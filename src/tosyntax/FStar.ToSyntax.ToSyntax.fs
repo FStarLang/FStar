@@ -2646,10 +2646,19 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
   // new decl.
+  let env0 = env in
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
-  let attrs = mk_comment_attr d @ attrs in
+  let val_attrs =
+    match sigelts with
+    | [ { sigel = Sig_let (lbs, names) } ] ->
+      names |>
+      List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm)) |>
+      List.filter (fun t -> Option.isNone (get_fail_attr false t)) //don't forward fail attributes
+    | _ -> []
+  in
+  let attrs = mk_comment_attr d @ attrs @ val_attrs in
   env,
   List.mapi
     (fun i sigelt ->
@@ -2786,14 +2795,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       match (Subst.compress <| ds_lets).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
-          let attrs = List.map (desugar_term env) d.attrs in
-          let val_quals, val_attrs =
+          let val_quals =
                fvs
-               |> List.map (fun fv -> Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v)
-               |> List.unzip
-               |> (fun (quals, attrs) ->
-                 List.flatten quals,
-                 List.flatten attrs)
+               |> List.collect (fun fv -> fst (Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v))
           in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
           //   (List.map Print.fv_to_string fvs |> String.concat ", ")
@@ -2826,7 +2830,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs } in
+                    sigattrs = [] } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
@@ -2983,24 +2987,7 @@ let desugar_decls env decls =
       let env, se = desugar_decl env d in
       env, sigelts@se) (env, []) decls
   in
-  (* Propagate the doc from a val to a let. *)
-  let rec forward acc = function
-    | se1 :: se2 :: sigelts ->
-        begin match se1.sigel, se2.sigel with
-        | Sig_declare_typ _, Sig_let _ ->
-            forward ({ se2 with sigattrs =
-              List.filter (fun t ->
-                Option.isNone (get_fail_attr false t) //forward all non-fail attributes
-              ) se1.sigattrs @ se2.sigattrs
-            } :: se1 :: acc) sigelts
-        | _ ->
-            forward (se1 :: acc) (se2 :: sigelts)
-        end
-    | sigelts ->
-        List.rev_append acc sigelts
-  in
-  env, forward [] sigelts
-
+  env, sigelts
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
