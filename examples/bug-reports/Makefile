@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 include ../Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-all: verify iverify not-verify extract
+all: verify iverify not-verify extract bug1803
 
 
 ##################
@@ -148,3 +148,10 @@ extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 clean:
 	rm -rf out*
 	rm -rf Bug*.exe
+
+bug1803: bug1803.fst
+	mkdir -p out
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --lax --odir out --codegen OCaml bug1803.fst
+	echo "let _ = main ()" >> out/Bug1803.ml
+	$(OCAMLOPT) -I $(FSTAR_HOME)/ulib/ml -I out out/Bug1803.ml -o out/Bug1803
+	out/Bug1803 | grep -q correct -
