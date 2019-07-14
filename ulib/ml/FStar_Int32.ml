@@ -3,6 +3,9 @@ type uint32 = int
 type t = int32
 type t' = t
 
+let cmod x =
+  if x > 2147483647 then x - 4294967296 else x
+
 let v (x:int32) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0
@@ -29,8 +32,8 @@ let logand (a:int32) (b:int32) : int32 = a land b
 let logxor (a:int32) (b:int32) : int32 = a lxor b
 let logor  (a:int32) (b:int32) : int32 = a lor b
 let lognot (a:int32) : int32 = lnot a
-       
-let int_to_int32 (x:Prims.int) = int_of_string (Prims.to_string x) land 4294967295
+
+let int_to_int32 (x:Prims.int) = let u = int_of_string (Prims.to_string x) in (cmod u)
 
 let shift_right (a:int32) (b:uint32) : int32 = a lsr b
 let shift_left  (a:int32) (b:uint32) : int32 = (a lsl b) land 4294967295
@@ -65,9 +68,6 @@ let op_Greater_Hat = gt
 let op_Greater_Equals_Hat = gte
 let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
-
-let cmod x =
-  if x > 2147483647 then x - 4294967296 else x
 
 let to_string s = string_of_int (cmod s)
 let int_to_t s = int_to_int32 s
