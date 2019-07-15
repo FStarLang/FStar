@@ -39,12 +39,6 @@ type option_val =
   | List of list<option_val>
   | Unset
 
-type options =
-  | Set
-  | Reset
-  | Restore
-
-
 type error_flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
   | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
@@ -54,7 +48,6 @@ type error_flag =
   | CWarning        //CWarning: reported using log_issue as warnings by default;
                     //          then can be silenced or escalated to errors
   | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
-
 
 val defaults                    : list<(string * option_val)>
 
@@ -112,7 +105,6 @@ type opt_type =
 val desc_of_opt_type            : opt_type -> option<string>
 val all_specs_with_types        : list<(char * string * opt_type * string)>
 val settable                    : string -> bool
-val resettable                  : string -> bool
 
 val abort_counter : ref<int>
 
@@ -162,6 +154,7 @@ val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
+val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
@@ -169,7 +162,6 @@ val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
-val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
@@ -195,7 +187,7 @@ val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
-val set_options                 : options -> string -> parse_cmdline_res
+val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool

@@ -28,12 +28,16 @@ or our new [even cooler online editor] (experimental).
 
 ## OPAM package ##
 
-If the OCaml package manager is present on your platform, you can
+If the OCaml package manager (OPAM) is present on your platform, you can
 install the latest development version of F\* (`master` branch) and
 required dependencies (except for Z3) using the following commands:
 
         $ opam pin add fstar --dev-repo
         $ opam install fstar
+
+Note: To install OCaml and OPAM on your platform please read the
+[Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+section further below, steps 0 to 3.
 
 ## Binary releases ##
 
@@ -48,24 +52,6 @@ Building F\* from sources section below) or at least in the latest
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 [automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
-
-### Extracting F* programs to OCaml using binary releases
-
-Binary builds come with binary builds of F* standard library. 
-These can only be linked against code compiled in **exactly the same OCaml environment**.
-A common symptom of a mismatch is a message of the form 
-
-       Error: Files bin/fstarlib/fstarlib.cmxa
-              and ...
-              make inconsistent assumptions over interface ...
-
-Rather, if you intend to extract and compile OCaml code against the F* library, please 
-rebuild it with:
-
-        $ make -C ulib/ml
-
-See [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code) for further 
-documentation on extracting and executing F* code.
 
 ### Testing a binary package ###
 
@@ -93,12 +79,17 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/micro-benchmarks
 
-3. If you have OCaml installed the following command should print "Hello F\*!"
-   You need the same version of OCaml as was used to create the
-   `fstar.exe` binary (which you can see with `fstar.exe --version`,
-    as illustrated above).
+3. If you have OCaml installed and intend to extract and compile OCaml code
+   against the F* library, please rebuild it with:
+
+        $ make -C ulib install-fstarlib
+
+   Then the following command should print "Hello F\*!"
 
         $ make -C examples/hello hello
+
+   See [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code) for
+   further documentation on extracting and executing F* code.
 
    Note: to have a working OCaml install, please first read the
    [Working OCaml
@@ -108,12 +99,6 @@ following commands. (On Windows this requires Cygwin and `make`)
    required to compile OCaml programs extracted from F\* code:
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
-
-   Note: If you hand-rolled your own F* binary then remember that you need to
-         also build our OCaml support library, as further documented
-         [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code):
-
-        $ make -C ulib/ml
 
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
@@ -241,7 +226,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
   ```
 
   **Note:** this list of packages is longer than the list in the

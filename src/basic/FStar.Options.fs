@@ -46,11 +46,6 @@ type option_val =
   | List of list<option_val>
   | Unset
 
-type options =
-  | Set
-  | Reset
-  | Restore
-
 type error_flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
   | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
@@ -60,7 +55,6 @@ type error_flag =
   | CWarning        //CWarning: reported using log_issue as warnings by default;
                     //          then can be silenced or escalated to errors
   | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
-
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -193,6 +187,7 @@ let defaults =
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
@@ -208,7 +203,6 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
-      ("n_cores"                      , Int 1);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -339,6 +333,7 @@ let get_hint_info               ()      = lookup_opt "hint_info"                
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
@@ -354,7 +349,6 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_n_cores                 ()      = lookup_opt "n_cores"                  as_int
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
@@ -667,14 +661,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "detail_errors",
         Const (Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
-         implies n_cores=1");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer");
 
        ( noshort,
         "detail_hint_replay",
         Const (Bool true),
-         "Emit a detailed report for proof whose unsat core fails to replay;
-         implies n_cores=1");
+         "Emit a detailed report for proof whose unsat core fails to replay");
 
        ( noshort,
         "doc",
@@ -743,6 +735,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "ide",
         Const (Bool true),
         "JSON-based interactive mode for IDEs");
+
+       ( noshort,
+        "lsp",
+        Const (Bool true),
+        "Language Server Protocol-based interactive mode for IDEs");
 
        ( noshort,
         "include",
@@ -818,11 +815,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "MLish",
         Const (Bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-       ( noshort,
-        "n_cores",
-        IntStr "positive_integer", //; detail_errors := false),
-        "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
@@ -1170,12 +1162,13 @@ and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode 
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
            (specs_with_types ())
 
-//Several options can only be set at the time the process is created, and not controlled interactively via pragmas
-//Additionaly, the --smt option is a security concern
+// Several options can only be set at the time the process is created,
+// and not controlled interactively via pragmas.
+// Additionaly, the --smt option is a security concern.
 let settable = function
     | "abort_on"
-    | "admit_smt_queries"
     | "admit_except"
+    | "admit_smt_queries"
     | "debug"
     | "debug_level"
     | "defensive"
@@ -1183,20 +1176,22 @@ let settable = function
     | "detail_hint_replay"
     | "eager_subtyping"
     | "hide_uvar_nums"
-    | "hint_info"
     | "hint_file"
+    | "hint_info"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
     | "load"
-    | "log_types"
     | "log_queries"
+    | "log_types"
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
-    | "no_smt"
+    | "no_plugins"
     | "__no_positivity"
-    | "ugly"
+    | "normalize_pure_terms_for_extraction"
+    | "no_smt"
+    | "no_tactics"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_full_names"
@@ -1205,45 +1200,43 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
+    | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
-    | "smtencoding.nl_arith_repr"
     | "smtencoding.l_arith_repr"
-    | "timing"
-    | "trace_error"
-    | "unthrottle_inductives"
-    | "use_eq_at_higher_order"
-    | "no_plugins"
-    | "no_tactics"
-    | "normalize_pure_terms_for_extraction"
+    | "smtencoding.nl_arith_repr"
+    | "smtencoding.valid_intro"
+    | "smtencoding.valid_elim"
     | "tactic_raw_binders"
     | "tactics_failhard"
     | "tactics_info"
+    | "__tactics_nbe"
     | "tactic_trace"
     | "tactic_trace_d"
     | "tcnorm"
-    | "__tactics_nbe"
     | "__temp_fast_implicits"
     | "__temp_no_proj"
-    | "reuse_hint_for"
-    | "warn_error"
-    | "z3rlimit_factor"
-    | "z3rlimit"
-    | "z3refresh"
+    | "timing"
+    | "trace_error"
+    | "ugly"
+    | "unthrottle_inductives"
+    | "use_eq_at_higher_order"
     | "use_two_phase_tc"
-    | "vcgen.optimize_bind_as_seq" -> true
+    | "using_facts_from"
+    | "vcgen.optimize_bind_as_seq"
+    | "warn_error"
+    | "z3cliopt"
+    | "z3refresh"
+    | "z3rlimit"
+    | "z3rlimit_factor"
+    | "z3seed"
+    -> true
+
     | _ -> false
 
-// the first two options below are options that are passed to z3 using
-// command-line arguments;
-// using_facts_from requires pruning the Z3 context.
-// All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from" || s="smtencoding.valid_intro" || s="smtencoding.valid_elim"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
-let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
@@ -1254,17 +1247,13 @@ let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
-let set_options o s =
-    let specs = match o with
-        | Set -> settable_specs
-        | Reset -> resettable_specs
-        | Restore -> all_specs in
+let set_options s =
     try
         if s = ""
         then Success
-        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+        else Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s
     with
-      | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
@@ -1396,6 +1385,7 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+//   --already_cached
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list<(list<string> * bool)> =
@@ -1423,8 +1413,9 @@ let parse_settings ns : list<(list<string> * bool)> =
       let s = FStar.Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
+             let s = FStar.Util.replace_char s ' ' ',' in
              FStar.Util.splitlines s
-             |> List.concatMap (fun s -> FStar.Util.split s " ")
+             |> List.concatMap (fun s -> FStar.Util.split s ",")
              |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
@@ -1483,6 +1474,7 @@ let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
+let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
 let keep_query_captions          () = log_queries                     ()
                                     && get_keep_query_captions        ()
@@ -1492,7 +1484,6 @@ let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction

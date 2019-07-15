@@ -889,7 +889,7 @@ let single_piece_fragment_valid (#t:Type) (h0:heap) (p:piece t) :
     (requires (piece_valid h0 p))
     (ensures (fragment_valid h0 (Frag1 p))) = ()
 
-#set-options "--z3rlimit 20 --initial_ifuel 2"
+#set-options "--z3rlimit 40 --initial_ifuel 2"
 
 let tot_defragmentable_fragment_to_dll (#t:Type) (h0:heap) (f:fragment t{
     fragment_valid h0 f /\
@@ -1191,7 +1191,7 @@ let tot_piece_tail (#t:Type) (h0:heap) (p:piece t) (n:pointer (node t)) :
     (ensures (fun q ->
          (piece_valid h0 q) /\
          (reveal q.pnodes) == tl (reveal p.pnodes))) =
-  { phead = n ; ptail = p.ptail ; pnodes = elift1_p tl p.pnodes }
+  { phead = n ; ptail = p.ptail ; pnodes = elift1_p (tot_to_gtot tl) p.pnodes }
 
 /// If a dll is valid, then both the forward and backward links of
 /// each of the nodes are contained in the heap, and disjoint from

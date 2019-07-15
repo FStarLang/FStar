@@ -103,13 +103,26 @@ cd fstar
 # to export it from here.
 export FSTAR_HOME="$PWD"
 
+diag "-- Versions --"
+bin/fstar.exe --version
+bin/z3 --version
+
 diag "-- Verify micro benchmarks --"
 make -C examples/micro-benchmarks
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for ulib"
+  echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
+fi
+
+diag "-- Rebuilding ulib/ml (to make sure it works) --"
+make -C ulib/ml clean && make -C ulib install-fstarlib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
 fi
 
 diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"

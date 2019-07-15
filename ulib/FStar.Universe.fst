@@ -20,7 +20,7 @@ module FStar.Universe
   * universe. The two functions [raise_val] and [dowgrade_val] allow to coerce   *
   * from [a] to [raise_t a] and back.                                            **)
 
-noeq type raise0 (a : Type u#a) : Type u#(max a (b + 1)) =
+noeq type raise0 (a : Type u#a) : Type u#(max a b) =
 | Ret : a -> raise0 a
 
 let raise_t a = raise0 a

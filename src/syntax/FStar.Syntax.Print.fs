@@ -693,6 +693,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
       | Sig_pragma(PushOptions None) -> "#push-options"
       | Sig_pragma(PushOptions (Some s)) -> U.format1 "#push-options \"%s\"" s
+      | Sig_pragma(RestartSolver) -> "#restart-solver"
       | Sig_pragma(PopOptions) -> "#pop-options"
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
