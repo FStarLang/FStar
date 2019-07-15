@@ -324,11 +324,11 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
                  then NBE.normalize
                  else N.normalize_with_primitive_steps
     in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
 
     // F* requires more annotations.
     // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result ncb in
@@ -520,7 +520,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
-    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         begin match pol with
         | Pos ->

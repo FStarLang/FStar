@@ -6836,8 +6836,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                           FStar_TypeChecker_Common.rank =
                             (uu___2816_20131.FStar_TypeChecker_Common.rank)
                         }) wl1
-                 | (HeadMatch unif,FStar_Pervasives_Native.None ) ->
-                     rigid_heads_match env1 unif torig wl1 t1 t2
+                 | (HeadMatch need_unif,FStar_Pervasives_Native.None ) ->
+                     rigid_heads_match env1 need_unif torig wl1 t1 t2
                  | (FullMatch ,FStar_Pervasives_Native.None ) ->
                      rigid_heads_match env1 false torig wl1 t1 t2))
             in

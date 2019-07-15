@@ -77,7 +77,7 @@ module C = FStar.Parser.Const
 
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
-    S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] None Range.dummyRange
+    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] None Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_equational_at_level i, Delta_equational_at_level j -> i > j
