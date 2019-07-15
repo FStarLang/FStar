@@ -375,3 +375,15 @@ let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma
   (ensures (loc_unused_in c h `loc_includes` loc_of_aloc l))
   =
   admit()
+
+let modifies_aloc_intro
+  (#al: Type) (#c: cls al) (z: al) (h h' : HS.mem)
+  (alocs: (
+    (x: al) ->
+    Lemma
+    (requires (c.aloc_disjoint x z))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies (loc_of_aloc #_ #c z) h h') =
+  admit()

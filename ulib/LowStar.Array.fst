@@ -6,7 +6,7 @@ open FStar.HyperStack.ST
 module F = FStar.FunctionalExtensionality
 module G = FStar.Ghost
 module U32 = FStar.UInt32
-module MG = FStar.ModifiesGen
+module MG = FStar.MG2
 
 open LowStar.Permissions
 
@@ -37,44 +37,46 @@ let upd #a b i v =
   let s = ! b.content in
   let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
   (**) assert (writeable_cell h0 b (U32.v i));
-  let s1 = Seq.upd s (U32.v b.idx + U32.v i) (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v)) in
+  let s1 = Seq.upd s
+    (U32.v b.idx + U32.v i)
+    (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v))
+  in
   b.content := s1;
   (**) let h1 = get() in
   (**) assert (as_seq h1 b `Seq.equal` Seq.upd (as_seq h0 b) (U32.v i) v);
   (**) assert (as_perm_seq h1 b `Seq.equal` as_perm_seq h0 b);
-  (**) let r = frameOf b in
-  (**) let n = as_addr b in
+  (**) let aloc = aloc_cell b (U32.v i) in
   (**) MG.modifies_aloc_intro
   (**)   #ucell #cls
-  (**)   #r #n
-  (**)   ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = (Ghost.reveal b.pid)})
+  (**)   aloc
   (**)   h0 h1
-  (**)   (fun r -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun r n -> ())
   (**)   (fun aloc' ->
-  (**)     let aloc = ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = (Ghost.reveal b.pid)}) in
-  (**)     let aux (t:Type0) (b':array t) : Lemma
-  (**)       (requires (
-  (**)         let i = aloc'.b_index - U32.v b'.idx in
-  (**)         frameOf b' == r /\ as_addr b' == n /\ Ghost.reveal b'.pid == aloc'.b_pid /\ U32.v b'.max_length == aloc'.b_max /\
-  (**)         aloc'.b_index >= U32.v b'.idx /\ aloc'.b_index < U32.v b'.idx + U32.v b'.length /\
-  (**)         live_cell h0 b' i))
-  (**)       (ensures (let i = aloc'.b_index - U32.v b'.idx in
-  (**)        live_cell h1 b' i /\
-  (**)        (sel h0 b' i == sel h1 b' i))) =
-  (**)        live_same_arrays_equal_types b b' h0;
-  (**)        if aloc.b_index = aloc'.b_index then begin
-  (**)          let s0 = HS.sel h0 b.content in
-  (**)          let (v0, vp0) = Seq.index s0 aloc.b_index in
-  (**)          only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0) aloc.b_pid aloc'.b_pid
-  (**)        end
-  (**)        else begin
-  (**)          live_same_arrays_equal_types b b' h1
-  (**)        end
-  (**)     in
-  (**)     prove_loc_preserved #r #n aloc' h0 h1 aux
+  (**)     ucell_preserved_intro aloc' h0 h1 (fun t' b' ->
+  (**)       if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)         live_same_arrays_equal_types b b' h0;
+  (**)         if aloc.b_index = aloc'.b_index then begin
+  (**)           let s0 = HS.sel h0 b.content in
+  (**)           let (v0, vp0) = Seq.index s0 aloc.b_index in
+  (**)           if not (is_live_pid (Ghost.reveal vp0) aloc'.b_pid) then begin
+  (**)             if aloc'.b_pid = aloc.b_pid then
+  (**)               assert(is_live_pid (Ghost.reveal vp0) aloc.b_pid /\ (~ (is_live_pid (Ghost.reveal vp0) aloc.b_pid)))
+  (**)             else begin
+  (**)               assert(ucell_matches_live_array_cell aloc' t' b' h0);
+  (**)               let (_, vp0') = Seq.index s0 aloc'.b_index in
+  (**)               if (is_live_pid (Ghost.reveal vp0') aloc'.b_pid) then begin
+  (**)                 only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0') aloc.b_pid aloc'.b_pid;
+  (**)                 assert(aloc'.b_pid = aloc.b_pid /\ (~ (aloc'.b_pid <> aloc.b_pid)))
+  (**)               end else
+  (**)                 admit()//assert(is_live_pid (Ghost.reveal vp0') aloc'.b_pid /\ (~ (is_live_pid (Ghost.reveal vp0') aloc'.b_pid)))
+  (**)             end
+  (**)           end else
+  (**)             only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0) aloc.b_pid aloc'.b_pid
+  (**)         end
+  (**)         else begin
+  (**)           live_same_arrays_equal_types b b' h1
+  (**)         end
+  (**)       end
+  (**)     )
   (**)   );
   (**) assert (modifies (loc_cell b (U32.v i)) h0 h1);
   (**) lemma_includes_loc_cell_loc_array b (U32.v i);
