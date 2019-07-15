@@ -330,6 +330,7 @@ noextract
 let coerce (x:'a{'a == 'b}) : 'b = x
 
 /// `fragment_printer`: The type of a printer of fragments
+noextract
 let fragment_printer =
   (acc:list frag_t)
   -> Stack unit
