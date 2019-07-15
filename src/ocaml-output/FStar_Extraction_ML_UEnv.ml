@@ -246,8 +246,8 @@ let (lookup_ty_const :
           FStar_Util.find_map env.tydefs
             (fun tydef  ->
                if
-                 (module_name = tydef.tydef_mlmodule_name) &&
-                   (ty_name = tydef.tydef_name)
+                 (ty_name = tydef.tydef_name) &&
+                   (module_name = tydef.tydef_mlmodule_name)
                then FStar_Pervasives_Native.Some (tydef.tydef_def)
                else FStar_Pervasives_Native.None)
   
@@ -271,8 +271,8 @@ let (maybe_mangle_type_projector :
       FStar_Util.find_map env.tydefs
         (fun tydef  ->
            if
-             (tydef.tydef_mlmodule_name = mname) &&
-               (tydef.tydef_name = ty_name)
+             (tydef.tydef_name = ty_name) &&
+               (tydef.tydef_mlmodule_name = mname)
            then
              match tydef.tydef_mangled_name with
              | FStar_Pervasives_Native.None  ->
