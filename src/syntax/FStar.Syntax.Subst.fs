@@ -472,14 +472,25 @@ let rec push_subst s t =
       delayed substitution (i.e., step 1 above), but not
       memoize the result of uvar solutions (since those
       could be reverted).
+
+      The function is broken into a fast-path where the
+      result can be easily determined and a recursive slow
+      path.
 *)
-let rec compress (t:term) =
+let rec compress_slow (t:term) =
     let t = try_read_memo t in
     let t = force_uvar t in
     match t.n with
     | Tm_delayed((t', s), memo) ->
         memo := Some (push_subst s t');
-        compress t
+        compress_slow t
+    | _ ->
+        t
+
+let compress (t:term) =
+  match t.n with
+    | Tm_delayed(_, _) | Tm_uvar(_, _) ->
+        compress_slow t
     | _ ->
         t
 
