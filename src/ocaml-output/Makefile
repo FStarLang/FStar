@@ -159,7 +159,7 @@ endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
 COMMIT = $(shell ../tools/get_commit)
-COMMITDATE = $(shell git log --pretty=format:%ci -n 1)
+COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
