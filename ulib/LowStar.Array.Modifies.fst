@@ -120,6 +120,51 @@ let ucell_unused_in (cell:ucell) (h: HS.mem) =
   // Or there is an allocated array but it doesnt use the ucell
   (exists (t:Type) (b:array t). ucell_matches_unused_array_cell cell t b h)
 
+let ucell_unused_in_intro_not_allocated (cell: ucell) (h: HS.mem)
+  (not_allocated: (t: Type) -> (ref: HS.mreference t (Heap.trivial_preorder t)) -> Lemma (
+    (HS.as_addr ref =  cell.b_addr /\ HS.frameOf ref = cell.b_rid) ==> (~ (HS.contains h ref))
+  )) : Lemma (ucell_unused_in cell h)
+  =
+  Classical.forall_intro_2 not_allocated
+
+let ucell_unused_in_intro_not_live (cell: ucell) (h: HS.mem) (t: Type) (b: array t) : Lemma
+  (requires (ucell_matches_unused_array_cell cell t b h))
+  (ensures (ucell_unused_in cell h))
+  =
+  ()
+
+let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
+  (t: Type)
+  (ref: HS.mreference t (Heap.trivial_preorder t))
+  (not_allocated: (unit -> Lemma
+    (requires (HS.as_addr ref = cell.b_addr /\ HS.frameOf ref = cell.b_rid ==> (~ (HS.contains h ref))))
+    (ensures (goal))
+  ))
+  (not_live: (t: Type) -> (b: array t) -> Lemma
+    (requires (ucell_matches_unused_array_cell cell t b h))
+    (ensures (goal))
+  )
+  : Lemma (requires (ucell_unused_in cell h)) (ensures (goal))
+  =
+  let l = forall (t:Type) (ref: HS.mreference t (Heap.trivial_preorder t)).
+    (HS.as_addr ref = cell.b_addr /\ HS.frameOf ref = cell.b_rid) ==> (~ (HS.contains h ref))
+  in
+  let r = exists (t:Type) (b:array t). ucell_matches_unused_array_cell cell t b h in
+  let goal' = fun (_ : squash (l \/ r)) -> goal in
+  Classical.or_elim #l #r #goal'
+    (fun (_ : squash l) -> not_allocated ())
+    (fun (_ : squash r) ->
+      let p (t': Type) = exists (b': array t'). ucell_matches_unused_array_cell cell t' b' h in
+      let pf : squash (exists (t': Type) . p t') = () in
+      Classical.exists_elim goal #Type #p pf (fun t' ->
+        let p (b': array t') = ucell_matches_unused_array_cell cell t' b' h in
+        let pf : squash (exists (b': array t') . p b') = () in
+        Classical.exists_elim goal #(array t') #p pf (fun b' ->
+	  not_live t' b'
+        )
+      )
+    )
+
 let ucell_used_in (cell:ucell) (h: HS.mem) =
   // There exists an array allocated with the correct size that contains a live cell corresponding to the ucell
   exists (t:Type) (b:array t). ucell_matches_live_array_cell cell t b h
@@ -211,6 +256,7 @@ let cls : MG.cls ucell = MG.Cls #ucell
     in
     Classical.impl_intro aux
   )
+  (fun x h -> admit())
   (fun greater lesser h -> ())
   (fun greater lesser h -> ())
   (fun x h0 h1 ->
