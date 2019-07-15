@@ -65,6 +65,24 @@ let loc_disjoint_aloc_intro
   (ensures (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2))) =
   Classical.forall_intro_4 (fun x y z -> Classical.move_requires (c.aloc_disjoint_includes x y z))
 
+let loc_disjoint_aloc_elim
+  #aloc #c b1 b2
+= Classical.forall_intro c.aloc_includes_refl;
+  assert (b1 `GSet.mem` loc_of_aloc #_ #c b1);
+  assert (b2 `GSet.mem` loc_of_aloc #_ #c b2)
+
+let loc_includes_aloc_intro
+  #aloc #c b1 b2
+= Classical.forall_intro_3 (fun x y -> Classical.move_requires (c.aloc_includes_trans x y));
+  Classical.forall_intro c.aloc_includes_refl;
+  assert (b1 `GSet.mem` loc_of_aloc #_ #c b1)
+
+let loc_includes_aloc_elim
+  #aloc #c b1 b2
+= Classical.forall_intro c.aloc_includes_refl;
+  assert (b1 `GSet.mem` loc_of_aloc #_ #c b1);
+  assert (b2 `GSet.mem` loc_of_aloc #_ #c b2)
+
 let loc_includes_disjoint_elim
   #al (c: cls al)
   (l l1 l2: loc c)
@@ -129,6 +147,15 @@ let loc_union_loc_none_r
 
 let preserved #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
   forall (x: al) . {:pattern (x `GSet.mem` l)} x `GSet.mem` l ==> c.aloc_preserved x h1 h2
+
+let preserved_elim
+  #al #c l h1 h2 x
+= Classical.forall_intro c.aloc_includes_refl;
+  assert (x `GSet.mem` loc_of_aloc #_ #c x)
+
+let preserved_intro
+  #al #c l h1 h2 f
+= Classical.forall_intro (Classical.move_requires f)
 
 let modifies #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
   forall (l' : loc c) . {:pattern (l' `loc_disjoint` l)} l' `loc_disjoint` l ==> preserved l' h1 h2
