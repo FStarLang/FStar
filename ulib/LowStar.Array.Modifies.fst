@@ -34,7 +34,8 @@ type ucell : Type0 = {
 
 let ucell_matches_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
 frameOf b = cell.b_rid /\ as_addr b = cell.b_addr /\ U32.v b.max_length = cell.b_max /\ HS.contains h b.content /\
-     cell.b_index >= U32.v b.idx /\ cell.b_index < U32.v b.idx + U32.v b.length // If this cell is part of the buffer
+     cell.b_index >= U32.v b.idx /\ cell.b_index < U32.v b.idx + U32.v b.length /\ // If this cell is part of the buffer
+     cell.b_pid = Ghost.reveal b.pid // The pids match
 
 let ucell_matches_used_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
   ucell_matches_array_cell cell t b h /\ begin
@@ -594,20 +595,35 @@ let fresh_array_pid #a b' h0 h1 =
   Ghost.reveal b'.pid > Ghost.reveal (get_array_current_max h0 b') /\
   Ghost.reveal (get_array_current_max h1 b') = Ghost.reveal b'.pid
 
+let cell_unused_in_intro (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) : Lemma
+  (requires (ucell_unused_in (aloc_cell b i) h))
+  (ensures (loc_unused_in h `loc_includes` loc_cell b i))
+  = MG.aloc_unused_in_intro cls (aloc_cell b i) h
 
-let ucell_not_used_pid_in_loc_unused_in (cell:ucell ) (h: HS.mem) : Lemma
-  (requires (ucell_unused_in cell h))
-  (ensures (loc_unused_in h `loc_includes` MG.loc_of_aloc cell))
-  = MG.aloc_unused_in_intro cls cell h
+let rec array_unused_in_intro' (#t: Type) (b: array t) (h : HS.mem) (i:nat{i <= vlength b}) : Lemma
+  (requires (forall (j:nat{j < vlength b}). ucell_unused_in (aloc_cell b j) h))
+  (ensures (loc_unused_in h `loc_includes` compute_loc_array b i))
+  (decreases (vlength b - i))
+  =
+  if i >= vlength b then () else begin
+    array_unused_in_intro' #t b h (i + 1);
+    cell_unused_in_intro #t b i h;
+    loc_includes_union_r (loc_unused_in h)(loc_cell b i) (compute_loc_array b (i+1))
+  end
 
-let cell_not_used_pid_in_loc_unused_in (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) :
+let rec array_unused_in_intro (#t: Type) (b: array t) (h : HS.mem) : Lemma
+  (requires (forall (j:nat{j < vlength b}). ucell_unused_in (aloc_cell b j) h))
+  (ensures (loc_unused_in h `loc_includes` loc_array b))
+  = array_unused_in_intro' #t b h 0
+
+let cell_not_used_pid_implies_aloc_unused_in (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) :
   Lemma (requires (
     HS.contains h b.content /\ begin
       let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
       Ghost.reveal b.pid > get_current_max (Ghost.reveal perm_map)
     end
   ))
-  (ensures (loc_unused_in h `loc_includes` (loc_cell b i)))
+  (ensures (ucell_unused_in (aloc_cell b i) h))
 =
   let r = frameOf b in
   let a = as_addr b in
@@ -630,27 +646,4 @@ let cell_not_used_pid_in_loc_unused_in (#t: Type) (b: array t) (i:nat{i < vlengt
       live_same_arrays_equal_types #t #t' b b' h
     in Classical.impl_intro aux
   in
-  Classical.forall_intro_2 aux;
-  ucell_not_used_pid_in_loc_unused_in
-    cell h
-
-let rec array_not_used_pid_in_loc_unused_in' (#a: Type) (b: array a) (h: HS.mem) (i:nat{i <= vlength b}) :
-  Lemma (requires (Ghost.reveal b.pid >= Ghost.reveal (get_array_current_max #a h b) /\ HS.contains h b.content))
-  (ensures (loc_unused_in h `loc_includes` (compute_loc_array b i)))
-  (decreases (vlength b - i))
-  =
-  if i = vlength b then
-    loc_includes_none (loc_unused_in h)
-  else begin
-    array_not_used_pid_in_loc_unused_in' #a b h (i + 1);
-    cell_not_used_pid_in_loc_unused_in #a b i h;
-    loc_includes_union_r (loc_unused_in h)(loc_cell b i) (compute_loc_array b (i+1))
-  end
-
-let array_not_used_pid_in_loc_unused_in (#a: Type) (b: array a) (h: HS.mem) :
-  Lemma (requires (
-    Ghost.reveal b.pid >= Ghost.reveal (get_array_current_max #a h b) /\
-    HS.contains h b.content
-  ))
-  (ensures (loc_unused_in h `loc_includes` (loc_array b)))
-  = array_not_used_pid_in_loc_unused_in' #a b h 0
+  Classical.forall_intro_2 aux
