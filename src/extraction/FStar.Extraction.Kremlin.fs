@@ -79,6 +79,7 @@ and flag =
   | Abstract
   | IfDef
   | Macro
+  | Deprecated of string
 
 and fsdoc = string
 
@@ -377,6 +378,7 @@ and translate_flags flags =
     | Syntax.CAbstract -> Some Abstract
     | Syntax.CIfDef -> Some IfDef
     | Syntax.CMacro -> Some Macro
+    | Syntax.Deprecated s -> Some (Deprecated s)
     | _ -> None // is this all of them?
   ) flags
 
@@ -854,7 +856,7 @@ and translate_expr env e: expr =
      || string_of_mlpath p = "LowStar.ConstBuffer.cast"
      || string_of_mlpath p = "LowStar.ConstBuffer.to_buffer"
      || string_of_mlpath p = "LowStar.ConstBuffer.to_ibuffer" ->
-   translate_expr env e  //just identities
+   translate_expr env e1  //just identities
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)

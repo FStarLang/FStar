@@ -35,10 +35,13 @@ let propExt_Type_inconsistent ()
    sub-singletons is also inconsistent. *)
 let sub_singleton = a:Type{forall (x y:a). x == y}
 let propExt_sub_singleton = forall (p1 p2:sub_singleton). (p1 <==> p2) <==> p1==p2
+
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let propExt_sub_singleton_inconsistent()
   : Lemma (requires propExt_sub_singleton)
           (ensures False)
   = () //SMT finds the proof automatically, by noticing, e.g., T == ()
+#pop-options
 
 
 (* predicate extensionality essentially implies propositional

@@ -39,8 +39,9 @@ module Dep     = FStar.Parser.Dep
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
+ * It need to be kept in sync with prims.fst
  *)
-let cache_version_number = 12
+let cache_version_number = 14
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
@@ -53,24 +54,32 @@ type tc_result = {
 }
 
 (*
- * Abbreviation for what we store in the checked files
+ * Abbreviation for what we store in the checked files (stages as described below)
  *)
-type checked_file_entry =
-  int *                      //cache version number
-  
-  list<(string * string)> *  //list of (file_name * digest) of direct dependences
-                             //file_name is name of the source file and
-                             //digest is that of the corresponding checked file
-                             //except when the entries are for the current .fst and .fsti,
-                             //digest is that of the source file
-  
-  string *                   //digest of this source file
-                             //also present in the list above, but handy to have it here
-                             //when checking if parsing data is valid
-  
-  Parser.Dep.parsing_data *  //parsing data for this file
-  
-  tc_result                  //typechecking result, including the smt encoding
+type checked_file_entry_stage1 =
+{
+  //cache version number
+  version: int;
+
+  //digest of this source file to check if parsing data is valid
+  digest: string;
+
+  //parsing data for this file
+  parsing_data: Parser.Dep.parsing_data
+}
+
+type checked_file_entry_stage2 =
+{
+  //list of (file_name * digest) of direct dependences
+  //file_name is name of the source file and
+  //digest is that of the corresponding checked file
+  //except when the entries are for the current .fst and .fsti,
+  //digest is that of the source file
+  deps_dig: list<(string * string)>;
+
+  //typechecking result, including the smt encoding
+  tc_res: tc_result
+}
 
 (*
  * Local cache for checked files contents
@@ -79,7 +88,7 @@ type checked_file_entry =
 
 (*
  * Cache files could be loaded in two steps
- * 
+ *
  * Initially the dependence analysis is just interested in the parsing data
  *   and till that point we don't have the dependences sorted out, because of
  *   which we can't check the validity of tc data (since we need to check hashes
@@ -183,26 +192,26 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
-    else let entry :option<checked_file_entry> = BU.load_value_from_file checked_fn in
+    else let entry :option<checked_file_entry_stage1> = BU.load_value_from_file checked_fn in
          match entry with
          | None ->
            let msg = BU.format1 "checked file %s is corrupt" checked_fn in
            add_and_return (Invalid msg, Inl msg)
-         | Some (vnum, _, dig, parsing_data, _) ->
-           if vnum <> cache_version_number
+         | Some (x) ->
+           if x.version <> cache_version_number
            then let msg = BU.format1 "checked file %s has incorrect version" checked_fn in
                 add_and_return (Invalid msg, Inl msg)
-           else let current_dig = BU.digest_of_file fn in
-                if dig <> current_dig
+           else let current_digest = BU.digest_of_file fn in
+                if x.digest <> current_digest
                 then begin
                   if Options.debug_any () then
                   BU.print4 "Checked file %s is stale since incorrect digest of %s, \
                     expected: %s, found: %s\n"
-                    checked_fn fn current_dig dig;
+                    checked_fn fn current_digest x.digest;
                   let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   add_and_return (Invalid msg, Inl msg)
                 end
-                else add_and_return (Unknown, Inr parsing_data)
+                else add_and_return (Unknown, Inr x.parsing_data)
 
 (*
  * Second step for loading checked files, validates the tc data
@@ -213,9 +222,9 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
   :either<string, tc_result> =
 
   let load_tc_result (fn:string) :list<(string * string)> * tc_result =
-    let entry :option<checked_file_entry> = BU.load_value_from_file checked_fn in
+    let entry :option<(checked_file_entry_stage1 * checked_file_entry_stage2)> = BU.load_2values_from_file checked_fn in
     match entry with
-     | Some (_, deps_dig, _, _, tc_result) -> deps_dig, tc_result
+     | Some ((_,s2)) -> s2.deps_dig, s2.tc_res
      | _ ->
        failwith "Impossible! if first phase of loading was unknown, it should have succeeded"
   in
@@ -235,7 +244,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
       if deps_dig = deps_dig'
       then begin
         //mark the tc data of the file as valid
-        let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in 
+        let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in
         BU.smap_add mcache checked_fn elt;
         (*
          * if there exists an interface for it, mark that too as valid
@@ -390,8 +399,12 @@ let load_module_from_cache =
 (*
  * Just to make sure data has the right type
  *)
-let store_value_to_cache (cache_file:string) (data:checked_file_entry) :unit =
-  BU.save_value_to_file cache_file data
+let store_values_to_cache
+    (cache_file:string)
+    (stage1:checked_file_entry_stage1)
+    (stage2:checked_file_entry_stage2)
+    :unit =
+  BU.save_2values_to_file cache_file stage1 stage2
 
 let store_module_to_cache env fn parsing_data tc_result =
   if Options.cache_checked_modules()
@@ -402,13 +415,10 @@ let store_module_to_cache env fn parsing_data tc_result =
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
-        
-      //cache_version_number should always be the first field here
-      store_value_to_cache cache_file (cache_version_number,
-                                       hashes,
-                                       BU.digest_of_file fn,
-                                       parsing_data,
-                                       tc_result)
+
+      let stage1 = {version=cache_version_number; digest=(BU.digest_of_file fn); parsing_data=parsing_data} in
+      let stage2 = {deps_dig=hashes; tc_res=tc_result} in
+      store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
       FStar.Errors.log_issue
         (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)

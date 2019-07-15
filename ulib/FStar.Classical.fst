@@ -22,9 +22,12 @@ let give_witness #a x = return_squash x
 let give_witness_from_squash #a x = x
 
 val get_squashed (#b a:Type) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
+
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let get_squashed #b a =
   let p = get_proof a in
   join_squash #b p
+#pop-options
 
 let get_equality #t a b = get_squashed #(equals a b) (a == b)
 
