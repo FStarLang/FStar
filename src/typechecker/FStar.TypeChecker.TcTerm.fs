@@ -1399,14 +1399,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let e, tfun, guard = match tfun_opt with
         | Some t ->
            let t = SS.compress t in
+           let t_annot = match topt with | Some t -> t | None -> failwith "Impossible!" in
            begin match t.n with
                 | Tm_arrow _ ->
                     //we already checked the body to have the expected type; so, no need to check again
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
-                    e, t, guard
+                    e, t_annot, guard
                 | _ ->
                     let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in
-                    e, t, Env.conj_guard guard guard'
+                    e, t_annot, Env.conj_guard guard guard'
            end
 
         | None -> e, tfun_computed, guard in
