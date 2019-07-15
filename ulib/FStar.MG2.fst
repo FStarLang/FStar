@@ -10,122 +10,7 @@ module HST = FStar.HyperStack.ST
 
 module GSet = FStar.GSet
 
-noeq
-type cls (aloc: Type) : Type = | Cls:
-  (aloc_includes: (
-    aloc ->
-    aloc ->
-    GTot Type0
-  )) ->
-  (aloc_includes_refl: (
-    (x: aloc) ->
-    Lemma
-    (aloc_includes x x)
-  )) ->
-  (aloc_includes_trans: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    (x3: aloc) ->
-    Lemma
-    (requires (aloc_includes x1 x2 /\ aloc_includes x2 x3))
-    (ensures (aloc_includes x1 x3))
-  )) ->
-  (aloc_disjoint: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    GTot Type0
-  )) ->
-  (aloc_disjoint_sym: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    Lemma
-    (aloc_disjoint x1 x2 <==> aloc_disjoint x2 x1)
-  )) ->
-  (aloc_disjoint_not_includes: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    Lemma
-    ((aloc_disjoint x1 x2 /\ aloc_includes x1 x2) ==> False)
-  )) ->
-  (aloc_disjoint_includes: (
-    (larger1: aloc) ->
-    (larger2: aloc) ->
-    (smaller1: aloc) ->
-    (smaller2: aloc) ->
-    Lemma
-    (requires (aloc_disjoint larger1 larger2 /\ larger1 `aloc_includes` smaller1 /\ larger2 `aloc_includes` smaller2))
-    (ensures (aloc_disjoint smaller1 smaller2))
-  )) ->
-  (aloc_preserved: (
-    aloc ->
-    HS.mem ->
-    HS.mem ->
-    GTot Type0
-  )) ->
-  (aloc_preserved_refl: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    (aloc_preserved x h h)
-  )) ->
-  (aloc_preserved_trans: (
-    (x: aloc) ->
-    (h1: HS.mem) ->
-    (h2: HS.mem) ->
-    (h3: HS.mem) ->
-    Lemma
-    (requires (aloc_preserved x h1 h2 /\ aloc_preserved x h2 h3))
-    (ensures (aloc_preserved x h1 h3))
-  )) ->
-  (aloc_used_in: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    GTot Type0
-  )) ->
-  (aloc_unused_in: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    GTot Type0
-  )) ->
-  (aloc_used_in_unused_in_disjoint: (
-    (x: aloc) ->
-    (y: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    ((x `aloc_used_in` h /\ y `aloc_unused_in` h) ==> x `aloc_disjoint` y)
-  )) ->
-  (aloc_used_in_or_unused_in: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    (x `aloc_used_in` h \/ x `aloc_unused_in` h)
-  )) ->
-  (aloc_used_in_includes: (
-    (greater: aloc) ->
-    (lesser: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    ((greater `aloc_includes` lesser /\ greater `aloc_used_in` h) ==> lesser `aloc_used_in` h)
-  )) ->
-  (aloc_unused_in_includes: (
-    (greater: aloc) ->
-    (lesser: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    ((greater `aloc_includes` lesser /\ greater `aloc_unused_in` h) ==> lesser `aloc_unused_in` h)
-  )) ->
-  (aloc_unused_in_preserved: (
-    (x: aloc) ->
-    (h1: HS.mem) ->
-    (h2: HS.mem) ->
-    Lemma
-    (requires (x `aloc_unused_in` h1))
-    (ensures (aloc_preserved x h1 h2))
-  )) ->
-  cls aloc
-
-
-type loc (#aloc: Type) (c: cls aloc) = (s: GSet.set aloc { forall (greater lesser: aloc) . {:pattern (greater `GSet.mem` s); (greater `c.aloc_includes` lesser)} greater `GSet.mem` s /\ greater `c.aloc_includes` lesser ==> lesser `GSet.mem` s })
+let loc (#aloc: Type0) (c: cls aloc) = (s: GSet.set aloc { forall (greater lesser: aloc) . {:pattern (greater `GSet.mem` s); (greater `c.aloc_includes` lesser)} greater `GSet.mem` s /\ greater `c.aloc_includes` lesser ==> lesser `GSet.mem` s })
 
 let loc_of_aloc #al (#c: cls al) (b: al) : GTot (loc c) =
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (c.aloc_includes_trans x y));
@@ -440,20 +325,6 @@ let modifies_only_used_in
       c.aloc_unused_in_preserved x h h'
     end
   )
-
-let modifies_loc_unused_in
-  #al
-  (c: cls al)
-  (l: loc c)
-  (h1 h2: HS.mem)
-  (l' : loc c)
-: Lemma
-  (requires (
-    modifies l h1 h2 /\
-    loc_unused_in c h2 `loc_includes` l'
-  ))
-  (ensures (loc_unused_in c h1 `loc_includes` l'))
- = admit()
 
 let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma
   (requires (l `c.aloc_unused_in` h))
