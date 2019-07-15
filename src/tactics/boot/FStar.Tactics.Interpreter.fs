@@ -287,7 +287,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
                                   (fun _ _ _ -> fail "sorry, `lset` does not work in NBE")
                                         NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
-    ] @ reflection_primops @ (native_tactics_steps ())
+    ] @ (native_tactics_steps ())
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 

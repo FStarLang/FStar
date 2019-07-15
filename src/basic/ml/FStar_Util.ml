@@ -389,6 +389,9 @@ let psmap_find_map (m:'value psmap) f =
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
+let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
+  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
+
 module ZHashtbl = BatHashtbl.Make(Z)
 module ZMap = BatMap.Make(Z)
 
