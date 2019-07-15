@@ -464,14 +464,48 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
     else let c = Env.unfold_effect_abbrev env c in
          let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
-         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
-                            [S.as_arg res_t;
-                             S.as_arg <| label_opt env reason (Env.get_range env) f;
-                             S.as_arg wp]
-                            None
-                            wp.pos
+
+         (*
+          * AR: lookup the pure_assert_wp from prims
+          *     its type is p:Type -> pure_wp unit
+          *     and it should not be universe polymorphic
+          *)
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in  //Env.lookup_lid env C.pure_assert_wp_lid in
+
+         (* AR: apply it to f, after decorating f with the reason *)
+         let pure_assert_wp = mk_Tm_app
+           pure_assert_wp
+           [ S.as_arg <| label_opt env reason (Env.get_range env) f ]
+           None
+           (Env.get_range env)
          in
-         mk_comp md u_res_t res_t wp flags
+
+         (* AR: lift it to c.effect_name *)
+         let edge =
+           match Env.monad_leq env C.effect_PURE_lid md.mname with
+           | Some edge -> edge
+           | None -> failwith ("Impossible! Did not find a lift from PURE to " ^ md.mname.str)
+         in
+         let pure_assert_wp = edge.mlift.mlift_wp S.U_zero S.t_unit pure_assert_wp in
+
+         (* AR: now bind it with fun _ -> wp *)
+         let s_wp = mk_Tm_app
+           (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
+           [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range (Env.get_range env))) None (Env.get_range env);
+             S.as_arg <| S.t_unit;
+             S.as_arg res_t;
+             S.as_arg pure_assert_wp;
+             S.as_arg <| U.abs [null_binder S.t_unit] wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
+           None
+           wp.pos in
+
+         //BU.print4 "Strengthen comp, input wp: %s, f: %s, pure_assert_wp: %s, and strengthened wp: %s\n"
+         //  (Print.term_to_string wp)
+         //  (Print.term_to_string f)
+         //  (Print.term_to_string pure_assert_wp)
+         //  (N.normalize [ Beta; Env.Eager_unfolding ] env s_wp |> Print.term_to_string);
+
+         mk_comp md u_res_t res_t s_wp flags
 
 let strengthen_precondition
             (reason:option<(unit -> string)>)

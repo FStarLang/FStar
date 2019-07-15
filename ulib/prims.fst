@@ -241,6 +241,9 @@ effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect Tot (a:Type) = PURE a (pure_null_wp a)
 
+unfold
+let pure_assert_wp (p:Type) (post:pure_post unit) = p /\ post ()
+
 total
 new_effect GHOST = PURE
 
