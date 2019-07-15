@@ -169,6 +169,30 @@ val loc_disjoint_aloc_intro
   (requires (c.aloc_disjoint b1 b2))
   (ensures (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
 
+val loc_disjoint_aloc_elim
+  (#aloc: Type) (#c: cls aloc)
+  (b1: aloc)
+  (b2: aloc)
+: Lemma
+  (requires (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+  (ensures (c.aloc_disjoint b1 b2))
+
+val loc_includes_aloc_intro
+  (#aloc: Type) (#c: cls aloc)
+  (b1: aloc)
+  (b2: aloc)
+: Lemma
+  (requires (c.aloc_includes b1 b2))
+  (ensures (loc_includes (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+
+val loc_includes_aloc_elim
+  (#aloc: Type) (#c: cls aloc)
+  (b1: aloc)
+  (b2: aloc)
+: Lemma
+  (requires (loc_includes (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+  (ensures (c.aloc_includes b1 b2))
+
 val loc_includes_disjoint_elim
   (#al: _) (c: cls al)
   (l l1 l2: loc c)
@@ -207,6 +231,20 @@ val loc_union_loc_none_r
   (loc_union s loc_none == s)
 
 val preserved (#al: _) (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0
+
+val preserved_elim (#al: _) (#c: cls al) (l: loc c) (h1 h2: HS.mem) (x: al) : Lemma
+  (requires (preserved l h1 h2 /\ l `loc_includes` loc_of_aloc x))
+  (ensures (c.aloc_preserved x h1 h2))
+
+val preserved_intro (#al: _) (#c: cls al) (l: loc c) (h1 h2: HS.mem)
+  (f: (
+    (x: al) ->
+    Lemma
+    (requires (l `loc_includes` loc_of_aloc x))
+    (ensures (c.aloc_preserved x h1 h2))
+  ))
+: Lemma
+  (preserved l h1 h2)
 
 val modifies (#al: _) (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0
 
