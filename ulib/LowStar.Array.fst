@@ -62,12 +62,13 @@ let upd #a b i v =
   (**)               assert(is_live_pid (Ghost.reveal vp0) aloc.b_pid /\ (~ (is_live_pid (Ghost.reveal vp0) aloc.b_pid)))
   (**)             else begin
   (**)               assert(ucell_matches_live_array_cell aloc' t' b' h0);
-  (**)               let (_, vp0') = Seq.index s0 aloc'.b_index in
+  (**)               let s0' = HS.sel h0 b'.content in
+  (**)               let (_, vp0') = Seq.index s0' aloc'.b_index in
   (**)               if (is_live_pid (Ghost.reveal vp0') aloc'.b_pid) then begin
   (**)                 only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0') aloc.b_pid aloc'.b_pid;
   (**)                 assert(aloc'.b_pid = aloc.b_pid /\ (~ (aloc'.b_pid <> aloc.b_pid)))
   (**)               end else
-  (**)                 admit()//assert(is_live_pid (Ghost.reveal vp0') aloc'.b_pid /\ (~ (is_live_pid (Ghost.reveal vp0') aloc'.b_pid)))
+  (**)                 assert(~ (is_live_pid (Ghost.reveal vp0') aloc'.b_pid) /\ is_live_pid (Ghost.reveal vp0') aloc'.b_pid)
   (**)             end
   (**)           end else
   (**)             only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0) aloc.b_pid aloc'.b_pid
@@ -94,9 +95,10 @@ let alloc #a init len =
   (**) let h0 = HST.get() in
   let content = HST.ralloc_mm HS.root s in
   (**) let h1 = HST.get() in
-  (**) MG.modifies_ralloc_post #ucell #cls HS.root s h0 content h1;
   let b = Array len content 0ul len (snd (Ghost.reveal perm_map_pid)) in
   (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
+  (**) assume(loc_unused_in h0 `loc_includes` (loc_array b));
+  (**) assume(loc_used_in h1 `loc_includes` (loc_array b));
   b
 
 let free #a b =
