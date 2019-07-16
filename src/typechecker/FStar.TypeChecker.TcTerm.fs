@@ -1328,7 +1328,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         try normalizing it first;
                         otherwise synthesize a type and check it against the given type *)
                 if not norm
-                then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)
+                then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)  //AR: without the unascribe we lose out on some arrows
                 else let _, bs, _, c_opt, envbody, body, g_env = expected_function_typ env None body in
                      Some t, bs, [], c_opt, envbody, body, g_env
           in
@@ -1396,10 +1396,24 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = TcUtil.close_guard_implicits env bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
+    (*
+     * AR: there are three types in the code above now:
+     *     topt : option<term> -- the original annotation
+     *     tfun_opt : option<term> -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
+     *     tfun_computed : term -- computed type of the abstraction
+     *     
+     *     the following code has the logic for which type to package the input expression with
+     *     if tfun_opt is Some we are guaranteed that topt is also Some, and in that case, we use Some?.v topt
+     *       in this case earlier we were returning Some?.v tfun_opt but that means we lost out on the user annotation
+     *     if tfun_opt is None, then we just return tfun_computed (QUESTION: have we checked that tfun_computed <: topt?)
+     *)
     let e, tfun, guard = match tfun_opt with
         | Some t ->
            let t = SS.compress t in
-           let t_annot = match topt with | Some t -> t | None -> failwith "Impossible!" in
+           let t_annot =
+             match topt with
+             | Some t -> t
+             | None -> failwith "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some" in
            begin match t.n with
                 | Tm_arrow _ ->
                     //we already checked the body to have the expected type; so, no need to check again
