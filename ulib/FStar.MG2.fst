@@ -160,9 +160,10 @@ let preserved_intro
 let modifies #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
   forall (l' : loc c) . {:pattern (l' `loc_disjoint` l)} l' `loc_disjoint` l ==> preserved l' h1 h2
 
+
 let loc_used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
-  Classical.forall_intro_3 c.aloc_used_in_includes;
-  GSet.comprehend (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_used_in` h))
+  admit()
+
 
 let loc_unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
   Classical.forall_intro_3 c.aloc_unused_in_includes;
@@ -275,7 +276,7 @@ let modifies_trans
 
 let loc_unused_in_used_in_disjoint (#al: Type) (c: cls al) (h: HS.mem) : Lemma
   (loc_unused_in c h `loc_disjoint` loc_used_in c h) =
-  Classical.forall_intro_3 c.aloc_used_in_unused_in_disjoint
+  admit()
 
 let modifies_aloc_intro'
   (#al: Type) (#c: cls al) (l: loc c) (h h' : HS.mem)
@@ -287,7 +288,7 @@ let modifies_aloc_intro'
   ))
 : Lemma
   (modifies l h h')
-= 
+=
   let f
     (l': loc c)
   : Lemma
@@ -331,11 +332,11 @@ let modifies_only_used_in
   (requires (modifies (loc_unused_in c h `loc_union` l) h h'))
   (ensures (modifies l h h')) =
   modifies_aloc_intro' l h h' (fun x ->
-    c.aloc_used_in_or_unused_in x h;
-    Classical.forall_intro_2 (fun x y -> c.aloc_used_in_unused_in_disjoint x y h);
+    admit();//c.aloc_used_in_or_unused_in x h;
+    //Classical.forall_intro_2 (fun x y -> c.aloc_used_in_unused_in_disjoint x y h);
     Classical.forall_intro c.aloc_includes_refl;
     c.aloc_disjoint_not_includes x x;
-    if StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_used_in` h) then begin
+    (*if StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_used_in` h) then begin
       let f
         (x' y' : al)
       : Lemma
@@ -350,7 +351,8 @@ let modifies_only_used_in
       assert (x `GSet.mem` loc_of_aloc #_ #c x)
     end else begin
       c.aloc_unused_in_preserved x h h'
-    end
+    end*)
+    ()
   )
 
 let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma

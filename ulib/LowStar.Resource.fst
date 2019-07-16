@@ -21,6 +21,8 @@ module HST = FStar.HyperStack.ST
 
 open LowStar.Array
 
+#set-options "--z3rlimit 10"
+
 (* Views and resources *)
 
 let imem inv = m:HS.mem{inv m}
@@ -129,8 +131,8 @@ let reveal_star_inv (res1 res2:resource) (h:HS.mem)
   ()
 
 let reveal_star_sel (res1 res2:resource) (h:HS.mem)
-  : Lemma 
-      (ensures (sel (view_of (res1 <*> res2)) h == (sel (view_of res1) h, sel (view_of res2) h)))
+  : Lemma
+      (ensures (sel (view_of (res1 <*> res2)) h === (sel (view_of res1) h, sel (view_of res2) h)))
       [SMTPat (sel (view_of (res1 <*> res2)) h)]
   = ()
 

@@ -44,11 +44,11 @@ let non_live_addrs_codom
       (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
 
 #reset-options //"--log_queries --query_stats"
-let live_addrs_codom 
+let live_addrs_codom
       (regions: Ghost.erased (Set.set HS.rid))
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
       (non_live_addrs:
-        i_restricted_g_t 
+        i_restricted_g_t
 	  (addrs_dom regions)
 	  (non_live_addrs_codom regions region_liveness_tags))
       (r:addrs_dom regions) = (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
@@ -58,8 +58,8 @@ type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
   | Loc:
       (regions: Ghost.erased (Set.set HS.rid)) ->
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } ) ->
-      (non_live_addrs: 
-        i_restricted_g_t 
+      (non_live_addrs:
+        i_restricted_g_t
 	  (addrs_dom regions)
 	  (non_live_addrs_codom regions region_liveness_tags)) ->
       (live_addrs:
@@ -76,7 +76,7 @@ let loc = loc'
 
 let mk_non_live_addrs (#regions:_) (#region_liveness_tags:_)
                       (f: (x:addrs_dom regions -> GTot (non_live_addrs_codom regions region_liveness_tags x)))
-    : i_restricted_g_t 
+    : i_restricted_g_t
 	  (addrs_dom regions)
 	  (non_live_addrs_codom regions region_liveness_tags) =
     F.on_dom_g _ f
@@ -84,17 +84,17 @@ let mk_non_live_addrs (#regions:_) (#region_liveness_tags:_)
 let mk_live_addrs (#regions:_) (#region_liveness_tags:_)
                   (#non_live_addrs_codom: _)
                   (f: (x:addrs_dom regions -> GTot (live_addrs_codom regions region_liveness_tags non_live_addrs_codom x)))
-    : i_restricted_g_t 
+    : i_restricted_g_t
 	  (addrs_dom regions)
 	  (live_addrs_codom regions region_liveness_tags non_live_addrs_codom) =
     F.on_dom_g _ f
 
-let loc_none #a #c = 
-  Loc 
+let loc_none #a #c =
+  Loc
     (Ghost.hide (Set.empty))
-    (Ghost.hide (Set.empty))    
+    (Ghost.hide (Set.empty))
     (mk_non_live_addrs (fun _ -> GSet.empty))
-    (mk_live_addrs (fun _ -> GSet.empty))    
+    (mk_live_addrs (fun _ -> GSet.empty))
     (Ghost.hide GSet.empty)
 
 let regions_of_loc
@@ -166,7 +166,7 @@ let loc_union #al #c s1 s2 =
   let region_liveness_tags : Ghost.erased (Set.set HS.rid) = (Ghost.hide (Set.union (Ghost.reveal (Loc?.region_liveness_tags s1)) (Ghost.reveal (Loc?.region_liveness_tags s2)))) in
   let gregions = Ghost.hide regions in
   let non_live_addrs =
-    F.on_dom_g (addrs_dom gregions) #(non_live_addrs_codom gregions region_liveness_tags) 
+    F.on_dom_g (addrs_dom gregions) #(non_live_addrs_codom gregions region_liveness_tags)
     (fun r ->
     GSet.union
       (if Set.mem r regions1 then Loc?.non_live_addrs s1 r else GSet.empty)
@@ -189,13 +189,13 @@ let loc_union #al #c s1 s2 =
     live_addrs
     aux
 
-let fun_set_equal (#t: Type) (#t': Type) 
-                  (#p:(t -> GSet.set t' -> Type)) 
+let fun_set_equal (#t: Type) (#t': Type)
+                  (#p:(t -> GSet.set t' -> Type))
                   (f1 f2: i_restricted_g_t t (fun x -> g:GSet.set t'{p x g})) :Tot Type0 =
   forall (x: t) . {:pattern (f1 x) \/ (f2 x) } f1 x `GSet.equal` f2 x
 
-let fun_set_equal_elim (#t: Type) (#t': Type) 
-                       (#p:(t -> GSet.set t' -> Type)) 
+let fun_set_equal_elim (#t: Type) (#t': Type)
+                       (#p:(t -> GSet.set t' -> Type))
                        (f1 f2: i_restricted_g_t t (fun x -> g:GSet.set t'{p x g})) : Lemma
   (requires (fun_set_equal f1 f2))
   (ensures (f1 == f2))
@@ -207,7 +207,7 @@ let loc_equal (#al: aloc_t) (#c: cls al) (s1 s2: loc c) : GTot Type0 =
   let Loc regions2 region_liveness_tags2 _ _ aux2 = s2 in
   Ghost.reveal regions1 `Set.equal` Ghost.reveal regions2 /\
   Ghost.reveal region_liveness_tags1 `Set.equal` Ghost.reveal region_liveness_tags2 /\
-  fun_set_equal (Loc?.non_live_addrs s1) (Loc?.non_live_addrs s2) /\ 
+  fun_set_equal (Loc?.non_live_addrs s1) (Loc?.non_live_addrs s2) /\
   fun_set_equal (Loc?.live_addrs s1) (Loc?.live_addrs s2) /\
   Ghost.reveal (Loc?.aux s1) `GSet.equal` Ghost.reveal (Loc?.aux s2)
 
@@ -237,11 +237,11 @@ let loc_union_loc_none_r #al #c s =
 let loc_of_aloc #al #c #r #n b =
   let regions =        (Ghost.hide (Set.singleton r)) in
   let region_liveness_tags = (Ghost.hide (Set.empty)) in
-  Loc 
+  Loc
     regions
     region_liveness_tags
     (mk_non_live_addrs (fun _ -> GSet.empty))
-    (mk_live_addrs (fun _ -> GSet.empty))    
+    (mk_live_addrs (fun _ -> GSet.empty))
     (Ghost.hide (GSet.singleton (ALoc r n (Some b))))
 
 let loc_of_aloc_not_none #al #c #r #n b = ()
@@ -630,9 +630,9 @@ let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
 let loc_none_in_some_region #a (c: cls a) (r: HS.rid) : GTot (loc c) =
   Loc
     (Ghost.hide (Set.singleton r))
-    (Ghost.hide (Set.empty))    
+    (Ghost.hide (Set.empty))
     (mk_non_live_addrs (fun _ -> GSet.empty))
-    (mk_live_addrs (fun _ -> GSet.empty))    
+    (mk_live_addrs (fun _ -> GSet.empty))
     (Ghost.hide GSet.empty)
 
 let dummy #a (c: cls a) (r: HS.rid) : Tot unit =
@@ -655,7 +655,8 @@ let loc_includes_disjoint_elim
   )
   (ensures (l2 `loc_includes'` l))
 = assume (Set.subset (Ghost.reveal (Loc?.regions l)) (Ghost.reveal (Loc?.regions l2)));
-  assume (forall r . GSet.subset (addrs_of_loc l r) (addrs_of_loc l2 r))
+  assume (forall r . GSet.subset (addrs_of_loc l r) (addrs_of_loc l2 r));
+  admit()
 
 (** Liveness-insensitive memory locations *)
 
@@ -705,7 +706,7 @@ let modifies_preserves_livenesses
 let modifies_preserves_livenesses_elim
   (#al: aloc_t) (#c: cls al)
   (s: loc c)
-  (h1 h2: HS.mem) 
+  (h1 h2: HS.mem)
   (#t: Type)
   (#pre: Preorder.preorder t)
   (p: HS.mreference t pre)
@@ -808,7 +809,7 @@ let modifies_preserves_alocs_intro
     (b: al r a) ->
     Lemma
     (requires (
-      Set.mem r (regions_of_loc s) /\ 
+      Set.mem r (regions_of_loc s) /\
       (~ (GSet.mem a (addrs_of_loc_weak s r))) /\
       (GSet.mem a (addrs_of_loc_aux s r) /\ loc_aux_disjoint (Ghost.reveal (Loc?.aux s)) (GSet.singleton (ALoc r a (Some b))))
     ))
@@ -829,7 +830,7 @@ let modifies_preserves_alocs_intro
       then
 	Classical.move_requires (f r a) b
       else
-	c.same_mreference_aloc_preserved b h1 h2 (fun a' pre' r' -> ())        
+	c.same_mreference_aloc_preserved b h1 h2 (fun a' pre' r' -> ())
     end else if Set.mem r (regions_of_loc s)
     then begin
       assert (GSet.mem a (addrs_of_loc_weak s r));
@@ -965,7 +966,7 @@ let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
     :Lemma (requires (HS.contains h p /\
                       (Set.mem (HS.frameOf p) (regions_of_loc l) ==> ~ (GSet.mem (HS.as_addr p) (addrs_of_loc l (HS.frameOf p))))))
            (ensures  (HS.contains h' p /\ HS.sel h' p == HS.sel h p))
-    = 
+    =
     assert_norm (Loc?.region_liveness_tags (loc_mreference #_ #c p) == Ghost.hide Set.empty);
     assert (loc_disjoint_region_liveness_tags (loc_mreference p) l);
     // FIXME: WHY WHY WHY is this assert necessary?
@@ -1019,7 +1020,7 @@ let modifies_address_intro #al #c r n h h' regions mrefs unused_ins =
     (fun r n -> unused_ins r n)
   ;
   modifies_preserves_alocs_intro l h h' ()
-    (fun r a b -> 
+    (fun r a b ->
       c.same_mreference_aloc_preserved b h h' (fun t pre p -> mrefs t pre p)
     )
 
@@ -1437,7 +1438,7 @@ let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
       assert (c.aloc_disjoint al0 b);
       c.aloc_disjoint_sym al0 b;
       alocs (fun t pre m -> ()) b
-    end 
+    end
     else begin
       assert (loc_disjoint (loc_union l (loc_addresses true r0 (Set.singleton a0))) (loc_of_aloc b))
     end
@@ -1538,7 +1539,7 @@ let loc_unused_in_not_unused_in_union
   h
 : Lemma
   ((loc_not_unused_in c h `loc_union` loc_unused_in c h) `loc_includes` l)
-= ()
+= admit()
 
 
 #push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
@@ -1877,7 +1878,7 @@ let union_loc_of_loc_includes_elim
   let doms' = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   let doml = aloc_domain (c b) (Loc?.regions larger) (Loc?.live_addrs larger) in
   let doms = aloc_domain (c b) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
-  let g 
+  let g
     (r: HS.rid)
     (a: nat)
     (x: aloc (c b))
@@ -1993,7 +1994,7 @@ let union_loc_of_loc_disjoint_elim
   assert (forall (x y: aloc (c b)) . (GSet.mem x auxl /\ GSet.mem y auxs) ==> (
     let x' = ALoc x.region x.addr (if None? x.loc then None else Some (make_cls_union_aloc b (Some?.v x.loc))) in
     let y' = ALoc y.region y.addr (if None? y.loc then None else Some (make_cls_union_aloc b (Some?.v y.loc))) in
-    GSet.mem x' auxl' /\ GSet.mem y' auxs' /\ (aloc_disjoint x' y' ==> aloc_disjoint x y))); 
+    GSet.mem x' auxl' /\ GSet.mem y' auxs' /\ (aloc_disjoint x' y' ==> aloc_disjoint x y)));
   assert (auxl `loc_aux_disjoint` auxs)
 #pop-options
 
