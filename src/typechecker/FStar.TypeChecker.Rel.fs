@@ -941,7 +941,7 @@ let rec head_matches env t1 t2 : match_result =
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
-        let head = U.head_of t in
+        let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print2 "Head of %s is %s\n" (Print.term_to_string t) (Print.term_to_string head);
         match (U.un_uinst head).n with
@@ -2483,8 +2483,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             solve_t env ({problem with lhs=t1; rhs=t2}) wl
 
         (* Need to maybe reunify the heads *)
-        | (HeadMatch unif, None) ->
-            rigid_heads_match env unif torig wl t1 t2
+        | (HeadMatch need_unif, None) ->
+            rigid_heads_match env need_unif torig wl t1 t2
 
         | (FullMatch, None) ->
             rigid_heads_match env false torig wl t1 t2
@@ -2990,9 +2990,13 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
          | Total  (t1, _), Total  (t2, _)
-         | GTotal (t1, _), GTotal (t2, _)
-         | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
+         | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+
+         | Total  (t1, _), GTotal (t2, _) ->
+            if problem.relation = SUB
+            then solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+            else giveup env "GTot =/= Tot" orig
 
          | GTotal _, Comp _
          | Total _,  Comp _ ->
@@ -3283,17 +3287,6 @@ let solve_deferred_constraints env (g:guard_t) =
 let solve_some_deferred_constraints env (g:guard_t) =
     try_solve_deferred_constraints true env g
 
-let last_proof_ns : ref<option<Env.proof_namespace>> = BU.mk_ref None
-
-let maybe_update_proof_ns env : unit =
-    let pns = env.proof_ns in
-    match !last_proof_ns with
-    | None -> last_proof_ns := Some pns
-    | Some old ->
-        if old = pns
-        then ()
-        else (env.solver.refresh (); last_proof_ns := Some pns)
-
 //use_smt flag says whether to use the smt solver to discharge this guard
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
 //if use_smt = false, then None means could not discharge the guard without using smt
@@ -3335,7 +3328,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 if Options.use_tactics()
                 then begin
                     Options.with_saved_options (fun () ->
-                        ignore <| Options.set_options Options.Set "--no_tactics";
+                        ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
                         vcs |> List.map (fun (env, goal, opts) ->
                         env, N.normalize [Env.Simplify; Env.Primops] env goal, opts)
@@ -3353,7 +3346,6 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                     | NonTrivial goal ->
                         FStar.Options.push ();
                         FStar.Options.set opts;
-                        maybe_update_proof_ns env;
                         if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"

@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "e6943dd7cddb692925417ea931969802"
+      "4cca347f1caa906d77283e4e6f838aaf"
     ],
     [
       "Normalization.id",
@@ -16,17 +16,14 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "58c6d6a328de81ee5c7da49bb6c0f807"
+      "122be2b524ac7683c83ab911d511c56f"
     ],
     [
       "Normalization.test2",
@@ -35,7 +32,7 @@
       0,
       [ "@query" ],
       0,
-      "a5cf1e59a56fc1530be69a672549e940"
+      "1f18241dac21d681e8ac9fc14afe3305"
     ],
     [
       "Normalization.pow2_values",
@@ -44,7 +41,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "49365b769bb1f8c9f25ec89372b3200b"
+      "67a6cc5f5d1fa6924d07e390d9bf912b"
     ],
     [
       "Normalization.test_sort",
@@ -58,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2358f155386f02776b1223959cc09275"
+      "e8979a0de36b3eaeb37d0f9341b10e95"
     ],
     [
       "Normalization.test_sort1",
@@ -72,7 +69,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "618fd55b905d9298681edc723b182fee"
+      "1eecf6893cc1f03982cf141e597c1715"
     ],
     [
       "Normalization.f_1529_3",
@@ -80,14 +77,11 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "function_token_typing_Normalization.f_1529",
-        "function_token_typing_Prims.__cache_version_number__",
-        "interpretation_Tm_abs_d043881a492feb079f99a347e342e079"
+        "@query", "function_token_typing_Normalization.f_1529",
+        "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "649be2dd2a77966425a13d051e432620"
+      "c8c05228ca8f490290a0b9c897ad647c"
     ],
     [
       "Normalization.id",
@@ -95,17 +89,14 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d2dcc34d30ab923a5488842601c252a4"
+      "05c4e830b85c8b49c80bf1ce41598ef3"
     ],
     [
       "Normalization.test_sort",
@@ -119,7 +110,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dcbdf2a22f8afdebe30976aaeb9b54c2"
+      "46c52aa18f03b1bff0ab6090b622224b"
     ],
     [
       "Normalization.test_sort1",
@@ -133,7 +124,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "581f318950b519aba43438c73111a2b7"
+      "623b56cd7581d8ccaf88ec9703512992"
     ],
     [
       "Normalization.f_1529_3",
@@ -141,14 +132,11 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "function_token_typing_Normalization.f_1529",
-        "function_token_typing_Prims.__cache_version_number__",
-        "interpretation_Tm_abs_d043881a492feb079f99a347e342e079"
+        "@query", "function_token_typing_Normalization.f_1529",
+        "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "a4cb84876c3dacae7d3112c63be92aa8"
+      "f3ed2addce86f1f761ccf42954313acf"
     ]
   ]
 ]

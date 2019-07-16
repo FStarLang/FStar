@@ -480,9 +480,9 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      iter print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
-     iter (fun (n,d) ->
+     let new_doc = FStar_Pprint.blank_buffer_doc in
+     iter (fun (n, d) ->
          FStar_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStar_Format.pretty (Prims.parse_int "120") d)) new_doc
+           (FStar_Pprint.pretty_string 0.8 (Prims.parse_int "120") d)) new_doc
   | _ -> failwith "Unrecognized extension"

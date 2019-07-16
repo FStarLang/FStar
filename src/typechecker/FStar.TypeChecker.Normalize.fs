@@ -464,8 +464,9 @@ and rebuild_closure cfg env stack t =
     | Meta(env_m, m, r)::stack ->
       let m =
           match m with
-          | Meta_pattern args ->
-            Meta_pattern (args |> List.map (fun args ->
+          | Meta_pattern (names, args) ->
+            Meta_pattern (names |> List.map (non_tail_inline_closure_env cfg env_m),
+                          args |> List.map (fun args ->
                                             args |> List.map (fun (a, q) ->
                                             non_tail_inline_closure_env cfg env_m a, q)))
 
@@ -829,7 +830,7 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_meta(t, m) ->
         maybe_weakly_reduced t
         || (match m with
-           | Meta_pattern args ->
+           | Meta_pattern (_, args) ->
              BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -986,9 +987,12 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         let stack = push (App (env, ref, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
-let is_fext_on_domain (t:term) :option<term> =
+(* on_domain_lids are constant, so compute them once *)
+let on_domain_lids =
   let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
-  let on_domain_lids = ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid in
+  ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid
+
+let is_fext_on_domain (t:term) :option<term> =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
 
   match (SS.compress t).n with
@@ -1396,9 +1400,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(env,m,r)::stack) head
 
-                      | Meta_pattern args ->
+                      | Meta_pattern (names, args) ->
                           let args = norm_pattern_args cfg env args in
-                          norm cfg env (Meta(env,Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                          let names =  names |> List.map (norm cfg env []) in
+                          norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
+                          //meta doesn't block reduction, but we need to put the label back
 
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
@@ -1406,8 +1412,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | [] ->
                     let head = norm cfg env [] head in
                     let m = match m with
-                        | Meta_pattern args ->
-                            Meta_pattern (norm_pattern_args cfg env args)
+                        | Meta_pattern (names, args) ->
+                          let names =  names |> List.map (norm cfg env []) in
+                          Meta_pattern (names, norm_pattern_args cfg env args)
                         | _ -> m in
                     let t = mk (Tm_meta(head, m)) t.pos in
                     rebuild cfg env stack t
@@ -2718,7 +2725,7 @@ and elim_delayed_subst_comp (c:comp) : comp =
       mk (Comp ct)
 
 and elim_delayed_subst_meta = function
-  | Meta_pattern args -> Meta_pattern(List.map elim_delayed_subst_args args)
+  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
   | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
   | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
   | m -> m

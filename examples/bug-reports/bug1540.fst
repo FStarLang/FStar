@@ -1,18 +1,3 @@
-(*
-   Copyright 2008-2018 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
 module Bug1540
 
 class deq a = {
@@ -23,16 +8,8 @@ instance eq_string : deq string = magic ()
 instance eq_list (_ : deq 'a) : deq (list 'a) =
   magic ()
 
-let f1 #a #d = eq #a #d
-
-let id1 (#x:int) = x
-let id2 (#[()]x:int) = x
-
-#set-options "--debug Bug1540 --debug_level High --print_implicits"
-let t1 = id1
-
-let t2 = id2
-
+[@(expect_failure [228])]
+let b1 = eq
 
 // Bug.f1 :
 //     _:
@@ -46,4 +23,17 @@ let t2 = id2
 instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) =
   Mkdeq (fun (a,b) (c,d) -> eq a c && eq b d)
 
+[@(expect_failure [228])]
+let b2 = eq
+
+val f2 : string -> string -> bool
 let f2 = eq
+
+val f3 : list string -> list string -> bool
+let f3 = eq
+
+val f4 : list (list string) -> list (list string) -> bool
+let f4 = eq
+
+val f5 : list (list (list string)) -> list (list (list string)) -> bool
+let f5 = eq

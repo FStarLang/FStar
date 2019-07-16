@@ -60,7 +60,7 @@ val norm : list<EMB.norm_step> -> tac<unit>
 val norm_term_env : env -> list<EMB.norm_step> -> term -> tac<term>
 val refine_intro : unit -> tac<unit>
 val t_exact : bool -> bool -> term -> tac<unit>
-val t_apply : bool -> term -> tac<unit>
+val t_apply : bool -> bool -> term -> tac<unit>
 val apply_lemma : term -> tac<unit>
 val rewrite : binder -> tac<unit>
 val rename_to : binder -> string -> tac<unit>
@@ -70,6 +70,7 @@ val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
 val tc : term -> tac<typ>
+val tcc : term -> tac<comp>
 
 val is_irrelevant : goal -> bool
 
@@ -87,7 +88,6 @@ val trefl : unit -> tac<unit>
 val dup      : unit -> tac<unit>
 val tadmit_t : term -> tac<unit>
 
-val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>
 
 val top_env : unit -> tac<env>

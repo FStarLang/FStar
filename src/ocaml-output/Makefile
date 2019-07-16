@@ -105,6 +105,7 @@ install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
 	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
 	touch $@
 
 FStar_Parser_Parse.ml: parse.mly
@@ -166,6 +167,7 @@ FStar_Version.ml:
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
+	# We deliberately leave out date, so that rebuilds are no-ops
 	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 
@@ -225,15 +227,9 @@ endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
 Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
-.PHONY: ulib
-ulib:
-	make -C ../../ulib install-fstarlib
-	make -C ../../ulib install-fstar-tactics
-
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 package: all
-	$(MAKE) ulib
 	@# Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
@@ -242,13 +238,14 @@ package: all
 	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library.
 	$(call fexport,ulib)
+	mkdir -p $(PREFIX)/src/ocaml-output/
+	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
+	cp ../../version.txt $(PREFIX)/
+	cp ../../_tags $(PREFIX)/
 	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-	$(call fexport-all,bin/fstarlib)
-	$(call fexport-all,bin/fstar-compiler-lib)
-	$(call fexport-all,bin/fstar-tactics-lib)
 
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial

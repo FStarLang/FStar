@@ -186,14 +186,17 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac3 0 "t_exact"       t_exact e_bool e_bool RE.e_term e_unit
                                t_exact NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mktac2 1 "t_apply"       t_apply e_bool RE.e_term e_unit
-                               t_apply NBET.e_bool NRE.e_term NBET.e_unit;
+      mktac3 1 "t_apply"       t_apply e_bool e_bool RE.e_term e_unit
+                               t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
                                apply_lemma NRE.e_term NBET.e_unit;
 
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
+
+      mktac1 0 "tcc"           tcc RE.e_term RE.e_comp
+                               tcc NRE.e_term NRE.e_comp;
 
       mktac1 0 "tc"            tc RE.e_term RE.e_term
                                tc NRE.e_term NRE.e_term;
@@ -236,9 +239,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "join"          join  e_unit e_unit
                                join  NBET.e_unit NBET.e_unit;
-
-      mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term)
-                               cases NRE.e_term (NBET.e_tuple2 NRE.e_term NRE.e_term);
 
       mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int))
                                t_destruct NRE.e_term (NBET.e_list (NBET.e_tuple2 NRE.e_fv NBET.e_int));
@@ -324,11 +324,11 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
                  then NBE.normalize
                  else N.normalize_with_primitive_steps
     in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
 
     // F* requires more annotations.
     // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result ncb in
@@ -520,7 +520,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
-    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         begin match pol with
         | Pos ->

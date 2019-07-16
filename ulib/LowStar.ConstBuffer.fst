@@ -46,3 +46,5 @@ let sub c i len =
     (| IMMUTABLE, B.msub _ x i len |)
 
 let cast c = qbuf_mbuf c
+let to_buffer c = qbuf_mbuf c
+let to_ibuffer c = qbuf_mbuf c

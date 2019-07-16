@@ -503,14 +503,20 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
     mk (Tm_meta (e, Meta_desugared Meta_smt_pat)) None top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
 
-  | Tm_meta(e, Meta_pattern pats) ->
+  | Tm_meta(e, Meta_pattern(names, pats)) ->
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
+    //NS: PATTERN INFERENCE
+    //if `pats` is empty (that means the user did not annotate a pattern).
+    //In that case try to infer a pattern by
+    //analyzing `e` for the smallest terms that contain all the variables
+    //in `names`.
+    //If not pattern can be inferred, raise a warning
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_smt_pats env pats in
     let g' = {g' with guard_f=Trivial} in //The pattern may have some VCs associated with it, but these are irrelevant.
-    mk (Tm_meta(e, Meta_pattern pats)) None top.pos,
+    mk (Tm_meta(e, Meta_pattern(names, pats))) None top.pos,
     c,
     Env.conj_guard g g' //but don't drop g' altogether, since it also contains unification constraints
 
@@ -2858,6 +2864,7 @@ let type_of_tot_term env e =
     let t, c, g =
         try tc_tot_or_gtot_term env e
         with Error(e, msg, _) -> raise_error (e, msg) (Env.get_range env) in
+    let c = N.ghost_to_pure_lcomp env c in
     if U.is_total_lcomp c
     then t, c.res_typ, g
     else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)
