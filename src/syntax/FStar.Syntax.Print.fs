@@ -644,7 +644,6 @@ let eff_decl_to_string' for_free r q ed =
       ; ite_wp      = %s\n\
       ; stronger    = %s\n\
       ; close_wp    = %s\n\
-      ; assert_p    = %s\n\
       ; assume_p    = %s\n\
       ; null_wp     = %s\n\
       ; trivial     = %s\n\
@@ -663,7 +662,6 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
-         tscheme_to_string ed.assert_p;
          tscheme_to_string ed.assume_p;
          tscheme_to_string ed.null_wp;
          tscheme_to_string ed.trivial;
