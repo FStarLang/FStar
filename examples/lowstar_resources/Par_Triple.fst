@@ -50,16 +50,20 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
 val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 
+let pair_x (#a:Type) (x:a) = fun y -> (x, y)
+let pair_y (#b:Type) (y:b) = fun x -> (x, y)
+
+
 let rec l_par #a #b c0 c1 =
   match c0 with
-  | Ret x -> map (fun y -> (x,y)) c1
+  | Ret x -> map (pair_x x) c1
   | Get b c0' -> Get b (fun n -> FStar.WellFounded.axiom1 c0' n; Or (l_par (c0' n) c1) (r_par (c0' n) c1))
   | Put b n c0' -> Put b n (Or (l_par c0' c1) (r_par c0' c1))
   | Or c0' c0'' -> Or (l_par c0' c1) (l_par c0'' c1)
 
 and r_par #a #b c0 c1 =
   match c1 with
-  | Ret y -> map (fun x -> (x,y)) c0
+  | Ret y -> map (pair_y y) c0
   | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; Or (l_par c0 (c1' n)) (r_par c0 (c1' n)))
   | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
   | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
@@ -241,6 +245,26 @@ let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:
   | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
   | Or c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
 
+// TODO: I think we miss two components here:
+// - pre/postconditions should be stable on a resource: They only depend on a resource footprint
+// - We should ensure that we only access/update memory in the resource footprint inside of chi
+// If pre implies post for any memory, then chi holds
+let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
+  : Lemma
+  (requires chi c r pre post /\ (forall h. pre h ==> post_add h))
+  (ensures chi c r pre (fun h -> post h /\ post_add h))
+  (decreases c) =
+  match c with
+  | Ret _ -> ()
+  | Get b c' ->
+    let aux (h:mem) : Lemma (chi (c' (h b)) r pre (fun h -> post h /\ post_add h))
+      = FStar.WellFounded.axiom1 c' (h b); chi_pre_implies_post (c' (h b)) r pre post post_add
+    in Classical.forall_intro aux
+  | Put b n c -> admit(); chi_pre_implies_post c r (upd_pre pre b n) post post_add
+  | Or c0 c1 -> chi_pre_implies_post c0 r pre post post_add; chi_pre_implies_post c1 r pre post post_add
+
+// TODO: Lemma about chi-preservation when taking a bigger resource
+
 let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{chi c r pre post}
 
 val par  (#a #b:Type0)
@@ -255,12 +279,16 @@ let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 =
   let aux_lpar () : Lemma
     (chi (l_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h))
     = match c0 with
-    | Ret x -> begin
-      match c1 with
-      | Ret y -> ()
-      | Get b c -> admit()
-      | _ -> admit()
-    end
+    | Ret x -> 
+      map_chi (pair_x x) c1 r1 pre1 post1;
+      assert (l_par c0 c1 == map (pair_x x) c1);
+      chi_stronger_pre (l_par c0 c1) r1 pre1 post1 (fun h -> pre0 h /\ pre1 h);
+      assert (chi (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post1 h));
+      chi_pre_implies_post (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) post1 post0;
+      // Swapping the postcondition
+      chi_weaken_post (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post1 h /\ post0 h) (fun h -> post0 h /\ post1 h);
+      assert (chi (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h));
+      assume (chi (l_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h))
     | _ -> admit()
      
   in
