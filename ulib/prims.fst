@@ -205,9 +205,6 @@ unfold
 let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
 
 unfold
-let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
-
-unfold
 let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
 
 unfold
@@ -225,7 +222,6 @@ new_effect { (* The definition of the PURE effect is fixed; no user should ever 
      ; ite_wp       = pure_ite_wp
      ; stronger     = pure_stronger
      ; close_wp     = pure_close_wp
-     ; assert_p     = pure_assert_p
      ; assume_p     = pure_assume_p
      ; null_wp      = pure_null_wp
      ; trivial      = pure_trivial

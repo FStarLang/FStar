@@ -50,10 +50,6 @@ unfold let reader_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (reader_wp_h heap a)))
                              (p:reader_post_h a) (h:heap) =
      (forall (b:b). wp b p h)
-unfold let reader_assert_p      (heap:Type) (a:Type) (p:Type)
-                             (wp:reader_wp_h heap a)
-                             (q:reader_post_h a) (h:heap) =
-     p /\ wp q h
 unfold let reader_assume_p      (heap:Type) (a:Type) (p:Type)
                              (wp:reader_wp_h heap a)
                              (q:reader_post_h a) (h:heap) =
@@ -73,7 +69,6 @@ new_effect {
      ; ite_wp       = reader_ite_wp heap
      ; stronger     = reader_stronger heap
      ; close_wp     = reader_close_wp heap
-     ; assert_p     = reader_assert_p heap
      ; assume_p     = reader_assume_p heap
      ; null_wp      = reader_null_wp heap
      ; trivial      = reader_trivial heap

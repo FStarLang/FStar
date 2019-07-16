@@ -81,10 +81,6 @@ unfold let st_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (st_wp_h heap a)))
                              (p:st_post_h heap a) (h:heap) =
      (forall (b:b). wp b p h)
-unfold let st_assert_p      (heap:Type) (a:Type) (p:Type)
-                             (wp:st_wp_h heap a)
-                             (q:st_post_h heap a) (h:heap) =
-     p /\ wp q h
 unfold let st_assume_p      (heap:Type) (a:Type) (p:Type)
                              (wp:st_wp_h heap a)
                              (q:st_post_h heap a) (h:heap) =
@@ -104,7 +100,6 @@ new_effect {
      ; ite_wp       = st_ite_wp heap
      ; stronger     = st_stronger heap
      ; close_wp     = st_close_wp heap
-     ; assert_p     = st_assert_p heap
      ; assume_p     = st_assume_p heap
      ; null_wp      = st_null_wp heap
      ; trivial      = st_trivial heap
@@ -146,7 +141,6 @@ unfold let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
         (forall (p:ex_post a). wp1 p ==> wp2 p)
 
 unfold let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (p:ex_post a) = (forall (b:b). wp b p)
-unfold let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q /\ wp p)
 unfold let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q ==> wp p)
 unfold let ex_null_wp (a:Type) (p:ex_post a) = (forall (r:result a). p r)
 unfold let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
@@ -160,7 +154,6 @@ new_effect {
   ; ite_wp       = ex_ite_wp
   ; stronger     = ex_stronger
   ; close_wp     = ex_close_wp
-  ; assert_p     = ex_assert_p
   ; assume_p     = ex_assume_p
   ; null_wp      = ex_null_wp
   ; trivial      = ex_trivial
@@ -207,9 +200,6 @@ unfold let all_close_wp (heap:Type) (a:Type) (b:Type)
                          (wp:(b -> GTot (all_wp_h heap a)))
                          (p:all_post_h heap a) (h:heap) =
     (forall (b:b). wp b p h)
-unfold let all_assert_p (heap:Type) (a:Type) (p:Type)
-                         (wp:all_wp_h heap a) (q:all_post_h heap a) (h:heap) =
-    p /\ wp q h
 unfold let all_assume_p (heap:Type) (a:Type) (p:Type)
                          (wp:all_wp_h heap a) (q:all_post_h heap a) (h:heap) =
     p ==> wp q h
@@ -228,7 +218,6 @@ new_effect {
   ; ite_wp       = all_ite_wp       heap
   ; stronger     = all_stronger     heap
   ; close_wp     = all_close_wp     heap
-  ; assert_p     = all_assert_p     heap
   ; assume_p     = all_assume_p     heap
   ; null_wp      = all_null_wp      heap
   ; trivial      = all_trivial      heap
