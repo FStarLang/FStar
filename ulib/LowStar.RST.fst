@@ -35,19 +35,19 @@ assume val lemma_modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
                      modifies l1 h1 h2 /\
                      (forall l .
                        loc_disjoint l l0 /\
-                       loc_includes (loc_not_unused_in h0) l
+                       loc_includes (loc_used_in h0) l
                        ==>
                        loc_disjoint l l1)))
           (ensures  (modifies l0 h0 h2))
 
 assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':loc)
   : Lemma (requires (loc_disjoint l' l /\
-                     loc_includes (loc_not_unused_in h0) l' /\
+                     loc_includes (loc_used_in h0) l' /\
                      modifies l h0 h1))
-          (ensures  (loc_includes (loc_not_unused_in h1) l'))
+          (ensures  (loc_includes (loc_used_in h1) l'))
           [SMTPat (loc_disjoint l' l);
-           SMTPat (loc_includes (loc_not_unused_in h0) l');
-           SMTPat (loc_includes (loc_not_unused_in h1) l')]
+           SMTPat (loc_includes (loc_used_in h0) l');
+           SMTPat (loc_includes (loc_used_in h1) l')]
 
 (*
 // [DA: other extra lemmas that were assumed at various states of
@@ -75,10 +75,10 @@ let modifies (res0 res1:resource) (h0 h1:HS.mem) =
     modifies (as_loc (fp res0)) h0 h1 /\
     (forall frame .
       loc_disjoint frame (as_loc (fp res0)) /\
-      loc_includes (loc_not_unused_in h0) frame
+      loc_includes (loc_used_in h0) frame
       ==>
       loc_disjoint frame (as_loc (fp res1)) /\
-      loc_includes (loc_not_unused_in h1) frame)
+      loc_includes (loc_used_in h1) frame)
 
 let modifies_refl (res:resource) (h:HS.mem)
   : Lemma (modifies res res h h)
@@ -101,10 +101,10 @@ let reveal_modifies ()
              LowStar.Array.modifies (as_loc (fp res0)) h0 h1 /\
              (forall frame .
                loc_disjoint frame (as_loc (fp res0)) /\
-               loc_includes (loc_not_unused_in  h0) frame
+               loc_includes (loc_used_in  h0) frame
                ==>
                loc_disjoint frame (as_loc (fp res1)) /\
-               loc_includes (loc_not_unused_in  h1) frame))
+               loc_includes (loc_used_in  h1) frame))
   = ()
 
 (* State effect indexed by resources *)
@@ -114,13 +114,13 @@ let r_post res0 a res1 = imem (inv res0) -> x:a -> imem (inv (res1 x)) -> Type0
 
 abstract
 let rst_inv (res:resource) (h:HS.mem) : GTot prop =
-  loc_includes (loc_not_unused_in  h) (as_loc (fp res)) /\ True
+  loc_includes (loc_used_in  h) (as_loc (fp res)) /\ True
 
 let reveal_rst_inv ()
   : Lemma (forall res h .
              rst_inv res h
              <==>
-             loc_includes (loc_not_unused_in  h) (as_loc (fp res)))
+             loc_includes (loc_used_in  h) (as_loc (fp res)))
   = ()
 
 let rst_inv_star (res0 res1: resource) (h: HS.mem) : Lemma

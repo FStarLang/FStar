@@ -21,14 +21,6 @@ let aloc_preserved
 : GTot Type0
 = forall (t: Type) (#rel: _) (r: mreference t rel) . // {:pattern (mreference_preserved r h1 h2)}
   (frameOf r == fst x /\ as_addr r == snd x) ==> mreference_preserved r h1 h2
-
-let aloc_used_in
-  (x: aloc)
-  (h: mem)
-: GTot Type0
-= exists (t: Type) (#rel: _) (r: mreference t rel) . {:pattern (h `contains` r)}
-  frameOf r == fst x /\ as_addr r == snd x /\ h `contains` r
-
 let aloc_unused_in
   (x: aloc)
   (h: mem)
@@ -47,10 +39,6 @@ let clas: cls aloc = Cls
   aloc_preserved
   (fun _ _ -> ())
   (fun _ _ _ _ -> ())
-  aloc_used_in
   aloc_unused_in
-  (fun _ _ _ -> ())
-  (fun _ _ -> ())
-  (fun _ _ _ -> ())
   (fun _ _ _ -> ())
   (fun _ _ _ -> ())

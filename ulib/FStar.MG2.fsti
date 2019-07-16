@@ -77,35 +77,10 @@ type cls (aloc: Type) : Type = | Cls:
     (requires (aloc_preserved x h1 h2 /\ aloc_preserved x h2 h3))
     (ensures (aloc_preserved x h1 h3))
   )) ->
-  (aloc_used_in: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    GTot Type0
-  )) ->
   (aloc_unused_in: (
     (x: aloc) ->
     (h: HS.mem) ->
     GTot Type0
-  )) ->
-  (aloc_used_in_unused_in_disjoint: (
-    (x: aloc) ->
-    (y: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    ((x `aloc_used_in` h /\ y `aloc_unused_in` h) ==> x `aloc_disjoint` y)
-  )) ->
-  (aloc_used_in_or_unused_in: (
-    (x: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    (x `aloc_used_in` h \/ x `aloc_unused_in` h)
-  )) ->
-  (aloc_used_in_includes: (
-    (greater: aloc) ->
-    (lesser: aloc) ->
-    (h: HS.mem) ->
-    Lemma
-    ((greater `aloc_includes` lesser /\ greater `aloc_used_in` h) ==> lesser `aloc_used_in` h)
   )) ->
   (aloc_unused_in_includes: (
     (greater: aloc) ->
