@@ -74,6 +74,13 @@ let implies_intros () : Tac binders = repeat1 implies_intro
 let l_intro () = forall_intro `or_else` implies_intro
 let l_intros () = repeat l_intro
 
+let squash_intro () : Tac unit =
+    apply (`FStar.Squash.return_squash)
+
+let l_exact (t:term) =
+    try exact t with
+    | _ -> (squash_intro (); exact t)
+
 private
 let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
   h ()
@@ -157,9 +164,6 @@ let unsquash (t:term) : Tac term =
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
     pack_ln (Tv_Var (bv_of_binder b))
-
-let squash_intro () : Tac unit =
-    apply (`FStar.Squash.return_squash)
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->
