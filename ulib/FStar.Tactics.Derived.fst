@@ -34,7 +34,7 @@ let run_tactic (t:unit -> Tac unit)
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (m:string) = raise (TacticFailure m)
+let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -275,6 +275,7 @@ let guard (b : bool) : TacH unit (requires (fun _ -> True))
     =
     if not b then
         fail "guard failed"
+    else ()
 
 let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
     match catch f with

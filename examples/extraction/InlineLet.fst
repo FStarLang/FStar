@@ -57,7 +57,12 @@ let maybe_ideal_op (i:int) =
     then some_stateful_operation i
     else i + 1
 
-let test (r:rid) (x:bool) =
+(*
+ * AR: 07/11: adding a refinement to r to make sure that this
+ *            unannotated top-level function has a trivial precondition
+ *            cf. #1055
+ *)
+let test (r:rid{is_eternal_region r}) (x:bool) =
   let r : ref int = FStar.HyperStack.ST.ralloc r 0 in
   [@inline_let]
   let pkg = pkg_of_local_pkg r (LocalPkg maybe_ideal_op) in

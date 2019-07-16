@@ -158,22 +158,41 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
      then mk_GTotal (U.comp_result c)
      else failwith "Impossible: Expected pure_or_ghost comp"
   in
-  let expected_c_opt, c =
+  (*
+   * AR: Following code has the logic for determining expected comp, comp,
+   *       and after checking sub-comp whether we should return comp, rather than the expected comp
+   *     If the input expected comp, copt, is Some, then that becomes the
+   *       expected comp and that's what we return
+   *     If the input expected comp is not set, and we are in Tot/Pure, GTot, ML case
+   *       then expected comp is Tot/GTot/ML, and we return the expected comp
+   *     When we are in an effectful case, and expected comp is not set, we check that
+   *       c <: M.null_wp to make sure that c has a trivial precondition, cf. #1055
+   *     But in this case, we still return c so that callers can use the postconditions
+   *)
+  let expected_c_opt, c, should_return_c =
+    let ct = U.comp_result c in
     match copt with
-    | Some _ -> copt, c
+    | Some _ -> copt, c, false
     | None  ->
         if (Options.ml_ish()
             && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp (U.comp_result c) e.pos), c
+        then Some (U.ml_comp ct e.pos), c, false
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
-        then None, tot_or_gtot c //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
+        then None, tot_or_gtot c, false //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
-             then Some (tot_or_gtot c), c
-             else None, c
+        then Some (tot_or_gtot c), c, false
+        else if Options.trivial_pre_for_unannotated_effectful_fns ()
+        then (*
+              * AR: note that Env.null_wp_for_eff does the normalization of effects
+              *     the true flag indicates that check sub-comp but return c
+              *)
+             Some (Env.null_wp_for_eff env (U.comp_effect_name c) (ct |> env.universe_of env) ct), c, true
+        else None, c, true
   in
+  let c0 = c in
   let c = norm_c env c in
   match expected_c_opt with
     | None ->
@@ -191,7 +210,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
                          (Range.string_of_range e.pos)
                          (guard_to_string env g);
        let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
-       e, expected_c, g
+       e, (if should_return_c then c0 else expected_c), g
 
 let no_logical_guard env (te, kt, f) =
   match guard_form f with
@@ -1309,9 +1328,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         try normalizing it first;
                         otherwise synthesize a type and check it against the given type *)
                 if not norm
-                then as_function_typ true (N.unfold_whnf env t)
+                then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)  //AR: without the unascribe we lose out on some arrows
                 else let _, bs, _, c_opt, envbody, body, g_env = expected_function_typ env None body in
-                      Some t, bs, [], c_opt, envbody, body, g_env
+                     Some t, bs, [], c_opt, envbody, body, g_env
           in
           as_function_typ false t
     in
@@ -1327,6 +1346,18 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (if env.top_level then "true" else "false");
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env = expected_function_typ env topt body in
+
+    if Env.debug env Options.Extreme
+    then BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
+           (match tfun_opt with
+            | None -> "None"
+            | Some t -> Print.term_to_string t)
+           (match c_opt with
+            | None -> "None"
+            | Some t -> Print.comp_to_string t)
+           (match Env.expected_typ envbody with
+            | None -> "None"
+            | Some t -> Print.term_to_string t);
 
     if Env.debug env <| Options.Other "NYC"
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
@@ -1365,17 +1396,32 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = TcUtil.close_guard_implicits env bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
+    (*
+     * AR: there are three types in the code above now:
+     *     topt : option<term> -- the original annotation
+     *     tfun_opt : option<term> -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
+     *     tfun_computed : term -- computed type of the abstraction
+     *     
+     *     the following code has the logic for which type to package the input expression with
+     *     if tfun_opt is Some we are guaranteed that topt is also Some, and in that case, we use Some?.v topt
+     *       in this case earlier we were returning Some?.v tfun_opt but that means we lost out on the user annotation
+     *     if tfun_opt is None, then so is topt and we just return tfun_computed
+     *)
     let e, tfun, guard = match tfun_opt with
         | Some t ->
            let t = SS.compress t in
+           let t_annot =
+             match topt with
+             | Some t -> t
+             | None -> failwith "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some" in
            begin match t.n with
                 | Tm_arrow _ ->
                     //we already checked the body to have the expected type; so, no need to check again
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
-                    e, t, guard
+                    e, t_annot, guard
                 | _ ->
-                    let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in
-                    e, t, Env.conj_guard guard guard'
+                    let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in  //QUESTION: t should also probably be t_annot here
+                    e, t_annot, Env.conj_guard guard guard'
            end
 
         | None -> e, tfun_computed, guard in
