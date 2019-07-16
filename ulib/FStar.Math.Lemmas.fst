@@ -832,35 +832,7 @@ val modulo_sub : p:pos -> a:int -> b:int -> c:int -> Lemma
   (ensures (b % p = c % p))
 
 let modulo_sub p a b c =
-  modulo_distributivity a b p;
-  modulo_distributivity a c p;
-  // have : (a % p + b % p) % p = (a % p + c % p) % p
-  assert ((a % p + b % p) % p = (a % p + c % p) % p);
-  euclidean_division_definition a p;
-  let q = a / p in
-  let r = a % p in
-  assert ((r + b % p) % p = (r + c % p) % p);
-  if r = 0 then (
-    lemma_mod_twice b p;
-    lemma_mod_twice c p
-  ) else (
-    assert (r > 0);
-    lemma_mod_twice a p;
-
-    lemma_mod_sub_1 r p; // gives ((-r) % p) = p - (r % p)
-                         // ; and so r = r % p = p - ((-r) % p) = p - h
-
-    let h = (-r) % p in
-
-    // add h to both sides, that is (p-r)
-    modulo_add p h (r + b % p) (r + c % p);
-
-    // cancel the extra p
-    lemma_mod_plus (b % p) 1 p;
-    lemma_mod_plus (c % p) 1 p;
-    lemma_mod_twice b p;
-    lemma_mod_twice c p
-  )
+  modulo_add p (-a) (a + b) (a + c)
 
 val lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) : Lemma
   (requires b < n /\ c < n /\ (a + b) % n = (a + c) % n)

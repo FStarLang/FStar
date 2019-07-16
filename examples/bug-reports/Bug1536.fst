@@ -44,8 +44,14 @@ let raise : #a:Type -> e:exn -> EXN a (fun () p -> p (Inr e)) = EXN?.raise
 
 exception EE
 
-#set-options "--debug Bug --debug_level SMTQuery --no_smt"
+(*
+ * AR: 07/11: since we now check for trivial preconditions for top-level effects,
+ *            the following don't verify with --no_smt, but the smt query is super
+ *            trivial and needs just prims
+ *)
 
-let t1 () = assert (normalize_term (reify (ret 1) ()) == Inl 1)
+#set-options "--using_facts_from 'Prims'"
+
+let t1 () = let _ = assert (normalize_term (reify (ret 1) ()) == Inl 1)  in ()
 
 let t2 () = assert (normalize_term (reify (raise #int EE) ()) == Inr EE)
