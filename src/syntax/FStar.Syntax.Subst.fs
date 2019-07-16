@@ -476,6 +476,11 @@ let rec push_subst s t =
       The function is broken into a fast-path where the
       result can be easily determined and a recursive slow
       path.
+
+      Warning: if try_read_memo or force_uvar change to
+      operate on inputs other than Tm_delayed or Tm_uvar
+      then the fastpath out match in compress will need to
+      be updated.
 *)
 let rec compress_slow (t:term) =
     let t = try_read_memo t in
