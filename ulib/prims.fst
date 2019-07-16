@@ -241,6 +241,10 @@ effect Tot (a:Type) = PURE a (pure_null_wp a)
 unfold
 let pure_assert_wp (p:Type) (post:pure_post unit) = p /\ post ()
 
+[@"opaque_to_smt"]
+unfold
+let pure_assume_wp (p:Type) (post:pure_post unit) = p ==> post ()
+
 total
 new_effect GHOST = PURE
 

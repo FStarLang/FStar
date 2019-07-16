@@ -439,10 +439,48 @@ let weaken_comp env (c:comp) (formula:term) : comp =
     else let c = Env.unfold_effect_abbrev env c in
          let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
-         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)
-                            [S.as_arg res_t; S.as_arg formula; S.as_arg wp]
-                            None wp.pos in
-         mk_comp md u_res_t res_t wp (weaken_flags c.flags)
+         let r = Env.get_range env in
+
+         (*
+          * The following code does:
+          *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
+          *)
+
+         (*
+          * lookup the pure_assume_wp from prims
+          * its type is p:Type -> pure_wp unit
+          *  and it is not universe polymorphic
+          *)
+         let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
+
+         (* apply it to f, after decorating f with the reason *)
+         let pure_assume_wp = mk_Tm_app
+           pure_assume_wp
+           [ S.as_arg <| formula ]
+           None
+           r
+         in
+
+         (* lift it to c.effect_name *)
+         let edge =
+           match Env.monad_leq env C.effect_PURE_lid md.mname with
+           | Some edge -> edge
+           | None -> failwith ("Impossible! weaken_comp: did not find a lift from PURE to " ^ md.mname.str)
+         in
+         let md_assume_wp = edge.mlift.mlift_wp S.U_zero S.t_unit pure_assume_wp in
+
+         (* now bind it with fun _ -> wp *)
+         let w_wp = mk_Tm_app
+           (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
+           [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
+             S.as_arg <| S.t_unit;
+             S.as_arg res_t;
+             S.as_arg md_assume_wp;
+             S.as_arg <| U.abs [null_binder S.t_unit] wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
+           None
+           wp.pos in
+
+         mk_comp md u_res_t res_t w_wp (weaken_flags c.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
