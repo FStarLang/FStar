@@ -2365,7 +2365,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
           "ite_wp";
           "stronger";
           "close_wp";
-          "assume_p";
           "null_wp";
           "trivial"
         ]
