@@ -22,10 +22,12 @@ module DMap = FStar.DependentMap
 ///
 ///      Maybe we'll revise it
 let tape = nat -> Tot byte
+let index = nat
 
 let default_tape_rel = lo tape
+let default_index_rel = lo index
 
-let truncate (t:tape) (n:nat) : tape =
+let truncate (t:tape) (n:index) : tape =
   fun m -> t (m + n)
 
 /// The type of effectful computations with 3 effects
@@ -52,24 +54,25 @@ let triple_rel (#a:Type) (#b:Type) (#c:Type) (arel:rel a) (brel:rel b) (crel:rel
   y0 `brel` y1 /\
   z0 `crel` z1
 
-let eff' (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) (trel:rel tape)=
-  (trel ** srel) ^--> (triple_rel (option_rel arel) srel trel)
+let eff' (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) (trel:rel tape) (irel:rel index) =
+  (trel ** srel) ^--> (triple_rel (option_rel arel) srel irel)
 
 #set-options "--z3rlimit 50 --max_fuel 1 --max_ifuel 2"
 let eff'_rel #s #a
     (srel: erel s)
     (arel: erel a)
     (trel: erel tape)
-    : erel (eff' srel arel trel)
-  = arrow_rel (trel ** srel) (triple_rel (option_rel #a arel) srel trel)
+    (irel: erel index)
+    : erel (eff' srel arel trel irel)
+  = arrow_rel (trel ** srel) (triple_rel (option_rel #a arel) srel irel)
 
-let eff #s #a srel arel = eff' #s #a srel arel default_tape_rel
+let eff #s #a srel arel = eff' #s #a srel arel default_tape_rel default_index_rel
 
 let eff_rel #s #a
     (srel: erel s)
     (arel: erel a)
-    : erel (eff' srel arel default_tape_rel)
-  = eff'_rel #s #a srel arel default_tape_rel
+    : erel (eff' srel arel default_tape_rel default_index_rel)
+  = eff'_rel #s #a srel arel default_tape_rel default_index_rel
 
 /// Note: F* provides syntactic sugar for monadic computations, as
 /// follows
@@ -92,7 +95,7 @@ let eff_rel #s #a
 /// returning a result into a computation
 let return (#s:Type) (#a:Type) (#srel:erel s) (#arel:erel a) (x:a)
   : eff #s #a srel arel
-  = fun ((t:tape), (s0:s)) -> Some x, s0, t
+  = fun ((t:tape), (s0:s)) -> Some x, s0, 0
 
 /// sequential composition of `eff` computations
 //let bind #st #a #b
@@ -118,24 +121,51 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
          (g:arel ^--> eff_rel #s #b srel brel)
    : eff #s #b srel brel =
    fun (t, s0) ->
-     let x, s1, t = f (t, s0) in
-     match x with
-     | Some x ->
-       g x (t,s1)
-     | None -> None, s1, t
+     match f (t, s0) with
+     | Some x, s1, n ->
+       g x (truncate t n,s1)
+     | None, s1, n ->
+       None, s1, n
 
 /// reading the entire state
 let get #s (#srel:erel s) : eff srel srel =
-  fun (t, s0) -> Some s0, s0 ,t
+  fun (t, s0) -> Some s0, s0, 0
 
 /// writing the entire state
 let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
-  fun s (t,_) -> Some (), s, t
+  fun s (t,_) -> Some (), s, 0
 
-(* Old effect, leaving out the tape for now. *)
 /// sampling from the head of the tape
-//let sample #st : eff st byte
-//  = fun (t, s) -> Some (t 0), s, 1
+let sample #st : eff st (lo byte)
+  = fun (t, s) -> Some (t 0), s, 1
+
+let sample_multiple #s #srel (length:nat) :eff srel (lo (lbytes length)) =
+  fun (t, s) ->
+  let rec sample_inner c =
+    match c with
+    | 0 -> empty_bytes
+    | c' ->
+      let b = t (c - 1) in
+      let rest = sample_inner (c - 1) in
+      append rest (create 1ul b)
+  in
+  let b_string = sample_inner length in
+  Some b_string, s, length
+
+
+//let sample_multiple #s #srel (length:nat) :eff srel (lo (lbytes length))=
+//  let rec sample_inner #s #srel (c:nat{c < length}) : eff #s #(lbytes (length - c)) srel (lo (lbytes (length - c))) =
+//    match c with
+//    | 0 -> return #s #(lbytes 0) #srel #(lo (lbytes 0)) empty_bytes
+//    | c' ->
+//      b <-- sample;
+//      rest <-- sample_inner #s #srel (c - 1);
+//      return (append (create 1ul b) rest)
+//  in
+//  b_string <-- sample_inner length;
+//  return #s #(lbytes length) #srel #(lo (lbytes length)) b_string
+
+
 
 
 (* Old effect *)
