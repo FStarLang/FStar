@@ -2877,7 +2877,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                ite_wp       = elim_tscheme ed.ite_wp;
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
-               assume_p     = elim_tscheme ed.assume_p;
                null_wp      = elim_tscheme ed.null_wp;
                trivial      = elim_tscheme ed.trivial;
                repr         = elim_term    ed.repr;

@@ -384,7 +384,6 @@ type eff_decl = {
     ite_wp      :tscheme;
     stronger    :tscheme;
     close_wp    :tscheme;
-    assume_p    :tscheme;
     null_wp     :tscheme;
     trivial     :tscheme;
     //NEW FIELDS

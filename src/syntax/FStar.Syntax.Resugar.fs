@@ -1062,7 +1062,6 @@ let resugar_eff_decl' env for_free r q ed =
   let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
   let stronger = resugar_tscheme'' env "stronger" ed.stronger in
   let close_wp = resugar_tscheme'' env "close_wp" ed.close_wp in
-  let assume_p = resugar_tscheme'' env "assume_p" ed.assume_p in
   let null_wp = resugar_tscheme'' env "null_wp" ed.null_wp in
   let trivial = resugar_tscheme'' env "trivial" ed.trivial in
   let repr = resugar_tscheme'' env "repr" ([], ed.repr) in
@@ -1074,7 +1073,7 @@ let resugar_eff_decl' env for_free r q ed =
     else
       [repr; return_repr; bind_repr; ret_wp; bind_wp;
        if_then_else; ite_wp; stronger; close_wp;
-       assume_p; null_wp; trivial] in
+       null_wp; trivial] in
   let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
