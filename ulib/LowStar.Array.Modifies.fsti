@@ -173,21 +173,6 @@ val unused_in_used_in_disjoint_2
   (ensures (loc_disjoint l1'  l2' ))
   [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_used_in h `loc_includes` l2)]
 
-val modifies_loc_unused_in
-  (l: loc)
-  (h1 h2: HS.mem)
-  (l' : loc)
-: Lemma
-  (requires (
-    modifies l h1 h2 /\
-    loc_unused_in h2 `loc_includes` l'
-  ))
-  (ensures (loc_unused_in h1 `loc_includes` l'))
-  [SMTPatOr [
-    [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in h2 `loc_includes` l')];
-    [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in h1 `loc_includes` l')];
-  ]]
-
 let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
   (loc_unused_in h `loc_includes` l /\
   loc_used_in h' `loc_includes` l)
