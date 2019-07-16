@@ -196,6 +196,18 @@ type debug_switches = {
     print_normalized : bool;
 }
 
+let no_debug_switches = {
+    gen              = false;
+    top              = false;
+    cfg              = false;
+    primop           = false;
+    unfolding        = false;
+    b380             = false;
+    wpe              = false;
+    norm_delayed     = false;
+    print_normalized = false;
+}
+
 type primitive_step = {
      name:Ident.lid;
      arity:int;
@@ -985,25 +997,27 @@ let config' psteps s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    let steps = add_steps (cached_steps ()) psteps in
+    let steps = to_fsteps s |> add_nbe in
+    let psteps = add_steps (cached_steps ()) psteps in
     {tcenv = e;
-     debug = { gen = Env.debug e (Options.Other "Norm")
+     debug = if Options.debug_any () then
+            { gen = Env.debug e (Options.Other "Norm")
              ; top = Env.debug e (Options.Other "NormTop")
              ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
              ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
-             ; wpe  = Env.debug e (Options.Other "WPE")
+             ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
-     steps = to_fsteps s |> add_nbe ;
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")}
+            else no_debug_switches
+      ;
+     steps = steps;
      delta_level = d;
-     primitive_steps = steps;
+     primitive_steps = psteps;
      strong = false;
      memoize_lazy = true;
-     normalize_pure_lets =
-       (Options.normalize_pure_terms_for_extraction()
-        || not (s |> BU.for_some (eq_step PureSubtermsWithinComputations)));
+     normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
      reifying = false}
 
 let config s e = config' [] s e

@@ -17,6 +17,8 @@ open SHA1
 open CntFormat
 open MAC
 
+module Bytes = Platform.Bytes
+
 let max x y = if x > y then x else y
 
 (* Events for proving injective agreement *)
@@ -62,17 +64,28 @@ let fresh_cnt x =
   let y = !server_cnt in
   (y < x)
 
+(*
+ * AR: 07/11: since this function has a non-trivial precondition,
+ *            adding a spec for it, cf. #1055
+ *)
+let next_cnt ()
+  : ST uint16
+    (requires fun h ->
+      Bytes.repr_bytes (sel h client_cnt + 1) <= 2)
+    (ensures fun h0 r h1 ->
+      r == sel h0 client_cnt /\
+      modifies !{client_cnt} h0 h1 /\
+      sel h1 client_cnt == sel h0 client_cnt + 1)
+  = let c  = !client_cnt in
+    client_cnt := c+1;
+    c
 
-let next_cnt () =
-  let c  = !client_cnt in
-  client_cnt := c+1;
-  c
-
-
-let update_cnt x =
+(*
+ * AR: 07/11: adding the annotation to ensure a trivial precondition
+ *)
+let update_cnt (x:uint16) =
   let y = !server_cnt in
   server_cnt := max x y
-
 
 let log_event e =
   let l = !log_prot in
