@@ -64,7 +64,7 @@ and r_par #a #b c0 c1 =
   | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
   | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
 
-let m_par (#a #b:Type0) (c0:m a) (c1:m b) =
+let m_par (#a #b:Type0) (c0:m a) (c1:m b) : m (a & b) =
   Or (l_par c0 c1) (r_par c0 c1)
 
 // A logically equivalent definition of parallel composition (at unit)
@@ -166,6 +166,8 @@ let (<*>) (r0 r1:resource) : resource =
     }
   }
 
+// Cannot leave this function unnamed inside chi definition to reason about it
+let upd_pre (pre:mem -> Type) (b:bool) (n:nat) = fun h -> pre (upd b n h)
 
 // We define the validity of a Hoare triple by induction on a command
 // For the time being, the postcondition only takes one state. TODO: Take initial state as a parameter as well
@@ -179,7 +181,7 @@ let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type 
       (FStar.WellFounded.axiom1 c (h b);
       chi (c (h b)) r pre post)
   | Put b n c -> // TODO: Something about invariant/liveness here?
-        chi c r (fun h -> pre (upd b n h)) post
+        chi c r (upd_pre pre b n) post
   | Or c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
 // This is an alternate characterization of Hoare Triples. This should be provable from the definition of chi.
@@ -194,13 +196,76 @@ val lemma_chi_characterization (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) 
 
 let lemma_chi_characterization #a c pre post h0 = admit()
 
+// Map preserves chi
+let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : 
+  Lemma 
+  (requires chi c r pre post)
+  (ensures chi (map f c) r pre post) 
+  (decreases c) =
+  match c with
+  | Ret x -> ()
+  | Get b c' ->
+        let aux (h:mem) : Lemma (chi (map f (c' (h b))) r pre post)
+          = FStar.WellFounded.axiom1 c' (h b); map_chi f (c' (h b)) r pre post
+        in Classical.forall_intro aux
+  | Put b n c -> map_chi f c r (upd_pre pre b n) post
+  | Or c0 c1 -> map_chi f c0 r pre post; map_chi f c1 r pre post
+
+// We can derive a weaker precondition from a stronger one
+let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_weak:mem -> Type)
+  : Lemma
+  (requires chi c r pre post /\ (forall h. post h ==> post_weak h))
+  (ensures chi c r pre post_weak)
+  (decreases c) =
+  match c with
+  | Ret _ -> ()
+  | Get b c' ->
+    let aux (h:mem) : Lemma (chi (c' (h b)) r pre post_weak)
+      = FStar.WellFounded.axiom1 c' (h b); chi_weaken_post (c' (h b)) r pre post post_weak
+    in Classical.forall_intro aux
+  | Put b n c -> chi_weaken_post c r (upd_pre pre b n) post post_weak
+  | Or c0 c1 -> chi_weaken_post c0 r pre post post_weak; chi_weaken_post c1 r pre post post_weak
+
+// chi still holds if we strengthen the precondition
+let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (pre_strong:mem -> Type)
+  : Lemma
+  (requires chi c r pre post /\ (forall h. pre_strong h ==> pre h))
+  (ensures chi c r pre_strong post)
+  (decreases c) =
+  match c with
+  | Ret _ -> ()
+  | Get b c' ->
+    let aux (h:mem) : Lemma (chi (c' (h b)) r pre_strong post)
+      = FStar.WellFounded.axiom1 c' (h b); chi_stronger_pre (c' (h b)) r pre post pre_strong
+    in Classical.forall_intro aux
+  | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
+  | Or c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
+
 let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{chi c r pre post}
 
-val par  (#a #b:Type)
+val par  (#a #b:Type0)
          (#r0 #r1:resource)
          (#pre0 #pre1 #post0 #post1:mem -> Type)
          (c0:rst a r0 pre0 post0)
          (c1:rst b r1 pre1 post1)
        : rst (a & b) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h)
 
-let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = admit()
+let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
+  let c = m_par c0 c1 in
+  let aux_lpar () : Lemma
+    (chi (l_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h))
+    = match c0 with
+    | Ret x -> begin
+      match c1 with
+      | Ret y -> ()
+      | Get b c -> admit()
+      | _ -> admit()
+    end
+    | _ -> admit()
+     
+  in
+  aux_lpar();
+
+  assume (chi (r_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h));
+  c
+
