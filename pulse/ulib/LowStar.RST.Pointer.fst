@@ -52,7 +52,8 @@ let ptr_write (#a:Type)
   reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();
-  A.upd ptr 0ul x
+  A.upd ptr 0ul x;
+  admit()
 
 
 (* Unscoped allocation and deallocation of pointer resources *)
@@ -102,6 +103,7 @@ let ptr_share
   (**) reveal_modifies ();
   (**) reveal_star ();
   let ptr1 = A.share ptr in
+  admit();
   ptr1
 
 let ptr_merge
@@ -121,6 +123,7 @@ let ptr_merge
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
   (**) reveal_star ();
+  admit();
   A.merge ptr1 ptr2
 
 
@@ -155,6 +158,7 @@ let with_new_ptr (#res:resource)
                                               (fun h0 x h1 -> post h0 x h1 /\ P.allows_write (sel (ptr_view ptr) h1).p)))
                : RST b res (fun _ -> res) pre post =
   reveal_star ();
+  admit();
   let ptr =
     rst_frame
       res
@@ -172,4 +176,5 @@ let with_new_ptr (#res:resource)
     #(fun _ -> empty_resource)
     #res
     (fun _ -> ptr_free ptr);
+    admit();
   x
