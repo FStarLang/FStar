@@ -32,6 +32,7 @@ let process_args () : parse_cmdline_res * list<string> =
   Options.parse_cmd_line ()
 
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
+(* GM: unclear if it's useful now? *)
 let cleanup () = Util.kill_all ()
 
 (* printing a finished message *)
