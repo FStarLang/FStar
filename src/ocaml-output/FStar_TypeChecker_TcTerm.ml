@@ -4760,7 +4760,8 @@ and (tc_abs :
                                   match topt with
                                   | FStar_Pervasives_Native.Some t2 -> t2
                                   | FStar_Pervasives_Native.None  ->
-                                      failwith "Impossible!"
+                                      failwith
+                                        "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some"
                                    in
                                 (match t1.FStar_Syntax_Syntax.n with
                                  | FStar_Syntax_Syntax.Tm_arrow uu____13655
