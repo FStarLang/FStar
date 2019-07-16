@@ -31,6 +31,8 @@ let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:A.array a) : Lem
   in
   Classical.forall_intro_2 aux
 
+#set-options "--z3rlimit 20"
+
 abstract
 let array_view (#a:Type) (b:A.array a) : view (varray a) =
   reveal_view ();
@@ -39,6 +41,7 @@ let array_view (#a:Type) (b:A.array a) : view (varray a) =
     A.live h b /\ constant_perm_seq h b
   in
   let sel (h: imem inv) : GTot (varray a) = { s = A.as_seq h b; p = A.get_perm h b 0 } in
+  admit();
   {
     fp = fp;
     inv = inv;
