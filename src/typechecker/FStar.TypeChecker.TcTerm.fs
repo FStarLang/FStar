@@ -1405,7 +1405,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *     the following code has the logic for which type to package the input expression with
      *     if tfun_opt is Some we are guaranteed that topt is also Some, and in that case, we use Some?.v topt
      *       in this case earlier we were returning Some?.v tfun_opt but that means we lost out on the user annotation
-     *     if tfun_opt is None, then we just return tfun_computed (QUESTION: have we checked that tfun_computed <: topt?)
+     *     if tfun_opt is None, then so is topt and we just return tfun_computed
      *)
     let e, tfun, guard = match tfun_opt with
         | Some t ->
