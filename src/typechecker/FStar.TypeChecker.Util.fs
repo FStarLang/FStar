@@ -425,6 +425,35 @@ let return_value env u_t_opt t v =
                     (N.comp_to_string env c);
   c
 
+
+(* private *)
+(*
+ * Helper function used by weaken_comp and strengthen_comp
+ * wp1 is a (pure_wp unit), md is an effect, wp2 is a (M.wp res_t)
+ * The code basically does M.bind_wp (lift_PURE_M wp1) (fun _ -> wp2)
+ *)
+let lift_wp_and_bind_with env (wp1:term) (md:eff_decl) (u_res_t:universe) (res_t:typ) (wp2:term) : term =
+  let r = Env.get_range env in
+  (* lift wp1 to c.effect_name *)
+  let edge =
+    match Env.monad_leq env C.effect_PURE_lid md.mname with
+    | Some edge -> edge
+    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ md.mname.str)
+  in
+  let wp1 = edge.mlift.mlift_wp S.U_zero S.t_unit wp1 in
+
+  (* now bind it with fun _ -> wp *)
+  mk_Tm_app
+    (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
+    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
+      S.as_arg <| S.t_unit;
+      S.as_arg res_t;
+      S.as_arg wp1;
+      S.as_arg <| U.abs [null_binder S.t_unit] wp2 (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
+    None
+    wp2.pos
+
+
 let weaken_flags flags =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
     then [SHOULD_NOT_INLINE]
@@ -460,26 +489,8 @@ let weaken_comp env (c:comp) (formula:term) : comp =
            None
            r
          in
-
-         (* lift it to c.effect_name *)
-         let edge =
-           match Env.monad_leq env C.effect_PURE_lid md.mname with
-           | Some edge -> edge
-           | None -> failwith ("Impossible! weaken_comp: did not find a lift from PURE to " ^ md.mname.str)
-         in
-         let md_assume_wp = edge.mlift.mlift_wp S.U_zero S.t_unit pure_assume_wp in
-
-         (* now bind it with fun _ -> wp *)
-         let w_wp = mk_Tm_app
-           (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
-           [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
-             S.as_arg <| S.t_unit;
-             S.as_arg res_t;
-             S.as_arg md_assume_wp;
-             S.as_arg <| U.abs [null_binder S.t_unit] wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
-           None
-           wp.pos in
-
+         
+         let w_wp = lift_wp_and_bind_with env pure_assume_wp md u_res_t res_t wp in
          mk_comp md u_res_t res_t w_wp (weaken_flags c.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
@@ -524,31 +535,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
            r
          in
 
-         (* lift it to c.effect_name *)
-         let edge =
-           match Env.monad_leq env C.effect_PURE_lid md.mname with
-           | Some edge -> edge
-           | None -> failwith ("Impossible! strengthen_comp: did not find a lift from PURE to " ^ md.mname.str)
-         in
-         let md_assert_wp = edge.mlift.mlift_wp S.U_zero S.t_unit pure_assert_wp in
-
-         (* now bind it with fun _ -> wp *)
-         let s_wp = mk_Tm_app
-           (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
-           [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
-             S.as_arg <| S.t_unit;
-             S.as_arg res_t;
-             S.as_arg md_assert_wp;
-             S.as_arg <| U.abs [null_binder S.t_unit] wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
-           None
-           wp.pos in
-
-         //BU.print4 "Strengthen comp, input wp: %s, f: %s, pure_assert_wp: %s, and strengthened wp: %s\n"
-         //  (Print.term_to_string wp)
-         //  (Print.term_to_string f)
-         //  (Print.term_to_string pure_assert_wp)
-         //  (N.normalize [ Beta; Env.Eager_unfolding ] env s_wp |> Print.term_to_string);
-
+         let s_wp = lift_wp_and_bind_with env pure_assert_wp md u_res_t res_t wp in
          mk_comp md u_res_t res_t s_wp flags
 
 let strengthen_precondition
