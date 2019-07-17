@@ -2231,6 +2231,7 @@ val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
   (idx_dst:U32.t)
   (len:U32.t)
   :HST.Stack unit (requires (fun h -> live h src /\ live h dst /\
+                                   not (g_is_null src) /\ not (g_is_null dst) /\
                                     U32.v idx_src + U32.v len <= length src /\
                                     U32.v idx_dst + U32.v len <= length dst /\
                                     (* TODO: remove the rhs part of this disjunction once patterns on loc_buffer_from_to are introduced *)
@@ -2254,6 +2255,7 @@ val fill (#t:Type) (#rrel #rel: srel t)
 : HST.Stack unit
   (requires (fun h ->
     live h b /\
+    not (g_is_null b) /\
     U32.v len <= length b /\
     rel (as_seq h b) (Seq.replace_subseq (as_seq h b) 0 (U32.v len) (Seq.create (U32.v len) z))
   ))
