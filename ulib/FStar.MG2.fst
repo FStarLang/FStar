@@ -334,6 +334,18 @@ let modifies_loc_none_intro
   (modifies (loc_none #al #c) h h')
 = admit()
 
+let modifies_intro
+  (#al: Type) (#c: cls al) (l: loc c) (h h' : HS.mem)
+  (alocs: (
+    (x: al) ->
+    Lemma
+    (requires (loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies l h h')
+  = admit()
+
 let modifies_only_used_in
   (#al: Type)
   (#c: cls al)

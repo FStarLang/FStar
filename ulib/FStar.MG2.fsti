@@ -345,6 +345,17 @@ val modifies_loc_none_intro
 : Lemma
   (modifies (loc_none #al #c) h h')
 
+val modifies_intro
+  (#al: Type) (#c: cls al) (l: loc c) (h h' : HS.mem)
+  (alocs: (
+    (x: al) ->
+    Lemma
+    (requires (loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies l h h')
+
 
 val modifies_only_used_in
   (#al: Type)
