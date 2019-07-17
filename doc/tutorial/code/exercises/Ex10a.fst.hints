@@ -41,6 +41,28 @@
       "26e809d0de2367e54634f89193252309"
     ],
     [
+      "Ex10a.grant",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "99d33816798ee757d2d43534858261ce"
+    ],
+    [
+      "Ex10a.revoke",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Ex10a.entry__uu___haseq",
+        "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
+      ],
+      0,
+      "2a3d22ae8fb618d882e88538f483adc3"
+    ],
+    [
       "Ex10a.safe_delete",
       1,
       2,
@@ -59,7 +81,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "0a1442804ef91ce49925503faafb11f1"
+      "00fd4c4f3a2a3416e6c65a52fcbbc84a"
     ],
     [
       "Ex10a.test_acls",
@@ -93,7 +115,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
       ],
       0,
-      "ef6ddd09b18904c4759eba5b515b36e9"
+      "888715dc94e81dfd3b978e17fa7f7111"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -106,7 +128,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "f637763dc798f320fb7a989ac2f135cf"
+      "425908211726ab323cb151ed5dfb2901"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -119,7 +141,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "415311d83a112e86404887468ff52951"
+      "862eafbcd167eeff1240ae808797f837"
     ],
     [
       "Ex10a.canRead",
@@ -132,20 +154,16 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "05b80364f5de2154889c1e2821c180db"
+      "53add9aec07b50485778db44266e6aaa"
     ],
     [
       "Ex10a.revoke",
-      1,
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_Ex10a.entry__uu___haseq",
-        "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
-      ],
+      [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "8f36d93b53adf679eda19f95e8ef8597"
+      "5078322d6ca8ce95eda69f96a0ecfa96"
     ]
   ]
 ]

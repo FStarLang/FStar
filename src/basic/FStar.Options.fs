@@ -263,7 +263,9 @@ let defaults =
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
       ("use_extracted_interfaces"     , Bool false);
-      ("use_nbe"                      , Bool false)]
+      ("use_nbe"                      , Bool false);
+      ("trivial_pre_for_unannotated_effectful_fns"
+                                      , Bool true);]
 
 let parse_warn_error_set_get =
     let r = Util.mk_ref None in
@@ -409,6 +411,8 @@ let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertio
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_trivial_pre_for_unannotated_effectful_fns
+                                ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -1137,8 +1141,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         ( noshort,
          "use_nbe",
           BoolStr,
-         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+         "Use normalization by evaluation as the default normalization strategy (default 'false')");
 
+        ( noshort,
+         "trivial_pre_for_unannotated_effectful_fns",
+          BoolStr,
+         "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
 
         ( noshort,
           "__debug_embedding",
@@ -1230,6 +1238,7 @@ let settable = function
     | "z3rlimit"
     | "z3rlimit_factor"
     | "z3seed"
+    | "trivial_pre_for_unannotated_effectful_fns"
     -> true
 
     | _ -> false
@@ -1551,6 +1560,8 @@ let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
+let trivial_pre_for_unannotated_effectful_fns
+                                 () = get_trivial_pre_for_unannotated_effectful_fns ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors
