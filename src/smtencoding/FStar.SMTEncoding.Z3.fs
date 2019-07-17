@@ -23,7 +23,9 @@ open FStar
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
+open FStar.Profiling
 module BU = FStar.Util
+module P = FStar.Profiling
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -593,15 +595,17 @@ let cache_hit
     else
         false
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e ->
-        refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
-        raise e
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash name () : z3result =
+  let (status, statistics), elapsed_time =
+    P.profile
+      (fun () ->
+        try doZ3Exe log_file r fresh input label_messages
+        with e ->
+          refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
+          raise e)
+      (fun () -> name)
+      Options.ProfileSMT
   in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
@@ -617,6 +621,7 @@ let ask
     (_scope : option<scope_t>) // GM: This was only used in ask_n_cores
     (cb:cb)
     (fresh:bool)
+    (name:string)
   = let theory =
         if fresh
         then flatten_fresh_scope()
@@ -628,4 +633,4 @@ let ask
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
     if not (fresh && cache_hit log_file_name cache qhash cb) then
-        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
+        run_job ({job=z3_job log_file_name r fresh label_messages input qhash name; callback=cb})

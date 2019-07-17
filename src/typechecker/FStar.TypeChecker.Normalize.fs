@@ -32,6 +32,7 @@ open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
+open FStar.Profiling
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -43,6 +44,7 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+module P = FStar.Profiling
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -2484,7 +2486,10 @@ let normalize_with_primitive_steps ps s e t =
       r
     end
 
-let normalize s e t = normalize_with_primitive_steps [] s e t
+let normalize s e t = 
+  let (r, _) = P.profile (fun() -> normalize_with_primitive_steps [] s e t) 
+            (fun() -> Print.term_to_string t) (Options.ProfileNormalize) in
+  r
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 

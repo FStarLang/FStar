@@ -31,6 +31,13 @@ type debug_level_t =
   | Extreme
   | Other of string
 
+type profile_t = 
+  | ProfileModule
+  | ProfileDecl
+  | ProfileNormalize
+  | ProfileSMT
+  | Profile of string
+
 type option_val =
   | Bool of bool
   | String of string
@@ -122,6 +129,11 @@ val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_module                : string  -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
+val profile_module              : string -> bool
+val profile_name                : profile_t -> string
+val profile_at_level            : profile_t -> bool
+val profile_phase               : profile_t -> bool
+val get_profile_phase           : unit -> list<string>
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>

@@ -38,6 +38,14 @@ type debug_level_t =
   | Extreme
   | Other of string
 
+type profile_t = 
+  | ProfileModule
+  | ProfileDecl
+  | ProfileNormalize
+  | ProfileSMT
+  | Profile of string
+
+
 type option_val =
   | Bool of bool
   | String of string
@@ -265,7 +273,11 @@ let defaults =
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
-                                      , Bool true);]
+                                      , Bool true);
+      ("profile_level"                , List []);
+      ("profile_phase"                , List []);
+      ("profile_module"               , List []);
+      ]
 
 let parse_warn_error_set_get =
     let r = Util.mk_ref None in
@@ -413,6 +425,9 @@ let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" 
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_profile_level           ()      = lookup_opt "profile_level"            as_comma_string_list
+let get_profile_phase           ()      = lookup_opt "profile_phase"            as_comma_string_list
+let get_profile_module          ()      = lookup_opt "profile_module"           as_comma_string_list
 
 let dlevel = function
    | "Low" -> Low
@@ -427,6 +442,18 @@ let one_debug_level_geq l1 l2 = match l1 with
    | High -> (l2 = Low || l2 = Medium || l2 = High)
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
+
+let profile_name x = 
+  let n = match x with
+   | ProfileModule -> "Module"
+   | ProfileDecl -> "Decl"
+   | ProfileNormalize -> "Normalize"
+   | ProfileSMT -> "SMT"
+   | Profile s -> s in
+  String.lowercase n
+   
+let profile_level_eq l2 = get_profile_level() |> Util.for_some (fun l1 -> String.lowercase l1 = String.lowercase (profile_name l2))
+let profile_phase_eq p2 = get_profile_phase() |> Util.for_some (fun p1 -> String.lowercase p1 = String.lowercase (profile_name p2))
 
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
@@ -1160,6 +1187,21 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                           (Const (Bool true))),
         "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
 
+       ( noshort,
+        "profile_level",
+        Accumulated (OpenEnumStr (["Module"; "Decl"], "...")),
+        "Control the verbosity of profile info");
+
+        ( noshort,
+        "profile_phase",
+        Accumulated (OpenEnumStr (["Normalize"; "SMT"], "...")),
+        "Control which phase to profile");
+
+        ( noshort,
+        "profile_module",
+        Accumulated (OpenEnumStr ([], "...")),
+        "Control which module to profile");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (Bool true))),
@@ -1239,8 +1281,9 @@ let settable = function
     | "z3rlimit_factor"
     | "z3seed"
     | "trivial_pre_for_unannotated_effectful_fns"
-    -> true
-
+    | "profile_level"
+    | "profile_phase" 
+    | "profile_module" -> true
     | _ -> false
 
 let all_specs = specs ()
@@ -1451,6 +1494,9 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let profile_module   modul          = (get_profile_module () |> (fun l -> match l with | [] -> true | _ -> List.existsb (module_name_eq modul) l))
+let profile_at_level    level       = profile_level_eq level
+let profile_phase    phase          = profile_phase_eq phase
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
