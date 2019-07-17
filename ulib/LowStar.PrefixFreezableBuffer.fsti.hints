@@ -93,7 +93,7 @@
         "typing_LowStar.PrefixFreezableBuffer.prefix_freezable_preorder"
       ],
       0,
-      "b74c985e6260ab2cd3efbdb6bb32e224"
+      "1687886ab8752ec87df5f9204236aa88"
     ],
     [
       "LowStar.PrefixFreezableBuffer.freeze",
@@ -118,7 +118,7 @@
         "typing_LowStar.PrefixFreezableBuffer.prefix_freezable_preorder"
       ],
       0,
-      "a6122933c21a981694cb05edfb228b84"
+      "facc1a93397f416c6a3318755b3a1d4e"
     ],
     [
       "LowStar.PrefixFreezableBuffer.frozen_until_st",
