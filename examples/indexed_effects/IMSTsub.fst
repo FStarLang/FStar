@@ -66,16 +66,6 @@ let st_close (a:Type) (b:Type) (wp:(b -> GTot (st_wp a)))
   = forall x. wp x s rel p s0
 
 unfold
-let st_assert_p (a:Type) (p:Type) (wp:st_wp a) 
-                (s:Type0) (rel:preorder s) (q:st_post s a) (s0:s)
-  = p /\ wp s rel q s0
-
-unfold
-let st_assume_p (a:Type) (p:Type) (wp:st_wp a) 
-                (s:Type0) (rel:preorder s) (q:st_post s a) (s0:s)
-  = p ==> wp s rel q s0
-
-unfold
 let st_null (a:Type) (s:Type0) (rel:preorder s) (p:st_post s a) (s0:s)
   = forall x s1. p x s1
 
@@ -93,8 +83,6 @@ new_effect {
      ; ite_wp       = st_ite
      ; stronger     = st_stronger
      ; close_wp     = st_close
-     ; assert_p     = st_assert_p
-     ; assume_p     = st_assume_p
      ; null_wp      = st_null
      ; trivial      = st_trivial
 }
