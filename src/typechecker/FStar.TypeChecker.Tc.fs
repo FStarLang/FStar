@@ -1875,7 +1875,13 @@ let tc_decls env ses =
     let (_, _, env, _) = acc in
     let r, ms_elapsed =
       P.profile (fun () -> process_one_decl acc se)
-                (fun () -> Print.sigelt_to_string_short se)
+                (fun () ->
+                  let names = U.lids_of_sigelt se in
+                  let tag =
+                    match names with
+                    | [l] -> Ident.string_of_lid l
+                    | l::_ -> Ident.string_of_lid l ^ "..." in
+                  tag)
                 Options.ProfileDecl
     in
     if Env.debug env (Options.Other "TCDeclTime")
