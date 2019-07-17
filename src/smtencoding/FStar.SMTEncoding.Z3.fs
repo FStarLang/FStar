@@ -176,7 +176,7 @@ let query_logging =
       file_name
     in
     let write_to_log fresh str =
-      if fresh || (Options.n_cores() > 1)
+      if fresh
       then write_to_new_log str
       else append_to_log str
     in
@@ -437,65 +437,15 @@ type z3result = {
 
 type z3job = job_t<z3result>
 
-let job_queue : ref<list<z3job>> = BU.mk_ref []
+let run_job j = j.callback <| j.job ()
 
-let pending_jobs = BU.mk_ref 0
-
-let running = BU.mk_ref false
-
-let rec dequeue' () =
-    (*print_string (BU.string_of_int (List.length !job_queue));*)
-    let j = match !job_queue with
-        | [] -> failwith "Impossible"
-        | hd::tl ->
-          job_queue := tl;
-          hd in
-    incr pending_jobs;
-    BU.monitor_exit job_queue;
-    run_job j;
-    BU.with_monitor job_queue (fun () -> decr pending_jobs) (); dequeue (); ()
-
-and dequeue () = match !running with
-  | true ->
-    let rec aux () =
-      BU.monitor_enter (job_queue);
-      match !job_queue with
-        | [] ->
-          BU.monitor_exit job_queue;
-          BU.sleep(50);
-          aux ()
-        | _ -> dequeue'() in
-    aux()
-  | false -> ()
-
-and run_job j = j.callback <| j.job ()
-
-(* threads are spawned only if fresh, I.e. we check here and in ask the mode of execution,
-   should be improved by using another option, see ask *)
 let init () =
-    running := true;
-    let n_cores = (Options.n_cores()) in
-    if (n_cores > 1) then
-      let rec aux n =
-          if n = 0 then ()
-          else (spawn dequeue; aux (n - 1)) in
-      aux n_cores
-    else ()
-
-let enqueue j =
-    BU.with_monitor job_queue (fun () ->
-        job_queue := !job_queue@[j];
-        BU.monitor_pulse job_queue) ()
+    (* A no-op now that there's no concurrency *)
+    ()
 
 let finish () =
-    let rec aux () =
-        let n, m = BU.with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue) () in
-        //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
-        if n+m=0
-        then running := false
-        else let _ = BU.sleep(500) in
-             aux() in
-    aux()
+    (* A no-op now that there's no concurrency *)
+    ()
 
 type scope_t = list<list<decl>>
 
@@ -543,8 +493,7 @@ let giveZ3 decls =
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
-    if (Options.n_cores() < 2) then
-        (!bg_z3_proc).refresh();
+    (!bg_z3_proc).refresh();
     bg_scope := flatten_fresh_scope ()
 
 let context_profile (theory:list<decl>) =
@@ -659,12 +608,13 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     z3result_query_hash = qhash;
     z3result_log_file   = log_file }
 
-let ask_1_core
+let ask
     (r:Range.range)
     (filter_theory:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
     (qry:list<decl>)
+    (_scope : option<scope_t>) // GM: This was only used in ask_n_cores
     (cb:cb)
     (fresh:bool)
   = let theory =
@@ -679,35 +629,3 @@ let ask_1_core
     let input, qhash, log_file_name = mk_input fresh theory in
     if not (fresh && cache_hit log_file_name cache qhash cb) then
         run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
-
-let ask_n_cores
-    (r:Range.range)
-    (filter_theory:list<decl> -> list<decl> * bool)
-    (cache:option<string>)
-    (label_messages:error_labels)
-    (qry:list<decl>)
-    (scope:option<scope_t>)
-    (cb:cb)
-  = let theory = List.flatten (match scope with
-        | Some s -> (List.rev s)
-        | None   -> bg_scope := [] ; // Not needed; discard.
-                    (List.rev !fresh_scope)) in
-    let theory = theory@[Push]@qry@[Pop] in
-    let theory, used_unsat_core = filter_theory theory in
-    let input, qhash, log_file_name = mk_input true theory in
-    if not (cache_hit log_file_name cache qhash cb) then
-        enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
-
-let ask
-    (r:Range.range)
-    (filter:list<decl> -> list<decl> * bool)
-    (cache:option<string>)
-    (label_messages:error_labels)
-    (qry:list<decl>)
-    (scope:option<scope_t>)
-    (cb:cb)
-    (fresh:bool)
-  = if Options.n_cores() = 1 then
-        ask_1_core r filter cache label_messages qry cb fresh
-    else
-        ask_n_cores r filter cache label_messages qry scope cb

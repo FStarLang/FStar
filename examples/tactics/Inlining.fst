@@ -31,8 +31,14 @@ open FStar.Buffer
 
 let add_1 (x:int) : int = x+1
 
-let set_to_1 (x: buffer U32.t{length x == 1}) =
-  x.(0ul) <- 1ul
+(*
+ * AR: 07/11: non-trivial precondition, need a spec
+ *)
+let set_to_1 (x: buffer U32.t{length x == 1})
+  : ST unit
+    (requires fun h -> live h x)
+    (ensures fun h0 _ h1 -> True)
+  = x.(0ul) <- 1ul
 
 // eg, we want to inline add_1 into this function
 let add_2 (x:int) : int = add_1 (add_1 x)
