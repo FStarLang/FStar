@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "897aba63b5f81d5ce9d7c5342b0ae0f4"
+      "9ee7684c723d4ee20c45ef0e274a6d0b"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "0f3cbc0087bdb2a16946ed047336c940"
+      "4625f04e68d04399c7d0f61d41cb4b47"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6383231a0df4dc00d5b18c89e5477f0e"
+      "ed4446278693ae5d62b0bd2e5c9ba17d"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "db02d45a758d8e3d34f9373820703ec3"
+      "28e2fb35a80c368c59b222fc7cfb2ab9"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "c05ff99d333f533a2598207002587a9e"
+      "75a8e8f7e3f95b16b0095dd0bd7e7fdd"
     ],
     [
       "Trace.uu___99",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "de5d447a5902402171bd4bc04437b207"
+      "ded10f4731a7c0b2546482941028e8ea"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f5d7d9084ad33e6ff975828450560611"
+      "bee3827824c4e5b1d1df166837cfe4c1"
     ],
     [
       "Trace.uu___109",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "7231809d1e290901f2888008785acd4b"
+      "3caa0a35a2800d6c2cf526b7cb426c0e"
     ],
     [
       "Trace.uu___113",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "14c51694d989e31e55975ef238be9a6d"
+      "b754dd17c8c789ee279916a903bf2dc5"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "94accb2b73f989696702383fa216189d"
+      "6a50d0d2dbc3c394d2185e496c29d0d5"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "521cd15340468adfecce24fb19cb3ba1"
+      "db4a5ced7c9b1b661b76ea8043d429de"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e4c025bb8b848bda2e7e9d2bd0178f85"
+      "cbf32b3705a25698e7f45b73708d8f8c"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "9905335c71f1639af2519f8f0c7e55d0"
+      "a963aab29d05c7fa5d8685b22d8025c4"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "06d22dbafeb95d3a2c3e046e68b49e10"
+      "059f68cc463190b60807fbfc89af445e"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "7db40b3a6a1a99de233e544e1c8efc7e"
+      "e82a19477600f723bcd0cf931dceb61a"
     ],
     [
       "Trace.uu___99",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "c909a4b7d4c461bee0f464489307fdaf"
+      "f15d7d97bc5d05617ca4ac5df002bf54"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1d3dc86c168667653a0c71ecac28b94c"
+      "300d6ec1a848c0cf48330d4deb9d0468"
     ],
     [
       "Trace.uu___109",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "bab6d151de153c05cbc2e1ed99f71e30"
+      "8cf06e4e7a110e7712a2dbb7d9788e01"
     ],
     [
       "Trace.uu___113",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "ea5924daae24fbb83afa4d749b9df415"
+      "b0a413bd04eea88290fab5b60e63dc13"
     ]
   ]
 ]

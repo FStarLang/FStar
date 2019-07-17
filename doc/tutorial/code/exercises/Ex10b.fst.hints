@@ -95,6 +95,15 @@
       "ad7a24e0990eb7173306da94431b4e1d"
     ],
     [
+      "Ex10b.shift_x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8ba8a4a1aed0341d6c7c6fdb734a4d63"
+    ],
+    [
       "Ex10b.shift_x_p1",
       1,
       2,
@@ -106,7 +115,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2101da3943b7762d1093de324d904a86"
+      "7c5b51183a15fd8a2a57f599927cb767"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -120,7 +129,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8dc05888b1b8f5f6a029919f751aa802"
+      "66a9a89479801758fd2a229e8415534d"
     ],
     [
       "Ex10b.test",
@@ -148,7 +157,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "4730df6d246f74e0cb71a183bfe83b16"
+      "3b4e30adb03ce4379f433967f4133a19"
     ],
     [
       "Ex10b.point",
@@ -162,7 +171,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e5aa8d96168c214330c6ab43c2889017"
+      "b51f122a0ab8e9039ea5899fa20e11ee"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -176,7 +185,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d5363f741be2ca0e1ef18f460a097362"
+      "9a674e7461b33b1b24ebba13e159e877"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -192,7 +201,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "95335a0fbfb44453d338a855b1715d30"
+      "271a1d068314c0df8d789d8497142801"
     ],
     [
       "Ex10b.new_point",
@@ -206,7 +215,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f4951348481046e7c6cc478a3635a32a"
+      "d9e40adbbe21ee205b93da825c1f17c3"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -220,7 +229,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "eb2bf7df02a00b8ff8d9ced73ad28ab1"
+      "8cee8bc1f205ea5266bcc145f2e03182"
     ]
   ]
 ]
