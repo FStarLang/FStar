@@ -158,8 +158,8 @@ irreducible
 let postprocess_for_extraction_with (tau : unit -> Tac unit) = ()
 
 #set-options "--no_tactics"
-  
-let unfold_with_tactic (t:unit -> Tac 'a) (p:Type)
+
+let unfold_with_tactic (t:unit -> Tac unit) (p:Type)
   : Lemma (requires p)
           (ensures (with_tactic t p))
   = ()
