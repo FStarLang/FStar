@@ -404,7 +404,10 @@ let rec __assumption_aux (bs : binders) : Tac unit =
         fail "no assumption matches goal"
     | b::bs ->
         let t = pack_ln (Tv_Var (bv_of_binder b)) in
-        or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
+        try exact t with | _ ->
+        try (apply (`FStar.Squash.return_squash);
+             exact t) with | _ ->
+        __assumption_aux bs
 
 let assumption () : Tac unit =
     __assumption_aux (binders_of_env (cur_env ()))
@@ -546,7 +549,25 @@ let rec apply_squash_or_lem d t =
     | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply_lemma t
+       | Some rt ->
+        // DUPLICATED, refactor!
+         begin
+         (* What I would really like to do here is unify `mk_squash post` and the goal,
+          * but it didn't work on a first try, so just doing this for now *)
+         match trytac (fun () -> apply_lemma t) with
+         | Some _ -> () // Success
+         | None ->
+             let rt = norm_term [] rt in
+             (* Is the lemma an implication? We can try to intro *)
+             match term_as_formula' rt with
+             | Implies p q ->
+                 apply_lemma (`push1);
+                 apply_squash_or_lem (d-1) t
+
+             | _ ->
+                 fail "mapply: can't apply (1)"
+         end
+
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
            apply (`FStar.Squash.return_squash);
