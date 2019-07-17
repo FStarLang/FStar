@@ -323,6 +323,17 @@ let modifies_aloc_intro
     alocs x
   )
 
+let modifies_loc_none_intro
+  (#al: Type) (#c: cls al)  (h h' : HS.mem)
+  (alocs: (
+    (x: al) ->
+    Lemma
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies (loc_none #al #c) h h')
+= admit()
+
 let modifies_only_used_in
   (#al: Type)
   (#c: cls al)
@@ -368,3 +379,8 @@ let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma
   in
   Classical.forall_intro (Classical.move_requires f);
   Classical.forall_intro c.aloc_includes_refl
+
+let aloc_used_in_intro (#al: _) (c: cls al) (l: al) (h: HS.mem) : Lemma
+  (requires (~ (l `c.aloc_unused_in` h)))
+  (ensures (loc_used_in c h `loc_includes` loc_of_aloc l))
+  = admit()

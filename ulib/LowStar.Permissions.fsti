@@ -128,7 +128,8 @@ type value_perms (a: Type0) (v: a) = p:perms_rec a{forall (pid:live_pid p). get_
 val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Ghost (value_perms a init & perm_id)
   (requires (True)) (ensures (fun (v_perms, pid) ->
     get_permission_from_pid v_perms pid = 1.0R /\
-    is_fully_owned v_perms = fully_owned
+    is_fully_owned v_perms = fully_owned /\
+    pid = get_current_max v_perms
   ))
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new ``perm_id``
