@@ -32,5 +32,5 @@ ADD update-fstar.sh .
 RUN git clone https://github.com/FStarLang/FStar.git
 ENV FSTAR_HOME=/home/build/FStar
 WORKDIR $FSTAR_HOME
-RUN opam config exec -- make -j
+RUN opam config exec -- make
 WORKDIR /home/build
