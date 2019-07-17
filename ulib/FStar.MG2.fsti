@@ -335,6 +335,17 @@ val modifies_aloc_intro
 : Lemma
   (modifies (loc_of_aloc #_ #c z) h h')
 
+val modifies_loc_none_intro
+  (#al: Type) (#c: cls al)  (h h' : HS.mem)
+  (alocs: (
+    (x: al) ->
+    Lemma
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies (loc_none #al #c) h h')
+
+
 val modifies_only_used_in
   (#al: Type)
   (#c: cls al)
@@ -347,3 +358,7 @@ val modifies_only_used_in
 val aloc_unused_in_intro (#al: _) (c: cls al) (l: al) (h: HS.mem) : Lemma
   (requires (l `c.aloc_unused_in` h))
   (ensures (loc_unused_in c h `loc_includes` loc_of_aloc l))
+
+val aloc_used_in_intro (#al: _) (c: cls al) (l: al) (h: HS.mem) : Lemma
+  (requires (~ (l `c.aloc_unused_in` h)))
+  (ensures (loc_used_in c h `loc_includes` loc_of_aloc l))

@@ -277,12 +277,17 @@ let cls : MG.cls ucell = MG.Cls #ucell
       let i = x.b_index - U32.v b.idx in
       ucell_unused_in_elim x h0 (ucell_preserved x h0 h1) (Seq.lseq (value_with_perms t) (U32.v b.max_length)) b.content
         (fun () ->  assert((HS.contains h1 b.content) /\ (~ (HS.contains h1 b.content))))
-        (fun a ref -> admit())
+        (fun a ref ->
+          assert(
+            a =!= Seq.lseq (value_with_perms t) (U32.v b.max_length) /\
+            a == Seq.lseq (value_with_perms t) (U32.v b.max_length)
+          )
+        )
         (fun t' b' ->
           live_same_arrays_equal_types b' b h0;
-              let (_, perm_map) = Seq.index (HS.sel h0 b.content) x.b_index in
-              LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x.b_pid;
-              assert((live_cell h0 b i) /\ (~ (live_cell h0 b i)))
+          let (_, perm_map) = Seq.index (HS.sel h0 b.content) x.b_index in
+          LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x.b_pid;
+          assert((live_cell h0 b i) /\ (~ (live_cell h0 b i)))
         )
       )
   )
@@ -659,6 +664,27 @@ let rec array_unused_in_intro (#t: Type) (b: array t) (h : HS.mem) : Lemma
   (requires (forall (j:nat{j < vlength b}). ucell_unused_in (aloc_cell b j) h))
   (ensures (loc_unused_in h `loc_includes` loc_array b))
   = array_unused_in_intro' #t b h 0
+
+let cell_used_in_intro (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) : Lemma
+  (requires (~ (ucell_unused_in (aloc_cell b i) h)))
+  (ensures (loc_used_in h `loc_includes` loc_cell b i))
+  = MG.aloc_used_in_intro cls (aloc_cell b i) h
+
+let rec array_used_in_intro' (#t: Type) (b: array t) (h : HS.mem) (i:nat{i <= vlength b}) : Lemma
+  (requires (forall (j:nat{j < vlength b}). ~ (ucell_unused_in (aloc_cell b j) h)))
+  (ensures (loc_used_in h `loc_includes` compute_loc_array b i))
+  (decreases (vlength b - i))
+  =
+  if i >= vlength b then () else begin
+    array_used_in_intro' #t b h (i + 1);
+    cell_used_in_intro #t b i h;
+    loc_includes_union_r (loc_used_in h)(loc_cell b i) (compute_loc_array b (i+1))
+  end
+
+let rec array_used_in_intro (#t: Type) (b: array t) (h : HS.mem) : Lemma
+  (requires (forall (j:nat{j < vlength b}). ~ (ucell_unused_in (aloc_cell b j) h)))
+  (ensures (loc_used_in h `loc_includes` loc_array b))
+  = array_used_in_intro' #t b h 0
 
 let cell_not_used_pid_implies_aloc_unused_in (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) :
   Lemma (requires (
