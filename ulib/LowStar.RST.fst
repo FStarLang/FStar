@@ -246,10 +246,10 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
             : RST a outer0 outer1
-                    (FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+                    (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
                       frame_pre delta pre)
                     (frame_post delta post) =
   reveal_view ();
   reveal_can_be_split_into ();
-  FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
   f ()
