@@ -109,6 +109,8 @@ let profile f msg phasename =
   let new_phase = FStar_Options.profile_phase phasename in
   if (!profiling && (new_level || new_phase)) then
     profile' f (msg()) phasename new_level new_phase
+  else if phasename=FStar_Options.ProfileModule
+  then FStar_Util.record_time f
   else f(), Z.of_int 0
 
 let init_profiler _ =

@@ -133,6 +133,8 @@ let profile  (f: unit -> 'b) (msg:unit -> string) (phasename:Options.profile_t):
   let new_phase = Options.profile_phase phasename in
   if (!profiling && (new_level || new_phase)) then
     profile' f (msg()) phasename new_level new_phase
+  else if phasename=Options.ProfileModule
+  then FStar_Util.record_time f
   else f(), 0
 
 let init_profiler () = profiling := true

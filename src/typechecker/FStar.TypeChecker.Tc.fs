@@ -1879,6 +1879,7 @@ let tc_decls env ses =
                   let names = U.lids_of_sigelt se in
                   let tag =
                     match names with
+                    | [] -> "??"
                     | [l] -> Ident.string_of_lid l
                     | l::_ -> Ident.string_of_lid l ^ "..." in
                   tag)
