@@ -118,9 +118,19 @@ let xor a b = (a || b) && ((not a) || (not b))
 // In the current model, two locations are disjoint if they are not the whole memory (None) and if they are actually disjoint (xor of two resources)
 let disjoint (l1 l2:loc) = Some? l1 /\ Some? l2 /\ xor (Some?.v l1) (Some?.v l2)
 
+// l2 is included in l1
+let includes (l1 l2:loc) = 
+  None? l1 \/ // l1 is the whole memory
+  l1 == l2 // Or l1 is Some of something, and l2 needs to be the same
+
+let loc_union (l1 l2:loc) : loc =
+  match l1, l2 with
+  | None, _ | _, None -> None
+  | Some v1, Some v2 -> if v1 = v2 then Some v1 else None
+
 // We only consider predicates that are stable on the resource footprint: They depend only on the memory contents of the available resource
 let is_stable_on (fp:loc) (pred:mem -> Type) =
-  forall (h0 h1:mem) (l:loc). pred h0 /\ modifies l h0 h1 /\ disjoint fp l ==> pred h1
+  forall (h0 h1:mem) (l:loc). (pred h0 /\ modifies l h0 h1 /\ disjoint fp l) ==> pred h1
 
 // Semantics of the monad
 let rec run #a (c:m a) (h:mem) : a * mem =
@@ -180,11 +190,12 @@ let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type 
   match c with
   | Ret x -> forall h. pre h ==> post h
   | Get b c ->
-    forall h.
-      // TODO: Something about invariant/liveness here?
+    includes r.view.fp (Some b) /\ // The accessed memory is inside the resource
+    (forall h.
       (FStar.WellFounded.axiom1 c (h b);
-      chi (c (h b)) r pre post)
-  | Put b n c -> // TODO: Something about invariant/liveness here?
+      chi (c (h b)) r pre post))
+  | Put b n c -> 
+        includes r.view.fp (Some b) /\ // The updated memory is inside the resource
         chi c r (upd_pre pre b n) post
   | Or c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
@@ -245,30 +256,64 @@ let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:
   | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
   | Or c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
 
-// TODO: I think we miss two components here:
-// - pre/postconditions should be stable on a resource: They only depend on a resource footprint
-// - We should ensure that we only access/update memory in the resource footprint inside of chi
 // If pre implies post for any memory, then chi holds
-let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
+let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> Type) (pre_small:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
   : Lemma
-  (requires chi c r pre post /\ (forall h. pre h ==> post_add h))
+  (requires chi c r pre post /\ 
+            (forall h. pre h ==> pre_small h) /\
+            (forall h. pre_small h ==> post_add h) /\
+            is_stable_on l pre_small /\
+            is_stable_on l post_add /\ 
+            disjoint l r.view.fp)
   (ensures chi c r pre (fun h -> post h /\ post_add h))
   (decreases c) =
   match c with
   | Ret _ -> ()
   | Get b c' ->
     let aux (h:mem) : Lemma (chi (c' (h b)) r pre (fun h -> post h /\ post_add h))
-      = FStar.WellFounded.axiom1 c' (h b); chi_pre_implies_post (c' (h b)) r pre post post_add
+      = FStar.WellFounded.axiom1 c' (h b); chi_pre_implies_post (c' (h b)) r l pre pre_small post post_add
     in Classical.forall_intro aux
-  | Put b n c -> admit(); chi_pre_implies_post c r (upd_pre pre b n) post post_add
-  | Or c0 c1 -> chi_pre_implies_post c0 r pre post post_add; chi_pre_implies_post c1 r pre post post_add
+  | Put b n c -> 
+    let aux (h:mem) : Lemma
+      (requires upd_pre pre_small b n h)
+      (ensures pre_small h)
+      = let h' = upd b n h in
+        assert (modifies r.view.fp h' h)
+    in Classical.forall_intro (Classical.move_requires aux);
+    let aux_stable (h0 h1:mem) (l':loc) : Lemma
+      (requires upd_pre pre_small b n h0 /\ modifies l' h0 h1 /\ disjoint l' l)
+      (ensures upd_pre pre_small b n h1)
+      = let h0' = upd b n h0 in
+        let h1' = upd b n h1 in
+        assert (modifies (loc_union r.view.fp l') h0' h1')
+    in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
+    chi_pre_implies_post c r l (upd_pre pre b n) (upd_pre pre_small b n) post post_add
+  | Or c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add; chi_pre_implies_post c1 r l pre pre_small post post_add
 
-// TODO: Lemma about chi-preservation when taking a bigger resource
+let rec chi_bigger_resource (#a:Type) (c:m a) (smaller bigger:resource) (pre:mem -> Type) (post:mem -> Type)
+  : Lemma
+  (requires chi c smaller pre post /\ includes bigger.view.fp smaller.view.fp)
+  (ensures chi c bigger pre post)
+  (decreases c)
+  =  match c with
+  | Ret _ -> ()
+  | Get b c' ->
+    let aux (h:mem) : Lemma (chi (c' (h b)) bigger pre post)
+      = FStar.WellFounded.axiom1 c' (h b); chi_bigger_resource (c' (h b)) smaller bigger pre post
+    in Classical.forall_intro aux
+  | Put b n c -> chi_bigger_resource c smaller bigger (upd_pre pre b n) post
+  | Or c0 c1 -> chi_bigger_resource c0 smaller bigger pre post; chi_bigger_resource c1 smaller bigger pre post
 
-let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{chi c r pre post}
+let r_pred (pred:mem -> Type) (r:resource) = fun h -> pred h /\ r.view.inv h
+
+// The is_stable_on predicate is not yet provable in the current RST model, but it will be once selectors are implemented
+let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{
+  chi c r (r_pred pre r) (r_pred post r) /\
+  is_stable_on r.view.fp pre /\ is_stable_on r.view.fp post}
 
 val par  (#a #b:Type0)
-         (#r0 #r1:resource)
+         (#r0:resource)
+         (#r1:resource{disjoint r0.view.fp r1.view.fp})
          (#pre0 #pre1 #post0 #post1:mem -> Type)
          (c0:rst a r0 pre0 post0)
          (c1:rst b r1 pre1 post1)
@@ -277,23 +322,24 @@ val par  (#a #b:Type0)
 let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
   let c = m_par c0 c1 in
   let aux_lpar () : Lemma
-    (chi (l_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h))
+    (chi (l_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
     = match c0 with
     | Ret x -> 
-      map_chi (pair_x x) c1 r1 pre1 post1;
-      assert (l_par c0 c1 == map (pair_x x) c1);
-      chi_stronger_pre (l_par c0 c1) r1 pre1 post1 (fun h -> pre0 h /\ pre1 h);
-      assert (chi (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post1 h));
-      chi_pre_implies_post (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) post1 post0;
+      map_chi (pair_x x) c1 r1 (r_pred pre1 r1) (r_pred post1 r1);
+      chi_stronger_pre (l_par c0 c1) r1 (r_pred pre1 r1) (r_pred post1 r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1));
+      chi_pre_implies_post (l_par c0 c1) r1 r0.view.fp 
+        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+        (r_pred pre0 r0)
+        (r_pred post1 r1) (r_pred post0 r0);
       // Swapping the postcondition
-      chi_weaken_post (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post1 h /\ post0 h) (fun h -> post0 h /\ post1 h);
-      assert (chi (l_par c0 c1) r1 (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h));
-      assume (chi (l_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h))
+      chi_weaken_post (l_par c0 c1) r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+        (fun h -> r_pred post1 r1 h /\ r_pred post0 r0 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1));
+      chi_bigger_resource (l_par c0 c1) r1 (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
     | _ -> admit()
      
   in
   aux_lpar();
 
-  assume (chi (r_par c0 c1) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h));
+  assume (chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
   c
 
