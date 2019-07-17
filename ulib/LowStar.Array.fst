@@ -83,8 +83,6 @@ let upd #a b i v =
   (**) lemma_includes_loc_cell_loc_array b (U32.v i);
   (**) MG.modifies_loc_includes (loc_array b) h0 h1 (loc_cell b (U32.v i))
 
-#pop-options
-
 let alloc #a init len =
   let perm_map_pid = Ghost.hide (
     let (vp, pid) = new_value_perms init true in
@@ -97,10 +95,26 @@ let alloc #a init len =
   (**) let h1 = HST.get() in
   let b = Array len content 0ul len (snd (Ghost.reveal perm_map_pid)) in
   (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
-  (**) assume(loc_unused_in h0 `loc_includes` (loc_array b));
-  (**) assume(loc_used_in h1 `loc_includes` (loc_array b));
-  admit();
+  (**) array_unused_in_intro b h0;
+  (**) let aux (i:nat{i < vlength b}) : Lemma (requires (ucell_unused_in (aloc_cell b i) h1)) (ensures False) =
+  (**)  let cell = aloc_cell b i in
+  (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v len)) content
+  (**)    (fun () -> ())
+  (**)    (fun a' ref' -> ())
+  (**)    (fun t' b' ->
+  (**)      live_same_arrays_equal_types b b' h1;
+  (**)      let (_, perm_map) = Seq.index (HS.sel h1 b.content) i in
+  (**)      let current_max = P.get_current_max (Ghost.reveal perm_map) in
+  (**)      assert(ucell_matches_unused_array_cell cell t' b' h1);
+  (**)      assert(ucell_matches_used_array_cell cell a b h1)
+  (**)    )
+  (**) in
+  (**) Classical.forall_intro (Classical.move_requires aux);
+  (**) array_used_in_intro b h1;
+  (**) MG.modifies_loc_none_intro #ucell #cls h0 h1 (fun cell -> ());
   b
+
+#pop-options
 
 let free #a b =
   (**) let h0 = HST.get () in
