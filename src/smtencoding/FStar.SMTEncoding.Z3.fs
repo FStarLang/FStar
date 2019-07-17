@@ -23,7 +23,7 @@ open FStar
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
-open FStar.Profiling
+
 module BU = FStar.Util
 module P = FStar.Profiling
 

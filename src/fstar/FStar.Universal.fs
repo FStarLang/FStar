@@ -33,7 +33,6 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 open FStar.TypeChecker
 open FStar.CheckedFiles
-open FStar.Profiling
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -291,7 +290,11 @@ let tc_one_file
       let fmod, env = parse env pre_fn fn in
       let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
-          let _ = if (Options.profile_module fmod.name.str) then P.init_profiler () else P.disable_profiler () in
+          let _ =
+            if Options.profile_module fmod.name.str
+            then P.init_profiler ()
+            else P.disable_profiler ()
+          in
           let check env =
               with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
@@ -310,12 +313,13 @@ let tc_one_file
                  in
                  ((modul, smt_decls), env))
             in
-          
+
           let ((tcmod, smt_decls), env), tc_time =
-            P.profile (fun() -> check env) 
-                      (fun() -> fmod.name.str) Options.ProfileModule
+            P.profile (fun () -> check env)
+                      (fun () -> fmod.name.str)
+                      Options.ProfileModule
           in
-          
+
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
           let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
           {

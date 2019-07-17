@@ -25,11 +25,18 @@ let profiling = ref false
 
 exception ProfilingException of string
 
-type counter = {total_time:int ref;}
-type profiler = {plevel:Options.profile_t; pname:string; ptime:int ref; counters:System.Collections.Generic.Dictionary<string, counter>; }
+type counter = {
+  total_time:int ref;
+}
+type profiler = {
+  plevel:Options.profile_t;
+  pname:string;
+  ptime:int ref;
+  counters:System.Collections.Generic.Dictionary<string, counter>;
+}
 let stack:ref<(list<profiler>)> = BU.mk_ref []
 
-let cur_counters () = 
+let cur_counters () =
   match !stack with
   | hd::tl -> Some (hd.counters)
   | _ -> None
@@ -46,7 +53,7 @@ let new_counter (counters:System.Collections.Generic.Dictionary<string, counter>
 let add_counter counters name elapsed =
   match find_counter counters name with
     | Some ctr -> ctr.total_time := elapsed + !ctr.total_time;
-    | _ -> 
+    | _ ->
       failwith ("counter for " ^ name ^ " not found")
 
 let push_stack p =
@@ -55,13 +62,13 @@ let push_stack p =
 let get_profiler l s new_level =
   if new_level then
     // create a counter for each profile_phase, instead of creating it lazily when the phase is
-    // invoked. This is to ensure profile data will be consistent for all modules regardless 
+    // invoked. This is to ensure profile data will be consistent for all modules regardless
     // whether a phase is invoked for all modules, e.g. for modules without decls, we will still
     // have normalization time as 0ms, instead of missing normalization time since normalization is
-    // never called. 
+    // never called.
     let cts = new System.Collections.Generic.Dictionary<string, counter>() in
     Options.get_profile_phase() |> List.iter (fun l ->  new_counter cts (String.lowercase l));
-    let p = {plevel=l; pname=s; ptime = ref 0; counters=cts} in 
+    let p = {plevel=l; pname=s; ptime = ref 0; counters=cts} in
     push_stack p;
     Some (p.counters)
   else
@@ -72,7 +79,7 @@ let propogate_profile_info p =
   | Some counters ->
     let c = p.counters in
     // propogate profile info from counter 'c' up the stack to the next level
-    let all_keys = List.ofSeq (c.Keys) in 
+    let all_keys = List.ofSeq (c.Keys) in
     all_keys |> List.map (fun k -> let t = snd <| c.TryGetValue(k) in add_counter counters k !t.total_time) |> ignore
   | _ -> ()
 
@@ -86,9 +93,9 @@ let pop_stack  () =
 let print_profile p =
   let counters = p.counters in
   let ctr2string name =
-    let ctr = 
-      match find_counter counters name with 
-      | Some ctr -> ctr 
+    let ctr =
+      match find_counter counters name with
+      | Some ctr -> ctr
       | _ ->  failwith ("counter for " ^ name ^ " not found") in
     Printf.sprintf "\t%s: %s ms" name (string_of_int (!ctr.total_time)) in
   let all_keys = List.ofSeq (counters.Keys) in
@@ -110,19 +117,22 @@ let profile' (f: unit -> 'b) (name:string) (phasename:Options.profile_t) (new_le
   | Some counters -> // has a profiler to aggregate time
     if new_phase then add_counter counters (Options.profile_name phasename) ms; // only aggregate the time on phases that are profiled.
     if new_level then pop_and_print_profiler name ms; // pop and print current level
-  | None -> 
+  | None ->
     // if there is no profiler (which means no profile_at_level), then don't
     // aggregate, just print out the time
-    Printf.printf "Profiled %s: %s: %s: %s ms\n" (Options.profile_name phasename) name (Options.profile_name phasename)(string_of_int ms)
-  in 
+    Printf.printf "Profiled %s: %s: %s: %s ms\n"
+      (Options.profile_name phasename)
+      name
+      (Options.profile_name phasename)(string_of_int ms)
+  in
   (r, ms)
 
 let profile  (f: unit -> 'b) (msg:unit -> string) (phasename:Options.profile_t): 'b * int =
   let new_level = Options.profile_at_level phasename in
   let new_phase = Options.profile_phase phasename in
-  if (!profiling && (new_level || new_phase)) then 
+  if (!profiling && (new_level || new_phase)) then
     profile' f (msg()) phasename new_level new_phase
-  else BU.record_time f
+  else f(), 0
 
 let init_profiler () = profiling := true
 

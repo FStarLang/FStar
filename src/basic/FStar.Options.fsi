@@ -31,7 +31,7 @@ type debug_level_t =
   | Extreme
   | Other of string
 
-type profile_t = 
+type profile_t =
   | ProfileModule
   | ProfileDecl
   | ProfileNormalize

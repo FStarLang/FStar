@@ -33,7 +33,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
-open FStar.Profiling
+
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
@@ -1873,9 +1873,10 @@ let tc_decls env ses =
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
     let (_, _, env, _) = acc in
-    let r, ms_elapsed = 
-      P.profile (fun() -> process_one_decl acc se) 
-            (fun() -> Print.sigelt_to_string_short se) Options.ProfileDecl
+    let r, ms_elapsed =
+      P.profile (fun () -> process_one_decl acc se)
+                (fun () -> Print.sigelt_to_string_short se)
+                Options.ProfileDecl
     in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs

@@ -38,7 +38,7 @@ type debug_level_t =
   | Extreme
   | Other of string
 
-type profile_t = 
+type profile_t =
   | ProfileModule
   | ProfileDecl
   | ProfileNormalize
@@ -443,7 +443,7 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-let profile_name x = 
+let profile_name x =
   let n = match x with
    | ProfileModule -> "Module"
    | ProfileDecl -> "Decl"
@@ -451,9 +451,15 @@ let profile_name x =
    | ProfileSMT -> "SMT"
    | Profile s -> s in
   String.lowercase n
-   
-let profile_level_eq l2 = get_profile_level() |> Util.for_some (fun l1 -> String.lowercase l1 = String.lowercase (profile_name l2))
-let profile_phase_eq p2 = get_profile_phase() |> Util.for_some (fun p1 -> String.lowercase p1 = String.lowercase (profile_name p2))
+
+let profile_level_eq l2 =
+  get_profile_level() |>
+  Util.for_some (fun l1 ->
+    String.lowercase l1 = String.lowercase (profile_name l2))
+let profile_phase_eq p2 =
+  get_profile_phase() |>
+  Util.for_some (fun p1 ->
+    String.lowercase p1 = String.lowercase (profile_name p2))
 
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
@@ -1282,7 +1288,7 @@ let settable = function
     | "z3seed"
     | "trivial_pre_for_unannotated_effectful_fns"
     | "profile_level"
-    | "profile_phase" 
+    | "profile_phase"
     | "profile_module" -> true
     | _ -> false
 
