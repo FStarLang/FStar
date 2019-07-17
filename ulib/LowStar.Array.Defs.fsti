@@ -32,7 +32,7 @@ let writeable_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Typ
 
 let writeable #a h b =
   live #a h b /\
-  (forall (i:nat{i < vlength #a b}). writeable_cell h b i)
+  (forall (i:nat{i < vlength #a b}). {:pattern (get_perm h b i) } writeable_cell h b i)
 
 
 val mergeable (#a:Type0) (b1 b2:array a) : Type0

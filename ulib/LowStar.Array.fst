@@ -29,7 +29,7 @@ let index #a b i =
   let ( v, _ ) = Seq.index s (U32.v b.idx + U32.v i) in
   v
 
-#push-options "--z3rlimit 10"
+#push-options "--z3rlimit 15"
 
 let upd #a b i v =
   (**) let open HST in
@@ -53,6 +53,7 @@ let upd #a b i v =
   (**)   (fun aloc' ->
   (**)     ucell_preserved_intro aloc' h0 h1 (fun t' b' ->
   (**)       if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)         (* Here we prove that a disjoint location at the same memory address cannot be live in the first place *)
   (**)         live_same_arrays_equal_types b b' h0;
   (**)         if aloc.b_index = aloc'.b_index then begin
   (**)           let s0 = HS.sel h0 b.content in
@@ -114,21 +115,50 @@ let alloc #a init len =
   (**) MG.modifies_loc_none_intro #ucell #cls h0 h1 (fun cell -> ());
   b
 
-#pop-options
-
 let free #a b =
   (**) let h0 = HST.get () in
   HST.rfree b.content;
   (**) let h1 = HST.get () in
-  (**) let r = frameOf b in
-  (**) let n = as_addr b in
-  (**) //modifies_free #(Seq.lseq (value_with_perms a) (U32.v b.max_length))
-  (**) //  #(Heap.trivial_preorder (Seq.lseq (value_with_perms a) (U32.v b.max_length)))
-  (**) //  b.content h0;
-  (**) // assert(modifies (loc_freed_mreference b.content) h0 h1);
-  (**) assume(modifies (loc_array b) h0 h1);
-  admit();
+  (**) MG.modifies_intro #ucell #cls (loc_array b) h0 h1 (fun cell ->
+  (**)   ucell_preserved_intro cell h0 h1  (fun t' b' ->
+  (**)     let is_inside_b = ucell_matches_array_cell cell a b h0 in
+  (**)     Classical.excluded_middle (is_inside_b);
+  (**)     let i' = cell.b_index - U32.v b'.idx in
+  (**)     let i = cell.b_index - U32.v b.idx in
+  (**)     let goal = fun _ -> ucell_matches_live_array_cell cell t' b' h1 /\ sel h0 b' i' == sel h1 b' i' in
+  (**)     Classical.or_elim #(is_inside_b) #(~ is_inside_b) #goal
+  (**)       (fun _ ->
+  (**)         assert(cell == aloc_cell b (cell.b_index - U32.v b.idx));
+  (**)         lemma_includes_loc_cell_loc_array #a b (cell.b_index - U32.v b.idx);
+  (**)         loc_disjoint_includes (loc_array b) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell);
+  (**)         MG.loc_disjoint_aloc_elim #ucell #cls cell cell
+  (**)       )
+  (**)       (fun _ ->
+  (**)         (* Here we basically prove that b is the only live array that is standing at the freed location *)
+  (**)         if frameOf b <> cell.b_rid || as_addr b <> cell.b_addr then (* Different memory locations *)
+  (**)           ()
+  (**)         else if U32.v b.max_length <> cell.b_max then (* Two arrays allocated at same memory locations *)
+  (**)           live_same_arrays_equal_types b b' h0
+  (**)         else if cell.b_index < U32.v b.idx || cell.b_index > U32.v b.idx + U32.v b.length then (* Cell outside of array *)
+  (**)           ()
+  (**)         else begin (* Different pids *)
+  (**)           live_same_arrays_equal_types b b' h0;
+  (**)           assert(writeable_cell h0 b i);
+  (**)           let (v, perm_map') = Seq.index (HS.sel h0 b'.content) cell.b_index in
+  (**)           assert(live_cell h0 b' i');
+  (**)           let aux (pid': live_pid (Ghost.reveal perm_map')) : Lemma ((Ghost.reveal b.pid) == pid') =
+  (**)             only_one_live_pid_with_full_permission #a #v (Ghost.reveal perm_map') (Ghost.reveal b.pid)
+  (**)           in
+  (**)           aux (Ghost.reveal b'.pid);
+  (**)           assert(Ghost.reveal b.pid == Ghost.reveal b'.pid /\ Ghost.reveal b.pid <> Ghost.reveal b'.pid)
+  (**)         end
+  (**)       )
+  (**)   )
+  (**) );
+  (**) assert(modifies (loc_array b) h0 h1);
   ()
+
+#pop-options
 
 val share_cell
   (#a:Type0)
