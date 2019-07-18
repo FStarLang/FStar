@@ -32,7 +32,7 @@ type m a =
   | Ret : a -> m a
   | Get : bool -> (nat -> m a) -> m a
   | Put : bool -> nat -> m a -> m a
-  | Or  : m a -> m a -> m a
+  | MOr  : m a -> m a -> m a // MOr instead of Or to avoid name clashes with FStar.Reflection
 
 // Functoriality of m
 let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
@@ -40,7 +40,7 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   | Ret x -> Ret (f x)
   | Get b c -> Get b (fun n -> FStar.WellFounded.axiom1 c n; map f (c n))
   | Put b n c -> Put b n (map f c)
-  | Or c0 c1 -> Or (map f c0) (map f c1)
+  | MOr c0 c1 -> MOr (map f c0) (map f c1)
 
 
 // Below are two styles of defining the `||` operation. The first of these is more intuitive.
@@ -53,23 +53,26 @@ val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %
 let pair_x (#a:Type) (x:a) = fun y -> (x, y)
 let pair_y (#b:Type) (y:b) = fun x -> (x, y)
 
+let rec l_get (#a:Type) (#b:Type) (c0':nat -> m a) (c1:m b) (n:nat) : Tot (m (a & b)) (decreases c0') =
+  FStar.WellFounded.axiom1 c0' n;
+  MOr (l_par (c0' n) c1) (r_par (c0' n) c1)
 
-let rec l_par #a #b c0 c1 =
+and l_par #a #b c0 c1 =
   match c0 with
   | Ret x -> map (pair_x x) c1
-  | Get b c0' -> Get b (fun n -> FStar.WellFounded.axiom1 c0' n; Or (l_par (c0' n) c1) (r_par (c0' n) c1))
-  | Put b n c0' -> Put b n (Or (l_par c0' c1) (r_par c0' c1))
-  | Or c0' c0'' -> Or (l_par c0' c1) (l_par c0'' c1)
+  | Get b c0' -> Get b (l_get c0' c1)
+  | Put b n c0' -> Put b n (MOr (l_par c0' c1) (r_par c0' c1))
+  | MOr c0' c0'' -> MOr (l_par c0' c1) (l_par c0'' c1)
 
 and r_par #a #b c0 c1 =
   match c1 with
   | Ret y -> map (pair_y y) c0
-  | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; Or (l_par c0 (c1' n)) (r_par c0 (c1' n)))
-  | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
-  | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
+  | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; MOr (l_par c0 (c1' n)) (r_par c0 (c1' n)))
+  | Put b n c1' -> Put b n (MOr (l_par c0 c1') (r_par c0 c1'))
+  | MOr c1' c1'' -> MOr (r_par c0 c1') (r_par c0 c1'')
 
 let m_par (#a #b:Type0) (c0:m a) (c1:m b) : m (a & b) =
-  Or (l_par c0 c1) (r_par c0 c1)
+  MOr (l_par c0 c1) (r_par c0 c1)
 
 // A logically equivalent definition of parallel composition (at unit)
 // in terms of two unary effect handlers, based on G. Plotkin's slides.
@@ -79,10 +82,10 @@ let rec r_par' c0 c1 =
   | Ret x -> Ret x
   | Get b c0' -> Get b (fun n ->
                           FStar.WellFounded.axiom1 c0' n;
-                          Or (c1 (c0' n))
+                          MOr (c1 (c0' n))
                              (r_par' (c0' n) c1))
-  | Put b n c0' -> Put b n (Or (c1 c0') (r_par' c0' c1))
-  | Or c0' c0'' -> Or (r_par' c0' c1) (r_par' c0'' c1)
+  | Put b n c0' -> Put b n (MOr (c1 c0') (r_par' c0' c1))
+  | MOr c0' c0'' -> MOr (r_par' c0' c1) (r_par' c0'' c1)
 
 val l_par' (c0:m unit) (c1:m unit) : m unit
 let rec l_par' c0 c1 =
@@ -90,13 +93,13 @@ let rec l_par' c0 c1 =
   | Ret x -> Ret x
   | Get b c0' -> Get b (fun n ->
                           FStar.WellFounded.axiom1 c0' n;
-                          Or (l_par' (c0' n) c1)
+                          MOr (l_par' (c0' n) c1)
                              (r_par' c1 (l_par' (c0' n))))
-  | Put b n c0' -> Put b n (Or (l_par' c0' c1) (r_par' c1 (l_par' c0')))
-  | Or c0' c0'' -> Or (l_par' c0' c1) (l_par' c0'' c1)
+  | Put b n c0' -> Put b n (MOr (l_par' c0' c1) (r_par' c1 (l_par' c0')))
+  | MOr c0' c0'' -> MOr (l_par' c0' c1) (l_par' c0'' c1)
 
 let m_par' c0 c1 : m unit =
-  Or (l_par' c0 c1) (r_par' c1 (l_par' c0))
+  MOr (l_par' c0 c1) (r_par' c1 (l_par' c0))
 
 
 // For this example sketch, memory is simply a pair of booleans.
@@ -138,14 +141,12 @@ let rec run #a (c:m a) (h:mem) : a * mem =
   | Ret x -> x, h
   | Get b c -> run (FStar.WellFounded.axiom1 c (h b); c (h b)) h
   | Put b n c -> run c (upd b n h)
-  | Or c0 c1 -> admit()
+  | MOr c0 c1 -> admit()
 
 
 // Simple variant of our notion of resources.
 let inv_reads_fp (fp:option bool) (inv:mem -> Type0) =
-  match fp with
-  | None -> True
-  | Some b -> forall h h' . inv h /\ modifies (Some (not b)) h h' ==> inv h'
+  forall h h' l. inv h /\ disjoint fp l /\ modifies l h h' ==> inv h'
 
 noeq
 type view_t a = {
@@ -183,9 +184,7 @@ let (<*>) (r0 r1:resource) : resource =
 // Cannot leave this function unnamed inside chi definition to reason about it
 let upd_pre (pre:mem -> Type) (b:bool) (n:nat) = fun h -> pre (upd b n h)
 
-// We define the validity of a Hoare triple by induction on a command
-// For the time being, the postcondition only takes one state. TODO: Take initial state as a parameter as well
-// TODO: The postcondition should also take the return value as an argument
+
 let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type =
   match c with
   | Ret x -> forall h. pre h ==> post h
@@ -196,8 +195,9 @@ let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type 
       chi (c (h b)) r pre post))
   | Put b n c -> 
         includes r.view.fp (Some b) /\ // The updated memory is inside the resource
+        (forall h. r.view.inv h ==> r.view.inv (upd b n h)) /\ // The resource invariant is preserved
         chi c r (upd_pre pre b n) post
-  | Or c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
+  | MOr c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
 // This is an alternate characterization of Hoare Triples. This should be provable from the definition of chi.
 // It states that if we satisfy chi, then running the command in a state satisfying the precondition
@@ -224,7 +224,7 @@ let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> 
           = FStar.WellFounded.axiom1 c' (h b); map_chi f (c' (h b)) r pre post
         in Classical.forall_intro aux
   | Put b n c -> map_chi f c r (upd_pre pre b n) post
-  | Or c0 c1 -> map_chi f c0 r pre post; map_chi f c1 r pre post
+  | MOr c0 c1 -> map_chi f c0 r pre post; map_chi f c1 r pre post
 
 // We can derive a weaker precondition from a stronger one
 let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_weak:mem -> Type)
@@ -239,7 +239,7 @@ let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:m
       = FStar.WellFounded.axiom1 c' (h b); chi_weaken_post (c' (h b)) r pre post post_weak
     in Classical.forall_intro aux
   | Put b n c -> chi_weaken_post c r (upd_pre pre b n) post post_weak
-  | Or c0 c1 -> chi_weaken_post c0 r pre post post_weak; chi_weaken_post c1 r pre post post_weak
+  | MOr c0 c1 -> chi_weaken_post c0 r pre post post_weak; chi_weaken_post c1 r pre post post_weak
 
 // chi still holds if we strengthen the precondition
 let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (pre_strong:mem -> Type)
@@ -254,7 +254,7 @@ let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:
       = FStar.WellFounded.axiom1 c' (h b); chi_stronger_pre (c' (h b)) r pre post pre_strong
     in Classical.forall_intro aux
   | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
-  | Or c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
+  | MOr c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
 
 // If pre implies post for any memory, then chi holds
 let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> Type) (pre_small:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
@@ -288,21 +288,29 @@ let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> 
         assert (modifies (loc_union r.view.fp l') h0' h1')
     in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
     chi_pre_implies_post c r l (upd_pre pre b n) (upd_pre pre_small b n) post post_add
-  | Or c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add; chi_pre_implies_post c1 r l pre pre_small post post_add
+  | MOr c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add; chi_pre_implies_post c1 r l pre pre_small post post_add
 
-let rec chi_bigger_resource (#a:Type) (c:m a) (smaller bigger:resource) (pre:mem -> Type) (post:mem -> Type)
+let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type) (post:mem -> Type)
   : Lemma
-  (requires chi c smaller pre post /\ includes bigger.view.fp smaller.view.fp)
-  (ensures chi c bigger pre post)
+  (requires chi c r1 pre post /\ disjoint r0.view.fp r1.view.fp)
+  (ensures chi c (r0 <*> r1) pre post)
   (decreases c)
   =  match c with
   | Ret _ -> ()
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) bigger pre post)
-      = FStar.WellFounded.axiom1 c' (h b); chi_bigger_resource (c' (h b)) smaller bigger pre post
+    let aux (h:mem) : Lemma (chi (c' (h b)) (r0 <*> r1) pre post)
+      = FStar.WellFounded.axiom1 c' (h b); chi_bigger_resource (c' (h b)) r0 r1 pre post
     in Classical.forall_intro aux
-  | Put b n c -> chi_bigger_resource c smaller bigger (upd_pre pre b n) post
-  | Or c0 c1 -> chi_bigger_resource c0 smaller bigger pre post; chi_bigger_resource c1 smaller bigger pre post
+  | Put b n c ->
+      let aux (h:mem) : Lemma
+      (requires r0.view.inv h)
+      (ensures r0.view.inv (upd b n h))
+      =
+      let h' = upd b n h in
+      assert (modifies (r1.view.fp) h h')
+    in Classical.forall_intro (Classical.move_requires aux);
+    chi_bigger_resource c r0 r1 (upd_pre pre b n) post
+  | MOr c0 c1 -> chi_bigger_resource c0 r0 r1 pre post; chi_bigger_resource c1 r0 r1 pre post
 
 let r_pred (pred:mem -> Type) (r:resource) = fun h -> pred h /\ r.view.inv h
 
@@ -319,27 +327,102 @@ val par  (#a #b:Type0)
          (c1:rst b r1 pre1 post1)
        : rst (a & b) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h)
 
-let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
-  let c = m_par c0 c1 in
-  let aux_lpar () : Lemma
-    (chi (l_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+open FStar.Tactics
+
+let rec lemma_lpar (#a #b:Type) 
+    (r0:resource) (r1:resource{disjoint r0.view.fp r1.view.fp})
+    (c0:m a) (c1:m b) 
+    (pre0 pre1 post0 post1:mem -> Type) : Lemma
+    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
+      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
+    (ensures chi (l_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+    (decreases %[c0; c1])
     = match c0 with
-    | Ret x -> 
+    | Ret x ->
       map_chi (pair_x x) c1 r1 (r_pred pre1 r1) (r_pred post1 r1);
       chi_stronger_pre (l_par c0 c1) r1 (r_pred pre1 r1) (r_pred post1 r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1));
       chi_pre_implies_post (l_par c0 c1) r1 r0.view.fp 
         (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
         (r_pred pre0 r0)
         (r_pred post1 r1) (r_pred post0 r0);
-      // Swapping the postcondition
       chi_weaken_post (l_par c0 c1) r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
         (fun h -> r_pred post1 r1 h /\ r_pred post0 r0 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1));
-      chi_bigger_resource (l_par c0 c1) r1 (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
-    | _ -> admit()
-     
-  in
-  aux_lpar();
+      chi_bigger_resource (l_par c0 c1) r0 r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+      
+    | Get b' c0' ->
+      let aux (h:mem) : Lemma (chi (MOr (l_par (c0' (h b')) c1) (r_par (c0' (h b')) c1)) (r0 <*> r1) 
+        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+      = FStar.WellFounded.axiom1 c0' (h b');
+        lemma_lpar r0 r1 (c0' (h b')) c1 pre0 pre1 post0 post1;
+        lemma_rpar r0 r1 (c0' (h b')) c1 pre0 pre1 post0 post1
+      in
+      Classical.forall_intro aux
 
-  assume (chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
+    | Put b' n c0' ->
+      let r = r0 <*> r1 in
+      assert (chi c0' r0 (upd_pre (r_pred pre0 r0) b' n) (r_pred post0 r0));
+      
+      chi_stronger_pre c0' r0 (upd_pre (r_pred pre0 r0) b' n) (r_pred post0 r0) (r_pred (upd_pre pre0 b' n) r0);
+      assert (chi c0' r0 (r_pred (upd_pre pre0 b' n) r0) (r_pred post0 r0));
+
+      assume (is_stable_on r0.view.fp (upd_pre pre0 b' n));
+
+      lemma_lpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
+      lemma_rpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
+
+      assert (chi (l_par c0' c1) (r0 <*> r1) 
+        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
+        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
+      
+      let aux (h:mem) : Lemma
+        (requires upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n h)
+        (ensures r_pred (fun h -> upd_pre pre0 b' n h /\ pre1 h) (r0 <*> r1) h)
+        = let h' = upd b' n h in
+          assert (modifies r0.view.fp h (upd b' n h));
+          assert (r_pred (fun h -> pre0 h /\ pre1 h) r (upd b' n h));
+          assert (pre0 h' /\ pre1 h' /\ r.view.inv h');
+          assert (modifies r0.view.fp h' h);
+          assume (r.view.inv h)
+//          admit()
+
+      in
+      Classical.forall_intro (Classical.move_requires aux);
+      chi_stronger_pre (l_par c0' c1) (r0 <*> r1) 
+        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
+        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
+      assert (chi (l_par c0' c1) (r0 <*> r1)
+                  (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n)
+                  (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
+
+
+      assume (chi (r_par c0' c1) (r0 <*> r1)
+                  (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n)
+                  (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
+
+      let aux (h:mem) : Lemma
+        (requires r.view.inv h)
+        (ensures r.view.inv (upd b' n h))
+        = assert (modifies r0.view.fp h (upd b' n h))
+      in
+      Classical.forall_intro (Classical.move_requires aux)
+
+
+    | MOr c0' c0'' -> lemma_lpar r0 r1 c0' c1 pre0 pre1 post0 post1; lemma_lpar r0 r1 c0'' c1 pre0 pre1 post0 post1
+      
+and lemma_rpar (#a #b:Type) 
+    (r0:resource) (r1:resource{disjoint r0.view.fp r1.view.fp})
+    (c0:m a) (c1:m b) 
+    (pre0 pre1 post0 post1:mem -> Type) : Lemma
+    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
+      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
+    (ensures chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+    (decreases %[c0; c1])    
+    = admit()
+
+let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
+  let c = m_par c0 c1 in
+  lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1;
+  lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1;
   c
 
