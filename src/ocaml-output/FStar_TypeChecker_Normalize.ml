@@ -8040,6 +8040,9 @@ let (eta_expand :
                                      (uu___3256_26394.FStar_TypeChecker_Env.proof_ns);
                                    FStar_TypeChecker_Env.synth_hook =
                                      (uu___3256_26394.FStar_TypeChecker_Env.synth_hook);
+                                   FStar_TypeChecker_Env.try_solve_implicits_hook
+                                     =
+                                     (uu___3256_26394.FStar_TypeChecker_Env.try_solve_implicits_hook);
                                    FStar_TypeChecker_Env.splice =
                                      (uu___3256_26394.FStar_TypeChecker_Env.splice);
                                    FStar_TypeChecker_Env.postprocess =
@@ -8134,6 +8137,8 @@ let (eta_expand :
                              (uu___3263_26409.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth_hook =
                              (uu___3263_26409.FStar_TypeChecker_Env.synth_hook);
+                           FStar_TypeChecker_Env.try_solve_implicits_hook =
+                             (uu___3263_26409.FStar_TypeChecker_Env.try_solve_implicits_hook);
                            FStar_TypeChecker_Env.splice =
                              (uu___3263_26409.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.postprocess =

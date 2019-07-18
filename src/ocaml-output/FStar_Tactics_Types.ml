@@ -108,6 +108,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___16_119.FStar_TypeChecker_Env.proof_ns);
       FStar_TypeChecker_Env.synth_hook =
         (uu___16_119.FStar_TypeChecker_Env.synth_hook);
+      FStar_TypeChecker_Env.try_solve_implicits_hook =
+        (uu___16_119.FStar_TypeChecker_Env.try_solve_implicits_hook);
       FStar_TypeChecker_Env.splice =
         (uu___16_119.FStar_TypeChecker_Env.splice);
       FStar_TypeChecker_Env.postprocess =
