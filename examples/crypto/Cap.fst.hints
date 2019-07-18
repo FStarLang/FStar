@@ -14,6 +14,41 @@
       "13ac0fe04fb5f7489b3b8b6a11127a4d"
     ],
     [
+      "Cap.gen",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2f95ad7eac93d82def656f613c94a768"
+    ],
+    [
+      "Cap.issue",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Cap.UTF8_inj",
+        "equation_Cap.capRead", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.file", "equation_MAC.pkey",
+        "function_token_typing_MAC.key_prop",
+        "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357",
+        "refinement_interpretation_Tm_refine_e7c2b5a7f5564b833b80f9c630ccb99f",
+        "string_inversion", "token_correspondence_Cap.capRead"
+      ],
+      0,
+      "c3a07ebc3fd2f0b0f00548bfdcd8fa07"
+    ],
+    [
+      "Cap.redeem",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ef8cebe6055254c90f71d2def8397840"
+    ],
+    [
       "Cap.main",
       1,
       2,
@@ -38,7 +73,7 @@
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "82ff87e8bb04cb7566ed8b036b3b5269"
+      "102d0b3c3b8585d3ca772df8ea4086bf"
     ],
     [
       "Cap.capRead",
@@ -50,16 +85,33 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "32c42289e5eaf4b616ca19e8c69e0baf"
+      "5d66f68912a1e1f4f71664a6d451d311"
     ],
     [
       "Cap.issue",
-      1,
+      2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Cap.UTF8_inj",
+        "equation_Cap.capRead", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.file", "equation_MAC.pkey",
+        "function_token_typing_MAC.key_prop",
+        "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357",
+        "refinement_interpretation_Tm_refine_e7c2b5a7f5564b833b80f9c630ccb99f",
+        "string_inversion", "token_correspondence_Cap.capRead"
+      ],
       0,
-      "77818a124ee9cdefd22298d9f2fbf9e8"
+      "3cd86a470a2bf108b8605650b331f9b3"
+    ],
+    [
+      "Cap.redeem",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "5048183ad8bd7607f9e3dadd6b9a3552"
     ]
   ]
 ]
