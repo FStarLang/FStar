@@ -404,9 +404,10 @@ let report_implicits rng (is : Env.implicits) : unit =
     Err.add_errors errs;
     Err.stop_if_err ()
 
-let run_tactic_on_typ
+let run_tactic_on_typ'
         (rng_tac : Range.range) (rng_goal : Range.range)
-        (tactic:term) (env:env) (typ:typ)
+        (tactic:term) (env:env)
+        (typ:S.typ) (initial_proofstate: Range.range -> Env.env -> proofstate * term)
                     : list<goal> // remaining goals
                     * term // witness
                     =
@@ -429,11 +430,12 @@ let run_tactic_on_typ
     let env = { env with Env.lax_universes = true } in
     let env = { env with failhard = true } in
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
-    let ps, w = proofstate_of_goal_ty rng env typ in
+    let ps, w = initial_proofstate rng env in
 
     Reflection.Basic.env_hook := Some env;
     if !tacdbg then
-        BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
+        BU.print1 "Running tactic with goal = (%s) {\n"
+          (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run_safe (tau ()) ps) in
     if !tacdbg then
         BU.print_string "}\n";
@@ -493,6 +495,30 @@ let run_tactic_on_typ
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: %s" (texn_to_string e))
                           ps.entry_range
+
+let run_tactic_on_typ
+        (rng_tac : Range.range) (rng_goal : Range.range)
+        (tactic:term) (env:env)
+        (typ:term)
+    : list<goal> // remaining goals
+    * term // witness
+    =
+    run_tactic_on_typ' rng_tac rng_goal tactic env typ (fun rng env -> proofstate_of_goal_ty rng env typ)
+
+
+let run_tactic_on_all_implicits
+        (rng_tac : Range.range) (rng_goal : Range.range)
+        (tactic:term) (env:env) (imps:Env.implicits)
+    : list<goal> // remaining goals
+    * term // witness
+    =
+    run_tactic_on_typ'
+      rng_tac
+      rng_goal
+      tactic
+      env
+      S.t_unit
+      (fun rng env -> proofstate_of_all_implicits rng env imps)
 
 // Polarity
 type pol =
@@ -749,6 +775,31 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
     end
+
+
+let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+    tacdbg := Env.debug env (Options.Other "Tac");
+
+    let gs, w = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
+    // Check that all goals left are irrelevant and provable
+    // TODO: It would be nicer to combine all of these into a guard and return
+    // that to TcTerm, but the varying environments make it awkward.
+    gs |> List.iter (fun g ->
+        match getprop (goal_env g) (goal_type g) with
+        | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
+            let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
+                        ; deferred = []
+                        ; univ_ineqs = [], []
+                        ; implicits = [] } in
+            TcRel.force_trivial_guard (goal_env g) guard
+            end
+        | None ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals")
+                            (Env.get_range env));
+    ()
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin

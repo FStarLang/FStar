@@ -2091,6 +2091,7 @@ let goal_of_goal_ty env typ : goal * guard_t =
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
+
 let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = {
@@ -2110,3 +2111,27 @@ let proofstate_of_goal_ty rng env typ =
     }
     in
     (ps, (goal_witness g))
+
+let goal_of_implicit env (i:Env.implicit) : goal =
+  mk_goal env i.imp_uvar (FStar.Options.peek()) false ""
+
+let proofstate_of_all_implicits rng env imps =
+    let goals = List.map (goal_of_implicit env) imps in
+    let w = goal_witness (List.hd goals) in
+    let ps = {
+        main_context = env;
+        main_goal = List.hd goals;
+        all_implicits = imps;
+        goals = goals;
+        smt_goals = [];
+        depth = 0;
+        __dump = (fun ps msg -> dump_proofstate ps msg);
+        psc = Cfg.null_psc;
+        entry_range = rng;
+        guard_policy = SMT;
+        freshness = 0;
+        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        local_state = BU.psmap_empty ();
+    }
+    in
+    (ps, w)
