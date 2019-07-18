@@ -1231,14 +1231,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
               //   (Print.term_to_string head)
               //   (List.map string_of_int strict_args |> String.concat "; ");
               let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let norm_args_len = List.length norm_args in
               if strict_args
                 |> List.for_all (fun i ->
-                  let arg_i, _ = List.nth norm_args i in
-                  let head, _ = U.head_and_args arg_i in
-                  match (un_uinst head).n with
-                  | Tm_constant _ -> true
-                  | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
-                  | _ -> false)
+                  if i >= norm_args_len then false
+                  else
+                    let arg_i, _ = List.nth norm_args i in
+                    let head, _ = U.head_and_args arg_i in
+                    match (un_uinst head).n with
+                    | Tm_constant _ -> true
+                    | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
+                    | _ -> false)
               then //all strict args have constant head symbols
                    let stack =
                      stack |>
