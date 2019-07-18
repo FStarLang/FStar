@@ -3943,6 +3943,8 @@ let (check_and_ascribe :
                 (uu___1300_10046.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =
                 (uu___1300_10046.FStar_TypeChecker_Env.synth_hook);
+              FStar_TypeChecker_Env.try_solve_implicits_hook =
+                (uu___1300_10046.FStar_TypeChecker_Env.try_solve_implicits_hook);
               FStar_TypeChecker_Env.splice =
                 (uu___1300_10046.FStar_TypeChecker_Env.splice);
               FStar_TypeChecker_Env.postprocess =
