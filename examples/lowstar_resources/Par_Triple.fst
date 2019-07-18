@@ -195,7 +195,9 @@ let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type 
       chi (c (h b)) r pre post))
   | Put b n c -> 
         includes r.view.fp (Some b) /\ // The updated memory is inside the resource
-        (forall h. r.view.inv h ==> r.view.inv (upd b n h)) /\ // The resource invariant is preserved
+        // TODO: Equivalence is probably too strong. Should we rephrase chi to be {r.view.inv /\ pre}c{post /\ r.view.inv}
+        // with resource invariants somehow outside of chi?
+        (forall h. r.view.inv h <==> r.view.inv (upd b n h)) /\ // The resource invariant is preserved
         chi c r (upd_pre pre b n) post
   | MOr c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
@@ -303,11 +305,11 @@ let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type)
     in Classical.forall_intro aux
   | Put b n c ->
       let aux (h:mem) : Lemma
-      (requires r0.view.inv h)
-      (ensures r0.view.inv (upd b n h))
+      (ensures r0.view.inv h <==> r0.view.inv (upd b n h))
       =
       let h' = upd b n h in
-      assert (modifies (r1.view.fp) h h')
+      assert (modifies (r1.view.fp) h h');
+      assert (modifies r1.view.fp h' h)
     in Classical.forall_intro (Classical.move_requires aux);
     chi_bigger_resource c r0 r1 (upd_pre pre b n) post
   | MOr c0 c1 -> chi_bigger_resource c0 r0 r1 pre post; chi_bigger_resource c1 r0 r1 pre post
@@ -360,50 +362,41 @@ let rec lemma_lpar (#a #b:Type)
 
     | Put b' n c0' ->
       let r = r0 <*> r1 in
-      assert (chi c0' r0 (upd_pre (r_pred pre0 r0) b' n) (r_pred post0 r0));
-      
       chi_stronger_pre c0' r0 (upd_pre (r_pred pre0 r0) b' n) (r_pred post0 r0) (r_pred (upd_pre pre0 b' n) r0);
-      assert (chi c0' r0 (r_pred (upd_pre pre0 b' n) r0) (r_pred post0 r0));
+      
+      let aux_stable (h0 h1:mem) (l':loc) : Lemma
+        (requires upd_pre pre0 b' n h0 /\ modifies l' h0 h1 /\ disjoint l' r0.view.fp)
+        (ensures upd_pre pre0 b' n h1)
+        = let h0' = upd b' n h0 in
+          let h1' = upd b' n h1 in
+          assert (modifies l' h0' h1')
 
-      assume (is_stable_on r0.view.fp (upd_pre pre0 b' n));
+      in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
 
       lemma_lpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
       lemma_rpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
 
-      assert (chi (l_par c0' c1) (r0 <*> r1) 
-        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
-        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
       
       let aux (h:mem) : Lemma
         (requires upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n h)
         (ensures r_pred (fun h -> upd_pre pre0 b' n h /\ pre1 h) (r0 <*> r1) h)
         = let h' = upd b' n h in
           assert (modifies r0.view.fp h (upd b' n h));
-          assert (r_pred (fun h -> pre0 h /\ pre1 h) r (upd b' n h));
-          assert (pre0 h' /\ pre1 h' /\ r.view.inv h');
-          assert (modifies r0.view.fp h' h);
-          assume (r.view.inv h)
-//          admit()
-
+          assert (modifies r0.view.fp h' h)
       in
       Classical.forall_intro (Classical.move_requires aux);
       chi_stronger_pre (l_par c0' c1) (r0 <*> r1) 
         (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
         (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
         (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
-      assert (chi (l_par c0' c1) (r0 <*> r1)
-                  (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n)
-                  (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
-
-
-      assume (chi (r_par c0' c1) (r0 <*> r1)
-                  (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n)
-                  (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)));
+      chi_stronger_pre (r_par c0' c1) (r0 <*> r1) 
+        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
+        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
 
       let aux (h:mem) : Lemma
-        (requires r.view.inv h)
-        (ensures r.view.inv (upd b' n h))
-        = assert (modifies r0.view.fp h (upd b' n h))
+        (ensures r.view.inv h <==> r.view.inv (upd b' n h))
+        = assert (modifies r0.view.fp h (upd b' n h)); assert (modifies r0.view.fp (upd b' n h) h)
       in
       Classical.forall_intro (Classical.move_requires aux)
 
@@ -425,4 +418,3 @@ let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 =
   lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1;
   lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1;
   c
-
