@@ -160,14 +160,16 @@ let preserved_intro
 let modifies #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
   forall (l' : loc c) . {:pattern (l' `loc_disjoint` l)} l' `loc_disjoint` l ==> preserved l' h1 h2
 
-
-let loc_used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
-  admit()
-
-
-let loc_unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
+let loc_unused_in' #al (c: cls al) (h: HS.mem) : Tot (loc c) =
   Classical.forall_intro_3 c.aloc_unused_in_includes;
   GSet.comprehend (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_unused_in` h))
+
+let loc_used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
+  Classical.forall_intro_3 c.aloc_unused_in_includes;
+  GSet.complement (loc_unused_in' c h)
+
+let loc_unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
+  loc_unused_in' c h
 
 let loc_includes_refl
   (#aloc: Type) (#c: cls aloc)

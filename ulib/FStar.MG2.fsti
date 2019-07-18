@@ -87,7 +87,7 @@ type cls (aloc: Type) : Type = | Cls:
     (lesser: aloc) ->
     (h: HS.mem) ->
     Lemma
-    ((greater `aloc_includes` lesser /\ greater `aloc_unused_in` h) ==> lesser `aloc_unused_in` h)
+    (greater `aloc_includes` lesser ==> (greater `aloc_unused_in` h <==> lesser `aloc_unused_in` h))
   )) ->
   (aloc_unused_in_preserved: (
     (x: aloc) ->
