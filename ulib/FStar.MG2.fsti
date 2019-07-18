@@ -89,6 +89,13 @@ type cls (aloc: Type) : Type = | Cls:
     Lemma
     (greater `aloc_includes` lesser ==> (greater `aloc_unused_in` h <==> lesser `aloc_unused_in` h))
   )) ->
+  (aloc_unused_in_disjoint: (
+    (x: aloc) ->
+    (y: aloc) ->
+    (h: HS.mem) ->
+    Lemma
+    ((x `aloc_unused_in` h /\ (~ (y `aloc_unused_in` h))) ==> x `aloc_disjoint` y)
+  )) ->
   (aloc_unused_in_preserved: (
     (x: aloc) ->
     (h1: HS.mem) ->

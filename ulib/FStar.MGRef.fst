@@ -42,3 +42,4 @@ let clas: cls aloc = Cls
   aloc_unused_in
   (fun _ _ _ -> ())
   (fun _ _ _ -> ())
+  (fun _ _ _ -> ())
