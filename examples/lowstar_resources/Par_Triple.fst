@@ -74,35 +74,9 @@ and r_par #a #b c0 c1 =
 let m_par (#a #b:Type0) (c0:m a) (c1:m b) : m (a & b) =
   MOr (l_par c0 c1) (r_par c0 c1)
 
-// A logically equivalent definition of parallel composition (at unit)
-// in terms of two unary effect handlers, based on G. Plotkin's slides.
-val r_par' (c0:m unit) (c1:m unit -> m unit) : m unit
-let rec r_par' c0 c1 =
-  match c0 with
-  | Ret x -> Ret x
-  | Get b c0' -> Get b (fun n ->
-                          FStar.WellFounded.axiom1 c0' n;
-                          MOr (c1 (c0' n))
-                             (r_par' (c0' n) c1))
-  | Put b n c0' -> Put b n (MOr (c1 c0') (r_par' c0' c1))
-  | MOr c0' c0'' -> MOr (r_par' c0' c1) (r_par' c0'' c1)
+(*** Memory definitions ***)
 
-val l_par' (c0:m unit) (c1:m unit) : m unit
-let rec l_par' c0 c1 =
-  match c0 with
-  | Ret x -> Ret x
-  | Get b c0' -> Get b (fun n ->
-                          FStar.WellFounded.axiom1 c0' n;
-                          MOr (l_par' (c0' n) c1)
-                             (r_par' c1 (l_par' (c0' n))))
-  | Put b n c0' -> Put b n (MOr (l_par' c0' c1) (r_par' c1 (l_par' c0')))
-  | MOr c0' c0'' -> MOr (l_par' c0' c1) (l_par' c0'' c1)
-
-let m_par' c0 c1 : m unit =
-  MOr (l_par' c0 c1) (r_par' c1 (l_par' c0))
-
-
-// For this example sketch, memory is simply a pair of booleans.
+/// For this example sketch, memory is simply a pair of booleans.
 let mem = bool -> nat
 
 let upd (b:bool) (n:nat) (h:mem) : mem =
@@ -115,13 +89,13 @@ let modifies (fp:loc) (h0 h1:mem) =
   | None -> True
   | Some b -> h0 (not b) == h1 (not b)
 
-// Separating conjunction of two resources.
+/// Separating conjunction of two resources.
 let xor a b = (a || b) && ((not a) || (not b))
 
-// In the current model, two locations are disjoint if they are not the whole memory (None) and if they are actually disjoint (xor of two resources)
+/// In the current model, two locations are disjoint if they are not the whole memory (None) and if they are actually disjoint (xor of two resources)
 let disjoint (l1 l2:loc) = Some? l1 /\ Some? l2 /\ xor (Some?.v l1) (Some?.v l2)
 
-// l2 is included in l1
+/// l2 is included in l1
 let includes (l1 l2:loc) = 
   None? l1 \/ // l1 is the whole memory
   l1 == l2 // Or l1 is Some of something, and l2 needs to be the same
@@ -131,20 +105,13 @@ let loc_union (l1 l2:loc) : loc =
   | None, _ | _, None -> None
   | Some v1, Some v2 -> if v1 = v2 then Some v1 else None
 
-// We only consider predicates that are stable on the resource footprint: They depend only on the memory contents of the available resource
+/// We only consider predicates that are stable on the resource footprint: They depend only on the memory contents of the available resource
 let is_stable_on (fp:loc) (pred:mem -> Type) =
   forall (h0 h1:mem) (l:loc). (pred h0 /\ modifies l h0 h1 /\ disjoint fp l) ==> pred h1
 
-// Semantics of the monad
-let rec run #a (c:m a) (h:mem) : a * mem =
-  match c with
-  | Ret x -> x, h
-  | Get b c -> run (FStar.WellFounded.axiom1 c (h b); c (h b)) h
-  | Put b n c -> run c (upd b n h)
-  | MOr c0 c1 -> admit()
+(*** Resource definitions ***)
 
-
-// Simple variant of our notion of resources.
+/// Simple variant of our notion of resources.
 let inv_reads_fp (fp:option bool) (inv:mem -> Type0) =
   forall h h' l. inv h /\ disjoint fp l /\ modifies l h h' ==> inv h'
 
@@ -184,7 +151,9 @@ let (<*>) (r0 r1:resource) : resource =
 // Cannot leave this function unnamed inside chi definition to reason about it
 let upd_pre (pre:mem -> Type) (b:bool) (n:nat) = fun h -> pre (upd b n h)
 
+(*** Axiomatisation of the semantics, RST monad definition ***)
 
+/// We assume here that the initial and final resources are the same
 let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type =
   match c with
   | Ret x -> forall h. pre h ==> post h
@@ -201,19 +170,19 @@ let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type 
         chi c r (upd_pre pre b n) post
   | MOr c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
-// This is an alternate characterization of Hoare Triples. This should be provable from the definition of chi.
-// It states that if we satisfy chi, then running the command in a state satisfying the precondition
-// results in a state satisfying the postcondition, and only modifying the specified footprint
-val lemma_chi_characterization (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (h0:mem) : Lemma
-  (requires pre h0 /\ chi c r pre post)
-  (ensures (
-    let x, h1 = run c h0 in
-    post h1 /\ modifies r.view.fp h0 h1)
-  )
+let r_pred (pred:mem -> Type) (r:resource) = fun h -> pred h /\ r.view.inv h
 
-let lemma_chi_characterization #a c pre post h0 = admit()
+/// The `is_stable_on predicate` is not yet provable in the current RST model:
+/// pre/postconditions can currently refer to the whole memory, and not just the resource footprint
+/// This will be resolved once selectors are implemented
+let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{
+  chi c r (r_pred pre r) (r_pred post r) /\
+  is_stable_on r.view.fp pre /\ is_stable_on r.view.fp post}
 
-// Map preserves chi
+
+(*** Lemmas about chi ***)
+
+/// Map preserves chi
 let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : 
   Lemma 
   (requires chi c r pre post)
@@ -228,7 +197,7 @@ let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> 
   | Put b n c -> map_chi f c r (upd_pre pre b n) post
   | MOr c0 c1 -> map_chi f c0 r pre post; map_chi f c1 r pre post
 
-// We can derive a weaker precondition from a stronger one
+/// We can derive a weaker precondition from a stronger one
 let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_weak:mem -> Type)
   : Lemma
   (requires chi c r pre post /\ (forall h. post h ==> post_weak h))
@@ -243,7 +212,7 @@ let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:m
   | Put b n c -> chi_weaken_post c r (upd_pre pre b n) post post_weak
   | MOr c0 c1 -> chi_weaken_post c0 r pre post post_weak; chi_weaken_post c1 r pre post post_weak
 
-// chi still holds if we strengthen the precondition
+/// chi still holds if we strengthen the precondition
 let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (pre_strong:mem -> Type)
   : Lemma
   (requires chi c r pre post /\ (forall h. pre_strong h ==> pre h))
@@ -258,7 +227,7 @@ let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:
   | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
   | MOr c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
 
-// If pre implies post for any memory, then chi holds
+/// If a subset of pre implies a new post for any memory, then chi still holds when the new post is added to the existing postcondition
 let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> Type) (pre_small:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
   : Lemma
   (requires chi c r pre post /\ 
@@ -292,6 +261,7 @@ let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> 
     chi_pre_implies_post c r l (upd_pre pre b n) (upd_pre pre_small b n) post post_add
   | MOr c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add; chi_pre_implies_post c1 r l pre pre_small post post_add
 
+/// We can extend the resource in chi to a starred resource
 let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type) (post:mem -> Type)
   : Lemma
   (requires chi c r1 pre post /\ disjoint r0.view.fp r1.view.fp)
@@ -313,23 +283,6 @@ let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type)
     in Classical.forall_intro (Classical.move_requires aux);
     chi_bigger_resource c r0 r1 (upd_pre pre b n) post
   | MOr c0 c1 -> chi_bigger_resource c0 r0 r1 pre post; chi_bigger_resource c1 r0 r1 pre post
-
-let r_pred (pred:mem -> Type) (r:resource) = fun h -> pred h /\ r.view.inv h
-
-// The is_stable_on predicate is not yet provable in the current RST model, but it will be once selectors are implemented
-let rst (a:Type) (r:resource) (pre post:mem -> Type) = c:m a{
-  chi c r (r_pred pre r) (r_pred post r) /\
-  is_stable_on r.view.fp pre /\ is_stable_on r.view.fp post}
-
-val par  (#a #b:Type0)
-         (#r0:resource)
-         (#r1:resource{disjoint r0.view.fp r1.view.fp})
-         (#pre0 #pre1 #post0 #post1:mem -> Type)
-         (c0:rst a r0 pre0 post0)
-         (c1:rst b r1 pre1 post1)
-       : rst (a & b) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h)
-
-open FStar.Tactics
 
 let rec lemma_lpar (#a #b:Type) 
     (r0:resource) (r1:resource{disjoint r0.view.fp r1.view.fp})
@@ -474,8 +427,47 @@ and lemma_rpar (#a #b:Type)
 
     | MOr c1' c1'' -> lemma_rpar r0 r1 c0 c1' pre0 pre1 post0 post1; lemma_rpar r0 r1 c0 c1'' pre0 pre1 post0 post1
 
+(*** Parallel composition ***)
+
+/// This is where we enforce that we can only perform parallel composition of commands operating on resources with disjoint footprints
+/// If memory footprints overlapped, we wouldn't be able to prove that assuming only both preconditions, we can prove both postconditions
+/// through any interleaving (modeled by chi)
+val par  (#a #b:Type0)
+         (#r0:resource)
+         (#r1:resource{disjoint r0.view.fp r1.view.fp})
+         (#pre0 #pre1 #post0 #post1:mem -> Type)
+         (c0:rst a r0 pre0 post0)
+         (c1:rst b r1 pre1 post1)
+       : rst (a & b) (r0 <*> r1) (fun h -> pre0 h /\ pre1 h) (fun h -> post0 h /\ post1 h)
+
 let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
   let c = m_par c0 c1 in
-  lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1;
-  lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1;
+  (**) lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1;
+  (**) lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1;
   c
+
+
+(*** Denotational semantics ***)
+
+
+/// Semantics of the monad
+/// To resolve non-determinism for MOr, we might need a stream of booleans to pick the left or right branch at each or instruction
+let rec run #a (c:m a) (h:mem) : a * mem =
+  match c with
+  | Ret x -> x, h
+  | Get b c -> run (FStar.WellFounded.axiom1 c (h b); c (h b)) h
+  | Put b n c -> run c (upd b n h)
+  | MOr c0 c1 -> admit()
+
+/// The denotational semantics `run` and their axiomatisation `chi` should be coherent
+/// More precisely, if we satisfy chi, then running the command `c` in a state satisfying the precondition
+/// results in a state satisfying the postcondition, and only modifying the specified footprint
+/// This would prove that Hoare triples accepted by chi always match the semantics
+val lemma_chi_characterization (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (h0:mem) : Lemma
+  (requires pre h0 /\ chi c r pre post)
+  (ensures (
+    let x, h1 = run c h0 in
+    post h1 /\ modifies r.view.fp h0 h1)
+  )
+
+let lemma_chi_characterization #a c pre post h0 = admit()
