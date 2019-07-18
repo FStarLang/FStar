@@ -346,7 +346,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "1f019f75048e6dacc326bdb301d31619"
+      "a7206a0e07e2567277b471a38f28ca80"
     ],
     [
       "Ex07c.appears_free_in",
@@ -578,7 +578,7 @@
         "refinement_interpretation_Tm_refine_b6f32c64566936006e4e25abfa332545"
       ],
       0,
-      "cdc43bd38f62cbab562cc0c6152ba070"
+      "49d6015937ff94a5f24f6f76e58122a9"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -590,7 +590,7 @@
         "refinement_interpretation_Tm_refine_4dd1c5c0ab840b5b119e8987fb6d6069"
       ],
       0,
-      "96dce84899b02a280e747212a2406ea4"
+      "26c8d0198cda5604d8eb1ece5040b87c"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -677,7 +677,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_typing"
       ],
       0,
-      "9a81665ab08584ff28b6afc297ef43f7"
+      "9c15392693178c8ea20600f93db0c388"
     ],
     [
       "Ex07c.preservation",
@@ -689,7 +689,7 @@
         "refinement_interpretation_Tm_refine_228b28518ddadbae1e0470b40bd6811c"
       ],
       0,
-      "42dc12b5d5f66290a021d59f11910b80"
+      "358f562425efe089f2e7920df1b0eb53"
     ],
     [
       "Ex07c.preservation",
@@ -701,7 +701,7 @@
         "refinement_interpretation_Tm_refine_d791e207d72e99c79e5a561580d97ac3"
       ],
       0,
-      "7688f4100f0262323b9d7fc102a3bebf"
+      "664efd764c74a7191fd35b90c93dd907"
     ],
     [
       "Ex07c.preservation",
@@ -769,7 +769,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "4282f7020f8de4671fe579e4e0d684bc"
+      "930b55c8c9c71d93a55336b44284a83b"
     ],
     [
       "Ex07c.ty",
@@ -1098,7 +1098,7 @@
         "refinement_interpretation_Tm_refine_4dd1c5c0ab840b5b119e8987fb6d6069"
       ],
       0,
-      "4f72d478c8ab483cc6a3dd410029e04d"
+      "c2819bb6ade00ef2cbbca9bd3c2d8a63"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -1185,7 +1185,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_typing"
       ],
       0,
-      "13c8ad2b0c56728f5f6f9ace1b03f8a0"
+      "31a1425844c381202239e9bee399927f"
     ],
     [
       "Ex07c.preservation",
@@ -1197,7 +1197,7 @@
         "refinement_interpretation_Tm_refine_d791e207d72e99c79e5a561580d97ac3"
       ],
       0,
-      "51bde0b8a4c886f52b98c136d3a1c08f"
+      "1c23732a1988e7a89e1ac2ab01cd2bd4"
     ],
     [
       "Ex07c.preservation",
@@ -1265,7 +1265,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "b967398e01220911883c7186a8ca17cf"
+      "047f0de9d490d29f23359febd3fb5ec9"
     ]
   ]
 ]

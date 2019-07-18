@@ -298,7 +298,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "b974d28c7fa5978c0a40602a62af76dd"
+      "f0b46061386911c777d26338af718e49"
     ],
     [
       "Ex07a.appears_free_in",
@@ -629,7 +629,7 @@
         "unit_typing"
       ],
       0,
-      "e7215c37070312e9dbcf377a0a0c62cb"
+      "a00d6eccda545770ee0a896638801324"
     ],
     [
       "Ex07a.typed_step",
