@@ -143,7 +143,8 @@ val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid
     ~ (is_live_pid v_perms new_pid) /\
     (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    )
+    ) /\
+    get_current_max new_v_perms > get_current_max v_perms
   ))
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new
@@ -164,7 +165,8 @@ val share_perms_with_pid:
     get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
     (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    )
+    ) /\
+    get_current_max new_v_perms > get_current_max v_perms
   ))
 
 
@@ -186,7 +188,8 @@ val move_perms_with_pid:
     get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /\
     (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    )
+    ) /\
+    get_current_max new_v_perms > get_current_max v_perms
   ))
 
 /// When merginin two ``pid``, the first one will receive the sum of both permissions while the second

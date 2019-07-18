@@ -112,6 +112,26 @@ let ucell_disjoint (c1 c2:ucell) : GTot Type0 =
     (c1.b_index <> c2.b_index \/           // Either the cells are different (i.e. spatially disjoint)
     c1.b_pid <> c2.b_pid))                 // Or they don't have the same permission
 
+let ucell_disjoint_elim (c1 c2: ucell) (goal: Type)
+  (not_same_region: unit -> Lemma (requires (c1.b_rid <> c2.b_rid)) (ensures goal))
+  (not_same_address: unit -> Lemma (requires (c1.b_rid = c2.b_rid /\ c1.b_addr <> c2.b_addr)) (ensures goal))
+  (not_same_index: unit -> Lemma
+    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_max = c2.b_max /\ c1.b_index <> c2.b_index))
+    (ensures goal)
+  )
+  (not_same_pid: unit -> Lemma
+    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_max = c2.b_max /\ c1.b_index = c2.b_index /\ c1.b_pid <> c2.b_pid))
+    (ensures goal)
+  )
+  : Lemma (requires (c1 `ucell_disjoint` c2)) (ensures goal)
+  =
+  if c1.b_rid <> c2.b_rid then not_same_region ()
+  else if c1.b_addr <> c2.b_addr then not_same_address ()
+  else if c1.b_max = c2.b_max && c1.b_index <> c2.b_index then not_same_index ()
+  else if c1.b_max = c2.b_max && c1.b_pid <> c2.b_pid then not_same_pid ()
+  else ()
+
+
 let ucell_unused_in (cell:ucell) (h: HS.mem) =
   // Either there is nothing allocated at that memory cell
   (forall (t:Type) (ref: HS.mreference t (Heap.trivial_preorder t)).
