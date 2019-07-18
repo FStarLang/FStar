@@ -101,6 +101,15 @@ let whnf env t =
 let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
                               Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
 
+(* `maybe_whnf env t` attempts to reduce t to weak-head normal form.
+ *  It is called when `t` is a head redex, e.g., if its head symbol is marked for unfolding.
+ *  However, if its head symbol is also marked as `strict_on_arguments`, then if it is applied
+ *  to non-constant arguments, then it may actually not be unfolded.
+ *  In those cases `maybe_whnf env t` may not reduce `t` at all.
+ *  In callers of this code, we need to be careful to check that if `t` was not reduced, then
+ *  we do not enter into infinite loops by recursing on `t` itself.
+ *)
+
 let maybe_whnf env t =
   let t' = whnf env t in
   let head', _ = U.head_and_args t' in
