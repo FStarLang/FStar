@@ -154,9 +154,7 @@ let free #a b =
   (**)         end
   (**)       )
   (**)   )
-  (**) );
-  (**) assert(modifies (loc_array b) h0 h1);
-  ()
+  (**) )
 
 #pop-options
 
@@ -185,44 +183,41 @@ val share_cell
     get_perm_pid h1 b (U32.v i) (Ghost.reveal pid) == P.half_permission (get_perm h0 b (U32.v i))
   ))
 
-#push-options "--z3rlimit 10"
+#push-options "--z3rlimit 50"
 
 let share_cell #a b i pid =
   (**) let open HST in
   (**) let h0 = get() in
-  let s = ! b.content in
-  let sb0 = Seq.slice s (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
-  let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
+  let s0 = ! b.content in
+  let (v_init, perm_map) = Seq.index s0 (U32.v b.idx + U32.v i) in
   (**) assert (live_cell h0 b (U32.v i));
   (**) lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid);
-  let sb1 = Seq.upd sb0 (U32.v i)
-    (v_init, Ghost.hide (share_perms_with_pid #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal pid)))
+  let perm_map' = Ghost.hide (share_perms_with_pid #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal pid)) in
+  let s1 = Seq.upd s0 (U32.v b.idx + U32.v i)
+    (v_init, perm_map')
   in
-  let s1 = Seq.replace_subseq s (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
   b.content := s1;
   (**) let h1 = get() in
   (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
-  (**) let r = frameOf b in
-  (**) let n = as_addr b in
-  admit()(*
+  (**) let cell = aloc_cell b (U32.v i) in
   (**) MG.modifies_aloc_intro
   (**)   #ucell #cls
-  (**)   #r #n
-  (**)   ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = Ghost.reveal b.pid})
+  (**)   cell
   (**)   h0 h1
-  (**)   (fun r -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun r n -> ())
   (**)   (fun aloc' ->
-  (**)      prove_loc_preserved #r #n aloc' h0 h1 (fun t b'->
-  (**)        live_same_arrays_equal_types b b' h0;
-  (**)        live_same_arrays_equal_types b b' h1;
-  (**)        if aloc'.b_index <> U32.v b.idx + U32.v i then ()
-  (**)        else lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
+  (**)      ucell_preserved_intro aloc' h0 h1 (fun t' b'->
+  (**)        let i' = aloc'.b_index - U32.v b'.idx in
+  (**)        ucell_disjoint_elim aloc' cell (ucell_matches_live_array_cell aloc' t' b' h1 /\ sel h0 b' i' == sel h1 b' i')
+  (**)          (fun _ -> ())
+  (**)          (fun _ -> ())
+  (**)          (fun _ -> (* Different indexes *)
+  (**)            live_same_arrays_equal_types b b' h0; live_same_arrays_equal_types b b' h1
+  (**)          )
+  (**)          (fun _ -> (* Different PIDs *)
+  (**)            live_same_arrays_equal_types b b' h0; live_same_arrays_equal_types b b' h1
+  (**)          )
   (**)      )
-  (**)     )
-  *)
+  (**)   )
 
 #pop-options
 
@@ -255,10 +250,8 @@ val share_cells
 let rec share_cells #a b i pid =
   (**) let h0 = HST.get() in
   if U32.v i >= vlength b then
-    (**) admit()(*MG.modifies_none_intro #ucell #cls h0 h0
+    (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
-    (**)   (fun _ _ _ -> ())
-    (**)   (fun _ _ -> ())*)
   else begin
     share_cells b (U32.add i 1ul) pid;
     (**) let h1 = HST.get() in
@@ -291,11 +284,21 @@ let share #a b =
   (**) assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
-  get_array_current_max_same_with_new_pid #a b h0 new_pid;
-  //array_not_used_pid_in_loc_unused_in b' h0;
-  (**)// assert( loc_unused_in h0 `loc_includes` (loc_array b'));
-  (**)// assert( loc_not_unused_in h1 `loc_includes` (loc_array b'));
-  admit();
+  (**) get_array_current_max_same_with_new_pid #a b h0 new_pid;
+  (**) array_unused_in_intro b' h0;
+  (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
+  (**)  let cell = aloc_cell b' i in
+  (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
+  (**)    (fun () -> ())
+  (**)    (fun a' ref' -> ())
+  (**)    (fun t'' b'' ->
+  (**)       live_same_arrays_equal_types b' b'' h1;
+  (**)       let (_, perm_map) = Seq.index (HS.sel h1 b'.content) cell.b_index in
+  (**)       lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b'.pid)
+  (**)    )
+  (**) in
+  (**) Classical.forall_intro (Classical.move_requires aux);
+  (**) array_used_in_intro b' h1;
   b'
 
 val merge_cell:
@@ -328,40 +331,19 @@ let merge_cell #a b b1 i =
   b.content := s1;
   (**) let h1 = HST.get () in
   (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
-  (**) let r = frameOf b in
-  (**) let n = as_addr b in
   (**) let acell = aloc_cell b (U32.v i) in
   (**) let cell = loc_cell b (U32.v i) in
   (**) let acell1 = aloc_cell b1 (U32.v i) in
   (**) let cell1 = loc_cell b1 (U32.v i) in
   (**) let l = cell `loc_union` cell1 in
-  admit() (*
   (**) MG.modifies_intro #ucell #cls
   (**)   l
   (**)   h0 h1
-  (**)   (fun r -> ())
-  (**)   (fun t pre ref ->
-  (**)     MG.loc_includes_refl cell;
-  (**)     MG.loc_includes_union_l cell cell1 cell;
-  (**)     MG.loc_includes_refl (MG.loc_mreference #ucell #cls #t #pre ref);
-  (**)     MG.loc_disjoint_includes
-  (**)       (MG.loc_mreference ref)
-  (**)       l
-  (**)       (MG.loc_mreference ref)
-  (**)       cell;
-  (**)     MG.loc_disjoint_sym  (MG.loc_mreference ref) cell;
-  (**)     MG.loc_disjoint_aloc_addresses_elim #ucell #cls #r #n acell
-  (**)       true
-  (**)       (HS.frameOf ref)
-  (**)       (Set.singleton (HS.as_addr ref))
-  (**)   )
-  (**)   (fun t pre b -> ())
-  (**)   (fun r n -> ())
-  (**)   (fun r' n' loc' ->
-  (**)     prove_loc_preserved #r' #n' loc' h0 h1 (fun t' b' ->
+  (**)   (fun loc' ->
+  (**)     ucell_preserved_intro loc' h0 h1 (fun t' b' ->
   (**)       MG.loc_includes_refl cell;
   (**)       MG.loc_includes_union_l cell cell1 cell;
-  (**)       MG.loc_includes_refl (MG.loc_of_aloc #ucell #cls #r' #n' loc');
+  (**)       MG.loc_includes_refl (MG.loc_of_aloc #ucell #cls loc');
   (**)       MG.loc_disjoint_includes
   (**)         (MG.loc_of_aloc loc')
   (**)         l
@@ -376,17 +358,16 @@ let merge_cell #a b b1 i =
   (**)         (MG.loc_of_aloc loc')
   (**)         cell1;
   (**)       MG.loc_disjoint_sym (MG.loc_of_aloc loc') cell1;
-  (**)       MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n loc' acell;
-  (**)       MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n loc' acell1;
-  (**)       let i' = loc'.b_index - U32.v b'.idx in
-  (**)       let (_, new_perm_map) = Seq.index (HS.sel h1 b'.content) (U32.v b'.idx + i') in
-  (**)       if r' = r && n' = n then begin
+  (**)       MG.loc_disjoint_aloc_elim #ucell #cls loc' acell;
+  (**)       MG.loc_disjoint_aloc_elim #ucell #cls loc' acell1;
+  (**)       let (_, new_perm_map) = Seq.index (HS.sel h1 b'.content) loc'.b_index in
+  (**)       if loc'.b_rid = acell.b_rid && loc'.b_addr = acell.b_addr then begin
   (**)         live_same_arrays_equal_types b b' h0;
-  (**)         live_same_arrays_equal_types b b' h1
+  (**)         live_same_arrays_equal_types b b' h1;
+  (**)         lemma_live_pid_smaller_max (Ghost.reveal new_perm_map) loc'.b_pid
   (**)       end else ()
   (**)     )
   (**)  )
-  *)
 
 let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vlength buf}) : Lemma
   (requires (mergeable buf buf1))
@@ -452,12 +433,9 @@ val merge_cells:
 let rec merge_cells #a b b1 i =
   (**) let h0 = HST.get () in
   if U32.v i >= vlength b then begin
-  admit()(*
-    (**) MG.modifies_none_intro #ucell #cls h0 h0
-    (**)   (fun _ -> ())
-    (**)   (fun _ _ _ -> ())
-    (**)   (fun _ _ -> ());
-    (**) MG.loc_union_loc_none_l #ucell #cls (MG.loc_none)*)
+    (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
+    (**)   (fun _ -> ());
+    (**) MG.loc_union_loc_none_l #ucell #cls (MG.loc_none)
   end else begin
     merge_cell #a b b1 i;
     (**) let h1 = HST.get () in
@@ -525,26 +503,29 @@ let move_cell #a b i pid =
   b.content := s1;
   (**) let h1 = get() in
   (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
-  (**) let r = frameOf b in
-  (**) let n = as_addr b in
-  admit()(*
+  (**) let cell = aloc_cell b (U32.v i) in
   (**) MG.modifies_aloc_intro
   (**)   #ucell #cls
-  (**)   #r #n
-  (**)   ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = Ghost.reveal b.pid})
+  (**)   cell
   (**)   h0 h1
-  (**)   (fun r -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun r n -> ())
   (**)   (fun aloc' ->
-  (**)      prove_loc_preserved #r #n aloc' h0 h1 (fun t b'->
-  (**)        live_same_arrays_equal_types b b' h0;
-  (**)        live_same_arrays_equal_types b b' h1;
-  (**)        if aloc'.b_index <> U32.v b.idx + U32.v i then ()
-  (**)        else lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
-  (**)      )
-  (**)     )*)
+  (**)     ucell_preserved_intro aloc' h0 h1 (fun t' b' ->
+  (**)       let i' = aloc'.b_index - U32.v b'.idx in
+  (**)       let goal = ucell_matches_live_array_cell aloc' t' b' h1 /\ sel h0 b' i'  == sel h1 b' i' in
+  (**)       ucell_disjoint_elim cell aloc' goal
+  (**)         (fun _ -> ())
+  (**)         (fun _ -> ())
+  (**)         (fun _ -> (* Different indexes *)
+  (**)           live_same_arrays_equal_types b b' h0;
+  (**)           live_same_arrays_equal_types b b' h1
+  (**)         )
+  (**)         (fun _ -> (* Different pids *)
+  (**)           live_same_arrays_equal_types b b' h0;
+  (**)           live_same_arrays_equal_types b b' h1;
+  (**)           lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
+  (**)         )
+  (**)     )
+  (**)   )
 
 #pop-options
 
@@ -577,11 +558,9 @@ val move_cells
 
 let rec move_cells #a b i pid =
   (**) let h0 = HST.get() in
-  if U32.v i >= vlength b then admit()(*
-    (**) MG.modifies_none_intro #ucell #cls h0 h0
+  if U32.v i >= vlength b then
+    (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
-    (**)   (fun _ _ _ -> ())
-    (**)   (fun _ _ -> ())*)
   else begin
     move_cells b (U32.add i 1ul) pid;
     (**) let h1 = HST.get() in
@@ -605,9 +584,20 @@ let move #a b =
   (**) assert (as_perm_seq h1 b' `Seq.equal` as_perm_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
-  get_array_current_max_same_with_new_pid #a b h0 new_pid;
-  //array_not_used_pid_in_loc_unused_in b' h0;
-  admit();
+  (**) array_unused_in_intro b' h0;
+  (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
+  (**)  let cell = aloc_cell b' i in
+  (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
+  (**)    (fun () -> ())
+  (**)    (fun a' ref' -> ())
+  (**)    (fun t'' b'' ->
+  (**)       live_same_arrays_equal_types b' b'' h1;
+  (**)       let (_, perm_map) = Seq.index (HS.sel h1 b'.content) cell.b_index in
+  (**)       lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b'.pid)
+  (**)    )
+  (**) in
+  (**) Classical.forall_intro (Classical.move_requires aux);
+  (**) array_used_in_intro b' h1;
   b'
 
 let split #a b idx =

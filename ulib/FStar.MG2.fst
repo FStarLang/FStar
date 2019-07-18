@@ -171,6 +171,12 @@ let loc_used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
 let loc_unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
   loc_unused_in' c h
 
+let loc_disjoint_unused_in_used_in
+  (#al: Type) (c: cls al)
+  (h: HS.mem)
+  : Lemma (loc_unused_in #al c h `loc_disjoint` loc_used_in #al c h)
+  = admit()
+
 let loc_includes_refl
   (#aloc: Type) (#c: cls aloc)
   (s: loc c)

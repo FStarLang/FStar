@@ -152,6 +152,7 @@ val loc_disjoint_aloc_elim
   (requires (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
   (ensures (c.aloc_disjoint b1 b2))
 
+
 val loc_includes_aloc_intro
   (#aloc: Type) (#c: cls aloc)
   (b1: aloc)
@@ -226,6 +227,11 @@ val modifies (#al: _) (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0
 val loc_used_in (#al: _) (c: cls al) (h: HS.mem) : Tot (loc c)
 
 val loc_unused_in (#al: _) (c: cls al) (h: HS.mem) : Tot (loc c)
+
+val loc_disjoint_unused_in_used_in
+  (#al: Type) (c: cls al)
+  (h: HS.mem)
+  : Lemma (loc_unused_in #al c h `loc_disjoint` loc_used_in #al c h)
 
 val loc_includes_refl
   (#aloc: Type) (#c: cls aloc)
