@@ -28,24 +28,22 @@ let my_cut (t:term) : Tac unit =
 
 assume val aug : (unit -> Type0) -> Type0
 let test (p:(unit -> Type0)) (q:(unit -> Type0))
-   = assert_by_tactic
-            (p == q ==>
+   = assert (p == q ==>
              aug p ==>
              aug q)
-             (fun () ->
-               let eq = implies_intro () in
-               let h = implies_intro () in
-               dump "A" ;
-               my_cut (type_of_binder h);
-               dump "B" ;
-               rewrite eq;
-               norm [] ;
-               dump "C" ;
-               let hh = intro () in
-               apply (quote FStar.Squash.return_squash) ;
-               dump "D" ;
-               exact (pack (Tv_Var (bv_of_binder hh))) ; //USED TO FAIL
-               exact (pack (Tv_Var (bv_of_binder h))))
+         by (let eq = implies_intro () in
+             let h = implies_intro () in
+             dump "A" ;
+             my_cut (type_of_binder h);
+             dump "B" ;
+             rewrite eq;
+             norm [] ;
+             dump "C" ;
+             let hh = intro () in
+             apply (quote FStar.Squash.return_squash) ;
+             dump "D" ;
+             exact (pack (Tv_Var (bv_of_binder hh))) ; //USED TO FAIL
+             exact (pack (Tv_Var (bv_of_binder h))))
 
 let t1 () : Tac unit =
   let x     = forall_intro  () in
@@ -61,15 +59,11 @@ let t1 () : Tac unit =
   dump "End"
 
 let foo1 () =
-    assert_by_tactic
-      (
-          (forall (x:int). p1 2 ==> (forall (y:int). y == 1 ==> p1 2)) // SUCCEEDS
-          ) t1;
+    assert (forall (x:int). p1 2 ==> (forall (y:int). y == 1 ==> p1 2)) // SUCCEEDS
+        by t1 ();
     ()
 
 let foo2 () =
-    assert_by_tactic
-      (
-          (forall (x:int). p1 x ==> (forall (y:int). y == 1 ==> p1 x)) // USED TO FAIL
-          ) t1;
+    assert (forall (x:int). p1 x ==> (forall (y:int). y == 1 ==> p1 x)) // USED TO FAIL
+        by t1 ();
     ()

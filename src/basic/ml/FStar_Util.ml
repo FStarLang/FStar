@@ -141,9 +141,14 @@ let rec waitpid_ignore_signals pid =
 let kill_process (p: proc) =
   if not p.killed then begin
       (* Close the fds directly: close_in and close_out both call `flush`,
-         potentially forcing us to wait until p starts reading again *)
-      Unix.close (Unix.descr_of_in_channel p.inc);
-      Unix.close (Unix.descr_of_out_channel p.outc);
+         potentially forcing us to wait until p starts reading again. They
+         might have been closed already (e.g. `run_process`), so we
+         just `attempt` it. *)
+      let attempt f =
+          try f () with | _ -> ()
+      in
+      attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
+      attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
       (try Unix.kill p.pid Sys.sigkill
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
@@ -170,19 +175,19 @@ let process_read_all_output (p: proc) =
     waiting in input_line at that point, and input_line polls for signals fairly
     frequently.  If the signal reaches the writer (main) thread, on the other
     hand, we're toast: `Thread.join` isn't interruptible, so Caml will save the
-    signal until the child tread exits and `join` returns, and at that point the
+    signal until the child thread exits and `join` returns, and at that point the
     Z3 query is complete and the signal is useless.
 
     There are three possible solutions to this problem:
     1. Use an interruptible version of Thread.join written in C
     2. Ensure that signals are always delivered to the reader thread
-    3. Use a different synchronization mechanism between th reader and the writer.
+    3. Use a different synchronization mechanism between the reader and the writer.
 
     Option 1 is bad because building F* doesn't currently require a C compiler.
     Option 2 is easy to implement with `Unix.sigprocmask`, but that isn't
     available on Windows.  Option 3 is what the code below does: it uses a pipe
     and a 1-byte write as a way for the writer thread to wait on the reader
-    thread.  That's what `reader_fn` is passed a `signal_exit` function.
+    thread. That's why `reader_fn` is passed a `signal_exit` function.
 
     If a SIGINT reaches the reader, it should still call `signal_exit`.  If
     a SIGINT reaches the writer, it should make sure that the reader exits.
@@ -212,12 +217,12 @@ let process_read_async p stdin reader_fn =
 
 let run_process (id: string) (prog: string) (args: string list) (stdin: string option): string =
   let p = start_process' id prog args None in
-  let output = ref "" in
-  let reader_fn signal_fn =
-    output := process_read_all_output p; signal_fn () in
-  BatPervasives.finally (fun () -> kill_process p)
-    (fun () -> process_read_async p stdin reader_fn) ();
-  !output
+  (match stdin with
+   | None -> ()
+   | Some str -> output_string p.outc str);
+  flush p.outc;
+  close_out p.outc;
+  process_read_all_output p
 
 type read_result = EOF | SIGINT
 
@@ -337,65 +342,77 @@ let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
   set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
+module StringOps =
+  struct
+    type t = string
+    let equal (x:t) (y:t) = x=y
+    let compare (x:t) (y:t) = BatString.compare x y
+    let hash (x:t) = BatHashtbl.hash x
+  end
 
-type 'value smap = (string, 'value) BatHashtbl.t
-let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
-let smap_clear (s:('value smap)) = BatHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) =
-    BatHashtbl.remove m k; BatHashtbl.add m k v
+module StringHashtbl = BatHashtbl.Make(StringOps)
+module StringMap = BatMap.Make(StringOps)
+
+type 'value smap = 'value StringHashtbl.t
+let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
+let smap_clear (s:('value smap)) = StringHashtbl.clear s
+let smap_add (m:'value smap) k (v:'value) = StringHashtbl.replace m k v
 let smap_of_list (l: (string * 'value) list) =
-  let s = BatHashtbl.create (BatList.length l) in
+  let s = StringHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
   s
-let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
-let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
-let smap_remove (m:'value smap) k = BatHashtbl.remove m k
+let smap_try_find (m:'value smap) k = StringHashtbl.find_option m k
+let smap_fold (m:'value smap) f a = StringHashtbl.fold f m a
+let smap_remove (m:'value smap) k = StringHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
-let smap_copy (m:'value smap) = BatHashtbl.copy m
-let smap_size (m:'value smap) = BatHashtbl.length m
+let smap_copy (m:'value smap) = StringHashtbl.copy m
+let smap_size (m:'value smap) = StringHashtbl.length m
+let smap_iter (m:'value smap) f = StringHashtbl.iter f m
 
 exception PSMap_Found
-type 'value psmap = (string, 'value) BatMap.t
-let psmap_empty (_: unit) : 'value psmap = BatMap.empty
-let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+type 'value psmap = 'value StringMap.t
+let psmap_empty (_: unit) : 'value psmap = StringMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = StringMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  BatMap.find_default dflt key map
+  StringMap.find_default dflt key map
 let psmap_try_find (map: 'value psmap) (key: string) =
-  BatMap.Exceptionless.find key map
-let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
+  StringMap.Exceptionless.find key map
+let psmap_fold (m:'value psmap) f a = StringMap.fold f m a
 let psmap_find_map (m:'value psmap) f =
   let res = ref None in
   let upd k v =
     let r = f k v in
     if r <> None then (res := r; raise PSMap_Found) in
-  (try BatMap.iter upd m with PSMap_Found -> ());
+  (try StringMap.iter upd m with PSMap_Found -> ());
   !res
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
-  BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
+  StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
+module ZHashtbl = BatHashtbl.Make(Z)
+module ZMap = BatMap.Make(Z)
 
-type 'value imap = (Z.t, 'value) BatHashtbl.t
-let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
-let imap_clear (s:('value imap)) = BatHashtbl.clear s
-let imap_add (m:'value imap) k (v:'value) = BatHashtbl.add m k v
+type 'value imap = 'value ZHashtbl.t
+let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
+let imap_clear (s:('value imap)) = ZHashtbl.clear s
+let imap_add (m:'value imap) k (v:'value) = ZHashtbl.replace m k v
 let imap_of_list (l: (Z.t * 'value) list) =
-  let s = BatHashtbl.create (BatList.length l) in
+  let s = ZHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> imap_add s x y) l;
   s
-let imap_try_find (m:'value imap) k = BatHashtbl.find_option m k
-let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
-let imap_remove (m:'value imap) k = BatHashtbl.remove m k
+let imap_try_find (m:'value imap) k = ZHashtbl.find_option m k
+let imap_fold (m:'value imap) f a = ZHashtbl.fold f m a
+let imap_remove (m:'value imap) k = ZHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
-let imap_copy (m:'value imap) = BatHashtbl.copy m
+let imap_copy (m:'value imap) = ZHashtbl.copy m
 
-type 'value pimap = (Z.t, 'value) BatMap.t
-let pimap_empty (_: unit) : 'value pimap = BatMap.empty
-let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+type 'value pimap = 'value ZMap.t
+let pimap_empty (_: unit) : 'value pimap = ZMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = ZMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  BatMap.find_default dflt key map
+  ZMap.find_default dflt key map
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  BatMap.Exceptionless.find key map
-let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
+  ZMap.Exceptionless.find key map
+let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -523,7 +540,7 @@ let replace_char (s:string) c1 c2 =
   BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
-let hashcode s = Z.of_int (BatHashtbl.hash s)
+let hashcode s = Z.of_int (StringOps.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
 let splitlines s = split s "\n"
@@ -952,6 +969,27 @@ let load_value_from_file (fname:string) =
     BatPervasives.finally
       (fun () -> close_in channel)
       (fun channel -> Some (input_value channel))
+      channel
+  with | _ -> None
+
+let save_2values_to_file (fname:string) value1 value2 =
+  let channel = open_out_bin fname in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel ->
+      output_value channel value1;
+      output_value channel value2)
+    channel
+
+let load_2values_from_file (fname:string) =
+  try
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel ->
+        let v1 = input_value channel in
+        let v2 = input_value channel in
+        Some (v1, v2))
       channel
   with | _ -> None
 

@@ -18,7 +18,8 @@ include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
 
-FStar.UInt128.fst.checked: OTHERFLAGS+=--z3rlimit_factor 2
+FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
+LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 
 # Default rule is verify-all, defined in gmake/Makefile.tmpl
 
@@ -30,3 +31,32 @@ LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
 verify-extra: $(addsuffix .checked, $(EXTRA))
+
+# Benchmarking rules
+#
+# we want to run FStar with just the target file as that being checked
+# ideally all the .checked files will exist and we will:
+#  - move them to the side
+#  - execute the benchmark
+#  - move the checked file back
+#
+# phony-benchmark target to ensure bench rules always run on:
+#  make -C ulib benchmark
+
+.PHONY: phony-benchmark
+
+phony-benchmark:
+
+# a.fst.bench will move the a.fst.checked binary and then move it back
+%.fst.bench: %.fst phony-benchmark
+	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
+	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
+
+# a.fsti.bench will move the a.fsti.checked binary and then move it back
+%.fsti.bench: %.fsti phony-benchmark
+	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
+	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
+
+verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))

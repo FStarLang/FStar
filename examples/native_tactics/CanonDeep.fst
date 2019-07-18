@@ -202,4 +202,4 @@ let check_canon_deep () =
             (fun () -> dump "`canon deep` left the following goals";
                        fail "")
 
-let lem0 =  assert_by_tactic (x * (y * z) == (x * y) * z) check_canon_deep
+let lem0 =  assert (x * (y * z) == (x * y) * z) by check_canon_deep ()

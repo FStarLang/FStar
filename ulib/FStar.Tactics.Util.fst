@@ -25,8 +25,9 @@ let rec map f x = match x with
   | a::tl -> f a::map f tl
 
 val iter : ('a -> Tac unit) -> list 'a -> Tac unit
-let iter f x =
-    let _ = map f x in ()
+let rec iter f x = match x with
+  | [] -> ()
+  | a::tl -> f a; iter f tl
 
 val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
 let rec fold_left f x l = match l with

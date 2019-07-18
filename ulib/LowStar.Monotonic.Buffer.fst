@@ -1416,30 +1416,61 @@ let freeable_disjoint #_ #_ #_ #_ #_ #_ b1 b2 =
     MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
 private let alloc_heap_common (#a:Type0) (#rrel:srel a)
-  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0}) (mm:bool)
+  (r:HST.erid) (len:U32.t{U32.v len > 0}) (s:Seq.seq a{Seq.length s == U32.v len})
+  (mm:bool)
   :HST.ST (lmbuffer a rrel rrel (U32.v len))
           (requires (fun _      -> True))
-          (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+          (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 s /\
 	                        frameOf b == r /\
                                 HS.is_mm (Buffer?.content b) == mm /\
                                 Buffer?.idx b == 0ul /\
                                 Buffer?.length b == Buffer?.max_length b))
-  = let s = Seq.create (U32.v len) init in
-    lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  = lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
     let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
       if mm then HST.ralloc_mm r s else HST.ralloc r s
     in
     let b = Buffer len content 0ul len in
     b
 
-let mgcmalloc #_ #_ r init len = alloc_heap_common r init len false
+let mgcmalloc #_ #_ r init len =
+  alloc_heap_common r len (Seq.create (U32.v len) init) false
 
-let mmalloc #_ #_ r init len = alloc_heap_common r init len true
+private let read_sub_buffer (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (idx len:U32.t)
+  : HST.ST (Seq.seq a)
+    (requires fun h0 ->
+      live h0 b /\ U32.v len > 0 /\
+      U32.v idx + U32.v len <= length b)
+    (ensures fun h0 s h1 ->
+      h0 == h1 /\
+      s == Seq.slice (as_seq h0 b) (U32.v idx) (U32.v idx + U32.v len))
+  = let open HST in
+    let s = ! (Buffer?.content b) in  //the whole allocation unit
+    let s = Seq.slice s (U32.v (Buffer?.idx b))
+              (U32.v (Buffer?.idx b) + U32.v (Buffer?.length b)) in //b buffer
+    Seq.slice s (U32.v idx) (U32.v idx + U32.v len)  //slice of b
+
+let mgcmalloc_and_blit #_ #_ r #_ #_ src id_src len =
+  alloc_heap_common r len (read_sub_buffer src id_src len) false
+
+let mmalloc #_ #_ r init len =
+  alloc_heap_common r len (Seq.create (U32.v len) init) true
+
+let mmalloc_and_blit #_ #_ r #_ #_ src id_src len =
+  alloc_heap_common r len (read_sub_buffer src id_src len) true
 
 let malloca #a #rrel init len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
+  in
+  let b = Buffer len content 0ul len in
+  b
+
+let malloca_and_blit #a #rrel #_ #_ src id_src len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.salloc (read_sub_buffer src id_src len)
   in
   let b = Buffer len content 0ul len in
   b
@@ -1464,10 +1495,21 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
-  if len = 0ul then ()
+  if len = 0ul then begin
+    (*
+     * AR: 07/03: the then case, which should actually be trivial, takes a long time to verify
+     *            we should do some z3 profiling to see what's going on
+     *)
+    let h = get () in
+    Seq.slice_is_empty (as_seq h dst) (U32.v idx_dst);
+    Seq.slice_is_empty (as_seq h src) (U32.v idx_src);
+    assert (Seq.equal (Seq.slice (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len))
+                      (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len)));
+    ()
+  end
   else
     let h = get () in
     let Buffer _ content1 idx1 length1 = src in

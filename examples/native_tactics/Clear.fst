@@ -32,7 +32,7 @@ let tau1 = fun () ->
                 exact (`p)
 
 let l1 (x : bool) (y : int) (z : unit) =
-    assert_by_tactic (phi ==> (psi ==> xi)) tau1
+    assert (phi ==> (psi ==> xi)) by tau1 ()
 
 
 let clear_all_of_type (t : typ) : Tac unit =
@@ -57,4 +57,4 @@ let tau2 = fun () -> let e = cur_env () in
                        guard (List.length (binders_of_env e) = n - 2)
 
 let l2 (x : int) (y : bool) (z : int) =
-    assert_by_tactic (phi ==> (psi ==> xi)) tau2
+    assert (phi ==> (psi ==> xi)) by tau2 ()

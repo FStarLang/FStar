@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_WhileReify.binop"
       ],
       0,
-      "4cc86e450430ca4c63c0366edeaae0fb"
+      "4164e906d559d1230398de15a7988eb9"
     ],
     [
       "WhileReify.exp",
@@ -27,7 +27,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "0bad95bfd77e861e3e4256cbd005ff14"
+      "2baf721c551806b878b27aa6869a606d"
     ],
     [
       "WhileReify.__proj__AInt__item___0",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Tm_refine_0add5ff0a561d40ba564f66ead022700"
       ],
       0,
-      "dbd61fb2d26825114ac3a08ac236f7dd"
+      "992ff9af68a20da74199aa0648e6392d"
     ],
     [
       "WhileReify.__proj__AVar__item___0",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_c7bb9ae7b944e08fb527e97372845503"
       ],
       0,
-      "c7545f859112c61e7c12364a2b6e798f"
+      "965609eb7cc7f4e7a985c00b05575cd0"
     ],
     [
       "WhileReify.__proj__AOp__item___0",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "8dfa9ae0ccf97dcf5fae7aa7e616a58a"
+      "9340c76ed10e9df9c9613b3a9431b370"
     ],
     [
       "WhileReify.__proj__AOp__item___1",
@@ -79,7 +79,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "b82e57fd6e3197f1a91cd2aa17f42870"
+      "a9cd0e71619eda5041a8f23252fe025c"
     ],
     [
       "WhileReify.__proj__AOp__item___2",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "6e93c332edaa54d6c304acf04a9148c8"
+      "27ecade9751f8f17cd7da86dbdf7c49b"
     ],
     [
       "WhileReify.com",
@@ -107,7 +107,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "db0a9cf1c3bf9021894b81c61bdc7623"
+      "f52242ade22ccb24eceabde52da965ca"
     ],
     [
       "WhileReify.__proj__Assign__item__var",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b4ca4f8261c0ffd1d6239fd5d8f8a68c"
       ],
       0,
-      "5be9f7b7a00acd71a232891a9fd2486f"
+      "a6bc6302523f3a98cb1169afb2af66bc"
     ],
     [
       "WhileReify.__proj__Assign__item__term",
@@ -133,7 +133,7 @@
         "refinement_interpretation_Tm_refine_b4ca4f8261c0ffd1d6239fd5d8f8a68c"
       ],
       0,
-      "f7d70f77b49543b7ab876fbfaab3f0fd"
+      "0035056ecffa42b6c15e59723228518d"
     ],
     [
       "WhileReify.__proj__Seq__item__first",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Tm_refine_9daf575df0f09c310d4a988973469100"
       ],
       0,
-      "aec38456a11c1ddcdc2f252eda5b5ba1"
+      "483fbbd72e5d0f6ee652fa3eb679606f"
     ],
     [
       "WhileReify.__proj__Seq__item__second",
@@ -159,7 +159,7 @@
         "refinement_interpretation_Tm_refine_9daf575df0f09c310d4a988973469100"
       ],
       0,
-      "133e5c4fa32f4885dfe3d3dfd37ea339"
+      "9f5dcaa7798d22f1067667dbd8065160"
     ],
     [
       "WhileReify.__proj__If__item__cond",
@@ -172,7 +172,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "8b01f4939d5a1266a4d07a55df2c7e0c"
+      "30518fb3b72a95e05cc4939cd97cf1eb"
     ],
     [
       "WhileReify.__proj__If__item__then_branch",
@@ -185,7 +185,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "c85df2d059a9008253e8a9c78dcc2302"
+      "7270bb7b562a4421171d5ae25df262a7"
     ],
     [
       "WhileReify.__proj__If__item__else_branch",
@@ -198,7 +198,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "23e9bda82312989519550719a56ec790"
+      "8befc60233d88d71439936e4a5a820a0"
     ],
     [
       "WhileReify.__proj__While__item__cond",
@@ -211,7 +211,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "dd1f04c6e8031fb61e0dc3f0a9266fbb"
+      "b63520faae1ae64bebe2352acd42285b"
     ],
     [
       "WhileReify.__proj__While__item__body",
@@ -224,7 +224,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "36d7a892ffac1f2a59d6809fbdb770f5"
+      "5fffa19ea2e5da982b440c05fa01ee20"
     ],
     [
       "WhileReify.__proj__While__item__metric",
@@ -237,7 +237,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "1fdc9c3d38f0dddb89b2fe9789b36bb4"
+      "03b7d613ee8d6813a2815371d8af74e8"
     ],
     [
       "WhileReify.interpret_exp_st",
@@ -255,7 +255,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "32c3bce51e8f851e0e40e487deb29973"
+      "f99fde532ed4f5dcc11d774ee3911c95"
     ],
     [
       "WhileReify.interpret_exp'",
@@ -264,7 +264,7 @@
       1,
       [ "@query", "primitive_Prims.op_GreaterThan" ],
       0,
-      "0652c66cb40ab6002740498618ac58f7"
+      "71d93912308307701ecd06a424d13283"
     ],
     [
       "WhileReify.interpret_com_st",
@@ -273,7 +273,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "WhileReify_pretyping_db9f5591f9c8c6a645bfa61f7afb22db",
         "binder_x_7ab1748f97b7be5091389973104c9c7b_1",
@@ -288,7 +287,6 @@
         "equation_Prims.nat", "equation_WhileReify.decr_while",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_WhileReify.com",
-        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.unit", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -296,7 +294,7 @@
         "projection_inverse_WhileReify.While_cond",
         "projection_inverse_WhileReify.While_metric",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_WhileReify.If", "subterm_ordering_WhileReify.Seq",
         "subterm_ordering_WhileReify.While",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
@@ -304,7 +302,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "669ea736c4b4cea6c343760de02364fa"
+      "e652b8541d45220931f3c4ae9beeff49"
     ],
     [
       "WhileReify.interpret_com",
@@ -331,7 +329,7 @@
         "typing_WhileReify.interpret_com_st", "unit_typing"
       ],
       0,
-      "9d763f9a57d71ba1e54963e95166bd43"
+      "5fb83af747da6fca26b83e1222fa532b"
     ],
     [
       "WhileReify.bidule",
@@ -343,7 +341,6 @@
         "@fuel_correspondence_WhileReify.interpret_exp_st.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_equality",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_WhileReify.AInt",
         "constructor_distinct_WhileReify.AOp",
         "constructor_distinct_WhileReify.AVar",
@@ -355,20 +352,20 @@
         "equation_WhileReify.interpret_binop",
         "equation_with_fuel_WhileReify.interpret_exp_st.fuel_instrumented",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_2ca2ac6fc76f9adb0c42fe5c105caf1d",
-        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
-        "interpretation_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "interpretation_Tm_abs_fb49622d5f0ea4c46753f5a31493400f",
+        "interpretation_Tm_abs_0c19ea74aac85ee3cf642bef7a7a3e70",
+        "interpretation_Tm_abs_554ae364705a657216a37832b8a4f339",
+        "interpretation_Tm_abs_6ddd41efc4b5662e5cf5849d70095a69",
+        "interpretation_Tm_abs_99c38b30cf574b9acfca23e49f7597f3",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_WhileReify.AInt__0",
         "projection_inverse_WhileReify.AOp__0",
         "projection_inverse_WhileReify.AOp__1",
         "projection_inverse_WhileReify.AOp__2",
-        "projection_inverse_WhileReify.AVar__0", "unit_typing"
+        "projection_inverse_WhileReify.AVar__0"
       ],
       0,
-      "de8dbf6693fd6ea2bfb179026e4329e2"
+      "067d75a66a9be46718163860fe0690e1"
     ],
     [
       "WhileReify.bidule2",
@@ -380,7 +377,6 @@
         "@fuel_correspondence_WhileReify.interpret_exp_st.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_equality",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_WhileReify.AInt",
         "constructor_distinct_WhileReify.AOp",
         "constructor_distinct_WhileReify.AVar",
@@ -393,20 +389,20 @@
         "equation_WhileReify.interpret_exp",
         "equation_with_fuel_WhileReify.interpret_exp_st.fuel_instrumented",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_2ca2ac6fc76f9adb0c42fe5c105caf1d",
-        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
-        "interpretation_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "interpretation_Tm_abs_fb49622d5f0ea4c46753f5a31493400f",
+        "interpretation_Tm_abs_0c19ea74aac85ee3cf642bef7a7a3e70",
+        "interpretation_Tm_abs_554ae364705a657216a37832b8a4f339",
+        "interpretation_Tm_abs_6ddd41efc4b5662e5cf5849d70095a69",
+        "interpretation_Tm_abs_99c38b30cf574b9acfca23e49f7597f3",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_WhileReify.AInt__0",
         "projection_inverse_WhileReify.AOp__0",
         "projection_inverse_WhileReify.AOp__1",
         "projection_inverse_WhileReify.AOp__2",
-        "projection_inverse_WhileReify.AVar__0", "unit_typing"
+        "projection_inverse_WhileReify.AVar__0"
       ],
       0,
-      "a5043097e5d3ff3a9236fb5929368088"
+      "77708324894abdc4a4942345b5a348b0"
     ],
     [
       "WhileReify.interpret_binop",
@@ -420,7 +416,7 @@
         "fuel_guarded_inversion_WhileReify.binop"
       ],
       0,
-      "a1e166ed8cd2d235d0e9d0a091e73839"
+      "9c95a3943484d7b5daa44bdb2e744bd5"
     ],
     [
       "WhileReify.exp",
@@ -434,7 +430,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "40cac640f12d2dd6a7172ae513a3227d"
+      "19a3361a65e2ac9fe1a616e60a8d44c1"
     ],
     [
       "WhileReify.__proj__AInt__item___0",
@@ -447,7 +443,7 @@
         "refinement_interpretation_Tm_refine_0add5ff0a561d40ba564f66ead022700"
       ],
       0,
-      "4c0efdf9a5cc51584451f19b2ed7aca9"
+      "69c1336469f8d4100b80788a1cd9bc10"
     ],
     [
       "WhileReify.__proj__AVar__item___0",
@@ -460,7 +456,7 @@
         "refinement_interpretation_Tm_refine_c7bb9ae7b944e08fb527e97372845503"
       ],
       0,
-      "08d47c2af82839833602429c0a84dae2"
+      "2ecb49d6beaac928fe26a196ab87e02e"
     ],
     [
       "WhileReify.__proj__AOp__item___0",
@@ -473,7 +469,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "bde924834e8996ff78a4ff55224e165c"
+      "1ee761dfbaec7619faa29a61d973247e"
     ],
     [
       "WhileReify.__proj__AOp__item___1",
@@ -486,7 +482,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "25179a3a06577f8573237366de615c03"
+      "91133a465cf1630ffd8e6ba07ee84e22"
     ],
     [
       "WhileReify.__proj__AOp__item___2",
@@ -499,7 +495,7 @@
         "refinement_interpretation_Tm_refine_647225795b9d6bcf91005b32fa64ac20"
       ],
       0,
-      "ac7f271e8078b62d67d29c8e08d0056f"
+      "4e85d1d0dad335550b6eb1f4cd50a12d"
     ],
     [
       "WhileReify.com",
@@ -514,7 +510,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "105a61c6012ff50c0445fc1fcae238b3"
+      "2c75586ac8dfb16643dddb12d867e76c"
     ],
     [
       "WhileReify.__proj__Assign__item__var",
@@ -527,7 +523,7 @@
         "refinement_interpretation_Tm_refine_b4ca4f8261c0ffd1d6239fd5d8f8a68c"
       ],
       0,
-      "db98d564905ff08eb69f5ca6a922ffbf"
+      "568d7cc01a9a9bbdfbe683323eff2ba5"
     ],
     [
       "WhileReify.__proj__Assign__item__term",
@@ -540,7 +536,7 @@
         "refinement_interpretation_Tm_refine_b4ca4f8261c0ffd1d6239fd5d8f8a68c"
       ],
       0,
-      "25085245d9583ff817c12e4252553c72"
+      "39a88eca6c42fb9862b500898903a21f"
     ],
     [
       "WhileReify.__proj__Seq__item__first",
@@ -553,7 +549,7 @@
         "refinement_interpretation_Tm_refine_9daf575df0f09c310d4a988973469100"
       ],
       0,
-      "d8780ad5dc0faa3f21f07ec6f64f86de"
+      "909390c3373eb2fb9d3ce94d62f2be7a"
     ],
     [
       "WhileReify.__proj__Seq__item__second",
@@ -566,7 +562,7 @@
         "refinement_interpretation_Tm_refine_9daf575df0f09c310d4a988973469100"
       ],
       0,
-      "a0d32cde3a660cc9ec92e207810e8373"
+      "67d01984fe8bc9f666c7785bae4000a7"
     ],
     [
       "WhileReify.__proj__If__item__cond",
@@ -579,7 +575,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "a081c22fe68d039f15edda3462e5e088"
+      "564a3d94e651ba22da9b31d67c260a17"
     ],
     [
       "WhileReify.__proj__If__item__then_branch",
@@ -592,7 +588,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "ce0af87802e55a3f8b9d0ee257d09fbe"
+      "fa563559f64a4f12799f0d39be3c99fa"
     ],
     [
       "WhileReify.__proj__If__item__else_branch",
@@ -605,7 +601,7 @@
         "refinement_interpretation_Tm_refine_8fa1b646879801a2172adb9c083178ea"
       ],
       0,
-      "4b440d79254a14e094f84a25b2473cad"
+      "dc7de542ae736bdee442fd5203b973b0"
     ],
     [
       "WhileReify.__proj__While__item__cond",
@@ -618,7 +614,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "7f04da46b33377f8ff1056bf44869927"
+      "1e525fc7c276413b7a47907ce958c4d9"
     ],
     [
       "WhileReify.__proj__While__item__body",
@@ -631,7 +627,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "29d48026f2a60f20d7d0a6431810737c"
+      "4c6c81320a550aeecb80ec3bec29a538"
     ],
     [
       "WhileReify.__proj__While__item__metric",
@@ -644,7 +640,7 @@
         "refinement_interpretation_Tm_refine_78179a791815afbcdc83897b79011567"
       ],
       0,
-      "a9fd2c09f6ebb370c3fcac697af9fa3b"
+      "8dce1df78bf8d93be5ea5a321fdb7f99"
     ],
     [
       "WhileReify.interpret_exp_st",
@@ -661,7 +657,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "7dbfac84ec69e50dbbd3cf4f9f716e39"
+      "4fd19f927cf2f13b1afa20f7524a1b74"
     ],
     [
       "WhileReify.interpret_exp'",
@@ -670,7 +666,7 @@
       1,
       [ "@query", "primitive_Prims.op_GreaterThan" ],
       0,
-      "985ae43305a5f56211084c39138b6201"
+      "43164079e6ffc6c7e997927ca9e1fb65"
     ],
     [
       "WhileReify.interpret_com_st",
@@ -679,7 +675,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "WhileReify_pretyping_db9f5591f9c8c6a645bfa61f7afb22db",
         "binder_x_7ab1748f97b7be5091389973104c9c7b_1",
@@ -692,9 +687,9 @@
         "disc_equation_WhileReify.While", "equality_tok_Prims.LexTop@tok",
         "equality_tok_WhileReify.Skip@tok", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_WhileReify.decr_while",
+        "equation_WhileReify.metric",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_WhileReify.com",
-        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.unit", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -702,15 +697,16 @@
         "projection_inverse_WhileReify.While_cond",
         "projection_inverse_WhileReify.While_metric",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_WhileReify.If", "subterm_ordering_WhileReify.Seq",
         "subterm_ordering_WhileReify.While",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
-        "typing_WhileReify.decr_while", "typing_tok_WhileReify.Skip@tok",
-        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+        "typing_WhileReify.decr_while", "typing_WhileReify.interpret_exp_",
+        "typing_tok_WhileReify.Skip@tok", "unit_inversion", "unit_typing",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "5fd096d33206fb96ef2cc9b32bf97f01"
+      "ab811165bb280eed2cb8d442f3b677f1"
     ],
     [
       "WhileReify.interpret_com",
@@ -737,7 +733,7 @@
         "typing_WhileReify.interpret_com_st", "unit_typing"
       ],
       0,
-      "a3e4a0bf436e370a8867a059e352ed6f"
+      "e4da471e064f6d34fea015b2bc9734b8"
     ],
     [
       "WhileReify.bidule",
@@ -749,7 +745,6 @@
         "@fuel_correspondence_WhileReify.interpret_exp_st.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_equality",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_WhileReify.AInt",
         "constructor_distinct_WhileReify.AOp",
         "constructor_distinct_WhileReify.AVar",
@@ -761,20 +756,20 @@
         "equation_WhileReify.interpret_binop",
         "equation_with_fuel_WhileReify.interpret_exp_st.fuel_instrumented",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_2ca2ac6fc76f9adb0c42fe5c105caf1d",
-        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
-        "interpretation_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "interpretation_Tm_abs_fb49622d5f0ea4c46753f5a31493400f",
+        "interpretation_Tm_abs_0c19ea74aac85ee3cf642bef7a7a3e70",
+        "interpretation_Tm_abs_554ae364705a657216a37832b8a4f339",
+        "interpretation_Tm_abs_6ddd41efc4b5662e5cf5849d70095a69",
+        "interpretation_Tm_abs_99c38b30cf574b9acfca23e49f7597f3",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_WhileReify.AInt__0",
         "projection_inverse_WhileReify.AOp__0",
         "projection_inverse_WhileReify.AOp__1",
         "projection_inverse_WhileReify.AOp__2",
-        "projection_inverse_WhileReify.AVar__0", "unit_typing"
+        "projection_inverse_WhileReify.AVar__0"
       ],
       0,
-      "8dbd34737d8c82e17a257f562baa53c6"
+      "d9672a0594f29510c73574f1ed467e38"
     ],
     [
       "WhileReify.bidule2",
@@ -786,7 +781,6 @@
         "@fuel_correspondence_WhileReify.interpret_exp_st.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_equality",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_WhileReify.AInt",
         "constructor_distinct_WhileReify.AOp",
         "constructor_distinct_WhileReify.AVar",
@@ -799,20 +793,20 @@
         "equation_WhileReify.interpret_exp",
         "equation_with_fuel_WhileReify.interpret_exp_st.fuel_instrumented",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_2ca2ac6fc76f9adb0c42fe5c105caf1d",
-        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
-        "interpretation_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "interpretation_Tm_abs_fb49622d5f0ea4c46753f5a31493400f",
+        "interpretation_Tm_abs_0c19ea74aac85ee3cf642bef7a7a3e70",
+        "interpretation_Tm_abs_554ae364705a657216a37832b8a4f339",
+        "interpretation_Tm_abs_6ddd41efc4b5662e5cf5849d70095a69",
+        "interpretation_Tm_abs_99c38b30cf574b9acfca23e49f7597f3",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_WhileReify.AInt__0",
         "projection_inverse_WhileReify.AOp__0",
         "projection_inverse_WhileReify.AOp__1",
         "projection_inverse_WhileReify.AOp__2",
-        "projection_inverse_WhileReify.AVar__0", "unit_typing"
+        "projection_inverse_WhileReify.AVar__0"
       ],
       0,
-      "c4d4b34d7ed0df5f16e61c9e2d0d22b3"
+      "866e3165ab37a1c86dc89cfa4933312f"
     ]
   ]
 ]

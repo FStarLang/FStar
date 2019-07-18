@@ -28,12 +28,16 @@ or our new [even cooler online editor] (experimental).
 
 ## OPAM package ##
 
-If the OCaml package manager is present on your platform, you can
+If the OCaml package manager (OPAM) is present on your platform, you can
 install the latest development version of F\* (`master` branch) and
 required dependencies (except for Z3) using the following commands:
 
         $ opam pin add fstar --dev-repo
         $ opam install fstar
+
+Note: To install OCaml and OPAM on your platform please read the
+[Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+section further below, steps 0 to 3.
 
 ## Binary releases ##
 
@@ -65,7 +69,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
-        Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
+        Z3 version 4.8.5 - 64 bit
 
    Note: if you are using the binary package and extracted it to,
    say, the `fstar` directory, then both `fstar.exe` and `z3` are in
@@ -75,12 +79,17 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/micro-benchmarks
 
-3. If you have OCaml installed the following command should print "Hello F\*!"
-   You need the same version of OCaml as was used to create the
-   `fstar.exe` binary (which you can see with `fstar.exe --version`,
-    as illustrated above).
+3. If you have OCaml installed and intend to extract and compile OCaml code
+   against the F* library, please rebuild it with:
 
-        $ make -C examples/hello ocaml
+        $ make -C ulib install-fstarlib
+
+   Then the following command should print "Hello F\*!"
+
+        $ make -C examples/hello hello
+
+   See [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code) for
+   further documentation on extracting and executing F* code.
 
    Note: to have a working OCaml install, please first read the
    [Working OCaml
@@ -91,16 +100,12 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
-   Note: If you hand-rolled your own F* binary then remember that you need to
-         also build our OCaml support library, as further documented
-         [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code):
-
-        $ make -C ulib/ml
-
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
 
-        $ make -j6 -C ulib examples
+        $ make -j6 -C ulib
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+        $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: Some of the examples require having OCaml installed (as for step 3 above).
@@ -186,7 +191,7 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
+The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work.
 
 #### Instructions for Windows ####
 
@@ -199,7 +204,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-1. Install OPAM (version 1.2.x).
+1. Install OPAM (version 1.2.x or later).
 
    - Installation instructions are available at various places
      (e.g., https://dev.realworldocaml.org/install.html
@@ -227,7 +232,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
   ```
 
   **Note:** this list of packages is longer than the list in the
