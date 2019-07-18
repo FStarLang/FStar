@@ -176,7 +176,7 @@
       1,
       [ "@query" ],
       0,
-      "c1fce6283c7c953e9b5cd13f939dda99"
+      "99a8d9b4f369affc7f7e27b3418d89cb"
     ],
     [
       "StatefulLens.op_String_Assignment",
@@ -185,7 +185,7 @@
       1,
       [ "@query" ],
       0,
-      "39cd8df729230281a07df30b78b2d094"
+      "7f0fa987de34c62278c90bf4d87a2942"
     ],
     [
       "StatefulLens.test3",
@@ -194,7 +194,7 @@
       1,
       [ "@query" ],
       0,
-      "9a86ffb893f264bdea80be89dbe6c51f"
+      "00700108828940553eadebc289a6c723"
     ],
     [
       "StatefulLens.test4",
@@ -242,7 +242,7 @@
       1,
       [ "@query" ],
       0,
-      "fe110560003442fa1865975f10da9b3d"
+      "067f25eea0f13ae84ed1b2389bb6b0e1"
     ],
     [
       "StatefulLens.move_x",
