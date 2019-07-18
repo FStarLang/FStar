@@ -295,12 +295,12 @@ let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> 
 let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type) (post:mem -> Type)
   : Lemma
   (requires chi c r1 pre post /\ disjoint r0.view.fp r1.view.fp)
-  (ensures chi c (r0 <*> r1) pre post)
+  (ensures chi c (r0 <*> r1) pre post /\ chi c (r1 <*> r0) pre post)
   (decreases c)
   =  match c with
   | Ret _ -> ()
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) (r0 <*> r1) pre post)
+    let aux (h:mem) : Lemma (chi (c' (h b)) (r0 <*> r1) pre post /\ chi (c' (h b)) (r1 <*> r0) pre post)
       = FStar.WellFounded.axiom1 c' (h b); chi_bigger_resource (c' (h b)) r0 r1 pre post
     in Classical.forall_intro aux
   | Put b n c ->
@@ -411,7 +411,68 @@ and lemma_rpar (#a #b:Type)
       chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
     (ensures chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
     (decreases %[c0; c1])    
-    = admit()
+    = match c1 with
+    | Ret y ->
+      map_chi (pair_y y) c0 r0 (r_pred pre0 r0) (r_pred post0 r0);
+      chi_stronger_pre (r_par c0 c1) r0 (r_pred pre0 r0) (r_pred post0 r0) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1));
+      chi_pre_implies_post (r_par c0 c1) r0 r1.view.fp 
+        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+        (r_pred pre1 r1)
+        (r_pred post0 r0) (r_pred post1 r1);
+      chi_weaken_post (r_par c0 c1) r0 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+        (fun h -> r_pred post0 r0 h /\ r_pred post1 r1 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1));
+      chi_bigger_resource (r_par c0 c1) r1 r0 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+
+    | Get b' c1' ->
+      let aux (h:mem) : Lemma (chi (MOr (l_par c0 (c1' (h b'))) (r_par c0 (c1' (h b')))) (r0 <*> r1) 
+        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+      = FStar.WellFounded.axiom1 c1' (h b');
+        lemma_lpar r0 r1 c0 (c1' (h b')) pre0 pre1 post0 post1;
+        lemma_rpar r0 r1 c0 (c1' (h b')) pre0 pre1 post0 post1
+      in
+      Classical.forall_intro aux
+
+    | Put b' n c1' -> 
+      let r = r0 <*> r1 in
+      chi_stronger_pre c1' r1 (upd_pre (r_pred pre1 r1) b' n) (r_pred post1 r1) (r_pred (upd_pre pre1 b' n) r1);
+        
+      let aux_stable (h0 h1:mem) (l':loc) : Lemma
+          (requires upd_pre pre1 b' n h0 /\ modifies l' h0 h1 /\ disjoint l' r1.view.fp)
+          (ensures upd_pre pre1 b' n h1)
+          = let h0' = upd b' n h0 in
+            let h1' = upd b' n h1 in
+            assert (modifies l' h0' h1')
+            
+      in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
+
+      lemma_lpar r0 r1 c0 c1' pre0 (upd_pre pre1 b' n) post0 post1;
+      lemma_rpar r0 r1 c0 c1' pre0 (upd_pre pre1 b' n) post0 post1;
+      
+      let aux (h:mem) : Lemma
+        (requires upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n h)
+        (ensures r_pred (fun h -> pre0 h /\ upd_pre pre1 b' n h) (r0 <*> r1) h)
+        = let h' = upd b' n h in
+          assert (modifies r1.view.fp h (upd b' n h));
+          assert (modifies r1.view.fp h' h)
+      in
+      Classical.forall_intro (Classical.move_requires aux);
+
+      chi_stronger_pre (l_par c0 c1') (r0 <*> r1) 
+        (r_pred (fun h -> pre0 h /\ (upd_pre pre1 b' n) h) (r0 <*> r1))
+        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
+      chi_stronger_pre (r_par c0 c1') (r0 <*> r1) 
+        (r_pred (fun h -> pre0 h /\ (upd_pre pre1 b' n) h) (r0 <*> r1))
+        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
+
+      let aux (h:mem) : Lemma
+        (ensures r.view.inv h <==> r.view.inv (upd b' n h))
+        = assert (modifies r1.view.fp h (upd b' n h)); assert (modifies r1.view.fp (upd b' n h) h)
+      in
+    Classical.forall_intro (Classical.move_requires aux)
+
+    | MOr c1' c1'' -> lemma_rpar r0 r1 c0 c1' pre0 pre1 post0 post1; lemma_rpar r0 r1 c0 c1'' pre0 pre1 post0 post1
 
 let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 = 
   let c = m_par c0 c1 in
