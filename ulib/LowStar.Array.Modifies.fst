@@ -234,7 +234,6 @@ let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
       )
     )
 
-
 let live_same_arrays_equal_types
   (#a1: Type0)
   (#a2: Type0)
@@ -291,6 +290,9 @@ let cls : MG.cls ucell = MG.Cls #ucell
   (fun x h1 h2 h3 -> ())
   ucell_unused_in
   (fun greater lesser h -> ())
+  (fun x1 x2 h ->
+    (* used_in and unused_in disjoint *)
+    admit ())
   (fun x h0 h1 ->
     (* unused means preserved *)
     ucell_preserved_intro x h0 h1 (fun t b ->
