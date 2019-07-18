@@ -1521,7 +1521,9 @@ let (__tc :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___484_3058.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___484_3058.FStar_TypeChecker_Env.nbe)
+                      (uu___484_3058.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___484_3058.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___488_3070  ->
@@ -1654,7 +1656,9 @@ let (__tc_ghost :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___505_3194.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___505_3194.FStar_TypeChecker_Env.nbe)
+                      (uu___505_3194.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___505_3194.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___509_3209  ->
@@ -1791,7 +1795,9 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___530_3345.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___530_3345.FStar_TypeChecker_Env.nbe)
+                      (uu___530_3345.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___530_3345.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 let e2 =
                   let uu___533_3348 = e1  in
@@ -1880,7 +1886,9 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___533_3348.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___533_3348.FStar_TypeChecker_Env.nbe)
+                      (uu___533_3348.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___533_3348.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___537_3360  ->
@@ -3601,7 +3609,10 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> unit tac) =
                                                                     (uu___1011_7283.FStar_TypeChecker_Env.dsenv);
                                                                     FStar_TypeChecker_Env.nbe
                                                                     =
-                                                                    (uu___1011_7283.FStar_TypeChecker_Env.nbe)
+                                                                    (uu___1011_7283.FStar_TypeChecker_Env.nbe);
+                                                                    FStar_TypeChecker_Env.strict_args_tab
+                                                                    =
+                                                                    (uu___1011_7283.FStar_TypeChecker_Env.strict_args_tab)
                                                                     }  in
                                                                     let g_typ
                                                                     =
@@ -4721,7 +4732,9 @@ let (pointwise_rec :
                      FStar_TypeChecker_Env.dsenv =
                        (uu___1409_9935.FStar_TypeChecker_Env.dsenv);
                      FStar_TypeChecker_Env.nbe =
-                       (uu___1409_9935.FStar_TypeChecker_Env.nbe)
+                       (uu___1409_9935.FStar_TypeChecker_Env.nbe);
+                     FStar_TypeChecker_Env.strict_args_tab =
+                       (uu___1409_9935.FStar_TypeChecker_Env.strict_args_tab)
                    }) t
                  in
               match uu____9926 with
@@ -5092,7 +5105,9 @@ let (rewrite_rec :
                                    FStar_TypeChecker_Env.dsenv =
                                      (uu___1516_10917.FStar_TypeChecker_Env.dsenv);
                                    FStar_TypeChecker_Env.nbe =
-                                     (uu___1516_10917.FStar_TypeChecker_Env.nbe)
+                                     (uu___1516_10917.FStar_TypeChecker_Env.nbe);
+                                   FStar_TypeChecker_Env.strict_args_tab =
+                                     (uu___1516_10917.FStar_TypeChecker_Env.strict_args_tab)
                                  }) t1
                                in
                             match uu____10908 with
@@ -5571,7 +5586,9 @@ let (join_goals :
                                   FStar_TypeChecker_Env.dsenv =
                                     (uu___1647_11818.FStar_TypeChecker_Env.dsenv);
                                   FStar_TypeChecker_Env.nbe =
-                                    (uu___1647_11818.FStar_TypeChecker_Env.nbe)
+                                    (uu___1647_11818.FStar_TypeChecker_Env.nbe);
+                                  FStar_TypeChecker_Env.strict_args_tab =
+                                    (uu___1647_11818.FStar_TypeChecker_Env.strict_args_tab)
                                 }  in
                               let uu____11823 =
                                 mk_irrelevant_goal "joined" nenv ng
@@ -5868,7 +5885,9 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit tac) =
                    FStar_TypeChecker_Env.dsenv =
                      (uu___1727_12248.FStar_TypeChecker_Env.dsenv);
                    FStar_TypeChecker_Env.nbe =
-                     (uu___1727_12248.FStar_TypeChecker_Env.nbe)
+                     (uu___1727_12248.FStar_TypeChecker_Env.nbe);
+                   FStar_TypeChecker_Env.strict_args_tab =
+                     (uu___1727_12248.FStar_TypeChecker_Env.strict_args_tab)
                  }  in
                let g =
                  FStar_Tactics_Types.mk_goal env1 ctx_uvar opts false ""  in
@@ -6469,7 +6488,10 @@ let (t_destruct :
                                                                     (uu___1891_13776.FStar_TypeChecker_Env.dsenv);
                                                                     FStar_TypeChecker_Env.nbe
                                                                     =
-                                                                    (uu___1891_13776.FStar_TypeChecker_Env.nbe)
+                                                                    (uu___1891_13776.FStar_TypeChecker_Env.nbe);
+                                                                    FStar_TypeChecker_Env.strict_args_tab
+                                                                    =
+                                                                    (uu___1891_13776.FStar_TypeChecker_Env.strict_args_tab)
                                                                     }) s_ty
                                                                     pat  in
                                                                     match uu____13759

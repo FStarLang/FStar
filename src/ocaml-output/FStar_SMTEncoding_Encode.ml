@@ -1934,7 +1934,9 @@ let (encode_free_var :
                                      FStar_TypeChecker_Env.dsenv =
                                        (uu___311_7435.FStar_TypeChecker_Env.dsenv);
                                      FStar_TypeChecker_Env.nbe =
-                                       (uu___311_7435.FStar_TypeChecker_Env.nbe)
+                                       (uu___311_7435.FStar_TypeChecker_Env.nbe);
+                                     FStar_TypeChecker_Env.strict_args_tab =
+                                       (uu___311_7435.FStar_TypeChecker_Env.strict_args_tab)
                                    }) comp FStar_Syntax_Syntax.U_unknown
                                  in
                               FStar_Syntax_Syntax.mk_Total uu____7432
@@ -2939,7 +2941,9 @@ let (encode_top_level_let :
                   FStar_TypeChecker_Env.dsenv =
                     (uu___523_9449.FStar_TypeChecker_Env.dsenv);
                   FStar_TypeChecker_Env.nbe =
-                    (uu___523_9449.FStar_TypeChecker_Env.nbe)
+                    (uu___523_9449.FStar_TypeChecker_Env.nbe);
+                  FStar_TypeChecker_Env.strict_args_tab =
+                    (uu___523_9449.FStar_TypeChecker_Env.strict_args_tab)
                 }  in
               let subst_comp1 formals actuals comp =
                 let subst1 =
