@@ -158,46 +158,37 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
      then mk_GTotal (U.comp_result c)
      else failwith "Impossible: Expected pure_or_ghost comp"
   in
-  (*
-   * AR: Following code has the logic for determining expected comp, comp,
-   *       and after checking sub-comp whether we should return comp, rather than the expected comp
-   *     If the input expected comp, copt, is Some, then that becomes the
-   *       expected comp and that's what we return
-   *     If the input expected comp is not set, and we are in Tot/Pure, GTot, ML case
-   *       then expected comp is Tot/GTot/ML, and we return the expected comp
-   *     When we are in an effectful case, and expected comp is not set, we check that
-   *       c <: M.null_wp to make sure that c has a trivial precondition, cf. #1055
-   *     But in this case, we still return c so that callers can use the postconditions
-   *)
-  let expected_c_opt, c, should_return_c =
+
+  let expected_c_opt, c, gopt =
     let ct = U.comp_result c in
     match copt with
-    | Some _ -> copt, c, false
+    | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
         if (Options.ml_ish()
             && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp ct e.pos), c, false
+        then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
-        then None, tot_or_gtot c, false //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
+        then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
-        then Some (tot_or_gtot c), c, false
+        then Some (tot_or_gtot c), c, None
         else if Options.trivial_pre_for_unannotated_effectful_fns ()
-        then (*
-              * AR: note that Env.null_wp_for_eff does the normalization of effects
-              *     the true flag indicates that check sub-comp but return c
-              *)
-             Some (Env.null_wp_for_eff env (U.comp_effect_name c) (ct |> env.universe_of env) ct), c, true
-        else None, c, true
+        then None, c, (
+               let _, _, g = TcUtil.check_trivial_precondition env c in
+               Some g)
+        else None, c, None
   in
-  let c0 = c in
   let c = norm_c env c in
   match expected_c_opt with
     | None ->
-      e, c, Env.trivial_guard
+      e, c, (match gopt with | None -> Env.trivial_guard | Some g -> g)
     | Some expected_c -> //expected effects should already be normalized
+       let _ = match gopt with
+         | None -> ()
+         | Some _ -> failwith "Impossible! check_expected_effect, gopt should have been None"
+       in
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
        if debug env <| Options.Low then
@@ -210,7 +201,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
                          (Range.string_of_range e.pos)
                          (guard_to_string env g);
        let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
-       e, (if should_return_c then c0 else expected_c), g
+       e, expected_c, g
 
 let no_logical_guard env (te, kt, f) =
   match guard_form f with
