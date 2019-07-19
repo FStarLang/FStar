@@ -1371,18 +1371,18 @@ type connective =
    *)
 let destruct_base_table =
   [ (0, [PC.true_lid; PC.false_lid]);
-    (1, [PC.not_lid]);
     (2, [PC.and_lid; PC.or_lid; PC.imp_lid; PC.iff_lid; PC.eq2_lid; PC.eq3_lid]);
+    (1, [PC.not_lid]);
     (3, [PC.ite_lid; PC.eq2_lid]);
     (4, [PC.eq3_lid])
   ]
 
 let destruct_sq_base_table =
-  [ (0, [(PC.c_true_lid, PC.true_lid); (PC.c_false_lid, PC.false_lid)]);
-    (2, [(PC.c_and_lid, PC.and_lid); (PC.c_or_lid, PC.or_lid);
+  [ (2, [(PC.c_and_lid, PC.and_lid); (PC.c_or_lid, PC.or_lid);
          (PC.c_eq2_lid, PC.c_eq2_lid); (PC.c_eq3_lid, PC.c_eq3_lid)]);
     (3, [(PC.c_eq2_lid, PC.c_eq2_lid)]);
-    (4, [(PC.c_eq3_lid, PC.c_eq3_lid)])
+    (4, [(PC.c_eq3_lid, PC.c_eq3_lid)]);
+    (0, [(PC.c_true_lid, PC.true_lid); (PC.c_false_lid, PC.false_lid)])
   ]
 
 let destruct_typ_as_formula f : option<connective> =
