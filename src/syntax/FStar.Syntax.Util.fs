@@ -1369,30 +1369,39 @@ let destruct_typ_as_formula f : option<connective> =
       | Tm_meta(t, Meta_monadic _)
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
+    let mk_base_conn lid args = Some (BaseConn (lid, args)) in
     let destruct_base_conn f =
-        let connectives = [ (PC.true_lid,  0);
-                            (PC.false_lid, 0);
-                            (PC.and_lid,   2);
-                            (PC.or_lid,    2);
-                            (PC.imp_lid, 2);
-                            (PC.iff_lid, 2);
-                            (PC.ite_lid, 3);
-                            (PC.not_lid, 1);
-                            (PC.eq2_lid, 3);
-                            (PC.eq2_lid, 2);
-                            (PC.eq3_lid, 4);
-                            (PC.eq3_lid, 2)
-                        ]
-        in
+        let tc_lid_eq tc lid = lid_equals tc.fv_name.v lid in
 
-        let aux f (lid, arity) =
-            let t, args = head_and_args (unmeta_monadic f) in
-            let t = un_uinst t in
-            if is_constructor t lid
-            && List.length args = arity
-            then Some (BaseConn(lid, args))
-            else None in
-        U.find_map connectives (aux f) in
+        let t, args = head_and_args (unmeta_monadic f) in
+        let t = un_uinst t in
+        match (pre_typ t).n with
+        | Tm_fvar tc -> begin
+          match List.length args with
+          | 0 when tc_lid_eq tc PC.true_lid ->
+            mk_base_conn PC.true_lid args
+          | 0 when tc_lid_eq tc PC.false_lid ->
+            mk_base_conn PC.false_lid args
+          | 2 when tc_lid_eq tc PC.and_lid ->
+            mk_base_conn PC.and_lid args
+          | 2 when tc_lid_eq tc PC.or_lid ->
+            mk_base_conn PC.or_lid args
+          | 2 when tc_lid_eq tc PC.imp_lid ->
+            mk_base_conn PC.imp_lid args
+          | 2 when tc_lid_eq tc PC.iff_lid ->
+            mk_base_conn PC.iff_lid args
+          | 3 when tc_lid_eq tc PC.ite_lid ->
+            mk_base_conn PC.ite_lid args
+          | 1 when tc_lid_eq tc PC.not_lid ->
+            mk_base_conn PC.not_lid args
+          | y when ((tc_lid_eq tc PC.eq2_lid) && (y=3 || y=2)) ->
+            mk_base_conn PC.eq2_lid args
+          | y when ((tc_lid_eq tc PC.eq3_lid) && (y=4 || y=2)) ->
+            mk_base_conn PC.eq3_lid args
+          | _ -> None
+          end
+        | _ -> None
+    in
 
     let patterns t =
         let t = compress t in
@@ -1432,50 +1441,36 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
-    // Unfolded connectives
-    let u_connectives =
-        [ (PC.true_lid,  PC.c_true_lid, 0);
-          (PC.false_lid, PC.c_false_lid, 0);
-          (PC.and_lid,   PC.c_and_lid, 2);
-          (PC.or_lid,    PC.c_or_lid, 2);
-        ]
-    in
     let destruct_sq_base_conn t =
         bind_opt (un_squash t) (fun t ->
         let hd, args = head_and_args' t in
-        match (un_uinst hd).n, List.length args with
-        | Tm_fvar fv, 2
-            when fv_eq_lid fv PC.c_and_lid ->
-                Some (BaseConn (PC.and_lid, args))
-        | Tm_fvar fv, 2
-            when fv_eq_lid fv PC.c_or_lid ->
-                Some (BaseConn (PC.or_lid, args))
+        match (un_uinst hd).n with
+        | Tm_fvar fv -> begin
+          match List.length args with
+          | 2 when fv_eq_lid fv PC.c_and_lid ->
+            mk_base_conn PC.and_lid args
+          | 2 when fv_eq_lid fv PC.c_or_lid ->
+            mk_base_conn PC.or_lid args
 
-        // eq2 can have 2 args or 3
-        | Tm_fvar fv, 2
-            when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.c_eq2_lid, args))
-        | Tm_fvar fv, 3
-            when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.c_eq2_lid, args))
+          // eq2 can have 2 args or 3
+          | 2 when fv_eq_lid fv PC.c_eq2_lid ->
+            mk_base_conn PC.c_eq2_lid args
+          | 3 when fv_eq_lid fv PC.c_eq2_lid ->
+            mk_base_conn PC.c_eq2_lid args
 
-        // eq3 can have 2 args or 4
-        | Tm_fvar fv, 2
-            when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.c_eq3_lid, args))
-        | Tm_fvar fv, 4
-            when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.c_eq3_lid, args))
+          // eq3 can have 2 args or 4
+          | 2 when fv_eq_lid fv PC.c_eq3_lid ->
+            mk_base_conn PC.c_eq3_lid args
+          | 4 when fv_eq_lid fv PC.c_eq3_lid ->
+            mk_base_conn PC.c_eq3_lid args
 
-        | Tm_fvar fv, 0
-            when fv_eq_lid fv PC.c_true_lid ->
-                Some (BaseConn (PC.true_lid, args))
-        | Tm_fvar fv, 0
-            when fv_eq_lid fv PC.c_false_lid ->
-                Some (BaseConn (PC.false_lid, args))
-
-        | _ ->
-            None
+          | 0 when fv_eq_lid fv PC.c_true_lid ->
+            mk_base_conn PC.true_lid args
+          | 0 when fv_eq_lid fv PC.c_false_lid ->
+            mk_base_conn PC.false_lid args
+          | _ -> None
+          end
+        | _ -> None
         )
     in
     let rec destruct_sq_forall t =
