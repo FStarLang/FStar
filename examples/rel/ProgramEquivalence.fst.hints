@@ -455,7 +455,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "087f05af438b89a6b33248067777bd85"
+      "570412361b4ebd876358130f158fc38d"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",
@@ -543,7 +543,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "115f9cbe2d53fe0df622d867cb6ac238"
+      "65b17f69937470941d9a72436491ebdb"
     ],
     [
       "ProgramEquivalence.__proj__C__item__c",

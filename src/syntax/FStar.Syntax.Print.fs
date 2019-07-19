@@ -743,7 +743,7 @@ let rec sigelt_to_string (x: sigelt) =
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
       in
       match x.sigattrs with
-      | [] -> basic
+      | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg

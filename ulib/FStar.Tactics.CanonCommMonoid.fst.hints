@@ -585,7 +585,7 @@
         "token_correspondence_FStar.Tactics.CanonCommMonoid.sortWith"
       ],
       0,
-      "811a64020382963b8333d4965e4abc18"
+      "a1adee805284100f3186f4dc46075921"
     ],
     [
       "FStar.Tactics.CanonCommMonoid.lem1",
@@ -1103,7 +1103,7 @@
         "token_correspondence_FStar.Tactics.CanonCommMonoid.sortWith"
       ],
       0,
-      "49a5447f64a4a82c21575a85cdffdab2"
+      "1f6cccbe0517443e9222e02a871b085e"
     ]
   ]
 ]

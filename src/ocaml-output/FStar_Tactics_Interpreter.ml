@@ -1808,7 +1808,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___189_2290.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___189_2290.FStar_TypeChecker_Env.nbe)
+                             (uu___189_2290.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___189_2290.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let env3 =
                          let uu___192_2293 = env2  in
@@ -1897,7 +1899,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___192_2293.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___192_2293.FStar_TypeChecker_Env.nbe)
+                             (uu___192_2293.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___192_2293.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let env4 =
                          let uu___195_2296 = env3  in
@@ -1986,7 +1990,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___195_2296.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___195_2296.FStar_TypeChecker_Env.nbe)
+                             (uu___195_2296.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___195_2296.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let rng =
                          let uu____2299 = FStar_Range.use_range rng_goal  in
