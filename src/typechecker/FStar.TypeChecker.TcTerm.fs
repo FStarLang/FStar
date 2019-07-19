@@ -2433,9 +2433,55 @@ and check_top_level_let env e =
          in
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
+         
+         (*
+          * AR: we now compute comp for the whole `let x = e1 in e2`, where e2 = ()
+          *
+          *     we have already checked that c1 has a trivial precondition
+          *       and in most cases, c1 is some variant of PURE (top-level functions)
+          *     so if that's the case, we simply make cres as Tot unit
+          *
+          *     if c1 is not PURE, then we take a longer route and compute:
+          *       M.bind wp1 (fun _ -> (M.return_wp unit))
+          *
+          *     all this to remove the earlier usage of M.null_wp
+          *)
+         let cres =
+           if U.is_pure_or_ghost_comp c1 then S.mk_Total' S.t_unit (Some S.U_zero)
+           else let c1_comp_typ = c1 |> Env.unfold_effect_abbrev env in
+                let c1_wp =
+                  match c1_comp_typ.effect_args with
+                  | [(wp, _)] -> wp
+                  | _ -> failwith "Impossible! check_top_level_let: got unexpected effect args"
+                in
+                let c1_eff_decl = Env.get_effect_decl env c1_comp_typ.effect_name in
 
-         (* the result has the same effect as c1, except it returns unit *)
-         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
+                (* wp2 = M.return_wp unit () *)
+                let wp2 = mk_Tm_app
+                  (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl c1_eff_decl.ret_wp)
+                  [S.as_arg S.t_unit; S.as_arg S.unit_const]
+                  None
+                  e2.pos
+                in
+
+                (* wp = M.bind wp_c1 (fun _ -> wp2) *)
+                let wp = mk_Tm_app
+                  (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl c1_eff_decl.bind_wp)
+                  [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
+                    S.as_arg <| c1_comp_typ.result_typ;
+                    S.as_arg S.t_unit;
+                    S.as_arg c1_wp;
+                    S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
+                  None
+                  lb.lbpos
+                in
+                mk_Comp ({
+                  comp_univs=[S.U_zero];
+                  effect_name=c1_comp_typ.effect_name;
+                  result_typ=S.t_unit;
+                  effect_args=[S.as_arg wp];
+                  flags=[]})
+         in
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let((false, [lb]), e2))
