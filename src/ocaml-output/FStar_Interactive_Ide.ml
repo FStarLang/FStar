@@ -139,7 +139,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.tc_hooks =
           (uu___27_252.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv = uu____253;
-        FStar_TypeChecker_Env.nbe = (uu___27_252.FStar_TypeChecker_Env.nbe)
+        FStar_TypeChecker_Env.nbe = (uu___27_252.FStar_TypeChecker_Env.nbe);
+        FStar_TypeChecker_Env.strict_args_tab =
+          (uu___27_252.FStar_TypeChecker_Env.strict_args_tab)
       }
   
 let with_captured_errors' :
@@ -2345,7 +2347,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.dsenv =
                  (uu___837_6805.FStar_TypeChecker_Env.dsenv);
                FStar_TypeChecker_Env.nbe =
-                 (uu___837_6805.FStar_TypeChecker_Env.nbe)
+                 (uu___837_6805.FStar_TypeChecker_Env.nbe);
+               FStar_TypeChecker_Env.strict_args_tab =
+                 (uu___837_6805.FStar_TypeChecker_Env.strict_args_tab)
              });
           repl_stdin = (uu___835_6803.repl_stdin);
           repl_names = (uu___835_6803.repl_names)
