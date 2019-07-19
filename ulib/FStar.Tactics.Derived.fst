@@ -517,12 +517,22 @@ private val push1 : (#p:Type) -> (#q:Type) ->
                         squash q
 private let push1 #p #q f u = ()
 
+private val push1' : (#p:Type) -> (#q:Type) ->
+                         (p ==> q) ->
+                         squash p ->
+                         squash q
+private let push1' #p #q f u = ()
+
 (*
  * Some easier applying, which should prevent frustation
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
+    (* Before anything, try a vanilla apply and apply_lemma *)
+    try apply t with | _ ->
+    try apply (`FStar.Squash.return_squash); apply t with | _ ->
+    try apply_lemma t with | _ ->
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
     let g = cur_goal () in
@@ -570,8 +580,24 @@ let rec apply_squash_or_lem d t =
 
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
-           apply (`FStar.Squash.return_squash);
-           apply t
+        // DUPLICATED, refactor!
+         begin
+         (* What I would really like to do here is unify `mk_squash post` and the goal,
+          * but it didn't work on a first try, so just doing this for now *)
+         match trytac (fun () -> apply_lemma t) with
+         | Some _ -> () // Success
+         | None ->
+             let rt = norm_term [] rt in
+             (* Is the lemma an implication? We can try to intro *)
+             match term_as_formula' rt with
+             | Implies p q ->
+                 apply_lemma (`push1);
+                 apply_squash_or_lem (d-1) t
+
+             | _ ->
+                 apply (`FStar.Squash.return_squash);
+                 apply t
+         end
        end
     | _ -> fail "mapply: can't apply (2)"
     end
