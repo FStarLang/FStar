@@ -1362,6 +1362,29 @@ type connective =
     | QEx of binders * qpats * typ
     | BaseConn of lident * args
 
+(* destruct_typ_as_formula can be a bottleneck
+   these tables are defined here to ensure they are constructed
+   only once in the compiled extracted code
+
+   the tables encode arity -> lids
+   and in the case of sq_base the lid mapping
+   *)
+let destruct_base_table =
+  [ (0, [PC.true_lid; PC.false_lid]);
+    (1, [PC.not_lid]);
+    (2, [PC.and_lid; PC.or_lid; PC.imp_lid; PC.iff_lid; PC.eq2_lid; PC.eq3_lid]);
+    (3, [PC.ite_lid; PC.eq2_lid]);
+    (4, [PC.eq3_lid])
+  ]
+
+let destruct_sq_base_table =
+  [ (0, [(PC.c_true_lid, PC.true_lid); (PC.c_false_lid, PC.false_lid)]);
+    (2, [(PC.c_and_lid, PC.and_lid); (PC.c_or_lid, PC.or_lid);
+         (PC.c_eq2_lid, PC.c_eq2_lid); (PC.c_eq3_lid, PC.c_eq3_lid)]);
+    (3, [(PC.c_eq2_lid, PC.c_eq2_lid)]);
+    (4, [(PC.c_eq3_lid, PC.c_eq3_lid)])
+  ]
+
 let destruct_typ_as_formula f : option<connective> =
     let rec unmeta_monadic f =
       let f = Subst.compress f in
@@ -1370,36 +1393,23 @@ let destruct_typ_as_formula f : option<connective> =
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
     let mk_base_conn lid args = Some (BaseConn (lid, args)) in
-    let destruct_base_conn f =
-        let tc_lid_eq tc lid = lid_equals tc.fv_name.v lid in
 
+    let destruct_base_conn f =
         let t, args = head_and_args (unmeta_monadic f) in
         let t = un_uinst t in
         match (pre_typ t).n with
-        | Tm_fvar tc -> begin
-          match List.length args with
-          | 0 when tc_lid_eq tc PC.true_lid ->
-            mk_base_conn PC.true_lid args
-          | 0 when tc_lid_eq tc PC.false_lid ->
-            mk_base_conn PC.false_lid args
-          | 2 when tc_lid_eq tc PC.and_lid ->
-            mk_base_conn PC.and_lid args
-          | 2 when tc_lid_eq tc PC.or_lid ->
-            mk_base_conn PC.or_lid args
-          | 2 when tc_lid_eq tc PC.imp_lid ->
-            mk_base_conn PC.imp_lid args
-          | 2 when tc_lid_eq tc PC.iff_lid ->
-            mk_base_conn PC.iff_lid args
-          | 3 when tc_lid_eq tc PC.ite_lid ->
-            mk_base_conn PC.ite_lid args
-          | 1 when tc_lid_eq tc PC.not_lid ->
-            mk_base_conn PC.not_lid args
-          | y when ((tc_lid_eq tc PC.eq2_lid) && (y=3 || y=2)) ->
-            mk_base_conn PC.eq2_lid args
-          | y when ((tc_lid_eq tc PC.eq3_lid) && (y=4 || y=2)) ->
-            mk_base_conn PC.eq3_lid args
-          | _ -> None
-          end
+        | Tm_fvar tc ->
+            let arg_len = List.length args in
+            let aux (arity, lids) =
+                if arg_len = arity
+                then U.find_map lids
+                    (fun lid ->
+                      if lid_equals tc.fv_name.v lid
+                      then mk_base_conn lid args
+                      else None)
+                else None
+            in
+            U.find_map destruct_base_table aux
         | _ -> None
     in
 
@@ -1446,29 +1456,17 @@ let destruct_typ_as_formula f : option<connective> =
         let hd, args = head_and_args' t in
         match (un_uinst hd).n with
         | Tm_fvar fv -> begin
-          match List.length args with
-          | 2 when fv_eq_lid fv PC.c_and_lid ->
-            mk_base_conn PC.and_lid args
-          | 2 when fv_eq_lid fv PC.c_or_lid ->
-            mk_base_conn PC.or_lid args
-
-          // eq2 can have 2 args or 3
-          | 2 when fv_eq_lid fv PC.c_eq2_lid ->
-            mk_base_conn PC.c_eq2_lid args
-          | 3 when fv_eq_lid fv PC.c_eq2_lid ->
-            mk_base_conn PC.c_eq2_lid args
-
-          // eq3 can have 2 args or 4
-          | 2 when fv_eq_lid fv PC.c_eq3_lid ->
-            mk_base_conn PC.c_eq3_lid args
-          | 4 when fv_eq_lid fv PC.c_eq3_lid ->
-            mk_base_conn PC.c_eq3_lid args
-
-          | 0 when fv_eq_lid fv PC.c_true_lid ->
-            mk_base_conn PC.true_lid args
-          | 0 when fv_eq_lid fv PC.c_false_lid ->
-            mk_base_conn PC.false_lid args
-          | _ -> None
+            let arg_len = List.length args in
+            let aux (arity, lids) =
+                if arg_len = arity
+                then U.find_map lids
+                    (fun (lid, out_lid) ->
+                      if fv_eq_lid fv lid
+                      then mk_base_conn out_lid args
+                      else None)
+                else None
+            in
+            U.find_map destruct_sq_base_table aux
           end
         | _ -> None
         )
