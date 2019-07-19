@@ -7,22 +7,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W32",
-        "equality_tok_FStar.Integers.W32@tok", "equation_FStar.Integers.v",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt32.lte",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Ex2.lbuffer",
         "equation_LowStar.Monotonic.Buffer.length",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Integers.Unsigned__0",
         "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
-        "refinement_interpretation_Tm_refine_8807cc77b6a1b45afbe57dc1caa2253c"
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
       ],
       0,
-      "b9f85755dcd4fa54883f8cc73dbc433a"
+      "5dc1ed6b0a08377b3c14ff7c154da44f"
     ],
     [
       "LowStar.Ex2.prefix_equal",
@@ -30,22 +26,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W32",
-        "equality_tok_FStar.Integers.W32@tok", "equation_FStar.Integers.v",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt32.lte",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Ex2.lbuffer",
         "equation_LowStar.Monotonic.Buffer.length",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Integers.Unsigned__0",
         "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
-        "refinement_interpretation_Tm_refine_8807cc77b6a1b45afbe57dc1caa2253c"
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
       ],
       0,
-      "4ec96fb5db39c94faf2d8cdb6d032802"
+      "d1a3b2701f2297e553a52e5e1d9622e8"
     ]
   ]
 ]
