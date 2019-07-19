@@ -1002,7 +1002,18 @@ let universe_of_comp env u_res c =
                         c.pos
          | Some tm -> env.universe_of env tm
 
-
+let check_trivial_precondition env c =
+  let ct = c |> Env.unfold_effect_abbrev env in
+  let md = Env.get_effect_decl env ct.effect_name in
+  let u_t, t, wp = destruct_comp ct in
+  let vc = mk_Tm_app
+    (inst_effect_fun_with [u_t] env md md.trivial)
+    [S.as_arg t; S.as_arg wp]
+    None
+    (Env.get_range env)
+  in
+  
+  ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     if env.is_pattern then e, lc else
@@ -1609,15 +1620,11 @@ let check_top_level env g lc : (bool * comp) =
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
-              |> Normalize.normalize_comp steps env
-              |> Env.comp_to_comp_typ env in
-       let md = Env.get_effect_decl env c.effect_name in
-       let u_t, t, wp = destruct_comp c in
-       let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] None (Env.get_range env) in
+              |> Normalize.normalize_comp steps env in
+       let ct, vc, g = check_trivial_precondition env c in
        if Env.debug env <| Options.Other "Simplification"
        then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
-       let g = Env.conj_guard g (Env.guard_of_guard_formula <| NonTrivial vc) in
-       discharge g, mk_Comp c
+       discharge g, ct |> mk_Comp
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,
