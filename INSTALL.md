@@ -185,12 +185,24 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work.
+The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work. OCaml version 4.08.0 is known **not** to work because you can't yet get packages such as [batteries](https://opam.ocaml.org/packages/batteries/) and [ulex](https://github.com/FStarLang/FStar/issues/1792).
 
 #### Instructions for Windows ####
 
 1. Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/)
    to install both OCaml and OPAM.
+   The current installer will give you OCaml 4.08.0, which as explained above does not work with F*.
+   To switch to an earlier OCaml version please run the following commands:
+  ```sh
+  $ opam switch list-available
+  $ opam switch create ocaml-variants.4.07.1+mingw32c
+  ```
+  Afterwards you can install the `depext` and `depext-cygwinports` packages,
+  to be able to more easily install some binary dependencies below.
+  ```sh
+  $ opam install depext depext-cygwinports
+  ```
+  [More documentation on depext-cygwin here](https://fdopen.github.io/opam-repository-mingw/depext-cygwin/).
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -228,8 +240,18 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
   ```
+  
+  **Note:** Some of these opam packages depend on binary packages that you need to install locally
+  (eg, using your package manager. So if the command above gives you errors like this:
+  ```sh
+  $ [ERROR] The compilation of conf-gmp failed at "./test-win.sh".
+  ```
+  You can use `depext` to install the missing binary packages, for instance:
+  ```sh
+  $ opam depext -i conf-gmp
+  ```
 
-  **Note:** this list of packages is longer than the list in the
+  **Note:** This list of opam packages is longer than the list in the
   [Testing a binary package](#testing-a-binary-package) section above,
   because the additional packages here are necessary to compile F\*.
 
