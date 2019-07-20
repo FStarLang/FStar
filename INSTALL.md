@@ -80,7 +80,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed and intend to extract and compile OCaml code
-   against the F* library, please rebuild it with:
+   against the F* library, please build it with:
 
         $ make -C ulib install-fstarlib
 
@@ -242,15 +242,21 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
   ```
   
   **Note:** Some of these opam packages depend on binary packages that you need to install locally
-  (eg, using your package manager. So if the command above gives you errors like this:
+  (eg, using your Linux package manager). So if the command above gives you errors like this:
   ```sh
-  $ [ERROR] The compilation of conf-gmp failed at "./test-win.sh".
+  [ERROR] The compilation of conf-gmp failed at "./test-win.sh".
   ```
   You can use `depext` to install the missing binary packages, for instance:
   ```sh
   $ opam depext -i conf-gmp
   ```
-
+  On Windows, for dynamic libraries like gmp, if you want to call `bin/fstar.exe` from Windows or VSCode
+  (not just from a cygwin shell),
+  you also need to copy the dll from cygwin to the `bin` folder if you get popups like this:
+  ```sh
+  The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
+  ```
+  
   **Note:** This list of opam packages is longer than the list in the
   [Testing a binary package](#testing-a-binary-package) section above,
   because the additional packages here are necessary to compile F\*.
