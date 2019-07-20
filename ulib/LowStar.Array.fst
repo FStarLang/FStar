@@ -102,7 +102,7 @@ let alloc #a init len =
   (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v len)) content
   (**)    (fun () -> ())
   (**)    (fun a' ref' -> ())
-  (**)    (fun t' b' ->
+  (**)    (fun t' b' cell' ->
   (**)      live_same_arrays_equal_types b b' h1;
   (**)      let (_, perm_map) = Seq.index (HS.sel h1 b.content) i in
   (**)      let current_max = P.get_current_max (Ghost.reveal perm_map) in
@@ -273,6 +273,7 @@ let lemma_different_live_pid #a h b =
   assert (live_cell h b 0);
   lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid)
 
+#set-options "--z3rlimit 20"
 
 let share #a b =
   (**) let open HST in
@@ -285,13 +286,14 @@ let share #a b =
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
   (**) get_array_current_max_same_with_new_pid #a b h0 new_pid;
+  admit();
   (**) array_unused_in_intro b' h0;
   (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
   (**)  let cell = aloc_cell b' i in
   (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
   (**)    (fun () -> ())
   (**)    (fun a' ref' -> ())
-  (**)    (fun t'' b'' ->
+  (**)    (fun t'' b'' cell'' ->
   (**)       live_same_arrays_equal_types b' b'' h1;
   (**)       let (_, perm_map) = Seq.index (HS.sel h1 b'.content) cell.b_index in
   (**)       lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b'.pid)
@@ -584,13 +586,14 @@ let move #a b =
   (**) assert (as_perm_seq h1 b' `Seq.equal` as_perm_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
+  (**) admit();
   (**) array_unused_in_intro b' h0;
   (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
   (**)  let cell = aloc_cell b' i in
   (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
   (**)    (fun () -> ())
   (**)    (fun a' ref' -> ())
-  (**)    (fun t'' b'' ->
+  (**)    (fun t'' b'' cell'' ->
   (**)       live_same_arrays_equal_types b' b'' h1;
   (**)       let (_, perm_map) = Seq.index (HS.sel h1 b'.content) cell.b_index in
   (**)       lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b'.pid)
