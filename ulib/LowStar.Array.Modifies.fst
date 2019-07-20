@@ -21,6 +21,7 @@ friend LowStar.Array.Defs
 (*** Definitions of locations for arrays with permissions ***)
 
 type array_len = n:nat{n > 0 /\ n <= UInt.max_int 32}
+type index_len = n:nat{n <= UInt.max_int 32}
 
 /// We need to define the atomic locations cell per cell. We will then define loc_buffer as the union of aloc of cells
 /// The reason for this is that we want to prove that the loc of the union of two buffers corresponds to the union of locs
@@ -30,7 +31,7 @@ type ucell : Type0 = {
   b_rid: HS.rid;
   b_addr: nat;
   b_max: array_len;
-  b_index:array_len;
+  b_index:index_len;
   b_pid:perm_id;
 }
 
@@ -147,10 +148,11 @@ let ucell_unused_in (cell:ucell) (h: HS.mem) =
     HS.as_addr ref = cell.b_addr /\ HS.frameOf ref = cell.b_rid /\ HS.contains h ref /\
       (forall (t: Type) (len:array_len). a =!= Seq.lseq (value_with_perms t) len)
   ) \/
-  // Or there is an allocated array matching the cell but it doesnt use the ucell
-  (exists (t:Type) (b:array t).
-    (~ (ucell_matches_array_cell cell t b h) /\ ucell_matches_array cell t b h) \/
-    ucell_matches_unused_array_cell cell t b h
+  // Or there is an allocated array matching the cell or another cell with a different 
+  //max_length but it's unused
+  (exists (t:Type) (b:array t) (cell': ucell).
+    cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+    ucell_matches_unused_array_cell cell' t b h
   )
 
 let ucell_unused_in_intro_not_allocated (cell: ucell) (h: HS.mem)
@@ -166,11 +168,6 @@ let ucell_unused_in_intro_unused_cell (cell: ucell) (h: HS.mem) (t: Type) (b: ar
   =
   ()
 
-let ucell_unused_in_intro_not_matching_cell (cell: ucell) (h: HS.mem) (t: Type) (b: array t) : Lemma
-  (requires (~ (ucell_matches_array_cell cell t b h) /\ ucell_matches_array cell t b h))
-  (ensures (ucell_unused_in cell h))
-  =
-  ()
 
 let ucell_unused_in_intro_not_matching (cell: ucell) (h: HS.mem) (t: Type) (b: array t) : Lemma
   (requires (ucell_matches_unused_array_cell cell t b h))
@@ -212,12 +209,11 @@ let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
     ))
     (ensures goal)
   )
-  (matching_array_but_not_cell: (t: Type) -> (b: array t) -> Lemma
-    (requires ((~ (ucell_matches_array_cell cell t b h)) /\ ucell_matches_array cell t b h))
-    (ensures (goal))
-  )
-  (matching_cell_not_used: (t: Type) -> (b: array t) -> Lemma
-    (requires (ucell_matches_unused_array_cell cell t b h))
+  (matching_cell_not_used: (t: Type) -> (b: array t) -> (cell': ucell) -> Lemma
+    (requires (
+      cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+      ucell_matches_unused_array_cell cell' t b h
+    ))
     (ensures (goal))
   )
   : Lemma (requires (ucell_unused_in cell h)) (ensures (goal))
@@ -231,9 +227,9 @@ let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
       a =!= Seq.lseq (value_with_perms t) len
     )
   in
-  let r = exists (t:Type) (b:array t).
-    (~ (ucell_matches_array_cell cell t b h) /\ ucell_matches_array cell t b h) \/
-    ucell_matches_unused_array_cell cell t b h
+  let r = exists (t:Type) (b:array t) (cell': ucell).
+    cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+    ucell_matches_unused_array_cell cell' t b h
   in
   let goal' = fun (_ : squash ((l \/ m) \/ r)) -> goal in
   Classical.or_elim #(l \/ m) #r #goal'
@@ -263,25 +259,27 @@ let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
         )
     )
     (fun (pf_term : squash r) ->
-      let p (t': Type) = exists (b': array t').
-        (~ (ucell_matches_array_cell cell t' b' h) /\ ucell_matches_array cell t' b' h) \/
-        ucell_matches_unused_array_cell cell t' b' h
+      let p (t': Type) = exists (b': array t') (cell': ucell).
+        cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+        ucell_matches_unused_array_cell cell' t' b' h
       in
-      let pf : squash (exists (t': Type) . p t') = () in
+      let pf : squash (exists (t': Type) . p t') = pf_term in
       Classical.exists_elim goal #Type #p pf (fun t' ->
-        let p (b': array t') =
-          (~ (ucell_matches_array_cell cell t' b' h) /\ ucell_matches_array cell t' b' h) \/
-          ucell_matches_unused_array_cell cell t' b' h
+        let p (b': array t') = exists (cell': ucell).
+          cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+          ucell_matches_unused_array_cell cell' t' b' h
         in
         let pf : squash (exists (b': array t') . p b') = () in
         Classical.exists_elim goal #(array t') #p pf (fun b' ->
-          Classical.or_elim
-            #(~ (ucell_matches_array_cell cell t' b' h) /\ ucell_matches_array cell t' b' h)
-            #(ucell_matches_unused_array_cell cell t' b' h)
-            #(fun _ -> goal)
-            (fun _ -> matching_array_but_not_cell t' b')
-            (fun _ -> matching_cell_not_used t' b')
-         )
+          let p (cell': ucell) =
+            cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\
+            ucell_matches_unused_array_cell cell' t' b' h
+          in
+          let pf : squash (exists (cell': ucell) . p cell') = () in
+          Classical.exists_elim goal #ucell #p pf (fun cell' ->
+            matching_cell_not_used t' b' cell'
+          )
+        )
       )
     )
 
@@ -332,12 +330,19 @@ let live_same_ref_equal_types
   let v_ref: a = HS.sel h ref in
   assert(v_b == v_ref)
 
+#push-options "--z3rlimit 50 --max_fuel 2 --max_ifuel 1"
 
 let ucell_not_unused_in_elim
   (cell: ucell)
   (h: HS.mem)
   (goal: Type)
-  (lemma: (t: Type) -> (b: array t) -> Lemma (requires (ucell_matches_used_array_cell cell t b h)) (ensures (goal)))
+  (lemma: (t: Type) -> (b: array t) -> (cell': ucell) -> Lemma 
+    (requires (
+      cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\
+      ucell_matches_used_array_cell cell' t b h
+    )) 
+    (ensures (goal))
+  )
   : Lemma
   (requires (~ (ucell_unused_in cell h)))
   (ensures (goal))
@@ -352,8 +357,8 @@ let ucell_not_unused_in_elim
         a == Seq.lseq (value_with_perms t) len
       )
     ) /\
-    (forall (t:Type) (b:array t).
-      (ucell_matches_array_cell cell t b h \/ (~ (ucell_matches_array cell t b h))) /\
+    (forall (t:Type) (b:array t) (cell': ucell).
+       cell.b_rid <> cell'.b_rid \/ cell.b_addr <> cell'.b_addr \/ cell.b_pid = cell'.b_pid \/
       (~ (ucell_matches_unused_array_cell cell t b h))
     )
   );
@@ -387,18 +392,16 @@ let ucell_not_unused_in_elim
           in
           let b = Array (U32.uint_to_t len) ref 0ul 1ul (Ghost.hide 1) in
           assert(HS.contains h b.content);
-          assume(len = cell.b_max);
-          assert(ucell_matches_array_cell cell t b h);
-          assert(~ (ucell_matches_unused_array_cell cell t b h));
-          assert(ucell_matches_used_array_cell cell t b h);
-          lemma t b
+          let cell' = { cell with b_max = len; b_index = 0; b_pid = 1 } in
+          assert(ucell_matches_array_cell cell' t b h);
+          assert(~ (ucell_matches_unused_array_cell cell' t b h));
+          assert(ucell_matches_used_array_cell cell' t b h);
+          lemma t b cell'
         )
       )
     )
   )
-
-#push-options "--z3rlimit 20"
-
+  
 let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
   (fun  x -> ())
@@ -415,7 +418,7 @@ let cls : MG.cls ucell = MG.Cls #ucell
   (fun x2 x1 h ->
     (* used_in and unused_in disjoint *)
     let aux (_ : squash ((~ (x1 `ucell_unused_in` h)) /\ x2 `ucell_unused_in` h)) : Lemma (x1 `ucell_disjoint` x2) =
-      ucell_not_unused_in_elim x1 h (x1 `ucell_disjoint` x2) (fun t b ->
+      ucell_not_unused_in_elim x1 h (x1 `ucell_disjoint` x2) (fun t b x1' ->
         ucell_unused_in_elim x2 h (x1 `ucell_disjoint` x2) (Seq.lseq (value_with_perms t) (U32.v b.max_length)) b.content
           (fun () ->
             if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else
@@ -423,28 +426,20 @@ let cls : MG.cls ucell = MG.Cls #ucell
           )
           (fun a ref ->
             if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
-              live_same_ref_equal_types #a #t b ref h;
-              admit()
+              live_same_ref_equal_types #a #t b ref h
             end
           )
-          (fun t' b' ->
-            if (frameOf b <> frameOf b' || as_addr b <> as_addr b') then begin
-              admit()
-            end else begin
-              live_same_arrays_equal_types b b' h
-            end
-          )
-          (fun t' b' ->
+          (fun t' b' x2' ->
             if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
               live_same_arrays_equal_types b' b h;
-              if x1.b_index <> x2.b_index then () else begin
-                let (_, perm_map1) = Seq.index (HS.sel h b.content) x1.b_index in
-                let (_, perm_map2) = Seq.index (HS.sel h b'.content) x2.b_index in
-                if x1.b_pid <> x2.b_pid then () else begin
+              if x1'.b_index <> x2'.b_index then admit() else begin
+                let (_, perm_map1) = Seq.index (HS.sel h b.content) x1'.b_index in
+                let (_, perm_map2) = Seq.index (HS.sel h b'.content) x2'.b_index in
+                if x1'.b_pid <> x2'.b_pid then admit() else begin
                   assert(perm_map1 == perm_map2);
                   assert(
-                    x1.b_pid <= get_current_max (Ghost.reveal perm_map1) /\
-                    x1.b_pid > get_current_max (Ghost.reveal perm_map1)
+                    x1'.b_pid <= get_current_max (Ghost.reveal perm_map1) /\
+                    x1'.b_pid > get_current_max (Ghost.reveal perm_map1)
                   )
                 end
               end
@@ -465,12 +460,12 @@ let cls : MG.cls ucell = MG.Cls #ucell
             a == Seq.lseq (value_with_perms t) (U32.v b.max_length)
           )
         )
-        (fun t' b' -> admit())
-        (fun t' b' ->
+        (fun t' b' x' ->
+          let i' = x'.b_index - U32.v b'.idx in
           live_same_arrays_equal_types b' b h0;
-          let (_, perm_map) = Seq.index (HS.sel h0 b.content) x.b_index in
-          LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x.b_pid;
-          assert((live_cell h0 b i) /\ (~ (live_cell h0 b i)))
+          let (_, perm_map) = Seq.index (HS.sel h0 b.content) x'.b_index in
+          LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x'.b_pid;
+          assume((live_cell h0 b' i') /\ (~ (live_cell h0 b' i')))
         )
       )
   )
@@ -901,4 +896,5 @@ let cell_not_used_pid_implies_aloc_unused_in (#t: Type) (b: array t) (i:nat{i < 
       live_same_arrays_equal_types #t #t' b b' h
     in Classical.impl_intro aux
   in
-  Classical.forall_intro_2 aux
+  Classical.forall_intro_2 aux;
+  admit()
