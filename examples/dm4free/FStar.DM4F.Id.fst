@@ -47,7 +47,6 @@ let _ = ID?.wp_if_then_else
 let _ = ID?.wp_close
 let _ = ID?.stronger
 let _ = ID?.ite_wp
-let _ = ID?.null_wp
 let _ = ID?.wp_trivial
 let _ = ID?.ctx
 let _ = ID?.gctx
