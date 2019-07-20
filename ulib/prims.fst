@@ -205,9 +205,6 @@ unfold
 let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
 
 unfold
-let pure_null_wp  (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
-
-unfold
 let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (trivial_result:a) -> True)
 
 total
@@ -219,7 +216,6 @@ new_effect { (* The definition of the PURE effect is fixed; no user should ever 
      ; ite_wp       = pure_ite_wp
      ; stronger     = pure_stronger
      ; close_wp     = pure_close_wp
-     ; null_wp      = pure_null_wp
      ; trivial      = pure_trivial
 }
 
@@ -231,6 +227,9 @@ effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
+unfold
+let pure_null_wp (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
+
 effect Tot (a:Type) = PURE a (pure_null_wp a)
 
 [@"opaque_to_smt"]
