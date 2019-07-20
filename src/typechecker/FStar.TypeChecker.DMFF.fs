@@ -468,7 +468,6 @@ let gen_wps_for_free
     stronger     = ([], c stronger);
     trivial      = ([], c wp_trivial);
     ite_wp       = ([], c ite_wp);
-    null_wp      = ([], c null_wp)
   }
 
 

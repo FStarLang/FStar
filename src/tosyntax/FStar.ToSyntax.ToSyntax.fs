@@ -513,7 +513,6 @@ let is_special_effect_combinator = function
   | "wp_close"
   | "stronger"
   | "ite_wp"
-  | "null_wp"
   | "wp_trivial"
   | "ctx"
   | "gctx"
@@ -2377,7 +2376,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
           "ite_wp";
           "stronger";
           "close_wp";
-          "null_wp";
           "trivial"
         ]
     in
@@ -2456,7 +2454,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              ite_wp      = dummy_tscheme;
              stronger    = dummy_tscheme;
              close_wp    = dummy_tscheme;
-             null_wp     = dummy_tscheme;
              trivial     = dummy_tscheme;
              repr        = snd (lookup "repr");
              bind_repr   = lookup "bind";
@@ -2484,7 +2481,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              ite_wp      = lookup "ite_wp";
              stronger    = lookup "stronger";
              close_wp    = lookup "close_wp";
-             null_wp     = lookup "null_wp";
              trivial     = lookup "trivial";
              repr        = (if rr then snd <| lookup "repr" else S.tun);
              bind_repr   = (if rr then lookup "bind" else un_ts);
@@ -2553,7 +2549,6 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             ite_wp      =sub ed.ite_wp;
             stronger    =sub ed.stronger;
             close_wp    =sub ed.close_wp;
-            null_wp     =sub ed.null_wp;
             trivial     =sub ed.trivial;
 
             repr        =snd (sub ([], ed.repr));
@@ -3121,7 +3116,6 @@ let add_modul_to_env (m:Syntax.modul)
                ite_wp      = erase_tscheme ed.ite_wp;
                stronger    = erase_tscheme ed.stronger;
                close_wp    = erase_tscheme ed.close_wp;
-               null_wp     = erase_tscheme ed.null_wp;
                trivial     = erase_tscheme ed.trivial;
                repr        = erase_term ed.repr;
                return_repr = erase_tscheme ed.return_repr;
