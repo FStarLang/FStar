@@ -396,6 +396,10 @@ let rec revert_all (bs:binders) : Tac unit =
     | _::tl -> revert ();
                revert_all tl
 
+(* Some syntax utility functions *)
+let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
+let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
+
 // Cannot define this inside `assumption` due to #1091
 private
 let rec __assumption_aux (bs : binders) : Tac unit =
@@ -403,7 +407,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack_ln (Tv_Var (bv_of_binder b)) in
+        let t = binder_to_term b in
         try exact t with | _ ->
         try (apply (`FStar.Squash.return_squash);
              exact t) with | _ ->
@@ -641,10 +645,6 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
       x
     )
   )
-
-(* Some syntax utility functions *)
-let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
 
 (*
  * Specialize a function by partially evaluating it

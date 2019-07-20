@@ -22,6 +22,8 @@ open FStar.Tactics.Util
 open FStar.Reflection
 open FStar.Reflection.Formula
 
+let cur_formula () : Tac formula = term_as_formula (cur_goal ())
+
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
                             x:a -> squash (b x)
@@ -92,11 +94,18 @@ let pose_lemma (t : term) : Tac binder =
     | C_Lemma pre post -> pre, post
     | _ -> fail ""
   in
-  let reqb = tcut (`squash (`#pre)) in
-  let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binder_to_term reqb)) (fun () -> (`#t)))) in
-  flip ();
-  ignore (trytac trivial);
-  b
+  (* If the precondition is trivial, do not cut by it *)
+  dump ("pre = " ^ term_to_string pre);
+  match term_as_formula' pre with
+  | True_ ->
+    pose (`(__lemma_to_squash #(`#pre) #(`#post) () (fun () -> (`#t))))
+  | _ ->
+    let reqb = tcut (`squash (`#pre)) in
+
+    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binder_to_term reqb)) (fun () -> (`#t)))) in
+    flip ();
+    ignore (trytac trivial);
+    b
 
 let explode () : Tac unit =
     ignore (
