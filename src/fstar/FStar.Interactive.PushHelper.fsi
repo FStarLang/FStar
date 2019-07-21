@@ -18,7 +18,8 @@
  * text fragments and update state; this file collects helpers for them *)
 #light "off"
 
-module FStar.PushHelper
+module FStar.Interactive.PushHelper
+open FStar
 open FStar.ST
 open FStar.Util
 open FStar.Ident

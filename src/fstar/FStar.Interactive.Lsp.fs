@@ -25,8 +25,8 @@ open FStar.Universal
 open FStar.Range
 
 module U = FStar.Util
-module QH = FStar.QueryHelper
-module PH = FStar.PushHelper
+module QH = FStar.Interactive.QueryHelper
+module PH = FStar.Interactive.PushHelper
 module PI = FStar.Parser.ParseIt
 module TcEnv = FStar.TypeChecker.Env
 

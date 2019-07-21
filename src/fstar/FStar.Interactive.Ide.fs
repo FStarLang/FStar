@@ -26,8 +26,8 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
 open FStar.JsonHelper
-open FStar.QueryHelper
-open FStar.PushHelper
+open FStar.Interactive.QueryHelper
+open FStar.Interactive.PushHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -40,7 +40,7 @@ module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
-module QH = FStar.QueryHelper
+module QH = FStar.Interactive.QueryHelper
 
 let with_captured_errors' env sigint_handler f =
   try
@@ -615,6 +615,9 @@ let collect_errors () =
   errors
 
 let run_segment (st: repl_state) (code: string) =
+  // Unfortunately, frag_fname is a special case in the interactive mode,
+  // while in LSP, it is the only mode. To cope with this difference,
+  // pass a frag_fname that is expected by the Interactive mode.
   let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =

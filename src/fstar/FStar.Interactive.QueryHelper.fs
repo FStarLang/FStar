@@ -18,7 +18,8 @@
  * queries; this file collects helpers for them                  *)
 #light "off"
 
-module FStar.QueryHelper
+module FStar.Interactive.QueryHelper
+open FStar
 open FStar.Range
 open FStar.Util
 open FStar.JsonHelper

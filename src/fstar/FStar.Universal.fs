@@ -142,6 +142,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   let file_from_env env = Range.file_of_range (TcEnv.get_range env) in
   let acceptable_mod_name modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
+    // We use file_from_env instead of `Options.file_list ()` because no file
+    // is passed as a command-line argument in LSP mode.
     Parser.Dep.lowercase_module_name (file_from_env env) =
     String.lowercase (string_of_lid modul.name) in
 

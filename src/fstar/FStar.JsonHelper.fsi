@@ -161,8 +161,13 @@ type error_code =
 | RequestCancelled
 | ContentModified
 
+// A lookup table for pretty-printing error codes
 val errorcode_to_int : error_code -> int
+
+// Another lookup table for pretty-printing JSON objects
 val json_debug : json -> string
+
+// Wrap an error-code along with a description of the error in a BadProtocolMsg
 val wrap_jsfail : option<int> -> string -> json -> lsp_query
 
 (* Helpers for constructing the response *)
@@ -172,11 +177,26 @@ val resultResponse : json -> option<assoct>
 val errorResponse : json -> option<assoct>
 val nullResponse : option<assoct>
 
+// Build JSON of a given response
 val json_of_response : option<int> -> assoct -> json
+
+// Given an error_code and a string describing the error, build a JSON error
 val js_resperr : error_code -> string -> json
+
+// Build an error corresponding to BadProtocolMsg
 val wrap_content_szerr : string -> lsp_query
+
+// Report on server capabilities
 val js_servcap : json
+
+// Create a JSON location link from a Range.range
 val js_loclink : Range.range -> json
+
+// Convert txdoc_pos into (filename, line, col)
 val pos_munge : txdoc_pos -> string * int * int
+
+// Build a JSON diagnostic
 val js_diag : string -> string -> option<Range.range> -> assoct
+
+// Build an empty JSON diagnostic; used for clearing diagnostic
 val js_diag_clear : string -> assoct
