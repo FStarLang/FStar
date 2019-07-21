@@ -194,7 +194,7 @@ let prelude () :Tac unit =
   let _ = forall_intros () in  //forall (p:post) (h:heap)
   let aux () =
     let h = implies_intro () in
-    and_elim (pack (Tv_Var (fst (inspect_binder h))));
+    let _ = and_elim (pack (Tv_Var (fst (inspect_binder h)))) in
     clear h
   in
   ignore (repeat aux);  //(a /\ b) ==> c --> a ==> b ==> c, repeat to account for nested conjuncts
@@ -396,7 +396,7 @@ private let __exists_elim_as_forall1
   = ()
 
 private let __elim_and (h:binder) :Tac unit
-  = and_elim (pack (Tv_Var (bv_of_binder h)));
+  = let _ = and_elim (pack (Tv_Var (bv_of_binder h))) in
     clear h
 
 private let __elim_exists_return_binders1 (h:binder) :Tac (list binder)

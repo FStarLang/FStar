@@ -50,7 +50,7 @@ unfold let unfold_steps :list string =
  *)
 private let and_elim' () : Tac unit =
   let h = implies_intro () in  //introduce p /\ q in the context
-  and_elim (pack (Tv_Var (bv_of_binder h)));  //split them into p and q
+  let _ = and_elim (pack (Tv_Var (bv_of_binder h))) in  //split them into p and q
   clear h  //remove h from the context
 
 (*

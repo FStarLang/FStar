@@ -37,8 +37,7 @@ let closure_transitive #a r =
      let y = forall_intro () in
      let z = forall_intro () in
      let h = implies_intro () in
-     and_elim (binder_to_term h);
-     let _ = implies_intros () in
+     let _ = and_elim (binder_to_term h) in
      seq (fun _ -> mapply (`Closure)) assumption)
 
 let closure #a r =
@@ -92,8 +91,6 @@ let stable_on_closure #a r p hr =
      let x : a = unquote (binder_to_term x) in
      let y : a = unquote (binder_to_term y) in
      let h = implies_intro () in
-     and_elim (binder_to_term h);
-     let px = implies_intro () in
-     let xy = implies_intro () in
+     let (px, xy) = and_elim (binder_to_term h) in
      let xy : closure r x y = unquote (binder_to_term xy) in
      exact (quote (_stable_on_closure r p hr x y xy (Squash.get_proof _))))
