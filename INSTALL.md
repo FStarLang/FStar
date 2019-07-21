@@ -191,18 +191,23 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
 
 1. Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/)
    to install both OCaml and OPAM.
-   The current installer will give you OCaml 4.08.0, which as explained above does not work with F*.
-   To switch to an earlier OCaml version please run the following commands:
+   
+2. This installer will currently give you OCaml 4.08.0 by default,
+   which as explained above does not work with F*.
+   So switch to a supported OCaml version by running the following commands:
   ```sh
   $ opam switch list-available
   $ opam switch create ocaml-variants.4.07.1+mingw32c
   ```
-  Afterwards you can install the `depext` and `depext-cygwinports` packages,
-  to be able to more easily install some binary dependencies below.
+
+3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
+  to be able to install some binary dependencies below more easily.
   ```sh
   $ opam install depext depext-cygwinports
   ```
   [More documentation on depext-cygwin here](https://fdopen.github.io/opam-repository-mingw/depext-cygwin/).
+  
+  Then follow step 4 in "Instructions for all OSes" below.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -216,8 +221,6 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
      (e.g., https://dev.realworldocaml.org/install.html
      or http://opam.ocaml.org/doc/Install.html).
 
-#### Instructions for all OSes ####
-
 2. Initialize and configure OPAM
 
    - You need to initialize it by running `opam init` and update the `PATH`
@@ -225,15 +228,22 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-   - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
-     for instructions on how to configure your environment for use with OPAM
-
-3. Ensure that OPAM is using a recent enough version of OCaml
+3. Ensure that OPAM is using a supported version of OCaml
 
    - Type `opam switch list`. The current OCaml version used by opam
      is identified by the letter C. If it is not within the version
-     range required by F\* (see above), type `opam switch ` and then
-     the version number you wish to switch opam to.
+     range required by F\* (see above), type `opam switch list-available`
+     to see what versions are available and then `opam switch <version-number>`.
+
+   - Afterwards you can also install the `depext` package,
+     to be able to install some binary dependencies below more easily.
+     ```sh
+     $ opam install depext
+     ```
+
+  Then follow step 4 below.
+
+#### Instructions for all OSes ####
 
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
