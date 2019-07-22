@@ -62,13 +62,13 @@ let share #a b =
   b'
 
 
-let merge #a b b' =
+let gather #a b b' =
   (**) reveal_array();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
   (**) reveal_star();
   admit();
-  A.merge #a b b'
+  A.gather #a b b'
 
 let split #a b idx =
   (**) reveal_array ();

@@ -77,10 +77,10 @@ val share (#a:Type) (b:A.array a)
           (sel (array_view b') h1).p == P.half_permission (sel (array_view b) h0).p /\
           summable_permissions h1 b b')
 
-val merge (#a:Type) (b b':A.array a)
+val gather (#a:Type) (b b':A.array a)
   : RST unit (array_resource b <*> array_resource b')
              (fun _ -> array_resource b)
-             (fun h0 -> A.mergeable b b' /\ summable_permissions h0 b b')
+             (fun h0 -> A.gatherable b b' /\ summable_permissions h0 b b')
              (fun h0 _ h1 ->
                summable_permissions h0 b b' /\
                (sel (array_view b) h0).s == (sel (array_view b) h1).s /\

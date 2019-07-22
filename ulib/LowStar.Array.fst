@@ -18,7 +18,87 @@ friend LowStar.Array.Modifies
 open LowStar.Array.Defs
 open LowStar.Array.Modifies
 
-(*** Stateful operations implementing the ghost specifications ***)
+#push-options "--z3rlimit 15"
+
+let alloc #a init len =
+  let perm_map_pid = Ghost.hide (
+    let (vp, pid) = new_value_perms init true in
+    ((vp <: perms_rec a), Ghost.hide pid)
+  ) in
+  let v = (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
+  let s = Seq.create (U32.v len) v in
+  (**) let h0 = HST.get() in
+  let content = HST.ralloc_mm HS.root s in
+  (**) let h1 = HST.get() in
+  let b = Array len content 0ul len (snd (Ghost.reveal perm_map_pid)) in
+  (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
+  (**) array_unused_in_intro b h0 (fun j ->
+  (**)  ucell_unused_in_intro_not_allocated (aloc_cell b j) h0 (fun t ref -> ())
+  (**) );
+  (**) let aux (i:nat{i < vlength b}) : Lemma (requires (ucell_unused_in (aloc_cell b i) h1)) (ensures False) =
+  (**)  let cell = aloc_cell b i in
+  (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v len)) content
+  (**)    (fun () -> ())
+  (**)    (fun a' ref' ->
+  (**)      live_same_ref_equal_types b ref' h1
+  (**)    )
+  (**)    (fun t' b' cell' ->
+  (**)      live_same_arrays_equal_types b b' h1;
+  (**)      let (_, perm_map) = Seq.index (HS.sel h1 b.content) i in
+  (**)      let current_max = P.get_current_max (Ghost.reveal perm_map) in
+  (**)      assert(ucell_matches_unused_array_cell cell t' b' h1);
+  (**)      assert(ucell_matches_used_array_cell cell a b h1)
+  (**)    )
+  (**) in
+  (**) Classical.forall_intro (Classical.move_requires aux);
+  (**) array_used_in_intro b h1;
+  (**) MG.modifies_loc_none_intro #ucell #cls h0 h1 (fun cell -> ());
+  b
+
+#pop-options
+
+let free #a b =
+  (**) let h0 = HST.get () in
+  HST.rfree b.content;
+  (**) let h1 = HST.get () in
+  (**) MG.modifies_intro #ucell #cls (loc_array b) h0 h1 (fun cell ->
+  (**)   ucell_preserved_intro cell h0 h1  (fun t' b' ->
+  (**)     let is_inside_b = ucell_matches_array_cell cell a b h0 in
+  (**)     Classical.excluded_middle (is_inside_b);
+  (**)     let i' = cell.b_index - U32.v b'.idx in
+  (**)     let i = cell.b_index - U32.v b.idx in
+  (**)     let goal = fun _ -> ucell_matches_live_array_cell cell t' b' h1 /\ sel h0 b' i' == sel h1 b' i' in
+  (**)     Classical.or_elim #(is_inside_b) #(~ is_inside_b) #goal
+  (**)       (fun _ ->
+  (**)         live_same_arrays_equal_types b b' h0;
+  (**)         assert(cell.b_max = U32.v b.max_length);
+  (**)         assert(cell == aloc_cell b (cell.b_index - U32.v b.idx));
+  (**)         lemma_includes_loc_cell_loc_array #a b (cell.b_index - U32.v b.idx);
+  (**)         loc_disjoint_includes (loc_array b) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell);
+  (**)         MG.loc_disjoint_aloc_elim #ucell #cls cell cell
+  (**)       )
+  (**)       (fun _ ->
+  (**)         (* Here we basically prove that b is the only live array that is standing at the freed location *)
+  (**)         if frameOf b <> cell.b_rid || as_addr b <> cell.b_addr then (* Different memory locations *)
+  (**)           ()
+  (**)         else if U32.v b.max_length <> cell.b_max then (* Two arrays allocated at same memory locations *)
+  (**)           live_same_arrays_equal_types b b' h0
+  (**)         else if cell.b_index < U32.v b.idx || cell.b_index > U32.v b.idx + U32.v b.length then (* Cell outside of array *)
+  (**)           ()
+  (**)         else begin (* Different pids *)
+  (**)           live_same_arrays_equal_types b b' h0;
+  (**)           assert(writeable_cell h0 b i);
+  (**)           let (v, perm_map') = Seq.index (HS.sel h0 b'.content) cell.b_index in
+  (**)           assert(live_cell h0 b' i');
+  (**)           let aux (pid': live_pid (Ghost.reveal perm_map')) : Lemma ((Ghost.reveal b.pid) == pid') =
+  (**)             only_one_live_pid_with_full_permission #a #v (Ghost.reveal perm_map') (Ghost.reveal b.pid)
+  (**)           in
+  (**)           aux (Ghost.reveal b'.pid);
+  (**)           assert(Ghost.reveal b.pid == Ghost.reveal b'.pid /\ Ghost.reveal b.pid <> Ghost.reveal b'.pid)
+  (**)         end
+  (**)       )
+  (**)   )
+  (**) )
 
 
 let index #a b i =
@@ -83,78 +163,6 @@ let upd #a b i v =
   (**) assert (modifies (loc_cell b (U32.v i)) h0 h1);
   (**) lemma_includes_loc_cell_loc_array b (U32.v i);
   (**) MG.modifies_loc_includes (loc_array b) h0 h1 (loc_cell b (U32.v i))
-
-let alloc #a init len =
-  let perm_map_pid = Ghost.hide (
-    let (vp, pid) = new_value_perms init true in
-    ((vp <: perms_rec a), Ghost.hide pid)
-  ) in
-  let v = (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
-  let s = Seq.create (U32.v len) v in
-  (**) let h0 = HST.get() in
-  let content = HST.ralloc_mm HS.root s in
-  (**) let h1 = HST.get() in
-  let b = Array len content 0ul len (snd (Ghost.reveal perm_map_pid)) in
-  (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
-  (**) array_unused_in_intro b h0;
-  (**) let aux (i:nat{i < vlength b}) : Lemma (requires (ucell_unused_in (aloc_cell b i) h1)) (ensures False) =
-  (**)  let cell = aloc_cell b i in
-  (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v len)) content
-  (**)    (fun () -> ())
-  (**)    (fun a' ref' -> ())
-  (**)    (fun t' b' cell' ->
-  (**)      live_same_arrays_equal_types b b' h1;
-  (**)      let (_, perm_map) = Seq.index (HS.sel h1 b.content) i in
-  (**)      let current_max = P.get_current_max (Ghost.reveal perm_map) in
-  (**)      assert(ucell_matches_unused_array_cell cell t' b' h1);
-  (**)      assert(ucell_matches_used_array_cell cell a b h1)
-  (**)    )
-  (**) in
-  (**) Classical.forall_intro (Classical.move_requires aux);
-  (**) array_used_in_intro b h1;
-  (**) MG.modifies_loc_none_intro #ucell #cls h0 h1 (fun cell -> ());
-  b
-
-let free #a b =
-  (**) let h0 = HST.get () in
-  HST.rfree b.content;
-  (**) let h1 = HST.get () in
-  (**) MG.modifies_intro #ucell #cls (loc_array b) h0 h1 (fun cell ->
-  (**)   ucell_preserved_intro cell h0 h1  (fun t' b' ->
-  (**)     let is_inside_b = ucell_matches_array_cell cell a b h0 in
-  (**)     Classical.excluded_middle (is_inside_b);
-  (**)     let i' = cell.b_index - U32.v b'.idx in
-  (**)     let i = cell.b_index - U32.v b.idx in
-  (**)     let goal = fun _ -> ucell_matches_live_array_cell cell t' b' h1 /\ sel h0 b' i' == sel h1 b' i' in
-  (**)     Classical.or_elim #(is_inside_b) #(~ is_inside_b) #goal
-  (**)       (fun _ ->
-  (**)         assume(cell == aloc_cell b (cell.b_index - U32.v b.idx));
-  (**)         lemma_includes_loc_cell_loc_array #a b (cell.b_index - U32.v b.idx);
-  (**)         loc_disjoint_includes (loc_array b) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell);
-  (**)         MG.loc_disjoint_aloc_elim #ucell #cls cell cell
-  (**)       )
-  (**)       (fun _ ->
-  (**)         (* Here we basically prove that b is the only live array that is standing at the freed location *)
-  (**)         if frameOf b <> cell.b_rid || as_addr b <> cell.b_addr then (* Different memory locations *)
-  (**)           ()
-  (**)         else if U32.v b.max_length <> cell.b_max then (* Two arrays allocated at same memory locations *)
-  (**)           (live_same_arrays_equal_types b b' h0; admit())
-  (**)         else if cell.b_index < U32.v b.idx || cell.b_index > U32.v b.idx + U32.v b.length then (* Cell outside of array *)
-  (**)           admit()
-  (**)         else begin (* Different pids *)
-  (**)           live_same_arrays_equal_types b b' h0;
-  (**)           assert(writeable_cell h0 b i);
-  (**)           let (v, perm_map') = Seq.index (HS.sel h0 b'.content) cell.b_index in
-  (**)           assert(live_cell h0 b' i');
-  (**)           let aux (pid': live_pid (Ghost.reveal perm_map')) : Lemma ((Ghost.reveal b.pid) == pid') =
-  (**)             only_one_live_pid_with_full_permission #a #v (Ghost.reveal perm_map') (Ghost.reveal b.pid)
-  (**)           in
-  (**)           aux (Ghost.reveal b'.pid);
-  (**)           assert(Ghost.reveal b.pid == Ghost.reveal b'.pid /\ Ghost.reveal b.pid <> Ghost.reveal b'.pid)
-  (**)         end
-  (**)       )
-  (**)   )
-  (**) )
 
 #pop-options
 
@@ -286,8 +294,9 @@ let share #a b =
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
   (**) get_array_current_max_same_with_new_pid #a b h0 new_pid;
-  (**) admit();
-  (**) array_unused_in_intro b' h0;
+  (**) array_unused_in_intro b' h0 (fun j ->
+  (**)   ucell_unused_in_intro_unused_cell (aloc_cell b' j) h0 a b'
+  (**) );
   (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
   (**)  let cell = aloc_cell b' i in
   (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
@@ -300,16 +309,26 @@ let share #a b =
   (**)    )
   (**) in
   (**) Classical.forall_intro (Classical.move_requires aux);
-  (**) array_used_in_intro b' h1;
+  (**) array_used_in_intro b' h1 ;
   b'
 
-val merge_cell:
+let gatherable_trans (#a: Type0) (b1 b2 b3: array a): Lemma
+  (requires (gatherable b1 b2 /\ gatherable b2 b3 /\ loc_disjoint (loc_array b1) (loc_array b3)))
+  (ensures (gatherable b1 b3)) =
+  (* prove with ucell_disjoint_elim *)
+  assert(loc_cell b1 0 `loc_disjoint` loc_array b3);
+  lemma_includes_loc_cell_loc_array b1 0;
+  lemma_includes_loc_cell_loc_array b3 0;
+  MG.loc_disjoint_includes (loc_array b1) (loc_array b3) (loc_cell b1 0) (loc_cell b3 0);
+  MG.loc_disjoint_aloc_elim  #ucell #cls (aloc_cell b1 0) (aloc_cell b3 0)
+
+val gather_cell:
   #a: Type ->
   b: array a ->
   b1: array a ->
   i:U32.t{U32.v i < vlength b} ->
   Stack unit (requires (fun h0 ->
-    mergeable b b1 /\
+    gatherable b b1 /\
     live h0 b /\ live_cell h0 b1 (U32.v i) /\ HS.contains h0 b1.content /\
     P.summable_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm
   ))
@@ -322,7 +341,7 @@ val merge_cell:
     modifies (loc_cell b (U32.v i) `loc_union` loc_cell b1 (U32.v i)) h0 h1
   ))
 
-let merge_cell #a b b1 i =
+let gather_cell #a b b1 i =
  let open HST in
   (**) let h0 = HST.get () in
   let s0 = !b.content in
@@ -372,7 +391,7 @@ let merge_cell #a b b1 i =
   (**)  )
 
 let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vlength buf}) : Lemma
-  (requires (mergeable buf buf1))
+  (requires (gatherable buf buf1))
   (ensures (
       let s02 = compute_loc_array buf i `MG.loc_union` compute_loc_array buf1 i in
       let s12 = compute_loc_array buf (i + 1) `MG.loc_union` (compute_loc_array buf1 (i + 1)) in
@@ -381,7 +400,7 @@ let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vleng
   ))
   (decreases (vlength buf - i))
   =
-  assert(mergeable buf buf1) ;
+  assert(gatherable buf buf1) ;
   let lbi = compute_loc_array buf i in
   let lb1i = compute_loc_array buf1 i in
   let b = compute_loc_array buf (i + 1) in
@@ -411,13 +430,13 @@ let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vleng
      (a `MG.loc_union` c) `MG.loc_union` (b `MG.loc_union` d);
   }
 
-val merge_cells:
+val gather_cells:
   #a: Type ->
   b: array a ->
   b1: array a ->
   i:U32.t{U32.v i <= vlength b} ->
   Stack unit (requires (fun h0 ->
-    mergeable b b1 /\
+    gatherable b b1 /\
     live h0 b /\  HS.contains h0 b1.content /\
     (forall (j:nat{j < vlength b /\ j >= U32.v i}). live_cell h0 b1 j /\ P.summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm)
   ))
@@ -432,20 +451,20 @@ val merge_cells:
     )
   ))
 
-let rec merge_cells #a b b1 i =
+let rec gather_cells #a b b1 i =
   (**) let h0 = HST.get () in
   if U32.v i >= vlength b then begin
     (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ());
     (**) MG.loc_union_loc_none_l #ucell #cls (MG.loc_none)
   end else begin
-    merge_cell #a b b1 i;
+    gather_cell #a b b1 i;
     (**) let h1 = HST.get () in
     (**) assert(forall (j:nat{j >=  U32.v i + 1 /\ j < vlength b}).
     (**)   live_cell h0 b1 j /\ sel h0 b1 j == sel h1 b1 j /\ live_cell h1 b1 j /\
     (**)   P.summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm
     (**) );
-    merge_cells #a b b1 (U32.add i 1ul);
+    gather_cells #a b b1 (U32.add i 1ul);
     (**) let h2 = HST.get () in
     (**) let s02 = compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i) in
     (**) let s12 = compute_loc_array b (U32.v i + 1) `MG.loc_union` (compute_loc_array b1 (U32.v i + 1)) in
@@ -459,10 +478,12 @@ let rec merge_cells #a b b1 i =
   (**) let h2 = HST.get () in
   assert(MG.modifies (compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i)) h0 h2)
 
-let merge #a b b1 =
-  merge_cells #a b b1 0ul;
+let gather #a b b1 =
+  gather_cells #a b b1 0ul;
   (**) let h1 = HST.get () in
   (**) assert(forall (i:nat{i < vlength b}). (sel h1 b i).wp_perm = get_perm h1 b i)
+
+
 
 val move_cell
   (#a:Type0)
@@ -586,8 +607,9 @@ let move #a b =
   (**) assert (as_perm_seq h1 b' `Seq.equal` as_perm_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
-  (**) admit();
-  (**) array_unused_in_intro b' h0;
+  (**) array_unused_in_intro b' h0 (fun j ->
+  (**)   ucell_unused_in_intro_unused_cell (aloc_cell b' j) h0 a b'
+  (**) );
   (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
   (**)  let cell = aloc_cell b' i in
   (**)  ucell_unused_in_elim cell h1 False (Seq.lseq (value_with_perms a) (U32.v b'.max_length)) b'.content
@@ -603,10 +625,13 @@ let move #a b =
   (**) array_used_in_intro b' h1;
   b'
 
+let sub #a b i len =
+ Array b.max_length b.content (U32.add b.idx i) len b.pid
+
 let split #a b idx =
   (**) let h0 = HST.get () in
-  let b1 = msub b 0ul idx in
-  let b2 = msub b idx U32.(b.length -^ idx) in
+  let b1 = sub b 0ul idx in
+  let b2 = sub b idx U32.(b.length -^ idx) in
   (**) disjoint_gsubs b 0ul idx idx U32.(b.length -^ idx);
   (b1, b2)
 
