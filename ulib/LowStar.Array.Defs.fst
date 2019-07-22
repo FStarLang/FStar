@@ -27,8 +27,6 @@ noeq type array (a:Type0) :Type0 =
     pid:Ghost.erased perm_id ->
     array a
 
-(*** Definitions of Ghost operations and predicates on arrays ***)
-
 let length #a b = b.length
 
 let as_seq #a h b =
@@ -82,33 +80,30 @@ let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < vlength b}) : GTot (wit
   let snapshot = get h b i in
   { wp_v = snapshot; wp_perm = perm}
 
-// Two arrays are mergeable (for permissions) if they correspond to the same subarray in the same array, and they have different pids
-let mergeable #a b1 b2 =
+// Two arrays are gatherable (for permissions) if they correspond to the same subarray in the same array, and they have different pids
+let gatherable #a b1 b2 =
   b1.max_length == b2.max_length /\
   b1.content == b2.content /\
   b1.idx == b2.idx /\
   b1.length == b2.length /\
   (Ghost.reveal b1.pid <> Ghost.reveal b2.pid)
 
-let mergeable_same_length (#a:Type0) (b1 b2:array a) : Lemma
-  (requires (mergeable b1 b2))
+let gatherable_same_length (#a:Type0) (b1 b2:array a) : Lemma
+  (requires (gatherable b1 b2))
   (ensures (length b1 = length b2))
 = ()
 
-let mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
-  (requires (mergeable b1 b2))
-  (ensures (mergeable b2 b1))
+let gatherable_comm (#a: Type0) (b1 b2: array a): Lemma
+  (requires (gatherable b1 b2))
+  (ensures (gatherable b2 b1))
 = ()
+
 
 let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
 let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 
 let freeable #a b = b.idx = 0ul /\ b.max_length = b.length /\
   HS.is_mm b.content /\ HST.is_eternal_region (frameOf b)
-
-
-(*** Sub-buffers *)
-
 
 let gsub #a b i len =
     let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
@@ -145,8 +140,6 @@ let gsub_gsub #a b i1 len1 i2 len2 = ()
 
 let gsub_zero_length #a b = ()
 
-let msub #a b i len =
- Array b.max_length b.content (U32.add b.idx i) len b.pid
 
 let is_split_into #a b (b1,b2) =
   b.max_length == b1.max_length /\

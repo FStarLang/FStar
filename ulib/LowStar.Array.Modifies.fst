@@ -53,7 +53,7 @@ let ucell_matches_unused_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.m
   end
 
 let ucell_matches_live_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
-  ucell_matches_used_array_cell cell t b h /\ begin
+  ucell_matches_used_array_cell cell t b h /\ cell.b_max = U32.v b.max_length /\ begin
     let i = cell.b_index - U32.v b.idx in
     live_cell h b i
   end
@@ -569,9 +569,9 @@ let lemma_disjoint_pid_disjoint_arrays (#a:Type0) (b1 b2:array a) : Lemma
   (ensures loc_disjoint (loc_array b1) (loc_array b2))
   = lemma_disjoint_pid_disjoint_compute_array b1 b2 0;
     MG.loc_disjoint_sym (loc_array b2) (loc_array b1)
-let loc_used_in = MG.loc_used_in #ucell cls
 
 let loc_unused_in = MG.loc_unused_in #ucell cls
+let loc_used_in = MG.loc_used_in #ucell cls
 
 let modifies (s:loc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
@@ -589,28 +589,6 @@ let lemma_disjoint_loc_from_array_disjoint_from_cells (#t: Type) (b: array t) (p
   Classical.forall_intro aux
 
 #set-options "--z3rlimit 10"
-
-let modifies_array_elim #t b p h h' =
-  lemma_disjoint_loc_from_array_disjoint_from_cells #t b p;
-  assert(forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p);
-  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved (aloc_cell b i) h h')) =
-    MG.modifies_aloc_elim #ucell #cls
-      (aloc_cell b i) p h h'
-  in
-  Classical.forall_intro aux;
-  assert(forall(i:nat{i < vlength b}). ucell_preserved (aloc_cell b i) h h');
-  assert(forall(i:nat{i < vlength b}). sel h b i == sel h' b i);
-  assert(forall(i:nat{i < vlength b}). (sel h b i).wp_v == Seq.index (as_seq h b) i /\ (sel h' b i).wp_v == Seq.index (as_seq h' b) i);
-  assert(forall(i:nat{i < vlength b}).
-    (sel h b i).wp_perm == Seq.index (as_perm_seq h b) i /\
-    (sel h' b i).wp_perm == Seq.index (as_perm_seq h' b) i
-  );
-  Seq.lemma_eq_intro (as_seq h b) (as_seq h' b);
-  Seq.lemma_eq_intro (as_perm_seq h b) (as_perm_seq h' b);
-  assert(as_seq h b  == as_seq h' b);
-  assert(as_perm_seq h b  == as_perm_seq h' b);
-  assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
-  assert(live_cell h' b 0 /\ HS.contains h' b.content)
 
 let loc_union_idem s = MG.loc_union_idem s
 let loc_union_comm s1 s2 = MG.loc_union_comm s1 s2
@@ -640,8 +618,6 @@ let loc_disjoint_sym' s1 s2 = MG.loc_disjoint_sym s1 s2
 
 let loc_disjoint_none_r s = MG.loc_disjoint_none_r s
 
-
-
 let loc_disjoint_union_r' s s1 s2 =
   Classical.move_requires (MG.loc_disjoint_union_r s s1) s2;
   loc_includes_union_l s1 s2 s1;
@@ -653,6 +629,29 @@ let loc_disjoint_union_r' s s1 s2 =
 let loc_disjoint_includes p1 p2 p1' p2' = MG.loc_disjoint_includes p1 p2 p1' p2'
 
 let loc_disjoint_includes_r b1 b2 b2' = loc_disjoint_includes b1 b2 b1 b2'
+
+let modifies_array_elim #t b p h h' =
+  lemma_disjoint_loc_from_array_disjoint_from_cells #t b p;
+  assert(forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p);
+  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved (aloc_cell b i) h h')) =
+    MG.modifies_aloc_elim #ucell #cls
+      (aloc_cell b i) p h h'
+  in
+  Classical.forall_intro aux;
+  assert(forall(i:nat{i < vlength b}). ucell_preserved (aloc_cell b i) h h');
+  assert(forall(i:nat{i < vlength b}). sel h b i == sel h' b i);
+  assert(forall(i:nat{i < vlength b}). (sel h b i).wp_v == Seq.index (as_seq h b) i /\ (sel h' b i).wp_v == Seq.index (as_seq h' b) i);
+  assert(forall(i:nat{i < vlength b}).
+    (sel h b i).wp_perm == Seq.index (as_perm_seq h b) i /\
+    (sel h' b i).wp_perm == Seq.index (as_perm_seq h' b) i
+  );
+  Seq.lemma_eq_intro (as_seq h b) (as_seq h' b);
+  Seq.lemma_eq_intro (as_perm_seq h b) (as_perm_seq h' b);
+  assert(as_seq h b  == as_seq h' b);
+  assert(as_perm_seq h b  == as_perm_seq h' b);
+  assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
+  assert(live_cell h' b 0 /\ HS.contains h' b.content)
+
 
 let modifies_refl s h = MG.modifies_refl s h
 
@@ -840,10 +839,13 @@ let rec array_unused_in_intro' (#t: Type) (b: array t) (h : HS.mem) (i:nat{i <= 
     loc_includes_union_r (loc_unused_in h)(loc_cell b i) (compute_loc_array b (i+1))
   end
 
-let rec array_unused_in_intro (#t: Type) (b: array t) (h : HS.mem) : Lemma
-  (requires (forall (j:nat{j < vlength b}). ucell_unused_in (aloc_cell b j) h))
+let rec array_unused_in_intro (#t: Type) (b: array t) (h : HS.mem)
+  (cell_unused_in: (j:nat{j < vlength b}) -> Lemma ( ucell_unused_in (aloc_cell b j) h))
+  : Lemma
   (ensures (loc_unused_in h `loc_includes` loc_array b))
-  = array_unused_in_intro' #t b h 0
+  =
+  Classical.forall_intro cell_unused_in;
+  array_unused_in_intro' #t b h 0
 
 let cell_used_in_intro (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) : Lemma
   (requires (~ (ucell_unused_in (aloc_cell b i) h)))
