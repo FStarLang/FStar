@@ -18,7 +18,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "314c4ffc4af1453ea8286c04aa45649b"
+      "015ee4161ae8e69be5ae5483b1b0befa"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -27,7 +27,7 @@
       1,
       [ "@query" ],
       0,
-      "fc9f671b279a43ab8b3f043a830b3cd5"
+      "126c74df64a80d6e31e492c54a36b685"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "117e4eb8e68bce06e665134f9b865cf8"
+      "46ffce32c122e7a5f64b09ac97af873e"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -60,7 +60,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c3f835c13410e0042faa7abc7aa72d13"
+      "9ab59d7da84be097834c217234fe4ce8"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -69,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "422db23edb7b2ac2d26e76874ce360d1"
+      "70528f7f6a071e4d8dbdd8ad661cd8bb"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "42d650bac4e46265462edda5ca692a89"
+      "0fa8b68dec3d450d6684370a5af057c8"
     ]
   ]
 ]

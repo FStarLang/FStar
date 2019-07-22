@@ -52,16 +52,7 @@
         "typing_FStar.Monotonic.HyperStack.mk_mem"
       ],
       0,
-      "a8648a51d0220ce26ae7a2a13b403b1c"
-    ],
-    [
-      "InlineLet.maybe_ideal_op",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "556b4e02f06e9c5655895414facc44a5"
+      "4ab2873df0b94ff222f46305a1e13e8d"
     ],
     [
       "InlineLet.test",
@@ -94,7 +85,7 @@
         "typing_FStar.Monotonic.HyperStack.is_mm"
       ],
       0,
-      "32478eaa797fac76af667b891a0b5b37"
+      "206c30e8597ea851c997427f9a69685b"
     ]
   ]
 ]
