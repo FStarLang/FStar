@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Closure
 
 open FStar.ReflexiveTransitiveClosure
@@ -19,11 +34,8 @@ let q = function
   | A -> False
   | B | C -> True
 
-let cl = closure r
-
-let reachable_from_B (x:state{ cl B x }) : Lemma (x = B \/ x = C) =
+let reachable_from_B (x:state{ closure r B x }) : Lemma (x = B \/ x = C) =
   stable_on_closure r q ()
-
 
 /// More complex test based on TLS Handshake
 

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "69973c6c1d83b22890a0b2953b5315f0"
+      "29d6a2dec4541d1cd5277a92729ed470"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "3bf66a69bf122af2966512271f937e67"
+      "24d9212b78b1dd1f41c002e3475c644b"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -30,10 +30,10 @@
       1,
       [
         "@query", "equation_UserTactics.visible_boolean",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "f571f4377e9f2646200717b6f5c66393"
+      "4865f852fb7e66f30135615ba3d1068f"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "9427a189711f5c7daebca3a660604c34"
+      "1b23036ea4deaba7e4703f4ad89ec2bb"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "2cfc922d1a03984568b5df5c04956baf"
+      "c9c803ce9c968d49c27a471025a8ce8d"
     ],
     [
       "UserTactics.test_apply",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "3de0220627093db2884b71c531bc8d43"
+      "b4cc10b5f9c66304024395597f48f500"
     ],
     [
       "UserTactics.test_apply",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9ba09e1337230a0c72b23902e2f7e5a7"
+      "4b7216faa8eef065549fcbde60d2b9be"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -84,7 +84,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "a68a3cc73166bf3524d9a969b300ca56"
+      "9ac2d500e448812f5fc7dd27adc34601"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -93,7 +93,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "59a93336b5cfc5ee3d9fa65819deceb7"
+      "33ed073f3420489f4eb40d1550225e03"
     ],
     [
       "UserTactics.test_print_goal",
@@ -102,7 +102,7 @@
       1,
       [ "@query" ],
       0,
-      "a9715cfcb9d445b14f20e6c5e07c65d5"
+      "ed36ef282d96c0af93012284419ea803"
     ],
     [
       "UserTactics.f",
@@ -115,7 +115,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "559053c4a09d9d4434743c5fbdf52e50"
+      "b1159ea92354c6e2b1151b813e3e1a35"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -124,10 +124,10 @@
       1,
       [
         "@query", "equation_UserTactics.visible_boolean",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "acf16efc27a850902458c002e4b85a6d"
+      "e3a6d87b595a0f0159e26bfe8bbf0243"
     ],
     [
       "UserTactics.sqintro",
@@ -136,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "30bfd1c48a9b08cbbaf437998d56f05b"
+      "362935ace9c35d4fe7275604577d4a28"
     ],
     [
       "UserTactics.test_apply",
@@ -148,7 +148,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b2d168a8a56d6ab4f198c09dd476bb8b"
+      "cc2b9216f4a3a6bc6a3cadc7b70cbda4"
     ],
     [
       "UserTactics.test_apply",
@@ -160,7 +160,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "062549d1fad164198dcc71533bfe390e"
+      "49b5702fd4159b79662c29a2bb8d719b"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -169,7 +169,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "dd29b115c35d9f840688a62a81a524a3"
+      "bd82db64dc6bf5542f92b2665531b97d"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -178,7 +178,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "f12bc624c1d0164786ac44ac6716903d"
+      "bb7ec7c7d31c886a52f5cf1274b195af"
     ]
   ]
 ]

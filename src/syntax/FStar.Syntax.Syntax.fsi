@@ -368,9 +368,6 @@ type eff_decl = {
     ite_wp      :tscheme;
     stronger    :tscheme;
     close_wp    :tscheme;
-    assert_p    :tscheme;
-    assume_p    :tscheme;
-    null_wp     :tscheme;
     trivial     :tscheme;
     //NEW FIELDS
     //representation of the effect as pure type

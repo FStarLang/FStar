@@ -15,4 +15,4 @@ RUN emacs --batch \
 	--eval "(package-install 'flycheck)"
 
 ADD .emacs .emacs
-RUN sudo chown FStar:FStar .emacs
+RUN sudo chown build:build .emacs

@@ -291,42 +291,6 @@ let gen_wps_for_free
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
 
-  (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
-                       Tot (st2_wp heap a)
-    let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
-  let wp_assert =
-    let q = S.gen_bv "q" None U.ktype in
-    let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar PC.and_lid (S.Delta_constant_at_level 1) None in
-    let body =
-      U.mk_app c_app (List.map S.as_arg [
-        U.mk_app c_pure (List.map S.as_arg [
-          U.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
-        S.bv_to_name wp])
-    in
-    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
-  in
-  let wp_assert = register env (mk_lid "wp_assert") wp_assert in
-  let wp_assert = mk_generic_app wp_assert in
-
-  (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
-                       Tot (st2_wp heap a)
-    let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
-  let wp_assume =
-    let q = S.gen_bv "q" None U.ktype in
-    let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar PC.imp_lid (S.Delta_constant_at_level 1) None in
-    let body =
-      U.mk_app c_app (List.map S.as_arg [
-        U.mk_app c_pure (List.map S.as_arg [
-          U.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
-        S.bv_to_name wp])
-    in
-    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
-  in
-  let wp_assume = register env (mk_lid "wp_assume") wp_assume in
-  let wp_assume = mk_generic_app wp_assume in
-
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                         f:(b->Tot (st2_wp heap a)) ->
                         Tot (st2_wp heap a)
@@ -500,13 +464,10 @@ let gen_wps_for_free
   let c = close binders in
   List.rev !sigelts, { ed with
     if_then_else = ([], c wp_if_then_else);
-    assert_p     = ([], c wp_assert);
-    assume_p     = ([], c wp_assume);
     close_wp     = ([], c wp_close);
     stronger     = ([], c stronger);
     trivial      = ([], c wp_trivial);
     ite_wp       = ([], c ite_wp);
-    null_wp      = ([], c null_wp)
   }
 
 

@@ -103,6 +103,7 @@ type ('Aa,'Aq,'Awp,'Ap) pure_assert_p = unit
 type ('Aa,'Aq,'Awp,'Ap) pure_assume_p = unit
 type ('Aa,'Ap) pure_null_wp = unit
 type ('Aa,'Awp) pure_trivial = 'Awp
+type ('Ap, 'Apost) pure_assert_wp = unit
 type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
 let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
 let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z
