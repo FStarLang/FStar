@@ -732,7 +732,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___84_418.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv =
           (uu___84_418.FStar_TypeChecker_Env.dsenv);
-        FStar_TypeChecker_Env.nbe = (uu___84_418.FStar_TypeChecker_Env.nbe)
+        FStar_TypeChecker_Env.nbe = (uu___84_418.FStar_TypeChecker_Env.nbe);
+        FStar_TypeChecker_Env.strict_args_tab =
+          (uu___84_418.FStar_TypeChecker_Env.strict_args_tab)
       }  in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
   
