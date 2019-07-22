@@ -3469,7 +3469,7 @@ let force_trivial_guard env g =
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
     | imp::_ ->
-      match Env.lookup_attr env "Test.resolve_implicits" with
+      match Env.lookup_attr env "FrameInference.resolve_implicits" with
       | {sigel=Sig_let (_, [lid])}::_ ->
         let qn = Env.lookup_qname env lid in
         let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in

@@ -11809,7 +11809,8 @@ let (force_trivial_guard :
           FStar_All.pipe_left (fun a2  -> ()) uu____29725
       | imp::uu____29727 ->
           let uu____29730 =
-            FStar_TypeChecker_Env.lookup_attr env "Test.resolve_implicits"
+            FStar_TypeChecker_Env.lookup_attr env
+              "FrameInference.resolve_implicits"
              in
           (match uu____29730 with
            | {
