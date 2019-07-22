@@ -27,8 +27,7 @@ let heap_merge :
         | (h,EmptyHeap ) -> h
         | (Heap (v1,hh1),Heap (v2,hh2)) ->
             let uu____224 =
-              let uu____226 = cmp v1 v2  in uu____226 < (Prims.parse_int "0")
-               in
+              let uu____226 = cmp v1 v2  in uu____226 < Prims.int_zero  in
             if uu____224
             then Heap (v1, (h2 :: hh1))
             else Heap (v2, (h1 :: hh2))
@@ -101,7 +100,7 @@ let push_nodup :
                 let uu____552 = key_fn x  in
                 let uu____554 = key_fn h  in
                 string_compare uu____552 uu____554  in
-              uu____550 = (Prims.parse_int "0")  in
+              uu____550 = Prims.int_zero  in
             if uu____548 then h :: t else x :: h :: t
   
 let rec add_priorities :
@@ -115,8 +114,7 @@ let rec add_priorities :
       fun uu___4_604  ->
         match uu___4_604 with
         | [] -> acc
-        | h::t ->
-            add_priorities (n1 + (Prims.parse_int "1")) ((n1, h) :: acc) t
+        | h::t -> add_priorities (n1 + Prims.int_one) ((n1, h) :: acc) t
   
 let merge_increasing_lists_rev :
   'a . ('a -> Prims.string) -> 'a Prims.list Prims.list -> 'a Prims.list =
@@ -131,7 +129,7 @@ let merge_increasing_lists_rev :
               let uu____808 = key_fn h1  in
               let uu____810 = key_fn h2  in
               string_compare uu____808 uu____810  in
-            if cmp_h <> (Prims.parse_int "0") then cmp_h else pr1 - pr2
+            if cmp_h <> Prims.int_zero then cmp_h else pr1 - pr2
          in
       let rec aux lists1 acc =
         let uu____853 = heap_pop cmp lists1  in
@@ -152,7 +150,7 @@ let merge_increasing_lists_rev :
       | [] -> []
       | l::[] -> FStar_List.rev l
       | uu____1116 ->
-          let lists2 = add_priorities (Prims.parse_int "0") [] lists1  in
+          let lists2 = add_priorities Prims.int_zero [] lists1  in
           let uu____1141 = heap_from_list cmp lists2  in aux uu____1141 []
   
 type 'a btree =
@@ -194,11 +192,11 @@ let rec btree_from_list :
   =
   fun nodes  ->
     fun size  ->
-      if size = (Prims.parse_int "0")
+      if size = Prims.int_zero
       then (StrEmpty, nodes)
       else
-        (let lbt_size = size / (Prims.parse_int "2")  in
-         let rbt_size = (size - lbt_size) - (Prims.parse_int "1")  in
+        (let lbt_size = size / (Prims.of_int (2))  in
+         let rbt_size = (size - lbt_size) - Prims.int_one  in
          let uu____1427 = btree_from_list nodes lbt_size  in
          match uu____1427 with
          | (lbt,nodes_left) ->
@@ -219,14 +217,14 @@ let rec btree_insert_replace :
         | StrEmpty  -> StrBranch (k, v1, StrEmpty, StrEmpty)
         | StrBranch (k',v',lbt,rbt) ->
             let cmp = string_compare k k'  in
-            if cmp < (Prims.parse_int "0")
+            if cmp < Prims.int_zero
             then
               let uu____1643 =
                 let uu____1657 = btree_insert_replace lbt k v1  in
                 (k', v', uu____1657, rbt)  in
               StrBranch uu____1643
             else
-              if cmp > (Prims.parse_int "0")
+              if cmp > Prims.int_zero
               then
                 (let uu____1671 =
                    let uu____1685 = btree_insert_replace rbt k v1  in
@@ -242,10 +240,10 @@ let rec btree_find_exact :
       | StrEmpty  -> FStar_Pervasives_Native.None
       | StrBranch (k',v1,lbt,rbt) ->
           let cmp = string_compare k k'  in
-          if cmp < (Prims.parse_int "0")
+          if cmp < Prims.int_zero
           then btree_find_exact lbt k
           else
-            if cmp > (Prims.parse_int "0")
+            if cmp > Prims.int_zero
             then btree_find_exact rbt k
             else FStar_Pervasives_Native.Some v1
   
@@ -268,14 +266,14 @@ let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
       | StrEmpty  -> StrEmpty
       | StrBranch (k',v1,lbt,rbt) ->
           let cmp = string_compare k k'  in
-          if cmp < (Prims.parse_int "0")
+          if cmp < Prims.int_zero
           then
             let uu____1875 =
               let uu____1889 = btree_remove lbt k  in
               (k', v1, uu____1889, rbt)  in
             StrBranch uu____1875
           else
-            if cmp > (Prims.parse_int "0")
+            if cmp > Prims.int_zero
             then
               (let uu____1903 =
                  let uu____1917 = btree_remove rbt k  in
@@ -328,9 +326,8 @@ let rec btree_find_prefix :
         | StrBranch (k,v1,lbt,rbt) ->
             let cmp = string_compare k prefix2  in
             let include_middle = FStar_Util.starts_with k prefix2  in
-            let explore_right =
-              (cmp <= (Prims.parse_int "0")) || include_middle  in
-            let explore_left = cmp > (Prims.parse_int "0")  in
+            let explore_right = (cmp <= Prims.int_zero) || include_middle  in
+            let explore_left = cmp > Prims.int_zero  in
             let matches = if explore_right then aux rbt prefix2 acc else acc
                in
             let matches1 =
@@ -899,14 +896,14 @@ let (match_length_of_path : path -> Prims.int) =
                   | FStar_Pervasives_Native.Some prefix1 ->
                       let completion_len =
                         FStar_String.length (elem.segment).completion  in
-                      (((acc_len + (Prims.parse_int "1")) + completion_len),
+                      (((acc_len + Prims.int_one) + completion_len),
                         (prefix1, completion_len))
                   | FStar_Pervasives_Native.None  -> acc))
-        ((Prims.parse_int "0"), ("", (Prims.parse_int "0"))) path
+        (Prims.int_zero, ("", Prims.int_zero)) path
        in
     match uu____4898 with
     | (length1,(last_prefix,last_completion_length)) ->
-        ((length1 - (Prims.parse_int "1")) - last_completion_length) +
+        ((length1 - Prims.int_one) - last_completion_length) +
           (FStar_String.length last_prefix)
   
 let (first_import_of_path :

@@ -722,7 +722,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
              let proj i ab =
                let uu____2552 =
                  let uu____2557 =
-                   FStar_Parser_Const.mk_tuple_data_lid (Prims.parse_int "2")
+                   FStar_Parser_Const.mk_tuple_data_lid (Prims.of_int (2))
                      rng
                     in
                  let uu____2559 =
@@ -760,8 +760,8 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                      FStar_Syntax_Syntax.mk_Tm_app uu____2571 uu____2572  in
                    uu____2566 FStar_Pervasives_Native.None rng
                 in
-             let shadow_a = map_shadow topt (proj (Prims.parse_int "1"))  in
-             let shadow_b = map_shadow topt (proj (Prims.parse_int "2"))  in
+             let shadow_a = map_shadow topt (proj Prims.int_one)  in
+             let shadow_b = map_shadow topt (proj (Prims.of_int (2)))  in
              let uu____2660 =
                let uu____2665 =
                  let uu____2666 =

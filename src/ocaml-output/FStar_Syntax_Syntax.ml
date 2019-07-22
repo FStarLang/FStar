@@ -1674,7 +1674,7 @@ let (order_bv : bv -> bv -> Prims.int) =
         FStar_String.compare (x.ppname).FStar_Ident.idText
           (y.ppname).FStar_Ident.idText
          in
-      if i = (Prims.parse_int "0") then x.index - y.index else i
+      if i = Prims.int_zero then x.index - y.index else i
   
 let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
   fun x  ->
@@ -1909,7 +1909,7 @@ let (is_type : term -> Prims.bool) =
 let (null_id : FStar_Ident.ident) =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange) 
 let (null_bv : term -> bv) =
-  fun k  -> { ppname = null_id; index = (Prims.parse_int "0"); sort = k } 
+  fun k  -> { ppname = null_id; index = Prims.int_zero; sort = k } 
 let (mk_binder : bv -> binder) = fun a  -> (a, FStar_Pervasives_Native.None) 
 let (null_binder : term -> binder) =
   fun t  ->
@@ -2141,10 +2141,9 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
       | (Pat_dot_term (bv1,t1),Pat_dot_term (bv2,t2)) -> true
       | (uu____9778,uu____9779) -> false
   
-let (delta_constant : delta_depth) =
-  Delta_constant_at_level (Prims.parse_int "0") 
+let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero 
 let (delta_equational : delta_depth) =
-  Delta_equational_at_level (Prims.parse_int "0") 
+  Delta_equational_at_level Prims.int_zero 
 let (fvconst : FStar_Ident.lident -> fv) =
   fun l  -> lid_as_fv l delta_constant FStar_Pervasives_Native.None 
 let (tconst : FStar_Ident.lident -> term) =
@@ -2159,7 +2158,7 @@ let (tabbrev : FStar_Ident.lident -> term) =
     let uu____9812 =
       let uu____9819 =
         let uu____9820 =
-          lid_as_fv l (Delta_constant_at_level (Prims.parse_int "1"))
+          lid_as_fv l (Delta_constant_at_level Prims.int_one)
             FStar_Pervasives_Native.None
            in
         Tm_fvar uu____9820  in

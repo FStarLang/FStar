@@ -195,8 +195,8 @@ let (parse_lsp_query : Prims.string -> FStar_JsonHelper.lsp_query) =
 let (run_exit : FStar_JsonHelper.repl_state -> Prims.int) =
   fun st  ->
     if st.FStar_JsonHelper.repl_last <> FStar_JsonHelper.Shutdown
-    then (Prims.parse_int "1")
-    else (Prims.parse_int "0")
+    then Prims.int_one
+    else Prims.int_zero
   
 let (run_query :
   FStar_JsonHelper.repl_state ->
@@ -339,8 +339,8 @@ let rec (parse_header_len :
           if FStar_Util.starts_with s "Content-Length: "
           then
             let uu____564 =
-              let uu____566 =
-                FStar_Util.substring_from s (Prims.parse_int "16")  in
+              let uu____566 = FStar_Util.substring_from s (Prims.of_int (16))
+                 in
               FStar_Util.int_of_string uu____566  in
             parse_header_len stream uu____564
           else
@@ -360,7 +360,7 @@ let rec (read_lsp_query :
       (fun uu___141_595  ->
          match () with
          | () ->
-             let n1 = parse_header_len stream (Prims.parse_int "0")  in
+             let n1 = parse_header_len stream Prims.int_zero  in
              let uu____599 = FStar_Util.nread stream n1  in
              (match uu____599 with
               | FStar_Pervasives_Native.Some s -> parse_lsp_query s
@@ -400,8 +400,8 @@ let rec (go : FStar_JsonHelper.repl_state -> Prims.int) =
 let (initial_repl_state : FStar_JsonHelper.repl_state) =
   let uu____661 = FStar_Util.open_stdin ()  in
   {
-    FStar_JsonHelper.repl_line = (Prims.parse_int "1");
-    FStar_JsonHelper.repl_column = (Prims.parse_int "0");
+    FStar_JsonHelper.repl_line = Prims.int_one;
+    FStar_JsonHelper.repl_column = Prims.int_zero;
     FStar_JsonHelper.repl_stdin = uu____661;
     FStar_JsonHelper.repl_last = FStar_JsonHelper.Exit;
     FStar_JsonHelper.repl_names = FStar_Interactive_CompletionTable.empty

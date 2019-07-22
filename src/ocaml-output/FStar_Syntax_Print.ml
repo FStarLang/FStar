@@ -165,19 +165,17 @@ let rec (reconstruct_lex :
         let args1 = filter_imp args  in
         let exps = FStar_List.map FStar_Pervasives_Native.fst args1  in
         let uu____612 =
-          (is_lex_cons f) &&
-            ((FStar_List.length exps) = (Prims.parse_int "2"))
+          (is_lex_cons f) && ((FStar_List.length exps) = (Prims.of_int (2)))
            in
         if uu____612
         then
           let uu____621 =
-            let uu____626 = FStar_List.nth exps (Prims.parse_int "1")  in
+            let uu____626 = FStar_List.nth exps Prims.int_one  in
             reconstruct_lex uu____626  in
           (match uu____621 with
            | FStar_Pervasives_Native.Some xs ->
                let uu____637 =
-                 let uu____640 = FStar_List.nth exps (Prims.parse_int "0")
-                    in
+                 let uu____640 = FStar_List.nth exps Prims.int_zero  in
                  uu____640 :: xs  in
                FStar_Pervasives_Native.Some uu____637
            | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None)
@@ -275,8 +273,7 @@ let rec (int_of_univ :
       let uu____907 = FStar_Syntax_Subst.compress_univ u  in
       match uu____907 with
       | FStar_Syntax_Syntax.U_zero  -> (n1, FStar_Pervasives_Native.None)
-      | FStar_Syntax_Syntax.U_succ u1 ->
-          int_of_univ (n1 + (Prims.parse_int "1")) u1
+      | FStar_Syntax_Syntax.U_succ u1 -> int_of_univ (n1 + Prims.int_one) u1
       | uu____920 -> (n1, (FStar_Pervasives_Native.Some u))
   
 let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
@@ -293,7 +290,7 @@ let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
         Prims.op_Hat "@" uu____949
     | FStar_Syntax_Syntax.U_zero  -> "0"
     | FStar_Syntax_Syntax.U_succ u1 ->
-        let uu____954 = int_of_univ (Prims.parse_int "1") u1  in
+        let uu____954 = int_of_univ Prims.int_one u1  in
         (match uu____954 with
          | (n1,FStar_Pervasives_Native.None ) -> FStar_Util.string_of_int n1
          | (n1,FStar_Pervasives_Native.Some u2) ->
@@ -450,7 +447,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
       let e = FStar_Syntax_Resugar.resugar_term x  in
       let d = FStar_Parser_ToDocument.term_to_document e  in
       FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-        (Prims.parse_int "100") d
+        (Prims.of_int (100)) d
     else
       (let x1 = FStar_Syntax_Subst.compress x  in
        let x2 =
@@ -767,7 +764,7 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
         FStar_Syntax_Resugar.resugar_pat x uu____2662  in
       let d = FStar_Parser_ToDocument.pat_to_document e  in
       FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-        (Prims.parse_int "100") d
+        (Prims.of_int (100)) d
     else
       (match x.FStar_Syntax_Syntax.v with
        | FStar_Syntax_Syntax.Pat_cons (l,pats) ->
@@ -930,7 +927,7 @@ and (binder_to_string' :
         | FStar_Pervasives_Native.Some e ->
             let d = FStar_Parser_ToDocument.binder_to_document e  in
             FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-              (Prims.parse_int "100") d
+              (Prims.of_int (100)) d
       else
         (let uu____2939 = b  in
          match uu____2939 with
@@ -1016,7 +1013,7 @@ and (comp_to_string' :
         (let e = FStar_Syntax_Resugar.resugar_comp' env c  in
          let d = FStar_Parser_ToDocument.term_to_document e  in
          FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-           (Prims.parse_int "100") d)
+           (Prims.of_int (100)) d)
 
 and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
   fun c  ->
@@ -1028,7 +1025,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
       let e = FStar_Syntax_Resugar.resugar_comp c  in
       let d = FStar_Parser_ToDocument.term_to_document e  in
       FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-        (Prims.parse_int "100") d
+        (Prims.of_int (100)) d
     else
       (match c.FStar_Syntax_Syntax.n with
        | FStar_Syntax_Syntax.Total (t,uopt) ->
@@ -1245,7 +1242,7 @@ let (term_to_string' :
         (let e = FStar_Syntax_Resugar.resugar_term' env x  in
          let d = FStar_Parser_ToDocument.term_to_document e  in
          FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-           (Prims.parse_int "100") d)
+           (Prims.of_int (100)) d)
   
 let (binder_to_json :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binder -> FStar_Util.json) =
@@ -1292,7 +1289,7 @@ let (tscheme_to_string : FStar_Syntax_Syntax.tscheme -> Prims.string) =
       let d = FStar_Syntax_Resugar.resugar_tscheme s  in
       let d1 = FStar_Parser_ToDocument.decl_to_document d  in
       FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-        (Prims.parse_int "100") d1
+        (Prims.of_int (100)) d1
     else
       (let uu____3685 = s  in
        match uu____3685 with
@@ -1335,7 +1332,7 @@ let (eff_decl_to_string' :
             let d = FStar_Syntax_Resugar.resugar_eff_decl for_free r q ed  in
             let d1 = FStar_Parser_ToDocument.decl_to_document d  in
             FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-              (Prims.parse_int "100") d1
+              (Prims.of_int (100)) d1
           else
             (let actions_to_string actions =
                let uu____3780 =

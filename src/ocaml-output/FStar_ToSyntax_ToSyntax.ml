@@ -240,8 +240,7 @@ let (desugar_name' :
                              FStar_Syntax_Print.term_to_string tm  in
                            Prims.op_Hat uu____580 " is deprecated"  in
                          let msg1 =
-                           if
-                             (FStar_List.length args) > (Prims.parse_int "0")
+                           if (FStar_List.length args) > Prims.int_zero
                            then
                              let uu____596 =
                                let uu____597 =
@@ -360,7 +359,7 @@ let op_as_term :
             | "+" ->
                 r FStar_Parser_Const.op_Addition
                   FStar_Syntax_Syntax.delta_equational
-            | "-" when arity = (Prims.parse_int "1") ->
+            | "-" when arity = Prims.int_one ->
                 r FStar_Parser_Const.op_Minus
                   FStar_Syntax_Syntax.delta_equational
             | "-" ->
@@ -381,11 +380,11 @@ let op_as_term :
                 then
                   r FStar_Parser_Const.list_append_lid
                     (FStar_Syntax_Syntax.Delta_equational_at_level
-                       (Prims.parse_int "2"))
+                       (Prims.of_int (2)))
                 else
                   r FStar_Parser_Const.list_tot_append_lid
                     (FStar_Syntax_Syntax.Delta_equational_at_level
-                       (Prims.parse_int "2"))
+                       (Prims.of_int (2)))
             | "|>" ->
                 r FStar_Parser_Const.pipe_right_lid
                   FStar_Syntax_Syntax.delta_equational
@@ -398,30 +397,27 @@ let op_as_term :
             | "~" ->
                 r FStar_Parser_Const.not_lid
                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "2"))
+                     (Prims.of_int (2)))
             | "==" ->
                 r FStar_Parser_Const.eq2_lid
                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "2"))
+                     (Prims.of_int (2)))
             | "<<" ->
                 r FStar_Parser_Const.precedes_lid
                   FStar_Syntax_Syntax.delta_constant
             | "/\\" ->
                 r FStar_Parser_Const.and_lid
-                  (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "1"))
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
             | "\\/" ->
                 r FStar_Parser_Const.or_lid
-                  (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "1"))
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
             | "==>" ->
                 r FStar_Parser_Const.imp_lid
-                  (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "1"))
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
             | "<==>" ->
                 r FStar_Parser_Const.iff_lid
                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                     (Prims.parse_int "2"))
+                     (Prims.of_int (2)))
             | uu____833 -> FStar_Pervasives_Native.None  in
           let uu____835 =
             let uu____838 =
@@ -630,7 +626,7 @@ let (close :
       let ftv =
         let uu____1593 = free_type_vars env t  in
         FStar_All.pipe_left sort_ftv uu____1593  in
-      if (FStar_List.length ftv) = (Prims.parse_int "0")
+      if (FStar_List.length ftv) = Prims.int_zero
       then t
       else
         (let binders =
@@ -659,7 +655,7 @@ let (close_fun :
       let ftv =
         let uu____1639 = free_type_vars env t  in
         FStar_All.pipe_left sort_ftv uu____1639  in
-      if (FStar_List.length ftv) = (Prims.parse_int "0")
+      if (FStar_List.length ftv) = Prims.int_zero
       then t
       else
         (let binders =
@@ -828,8 +824,8 @@ let (gather_pattern_bound_vars :
           (fun id1  ->
              fun id2  ->
                if id1.FStar_Ident.idText = id2.FStar_Ident.idText
-               then (Prims.parse_int "0")
-               else (Prims.parse_int "1"))
+               then Prims.int_zero
+               else Prims.int_one)
          in
       gather_pattern_bound_vars_maybe_top fail_on_patconst acc p
   
@@ -1281,10 +1277,10 @@ let rec (sum_to_universe :
   =
   fun u  ->
     fun n1  ->
-      if n1 = (Prims.parse_int "0")
+      if n1 = Prims.int_zero
       then u
       else
-        (let uu____3570 = sum_to_universe u (n1 - (Prims.parse_int "1"))  in
+        (let uu____3570 = sum_to_universe u (n1 - Prims.int_one)  in
          FStar_Syntax_Syntax.U_succ uu____3570)
   
 let (int_to_universe : Prims.int -> FStar_Syntax_Syntax.universe) =
@@ -1306,7 +1302,7 @@ let rec (desugar_maybe_non_constant_universe :
         FStar_Util.Inr (FStar_Syntax_Syntax.U_name u)
     | FStar_Parser_AST.Const (FStar_Const.Const_int (repr,uu____3617)) ->
         let n1 = FStar_Util.int_of_string repr  in
-        (if n1 < (Prims.parse_int "0")
+        (if n1 < Prims.int_zero
          then
            FStar_Errors.raise_error
              (FStar_Errors.Fatal_NegativeUniverseConstFatal_NotSupported,
@@ -1377,7 +1373,7 @@ let rec (desugar_maybe_non_constant_universe :
                  let uu____3900 =
                    FStar_List.fold_left
                      (fun m  -> fun n1  -> if m > n1 then m else n1)
-                     (Prims.parse_int "0") nargs
+                     Prims.int_zero nargs
                     in
                  FStar_Util.Inl uu____3900)
           | uu____3916 ->
@@ -1587,7 +1583,7 @@ let rec (desugar_data_pat :
                   let uu____4918 =
                     let uu____4919 =
                       let uu____4925 =
-                        FStar_Parser_AST.compile_op (Prims.parse_int "0")
+                        FStar_Parser_AST.compile_op Prims.int_zero
                           op.FStar_Ident.idText op.FStar_Ident.idRange
                          in
                       (uu____4925, (op.FStar_Ident.idRange))  in
@@ -2038,8 +2034,8 @@ and (desugar_binding_pat_maybe_top :
         let op_to_ident x =
           let uu____7496 =
             let uu____7502 =
-              FStar_Parser_AST.compile_op (Prims.parse_int "0")
-                x.FStar_Ident.idText x.FStar_Ident.idRange
+              FStar_Parser_AST.compile_op Prims.int_zero x.FStar_Ident.idText
+                x.FStar_Ident.idRange
                in
             (uu____7502, (x.FStar_Ident.idRange))  in
           FStar_Ident.mk_ident uu____7496  in
@@ -2368,8 +2364,8 @@ and (desugar_term_maybe_top :
             (let uu____8132 = FStar_Ident.text_of_id op_star  in
              uu____8132 = "*") &&
               (let uu____8137 =
-                 op_as_term env (Prims.parse_int "2")
-                   top.FStar_Parser_AST.range op_star
+                 op_as_term env (Prims.of_int (2)) top.FStar_Parser_AST.range
+                   op_star
                   in
                FStar_All.pipe_right uu____8137 FStar_Option.isNone)
             ->
@@ -2380,7 +2376,7 @@ and (desugar_term_maybe_top :
                      FStar_Ident.idRange = uu____8154;_},t1::t2::[])
                   when
                   let uu____8160 =
-                    op_as_term env (Prims.parse_int "2")
+                    op_as_term env (Prims.of_int (2))
                       top.FStar_Parser_AST.range op_star
                      in
                   FStar_All.pipe_right uu____8160 FStar_Option.isNone ->
@@ -2441,7 +2437,7 @@ and (desugar_term_maybe_top :
                  FStar_Errors.raise_error uu____8246
                    top.FStar_Parser_AST.range
              | FStar_Pervasives_Native.Some op ->
-                 if (FStar_List.length args) > (Prims.parse_int "0")
+                 if (FStar_List.length args) > Prims.int_zero
                  then
                    let uu____8269 =
                      let uu____8294 =
@@ -2635,7 +2631,7 @@ and (desugar_term_maybe_top :
                   let uu____8702 =
                     FStar_Syntax_Syntax.fvar lid
                       (FStar_Syntax_Syntax.Delta_constant_at_level
-                         (Prims.parse_int "1")) FStar_Pervasives_Native.None
+                         Prims.int_one) FStar_Pervasives_Native.None
                      in
                   (uu____8702, noaqs)
               | FStar_Pervasives_Native.None  ->
@@ -3108,7 +3104,7 @@ and (desugar_term_maybe_top :
                                               let tup2 =
                                                 let uu____10781 =
                                                   FStar_Parser_Const.mk_tuple_data_lid
-                                                    (Prims.parse_int "2")
+                                                    (Prims.of_int (2))
                                                     top.FStar_Parser_AST.range
                                                    in
                                                 FStar_Syntax_Syntax.lid_as_fv
@@ -3179,7 +3175,7 @@ and (desugar_term_maybe_top :
                                               let tupn =
                                                 let uu____11000 =
                                                   FStar_Parser_Const.mk_tuple_data_lid
-                                                    ((Prims.parse_int "1") +
+                                                    (Prims.int_one +
                                                        (FStar_List.length
                                                           args))
                                                     top.FStar_Parser_AST.range
@@ -3498,7 +3494,7 @@ and (desugar_term_maybe_top :
                                        &&
                                        ((Prims.op_Negation is_rec) ||
                                           ((FStar_List.length args1) <>
-                                             (Prims.parse_int "0")))
+                                             Prims.int_zero))
                                       in
                                    if uu____13083
                                    then FStar_Parser_AST.ml_comp t
@@ -4003,7 +3999,7 @@ and (desugar_term_maybe_top :
                                   in
                                FStar_Syntax_Syntax.fvar uu____15323
                                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                                    (Prims.parse_int "1")) qual
+                                    Prims.int_one) qual
                                 in
                              let uu____15326 =
                                let uu____15337 =
@@ -4599,7 +4595,7 @@ and (desugar_comp :
           let uu____17108 = pre_process_comp_typ t  in
           match uu____17108 with
           | ((eff,cattributes),args) ->
-              (if (FStar_List.length args) = (Prims.parse_int "0")
+              (if (FStar_List.length args) = Prims.int_zero
                then
                  (let uu____17160 =
                     let uu____17166 =
@@ -4924,8 +4920,7 @@ and (desugar_formula :
                           in
                        FStar_Syntax_Syntax.fvar uu____18278
                          (FStar_Syntax_Syntax.Delta_constant_at_level
-                            (Prims.parse_int "1"))
-                         FStar_Pervasives_Native.None
+                            Prims.int_one) FStar_Pervasives_Native.None
                         in
                      let uu____18280 =
                        let uu____18291 = FStar_Syntax_Syntax.as_arg body3  in
@@ -5302,10 +5297,10 @@ let (mk_indexed_projector_names :
                                       then
                                         FStar_Syntax_Syntax.Delta_abstract
                                           (FStar_Syntax_Syntax.Delta_equational_at_level
-                                             (Prims.parse_int "1"))
+                                             Prims.int_one)
                                       else
                                         FStar_Syntax_Syntax.Delta_equational_at_level
-                                          (Prims.parse_int "1")
+                                          Prims.int_one
                                        in
                                     let lb =
                                       let uu____19227 =
@@ -6525,7 +6520,7 @@ let rec (desugar_effect :
                               FStar_Syntax_Util.arrow_formals eff_t  in
                             FStar_Pervasives_Native.fst uu____24877  in
                           FStar_List.length uu____24868  in
-                        uu____24866 = (Prims.parse_int "1")  in
+                        uu____24866 = Prims.int_one  in
                       let mandatory_members =
                         let rr_members = ["repr"; "return"; "bind"]  in
                         if for_free
@@ -7066,7 +7061,7 @@ and (desugar_redefine_effect :
                                      FStar_Syntax_Subst.close_tscheme
                                        binders1 uu____25921
                                   in
-                               let sub1 = sub' (Prims.parse_int "0")  in
+                               let sub1 = sub' Prims.int_zero  in
                                let mname =
                                  FStar_Syntax_DsEnv.qualify env0 eff_name  in
                                let ed1 =
@@ -7187,7 +7182,7 @@ and (desugar_redefine_effect :
                                          uu____26047
                                         in
                                      FStar_List.length uu____26038  in
-                                   uu____26036 = (Prims.parse_int "1")  in
+                                   uu____26036 = Prims.int_one  in
                                  let uu____26080 =
                                    let uu____26083 =
                                      trans_qual1
@@ -7304,7 +7299,7 @@ and (mk_comment_attr :
               let uu____26218 =
                 let uu____26220 =
                   FStar_Parser_ToDocument.signature_to_document d  in
-                FStar_Pprint.pretty_string 0.95 (Prims.parse_int "80")
+                FStar_Pprint.pretty_string 0.95 (Prims.of_int (80))
                   uu____26220
                  in
               Prims.op_Hat "\n  " uu____26218
@@ -7390,7 +7385,7 @@ and (desugar_decl_aux :
             FStar_List.mapi
               (fun i  ->
                  fun sigelt  ->
-                   if i = (Prims.parse_int "0")
+                   if i = Prims.int_zero
                    then
                      let uu___3413_26472 = sigelt  in
                      {
@@ -7987,8 +7982,8 @@ and (desugar_decl_noattrs :
             {
               FStar_Syntax_Syntax.sigel =
                 (FStar_Syntax_Syntax.Sig_datacon
-                   (l, [], t, FStar_Parser_Const.exn_lid,
-                     (Prims.parse_int "0"), [FStar_Parser_Const.exn_lid]));
+                   (l, [], t, FStar_Parser_Const.exn_lid, Prims.int_zero,
+                     [FStar_Parser_Const.exn_lid]));
               FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
               FStar_Syntax_Syntax.sigquals = qual;
               FStar_Syntax_Syntax.sigmeta =

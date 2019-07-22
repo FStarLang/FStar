@@ -13,7 +13,7 @@ let (set_hint_correlator :
         let n_opt = FStar_Util.smap_try_find tbl lid.FStar_Ident.str  in
         if FStar_Util.is_some n_opt
         then FStar_All.pipe_right n_opt FStar_Util.must
-        else (Prims.parse_int "0")  in
+        else Prims.int_zero  in
       let uu____64 = FStar_Options.reuse_hint_for ()  in
       match uu____64 with
       | FStar_Pervasives_Native.Some l ->
@@ -352,7 +352,7 @@ let (tc_eff_decl :
             FStar_List.length ed.FStar_Syntax_Syntax.binders  in
           let uu____509 =
             let uu____516 =
-              open_univs_binders (Prims.parse_int "0")
+              open_univs_binders Prims.int_zero
                 ed.FStar_Syntax_Syntax.binders
                in
             let uu____518 =
@@ -2084,7 +2084,7 @@ let (tc_eff_decl :
                                                                u1 u2
                                                               in
                                                            uu____3116 =
-                                                             (Prims.parse_int "0"))
+                                                             Prims.int_zero)
                                                       gen_univs
                                                       annotated_univ_names)
                                                   in
@@ -2151,8 +2151,7 @@ let (tc_eff_decl :
                                                   ts1)
                                               in
                                            (let uu____3262 =
-                                              ((n1 >= (Prims.parse_int "0"))
-                                                 &&
+                                              ((n1 >= Prims.int_zero) &&
                                                  (let uu____3266 =
                                                     FStar_Syntax_Util.is_unknown
                                                       (FStar_Pervasives_Native.snd
@@ -2196,16 +2195,14 @@ let (tc_eff_decl :
                                            ts1  in
                                          let close_action act =
                                            let uu____3304 =
-                                             close1
-                                               (~- (Prims.parse_int "1"))
+                                             close1 (~- Prims.int_one)
                                                ((act.FStar_Syntax_Syntax.action_univs),
                                                  (act.FStar_Syntax_Syntax.action_defn))
                                               in
                                            match uu____3304 with
                                            | (univs2,defn) ->
                                                let uu____3320 =
-                                                 close1
-                                                   (~- (Prims.parse_int "1"))
+                                                 close1 (~- Prims.int_one)
                                                    ((act.FStar_Syntax_Syntax.action_univs),
                                                      (act.FStar_Syntax_Syntax.action_typ))
                                                   in
@@ -2234,48 +2231,39 @@ let (tc_eff_decl :
                                          let ed3 =
                                            let uu___391_3340 = ed2  in
                                            let uu____3341 =
-                                             close1 (Prims.parse_int "0")
-                                               return_wp
+                                             close1 Prims.int_zero return_wp
                                               in
                                            let uu____3343 =
-                                             close1 (Prims.parse_int "1")
-                                               bind_wp
-                                              in
+                                             close1 Prims.int_one bind_wp  in
                                            let uu____3345 =
-                                             close1 (Prims.parse_int "0")
+                                             close1 Prims.int_zero
                                                if_then_else1
                                               in
                                            let uu____3347 =
-                                             close1 (Prims.parse_int "0")
-                                               ite_wp
-                                              in
+                                             close1 Prims.int_zero ite_wp  in
                                            let uu____3349 =
-                                             close1 (Prims.parse_int "0")
-                                               stronger
+                                             close1 Prims.int_zero stronger
                                               in
                                            let uu____3351 =
-                                             close1 (Prims.parse_int "1")
-                                               close_wp
+                                             close1 Prims.int_one close_wp
                                               in
                                            let uu____3353 =
-                                             close1 (Prims.parse_int "0")
-                                               trivial_wp
+                                             close1 Prims.int_zero trivial_wp
                                               in
                                            let uu____3355 =
                                              let uu____3356 =
-                                               close1 (Prims.parse_int "0")
+                                               close1 Prims.int_zero
                                                  ([], repr)
                                                 in
                                              FStar_Pervasives_Native.snd
                                                uu____3356
                                               in
                                            let uu____3374 =
-                                             close1 (Prims.parse_int "0")
+                                             close1 Prims.int_zero
                                                return_repr
                                               in
                                            let uu____3376 =
-                                             close1 (Prims.parse_int "1")
-                                               bind_repr
+                                             close1 Prims.int_one bind_repr
                                               in
                                            let uu____3378 =
                                              FStar_List.map close_action
@@ -2875,7 +2863,7 @@ let (cps_and_elaborate :
                                                  FStar_Syntax_Syntax.lid_as_fv
                                                    FStar_Parser_Const.range_lid
                                                    (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                      (Prims.parse_int "1"))
+                                                      Prims.int_one)
                                                    FStar_Pervasives_Native.None
                                                   in
                                                let uu____4719 =
@@ -2904,7 +2892,7 @@ let (cps_and_elaborate :
                                            if
                                              (FStar_List.length
                                                 effect_binders1)
-                                               = (Prims.parse_int "0")
+                                               = Prims.int_zero
                                            then t
                                            else
                                              (let uu____4785 =
@@ -3711,7 +3699,7 @@ let (cps_and_elaborate :
                                                                    (FStar_List.length
                                                                     effect_binders1)
                                                                     =
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                  then
                                                                    let lift_from_pure
                                                                     =
@@ -3832,9 +3820,7 @@ let tc_lex_t :
                  FStar_Syntax_Syntax.sigmeta = uu____6366;
                  FStar_Syntax_Syntax.sigattrs = uu____6367;_}::[]
                when
-               ((_6387 = (Prims.parse_int "0")) &&
-                  (_6395 = (Prims.parse_int "0")))
-                 &&
+               ((_6387 = Prims.int_zero) && (_6395 = Prims.int_zero)) &&
                  (((FStar_Ident.lid_equals lex_t1
                       FStar_Parser_Const.lex_t_lid)
                      &&
@@ -3896,8 +3882,7 @@ let tc_lex_t :
                    FStar_Syntax_Syntax.sigel =
                      (FStar_Syntax_Syntax.Sig_datacon
                         (lex_top1, [utop], lex_top_t1,
-                          FStar_Parser_Const.lex_t_lid,
-                          (Prims.parse_int "0"), []));
+                          FStar_Parser_Const.lex_t_lid, Prims.int_zero, []));
                    FStar_Syntax_Syntax.sigrng = r1;
                    FStar_Syntax_Syntax.sigquals = [];
                    FStar_Syntax_Syntax.sigmeta =
@@ -3988,8 +3973,7 @@ let tc_lex_t :
                    FStar_Syntax_Syntax.sigel =
                      (FStar_Syntax_Syntax.Sig_datacon
                         (lex_cons, [ucons1; ucons2], lex_cons_t1,
-                          FStar_Parser_Const.lex_t_lid,
-                          (Prims.parse_int "0"), []));
+                          FStar_Parser_Const.lex_t_lid, Prims.int_zero, []));
                    FStar_Syntax_Syntax.sigrng = r2;
                    FStar_Syntax_Syntax.sigquals = [];
                    FStar_Syntax_Syntax.sigmeta =
@@ -4203,7 +4187,7 @@ let (tc_inductive' :
                     in
                  let res =
                    let uu____6920 =
-                     (((FStar_List.length tcs) = (Prims.parse_int "0")) ||
+                     (((FStar_List.length tcs) = Prims.int_zero) ||
                         ((FStar_Ident.lid_equals
                             env.FStar_TypeChecker_Env.curmodule
                             FStar_Parser_Const.prims_lid)
@@ -4300,11 +4284,11 @@ let (check_multi_eq :
         | hd1::tl1 ->
             let uu____7532 = collect1 tl1  in
             (match uu____7532 with
-             | [] -> [(hd1, (Prims.parse_int "1"))]
+             | [] -> [(hd1, Prims.int_one)]
              | (h,n1)::t ->
                  if h = hd1
-                 then (h, (n1 + (Prims.parse_int "1"))) :: t
-                 else (hd1, (Prims.parse_int "1")) :: (h, n1) :: t)
+                 then (h, (n1 + Prims.int_one)) :: t
+                 else (hd1, Prims.int_one) :: (h, n1) :: t)
          in
       let summ l = collect1 l  in
       let l11 = summ l1  in
@@ -4313,17 +4297,15 @@ let (check_multi_eq :
         match (l12, l22) with
         | ([],[]) -> FStar_Pervasives_Native.None
         | ((e,n1)::uu____7770,[]) ->
-            FStar_Pervasives_Native.Some (e, n1, (Prims.parse_int "0"))
+            FStar_Pervasives_Native.Some (e, n1, Prims.int_zero)
         | ([],(e,n1)::uu____7826) ->
-            FStar_Pervasives_Native.Some (e, (Prims.parse_int "0"), n1)
+            FStar_Pervasives_Native.Some (e, Prims.int_zero, n1)
         | ((hd1,n1)::tl1,(hd2,n2)::tl2) ->
             if hd1 < hd2
-            then
-              FStar_Pervasives_Native.Some (hd1, n1, (Prims.parse_int "0"))
+            then FStar_Pervasives_Native.Some (hd1, n1, Prims.int_zero)
             else
               if hd1 > hd2
-              then
-                FStar_Pervasives_Native.Some (hd2, (Prims.parse_int "0"), n2)
+              then FStar_Pervasives_Native.Some (hd2, Prims.int_zero, n2)
               else
                 if n1 <> n2
                 then FStar_Pervasives_Native.Some (hd1, n1, n2)
@@ -4916,9 +4898,7 @@ let (tc_decl' :
                            failwith "Impossible (parser)"
                        | (lift,FStar_Pervasives_Native.Some (uvs,lift_wp)) ->
                            let uu____8898 =
-                             if
-                               (FStar_List.length uvs) >
-                                 (Prims.parse_int "0")
+                             if (FStar_List.length uvs) > Prims.int_zero
                              then
                                let uu____8909 =
                                  FStar_Syntax_Subst.univ_var_opening uvs  in
@@ -4936,9 +4916,7 @@ let (tc_decl' :
                            (match uu____8898 with
                             | (env1,lift_wp1) ->
                                 let lift_wp2 =
-                                  if
-                                    (FStar_List.length uvs) =
-                                      (Prims.parse_int "0")
+                                  if (FStar_List.length uvs) = Prims.int_zero
                                   then check_and_gen env1 lift_wp1 expected_k
                                   else
                                     (let lift_wp2 =
@@ -4955,9 +4933,7 @@ let (tc_decl' :
                        | (FStar_Pervasives_Native.Some
                           (what,lift),FStar_Pervasives_Native.None ) ->
                            let uu____9054 =
-                             if
-                               (FStar_List.length what) >
-                                 (Prims.parse_int "0")
+                             if (FStar_List.length what) > Prims.int_zero
                              then
                                let uu____9069 =
                                  FStar_Syntax_Subst.univ_var_opening what  in
@@ -5012,7 +4988,7 @@ let (tc_decl' :
                                               in
                                            if
                                              (FStar_List.length uvs) =
-                                               (Prims.parse_int "0")
+                                               Prims.int_zero
                                            then
                                              let uu____9234 =
                                                let uu____9245 =
@@ -5273,7 +5249,7 @@ let (tc_decl' :
                                                let lift3 =
                                                  if
                                                    (FStar_List.length uvs) =
-                                                     (Prims.parse_int "0")
+                                                     Prims.int_zero
                                                  then
                                                    check_and_gen env2 lift2
                                                      expected_k2
@@ -5301,7 +5277,7 @@ let (tc_decl' :
                                 FStar_All.pipe_right uu____9792
                                   FStar_List.length
                                  in
-                              uu____9790 <> (Prims.parse_int "1")  in
+                              uu____9790 <> Prims.int_one  in
                             if uu____9788
                             then
                               let uu____9814 =
@@ -5349,7 +5325,7 @@ let (tc_decl' :
                                    FStar_All.pipe_right uu____9870
                                      FStar_List.length
                                     in
-                                 uu____9868 <> (Prims.parse_int "1"))
+                                 uu____9868 <> Prims.int_one)
                                in
                             if uu____9857
                             then
@@ -5416,7 +5392,7 @@ let (tc_decl' :
                             ([se1], [], env0))))))
        | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,uvs,tps,c,flags) ->
            let uu____10021 =
-             if (FStar_List.length uvs) = (Prims.parse_int "0")
+             if (FStar_List.length uvs) = Prims.int_zero
              then (env, uvs, tps, c)
              else
                (let uu____10049 = FStar_Syntax_Subst.univ_var_opening uvs  in
@@ -5528,7 +5504,7 @@ let (tc_decl' :
                                       | (tps5,c5) ->
                                           (if
                                              (FStar_List.length uvs2) <>
-                                               (Prims.parse_int "1")
+                                               Prims.int_one
                                            then
                                              (let uu____10408 =
                                                 FStar_Syntax_Subst.open_univ_vars
@@ -6985,9 +6961,8 @@ let (tc_decl :
                             match uu____12710 with
                             | FStar_Pervasives_Native.Some r -> r
                             | FStar_Pervasives_Native.None  ->
-                                ((~- (Prims.parse_int "1")),
-                                  (~- (Prims.parse_int "1")),
-                                  (~- (Prims.parse_int "1")))
+                                ((~- Prims.int_one), (~- Prims.int_one),
+                                  (~- Prims.int_one))
                              in
                           (match uu____12700 with
                            | (e,n1,n2) ->
@@ -8692,7 +8667,7 @@ and (finish_partial_modul :
                  && (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
                 &&
                 (let uu____15788 = FStar_Errors.get_err_count ()  in
-                 uu____15788 = (Prims.parse_int "0"))
+                 uu____15788 = Prims.int_zero)
                in
             if should_extract_interface
             then

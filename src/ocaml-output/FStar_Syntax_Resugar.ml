@@ -2,7 +2,7 @@ open Prims
 let (doc_to_string : FStar_Pprint.document -> Prims.string) =
   fun doc1  ->
     FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
-      (Prims.parse_int "100") doc1
+      (Prims.of_int (100)) doc1
   
 let (parser_term_to_string : FStar_Parser_AST.term -> Prims.string) =
   fun t  ->
@@ -90,7 +90,7 @@ let rec (universe_to_int :
     fun u  ->
       match u with
       | FStar_Syntax_Syntax.U_succ u1 ->
-          universe_to_int (n1 + (Prims.parse_int "1")) u1
+          universe_to_int (n1 + Prims.int_one) u1
       | uu____261 -> (n1, u)
   
 let (universe_to_string : FStar_Ident.ident Prims.list -> Prims.string) =
@@ -121,7 +121,7 @@ and (resugar_universe :
             (FStar_Parser_AST.Const
                (FStar_Const.Const_int ("0", FStar_Pervasives_Native.None))) r
       | FStar_Syntax_Syntax.U_succ uu____342 ->
-          let uu____343 = universe_to_int (Prims.parse_int "0") u  in
+          let uu____343 = universe_to_int Prims.int_zero u  in
           (match uu____343 with
            | (n1,u1) ->
                (match u1 with
@@ -200,7 +200,7 @@ let (string_to_op :
           FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
       | "Subtraction" ->
           FStar_Pervasives_Native.Some
-            ("-", (FStar_Pervasives_Native.Some (Prims.parse_int "2")))
+            ("-", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Tilde" ->
           FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
       | "Slash" ->
@@ -336,13 +336,13 @@ let rec (resugar_term_as_op :
               ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.nsstr
              in
           let str =
-            if length1 = (Prims.parse_int "0")
+            if length1 = Prims.int_zero
             then
               ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
             else
               FStar_Util.substring_from
                 ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
-                (length1 + (Prims.parse_int "1"))
+                (length1 + Prims.int_one)
              in
           if FStar_Util.starts_with str "dtuple"
           then
@@ -380,13 +380,13 @@ let rec (resugar_term_as_op :
             ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.nsstr
            in
         let s =
-          if length1 = (Prims.parse_int "0")
+          if length1 = Prims.int_zero
           then
             ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
           else
             FStar_Util.substring_from
               ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
-              (length1 + (Prims.parse_int "1"))
+              (length1 + Prims.int_one)
            in
         let uu____1630 = string_to_op s  in
         (match uu____1630 with
@@ -470,11 +470,11 @@ let rec (resugar_term' :
               ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.nsstr
              in
           let s =
-            if length1 = (Prims.parse_int "0")
+            if length1 = Prims.int_zero
             then a.FStar_Ident.str
             else
               FStar_Util.substring_from a.FStar_Ident.str
-                (length1 + (Prims.parse_int "1"))
+                (length1 + Prims.int_one)
              in
           let is_prefix = Prims.op_Hat FStar_Ident.reserved_prefix "is_"  in
           if FStar_Util.starts_with s is_prefix
@@ -515,11 +515,9 @@ let rec (resugar_term' :
                     (FStar_Ident.lid_equals a FStar_Parser_Const.assume_lid))
                    ||
                    (let uu____1998 =
-                      let uu____2000 =
-                        FStar_String.get s (Prims.parse_int "0")  in
+                      let uu____2000 = FStar_String.get s Prims.int_zero  in
                       FStar_Char.uppercase uu____2000  in
-                    let uu____2003 = FStar_String.get s (Prims.parse_int "0")
-                       in
+                    let uu____2003 = FStar_String.get s Prims.int_zero  in
                     uu____1998 <> uu____2003)
                   in
                if uu____1994
@@ -740,7 +738,7 @@ let rec (resugar_term' :
                   in
                FStar_Option.get out
            | FStar_Pervasives_Native.Some ("dtuple",uu____2931) when
-               (FStar_List.length args1) > (Prims.parse_int "0") ->
+               (FStar_List.length args1) > Prims.int_zero ->
                let args2 = last1 args1  in
                let body =
                  match args2 with
@@ -819,7 +817,7 @@ let rec (resugar_term' :
                          mk1 uu____3158
                      | uu____3165 -> resugar_term' env t1))
            | FStar_Pervasives_Native.Some ("try_with",uu____3166) when
-               (FStar_List.length args1) > (Prims.parse_int "1") ->
+               (FStar_List.length args1) > Prims.int_one ->
                let new_args = last_two args1  in
                let uu____3190 =
                  match new_args with
@@ -1004,7 +1002,7 @@ let rec (resugar_term' :
                           FStar_Parser_AST.QExists uu____4100  in
                         mk1 uu____4099)
                   in
-               if (FStar_List.length args1) > (Prims.parse_int "0")
+               if (FStar_List.length args1) > Prims.int_zero
                then
                  let args2 = last1 args1  in
                  (match args2 with

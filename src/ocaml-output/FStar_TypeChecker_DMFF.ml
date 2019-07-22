@@ -595,7 +595,7 @@ let (gen_wps_for_free :
                       (FStar_Syntax_Util.residual_tot wp_a1)
                      in
                   let mk_generic_app c =
-                    if (FStar_List.length binders) > (Prims.parse_int "0")
+                    if (FStar_List.length binders) > Prims.int_zero
                     then
                       let uu____1693 =
                         let uu____1694 =
@@ -631,8 +631,7 @@ let (gen_wps_for_free :
                       let l_ite =
                         FStar_Syntax_Syntax.fvar FStar_Parser_Const.ite_lid
                           (FStar_Syntax_Syntax.Delta_constant_at_level
-                             (Prims.parse_int "2"))
-                          FStar_Pervasives_Native.None
+                             (Prims.of_int (2))) FStar_Pervasives_Native.None
                          in
                       let uu____1817 =
                         let uu____1820 =
@@ -1013,7 +1012,7 @@ let (gen_wps_for_free :
                                  in
                               FStar_Syntax_Syntax.fvar uu____3027
                                 (FStar_Syntax_Syntax.Delta_constant_at_level
-                                   (Prims.parse_int "1"))
+                                   Prims.int_one)
                                 FStar_Pervasives_Native.None
                                in
                             FStar_Syntax_Util.mk_app projector
@@ -1664,7 +1663,7 @@ and (star_type' :
                                  (non_dependent_or_raise s ct;
                                   (let k = n1 - (FStar_List.length binders1)
                                       in
-                                   if k > (Prims.parse_int "0")
+                                   if k > Prims.int_zero
                                    then is_non_dependent_arrow ct k
                                    else true)))) ()
                    with | Not_found  -> false)
@@ -1792,12 +1791,10 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_refine (x,t2) when false ->
           let x1 = FStar_Syntax_Syntax.freshen_bv x  in
           let sort = star_type' env x1.FStar_Syntax_Syntax.sort  in
-          let subst1 = [FStar_Syntax_Syntax.DB ((Prims.parse_int "0"), x1)]
-             in
+          let subst1 = [FStar_Syntax_Syntax.DB (Prims.int_zero, x1)]  in
           let t3 = FStar_Syntax_Subst.subst subst1 t2  in
           let t4 = star_type' env t3  in
-          let subst2 = [FStar_Syntax_Syntax.NM (x1, (Prims.parse_int "0"))]
-             in
+          let subst2 = [FStar_Syntax_Syntax.NM (x1, Prims.int_zero)]  in
           let t5 = FStar_Syntax_Subst.subst subst2 t4  in
           mk1
             (FStar_Syntax_Syntax.Tm_refine

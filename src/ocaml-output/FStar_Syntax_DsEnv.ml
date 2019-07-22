@@ -597,7 +597,7 @@ let (set_ds_hooks : env -> dsenv_hooks -> env) =
       }
   
 let new_sigmap : 'Auu____2618 . unit -> 'Auu____2618 FStar_Util.smap =
-  fun uu____2625  -> FStar_Util.smap_create (Prims.parse_int "100") 
+  fun uu____2625  -> FStar_Util.smap_create (Prims.of_int (100)) 
 let (empty_env : FStar_Parser_Dep.deps -> env) =
   fun deps  ->
     let uu____2633 = new_sigmap ()  in
@@ -1045,7 +1045,7 @@ let (resolve_module_name :
               then FStar_Pervasives_Native.Some new_lid
               else aux q
           | (Module_abbrev (name,modul))::uu____4006 when
-              (nslen = (Prims.parse_int "0")) &&
+              (nslen = Prims.int_zero) &&
                 (name.FStar_Ident.idText =
                    (lid.FStar_Ident.ident).FStar_Ident.idText)
               -> FStar_Pervasives_Native.Some modul
@@ -1149,7 +1149,7 @@ let (shorten_module_path :
                | FStar_Pervasives_Native.Some (stripped_ids,rev_kept_ids) ->
                    (stripped_ids, (FStar_List.rev rev_kept_ids)))
            in
-        if is_full_path && ((FStar_List.length ids) > (Prims.parse_int "0"))
+        if is_full_path && ((FStar_List.length ids) > Prims.int_zero)
         then
           let uu____4413 =
             let uu____4416 = FStar_Ident.lid_of_ids ids  in
@@ -1482,8 +1482,7 @@ let (try_lookup_name :
                          let uu____5192 =
                            FStar_Syntax_Syntax.fvar source_lid
                              (FStar_Syntax_Syntax.Delta_constant_at_level
-                                (Prims.parse_int "1"))
-                             FStar_Pervasives_Native.None
+                                Prims.int_one) FStar_Pervasives_Native.None
                             in
                          (uu____5192, [])  in
                        Term_name uu____5185  in
@@ -3404,9 +3403,7 @@ let (prepare_module_or_interface :
                      | (lid,kind) -> (lid, (convert_kind kind))) auto_open
                  in
               let namespace_of_module =
-                if
-                  (FStar_List.length mname.FStar_Ident.ns) >
-                    (Prims.parse_int "0")
+                if (FStar_List.length mname.FStar_Ident.ns) > Prims.int_zero
                 then
                   let uu____12779 =
                     let uu____12784 =
@@ -3563,9 +3560,7 @@ let fail_or :
               let uu____13000 = FStar_Ident.text_of_lid lid  in
               FStar_Util.format1 "Identifier not found: [%s]" uu____13000  in
             let msg1 =
-              if
-                (FStar_List.length lid.FStar_Ident.ns) =
-                  (Prims.parse_int "0")
+              if (FStar_List.length lid.FStar_Ident.ns) = Prims.int_zero
               then msg
               else
                 (let modul =

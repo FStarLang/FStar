@@ -1625,13 +1625,13 @@ let (is_norm_request :
       match uu____5950 with
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize_term
-          -> aux (Prims.parse_int "2")
+          -> aux (Prims.of_int (2))
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize ->
-          aux (Prims.parse_int "1")
+          aux Prims.int_one
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.norm ->
-          aux (Prims.parse_int "3")
+          aux (Prims.of_int (3))
       | uu____5960 -> Norm_request_none
   
 let (should_consider_norm_requests : FStar_TypeChecker_Cfg.cfg -> Prims.bool)
@@ -1661,8 +1661,7 @@ let (rejig_norm_request :
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize_term
           ->
           (match args with
-           | t1::t2::rest when
-               (FStar_List.length rest) > (Prims.parse_int "0") ->
+           | t1::t2::rest when (FStar_List.length rest) > Prims.int_zero ->
                let uu____6041 = FStar_Syntax_Util.mk_app hd1 [t1; t2]  in
                FStar_Syntax_Util.mk_app uu____6041 rest
            | uu____6068 ->
@@ -1671,7 +1670,7 @@ let (rejig_norm_request :
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize ->
           (match args with
-           | t::rest when (FStar_List.length rest) > (Prims.parse_int "0") ->
+           | t::rest when (FStar_List.length rest) > Prims.int_zero ->
                let uu____6108 = FStar_Syntax_Util.mk_app hd1 [t]  in
                FStar_Syntax_Util.mk_app uu____6108 rest
            | uu____6127 ->
@@ -1680,8 +1679,8 @@ let (rejig_norm_request :
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.norm ->
           (match args with
-           | t1::t2::t3::rest when
-               (FStar_List.length rest) > (Prims.parse_int "0") ->
+           | t1::t2::t3::rest when (FStar_List.length rest) > Prims.int_zero
+               ->
                let uu____6201 = FStar_Syntax_Util.mk_app hd1 [t1; t2; t3]  in
                FStar_Syntax_Util.mk_app uu____6201 rest
            | uu____6236 ->
@@ -2500,7 +2499,7 @@ let (is_fext_on_domain :
         (match uu____9297 with
          | FStar_Syntax_Syntax.Tm_fvar fv when
              (is_on_dom fv) &&
-               ((FStar_List.length args) = (Prims.parse_int "3"))
+               ((FStar_List.length args) = (Prims.of_int (3)))
              ->
              let f =
                let uu____9315 =
@@ -2546,7 +2545,7 @@ let rec (norm :
                  FStar_Util.string_of_int (FStar_List.length env)  in
                let uu____9763 =
                  let uu____9765 =
-                   let uu____9768 = firstn (Prims.parse_int "4") stack  in
+                   let uu____9768 = firstn (Prims.of_int (4)) stack  in
                    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____9768
                     in
                  stack_to_string uu____9765  in
@@ -2627,7 +2626,7 @@ let rec (norm :
                (match uu____9859 with
                 | FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level _9862) when
-                    _9862 = (Prims.parse_int "0") ->
+                    _9862 = Prims.int_zero ->
                     (FStar_TypeChecker_Cfg.log_unfolding cfg
                        (fun uu____9866  ->
                           let uu____9867 =
@@ -4388,10 +4387,9 @@ let rec (norm :
                               (FStar_Pervasives_Native.None,
                                 (Clos (env, fix_f_i, memo, true)))
                               :: rec_env  in
-                            (rec_env1, (memo :: memos),
-                              (i + (Prims.parse_int "1"))))
+                            (rec_env1, (memo :: memos), (i + Prims.int_one)))
                    (FStar_Pervasives_Native.snd lbs)
-                   (env, [], (Prims.parse_int "0"))
+                   (env, [], Prims.int_zero)
                   in
                (match uu____13361 with
                 | (rec_env,memos,uu____13755) ->
@@ -4565,7 +4563,7 @@ and (do_unfold_fv :
                           t0.FStar_Syntax_Syntax.pos t
                        in
                     let n1 = FStar_List.length us  in
-                    if n1 > (Prims.parse_int "0")
+                    if n1 > Prims.int_zero
                     then
                       match stack with
                       | (UnivArgs (us',uu____14517))::stack1 ->
@@ -6277,7 +6275,7 @@ and (maybe_simplify_aux :
                                                   | uu____20269 -> false  in
                                                 (if
                                                    (FStar_List.length args) =
-                                                     (Prims.parse_int "1")
+                                                     Prims.int_one
                                                  then
                                                    let t =
                                                      let uu____20283 =
@@ -6729,7 +6727,7 @@ and (maybe_simplify_aux :
                                                   | uu____23042 -> false  in
                                                 (if
                                                    (FStar_List.length args) =
-                                                     (Prims.parse_int "1")
+                                                     Prims.int_one
                                                  then
                                                    let t =
                                                      let uu____23056 =
@@ -6861,7 +6859,7 @@ and (rebuild :
                   FStar_Util.string_of_int (FStar_List.length env)  in
                 let uu____23315 =
                   let uu____23317 =
-                    let uu____23320 = firstn (Prims.parse_int "4") stack  in
+                    let uu____23320 = firstn (Prims.of_int (4)) stack  in
                     FStar_All.pipe_left FStar_Pervasives_Native.fst
                       uu____23320
                      in

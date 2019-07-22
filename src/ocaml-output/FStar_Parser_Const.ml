@@ -253,10 +253,9 @@ let (postprocess_with : FStar_Ident.lident) =
 let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
-  let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let x = FStar_Util.mk_ref Prims.int_zero  in
   let gen1 uu____897 = FStar_Util.incr x; FStar_Util.read x  in
-  let reset uu____905 = FStar_Util.write x (Prims.parse_int "0")  in
-  (gen1, reset) 
+  let reset uu____905 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l  ->
@@ -297,7 +296,7 @@ let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
       let uu____1025 = psnconst t  in FStar_Ident.set_lid_range uu____1025 r
   
 let (lid_tuple2 : FStar_Ident.lident) =
-  mk_tuple_lid (Prims.parse_int "2") FStar_Range.dummyRange 
+  mk_tuple_lid (Prims.of_int (2)) FStar_Range.dummyRange 
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_lid : FStar_Ident.ident -> Prims.bool) =
@@ -315,7 +314,7 @@ let (mk_tuple_data_lid :
       let uu____1066 = psnconst t  in FStar_Ident.set_lid_range uu____1066 r
   
 let (lid_Mktuple2 : FStar_Ident.lident) =
-  mk_tuple_data_lid (Prims.parse_int "2") FStar_Range.dummyRange 
+  mk_tuple_data_lid (Prims.of_int (2)) FStar_Range.dummyRange 
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.Mktuple" 
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
@@ -327,7 +326,7 @@ let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str 
 let (mod_prefix_dtuple : Prims.int -> Prims.string -> FStar_Ident.lident) =
-  fun n1  -> if n1 = (Prims.parse_int "2") then pconst else psconst 
+  fun n1  -> if n1 = (Prims.of_int (2)) then pconst else psconst 
 let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
@@ -376,7 +375,7 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
     let c =
       FStar_Util.char_at (lid.FStar_Ident.ident).FStar_Ident.idText
-        (Prims.parse_int "0")
+        Prims.int_zero
        in
     FStar_Util.is_upper c
   

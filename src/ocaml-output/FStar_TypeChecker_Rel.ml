@@ -432,7 +432,7 @@ let (empty_worklist : FStar_TypeChecker_Env.env -> worklist) =
     {
       attempting = [];
       wl_deferred = [];
-      ctr = (Prims.parse_int "0");
+      ctr = Prims.int_zero;
       defer_ok = true;
       smt_ok = true;
       umax_heuristic_ok = true;
@@ -874,10 +874,10 @@ let (p_invert :
 let (is_top_level_prob : FStar_TypeChecker_Common.prob -> Prims.bool) =
   fun p  ->
     let uu____1887 = FStar_All.pipe_right (p_reason p) FStar_List.length  in
-    uu____1887 = (Prims.parse_int "1")
+    uu____1887 = Prims.int_one
   
 let (next_pid : unit -> Prims.int) =
-  let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let ctr = FStar_Util.mk_ref Prims.int_zero  in
   fun uu____1907  -> FStar_Util.incr ctr; FStar_ST.op_Bang ctr 
 let mk_problem :
   'Auu____1949 .
@@ -1918,7 +1918,7 @@ let (solve_prob' :
               {
                 attempting = (uu___692_5384.attempting);
                 wl_deferred = (uu___692_5384.wl_deferred);
-                ctr = (wl1.ctr + (Prims.parse_int "1"));
+                ctr = (wl1.ctr + Prims.int_one);
                 defer_ok = (uu___692_5384.defer_ok);
                 smt_ok = (uu___692_5384.smt_ok);
                 umax_heuristic_ok = (uu___692_5384.umax_heuristic_ok);
@@ -1947,7 +1947,7 @@ let (extend_solution : Prims.int -> uvi Prims.list -> worklist -> worklist) =
          {
            attempting = (uu___700_5432.attempting);
            wl_deferred = (uu___700_5432.wl_deferred);
-           ctr = (wl.ctr + (Prims.parse_int "1"));
+           ctr = (wl.ctr + Prims.int_one);
            defer_ok = (uu___700_5432.defer_ok);
            smt_ok = (uu___700_5432.smt_ok);
            umax_heuristic_ok = (uu___700_5432.umax_heuristic_ok);
@@ -2315,8 +2315,8 @@ let (fv_delta_depth :
               && (Prims.op_Negation env.FStar_TypeChecker_Env.is_iface)
           then d1
           else FStar_Syntax_Syntax.delta_constant
-      | FStar_Syntax_Syntax.Delta_constant_at_level i when
-          i > (Prims.parse_int "0") ->
+      | FStar_Syntax_Syntax.Delta_constant_at_level i when i > Prims.int_zero
+          ->
           let uu____7015 =
             FStar_TypeChecker_Env.lookup_definition
               [FStar_TypeChecker_Env.Unfold
@@ -2600,13 +2600,13 @@ let (head_matches_delta :
              in
           let success d r t11 t21 =
             (r,
-              (if d > (Prims.parse_int "0")
+              (if d > Prims.int_zero
                then FStar_Pervasives_Native.Some (t11, t21)
                else FStar_Pervasives_Native.None))
              in
           let fail1 d r t11 t21 =
             (r,
-              (if d > (Prims.parse_int "0")
+              (if d > Prims.int_zero
                then FStar_Pervasives_Native.Some (t11, t21)
                else FStar_Pervasives_Native.None))
              in
@@ -2647,9 +2647,7 @@ let (head_matches_delta :
                     (t11, t2'))
                   in
                match uu____8076 with
-               | (t12,t22) ->
-                   aux retry (n_delta + (Prims.parse_int "1")) t12 t22
-                in
+               | (t12,t22) -> aux retry (n_delta + Prims.int_one) t12 t22  in
              let reduce_both_and_try_again d r1 =
                let uu____8124 = FStar_TypeChecker_Common.decr_delta_depth d
                   in
@@ -2668,7 +2666,7 @@ let (head_matches_delta :
                        FStar_TypeChecker_Env.Weak;
                        FStar_TypeChecker_Env.HNF] env t21
                       in
-                   aux retry (n_delta + (Prims.parse_int "1")) t12 t22
+                   aux retry (n_delta + Prims.int_one) t12 t22
                 in
              match r with
              | MisMatch
@@ -2677,8 +2675,7 @@ let (head_matches_delta :
                   i),FStar_Pervasives_Native.Some
                   (FStar_Syntax_Syntax.Delta_equational_at_level j))
                  when
-                 ((i > (Prims.parse_int "0")) || (j > (Prims.parse_int "0")))
-                   && (i <> j)
+                 ((i > Prims.int_zero) || (j > Prims.int_zero)) && (i <> j)
                  ->
                  reduce_one_and_try_again
                    (FStar_Syntax_Syntax.Delta_equational_at_level i)
@@ -2701,13 +2698,13 @@ let (head_matches_delta :
                         fail1 n_delta r t11 t21
                     | (FStar_Pervasives_Native.Some
                        t12,FStar_Pervasives_Native.None ) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t12 t21
+                        aux false (n_delta + Prims.int_one) t12 t21
                     | (FStar_Pervasives_Native.None
                        ,FStar_Pervasives_Native.Some t22) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t11 t22
+                        aux false (n_delta + Prims.int_one) t11 t22
                     | (FStar_Pervasives_Native.Some
                        t12,FStar_Pervasives_Native.Some t22) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t12 t22)
+                        aux false (n_delta + Prims.int_one) t12 t22)
              | MisMatch
                  (uu____8239,FStar_Pervasives_Native.Some
                   (FStar_Syntax_Syntax.Delta_equational_at_level uu____8240))
@@ -2725,13 +2722,13 @@ let (head_matches_delta :
                         fail1 n_delta r t11 t21
                     | (FStar_Pervasives_Native.Some
                        t12,FStar_Pervasives_Native.None ) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t12 t21
+                        aux false (n_delta + Prims.int_one) t12 t21
                     | (FStar_Pervasives_Native.None
                        ,FStar_Pervasives_Native.Some t22) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t11 t22
+                        aux false (n_delta + Prims.int_one) t11 t22
                     | (FStar_Pervasives_Native.Some
                        t12,FStar_Pervasives_Native.Some t22) ->
-                        aux false (n_delta + (Prims.parse_int "1")) t12 t22)
+                        aux false (n_delta + Prims.int_one) t12 t22)
              | MisMatch
                  (FStar_Pervasives_Native.Some
                   d1,FStar_Pervasives_Native.Some d2)
@@ -2743,7 +2740,7 @@ let (head_matches_delta :
              | MisMatch uu____8328 -> fail1 n_delta r t11 t21
              | uu____8337 -> success n_delta r t11 t21)
              in
-          let r = aux true (Prims.parse_int "0") t1 t2  in
+          let r = aux true Prims.int_zero t1 t2  in
           (let uu____8352 =
              FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                (FStar_Options.Other "RelDelta")
@@ -2790,12 +2787,12 @@ let (kind_type :
 let (rank_t_num : FStar_TypeChecker_Common.rank_t -> Prims.int) =
   fun uu___24_8465  ->
     match uu___24_8465 with
-    | FStar_TypeChecker_Common.Rigid_rigid  -> (Prims.parse_int "0")
-    | FStar_TypeChecker_Common.Flex_rigid_eq  -> (Prims.parse_int "1")
-    | FStar_TypeChecker_Common.Flex_flex_pattern_eq  -> (Prims.parse_int "2")
-    | FStar_TypeChecker_Common.Flex_rigid  -> (Prims.parse_int "3")
-    | FStar_TypeChecker_Common.Rigid_flex  -> (Prims.parse_int "4")
-    | FStar_TypeChecker_Common.Flex_flex  -> (Prims.parse_int "5")
+    | FStar_TypeChecker_Common.Rigid_rigid  -> Prims.int_zero
+    | FStar_TypeChecker_Common.Flex_rigid_eq  -> Prims.int_one
+    | FStar_TypeChecker_Common.Flex_flex_pattern_eq  -> (Prims.of_int (2))
+    | FStar_TypeChecker_Common.Flex_rigid  -> (Prims.of_int (3))
+    | FStar_TypeChecker_Common.Rigid_flex  -> (Prims.of_int (4))
+    | FStar_TypeChecker_Common.Flex_flex  -> (Prims.of_int (5))
   
 let (rank_leq :
   FStar_TypeChecker_Common.rank_t ->
@@ -3219,7 +3216,7 @@ let rec (really_solve_universe_eq :
                                   let uu____9644 =
                                     FStar_Syntax_Util.compare_univs uv1 uv2
                                      in
-                                  uu____9644 = (Prims.parse_int "0")))
+                                  uu____9644 = Prims.int_zero))
                            in
                         if uu____9636 then uv1 :: uvs else uvs) [])
                in
@@ -3232,7 +3229,7 @@ let rec (really_solve_universe_eq :
                           (fun u'  ->
                              let uu____9673 =
                                FStar_Syntax_Util.compare_univs u u'  in
-                             uu____9673 = (Prims.parse_int "0")))
+                             uu____9673 = Prims.int_zero))
                       in
                    Prims.op_Negation uu____9665)
                in
@@ -4067,8 +4064,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                let subst1 =
                                                  [FStar_Syntax_Syntax.DB
-                                                    ((Prims.parse_int "0"),
-                                                      x1)]
+                                                    (Prims.int_zero, x1)]
                                                   in
                                                let phi11 =
                                                  FStar_Syntax_Subst.subst
@@ -4090,8 +4086,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                let subst1 =
                                                  [FStar_Syntax_Syntax.DB
-                                                    ((Prims.parse_int "0"),
-                                                      x1)]
+                                                    (Prims.int_zero, x1)]
                                                   in
                                                let phi1 =
                                                  FStar_Syntax_Subst.subst
@@ -4111,8 +4106,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                let subst1 =
                                                  [FStar_Syntax_Syntax.DB
-                                                    ((Prims.parse_int "0"),
-                                                      x1)]
+                                                    (Prims.int_zero, x1)]
                                                   in
                                                let phi1 =
                                                  FStar_Syntax_Subst.subst
@@ -5052,11 +5046,10 @@ and (solve_binders :
                           let hd12 = FStar_Syntax_Syntax.freshen_bv hd11  in
                           let subst2 =
                             let uu____15061 =
-                              FStar_Syntax_Subst.shift_subst
-                                (Prims.parse_int "1") subst1
+                              FStar_Syntax_Subst.shift_subst Prims.int_one
+                                subst1
                                in
-                            (FStar_Syntax_Syntax.DB
-                               ((Prims.parse_int "0"), hd12))
+                            (FStar_Syntax_Syntax.DB (Prims.int_zero, hd12))
                               :: uu____15061
                              in
                           let env2 = FStar_TypeChecker_Env.push_bv env1 hd12
@@ -5777,7 +5770,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                        giveup env1 uu____16911 orig
                      else
                        (let uu____16928 =
-                          (nargs = (Prims.parse_int "0")) ||
+                          (nargs = Prims.int_zero) ||
                             (let uu____16933 =
                                FStar_Syntax_Util.eq_args args1 args2  in
                              uu____16933 = FStar_Syntax_Util.Equal)
@@ -7747,7 +7740,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                           in
                                        let subst1 =
                                          [FStar_Syntax_Syntax.DB
-                                            ((Prims.parse_int "0"), x13)]
+                                            (Prims.int_zero, x13)]
                                           in
                                        let phi12 =
                                          FStar_Syntax_Subst.subst subst1
@@ -7912,7 +7905,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                          (uu___3083_21957.wl_deferred);
                                                        ctr =
                                                          (wl3.ctr +
-                                                            (Prims.parse_int "1"));
+                                                            Prims.int_one);
                                                        defer_ok =
                                                          (uu___3083_21957.defer_ok);
                                                        smt_ok =
@@ -10876,9 +10869,7 @@ let (solve_universe_inequalities' :
                       match uu____28634 with
                       | (lb,v1) ->
                           let uu____28641 =
-                            solve_universe_eq (~- (Prims.parse_int "1")) wl
-                              lb v1
-                             in
+                            solve_universe_eq (~- Prims.int_one) wl lb v1  in
                           (match uu____28641 with
                            | USolved wl1 -> ()
                            | uu____28644 -> fail1 lb v1)))

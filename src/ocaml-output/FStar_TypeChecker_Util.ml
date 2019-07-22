@@ -976,7 +976,7 @@ let (weaken_comp :
                    FStar_Syntax_Syntax.lid_as_fv
                      FStar_Parser_Const.pure_assume_wp_lid
                      (FStar_Syntax_Syntax.Delta_constant_at_level
-                        (Prims.parse_int "1")) FStar_Pervasives_Native.None
+                        Prims.int_one) FStar_Pervasives_Native.None
                     in
                  FStar_Syntax_Syntax.fv_to_tm uu____2530  in
                let pure_assume_wp1 =
@@ -1048,8 +1048,7 @@ let (strengthen_comp :
                        FStar_Syntax_Syntax.lid_as_fv
                          FStar_Parser_Const.pure_assert_wp_lid
                          (FStar_Syntax_Syntax.Delta_constant_at_level
-                            (Prims.parse_int "1"))
-                         FStar_Pervasives_Native.None
+                            Prims.int_one) FStar_Pervasives_Native.None
                         in
                      FStar_Syntax_Syntax.fv_to_tm uu____2668  in
                    let pure_assert_wp1 =
@@ -2209,7 +2208,7 @@ let (maybe_coerce_bool_to_type :
                       in
                    FStar_Syntax_Syntax.fvar uu____5216
                      (FStar_Syntax_Syntax.Delta_constant_at_level
-                        (Prims.parse_int "1")) FStar_Pervasives_Native.None
+                        Prims.int_one) FStar_Pervasives_Native.None
                     in
                  let lc1 =
                    let uu____5219 =
@@ -2986,7 +2985,7 @@ let (maybe_instantiate :
               match uu___7_6759 with
               | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
               | FStar_Pervasives_Native.Some i ->
-                  FStar_Pervasives_Native.Some (i - (Prims.parse_int "1"))
+                  FStar_Pervasives_Native.Some (i - Prims.int_one)
                in
             let t1 = FStar_TypeChecker_Normalize.unfold_whnf env t  in
             match t1.FStar_Syntax_Syntax.n with
@@ -2997,7 +2996,7 @@ let (maybe_instantiate :
                      let rec aux subst1 inst_n bs2 =
                        match (inst_n, bs2) with
                        | (FStar_Pervasives_Native.Some _6933,uu____6920) when
-                           _6933 = (Prims.parse_int "0") ->
+                           _6933 = Prims.int_zero ->
                            ([], bs2, subst1,
                              FStar_TypeChecker_Env.trivial_guard)
                        | (uu____6966,(x,FStar_Pervasives_Native.Some
