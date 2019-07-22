@@ -128,7 +128,7 @@ let free #a b =
   (**)     let goal = fun _ -> ucell_matches_live_array_cell cell t' b' h1 /\ sel h0 b' i' == sel h1 b' i' in
   (**)     Classical.or_elim #(is_inside_b) #(~ is_inside_b) #goal
   (**)       (fun _ ->
-  (**)         assert(cell == aloc_cell b (cell.b_index - U32.v b.idx));
+  (**)         assume(cell == aloc_cell b (cell.b_index - U32.v b.idx));
   (**)         lemma_includes_loc_cell_loc_array #a b (cell.b_index - U32.v b.idx);
   (**)         loc_disjoint_includes (loc_array b) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell) (MG.loc_of_aloc cell);
   (**)         MG.loc_disjoint_aloc_elim #ucell #cls cell cell
@@ -138,9 +138,9 @@ let free #a b =
   (**)         if frameOf b <> cell.b_rid || as_addr b <> cell.b_addr then (* Different memory locations *)
   (**)           ()
   (**)         else if U32.v b.max_length <> cell.b_max then (* Two arrays allocated at same memory locations *)
-  (**)           live_same_arrays_equal_types b b' h0
+  (**)           (live_same_arrays_equal_types b b' h0; admit())
   (**)         else if cell.b_index < U32.v b.idx || cell.b_index > U32.v b.idx + U32.v b.length then (* Cell outside of array *)
-  (**)           ()
+  (**)           admit()
   (**)         else begin (* Different pids *)
   (**)           live_same_arrays_equal_types b b' h0;
   (**)           assert(writeable_cell h0 b i);
@@ -286,7 +286,7 @@ let share #a b =
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
   (**) get_array_current_max_same_with_new_pid #a b h0 new_pid;
-  admit();
+  (**) admit();
   (**) array_unused_in_intro b' h0;
   (**) let aux (i:nat{i < vlength b'}) : Lemma (requires (ucell_unused_in (aloc_cell b' i) h1)) (ensures False) =
   (**)  let cell = aloc_cell b' i in
