@@ -1,4 +1,5 @@
 module FrameInference
+open FStar.Tactics
 module T = FStar.Tactics
 assume
 val resource : Type u#1
@@ -32,7 +33,7 @@ assume
 val cmd (r1:resource) (r2:resource) : Type
 
 assume
-val seq (#p #q #r : resource) (f:cmd p q) (g:cmd q r)
+val ( >> ) (#p #q #r : resource) (f:cmd p q) (g:cmd q r)
   : cmd p r
 
 assume
@@ -45,10 +46,13 @@ val frame_delta (pre p post q : resource) : Type
 assume
 val frame2
     (#pre #post #p #q : resource)
-    // (#delta:frame_delta pre p post q)
+    (#delta:frame_delta pre p post q)
     (f:cmd p q)
   : cmd pre post
 
+
+assume
+val frame_delta_refl (pre p q : resource) : frame_delta pre p pre q
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,13 +70,58 @@ assume val f5: cmd r5 r5
 
 
 let test0 : cmd (r1 ** r2) (r1 ** r2) =
-  seq (frame f2)
-      (frame f2)
+  frame f2 >>
+  frame f2
+
+// let test1 : cmd (r1 ** r2) (r1 ** r2) =
+//   frame f1 >>
+//   frame f2
+
+irreducible
+let resolve_implicits = ()
+
+[@resolve_implicits]
+let resolve_tac () : Tac unit =
+  T.dump "Start!";
+  let _ = T.repeat (fun () ->
+    T.apply (`frame_delta_refl);
+    T.dump "Next")
+  in
+  ()
 
 
-// let test1
-//   : cmd (r1 ** r2) (r1 ** r2)
-//   by (T.dump "A")
-//   =
-//   seq (frame2 #_ #_ #_ #_ f1)
-//       (frame2 f2)
+let test1 (b:bool)
+  : cmd (r1 ** r2 ** r3 ** r4 ** r5)
+        (r1 ** r2 ** r3 ** r4 ** r5)
+  =
+  frame2 f1 >>
+  frame2 f2 >>
+  frame2 f3 >>
+  frame2 f4 >>
+  frame2 f5
+
+  // >>
+  // (if b then
+  //   frame2 f3 >>
+  //   frame2 f4
+  //  else frame2 f5)
+
+
+#set-options "--print_implicits"
+
+
+assume
+val frame3
+    (#pre #post #p #q : resource)
+    (#[T.apply (`frame_delta_refl)] delta:frame_delta pre p post q)
+    (f:cmd p q)
+  : cmd pre post
+
+let test2
+  : cmd (r1 ** r2) (r1 ** r2)
+  =
+  frame3 f1 >>
+  frame3 f2 >>
+  frame3 f3 >>
+  frame3 f4 >>
+  frame3 f5
