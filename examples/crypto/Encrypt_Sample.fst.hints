@@ -7,18 +7,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_FStar.Pervasives.Err",
-        "data_typing_intro_FStar.Pervasives.Err@tok",
+        "@query", "constructor_distinct_FStar.Pervasives.V",
         "disc_equation_FStar.Pervasives.Err", "equation_AES.plain",
-        "equation_Prims.eqtype", "function_token_typing_Prims.unit",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_inversion", "string_typing", "unit_typing"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8038548104cdd460e51a2397a5d475fd"
+      "9d510535e18a978c5225e354806cf02d"
     ]
   ]
 ]
