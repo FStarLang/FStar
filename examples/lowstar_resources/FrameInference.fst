@@ -77,9 +77,6 @@ let test0 : cmd (r1 ** r2) (r1 ** r2) =
 //   frame f1 >>
 //   frame f2
 
-irreducible
-let resolve_implicits = ()
-
 [@resolve_implicits]
 let resolve_tac () : Tac unit =
   T.dump "Start!";
