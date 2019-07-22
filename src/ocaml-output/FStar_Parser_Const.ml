@@ -237,6 +237,8 @@ let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
 let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"] 
+let (resolve_implicits_attr_string : Prims.string) =
+  "FStar.Pervasives.resolve_implicits" 
 let (comment_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Comment"] 
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure" 
@@ -252,14 +254,14 @@ let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let gen1 uu____893 = FStar_Util.incr x; FStar_Util.read x  in
-  let reset uu____901 = FStar_Util.write x (Prims.parse_int "0")  in
+  let gen1 uu____896 = FStar_Util.incr x; FStar_Util.read x  in
+  let reset uu____904 = FStar_Util.write x (Prims.parse_int "0")  in
   (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l  ->
-    let uu____932 = FStar_Options.print_real_names ()  in
-    if uu____932
+    let uu____935 = FStar_Options.print_real_names ()  in
+    if uu____935
     then l.FStar_Ident.str
     else (l.FStar_Ident.ident).FStar_Ident.idText
   
@@ -271,28 +273,28 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_real r -> FStar_String.op_Hat r "R"
     | FStar_Const.Const_float x1 -> FStar_Util.string_of_float x1
-    | FStar_Const.Const_string (s,uu____961) -> FStar_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu____965 -> "<bytearray>"
-    | FStar_Const.Const_int (x1,uu____974) -> x1
+    | FStar_Const.Const_string (s,uu____964) -> FStar_Util.format1 "\"%s\"" s
+    | FStar_Const.Const_bytearray uu____968 -> "<bytearray>"
+    | FStar_Const.Const_int (x1,uu____977) -> x1
     | FStar_Const.Const_char c ->
-        let uu____991 = FStar_String.op_Hat (FStar_Util.string_of_char c) "'"
+        let uu____994 = FStar_String.op_Hat (FStar_Util.string_of_char c) "'"
            in
-        FStar_String.op_Hat "'" uu____991
+        FStar_String.op_Hat "'" uu____994
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
     | FStar_Const.Const_range_of  -> "range_of"
     | FStar_Const.Const_set_range_of  -> "set_range_of"
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
-        let uu____1000 = sli l  in
-        FStar_Util.format1 "[[%s.reflect]]" uu____1000
+        let uu____1003 = sli l  in
+        FStar_Util.format1 "[[%s.reflect]]" uu____1003
   
 let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1018 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "tuple%s" uu____1018  in
-      let uu____1021 = psnconst t  in FStar_Ident.set_lid_range uu____1021 r
+        let uu____1021 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "tuple%s" uu____1021  in
+      let uu____1024 = psnconst t  in FStar_Ident.set_lid_range uu____1024 r
   
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.parse_int "2") FStar_Range.dummyRange 
@@ -300,17 +302,17 @@ let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_lid : FStar_Ident.ident -> Prims.bool) =
   fun lid  ->
-    let uu____1042 = FStar_Ident.text_of_id lid  in
-    is_tuple_constructor_string uu____1042
+    let uu____1045 = FStar_Ident.text_of_id lid  in
+    is_tuple_constructor_string uu____1045
   
 let (mk_tuple_data_lid :
   Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1059 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mktuple%s" uu____1059  in
-      let uu____1062 = psnconst t  in FStar_Ident.set_lid_range uu____1062 r
+        let uu____1062 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mktuple%s" uu____1062  in
+      let uu____1065 = psnconst t  in FStar_Ident.set_lid_range uu____1065 r
   
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.parse_int "2") FStar_Range.dummyRange 
@@ -319,8 +321,8 @@ let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1090 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1090
+      let uu____1093 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1093
   
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str 
@@ -330,11 +332,11 @@ let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1138 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "dtuple%s" uu____1138  in
-      let uu____1141 = let uu____1142 = mod_prefix_dtuple n1  in uu____1142 t
+        let uu____1141 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "dtuple%s" uu____1141  in
+      let uu____1144 = let uu____1145 = mod_prefix_dtuple n1  in uu____1145 t
          in
-      FStar_Ident.set_lid_range uu____1141 r
+      FStar_Ident.set_lid_range uu____1144 r
   
 let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -348,11 +350,11 @@ let (mk_dtuple_data_lid :
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1183 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mkdtuple%s" uu____1183  in
-      let uu____1186 = let uu____1187 = mod_prefix_dtuple n1  in uu____1187 t
+        let uu____1186 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mkdtuple%s" uu____1186  in
+      let uu____1189 = let uu____1190 = mod_prefix_dtuple n1  in uu____1190 t
          in
-      FStar_Ident.set_lid_range uu____1186 r
+      FStar_Ident.set_lid_range uu____1189 r
   
 let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -362,13 +364,13 @@ let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1220 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1220
+      let uu____1223 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1223
   
 let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  ->
-    let uu____1228 = FStar_Ident.text_of_lid f  in
-    is_dtuple_datacon_string uu____1228
+    let uu____1231 = FStar_Ident.text_of_lid f  in
+    is_dtuple_datacon_string uu____1231
   
 let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
