@@ -3845,7 +3845,9 @@ let (check_and_ascribe :
               FStar_TypeChecker_Env.dsenv =
                 (uu___1276_9828.FStar_TypeChecker_Env.dsenv);
               FStar_TypeChecker_Env.nbe =
-                (uu___1276_9828.FStar_TypeChecker_Env.nbe)
+                (uu___1276_9828.FStar_TypeChecker_Env.nbe);
+              FStar_TypeChecker_Env.strict_args_tab =
+                (uu___1276_9828.FStar_TypeChecker_Env.strict_args_tab)
             }  in
           let uu____9831 = check1 env2 t1 t2  in
           match uu____9831 with
