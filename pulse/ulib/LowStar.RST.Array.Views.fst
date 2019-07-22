@@ -72,5 +72,5 @@ val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
 let length_view_as_seq #a h b = ()
 
 let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}) (b':A.array a{(array_view b').inv h}) =
-  A.mergeable b b' /\
+  A.gatherable b b' /\
   P.summable_permissions (sel (array_view b) h).p (sel (array_view b') h).p

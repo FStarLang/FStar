@@ -95,7 +95,7 @@ let ptr_share
       (sel (ptr_view ptr) h1).x == (sel (ptr_view ptr1) h1).x /\
       (sel (ptr_view ptr) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
       (sel (ptr_view ptr1) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
-      A.mergeable ptr ptr1 /\
+      A.gatherable ptr ptr1 /\
       P.summable_permissions (sel (ptr_view ptr) h1).p (sel (ptr_view ptr1) h1).p)
   =
   (**) reveal_ptr();
@@ -113,7 +113,7 @@ let ptr_merge
   : RST unit
     (ptr_resource ptr1 <*> ptr_resource ptr2)
     (fun _ -> ptr_resource ptr1)
-    (fun h0 -> A.mergeable ptr1 ptr2 /\ P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)
+    (fun h0 -> A.gatherable ptr1 ptr2 /\ P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)
     (fun h0 _ h1 ->
       P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p /\
       (sel (ptr_view ptr1) h0).x == (sel (ptr_view ptr1) h1).x /\
@@ -124,7 +124,7 @@ let ptr_merge
   (**) reveal_modifies ();
   (**) reveal_star ();
   admit();
-  A.merge ptr1 ptr2
+  A.gather ptr1 ptr2
 
 
 (* Scoped allocation of (heap-allocated, freeable) pointer resources *)
