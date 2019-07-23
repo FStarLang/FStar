@@ -40,6 +40,7 @@ assume val lemma_modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
                        loc_disjoint l l1)))
           (ensures  (modifies l0 h0 h2))
 
+
 assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':loc)
   : Lemma (requires (loc_disjoint l' l /\
                      loc_includes (loc_used_in h0) l' /\

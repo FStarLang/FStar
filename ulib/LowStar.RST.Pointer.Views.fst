@@ -14,15 +14,17 @@ open LowStar.BufferOps
 
 (* View and resource for (heap-allocated, freeable) pointer resources *)
 
+unfold let pointer (t: Type) = ptr:A.array t{A.vlength ptr = 1}
+
 type vptr (a: Type) = {
   x: a;
   p: P.permission
 }
 
 abstract
-let ptr_view (#a:Type) (ptr:A.array a) : view (vptr a) = 
+let ptr_view (#a:Type) (ptr:pointer a) : view (vptr a) =
   reveal_view ();
-  let fp = Ghost.hide (A.loc_array ptr) in 
+  let fp = Ghost.hide (A.loc_array ptr) in
   let inv h = A.live h ptr /\ A.vlength ptr = 1 in
   let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0} in
   {
@@ -31,14 +33,14 @@ let ptr_view (#a:Type) (ptr:A.array a) : view (vptr a) =
     sel = sel
   }
 
-let ptr_resource (#a:Type) (ptr:A.array a) = 
+let ptr_resource (#a:Type) (ptr:pointer a) =
   as_resource (ptr_view ptr)
 
 let reveal_ptr ()
-  : Lemma ((forall a (ptr:A.array a) .{:pattern as_loc (fp (ptr_resource ptr))} 
+  : Lemma ((forall a (ptr:pointer a) .{:pattern as_loc (fp (ptr_resource ptr))}
              as_loc (fp (ptr_resource ptr)) == A.loc_array ptr) /\
-           (forall a (ptr:A.array a) h .{:pattern inv (ptr_resource ptr) h} 
+           (forall a (ptr:pointer a) h .{:pattern inv (ptr_resource ptr) h}
              inv (ptr_resource ptr) h <==> A.live h ptr /\ A.vlength ptr = 1) /\
-           (forall a (ptr:A.array a) h .{:pattern sel (ptr_view ptr) h} 
-             sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0})) = 
+           (forall a (ptr:pointer a) h .{:pattern sel (ptr_view ptr) h}
+             sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0})) =
   ()
