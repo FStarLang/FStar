@@ -358,8 +358,8 @@ let (tc_data :
                                                   | (x,uu____976) ->
                                                       FStar_Syntax_Syntax.DB
                                                         ((ntps -
-                                                            ((Prims.parse_int "1")
-                                                               + i)), x)))
+                                                            (Prims.int_one +
+                                                               i)), x)))
                                          in
                                       let uu____983 =
                                         FStar_Syntax_Subst.subst subst1 t3
@@ -1650,7 +1650,7 @@ let (is_haseq_lid : FStar_Ident.lid -> Prims.bool) =
              haseq_suffix_len
             in
          FStar_String.compare uu____4129 haseq_suffix  in
-       uu____4127 = (Prims.parse_int "0"))
+       uu____4127 = Prims.int_zero)
   
 let (get_haseq_axiom_lid : FStar_Ident.lid -> FStar_Ident.lid) =
   fun lid  ->
@@ -2528,7 +2528,7 @@ let (check_inductive_well_typedness :
                     uu____6878
                 else ());
                (let univs1 =
-                  if (FStar_List.length tys) = (Prims.parse_int "0")
+                  if (FStar_List.length tys) = Prims.int_zero
                   then []
                   else
                     (let uu____6893 =
@@ -2634,9 +2634,7 @@ let (check_inductive_well_typedness :
                                 uu____7193
                             else ());
                            FStar_TypeChecker_Rel.force_trivial_guard env0 g2;
-                           if
-                             (FStar_List.length univs1) =
-                               (Prims.parse_int "0")
+                           if (FStar_List.length univs1) = Prims.int_zero
                            then generalize_and_inst_within env0 tcs datas1
                            else
                              (let uu____7212 =
@@ -2854,7 +2852,7 @@ let (mk_discriminator_and_indexed_projectors :
                                  FStar_Ident.set_lid_range disc_name p  in
                                FStar_Syntax_Syntax.fvar uu____7629
                                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                                    (Prims.parse_int "1"))
+                                    Prims.int_one)
                                  FStar_Pervasives_Native.None
                                 in
                              let uu____7631 =
@@ -3133,10 +3131,10 @@ let (mk_discriminator_and_indexed_projectors :
                                 then
                                   FStar_Syntax_Syntax.Delta_abstract
                                     (FStar_Syntax_Syntax.Delta_equational_at_level
-                                       (Prims.parse_int "1"))
+                                       Prims.int_one)
                                 else
                                   FStar_Syntax_Syntax.Delta_equational_at_level
-                                    (Prims.parse_int "1")
+                                    Prims.int_one
                                  in
                               let imp =
                                 FStar_Syntax_Util.abs binders body
@@ -3229,7 +3227,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                  FStar_Syntax_Syntax.lid_as_fv
                                                    field_name
                                                    (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                      (Prims.parse_int "1"))
+                                                      Prims.int_one)
                                                    FStar_Pervasives_Native.None
                                                   in
                                                FStar_Syntax_Syntax.fv_to_tm
@@ -3523,10 +3521,10 @@ let (mk_discriminator_and_indexed_projectors :
                                                    then
                                                      FStar_Syntax_Syntax.Delta_abstract
                                                        (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                          (Prims.parse_int "1"))
+                                                          Prims.int_one)
                                                    else
                                                      FStar_Syntax_Syntax.Delta_equational_at_level
-                                                       (Prims.parse_int "1")
+                                                       Prims.int_one
                                                     in
                                                  let lbtyp =
                                                    if no_decl
@@ -3671,7 +3669,7 @@ let (mk_data_operations :
                                        FStar_Pervasives_Native.Some
                                          (tps, typ0,
                                            ((FStar_List.length constrs) >
-                                              (Prims.parse_int "1")))
+                                              Prims.int_one))
                                    | uu____9156 -> failwith "Impossible"
                                  else FStar_Pervasives_Native.None)
                              in

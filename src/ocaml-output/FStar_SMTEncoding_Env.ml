@@ -70,7 +70,7 @@ let (primitive_projector_by_pos :
                  (match uu____334 with
                   | (binders,uu____341) ->
                       if
-                        (i < (Prims.parse_int "0")) ||
+                        (i < Prims.int_zero) ||
                           (i >= (FStar_List.length binders))
                       then fail1 ()
                       else
@@ -228,11 +228,11 @@ let (__proj__Mkvarops_t__item__mk_unique :
         next_id = next_id1; mk_unique;_} -> mk_unique
   
 let (varops : varops_t) =
-  let initial_ctr = (Prims.parse_int "100")  in
+  let initial_ctr = (Prims.of_int (100))  in
   let ctr = FStar_Util.mk_ref initial_ctr  in
   let new_scope uu____1559 =
-    let uu____1560 = FStar_Util.smap_create (Prims.parse_int "100")  in
-    let uu____1566 = FStar_Util.smap_create (Prims.parse_int "100")  in
+    let uu____1560 = FStar_Util.smap_create (Prims.of_int (100))  in
+    let uu____1566 = FStar_Util.smap_create (Prims.of_int (100))  in
     (uu____1560, uu____1566)  in
   let scopes =
     let uu____1589 = let uu____1601 = new_scope ()  in [uu____1601]  in
@@ -405,7 +405,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
           in
        failwith uu____2675)
     else
-      if fvb.fvb_thunked && (fvb.smt_arity <> (Prims.parse_int "0"))
+      if fvb.fvb_thunked && (fvb.smt_arity <> Prims.int_zero)
       then
         (let uu____2685 =
            let uu____2687 = FStar_Ident.string_of_lid fvb.fvar_lid  in
@@ -660,7 +660,7 @@ let (gen_term_var :
         {
           bvar_bindings = uu____3757;
           fvar_bindings = (uu___241_3756.fvar_bindings);
-          depth = (env.depth + (Prims.parse_int "1"));
+          depth = (env.depth + Prims.int_one);
           tcenv = (uu___241_3756.tcenv);
           warn = (uu___241_3756.warn);
           nolabels = (uu___241_3756.nolabels);
@@ -949,7 +949,7 @@ let (push_free_var_thunk :
         fun fname  ->
           fun ftok  ->
             push_free_var_maybe_thunked env x arity fname ftok
-              (arity = (Prims.parse_int "0"))
+              (arity = Prims.int_zero)
   
 let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
   =
@@ -989,7 +989,7 @@ let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
   fun fvb  ->
     if
       (Prims.op_Negation fvb.fvb_thunked) ||
-        (fvb.smt_arity <> (Prims.parse_int "0"))
+        (fvb.smt_arity <> Prims.int_zero)
     then failwith "Forcing a non-thunk in the SMT encoding"
     else ();
     FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV
@@ -1097,7 +1097,7 @@ let (lookup_free_var_sym :
             FStar_SMTEncoding_Term.freevars = uu____4555;
             FStar_SMTEncoding_Term.rng = uu____4556;_}
           when env.use_zfuel_name ->
-          ((FStar_Util.Inl g), zf, (fvb.smt_arity + (Prims.parse_int "1")))
+          ((FStar_Util.Inl g), zf, (fvb.smt_arity + Prims.int_one))
       | uu____4581 ->
           (match fvb.smt_token with
            | FStar_Pervasives_Native.None  when fvb.fvb_thunked ->
@@ -1112,7 +1112,7 @@ let (lookup_free_var_sym :
                (match sym.FStar_SMTEncoding_Term.tm with
                 | FStar_SMTEncoding_Term.App (g,fuel::[]) ->
                     ((FStar_Util.Inl g), [fuel],
-                      (fvb.smt_arity + (Prims.parse_int "1")))
+                      (fvb.smt_arity + Prims.int_one))
                 | uu____4643 ->
                     ((FStar_Util.Inl
                         (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],

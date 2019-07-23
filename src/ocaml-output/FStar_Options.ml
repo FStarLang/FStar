@@ -260,7 +260,7 @@ let (add_light_off_file : Prims.string -> unit) =
 let (defaults : (Prims.string * option_val) Prims.list) =
   [("__temp_no_proj", (List []));
   ("__temp_fast_implicits", (Bool false));
-  ("abort_on", (Int (Prims.parse_int "0")));
+  ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
   ("already_cached", Unset);
@@ -296,16 +296,16 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("print", (Bool false));
   ("print_in_place", (Bool false));
   ("profile", (Bool false));
-  ("initial_fuel", (Int (Prims.parse_int "2")));
-  ("initial_ifuel", (Int (Prims.parse_int "1")));
+  ("initial_fuel", (Int (Prims.of_int (2))));
+  ("initial_ifuel", (Int Prims.int_one));
   ("keep_query_captions", (Bool true));
   ("lax", (Bool false));
   ("load", (List []));
   ("log_queries", (Bool false));
   ("log_types", (Bool false));
-  ("max_fuel", (Int (Prims.parse_int "8")));
-  ("max_ifuel", (Int (Prims.parse_int "2")));
-  ("min_fuel", (Int (Prims.parse_int "1")));
+  ("max_fuel", (Int (Prims.of_int (8))));
+  ("max_ifuel", (Int (Prims.of_int (2))));
+  ("min_fuel", (Int Prims.int_one));
   ("MLish", (Bool false));
   ("no_default_includes", (Bool false));
   ("no_extract", (List []));
@@ -339,7 +339,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("tactics_info", (Bool false));
   ("tactic_raw_binders", (Bool false));
   ("tactic_trace", (Bool false));
-  ("tactic_trace_d", (Int (Prims.parse_int "0")));
+  ("tactic_trace_d", (Int Prims.int_zero));
   ("tcnorm", (Bool true));
   ("timing", (Bool false));
   ("trace_error", (Bool false));
@@ -355,9 +355,9 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("verify_module", (List []));
   ("warn_default_effects", (Bool false));
   ("z3refresh", (Bool false));
-  ("z3rlimit", (Int (Prims.parse_int "5")));
-  ("z3rlimit_factor", (Int (Prims.parse_int "1")));
-  ("z3seed", (Int (Prims.parse_int "0")));
+  ("z3rlimit", (Int (Prims.of_int (5))));
+  ("z3rlimit_factor", (Int Prims.int_one));
+  ("z3seed", (Int Prims.int_zero));
   ("z3cliopt", (List []));
   ("use_two_phase_tc", (Bool true));
   ("__no_positivity", (Bool false));
@@ -403,7 +403,7 @@ let (init : unit -> unit) =
   
 let (clear : unit -> unit) =
   fun uu____2535  ->
-    let o = FStar_Util.smap_create (Prims.parse_int "50")  in
+    let o = FStar_Util.smap_create (Prims.of_int (50))  in
     FStar_ST.op_Colon_Equals fstar_options [[o]];
     FStar_ST.op_Colon_Equals light_off_files [];
     init ()
@@ -985,7 +985,7 @@ let (pp_lowercase : option_val -> option_val) =
     String uu____5001
   
 let (abort_counter : Prims.int FStar_ST.ref) =
-  FStar_Util.mk_ref (Prims.parse_int "0") 
+  FStar_Util.mk_ref Prims.int_zero 
 let rec (specs_with_types :
   unit ->
     (FStar_BaseTypes.char * Prims.string * opt_type * Prims.string)
@@ -1204,7 +1204,7 @@ let rec (specs_with_types :
     (118, "version",
       (WithSideEffect
          (((fun uu____6693  ->
-              display_version (); FStar_All.exit (Prims.parse_int "0"))),
+              display_version (); FStar_All.exit Prims.int_zero)),
            (Const (Bool true)))), "Display version number");
     (FStar_Getopt.noshort, "warn_default_effects", (Const (Bool true)),
       "Warn when (a -> b) is desugared to (a -> Tot b)");
@@ -1247,7 +1247,7 @@ let rec (specs_with_types :
       (WithSideEffect
          (((fun uu____7024  ->
               (let uu____7026 = specs ()  in display_usage_aux uu____7026);
-              FStar_All.exit (Prims.parse_int "0"))), (Const (Bool true)))),
+              FStar_All.exit Prims.int_zero)), (Const (Bool true)))),
       "Display this information")]
 
 and (specs : unit -> FStar_Getopt.opt Prims.list) =
@@ -1427,8 +1427,8 @@ let (module_name_of_file_name : Prims.string -> Prims.string) =
             let uu____7688 = FStar_Util.get_file_extension f1  in
             FStar_String.length uu____7688  in
           (FStar_String.length f1) - uu____7686  in
-        uu____7684 - (Prims.parse_int "1")  in
-      FStar_String.substring f1 (Prims.parse_int "0") uu____7682  in
+        uu____7684 - Prims.int_one  in
+      FStar_String.substring f1 Prims.int_zero uu____7682  in
     FStar_String.lowercase f2
   
 let (should_verify : Prims.string -> Prims.bool) =
@@ -1495,7 +1495,7 @@ let (include_path : unit -> Prims.string Prims.list) =
   
 let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
-  let file_map = FStar_Util.smap_create (Prims.parse_int "100")  in
+  let file_map = FStar_Util.smap_create (Prims.of_int (100))  in
   fun filename  ->
     let uu____7903 = FStar_Util.smap_try_find file_map filename  in
     match uu____7903 with
@@ -1608,7 +1608,7 @@ let (parse_settings :
     (Prims.string Prims.list * Prims.bool) Prims.list)
   =
   fun ns  ->
-    let cache = FStar_Util.smap_create (Prims.parse_int "31")  in
+    let cache = FStar_Util.smap_create (Prims.of_int (31))  in
     let with_cache f s =
       let uu____8253 = FStar_Util.smap_try_find cache s  in
       match uu____8253 with
@@ -1626,14 +1626,13 @@ let (parse_settings :
           if FStar_Util.starts_with s "-"
           then
             (let path =
-               let uu____8407 =
-                 FStar_Util.substring_from s (Prims.parse_int "1")  in
+               let uu____8407 = FStar_Util.substring_from s Prims.int_one  in
                path_of_text uu____8407  in
              (path, false))
           else
             (let s1 =
                if FStar_Util.starts_with s "+"
-               then FStar_Util.substring_from s (Prims.parse_int "1")
+               then FStar_Util.substring_from s Prims.int_one
                else s  in
              ((path_of_text s1), true))
        in
@@ -2064,7 +2063,7 @@ let (should_be_already_cached : Prims.string -> Prims.bool) =
         module_matches_namespace_filter m already_cached_setting
   
 let (error_flags : unit -> error_flag Prims.list) =
-  let cache = FStar_Util.smap_create (Prims.parse_int "10")  in
+  let cache = FStar_Util.smap_create (Prims.of_int (10))  in
   fun uu____10194  ->
     let we = warn_error ()  in
     let uu____10197 = FStar_Util.smap_try_find cache we  in

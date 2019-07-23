@@ -11,7 +11,7 @@ let (finished_message :
   fun fmods  ->
     fun errs  ->
       let print_to =
-        if errs > (Prims.parse_int "0")
+        if errs > Prims.int_zero
         then FStar_Util.print_error
         else FStar_Util.print_string  in
       let uu____77 =
@@ -33,7 +33,7 @@ let (finished_message :
                         in
                      if uu____143
                      then
-                       (if time >= (Prims.parse_int "0")
+                       (if time >= Prims.int_zero
                         then
                           let uu____148 =
                             let uu____150 = FStar_Ident.text_of_lid name  in
@@ -51,9 +51,9 @@ let (finished_message :
                               in
                            print_to uu____157))
                      else ()));
-         if errs > (Prims.parse_int "0")
+         if errs > Prims.int_zero
          then
-           (if errs = (Prims.parse_int "1")
+           (if errs = Prims.int_one
             then FStar_Util.print_error "1 error was reported (see above)\n"
             else
               (let uu____172 = FStar_Util.string_of_int errs  in
@@ -73,9 +73,8 @@ let (report_errors :
     (let uu____214 = FStar_Errors.report_all ()  in
      FStar_All.pipe_right uu____214 (fun a1  -> ()));
     (let nerrs = FStar_Errors.get_err_count ()  in
-     if nerrs > (Prims.parse_int "0")
-     then
-       (finished_message fmods nerrs; FStar_All.exit (Prims.parse_int "1"))
+     if nerrs > Prims.int_zero
+     then (finished_message fmods nerrs; FStar_All.exit Prims.int_one)
      else ())
   
 let (load_native_tactics : unit -> unit) =
@@ -149,11 +148,9 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
     | (res,filenames) ->
         (match res with
          | FStar_Getopt.Help  ->
-             (FStar_Options.display_usage ();
-              FStar_All.exit (Prims.parse_int "0"))
+             (FStar_Options.display_usage (); FStar_All.exit Prims.int_zero)
          | FStar_Getopt.Error msg ->
-             (FStar_Util.print_error msg;
-              FStar_All.exit (Prims.parse_int "1"))
+             (FStar_Util.print_error msg; FStar_All.exit Prims.int_one)
          | FStar_Getopt.Success  ->
              (FStar_ST.op_Colon_Equals fstar_files
                 (FStar_Pervasives_Native.Some filenames);
@@ -175,8 +172,7 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
                        (let uu____488 = FStar_Options.expose_interfaces ()
                            in
                         Prims.op_Negation uu____488))
-                      &&
-                      ((FStar_List.length filenames) > (Prims.parse_int "1"))
+                      && ((FStar_List.length filenames) > Prims.int_one)
                      in
                   if uu____485
                   then
@@ -205,12 +201,12 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
                               (FStar_Errors.log_issue FStar_Range.dummyRange
                                  (FStar_Errors.Error_MissingFileName,
                                    "--ide: Name of current file missing in command line invocation\n");
-                               FStar_All.exit (Prims.parse_int "1"))
+                               FStar_All.exit Prims.int_one)
                           | uu____521::uu____522::uu____523 ->
                               (FStar_Errors.log_issue FStar_Range.dummyRange
                                  (FStar_Errors.Error_TooManyFiles,
                                    "--ide: Too many files in command line invocation\n");
-                               FStar_All.exit (Prims.parse_int "1"))
+                               FStar_All.exit Prims.int_one)
                           | filename::[] ->
                               let uu____539 =
                                 FStar_Options.legacy_interactive ()  in
@@ -243,7 +239,7 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
                               else
                                 if
                                   (FStar_List.length filenames) >=
-                                    (Prims.parse_int "1")
+                                    Prims.int_one
                                 then
                                   (let uu____563 =
                                      FStar_Dependencies.find_deps_if_needed
@@ -273,7 +269,7 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
                                                 module_names_and_times;
                                               finished_message
                                                 module_names_and_times
-                                                (Prims.parse_int "0")))))
+                                                Prims.int_zero))))
                                 else
                                   FStar_Errors.raise_error
                                     (FStar_Errors.Error_MissingFileName,
@@ -383,9 +379,9 @@ let (main : unit -> unit) =
                                 uu____927 uu____929
                             else ());
                            cleanup ();
-                           FStar_All.exit (Prims.parse_int "0")))
+                           FStar_All.exit Prims.int_zero))
                    else ()))) ()
     with
     | uu___121_945 ->
-        (handle_error uu___121_945; FStar_All.exit (Prims.parse_int "1"))
+        (handle_error uu___121_945; FStar_All.exit Prims.int_one)
   

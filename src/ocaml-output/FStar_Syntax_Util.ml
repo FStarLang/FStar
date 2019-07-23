@@ -39,7 +39,7 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
     let c =
       FStar_Util.char_at (lid.FStar_Ident.ident).FStar_Ident.idText
-        (Prims.parse_int "0")
+        Prims.int_zero
        in
     FStar_Util.is_upper c
   
@@ -116,7 +116,7 @@ let (name_binders :
                     let b2 =
                       {
                         FStar_Syntax_Syntax.ppname = b1;
-                        FStar_Syntax_Syntax.index = (Prims.parse_int "0");
+                        FStar_Syntax_Syntax.index = Prims.int_zero;
                         FStar_Syntax_Syntax.sort =
                           (a.FStar_Syntax_Syntax.sort)
                       }  in
@@ -247,13 +247,13 @@ let rec (univ_kernel :
   =
   fun u  ->
     match u with
-    | FStar_Syntax_Syntax.U_unknown  -> (u, (Prims.parse_int "0"))
-    | FStar_Syntax_Syntax.U_name uu____1123 -> (u, (Prims.parse_int "0"))
-    | FStar_Syntax_Syntax.U_unif uu____1126 -> (u, (Prims.parse_int "0"))
-    | FStar_Syntax_Syntax.U_zero  -> (u, (Prims.parse_int "0"))
+    | FStar_Syntax_Syntax.U_unknown  -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_name uu____1123 -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_unif uu____1126 -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_zero  -> (u, Prims.int_zero)
     | FStar_Syntax_Syntax.U_succ u1 ->
         let uu____1140 = univ_kernel u1  in
-        (match uu____1140 with | (k,n1) -> (k, (n1 + (Prims.parse_int "1"))))
+        (match uu____1140 with | (k,n1) -> (k, (n1 + Prims.int_one)))
     | FStar_Syntax_Syntax.U_max uu____1157 ->
         failwith "Imposible: univ_kernel (U_max _)"
     | FStar_Syntax_Syntax.U_bvar uu____1166 ->
@@ -274,20 +274,19 @@ let rec (compare_univs :
       | (uu____1206,FStar_Syntax_Syntax.U_bvar uu____1207) ->
           failwith "Impossible: compare_univs"
       | (FStar_Syntax_Syntax.U_unknown ,FStar_Syntax_Syntax.U_unknown ) ->
-          (Prims.parse_int "0")
-      | (FStar_Syntax_Syntax.U_unknown ,uu____1212) ->
-          ~- (Prims.parse_int "1")
-      | (uu____1214,FStar_Syntax_Syntax.U_unknown ) -> (Prims.parse_int "1")
+          Prims.int_zero
+      | (FStar_Syntax_Syntax.U_unknown ,uu____1212) -> ~- Prims.int_one
+      | (uu____1214,FStar_Syntax_Syntax.U_unknown ) -> Prims.int_one
       | (FStar_Syntax_Syntax.U_zero ,FStar_Syntax_Syntax.U_zero ) ->
-          (Prims.parse_int "0")
-      | (FStar_Syntax_Syntax.U_zero ,uu____1217) -> ~- (Prims.parse_int "1")
-      | (uu____1219,FStar_Syntax_Syntax.U_zero ) -> (Prims.parse_int "1")
+          Prims.int_zero
+      | (FStar_Syntax_Syntax.U_zero ,uu____1217) -> ~- Prims.int_one
+      | (uu____1219,FStar_Syntax_Syntax.U_zero ) -> Prims.int_one
       | (FStar_Syntax_Syntax.U_name u11,FStar_Syntax_Syntax.U_name u21) ->
           FStar_String.compare u11.FStar_Ident.idText u21.FStar_Ident.idText
       | (FStar_Syntax_Syntax.U_name uu____1223,FStar_Syntax_Syntax.U_unif
-         uu____1224) -> ~- (Prims.parse_int "1")
+         uu____1224) -> ~- Prims.int_one
       | (FStar_Syntax_Syntax.U_unif uu____1234,FStar_Syntax_Syntax.U_name
-         uu____1235) -> (Prims.parse_int "1")
+         uu____1235) -> Prims.int_one
       | (FStar_Syntax_Syntax.U_unif u11,FStar_Syntax_Syntax.U_unif u21) ->
           let uu____1263 = FStar_Syntax_Unionfind.univ_uvar_id u11  in
           let uu____1265 = FStar_Syntax_Unionfind.univ_uvar_id u21  in
@@ -305,17 +304,15 @@ let rec (compare_univs :
                     match uu____1299 with
                     | (u11,u21) ->
                         let c = compare_univs u11 u21  in
-                        if c <> (Prims.parse_int "0")
+                        if c <> Prims.int_zero
                         then FStar_Pervasives_Native.Some c
                         else FStar_Pervasives_Native.None)
                 in
              match copt with
-             | FStar_Pervasives_Native.None  -> (Prims.parse_int "0")
+             | FStar_Pervasives_Native.None  -> Prims.int_zero
              | FStar_Pervasives_Native.Some c -> c)
-      | (FStar_Syntax_Syntax.U_max uu____1327,uu____1328) ->
-          ~- (Prims.parse_int "1")
-      | (uu____1332,FStar_Syntax_Syntax.U_max uu____1333) ->
-          (Prims.parse_int "1")
+      | (FStar_Syntax_Syntax.U_max uu____1327,uu____1328) -> ~- Prims.int_one
+      | (uu____1332,FStar_Syntax_Syntax.U_max uu____1333) -> Prims.int_one
       | uu____1337 ->
           let uu____1342 = univ_kernel u1  in
           (match uu____1342 with
@@ -324,15 +321,14 @@ let rec (compare_univs :
                (match uu____1353 with
                 | (k2,n2) ->
                     let r = compare_univs k1 k2  in
-                    if r = (Prims.parse_int "0") then n1 - n2 else r))
+                    if r = Prims.int_zero then n1 - n2 else r))
   
 let (eq_univs :
   FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe -> Prims.bool)
   =
   fun u1  ->
     fun u2  ->
-      let uu____1384 = compare_univs u1 u2  in
-      uu____1384 = (Prims.parse_int "0")
+      let uu____1384 = compare_univs u1 u2  in uu____1384 = Prims.int_zero
   
 let (ml_comp :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -2155,10 +2151,10 @@ let (is_fstar_tactics_by_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
 let (is_builtin_tactic : FStar_Ident.lident -> Prims.bool) =
   fun md  ->
     let path = FStar_Ident.path_of_lid md  in
-    if (FStar_List.length path) > (Prims.parse_int "2")
+    if (FStar_List.length path) > (Prims.of_int (2))
     then
       let uu____8264 =
-        let uu____8268 = FStar_List.splitAt (Prims.parse_int "2") path  in
+        let uu____8268 = FStar_List.splitAt (Prims.of_int (2)) path  in
         FStar_Pervasives_Native.fst uu____8268  in
       match uu____8264 with
       | "FStar"::"Tactics"::[] -> true
@@ -2256,12 +2252,12 @@ let (tand : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.and_lid
 let (tor : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.or_lid 
 let (timp : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.imp_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
   
 let (tiff : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.iff_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "2"))
+    (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
     FStar_Pervasives_Native.None
   
 let (t_bool : FStar_Syntax_Syntax.term) =
@@ -2616,7 +2612,7 @@ let (lex_pair : FStar_Syntax_Syntax.term) =
   
 let (tforall : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
   
 let (t_haseq : FStar_Syntax_Syntax.term) =
@@ -2799,7 +2795,7 @@ let (mk_squash :
     fun p  ->
       let sq =
         FStar_Syntax_Syntax.fvar FStar_Parser_Const.squash_lid
-          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+          (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
           FStar_Pervasives_Native.None
          in
       let uu____10361 = FStar_Syntax_Syntax.mk_Tm_uinst sq [u]  in
@@ -2816,7 +2812,7 @@ let (mk_auto_squash :
     fun p  ->
       let sq =
         FStar_Syntax_Syntax.fvar FStar_Parser_Const.auto_squash_lid
-          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "2"))
+          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
           FStar_Pervasives_Native.None
          in
       let uu____10415 = FStar_Syntax_Syntax.mk_Tm_uinst sq [u]  in
@@ -3076,18 +3072,18 @@ let (destruct_typ_as_formula :
       | uu____11699 -> f2  in
     let destruct_base_conn f1 =
       let connectives =
-        [(FStar_Parser_Const.true_lid, (Prims.parse_int "0"));
-        (FStar_Parser_Const.false_lid, (Prims.parse_int "0"));
-        (FStar_Parser_Const.and_lid, (Prims.parse_int "2"));
-        (FStar_Parser_Const.or_lid, (Prims.parse_int "2"));
-        (FStar_Parser_Const.imp_lid, (Prims.parse_int "2"));
-        (FStar_Parser_Const.iff_lid, (Prims.parse_int "2"));
-        (FStar_Parser_Const.ite_lid, (Prims.parse_int "3"));
-        (FStar_Parser_Const.not_lid, (Prims.parse_int "1"));
-        (FStar_Parser_Const.eq2_lid, (Prims.parse_int "3"));
-        (FStar_Parser_Const.eq2_lid, (Prims.parse_int "2"));
-        (FStar_Parser_Const.eq3_lid, (Prims.parse_int "4"));
-        (FStar_Parser_Const.eq3_lid, (Prims.parse_int "2"))]  in
+        [(FStar_Parser_Const.true_lid, Prims.int_zero);
+        (FStar_Parser_Const.false_lid, Prims.int_zero);
+        (FStar_Parser_Const.and_lid, (Prims.of_int (2)));
+        (FStar_Parser_Const.or_lid, (Prims.of_int (2)));
+        (FStar_Parser_Const.imp_lid, (Prims.of_int (2)));
+        (FStar_Parser_Const.iff_lid, (Prims.of_int (2)));
+        (FStar_Parser_Const.ite_lid, (Prims.of_int (3)));
+        (FStar_Parser_Const.not_lid, Prims.int_one);
+        (FStar_Parser_Const.eq2_lid, (Prims.of_int (3)));
+        (FStar_Parser_Const.eq2_lid, (Prims.of_int (2)));
+        (FStar_Parser_Const.eq3_lid, (Prims.of_int (4)));
+        (FStar_Parser_Const.eq3_lid, (Prims.of_int (2)))]  in
       let aux f2 uu____11795 =
         match uu____11795 with
         | (lid,arity) ->
@@ -3219,13 +3215,13 @@ let (destruct_typ_as_formula :
       aux FStar_Pervasives_Native.None [] t  in
     let u_connectives =
       [(FStar_Parser_Const.true_lid, FStar_Parser_Const.c_true_lid,
-         (Prims.parse_int "0"));
+         Prims.int_zero);
       (FStar_Parser_Const.false_lid, FStar_Parser_Const.c_false_lid,
-        (Prims.parse_int "0"));
+        Prims.int_zero);
       (FStar_Parser_Const.and_lid, FStar_Parser_Const.c_and_lid,
-        (Prims.parse_int "2"));
+        (Prims.of_int (2)));
       (FStar_Parser_Const.or_lid, FStar_Parser_Const.c_or_lid,
-        (Prims.parse_int "2"))]
+        (Prims.of_int (2)))]
        in
     let destruct_sq_base_conn t =
       let uu____12942 = un_squash t  in
@@ -3241,56 +3237,56 @@ let (destruct_typ_as_formula :
                  (uu____13003, (FStar_List.length args))  in
                (match uu____12997 with
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13020) when
-                    (_13020 = (Prims.parse_int "2")) &&
+                    (_13020 = (Prims.of_int (2))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_and_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.and_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13023) when
-                    (_13023 = (Prims.parse_int "2")) &&
+                    (_13023 = (Prims.of_int (2))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_or_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.or_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13026) when
-                    (_13026 = (Prims.parse_int "2")) &&
+                    (_13026 = (Prims.of_int (2))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq2_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13029) when
-                    (_13029 = (Prims.parse_int "3")) &&
+                    (_13029 = (Prims.of_int (3))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq2_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13032) when
-                    (_13032 = (Prims.parse_int "2")) &&
+                    (_13032 = (Prims.of_int (2))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq3_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13035) when
-                    (_13035 = (Prims.parse_int "4")) &&
+                    (_13035 = (Prims.of_int (4))) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq3_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13038) when
-                    (_13038 = (Prims.parse_int "0")) &&
+                    (_13038 = Prims.int_zero) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_true_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.true_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_13041) when
-                    (_13041 = (Prims.parse_int "0")) &&
+                    (_13041 = Prims.int_zero) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_false_lid)
                     ->
@@ -3556,11 +3552,9 @@ let rec (incr_delta_depth :
   fun d  ->
     match d with
     | FStar_Syntax_Syntax.Delta_constant_at_level i ->
-        FStar_Syntax_Syntax.Delta_constant_at_level
-          (i + (Prims.parse_int "1"))
+        FStar_Syntax_Syntax.Delta_constant_at_level (i + Prims.int_one)
     | FStar_Syntax_Syntax.Delta_equational_at_level i ->
-        FStar_Syntax_Syntax.Delta_equational_at_level
-          (i + (Prims.parse_int "1"))
+        FStar_Syntax_Syntax.Delta_equational_at_level (i + Prims.int_one)
     | FStar_Syntax_Syntax.Delta_abstract d1 -> incr_delta_depth d1
   
 let (incr_delta_qualifier :
@@ -4068,13 +4062,13 @@ let rec (sizeof : FStar_Syntax_Syntax.term -> Prims.int) =
         let uu____16448 =
           let uu____16450 = FStar_Syntax_Subst.compress t  in
           sizeof uu____16450  in
-        (Prims.parse_int "1") + uu____16448
+        Prims.int_one + uu____16448
     | FStar_Syntax_Syntax.Tm_bvar bv ->
         let uu____16453 = sizeof bv.FStar_Syntax_Syntax.sort  in
-        (Prims.parse_int "1") + uu____16453
+        Prims.int_one + uu____16453
     | FStar_Syntax_Syntax.Tm_name bv ->
         let uu____16457 = sizeof bv.FStar_Syntax_Syntax.sort  in
-        (Prims.parse_int "1") + uu____16457
+        Prims.int_one + uu____16457
     | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
         let uu____16466 = sizeof t1  in (FStar_List.length us) + uu____16466
     | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____16470) ->
@@ -4086,7 +4080,7 @@ let rec (sizeof : FStar_Syntax_Syntax.term -> Prims.int) =
                  match uu____16512 with
                  | (bv,uu____16522) ->
                      let uu____16527 = sizeof bv.FStar_Syntax_Syntax.sort  in
-                     acc + uu____16527) (Prims.parse_int "0") bs
+                     acc + uu____16527) Prims.int_zero bs
            in
         uu____16495 + uu____16497
     | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
@@ -4098,10 +4092,10 @@ let rec (sizeof : FStar_Syntax_Syntax.term -> Prims.int) =
                  match uu____16573 with
                  | (arg,uu____16583) ->
                      let uu____16588 = sizeof arg  in acc + uu____16588)
-            (Prims.parse_int "0") args
+            Prims.int_zero args
            in
         uu____16556 + uu____16558
-    | uu____16591 -> (Prims.parse_int "1")
+    | uu____16591 -> Prims.int_one
   
 let (is_fvar : FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool)
   =

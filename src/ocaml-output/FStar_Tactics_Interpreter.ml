@@ -190,15 +190,15 @@ and (primitive_steps :
   fun uu____702  ->
     let uu____705 =
       let uu____708 =
-        mktot1' (Prims.parse_int "0") "tracepoint"
-          FStar_Tactics_Types.tracepoint FStar_Tactics_Embedding.e_proofstate
-          FStar_Syntax_Embeddings.e_unit FStar_Tactics_Types.tracepoint
+        mktot1' Prims.int_zero "tracepoint" FStar_Tactics_Types.tracepoint
+          FStar_Tactics_Embedding.e_proofstate FStar_Syntax_Embeddings.e_unit
+          FStar_Tactics_Types.tracepoint
           FStar_Tactics_Embedding.e_proofstate_nbe
           FStar_TypeChecker_NBETerm.e_unit
          in
       let uu____711 =
         let uu____714 =
-          mktot2' (Prims.parse_int "0") "set_proofstate_range"
+          mktot2' Prims.int_zero "set_proofstate_range"
             FStar_Tactics_Types.set_proofstate_range
             FStar_Tactics_Embedding.e_proofstate
             FStar_Syntax_Embeddings.e_range
@@ -210,7 +210,7 @@ and (primitive_steps :
            in
         let uu____717 =
           let uu____720 =
-            mktot1' (Prims.parse_int "0") "incr_depth"
+            mktot1' Prims.int_zero "incr_depth"
               FStar_Tactics_Types.incr_depth
               FStar_Tactics_Embedding.e_proofstate
               FStar_Tactics_Embedding.e_proofstate
@@ -220,7 +220,7 @@ and (primitive_steps :
              in
           let uu____723 =
             let uu____726 =
-              mktot1' (Prims.parse_int "0") "decr_depth"
+              mktot1' Prims.int_zero "decr_depth"
                 FStar_Tactics_Types.decr_depth
                 FStar_Tactics_Embedding.e_proofstate
                 FStar_Tactics_Embedding.e_proofstate
@@ -238,7 +238,7 @@ and (primitive_steps :
                   FStar_TypeChecker_NBETerm.e_list
                     FStar_Tactics_Embedding.e_goal_nbe
                    in
-                mktot1' (Prims.parse_int "0") "goals_of"
+                mktot1' Prims.int_zero "goals_of"
                   FStar_Tactics_Types.goals_of
                   FStar_Tactics_Embedding.e_proofstate uu____733
                   FStar_Tactics_Types.goals_of
@@ -254,7 +254,7 @@ and (primitive_steps :
                     FStar_TypeChecker_NBETerm.e_list
                       FStar_Tactics_Embedding.e_goal_nbe
                      in
-                  mktot1' (Prims.parse_int "0") "smt_goals_of"
+                  mktot1' Prims.int_zero "smt_goals_of"
                     FStar_Tactics_Types.smt_goals_of
                     FStar_Tactics_Embedding.e_proofstate uu____753
                     FStar_Tactics_Types.smt_goals_of
@@ -262,7 +262,7 @@ and (primitive_steps :
                    in
                 let uu____769 =
                   let uu____772 =
-                    mktot1' (Prims.parse_int "0") "goal_env"
+                    mktot1' Prims.int_zero "goal_env"
                       FStar_Tactics_Types.goal_env
                       FStar_Tactics_Embedding.e_goal
                       FStar_Reflection_Embeddings.e_env
@@ -272,7 +272,7 @@ and (primitive_steps :
                      in
                   let uu____775 =
                     let uu____778 =
-                      mktot1' (Prims.parse_int "0") "goal_type"
+                      mktot1' Prims.int_zero "goal_type"
                         FStar_Tactics_Types.goal_type
                         FStar_Tactics_Embedding.e_goal
                         FStar_Reflection_Embeddings.e_term
@@ -282,7 +282,7 @@ and (primitive_steps :
                        in
                     let uu____781 =
                       let uu____784 =
-                        mktot1' (Prims.parse_int "0") "goal_witness"
+                        mktot1' Prims.int_zero "goal_witness"
                           FStar_Tactics_Types.goal_witness
                           FStar_Tactics_Embedding.e_goal
                           FStar_Reflection_Embeddings.e_term
@@ -292,7 +292,7 @@ and (primitive_steps :
                          in
                       let uu____787 =
                         let uu____790 =
-                          mktot1' (Prims.parse_int "0") "is_guard"
+                          mktot1' Prims.int_zero "is_guard"
                             FStar_Tactics_Types.is_guard
                             FStar_Tactics_Embedding.e_goal
                             FStar_Syntax_Embeddings.e_bool
@@ -302,7 +302,7 @@ and (primitive_steps :
                            in
                         let uu____795 =
                           let uu____798 =
-                            mktot1' (Prims.parse_int "0") "get_label"
+                            mktot1' Prims.int_zero "get_label"
                               FStar_Tactics_Types.get_label
                               FStar_Tactics_Embedding.e_goal
                               FStar_Syntax_Embeddings.e_string
@@ -312,7 +312,7 @@ and (primitive_steps :
                              in
                           let uu____803 =
                             let uu____806 =
-                              mktot2' (Prims.parse_int "0") "set_label"
+                              mktot2' Prims.int_zero "set_label"
                                 FStar_Tactics_Types.set_label
                                 FStar_Syntax_Embeddings.e_string
                                 FStar_Tactics_Embedding.e_goal
@@ -325,7 +325,7 @@ and (primitive_steps :
                             let uu____811 =
                               let uu____814 =
                                 FStar_Tactics_InterpFuns.mktot2
-                                  (Prims.parse_int "0") "push_binder"
+                                  Prims.int_zero "push_binder"
                                   (fun env  ->
                                      fun b  ->
                                        FStar_TypeChecker_Env.push_binders env
@@ -352,7 +352,7 @@ and (primitive_steps :
                                       FStar_Tactics_Embedding.e_goal_nbe
                                      in
                                   FStar_Tactics_InterpFuns.mktac1
-                                    (Prims.parse_int "0") "set_goals"
+                                    Prims.int_zero "set_goals"
                                     FStar_Tactics_Basic.set_goals uu____877
                                     FStar_Syntax_Embeddings.e_unit
                                     FStar_Tactics_Basic.set_goals uu____882
@@ -369,7 +369,7 @@ and (primitive_steps :
                                         FStar_Tactics_Embedding.e_goal_nbe
                                        in
                                     FStar_Tactics_InterpFuns.mktac1
-                                      (Prims.parse_int "0") "set_smt_goals"
+                                      Prims.int_zero "set_smt_goals"
                                       FStar_Tactics_Basic.set_smt_goals
                                       uu____897
                                       FStar_Syntax_Embeddings.e_unit
@@ -380,7 +380,7 @@ and (primitive_steps :
                                   let uu____913 =
                                     let uu____916 =
                                       FStar_Tactics_InterpFuns.mktac1
-                                        (Prims.parse_int "0") "trivial"
+                                        Prims.int_zero "trivial"
                                         FStar_Tactics_Basic.trivial
                                         FStar_Syntax_Embeddings.e_unit
                                         FStar_Syntax_Embeddings.e_unit
@@ -409,7 +409,7 @@ and (primitive_steps :
                                             FStar_TypeChecker_NBETerm.e_any
                                            in
                                         FStar_Tactics_InterpFuns.mktac2
-                                          (Prims.parse_int "1") "catch"
+                                          Prims.int_one "catch"
                                           (fun uu____962  ->
                                              FStar_Tactics_Basic.catch)
                                           FStar_Syntax_Embeddings.e_any
@@ -440,7 +440,7 @@ and (primitive_steps :
                                               FStar_TypeChecker_NBETerm.e_any
                                              in
                                           FStar_Tactics_InterpFuns.mktac2
-                                            (Prims.parse_int "1") "recover"
+                                            Prims.int_one "recover"
                                             (fun uu____1008  ->
                                                FStar_Tactics_Basic.recover)
                                             FStar_Syntax_Embeddings.e_any
@@ -453,7 +453,7 @@ and (primitive_steps :
                                         let uu____1011 =
                                           let uu____1014 =
                                             FStar_Tactics_InterpFuns.mktac1
-                                              (Prims.parse_int "0") "intro"
+                                              Prims.int_zero "intro"
                                               FStar_Tactics_Basic.intro
                                               FStar_Syntax_Embeddings.e_unit
                                               FStar_Reflection_Embeddings.e_binder
@@ -474,8 +474,7 @@ and (primitive_steps :
                                                   FStar_Reflection_NBEEmbeddings.e_binder
                                                  in
                                               FStar_Tactics_InterpFuns.mktac1
-                                                (Prims.parse_int "0")
-                                                "intro_rec"
+                                                Prims.int_zero "intro_rec"
                                                 FStar_Tactics_Basic.intro_rec
                                                 FStar_Syntax_Embeddings.e_unit
                                                 uu____1021
@@ -494,8 +493,7 @@ and (primitive_steps :
                                                     FStar_TypeChecker_NBETerm.e_norm_step
                                                    in
                                                 FStar_Tactics_InterpFuns.mktac1
-                                                  (Prims.parse_int "0")
-                                                  "norm"
+                                                  Prims.int_zero "norm"
                                                   FStar_Tactics_Basic.norm
                                                   uu____1049
                                                   FStar_Syntax_Embeddings.e_unit
@@ -514,7 +512,7 @@ and (primitive_steps :
                                                       FStar_TypeChecker_NBETerm.e_norm_step
                                                      in
                                                   FStar_Tactics_InterpFuns.mktac3
-                                                    (Prims.parse_int "0")
+                                                    Prims.int_zero
                                                     "norm_term_env"
                                                     FStar_Tactics_Basic.norm_term_env
                                                     FStar_Reflection_Embeddings.e_env
@@ -538,7 +536,7 @@ and (primitive_steps :
                                                         FStar_TypeChecker_NBETerm.e_norm_step
                                                        in
                                                     FStar_Tactics_InterpFuns.mktac2
-                                                      (Prims.parse_int "0")
+                                                      Prims.int_zero
                                                       "norm_binder_type"
                                                       FStar_Tactics_Basic.norm_binder_type
                                                       uu____1089
@@ -552,7 +550,7 @@ and (primitive_steps :
                                                   let uu____1105 =
                                                     let uu____1108 =
                                                       FStar_Tactics_InterpFuns.mktac2
-                                                        (Prims.parse_int "0")
+                                                        Prims.int_zero
                                                         "rename_to"
                                                         FStar_Tactics_Basic.rename_to
                                                         FStar_Reflection_Embeddings.e_binder
@@ -566,7 +564,7 @@ and (primitive_steps :
                                                     let uu____1113 =
                                                       let uu____1116 =
                                                         FStar_Tactics_InterpFuns.mktac1
-                                                          (Prims.parse_int "0")
+                                                          Prims.int_zero
                                                           "binder_retype"
                                                           FStar_Tactics_Basic.binder_retype
                                                           FStar_Reflection_Embeddings.e_binder
@@ -578,7 +576,7 @@ and (primitive_steps :
                                                       let uu____1119 =
                                                         let uu____1122 =
                                                           FStar_Tactics_InterpFuns.mktac1
-                                                            (Prims.parse_int "0")
+                                                            Prims.int_zero
                                                             "revert"
                                                             FStar_Tactics_Basic.revert
                                                             FStar_Syntax_Embeddings.e_unit
@@ -590,7 +588,7 @@ and (primitive_steps :
                                                         let uu____1125 =
                                                           let uu____1128 =
                                                             FStar_Tactics_InterpFuns.mktac1
-                                                              (Prims.parse_int "0")
+                                                              Prims.int_zero
                                                               "clear_top"
                                                               FStar_Tactics_Basic.clear_top
                                                               FStar_Syntax_Embeddings.e_unit
@@ -602,7 +600,7 @@ and (primitive_steps :
                                                           let uu____1131 =
                                                             let uu____1134 =
                                                               FStar_Tactics_InterpFuns.mktac1
-                                                                (Prims.parse_int "0")
+                                                                Prims.int_zero
                                                                 "clear"
                                                                 FStar_Tactics_Basic.clear
                                                                 FStar_Reflection_Embeddings.e_binder
@@ -615,7 +613,7 @@ and (primitive_steps :
                                                               let uu____1140
                                                                 =
                                                                 FStar_Tactics_InterpFuns.mktac1
-                                                                  (Prims.parse_int "0")
+                                                                  Prims.int_zero
                                                                   "rewrite"
                                                                   FStar_Tactics_Basic.rewrite
                                                                   FStar_Reflection_Embeddings.e_binder
@@ -629,7 +627,7 @@ and (primitive_steps :
                                                                 let uu____1146
                                                                   =
                                                                   FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "refine_intro"
                                                                     FStar_Tactics_Basic.refine_intro
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -643,7 +641,7 @@ and (primitive_steps :
                                                                   let uu____1152
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac3
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "t_exact"
                                                                     FStar_Tactics_Basic.t_exact
                                                                     FStar_Syntax_Embeddings.e_bool
@@ -661,7 +659,7 @@ and (primitive_steps :
                                                                     let uu____1162
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac3
-                                                                    (Prims.parse_int "1")
+                                                                    Prims.int_one
                                                                     "t_apply"
                                                                     FStar_Tactics_Basic.t_apply
                                                                     FStar_Syntax_Embeddings.e_bool
@@ -679,7 +677,7 @@ and (primitive_steps :
                                                                     let uu____1172
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "apply_lemma"
                                                                     FStar_Tactics_Basic.apply_lemma
                                                                     FStar_Reflection_Embeddings.e_term
@@ -693,7 +691,7 @@ and (primitive_steps :
                                                                     let uu____1178
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "set_options"
                                                                     FStar_Tactics_Basic.set_options
                                                                     FStar_Syntax_Embeddings.e_string
@@ -707,7 +705,7 @@ and (primitive_steps :
                                                                     let uu____1186
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "tcc"
                                                                     FStar_Tactics_Basic.tcc
                                                                     FStar_Reflection_Embeddings.e_term
@@ -721,7 +719,7 @@ and (primitive_steps :
                                                                     let uu____1192
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "tc"
                                                                     FStar_Tactics_Basic.tc
                                                                     FStar_Reflection_Embeddings.e_term
@@ -735,7 +733,7 @@ and (primitive_steps :
                                                                     let uu____1198
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "unshelve"
                                                                     FStar_Tactics_Basic.unshelve
                                                                     FStar_Reflection_Embeddings.e_term
@@ -749,7 +747,7 @@ and (primitive_steps :
                                                                     let uu____1204
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "1")
+                                                                    Prims.int_one
                                                                     "unquote"
                                                                     FStar_Tactics_Basic.unquote
                                                                     FStar_Syntax_Embeddings.e_any
@@ -772,7 +770,7 @@ and (primitive_steps :
                                                                     let uu____1217
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "prune"
                                                                     FStar_Tactics_Basic.prune
                                                                     FStar_Syntax_Embeddings.e_string
@@ -786,7 +784,7 @@ and (primitive_steps :
                                                                     let uu____1225
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "addns"
                                                                     FStar_Tactics_Basic.addns
                                                                     FStar_Syntax_Embeddings.e_string
@@ -800,7 +798,7 @@ and (primitive_steps :
                                                                     let uu____1233
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "print"
                                                                     FStar_Tactics_Basic.print
                                                                     FStar_Syntax_Embeddings.e_string
@@ -814,7 +812,7 @@ and (primitive_steps :
                                                                     let uu____1241
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "debugging"
                                                                     FStar_Tactics_Basic.debugging
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -828,7 +826,7 @@ and (primitive_steps :
                                                                     let uu____1249
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "dump"
                                                                     FStar_Tactics_Basic.print_proof_state
                                                                     FStar_Syntax_Embeddings.e_string
@@ -852,7 +850,7 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "t_pointwise"
                                                                     FStar_Tactics_Basic.pointwise
                                                                     FStar_Tactics_Embedding.e_direction
@@ -902,7 +900,7 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "topdown_rewrite"
                                                                     FStar_Tactics_Basic.topdown_rewrite
                                                                     uu____1278
@@ -918,7 +916,7 @@ and (primitive_steps :
                                                                     let uu____1371
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "trefl"
                                                                     FStar_Tactics_Basic.trefl
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -932,7 +930,7 @@ and (primitive_steps :
                                                                     let uu____1377
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "dup"
                                                                     FStar_Tactics_Basic.dup
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -946,7 +944,7 @@ and (primitive_steps :
                                                                     let uu____1383
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "tadmit_t"
                                                                     FStar_Tactics_Basic.tadmit_t
                                                                     FStar_Reflection_Embeddings.e_term
@@ -960,7 +958,7 @@ and (primitive_steps :
                                                                     let uu____1389
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "join"
                                                                     FStar_Tactics_Basic.join
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -996,7 +994,7 @@ and (primitive_steps :
                                                                     uu____1425
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "t_destruct"
                                                                     FStar_Tactics_Basic.t_destruct
                                                                     FStar_Reflection_Embeddings.e_term
@@ -1010,7 +1008,7 @@ and (primitive_steps :
                                                                     let uu____1453
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "top_env"
                                                                     FStar_Tactics_Basic.top_env
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -1024,7 +1022,7 @@ and (primitive_steps :
                                                                     let uu____1459
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "inspect"
                                                                     FStar_Tactics_Basic.inspect
                                                                     FStar_Reflection_Embeddings.e_term
@@ -1038,7 +1036,7 @@ and (primitive_steps :
                                                                     let uu____1465
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "pack"
                                                                     FStar_Tactics_Basic.pack
                                                                     FStar_Reflection_Embeddings.e_term_view
@@ -1052,7 +1050,7 @@ and (primitive_steps :
                                                                     let uu____1471
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "fresh"
                                                                     FStar_Tactics_Basic.fresh
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -1076,7 +1074,7 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "uvar_env"
                                                                     FStar_Tactics_Basic.uvar_env
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1092,7 +1090,7 @@ and (primitive_steps :
                                                                     let uu____1497
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac3
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "unify_env"
                                                                     FStar_Tactics_Basic.unify_env
                                                                     FStar_Reflection_Embeddings.e_env
@@ -1120,7 +1118,7 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac3
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "launch_process"
                                                                     FStar_Tactics_Basic.launch_process
                                                                     FStar_Syntax_Embeddings.e_string
@@ -1138,7 +1136,7 @@ and (primitive_steps :
                                                                     let uu____1537
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "fresh_bv_named"
                                                                     FStar_Tactics_Basic.fresh_bv_named
                                                                     FStar_Syntax_Embeddings.e_string
@@ -1154,7 +1152,7 @@ and (primitive_steps :
                                                                     let uu____1545
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "change"
                                                                     FStar_Tactics_Basic.change
                                                                     FStar_Reflection_Embeddings.e_term
@@ -1168,7 +1166,7 @@ and (primitive_steps :
                                                                     let uu____1551
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "get_guard_policy"
                                                                     FStar_Tactics_Basic.get_guard_policy
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -1182,7 +1180,7 @@ and (primitive_steps :
                                                                     let uu____1557
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "set_guard_policy"
                                                                     FStar_Tactics_Basic.set_guard_policy
                                                                     FStar_Tactics_Embedding.e_guard_policy
@@ -1196,7 +1194,7 @@ and (primitive_steps :
                                                                     let uu____1563
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                     "lax_on"
                                                                     FStar_Tactics_Basic.lax_on
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -1210,7 +1208,7 @@ and (primitive_steps :
                                                                     let uu____1571
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac2
-                                                                    (Prims.parse_int "1")
+                                                                    Prims.int_one
                                                                     "lget"
                                                                     FStar_Tactics_Basic.lget
                                                                     FStar_Syntax_Embeddings.e_any
@@ -1233,7 +1231,7 @@ and (primitive_steps :
                                                                     let uu____1585
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac3
-                                                                    (Prims.parse_int "1")
+                                                                    Prims.int_one
                                                                     "lset"
                                                                     FStar_Tactics_Basic.lset
                                                                     FStar_Syntax_Embeddings.e_any
@@ -1808,7 +1806,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___189_2290.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___189_2290.FStar_TypeChecker_Env.nbe)
+                             (uu___189_2290.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___189_2290.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let env3 =
                          let uu___192_2293 = env2  in
@@ -1897,7 +1897,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___192_2293.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___192_2293.FStar_TypeChecker_Env.nbe)
+                             (uu___192_2293.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___192_2293.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let env4 =
                          let uu___195_2296 = env3  in
@@ -1986,7 +1988,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.dsenv =
                              (uu___195_2296.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___195_2296.FStar_TypeChecker_Env.nbe)
+                             (uu___195_2296.FStar_TypeChecker_Env.nbe);
+                           FStar_TypeChecker_Env.strict_args_tab =
+                             (uu___195_2296.FStar_TypeChecker_Env.strict_args_tab)
                          }  in
                        let rng =
                          let uu____2299 = FStar_Range.use_range rng_goal  in
@@ -2697,7 +2701,7 @@ let (preprocess :
          FStar_Util.print2 "About to preprocess %s |= %s\n" uu____4721
            uu____4726
        else ());
-      (let initial = ((Prims.parse_int "1"), [])  in
+      (let initial = (Prims.int_one, [])  in
        let uu____4761 =
          let uu____4770 = traverse by_tactic_interp Pos env goal  in
          match uu____4770 with
@@ -2802,8 +2806,7 @@ let (preprocess :
                                   (g.FStar_Tactics_Types.opts))
                                  in
                               uu____5046 :: gs1  in
-                            ((n1 + (Prims.parse_int "1")), uu____5037)))) s
-                 gs
+                            ((n1 + Prims.int_one), uu____5037)))) s gs
                 in
              let uu____5070 = s1  in
              match uu____5070 with

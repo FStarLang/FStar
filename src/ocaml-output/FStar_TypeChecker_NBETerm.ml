@@ -1202,7 +1202,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                        failwith "cannot unembed function argument"),
                  [(fun uu____5714  ->
                      let uu____5717 = type_of eb  in as_arg uu____5717)],
-                 (Prims.parse_int "1"), FStar_Pervasives_Native.None))
+                 Prims.int_one, FStar_Pervasives_Native.None))
          in
       let un cb lam =
         let k lam1 =

@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.parse_int "14") 
+let (cache_version_number : Prims.int) = (Prims.of_int (14)) 
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -99,7 +99,7 @@ type cache_t =
   (tc_result_t * (Prims.string,FStar_Parser_Dep.parsing_data)
     FStar_Util.either)
 let (mcache : cache_t FStar_Util.smap) =
-  FStar_Util.smap_create (Prims.parse_int "50") 
+  FStar_Util.smap_create (Prims.of_int (50)) 
 let (hash_dependences :
   FStar_Parser_Dep.deps ->
     Prims.string ->
@@ -441,13 +441,9 @@ let (load_module_from_cache :
             (FStar_ST.op_Colon_Equals already_failed true;
              (let uu____1612 =
                 let uu____1613 =
-                  FStar_Range.mk_pos (Prims.parse_int "0")
-                    (Prims.parse_int "0")
-                   in
+                  FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
                 let uu____1616 =
-                  FStar_Range.mk_pos (Prims.parse_int "0")
-                    (Prims.parse_int "0")
-                   in
+                  FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
                 FStar_Range.mk_range fn uu____1613 uu____1616  in
               let uu____1619 =
                 let uu____1625 =
@@ -524,8 +520,8 @@ let (store_module_to_cache :
                     checked_module = (uu___225_1764.checked_module);
                     mii = (uu___225_1764.mii);
                     smt_decls = (uu___225_1764.smt_decls);
-                    tc_time = (Prims.parse_int "0");
-                    extraction_time = (Prims.parse_int "0")
+                    tc_time = Prims.int_zero;
+                    extraction_time = Prims.int_zero
                   }  in
                 let stage1 =
                   let uu____1768 = FStar_Util.digest_of_file fn  in
@@ -539,13 +535,9 @@ let (store_module_to_cache :
             | FStar_Util.Inl msg ->
                 let uu____1782 =
                   let uu____1783 =
-                    FStar_Range.mk_pos (Prims.parse_int "0")
-                      (Prims.parse_int "0")
-                     in
+                    FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
                   let uu____1786 =
-                    FStar_Range.mk_pos (Prims.parse_int "0")
-                      (Prims.parse_int "0")
-                     in
+                    FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
                   FStar_Range.mk_range fn uu____1783 uu____1786  in
                 let uu____1789 =
                   let uu____1795 =

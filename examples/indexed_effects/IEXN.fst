@@ -72,20 +72,6 @@ let iex_close_wp (a:Type) (b:Type)
   forall (x:b). wp x es p
 
 unfold 
-let iex_assert_p (a:Type) (q:Type) 
-      (wp:iex_wp a) (es:exns) (p:iex_post a) = 
-  q /\ wp es p
-
-unfold 
-let iex_assume_p (a:Type) (q:Type) 
-      (wp:iex_wp a) (es:exns) (p:iex_post a) = 
-  q ==> wp es p
-
-unfold 
-let iex_null_wp (a:Type) (es:exns) (p:iex_post a) = 
-  forall (r:result a). p r
-
-unfold 
 let iex_trivial (a:Type) (wp:iex_wp a) = 
   forall es . wp es (fun r -> True)
 
@@ -99,9 +85,6 @@ new_effect {
   ; ite_wp       = iex_ite_wp
   ; stronger     = iex_stronger
   ; close_wp     = iex_close_wp
-  ; assert_p     = iex_assert_p
-  ; assume_p     = iex_assume_p
-  ; null_wp      = iex_null_wp
   ; trivial      = iex_trivial
 }
 
