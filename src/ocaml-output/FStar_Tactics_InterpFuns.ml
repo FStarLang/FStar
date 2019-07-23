@@ -1321,10 +1321,10 @@ let (step_from_native_step :
     {
       FStar_TypeChecker_Cfg.name = (s.FStar_Tactics_Native.name);
       FStar_TypeChecker_Cfg.arity = (s.FStar_Tactics_Native.arity);
-      FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
+      FStar_TypeChecker_Cfg.univ_arity = Prims.int_zero;
       FStar_TypeChecker_Cfg.auto_reflect =
         (FStar_Pervasives_Native.Some
-           (s.FStar_Tactics_Native.arity - (Prims.parse_int "1")));
+           (s.FStar_Tactics_Native.arity - Prims.int_one));
       FStar_TypeChecker_Cfg.strong_reduction_ok =
         (s.FStar_Tactics_Native.strong_reduction_ok);
       FStar_TypeChecker_Cfg.requires_binder_substitution = false;
@@ -1378,7 +1378,7 @@ let (mk :
               FStar_TypeChecker_Cfg.arity = arity;
               FStar_TypeChecker_Cfg.univ_arity = nunivs;
               FStar_TypeChecker_Cfg.auto_reflect =
-                (FStar_Pervasives_Native.Some (arity - (Prims.parse_int "1")));
+                (FStar_Pervasives_Native.Some (arity - Prims.int_one));
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
               FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
@@ -1401,12 +1401,12 @@ let rec drop :
   =
   fun n1  ->
     fun l  ->
-      if n1 = (Prims.parse_int "0")
+      if n1 = Prims.int_zero
       then l
       else
         (match l with
          | [] -> failwith "drop: impossible"
-         | uu____6954::xs -> drop (n1 - (Prims.parse_int "1")) xs)
+         | uu____6954::xs -> drop (n1 - Prims.int_one) xs)
   
 let mktac1 :
   'a 'na 'nr 'r .
@@ -1428,7 +1428,7 @@ let mktac1 :
             fun nf  ->
               fun nea  ->
                 fun ner  ->
-                  mk name (Prims.parse_int "2") nunivs
+                  mk name (Prims.of_int (2)) nunivs
                     (mk_tactic_interpretation_1 f ea er)
                     (fun cb  ->
                        fun args  ->
@@ -1460,7 +1460,7 @@ let mktac2 :
                 fun nea  ->
                   fun neb  ->
                     fun ner  ->
-                      mk name (Prims.parse_int "3") nunivs
+                      mk name (Prims.of_int (3)) nunivs
                         (mk_tactic_interpretation_2 f ea eb er)
                         (fun cb  ->
                            fun args  ->
@@ -1496,7 +1496,7 @@ let mktac3 :
                     fun neb  ->
                       fun nec  ->
                         fun ner  ->
-                          mk name (Prims.parse_int "4") nunivs
+                          mk name (Prims.of_int (4)) nunivs
                             (mk_tactic_interpretation_3 f ea eb ec er)
                             (fun cb  ->
                                fun args  ->
@@ -1537,7 +1537,7 @@ let mktac4 :
                         fun nec  ->
                           fun ned  ->
                             fun ner  ->
-                              mk name (Prims.parse_int "5") nunivs
+                              mk name (Prims.of_int (5)) nunivs
                                 (mk_tactic_interpretation_4 f ea eb ec ed er)
                                 (fun cb  ->
                                    fun args  ->
@@ -1584,7 +1584,7 @@ let mktac5 :
                             fun ned  ->
                               fun nee  ->
                                 fun ner  ->
-                                  mk name (Prims.parse_int "6") nunivs
+                                  mk name (Prims.of_int (6)) nunivs
                                     (mk_tactic_interpretation_5 f ea eb ec ed
                                        ee er)
                                     (fun cb  ->
@@ -1750,7 +1750,7 @@ let mktot1 :
             fun nf  ->
               fun nea  ->
                 fun ner  ->
-                  mkt name (Prims.parse_int "1") nunivs
+                  mkt name Prims.int_one nunivs
                     (mk_total_interpretation_1 f ea er)
                     (fun cb  ->
                        fun args  ->
@@ -1782,7 +1782,7 @@ let mktot2 :
                 fun nea  ->
                   fun neb  ->
                     fun ner  ->
-                      mkt name (Prims.parse_int "2") nunivs
+                      mkt name (Prims.of_int (2)) nunivs
                         (mk_total_interpretation_2 f ea eb er)
                         (fun cb  ->
                            fun args  ->

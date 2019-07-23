@@ -183,7 +183,9 @@ let (init_once : unit -> unit) =
                (uu___46_235.FStar_TypeChecker_Env.tc_hooks);
              FStar_TypeChecker_Env.dsenv = dsenv1;
              FStar_TypeChecker_Env.nbe =
-               (uu___46_235.FStar_TypeChecker_Env.nbe)
+               (uu___46_235.FStar_TypeChecker_Env.nbe);
+             FStar_TypeChecker_Env.strict_args_tab =
+               (uu___46_235.FStar_TypeChecker_Env.strict_args_tab)
            }  in
          let uu____236 =
            FStar_TypeChecker_Tc.check_module env1 prims_mod false  in
@@ -276,7 +278,9 @@ let (init_once : unit -> unit) =
                     (uu___52_245.FStar_TypeChecker_Env.tc_hooks);
                   FStar_TypeChecker_Env.dsenv = dsenv1;
                   FStar_TypeChecker_Env.nbe =
-                    (uu___52_245.FStar_TypeChecker_Env.nbe)
+                    (uu___52_245.FStar_TypeChecker_Env.nbe);
+                  FStar_TypeChecker_Env.strict_args_tab =
+                    (uu___52_245.FStar_TypeChecker_Env.strict_args_tab)
                 }  in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid  in
@@ -297,8 +301,8 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s  ->
     {
       FStar_Parser_ParseIt.frag_text = s;
-      FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
-      FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
+      FStar_Parser_ParseIt.frag_line = Prims.int_one;
+      FStar_Parser_ParseIt.frag_col = Prims.int_zero
     }
   
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
@@ -426,7 +430,9 @@ let (tc' :
           (uu___83_377.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv =
           (uu___83_377.FStar_TypeChecker_Env.dsenv);
-        FStar_TypeChecker_Env.nbe = (uu___83_377.FStar_TypeChecker_Env.nbe)
+        FStar_TypeChecker_Env.nbe = (uu___83_377.FStar_TypeChecker_Env.nbe);
+        FStar_TypeChecker_Env.strict_args_tab =
+          (uu___83_377.FStar_TypeChecker_Env.strict_args_tab)
       }  in
     let uu____379 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm
        in
@@ -531,7 +537,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___103_440.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv =
           (uu___103_440.FStar_TypeChecker_Env.dsenv);
-        FStar_TypeChecker_Env.nbe = (uu___103_440.FStar_TypeChecker_Env.nbe)
+        FStar_TypeChecker_Env.nbe = (uu___103_440.FStar_TypeChecker_Env.nbe);
+        FStar_TypeChecker_Env.strict_args_tab =
+          (uu___103_440.FStar_TypeChecker_Env.strict_args_tab)
       }  in
     let uu____442 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm
        in
@@ -566,7 +574,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                               FStar_ST.op_Colon_Equals tcenv_ref
                                 (FStar_Pervasives_Native.Some tcenv');
                               (let n1 = FStar_Errors.get_err_count ()  in
-                               if n1 <> (Prims.parse_int "0")
+                               if n1 <> Prims.int_zero
                                then
                                  (report ();
                                   (let uu____584 =
