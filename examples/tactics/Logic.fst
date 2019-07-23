@@ -21,7 +21,7 @@ open FStar.Tactics
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();
-    let (h1, _) = and_elim (binder_to_term h) in
+    let (h1, _) = destruct_and (binder_to_term h) in
     apply (`FStar.Squash.return_squash);
     exact (binder_to_term h1);
     qed ()

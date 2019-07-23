@@ -594,8 +594,8 @@ let prelude' () : Tac unit =
 
   //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
   //do couple of implies_intro and and_elim to get these conjections
-  let h = implies_intro () in let _ = and_elim (binder_to_term h) in clear h;
-  let h = implies_intro() in let _ = and_elim (binder_to_term h) in clear h;
+  let h = implies_intro () in and_elim (binder_to_term h); clear h;
+  let h = implies_intro() in and_elim (binder_to_term h); clear h;
 
   unfold_first_occurrence (`%with_fp);
   
@@ -618,7 +618,7 @@ let prelude' () : Tac unit =
   //we should full norm it, so that we can get our hands on the m0 == ..., i.e. the footprint of the command
   let user_annot = implies_intro() in
   norm_binder_type [primops; iota; delta; zeta] user_annot;
-  let _ = and_elim (binder_to_term user_annot) in
+  and_elim (binder_to_term user_annot);
   clear user_annot;
 
   //the first conjunct there is the m0 = ..., so inline it

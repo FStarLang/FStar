@@ -218,13 +218,15 @@ private val __and_elim' : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                               Lemma phi
 let __and_elim' #p #q #phi p_and_q f = ()
 
-let and_elim (t : term) : Tac (binder * binder) =
+let and_elim (t : term) : Tac unit =
     begin
      try apply_lemma (`(__and_elim (`#t)))
      with | _ -> apply_lemma (`(__and_elim' (`#t)))
-    end;
-    (implies_intro (), implies_intro ())
+    end
 
+let destruct_and (t : term) : Tac (binder * binder) =
+    and_elim t;
+    (implies_intro (), implies_intro ())
 
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
 private let __witness #a x #p _ =

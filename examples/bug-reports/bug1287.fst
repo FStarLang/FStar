@@ -51,7 +51,7 @@ let repeat' #a (f: unit -> Tac a) : Tac unit =
   let _ = repeat f in ()
 
 let and_elim' (h: binder) : Tac unit =
-  let _ = and_elim (pack (Tv_Var h)) in
+  and_elim (pack (Tv_Var h));
   clear h
 
 let exact_hyp (a: Type0) (h: binder) : Tac unit =

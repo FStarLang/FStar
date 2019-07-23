@@ -25,7 +25,7 @@ assume val  xi: Type
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();
-    let (h1, _) = and_elim (pack (Tv_Var (bv_of_binder h))) in
+    let (h1, _) = destruct_and (pack (Tv_Var (bv_of_binder h))) in
     apply (`FStar.Squash.return_squash);
     exact (pack (Tv_Var (bv_of_binder h1)));
     qed ()
