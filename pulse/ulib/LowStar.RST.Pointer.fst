@@ -24,13 +24,15 @@ module P = LowStar.Permissions
 
 open LowStar.Resource
 open LowStar.RST
+open LowStar.RST.Pointer.Views
 
 include LowStar.RST.Pointer.Views
 
 (* Reading and writing using a pointer resource *)
 
+
 let ptr_read (#a:Type)
-             (ptr:A.array a)
+             (ptr:pointer a)
            : RST a (ptr_resource ptr)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
@@ -41,7 +43,7 @@ let ptr_read (#a:Type)
   A.index ptr 0ul
 
 let ptr_write (#a:Type)
-              (ptr:A.array a)
+              (ptr:pointer a)
               (x:a)
             : RST unit (ptr_resource ptr)
                        (fun _ -> ptr_resource ptr)
@@ -49,18 +51,19 @@ let ptr_write (#a:Type)
                        (fun h0 _ h1 ->
                           (sel (ptr_view ptr) h0).p == (sel (ptr_view ptr) h1).p /\
                           (sel (ptr_view ptr) h1).x == x) =
-  reveal_ptr();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  (**) reveal_ptr();
+  (**) reveal_rst_inv ();
+  (**) reveal_modifies ();
   A.upd ptr 0ul x;
-  admit()
+  (**) let h1 = HST.get () in
+  (**) A.live_array_used_in ptr h1
 
 
 (* Unscoped allocation and deallocation of pointer resources *)
 
 let ptr_alloc (#a:Type)
               (init:a)
-            : RST (A.array a) (empty_resource)
+            : RST (pointer a) (empty_resource)
                                 (fun ptr -> ptr_resource ptr)
                                 (fun _ -> True)
                                 (fun _ ptr h1 ->
@@ -72,7 +75,7 @@ let ptr_alloc (#a:Type)
   A.alloc init 1ul
 
 let ptr_free (#a:Type)
-             (ptr:A.array a)
+             (ptr:pointer a)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
                       (fun h -> A.freeable ptr /\ P.allows_write (sel (ptr_view ptr) h).p)
@@ -85,8 +88,8 @@ let ptr_free (#a:Type)
 
 let ptr_share
   (#a: Type)
-  (ptr: A.array a)
-  : RST (A.array a)
+  (ptr: pointer a)
+  : RST (pointer a)
     (ptr_resource ptr)
     (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
     (fun h0 -> True)
@@ -103,13 +106,14 @@ let ptr_share
   (**) reveal_modifies ();
   (**) reveal_star ();
   let ptr1 = A.share ptr in
-  admit();
+  (**) let h1 = HST.get () in
+  (**) A.live_array_used_in ptr h1;
   ptr1
 
 let ptr_merge
   (#a: Type)
-  (ptr1: A.array a)
-  (ptr2: A.array a)
+  (ptr1: pointer a)
+  (ptr2: pointer a)
   : RST unit
     (ptr_resource ptr1 <*> ptr_resource ptr2)
     (fun _ -> ptr_resource ptr1)
@@ -123,8 +127,9 @@ let ptr_merge
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
   (**) reveal_star ();
-  admit();
-  A.gather ptr1 ptr2
+  A.gather ptr1 ptr2;
+  (**) let h1 = HST.get () in
+  (**) A.live_array_used_in ptr1 h1
 
 
 (* Scoped allocation of (heap-allocated, freeable) pointer resources *)
@@ -145,20 +150,22 @@ let with_new_ptr_post (res0:resource) (a:Type) (res1:a -> resource) =
                             sel (view_of (res1 x)) h2 == sel (view_of (res1 x)) h3
                             ==>
                             post h0 x h3}
-
+(*
 let with_new_ptr (#res:resource)
                  (#a:Type)
                  (init:a)
                  (#b:Type)
                  (#pre:with_new_ptr_pre res)
                  (#post:with_new_ptr_post res b (fun _ -> res))
-                 (f:(ptr:A.array a -> RST b (res <*> (ptr_resource ptr))
+                 (f:(ptr:pointer a -> RST b (res <*> (ptr_resource ptr))
                                               (fun _ -> res <*> (ptr_resource ptr))
                                               (fun h -> pre h /\ sel (ptr_view ptr) h == {x = init; p = FStar.Real.one})
                                               (fun h0 x h1 -> post h0 x h1 /\ P.allows_write (sel (ptr_view ptr) h1).p)))
                : RST b res (fun _ -> res) pre post =
+  reveal_empty_resource ();
+  reveal_rst_inv ();
+  reveal_ptr ();
   reveal_star ();
-  admit();
   let ptr =
     rst_frame
       res
@@ -168,6 +175,7 @@ let with_new_ptr (#res:resource)
       #res
       (fun _ -> ptr_alloc init)
   in
+  admit();
   let x = f ptr in
   rst_frame
     (res <*> ptr_resource ptr)
@@ -177,4 +185,4 @@ let with_new_ptr (#res:resource)
     #res
     (fun _ -> ptr_free ptr);
     admit();
-  x
+  *)
