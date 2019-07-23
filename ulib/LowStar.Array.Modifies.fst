@@ -285,6 +285,9 @@ let ucell_unused_in_elim (cell: ucell) (h: HS.mem) (goal: Type0)
 
 #pop-options
 
+let ucell_used_in (cell: ucell) (h: HS.mem) : Type =
+  ~ (ucell_unused_in cell h)
+
 let cast_ref (a: Type) (b: Type) (x: HST.reference a)
   : Pure (HST.reference b) (requires (a == b)) (ensures (fun _ -> True))
   = x
@@ -344,7 +347,7 @@ let ucell_not_unused_in_elim
     (ensures (goal))
   )
   : Lemma
-  (requires (~ (ucell_unused_in cell h)))
+  (requires (ucell_used_in cell h))
   (ensures (goal))
   =
   assert(
@@ -401,6 +404,57 @@ let ucell_not_unused_in_elim
       )
     )
   )
+
+let ucell_used_in_intro (cell: ucell) (h: HS.mem) (t: Type) (b: array t) (cell': ucell) : Lemma
+  (requires (
+    cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\ cell.b_index = cell'.b_index /\
+    ucell_matches_used_array_cell cell' t b h
+  ))
+  (ensures (ucell_used_in cell h))
+  =
+  let t' = Seq.lseq (value_with_perms t) (U32.v b.max_length) in
+  let ref' = b.content in
+  assert(
+    (HS.as_addr ref' = cell.b_addr /\ HS.frameOf ref' = cell.b_rid) /\ (HS.contains h ref')
+  );
+  assert(forall (a: Type) (ref: HST.reference a).
+    HS.as_addr ref <> cell.b_addr \/ HS.frameOf ref <> cell.b_rid \/ (~ (HS.contains h ref)) \/
+    (exists (t: Type) (len: array_len).
+      len > cell.b_index /\ a == Seq.lseq (value_with_perms t) len
+    )
+  );
+  let aux (t':Type) (b':array t') (cell'': ucell) : Lemma (
+     cell.b_rid <> cell''.b_rid \/ cell.b_addr <> cell''.b_addr \/ cell.b_pid <> cell''.b_pid \/ cell.b_index <> cell''.b_index \/
+    (~ (ucell_matches_unused_array_cell cell'' t' b' h))
+  ) =
+    if cell.b_rid <> cell''.b_rid then () else
+    if cell.b_addr <> cell''.b_addr then () else
+    if cell.b_pid <> cell''.b_pid then () else
+    if cell.b_index <> cell''.b_index then () else begin
+      Classical.excluded_middle (ucell_matches_unused_array_cell cell'' t' b' h);
+      Classical.or_elim
+        #(ucell_matches_unused_array_cell cell'' t' b' h)
+        #(~ (ucell_matches_unused_array_cell cell'' t' b' h))
+        #(fun _ -> ~ (ucell_matches_unused_array_cell cell'' t' b' h))
+        (fun _ ->
+          live_same_arrays_equal_types b b' h;
+          assert(HS.sel h b.content == HS.sel h b'.content);
+          assert(cell''.b_index = cell'.b_index);
+          let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+          assert(
+            cell.b_pid > get_current_max (Ghost.reveal perm_map) /\
+            cell.b_pid <= get_current_max (Ghost.reveal perm_map)
+          )
+        )
+        (fun _ -> ())
+    end
+  in
+  Classical.forall_intro_3 aux;
+  assert(forall (t:Type) (b:array t) (cell': ucell).
+    cell.b_rid <> cell'.b_rid \/ cell.b_addr <> cell'.b_addr \/ cell.b_pid <> cell'.b_pid \/ cell.b_index <> cell'.b_index \/
+    (~ (ucell_matches_unused_array_cell cell' t b h))
+  )
+
 
 let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
@@ -712,6 +766,27 @@ let rec loc_union_gsub_compute_loc_array (#a:Type0) (b:array a) (i len1 len2:U32
     loc_union_gsub_compute_loc_array b i len1 len2 (n+1);
     loc_union_assoc (loc_cell b1 n) (compute_loc_array b1 (n+1)) (loc_array b2)
   end
+
+let rec live_array_used_in' (#t: Type) (b: array t) (h: HS.mem) (i:nat{i <= vlength b}) : Lemma
+  (requires (live h b))
+  (ensures (loc_used_in h `loc_includes` (compute_loc_array b i)))
+  (decreases (vlength b - i))
+  =
+  if i = vlength b then MG.loc_includes_none (loc_used_in h) else begin
+    let cell = aloc_cell b i in
+    let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+    assert(live_cell h b i);
+    P.lemma_live_pid_smaller_max (Ghost.reveal perm_map) cell.b_pid;
+    ucell_used_in_intro cell h t b cell;
+    assert(ucell_used_in cell h);
+    MG2.aloc_used_in_intro cls cell h;
+    live_array_used_in' b h (i+1)
+  end
+
+let live_array_used_in (#t: Type) (b: array t) (h: HS.mem) : Lemma
+  (requires (live h b))
+  (ensures (loc_used_in h `loc_includes` (loc_array b)))
+  = live_array_used_in' b h 0
 
 let loc_union_gsub #a b i len1 len2 = loc_union_gsub_compute_loc_array b i len1 len2 0
 

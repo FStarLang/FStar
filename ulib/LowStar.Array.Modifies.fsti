@@ -53,7 +53,7 @@ let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
 /// `h1`. Everything that was not modified and live in `h0` should still be live in `h1` with its contents untouched.
 val modifies (s: loc) (h1 h2: HS.mem) : GTot Type0
 
-(**** The lemma attic ***)
+(**** The lemma loft ***)
 
 /// The `FStar.ModifiesGen` theory provides a bunch of lemmas describing the behavior of all its elements. For proof convenience, somme of these lemmas are reproduced here with `SMTPat`s. The lemma attic also contains array-specific lemmas.
 
@@ -225,6 +225,9 @@ val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
 	   SMTPat (modifies l_aux h1 h2);
 	   SMTPat (modifies l_goal h1 h3)]
 
+val live_array_used_in (#t: Type) (b: array t) (h: HS.mem) : Lemma
+  (requires (live h b))
+  (ensures (loc_used_in h `loc_includes` (loc_array b)))
 
 (***** Locations: splitting arrays *)
 
