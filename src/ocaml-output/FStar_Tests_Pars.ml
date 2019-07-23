@@ -301,8 +301,8 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s  ->
     {
       FStar_Parser_ParseIt.frag_text = s;
-      FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
-      FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
+      FStar_Parser_ParseIt.frag_line = Prims.int_one;
+      FStar_Parser_ParseIt.frag_col = Prims.int_zero
     }
   
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
@@ -574,7 +574,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                               FStar_ST.op_Colon_Equals tcenv_ref
                                 (FStar_Pervasives_Native.Some tcenv');
                               (let n1 = FStar_Errors.get_err_count ()  in
-                               if n1 <> (Prims.parse_int "0")
+                               if n1 <> Prims.int_zero
                                then
                                  (report ();
                                   (let uu____584 =

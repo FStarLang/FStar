@@ -899,7 +899,7 @@ let (tc_one_file :
                   Prims.op_Negation uu____1092)
                 in
              if uu____1082
-             then (FStar_Pervasives_Native.None, (Prims.parse_int "0"))
+             then (FStar_Pervasives_Native.None, Prims.int_zero)
              else
                FStar_Util.record_time
                  (fun uu____1114  ->
@@ -912,7 +912,7 @@ let (tc_one_file :
                let uu____1148 = FStar_Options.codegen ()  in
                uu____1148 = FStar_Pervasives_Native.None  in
              if uu____1146
-             then (env1, (Prims.parse_int "0"))
+             then (env1, Prims.int_zero)
              else
                (let uu____1163 =
                   FStar_Util.record_time
@@ -1048,7 +1048,7 @@ let (tc_one_file :
                        ((let uu____1583 =
                            (let uu____1587 = FStar_Errors.get_err_count ()
                                in
-                            uu____1587 = (Prims.parse_int "0")) &&
+                            uu____1587 = Prims.int_zero) &&
                              ((FStar_Options.lax ()) ||
                                 (FStar_Options.should_verify
                                    ((tc_result.FStar_CheckedFiles.checked_module).FStar_Syntax_Syntax.name).FStar_Ident.str))
@@ -1285,7 +1285,7 @@ let (batch_mode_tc :
                          (FStar_Options.interactive ()) &&
                            (let uu____2415 = FStar_Errors.get_err_count ()
                                in
-                            uu____2415 = (Prims.parse_int "0"))
+                            uu____2415 = Prims.int_zero)
                           in
                        if uu____2412
                        then

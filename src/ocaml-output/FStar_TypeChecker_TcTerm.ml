@@ -861,7 +861,7 @@ let (check_no_smt_theory_symbols :
       let tlist =
         let uu____2050 = FStar_All.pipe_right t pat_terms  in
         FStar_All.pipe_right uu____2050 (FStar_List.collect aux)  in
-      if (FStar_List.length tlist) = (Prims.parse_int "0")
+      if (FStar_List.length tlist) = Prims.int_zero
       then ()
       else
         (let msg =
@@ -7420,7 +7420,7 @@ and (tc_eqn :
                                                             ((FStar_List.length
                                                                 datacons)
                                                                >
-                                                               (Prims.parse_int "1"))
+                                                               Prims.int_one)
                                                         then
                                                           let discriminator =
                                                             FStar_Syntax_Util.mk_discriminator
@@ -7440,7 +7440,7 @@ and (tc_eqn :
                                                                  FStar_Syntax_Syntax.fvar
                                                                    discriminator
                                                                    (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                                    (Prims.parse_int "1"))
+                                                                    Prims.int_one)
                                                                    FStar_Pervasives_Native.None
                                                                   in
                                                                let disc1 =
@@ -7743,7 +7743,7 @@ and (tc_eqn :
                                                                     FStar_Syntax_Syntax.fvar
                                                                     uu____21881
                                                                     (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                                    (Prims.parse_int "1"))
+                                                                    Prims.int_one)
                                                                     FStar_Pervasives_Native.None
                                                                      in
                                                                     let uu____21883
@@ -8971,10 +8971,8 @@ and (build_let_rec_env :
                  (match uu____23904 with
                   | (actuals,uu____23915,uu____23916) ->
                       if
-                        ((FStar_List.length formals) < (Prims.parse_int "1"))
-                          ||
-                          ((FStar_List.length actuals) <
-                             (Prims.parse_int "1"))
+                        ((FStar_List.length formals) < Prims.int_one) ||
+                          ((FStar_List.length actuals) < Prims.int_one)
                       then
                         let uu____23937 =
                           let uu____23943 =
@@ -9005,7 +9003,7 @@ and (build_let_rec_env :
                          then
                            (let actuals_msg =
                               let n1 = FStar_List.length actuals1  in
-                              if n1 = (Prims.parse_int "1")
+                              if n1 = Prims.int_one
                               then "1 argument was found"
                               else
                                 (let uu____23986 =
@@ -9015,7 +9013,7 @@ and (build_let_rec_env :
                                in
                             let formals_msg =
                               let n1 = FStar_List.length formals  in
-                              if n1 = (Prims.parse_int "1")
+                              if n1 = Prims.int_one
                               then "1 argument"
                               else
                                 (let uu____24005 =

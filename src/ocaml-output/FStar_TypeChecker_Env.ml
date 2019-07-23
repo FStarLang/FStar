@@ -1401,11 +1401,11 @@ let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
       | (InliningDelta ,FStar_Syntax_Syntax.Inline_for_extraction ) -> true
       | uu____12480 -> false
   
-let (default_table_size : Prims.int) = (Prims.parse_int "200") 
+let (default_table_size : Prims.int) = (Prims.of_int (200)) 
 let new_sigtab : 'Auu____12494 . unit -> 'Auu____12494 FStar_Util.smap =
   fun uu____12501  -> FStar_Util.smap_create default_table_size 
 let new_gamma_cache : 'Auu____12507 . unit -> 'Auu____12507 FStar_Util.smap =
-  fun uu____12514  -> FStar_Util.smap_create (Prims.parse_int "100") 
+  fun uu____12514  -> FStar_Util.smap_create (Prims.of_int (100)) 
 let (initial_env :
   FStar_Parser_Dep.deps ->
     (env ->
@@ -1441,12 +1441,12 @@ let (initial_env :
                   let uu____12658 = new_sigtab ()  in
                   let uu____12665 =
                     let uu____12680 =
-                      FStar_Util.smap_create (Prims.parse_int "10")  in
+                      FStar_Util.smap_create (Prims.of_int (10))  in
                     (uu____12680, FStar_Pervasives_Native.None)  in
                   let uu____12701 =
-                    FStar_Util.smap_create (Prims.parse_int "20")  in
+                    FStar_Util.smap_create (Prims.of_int (20))  in
                   let uu____12705 =
-                    FStar_Util.smap_create (Prims.parse_int "50")  in
+                    FStar_Util.smap_create (Prims.of_int (50))  in
                   let uu____12709 = FStar_Options.using_facts_from ()  in
                   let uu____12710 =
                     FStar_Util.mk_ref
@@ -1454,7 +1454,7 @@ let (initial_env :
                      in
                   let uu____12713 = FStar_Syntax_DsEnv.empty_env deps  in
                   let uu____12714 =
-                    FStar_Util.smap_create (Prims.parse_int "20")  in
+                    FStar_Util.smap_create (Prims.of_int (20))  in
                   {
                     solver;
                     range = FStar_Range.dummyRange;
@@ -1798,7 +1798,7 @@ let (incr_query_index : env -> env) =
            in
         (match uu____14346 with
          | FStar_Pervasives_Native.None  ->
-             let next = n1 + (Prims.parse_int "1")  in
+             let next = n1 + Prims.int_one  in
              (add_query_index (l, next);
               FStar_Util.smap_add tbl l.FStar_Ident.str next;
               (let uu___487_14399 = env  in
@@ -1850,7 +1850,7 @@ let (incr_query_index : env -> env) =
                  strict_args_tab = (uu___487_14399.strict_args_tab)
                }))
          | FStar_Pervasives_Native.Some (uu____14416,m) ->
-             let next = m + (Prims.parse_int "1")  in
+             let next = m + Prims.int_one  in
              (add_query_index (l, next);
               FStar_Util.smap_add tbl l.FStar_Ident.str next;
               (let uu___496_14432 = env  in
@@ -2097,7 +2097,7 @@ let (mk_univ_subst :
   =
   fun formals  ->
     fun us  ->
-      let n1 = (FStar_List.length formals) - (Prims.parse_int "1")  in
+      let n1 = (FStar_List.length formals) - Prims.int_one  in
       FStar_All.pipe_right us
         (FStar_List.mapi
            (fun i  -> fun u  -> FStar_Syntax_Syntax.UN ((n1 - i), u)))
@@ -3034,28 +3034,26 @@ let (delta_depth_of_qninfo :
         (match qn with
          | FStar_Pervasives_Native.None  ->
              FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Delta_constant_at_level
-                  (Prims.parse_int "0"))
+               (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
          | FStar_Pervasives_Native.Some
              (FStar_Util.Inl uu____18601,uu____18602) ->
              FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Delta_constant_at_level
-                  (Prims.parse_int "0"))
+               (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
          | FStar_Pervasives_Native.Some
              (FStar_Util.Inr (se,uu____18651),uu____18652) ->
              (match se.FStar_Syntax_Syntax.sigel with
               | FStar_Syntax_Syntax.Sig_inductive_typ uu____18701 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                       (Prims.parse_int "0"))
+                       Prims.int_zero)
               | FStar_Syntax_Syntax.Sig_bundle uu____18719 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                       (Prims.parse_int "0"))
+                       Prims.int_zero)
               | FStar_Syntax_Syntax.Sig_datacon uu____18729 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                       (Prims.parse_int "0"))
+                       Prims.int_zero)
               | FStar_Syntax_Syntax.Sig_declare_typ uu____18746 ->
                   let uu____18753 =
                     FStar_Syntax_DsEnv.delta_depth_of_declaration lid
@@ -3078,7 +3076,7 @@ let (delta_depth_of_qninfo :
               | FStar_Syntax_Syntax.Sig_splice uu____18779 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                       (Prims.parse_int "1"))
+                       Prims.int_one)
               | FStar_Syntax_Syntax.Sig_main uu____18787 ->
                   FStar_Pervasives_Native.None
               | FStar_Syntax_Syntax.Sig_assume uu____18788 ->
@@ -3458,8 +3456,7 @@ let (lookup_projector :
             (match uu____19819 with
              | FStar_Syntax_Syntax.Tm_arrow (binders,uu____19824) ->
                  if
-                   (i < (Prims.parse_int "0")) ||
-                     (i >= (FStar_List.length binders))
+                   (i < Prims.int_zero) || (i >= (FStar_List.length binders))
                  then fail1 ()
                  else
                    (let b = FStar_List.nth binders i  in
@@ -4254,7 +4251,7 @@ let rec (unfold_effect_abbrev :
                (if
                   (FStar_List.length binders1) <>
                     ((FStar_List.length c.FStar_Syntax_Syntax.effect_args) +
-                       (Prims.parse_int "1"))
+                       Prims.int_one)
                 then
                   (let uu____22539 =
                      let uu____22545 =
@@ -4266,7 +4263,7 @@ let rec (unfold_effect_abbrev :
                          FStar_Util.string_of_int
                            ((FStar_List.length
                                c.FStar_Syntax_Syntax.effect_args)
-                              + (Prims.parse_int "1"))
+                              + Prims.int_one)
                           in
                        let uu____22566 =
                          let uu____22568 = FStar_Syntax_Syntax.mk_Comp c  in
@@ -5700,8 +5697,7 @@ let (dummy_solver : solver_t) =
     pop = (fun uu____25276  -> ());
     snapshot =
       (fun uu____25279  ->
-         (((Prims.parse_int "0"), (Prims.parse_int "0"),
-            (Prims.parse_int "0")), ()));
+         ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
     rollback = (fun uu____25298  -> fun uu____25299  -> ());
     encode_sig = (fun uu____25314  -> fun uu____25315  -> ());
     preprocess =

@@ -206,17 +206,15 @@ let rec (decr_delta_depth :
   fun uu___1_760  ->
     match uu___1_760 with
     | FStar_Syntax_Syntax.Delta_constant_at_level _763 when
-        _763 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+        _763 = Prims.int_zero -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_equational_at_level _764 when
-        _764 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+        _764 = Prims.int_zero -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_constant_at_level i ->
         FStar_Pervasives_Native.Some
-          (FStar_Syntax_Syntax.Delta_constant_at_level
-             (i - (Prims.parse_int "1")))
+          (FStar_Syntax_Syntax.Delta_constant_at_level (i - Prims.int_one))
     | FStar_Syntax_Syntax.Delta_equational_at_level i ->
         FStar_Pervasives_Native.Some
-          (FStar_Syntax_Syntax.Delta_equational_at_level
-             (i - (Prims.parse_int "1")))
+          (FStar_Syntax_Syntax.Delta_equational_at_level (i - Prims.int_one))
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
   
 type identifier_info =
