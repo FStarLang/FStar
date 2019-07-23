@@ -90,6 +90,10 @@ let delay t s =
 
         Also returns `true`, if it actually resolved the uvar at the head
                      `false` otherwise
+
+      Warning: if force_uvar changes to operate on inputs other
+      than Tm_uvar then the fastpath out match in compress will
+      need to be updated.
 *)
 let rec force_uvar' t =
   match t.n with
@@ -119,6 +123,10 @@ let rec try_read_memo_aux t =
         if shorten then m := Some t';
         t', true)
   | _ -> t, false
+
+//  Warning: if try_read_memo changes to operate on inputs other
+//    than Tm_delayed then the fastpath out match in compress will
+//    need to be updated.
 let try_read_memo t = fst (try_read_memo_aux t)
 
 let rec compress_univ u = match u with
