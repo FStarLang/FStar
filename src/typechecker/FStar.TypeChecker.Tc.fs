@@ -142,15 +142,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         in
         { ed with
             univs         = annotated_univ_names;
-            ret_wp        =op ed.ret_wp
-            ; bind_wp     =op ed.bind_wp
-            ; return_repr =op ed.return_repr
-            ; bind_repr   =op ed.bind_repr
-            ; if_then_else=op ed.if_then_else
-            ; ite_wp      =op ed.ite_wp
-            ; stronger    =op ed.stronger
-            ; close_wp    =op ed.close_wp
-            ; trivial     =op ed.trivial
+            ret_wp        = op ed.ret_wp
+            ; bind_wp     = op ed.bind_wp
+            ; return_repr = op ed.return_repr
+            ; bind_repr   = op ed.bind_repr
+            ; stronger    = op ed.stronger
+            ; match_wps   = U.map_match_wps op ed.match_wps
+            ; trivial     = map_opt ed.trivial op
             ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
             { a with
@@ -222,19 +220,28 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.bind_wp expected_k in
 
+  let if_then_else, ite_wp, close_wp = U.get_match_with_close_wps ed.match_wps in
+
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
     let expected_k = U.arrow [S.mk_binder a; S.mk_binder p;
-                                 S.null_binder wp_a;
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.if_then_else expected_k in
+                              S.null_binder wp_a;
+                              S.null_binder wp_a]
+                             (S.mk_Total wp_a) in
+    check_and_gen' env if_then_else expected_k in
 
   let ite_wp =
     let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.ite_wp expected_k in
+                              S.null_binder wp_a]
+                             (S.mk_Total wp_a) in
+    check_and_gen' env ite_wp expected_k in
+
+  let close_wp =
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let b_wp_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_a) in
+    let expected_k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder b_wp_a]
+                             (S.mk_Total wp_a) in
+    check_and_gen' env close_wp expected_k in
 
   let stronger =
     let t, _ = U.type_u() in
@@ -244,19 +251,15 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                 (S.mk_Total t) in
     check_and_gen' env ed.stronger expected_k in
 
-  let close_wp =
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let b_wp_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_a) in
-    let expected_k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder b_wp_a]
-                                (S.mk_Total wp_a) in
-    check_and_gen' env ed.close_wp expected_k in
-
   let trivial_wp =
-    let t, _ = U.type_u() in
-    let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder wp_a]
-                                (S.mk_GTotal t) in
-    check_and_gen' env ed.trivial expected_k in
+    match ed.trivial with
+    | None -> None
+    | Some trivial ->
+      let t, _ = U.type_u() in
+      let expected_k = U.arrow [S.mk_binder a;
+                                S.null_binder wp_a]
+                               (S.mk_GTotal t) in
+      Some (check_and_gen' env trivial expected_k) in
 
   let repr, bind_repr, return_repr, actions =
       match (SS.compress ed.repr).n with
@@ -494,17 +497,20 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_typ=typ; }
   in
   assert (List.length effect_params > 0 || List.length univs = 1);
+  let match_wps = Inl ({
+    if_then_else = close 0 if_then_else;
+    ite_wp = close 0 ite_wp;
+    close_wp = close 1 close_wp;
+  }) in
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
     ; signature   = signature
     ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
-    ; if_then_else= close 0 if_then_else
-    ; ite_wp      = close 0 ite_wp
     ; stronger    = close 0 stronger
-    ; close_wp    = close 1 close_wp
-    ; trivial     = close 0 trivial_wp
+    ; match_wps   = match_wps
+    ; trivial     = map_opt trivial_wp (close 0)
     ; repr        = (snd (close 0 ([], repr)))
     ; return_repr = close 0 return_repr
     ; bind_repr   = close 1 bind_repr

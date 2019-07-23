@@ -2955,7 +2955,11 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                          then let _ = if debug env <| Options.Other "Rel"
                                       then BU.print_string "Using trivial wp ... \n" in
                               let c1_univ = env.universe_of env c1.result_typ in
-                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl c2_decl.trivial,
+                              let trivial =
+                                match c2_decl.trivial with
+                                | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
+                                | Some t -> t in
+                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl trivial,
                                         [as_arg c1.result_typ;
                                          as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                  None r

@@ -372,25 +372,36 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+type match_with_close = {
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+}
+type match_with_subst = {
+  conjunction : tscheme;
+}
 type eff_decl = {
-    cattributes :list<cflag>;
-    mname       :lident;
-    univs       :univ_names;
-    binders     :binders;
-    signature   :term;
-    ret_wp      :tscheme;
+    is_layered  :bool;
+    cattributes :list<cflag>;      // default cflags
+    mname       :lident;           //STATE_h
+    univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
+    binders     :binders;          //heap:Type
+    signature   :term;             //: result:Type ... -> Effect
+    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
     stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
+    match_wps   :either<match_with_close, match_with_subst>;
+    trivial     :option<tscheme>;
+
     //NEW FIELDS
     //representation of the effect as pure type
-    repr        :term;
+    repr          :term;
+
     //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
+    return_repr   :tscheme;
+    bind_repr     :tscheme;
+    stronger_repr :option<tscheme>;
+
     //actions for the effect
     actions     :list<action>;
     eff_attrs   :list<attribute>;

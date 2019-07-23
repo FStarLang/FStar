@@ -340,11 +340,12 @@ let close_comp env bvs (c:comp) =
     then c
     else begin
             let close_wp u_res md res_t bvs wp0 =
+              let _, _, close = U.get_match_with_close_wps md.match_wps in
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env x.sort] in
                   let wp = U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
-                  mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
+                  mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
             let u_res_t, res_t, wp = destruct_comp c in
@@ -728,7 +729,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let c2 = S.mk_Comp (lift_comp c2 m lift2) in
                 let u1, t1, wp1 = destruct_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
-                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost md_pure_or_ghost.trivial)
+                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
                                     [S.as_arg t1; S.as_arg wp1]
                                     None
                                     r1
@@ -937,7 +938,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
              lax_mk_tot_or_comp_l eff u_res_t res_t []
         else begin
             let ifthenelse md res_t g wp_t wp_e =
-                mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+                let if_then_else, _, _ = U.get_match_with_close_wps md.match_wps in
+                mk_Tm_app (inst_effect_fun_with [u_res_t] env md if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
             let default_case =
                 let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
                 let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
@@ -964,7 +966,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
               let comp = Env.comp_to_comp_typ env comp in
               let md = Env.get_effect_decl env comp.effect_name in
               let _, _, wp = destruct_comp comp in
-              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
+              let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
+              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                  [S.as_arg res_t; S.as_arg wp]
                                  None
                                  wp.pos in
@@ -1007,7 +1010,7 @@ let check_trivial_precondition env c =
   let md = Env.get_effect_decl env ct.effect_name in
   let u_t, t, wp = destruct_comp ct in
   let vc = mk_Tm_app
-    (inst_effect_fun_with [u_t] env md md.trivial)
+    (inst_effect_fun_with [u_t] env md (md.trivial |> must))
     [S.as_arg t; S.as_arg wp]
     None
     (Env.get_range env)

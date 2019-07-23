@@ -2912,20 +2912,19 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
         a'
       in
       let ed = { ed with
-               univs        = univs;
-               binders      = binders;
-               signature    = signature;
-               ret_wp       = elim_tscheme ed.ret_wp;
-               bind_wp      = elim_tscheme ed.bind_wp;
-               if_then_else = elim_tscheme ed.if_then_else;
-               ite_wp       = elim_tscheme ed.ite_wp;
-               stronger     = elim_tscheme ed.stronger;
-               close_wp     = elim_tscheme ed.close_wp;
-               trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
-               return_repr  = elim_tscheme ed.return_repr;
-               bind_repr    = elim_tscheme ed.bind_repr;
-               actions      = List.map elim_action ed.actions } in
+               univs         = univs;
+               binders       = binders;
+               signature     = signature;
+               ret_wp        = elim_tscheme ed.ret_wp;
+               bind_wp       = elim_tscheme ed.bind_wp;
+               stronger      = elim_tscheme ed.stronger;
+               match_wps     = U.map_match_wps elim_tscheme ed.match_wps;
+               trivial       = map_opt ed.trivial elim_tscheme;
+               repr          = elim_term    ed.repr;
+               return_repr   = elim_tscheme ed.return_repr;
+               bind_repr     = elim_tscheme ed.bind_repr;
+               stronger_repr = map_opt ed.stronger_repr elim_tscheme;
+               actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 
     | Sig_sub_effect sub_eff ->

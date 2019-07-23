@@ -636,34 +636,51 @@ let eff_decl_to_string' for_free r q ed =
         actions |>
         List.map action_to_string |>
         String.concat ",\n\t" in
-    U.format "new_effect%s { \
+    let eff_name = if ed.is_layered then "layered_effect" else "new_effect" in
+    let match_wps =
+      match ed.match_wps with
+      | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->
+        U.format3 "{\n\
+          if_then_else = %s;\n\
+          ite_wp = %s\n\
+          close_wp = %s\n\
+        }\n" (tscheme_to_string t1) (tscheme_to_string t2) (tscheme_to_string t3)
+      | Inr ( { conjunction = t } ) ->
+        U.format1 "{\n\
+          conjunction = %s\n\
+        }\n" (tscheme_to_string t)
+    in
+    U.format "%s%s { \
       %s%s %s : %s \n  \
-        return_wp   = %s\n\
-      ; bind_wp     = %s\n\
-      ; if_then_else= %s\n\
-      ; ite_wp      = %s\n\
-      ; stronger    = %s\n\
-      ; close_wp    = %s\n\
-      ; trivial     = %s\n\
-      ; repr        = %s\n\
-      ; bind_repr   = %s\n\
-      ; return_repr = %s\n\
+        return_wp     = %s\n\
+      ; bind_wp       = %s\n\
+      ; stronger      = %s\n\
+      ; match_wps     = %s\n\
+      ; trivial       = %s\n\
+      ; repr          = %s\n\
+      ; return_repr   = %s\n\
+      ; bind_repr     = %s\n\
+      ; stronger_repr = %s\n\
       and effect_actions\n\t%s\n}\n"
-        [(if for_free then "_for_free " else "");
+        [eff_name;
+         (if for_free then "_for_free " else "");
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
          tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
-         tscheme_to_string ed.if_then_else;
-         tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
-         tscheme_to_string ed.close_wp;
-         tscheme_to_string ed.trivial;
+         match_wps;
+         (match ed.trivial with
+          | None -> ""
+          | Some t -> tscheme_to_string t);
          term_to_string ed.repr;
-         tscheme_to_string ed.bind_repr;
          tscheme_to_string ed.return_repr;
+         tscheme_to_string ed.bind_repr;
+         (match ed.stronger_repr with
+          | None -> ""
+          | Some t -> tscheme_to_string t);
          actions_to_string ed.actions]
 
 let eff_decl_to_string for_free ed =

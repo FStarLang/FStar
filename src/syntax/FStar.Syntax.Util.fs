@@ -853,6 +853,20 @@ let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   | Sig_new_effect ne -> ne
   | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
 
+let map_match_wps (f:tscheme -> tscheme) (match_wp:either<match_with_close, match_with_subst>)
+  : either<match_with_close, match_with_subst>
+  = match match_wp with
+    | Inl r ->
+      Inl ({ r with if_then_else = f r.if_then_else; ite_wp = f r.ite_wp; close_wp = f r.close_wp })
+    | Inr r ->
+      Inr ({ r with conjunction = f r.conjunction })
+
+let get_match_with_close_wps (match_wp:either<match_with_close, match_with_subst>)
+  : tscheme * tscheme * tscheme
+  = match match_wp with
+    | Inl r -> r.if_then_else, r.ite_wp, r.close_wp
+    | _ -> failwith "Impossible! get_match_with_close_wps called with a match_with_subst wp"
+
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))

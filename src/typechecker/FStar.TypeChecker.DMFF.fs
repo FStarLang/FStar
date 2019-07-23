@@ -463,11 +463,13 @@ let gen_wps_for_free
 
   let c = close binders in
   List.rev !sigelts, { ed with
-    if_then_else = ([], c wp_if_then_else);
-    close_wp     = ([], c wp_close);
+    match_wps = Inl ({
+      if_then_else = ([], c wp_if_then_else);
+      ite_wp = ([], c ite_wp);
+      close_wp = ([], c wp_close);
+    });
     stronger     = ([], c stronger);
-    trivial      = ([], c wp_trivial);
-    ite_wp       = ([], c ite_wp);
+    trivial      = Some ([], c wp_trivial);
   }
 
 

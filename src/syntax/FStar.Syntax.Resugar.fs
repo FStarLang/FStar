@@ -1058,11 +1058,7 @@ let resugar_eff_decl' env for_free r q ed =
   let eff_typ = resugar_term' env eff_typ in
   let ret_wp = resugar_tscheme'' env "ret_wp" ed.ret_wp in
   let bind_wp = resugar_tscheme'' env "bind_wp" ed.bind_wp in
-  let if_then_else = resugar_tscheme'' env "if_then_else" ed.if_then_else in
-  let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
   let stronger = resugar_tscheme'' env "stronger" ed.stronger in
-  let close_wp = resugar_tscheme'' env "close_wp" ed.close_wp in
-  let trivial = resugar_tscheme'' env "trivial" ed.trivial in
   let repr = resugar_tscheme'' env "repr" ([], ed.repr) in
   let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
   let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
@@ -1070,9 +1066,23 @@ let resugar_eff_decl' env for_free r q ed =
     if for_free then
       [repr; return_repr; bind_repr]
     else
-      [repr; return_repr; bind_repr; ret_wp; bind_wp;
-       if_then_else; ite_wp; stronger; close_wp;
-       trivial] in
+      [repr; return_repr; bind_repr; ret_wp; bind_wp; stronger] @
+      (match ed.match_wps with
+       | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->
+         let if_then_else = resugar_tscheme'' env "if_then_else" t1 in
+         let ite_wp = resugar_tscheme'' env "ite_wp" t2 in
+         let close_wp = resugar_tscheme'' env "close_wp" t3 in
+         [ if_then_else; ite_wp; close_wp ]
+       | Inr ({ conjunction = t }) ->
+         let conjunction = resugar_tscheme'' env "conjunction" t in
+         [ conjunction ]) @
+      (match ed.trivial with
+       | None -> []
+       | Some t -> [ resugar_tscheme'' env "trivial" t ]) @
+      (match ed.stronger_repr with
+       | None -> []
+       | Some t -> [ resugar_tscheme'' env "stronger_repr" t ])
+  in
   let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
