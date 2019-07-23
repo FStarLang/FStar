@@ -1126,7 +1126,7 @@ let (primitive_type_axioms :
                                   FStar_SMTEncoding_Term.unboxInt x  in
                                 let uu____4734 =
                                   FStar_SMTEncoding_Util.mkInteger'
-                                    (Prims.parse_int "0")
+                                    Prims.int_zero
                                    in
                                 (uu____4733, uu____4734)  in
                               FStar_SMTEncoding_Util.mkGT uu____4728  in
@@ -1137,7 +1137,7 @@ let (primitive_type_axioms :
                                     FStar_SMTEncoding_Term.unboxInt y  in
                                   let uu____4746 =
                                     FStar_SMTEncoding_Util.mkInteger'
-                                      (Prims.parse_int "0")
+                                      Prims.int_zero
                                      in
                                   (uu____4745, uu____4746)  in
                                 FStar_SMTEncoding_Util.mkGTE uu____4740  in
@@ -1624,8 +1624,7 @@ let (primitive_type_axioms :
     let body =
       let hastypeZ = FStar_SMTEncoding_Term.mk_HasTypeZ x1 t  in
       let hastypeS =
-        let uu____6285 = FStar_SMTEncoding_Term.n_fuel (Prims.parse_int "1")
-           in
+        let uu____6285 = FStar_SMTEncoding_Term.n_fuel Prims.int_one  in
         FStar_SMTEncoding_Term.mk_HasTypeFuel uu____6285 x1 t  in
       let uu____6287 = FStar_TypeChecker_Env.get_range env  in
       let uu____6288 =
@@ -1671,8 +1670,8 @@ let (primitive_type_axioms :
                 (uu____6440, uu____6441)  in
               FStar_SMTEncoding_Util.mkAnd uu____6435  in
             ([[with_type_t_e]],
-              (FStar_Pervasives_Native.Some (Prims.parse_int "0")),
-              [tt1; ee], uu____6434)
+              (FStar_Pervasives_Native.Some Prims.int_zero), [tt1; ee],
+              uu____6434)
              in
           FStar_SMTEncoding_Term.mkForall' uu____6417 uu____6418  in
         (uu____6416,
@@ -2052,7 +2051,7 @@ let (encode_free_var :
                                              {
                                                FStar_Syntax_Syntax.ppname = f;
                                                FStar_Syntax_Syntax.index =
-                                                 (Prims.parse_int "0");
+                                                 Prims.int_zero;
                                                FStar_Syntax_Syntax.sort =
                                                  FStar_Syntax_Syntax.tun
                                              }  in
@@ -3793,7 +3792,7 @@ let (encode_top_level_let :
                                                                     g))
                                                                     (fvb.FStar_SMTEncoding_Env.smt_arity
                                                                     +
-                                                                    (Prims.parse_int "1"))
+                                                                    Prims.int_one)
                                                                     args  in
                                                                     let gsapp
                                                                     =
@@ -3869,7 +3868,7 @@ let (encode_top_level_let :
                                                                     ([
                                                                     [gsapp]],
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (Prims.parse_int "0")),
+                                                                    Prims.int_zero),
                                                                     (fuel ::
                                                                     vars),
                                                                     uu____11632)
@@ -3954,7 +3953,7 @@ let (encode_top_level_let :
                                                                     let uu____11726
                                                                     =
                                                                     FStar_SMTEncoding_Term.n_fuel
-                                                                    (Prims.parse_int "0")
+                                                                    Prims.int_zero
                                                                      in
                                                                     uu____11726
                                                                     ::
@@ -4365,7 +4364,7 @@ let (encode_top_level_let :
                                     ->
                                     let plural =
                                       (FStar_List.length names1) >
-                                        (Prims.parse_int "1")
+                                        Prims.int_one
                                        in
                                     let r =
                                       let uu____12552 = FStar_List.hd names1
@@ -4711,7 +4710,7 @@ and (encode_sigelt' :
            when FStar_Ident.lid_equals lid FStar_Parser_Const.precedes_lid ->
            let uu____13394 =
              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env lid
-               (Prims.parse_int "4")
+               (Prims.of_int (4))
               in
            (match uu____13394 with | (tname,ttok,env1) -> ([], env1))
        | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____13416,t) ->
@@ -4886,7 +4885,7 @@ and (encode_sigelt' :
            let uu____13682 =
              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env
                (b2t1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-               (Prims.parse_int "1")
+               Prims.int_one
               in
            (match uu____13682 with
             | (tname,ttok,env1) ->
@@ -5185,7 +5184,7 @@ and (encode_sigelt' :
                                            let uu____14412 =
                                              FStar_Syntax_Syntax.fvar t
                                                (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                  (Prims.parse_int "0"))
+                                                  Prims.int_zero)
                                                FStar_Pervasives_Native.None
                                               in
                                            let uu____14414 =
@@ -5513,7 +5512,7 @@ and (encode_sigelt' :
                                   let xx_has_type_sfuel =
                                     if
                                       (FStar_List.length datas) >
-                                        (Prims.parse_int "1")
+                                        Prims.int_one
                                     then
                                       let uu____15089 =
                                         FStar_SMTEncoding_Util.mkApp
@@ -5744,7 +5743,7 @@ and (encode_sigelt' :
                                       let karr =
                                         if
                                           (FStar_List.length formals) >
-                                            (Prims.parse_int "0")
+                                            Prims.int_zero
                                         then
                                           let uu____15513 =
                                             let uu____15514 =
@@ -6194,10 +6193,10 @@ and (encode_sigelt' :
                                                                     arg_vars),
                                                                     eqns,
                                                                     (i +
-                                                                    (Prims.parse_int "1")))))
+                                                                    Prims.int_one))))
                                                                   (env', [],
                                                                     [],
-                                                                    (Prims.parse_int "0"))
+                                                                    Prims.int_zero)
                                                                   uu____16298
                                                                  in
                                                               (match uu____16284
@@ -6659,10 +6658,10 @@ and (encode_sigelt' :
                                                                     arg_vars),
                                                                     eqns,
                                                                     (i +
-                                                                    (Prims.parse_int "1")))))
+                                                                    Prims.int_one))))
                                                                   (env', [],
                                                                     [],
-                                                                    (Prims.parse_int "0"))
+                                                                    Prims.int_zero)
                                                                   uu____16916
                                                                  in
                                                               (match uu____16902
@@ -7239,7 +7238,7 @@ let (encode_env_bindings :
         | (i,decls,env1) ->
             (match b with
              | FStar_Syntax_Syntax.Binding_univ uu____17750 ->
-                 ((i + (Prims.parse_int "1")), decls, env1)
+                 ((i + Prims.int_one), decls, env1)
              | FStar_Syntax_Syntax.Binding_var x ->
                  let t1 =
                    norm_before_encoding env1 x.FStar_Syntax_Syntax.sort  in
@@ -7325,7 +7324,7 @@ let (encode_env_bindings :
                                    in
                                 FStar_List.append decls' uu____17860  in
                               FStar_List.append uu____17847 uu____17857  in
-                            ((i + (Prims.parse_int "1")),
+                            ((i + Prims.int_one),
                               (FStar_List.append decls g), env'))))
              | FStar_Syntax_Syntax.Binding_lid (x,(uu____17872,t)) ->
                  let t_norm = norm_before_encoding env1 t  in
@@ -7338,12 +7337,12 @@ let (encode_env_bindings :
                     in
                  (match uu____17892 with
                   | (g,env') ->
-                      ((i + (Prims.parse_int "1")),
-                        (FStar_List.append decls g), env')))
+                      ((i + Prims.int_one), (FStar_List.append decls g),
+                        env')))
          in
       let uu____17913 =
         FStar_List.fold_right encode_binding bindings
-          ((Prims.parse_int "0"), [], env)
+          (Prims.int_zero, [], env)
          in
       match uu____17913 with | (uu____17940,decls,env1) -> (decls, env1)
   
@@ -7400,11 +7399,11 @@ let (init_env : FStar_TypeChecker_Env.env -> unit) =
         let uu____18128 =
           let uu____18130 = FStar_TypeChecker_Env.current_module tcenv  in
           FStar_All.pipe_right uu____18130 FStar_Ident.string_of_lid  in
-        let uu____18132 = FStar_Util.smap_create (Prims.parse_int "100")  in
+        let uu____18132 = FStar_Util.smap_create (Prims.of_int (100))  in
         {
           FStar_SMTEncoding_Env.bvar_bindings = uu____18097;
           FStar_SMTEncoding_Env.fvar_bindings = uu____18112;
-          FStar_SMTEncoding_Env.depth = (Prims.parse_int "0");
+          FStar_SMTEncoding_Env.depth = Prims.int_zero;
           FStar_SMTEncoding_Env.tcenv = tcenv;
           FStar_SMTEncoding_Env.warn = true;
           FStar_SMTEncoding_Env.nolabels = false;

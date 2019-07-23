@@ -828,7 +828,7 @@ let (run_repl_transaction :
           | (env,finish_name_tracking) ->
               let check_success uu____2447 =
                 (let uu____2450 = FStar_Errors.get_err_count ()  in
-                 uu____2450 = (Prims.parse_int "0")) &&
+                 uu____2450 = Prims.int_zero) &&
                   (Prims.op_Negation must_rollback)
                  in
               let uu____2454 =
@@ -1187,7 +1187,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | Compute uu____3634 -> true
     | Search uu____3645 -> true
   
-let (interactive_protocol_vernum : Prims.int) = (Prims.parse_int "2") 
+let (interactive_protocol_vernum : Prims.int) = (Prims.of_int (2)) 
 let (interactive_protocol_features : Prims.string Prims.list) =
   ["autocomplete";
   "autocomplete/context";
@@ -1477,7 +1477,7 @@ let (read_interactive_query : FStar_Util.stream_reader -> query) =
   fun stream  ->
     let uu____4228 = FStar_Util.read_line stream  in
     match uu____4228 with
-    | FStar_Pervasives_Native.None  -> FStar_All.exit (Prims.parse_int "0")
+    | FStar_Pervasives_Native.None  -> FStar_All.exit Prims.int_zero
     | FStar_Pervasives_Native.Some line -> parse_interactive_query line
   
 let json_of_opt :
@@ -1919,7 +1919,7 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
               (FStar_String.lowercase o2.opt_name)))
   
 let (fstar_options_map_cache : fstar_option FStar_Util.smap) =
-  let cache = FStar_Util.smap_create (Prims.parse_int "50")  in
+  let cache = FStar_Util.smap_create (Prims.of_int (50))  in
   FStar_List.iter (fun opt  -> FStar_Util.smap_add cache opt.opt_name opt)
     fstar_options_list_cache;
   cache 
@@ -2019,7 +2019,7 @@ let run_exit :
         FStar_Util.either)
   =
   fun st  ->
-    ((QueryOK, FStar_Util.JsonNull), (FStar_Util.Inr (Prims.parse_int "0")))
+    ((QueryOK, FStar_Util.JsonNull), (FStar_Util.Inr Prims.int_zero))
   
 let run_describe_protocol :
   'Auu____5979 'Auu____5980 .
@@ -2081,8 +2081,8 @@ let run_segment :
       let frag =
         {
           FStar_Parser_ParseIt.frag_text = code;
-          FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
-          FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
+          FStar_Parser_ParseIt.frag_line = Prims.int_one;
+          FStar_Parser_ParseIt.frag_col = Prims.int_zero
         }  in
       let collect_decls uu____6183 =
         let uu____6184 = FStar_Parser_Driver.parse_fragment frag  in
@@ -2404,13 +2404,11 @@ let (capitalize : Prims.string -> Prims.string) =
     if str = ""
     then str
     else
-      (let first =
-         FStar_String.substring str (Prims.parse_int "0")
-           (Prims.parse_int "1")
+      (let first = FStar_String.substring str Prims.int_zero Prims.int_one
           in
        let uu____6903 =
-         FStar_String.substring str (Prims.parse_int "1")
-           ((FStar_String.length str) - (Prims.parse_int "1"))
+         FStar_String.substring str Prims.int_one
+           ((FStar_String.length str) - Prims.int_one)
           in
        Prims.op_Hat (FStar_String.uppercase first) uu____6903)
   
@@ -2987,8 +2985,8 @@ let run_with_parsed_and_tc_term :
                 FStar_Util.format1 "let __compute_dummy__ = (%s)" term1  in
               {
                 FStar_Parser_ParseIt.frag_text = dummy_decl;
-                FStar_Parser_ParseIt.frag_line = (Prims.parse_int "0");
-                FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
+                FStar_Parser_ParseIt.frag_line = Prims.int_zero;
+                FStar_Parser_ParseIt.frag_col = Prims.int_zero
               }  in
             let find_let_body ses =
               match ses with
@@ -3106,8 +3104,7 @@ let run_compute :
            in
         let normalize_term1 tcenv rules2 t =
           FStar_TypeChecker_Normalize.normalize rules2 tcenv t  in
-        run_with_parsed_and_tc_term st term (Prims.parse_int "0")
-          (Prims.parse_int "0")
+        run_with_parsed_and_tc_term st term Prims.int_zero Prims.int_zero
           (fun tcenv  ->
              fun def  ->
                let normalized = normalize_term1 tcenv rules1 def  in
@@ -3144,7 +3141,7 @@ let (st_cost : search_term' -> Prims.int) =
   fun uu___9_9964  ->
     match uu___9_9964 with
     | NameContainsStr str -> - (FStar_String.length str)
-    | TypeContainsLid lid -> (Prims.parse_int "1")
+    | TypeContainsLid lid -> Prims.int_one
   
 type search_candidate =
   {
@@ -3277,16 +3274,16 @@ let run_search :
           let negate = FStar_Util.starts_with term "-"  in
           let term1 =
             if negate
-            then FStar_Util.substring_from term (Prims.parse_int "1")
+            then FStar_Util.substring_from term Prims.int_one
             else term  in
           let beg_quote = FStar_Util.starts_with term1 "\""  in
           let end_quote = FStar_Util.ends_with term1 "\""  in
           let strip_quotes str =
-            if (FStar_String.length str) < (Prims.parse_int "2")
+            if (FStar_String.length str) < (Prims.of_int (2))
             then FStar_Exn.raise (InvalidSearch "Empty search term")
             else
-              FStar_Util.substring str (Prims.parse_int "1")
-                ((FStar_String.length term1) - (Prims.parse_int "2"))
+              FStar_Util.substring str Prims.int_one
+                ((FStar_String.length term1) - (Prims.of_int (2)))
              in
           let parsed =
             if beg_quote <> end_quote
@@ -3540,10 +3537,8 @@ let (install_ide_mode_hooks : (FStar_Util.json -> unit) -> unit) =
     FStar_Errors.set_handler interactive_error_handler
   
 let (initial_range : FStar_Range.range) =
-  let uu____11288 =
-    FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0")  in
-  let uu____11291 =
-    FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0")  in
+  let uu____11288 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
+  let uu____11291 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
   FStar_Range.mk_range "<input>" uu____11288 uu____11291 
 let (build_initial_repl_state : Prims.string -> repl_state) =
   fun filename  ->
@@ -3551,8 +3546,8 @@ let (build_initial_repl_state : Prims.string -> repl_state) =
     let env1 = FStar_TypeChecker_Env.set_range env initial_range  in
     let uu____11305 = FStar_Util.open_stdin ()  in
     {
-      repl_line = (Prims.parse_int "1");
-      repl_column = (Prims.parse_int "0");
+      repl_line = Prims.int_one;
+      repl_column = Prims.int_zero;
       repl_fname = filename;
       repl_deps_stack = [];
       repl_curmod = FStar_Pervasives_Native.None;

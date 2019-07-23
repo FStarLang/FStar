@@ -69,6 +69,10 @@ val close_lcomp: env -> list<bv> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 val universe_of_comp: env -> universe -> comp -> universe
+(*
+ * return value: formula for input comp to have trivial wp * guard for that formula
+ *)
+val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
 val check_and_ascribe : env -> term -> typ -> typ -> term * guard_t

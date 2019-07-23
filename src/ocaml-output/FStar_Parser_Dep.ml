@@ -56,7 +56,7 @@ let (check_and_strip_suffix :
            if uu____155
            then
              let uu____165 =
-               FStar_String.substring f (Prims.parse_int "0") (l - lext)  in
+               FStar_String.substring f Prims.int_zero (l - lext)  in
              FStar_Pervasives_Native.Some uu____165
            else FStar_Pervasives_Native.None) suffixes
        in
@@ -69,8 +69,7 @@ let (check_and_strip_suffix :
 let (is_interface : Prims.string -> Prims.bool) =
   fun f  ->
     let uu____215 =
-      FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1"))
-       in
+      FStar_String.get f ((FStar_String.length f) - Prims.int_one)  in
     uu____215 = 105
   
 let (is_implementation : Prims.string -> Prims.bool) =
@@ -400,7 +399,7 @@ let (deps_keys : dependence_graph -> Prims.string Prims.list) =
   fun uu____1254  -> match uu____1254 with | Deps m -> FStar_Util.smap_keys m 
 let (deps_empty : unit -> dependence_graph) =
   fun uu____1266  ->
-    let uu____1267 = FStar_Util.smap_create (Prims.parse_int "41")  in
+    let uu____1267 = FStar_Util.smap_create (Prims.of_int (41))  in
     Deps uu____1267
   
 let (mk_deps :
@@ -427,8 +426,8 @@ let (mk_deps :
   
 let (empty_deps : deps) =
   let uu____1325 = deps_empty ()  in
-  let uu____1326 = FStar_Util.smap_create (Prims.parse_int "0")  in
-  let uu____1338 = FStar_Util.smap_create (Prims.parse_int "0")  in
+  let uu____1326 = FStar_Util.smap_create Prims.int_zero  in
+  let uu____1338 = FStar_Util.smap_create Prims.int_zero  in
   mk_deps uu____1325 uu____1326 [] [] [] uu____1338 
 let (module_name_of_dep : dependence -> module_name) =
   fun uu___4_1351  ->
@@ -563,7 +562,7 @@ let (cache_file_name : Prims.string -> Prims.string) =
           FStar_Errors.raise_err uu____1792
         else FStar_Options.prepend_cache_dir cache_fn
      in
-  let memo = FStar_Util.smap_create (Prims.parse_int "100")  in
+  let memo = FStar_Util.smap_create (Prims.of_int (100))  in
   let memo1 f x =
     let uu____1834 = FStar_Util.smap_try_find memo x  in
     match uu____1834 with
@@ -791,7 +790,7 @@ let (build_inclusion_candidates_list :
   
 let (build_map : Prims.string Prims.list -> files_for_module_name) =
   fun filenames  ->
-    let map1 = FStar_Util.smap_create (Prims.parse_int "41")  in
+    let map1 = FStar_Util.smap_create (Prims.of_int (41))  in
     let add_entry key full_path =
       let uu____2400 = FStar_Util.smap_try_find map1 key  in
       match uu____2400 with
@@ -1125,7 +1124,7 @@ let (collect_one :
                 add_dep_on_module module_name false
              in
           let begin_module lid =
-            if (FStar_List.length lid.FStar_Ident.ns) > (Prims.parse_int "0")
+            if (FStar_List.length lid.FStar_Ident.ns) > Prims.int_zero
             then
               let uu____3700 =
                 let uu____3702 = namespace_of_lid lid  in
@@ -1176,8 +1175,7 @@ let (collect_one :
                   FStar_All.pipe_right data_from_cache FStar_Util.must  in
                 (uu____3858, deps, has_inline_for_extraction, mo_roots)))
         else
-          (let num_of_toplevelmods = FStar_Util.mk_ref (Prims.parse_int "0")
-              in
+          (let num_of_toplevelmods = FStar_Util.mk_ref Prims.int_zero  in
            let pd = FStar_Util.mk_ref []  in
            let add_to_parsing_data elt =
              let uu____3887 =
@@ -1285,7 +1283,7 @@ let (collect_one :
                   (let uu____4255 =
                      let uu____4257 = FStar_ST.op_Bang num_of_toplevelmods
                         in
-                     uu____4257 > (Prims.parse_int "1")  in
+                     uu____4257 > Prims.int_one  in
                    if uu____4255
                    then
                      let uu____4282 =
@@ -1602,7 +1600,7 @@ let (collect_one_cache :
   (dependence Prims.list * dependence Prims.list * Prims.bool)
     FStar_Util.smap FStar_ST.ref)
   =
-  let uu____5297 = FStar_Util.smap_create (Prims.parse_int "0")  in
+  let uu____5297 = FStar_Util.smap_create Prims.int_zero  in
   FStar_Util.mk_ref uu____5297 
 let (set_collect_one_cache :
   (dependence Prims.list * dependence Prims.list * Prims.bool)
@@ -1851,7 +1849,7 @@ let (collect :
           let uu____6307 = FStar_ST.op_Bang interfaces_needing_inlining  in
           l1 :: uu____6307  in
         FStar_ST.op_Colon_Equals interfaces_needing_inlining uu____6303  in
-      let parse_results = FStar_Util.smap_create (Prims.parse_int "40")  in
+      let parse_results = FStar_Util.smap_create (Prims.of_int (40))  in
       let rec discover_one file_name =
         let uu____6374 =
           let uu____6376 = deps_try_find dep_graph file_name  in
@@ -2099,8 +2097,8 @@ let (print_full : deps -> unit) =
       let order = FStar_Util.mk_ref []  in
       let remaining_output_files = FStar_Util.smap_copy orig_output_file_map
          in
-      let visited_other_modules =
-        FStar_Util.smap_create (Prims.parse_int "41")  in
+      let visited_other_modules = FStar_Util.smap_create (Prims.of_int (41))
+         in
       let should_visit lc_module_name =
         (let uu____7283 =
            FStar_Util.smap_try_find remaining_output_files lc_module_name  in
@@ -2171,7 +2169,7 @@ let (print_full : deps -> unit) =
       (let uu____7469 = FStar_ST.op_Bang order  in FStar_List.rev uu____7469)
        in
     let sb =
-      let uu____7500 = FStar_BigInt.of_int_fs (Prims.parse_int "10000")  in
+      let uu____7500 = FStar_BigInt.of_int_fs (Prims.of_int (10000))  in
       FStar_StringBuffer.create uu____7500  in
     let pr str =
       let uu____7510 = FStar_StringBuffer.add str sb  in
@@ -2452,7 +2450,7 @@ let (print_full : deps -> unit) =
             (FStar_Util.sort_with FStar_String.compare)
            in
         let all_ml_files =
-          let ml_file_map = FStar_Util.smap_create (Prims.parse_int "41")  in
+          let ml_file_map = FStar_Util.smap_create (Prims.of_int (41))  in
           FStar_All.pipe_right all_fst_files
             (FStar_List.iter
                (fun fst_file  ->
@@ -2465,8 +2463,7 @@ let (print_full : deps -> unit) =
                   else ()));
           sort_output_files ml_file_map  in
         let all_krml_files =
-          let krml_file_map = FStar_Util.smap_create (Prims.parse_int "41")
-             in
+          let krml_file_map = FStar_Util.smap_create (Prims.of_int (41))  in
           FStar_All.pipe_right keys
             (FStar_List.iter
                (fun fst_file  ->

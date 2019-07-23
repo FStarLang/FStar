@@ -61,20 +61,6 @@ let gmst_close (s:Type) (a:Type) (b:Type)
   forall x. wp x s0 p
 
 unfold
-let gmst_assert_p (s:Type) (a:Type) (p:Type) 
-                  (wp:gmst_wp s a) (s0:s) (q:gmst_post s a s0) =
-  p /\ wp s0 q
-
-unfold
-let gmst_assume_p (s:Type) (a:Type) (p:Type) 
-                  (wp:gmst_wp s a) (s0:s) (q:gmst_post s a s0) =
-  p ==> wp s0 q
-
-unfold
-let gmst_null (s:Type) (a:Type) (s0:s) (p:gmst_post s a s0) =
-  forall rel x s. p rel x s
-
-unfold
 let gmst_trivial (s:Type) (a:Type) (wp:gmst_wp s a) =
   forall s0. wp s0 (fun _ _ _ -> True)
 
@@ -88,9 +74,6 @@ new_effect {
      ; ite_wp       = gmst_ite s
      ; stronger     = gmst_stronger s
      ; close_wp     = gmst_close s
-     ; assert_p     = gmst_assert_p s
-     ; assume_p     = gmst_assume_p s
-     ; null_wp      = gmst_null s
      ; trivial      = gmst_trivial s
 }
 

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "727147d7f42eebd11697c79507caf1bc"
+      "a317978a0a75d5fb656dc75af3401036"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "bfe7dd915af32d85f1c855d88aeb92ba"
+      "f3282efc31e095f2cf1c9ba3efe11419"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,16 +39,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4f288a685715b1fcb7a6121e08795872"
-    ],
-    [
-      "Bug1091.jul25_2017_refUL",
-      1,
-      1,
-      1,
-      [ "@query" ],
-      0,
-      "deff619e3d06aa657580170ca4ba1528"
+      "635c02fb18d199a3cf5803f5cedcc515"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -63,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3820d63bf94d7b3da71eed92c6e8eec5"
+      "3dc9c26dbe932ef2ad9f0cf15c4e246b"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -75,7 +66,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "54786d551b5dcc6a58a9351083c69e7d"
+      "3617f0a6ffc7da31aeaa77c375ae9523"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -87,7 +78,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5c5f7deb9042f5e75034e196f6cd9cb1"
+      "59fef30d8d6dbc6ce2fa1eebc8960cc0"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -99,7 +90,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8de954a9b8e0d8cb83c1296083049ec2"
+      "06dd3c145b8b7dd2eb7de5300cddb5ce"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -111,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b379b3ec6964634e311dc854c7eb203f"
+      "a72a6282777dbde7cf032366ef1c1604"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -133,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1cf16c5ff4f15c1648c5716e5bc07cbc"
+      "6b4495444816e1fa476bdcde51d5a96a"
     ]
   ]
 ]

@@ -11,16 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "25425482f61be5361f4cd2e01c1a141a"
-    ],
-    [
-      "Cap.gen",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e143557e7cad6a60e76e2c594cdcb519"
+      "4a3c8ab299128dd14da77c2bd5953273"
     ],
     [
       "Cap.issue",
@@ -37,16 +28,7 @@
         "string_inversion", "token_correspondence_Cap.capRead"
       ],
       0,
-      "a640179e1fbd9576713221bcf24cf2ef"
-    ],
-    [
-      "Cap.redeem",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1dd8b7f8c7ba9c6230e5d1865d8559f8"
+      "0f6b243cbbefea59ab5b1a4ee8d627ac"
     ],
     [
       "Cap.main",
@@ -73,7 +55,7 @@
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "60361864286b7d40aa5989ca316709b8"
+      "1057255f9d25ad35a0df6e762c1a1867"
     ],
     [
       "Cap.capRead",
@@ -85,7 +67,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "c798c265d0d91c08716f0661db69d3a6"
+      "455b0dbec767ad47bb08b37c5ff44a63"
     ],
     [
       "Cap.issue",
@@ -102,16 +84,7 @@
         "string_inversion", "token_correspondence_Cap.capRead"
       ],
       0,
-      "cd0c0b4fcae045befb5124c26d84775b"
-    ],
-    [
-      "Cap.redeem",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
-      0,
-      "df3f422139cedf53b4d91a587102bf1e"
+      "f12c4405198e9a7e882e7e1ef7e4b715"
     ]
   ]
 ]
