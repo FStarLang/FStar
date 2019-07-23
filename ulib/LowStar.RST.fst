@@ -70,15 +70,42 @@ assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem)
 
 (* Abstract modifies clause for the resource-indexed state effect *)
 
+let frame_usedness_preservation (l1 l2:loc) (h0 h1:HS.mem)
+  = forall (frame: loc) .
+      (loc_disjoint frame l1 /\
+      loc_includes (loc_used_in h0) frame)
+      ==>
+      (loc_disjoint frame l2 /\
+      loc_includes (loc_used_in h1) frame)
+
+let frame_usedness_preservation_intro (l1 l2: loc) (h0 h1:HS.mem)
+  (lemma: (frame: loc) -> Lemma
+    (requires ((loc_disjoint frame l1) /\ loc_includes (loc_used_in h0) frame))
+    (ensures (loc_disjoint frame l2 /\ loc_includes (loc_used_in h1) frame))
+  ) : Lemma (frame_usedness_preservation l1 l2 h0 h1)
+  =
+  let aux (frame: loc) : Lemma ( (loc_disjoint frame l1 /\
+      loc_includes (loc_used_in h0) frame)
+      ==>
+      (loc_disjoint frame l2 /\
+      loc_includes (loc_used_in h1) frame))
+    =
+    let aux (_: squash (loc_disjoint frame l1 /\  loc_includes (loc_used_in h0) frame)) :
+      Lemma (loc_disjoint frame l2 /\ loc_includes (loc_used_in h1) frame)
+      = lemma frame
+    in Classical.impl_intro aux
+  in
+  Classical.forall_intro aux
+
+let frame_usedness_preservation_elim (l1 l2: loc) (h0 h1:HS.mem) (frame: loc) : Lemma
+  (requires (frame_usedness_preservation l1 l2 h0 h1 /\ (loc_disjoint frame l1) /\ loc_includes (loc_used_in h0) frame))
+  (ensures (loc_disjoint frame l2 /\ loc_includes (loc_used_in h1) frame))
+  = ()
+
 abstract
 let modifies (res0 res1:resource) (h0 h1:HS.mem) =
     modifies (as_loc (fp res0)) h0 h1 /\
-    (forall frame .
-      loc_disjoint frame (as_loc (fp res0)) /\
-      loc_includes (loc_used_in h0) frame
-      ==>
-      loc_disjoint frame (as_loc (fp res1)) /\
-      loc_includes (loc_used_in h1) frame)
+    frame_usedness_preservation (as_loc (fp res0)) (as_loc (fp res1)) h0 h1
 
 let modifies_refl (res:resource) (h:HS.mem)
   : Lemma (modifies res res h h)
@@ -99,12 +126,8 @@ let reveal_modifies ()
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}
              modifies res0 res1 h0 h1 <==>
              LowStar.Array.modifies (as_loc (fp res0)) h0 h1 /\
-             (forall frame .
-               loc_disjoint frame (as_loc (fp res0)) /\
-               loc_includes (loc_used_in  h0) frame
-               ==>
-               loc_disjoint frame (as_loc (fp res1)) /\
-               loc_includes (loc_used_in  h1) frame))
+             frame_usedness_preservation (as_loc (fp res0)) (as_loc (fp res1)) h0 h1
+          )
   = ()
 
 (* State effect indexed by resources *)

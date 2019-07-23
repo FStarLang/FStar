@@ -98,5 +98,5 @@ let read_write_with_sharing () : RST.RST unit
     (fun _ -> A.glue b b_first b_second);
 
   let h'' = HST.get () in
-  A.merge b b1;
+  A.gather b b1;
   A.free b
