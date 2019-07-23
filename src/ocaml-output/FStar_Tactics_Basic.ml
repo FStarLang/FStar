@@ -7195,13 +7195,13 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.all_implicits = imps;
             FStar_Tactics_Types.goals = goals;
             FStar_Tactics_Types.smt_goals = [];
-            FStar_Tactics_Types.depth = (Prims.parse_int "0");
+            FStar_Tactics_Types.depth = Prims.int_zero;
             FStar_Tactics_Types.__dump =
               (fun ps  -> fun msg  -> dump_proofstate ps msg);
             FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
-            FStar_Tactics_Types.freshness = (Prims.parse_int "0");
+            FStar_Tactics_Types.freshness = Prims.int_zero;
             FStar_Tactics_Types.tac_verb_dbg = uu____15806;
             FStar_Tactics_Types.local_state = uu____15809
           }  in

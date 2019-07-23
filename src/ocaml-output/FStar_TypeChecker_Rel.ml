@@ -11824,7 +11824,7 @@ let (force_trivial_guard :
                let fv =
                  FStar_Syntax_Syntax.lid_as_fv lid
                    (FStar_Syntax_Syntax.Delta_constant_at_level
-                      (Prims.parse_int "0")) FStar_Pervasives_Native.None
+                      Prims.int_zero) FStar_Pervasives_Native.None
                   in
                let dd =
                  let uu____29752 =
