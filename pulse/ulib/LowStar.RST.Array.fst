@@ -26,13 +26,8 @@ let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   (**) let h1 = HST.get () in
   (**) assert(modifies (array_resource b) (array_resource b) h0 h1);
   (**) assert(A.loc_includes (A.loc_used_in h0) (as_loc (fp (array_resource b))));
-  (**) //A.loc_includes_adresses_loc_array #a b true; // TODO: find out why this pattern is not triggered
-  (**) //A.address_liveness_insensitive_addresses (A.frameOf b) (Set.singleton (A.as_addr b));
-  (**) //assert(A.modifies (A.address_liveness_insensitive_locs) h0 h1);
-  (**) //A.modifies_address_liveness_insensitive_unused_in h0 h1;
-  (**) //assert(A.loc_includes (A.loc_used_in h1) (as_loc (fp (array_resource b))));
-  (**) same_perm_seq_always_constant h0 h1 b;
-  admit()
+  (**) A.live_array_used_in b h1;
+  (**) same_perm_seq_always_constant h0 h1 b
 
 let alloc (#a:Type) (init:a) (len:UInt32.t) =
   (**) reveal_array();
@@ -41,8 +36,7 @@ let alloc (#a:Type) (init:a) (len:UInt32.t) =
   let b = A.alloc init len in
   (**) let h1 = HST.get () in
   (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one); // Find out how to trigger that
-  (**) //A.loc_includes_adresses_loc_array #a b true;
-  admit();
+  (**) A.live_array_used_in b h1;
   b
 
 let free (#a:Type) (b:A.array a) =
@@ -58,7 +52,8 @@ let share #a b =
   (**) reveal_modifies();
   (**) reveal_star();
   let b' = A.share b in
-  admit();
+  (**) let h1 = HST.get () in
+  (**) A.live_array_used_in b h1;
   b'
 
 
@@ -67,8 +62,9 @@ let gather #a b b' =
   (**) reveal_rst_inv();
   (**) reveal_modifies();
   (**) reveal_star();
-  admit();
-  A.gather #a b b'
+  A.gather #a b b';
+  (**) let h1 = HST.get () in
+  (**) A.live_array_used_in b h1
 
 let split #a b idx =
   (**) reveal_array ();
