@@ -578,17 +578,17 @@ let (uu___is_ContentModified : error_code -> Prims.bool) =
 let (errorcode_to_int : error_code -> Prims.int) =
   fun uu___8_1749  ->
     match uu___8_1749 with
-    | ParseError  -> ~- (Prims.parse_int "32700")
-    | InvalidRequest  -> ~- (Prims.parse_int "32600")
-    | MethodNotFound  -> ~- (Prims.parse_int "32601")
-    | InvalidParams  -> ~- (Prims.parse_int "32602")
-    | InternalError  -> ~- (Prims.parse_int "32603")
-    | ServerErrorStart  -> ~- (Prims.parse_int "32099")
-    | ServerErrorEnd  -> ~- (Prims.parse_int "32000")
-    | ServerNotInitialized  -> ~- (Prims.parse_int "32002")
-    | UnknownErrorCode  -> ~- (Prims.parse_int "32001")
-    | RequestCancelled  -> ~- (Prims.parse_int "32800")
-    | ContentModified  -> ~- (Prims.parse_int "32801")
+    | ParseError  -> ~- (Prims.of_int (32700))
+    | InvalidRequest  -> ~- (Prims.of_int (32600))
+    | MethodNotFound  -> ~- (Prims.of_int (32601))
+    | InvalidParams  -> ~- (Prims.of_int (32602))
+    | InternalError  -> ~- (Prims.of_int (32603))
+    | ServerErrorStart  -> ~- (Prims.of_int (32099))
+    | ServerErrorEnd  -> ~- (Prims.of_int (32000))
+    | ServerNotInitialized  -> ~- (Prims.of_int (32002))
+    | UnknownErrorCode  -> ~- (Prims.of_int (32001))
+    | RequestCancelled  -> ~- (Prims.of_int (32800))
+    | ContentModified  -> ~- (Prims.of_int (32801))
   
 let (json_debug : FStar_Util.json -> Prims.string) =
   fun uu___9_1768  ->

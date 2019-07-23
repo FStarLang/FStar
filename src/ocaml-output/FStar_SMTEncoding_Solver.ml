@@ -132,7 +132,7 @@ let (filter_using_facts_from :
       let theory_rev = FStar_List.rev theory  in
       let pruned_theory =
         let include_assumption_names =
-          FStar_Util.smap_create (Prims.parse_int "10000")  in
+          FStar_Util.smap_create (Prims.of_int (10000))  in
         let keep_decl uu___2_442 =
           match uu___2_442 with
           | FStar_SMTEncoding_Term.Assume a ->
@@ -177,7 +177,7 @@ let rec (filter_assertions_with_stats :
         match core with
         | FStar_Pervasives_Native.None  ->
             let uu____565 = filter_using_facts_from e theory  in
-            (uu____565, false, (Prims.parse_int "0"), (Prims.parse_int "0"))
+            (uu____565, false, Prims.int_zero, Prims.int_zero)
         | FStar_Pervasives_Native.Some core1 ->
             let theory_rev = FStar_List.rev theory  in
             let uu____586 =
@@ -191,7 +191,7 @@ let rec (filter_assertions_with_stats :
                       Prims.op_Hat "UNSAT CORE: " uu____614  in
                     FStar_SMTEncoding_Term.Caption uu____612  in
                   [uu____611]  in
-                (uu____608, (Prims.parse_int "0"), (Prims.parse_int "0"))  in
+                (uu____608, Prims.int_zero, Prims.int_zero)  in
               FStar_List.fold_left
                 (fun uu____644  ->
                    fun d  ->
@@ -205,8 +205,7 @@ let rec (filter_assertions_with_stats :
                                   core1
                               then
                                 ((d :: theory1),
-                                  (n_retained + (Prims.parse_int "1")),
-                                  n_pruned)
+                                  (n_retained + Prims.int_one), n_pruned)
                               else
                                 if
                                   FStar_Util.starts_with
@@ -215,7 +214,7 @@ let rec (filter_assertions_with_stats :
                                 then ((d :: theory1), n_retained, n_pruned)
                                 else
                                   (theory1, n_retained,
-                                    (n_pruned + (Prims.parse_int "1")))
+                                    (n_pruned + Prims.int_one))
                           | FStar_SMTEncoding_Term.Module (name,decls) ->
                               let uu____738 =
                                 FStar_All.pipe_right decls
@@ -649,28 +648,26 @@ let (report_errors : query_settings -> unit) =
                          ((FStar_Util.starts_with err1 "canceled") ||
                             (FStar_Util.starts_with err1 "(resource"))
                            || (FStar_Util.starts_with err1 "timeout")
-                       then (ic, (cc + (Prims.parse_int "1")), uc)
+                       then (ic, (cc + Prims.int_one), uc)
                        else
                          if FStar_Util.starts_with err1 "(incomplete"
-                         then ((ic + (Prims.parse_int "1")), cc, uc)
-                         else (ic, cc, (uc + (Prims.parse_int "1"))))
-              ((Prims.parse_int "0"), (Prims.parse_int "0"),
-                (Prims.parse_int "0")) settings.query_errors
+                         then ((ic + Prims.int_one), cc, uc)
+                         else (ic, cc, (uc + Prims.int_one)))
+              (Prims.int_zero, Prims.int_zero, Prims.int_zero)
+              settings.query_errors
              in
           match uu____2238 with
           | (incomplete_count,canceled_count,unknown_count) ->
               FStar_All.pipe_right
                 (match (incomplete_count, canceled_count, unknown_count) with
                  | (uu____2368,_2373,_2374) when
-                     ((_2373 = (Prims.parse_int "0")) &&
-                        (_2374 = (Prims.parse_int "0")))
-                       && (incomplete_count > (Prims.parse_int "0"))
+                     ((_2373 = Prims.int_zero) && (_2374 = Prims.int_zero))
+                       && (incomplete_count > Prims.int_zero)
                      ->
                      "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
                  | (_2381,uu____2377,_2383) when
-                     ((_2381 = (Prims.parse_int "0")) &&
-                        (_2383 = (Prims.parse_int "0")))
-                       && (canceled_count > (Prims.parse_int "0"))
+                     ((_2381 = Prims.int_zero) && (_2383 = Prims.int_zero))
+                       && (canceled_count > Prims.int_zero)
                      ->
                      "The SMT query timed out, you might want to increase the rlimit"
                  | (uu____2386,uu____2387,uu____2388) ->
@@ -896,8 +893,8 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                          "statistics={"
                         in
                      let uu____3154 =
-                       FStar_Util.substring str (Prims.parse_int "0")
-                         ((FStar_String.length str) - (Prims.parse_int "1"))
+                       FStar_Util.substring str Prims.int_zero
+                         ((FStar_String.length str) - Prims.int_one)
                         in
                      Prims.op_Hat uu____3154 "}"
                    else ""  in
@@ -972,7 +969,7 @@ let (record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
              FStar_Util.fuel = (settings.query_fuel);
              FStar_Util.ifuel = (settings.query_ifuel);
              FStar_Util.unsat_core = core;
-             FStar_Util.query_elapsed_time = (Prims.parse_int "0");
+             FStar_Util.query_elapsed_time = Prims.int_zero;
              FStar_Util.hash =
                (match z3result.FStar_SMTEncoding_Z3.z3result_status with
                 | FStar_SMTEncoding_Z3.UNSAT core1 ->
@@ -1164,7 +1161,7 @@ let (ask_and_report_errors :
                    let uu____3734 =
                      let uu____3736 =
                        let uu____3738 = FStar_Options.max_fuel ()  in
-                       uu____3738 / (Prims.parse_int "2")  in
+                       uu____3738 / (Prims.of_int (2))  in
                      let uu____3741 = FStar_Options.initial_fuel ()  in
                      uu____3736 > uu____3741  in
                    if uu____3734
@@ -1173,7 +1170,7 @@ let (ask_and_report_errors :
                        let uu___460_3747 = default_settings  in
                        let uu____3748 =
                          let uu____3750 = FStar_Options.max_fuel ()  in
-                         uu____3750 / (Prims.parse_int "2")  in
+                         uu____3750 / (Prims.of_int (2))  in
                        let uu____3753 = FStar_Options.max_ifuel ()  in
                        {
                          query_env = (uu___460_3747.query_env);
@@ -1241,7 +1238,7 @@ let (ask_and_report_errors :
                          query_index = (uu___468_3800.query_index);
                          query_range = (uu___468_3800.query_range);
                          query_fuel = uu____3801;
-                         query_ifuel = (Prims.parse_int "1");
+                         query_ifuel = Prims.int_one;
                          query_rlimit = (uu___468_3800.query_rlimit);
                          query_hint = (uu___468_3800.query_hint);
                          query_errors = (uu___468_3800.query_errors);
@@ -1525,8 +1522,7 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.pop = (fun uu____4510  -> ());
     FStar_TypeChecker_Env.snapshot =
       (fun uu____4513  ->
-         (((Prims.parse_int "0"), (Prims.parse_int "0"),
-            (Prims.parse_int "0")), ()));
+         ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
     FStar_TypeChecker_Env.rollback =
       (fun uu____4532  -> fun uu____4533  -> ());
     FStar_TypeChecker_Env.encode_sig =

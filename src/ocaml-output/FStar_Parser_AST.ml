@@ -997,8 +997,8 @@ let (decl_drange : decl -> FStar_Range.range) = fun decl  -> decl.drange
 let (check_id : FStar_Ident.ident -> unit) =
   fun id1  ->
     let first_char =
-      FStar_String.substring id1.FStar_Ident.idText (Prims.parse_int "0")
-        (Prims.parse_int "1")
+      FStar_String.substring id1.FStar_Ident.idText Prims.int_zero
+        Prims.int_one
        in
     if (FStar_String.lowercase first_char) = first_char
     then ()
@@ -1608,7 +1608,7 @@ let (compile_op :
           | 38 -> "Amp"
           | 64 -> "At"
           | 43 -> "Plus"
-          | 45 when arity = (Prims.parse_int "1") -> "Minus"
+          | 45 when arity = Prims.int_one -> "Minus"
           | 45 -> "Subtraction"
           | 126 -> "Tilde"
           | 47 -> "Slash"
@@ -1650,7 +1650,7 @@ let (compile_op :
             Prims.op_Hat "op_" uu____7372
   
 let (compile_op' : Prims.string -> FStar_Range.range -> Prims.string) =
-  fun s  -> fun r  -> compile_op (~- (Prims.parse_int "1")) s r 
+  fun s  -> fun r  -> compile_op (~- Prims.int_one) s r 
 let (string_of_fsdoc :
   (Prims.string * (Prims.string * Prims.string) Prims.list) -> Prims.string)
   =

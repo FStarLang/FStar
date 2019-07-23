@@ -47,15 +47,6 @@ let st_wp (a:Type) = post a -> pre
 (* unfold *) let st_close_wp (a:Type) (b:Type) (wp:(b -> GTot (st_wp a))) (p:post a) (m:memory) =
   forall (b:b). wp b p m
 
-(* unfold *)  let st_assert_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (m:memory) =
-  p /\ wp q m
-
-(* unfold *)  let st_assume_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (m:memory) =
-  p ==> wp q m
-
-(* unfold *)  let st_null_wp (a:Type) (p:post a) (m:memory) =
-  forall (x:a) (m:memory). p x m
-
 (* unfold *) let st_trivial (a:Type) (wp:st_wp a) =
   forall m0. wp (fun _ _ -> True) m0
       
@@ -67,9 +58,6 @@ new_effect {
      ; ite_wp       = st_ite_wp
      ; stronger     = st_stronger
      ; close_wp     = st_close_wp
-     ; assert_p     = st_assert_p
-     ; assume_p     = st_assume_p
-     ; null_wp      = st_null_wp
      ; trivial      = st_trivial
 }
 

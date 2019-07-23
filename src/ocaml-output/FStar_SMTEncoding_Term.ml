@@ -519,7 +519,7 @@ let (mk_decls :
         fun aux_decls  ->
           let uu____2213 =
             let uu____2214 =
-              let sm = FStar_Util.smap_create (Prims.parse_int "20")  in
+              let sm = FStar_Util.smap_create (Prims.of_int (20))  in
               FStar_List.iter
                 (fun elt  ->
                    FStar_List.iter (fun s  -> FStar_Util.smap_add sm s "0")
@@ -805,11 +805,10 @@ let (boxBitVecFun : Prims.int -> (Prims.string * Prims.string)) =
 let (boxRealFun : (Prims.string * Prims.string)) = mkBoxFunctions "BoxReal" 
 let (isInjective : Prims.string -> Prims.bool) =
   fun s  ->
-    if (FStar_String.length s) >= (Prims.parse_int "3")
+    if (FStar_String.length s) >= (Prims.of_int (3))
     then
       (let uu____3272 =
-         FStar_String.substring s (Prims.parse_int "0") (Prims.parse_int "3")
-          in
+         FStar_String.substring s Prims.int_zero (Prims.of_int (3))  in
        uu____3272 = "Box") &&
         (let uu____3279 =
            let uu____3281 = FStar_String.list_of_string s  in
@@ -1201,7 +1200,7 @@ let (mkQuant :
                        FStar_Errors.log_issue r uu____4832);
                       []))
                in
-            if (FStar_List.length vars) = (Prims.parse_int "0")
+            if (FStar_List.length vars) = Prims.int_zero
             then body
             else
               (match body.tm with
@@ -1219,7 +1218,7 @@ let (mkLet : (term Prims.list * term) -> FStar_Range.range -> term) =
     fun r  ->
       match uu____4907 with
       | (es,body) ->
-          if (FStar_List.length es) = (Prims.parse_int "0")
+          if (FStar_List.length es) = Prims.int_zero
           then body
           else mk (Let (es, body)) r
   
@@ -1232,8 +1231,7 @@ let (abstr : fv Prims.list -> term -> term) =
         match uu____4953 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
         | FStar_Pervasives_Native.Some i ->
-            FStar_Pervasives_Native.Some
-              (nvars - (i + (Prims.parse_int "1")))
+            FStar_Pervasives_Native.Some (nvars - (i + Prims.int_one))
          in
       let rec aux ix t1 =
         let uu____4980 = FStar_ST.op_Bang t1.freevars  in
@@ -1288,8 +1286,8 @@ let (abstr : fv Prims.list -> term -> term) =
                                 let uu____5262 = aux ix1 e  in uu____5262 ::
                                   l
                                  in
-                              ((ix1 + (Prims.parse_int "1")), uu____5259))
-                     (ix, []) es
+                              ((ix1 + Prims.int_one), uu____5259)) (ix, [])
+                     es
                     in
                  (match uu____5215 with
                   | (ix1,es_rev) ->
@@ -1298,7 +1296,7 @@ let (abstr : fv Prims.list -> term -> term) =
                         ((FStar_List.rev es_rev), uu____5285)  in
                       mkLet uu____5278 t1.rng))
          in
-      aux (Prims.parse_int "0") t
+      aux Prims.int_zero t
   
 let (inst : term Prims.list -> term -> term) =
   fun tms  ->
@@ -1311,7 +1309,7 @@ let (inst : term Prims.list -> term -> term) =
         | Real uu____5323 -> t1
         | FreeV uu____5325 -> t1
         | BoundV i ->
-            if ((Prims.parse_int "0") <= (i - shift)) && ((i - shift) < n1)
+            if (Prims.int_zero <= (i - shift)) && ((i - shift) < n1)
             then FStar_List.nth tms1 (i - shift)
             else t1
         | App (op,tms2) ->
@@ -1352,8 +1350,8 @@ let (inst : term Prims.list -> term -> term) =
                          let uu____5511 =
                            let uu____5514 = aux shift e  in uu____5514 :: es1
                             in
-                         ((shift + (Prims.parse_int "1")), uu____5511))
-                (shift, []) es
+                         ((shift + Prims.int_one), uu____5511)) (shift, [])
+                es
                in
             (match uu____5467 with
              | (shift1,es_rev) ->
@@ -1362,7 +1360,7 @@ let (inst : term Prims.list -> term -> term) =
                    ((FStar_List.rev es_rev), uu____5537)  in
                  mkLet uu____5530 t1.rng)
          in
-      aux (Prims.parse_int "0") t
+      aux Prims.int_zero t
   
 let (subst : term -> fv -> term -> term) =
   fun t  ->
@@ -1547,7 +1545,7 @@ let (injective_constructor :
           let bvar_name i =
             let uu____6343 = FStar_Util.string_of_int i  in
             Prims.op_Hat "x_" uu____6343  in
-          let bvar_index i = n_bvars - (i + (Prims.parse_int "1"))  in
+          let bvar_index i = n_bvars - (i + Prims.int_one)  in
           let bvar i s =
             let uu____6372 =
               let uu____6373 =
@@ -1751,8 +1749,7 @@ let (name_binders_inner :
                           let b =
                             let uu____7158 = strSort s  in
                             FStar_Util.format2 "(%s %s)" nm uu____7158  in
-                          (names2, (b :: binders),
-                            (n1 + (Prims.parse_int "1"))))
+                          (names2, (b :: binders), (n1 + Prims.int_one)))
                  (outer_names, [], start))
              in
           match uu____7044 with
@@ -1763,7 +1760,7 @@ let (name_macro_binders :
   fun sorts  ->
     let uu____7229 =
       name_binders_inner (FStar_Pervasives_Native.Some "__") []
-        (Prims.parse_int "0") sorts
+        Prims.int_zero sorts
        in
     match uu____7229 with
     | (names1,binders,n1) -> ((FStar_List.rev names1), binders)
@@ -1773,11 +1770,11 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
     fun enclosing_name  ->
       fun t  ->
         let next_qid =
-          let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
+          let ctr = FStar_Util.mk_ref Prims.int_zero  in
           fun depth  ->
             let n1 = FStar_ST.op_Bang ctr  in
             FStar_Util.incr ctr;
-            if n1 = (Prims.parse_int "0")
+            if n1 = Prims.int_zero
             then enclosing_name
             else
               (let uu____7338 = FStar_Util.string_of_int n1  in
@@ -1801,7 +1798,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                           | uu____7407 -> tm))))
            in
         let rec aux' depth n1 names1 t1 =
-          let aux1 = aux (depth + (Prims.parse_int "1"))  in
+          let aux1 = aux (depth + Prims.int_one)  in
           match t1.tm with
           | Integer i -> i
           | Real r -> r
@@ -1891,9 +1888,8 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                            let b =
                              let uu____7789 = aux1 n1 names1 e  in
                              FStar_Util.format2 "(%s %s)" nm uu____7789  in
-                           (names01, (b :: binders),
-                             (n0 + (Prims.parse_int "1")))) (names1, [], n1)
-                  es
+                           (names01, (b :: binders), (n0 + Prims.int_one)))
+                  (names1, [], n1) es
                  in
               (match uu____7703 with
                | (names2,binders,n2) ->
@@ -1910,7 +1906,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
             FStar_Util.format3 "\n;; def=%s; use=%s\n%s\n" uu____7839
               uu____7841 s
           else s
-         in aux (Prims.parse_int "0") (Prims.parse_int "0") [] t
+         in aux Prims.int_zero Prims.int_zero [] t
   
 let (caption_to_string :
   Prims.bool -> Prims.string FStar_Pervasives_Native.option -> Prims.string)
@@ -2055,27 +2051,27 @@ and (mkPrelude : Prims.string -> Prims.string) =
        in
     let constrs =
       [("FString_const", [("FString_const_proj_0", Int_sort, true)],
-         String_sort, (Prims.parse_int "0"), true);
-      ("Tm_type", [], Term_sort, (Prims.parse_int "2"), true);
+         String_sort, Prims.int_zero, true);
+      ("Tm_type", [], Term_sort, (Prims.of_int (2)), true);
       ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)], Term_sort,
-        (Prims.parse_int "3"), false);
-      ("Tm_unit", [], Term_sort, (Prims.parse_int "6"), true);
+        (Prims.of_int (3)), false);
+      ("Tm_unit", [], Term_sort, (Prims.of_int (6)), true);
       ((FStar_Pervasives_Native.fst boxIntFun),
         [((FStar_Pervasives_Native.snd boxIntFun), Int_sort, true)],
-        Term_sort, (Prims.parse_int "7"), true);
+        Term_sort, (Prims.of_int (7)), true);
       ((FStar_Pervasives_Native.fst boxBoolFun),
         [((FStar_Pervasives_Native.snd boxBoolFun), Bool_sort, true)],
-        Term_sort, (Prims.parse_int "8"), true);
+        Term_sort, (Prims.of_int (8)), true);
       ((FStar_Pervasives_Native.fst boxStringFun),
         [((FStar_Pervasives_Native.snd boxStringFun), String_sort, true)],
-        Term_sort, (Prims.parse_int "9"), true);
+        Term_sort, (Prims.of_int (9)), true);
       ((FStar_Pervasives_Native.fst boxRealFun),
         [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
-        Term_sort, (Prims.parse_int "10"), true);
+        Term_sort, (Prims.of_int (10)), true);
       ("LexCons",
         [("LexCons_0", Term_sort, true);
         ("LexCons_1", Term_sort, true);
-        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.parse_int "11"),
+        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.of_int (11)),
         true)]
        in
     let bcons =
@@ -2124,19 +2120,17 @@ let (mkBvConstructor : Prims.int -> decl Prims.list) =
             FStar_Pervasives_Native.snd uu____8411  in
           (uu____8409, (BitVec_sort sz), true)  in
         [uu____8408]  in
-      (uu____8394, uu____8405, Term_sort, ((Prims.parse_int "12") + sz),
-        true)
+      (uu____8394, uu____8405, Term_sort, ((Prims.of_int (12)) + sz), true)
        in
     FStar_All.pipe_right uu____8393 (constructor_to_decl norng)
   
-let (__range_c : Prims.int FStar_ST.ref) =
-  FStar_Util.mk_ref (Prims.parse_int "0") 
+let (__range_c : Prims.int FStar_ST.ref) = FStar_Util.mk_ref Prims.int_zero 
 let (mk_Range_const : unit -> term) =
   fun uu____8443  ->
     let i = FStar_ST.op_Bang __range_c  in
     (let uu____8468 =
        let uu____8470 = FStar_ST.op_Bang __range_c  in
-       uu____8470 + (Prims.parse_int "1")  in
+       uu____8470 + Prims.int_one  in
      FStar_ST.op_Colon_Equals __range_c uu____8468);
     (let uu____8515 =
        let uu____8523 = let uu____8526 = mkInteger' i norng  in [uu____8526]
@@ -2459,18 +2453,17 @@ let (mk_LexCons : term -> term -> term -> FStar_Range.range -> term) =
   
 let rec (n_fuel : Prims.int -> term) =
   fun n1  ->
-    if n1 = (Prims.parse_int "0")
+    if n1 = Prims.int_zero
     then mkApp ("ZFuel", []) norng
     else
       (let uu____9543 =
          let uu____9551 =
-           let uu____9554 = n_fuel (n1 - (Prims.parse_int "1"))  in
-           [uu____9554]  in
+           let uu____9554 = n_fuel (n1 - Prims.int_one)  in [uu____9554]  in
          ("SFuel", uu____9551)  in
        mkApp uu____9543 norng)
   
-let (fuel_2 : term) = n_fuel (Prims.parse_int "2") 
-let (fuel_100 : term) = n_fuel (Prims.parse_int "100") 
+let (fuel_2 : term) = n_fuel (Prims.of_int (2)) 
+let (fuel_100 : term) = n_fuel (Prims.of_int (100)) 
 let (mk_and_opt :
   term FStar_Pervasives_Native.option ->
     term FStar_Pervasives_Native.option ->

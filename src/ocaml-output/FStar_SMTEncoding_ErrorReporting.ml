@@ -46,7 +46,7 @@ let (fresh_label :
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term -> (label * FStar_SMTEncoding_Term.term))
   =
-  let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let ctr = FStar_Util.mk_ref Prims.int_zero  in
   fun message  ->
     fun range  ->
       fun t  ->
@@ -542,7 +542,7 @@ let (label_goals :
                                                       (FStar_SMTEncoding_Term.Forall,
                                                         [[p]],
                                                         (FStar_Pervasives_Native.Some
-                                                           (Prims.parse_int "0")),
+                                                           Prims.int_zero),
                                                         sorts1, uu____1466)
                                                        in
                                                     FStar_SMTEncoding_Term.Quant
@@ -842,7 +842,7 @@ let (detail_errors :
               let uu____2364 =
                 let uu____2366 = FStar_TypeChecker_Env.get_range env  in
                 FStar_Range.string_of_range uu____2366  in
-              let uu____2367 = FStar_Util.string_of_int (Prims.parse_int "5")
+              let uu____2367 = FStar_Util.string_of_int (Prims.of_int (5))
                  in
               let uu____2370 =
                 FStar_Util.string_of_int (FStar_List.length all_labels)  in
@@ -937,7 +937,7 @@ let (detail_errors :
              in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
-            (FStar_Options.Int (Prims.parse_int "5"));
+            (FStar_Options.Int (Prims.of_int (5)));
           (let res = linear_check [] [] all_labels  in
            FStar_Util.print_string "\n";
            FStar_All.pipe_right res (FStar_List.iter print_result);

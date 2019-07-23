@@ -41,8 +41,7 @@ let (__proj__Mkrange__item__use_range : range -> rng) =
   fun projectee  ->
     match projectee with | { def_range; use_range;_} -> use_range
   
-let (dummy_pos : pos) =
-  { line = (Prims.parse_int "0"); col = (Prims.parse_int "0") } 
+let (dummy_pos : pos) = { line = Prims.int_zero; col = Prims.int_zero } 
 let (dummy_rng : rng) =
   { file_name = "<dummy>"; start_pos = dummy_pos; end_pos = dummy_pos } 
 let (dummyRange : range) = { def_range = dummy_rng; use_range = dummy_rng } 
@@ -70,11 +69,7 @@ let (set_def_range : range -> rng -> range) =
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
   fun l  ->
-    fun c  ->
-      {
-        line = (max (Prims.parse_int "0") l);
-        col = (max (Prims.parse_int "0") c)
-      }
+    fun c  -> { line = (max Prims.int_zero l); col = (max Prims.int_zero c) }
   
 let (mk_rng : file_name -> pos -> pos -> rng) =
   fun file_name  ->
@@ -186,14 +181,12 @@ let (compare_rng : rng -> rng -> Prims.int) =
   fun r1  ->
     fun r2  ->
       let fcomp = FStar_String.compare r1.file_name r2.file_name  in
-      if fcomp = (Prims.parse_int "0")
+      if fcomp = Prims.int_zero
       then
         let start1 = r1.start_pos  in
         let start2 = r2.start_pos  in
         let lcomp = start1.line - start2.line  in
-        (if lcomp = (Prims.parse_int "0")
-         then start1.col - start2.col
-         else lcomp)
+        (if lcomp = Prims.int_zero then start1.col - start2.col else lcomp)
       else fcomp
   
 let (compare : range -> range -> Prims.int) =

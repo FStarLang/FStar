@@ -164,7 +164,7 @@ let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
   =
-  let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
+  let cache = FStar_Util.smap_create (Prims.of_int (20))  in
   let rec delta_norm_eff g l =
     let uu____385 = FStar_Util.smap_try_find cache l.FStar_Ident.str  in
     match uu____385 with
@@ -443,7 +443,7 @@ let rec (is_ml_value : FStar_Extraction_ML_Syntax.mlexpr -> Prims.bool) =
     | uu____1650 -> false
   
 let (fresh : Prims.string -> Prims.string) =
-  let c = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let c = FStar_Util.mk_ref Prims.int_zero  in
   fun x  ->
     FStar_Util.incr c;
     (let uu____1668 =
@@ -482,7 +482,7 @@ let (check_pats_for_ite :
   fun l  ->
     let def =
       (false, FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)  in
-    if (FStar_List.length l) <> (Prims.parse_int "2")
+    if (FStar_List.length l) <> (Prims.of_int (2))
     then def
     else
       (let uu____1880 = FStar_List.hd l  in
@@ -534,7 +534,7 @@ let (instantiate_maybe_partial :
             let n_args = FStar_List.length tyargs  in
             if n_args = n_vars
             then
-              (if n_args = (Prims.parse_int "0")
+              (if n_args = Prims.int_zero
                then (e, FStar_Extraction_ML_Syntax.E_PURE, t)
                else
                  (let ts = instantiate_tyscheme (vars, t) tyargs  in
@@ -3387,7 +3387,7 @@ and (term_as_mlexpr' :
                      }  in
                    let e'1 =
                      FStar_Syntax_Subst.subst
-                       [FStar_Syntax_Syntax.DB ((Prims.parse_int "0"), x)] e'
+                       [FStar_Syntax_Syntax.DB (Prims.int_zero, x)] e'
                       in
                    ([lb1], e'1)))
               in

@@ -159,6 +159,7 @@ endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
 COMMIT = $(shell ../tools/get_commit)
+COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
@@ -167,7 +168,8 @@ FStar_Version.ml:
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	# We deliberately leave out date, so that rebuilds are no-ops
+	# We deliberately use commitdate instead of date, so that rebuilds are no-ops
+	echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
 	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 

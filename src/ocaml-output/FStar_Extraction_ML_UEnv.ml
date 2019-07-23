@@ -177,11 +177,10 @@ let (prependTick : Prims.string -> Prims.string) =
 let (removeTick : Prims.string -> Prims.string) =
   fun x  ->
     if FStar_Util.starts_with x "'"
-    then FStar_Util.substring_from x (Prims.parse_int "1")
+    then FStar_Util.substring_from x Prims.int_one
     else x
   
-let (convRange : FStar_Range.range -> Prims.int) =
-  fun r  -> (Prims.parse_int "0") 
+let (convRange : FStar_Range.range -> Prims.int) = fun r  -> Prims.int_zero 
 let (convIdent : FStar_Ident.ident -> FStar_Extraction_ML_Syntax.mlident) =
   fun id1  -> id1.FStar_Ident.idText 
 let (bv_as_ml_tyvar : FStar_Syntax_Syntax.bv -> Prims.string) =
@@ -446,9 +445,7 @@ let (find_uniq : binding Prims.list -> Prims.string -> Prims.string) =
     fun mlident  ->
       let rec find_uniq mlident1 i =
         let suffix =
-          if i = (Prims.parse_int "0")
-          then ""
-          else FStar_Util.string_of_int i  in
+          if i = Prims.int_zero then "" else FStar_Util.string_of_int i  in
         let target_mlident = Prims.op_Hat mlident1 suffix  in
         let has_collision =
           FStar_List.existsb
@@ -461,10 +458,9 @@ let (find_uniq : binding Prims.list -> Prims.string -> Prims.string) =
                    target_mlident = exp_b.exp_b_name) gamma
            in
         if has_collision
-        then find_uniq mlident1 (i + (Prims.parse_int "1"))
+        then find_uniq mlident1 (i + Prims.int_one)
         else target_mlident  in
-      let mlident1 = sanitize mlident  in
-      find_uniq mlident1 (Prims.parse_int "0")
+      let mlident1 = sanitize mlident  in find_uniq mlident1 Prims.int_zero
   
 let (extend_bv :
   uenv ->
