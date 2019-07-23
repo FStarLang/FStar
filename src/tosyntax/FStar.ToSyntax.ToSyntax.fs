@@ -2354,30 +2354,35 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
          rebind res true
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
+let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_t = desugar_term env eff_typ in
 
+    let num_indices = List.length (fst (U.arrow_formals eff_t)) in
+    if is_layered && num_indices <= 1 then
+      raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
+        "Effect " ^ Ident.text_of_id eff_name ^ "is defined as a layered effect but has no indices") d.drange;
+
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+    let for_free = num_indices = 1 in
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
-      else
+      else if is_layered then rr_members @ [ "stronger"; "conjunction" ]
         (* the first 3 are optional but must not be counted as actions *)
-        rr_members @ [
-          "return_wp";
-          "bind_wp";
-          "if_then_else";
-          "ite_wp";
-          "stronger";
-          "close_wp";
-          "trivial"
-        ]
+      else rr_members @ [
+        "return_wp";
+        "bind_wp";
+        "if_then_else";
+        "ite_wp";
+        "stronger";
+        "close_wp";
+        "trivial"
+      ]
     in
 
     let name_of_eff_decl decl =
@@ -2438,9 +2443,9 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
+    let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
     let se =
       if for_free then
-        let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
         let match_wps = Inl ({
           if_then_else = dummy_tscheme;
           ite_wp = dummy_tscheme;
@@ -2463,6 +2468,31 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              return_repr   = lookup "return";
              bind_repr     = lookup "bind";
              stronger_repr = None;
+             actions       = actions;
+             eff_attrs     = List.map (desugar_term env) attrs;
+           }));
+           sigquals = qualifiers;
+           sigrng = d.drange;
+           sigmeta = default_sigmeta  ;
+           sigattrs = [] }
+      else if is_layered then
+        { sigel =
+          (Sig_new_effect({
+             is_layered    = true;
+             mname         = mname;
+             cattributes   = [];
+             univs         = [];
+             binders       = binders;
+             signature     = eff_t;
+             ret_wp        = dummy_tscheme;
+             bind_wp       = dummy_tscheme;
+             stronger      = dummy_tscheme;
+             match_wps     = Inr ({ conjunction = lookup "conjunction" });
+             trivial       = None;
+             repr          = snd <| lookup "repr";
+             return_repr   = lookup "return";
+             bind_repr     = lookup "bind";
+             stronger_repr = Some (lookup "stronger");
              actions       = actions;
              eff_attrs     = List.map (desugar_term env) attrs;
            }));
@@ -2948,10 +2978,15 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
     let attrs = d.attrs in
-    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls attrs
+    let env, l = desugar_effect env d quals false eff_name eff_binders eff_typ eff_decls attrs in
+    BU.print1 "Desugared layered effect: %s"
+      (List.fold_left (fun s sigelt -> s ^ "\n\n" ^ (Print.sigelt_to_string sigelt)) "" l);
+    env, l
 
   | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
-    failwith "LayeredEffect desugaring is not implemented yet" 
+    let quals = d.quals in
+    let attrs = d.attrs in
+    desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

@@ -1,59 +1,100 @@
 module LowStar.STExn
 
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
+open FStar.Heap
+open FStar.ST
 
-open FStar.HyperStack.ST
+type pre_t = heap -> Type0
+type post_t (a:Type) = heap -> a -> heap -> Type0
 
-/// Encoding hoare_st a pre post as a layered effect on top of STATE (rather than defining it in terms of STATE)
+type hoare_st (a:Type) (pre:pre_t) (post:post_t a) =
+  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 
-
-/// Think of this definition below as repr of a layered effect hoare_st
-///
-/// The main difference being, in layered effect, this definition only provides a model of hoare_st
-///
-/// The typechecker would not unfold hoare_st to construct the VCs etc.
-
-type hoare_st (a:Type) (pre:HS.mem -> Type0) (post:HS.mem -> a -> HS.mem -> Type0) =
-  unit -> STATE a (fun p h0 -> pre h0 /\ (forall (x:a) (h1:HS.mem). post h0 x h1 ==> p x h1))
-
-
-/// For return and bind, the implementation provides the instantiation of indices of hoare_st
-
-let hoare_st_return (a:Type) (x:a)
-  : hoare_st a (fun _ -> True) (fun h0 y h1 -> h0 == h1 /\ y == x)
+let return_hoare_st (a:Type) (x:a)
+  : hoare_st a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
   = fun _ -> x
 
-let hoare_st_bind (a:Type) (b:Type)
-  (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
-  (pre2:a -> HS.mem -> Type0) (post2:a -> HS.mem -> b -> HS.mem -> Type0)
-  (f1:hoare_st a pre1 post1) (f2:(x:a -> hoare_st b (pre2 x) (post2 x)))
+let bind_hoare_st
+  (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (f:hoare_st a pre_f post_f)
+  (pre_g:a -> pre_t) (post_g:a -> post_t b) (g:(x:a -> hoare_st b (pre_g x) (post_g x)))
   : hoare_st b
-    (fun h0 -> pre1 h0 /\ (forall (x:a) (h1:HS.mem). post1 h0 x h1 ==> pre2 x h1))
-    (fun h0 y h2 -> exists (x:a) (h1:HS.mem). post1 h0 x h1 /\ post2 x h1 y h2)
+    (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
+    (fun h0 y h2 -> exists (x:a) (h1:heap). post_f h0 x h1 /\ post_g x h1 y h2)
   = fun _ ->
-    let x = f1 () in
-    f2 x ()
+    let x = f () in
+    g x ()
 
-unfold
-let hoare_st_stronger (a:Type)
-  (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
-  (pre2:HS.mem -> Type0) (post2:HS.mem -> a -> HS.mem -> Type0)
-  = (forall (h:HS.mem). pre1 h ==> pre2 h) /\
-    (forall (h0:HS.mem) (x:a) (h1:HS.mem). post2 h0 x h1 ==> post1 h0 x h1)
+let stronge_hoare_st
+  (a:Type)
+  (pre_f:pre_t) (post_f:post_t a)
+  (pre_g:pre_t) (post_g:post_t a)
+  (f:hoare_st a pre_f post_f)
+  : Pure (hoare_st a pre_g post_g)
+    (requires
+      (forall (h:heap). pre_g h ==> pre_f h) /\
+      (forall (h0 h1:heap) (x:a). post_f h0 x h1 ==> post_g h0 x h1))
+    (ensures fun _ -> True)
+  = f
 
-unfold
-let hoare_st_stronger_is_consistent (a:Type)
-  (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
-  (pre2:HS.mem -> Type0) (post2:HS.mem -> a -> HS.mem -> Type0)
-  : Lemma (requires hoare_st_stronger a pre1 post1 pre2 post2)
-          (ensures forall (u:unit).
-            st_stronger HS.mem a (fun p h0 -> pre1 h0 /\ (forall (x:a) (h1:HS.mem). post1 h0 x h1 ==> p x h1))
-                                 (fun p h0 -> pre2 h0 /\ (forall (x:a) (h1:HS.mem). post2 h0 x h1 ==> p x h1)))
-  = ()
+let conjunction_hoare_st
+  (a:Type)
+  (pre_f:pre_t) (post_f:post_t a) (f:hoare_st a pre_f post_f)
+  (pre_g:pre_t) (post_g:post_t a) (
+
+// module HS = FStar.HyperStack
+// module ST = FStar.HyperStack.ST
+
+// open FStar.HyperStack.ST
+
+// /// Encoding hoare_st a pre post as a layered effect on top of STATE (rather than defining it in terms of STATE)
 
 
-// (***** STEXN effect for Low* *****)
+// /// Think of this definition below as repr of a layered effect hoare_st
+// ///
+// /// The main difference being, in layered effect, this definition only provides a model of hoare_st
+// ///
+// /// The typechecker would not unfold hoare_st to construct the VCs etc.
+
+// type hoare_st (a:Type) (pre:HS.mem -> Type0) (post:HS.mem -> a -> HS.mem -> Type0) =
+//   unit -> STATE a (fun p h0 -> pre h0 /\ (forall (x:a) (h1:HS.mem). post h0 x h1 ==> p x h1))
+
+
+// /// For return and bind, the implementation provides the instantiation of indices of hoare_st
+
+// let hoare_st_return (a:Type) (x:a)
+//   : hoare_st a (fun _ -> True) (fun h0 y h1 -> h0 == h1 /\ y == x)
+//   = fun _ -> x
+
+// let hoare_st_bind (a:Type) (b:Type)
+//   (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
+//   (pre2:a -> HS.mem -> Type0) (post2:a -> HS.mem -> b -> HS.mem -> Type0)
+//   (f1:hoare_st a pre1 post1) (f2:(x:a -> hoare_st b (pre2 x) (post2 x)))
+//   : hoare_st b
+//     (fun h0 -> pre1 h0 /\ (forall (x:a) (h1:HS.mem). post1 h0 x h1 ==> pre2 x h1))
+//     (fun h0 y h2 -> exists (x:a) (h1:HS.mem). post1 h0 x h1 /\ post2 x h1 y h2)
+//   = fun _ ->
+//     let x = f1 () in
+//     f2 x ()
+
+// unfold
+// let hoare_st_stronger (a:Type)
+//   (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
+//   (pre2:HS.mem -> Type0) (post2:HS.mem -> a -> HS.mem -> Type0)
+//   = (forall (h:HS.mem). pre1 h ==> pre2 h) /\
+//     (forall (h0:HS.mem) (x:a) (h1:HS.mem). post2 h0 x h1 ==> post1 h0 x h1)
+
+// unfold
+// let hoare_st_stronger_is_consistent (a:Type)
+//   (pre1:HS.mem -> Type0) (post1:HS.mem -> a -> HS.mem -> Type0)
+//   (pre2:HS.mem -> Type0) (post2:HS.mem -> a -> HS.mem -> Type0)
+//   : Lemma (requires hoare_st_stronger a pre1 post1 pre2 post2)
+//           (ensures forall (u:unit).
+//             st_stronger HS.mem a (fun p h0 -> pre1 h0 /\ (forall (x:a) (h1:HS.mem). post1 h0 x h1 ==> p x h1))
+//                                  (fun p h0 -> pre2 h0 /\ (forall (x:a) (h1:HS.mem). post2 h0 x h1 ==> p x h1)))
+//   = ()
+
+
+// // (***** STEXN effect for Low* *****)
 
 // #set-options "--max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
 
