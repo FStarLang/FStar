@@ -1362,19 +1362,19 @@ type connective =
     | QEx of binders * qpats * typ
     | BaseConn of lident * args
 
-(* destruct_typ_as_formula can be a bottleneck
-   these tables are defined here to ensure they are constructed
-   only once in the compiled extracted code
+(* destruct_typ_as_formula can be hot these tables are defined
+   here to ensure they are constructed only once in the executing
+   binary
 
-   the tables encode arity -> lids
-   and in the case of sq_base the lid mapping
+   the tables encode arity -> match_lid -> output_lid
    *)
 let destruct_base_table =
-  [ (0, [PC.true_lid; PC.false_lid]);
-    (2, [PC.and_lid; PC.or_lid; PC.imp_lid; PC.iff_lid; PC.eq2_lid; PC.eq3_lid]);
-    (1, [PC.not_lid]);
-    (3, [PC.ite_lid; PC.eq2_lid]);
-    (4, [PC.eq3_lid])
+  let f x = (x,x) in
+  [ (0, [f PC.true_lid; f PC.false_lid]);
+    (2, [f PC.and_lid; f PC.or_lid; f PC.imp_lid; f PC.iff_lid; f PC.eq2_lid; f PC.eq3_lid]);
+    (1, [f PC.not_lid]);
+    (3, [f PC.ite_lid; f PC.eq2_lid]);
+    (4, [f PC.eq3_lid])
   ]
 
 let destruct_sq_base_table =
@@ -1392,24 +1392,26 @@ let destruct_typ_as_formula f : option<connective> =
       | Tm_meta(t, Meta_monadic _)
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
-    let mk_base_conn lid args = Some (BaseConn (lid, args)) in
+    let lookup_arity_lid table target_lid args =
+        let arg_len = List.length args in
+        let aux (arity, lids) =
+            if arg_len = arity
+            then U.find_map lids
+                (fun (lid, out_lid) ->
+                  if lid_equals target_lid lid
+                  then Some (BaseConn (out_lid, args))
+                  else None)
+            else None
+        in
+        U.find_map table aux
+    in
 
     let destruct_base_conn f =
         let t, args = head_and_args (unmeta_monadic f) in
         let t = un_uinst t in
         match (pre_typ t).n with
         | Tm_fvar tc ->
-            let arg_len = List.length args in
-            let aux (arity, lids) =
-                if arg_len = arity
-                then U.find_map lids
-                    (fun lid ->
-                      if lid_equals tc.fv_name.v lid
-                      then mk_base_conn lid args
-                      else None)
-                else None
-            in
-            U.find_map destruct_base_table aux
+            lookup_arity_lid destruct_base_table tc.fv_name.v args
         | _ -> None
     in
 
@@ -1455,19 +1457,8 @@ let destruct_typ_as_formula f : option<connective> =
         bind_opt (un_squash t) (fun t ->
         let hd, args = head_and_args' t in
         match (un_uinst hd).n with
-        | Tm_fvar fv -> begin
-            let arg_len = List.length args in
-            let aux (arity, lids) =
-                if arg_len = arity
-                then U.find_map lids
-                    (fun (lid, out_lid) ->
-                      if fv_eq_lid fv lid
-                      then mk_base_conn out_lid args
-                      else None)
-                else None
-            in
-            U.find_map destruct_sq_base_table aux
-          end
+        | Tm_fvar fv ->
+            lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
         | _ -> None
         )
     in
