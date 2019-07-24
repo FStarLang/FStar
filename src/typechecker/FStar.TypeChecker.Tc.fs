@@ -110,6 +110,113 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
+let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
+  if List.length ed.binders <> 0 then
+    raise_err (Errors.Error_TypeError,
+      "Effect parameters are not yet supported for layered effects: " ^ (string_of_lid ed.mname));
+  
+  let univs_opening, annotated_univ_names = SS.univ_var_opening ed.univs in
+
+  let env = Env.push_univ_vars env0 annotated_univ_names in
+  
+  //open the effect signature and typecheck it
+  //TODO: where do we check that the final type is Effect?
+  let signature, _ = tc_trivial_guard env (SS.subst univs_opening ed.signature) in
+  let ed = { ed with signature = signature } in
+
+  //open effect combinators w.r.t. univs_opening
+  //we expect other fields to be unset, in particular we will override them
+  let ed =
+    match annotated_univ_names with
+    | [] -> ed
+    | _ ->
+      let op (us, t) = us, SS.subst (SS.shift_subst (List.length us) univs_opening) t in
+      { ed with
+           univs         = annotated_univ_names;
+           match_wps     = U.map_match_wps op ed.match_wps;
+           repr          = snd (op ([], ed.repr));
+           return_repr   = op ed.return_repr;
+           bind_repr     = op ed.bind_repr;
+           stronger_repr = map_opt ed.stronger_repr op;
+        }
+  in
+
+  let bs =  //a:Type, indices
+    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (range_of_lid ed.mname) in
+    match (SS.compress ed.signature).n with
+    | Tm_arrow (bs, c) ->  //TODO: flatten binders in case someone writes a -> Tot (b -> ...)?
+      (match bs with
+       | (a, _)::indices when List.length indices >= 1 ->
+         (match (SS.compress a.sort).n with
+          | Tm_type _ -> bs
+          | _ -> fail ed.signature) 
+       | _ -> fail ed.signature)
+    | _ -> fail ed.signature
+  in
+
+  let check_and_gen env (us, t) k =
+    match annotated_univ_names with
+    | [] -> check_and_gen env t k
+    | _::_ ->
+      let (us, t) = SS.subst_tscheme univs_opening (us, t) in
+      let us, t = SS.open_univ_vars us t in
+      let t = tc_check_trivial_guard (Env.push_univ_vars env us) t k in
+      us, SS.close_univ_vars us t
+  in
+
+  //typecheck repr
+  let repr =
+    //repr should have the type a:Type -> .. indices .. -> Type
+    let expected_repr_type =
+      let t, u = U.type_u () in
+    U.arrow bs (S.mk_Total' t (Some u)) in
+
+    let repr = tc_check_trivial_guard env ed.repr expected_repr_type in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Checked repr: %s against expected repr type: %s\n"
+        (Print.term_to_string repr) (Print.term_to_string expected_repr_type);
+    repr in
+  
+  //typecheck return
+  let return_repr, return_repr_comp =
+    //return should have the type a:Type -> x:a -> repr a ?u1 ... ?un for n indices
+    let bs = SS.open_binders bs in
+    let a = List.hd bs in
+    let r = range_of_lid ed.mname in
+
+    let uvars, gs, _ =
+      List.fold_left (fun (uvars, gs, env) b ->
+        let t, _, g = TcUtil.new_implicit_var "" r env (fst b).sort in
+        uvars @ [ t |> S.as_arg ], gs @ [g], Env.push_binders env [b]
+      ) ([], [], env) bs in
+
+    let repr_args = (U.arg_of_non_null_binder a)::uvars in
+    let repr_comp = S.mk_Total (mk_Tm_app repr repr_args None r) in
+    let bs = [a; S.null_binder (S.bv_to_name (a |> fst))] in
+    let repr_comp = SS.close_comp bs repr_comp in
+    let bs = SS.close_binders bs in
+    let expected_return_repr_type = U.arrow bs repr_comp in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Checking return_repr: %s against expected return_repr type: %s\n"
+        (Print.tscheme_to_string ed.return_repr) (Print.term_to_string expected_return_repr_type);
+    
+
+    let return_repr = check_and_gen env ed.return_repr expected_return_repr_type in
+    List.iter (Rel.force_trivial_guard env) gs;
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Checked return_repr: %s against expected return_repr type: %s\n"
+        (Print.tscheme_to_string return_repr) (Print.term_to_string expected_return_repr_type);
+
+    //return_repr, repr_comp in
+    (), () in
+  
+  failwith "That's it for now"
+
+
+
 let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 //  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
   let open_annotated_univs, annotated_univ_names = SS.univ_var_opening ed.univs in
@@ -1191,6 +1298,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       [], ses @ effect_and_lift_ses, env0
 
   | Sig_new_effect(ne) ->
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "Starting to typecheck layered effect:\n%s\n" (Print.sigelt_to_string se);
+    if ne.is_layered then begin
+      let _ = tc_layered_eff_decl env ne in
+      ()
+    end;
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in

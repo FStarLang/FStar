@@ -8190,8 +8190,7 @@ and (desugar_decl_noattrs :
                             Prims.op_Hat "\n\n" uu____27817  in
                           Prims.op_Hat s uu____27815) "" l
                     in
-                 FStar_Util.print1 "Desugared the layered effect: %s"
-                   uu____27806);
+                 FStar_Util.print1 "Desugared layered effect: %s" uu____27806);
                 (env1, l)))
       | FStar_Parser_AST.LayeredEffect (FStar_Parser_AST.DefineEffect
           (eff_name,eff_binders,eff_typ,eff_decls)) ->
