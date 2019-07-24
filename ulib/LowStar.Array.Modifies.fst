@@ -767,6 +767,29 @@ let rec loc_union_gsub_compute_loc_array (#a:Type0) (b:array a) (i len1 len2:U32
     loc_union_assoc (loc_cell b1 n) (compute_loc_array b1 (n+1)) (loc_array b2)
   end
 
+let modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
+  : Lemma (requires (modifies l0 h0 h1 /\
+                     modifies l1 h1 h2 /\
+                     (forall l .
+                       loc_disjoint l l0 /\
+                       loc_includes (loc_used_in h0) l
+                       ==>
+                       loc_disjoint l l1)))
+          (ensures  (modifies l0 h0 h2))
+   =
+   MG.modifies_trans l0 h0 h1 l1 h2;
+   assert(modifies (loc_union l0 l1) h0 h2);
+   MG.framing_loc_still_unused_in l0 l1 h0 (fun l -> ());
+   MG.modifies_loc_includes (loc_unused_in h0 `loc_union` l0) h0 h2 (loc_union l0 l1);
+   MG.modifies_only_used_in l0 h0 h2
+
+let loc_disjoint_used_in_modifies (h0 h1:HS.mem) (l l':loc)
+  : Lemma (requires (loc_disjoint l' l /\
+                     loc_includes (loc_used_in h0) l' /\
+                     modifies l h0 h1))
+          (ensures  (loc_includes (loc_used_in h1) l'))
+  = MG.loc_used_in_preserved h0 h1 l l'
+
 let rec live_array_used_in' (#t: Type) (b: array t) (h: HS.mem) (i:nat{i <= vlength b}) : Lemma
   (requires (live h b))
   (ensures (loc_used_in h `loc_includes` (compute_loc_array b i)))

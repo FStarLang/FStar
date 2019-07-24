@@ -384,6 +384,31 @@ let modifies_only_used_in
     end
   )
 
+let framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h: HS.mem)
+  (framing: (l : loc c) -> Lemma
+    (requires (loc_disjoint l l0 /\ loc_includes (loc_used_in c h) l))
+    (ensures (loc_disjoint l l1))
+  )
+: Lemma
+  ((loc_unused_in c h `loc_union` l0) `loc_includes` (loc_union l0 l1)) =
+  admit()
+
+let loc_used_in_preserved
+  (#al: Type)
+  (#c: cls al)
+  (h0 h1: HS.mem)
+  (l l': loc c)
+: Lemma
+  (requires (loc_disjoint l' l /\ loc_includes (loc_used_in c h0) l' /\ modifies l h0 h1))
+  (ensures (loc_includes (loc_used_in c h1) l')) =
+  admit()
+  (*
+     Proving this will surely require preservation to also preserve aloc usedness. If this is the case, feel free to add this as an
+     instantiation requirement. The downside is that the footprint of `free` cannot be just the loc_array if we remove the memory
+     location from the heap (aka with HS.free). But it is possible to simply not remove the memory addresses from the heap, thus
+     ensuring that they are not reused by another call to malloc.
+  *)
+
 let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma
   (requires (l `c.aloc_unused_in` h))
   (ensures (loc_unused_in c h `loc_includes` loc_of_aloc l))

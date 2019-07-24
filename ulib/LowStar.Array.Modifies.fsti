@@ -225,6 +225,25 @@ val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
 	   SMTPat (modifies l_aux h1 h2);
 	   SMTPat (modifies l_goal h1 h3)]
 
+val modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
+  : Lemma (requires (modifies l0 h0 h1 /\
+                     modifies l1 h1 h2 /\
+                     (forall l .
+                       loc_disjoint l l0 /\
+                       loc_includes (loc_used_in h0) l
+                       ==>
+                       loc_disjoint l l1)))
+          (ensures  (modifies l0 h0 h2))
+
+val loc_disjoint_used_in_modifies (h0 h1:HS.mem) (l l':loc)
+  : Lemma (requires (loc_disjoint l' l /\
+                     loc_includes (loc_used_in h0) l' /\
+                     modifies l h0 h1))
+          (ensures  (loc_includes (loc_used_in h1) l'))
+          [SMTPat (loc_disjoint l' l);
+           SMTPat (loc_includes (loc_used_in h0) l');
+           SMTPat (loc_includes (loc_used_in h1) l')]
+
 val live_array_used_in (#t: Type) (b: array t) (h: HS.mem) : Lemma
   (requires (live h b))
   (ensures (loc_used_in h `loc_includes` (loc_array b)))
