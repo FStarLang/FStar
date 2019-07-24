@@ -7,8 +7,8 @@ module A = LowStar.Array
 module AR = LowStar.RST.Array
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module L = C.Loops
 module P = LowStar.Permissions
+module U32 = FStar.UInt32
 
 open FStar.Mul
 
@@ -22,49 +22,47 @@ let rec while res inv guard test body =
 val for:
   start:U32.t ->
   finish:U32.t{U32.v finish >= U32.v start} ->
-  context:R.resource ->
-  inv:(h:R.imem (R.inv context) -> nat -> Type0) ->
+  inv:(h:HS.mem -> nat -> Type0) ->
   f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> RST unit
-    (context)
-    (fun _ -> context)
+    (empty_resource)
+    (fun _ -> empty_resource)
     (requires (fun h -> inv h (U32.v i)))
     (ensures (fun h_1 _ h_2 -> U32.(inv h_1 (v i) /\ inv h_2 (v i + 1))))
   ) ->
   RST unit
-    (context)
-    (fun _ -> context)
+    (empty_resource)
+    (fun _ -> empty_resource)
     (requires (fun h -> inv h (U32.v start)))
     (ensures (fun _ _ h_2 -> inv h_2 (U32.v finish)))
 
-let rec for start finish inv context f =
+let rec for start finish inv f =
   if start = finish then
     ()
   else begin
     f start;
-    for (U32.(start +^ 1ul)) finish inv context f
+    for (U32.(start +^ 1ul)) finish inv f
   end
 
 val for_each:
   #a: Type ->
-  #context: resource ->
   b: A.array a ->
-  #inv:(h:R.imem (R.inv context) -> i:nat -> Type) ->
+  #inv:(h:HS.mem -> i:nat -> Type) ->
   f: (i:U32.t{U32.v i < A.vlength b} -> x:a -> RST unit
-    (context)
-    (fun _ -> context)
+    (empty_resource)
+    (fun _ -> empty_resource)
     (fun h0 -> inv h0 (U32.v i) /\ x == Seq.index (A.as_seq h0 b) (U32.v i))
     (fun h0 _ h1 -> inv h0 (U32.v i) /\ inv h1 (U32.v i + 1))
   ) ->
   RST unit
-    (R.(context <*> AR.array_resource b))
-    (fun _ -> R.(context <*> AR.array_resource b))
+    (R.(AR.array_resource b))
+    (fun _ -> R.(AR.array_resource b))
     (fun h0 -> inv h0 0)
     (fun h0 _ h1 -> inv h1 (A.vlength b) /\
       R.sel (R.view_of (AR.array_resource b)) h0 ==
       R.sel (R.view_of (AR.array_resource b)) h1
     )
 
-let for_each #a #context b #inv f =
+let for_each #a b #inv f =
   (**) let hinit = HST.get () in
   (**) let correct_inv = fun h i -> inv h i /\
   (**)  R.sel (R.view_of (AR.array_resource b)) hinit ==
@@ -72,8 +70,8 @@ let for_each #a #context b #inv f =
   (**) in
   let correct_f (i:U32.t{U32.(0 <= v i /\ v i < A.vlength b)})
     : RST unit
-      (R.(context <*> AR.array_resource b))
-      (fun _ -> R.(context <*> AR.array_resource b))
+      (R.(AR.array_resource b))
+      (fun _ -> R.(AR.array_resource b))
       (requires (fun h0 ->
         correct_inv h0 (U32.v i)
       ))
@@ -82,44 +80,43 @@ let for_each #a #context b #inv f =
       ))
    =
      let x = RST.rst_frame
-       (R.(context <*> AR.array_resource b))
-       (fun _ -> R.(context <*> AR.array_resource b))
+       (R.(AR.array_resource b))
+       (fun _ -> R.(AR.array_resource b))
        (fun _ -> AR.index b i)
      in
      admit();
      RST.rst_frame
-       (R.(context <*> AR.array_resource b))
-       #context
-       (fun _ -> R.(context <*> AR.array_resource b))
-       #(fun _ -> context)
+       (R.(AR.array_resource b))
+       #empty_resource
+       (fun _ -> R.(AR.array_resource b))
+       #(fun _ -> empty_resource)
        #(AR.array_resource b)
        #(fun h0 -> inv h0 (U32.v i) /\ x == Seq.index (A.as_seq h0 b) (U32.v i))
        #(fun h0 _ h1 -> inv h0 (U32.v i) /\ inv h1 (U32.v i + 1))
        (fun _ -> let f' = f i x in f')
   in
+  admit();
   for
     0ul
     (A.length b)
-    (R.(context <*> AR.array_resource b))
     correct_inv
     correct_f
 
 val mapi:
   #a: Type ->
   #a': Type ->
-  #context: resource ->
   output: A.array a' ->
   input: A.array a{A.length output = A.length input} ->
   #spec_f:(i:nat -> a -> GTot a') ->
   f: (i:U32.t{U32.v i < A.vlength input} -> x:a -> RST a'
-    (context)
-    (fun _ -> context)
+    (empty_resource)
+    (fun _ -> empty_resource)
     (fun h0 -> x == Seq.index (A.as_seq h0 input) (U32.v i))
     (fun h0 y h1 -> y == spec_f (U32.v i) x)
   ) ->
   RST unit
-    (R.(context <*> AR.array_resource output <*> AR.array_resource input))
-    (fun _ -> R.(context <*> AR.array_resource output <*> AR.array_resource input))
+    (R.(AR.array_resource output <*> AR.array_resource input))
+    (fun _ -> R.(AR.array_resource output <*> AR.array_resource input))
     (fun h0 -> P.allows_write (R.sel (R.view_of (AR.array_resource output)) h0).AR.p)
     (fun h0 _ h1 ->
       R.sel (R.view_of (AR.array_resource input)) h1 ==
@@ -132,10 +129,10 @@ val mapi:
       )
     )
 
-let mapi #a #a' #context output input #spec_f f =
+let mapi #a #a' output input #spec_f f =
   (**) let hinit = HST.get () in
-  (**) let correct_context = R.(context <*> AR.array_resource output) in
-  (**) let correct_inv (h:R.imem (R.inv correct_context)) (i:nat) : Type =
+  (**) let correct_inv (h:HS.mem) (i:nat) : Type =
+  (**)   admit();
   (**)   let i = if i >= A.vlength input then A.vlength input else i in
   (**)   (R.sel (R.view_of (AR.array_resource output)) h).AR.p =
   (**)   (R.sel (R.view_of (AR.array_resource output)) hinit).AR.p /\
@@ -145,20 +142,20 @@ let mapi #a #a' #context output input #spec_f f =
   (**)   )
   in
   let correct_f (i:U32.t{U32.v i < A.vlength input}) (x:a) : RST unit
-    (R.(context <*> AR.array_resource output))
-    (fun _ -> R.(context <*> AR.array_resource output))
+    (R.(AR.array_resource output))
+    (fun _ -> R.(AR.array_resource output))
     (fun h0 -> correct_inv h0 (U32.v i) /\ x == Seq.index (A.as_seq h0 input) (U32.v i))
     (fun h0 _ h1 -> correct_inv h0 (U32.v i) /\ correct_inv h1 (U32.v i + 1))
   =
    (**) let h0 = HST.get () in
     let new_x = RST.rst_frame
-      (R.(context <*> AR.array_resource output))
-      (fun _ -> R.(context <*> AR.array_resource output))
+      (R.(AR.array_resource output))
+      (fun _ -> R.(AR.array_resource output))
       (fun _ -> f i x)
     in
     RST.rst_frame
-      (R.(context <*> AR.array_resource output))
-      (fun _ -> R.(context <*> AR.array_resource output))
+      (R.(AR.array_resource output))
+      (fun _ -> R.(AR.array_resource output))
       (fun _ -> AR.upd output i new_x);
     (**) let h1 = HST.get () in
     (**) assert(correct_inv h0 (U32.v i));
@@ -233,4 +230,4 @@ let mapi #a #a' #context output input #spec_f f =
     (**) end
   in
   admit();
-  for_each #a #R.(context <*> AR.array_resource output) input #correct_inv correct_f
+  for_each #a input #correct_inv correct_f

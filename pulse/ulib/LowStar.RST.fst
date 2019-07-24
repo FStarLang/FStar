@@ -19,55 +19,8 @@ open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-// open FStar.ModifiesGen
 open LowStar.Array
 open LowStar.Resource
-
-
-(* Additional (currently assumed) lemmas:
-   [DA: Reasonable when addresses are not reused after deallocation,
-        but currently was not able to derive them from LowStar's buffers
-        library (Nik and/or Tahina will look into adding it to buffers library).
-        There are some other such assumed dotter around the RST development.] *)
-
-assume val lemma_modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
-  : Lemma (requires (modifies l0 h0 h1 /\
-                     modifies l1 h1 h2 /\
-                     (forall l .
-                       loc_disjoint l l0 /\
-                       loc_includes (loc_used_in h0) l
-                       ==>
-                       loc_disjoint l l1)))
-          (ensures  (modifies l0 h0 h2))
-
-
-assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':loc)
-  : Lemma (requires (loc_disjoint l' l /\
-                     loc_includes (loc_used_in h0) l' /\
-                     modifies l h0 h1))
-          (ensures  (loc_includes (loc_used_in h1) l'))
-          [SMTPat (loc_disjoint l' l);
-           SMTPat (loc_includes (loc_used_in h0) l');
-           SMTPat (loc_includes (loc_used_in h1) l')]
-
-(*
-// [DA: other extra lemmas that were assumed at various states of
-        development; the last two might still be needed for scoped
-        allocation of stack-allocated pointers/buffers/etc]
-
-assume val lemma_loc_not_unused_in_modifies (l0 l1:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l0 /\
-                     B.loc_includes l1 l0 /\ B.modifies l1 h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l1))
-
-assume val lemma_loc_not_unused_in_fresh_frame (l:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.fresh_frame h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l))
-
-assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.popped h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l))
-*)
 
 (* Abstract modifies clause for the resource-indexed state effect *)
 
@@ -121,7 +74,7 @@ let modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
              modifies res0 res2 h0 h2)
            [SMTPat (modifies res0 res2 h0 h2);
             SMTPat (modifies res0 res1 h0 h1)] =
-  lemma_modifies_loc_disjoint (as_loc (fp res0)) (as_loc (fp res1)) h0 h1 h2
+  modifies_loc_disjoint (as_loc (fp res0)) (as_loc (fp res1)) h0 h1 h2
 
 let reveal_modifies ()
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}

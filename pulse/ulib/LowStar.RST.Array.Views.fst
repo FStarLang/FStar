@@ -48,7 +48,7 @@ let array_view (#a:Type) (b:A.array a) : view (varray a) =
     sel = sel
   }
 
-let array_resource (#a:Type) (b:A.array a) =
+inline_for_extraction let array_resource (#a:Type) (b:A.array a) =
   as_resource (array_view b)
 
 let reveal_array ()
