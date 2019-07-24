@@ -1362,7 +1362,7 @@ type connective =
     | QEx of binders * qpats * typ
     | BaseConn of lident * args
 
-(* destruct_typ_as_formula can be hot these tables are defined
+(* destruct_typ_as_formula can be hot; these tables are defined
    here to ensure they are constructed only once in the executing
    binary
 
@@ -1405,22 +1405,26 @@ let destruct_typ_as_formula f : option<connective> =
         in
         U.find_map table aux
     in
-
-    let destruct_base_conn f =
-        let t, args = head_and_args (unmeta_monadic f) in
-        let t = un_uinst t in
-        match (pre_typ t).n with
-        | Tm_fvar tc ->
-            lookup_arity_lid destruct_base_table tc.fv_name.v args
+    let destruct_base_conn t =
+        let hd, args = head_and_args t in
+        match (un_uinst hd).n with
+        | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name.v args
         | _ -> None
     in
-
+    let destruct_sq_base_conn t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n with
+        | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
+        | _ -> None
+        )
+    in
     let patterns t =
         let t = compress t in
         match t.n with
             | Tm_meta(t, Meta_pattern (_, pats)) -> pats, compress t
-            | _ -> [], t in
-
+            | _ -> [], t
+    in
     let destruct_q_conn t =
         let is_q (fa:bool) (fv:fv) : bool =
             if fa
@@ -1452,16 +1456,6 @@ let destruct_typ_as_formula f : option<connective> =
 
             | _ -> None in
         aux None [] t in
-
-    let destruct_sq_base_conn t =
-        bind_opt (un_squash t) (fun t ->
-        let hd, args = head_and_args' t in
-        match (un_uinst hd).n with
-        | Tm_fvar fv ->
-            lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
-        | _ -> None
-        )
-    in
     let rec destruct_sq_forall t =
         bind_opt (un_squash t) (fun t ->
         match arrow_one t with
