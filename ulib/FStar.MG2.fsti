@@ -326,16 +326,6 @@ val modifies_trans
 val loc_unused_in_used_in_disjoint (#al: Type) (c: cls al) (h: HS.mem) : Lemma
   (loc_unused_in c h `loc_disjoint` loc_used_in c h)
 
-val modifies_aloc_intro'
-  (#al: Type) (#c: cls al) (l: loc c) (h h' : HS.mem)
-  (alocs: (
-    (x: al) ->
-    Lemma
-    (requires (loc_disjoint l (loc_of_aloc x)))
-    (ensures (c.aloc_preserved x h h'))
-  ))
-: Lemma
-  (modifies l h h')
 
 val modifies_aloc_intro
   (#al: Type) (#c: cls al) (z: al) (h h' : HS.mem)
@@ -369,7 +359,6 @@ val modifies_intro
 : Lemma
   (modifies l h h')
 
-
 val modifies_only_used_in
   (#al: Type)
   (#c: cls al)
@@ -378,6 +367,23 @@ val modifies_only_used_in
 : Lemma
   (requires (modifies (loc_unused_in c h `loc_union` l) h h'))
   (ensures (modifies l h h'))
+
+val framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h:HS.mem)
+  (framing: (l : loc c) -> Lemma
+    (requires (loc_disjoint l l0 /\ loc_includes (loc_used_in c h) l))
+    (ensures (loc_disjoint l l1))
+  )
+: Lemma
+  ((loc_unused_in c h `loc_union` l0) `loc_includes` (loc_union l0 l1))
+
+val loc_used_in_preserved
+  (#al: Type)
+  (#c: cls al)
+  (h0 h1: HS.mem)
+  (l l': loc c)
+: Lemma
+  (requires (loc_disjoint l' l /\ loc_includes (loc_used_in c h0) l' /\ modifies l h0 h1))
+  (ensures (loc_includes (loc_used_in c h1) l'))
 
 val aloc_unused_in_intro (#al: _) (c: cls al) (l: al) (h: HS.mem) : Lemma
   (requires (l `c.aloc_unused_in` h))
