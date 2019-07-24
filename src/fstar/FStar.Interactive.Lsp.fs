@@ -134,7 +134,7 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
 
 let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
   match q with
-  | Initialize (pid, rootUri) -> resultResponse (js_servcap), Inl gst
+  | Initialize (_, _) -> resultResponse js_servcap, Inl gst
   | Initialized -> None, Inl gst
   | Shutdown -> nullResponse, Inl gst
   | Exit -> None, Inr 0
@@ -187,7 +187,7 @@ let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
 
 // Raises exceptions, but all of them are caught
 let rec parse_header_len (stream: stream_reader) (len: int): int =
-  // Non-blocking read
+  // Blocking read
   match U.read_line stream with
   | Some s ->
     if U.starts_with s "Content-Length: " then

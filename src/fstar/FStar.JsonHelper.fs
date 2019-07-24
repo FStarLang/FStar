@@ -82,8 +82,15 @@ let js_str_int : json -> int = function
 // May throw
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
-let uri_to_path u = if U.starts_with u "file://" then substring_from u 7 else u
-let path_to_uri u = if U.starts_with u "file://" then u else U.format1 "file://%s" u
+// UNIX paths: file:///foo/bar corresponds to /foo/bar
+//             01234567
+//
+// Windows paths: "file:///z%3A/foo corresponds to z:/foo
+//                 0123456789
+let uri_to_path u = if U.substring u 9 3 = "%3A" then
+                    U.format2 "%s:%s" (U.substring u 8 1) (U.substring_from u 12)
+                    else U.substring_from u 7
+let path_to_uri u = U.format1 "file://%s" u
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 

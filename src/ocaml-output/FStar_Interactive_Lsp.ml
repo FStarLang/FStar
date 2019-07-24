@@ -251,7 +251,7 @@ let (run_query :
   fun gst ->
     fun q ->
       match q with
-      | FStar_JsonHelper.Initialize (pid, rootUri) ->
+      | FStar_JsonHelper.Initialize (uu____410, uu____411) ->
           let uu____416 =
             FStar_JsonHelper.resultResponse FStar_JsonHelper.js_servcap in
           (uu____416, (FStar_Util.Inl gst))
