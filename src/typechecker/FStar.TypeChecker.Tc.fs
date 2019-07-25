@@ -118,12 +118,16 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   
   let univs_opening, annotated_univ_names = SS.univ_var_opening ed.univs in
 
-  let env = Env.push_univ_vars env0 annotated_univ_names in
+  let env_uvs = Env.push_univ_vars env0 annotated_univ_names in
   
   //open the effect signature and typecheck it
   //TODO: where do we check that the final type is Effect?
-  let signature, _ = tc_trivial_guard env (SS.subst univs_opening ed.signature) in
+  let signature0 = ed.signature in  //save the unannotated signature -- will be used later to get a fresh instance when typechecking bind etc.
+  let signature, _ = tc_trivial_guard env_uvs (SS.subst univs_opening ed.signature) in
   let ed = { ed with signature = signature } in
+
+  //add ed.signature to the environment so that its universe is not generalized until we are done
+  let env = Env.push_bv env_uvs (S.new_bv None ed.signature) in
 
   //open effect combinators w.r.t. univs_opening
   //we expect other fields to be unset, in particular we will override them
@@ -142,18 +146,21 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
         }
   in
 
-  let bs =  //a:Type, indices
-    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (range_of_lid ed.mname) in
-    match (SS.compress ed.signature).n with
+  let get_binders_from_signature signature =
+    let fail () = raise_error (Err.unexpected_signature_for_monad env ed.mname signature) (range_of_lid ed.mname) in
+    match (SS.compress signature).n with
     | Tm_arrow (bs, c) ->  //TODO: flatten binders in case someone writes a -> Tot (b -> ...)?
       (match bs with
        | (a, _)::indices when List.length indices >= 1 ->
          (match (SS.compress a.sort).n with
           | Tm_type _ -> bs
-          | _ -> fail ed.signature) 
-       | _ -> fail ed.signature)
-    | _ -> fail ed.signature
+          | _ -> fail ()) 
+       | _ -> fail ())
+    | _ -> fail ()
   in
+
+  //bs are the default (closed) binders that we will work with
+  let bs =  get_binders_from_signature ed.signature in //a:Type, indices
 
   let check_and_gen env (us, t) k =
     match annotated_univ_names with
@@ -166,19 +173,25 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   in
 
   //typecheck repr
-  let repr =
+
+  //save the unannotated repr -- will be used later to get a fresh instance when typechecking bind etc.
+  let repr0 = ed.repr in
+  
+  let tc_repr repr bs =
     //repr should have the type a:Type -> .. indices .. -> Type
     let expected_repr_type =
       let t, u = U.type_u () in
-    U.arrow bs (S.mk_Total' t (Some u)) in
+      U.arrow bs (S.mk_Total' t (Some u)) in
 
-    let repr = tc_check_trivial_guard env ed.repr expected_repr_type in
+    let repr = tc_check_trivial_guard env repr expected_repr_type in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print2 "Checked repr: %s against expected repr type: %s\n"
         (Print.term_to_string repr) (Print.term_to_string expected_repr_type);
     repr in
   
+  let repr = tc_repr ed.repr bs in  //typechecked repr w.r.t. bs binders
+
   //typecheck return
   let return_repr, return_wp =
     //return should have the type a:Type -> x:a -> repr a ?u1 ... ?un for n indices
@@ -218,12 +231,86 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let indices = uvars |> List.map fst |> List.map SS.compress in  //indices are now indices for M.return in Gamma = bs
     let embedded_indices = EMB.embed (EMB.e_list EMB.e_any) indices Range.dummyRange None EMB.id_norm_cb in
 
-    let return_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None in
+    let return_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None |> TcUtil.generalize_universes env in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
-      BU.print1 "return_wp: %s\n" (Print.term_to_string return_wp);
+      BU.print1 "return_wp: %s\n" (Print.tscheme_to_string return_wp);
 
     return_repr, return_wp in
+
+  let bind_repr, bind_wp =
+    let bs = SS.open_binders bs in
+    let a, bs_indices = List.hd bs, List.tl bs in
+    let r = range_of_lid ed.mname in
+
+    //we now need fresh instances of binders and repr
+    let b_bs, b_repr =
+      match annotated_univ_names with
+      | [] ->
+        let signature, _ = tc_trivial_guard env signature0 in
+        let b_bs = get_binders_from_signature signature in
+        let repr = tc_repr repr0 b_bs in
+        b_bs, repr
+      | _ ->
+        let _, signature = Env.inst_tscheme (annotated_univ_names, ed.signature) in
+        let new_univs = annotated_univ_names |> List.map (fun _ -> new_u_univ ()) in
+        let u_subst = Env.mk_univ_subst annotated_univ_names new_univs in
+        get_binders_from_signature signature, SS.subst u_subst repr in
+
+    let b_bs = SS.open_binders b_bs in
+    let b, b_bs_indices = List.hd b_bs, List.tl b_bs in
+    let b_bs_indices_arrow = b_bs_indices |> List.map (fun (b, q) -> (({b with sort = U.arrow [S.null_binder (a |> fst |> S.bv_to_name)] (S.mk_Total b.sort)}), q)) in
+    
+    let f_b = S.null_binder (mk_Tm_app repr (a::bs_indices |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg) None Range.dummyRange) in
+
+    let g_b =
+      let b_arg = b |> fst |> S.bv_to_name |> S.as_arg in
+      let x = S.null_binder (a |> fst |> S.bv_to_name) in
+      let b_indices_args = b_bs_indices_arrow |> List.map fst |> List.map S.bv_to_name |> List.map (fun t -> mk_Tm_app t [x |> fst |> S.bv_to_name |> S.as_arg] None Range.dummyRange |> S.as_arg) in
+      let repr_app = mk_Tm_app b_repr (b_arg::b_indices_args) None Range.dummyRange in
+      S.null_binder (U.arrow [x] (S.mk_Total repr_app))
+    in
+
+    let bs = a::b::(bs_indices @ b_bs_indices_arrow @ [f_b; g_b]) in
+
+    let uvars, gs, _ =
+      let env = Env.push_binders env bs in
+      List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
+        let t, _, g = TcUtil.new_implicit_var "" r env (SS.subst bs_substs b.sort) in
+        uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
+      ) ([], [], []) b_bs_indices in
+
+    let expected_bind_repr_type =
+      let repr_args = (U.arg_of_non_null_binder b)::uvars in
+      let repr_comp = S.mk_Total (mk_Tm_app b_repr repr_args None r) in
+      let repr_comp = SS.close_comp bs repr_comp in
+      let bs = SS.close_binders bs in
+
+      U.arrow bs repr_comp in
+    
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Checking bind_repr: %s against expected bind_repr type: %s\n"
+        (Print.tscheme_to_string ed.bind_repr) (Print.term_to_string expected_bind_repr_type);
+
+    let bind_repr = check_and_gen ({ env with use_eq = true }) ed.bind_repr expected_bind_repr_type in
+    List.iter (Rel.force_trivial_guard env) gs;
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Checked bind_repr: %s against expected bind_repr type: %s\n"
+        (Print.tscheme_to_string bind_repr) (Print.term_to_string expected_bind_repr_type);
+    
+    //TODO: WE SHOULD CHECK f and g don't appear in the indices??
+    let bs = a::b::(bs_indices @ b_bs_indices_arrow) in
+    let indices = uvars |> List.map fst |> List.map SS.compress in  //indices are now indices for M.bind in Gamma = bs
+    let embedded_indices = EMB.embed (EMB.e_list EMB.e_any) indices Range.dummyRange None EMB.id_norm_cb in
+
+    let bind_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None |> TcUtil.generalize_universes env in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "bind_wp: %s\n" (Print.tscheme_to_string bind_wp);
+
+    bind_repr, bind_wp
+  in
   
   failwith "That's it for now"
 
