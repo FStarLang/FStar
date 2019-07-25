@@ -11,6 +11,7 @@ module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
 module BU = FStar.Util
+module S = FStar.Syntax.Syntax
 
 (*
    f: x:int -> P
@@ -51,11 +52,21 @@ let mk_goal env u o b l = {
     label=l;
 }
 
+let rename_binders subst bs =
+    bs |> List.map (function (x, imp) ->
+        let y = SS.subst subst (S.bv_to_name x) in
+        match (SS.compress y).n with
+        | Tm_name y ->
+            // We don't want to change the type
+            ({ y with sort = SS.subst subst x.sort }, imp)
+        | _ -> failwith "Not a renaming")
+
 let subst_goal subst goal =
     let g = goal.goal_ctx_uvar in
     let ctx_uvar = {
         g with ctx_uvar_gamma=Env.rename_gamma subst g.ctx_uvar_gamma;
-               ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ
+               ctx_uvar_binders=rename_binders subst g.ctx_uvar_binders;
+               ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ;
     } in
     { goal with goal_ctx_uvar = ctx_uvar }
 

@@ -25,18 +25,26 @@ assume val xi : Type
 
 assume val p : squash xi
 
-let l1 (x : bool) (y : int) (z : unit) =
+let l1 : int -> int =
+    _ by (
+        dump "A";
+        let x = intro () in
+        dump "B";
+        exact (`3))
+
+let l2 (x : bool) (y : int) (z : unit) =
     assert (phi ==> (psi ==> xi))
         by (let h0 = implies_intro () in
             let h1 = implies_intro () in
-            (* dump "Test"; *)
+            dump "Test";
             exact (quote p))
 
 // this error should show pretty binders too
-(* let _ = *)
-(*     assert (False ==> True) *)
-(*         by (let h0 = implies_intro () in *)
-(*             let x = quote (fun x -> 1 + x) in *)
-(*             let t = mk_e_app x [pack (Tv_Const C_Unit)] in *)
-(*             let _ = tc t in *)
-(*             trivial ()) *)
+[@expect_failure]
+let _ =
+    assert (False ==> True)
+        by (let h0 = implies_intro () in
+            let x = quote (fun x -> 1 + x) in
+            let t = mk_e_app x [pack (Tv_Const C_Unit)] in
+            let _ = tc t in
+            trivial ())
