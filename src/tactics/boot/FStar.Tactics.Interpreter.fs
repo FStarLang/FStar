@@ -48,6 +48,10 @@ let mktot1' uarity nm f ea er nf ena enr =
   { mktot1  uarity nm f ea er nf ena enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
+let mktot1'_psc uarity nm f ea er nf ena enr =
+  { mktot1_psc  uarity nm f ea er nf ena enr
+    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+
 let mktot2' uarity nm f ea eb er nf ena enb enr =
   { mktot2  uarity nm f ea eb er nf ena enb enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
@@ -92,8 +96,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
     (* Sigh, due to lack to expressive typing we need to duplicate a bunch of information here,
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
-    [ mktot1' 0 "tracepoint"  tracepoint E.e_proofstate e_unit
-                              tracepoint E.e_proofstate_nbe NBET.e_unit;
+    [ mktot1'_psc 0 "tracepoint"  tracepoint E.e_proofstate e_unit
+                                  tracepoint E.e_proofstate_nbe NBET.e_unit;
 
       mktot2' 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;

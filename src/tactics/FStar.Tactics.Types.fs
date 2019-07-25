@@ -115,12 +115,14 @@ let decr_depth (ps:proofstate) : proofstate =
 let incr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth + 1 }
 
-let tracepoint ps : unit =
-    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
-    then ps.__dump (subst_proof_state (Cfg.psc_subst ps.psc) ps) "TRACE"
-    else ()
-
 let set_ps_psc psc ps = { ps with psc = psc }
+
+let tracepoint psc ps : unit =
+    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ()) then begin
+        let ps = set_ps_psc psc ps in
+        let subst = Cfg.psc_subst ps.psc in
+        ps.__dump (subst_proof_state subst ps) "TRACE"
+    end
 
 let set_proofstate_range ps r =
     { ps with entry_range = Range.set_def_range ps.entry_range (Range.def_range r) }

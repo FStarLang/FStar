@@ -48,3 +48,14 @@ let _ =
             let t = mk_e_app x [pack (Tv_Const C_Unit)] in
             let _ = tc t in
             trivial ())
+
+#set-options "--tactic_trace_d 1"
+
+let constr (a b : prop) : Lemma (a ==> b ==> b /\ a) =
+  assert (a ==> b ==> b /\ a)
+      by (let ha = implies_intro () in
+          let hb = implies_intro () in
+          split ();
+          mapply (binder_to_term hb);
+          mapply (binder_to_term ha);
+          qed ())
