@@ -271,7 +271,8 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r  /\ Failed?.ps r == ps))
+                                                       else Failed? r))
+        (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then
         fail "guard failed"
