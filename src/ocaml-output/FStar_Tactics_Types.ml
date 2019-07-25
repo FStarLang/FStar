@@ -484,62 +484,63 @@ let (incr_depth : proofstate -> proofstate) =
       local_state = (uu___110_1004.local_state)
     }
   
-let (tracepoint : proofstate -> unit) =
-  fun ps  ->
-    let uu____1012 =
-      (FStar_Options.tactic_trace ()) ||
-        (let uu____1015 = FStar_Options.tactic_trace_d ()  in
-         ps.depth <= uu____1015)
-       in
-    if uu____1012
-    then
-      let uu____1018 =
-        let uu____1019 = FStar_TypeChecker_Cfg.psc_subst ps.psc  in
-        subst_proof_state uu____1019 ps  in
-      ps.__dump uu____1018 "TRACE"
-    else ()
-  
 let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
   fun psc  ->
     fun ps  ->
-      let uu___116_1034 = ps  in
+      let uu___114_1017 = ps  in
       {
-        main_context = (uu___116_1034.main_context);
-        main_goal = (uu___116_1034.main_goal);
-        all_implicits = (uu___116_1034.all_implicits);
-        goals = (uu___116_1034.goals);
-        smt_goals = (uu___116_1034.smt_goals);
-        depth = (uu___116_1034.depth);
-        __dump = (uu___116_1034.__dump);
+        main_context = (uu___114_1017.main_context);
+        main_goal = (uu___114_1017.main_goal);
+        all_implicits = (uu___114_1017.all_implicits);
+        goals = (uu___114_1017.goals);
+        smt_goals = (uu___114_1017.smt_goals);
+        depth = (uu___114_1017.depth);
+        __dump = (uu___114_1017.__dump);
         psc;
-        entry_range = (uu___116_1034.entry_range);
-        guard_policy = (uu___116_1034.guard_policy);
-        freshness = (uu___116_1034.freshness);
-        tac_verb_dbg = (uu___116_1034.tac_verb_dbg);
-        local_state = (uu___116_1034.local_state)
+        entry_range = (uu___114_1017.entry_range);
+        guard_policy = (uu___114_1017.guard_policy);
+        freshness = (uu___114_1017.freshness);
+        tac_verb_dbg = (uu___114_1017.tac_verb_dbg);
+        local_state = (uu___114_1017.local_state)
       }
+  
+let (tracepoint : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
+  fun psc  ->
+    fun ps  ->
+      let uu____1029 =
+        (FStar_Options.tactic_trace ()) ||
+          (let uu____1032 = FStar_Options.tactic_trace_d ()  in
+           ps.depth <= uu____1032)
+         in
+      if uu____1029
+      then
+        let ps1 = set_ps_psc psc ps  in
+        let subst1 = FStar_TypeChecker_Cfg.psc_subst ps1.psc  in
+        let uu____1037 = subst_proof_state subst1 ps1  in
+        ps1.__dump uu____1037 "TRACE"
+      else ()
   
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps  ->
     fun r  ->
-      let uu___120_1046 = ps  in
-      let uu____1047 =
-        let uu____1048 = FStar_Range.def_range r  in
-        FStar_Range.set_def_range ps.entry_range uu____1048  in
+      let uu___123_1052 = ps  in
+      let uu____1053 =
+        let uu____1054 = FStar_Range.def_range r  in
+        FStar_Range.set_def_range ps.entry_range uu____1054  in
       {
-        main_context = (uu___120_1046.main_context);
-        main_goal = (uu___120_1046.main_goal);
-        all_implicits = (uu___120_1046.all_implicits);
-        goals = (uu___120_1046.goals);
-        smt_goals = (uu___120_1046.smt_goals);
-        depth = (uu___120_1046.depth);
-        __dump = (uu___120_1046.__dump);
-        psc = (uu___120_1046.psc);
-        entry_range = uu____1047;
-        guard_policy = (uu___120_1046.guard_policy);
-        freshness = (uu___120_1046.freshness);
-        tac_verb_dbg = (uu___120_1046.tac_verb_dbg);
-        local_state = (uu___120_1046.local_state)
+        main_context = (uu___123_1052.main_context);
+        main_goal = (uu___123_1052.main_goal);
+        all_implicits = (uu___123_1052.all_implicits);
+        goals = (uu___123_1052.goals);
+        smt_goals = (uu___123_1052.smt_goals);
+        depth = (uu___123_1052.depth);
+        __dump = (uu___123_1052.__dump);
+        psc = (uu___123_1052.psc);
+        entry_range = uu____1053;
+        guard_policy = (uu___123_1052.guard_policy);
+        freshness = (uu___123_1052.freshness);
+        tac_verb_dbg = (uu___123_1052.tac_verb_dbg);
+        local_state = (uu___123_1052.local_state)
       }
   
 let (goals_of : proofstate -> goal Prims.list) = fun ps  -> ps.goals 
@@ -549,12 +550,12 @@ let (get_label : goal -> Prims.string) = fun g  -> g.label
 let (set_label : Prims.string -> goal -> goal) =
   fun l  ->
     fun g  ->
-      let uu___128_1096 = g  in
+      let uu___131_1102 = g  in
       {
-        goal_main_env = (uu___128_1096.goal_main_env);
-        goal_ctx_uvar = (uu___128_1096.goal_ctx_uvar);
-        opts = (uu___128_1096.opts);
-        is_guard = (uu___128_1096.is_guard);
+        goal_main_env = (uu___131_1102.goal_main_env);
+        goal_ctx_uvar = (uu___131_1102.goal_ctx_uvar);
+        opts = (uu___131_1102.opts);
+        is_guard = (uu___131_1102.is_guard);
         label = l
       }
   
@@ -563,27 +564,27 @@ type direction =
   | BottomUp 
 let (uu___is_TopDown : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TopDown  -> true | uu____1106 -> false
+    match projectee with | TopDown  -> true | uu____1112 -> false
   
 let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | BottomUp  -> true | uu____1117 -> false
+    match projectee with | BottomUp  -> true | uu____1123 -> false
   
 exception TacticFailure of Prims.string 
 let (uu___is_TacticFailure : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | TacticFailure uu____1132 -> true
-    | uu____1135 -> false
+    | TacticFailure uu____1138 -> true
+    | uu____1141 -> false
   
 let (__proj__TacticFailure__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee  ->
-    match projectee with | TacticFailure uu____1145 -> uu____1145
+    match projectee with | TacticFailure uu____1151 -> uu____1151
   
 exception EExn of FStar_Syntax_Syntax.term 
 let (uu___is_EExn : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EExn uu____1159 -> true | uu____1161 -> false
+    match projectee with | EExn uu____1165 -> true | uu____1167 -> false
   
 let (__proj__EExn__item__uu___ : Prims.exn -> FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | EExn uu____1169 -> uu____1169 
+  fun projectee  -> match projectee with | EExn uu____1175 -> uu____1175 

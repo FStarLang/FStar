@@ -456,7 +456,7 @@ let (ps_to_json :
           FStar_List.append uu____1242 uu____1327  in
         FStar_Util.JsonAssoc uu____1234
   
-let (dump_proofstate :
+let (do_dump_proofstate :
   FStar_Tactics_Types.proofstate -> Prims.string -> unit) =
   fun ps  ->
     fun msg  ->
@@ -467,7 +467,7 @@ let (dump_proofstate :
            FStar_Util.print_generic "proof-state" ps_to_string ps_to_json
              (msg, ps))
   
-let (print_proof_state : Prims.string -> unit tac) =
+let (dump : Prims.string -> unit tac) =
   fun msg  ->
     mk_tac
       (fun ps  ->
@@ -475,7 +475,7 @@ let (print_proof_state : Prims.string -> unit tac) =
          let subst1 = FStar_TypeChecker_Cfg.psc_subst psc  in
          (let uu____1420 = FStar_Tactics_Types.subst_proof_state subst1 ps
              in
-          dump_proofstate uu____1420 msg);
+          do_dump_proofstate uu____1420 msg);
          FStar_Tactics_Result.Success ((), ps))
   
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
@@ -491,7 +491,7 @@ let fail : 'a . Prims.string -> 'a tac =
               (FStar_Options.Other "TacFail")
              in
           if uu____1493
-          then dump_proofstate ps (Prims.op_Hat "TACTIC FAILING: " msg)
+          then do_dump_proofstate ps (Prims.op_Hat "TACTIC FAILING: " msg)
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Types.TacticFailure msg), ps))
@@ -7123,8 +7123,7 @@ let (proofstate_of_goal_ty :
                 FStar_Tactics_Types.goals = [g];
                 FStar_Tactics_Types.smt_goals = [];
                 FStar_Tactics_Types.depth = Prims.int_zero;
-                FStar_Tactics_Types.__dump =
-                  (fun ps  -> fun msg  -> dump_proofstate ps msg);
+                FStar_Tactics_Types.__dump = do_dump_proofstate;
                 FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
                 FStar_Tactics_Types.entry_range = rng;
                 FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
@@ -7132,6 +7131,6 @@ let (proofstate_of_goal_ty :
                 FStar_Tactics_Types.tac_verb_dbg = uu____15751;
                 FStar_Tactics_Types.local_state = uu____15754
               }  in
-            let uu____15764 = FStar_Tactics_Types.goal_witness g  in
-            (ps, uu____15764)
+            let uu____15759 = FStar_Tactics_Types.goal_witness g  in
+            (ps, uu____15759)
   
