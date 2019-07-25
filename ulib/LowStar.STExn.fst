@@ -7,6 +7,7 @@ type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0
 
 #set-options "--print_universes"
+
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
   unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 

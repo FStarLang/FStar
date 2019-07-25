@@ -33,6 +33,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
+
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
@@ -157,7 +158,7 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   let check_and_gen env (us, t) k =
     match annotated_univ_names with
     | [] -> check_and_gen env t k
-    | _::_ ->
+    | _ ->
       let (us, t) = SS.subst_tscheme univs_opening (us, t) in
       let us, t = SS.open_univ_vars us t in
       let t = tc_check_trivial_guard (Env.push_univ_vars env us) t k in
@@ -179,39 +180,50 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     repr in
   
   //typecheck return
-  let return_repr, return_repr_comp =
+  let return_repr, return_wp =
     //return should have the type a:Type -> x:a -> repr a ?u1 ... ?un for n indices
     let bs = SS.open_binders bs in
-    let a = List.hd bs in
+    let a, bs_indices = List.hd bs, List.tl bs in
     let r = range_of_lid ed.mname in
 
-    let uvars, gs, _ =
-      List.fold_left (fun (uvars, gs, env) b ->
-        let t, _, g = TcUtil.new_implicit_var "" r env (fst b).sort in
-        uvars @ [ t |> S.as_arg ], gs @ [g], Env.push_binders env [b]
-      ) ([], [], env) bs in
+    let bs = [a; S.null_binder (a |> fst |> S.bv_to_name)] in  //binders for return_repr
 
-    let repr_args = (U.arg_of_non_null_binder a)::uvars in
-    let repr_comp = S.mk_Total (mk_Tm_app repr repr_args None r) in
-    let bs = [a; S.null_binder (S.bv_to_name (a |> fst))] in
-    let repr_comp = SS.close_comp bs repr_comp in
-    let bs = SS.close_binders bs in
-    let expected_return_repr_type = U.arrow bs repr_comp in
+    let uvars, gs, _ =
+      let env = Env.push_binders env bs in
+      List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
+        let t, _, g = TcUtil.new_implicit_var "" r env (SS.subst bs_substs b.sort) in
+        uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
+      ) ([], [], []) bs_indices in
+
+    let expected_return_repr_type =
+      let repr_args = (U.arg_of_non_null_binder a)::uvars in
+      let repr_comp = S.mk_Total (mk_Tm_app repr repr_args None r) in
+      let repr_comp = SS.close_comp bs repr_comp in
+      let bs = SS.close_binders bs in
+
+      U.arrow bs repr_comp in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print2 "Checking return_repr: %s against expected return_repr type: %s\n"
         (Print.tscheme_to_string ed.return_repr) (Print.term_to_string expected_return_repr_type);
     
 
-    let return_repr = check_and_gen env ed.return_repr expected_return_repr_type in
+    let return_repr = check_and_gen ({ env with use_eq = true }) ed.return_repr expected_return_repr_type in
     List.iter (Rel.force_trivial_guard env) gs;
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print2 "Checked return_repr: %s against expected return_repr type: %s\n"
         (Print.tscheme_to_string return_repr) (Print.term_to_string expected_return_repr_type);
+    
+    let indices = uvars |> List.map fst |> List.map SS.compress in  //indices are now indices for M.return in Gamma = bs
+    let embedded_indices = EMB.embed (EMB.e_list EMB.e_any) indices Range.dummyRange None EMB.id_norm_cb in
 
-    //return_repr, repr_comp in
-    (), () in
+    let return_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "return_wp: %s\n" (Print.term_to_string return_wp);
+
+    return_repr, return_wp in
   
   failwith "That's it for now"
 
