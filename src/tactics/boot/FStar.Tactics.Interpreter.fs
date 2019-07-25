@@ -219,8 +219,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "debugging"     debugging e_unit e_bool
                                debugging NBET.e_unit NBET.e_bool;
 
-      mktac1 0 "dump"          print_proof_state e_string e_unit
-                               print_proof_state NBET.e_string NBET.e_unit;
+      mktac1 0 "dump"          dump e_string e_unit
+                               dump NBET.e_string NBET.e_unit;
 
       mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
                                pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
@@ -476,11 +476,11 @@ let run_tactic_on_typ
         // /implicits
 
         if !tacdbg then
-            dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
+            do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)
 
     | Failed (e, ps) ->
-        dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
+        do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
         let texn_to_string e =
             match e with
             | TacticFailure s ->
