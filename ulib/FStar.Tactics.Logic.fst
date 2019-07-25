@@ -95,7 +95,6 @@ let pose_lemma (t : term) : Tac binder =
     | _ -> fail ""
   in
   (* If the precondition is trivial, do not cut by it *)
-  dump ("pre = " ^ term_to_string pre);
   match term_as_formula' pre with
   | True_ ->
     pose (`(__lemma_to_squash #(`#pre) #(`#post) () (fun () -> (`#t))))
