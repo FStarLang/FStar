@@ -99,6 +99,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
     [ mktot1'_psc 0 "tracepoint"  tracepoint E.e_proofstate e_unit
                                   tracepoint E.e_proofstate_nbe NBET.e_unit;
 
+      mktot1'_psc 0 "set_ps_psc"  set_ps_psc E.e_proofstate E.e_proofstate
+                                  set_ps_psc E.e_proofstate_nbe E.e_proofstate_nbe;
+
       mktot2' 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;
 
