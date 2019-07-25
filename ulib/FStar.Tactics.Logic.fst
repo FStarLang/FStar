@@ -83,6 +83,8 @@ let l_exact (t:term) =
     try exact t with
     | _ -> (squash_intro (); exact t)
 
+let hyp (b:binder) : Tac unit = l_exact (binder_to_term b)
+
 private
 let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
   h ()
