@@ -162,13 +162,7 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 ## Building F\* from sources ##
 
-Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone. If you're developing a part of F\* that changes the OCaml output, you could get stuck due to a dirty worktree; in that case, run:
-
-```
-$ git clean -dfx
-$ git checkout -- src/ocaml-output
-$ make -C src -j6 ocaml-fstar-ocaml
-```
+Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone.
 
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 

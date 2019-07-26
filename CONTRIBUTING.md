@@ -5,7 +5,7 @@ collaboration model meant to attract contributions from a broad and
 growing community, which includes various companies, universities,
 research institutes, and individuals.
 
-The code of F* is released under the permissive Apache v2.0 License 
+The code of F* is released under the permissive Apache v2.0 License
 and is developed at https://github.com/FStarLang/FStar
 
 # Contributor License Agreement
@@ -77,6 +77,16 @@ manual approval to read the build logs. We plan to make our CI bot post a
 message on a pull request after each build, with a link to publicly-hosted logs
 (they exist! ask a reviewer about them if you need them) along with a full
 report on the aforementioned "Success with breakages" builds.
+
+NOTE: If you're developing a part of F\* that changes the OCaml output, you could get stuck due to a dirty worktree; in that case, run:
+
+```
+$ git clean -dfx
+$ git checkout -- src/ocaml-output
+$ make -C src -j6 ocaml-fstar-ocaml
+```
+
+Caution: You might want to run `git clean -dfx` only in certain subdirectories, not the entire tree.
 
 # Reviewers of pull requests
 
