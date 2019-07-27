@@ -252,10 +252,10 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
         let repr = tc_repr repr0 b_bs in
         b_bs, repr
       | _ ->
-        let _, signature = Env.inst_tscheme (annotated_univ_names, ed.signature) in
+        let _, signature = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names ed.signature) in
         let new_univs = annotated_univ_names |> List.map (fun _ -> new_u_univ ()) in
         let u_subst = Env.mk_univ_subst annotated_univ_names new_univs in
-        get_binders_from_signature signature, SS.subst u_subst repr in
+        get_binders_from_signature signature, SS.subst u_subst (SS.close_univ_vars annotated_univ_names repr) in
 
     let b_bs = SS.open_binders b_bs in
     let b, b_bs_indices = List.hd b_bs, List.tl b_bs in
@@ -1444,19 +1444,16 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_new_effect(ne) ->
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print1 "Starting to typecheck layered effect:\n%s\n" (Print.sigelt_to_string se);
-    if ne.is_layered then begin
-      let _ = tc_layered_eff_decl env ne in
-      ()
-    end;
+    let tc_fun = if ne.is_layered then tc_layered_eff_decl else tc_eff_decl in
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        let ne = tc_fun ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
       end
       else ne
     in
-    let ne = tc_eff_decl env ne in
+    let ne = tc_fun env ne in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], [], env0
 
