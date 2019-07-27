@@ -253,9 +253,8 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
         b_bs, repr
       | _ ->
         let _, signature = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names ed.signature) in
-        let new_univs = annotated_univ_names |> List.map (fun _ -> new_u_univ ()) in
-        let u_subst = Env.mk_univ_subst annotated_univ_names new_univs in
-        get_binders_from_signature signature, SS.subst u_subst (SS.close_univ_vars annotated_univ_names repr) in
+        let _, repr = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names repr) in
+        get_binders_from_signature signature, repr in
 
     let b_bs = SS.open_binders b_bs in
     let b, b_bs_indices = List.hd b_bs, List.tl b_bs in
