@@ -311,10 +311,55 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
     bind_repr, bind_wp
   in
+
+  //TODO: other combinators
+
+  //close the signature now
+  let univs, signature =
+    let univs, signature = TcUtil.generalize_universes env0 ed.signature in
+    match annotated_univ_names with
+    | [] -> univs, signature
+    | _ -> 
+      if List.length univs = List.length annotated_univ_names
+      && List.forall2 (fun u1 u2 -> FStar.Syntax.Syntax.order_univ_name u1 u2 = 0)
+                       univs
+                       annotated_univ_names
+      then univs, signature
+      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format2 "Expected an effect definition with %s universes; but found %s"
+                                      (BU.string_of_int (List.length annotated_univ_names))
+                                      (BU.string_of_int (List.length univs))))
+                        ed.signature.pos
+  in
   
-  failwith "That's it for now"
+  let close n ts =
+    let ts = SS.close_univ_vars_tscheme univs ts in
+    let m = List.length (fst ts) in
+    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    then begin
+      let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
+      let err_msg =
+        BU.format4 "The effect combinator is %s (m,n=%s,%s) (%s)"
+          error (string_of_int m) (string_of_int n) (Print.tscheme_to_string ts)
+      in
+      raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg) (snd ts ).pos
+    end ;
+    ts in
 
+  let ed = { ed with
+       univs         = univs;
+       binders       = [];
+       signature     = signature;
+       ret_wp        = close 0 return_wp;
+       bind_wp       = close 1 bind_wp;
+       repr          = repr;
+       return_repr   = close 0 return_repr;
+       bind_repr     = close 1 bind_repr;
+    } in
 
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "Typechecked layered effect: %s\n" (Print.eff_decl_to_string false ed);
+  
+  ed
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 //  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
