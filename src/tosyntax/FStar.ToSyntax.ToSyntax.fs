@@ -2416,9 +2416,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
               action_defn=Subst.close (binders @ action_params) (desugar_term env def);
               action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
             }, doc
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free || is_layered ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
+            // For layered effects also, user just provides the definition
             let env, action_params = desugar_binders env action_params in
             let action_params = Subst.close_binders action_params in
             {
