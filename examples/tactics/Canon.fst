@@ -24,9 +24,10 @@ assume val x : int
 assume val y : int
 assume val z : int
 
-// Testing the canonizer, it should be the only thing needed for this file
+// Testing the canonicalizer, it should be the only thing needed for this file
 let check_canon () =
     canon ();
+    trivial ();
     or_else qed
             (fun () -> dump "`canon` left the following goals";
                        fail "")
