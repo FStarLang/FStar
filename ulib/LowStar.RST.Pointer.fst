@@ -47,7 +47,7 @@ let ptr_write (#a:Type)
               (x:a)
             : RST unit (ptr_resource ptr)
                        (fun _ -> ptr_resource ptr)
-                       (fun h -> P.allows_write (sel (ptr_view ptr) h).p)
+                       (fun h -> P.allows_write (Ghost.reveal (sel (ptr_view ptr) h).p))
                        (fun h0 _ h1 ->
                           (sel (ptr_view ptr) h0).p == (sel (ptr_view ptr) h1).p /\
                           (sel (ptr_view ptr) h1).x == x) =
@@ -68,7 +68,7 @@ let ptr_alloc (#a:Type)
                                 (fun _ -> True)
                                 (fun _ ptr h1 ->
                                    A.freeable ptr /\
-                                   sel (ptr_view ptr) h1 == {x = init; p = FStar.Real.one}) =
+                                   sel (ptr_view ptr) h1 == {x = init; p = (Ghost.hide FStar.Real.one)}) =
   reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();
@@ -78,7 +78,7 @@ let ptr_free (#a:Type)
              (ptr:pointer a)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
-                      (fun h -> A.freeable ptr /\ P.allows_write (sel (ptr_view ptr) h).p)
+                      (fun h -> A.freeable ptr /\ P.allows_write (Ghost.reveal (sel (ptr_view ptr) h).p))
                       (fun _ ptr h1 -> True) =
   reveal_ptr();
   reveal_rst_inv ();
@@ -96,10 +96,10 @@ let ptr_share
     (fun h0 ptr1 h1 ->
       (sel (ptr_view ptr) h0).x == (sel (ptr_view ptr) h1).x /\
       (sel (ptr_view ptr) h1).x == (sel (ptr_view ptr1) h1).x /\
-      (sel (ptr_view ptr) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
-      (sel (ptr_view ptr1) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
+      Ghost.reveal (sel (ptr_view ptr) h1).p == P.half_permission (Ghost.reveal (sel (ptr_view ptr) h0).p) /\
+      Ghost.reveal (sel (ptr_view ptr1) h1).p == P.half_permission (Ghost.reveal (sel (ptr_view ptr) h0).p) /\
       A.gatherable ptr ptr1 /\
-      P.summable_permissions (sel (ptr_view ptr) h1).p (sel (ptr_view ptr1) h1).p)
+      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr) h1).p) (Ghost.reveal (sel (ptr_view ptr1) h1).p))
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -117,11 +117,13 @@ let ptr_merge
   : RST unit
     (ptr_resource ptr1 <*> ptr_resource ptr2)
     (fun _ -> ptr_resource ptr1)
-    (fun h0 -> A.gatherable ptr1 ptr2 /\ P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)
+    (fun h0 -> A.gatherable ptr1 ptr2 /\
+      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p))
     (fun h0 _ h1 ->
-      P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p /\
+      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p) /\
       (sel (ptr_view ptr1) h0).x == (sel (ptr_view ptr1) h1).x /\
-      (sel (ptr_view ptr1) h1).p == P.sum_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)
+      Ghost.reveal (sel (ptr_view ptr1) h1).p ==
+        P.sum_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p))
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
