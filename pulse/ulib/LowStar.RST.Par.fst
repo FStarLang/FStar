@@ -68,7 +68,7 @@ val new_lock (#a:Type) (b:array a) (pred:Seq.seq a -> Type)
         (RA.array_resource b) (fun _ -> empty_resource)
         (fun h ->
           pred (sel (RA.array_view b) h).RA.s /\
-          P.allows_write (sel (RA.array_view b) h).RA.p)
+          P.allows_write (Ghost.reveal (sel (RA.array_view b) h).RA.p))
         (fun _ l _ -> get_lock_pred l == pred)
 
 /// This model could allow a thread to acquire a lock, and create a new lock
@@ -90,7 +90,7 @@ val acquire (#a:Type) (b:array a) (l:lock b)
         (fun _ -> True)
         (fun _ _ h1 ->
           (get_lock_pred l) (sel (RA.array_view b) h1).RA.s /\
-          P.allows_write (sel (RA.array_view b) h1).RA.p)
+          P.allows_write (Ghost.reveal (sel (RA.array_view b) h1).RA.p))
 
 (* Release is similar to new_lock, without the new value creation *)
 assume
@@ -100,5 +100,5 @@ val release (#a:Type) (b:array a) (l:lock b)
         (fun _ -> empty_resource)
         (fun h ->
           (get_lock_pred l) (sel (RA.array_view b) h).RA.s /\
-          P.allows_write (sel (RA.array_view b) h).RA.p)
+          P.allows_write (Ghost.reveal (sel (RA.array_view b) h).RA.p))
         (fun _ _ _ -> True)

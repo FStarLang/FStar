@@ -16,9 +16,9 @@ open LowStar.BufferOps
 
 unfold let pointer (t: Type) = ptr:A.array t{A.vlength ptr = 1}
 
-type vptr (a: Type) = {
+noeq type vptr (a: Type) = {
   x: a;
-  p: P.permission
+  p: Ghost.erased P.permission
 }
 
 abstract
@@ -26,7 +26,7 @@ let ptr_view (#a:Type) (ptr:pointer a) : view (vptr a) =
   reveal_view ();
   let fp = Ghost.hide (A.loc_array ptr) in
   let inv h = A.live h ptr /\ A.vlength ptr = 1 in
-  let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0} in
+  let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = Ghost.hide (A.get_perm h ptr 0)} in
   {
     fp = fp;
     inv = inv;
@@ -42,5 +42,5 @@ let reveal_ptr ()
            (forall a (ptr:pointer a) h .{:pattern inv (ptr_resource ptr) h}
              inv (ptr_resource ptr) h <==> A.live h ptr /\ A.vlength ptr = 1) /\
            (forall a (ptr:pointer a) h .{:pattern sel (ptr_view ptr) h}
-             sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0})) =
+             sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = Ghost.hide (A.get_perm h ptr 0)})) =
   ()
