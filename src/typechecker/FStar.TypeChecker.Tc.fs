@@ -313,6 +313,137 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
   //TODO: other combinators
 
+  let tc_action env0 (act:action) : action =
+    if List.length act.action_params <> 0 then failwith ("tc_layered_eff_decl: action_params are not empty for " ^ act.action_name.str);
+
+    //open action univs if present
+    let univs, univ_subst, act, env =
+      match act.action_univs with
+      | [] -> [], [], act, env0
+      | us ->
+        let univ_subst, univs = SS.univ_var_opening us in
+        univs, univ_subst, ({ act with
+           action_univs = univs;
+           action_defn = SS.subst univ_subst act.action_defn;
+           action_typ = SS.subst univ_subst act.action_typ
+        }), Env.push_univ_vars env0 univs in
+
+    let act_typ =
+      match (SS.compress act.action_typ).n with
+      | Tm_arrow (bs, c) ->
+        let ct = comp_to_comp_typ c in
+        if lid_equals ct.effect_name ed.mname
+        then let c = repr
+               |> N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env
+               |> (fun repr -> mk_Tm_app repr ((ct.result_typ |> S.as_arg)::ct.effect_args) None Range.dummyRange)
+               |> S.mk_Total in
+             U.arrow bs c
+        else act.action_typ
+       | _ -> act.action_typ in
+    
+    let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
+
+    let act_defn, _, g_a = tc_tot_or_gtot_term
+      ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
+      act.action_defn in
+    
+    let act_typ = N.normalize [Env.Beta] env act_typ in
+
+    let expected_act_typ, repr_comp, guvars, g =
+      let act_bs, act_repr =
+        match annotated_univ_names with
+        | [] ->
+          let signature, _ = tc_trivial_guard env signature0 in
+          let b_bs = get_binders_from_signature signature in
+          let repr = tc_repr repr0 b_bs in
+          b_bs, repr
+        | _ ->
+          let _, signature = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names ed.signature) in
+          let _, repr = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names repr) in
+          get_binders_from_signature signature, repr in
+
+      let act_bs = SS.open_binders act_bs in
+
+      let act_typ_bs, act_typ_c =
+        match (SS.compress act_typ).n with
+        | Tm_arrow (bs, c) -> SS.open_comp bs c
+        | _ -> failwith "tc_layered_eff_decl: actions must have arrow types" in
+
+      let uvars, gs, _ =
+        let env = Env.push_binders env act_typ_bs in
+        List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
+          let t, _, g = TcUtil.new_implicit_var "" Range.dummyRange env (SS.subst bs_substs b.sort) in
+          uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
+        ) ([], [], []) act_bs in
+
+      let repr_comp = S.mk_Total (mk_Tm_app act_repr uvars None Range.dummyRange) in
+
+      let expected_act_typ = U.arrow act_typ_bs repr_comp in //, repr_comp, gs
+    
+      if Env.debug env <| Options.Other "LayeredEffects" then
+        BU.print2 "Trying teq of act_typ: %s and expected_act_typ: %s\n"
+          (Print.term_to_string (U.arrow act_typ_bs act_typ_c))
+          (Print.term_to_string expected_act_typ);
+
+      let g = Rel.teq env (U.arrow act_typ_bs act_typ_c) expected_act_typ in
+      expected_act_typ, repr_comp, gs, g in
+    
+    (g_t::g_a::g::guvars) |> List.iter (Rel.force_trivial_guard env);
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print4 "For action %s, act_typ: %s, expected_act_typ: %s, repr_comp: %s\n"
+        act.action_name.str
+        (Print.term_to_string act_typ)
+        (Print.term_to_string expected_act_typ)
+        (Print.comp_to_string repr_comp);
+    
+    let expected_act_typ = expected_act_typ |> N.normalize [Env.Beta] env in
+
+    let act_typ =
+      match (SS.compress expected_act_typ).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let us, t, args =
+          match (U.comp_result c |> SS.compress).n with
+          | Tm_app (hd, t::args) ->
+            let us =
+              match (SS.compress hd).n with
+              | Tm_uinst (_, us) -> []
+              | _ -> [] in
+            us, t, args
+          | _ -> failwith ("tc_layered_eff_decl: unexpected expected act_typ with comp_result: " ^ Print.term_to_string (U.comp_result c))
+        in
+        let c = {
+          effect_name = ed.mname;
+          comp_univs = us;
+          result_typ = t |> fst;
+          effect_args = args;
+          flags = []
+        } in
+        U.arrow bs (S.mk_Comp c)
+      | _ -> failwith "tc_layered_eff_decl: expected expected_act_typ to be an arrow"
+    in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "After injecting into the monad, action %s has type %s\n"
+        act.action_name.str
+        (Print.term_to_string act_typ);
+    
+    let univs, act_defn =
+      if List.length univs = 0 then TcUtil.generalize_universes env0 act_defn
+      else univs, SS.close_univ_vars univs act_defn in
+    
+    let act_typ = act_typ |> N.normalize [Env.Beta] env |> SS.close_univ_vars univs in
+
+    ({ act with
+       action_univs = univs;
+       action_defn = act_defn;
+       action_typ = act_typ
+    })
+  in
+
+  let actions = List.map (tc_action env) ed.actions in
+
   //close the signature now
   let univs, signature =
     let univs, signature = TcUtil.generalize_universes env0 ed.signature in
@@ -353,10 +484,13 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
        repr          = repr;
        return_repr   = close 0 return_repr;
        bind_repr     = close 1 bind_repr;
+       actions       = actions;
     } in
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecked layered effect: %s\n" (Print.eff_decl_to_string false ed);
+
+  failwith "That's it for now!";
   
   ed
 
