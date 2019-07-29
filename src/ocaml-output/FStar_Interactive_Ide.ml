@@ -34,7 +34,7 @@ let with_captured_errors' :
             (FStar_Util.print_string "Interrupted";
              FStar_Pervasives_Native.None)
         | FStar_Errors.Error (e, msg, r) ->
-            (FStar_Errors.add_errors [(e, msg, r)];
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
              FStar_Pervasives_Native.None)
         | FStar_Errors.Err (e, msg) ->
             ((let uu____112 =
@@ -42,7 +42,7 @@ let with_captured_errors' :
                   let uu____130 = FStar_TypeChecker_Env.get_range env in
                   (e, msg, uu____130) in
                 [uu____122] in
-              FStar_Errors.add_errors uu____112);
+              FStar_TypeChecker_Err.add_errors env uu____112);
              FStar_Pervasives_Native.None)
         | FStar_Errors.Stop -> FStar_Pervasives_Native.None
 let with_captured_errors :
@@ -2551,19 +2551,16 @@ let (install_ide_mode_hooks : (FStar_Util.json -> unit) -> unit) =
   fun printer ->
     FStar_Util.set_printer (interactive_printer printer);
     FStar_Errors.set_handler interactive_error_handler
-let (initial_range : Prims.string -> FStar_Range.range) =
-  fun fname ->
-    let uu____8078 = FStar_Range.mk_pos Prims.int_one Prims.int_zero in
-    let uu____8081 = FStar_Range.mk_pos Prims.int_one Prims.int_zero in
-    FStar_Range.mk_range fname uu____8078 uu____8081
+let (initial_range : FStar_Range.range) =
+  let uu____8071 = FStar_Range.mk_pos Prims.int_one Prims.int_zero in
+  let uu____8074 = FStar_Range.mk_pos Prims.int_one Prims.int_zero in
+  FStar_Range.mk_range "<input>" uu____8071 uu____8074
 let (build_initial_repl_state :
   Prims.string -> FStar_Interactive_JsonHelper.repl_state) =
   fun filename ->
     let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps in
-    let env1 =
-      let uu____8094 = initial_range filename in
-      FStar_TypeChecker_Env.set_range env uu____8094 in
-    let uu____8095 = FStar_Util.open_stdin () in
+    let env1 = FStar_TypeChecker_Env.set_range env initial_range in
+    let uu____8088 = FStar_Util.open_stdin () in
     {
       FStar_Interactive_JsonHelper.repl_line = Prims.int_one;
       FStar_Interactive_JsonHelper.repl_column = Prims.int_zero;
@@ -2571,47 +2568,47 @@ let (build_initial_repl_state :
       FStar_Interactive_JsonHelper.repl_deps_stack = [];
       FStar_Interactive_JsonHelper.repl_curmod = FStar_Pervasives_Native.None;
       FStar_Interactive_JsonHelper.repl_env = env1;
-      FStar_Interactive_JsonHelper.repl_stdin = uu____8095;
+      FStar_Interactive_JsonHelper.repl_stdin = uu____8088;
       FStar_Interactive_JsonHelper.repl_names =
         FStar_Interactive_CompletionTable.empty
     }
 let interactive_mode' :
-  'Auu____8111 . FStar_Interactive_JsonHelper.repl_state -> 'Auu____8111 =
+  'Auu____8104 . FStar_Interactive_JsonHelper.repl_state -> 'Auu____8104 =
   fun init_st ->
     write_hello ();
     (let exit_code =
-       let uu____8120 =
+       let uu____8113 =
          (FStar_Options.record_hints ()) || (FStar_Options.use_hints ()) in
-       if uu____8120
+       if uu____8113
        then
-         let uu____8124 =
-           let uu____8126 = FStar_Options.file_list () in
-           FStar_List.hd uu____8126 in
-         FStar_SMTEncoding_Solver.with_hints_db uu____8124
-           (fun uu____8133 -> go init_st)
+         let uu____8117 =
+           let uu____8119 = FStar_Options.file_list () in
+           FStar_List.hd uu____8119 in
+         FStar_SMTEncoding_Solver.with_hints_db uu____8117
+           (fun uu____8126 -> go init_st)
        else go init_st in
      FStar_All.exit exit_code)
 let (interactive_mode : Prims.string -> unit) =
   fun filename ->
     install_ide_mode_hooks FStar_Interactive_JsonHelper.write_json;
     FStar_Util.set_sigint_handler FStar_Util.sigint_ignore;
-    (let uu____8147 =
-       let uu____8149 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____8149 in
-     if uu____8147
+    (let uu____8140 =
+       let uu____8142 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____8142 in
+     if uu____8140
      then
        FStar_Errors.log_issue FStar_Range.dummyRange
          (FStar_Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen")
      else ());
     (let init1 = build_initial_repl_state filename in
-     let uu____8158 = FStar_Options.trace_error () in
-     if uu____8158
+     let uu____8151 = FStar_Options.trace_error () in
+     if uu____8151
      then interactive_mode' init1
      else
        (try
-          (fun uu___1070_8164 ->
+          (fun uu___1069_8157 ->
              match () with | () -> interactive_mode' init1) ()
         with
-        | uu___1069_8167 ->
+        | uu___1068_8160 ->
             (FStar_Errors.set_handler FStar_Errors.default_handler;
-             FStar_Exn.raise uu___1069_8167)))
+             FStar_Exn.raise uu___1068_8160)))

@@ -139,12 +139,13 @@ let init_env deps : TcEnv.env =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
-  let file_from_env env = Range.file_of_range (TcEnv.get_range env) in
+  // We use file_of_range instead of `Options.file_list ()` because no file
+  // is passed as a command-line argument in LSP mode.
+  let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
+                  else List.hd (Options.file_list ()) in
   let acceptable_mod_name modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
-    // We use file_from_env instead of `Options.file_list ()` because no file
-    // is passed as a command-line argument in LSP mode.
-    Parser.Dep.lowercase_module_name (file_from_env env) =
+    Parser.Dep.lowercase_module_name (fname env) =
     String.lowercase (string_of_lid modul.name) in
 
   let range_of_first_mod_decl modul =
@@ -171,7 +172,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     begin
        let msg : string =
            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
-                       (Parser.Dep.module_name_of_file (file_from_env env))
+                       (Parser.Dep.module_name_of_file (fname env))
        in
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
