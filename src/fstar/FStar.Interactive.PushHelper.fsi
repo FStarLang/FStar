@@ -23,8 +23,8 @@ open FStar
 open FStar.ST
 open FStar.Util
 open FStar.Ident
-open FStar.JsonHelper
 open FStar.TypeChecker.Env
+open FStar.Interactive.JsonHelper
 
 module DsEnv = FStar.Syntax.DsEnv
 module CTable = FStar.Interactive.CompletionTable

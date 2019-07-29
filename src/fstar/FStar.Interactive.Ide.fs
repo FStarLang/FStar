@@ -25,7 +25,7 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
-open FStar.JsonHelper
+open FStar.Interactive.JsonHelper
 open FStar.Interactive.QueryHelper
 open FStar.Interactive.PushHelper
 

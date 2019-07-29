@@ -18,7 +18,7 @@
  * FStar.Interactive.Ide                                            *)
 #light "off"
 
-module FStar.JsonHelper
+module FStar.Interactive.JsonHelper
 open FStar
 open FStar.Errors
 open FStar.Util

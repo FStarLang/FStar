@@ -26,9 +26,9 @@ open FStar.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Universal
-open FStar.JsonHelper
 open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
+open FStar.Interactive.JsonHelper
 
 module U = FStar.Util
 module SS = FStar.Syntax.Syntax

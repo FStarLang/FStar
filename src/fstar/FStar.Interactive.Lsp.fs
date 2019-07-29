@@ -18,11 +18,11 @@ module FStar.Interactive.Lsp
 
 open FStar
 open FStar.All
-open FStar.Errors
 open FStar.Util
-open FStar.JsonHelper
-open FStar.Universal
 open FStar.Range
+open FStar.Errors
+open FStar.Universal
+open FStar.Interactive.JsonHelper
 
 module U = FStar.Util
 module QH = FStar.Interactive.QueryHelper

@@ -22,8 +22,8 @@ module FStar.Interactive.QueryHelper
 open FStar
 open FStar.Range
 open FStar.Util
-open FStar.JsonHelper
 open FStar.TypeChecker.Env
+open FStar.Interactive.JsonHelper
 
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env

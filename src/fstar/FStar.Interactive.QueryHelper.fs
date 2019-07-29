@@ -22,9 +22,9 @@ module FStar.Interactive.QueryHelper
 open FStar
 open FStar.Range
 open FStar.Util
-open FStar.JsonHelper
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+open FStar.Interactive.JsonHelper
 open FStar.Interactive.CompletionTable
 
 module U = FStar.Util
