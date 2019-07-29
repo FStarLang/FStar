@@ -489,8 +489,6 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecked layered effect: %s\n" (Print.eff_decl_to_string false ed);
-
-  failwith "That's it for now!";
   
   ed
 
