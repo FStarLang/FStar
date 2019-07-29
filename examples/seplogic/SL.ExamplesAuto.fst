@@ -95,11 +95,6 @@ let close_wp_lemma (#a:Type) (#b:Type) (#wp:(b -> GTot (st_wp a))) (#post:post a
   :Lemma (st_close_wp a b wp post m)
   = ()
 
-let assume_p_lemma (#a:Type) (#p:Type) (#wp:st_wp a) (#post:post a) (#m:memory)
-  (_:squash (p ==> wp post m))
-  :Lemma (st_assume_p a p wp post m)
-  = ()
-
 let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   let hd, tl = collect_app t in
   // dump (term_to_string hd);
@@ -135,7 +130,6 @@ type cmd =
   | Ite       : cmd
   | IfThenElse: cmd
   | Close     : cmd
-  | Assume    : cmd
   | FramePost : cmd
   | Unknown   : option fv ->cmd
 
@@ -168,8 +162,6 @@ let peek_cmd () : Tac cmd =
        then IfThenElse
        else if inspect_fv fv = close_wp_qn
        then Close
-       else if inspect_fv fv = assume_p_qn
-       then Assume
        else if inspect_fv fv = framepost_qn
        then FramePost
        else if inspect_fv fv = exists_qn  //if it is exists x. then we can't unfold, so return None
@@ -260,11 +252,6 @@ let rec sl (i:int) : Tac unit =
   | Close ->
     apply_lemma (`close_wp_lemma);
     ignore (forall_intros ());
-    sl (i + 1)
-
-  | Assume ->
-    apply_lemma (`assume_p_lemma);
-    ignore (implies_intro ());
     sl (i + 1)
 
   | Read ->
@@ -450,16 +437,21 @@ let read_write (r1 r2:ref int) :ST unit (fun p m -> exists x y. m == (r1 |> x <*
     r2 := x
 
 
-let cond_test (r:ref int) (b:bool) :ST unit (fun p m -> exists x. m == r |> x /\ ((b   ==> p () (r |> 1)) /\
-                                                                      (~ b ==> p () (r |> 2))))
-  by (prelude' (); sl 0)
+(*
+ * AR: 07/17: disabling these, since with new assert_p and assume_p forms,
+ *              they need support for lifts in sl
+ *)
 
-  = if b then r := 1 else r := 2
+// let cond_test (r:ref int) (b:bool) :ST unit (fun p m -> exists x. m == r |> x /\ ((b   ==> p () (r |> 1)) /\
+//                                                                       (~ b ==> p () (r |> 2))))
+//   by (prelude' (); dump "A"; sl 0)
 
-let rotate_left_or_right (r1 r2 r3:ref int) (b:bool)
-  :ST unit (fun p m -> exists x y z. m == (r1 |> x <*> r2 |> y <*> r3 |> z) /\
-                             ((b   ==> p () (r1 |> z <*> r2 |> x <*> r3 |> y)) /\
-			      (~ b ==> p () (r1 |> y <*> r2 |> z <*> r3 |> x))))
-  by (sl_auto ())
+//   = if b then r := 1 else r := 2
 
-  = if b then rotate r1 r2 r3 else rotate r3 r2 r1
+// let rotate_left_or_right (r1 r2 r3:ref int) (b:bool)
+//   :ST unit (fun p m -> exists x y z. m == (r1 |> x <*> r2 |> y <*> r3 |> z) /\
+//                              ((b   ==> p () (r1 |> z <*> r2 |> x <*> r3 |> y)) /\
+// 			      (~ b ==> p () (r1 |> y <*> r2 |> z <*> r3 |> x))))
+//   by (sl_auto ())
+
+//   = if b then rotate r1 r2 r3 else rotate r3 r2 r1

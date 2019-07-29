@@ -37,6 +37,9 @@ let ( > )  (x:int) (y:int) = x > y
 let (mod) (x:int) (y:int)  = snd (ediv_rem x y)
 let ( ~- ) (x:int) = (~-) x
 let abs (x:int) = BigInteger.Abs x
+let of_int (x:int) = BigInteger x
+let int_zero = of_int 0
+let int_one = of_int 1
 let parse_int = BigInteger.Parse
 let to_string (x:int) = x.ToString()
 
