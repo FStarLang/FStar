@@ -48,6 +48,14 @@ let triple_rel (#a:Type) (#b:Type) (#c:Type) (arel:rel a) (brel:rel b) (crel:rel
   y0 `brel` y1 /\
   z0 `crel` z1
 
+let quatruple_rel (#a:Type) (#b:Type) (#c:Type) (#d:Type) (arel:rel a) (brel:rel b) (crel:rel c) (drel:rel d) (p0 p1:(a & b & c & d)) : prop =
+  let (w0, x0, y0, z0) = p0 in
+  let (w1, x1, y1, z1) = p1 in
+  w0 `arel` w1 /\
+  x0 `brel` x1 /\
+  y0 `crel` y1 /\
+  z0 `drel` z1
+
 let eff' (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) (trel:rel tape) (irel:rel index) =
   (trel ** srel) ^--> (triple_rel (option_rel arel) srel irel)
 
@@ -100,7 +108,7 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
    fun (t, s0) ->
      match f (t, s0) with
      | Some x, s1, n ->
-       g x (truncate t n,s1)
+       g x (truncate t n, s1)
      | None, s1, n ->
        None, s1, n
 
@@ -117,6 +125,7 @@ let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
 let sample #st : eff st (lo byte)
   = fun (t, s) -> Some (t 0ul), s, 1ul
 
+private
 let rec sample_inner (t:u32 -> byte) (c:u32) : Tot (lbytes32 c) (decreases (v c)) =
   match c with
   | 0ul -> empty_bytes
@@ -136,9 +145,8 @@ let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
 
 #reset-options
 #set-options "--z3rlimit 350 --query_stats --max_fuel 4 --max_ifuel 5"
-/// state separation
-let lift_left (#s1:Type) (#s1rel:erel s1{lo s1 == s1rel}) #s2 (#s2rel:erel s2) #a (#arel:erel a) ($f:(default_tape_rel ** s1rel) ^--> (triple_rel (option_rel arel) (lo int) (lo index)))
-  : ((default_tape_rel ** (s1rel ** s2rel)) ^--> (triple_rel (option_rel arel) (lo int ** s2rel) (lo index)))
+let lift_left (#s1:Type) (#s1rel:erel s1{lo s1 == s1rel}) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s1rel arel)
+  : ((default_tape_rel ** (s1rel ** s2rel)) ^--> (triple_rel (option_rel arel) (s1rel ** s2rel) (lo index)))
   = fun (t, (s1, s2)) ->
       match f (t ,s1) with
       | None, s1', n ->
@@ -165,3 +173,4 @@ let get_oracle #sig (m:module_t sig) (o:sig.labels) : sig.ops o = DM.sel m o
 ///   require two instance of this signature, which is what functor_prod gives you.
 ///   - a question on the implementation of sig_prod. What if the signatures are
 ///     the same? Then does the call always go to the first one?
+/// state separation

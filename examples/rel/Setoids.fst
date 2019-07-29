@@ -518,6 +518,16 @@ let functor_prod (a0 a1: sig) (b0 b1:sig)
        let mb1 = fb mb0 in
        module_prod a1 b1 ma1 mb1
 
+/// product of functors with a shared input package
+let functor_prod_shared_sig (sig_in: sig) (sig_out_a sig_out_b:sig)
+                 (fa: functor_t sig_in sig_out_a)
+                 (fb: functor_t sig_in sig_out_b)
+   : functor_t sig_in (sig_out_a `sig_prod` sig_out_b)
+   = fun (m:module_t sig_in) ->
+       let ma = fa m in
+       let mb = fb m in
+       module_prod sig_out_a sig_out_b ma mb
+
 
 /// Epsilon equivalences:
 ///     Imperfect equivalences indexed by an adversary's advantage

@@ -13,19 +13,19 @@ module DM = FStar.DependentMap
 let handle = h:(bytes&bytes){int_of_bytes (fst h) <= int_of_bytes (snd h)}
 
 let key (n:u32) = lbytes32 n
-let key_state (n:u32) = (Map.t handle (option bool) & Map.t handle (option (key n)))
+let key_state (n:u32) = Map.t handle (option bool) & Map.t handle (option (key n))
 
-let key_state_rel (n:u32) = lo (key_state n)
+private let key_state_rel (n:u32) = lo (key_state n)
 
-let key_eff (n:u32) = eff (key_state_rel n)
+//let key_eff (n:u32) = eff (key_state_rel n)
 
-let key_set_t (n:u32) = (lo handle) ** (lo (key n)) ^--> eff_rel (key_state_rel n) (lo handle)
+let key_set_t (n:u32) = ((lo handle) ** (lo (key n))) ^--> eff_rel (key_state_rel n) (lo handle)
 let key0_set n : key_set_t n =
     fun (h, k_in) ->
     s <-- get ;
     let (h_map,k_map) = s in
     match Map.sel h_map h,Map.sel k_map h with
-    | None,None ->
+    | None, None ->
       let s':key_state n = (Map.upd h_map h (Some true), Map.upd k_map h (Some k_in)) in
       put s' ;;
       return h
@@ -123,3 +123,64 @@ let key1_module (n:u32) : module_t (key_sig n) =
 
 let key0_functor n = as_fun (key0_module n)
 let key1_functor n = as_fun (key1_module n)
+
+////////////////////////////////////////////////////////////////////////////////
+//ID packages that allow restricted access to oracles of the KEY package.
+////////////////////////////////////////////////////////////////////////////////
+
+type key_read_labels =
+  | ID_GET
+  | ID_HON
+
+let key_read_field_types n : key_read_labels -> Type0 =
+    function ID_GET -> key_get_t n
+           | ID_HON -> key_hon_t n
+
+let key_read_field_rels n : (l:key_read_labels -> erel (key_read_field_types n l)) =
+  function ID_GET -> fun _ _ -> True //arrow (lo handle) (eff_rel ((lo (key_state n))) (lo (key n)))
+         | ID_HON -> fun _ _ -> True //arrow (lo handle) (eff_rel ((lo (key_state n))) (lo bool))
+
+let key_read_sig (n:u32) = {
+  labels = key_read_labels;
+  ops = key_read_field_types n;
+  rels = key_read_field_rels n
+  }
+
+#set-options "--z3rlimit 350 --max_fuel 3 --max_ifuel 4"
+let key_read_module (n:u32) (km:module_t (key_sig n)) : module_t (key_read_sig n) =
+  DM.create #_ #(key_read_sig n).ops
+    (function ID_GET -> get_oracle km GET
+            | ID_HON -> get_oracle km HON)
+
+let key_read_functor n
+  : functor_t (key_sig n) (key_read_sig n)
+  = fun (k:module_t (key_sig n)) -> key_read_module n k
+
+
+type key_write_labels =
+  | ID_SET
+  | ID_CSET
+
+let key_write_field_types n : key_write_labels -> Type0 =
+    function ID_SET -> key_set_t n
+           | ID_CSET -> key_cset_t n
+
+let key_write_field_rels n : (l:key_write_labels -> erel (key_write_field_types n l)) =
+  function ID_SET -> arrow (lo handle ** lo (key n)) (eff_rel ((lo (key_state n))) (lo handle))
+         | ID_CSET -> arrow (lo handle ** lo (key n)) (eff_rel ((lo (key_state n))) (lo handle))
+
+let key_write_sig (n:u32) = {
+  labels = key_write_labels;
+  ops = key_write_field_types n;
+  rels = key_write_field_rels n
+  }
+
+#set-options "--z3rlimit 350 --max_fuel 3 --max_ifuel 4"
+let key_write_module (n:u32) (km:module_t (key_sig n)) : module_t (key_write_sig n) =
+  DM.create #_ #(key_write_sig n).ops
+    (function ID_SET -> get_oracle km SET
+            | ID_CSET -> get_oracle km CSET)
+
+let key_write_functor n
+  : functor_t (key_sig n) (key_write_sig n)
+  = fun (k:module_t (key_sig n)) -> key_write_module n k
