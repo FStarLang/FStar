@@ -35,13 +35,13 @@ val index (#a:Type) (b:A.array a) (i:UInt32.t)
           (fun h0 x h1 ->
           UInt32.v i < A.vlength b /\
           Seq.index (sel (array_view b) h0).s (UInt32.v i) == x /\
-          sel (array_view b) h0 == sel (array_view b) h1
+          h0 == h1
           )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
   : RST unit (array_resource b)
              (fun _ -> array_resource b)
-             (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (sel (array_view b) h0).p )
+             (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (Ghost.reveal (sel (array_view b) h0).p))
              (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
              (sel (array_view b) h1).s ==
              Seq.upd (sel (array_view b) h0).s (UInt32.v i) v /\
@@ -56,13 +56,13 @@ val alloc (#a:Type) (init:a) (len:UInt32.t)
         (fun _ b h1 ->
         A.freeable b /\
         (sel (array_view b) h1).s == Seq.create (UInt32.v len) init /\
-        (sel (array_view b) h1).p = FStar.Real.one
+        Ghost.reveal (sel (array_view b) h1).p = FStar.Real.one
         )
 
 val free (#a:Type) (b:A.array a)
   : RST unit (array_resource b)
              (fun _ -> empty_resource)
-             (fun h0 -> A.freeable b /\ P.allows_write (sel (array_view b) h0).p)
+             (fun h0 -> A.freeable b /\ P.allows_write (Ghost.reveal (sel (array_view b) h0).p))
              (fun _ _ _ -> True)
 
 val share (#a:Type) (b:A.array a)
@@ -73,8 +73,8 @@ val share (#a:Type) (b:A.array a)
         (fun h0 b' h1 ->
           (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
           (sel (array_view b') h1).s == (sel (array_view b) h1).s /\
-          (sel (array_view b) h1).p == P.half_permission (sel (array_view b) h0).p /\
-          (sel (array_view b') h1).p == P.half_permission (sel (array_view b) h0).p /\
+          Ghost.reveal (sel (array_view b) h1).p == P.half_permission (Ghost.reveal (sel (array_view b) h0).p) /\
+          Ghost.reveal (sel (array_view b') h1).p == P.half_permission (Ghost.reveal (sel (array_view b) h0).p) /\
           summable_permissions h1 b b')
 
 val gather (#a:Type) (b b':A.array a)
@@ -84,7 +84,8 @@ val gather (#a:Type) (b b':A.array a)
              (fun h0 _ h1 ->
                summable_permissions h0 b b' /\
                (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
-               (sel (array_view b) h1).p == P.sum_permissions (sel (array_view b) h0).p (sel (array_view b') h0).p)
+               Ghost.reveal (sel (array_view b) h1).p ==
+                 P.sum_permissions (Ghost.reveal (sel (array_view b) h0).p) (Ghost.reveal (sel (array_view b') h0).p))
 
 
 val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b})

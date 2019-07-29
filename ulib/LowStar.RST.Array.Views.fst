@@ -11,9 +11,9 @@ module MG = FStar.ModifiesGen
 open LowStar.Resource
 open LowStar.RST
 
-type varray (a: Type) = {
+noeq type varray (a: Type) = {
   s: Seq.seq a;
-  p: P.permission
+  p: Ghost.erased P.permission
 }
 
 let constant_perm_seq (#a: Type) (h: HS.mem) (b: A.array a) : Type =
@@ -40,16 +40,32 @@ let array_view (#a:Type) (b:A.array a) : view (varray a) =
   let inv h =
     A.live h b /\ constant_perm_seq h b
   in
-  let sel (h: imem inv) : GTot (varray a) = { s = A.as_seq h b; p = A.get_perm h b 0 } in
-  admit();
+  let sel (h: HS.mem) : GTot (varray a) = { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) } in
   {
     fp = fp;
     inv = inv;
     sel = sel
   }
 
-inline_for_extraction let array_resource (#a:Type) (b:A.array a) =
+let array_view_same_as_as_seq (#a: Type) (b: A.array a) (h: HS.mem)
+  : Lemma ((sel (array_view b) h).s == A.as_seq h b)
+  [SMTPat ((sel (array_view b) h).s)]
+  = ()
+
+let as_seq (#a: Type) (h: HS.mem) (b: A.array a)  =
+  (sel (array_view b) h).s
+
+let get_perm (#a: Type) (h: HS.mem) (b: A.array a)  =
+  (sel (array_view b) h).p
+
+val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
+  (requires (array_view b).inv h)
+  (ensures A.vlength b == Seq.length (sel (array_view b) h).s)
+  [SMTPat (sel (array_view b) h).s]
+
+unfold let array_resource (#a:Type) (b:A.array a) =
   as_resource (array_view b)
+
 
 let reveal_array ()
   : Lemma (
@@ -59,18 +75,13 @@ let reveal_array ()
         inv (array_resource b) h <==> A.live h b /\ constant_perm_seq h b
       ) /\
       (forall a (b:A.array a) h .{:pattern sel (array_view b) h}
-        sel (array_view b) h == { s = A.as_seq h b; p = A.get_perm h b 0 }
+        sel (array_view b) h == { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) }
       )
     ) =
   ()
-
-val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
-  (requires (array_view b).inv h)
-  (ensures A.vlength b == Seq.length (sel (array_view b) h).s)
-  [SMTPat (sel (array_view b) h).s]
 
 let length_view_as_seq #a h b = ()
 
 let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}) (b':A.array a{(array_view b').inv h}) =
   A.gatherable b b' /\
-  P.summable_permissions (sel (array_view b) h).p (sel (array_view b') h).p
+  P.summable_permissions (Ghost.reveal (sel (array_view b) h).p) (Ghost.reveal (sel (array_view b') h).p)
