@@ -38,7 +38,6 @@ val set_label    : string -> goal -> goal
 val incr_depth : proofstate -> proofstate
 val decr_depth : proofstate -> proofstate
 val tracepoint : proofstate -> unit
-val set_ps_psc : proofstate -> proofstate
 val set_proofstate_range : proofstate -> FStar.Range.range -> proofstate
 
 type direction =

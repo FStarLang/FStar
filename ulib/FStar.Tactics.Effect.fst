@@ -51,7 +51,7 @@ private
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
 private
-let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e (set_ps_psc ps)
+let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 
 private
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
