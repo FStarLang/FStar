@@ -53,7 +53,7 @@ type iv    = lbytes (v ivlen)
 // internally, blocks are represented as 16 x 4-byte integers
 private type matrix = m:uint32s{length m = v blocklen / 4}
 
-private type shuffle = 
+private unfold type shuffle = 
   m:matrix -> STL unit
   (requires (fun h -> live h m))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))

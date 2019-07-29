@@ -48,9 +48,11 @@ assume val pack_binder    : bv -> aqualv -> binder
 assume val lookup_typ            : env -> name -> option sigelt
 assume val compare_bv            : bv -> bv -> order
 assume val binders_of_env        : env -> binders
-assume val moduleof              : env -> list string
+assume val moduleof              : env -> name
 assume val is_free               : bv -> term -> bool
 assume val lookup_attr           : term -> env -> list fv
+assume val all_defs_in_env       : env -> list fv
+assume val defs_in_module        : env -> name -> list fv
 assume val term_eq               : term -> term -> bool
 assume val term_to_string        : term -> string
 assume val comp_to_string        : comp -> string

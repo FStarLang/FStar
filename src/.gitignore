@@ -9,3 +9,4 @@ u_ocaml-output
 [Oo]bj/
 
 Makefile.local
+*.bak

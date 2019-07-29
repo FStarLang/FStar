@@ -27,7 +27,7 @@ module L = FStar.List.Tot
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (m:string) = raise (TacticFailure m)
+let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -122,13 +122,16 @@ of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t : term) : Tac unit =
-    t_apply true t
+    t_apply true false t
+
+let apply_noinst (t : term) : Tac unit =
+    t_apply true true t
 
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
 let apply_raw (t : term) : Tac unit =
-    t_apply false t
+    t_apply false false t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
@@ -265,6 +268,7 @@ let guard (b : bool) : TacH unit (requires (fun _ -> True))
     =
     if not b then
         fail "guard failed"
+    else ()
 
 let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
     match catch f with

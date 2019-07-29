@@ -82,6 +82,7 @@ let trans_pragma = function
   | AST.ResetOptions sopt -> S.ResetOptions sopt
   | AST.PushOptions sopt -> S.PushOptions sopt
   | AST.PopOptions -> S.PopOptions
+  | AST.RestartSolver -> S.RestartSolver
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
@@ -512,7 +513,6 @@ let is_special_effect_combinator = function
   | "wp_close"
   | "stronger"
   | "ite_wp"
-  | "null_wp"
   | "wp_trivial"
   | "ctx"
   | "gctx"
@@ -1387,8 +1387,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
       mk (Tm_match(t1',
-                    [(withinfo (Pat_constant (Const_bool true)) t2.range, None, t2');
-                     (withinfo (Pat_wild x) t3.range, None, t3')])), join_aqs [aq1;aq2;aq3]
+                    [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
+                     (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq2;aq3]
 
     | TryWith(e, branches) ->
       let r = top.range in
@@ -1530,7 +1530,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let rel = eta_and_annot rel in
 
       let wild r = mk_term Wild r Expr in
-      let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let init   = mk_term (Var C.calc_init_lid) Range.dummyRange Expr in
       let last_expr = match List.last steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
                       | _ -> failwith "impossible: no last_expr on calc"
@@ -1538,17 +1538,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
-      let e = mkApp init [(init_expr, Nothing)] init_expr.range in
+      let e = mkApp init [(init_expr, Nothing)] Range.dummyRange in
       let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
                           let pf = mkApp (step rel.range)
                                           [(wild rel.range, Hash);
                                            (init_expr, Hash);
                                            (prev, Hash);
                                            (eta_and_annot rel, Nothing); (next_expr, Nothing);
-                                           (thunk e, Nothing); (thunk just, Nothing)] just.range in
+                                           (thunk e, Nothing); (thunk just, Nothing)] Range.dummyRange in
                           (pf, next_expr))
                    (e, init_expr) steps in
-      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] init_expr.range in
+      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] Range.dummyRange in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
@@ -1811,28 +1811,46 @@ and desugar_formula env (f:term) : S.term =
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
-    let desugar_pats env pats = List.map (fun es -> es |> List.map (fun e -> arg_withimp_t Nothing <| desugar_term env e)) pats in
+    let with_pats env (names, pats) body =
+      match names, pats with
+      | [], [] -> body
+      | [], _::_ ->
+        //violates an internal invariant
+        failwith "Impossible: Annotated pattern without binders in scope"
+      | _ ->
+        let names =
+          names |> List.map
+          (fun i ->
+          { fail_or2 (try_lookup_id env) i with pos=i.idRange })
+        in
+        let pats =
+          pats |> List.map
+          (fun es -> es |> List.map
+                  (fun e -> arg_withimp_t Nothing <| desugar_term env e))
+        in
+        mk (Tm_meta (body, Meta_pattern (names, pats)))
+    in
     match tk with
       | Some a, k ->
         let env, a = push_bv env a in
         let a = {a with sort=k} in
-        let pats = desugar_pats env pats in
         let body = desugar_formula env body in
-        let body = match pats with
-          | [] -> body
-          | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
+        let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
         mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, //NS delta: wrong?  Delta_constant_at_level 2?
                       [as_arg body])
 
       | _ -> failwith "impossible" in
 
- let push_quant (q:(list<AST.binder> * list<(list<AST.term>)> * AST.term) -> AST.term') (binders:list<AST.binder>) pats (body:term) =
+ let push_quant
+      (q:(list<AST.binder> * AST.patterns * AST.term) -> AST.term')
+      (binders:list<AST.binder>)
+      pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
       let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
-      mk_term (q([b], [], body)) f.range Formula
+      mk_term (q([b], ([], []), body)) f.range Formula
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with
@@ -2293,38 +2311,50 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
+let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * bool =
+  let warn () =
+    if warn then
+      Errors.log_issue
+              at.pos
+              (Errors.Warning_UnappliedFail,
+               BU.format1 "Found ill-applied '%s', argument should be a non-empty list of integer literals"
+                          (string_of_lid head))
+  in
+  let hd, args = U.head_and_args at in
+   match (SS.compress hd).n with
+   | Tm_fvar fv when S.fv_eq_lid fv head ->
+     begin
+       match args with
+       | [] -> Some [], true
+       | [(a1, _)] ->
+         begin
+         match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
+         | Some es ->
+           Some (List.map FStar.BigInt.to_int_fs es), true
+         | _ ->
+           warn();
+           None, true
+         end
+      | _ ->
+        warn ();
+        None, true
+     end
+
+   | _ ->
+     None, false
+
+
 // If this is a fail attribute, return the listed errors and whether it's a fail_lax or not
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
-    let hd, args = U.head_and_args at in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr
-                              || S.fv_eq_lid fv C.fail_lax_attr ->
-        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
-        | Some es when List.length es > 0->
-            (* Is this an expect_lax_failure? *)
-            let b = S.fv_eq_lid fv C.fail_lax_attr in
-            Some (List.map FStar.BigInt.to_int_fs es, b)
-
-        | _ ->
-            if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
-            None
-        end
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr
-                       || S.fv_eq_lid fv C.fail_lax_attr ->
-        (* Is this an expect_lax_failure? *)
-        let b = S.fv_eq_lid fv C.fail_lax_attr in
-        Some ([], b)
-
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr
-                      || S.fv_eq_lid fv C.fail_lax_attr ->
-        if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
-        None
-
-    | _ ->
-        None
+    let rebind res b =
+      match res with
+      | None -> None
+      | Some l -> Some (l, b)
+    in
+    let res, matched = parse_attr_with_list warn at C.fail_attr in
+    if matched then rebind res false
+    else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
+         rebind res true
 
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
@@ -2343,9 +2373,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         "ite_wp";
         "stronger";
         "close_wp";
-        "assert_p";
-        "assume_p";
-        "null_wp";
         "trivial"
       ]
     in
@@ -2428,9 +2455,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            ite_wp      = lookup_or_dummy "ite_wp";
            stronger    = lookup_or_dummy "stronger";
            close_wp    = lookup_or_dummy "close_wp";
-           assert_p    = lookup_or_dummy "assert_p";
-           assume_p    = lookup_or_dummy "assume_p";
-           null_wp     = lookup_or_dummy "null_wp";
            trivial     = lookup_or_dummy "trivial";
            repr = {
              monad_m     = snd <| lookup_or_dummy "repr";
@@ -2509,9 +2533,6 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             ite_wp      =sub ed.ite_wp;
             stronger    =sub ed.stronger;
             close_wp    =sub ed.close_wp;
-            assert_p    =sub ed.assert_p;
-            assume_p    =sub ed.assume_p;
-            null_wp     =sub ed.null_wp;
             trivial     =sub ed.trivial;
 
             elaborated  =ed.elaborated;
@@ -2593,22 +2614,35 @@ and mk_comment_attr (d: decl) =
   let str = summary ^ pp ^ other ^ text in
   (* Building a fake term *)
   let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in //NS delta: ok
-  let arg = U.exp_string str in
-  U.mk_app fv [ S.as_arg arg ]
+  if str = "" then []
+  else [let arg = U.exp_string str in
+        U.mk_app fv [ S.as_arg arg ]]
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
   // new decl.
+  let env0 = env in
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
-  let attrs = mk_comment_attr d :: attrs in
-  env, List.mapi (fun i sigelt -> if i = 0
-                                  then { sigelt with sigattrs = attrs }
-                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
-                 sigelts
+  let val_attrs =
+    match sigelts with
+    | [ { sigel = Sig_let (lbs, names) } ] ->
+      names |>
+      List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm)) |>
+      List.filter (fun t -> Option.isNone (get_fail_attr false t)) //don't forward fail attributes
+    | _ -> []
+  in
+  let attrs = mk_comment_attr d @ attrs @ val_attrs in
+  env,
+  List.mapi
+    (fun i sigelt ->
+      if i = 0
+      then { sigelt with sigattrs = attrs }
+      else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
+    sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in
@@ -2738,11 +2772,21 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       match (Subst.compress <| ds_lets).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
-          let quals = match quals with
-            | _::_ -> List.map (trans_qual None) quals
-            | _ -> snd lbs |> List.collect
-            (function | {lbname=Inl _} -> []
-                      | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
+          let val_quals =
+               fvs
+               |> List.collect (fun fv -> fst (Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v))
+          in
+          // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
+          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
+          //   (Print.quals_to_string val_quals)
+          //   (List.map Print.term_to_string val_attrs |> String.concat ", ");
+          let quals =
+            match quals with
+            | _::_ ->
+             List.map (trans_qual None) quals
+            | _ ->
+             val_quals
+          in
           let quals =
             if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
             then S.Logic::quals
@@ -2759,16 +2803,18 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
            *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
            *)
-          let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs } in
+                    sigattrs = [] } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
-          env, [s]
+          // BU.print2 "Desugaring %s, se attrs are %s\n"
+          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
+          //   (List.map Print.term_to_string s.sigattrs |> String.concat ", ");
+           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
@@ -2918,27 +2964,7 @@ let desugar_decls env decls =
       let env, se = desugar_decl env d in
       env, sigelts@se) (env, []) decls
   in
-  (* Propagate the doc from a val to a let. *)
-  let rec forward acc = function
-    | se1 :: se2 :: sigelts ->
-        begin match se1.sigel, se2.sigel with
-        | Sig_declare_typ _, Sig_let _ ->
-            forward ({ se2 with sigattrs =
-              List.filter (function
-                | { n = Tm_app ({ n = Tm_fvar fv }, _) }
-                  when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
-                    true
-                | _ -> false
-              ) se1.sigattrs @ se2.sigattrs
-            } :: se1 :: acc) sigelts
-        | _ ->
-            forward (se1 :: acc) (se2 :: sigelts)
-        end
-    | sigelts ->
-        List.rev_append acc sigelts
-  in
-  env, forward [] sigelts
-
+  env, sigelts
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
@@ -3083,9 +3109,6 @@ let add_modul_to_env (m:Syntax.modul)
                ite_wp      = erase_tscheme ed.ite_wp;
                stronger    = erase_tscheme ed.stronger;
                close_wp    = erase_tscheme ed.close_wp;
-               assert_p    = erase_tscheme ed.assert_p;
-               assume_p    = erase_tscheme ed.assume_p;
-               null_wp     = erase_tscheme ed.null_wp;
                trivial     = erase_tscheme ed.trivial;
                repr = {
                  monad_m     = erase_term ed.repr.monad_m;

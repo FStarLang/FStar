@@ -55,11 +55,6 @@
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\format\format.fsproj">
-      <Name>format</Name>
-      <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -77,7 +72,7 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

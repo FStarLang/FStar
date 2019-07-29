@@ -292,7 +292,7 @@ and term_to_string x =
             U.format1 "quote (%s)" (term_to_string tm)
         end
 
-      | Tm_meta(t, Meta_pattern ps) ->
+      | Tm_meta(t, Meta_pattern (_, ps)) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
@@ -558,7 +558,7 @@ and cflags_to_string fs = FStar.Common.string_of_list cflag_to_string fs
 and formula_to_string phi = term_to_string phi
 
 and metadata_to_string = function
-    | Meta_pattern ps ->
+    | Meta_pattern (_, ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format1 "{Meta_pattern %s}" pats
 
@@ -644,9 +644,6 @@ let eff_decl_to_string' r q ed =
       ; ite_wp      = %s\n\
       ; stronger    = %s\n\
       ; close_wp    = %s\n\
-      ; assert_p    = %s\n\
-      ; assume_p    = %s\n\
-      ; null_wp     = %s\n\
       ; trivial     = %s\n\
       ; repr        = %s\n\
       ; bind_repr   = %s\n\
@@ -664,9 +661,6 @@ let eff_decl_to_string' r q ed =
          tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
-         tscheme_to_string ed.assert_p;
-         tscheme_to_string ed.assume_p;
-         tscheme_to_string ed.null_wp;
          tscheme_to_string ed.trivial;
          term_to_string ed.repr.monad_m;
          tscheme_to_string ed.repr.monad_bind;
@@ -696,6 +690,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
       | Sig_pragma(PushOptions None) -> "#push-options"
       | Sig_pragma(PushOptions (Some s)) -> U.format1 "#push-options \"%s\"" s
+      | Sig_pragma(RestartSolver) -> "#restart-solver"
       | Sig_pragma(PopOptions) -> "#pop-options"
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
@@ -748,7 +743,7 @@ let rec sigelt_to_string (x: sigelt) =
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
       in
       match x.sigattrs with
-      | [] -> basic
+      | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg

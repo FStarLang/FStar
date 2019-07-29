@@ -24,14 +24,12 @@ assume val xi : Type
 assume val p : squash xi
 
 let l1 (x : bool) (y : int) (z : unit) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () ->
-                let _ = implies_intro () in
-                clear_top ();
-                let _ = implies_intro () in
-                clear_top ();
-                exact (quote p)
-             )
+    assert (phi ==> (psi ==> xi))
+        by (let _ = implies_intro () in
+            clear_top ();
+            let _ = implies_intro () in
+            clear_top ();
+            exact (quote p))
 
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
@@ -46,11 +44,11 @@ let clear_all_of_type (t : typ) : Tac unit =
     ()
 
 let l2 (x : int) (y : bool) (z : int) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () -> let e = cur_env () in
-                       let n = List.length (binders_of_env e) in
-                       let u = quote int in
-                       clear_all_of_type u;
-                       let e = cur_env () in
-                       // We're removing two binders
-                       guard (List.length (binders_of_env e) = n - 2))
+    assert (phi ==> (psi ==> xi))
+        by (let e = cur_env () in
+            let n = List.length (binders_of_env e) in
+            let u = quote int in
+            clear_all_of_type u;
+            let e = cur_env () in
+            // We're removing two binders
+            guard (List.length (binders_of_env e) = n - 2))

@@ -66,7 +66,7 @@ let repr #a h (xs:t a{ok h xs}) : GTot (Seq.seq a) =
 
 /// A predicate stating that xs has no elements
 let empty #a h (xs: t a{ok h xs}) =
-  Seq.equal (repr h xs) Seq.createEmpty
+  Seq.equal (repr h xs) Seq.empty
 
 /// A predicate stating that xs has no more capacity
 let full #a h (xs: t a{ok h xs}) =
@@ -105,7 +105,7 @@ let push #a (x: t a) (e:a) : Stack unit
   x *= {v with first=next}
 
 unfold inline_for_extraction
-let malloc #a (init: a) len = B.malloc #a HS.root init len
+let malloc #a (init: a) (len:uint_32{v len > 0}) = B.malloc #a HS.root init len
 
 /// Finally, the create function. Find a suitable pre-condition, and reflect the
 /// semantics and memory changes in the post-condition.
@@ -113,7 +113,7 @@ let create #a (def:a) (len:uint_32) : ST (t a)
   (requires fun h -> len <> 0ul)
   (ensures fun h0 r h1 ->
             ok h1 r
-          /\ Seq.equal (repr h1 r) Seq.createEmpty
+          /\ Seq.equal (repr h1 r) Seq.empty
           /\ (deref h1 r).total_length = len
           /\ modifies loc_none h0 h1)
  = let buf = {

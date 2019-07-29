@@ -6,15 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.l_False", "equation_Prims.squash",
-        "function_token_typing_Prims.unit",
-        "haseqTm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query", "equation_Prims.l_False", "false_interp" ],
       0,
-      "e566b20f77f9474d7f0e1942b1f4adb9"
+      "59c395a9f9284962fd4f70c89bc84d7c"
     ]
   ]
 ]

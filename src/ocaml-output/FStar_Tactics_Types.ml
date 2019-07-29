@@ -119,7 +119,9 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.tc_hooks =
         (uu___16_119.FStar_TypeChecker_Env.tc_hooks);
       FStar_TypeChecker_Env.dsenv = (uu___16_119.FStar_TypeChecker_Env.dsenv);
-      FStar_TypeChecker_Env.nbe = (uu___16_119.FStar_TypeChecker_Env.nbe)
+      FStar_TypeChecker_Env.nbe = (uu___16_119.FStar_TypeChecker_Env.nbe);
+      FStar_TypeChecker_Env.strict_args_tab =
+        (uu___16_119.FStar_TypeChecker_Env.strict_args_tab)
     }
   
 let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
@@ -415,7 +417,7 @@ let (decr_depth : proofstate -> proofstate) =
       all_implicits = (uu___94_885.all_implicits);
       goals = (uu___94_885.goals);
       smt_goals = (uu___94_885.smt_goals);
-      depth = (ps.depth - (Prims.parse_int "1"));
+      depth = (ps.depth - Prims.int_one);
       __dump = (uu___94_885.__dump);
       psc = (uu___94_885.psc);
       entry_range = (uu___94_885.entry_range);
@@ -434,7 +436,7 @@ let (incr_depth : proofstate -> proofstate) =
       all_implicits = (uu___97_893.all_implicits);
       goals = (uu___97_893.goals);
       smt_goals = (uu___97_893.smt_goals);
-      depth = (ps.depth + (Prims.parse_int "1"));
+      depth = (ps.depth + Prims.int_one);
       __dump = (uu___97_893.__dump);
       psc = (uu___97_893.psc);
       entry_range = (uu___97_893.entry_range);

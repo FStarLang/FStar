@@ -17,39 +17,31 @@ module UnitTests
 
 open FStar.Tactics
 
-let _ = assert_by_tactic True
-                         trivial
-let _ = assert_by_tactic (1 + 1 = 2)
-                         trivial
-let _ = assert_by_tactic (1 + 1 == 2)
-                         trivial
-let _ = assert_by_tactic ("a" ^ "b" = "ab")
-                         trivial
-let _ = assert_by_tactic ("a" ^ "b" == "ab")
-                         trivial
+let _ = assert True by trivial ()
+let _ = assert (1 + 1 = 2) by trivial ()
+let _ = assert (1 + 1 == 2) by trivial ()
+let _ = assert ("a" ^ "b" = "ab") by trivial ()
+let _ = assert ("a" ^ "b" == "ab") by trivial ()
 
 let phi = True
 
-let _ = assert_by_tactic phi
-                         trivial
+let _ = assert phi by trivial ()
 
 let rec fib n =
     if n < 2
     then n
     else fib (n-1) + fib (n-2)
 
-let _ = assert_by_tactic (fib 5 = 5)
-                         trivial
-let _ = assert_by_tactic (fib 5 == 5)
-                         trivial
+let _ = assert (fib 5 = 5) by trivial ()
+let _ = assert (fib 5 == 5) by trivial ()
 
 let _ =
     let x = 1 in
-    assert_by_tactic (1 == x) trefl
+    assert (1 == x) by trefl ()
 
-let va1    = assert_by_tactic (1 == 1) trefl
-let va2 () = assert_by_tactic (1 == 1) trefl
-let va3    = fun () -> assert_by_tactic (1 == 1) trefl
+let va1    = assert (1 == 1) by trefl ()
+let va2 () = assert (1 == 1) by trefl ()
+let va3    = fun () -> assert (1 == 1) by trefl ()
 
 type t =
     | A : t
@@ -66,12 +58,12 @@ let f x =
 
 let g (x : t) = f (f (f (f (f (f x)))))
 
-let _ = assert_by_tactic (g A == (f (g A))) trivial
-let _ = assert_by_tactic (f B == B) trivial
+let _ = assert (g A == (f (g A))) by trivial ()
+let _ = assert (f B == B) by trivial ()
 
-let _ = assert_by_tactic (A? A == true) trivial
-let _ = assert_by_tactic (D? (D 5) == true) trivial
-let _ = assert_by_tactic (D?.x (D 5) == 5) trivial
+let _ = assert (A? A == true) by trivial ()
+let _ = assert (D? (D 5) == true) by trivial ()
+let _ = assert (D?.x (D 5) == 5) by trivial ()
 
 assume val p1 : Type
 assume val p2 : Type
@@ -79,72 +71,68 @@ assume val proof_1 : squash p1
 assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
 let _ =
-    assert_by_tactic p2
-                     (fun () -> apply_lemma (quote l); exact (quote proof_1))
+    assert p2 by (apply_lemma (quote l); exact (quote proof_1))
 
 let _ =
-    assert_by_tactic p2
-                     (fun () -> apply_lemma (quote (l ())); exact (quote proof_1))
+    assert p2 by (apply_lemma (quote (l ())); exact (quote proof_1))
 
 (* This fails, since when we fully apply `l` we get a Pure *)
 (* let _ = *)
-(*     assert_by_tactic p2 *)
-(*                      (fun () -> apply_lemma (quote (l () ())); *)
-(*                                 exact (quote proof_1)) *)
+(*     assert p2 by (apply_lemma (quote (l () ())); *)
+(*                   exact (quote proof_1)) *)
 
 assume val pp1 : Type0
 
 val l2 : x:(squash pp1) -> Lemma pp1
 let l2 x =
-    assert_by_tactic pp1 assumption
+    assert pp1 by assumption ()
 
 type r = {x : int}
 let xx : r = {x = 4}
 
-let _ = assert_by_tactic (xx.x = 4) trivial
-let _ = assert_by_tactic (xx.x == 4) trivial
+let _ = assert (xx.x = 4) by trivial ()
+let _ = assert (xx.x == 4) by trivial ()
 
 assume val dlem : squash True -> squash True -> squash True
 
-let _ = assert_by_tactic True (fun () ->
-            apply (quote dlem);
-            let _ = divide 1 (fun () -> trivial (); qed ())
-                             (fun () -> trivial (); qed ()) in
-            qed ())
+let _ = assert True
+            by (apply (quote dlem);
+                let _ = divide 1 (fun () -> trivial (); qed ())
+                                 (fun () -> trivial (); qed ()) in
+                qed ())
 
-let _ = assert_by_tactic True (fun () ->
-            apply (quote dlem);
-            let _ = divide 1 (fun () -> trivial (); qed ())
-                             (fun () -> trivial (); qed ()) in
-            qed ())
+let _ = assert True
+            by (apply (quote dlem);
+                let _ = divide 1 (fun () -> trivial (); qed ())
+                                 (fun () -> trivial (); qed ()) in
+                qed ())
 
 open FStar.Order
 
-let _ = assert_by_tactic (Lt = Lt) trivial
-let _ = assert_by_tactic (Gt = Gt) trivial
-let _ = assert_by_tactic (Eq = Eq) trivial
-let _ = assert_by_tactic (Lt <> Eq) trivial
-let _ = assert_by_tactic (Gt <> Lt) trivial
-let _ = assert_by_tactic (Eq <> Gt) trivial
-let _ = assert_by_tactic (ge Gt) trivial
-let _ = assert_by_tactic (ge Eq) trivial
-let _ = assert_by_tactic (le Lt) trivial
-let _ = assert_by_tactic (le Eq) trivial
-let _ = assert_by_tactic (ne Lt) trivial
-let _ = assert_by_tactic (ne Gt) trivial
+let _ = assert (Lt = Lt) by trivial ()
+let _ = assert (Gt = Gt) by trivial ()
+let _ = assert (Eq = Eq) by trivial ()
+let _ = assert (Lt <> Eq) by trivial ()
+let _ = assert (Gt <> Lt) by trivial ()
+let _ = assert (Eq <> Gt) by trivial ()
+let _ = assert (ge Gt) by trivial ()
+let _ = assert (ge Eq) by trivial ()
+let _ = assert (le Lt) by trivial ()
+let _ = assert (le Eq) by trivial ()
+let _ = assert (ne Lt) by trivial ()
+let _ = assert (ne Gt) by trivial ()
 
-let _ = assert_by_tactic (exists (n:int). n == 5)
-                         (fun () -> witness (quote 5); norm []; trefl (); qed ())
+let _ = assert (exists (n:int). n == 5)
+            by (witness (quote 5); norm []; trefl (); qed ())
 
 // This one doesn't work, currently, as 5 gets typed as int, and not as nat
 // Fixing this seemss non-trivial, after some attempts...
-(* let _ = assert_by_tactic (exists (n:nat). n == 5) *)
-(*                          (fun () -> witness (quote 5); trefl (); qed ()) *)
+(* let _ = assert (exists (n:nat). n == 5) *)
+(*             by (witness (quote 5); trefl (); qed ()) *)
 
 assume val l' : nat -> unit -> Lemma p1
 let _ =
-    assert_by_tactic p1
-                     (fun () -> apply_lemma (quote (l' 5)))
+    assert p1 by (apply_lemma (quote (l' 5)))
 
 (* Testing pointwise over matches *)
 noeq
@@ -153,6 +141,5 @@ type tt =
     | BB : tt
 
 let pwtest x =
-    assert_by_tactic
-        (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
-        (fun () -> pointwise trefl)
+    assert (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
+        by (pointwise trefl)

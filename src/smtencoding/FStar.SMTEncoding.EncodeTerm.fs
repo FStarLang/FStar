@@ -101,6 +101,22 @@ let whnf env t =
 let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
                               Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
 
+(* `maybe_whnf env t` attempts to reduce t to weak-head normal form.
+ *  It is called when `t` is a head redex, e.g., if its head symbol is marked for unfolding.
+ *  However, if its head symbol is also marked as `strict_on_arguments`, then if it is applied
+ *  to non-constant arguments, then it may actually not be unfolded.
+ *  In those cases `maybe_whnf env t` may not reduce `t` at all.
+ *  In callers of this code, we need to be careful to check that if `t` was not reduced, then
+ *  we do not enter into infinite loops by recursing on `t` itself.
+ *)
+
+let maybe_whnf env t =
+  let t' = whnf env t in
+  let head', _ = U.head_and_args t' in
+  if head_redex env head' //this wasn't reducible for some reason, e.g., not applied to strict arguments
+  then None
+  else Some t'
+
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
              (Syntax.fvar Const.true_lid delta_constant None)
@@ -119,7 +135,43 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int arity)
                                         (BU.string_of_int n_args))
                                 rng
- let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
+
+//See issue #1750 and examples/bug-reports/Bug1750.fst
+let isTotFun_axioms pos head vars guards is_pure =
+    let maybe_mkForall pat vars body =
+        match vars with
+        | [] -> body
+        | _ -> mkForall pos (pat, vars, body)
+    in
+    let rec is_tot_fun_axioms ctx ctx_guard head vars guards =
+        match vars, guards with
+        | [], [] ->
+          mkTrue
+
+        | [_], _ ->
+          //last arrow, the effect label tells us if its pure or not
+          if is_pure
+          then maybe_mkForall [[head]] ctx (mkImp (ctx_guard, mk_IsTotFun head))
+          else mkTrue
+
+        | x::vars, g_x::guards ->
+          //curried arrow with more than 1 argument
+          //head is definitely Tot
+          let is_tot_fun_head =
+              maybe_mkForall [[head]] ctx (mkImp (ctx_guard, mk_IsTotFun head))
+          in
+          let app = mk_Apply head [x] in
+          let ctx = ctx @ [x] in
+          let ctx_guard = mkAnd (ctx_guard, g_x) in
+          let rest = is_tot_fun_axioms ctx ctx_guard app vars guards in
+          mkAnd (is_tot_fun_head, rest)
+
+        | _ ->
+            failwith "impossible: isTotFun_axioms"
+    in
+    is_tot_fun_axioms [] mkTrue head vars guards
+
+let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
     match head with
     | BU.Inr head -> //must curry
@@ -169,7 +221,15 @@ let is_an_eta_expansion env vars body =
              args (List.rev xs)
           then //t is of the form (f vars) for all the lambda bound variables vars
                //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-               tok_of_name env f
+               let n = tok_of_name env f in
+               let _ =
+                 if Env.debug env.tcenv <| Options.Other "PartialApp"
+                 then BU.print2 "is_eta_expansion %s  ... tok_of_name = %s\n"
+                                (print_smt_term t)
+                                (match n with | None -> "None" | Some x -> print_smt_term x)
+               in
+               n
+
           else None
 
         | _, [] ->
@@ -343,18 +403,24 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
 
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
-    let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
+    let vars, guards, env, decls, names =
+      bs |> List.fold_left
+      (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
             let x = fst b in
             let xxsym, xx, env' = gen_term_var env x in
-            let guard_x_t, decls' = encode_term_pred fuel_opt (norm env x.sort) env xx in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
+            let guard_x_t, decls' =
+              encode_term_pred fuel_opt (norm env x.sort) env xx
+            in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
             mk_fv (xxsym, Term_sort),
             guard_x_t,
             env',
             decls',
-            x in
-        v::vars, g::guards, env, decls@decls', n::names) ([], [], env, [], []) in
-
+            x
+        in
+        v::vars, g::guards, env, decls@decls', n::names)
+       ([], [], env, [], [])
+    in
     List.rev vars,
     List.rev guards,
     env,
@@ -607,12 +673,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         t, []
 
       | Tm_fvar v ->
-        if head_redex env t
-        then encode_term (whnf env t) env
-        else let fvb = lookup_free_var_name env v.fv_name in
-             let tok = lookup_free_var env v.fv_name in
-             let tkey_hash = Term.hash_of_term tok in
-             let aux_decls, sym_name =
+        let encode_freev () =
+          let fvb = lookup_free_var_name env v.fv_name in
+          let tok = lookup_free_var env v.fv_name in
+          let tkey_hash = Term.hash_of_term tok in
+          let aux_decls, sym_name =
                if fvb.smt_arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
@@ -626,9 +691,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                     sym_name)], sym_name
                    | _ -> [], ""
                else [], "" in
-             tok, (if aux_decls = []
-                   then ([] |> mk_decls_trivial)
-                   else mk_decls sym_name tkey_hash aux_decls [])
+          tok, (if aux_decls = []
+                then ([] |> mk_decls_trivial)
+                else mk_decls sym_name tkey_hash aux_decls [])
+        in
+        if head_redex env t
+        then match maybe_whnf env t with
+             | None -> encode_freev()
+             | Some t -> encode_term t env
+        else encode_freev ()
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -651,27 +722,68 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
-        then let vars, guards, env', decls, _ = encode_binders None binders env in
+        then let vars, guards_l, env', decls, _ = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
-                | None -> mk_and_l guards, []
+                | None -> mk_and_l guards_l, []
                 | Some pre ->
                   let guard, decls0 = encode_formula pre env' in
-                  mk_and_l (guard::guards), decls0  in
+                  mk_and_l (guard::guards_l), decls0  in
+             //AR: promote ghost to pure for non-informative types
+             let is_pure = res |> N.ghost_to_pure env.tcenv |> U.is_pure_comp in
+             //cf. Bug #1750
+             //We need to distinguish pure and ghost functions in the encoding
+             //both in hash consing, producing different type constructors for them.
+             //Tot functions get an additional predicate IsTotFun in their intepretation
              let t_interp =
-                       mkForall t.pos
-                               ([[app]],
-                                vars,
-                                mkImp(guards, res_pred)) in
+                 mkForall t.pos
+                          ([[app]],
+                            vars,
+                              mkImp(guards, res_pred))
+             in
 
-             let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
-             let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
-             let tkey_hash = hash_of_term tkey in
-             let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
+             (*
+              * AR/NS: For an arrow like int -> int -> int -> GTot int, t_interp is of the form:
+              *     forall x0.
+              *           HasType x0 (int -> int -> int -> GTot int)
+              *         <==>
+              *           (forall (x1:int) (x2:int) (x3:int).
+              *             HasType (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) int)
+              *          /\ IsTotFun x0
+              *          /\ (forall x1. IsTotFun (ApplyTT x0 x1)
+              *
+              *   I.e, we add IsTotFun axioms for every total partial application.
+              *   Importantly, in the example above, the axiom is omitted for
+              *   (x0 x1 x2 : int -> GTot int), since this function is not total
+              *)
+
+
+             //finally add the IsTotFun for the function term itself
+             let t_interp =
+                 let tot_fun_axioms = isTotFun_axioms t.pos f vars guards_l is_pure in
+                 mkAnd (t_interp, tot_fun_axioms)
+             in
+             let cvars =
+               Term.free_variables t_interp
+               |> List.filter (fun x -> fv_name x <> fv_name fsym)
+             in
+             let tkey =
+               mkForall t.pos ([], fsym::cvars, t_interp)
+             in
+             let prefix =
+               if is_pure
+               then "Tm_arrow_"
+               else "Tm_ghost_arrow_"
+             in
+             let tkey_hash =
+               prefix ^ hash_of_term tkey in
+             let tsym =
+               prefix ^ BU.digest_of_string tkey_hash
+             in
              let cvar_sorts = List.map fv_sort cvars in
              let caption =
                  if Options.log_queries()
@@ -699,10 +811,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  let a_name = "interpretation_"^tsym in
                  Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
                                                 fsym::cvars,
-                                                mkIff(f_has_t_z, t_interp)),
+                                                 mkIff (f_has_t_z, t_interp)),
                                Some a_name,
-                               module_name ^ "_" ^ a_name) in
-
+                               module_name ^ "_" ^ a_name)
+             in
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
@@ -729,11 +841,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv t0 with
-            | {n=Tm_refine(x, f)} ->
-               let b, f = SS.open_term [x, None] f in
-               fst (List.hd b), f
-            | _ -> failwith "impossible" in
+        let x, f =
+          let steps = [
+            Env.Weak;
+            Env.HNF;
+            Env.EraseUniverses
+          ] in
+          match N.normalize_refinement steps env.tcenv t0 with
+          | {n=Tm_refine(x, f)} ->
+            let b, f = SS.open_term [x, None] f in
+            fst (List.hd b), f
+          | _ -> failwith "impossible"
+        in
 
         let base_t, decls = encode_term x.sort env in
         let x, xtm, env' = gen_term_var env x in
@@ -757,7 +876,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let ffv = mk_fv (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
-        let module_name = env.current_module_name in
+
+        if Env.debug env.tcenv (Options.Other "SMTEncoding")
+        then BU.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
+               (Syntax.Print.term_to_string f) tkey_hash (BU.digest_of_string tkey_hash)
+        else ();
+
         let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
         let cvar_sorts = List.map fv_sort cvars in
         let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
@@ -818,11 +942,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
         (* then BU.print2 "Encoding app head=%s, n_args=%s\n" (Print.term_to_string head) *)
         (*                                                    (string_of_int <| List.length args_e); *)
+        let head, args_e =
+          if head_redex env head
+          then match maybe_whnf env t0 with
+               | None -> head, args_e
+               | Some t -> U.head_and_args t
+          else head, args_e
+        in
         begin
         match (SS.compress head).n, args_e with
-        | _ when head_redex env head ->
-            encode_term (whnf env t) env
-
         | _ when is_arithmetic_primitive head args_e ->
             encode_arith_term env head args_e
 
@@ -865,18 +993,76 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let args, decls = encode_args args_e env in
 
             let encode_partial_app ht_opt =
-                let head, decls' = encode_term head env in
-                let app_tm = mk_Apply_args head args in
+                let smt_head, decls' = encode_term head env in
+                let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
-                | None -> app_tm, decls@decls'
-                | Some (formals, c) ->
+                | _ -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
+                | Some (head_type, formals, c) ->
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
+                             (Print.term_to_string head)
+                             (Print.term_to_string head_type)
+                             (Print.binders_to_string ", " formals)
+                             (Print.comp_to_string c)
+                             (Print.args_to_string args_e);
                     let formals, rest = BU.first_N (List.length args_e) formals in
                     let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
-                    let has_type, decls'' = encode_term_pred None ty env app_tm in
-                    let cvars = Term.free_variables has_type in
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
+                            (Print.term_to_string ty);
+                    let vars, pattern, has_type, decls'' =
+                      let t_hyps, decls =
+                        List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
+                          let t = SS.subst subst bv.sort in
+                          let t_hyp, decls' = encode_term_pred None t env e in
+                          if Env.debug env.tcenv (Options.Other "PartialApp")
+                          then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
+                                         (Print.term_to_string t)
+                                         (Term.print_smt_term t_hyp);
+                          t_hyp::t_hyps, decls@decls')
+                        ([], [])
+                        formals
+                        args
+                      in
+                      let t_head_hyp, decls' =
+                        match smt_head.tm with
+                        | FreeV _ ->
+                          encode_term_pred None head_type env smt_head
+                        | _ ->
+                          mkTrue, []
+                      in
+                      let hyp = Term.mk_and_l (t_head_hyp::t_hyps) Range.dummyRange in
+                      let has_type_conclusion, decls'' =
+                          encode_term_pred None ty env app_tm
+                      in
+                      let has_type = mkImp (hyp, has_type_conclusion) in
+                      let cvars = Term.free_variables has_type in
+                      let app_tm_vars = Term.free_variables app_tm in
+                      let pattern, vars =
+                        if Term.fvs_subset_of cvars app_tm_vars
+                        then [app_tm], app_tm_vars
+                        else if Term.fvs_subset_of cvars (Term.free_variables has_type_conclusion)
+                        then [has_type_conclusion], cvars
+                        else begin
+                          Errors.log_issue
+                            t0.pos
+                            (Errors.Warning_SMTPatternIllFormed,
+                             BU.format1 "No SMT pattern for partial application %s"
+                               (Print.term_to_string t0));
+                          [], cvars //no pattern!
+                        end
+                      in
+                      vars,
+                      pattern,
+                      has_type,
+                      decls@decls'@decls''
+                    in
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
+                            (Term.print_smt_term has_type);
                     let tkey_hash = Term.hash_of_term app_tm in
-                    let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
+                    let e_typing = Util.mkAssume(mkForall t0.pos ([pattern], vars, has_type),
                                                 Some "Partial app typing",
                                                 ("partial_app_typing_" ^
                                                  (BU.digest_of_string (Term.hash_of_term app_tm)))) in
@@ -905,15 +1091,34 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             match head_type with
             | None -> encode_partial_app None
             | Some head_type ->
-                let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
-                let formals, c = curried_arrow_formals_comp head_type in
+                let head_type, formals, c =
+                  let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
+                  let formals, c = curried_arrow_formals_comp head_type in
+                  if List.length formals < List.length args
+                  then let head_type =
+                           U.unrefine
+                           <| N.normalize_refinement
+                                    [Env.Weak; Env.HNF; Env.EraseUniverses; Env.UnfoldUntil delta_constant]
+                                    env.tcenv
+                                    head_type
+                       in
+                       let formals, c = curried_arrow_formals_comp head_type in
+                       head_type, formals, c
+                  else head_type, formals, c
+                in
+                if Env.debug env.tcenv (Options.Other "PartialApp")
+                then BU.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
+                            (Print.term_to_string head_type)
+                            (Print.binders_to_string ", " formals)
+                            (Print.args_to_string args_e);
+
                 begin
                 match head.n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv when (List.length formals = List.length args) -> encode_full_app fv.fv_name
                 | _ ->
                     if List.length formals > List.length args
-                    then encode_partial_app (Some (formals, c))
+                    then encode_partial_app (Some (head_type, formals, c))
                     else encode_partial_app None
                 end
 
@@ -984,6 +1189,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                            else body
                 in
                 let body, decls' = encode_term body envbody in
+                let is_pure = U.is_pure_effect rc.residual_effect in
                 let arrow_t_opt, decls'' =
                   match codomain_eff rc with
                   | None   -> None, []
@@ -1004,8 +1210,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
+                if Env.debug env.tcenv <| Options.Other "PartialApp"
+                then BU.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
+                       (List.map fv_name vars |> String.concat ", ")
+                       (print_smt_term body);
                 match is_an_eta_expansion env vars body with
                 | Some t ->
+                  if Env.debug env.tcenv <| Options.Other "PartialApp"
+                  then BU.print1 "Yes, is an eta expansion of\n\tcore=%s\n"
+                                 (print_smt_term t);
                   let decls = decls@decls'@decls'' in
                   t, decls
                 | None ->
@@ -1016,7 +1229,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let app = mk_Apply f vars in
                   let typing_f =
                     match arrow_t_opt with
-                    | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                    | None ->
+                      let tot_fun_ax =
+                        let ax = (isTotFun_axioms t0.pos f vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
+                        match cvars with
+                        | [] -> ax
+                        | _ -> mkForall t0.pos ([[f]], cvars, ax)
+                      in
+                      let a_name = "tot_fun_"^fsym in
+                      [Util.mkAssume(tot_fun_ax, Some a_name, a_name)]
+                      //no typing axiom for this lambda, because we don't have enough info
+                      //but we at least mark its partial applications as total (cf. #1750)
                     | Some t ->
                       let f_has_t = mk_HasTypeWithFuel None f t in
                       let a_name = "typing_"^fsym in
@@ -1036,9 +1259,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
-      | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
-        raise Inner_let_rec
+      | Tm_let((false, _::_), _) ->
+        failwith "Impossible: non-recursive let with multiple bindings"
+
+      | Tm_let ((_, lbs), _) ->
+        let names = lbs |> List.map (fun lb ->
+                                        let {lbname = lbname} = lb in
+                                        let x = BU.left lbname in (* has to be Inl *)
+                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+        raise (Inner_let_rec names)
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
@@ -1318,16 +1547,20 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                  || S.fv_eq_lid fv Const.auto_squash_lid ->
               encode_formula t env
 
-            | _ when head_redex env head ->
-              encode_formula (whnf env phi) env
-
             | _ ->
-              let tt, decls = encode_term phi env in
-              let tt =
-                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
-                  then tt
-                  else {tt with rng=phi.pos} in
-              mk_Valid tt, decls
+              let encode_valid () =
+                let tt, decls = encode_term phi env in
+                let tt =
+                    if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                    then tt
+                    else {tt with rng=phi.pos} in
+                mk_Valid tt, decls
+              in
+              if head_redex env head
+              then match maybe_whnf env head with
+                   | None -> encode_valid()
+                   | Some phi -> encode_formula phi env
+              else encode_valid()
           end
 
         | _ ->

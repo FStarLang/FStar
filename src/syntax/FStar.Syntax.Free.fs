@@ -153,7 +153,7 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_meta(t, m) ->
         let u1 = free_names_and_uvars t use_cache in
         begin match m with
-        | Meta_pattern args ->
+        | Meta_pattern (_, args) ->
             List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args u1
 
         | Meta_monadic(_, t') ->
@@ -235,3 +235,5 @@ let univnames t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uni
 let univnames_comp c = FStar.Util.as_set (fst (free_names_and_uvars_comp c true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
 let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv
+
+let uvars_uncached t = FStar.Util.as_set (fst (free_names_and_uvars t false)).free_uvars compare_uv

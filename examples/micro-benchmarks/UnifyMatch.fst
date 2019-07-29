@@ -122,6 +122,5 @@ let tests () : Tac (list (term * term * bool)) = [
    true);
   ]
 
-let _ = assert_by_tactic True
-        (fun () -> let _ = Tactics.Util.map test1 (tests ()) in
-                   ())
+let _ = assert True
+            by (let _ = Tactics.Util.map test1 (tests ()) in ())

@@ -464,8 +464,9 @@ and rebuild_closure cfg env stack t =
     | Meta(env_m, m, r)::stack ->
       let m =
           match m with
-          | Meta_pattern args ->
-            Meta_pattern (args |> List.map (fun args ->
+          | Meta_pattern (names, args) ->
+            Meta_pattern (names |> List.map (non_tail_inline_closure_env cfg env_m),
+                          args |> List.map (fun args ->
                                             args |> List.map (fun (a, q) ->
                                             non_tail_inline_closure_env cfg env_m a, q)))
 
@@ -829,7 +830,7 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_meta(t, m) ->
         maybe_weakly_reduced t
         || (match m with
-           | Meta_pattern args ->
+           | Meta_pattern (_, args) ->
              BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -986,9 +987,12 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         let stack = push (App (env, ref, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
-let is_fext_on_domain (t:term) :option<term> =
+(* on_domain_lids are constant, so compute them once *)
+let on_domain_lids =
   let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
-  let on_domain_lids = ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid in
+  ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid
+
+let is_fext_on_domain (t:term) :option<term> =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
 
   match (SS.compress t).n with
@@ -1210,9 +1214,53 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_app(head, args) ->
-            let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
-            log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
-            norm cfg env stack head
+            let strict_args =
+              match (U.un_uinst head).n with
+              | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
+              | _ -> None
+            in
+            begin
+            match strict_args with
+            | None ->
+              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              norm cfg env stack head
+
+            | Some strict_args ->
+              // BU.print2 "%s has strict args [%s]\n"
+              //   (Print.term_to_string head)
+              //   (List.map string_of_int strict_args |> String.concat "; ");
+              let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let norm_args_len = List.length norm_args in
+              if strict_args
+                |> List.for_all (fun i ->
+                  if i >= norm_args_len then false
+                  else
+                    let arg_i, _ = List.nth norm_args i in
+                    let head, _ = U.head_and_args arg_i in
+                    match (un_uinst head).n with
+                    | Tm_constant _ -> true
+                    | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
+                    | _ -> false)
+              then //all strict args have constant head symbols
+                   let stack =
+                     stack |>
+                     List.fold_right (fun (a, aq) stack ->
+                       Arg (Clos(env, a, BU.mk_ref (Some ([], a)), false),aq,t.pos)::stack)
+                     norm_args
+                   in
+                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+                   norm cfg env stack head
+              else let head = closure_as_term cfg env head in
+                   let term = S.mk_Tm_app head norm_args None t.pos in
+                   // let _ =
+                   //   BU.print3 "Rebuilding %s as %s\n%s\n"
+                   //     (Print.term_to_string t)
+                   //     (Print.term_to_string term)
+                   //     (BU.stack_dump())
+                   // in
+                   rebuild cfg env stack term
+            end
 
           | Tm_refine(x, _) when cfg.steps.for_extraction ->
             norm cfg env stack x.sort
@@ -1396,9 +1444,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(env,m,r)::stack) head
 
-                      | Meta_pattern args ->
+                      | Meta_pattern (names, args) ->
                           let args = norm_pattern_args cfg env args in
-                          norm cfg env (Meta(env,Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                          let names =  names |> List.map (norm cfg env []) in
+                          norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
+                          //meta doesn't block reduction, but we need to put the label back
 
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
@@ -1406,8 +1456,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | [] ->
                     let head = norm cfg env [] head in
                     let m = match m with
-                        | Meta_pattern args ->
-                            Meta_pattern (norm_pattern_args cfg env args)
+                        | Meta_pattern (names, args) ->
+                          let names =  names |> List.map (norm cfg env []) in
+                          Meta_pattern (names, norm_pattern_args cfg env args)
                         | _ -> m in
                     let t = mk (Tm_meta(head, m)) t.pos in
                     rebuild cfg env stack t
@@ -2723,7 +2774,7 @@ and elim_delayed_subst_comp (c:comp) : comp =
       mk (Comp ct)
 
 and elim_delayed_subst_meta = function
-  | Meta_pattern args -> Meta_pattern(List.map elim_delayed_subst_args args)
+  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
   | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
   | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
   | m -> m
@@ -2877,9 +2928,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                ite_wp       = elim_tscheme ed.ite_wp;
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
-               assert_p     = elim_tscheme ed.assert_p;
-               assume_p     = elim_tscheme ed.assume_p;
-               null_wp      = elim_tscheme ed.null_wp;
                trivial      = elim_tscheme ed.trivial;
                repr = {
                  monad_m = elim_term ed.repr.monad_m;

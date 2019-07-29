@@ -9,13 +9,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
-        "int_typing", "primitive_Prims.op_LessThanOrEqual",
+        "binder_x_ae567c2fb75be05905677af440075565_0",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dfb671e8ba35ee9093625b175733fd35"
+      "5258ce38dbdf41a6c7ade9deb3568b1c"
     ],
     [
       "Ex03b.fibonacci",
@@ -25,13 +26,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
-        "int_typing", "primitive_Prims.op_LessThanOrEqual",
+        "binder_x_ae567c2fb75be05905677af440075565_0",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "93e47a163e64329f7d1d0d86c3beb225"
+      "33e6843f71cb9eb269aea9143572a896"
     ]
   ]
 ]

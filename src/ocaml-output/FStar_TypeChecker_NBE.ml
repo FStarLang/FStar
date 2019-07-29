@@ -451,7 +451,7 @@ let rec (iapp :
                 (lb, lbs, bs, (FStar_List.append acc args), (ar - no_args),
                   ar_lst, tr_lb)
             else
-              if ar = (Prims.parse_int "0")
+              if ar = Prims.int_zero
               then
                 FStar_TypeChecker_NBETerm.Rec
                   (lb, lbs, bs, (FStar_List.append acc args), ar, ar_lst,
@@ -475,8 +475,8 @@ let rec (iapp :
                                "Zeta is not set; will not unfold %s\n"
                                uu____2863);
                         FStar_TypeChecker_NBETerm.Rec
-                          (lb, lbs, bs, full_args, (Prims.parse_int "0"),
-                            ar_lst, tr_lb))
+                          (lb, lbs, bs, full_args, Prims.int_zero, ar_lst,
+                            tr_lb))
                      else
                        if can_unfold
                        then
@@ -506,8 +506,8 @@ let rec (iapp :
                                iapp cfg t res))
                        else
                          FStar_TypeChecker_NBETerm.Rec
-                           (lb, lbs, bs, full_args, (Prims.parse_int "0"),
-                             ar_lst, tr_lb))
+                           (lb, lbs, bs, full_args, Prims.int_zero, ar_lst,
+                             tr_lb))
         | FStar_TypeChecker_NBETerm.Quote uu____2953 ->
             let uu____2958 =
               let uu____2960 = FStar_TypeChecker_NBETerm.t_to_string f  in
@@ -1814,7 +1814,7 @@ and (translate_monadic :
                               let uu____6337 =
                                 FStar_Syntax_Util.un_uinst
                                   (FStar_Pervasives_Native.snd
-                                     (ed.FStar_Syntax_Syntax.repr).FStar_Syntax_Syntax.monad_bind)
+                                     ed.FStar_Syntax_Syntax.bind_repr)
                                  in
                               translate cfg' [] uu____6337  in
                             iapp cfg uu____6336
@@ -2099,7 +2099,7 @@ and (translate_monadic_lift :
                     let uu____6892 =
                       FStar_Syntax_Subst.compress
                         (FStar_Pervasives_Native.snd
-                           (ed.FStar_Syntax_Syntax.repr).FStar_Syntax_Syntax.monad_ret)
+                           ed.FStar_Syntax_Syntax.return_repr)
                        in
                     uu____6892.FStar_Syntax_Syntax.n  in
                   match uu____6891 with

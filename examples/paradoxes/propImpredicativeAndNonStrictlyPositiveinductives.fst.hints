@@ -7,14 +7,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.eq2", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_inversion"
       ],
       0,
-      "40f620b20c3cb4caea343c6d625fd187"
+      "0a481e3effc6670737e79bff8cfa3e9c"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj_injective",
@@ -24,12 +23,11 @@
       [
         "@query", "eq2-interp",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.inj",
-        "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
-        "interpretation_Tm_abs_f0b2e79e0638237573385c8ed82603a7",
+        "interpretation_Tm_abs_9951d8bbbf25b027bdea9053a3abd95b",
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0,
-      "0e76ee53ad0d89fb821d3c1bc0e3e311"
+      "3157338e325fe18bb4e9ed5391885bfb"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.f_injective",
@@ -42,7 +40,7 @@
         "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0,
-      "0b6ac7e9430e3d4a8957122bbfa58d2a"
+      "99f773fb93f496368e74315f5bc2a242"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.p0",
@@ -50,14 +48,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.l_Exists", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_inversion"
       ],
       0,
-      "76e99a6a86eb13f808b275d4e494608d"
+      "b61b1d96ea1751f580f99dc496c49197"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad1",
@@ -66,13 +63,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.x0",
         "function_token_typing_PropImpredicativeAndNonStrictlyPositiveInductives.p0",
-        "refinement_interpretation_Tm_refine_a76790a67dd7603a5ece16b7793a8efe"
+        "refinement_interpretation_Tm_refine_104aa28b549e0db1b9235eb785e4cc79"
       ],
       0,
-      "0bc920b967b3e0e0c66be86dc1f21272"
+      "c1d73d6a6c6877d1dea32fa654496b28"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad2",
@@ -82,12 +78,12 @@
       [
         "@query",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.p0",
-        "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.x0",
-        "l_quant_interp_d3ca68f152efd3be60d9d9b53977e58f"
+        "function_token_typing_PropImpredicativeAndNonStrictlyPositiveInductives.p0",
+        "l_quant_interp_47acc1ba6e48f85f7ef66adc112f8bce"
       ],
       0,
-      "02e1b1cf6435d3ba95e218c60aad3116"
+      "599f4b110e6676214fe6c93882e60768"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",
@@ -96,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "3cb260b9146d93635ce693ede3af11a1"
+      "04adb81f5f761a5fce63d21afde00656"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.worse",
@@ -105,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "7bd4dc23a23ca285af6abe4fd7c3ee3d"
+      "7f053f1c7c36a4ef6a3b9815ed11dc16"
     ]
   ]
 ]

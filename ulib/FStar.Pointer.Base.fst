@@ -1485,6 +1485,7 @@ let path_disjoint
 : GTot Type0
 = squash (path_disjoint_t p1 p2)
 
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let path_disjoint_ind
   (#from: typ)
   (x:
@@ -1527,6 +1528,7 @@ let path_disjoint_ind
        let _ = FStar.Squash.return_squash hx in
        h_includes p1 p2 p1' p2')
      p1 p2 h)
+#pop-options
 
 let path_disjoint_step
   (#from: typ)
@@ -1542,6 +1544,7 @@ let path_disjoint_step
   [SMTPat (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2))]
 = FStar.Classical.give_witness (FStar.Squash.return_squash (PathDisjointStep p s1 s2))
 
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let path_disjoint_includes
   (#from: typ)
   (#to1: typ)
@@ -1557,6 +1560,7 @@ let path_disjoint_includes
   (ensures (path_disjoint p1' p2'))
 = let h : squash (path_disjoint_t p1 p2) = FStar.Squash.join_squash () in
   FStar.Squash.bind_squash h (fun h -> FStar.Squash.return_squash (PathDisjointIncludes p1 p2 p1' p2' h))
+#pop-options
 
 let path_disjoint_includes_l
   (#from: typ)

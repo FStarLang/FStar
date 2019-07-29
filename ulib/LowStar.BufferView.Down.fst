@@ -27,7 +27,7 @@ module Math=FStar.Math.Lemmas
 #set-options "--initial_fuel 1 --max_fuel 1"
 
 noeq
-type buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type0 =
+type buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b =
   | BufferView: buf:B.mbuffer src rrel rel
               -> v:view src dest
               -> buffer_view src rrel rel dest
@@ -106,7 +106,7 @@ let mods (#b: _)
              (h h':HS.mem)
     = B.modifies (B.loc_buffer (as_buffer vb)) h h'
 
-let upd' (#b: _)
+val upd' (#b: _)
         (h:HS.mem)
         (vb:buffer b{live h vb})
         (i:nat{i < length vb})
@@ -126,7 +126,9 @@ let upd' (#b: _)
             live h' vb /\
             FStar.HyperStack.ST.equal_domains h h'
           })
-  = indexing vb i;
+#push-options "--z3rlimit_factor 8"
+let upd' #b h vb i x =
+    indexing vb i;
     let as = B.as_seq h (as_buffer vb) in
     let v = get_view vb in
     let n = View?.n v in
@@ -139,6 +141,7 @@ let upd' (#b: _)
     B.g_upd_seq_as_seq (as_buffer vb) (Seq.upd as a_i a') h;
     lemma_g_upd_with_same_seq (as_buffer vb) h (Seq.upd as a_i a');
     mem
+#pop-options
 
 let upd = upd'
 let sel_upd #b vb i j x h = ()
@@ -249,11 +252,6 @@ let rec as_seq'_sel' #a #b v as i =
            sel'_tail v as i
          end
 #reset-options
-#set-options "--smtencoding.elim_box true"
-#set-options "--smtencoding.l_arith_repr native"
-#set-options "--smtencoding.nl_arith_repr wrapped"
-#set-options "--z3rlimit_factor 4" //just being conservative
-#set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
 
 let as_seq_sel #b h vb i =
   indexing vb i;
@@ -277,6 +275,7 @@ val as_seq'_slice (#a #b: _)
       Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n)))
     (decreases (Seq.length as))
 
+#push-options "--z3rlimit 100"
 let rec as_seq'_slice #a #b v as i =
   let n = View?.n v in
   if Seq.length as = 0 then ()
@@ -298,6 +297,7 @@ let rec as_seq'_slice #a #b v as i =
                     Seq.slice (as_seq' as v) (n * (j / n) + n) (n * (j / n) + n + n));
             FStar.Math.Lemmas.add_div_mod_1 j n;
             assert (j / n == i / n - 1)
+#pop-options
 
 let put_sel #b h vb i =
     indexing vb i;
@@ -349,6 +349,7 @@ let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.
          assert (as `Seq.equal` Seq.cons (View?.put v pfx) as');
          as_seq'_cons v (View?.put v pfx) as'
 
+#set-options "--z3rlimit 20"
 let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
   = let h' = upd_seq h vb s in
     Math.cancel_mul_mod (B.length (as_buffer vb)) (View?.n (get_view vb));

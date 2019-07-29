@@ -34,5 +34,5 @@ let tau =
              exact (`p1))
 
 let _ =
-    assert_by_tactic phi tau
+    assert phi by tau ()
 

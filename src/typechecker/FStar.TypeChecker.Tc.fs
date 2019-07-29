@@ -501,9 +501,6 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             ; ite_wp      =op ed.ite_wp
             ; stronger    =op ed.stronger
             ; close_wp    =op ed.close_wp
-            ; assert_p    =op ed.assert_p
-            ; assume_p    =op ed.assume_p
-            ; null_wp     =op ed.null_wp
             ; trivial     =op ed.trivial
             ; actions     = List.map (fun a ->
             { a with
@@ -633,25 +630,6 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     let expected_k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder b_wp_a]
                                 (S.mk_Total wp_a) in
     check_and_gen' env ed.close_wp expected_k in
-
-  let assert_p =
-    let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.assert_p expected_k in
-
-  let assume_p =
-    let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.assume_p expected_k in
-
-  let null_wp =
-    let expected_k = U.arrow [S.mk_binder a]
-                                (S.mk_Total wp_a) in
-    check_and_gen' env ed.null_wp expected_k in
 
   let trivial_wp =
     let t, _ = U.type_u() in
@@ -982,9 +960,6 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     ; ite_wp      = close 0 ite_wp
     ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
-    ; assert_p    = close 0 assert_p
-    ; assume_p    = close 0 assume_p
-    ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
     ; interp      = BU.map_opt interp (close 0)
     ; mrelation   = BU.map_opt mrelation (close 0)
@@ -1164,12 +1139,6 @@ let tc_inductive env ses quals lids =
   try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
-//when we process a reset-options pragma, we need to restart z3 etc.
-let z3_reset_options (en:env) :env =
-  let env = Env.set_proof_ns (Options.using_facts_from ()) en in
-  env.solver.refresh ();
-  env
-
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
     let comb f1 f2 =
         match f1, f2 with
@@ -1216,7 +1185,7 @@ let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)>
         | [], (e, n) :: _ ->
             Some (e, 0, n)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 ->
             if hd1 < hd2 then
                 Some (hd1, n1, 0)
             else if hd1 > hd2 then
@@ -1929,7 +1898,19 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (ResetOptions _) -> z3_reset_options env
+
+  | Sig_pragma (PushOptions _)
+  | Sig_pragma PopOptions
+  | Sig_pragma (SetOptions _)
+  | Sig_pragma (ResetOptions _) ->
+    (* we keep --using_facts_from reflected in the environment, so update it here *)
+    let env = { env with proof_ns = Options.using_facts_from () } in
+    env
+
+  | Sig_pragma RestartSolver ->
+    env.solver.refresh ();
+    env
+
   | Sig_pragma _ -> env
   | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
@@ -2271,7 +2252,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
       //restore command line options ad restart z3 (to reset things like nl.arith options)
       if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
         Options.restore_cmd_line_options true |> ignore;
-        z3_reset_options en0
+        en0
       end
       else en0
     in

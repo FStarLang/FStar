@@ -206,16 +206,9 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
 
 (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
-let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * universe)>) (datas:list<sigelt>)
+let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (datas:list<sigelt>)
     : list<sigelt> * list<sigelt>
-    =   let tc_universe_vars = List.map snd tcs in
-        let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
-
-        if Env.debug env <| Options.Other "GenUniverses"
-        then BU.print1 "@@@@@@Guard before generalization: %s\n" (Rel.guard_to_string env g);
-
-        Rel.force_trivial_guard env g;
-        //We build a single arrow term of the form
+    =   //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
         //for each type constructor tc_i
         //and each data constructor type dt_i
@@ -594,7 +587,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //implication
   let fml = U.mk_imp haseq_bs haseq_ind in
   //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+  let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
@@ -825,7 +818,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   let fml = U.mk_imp data_cond haseq_ind in
 
   //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+  let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
 
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
@@ -936,7 +929,9 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   then raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) (Env.get_range env);
 
   //AR: adding this code for the second phase
-  //    univs need not be empty, so open all along
+  //    univs need not be empty
+  //    we record whether the universes were already annotated
+  //    and later use it to decide if we should generalize
   let univs =
     if List.length tys = 0 then []
     else
@@ -947,36 +942,13 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
 
   let env0 = env in
 
-  let env1, tys, datas =  //AR: env1 contains the opened universe names if any
-    if List.length univs = 0 then env, tys, datas
-    else
-      let subst, univs = SS.univ_var_opening univs in
-      let tys = List.map (fun se ->
-        let sigel = match se.sigel with
-          | Sig_inductive_typ (lid, _, bs, t, l1, l2) ->
-            Sig_inductive_typ (lid, univs, SS.subst_binders subst bs, SS.subst (SS.shift_subst (List.length bs) subst) t, l1, l2)
-          | _ -> failwith "Impossible, can't happen"
-        in
-        { se with sigel = sigel }) tys
-      in
-      let datas = List.map (fun se ->
-        let sigel = match se.sigel with
-          | Sig_datacon (lid, _, t, lid_t, x, l) ->
-            Sig_datacon (lid, univs, SS.subst subst t, lid_t, x, l)
-          | _ -> failwith "Impossible, can't happen"
-        in
-        { se with sigel = sigel }) datas
-      in
-      Env.push_univ_vars env univs, tys, datas
-  in
-
   (* Check each tycon *)
   let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  ->
     let env, tc, tc_u, guard = tc_tycon env tc in
     let g' = Rel.universe_inequality S.U_zero tc_u in
     if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
     env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
-  ) tys (env1, [], Env.trivial_guard)
+  ) tys (env, [], Env.trivial_guard)
   in
 
   (* Check each datacon *)
@@ -987,7 +959,17 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   in
 
   (* Generalize their universes if not already annotated *)
-  let tcs, datas = if List.length univs = 0 then generalize_and_inst_within env1 g tcs datas else (List.map fst tcs), datas in
+  let tcs, datas =
+    let tc_universe_vars = List.map snd tcs in
+    let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
+
+    if Env.debug env0 <| Options.Other "GenUniverses"
+    then BU.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);
+
+    Rel.force_trivial_guard env0 g;
+    if List.length univs = 0 then generalize_and_inst_within env0 tcs datas
+    else (List.map fst tcs), datas
+  in
 
   let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
                     sigquals = quals;

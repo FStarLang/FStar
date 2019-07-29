@@ -113,7 +113,7 @@ let get = TAC?.__get
 let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 abstract
-let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p
+let with_tactic (t : unit -> Tac unit) (p:Type) : Type = p
 
 // This will run the tactic in order to (try to) produce a term of type t
 // It should not lead to any inconsistency, as any time this term appears
@@ -121,16 +121,18 @@ let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p
 // is run. A failure of the tactic is a typechecking failure.
 assume val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   : Pure unit
          (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
   = ()
+#pop-options
 
 (* We don't peel off all `with_tactic`s in negative positions, so give the SMT a way to reason about them *)
-val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
-                                                                         [SMTPat (with_tactic tau phi)]
-let by_tactic_seman a tau phi = ()
+val by_tactic_seman : tau:(unit -> Tac unit) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
+                                                                  [SMTPat (with_tactic tau phi)]
+let by_tactic_seman tau phi = ()
 
 (* One can always bypass the well-formedness of metaprograms. It does not matter
  * as they are only run at typechecking time, and if they get stuck, the compiler

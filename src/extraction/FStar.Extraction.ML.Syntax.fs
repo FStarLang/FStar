@@ -152,6 +152,8 @@ type meta =
   | Erased
   | CAbstract
   | CIfDef
+  | CMacro
+  | Deprecated of string
 
 // rename
 type metadata = list<meta>

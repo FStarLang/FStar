@@ -95,13 +95,27 @@ let mk_top_mllb (e: mlexpr): mllb =
 (* names of F* functions which need to be handled differently *)
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
+(* For integer constants (not 0/1) in this range we will use Prims.of_int
+ * Outside this range we will use string parsing to allow arbitrary sized
+ * integers.
+ * Using int_zero/int_one removes int processing to create the Z.t
+ * Using of_int removes string processing to create the Z.t
+ *)
+let max_of_int_const = Z.of_int   65535
+let min_of_int_const = Z.of_int (-65536)
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
   | MLC_Int (v, None) ->
-     let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const.integer i
+      let s = match Z.of_string v with
+        | x when x = Z.zero -> "Prims.int_zero"
+        | x when x = Z.one -> "Prims.int_one"
+        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
+            BatString.concat v ["(Prims.of_int ("; "))"]
+        | x ->
+            BatString.concat v ["(Prims.parse_int \""; "\")"] in
+      Const.integer s
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
@@ -480,9 +494,9 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      iter print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
-     iter (fun (n,d) ->
+     let new_doc = FStar_Pprint.blank_buffer_doc in
+     iter (fun (n, d) ->
          FStar_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStar_Format.pretty (Prims.parse_int "120") d)) new_doc
+           (FStar_Pprint.pretty_string 0.8 (Prims.parse_int "120") d)) new_doc
   | _ -> failwith "Unrecognized extension"

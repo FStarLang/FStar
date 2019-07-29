@@ -637,15 +637,15 @@ let try_lookup_root_effect_name env l =
         | Some (_, l') -> Some l'
         | _ -> None
 
-let lookup_letbinding_quals env lid =
+let lookup_letbinding_quals_and_attrs env lid =
   let k_global_def lid = function
-      | ({sigel = Sig_declare_typ(_, _, _); sigquals=quals }, _) ->
-          Some quals
+      | ({sigel = Sig_declare_typ(_, _, _); sigquals=quals; sigattrs=attrs }, _) ->
+          Some (quals, attrs)
       | _ ->
           None in
   match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
-    | Some quals -> quals
-    | _ -> []
+    | Some qa -> qa
+    | _ -> [], []
 
 let try_lookup_module env path =
   match List.tryFind (fun (mlid, modul) -> path_of_lid mlid = path) env.modules with

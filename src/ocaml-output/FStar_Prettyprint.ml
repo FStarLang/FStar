@@ -58,14 +58,14 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                              let uu____204 =
                                FStar_Pprint.pretty_string
                                  (FStar_Util.float_of_string "1.0")
-                                 (Prims.parse_int "100") doc1
+                                 (Prims.of_int (100)) doc1
                                 in
                              FStar_All.pipe_left
                                (FStar_Util.append_to_file f) uu____204
                          | FStar_Pervasives_Native.None  ->
                              FStar_Pprint.pretty_out_channel
                                (FStar_Util.float_of_string "1.0")
-                               (Prims.parse_int "100") doc1 FStar_Util.stdout);
+                               (Prims.of_int (100)) doc1 FStar_Util.stdout);
                         comments2)
                     in
                  let left_over_doc =
@@ -95,7 +95,7 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                       ((let uu____235 =
                           FStar_Pprint.pretty_string
                             (FStar_Util.float_of_string "1.0")
-                            (Prims.parse_int "100") left_over_doc
+                            (Prims.of_int (100)) left_over_doc
                            in
                         FStar_All.pipe_left (FStar_Util.append_to_file f)
                           uu____235);
@@ -103,8 +103,7 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                   | FStar_Pervasives_Native.None  ->
                       FStar_Pprint.pretty_out_channel
                         (FStar_Util.float_of_string "1.0")
-                        (Prims.parse_int "100") left_over_doc
-                        FStar_Util.stdout))
+                        (Prims.of_int (100)) left_over_doc FStar_Util.stdout))
          in
       FStar_List.iter (parse_and_prettyprint m) filenames;
       (match m with

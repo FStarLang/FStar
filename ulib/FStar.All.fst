@@ -34,7 +34,7 @@ sub_effect EXN ~> ALL { lift_wp = lift_exn_all }
 effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =
   ALL a
     (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
-effect ML (a:Type) = ALL a (all_null_wp heap a)
+effect ML (a:Type) = ALL a (fun (p:all_post a) (_:heap) -> forall (a:result a) (h:heap). p a h)
 
 let pipe_right (x : 'a) (f : ('a -> ML 'b)) : ML 'b = f x
 let pipe_left  (f : ('a -> ML 'b)) (x : 'a) : ML 'b = f x
