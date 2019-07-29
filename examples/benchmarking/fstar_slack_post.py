@@ -52,8 +52,15 @@ old_daily_results = get_dir_sorted_by_creation(
     )[-1]
 old_daily_results = get_result_dir_from_run(old_daily_results)
 
+def get_hash_from_result_dir(d):
+    d = os.path.dirname(d) ## remove 'result_dir'
+    return os.path.basename(d)[0:7]
+
+new_short_hash = get_hash_from_result_dir(new_daily_results)
+old_short_hash = get_hash_from_result_dir(old_daily_results)
+
 if args.verbose:
-    print('Will compare [new] %s vs [old] %s'%(new_daily_results, old_daily_results))
+    print('Will compare [new=%s] %s vs [old=%s] %s'%(new_short_hash, new_daily_results, old_short_hash, old_daily_results))
 
 ## load csv files
 def load_results(dir, files=['ulib.csv', 'ocaml_extract.csv', 'micro-benchmarks.csv'], verbose=args.verbose):
@@ -91,14 +98,14 @@ old_df = old_df.set_index('name')
 change_data = 100.*(new_df['time_secs']-old_df['time_secs'])/old_df['time_secs']
 change_data = change_data.sort_values()
 
-message_str = ''
+message_str = 'Performance comparison of %s [old] with %s [new]:\n' % (old_short_hash, new_short_hash)
 
 ## calculate best|25|50|75|worst
 quants = [0., 0.25, 0.5, 0.75, 1.]
-quantile_str = 'quantiles (0 - best improvement, 100 - worst regression)\n'
+quantile_str = ' quantiles (0 - best improvement, 100 - worst regression)\n'
 quantile_str += '```\n'
-quantile_str += '  ' + '|'.join(['%7.0f '%(x*100.) for x in quants]) + '\n'
-quantile_str += '  ' + '|'.join(['%6.2f%% '%x for x in change_data.quantile(quants)]) + '\n'
+quantile_str += '   ' + '|'.join(['%7.0f '%(x*100.) for x in quants]) + '\n'
+quantile_str += '   ' + '|'.join(['%6.2f%% '%x for x in change_data.quantile(quants)]) + '\n'
 quantile_str += '```\n'
 print(quantile_str)
 
@@ -109,7 +116,7 @@ def fn(title, series):
     s = title + '\n'
     s += '```\n'
     for index, value in series.items():
-        s += '  %-48s %6.2f%%\n'%(index, value)
+        s += '   %-48s %6.2f%%\n'%(index, value)
     s += '```\n'
     return s
 
@@ -118,8 +125,8 @@ N = 3
 #print('Worst %s regressions:\n %s'%(str(N), change_data.tail(N)))
 
 best_worst_str = ''
-best_worst_str += fn('Best %s improvements:'%str(N), change_data.head(N))
-best_worst_str += fn('Worst %s regressions:'%str(N), change_data.sort_values(ascending=False).head(N))
+best_worst_str += fn(' Best %s improvements:'%str(N), change_data.head(N))
+best_worst_str += fn(' Worst %s regressions:'%str(N), change_data.sort_values(ascending=False).head(N))
 print(best_worst_str)
 
 message_str += best_worst_str
