@@ -313,6 +313,7 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
   //TODO: other combinators
 
+  //TODO: clean it up! e.g. factor out common code from tc_eff_decl
   let tc_action env0 (act:action) : action =
     if List.length act.action_params <> 0 then failwith ("tc_layered_eff_decl: action_params are not empty for " ^ act.action_name.str);
 
