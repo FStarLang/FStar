@@ -9136,8 +9136,8 @@ let rec (elim_uvars :
                                (uu___3703_30090.FStar_Syntax_Syntax.mname);
                              FStar_Syntax_Syntax.univs = univs1;
                              FStar_Syntax_Syntax.binders = binders;
-                             FStar_Syntax_Syntax.signature = signature1;
                              FStar_Syntax_Syntax.spec = uu____30091;
+                             FStar_Syntax_Syntax.signature = signature1;
                              FStar_Syntax_Syntax.if_then_else = uu____30095;
                              FStar_Syntax_Syntax.ite_wp = uu____30096;
                              FStar_Syntax_Syntax.stronger = uu____30097;

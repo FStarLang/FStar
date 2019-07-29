@@ -6772,10 +6772,10 @@ let rec (desugar_effect :
                                         FStar_Syntax_Syntax.univs = [];
                                         FStar_Syntax_Syntax.binders =
                                           binders1;
-                                        FStar_Syntax_Syntax.signature =
-                                          eff_t1;
                                         FStar_Syntax_Syntax.spec =
                                           uu____25334;
+                                        FStar_Syntax_Syntax.signature =
+                                          eff_t1;
                                         FStar_Syntax_Syntax.if_then_else =
                                           uu____25362;
                                         FStar_Syntax_Syntax.ite_wp =
@@ -6970,37 +6970,37 @@ and (desugar_redefine_effect :
                                let ed1 =
                                  let uu____25814 =
                                    let uu____25815 =
-                                     sub1
-                                       ([],
-                                         (ed.FStar_Syntax_Syntax.signature))
-                                      in
-                                   FStar_Pervasives_Native.snd uu____25815
-                                    in
-                                 let uu____25830 =
-                                   let uu____25831 =
-                                     let uu____25832 =
+                                     let uu____25816 =
                                        sub1
                                          ([],
                                            ((ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_m))
                                         in
-                                     FStar_Pervasives_Native.snd uu____25832
+                                     FStar_Pervasives_Native.snd uu____25816
                                       in
-                                   let uu____25847 =
+                                   let uu____25831 =
                                      sub1
                                        (ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_ret
                                       in
-                                   let uu____25848 =
+                                   let uu____25832 =
                                      sub1
                                        (ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_bind
                                       in
                                    {
                                      FStar_Syntax_Syntax.monad_m =
-                                       uu____25831;
+                                       uu____25815;
                                      FStar_Syntax_Syntax.monad_ret =
-                                       uu____25847;
+                                       uu____25831;
                                      FStar_Syntax_Syntax.monad_bind =
-                                       uu____25848
+                                       uu____25832
                                    }  in
+                                 let uu____25833 =
+                                   let uu____25834 =
+                                     sub1
+                                       ([],
+                                         (ed.FStar_Syntax_Syntax.signature))
+                                      in
+                                   FStar_Pervasives_Native.snd uu____25834
+                                    in
                                  let uu____25849 =
                                    sub1 ed.FStar_Syntax_Syntax.if_then_else
                                     in
@@ -7097,9 +7097,9 @@ and (desugar_redefine_effect :
                                    FStar_Syntax_Syntax.univs =
                                      (ed.FStar_Syntax_Syntax.univs);
                                    FStar_Syntax_Syntax.binders = binders1;
+                                   FStar_Syntax_Syntax.spec = uu____25814;
                                    FStar_Syntax_Syntax.signature =
-                                     uu____25814;
-                                   FStar_Syntax_Syntax.spec = uu____25830;
+                                     uu____25833;
                                    FStar_Syntax_Syntax.if_then_else =
                                      uu____25849;
                                    FStar_Syntax_Syntax.ite_wp = uu____25850;
@@ -8354,26 +8354,26 @@ let (add_modul_to_env :
                 let uu___3857_28611 = ed  in
                 let uu____28612 = FStar_Syntax_Subst.close_binders binders
                    in
-                let uu____28613 = erase_term ed.FStar_Syntax_Syntax.signature
-                   in
-                let uu____28614 =
-                  let uu____28615 =
+                let uu____28613 =
+                  let uu____28614 =
                     erase_term
                       (ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_m
                      in
-                  let uu____28616 =
+                  let uu____28615 =
                     erase_tscheme
                       (ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_ret
                      in
-                  let uu____28617 =
+                  let uu____28616 =
                     erase_tscheme
                       (ed.FStar_Syntax_Syntax.spec).FStar_Syntax_Syntax.monad_bind
                      in
                   {
-                    FStar_Syntax_Syntax.monad_m = uu____28615;
-                    FStar_Syntax_Syntax.monad_ret = uu____28616;
-                    FStar_Syntax_Syntax.monad_bind = uu____28617
+                    FStar_Syntax_Syntax.monad_m = uu____28614;
+                    FStar_Syntax_Syntax.monad_ret = uu____28615;
+                    FStar_Syntax_Syntax.monad_bind = uu____28616
                   }  in
+                let uu____28617 = erase_term ed.FStar_Syntax_Syntax.signature
+                   in
                 let uu____28618 =
                   erase_tscheme ed.FStar_Syntax_Syntax.if_then_else  in
                 let uu____28619 = erase_tscheme ed.FStar_Syntax_Syntax.ite_wp
@@ -8412,8 +8412,8 @@ let (add_modul_to_env :
                     (uu___3857_28611.FStar_Syntax_Syntax.mname);
                   FStar_Syntax_Syntax.univs = [];
                   FStar_Syntax_Syntax.binders = uu____28612;
-                  FStar_Syntax_Syntax.signature = uu____28613;
-                  FStar_Syntax_Syntax.spec = uu____28614;
+                  FStar_Syntax_Syntax.spec = uu____28613;
+                  FStar_Syntax_Syntax.signature = uu____28617;
                   FStar_Syntax_Syntax.if_then_else = uu____28618;
                   FStar_Syntax_Syntax.ite_wp = uu____28619;
                   FStar_Syntax_Syntax.stronger = uu____28620;

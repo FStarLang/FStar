@@ -532,10 +532,10 @@ let (cps_and_elaborate_ed :
                                           (uu___153_945.FStar_Syntax_Syntax.univs);
                                         FStar_Syntax_Syntax.binders =
                                           (uu___153_945.FStar_Syntax_Syntax.binders);
-                                        FStar_Syntax_Syntax.signature =
-                                          (uu___153_945.FStar_Syntax_Syntax.signature);
                                         FStar_Syntax_Syntax.spec =
                                           (uu___153_945.FStar_Syntax_Syntax.spec);
+                                        FStar_Syntax_Syntax.signature =
+                                          (uu___153_945.FStar_Syntax_Syntax.signature);
                                         FStar_Syntax_Syntax.if_then_else =
                                           (uu___153_945.FStar_Syntax_Syntax.if_then_else);
                                         FStar_Syntax_Syntax.ite_wp =
@@ -1637,31 +1637,25 @@ let (cps_and_elaborate_ed :
                                                                    in
                                                                 let uu____2993
                                                                   =
-                                                                  FStar_Syntax_Subst.close
-                                                                    effect_binders1
-                                                                    effect_signature
-                                                                   in
-                                                                let uu____2994
-                                                                  =
-                                                                  let uu____2995
+                                                                  let uu____2994
                                                                     =
-                                                                    let uu____2996
+                                                                    let uu____2995
                                                                     =
                                                                     apply_close
                                                                     return_wp1
                                                                      in
                                                                     ([],
-                                                                    uu____2996)
+                                                                    uu____2995)
                                                                      in
-                                                                  let uu____3003
+                                                                  let uu____3002
                                                                     =
-                                                                    let uu____3004
+                                                                    let uu____3003
                                                                     =
                                                                     apply_close
                                                                     bind_wp1
                                                                      in
                                                                     ([],
-                                                                    uu____3004)
+                                                                    uu____3003)
                                                                      in
                                                                   {
                                                                     FStar_Syntax_Syntax.monad_m
@@ -1669,11 +1663,17 @@ let (cps_and_elaborate_ed :
                                                                     FStar_Syntax_Syntax.tun;
                                                                     FStar_Syntax_Syntax.monad_ret
                                                                     =
-                                                                    uu____2995;
+                                                                    uu____2994;
                                                                     FStar_Syntax_Syntax.monad_bind
                                                                     =
-                                                                    uu____3003
+                                                                    uu____3002
                                                                   }  in
+                                                                let uu____3010
+                                                                  =
+                                                                  FStar_Syntax_Subst.close
+                                                                    effect_binders1
+                                                                    effect_signature
+                                                                   in
                                                                 let uu____3011
                                                                   =
                                                                   let uu____3012
@@ -1727,12 +1727,12 @@ let (cps_and_elaborate_ed :
                                                                   FStar_Syntax_Syntax.binders
                                                                     =
                                                                     uu____2992;
-                                                                  FStar_Syntax_Syntax.signature
-                                                                    =
-                                                                    uu____2993;
                                                                   FStar_Syntax_Syntax.spec
                                                                     =
-                                                                    uu____2994;
+                                                                    uu____2993;
+                                                                  FStar_Syntax_Syntax.signature
+                                                                    =
+                                                                    uu____3010;
                                                                   FStar_Syntax_Syntax.if_then_else
                                                                     =
                                                                     (
@@ -1947,9 +1947,9 @@ let tc_eff_decl :
                                 FStar_Syntax_Syntax.univs =
                                   (uu___375_3246.FStar_Syntax_Syntax.univs);
                                 FStar_Syntax_Syntax.binders = effect_params;
-                                FStar_Syntax_Syntax.signature = signature1;
                                 FStar_Syntax_Syntax.spec =
                                   (uu___375_3246.FStar_Syntax_Syntax.spec);
+                                FStar_Syntax_Syntax.signature = signature1;
                                 FStar_Syntax_Syntax.if_then_else =
                                   (uu___375_3246.FStar_Syntax_Syntax.if_then_else);
                                 FStar_Syntax_Syntax.ite_wp =
@@ -2106,9 +2106,9 @@ let tc_eff_decl :
                                       annotated_univ_names;
                                     FStar_Syntax_Syntax.binders =
                                       (uu___387_3333.FStar_Syntax_Syntax.binders);
+                                    FStar_Syntax_Syntax.spec = uu____3334;
                                     FStar_Syntax_Syntax.signature =
                                       (uu___387_3333.FStar_Syntax_Syntax.signature);
-                                    FStar_Syntax_Syntax.spec = uu____3334;
                                     FStar_Syntax_Syntax.if_then_else =
                                       uu____3349;
                                     FStar_Syntax_Syntax.ite_wp = uu____3350;
@@ -4519,10 +4519,10 @@ let tc_eff_decl :
                                                    univs1;
                                                  FStar_Syntax_Syntax.binders
                                                    = effect_params;
-                                                 FStar_Syntax_Syntax.signature
-                                                   = signature2;
                                                  FStar_Syntax_Syntax.spec =
                                                    uu____6929;
+                                                 FStar_Syntax_Syntax.signature
+                                                   = signature2;
                                                  FStar_Syntax_Syntax.if_then_else
                                                    = uu____6934;
                                                  FStar_Syntax_Syntax.ite_wp =
@@ -5406,10 +5406,10 @@ let (tc_decl' :
                          (uu___1090_9090.FStar_Syntax_Syntax.univs);
                        FStar_Syntax_Syntax.binders =
                          (uu___1090_9090.FStar_Syntax_Syntax.binders);
-                       FStar_Syntax_Syntax.signature =
-                         (uu___1090_9090.FStar_Syntax_Syntax.signature);
                        FStar_Syntax_Syntax.spec =
                          (uu___1090_9090.FStar_Syntax_Syntax.spec);
+                       FStar_Syntax_Syntax.signature =
+                         (uu___1090_9090.FStar_Syntax_Syntax.signature);
                        FStar_Syntax_Syntax.if_then_else =
                          (uu___1090_9090.FStar_Syntax_Syntax.if_then_else);
                        FStar_Syntax_Syntax.ite_wp =

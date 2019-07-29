@@ -1483,10 +1483,10 @@ let (gen_wps_for_free :
                           (uu___366_4423.FStar_Syntax_Syntax.univs);
                         FStar_Syntax_Syntax.binders =
                           (uu___366_4423.FStar_Syntax_Syntax.binders);
-                        FStar_Syntax_Syntax.signature =
-                          (uu___366_4423.FStar_Syntax_Syntax.signature);
                         FStar_Syntax_Syntax.spec =
                           (uu___366_4423.FStar_Syntax_Syntax.spec);
+                        FStar_Syntax_Syntax.signature =
+                          (uu___366_4423.FStar_Syntax_Syntax.signature);
                         FStar_Syntax_Syntax.if_then_else = uu____4424;
                         FStar_Syntax_Syntax.ite_wp = uu____4432;
                         FStar_Syntax_Syntax.stronger = uu____4440;
