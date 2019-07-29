@@ -35,8 +35,8 @@ let lognot (a:uint8) : uint8 = lnot a
        
 let int_to_uint8 (x:Prims.int) : uint8 = int_of_string (Prims.to_string x) % 256
 
-let shift_right (a:uint8) (b:uint8) : uint8 = a lsr b
-let shift_left  (a:uint8) (b:uint8) : uint8 = (a lsl b) land 255
+let shift_right (a:uint8) (b:Stdint.Uint32.t) : uint8 = a lsr (Stdint.Uint32.to_int b)
+let shift_left  (a:uint8) (b:Stdint.Uint32.t) : uint8 = (a lsl (Stdint.Uint32.to_int b)) land 255
 
 (* Comparison operators *)
 let eq (a:uint8) (b:uint8) : bool = a = b

@@ -1,6 +1,24 @@
-all:
+.PHONY: intfiles
+
+all: intfiles
 	$(MAKE) -C .. install-fstarlib
 	$(MAKE) -C .. install-fstar-tactics
+
+intfiles:			\
+	FStar_Int8.ml		\
+	FStar_Int16.ml		\
+	FStar_Int32.ml		\
+	FStar_Int64.ml		\
+	FStar_UInt16.ml		\
+	FStar_UInt32.ml		\
+	FStar_UInt64.ml		\
+	FStar_Int_Cast.ml
+
+%.ml: %.ml.prefix FStar_Ints.ml.body
+	cat $< FStar_Ints.ml.body > $@
+
+FStar_Int_Cast.ml: mkcasts.sh
+	./mkcasts.sh >$@
 
 clean:
 	$(MAKE) -C .. clean
