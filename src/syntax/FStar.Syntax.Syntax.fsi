@@ -368,8 +368,8 @@ type eff_decl = {
     mname       : lident;           //STATE_h
     univs       : univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     : binders;          //heap:Type
-    signature   : term;             //: result:Type ... -> Effect
     spec        : term_monad;
+    signature   : term;             //: result:Type ... -> Effect
     if_then_else: tscheme;
     ite_wp      : tscheme;
     stronger    : tscheme;

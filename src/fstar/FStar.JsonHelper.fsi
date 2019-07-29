@@ -9,7 +9,7 @@ open FStar.Exn
 module CTable = FStar.Interactive.CompletionTable
 
 val try_assoc : string -> list<(string * 'a)> -> option<'a>
-val assoc : string -> list <(string * 'b)> -> 'b
+val assoc : string -> list<(string * 'b)> -> 'b
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP

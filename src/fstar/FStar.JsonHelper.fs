@@ -10,7 +10,7 @@ open FStar.Exn
 
 module CTable = FStar.Interactive.CompletionTable
 
-let try_assoc (key: string) (d: 'a) =
+let try_assoc (key: string) (d: list<(string * 'a)>) =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
