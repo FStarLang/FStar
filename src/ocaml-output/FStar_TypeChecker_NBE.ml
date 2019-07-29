@@ -1814,7 +1814,7 @@ and (translate_monadic :
                               let uu____6337 =
                                 FStar_Syntax_Util.un_uinst
                                   (FStar_Pervasives_Native.snd
-                                     ed.FStar_Syntax_Syntax.bind_repr)
+                                     (ed.FStar_Syntax_Syntax.repr).FStar_Syntax_Syntax.monad_bind)
                                  in
                               translate cfg' [] uu____6337  in
                             iapp cfg uu____6336
@@ -2099,7 +2099,7 @@ and (translate_monadic_lift :
                     let uu____6892 =
                       FStar_Syntax_Subst.compress
                         (FStar_Pervasives_Native.snd
-                           ed.FStar_Syntax_Syntax.return_repr)
+                           (ed.FStar_Syntax_Syntax.repr).FStar_Syntax_Syntax.monad_ret)
                        in
                     uu____6892.FStar_Syntax_Syntax.n  in
                   match uu____6891 with
