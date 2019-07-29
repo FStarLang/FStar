@@ -22,7 +22,7 @@ instance _ : has_stronger Type0 = {
 }
 
 instance stronger_gtot_arr (_ : has_stronger 'a) (_ : has_stronger 'b) : has_stronger ('a -> GTot 'b) = {
-  stronger = fun f1 f2 -> forall x1 x2. x1 `stronger` x2 ==> f1 x1 `stronger` f2 x2
+  stronger = fun (f1 f2 : 'a -> GTot 'b) -> forall x1 x2. x1 `stronger` x2 ==> f1 x1 `stronger` f2 x2
 }
 
 instance stronger_arr (_ : has_stronger 'a) (_ : has_stronger 'b) : has_stronger ('a -> 'b) = {
