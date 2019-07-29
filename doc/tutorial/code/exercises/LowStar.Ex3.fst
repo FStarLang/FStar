@@ -64,7 +64,7 @@ let repr #a h (xs:t a{ok h xs}) : GTot (Seq.seq a) =
 
 /// A predicate stating that xs has no elements
 let empty #a h (xs: t a{ok h xs}) =
-  Seq.equal (repr h xs) Seq.createEmpty
+  Seq.equal (repr h xs) Seq.empty
 
 /// A predicate stating that xs has no more capacity
 let full #a h (xs: t a{ok h xs}) : Type =

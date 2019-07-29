@@ -145,7 +145,7 @@ let serialize_nlist_nil
   (p: parser_spec t)
   (s: serializer_spec p)
 : Lemma
-  (ensures (serialize (serialize_nlist 0 s) [] == Seq.createEmpty))
+  (ensures (serialize (serialize_nlist 0 s) [] == Seq.empty))
 = ()
 
 #set-options "--z3rlimit 16"
