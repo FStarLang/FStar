@@ -671,9 +671,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let e, g =
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in
           if not <| U.is_total_lcomp c
-          then Errors.add_errors [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
+          then Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
           match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
-          | None -> Errors.add_errors [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                     e, Env.conj_guard g g0
           | Some g' -> e, Env.conj_guard g' (Env.conj_guard g g0)
         in
@@ -1392,7 +1392,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *     topt : option<term> -- the original annotation
      *     tfun_opt : option<term> -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
      *     tfun_computed : term -- computed type of the abstraction
-     *     
+     *
      *     the following code has the logic for which type to package the input expression with
      *     if tfun_opt is Some we are guaranteed that topt is also Some, and in that case, we use Some?.v topt
      *       in this case earlier we were returning Some?.v tfun_opt but that means we lost out on the user annotation
@@ -2424,7 +2424,7 @@ and check_top_level_let env e =
          in
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
-         
+
          (*
           * AR: we now compute comp for the whole `let x = e1 in e2`, where e2 = ()
           *

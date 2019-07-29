@@ -75,11 +75,11 @@ let check_frag (env:TcEnv.env) curmod frag =
         Some (m, env, FStar.Errors.get_err_count())
     with
         | FStar.Errors.Error(e, msg, r) when not ((Options.trace_error())) ->
-          FStar.Errors.add_errors [(e, msg, r)];
+          FStar.TypeChecker.Err.add_errors env [(e, msg, r)];
           None
 
         | FStar.Errors.Err (e, msg) when not ((Options.trace_error())) ->
-          FStar.Errors.add_errors [(e, msg, FStar.TypeChecker.Env.get_range env)];
+          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env)];
           None
 
 let report_fail () =

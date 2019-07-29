@@ -173,7 +173,7 @@ let (check_frag :
         | FStar_Errors.Error (e, msg, r) when
             let uu____437 = FStar_Options.trace_error () in
             Prims.op_Negation uu____437 ->
-            (FStar_Errors.add_errors [(e, msg, r)];
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
              FStar_Pervasives_Native.None)
         | FStar_Errors.Err (e, msg) when
             let uu____468 = FStar_Options.trace_error () in
@@ -183,7 +183,7 @@ let (check_frag :
                   let uu____489 = FStar_TypeChecker_Env.get_range env in
                   (e, msg, uu____489) in
                 [uu____481] in
-              FStar_Errors.add_errors uu____471);
+              FStar_TypeChecker_Err.add_errors env uu____471);
              FStar_Pervasives_Native.None)
 let (report_fail : unit -> unit) =
   fun uu____519 ->
