@@ -116,14 +116,34 @@ let conjunction_is_stronger_g (a:Type)
 : Tot _
 = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
 
+let read (#a:Type0) (r:ref a)
+: repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
+= fun _ -> read r 
+
+let write (#a:Type0) (r:ref a) (x:a)
+: repr unit (fun _ -> True) (fun h0 _ h1 -> sel h1 r == x)
+= fun _ -> write r x
+
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr        = repr;
        return      = return;
        bind        = bind;
        stronger    = stronger;
-       conjunction = conjunction
+       conjunction = conjunction;
+
+       read = read;
+       write = write
 }
+
+
+
+
+// assume val test : unit -> HoareST unit (fun _ -> True) (fun _ _ _ -> True)
+
+// let lift_pure_hoare_st (a:Type)
+//   (wp:pure_wp a) (f:unit -> PURE a wp)
+//   : repr a (fun _ -> wp (fun _ -> True)) (fun h0 r h1 -> h0 == h1 /\ r == f ())
 
 // module HS = FStar.HyperStack
 // module ST = FStar.HyperStack.ST

@@ -6679,7 +6679,8 @@ let rec (desugar_effect :
                                                  (uu____25329,uu____25330,
                                                   (FStar_Parser_AST.TyconAbbrev
                                                    (name,action_params,uu____25333,defn),doc1)::[])
-                                                 when for_free ->
+                                                 when for_free || is_layered
+                                                 ->
                                                  let uu____25372 =
                                                    desugar_binders env2
                                                      action_params
