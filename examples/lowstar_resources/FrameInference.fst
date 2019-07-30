@@ -49,7 +49,7 @@ let frame2
      #unit
      (fun _ -> post)
      #(fun _ -> q)
-     #(magic ())//delta
+     #(magic ())//TODO: replace by delta
      #(fun _ -> True)
      #(fun _ _ _ -> True)
      (fun _ -> f ())
@@ -61,8 +61,6 @@ let test0 (b1: A.array U32.t) (b2: A.array U32.t)
   : cmd R.(AR.array_resource b1 <*> AR.array_resource b2) R.(AR.array_resource b1 <*> AR.array_resource b2)
  =
   compose (frame (f b2)) (frame  (f b2))
-
-
 
 
 [@expect_failure]
@@ -82,7 +80,7 @@ let resolve_tac () : Tac unit =
   in
   ()
 
-
+// TODO: Should not expected failure
 [@expect_failure]
 let test2 (b1: A.array U32.t) (b2: A.array U32.t) (b3: A.array U32.t) (b4: A.array U32.t) (b5: A.array U32.t)
   : cmd R.(AR.array_resource b1 <*> AR.array_resource b2 <*> AR.array_resource b3 <*> AR.array_resource b4 <*> AR.array_resource b5)
@@ -110,11 +108,12 @@ let frame3
      #unit
      (fun _ -> post)
      #(fun _ -> q)
-     #(magic ())//delta
+     #(magic ())//TODO: replace by delta
      #(fun _ -> True)
      #(fun _ _ _ -> True)
      (fun _ -> f ())
 
+// TODO: should not expect failure
 [@expect_failure]
 let test3 (b1: A.array U32.t) (b2: A.array U32.t) (b3: A.array U32.t) (b4: A.array U32.t) (b5: A.array U32.t)
   : cmd R.(AR.array_resource b1 <*> AR.array_resource b2 <*> AR.array_resource b3 <*> AR.array_resource b4 <*> AR.array_resource b5)
