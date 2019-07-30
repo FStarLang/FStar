@@ -13,6 +13,8 @@ import urllib.request
 
 DEFAULT_GITHUB_COMMIT_LOC='https://github.com/FStarLang/FStar/commit/'
 DEFAULT_CODESPEED_REV_FMT='http://bench2.ocamllabs.io:8070/changes/?rev=%s'
+RED_THRESH = 20. # percentage change of all benchmarks worse than this
+GREY_THRESH = 10. # percentage change of a benchmark worse than this
 
 # create app here:
 #   https://api.slack.com/incoming-webhooks#
@@ -103,21 +105,10 @@ old_df = old_df.set_index('name')
 change_data = 100.*(new_df['time_secs']-old_df['time_secs'])/old_df['time_secs']
 change_data = change_data.sort_values()
 
-message_str = 'Performance comparison of <%s|%s> [old] with <%s|%s> [new]:\n' % (args.github_commit_loc+old_short_hash, old_short_hash, args.github_commit_loc+new_short_hash, new_short_hash)
-
-## calculate best|25|50|75|worst
-quants = [0., 0.25, 0.5, 0.75, 1.]
-quantile_str = ' quantiles (-ve is improvement, +ve is regression)\n'
-quantile_str += '```\n'
-quantile_str += '   ' + '|'.join(['%7.0f '%(x*100.) for x in quants]) + '\n'
-quantile_str += '   ' + '|'.join(['%6.2f%% '%x for x in change_data.quantile(quants)]) + '\n'
-quantile_str += '```\n'
-print(quantile_str)
-
-message_str += quantile_str
+message_str = 'Performance of <%s|%s> [old] compared with <%s|%s> [new]:\n' % (args.github_commit_loc+old_short_hash, old_short_hash, args.github_commit_loc+new_short_hash, new_short_hash)
 
 ## calculate top 3 improves, bottom 3 worst
-def fn(title, series):
+def long_pre_fn(title, series):
     s = title + '\n'
     s += '```\n'
     for index, value in series.items():
@@ -125,22 +116,64 @@ def fn(title, series):
     s += '```\n'
     return s
 
+def simple_compact_fn(title, series):
+    return '```' + title + '\n  ' + ', '.join(['%s %.1f%%'%(index,value) for index,value in series.items()] ) + '```\n'
+
 N = 3
 #print('Best %s improvements:\n %s'%(str(N), change_data.head(N)))
 #print('Worst %s regressions:\n %s'%(str(N), change_data.tail(N)))
 
+fn = simple_compact_fn
 best_worst_str = ''
-best_worst_str += fn(' Best %s improvements:'%str(N), change_data.head(N))
-best_worst_str += fn(' Worst %s regressions:'%str(N), change_data.sort_values(ascending=False).head(N))
+best_worst_str += fn('Best %s changes:'%str(N), change_data.head(N))
+best_worst_str += fn('Worst %s changes:'%str(N), change_data.sort_values(ascending=False).head(N))
 print(best_worst_str)
 
 message_str += best_worst_str
 
-message_str += '<%s|Full results>\n' %(args.codespeed_rev_fmt%(new_short_hash[0:7]))
+## calculate best|25|50|75|worst
+quants = [0., 0.25, 0.5, 0.75, 1.]
+quantile_str = '```\n'
+quantile_str += 'quantiles ' + '|'.join(['%7.0f '%(x*100.) for x in quants]) + '\n'
+quantile_str += '          ' + '|'.join(['%6.2f%% '%x for x in change_data.quantile(quants)]) + '\n'
+quantile_str += '```\n'
+print(quantile_str)
 
-## post to webhook
-def post_data_to_webhook(url, message, dry_run=args.dry_run, verbose=args.verbose):
-    json_data = {'text': message}
+message_str += quantile_str
+
+full_results_str = '<%s|All results and graphs>\n' %(args.codespeed_rev_fmt%(new_short_hash[0:7]))
+
+def color_code(df):
+    if (df > RED_THRESH).all():
+        color_code = 'danger'
+    elif (df > GREY_THRESH).any():
+        color_code = ''
+    else:
+        color_code = 'good'
+    return color_code
+
+color_code_str = color_code(change_data)
+
+def create_slack_text_message(s):
+    return {'text': s}
+
+# see https://api.slack.com/docs/message-attachments
+# (color can be 'good'(green), 'warning'(orange), 'danger'(red), ''(grey))
+def create_slack_attachment_message(fallback, color, text, footer):
+    return  {
+             "attachments": [
+                {
+                    "fallback": fallback,
+                    "color": color,
+                    "text": text,
+                    "footer":footer
+                }
+             ]
+            }
+
+
+def post_data_to_webhook(url, json_data, dry_run=args.dry_run, verbose=args.verbose):
+
     data_payload = json.dumps(json_data).encode('ascii')
 
     if dry_run:
@@ -170,6 +203,8 @@ def post_data_to_webhook(url, message, dry_run=args.dry_run, verbose=args.verbos
 if args.verbose:
     print('going to send:')
     print(message_str)
-post_data_to_webhook(args.url, message_str)
+
+#post_data_to_webhook(args.url, create_slack_text_message(message_str+full_results_str))
+post_data_to_webhook(args.url, create_slack_attachment_message(fallback='', color=color_code_str, text=message_str+full_results_str, footer=''))
 
 
