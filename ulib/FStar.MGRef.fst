@@ -32,7 +32,9 @@ let clas: cls aloc = Cls
   eq2
   (fun _ -> ())
   (fun _ _ _ -> ())
+  (fun _ _ -> ())
   (fun x y -> ~ (x == y))
+  (fun _ _ -> ())
   (fun _ _ -> ())
   (fun _ _ -> ())
   (fun _ _ _ _ -> ())
@@ -40,6 +42,7 @@ let clas: cls aloc = Cls
   (fun _ _ -> ())
   (fun _ _ _ _ -> ())
   aloc_unused_in
+  (fun _ _ _ -> ())
   (fun _ _ _ -> ())
   (fun _ _ _ -> ())
   (fun _ _ _ -> ())
