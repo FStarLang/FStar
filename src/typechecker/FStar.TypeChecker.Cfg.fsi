@@ -128,8 +128,7 @@ val built_in_primitive_steps : BU.psmap<primitive_step>
 val equality_ops : BU.psmap<primitive_step>
 
 val register_plugin: primitive_step -> unit
+val register_extra_step: primitive_step -> unit
 
 val config': list<primitive_step> -> list<step> -> Env.env -> cfg
 val config: list<step> -> Env.env -> cfg
-
-

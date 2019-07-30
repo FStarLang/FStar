@@ -427,7 +427,7 @@ let serialize_nlist_impl
       assert (M.modifies (M.loc_buffer b') h0 h);
       assert (n - n == 0);
       serialize_nlist_nil p s;
-      assert (Seq.createEmpty #byte `Seq.equal` Seq.empty);
+      assert (Seq.empty #byte `Seq.equal` Seq.empty);
       Seq.append_empty_r (B.as_seq h b');
       ()
     end

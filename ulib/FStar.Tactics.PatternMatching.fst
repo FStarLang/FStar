@@ -23,6 +23,8 @@
 
 module FStar.Tactics.PatternMatching
 
+open FStar.Tactics
+
 /// Contents
 /// ========
 ///
@@ -56,8 +58,6 @@ module FStar.Tactics.PatternMatching
 /// `a` and `b` for further inspection?
 ///
 /// Here's a basic (but cumbersome!) implementation:
-
-open FStar.Tactics
 
 let fetch_eq_side () : Tac (term * term) =
   let g = cur_goal () in
@@ -807,8 +807,6 @@ let pm #b #a (abspat: a) : Tac b =
 /// ========
 ///
 /// We conclude with a small set of examples.
-
-open FStar.Tactics
 
 /// Simple examples
 /// ---------------

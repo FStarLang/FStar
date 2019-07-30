@@ -1189,7 +1189,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
                              | Some g_env ->
                                 TcUtil.label_guard
-                                    (Env.get_range env)
+                                    hd.sort.pos
                                     "Type annotation on parameter incompatible with the expected type"
                                     g_env
                       in
