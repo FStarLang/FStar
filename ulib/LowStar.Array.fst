@@ -218,6 +218,7 @@ let share_cell #a b i pid =
   (**)        ucell_disjoint_elim aloc' cell (ucell_matches_live_array_cell aloc' t' b' h1 /\ sel h0 b' i' == sel h1 b' i')
   (**)          (fun _ -> ())
   (**)          (fun _ -> ())
+  (**)          (fun _ -> live_same_arrays_equal_types b b' h0)
   (**)          (fun _ -> (* Different indexes *)
   (**)            live_same_arrays_equal_types b b' h0; live_same_arrays_equal_types b b' h1
   (**)          )
@@ -538,6 +539,10 @@ let move_cell #a b i pid =
   (**)       ucell_disjoint_elim cell aloc' goal
   (**)         (fun _ -> ())
   (**)         (fun _ -> ())
+  (**)         (fun _ -> (* different max length *)
+  (**)           live_same_arrays_equal_types b b' h0;
+  (**)           live_same_arrays_equal_types b b' h1
+  (**)         )
   (**)         (fun _ -> (* Different indexes *)
   (**)           live_same_arrays_equal_types b b' h0;
   (**)           live_same_arrays_equal_types b b' h1
