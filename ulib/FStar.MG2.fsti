@@ -30,6 +30,12 @@ type cls (aloc: Type) : Type = | Cls:
     (requires (aloc_includes x1 x2 /\ aloc_includes x2 x3))
     (ensures (aloc_includes x1 x3))
   )) ->
+  (aloc_includes_equality: (
+    (x1: aloc) ->
+    (x2: aloc) ->
+    Lemma
+    (x1 `aloc_includes` x2 ==> x1 == x2)
+  )) ->
   (aloc_disjoint: (
     (x1: aloc) ->
     (x2: aloc) ->
@@ -40,6 +46,12 @@ type cls (aloc: Type) : Type = | Cls:
     (x2: aloc) ->
     Lemma
     (aloc_disjoint x1 x2 <==> aloc_disjoint x2 x1)
+  )) ->
+  (aloc_disjoint_inequality: (
+    (x1: aloc) ->
+    (x2: aloc) ->
+    Lemma
+    (x1 =!= x2 ==> aloc_disjoint x1 x2)
   )) ->
   (aloc_disjoint_not_includes: (
     (x1: aloc) ->
@@ -103,6 +115,14 @@ type cls (aloc: Type) : Type = | Cls:
     Lemma
     (requires (x `aloc_unused_in` h1))
     (ensures (aloc_preserved x h1 h2))
+  )) ->
+  (aloc_preserved_still_used: (
+    (x: aloc) ->
+    (h1: HS.mem) ->
+    (h2: HS.mem) ->
+    Lemma
+    (requires (~ (x `aloc_unused_in` h1) /\ aloc_preserved x h1 h2))
+    (ensures (~ (x `aloc_unused_in` h2)))
   )) ->
   cls aloc
 

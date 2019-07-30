@@ -529,9 +529,11 @@ let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
   (fun  x -> ())
   (fun  x1 x2 x3 -> ())
+  (fun x1 x2 -> ())
   ucell_disjoint
   (fun x1 x2 -> ())
-  (fun x1 xl -> ())
+  (fun x1 x2 -> ())
+  (fun x1 x2 -> ())
   (fun larger1 larger2 smaller1 smaller2 -> ())
   ucell_preserved
   (fun x h -> ())
@@ -568,6 +570,7 @@ let cls : MG.cls ucell = MG.Cls #ucell
         ucell_used_in_intro x h0 t b cell'
       )
   )
+  (fun x h1 h2 -> ucell_preseved_also_preserves_usedness x h1 h2)
 
 #pop-options
 
