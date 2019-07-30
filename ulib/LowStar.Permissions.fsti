@@ -207,7 +207,8 @@ val merge_perms:
     get_permission_from_pid new_v_perms pid2 = 0.0R /\
     (forall (pid':perm_id{pid' <> pid1 /\ pid' <> pid2}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    )
+    ) /\
+    get_current_max new_v_perms = get_current_max v_perms
   ))
 
 /// The invariants let us prove a particularly useful lemma: if you have full permission, then you are
@@ -247,5 +248,6 @@ val change_snapshot:
         get_snapshot_from_pid new_v_perms pid' ==
         get_snapshot_from_pid v_perms pid')
     ) /\
-    get_snapshot_from_pid new_v_perms pid == new_snapshot
+    get_snapshot_from_pid new_v_perms pid == new_snapshot /\
+    get_current_max v_perms = get_current_max new_v_perms
   ))

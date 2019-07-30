@@ -59,7 +59,8 @@ let alloc #a init len =
 
 let free #a b =
   (**) let h0 = HST.get () in
-  HST.rfree b.content;
+  (**) // We don't delete the Heap map entry to keep all the adresses used!
+  //HST.rfree b.content;
   (**) let h1 = HST.get () in
   (**) MG.modifies_intro #ucell #cls (loc_array b) h0 h1 (fun cell ->
   (**)   ucell_preserved_intro cell h0 h1 (fun t' b' ->
@@ -98,7 +99,11 @@ let free #a b =
   (**)         end
   (**)       )
   (**)   )
-  (**)   (fun t' b' cell' -> admit())
+  (**)   (fun t' b' cell' ->
+  (**)      assert(ucell_matches_used_array_cell cell' t' b' h0);
+  (**)      assert(ucell_matches_used_array_cell cell' t' b' h1);
+  (**)      ucell_used_in_intro cell h1 t' b' cell'
+  (**)   )
   (**) )
 
 
@@ -118,9 +123,10 @@ let upd #a b i v =
   let s = ! b.content in
   let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
   (**) assert (writeable_cell h0 b (U32.v i));
+  let new_perm_map = Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v) in
   let s1 = Seq.upd s
     (U32.v b.idx + U32.v i)
-    (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v))
+    (v, new_perm_map)
   in
   b.content := s1;
   (**) let h1 = get() in
@@ -160,7 +166,16 @@ let upd #a b i v =
   (**)         end
   (**)       end
   (**)     )
-  (**)     (fun t' b' cell' -> admit())
+  (**)     (fun t' b' cell' ->
+  (**)       if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)         live_same_arrays_equal_types b b' h0;
+  (**)         live_same_arrays_equal_types b b' h1;
+  (**)         assert(get_current_max (Ghost.reveal new_perm_map) = get_current_max (Ghost.reveal perm_map));
+  (**)         let (_, perm_map) = Seq.index s (cell'.b_index) in
+  (**)         assert(aloc'.b_pid <= get_current_max (Ghost.reveal perm_map));
+  (**)         ucell_used_in_intro aloc' h1 t' b' cell'
+  (**)       end
+  (**)     )
   (**)   );
   (**) assert (modifies (loc_cell b (U32.v i)) h0 h1);
   (**) lemma_includes_loc_cell_loc_array b (U32.v i);
@@ -228,7 +243,15 @@ let share_cell #a b i pid =
   (**)            live_same_arrays_equal_types b b' h0; live_same_arrays_equal_types b b' h1
   (**)          )
   (**)      )
-  (**)      (fun t' b' cell' -> admit())
+  (**)      (fun t' b' cell' ->
+  (**)        if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)          live_same_arrays_equal_types b b' h0;
+  (**)          live_same_arrays_equal_types b b' h1;
+  (**)          let (_, perm_map) = Seq.index s0 (cell'.b_index) in
+  (**)          assert(aloc'.b_pid <= get_current_max (Ghost.reveal perm_map));
+  (**)          ucell_used_in_intro aloc' h1 t' b' cell'
+  (**)        end
+  (**)      )
   (**)   )
 
 #pop-options
@@ -392,7 +415,15 @@ let gather_cell #a b b1 i =
   (**)         lemma_live_pid_smaller_max (Ghost.reveal new_perm_map) loc'.b_pid
   (**)       end else ()
   (**)     )
-  (**)     (fun t' b' cell' -> admit())
+  (**)     (fun t' b' cell' ->
+  (**)        if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)          live_same_arrays_equal_types b b' h0;
+  (**)          live_same_arrays_equal_types b b' h1;
+  (**)          let (_, perm_map) = Seq.index s0 (cell'.b_index) in
+  (**)          assert(loc'.b_pid <= get_current_max (Ghost.reveal perm_map));
+  (**)          ucell_used_in_intro loc' h1 t' b' cell'
+  (**)        end
+  (**)      )
   (**)  )
 
 let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vlength buf}) : Lemma
@@ -557,7 +588,15 @@ let move_cell #a b i pid =
   (**)           lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
   (**)         )
   (**)     )
-  (**)     (fun t' b' cell' -> admit())
+  (**)     (fun t' b' cell' ->
+  (**)       if frameOf b <> frameOf b' || as_addr b <> as_addr b' then () else begin
+  (**)        live_same_arrays_equal_types b b' h0;
+  (**)        live_same_arrays_equal_types b b' h1;
+  (**)        let (_, perm_map) = Seq.index s (cell'.b_index) in
+  (**)        assert(aloc'.b_pid <= get_current_max (Ghost.reveal perm_map));
+  (**)        ucell_used_in_intro aloc' h1 t' b' cell'
+  (**)      end
+  (**)     )
   (**)   )
 
 #pop-options
