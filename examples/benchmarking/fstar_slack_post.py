@@ -11,12 +11,17 @@ import urllib.parse
 import urllib.request
 
 
+DEFAULT_GITHUB_COMMIT_LOC='https://github.com/FStarLang/FStar/commit/'
+DEFAULT_CODESPEED_REV_FMT='http://bench2.ocamllabs.io:8070/changes/?rev=%s'
+
 # create app here:
 #   https://api.slack.com/incoming-webhooks#
 
 parser = argparse.ArgumentParser(description='Post a message to a slack webhook')
 parser.add_argument('url', type=str, help='webhook url to post to')
 parser.add_argument('last_daily_dir', type=str, help='directory with last daily data (e.g. /local/scratch/ctk21/FStar_bench/daily)')
+parser.add_argument('--github_commit_loc', type=str, help='web link for finding github commits (e.g. %s)'%DEFAULT_GITHUB_COMMIT_LOC, default=DEFAULT_GITHUB_COMMIT_LOC)
+parser.add_argument('--codespeed_rev_fmt', type=str, help='web link for codespeed changes page (e.g. %s)'%DEFAULT_CODESPEED_REV_FMT, default=DEFAULT_CODESPEED_REV_FMT)
 parser.add_argument('--dry_run', action='store_true', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
@@ -54,7 +59,7 @@ old_daily_results = get_result_dir_from_run(old_daily_results)
 
 def get_hash_from_result_dir(d):
     d = os.path.dirname(d) ## remove 'result_dir'
-    return os.path.basename(d)[0:7]
+    return os.path.basename(d)[0:12]
 
 new_short_hash = get_hash_from_result_dir(new_daily_results)
 old_short_hash = get_hash_from_result_dir(old_daily_results)
@@ -98,11 +103,11 @@ old_df = old_df.set_index('name')
 change_data = 100.*(new_df['time_secs']-old_df['time_secs'])/old_df['time_secs']
 change_data = change_data.sort_values()
 
-message_str = 'Performance comparison of %s [old] with %s [new]:\n' % (old_short_hash, new_short_hash)
+message_str = 'Performance comparison of <%s|%s> [old] with <%s|%s> [new]:\n' % (args.github_commit_loc+old_short_hash, old_short_hash, args.github_commit_loc+new_short_hash, new_short_hash)
 
 ## calculate best|25|50|75|worst
 quants = [0., 0.25, 0.5, 0.75, 1.]
-quantile_str = ' quantiles (0 - best improvement, 100 - worst regression)\n'
+quantile_str = ' quantiles (-ve is improvement, +ve is regression)\n'
 quantile_str += '```\n'
 quantile_str += '   ' + '|'.join(['%7.0f '%(x*100.) for x in quants]) + '\n'
 quantile_str += '   ' + '|'.join(['%6.2f%% '%x for x in change_data.quantile(quants)]) + '\n'
@@ -130,6 +135,8 @@ best_worst_str += fn(' Worst %s regressions:'%str(N), change_data.sort_values(as
 print(best_worst_str)
 
 message_str += best_worst_str
+
+message_str += '<%s|Full results>\n' %(args.codespeed_rev_fmt%(new_short_hash[0:7]))
 
 ## post to webhook
 def post_data_to_webhook(url, message, dry_run=args.dry_run, verbose=args.verbose):
