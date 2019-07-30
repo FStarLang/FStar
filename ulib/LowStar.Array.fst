@@ -62,7 +62,7 @@ let free #a b =
   HST.rfree b.content;
   (**) let h1 = HST.get () in
   (**) MG.modifies_intro #ucell #cls (loc_array b) h0 h1 (fun cell ->
-  (**)   ucell_preserved_intro cell h0 h1  (fun t' b' ->
+  (**)   ucell_preserved_intro cell h0 h1 (fun t' b' ->
   (**)     let is_inside_b = ucell_matches_array_cell cell a b h0 in
   (**)     Classical.excluded_middle (is_inside_b);
   (**)     let i' = cell.b_index - U32.v b'.idx in
@@ -98,6 +98,7 @@ let free #a b =
   (**)         end
   (**)       )
   (**)   )
+  (**)   (fun t' b' cell' -> admit())
   (**) )
 
 
@@ -159,6 +160,7 @@ let upd #a b i v =
   (**)         end
   (**)       end
   (**)     )
+  (**)     (fun t' b' cell' -> admit())
   (**)   );
   (**) assert (modifies (loc_cell b (U32.v i)) h0 h1);
   (**) lemma_includes_loc_cell_loc_array b (U32.v i);
@@ -226,6 +228,7 @@ let share_cell #a b i pid =
   (**)            live_same_arrays_equal_types b b' h0; live_same_arrays_equal_types b b' h1
   (**)          )
   (**)      )
+  (**)      (fun t' b' cell' -> admit())
   (**)   )
 
 #pop-options
@@ -389,6 +392,7 @@ let gather_cell #a b b1 i =
   (**)         lemma_live_pid_smaller_max (Ghost.reveal new_perm_map) loc'.b_pid
   (**)       end else ()
   (**)     )
+  (**)     (fun t' b' cell' -> admit())
   (**)  )
 
 let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vlength buf}) : Lemma
@@ -553,6 +557,7 @@ let move_cell #a b i pid =
   (**)           lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
   (**)         )
   (**)     )
+  (**)     (fun t' b' cell' -> admit())
   (**)   )
 
 #pop-options
