@@ -110,24 +110,27 @@ let ucell_includes (c1 c2: ucell) : GTot Type0 =
 let ucell_disjoint (c1 c2:ucell) : GTot Type0 =
   (c1.b_rid <> c2.b_rid) \/
   (c1.b_addr <> c2.b_addr) \/
-  (c1.b_pid <> c2.b_pid) \/  // They don't have the same permission id
-  (c1.b_index <> c2.b_index)      // Cells are different (i.e. spatially disjoint)
+  (c1.b_max <> c2.b_max) \/
+  (c1.b_pid <> c2.b_pid) \/
+  (c1.b_index <> c2.b_index)
 
 let ucell_disjoint_elim (c1 c2: ucell) (goal: Type)
   (not_same_region: unit -> Lemma (requires (c1.b_rid <> c2.b_rid)) (ensures goal))
   (not_same_address: unit -> Lemma (requires (c1.b_rid = c2.b_rid /\ c1.b_addr <> c2.b_addr)) (ensures goal))
+  (not_same_max_length: unit -> Lemma (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_max <> c2.b_max)) (ensures goal))
   (not_same_pid: unit -> Lemma
-    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_pid <> c2.b_pid))
+    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_max = c2.b_max /\ c1.b_pid <> c2.b_pid))
     (ensures goal)
   )
   (not_same_index: unit -> Lemma
-    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_index <> c2.b_index))
+    (requires (c1.b_rid = c2.b_rid /\ c1.b_addr = c2.b_addr /\ c1.b_max = c2.b_max /\ c1.b_index <> c2.b_index))
     (ensures goal)
   )
   : Lemma (requires (c1 `ucell_disjoint` c2)) (ensures goal)
   =
   if c1.b_rid <> c2.b_rid then not_same_region ()
   else if c1.b_addr <> c2.b_addr then not_same_address ()
+  else if c1.b_max <> c2.b_max then not_same_max_length ()
   else if c1.b_pid <> c2.b_pid then not_same_pid ()
   else if c1.b_index <> c2.b_index then not_same_index ()
 
