@@ -58,46 +58,6 @@ let ucell_matches_live_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem
     live_cell h b i
   end
 
-let ucell_preserved (cell:ucell) (h0 h1:HS.mem) : GTot Type0 =
-  forall (t:Type0) (b:array t). begin let i = cell.b_index - U32.v b.idx in // This cell corresponds to index i in the buffer
-    ucell_matches_live_array_cell cell t b h0 ==>
-      (ucell_matches_live_array_cell cell t b h1 /\  // If this cell is preserved, then its liveness is preserved
-      sel h0 b i == sel h1 b i) // And its contents (snapshot + permission) are the same
-  end
-
-let ucell_preserved_intro (loc: ucell) (h0 h1: HS.mem)
-  (lemma: (t: Type0 -> b': array t -> Lemma
-    (requires (
-      let i = loc.b_index - U32.v b'.idx in
-      ucell_matches_live_array_cell loc t b' h0))
-    (ensures (
-      let i = loc.b_index - U32.v b'.idx in
-      ucell_matches_live_array_cell loc t b' h1 /\
-      sel h0 b' i  == sel h1 b' i
-      ))
-  )) : Lemma (ucell_preserved loc h0 h1)
-  =
-  let aux (t: Type0) (b':array t) : Lemma(
-      let i = loc.b_index - U32.v b'.idx in
-      ucell_matches_live_array_cell loc t b' h0 ==>
-      ucell_matches_live_array_cell loc t b' h1 /\
-      sel h0 b' i  == sel h1 b' i)
-  =
-  let aux' (_ : squash (
-      let i = loc.b_index - U32.v b'.idx in
-      ucell_matches_live_array_cell loc t b' h0)
-    ) : Lemma (
-      let i = loc.b_index - U32.v b'.idx in
-      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
-      ucell_matches_live_array_cell loc t b' h1 /\
-      sel h0 b' i  == sel h1 b' i
-    )
-    = lemma t b'
-  in
-    Classical.impl_intro aux'
-  in
-  Classical.forall_intro_2 aux
-
 
 // Two cells are included if they are equal: Same pid and same index in the buffer
 let ucell_includes (c1 c2: ucell) : GTot Type0 =
@@ -338,7 +298,7 @@ let live_same_ref_equal_types
 
 #push-options "--z3rlimit 50 --max_fuel 2 --max_ifuel 1"
 
-let ucell_not_unused_in_elim
+let ucell_used_in_elim
   (cell: ucell)
   (h: HS.mem)
   (goal: Type)
@@ -458,6 +418,112 @@ let ucell_used_in_intro (cell: ucell) (h: HS.mem) (t: Type) (b: array t) (cell':
     (~ (ucell_matches_unused_array_cell cell' t b h))
   )
 
+let ucell_preserved (cell:ucell) (h0 h1:HS.mem) : GTot Type0 =
+  // There are two cases for ucell preservation. The first one is liveness preservation:
+  (forall (t:Type0) (b:array t).
+    ucell_matches_live_array_cell cell t b h0 ==> // If the cell is live in an array
+    (ucell_matches_live_array_cell cell t b h1 /\  // Then it is still live
+    (let i = cell.b_index - U32.v b.idx in sel h0 b i == sel h1 b i)) // And its contents are preserved
+  ) /\
+  // Second case for usedness preservation:
+  (
+    forall (t: Type) (b: array t) (cell': ucell) .
+    (cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\ cell.b_index = cell'.b_index /\
+    ucell_matches_used_array_cell cell' t b h0) ==> // If the cell is used in h0
+    ucell_matches_used_array_cell cell' t b h1 // It continues to be used in h1
+  )
+
+let ucell_preserved_intro (cell: ucell) (h0 h1: HS.mem)
+  (liveness_preserved: (t: Type -> b: array t -> Lemma
+    (requires (
+      ucell_matches_live_array_cell cell t b h0))
+    (ensures (
+      let i = cell.b_index - U32.v b.idx in
+      ucell_matches_live_array_cell cell t b h1 /\
+      sel h0 b i  == sel h1 b i
+      ))
+  ))
+  (usedness_preserved: (t: Type -> b: array t -> cell': ucell -> Lemma
+    (requires ((cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\ cell.b_index = cell'.b_index /\
+    ucell_matches_used_array_cell cell' t b h0)))
+    (ensures (ucell_matches_used_array_cell cell' t b h1))
+  ))
+   : Lemma (ucell_preserved cell h0 h1)
+  =
+  let aux (t: Type) (b':array t) : Lemma(
+      let i = cell.b_index - U32.v b'.idx in
+      ucell_matches_live_array_cell cell t b' h0 ==>
+      ucell_matches_live_array_cell cell t b' h1 /\
+      sel h0 b' i  == sel h1 b' i)
+  =
+  let aux' (_ : squash (
+      let i = cell.b_index - U32.v b'.idx in
+      ucell_matches_live_array_cell cell t b' h0)
+    ) : Lemma (
+      let i = cell.b_index - U32.v b'.idx in
+      cell.b_index >= U32.v b'.idx /\ cell.b_index < U32.v b'.idx + U32.v b'.length /\
+      ucell_matches_live_array_cell cell t b' h1 /\
+      sel h0 b' i  == sel h1 b' i
+    )
+    = liveness_preserved t b'
+  in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_2 aux;
+  let aux (t: Type) (b: array t) (cell': ucell) : Lemma (
+    (cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\ cell.b_index = cell'.b_index /\
+    ucell_matches_used_array_cell cell' t b h0) ==>
+    ucell_matches_used_array_cell cell' t b h1
+  ) =
+    let aux' (_ : squash (
+      cell.b_rid = cell'.b_rid /\ cell.b_addr = cell'.b_addr /\ cell.b_pid = cell'.b_pid /\ cell.b_index = cell'.b_index /\
+      ucell_matches_used_array_cell cell' t b h0)) : Lemma (ucell_matches_used_array_cell cell' t b h1)
+    =
+      usedness_preserved t b cell'
+    in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_3 aux
+
+let ucell_preseved_also_preserves_usedness (cell: ucell) (h0 h1: HS.mem) : Lemma
+  (requires (ucell_used_in cell h0 /\ ucell_preserved cell h0 h1))
+  (ensures (ucell_used_in cell h1))
+  =
+  ucell_used_in_elim cell h0 (ucell_used_in cell h1) (fun t b cell' ->
+    ucell_used_in_intro cell h1 t b cell'
+  )
+
+let ucell_used_in_and_unused_in_disjoint (x1 x2: ucell) (h: HS.mem) : Lemma
+  (requires (ucell_used_in x1 h /\ ucell_unused_in x2 h))
+  (ensures (x1 `ucell_disjoint` x2)) =
+  ucell_used_in_elim x1 h (x1 `ucell_disjoint` x2) (fun t b x1' ->
+    ucell_unused_in_elim x2 h (x1 `ucell_disjoint` x2) (Seq.lseq (value_with_perms t) (U32.v b.max_length)) b.content
+      (fun () ->
+        if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else
+          assert((HS.contains h b.content) /\ ~ (HS.contains h b.content))
+      )
+      (fun a ref ->
+        if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
+          live_same_ref_equal_types #a #t b ref h
+        end
+      )
+      (fun t' b' x2' ->
+        if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
+          live_same_arrays_equal_types b' b h;
+          if x1'.b_index <> x2'.b_index then () else begin
+            let (_, perm_map1) = Seq.index (HS.sel h b.content) x1'.b_index in
+            let (_, perm_map2) = Seq.index (HS.sel h b'.content) x2'.b_index in
+            if x1'.b_pid <> x2'.b_pid then () else begin
+              assert(perm_map1 == perm_map2);
+              assert(
+                x1'.b_pid <= get_current_max (Ghost.reveal perm_map1) /\
+                x1'.b_pid > get_current_max (Ghost.reveal perm_map1)
+              )
+            end
+          end
+        end
+     )
+  )
 
 let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
@@ -473,37 +539,9 @@ let cls : MG.cls ucell = MG.Cls #ucell
   ucell_unused_in
   (fun greater lesser h -> ())
   (fun x2 x1 h ->
-    (* used_in and unused_in disjoint *)
     let aux (_ : squash ((~ (x1 `ucell_unused_in` h)) /\ x2 `ucell_unused_in` h)) : Lemma (x1 `ucell_disjoint` x2) =
-      ucell_not_unused_in_elim x1 h (x1 `ucell_disjoint` x2) (fun t b x1' ->
-        ucell_unused_in_elim x2 h (x1 `ucell_disjoint` x2) (Seq.lseq (value_with_perms t) (U32.v b.max_length)) b.content
-          (fun () ->
-            if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else
-              assert((HS.contains h b.content) /\ ~ (HS.contains h b.content))
-          )
-          (fun a ref ->
-            if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
-              live_same_ref_equal_types #a #t b ref h
-            end
-          )
-          (fun t' b' x2' ->
-            if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
-              live_same_arrays_equal_types b' b h;
-              if x1'.b_index <> x2'.b_index then () else begin
-                let (_, perm_map1) = Seq.index (HS.sel h b.content) x1'.b_index in
-                let (_, perm_map2) = Seq.index (HS.sel h b'.content) x2'.b_index in
-                if x1'.b_pid <> x2'.b_pid then () else begin
-                  assert(perm_map1 == perm_map2);
-                  assert(
-                    x1'.b_pid <= get_current_max (Ghost.reveal perm_map1) /\
-                    x1'.b_pid > get_current_max (Ghost.reveal perm_map1)
-                  )
-                end
-              end
-            end
-         )
-      )
-      in Classical.impl_intro aux
+      ucell_used_in_and_unused_in_disjoint x1 x2 h
+    in Classical.impl_intro aux
   )
   (fun x h0 h1 ->
     (* unused means preserved *)
@@ -524,6 +562,10 @@ let cls : MG.cls ucell = MG.Cls #ucell
           LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x'.b_pid;
           assert((live_cell h0 b i) /\ (~ (live_cell h0 b' i')))
         )
+      )
+      (fun t b cell' ->
+        assert(ucell_unused_in x h0);
+        ucell_used_in_intro x h0 t b cell'
       )
   )
 
