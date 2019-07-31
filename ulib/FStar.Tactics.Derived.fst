@@ -24,6 +24,13 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
+
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
@@ -264,7 +271,8 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r  /\ Failed?.ps r == ps))
+                                                       else Failed? r))
+        (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then
         fail "guard failed"
@@ -389,6 +397,10 @@ let rec revert_all (bs:binders) : Tac unit =
     | _::tl -> revert ();
                revert_all tl
 
+(* Some syntax utility functions *)
+let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
+let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
+
 // Cannot define this inside `assumption` due to #1091
 private
 let rec __assumption_aux (bs : binders) : Tac unit =
@@ -396,8 +408,11 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack_ln (Tv_Var (bv_of_binder b)) in
-        or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
+        let t = binder_to_term b in
+        try exact t with | _ ->
+        try (apply (`FStar.Squash.return_squash);
+             exact t) with | _ ->
+        __assumption_aux bs
 
 let assumption () : Tac unit =
     __assumption_aux (binders_of_env (cur_env ()))
@@ -507,12 +522,22 @@ private val push1 : (#p:Type) -> (#q:Type) ->
                         squash q
 private let push1 #p #q f u = ()
 
+private val push1' : (#p:Type) -> (#q:Type) ->
+                         (p ==> q) ->
+                         squash p ->
+                         squash q
+private let push1' #p #q f u = ()
+
 (*
  * Some easier applying, which should prevent frustation
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
+    (* Before anything, try a vanilla apply and apply_lemma *)
+    try apply t with | _ ->
+    try apply (`FStar.Squash.return_squash); apply t with | _ ->
+    try apply_lemma t with | _ ->
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
     let g = cur_goal () in
@@ -539,11 +564,45 @@ let rec apply_squash_or_lem d t =
     | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply_lemma t
+       | Some rt ->
+        // DUPLICATED, refactor!
+         begin
+         (* What I would really like to do here is unify `mk_squash post` and the goal,
+          * but it didn't work on a first try, so just doing this for now *)
+         match trytac (fun () -> apply_lemma t) with
+         | Some _ -> () // Success
+         | None ->
+             let rt = norm_term [] rt in
+             (* Is the lemma an implication? We can try to intro *)
+             match term_as_formula' rt with
+             | Implies p q ->
+                 apply_lemma (`push1);
+                 apply_squash_or_lem (d-1) t
+
+             | _ ->
+                 fail "mapply: can't apply (1)"
+         end
+
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
-           apply (`FStar.Squash.return_squash);
-           apply t
+        // DUPLICATED, refactor!
+         begin
+         (* What I would really like to do here is unify `mk_squash post` and the goal,
+          * but it didn't work on a first try, so just doing this for now *)
+         match trytac (fun () -> apply_lemma t) with
+         | Some _ -> () // Success
+         | None ->
+             let rt = norm_term [] rt in
+             (* Is the lemma an implication? We can try to intro *)
+             match term_as_formula' rt with
+             | Implies p q ->
+                 apply_lemma (`push1);
+                 apply_squash_or_lem (d-1) t
+
+             | _ ->
+                 apply (`FStar.Squash.return_squash);
+                 apply t
+         end
        end
     | _ -> fail "mapply: can't apply (2)"
     end
@@ -587,10 +646,6 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
       x
     )
   )
-
-(* Some syntax utility functions *)
-let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
 
 (*
  * Specialize a function by partially evaluating it

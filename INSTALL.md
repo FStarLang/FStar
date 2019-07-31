@@ -260,9 +260,10 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
   ```sh
   $ opam depext -i conf-gmp
   ```
-  On Windows, for dynamic libraries like gmp, if you want to call `bin/fstar.exe` from Windows or VSCode
-  (not just from a cygwin shell),
-  you also need to copy the dll from cygwin to the `bin` folder if you get popups like this:
+  On Windows, for dynamic libraries like gmp, you should add `/usr/x86_64-w64-mingw32/sys-root/mingw/bin:/usr/i686-w64-mingw32/sys-root/mingw/bin` to your cygwin `$PATH`.
+  If you additionally want to call `bin/fstar.exe` from Windows or VSCode (not just from a cygwin shell),
+  you also need to add the corresponding Windows paths (like `C:\OCaml32\usr\i686-w64-mingw32\sys-root\mingw\bin`) to your
+  Windows `$PATH`. Otherwise you will get popups like this when trying to call fstar.exe outside cygwin:
   ```sh
   The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
   ```
@@ -296,7 +297,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
-        $ make ocaml -C src
+        $ make ocaml -C src -j6
 
 ## Runtime dependency: Z3 SMT solver ##
 

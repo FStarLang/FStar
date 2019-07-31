@@ -79,7 +79,7 @@ abstract let genPost parent h0 (k:key) h1 =
   /\ HyperStack.fresh_region k.region h0 h1
   /\ Map.contains (get_hmap h1) k.region
   /\ contains h1 k.log
-  /\ sel h1 k.log == createEmpty
+  /\ sel h1 k.log == empty
   /\ invariant h1 k
 
 
@@ -92,7 +92,7 @@ let keygen parent =
   let region = new_region parent in
   let ke = CPA.keygen region in
   let ka = MAC.keygen region in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region empty in
   Key #region ke ka log
 
 
