@@ -106,12 +106,44 @@ let is_subresource_of_intro (r0 r r1: resource) : Lemma
   (ensures (r0 `is_subresource_of` r))
   = ()
 
-let selector r = r0:resource{r0 `is_subresource_of` r} -> GTot r0.t
+let is_subresource_of_trans (r1 r2 r3: resource) : Lemma
+  (requires (r1 `is_subresource_of` r2 /\ r2 `is_subresource_of` r3))
+  (ensures (r1 `is_subresource_of` r3))
+  =
+  is_subresource_of_elim r1 r2 (r1 `is_subresource_of` r3) (fun delta12 ->
+    is_subresource_of_elim r2 r3 (r1 `is_subresource_of` r3) (fun delta23 ->
+      assert(r3 `can_be_split_into` (r2, delta23));
+      assert(r2 `can_be_split_into` (r1, delta12));
+      reveal_can_be_split_into ();
+      reveal_star ();
+      let delta13 = delta12 <*> delta23 in
+      loc_union_assoc (as_loc (fp delta23)) (as_loc (fp delta12)) (as_loc (fp r1));
+      assert(r3 `can_be_split_into` (r1, delta13));
+      is_subresource_of_intro r1 r3 delta13
+    )
+  )
 
-let mk_selector (r: resource) (h: imem (inv r)) : selector r  =
-  fun (r0:resource{r0 `is_subresource_of` r}) -> r0.view.sel h
+open FStar.FunctionalExtensionality
 
-let hsprop (r: resource) : Type = selector r -> prop
+let selector r = restricted_g_t (r0:resource{r0 `is_subresource_of` r}) (fun r0 -> r0.t)
+
+let mk_selector
+  (r: resource)
+  (h: imem (inv r)) :
+  (s:selector r{forall (r0:resource{r0 `is_subresource_of` r}). s r0 == r0.view.sel h})
+=
+  on_dom_g (r0:resource{r0 `is_subresource_of` r}) (fun (r0:resource{r0 `is_subresource_of` r}) -> r0.view.sel h)
+
+let focus_selector (r: resource) (s: selector r) (r0: resource{r0 `is_subresource_of` r}) : selector r0 =
+   on_dom_g (r0':resource{r0' `is_subresource_of` r0}) (fun (r0':resource{r0' `is_subresource_of` r0}) ->
+     is_subresource_of_trans r0' r0 r;
+     s r0'
+   )
+
+let hsprop (r: resource) : Type = selector r -> Type0
+
+let extend_hsprop (r0: resource) (p: hsprop r0) (r: resource{r0 `is_subresource_of` r}) : hsprop r =
+  fun s -> p (focus_selector r s r0)
 
 #push-options "--z3rlimit 30"
 
@@ -129,7 +161,6 @@ let hsrefine (r:resource) (p:hsprop r) : resource =
     let aux (_ : squash ( new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1)) : Lemma (new_view.inv h1) =
       assert(r.view.inv h1);
       assert(p (mk_selector r h0));
-      assert(r.view.sel h0 == r.view.sel h1);
       let sel0 = mk_selector r h0 in
       let sel1 = mk_selector r h1 in
       let aux (r0: resource{r0 `is_subresource_of` r}) : Lemma (sel0 r0 == sel1 r0) =
@@ -140,14 +171,7 @@ let hsrefine (r:resource) (p:hsprop r) : resource =
       let open FStar.FunctionalExtensionality in
       let a = r0:resource{r0 `is_subresource_of` r} in
       let b = fun r0 -> r0.t in
-      let fsel0 : arrow_g a b = sel0 in
-      let fsel1 : arrow_g a b = sel1 in
-      assert(feq_g sel0 sel1);
-      extensionality_g a b sel0 sel1;
-      assume(on_domain_g a fsel0 == fsel0);
-      assume(on_domain_g a fsel1 == fsel1);
-      assert(sel0 == sel1);
-      assert(p sel1)
+      extensionality_g a b sel0 sel1
     in
     Classical.impl_intro aux
   in
@@ -157,8 +181,34 @@ let hsrefine (r:resource) (p:hsprop r) : resource =
 
 #pop-options
 
-let r_pre (res:resource) = selector res -> Type0
-let r_post res0 a res1 = selector res0 -> x:a -> selector res1 -> Type0
+let refine_preserves_splitting (res0 delta res1: resource) (p: hsprop res0) : Lemma
+  (res0 `can_be_split_into` (res1,delta) <==> hsrefine res0 p `can_be_split_into` (res1,delta))
+  =
+  reveal_can_be_split_into ();
+  let aux (_ : squash (res0 `can_be_split_into` (res1,delta))) : Lemma (hsrefine res0 p `can_be_split_into` (res1,delta)) =
+    admit()
+  in
+  let aux' (_ : squash (hsrefine res0 p `can_be_split_into` (res1,delta))) : Lemma (res0 `can_be_split_into` (res1,delta)) =
+    admit()
+  in
+  Classical.impl_intro aux;
+  Classical.impl_intro aux'
+
+let refine_selector (r: resource) (s:selector r) (p: hsprop r{p s}) : selector (hsrefine r p) =
+  on_dom_g (r0:resource{r0 `is_subresource_of` (hsrefine r p)}) (fun (r0:resource{r0 `is_subresource_of` (hsrefine r p)}) ->
+     is_subresource_of_elim r0 (hsrefine r p) (r0 `is_subresource_of` r) (fun delta ->
+       refine_preserves_splitting r delta r0 p
+     );
+     s r0
+   )
+
+let r_pre (res:resource) =  hsprop res
+let r_post
+  (res0: resource)
+  (pre: r_pre res0)
+  (a: Type)
+  (res1: a -> resource) =
+  selector (hsrefine res0 pre) -> x:a -> hsprop (res1 x)
 
 abstract
 let rst_inv (res:resource) (h:HS.mem) : GTot prop =
@@ -200,104 +250,144 @@ effect RSTATE (a:Type)
 
 (* Pre- and postcondition style effect RST *)
 
-effect RST (a:Type)
-           (res0:resource)
-           (res1:a -> resource)
-           (pre:r_pre res0)
-           (post:r_post res0 a res1) =
-       RSTATE a res0 res1 (fun p h0 ->
-         pre h0 /\ (forall x h1 . post h0 x h1 ==> p x h1))
+effect RST0
+  (a:Type)
+  (res0:resource)
+  (res1:a -> selector res0 -> resource)
+= ST a
+  (fun h0 -> res0.view.inv h0)
+  (fun h0 x h1 -> (res1 x (mk_selector res0 h0)).view.inv h1)
+
+effect RST
+  (a: Type)
+  (res0: resource)
+  (res1: a -> resource)
+  (pre: r_pre res0)
+  (post: r_post res0 pre a res1)
+= RST0
+  a
+  (hsrefine res0 pre)
+  (fun x old -> hsrefine (res1 x) (post old x))
 
 (* Bind operation for RSTATE *)
 
-let bind (#a #b:Type)
-         (#res0:resource)
-         (#res1:a -> resource)
-         (#res2:b -> resource)
-         (#wp0:rstate_wp a res0 res1)
-         (#wp1:(x:a -> rstate_wp b (res1 x) res2))
-         (f:unit -> RSTATE a res0 res1 wp0)
-         (g:(x:a -> RSTATE b (res1 x) res2 (wp1 x)))
-       : RSTATE b res0 res2 (fun p h0 -> wp0 (fun x h1 -> wp1 x p h1) h0) =
+let bind
+  (#a #b:Type)
+  (#res0:resource)
+  (#res1:a -> resource)
+  (#res2:b -> resource)
+  (#wp0:rstate_wp a res0 res1)
+  (#wp1:(x:a -> rstate_wp b (res1 x) res2))
+  (f:unit -> RSTATE a res0 res1 wp0)
+  (g:(x:a -> RSTATE b (res1 x) res2 (wp1 x)))
+: RSTATE b res0 res2 (fun p h0 -> wp0 (fun x h1 -> wp1 x p h1) h0) =
   g (f ())
 
 open LowStar.RST.Tactics
 
-let frame_wp (#outer0:resource)
-             (#inner0:resource)
-             (#a:Type)
-             (#outer1:a -> resource)
-             (#inner1:a -> resource)
-             (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
-             (wp:rstate_wp a inner0 inner1)
-           : rstate_wp a outer0 outer1 =
+let frame_wp
+  (#outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (#outer1:a -> resource)
+  (#inner1:a -> resource)
+  (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
+  (wp:rstate_wp a inner0 inner1)
+: rstate_wp a outer0 outer1 =
   fun p h0 ->
     wp (fun x (h1:imem (inv (inner1 x))) ->
-          inv (outer1 x) h1 /\
-          sel (view_of delta) h0 == sel (view_of delta) h1
-          ==>
-          p x h1) h0
+      inv (outer1 x) h1 /\
+      sel (view_of delta) h0 == sel (view_of delta) h1
+      ==>
+      p x h1)
+    h0
 
-inline_for_extraction noextract let frame (outer0:resource)
-          (#inner0:resource)
-          (#a:Type)
-          (outer1:a -> resource)
-          (#inner1:a -> resource)
-          (#[resolve_delta ()]
-                   delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
-          (#wp:rstate_wp a inner0 inner1)
-          ($f:unit -> RSTATE a inner0 inner1 wp)
-        : RSTATE a outer0 outer1 (frame_wp delta wp) =
+inline_for_extraction noextract let frame
+  (outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (outer1:a -> resource)
+  (#inner1:a -> resource)
+  (#[resolve_delta ()]
+    delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
+  (#wp:rstate_wp a inner0 inner1)
+  ($f:unit -> RSTATE a inner0 inner1 wp)
+: RSTATE a outer0 outer1 (frame_wp delta wp) =
   reveal_view ();
   reveal_can_be_split_into ();
   f ()
 
 (* Generic framing operation for RST (through resource inclusion) *)
 
-unfold
-let frame_pre (#outer0:resource)
-              (#inner0:resource)
-              (delta:resource{frame_delta_pre outer0 inner0 delta})
-              (pre:r_pre inner0)
-              (h:imem (inv outer0)) =
-  pre h
+unfold let frame_pre
+  (#outer0:resource)
+  (#inner0:resource)
+  (delta:resource{frame_delta_pre outer0 inner0 delta})
+  (pre:r_pre inner0)
+  (old: selector outer0) =
+  pre (focus_selector outer0 old inner0)
 
 unfold
-let frame_post (#outer0:resource)
-               (#inner0:resource)
-               (#a:Type)
-               (#outer1:a -> resource)
-               (#inner1:a -> resource)
-               (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
-               (post:r_post inner0 a inner1)
-               (h0:imem (inv outer0))
-               (x:a)
-               (h1:imem (inv (outer1 x))) =
-  post h0 x h1 /\
-  sel (view_of delta) h0 == sel (view_of delta) h1
+let frame_post
+  (#outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (#outer1:a -> resource)
+  (#inner1:a -> resource)
+  (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
+  (pre:r_pre inner0)
+  (post:r_post inner0 pre a inner1)
+  (old:selector outer0)
+  (x:a)
+  (modern:selector (outer1 x))
+=
+  reveal_can_be_split_into ();
+  pre (focus_selector outer0 old inner0) /\
+  post
+    (refine_selector inner0 (focus_selector outer0 old inner0) pre)
+    x
+    (focus_selector (outer1 x) modern (inner1 x)) /\
+  old delta == modern delta
+
 
 #set-options "--no_tactics"
 
+let get (r: resource) : RST0
+  (selector r)
+  (r)
+  (fun _ _ -> r)
+  =
+  let h = HST.get () in
+  mk_selector r h
+
+
 // [DA: should be definable directly using RSTATE frame, but get
 //      an error about unexpected unification variable remaining]
-inline_for_extraction noextract let rst_frame (outer0:resource)
-              (#inner0:resource)
-              (#a:Type)
-              (outer1:a -> resource)
-              (#inner1:a -> resource)
-              (#[resolve_delta ()]
-                   delta:resource{FStar.Tactics.with_tactic
-                                         resolve_frame_delta
-                                         (frame_delta outer0 inner0 outer1 inner1 delta)
-                                         })
-              (#pre:r_pre inner0)
-              (#post:r_post inner0 a inner1)
-              ($f:unit -> RST a inner0 inner1 pre post)
-            : RST a outer0 outer1
-                    (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
-                      frame_pre delta pre)
-                    (frame_post delta post) =
+inline_for_extraction noextract let rst_frame
+  (outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (outer1:a -> resource)
+  (#inner1:a -> resource)
+  (#[resolve_delta ()]
+     delta:resource{
+       FStar.Tactics.with_tactic
+         resolve_frame_delta
+         (frame_delta outer0 inner0 outer1 inner1 delta)
+     }
+   )
+   (#pre:r_pre inner0)
+   (#post:r_post inner0 pre a inner1)
+   ($f:unit -> RST a inner0 inner1 pre post)
+: RST a outer0 outer1
+  (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+    frame_pre delta pre
+  )
+  (refine_preserves_splitting outer0 delta inner0 (frame_pre delta pre);
+    frame_post delta pre post)
+=
   reveal_view ();
   reveal_can_be_split_into ();
   FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  admit();
   f ()
