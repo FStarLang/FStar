@@ -128,7 +128,7 @@ let rec visit (callback:unit -> Tac unit) : Tac unit =
                         let _ = implies_intro () in
                         seq (fun () -> visit callback) l_revert
                     | _ ->
-                        or_else trivial smt
+                        ()
                    )
           )
 
