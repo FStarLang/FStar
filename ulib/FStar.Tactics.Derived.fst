@@ -389,7 +389,7 @@ let pose_as (s:string) (t:term) : Tac binder =
     b
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
-    map f (binders_of_env (cur_env ()))
+    map f (cur_binders ())
 
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
@@ -415,7 +415,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
         __assumption_aux bs
 
 let assumption () : Tac unit =
-    __assumption_aux (binders_of_env (cur_env ()))
+    __assumption_aux (cur_binders ())
 
 let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
@@ -468,10 +468,10 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     end
 
 let rewrite_eqs_from_context () : Tac unit =
-    rewrite_all_context_equalities (binders_of_env (cur_env ()))
+    rewrite_all_context_equalities (cur_binders ())
 
 let rewrite_equality (t:term) : Tac unit =
-    try_rewrite_equality t (binders_of_env (cur_env ()))
+    try_rewrite_equality t (cur_binders ())
 
 let unfold_def (t:term) : Tac unit =
     match inspect t with
