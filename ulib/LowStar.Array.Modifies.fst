@@ -529,9 +529,7 @@ let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
   (fun  x -> ())
   (fun  x1 x2 x3 -> ())
-  (fun x1 x2 -> ())
   ucell_disjoint
-  (fun x1 x2 -> ())
   (fun x1 x2 -> ())
   (fun x1 x2 -> ())
   (fun larger1 larger2 smaller1 smaller2 -> ())
@@ -827,7 +825,7 @@ let modifies_loc_disjoint (l0 l1:loc) (h0 h1 h2:HS.mem)
    =
    MG.modifies_trans l0 h0 h1 l1 h2;
    assert(modifies (loc_union l0 l1) h0 h2);
-   MG.framing_loc_still_unused_in l0 l1 h0 (fun l -> ());
+   MG.framing_loc_still_unused_in l0 l1 h0 (fun l -> ()) (fun x1 x2 -> ()) (fun x1 x2 -> ());
    MG.modifies_loc_includes (loc_unused_in h0 `loc_union` l0) h0 h2 (loc_union l0 l1);
    MG.modifies_only_used_in l0 h0 h2
 
