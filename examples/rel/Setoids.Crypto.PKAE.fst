@@ -211,8 +211,15 @@ let pkae_rel n aes : per (functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n a
 ///  AE_0 o ID_READ              AE_1 o ID_READ
 ///
 /// Goal: Show that we can instantiate an eq instance with pkae0 and pkae1
-/// Note, that for the full cryptographic proof, we would have to show `Perfect` equivalence with the actual PKAE security notion, which I have not yet encoded. However, that should be trivial, once we have make the following work.
-let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n) : eq (pkae_rel n aes) (sum (odh_eps n) (ae_eps n aes)) (pkae0_composition n aes os) (pkae1_composition n aes os) =
+/// Note, that for the full cryptographic proof, we would have to show `Perfect`
+/// equivalence with the actual PKAE security notion, which I have not yet
+/// encoded. However, that should be trivial, once we have make the following
+/// work.
+let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
+  : eq (pkae_rel n aes)
+       (sum (odh_eps n) (ae_eps n aes))
+       (pkae0_composition n aes os)
+       (pkae1_composition n aes os) =
   let starting_point = pkae0_composition n aes os in
 /// First step: pull ODH assumption to the right and make sure the result is
 /// still equal. Then idealize ODH and pull it back to the left.
@@ -232,15 +239,37 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n) : eq (pkae_rel n aes)
 ///  PKAE o ---- o -------- o KEY_1
 ///         AE_0   ID_READ
   let step1_right_side = odh_game0 n os in
-  let step1_left_side = comp (pkae_functor n aes) (functor_prod id_func (ae0_functor n aes)) in
+  let step1_left_side =
+    comp (pkae_functor n aes)
+         (functor_prod
+           id_func
+           (ae0_functor n aes))
+  in
   // Prove here, that pulling ODH to the right doesn't change anything.
-  let step1a_eq = Perfect #_ #_ #(pkae_rel n aes) starting_point (comp (step1_left_side) (step1_right_side)) () in
+  let step1a_eq =
+    Perfect #_ #_ #(pkae_rel n aes)
+      starting_point
+      (comp
+        (step1_left_side)
+        (step1_right_side))
+      ()
+  in
   // Now apply the ODH assumption via the Ctx rule.
-  let step1b_eq = Ctx #_ #_ #(pkae_rel n aes) (odh_assumption n os) step1_left_side in
+  let step1b_eq =
+    Ctx #_ #_ #(pkae_rel n aes)
+      (odh_assumption n os)
+      step1_left_side
+  in
   // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
   let step1_final = pkae_intermediate_composition n aes os in
   // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
-  let step1_final_eq = Perfect #_ #_ #(pkae_rel n aes) (comp (step1_left_side) (step1_right_side)) step1_final () in
+  let step1_final_eq =
+    Perfect #_ #_ #(pkae_rel n aes)
+      (comp
+        (step1_left_side)
+        (step1_right_side))
+      step1_final ()
+  in
 /// Second step: pull AE assumption to the right and make sure the result is
 /// still equal. Then idealize AE and pull it back to the left.
 ///         ODH    ID_WRITE
@@ -259,15 +288,37 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n) : eq (pkae_rel n aes)
 ///  PKAE o ---- o -------- o KEY_1
 ///         AE_1   ID_READ
   let step2_right_side = ae_game0 n aes in
-  let step2_left_side = comp (pkae_functor n aes) (functor_prod (odh_functor n aes) id_func) in
+  let step2_left_side =
+    comp
+      (pkae_functor n aes)
+      (functor_prod (odh_functor n aes) id_func)
+  in
   // Prove here, that pulling AE to the right doesn't change anything.
-  let step2a_eq = Perfect #_ #_ #(pkae_rel n aes) step1_final (comp (step2_left_side) (step2_right_side)) () in
+  let step2a_eq =
+    Perfect #_ #_ #(pkae_rel n aes)
+      step1_final
+      (comp
+        (step2_left_side)
+        (step2_right_side))
+      ()
+  in
   // Now apply the ODH assumption via the Ctx rule.
-  let step2b_eq = Ctx #_ #_ #(pkae_rel n aes) (ae_assumption n aes) step2_left_side in
+  let step2b_eq =
+    Ctx #_ #_ #(pkae_rel n aes)
+      (ae_assumption n aes)
+      step2_left_side
+  in
   // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
   let step2_final = pkae1_composition n aes os in
   // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
-  let step2_final_eq = Perfect #_ #_ #(pkae_rel n aes) (comp (step2_left_side) (step2_right_side)) step2_final () in
+  let step2_final_eq =
+    Perfect #_ #_ #(pkae_rel n aes)
+      (comp
+        (step2_left_side)
+        (step2_right_side))
+      step2_final
+      ()
+  in
   // Finally, connect all the created `eq` instances via the `Trans` rule to get the eq from pkae0_composition to pkae1_composition.
   // ...
   admit()
