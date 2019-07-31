@@ -25,10 +25,10 @@ documentation on F\*.
 
 ### Editing F* code
 
-You can edit F\* code using your favourite text editor, but Emacs,
-Atom, and Vim have extensions that add special support for F\*,
-including syntax highlighting and interactive development. More
-details on [editor support] on the [F\* wiki].
+You can edit F\* code using your favourite text editor, but Emacs, Visual Studio
+Code, Atom, and Vim have extensions that add special support for F\*, including
+for instance syntax highlighting, code completion, quick navigation, type hints,
+and interactive development.  More details on [editor support] on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 

@@ -297,7 +297,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
-        $ make ocaml -C src
+        $ make ocaml -C src -j6
 
 ## Runtime dependency: Z3 SMT solver ##
 

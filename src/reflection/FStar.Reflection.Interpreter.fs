@@ -171,3 +171,5 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "env_open_modules"      env_open_modules      E.e_env             (e_list e_string_list)
                                 env_open_modules      NRE.e_env           (NBET.e_list NBET.e_string_list);
 ]
+
+let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

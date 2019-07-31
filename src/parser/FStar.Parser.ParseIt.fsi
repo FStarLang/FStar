@@ -25,11 +25,13 @@ open FStar.Errors
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:int;
     frag_col:int
 }
 
+val read_vfs_entry : string -> option<(time * string)>
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well

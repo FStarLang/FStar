@@ -197,6 +197,10 @@ Guidelines for the changelog:
      those lists of namespaces can be given under the form `+A -B +C`
      (space-separated) or `+A,-B,+C` (comma-separated).
 
+## Editors
+
+   * Support for vscode via LSP (https://github.com/FStarLang/FStar/wiki/Using-F*-with-vscode)
+
 # Version 0.9.6.0
 
 ## Command line options
