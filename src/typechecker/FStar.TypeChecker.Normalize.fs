@@ -982,9 +982,9 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
             | UnivArgs (us, r) :: t -> UnivArgs (us, r) :: (push e t)
             | h :: t -> e :: h :: t
         in
-        let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
-                       None Range.dummyRange in
-        let stack = push (App (env, ref, None, Range.dummyRange)) stack in
+        let refl = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv))) None Range.dummyRange in
+        let refl = U.mk_app refl [S.iarg S.tun] in
+        let stack = push (App (env, refl, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
 (* on_domain_lids are constant, so compute them once *)
@@ -2326,8 +2326,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            log cfg (fun () -> BU.print1 "Reified lift to (1): %s\n" (Print.term_to_string lifted));
            norm cfg env (List.tl stack) lifted
 
-        | Tm_app ({n = Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
-           // reify (reflect e) ~> e
+        | Tm_app ({n = Tm_constant (FC.Const_reflect _)}, [(_, Some (Implicit _)); (e, _)]) ->
+           // reify (reflect #_ e) ~> e
            // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
            norm cfg env stack' e
 

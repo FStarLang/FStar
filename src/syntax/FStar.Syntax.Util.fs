@@ -1540,7 +1540,7 @@ let mk_reify t =
 
 let mk_reflect t =
     let reflect_ = mk (Tm_constant(FStar.Const.Const_reflect (Ident.lid_of_str "Bogus.Effect"))) None t.pos in
-    mk (Tm_app(reflect_, [as_arg t])) None t.pos
+    mk (Tm_app(reflect_, [as_arg tun; as_arg t])) None t.pos
 
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct (e.g. dmff). *)
