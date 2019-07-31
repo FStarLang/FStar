@@ -31,13 +31,13 @@ let test_trivial =
     assert ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3))
         by trivial ()
 
-(* let simple_equality_assertions = *)
-  (* assert (forall (y:int). y==0 ==> 0==y) *)
-  (*     by rewrite_all_equalities (); *)
-  (* assert(forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) *)
-  (*     by rewrite_all_equalities (); *)
-  (* assert(forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)) *)
-  (*     by rewrite_all_equalities () *)
+let simple_equality_assertions =
+  assert (forall (y:int). y==0 ==> 0==y)
+      by rewrite_all_equalities ();
+  assert(forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y))
+      by rewrite_all_equalities ();
+  assert(forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
+      by rewrite_all_equalities ()
 
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
@@ -50,33 +50,35 @@ let implicitly_unfolfed_before_preprocessing =
       by smt () //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True
-(* let simple_equality_assertions_within_a_function () = *)
-(*   assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)) *)
-(*       by rewrite_all_equalities (); //identical to one of the queries above, but now inside a function, which produces a slightly different VC *)
-(*   assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x) *)
-(*       by rewrite_all_equalities (); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized *)
-(*   assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away *)
-(*       by (visit (unfold_definition_and_simplify_eq (quote visible_predicate)) ()) *)
+
+let simple_equality_assertions_within_a_function () =
+  assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
+      by rewrite_all_equalities (); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
+  assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x)
+      by rewrite_all_equalities (); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
+  assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
+      by (visit (fun () -> unfold_definition_and_simplify_eq (quote visible_predicate)))
 
 let local_let_bindings =
   assert (let x = 10 in x + 0 == 10) by trivial ()
 
 assume type pred_1 : int -> Type0
 assume Pred1_saturated: forall x. pred_1 x
-(* let partially_solved_using_smt = *)
-(*   assert ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic *)
-(*            pred_1 0 /\ //by 1 smt sub-goal *)
-(*            pred_1 1)  //by another smt sub-goal *)
-(*       by rewrite_all_equalities () *)
+let partially_solved_using_smt =
+  assert ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic
+           pred_1 0 /\ //by 1 smt sub-goal
+           pred_1 1)  //by another smt sub-goal
+      by rewrite_all_equalities ()
 
 assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10))
 
+// GM: This looks wrong, `x` is an int, not an equality binder
 (* let scanning_environment = *)
 (*   let x = return_ten () in *)
 (*   assert (x + 0 == 10) *)
-(*       by (rewrite_equality (quote x);; *)
-(*           rewrite_eqs_from_context;; *)
-(*           trivial) *)
+(*       by (rewrite_equality (quote x); *)
+(*           rewrite_eqs_from_context (); *)
+(*           trivial ()) *)
 
 assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
 val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
