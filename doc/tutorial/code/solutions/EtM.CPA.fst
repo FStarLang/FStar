@@ -58,7 +58,7 @@ let genPost parent m0 (k:key) m1 =
   /\ extends k.region parent
   /\ HyperStack.fresh_region k.region m0 m1
   /\ contains m1 k.log
-  /\ sel m1 k.log == createEmpty
+  /\ sel m1 k.log == empty
 
 val keygen: parent:rid -> ST key
   (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
@@ -67,7 +67,7 @@ val keygen: parent:rid -> ST key
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region empty in
   Key #region raw log
 
 val encrypt: k:key -> m:msg -> ST cipher

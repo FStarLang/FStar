@@ -163,7 +163,6 @@ val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
-val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
@@ -238,6 +237,8 @@ val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
 val use_nbe                     : unit    -> bool
+val trivial_pre_for_unannotated_effectful_fns
+                                : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

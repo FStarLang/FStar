@@ -351,7 +351,6 @@ let report_errors settings : unit =
                    smt_error
     in
     if Options.detail_errors()
-    && Options.n_cores() = 1
     then let initial_fuel = {
                 settings with query_fuel=Options.initial_fuel();
                               query_ifuel=Options.initial_ifuel();

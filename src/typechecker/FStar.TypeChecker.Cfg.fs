@@ -196,6 +196,18 @@ type debug_switches = {
     print_normalized : bool;
 }
 
+let no_debug_switches = {
+    gen              = false;
+    top              = false;
+    cfg              = false;
+    primop           = false;
+    unfolding        = false;
+    b380             = false;
+    wpe              = false;
+    norm_delayed     = false;
+    print_normalized = false;
+}
+
 type primitive_step = {
      name:Ident.lid;
      arity:int;
@@ -207,12 +219,31 @@ type primitive_step = {
      interpretation_nbe:(NBETerm.nbe_cbs -> NBETerm.args -> option<NBETerm.t>)
 }
 
+(* Primitive step sets. They are represented as a persistent string map *)
+type prim_step_set = BU.psmap<primitive_step>
+
+let empty_prim_steps () : prim_step_set =
+    BU.psmap_empty ()
+
+let add_step (s : primitive_step) (ss : prim_step_set) =
+    BU.psmap_add ss (I.text_of_lid s.name) s
+
+let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
+    BU.psmap_merge s1 s2
+
+let add_steps (m : prim_step_set) (l : list<primitive_step>) : prim_step_set =
+    List.fold_right add_step l m
+
+let prim_from_list (l : list<primitive_step>) : prim_step_set =
+    add_steps (empty_prim_steps ()) l
+(* / Primitive step sets *)
+
 type cfg = {
      steps: fsteps;
      tcenv: Env.env;
      debug: debug_switches;
      delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-     primitive_steps:BU.psmap<primitive_step>;
+     primitive_steps:prim_step_set;
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
@@ -227,19 +258,11 @@ let cfg_to_string cfg =
 
 let cfg_env cfg = cfg.tcenv
 
-let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psmap<primitive_step> =
-    List.fold_right (fun p m -> BU.psmap_add m (I.text_of_lid p.name) p) l m
-
-let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
-    add_steps (BU.psmap_empty ()) l
-
 let find_prim_step cfg fv =
     BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
     BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
-
-
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -269,7 +292,7 @@ let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
     EMB.unembed emb x false EMB.id_norm_cb
 let mk t r = mk t None r
-let built_in_primitive_steps : BU.psmap<primitive_step> =
+let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
     let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char in
@@ -850,7 +873,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
-let equality_ops : BU.psmap<primitive_step> =
+let equality_ops : prim_step_set =
     let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
@@ -919,20 +942,45 @@ let primop_time_report () : string =
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
 
-let plugins =
-  let plugins = BU.mk_ref [] in
+let extendable_primops_dirty : ref<bool> = BU.mk_ref true
+
+let mk_extendable_primop_set () =
+  let steps = BU.mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
-      plugins := p :: !plugins
+      extendable_primops_dirty := true;
+      steps := add_step p !steps
   in
-  let retrieve () = !plugins
+  let retrieve () = !steps
   in
   register, retrieve
+
+let plugins = mk_extendable_primop_set ()
+let extra_steps = mk_extendable_primop_set ()
 
 let register_plugin p = fst plugins p
 let retrieve_plugins () =
     if Options.no_plugins ()
-    then []
+    then empty_prim_steps ()
     else snd plugins ()
+
+let register_extra_step  p  = fst extra_steps p
+let retrieve_extra_steps () = snd extra_steps ()
+
+let cached_steps : unit -> prim_step_set =
+    let memo : ref<prim_step_set> = BU.mk_ref (empty_prim_steps ()) in
+    fun () ->
+      if !extendable_primops_dirty
+      then
+        let steps =
+          merge_steps built_in_primitive_steps
+            (merge_steps (retrieve_plugins ())
+                (retrieve_extra_steps ()))
+        in
+        memo := steps;
+        extendable_primops_dirty := false;
+        steps
+      else
+      !memo
 
 let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strategy
     if Options.use_nbe ()
@@ -949,24 +997,27 @@ let config' psteps s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
+    let steps = to_fsteps s |> add_nbe in
+    let psteps = add_steps (cached_steps ()) psteps in
     {tcenv = e;
-     debug = { gen = Env.debug e (Options.Other "Norm")
+     debug = if Options.debug_any () then
+            { gen = Env.debug e (Options.Other "Norm")
              ; top = Env.debug e (Options.Other "NormTop")
              ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
              ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
-             ; wpe  = Env.debug e (Options.Other "WPE")
+             ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
-     steps = to_fsteps s |> add_nbe ;
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")}
+            else no_debug_switches
+      ;
+     steps = steps;
      delta_level = d;
-     primitive_steps = add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
+     primitive_steps = psteps;
      strong = false;
      memoize_lazy = true;
-     normalize_pure_lets =
-       (Options.normalize_pure_terms_for_extraction()
-        || not (s |> BU.for_some (eq_step PureSubtermsWithinComputations)));
+     normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
      reifying = false}
 
 let config s e = config' [] s e

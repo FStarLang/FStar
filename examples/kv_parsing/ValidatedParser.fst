@@ -371,6 +371,17 @@ let count_entries_example input =
     end;
     r
 
-let count_entries_example' input =
-    let (num_entries, _) = parse_num_entries_valid input in
+(*
+ * AR: 07/11: adding preconditions, cf. 1055
+ *)
+let count_entries_example' input
+  : ST _
+    (requires fun h0 ->
+      live h0 input /\
+      (let bs = as_seq h0 input in
+       Some? (parse_abstract_store bs) /\
+       (let (s, _) = Some?.v (parse_abstract_store bs) in
+        Some? (parse_many parse_entry (U32.v s.num_entries) bs))))
+    (ensures fun _ _ _ -> True)
+  = let (num_entries, _) = parse_num_entries_valid input in
     fold_left_buffer_n_st (fun acc e -> U32.add_mod acc 1ul) (fun acc e -> U32.add_mod acc 1ul) 0ul input num_entries

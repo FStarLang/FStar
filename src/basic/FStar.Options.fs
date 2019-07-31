@@ -204,7 +204,6 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
-      ("n_cores"                      , Int 1);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -265,7 +264,9 @@ let defaults =
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
       ("use_extracted_interfaces"     , Bool false);
-      ("use_nbe"                      , Bool false)]
+      ("use_nbe"                      , Bool false);
+      ("trivial_pre_for_unannotated_effectful_fns"
+                                      , Bool true);]
 
 let parse_warn_error_set_get =
     let r = Util.mk_ref None in
@@ -352,7 +353,6 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_n_cores                 ()      = lookup_opt "n_cores"                  as_int
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
@@ -413,6 +413,8 @@ let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertio
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_trivial_pre_for_unannotated_effectful_fns
+                                ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -676,14 +678,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "detail_errors",
         Const (Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
-         implies n_cores=1");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer");
 
        ( noshort,
         "detail_hint_replay",
         Const (Bool true),
-         "Emit a detailed report for proof whose unsat core fails to replay;
-         implies n_cores=1");
+         "Emit a detailed report for proof whose unsat core fails to replay");
 
        ( noshort,
         "doc",
@@ -832,11 +832,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "MLish",
         Const (Bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-       ( noshort,
-        "n_cores",
-        IntStr "positive_integer", //; detail_errors := false),
-        "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
@@ -1159,8 +1154,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         ( noshort,
          "use_nbe",
           BoolStr,
-         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+         "Use normalization by evaluation as the default normalization strategy (default 'false')");
 
+        ( noshort,
+         "trivial_pre_for_unannotated_effectful_fns",
+          BoolStr,
+         "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
 
         ( noshort,
           "__debug_embedding",
@@ -1252,6 +1251,7 @@ let settable = function
     | "z3rlimit"
     | "z3rlimit_factor"
     | "z3seed"
+    | "trivial_pre_for_unannotated_effectful_fns"
     -> true
 
     | _ -> false
@@ -1507,7 +1507,6 @@ let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
@@ -1575,6 +1574,8 @@ let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
+let trivial_pre_for_unannotated_effectful_fns
+                                 () = get_trivial_pre_for_unannotated_effectful_fns ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors

@@ -538,7 +538,8 @@ let rec go (line_col:(int*int))
         go line_col filename stack curmod tcenv ts
       in
 
-      let frag = {frag_text=text;
+      let frag = {frag_fname="<input>";
+                  frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
       let res = check_frag env curmod frag in begin
@@ -563,7 +564,7 @@ let interactive_mode (filename:string): unit =
   let filenames, maybe_intf, dep_graph = deps_of_our_file filename in
   let env = init_env dep_graph in
   let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let initial_range = Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
   let env =
     match maybe_intf with

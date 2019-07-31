@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "78da64c367e58462e8121b3da0bd3cd7"
+      "ed15fae8159671df979be9799beace17"
     ],
     [
       "Bug1206.ser_id",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "f993b7ed8a8d4a1b86e8fecdf4cde91c"
+      "a9769a0a17c527cce237b93a05a7f1f8"
     ]
   ]
 ]

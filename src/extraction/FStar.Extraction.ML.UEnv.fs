@@ -134,8 +134,8 @@ let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> =
 //TODO: this two-level search is pretty inefficient: we should optimize it
 let lookup_ty_const (env:uenv) ((module_name, ty_name):mlpath) : option<mltyscheme> =
     BU.find_map env.tydefs  (fun tydef ->
-        if module_name = tydef.tydef_mlmodule_name
-        && ty_name = tydef.tydef_name
+        if ty_name = tydef.tydef_name
+        && module_name = tydef.tydef_mlmodule_name
         then Some tydef.tydef_def
         else None)
 
@@ -145,8 +145,8 @@ let maybe_mangle_type_projector (env:uenv) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun tydef ->
-        if tydef.tydef_mlmodule_name = mname
-        && tydef.tydef_name = ty_name
+        if tydef.tydef_name = ty_name
+        && tydef.tydef_mlmodule_name = mname
         then match tydef.tydef_mangled_name with
              | None -> Some (mname, ty_name)
              | Some mangled -> Some (mname, mangled)

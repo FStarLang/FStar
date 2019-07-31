@@ -740,7 +740,7 @@ type constant = (width * Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list * Prims.string)
 type version = Prims.int
-let (current_version : version) = (Prims.parse_int "27") 
+let (current_version : version) = (Prims.of_int (27)) 
 type file = (Prims.string * program)
 type binary_format = (version * file Prims.list)
 let fst3 :
@@ -1093,7 +1093,7 @@ and (translate_let :
               | FStar_Extraction_ML_Syntax.MLE_Fun (args,uu____5220) ->
                   FStar_List.map FStar_Pervasives_Native.fst args
               | uu____5242 -> []  in
-            if (FStar_List.length tvars) = (Prims.parse_int "0")
+            if (FStar_List.length tvars) = Prims.int_zero
             then
               let uu____5250 =
                 let uu____5251 =
@@ -1137,8 +1137,8 @@ and (translate_let :
                let rec find_return_type eff i uu___6_5371 =
                  match uu___6_5371 with
                  | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____5380,eff1,t)
-                     when i > (Prims.parse_int "0") ->
-                     find_return_type eff1 (i - (Prims.parse_int "1")) t
+                     when i > Prims.int_zero ->
+                     find_return_type eff1 (i - Prims.int_one) t
                  | t -> (i, eff, t)  in
                let name1 = ((env2.module_name), name)  in
                let uu____5400 =
@@ -1147,7 +1147,7 @@ and (translate_let :
                   in
                match uu____5400 with
                | (i,eff,t) ->
-                   (if i > (Prims.parse_int "0")
+                   (if i > Prims.int_zero
                     then
                       (let msg =
                          "function type annotation has less arrows than the number of arguments; please mark the return type abbreviation as inline_for_extraction"
@@ -1564,7 +1564,7 @@ and (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
           let uu____6604 = FStar_List.map (translate_type env) args  in
           TTuple uu____6604
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,lid) ->
-          if (FStar_List.length args) > (Prims.parse_int "0")
+          if (FStar_List.length args) > Prims.int_zero
           then
             let uu____6615 =
               let uu____6630 = FStar_List.map (translate_type env) args  in
@@ -2726,7 +2726,7 @@ and (assert_lid : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
     fun t  ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Named (ts,lid) ->
-          if (FStar_List.length ts) > (Prims.parse_int "0")
+          if (FStar_List.length ts) > Prims.int_zero
           then
             let uu____8469 =
               let uu____8484 = FStar_List.map (translate_type env) ts  in
@@ -2870,8 +2870,7 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
             let uu____9051 = FStar_String.list_of_string s  in
             FStar_All.pipe_right uu____9051
               (FStar_Util.for_some
-                 (fun c1  ->
-                    c1 = (FStar_Char.char_of_int (Prims.parse_int "0"))))
+                 (fun c1  -> c1 = (FStar_Char.char_of_int Prims.int_zero)))
              in
           if uu____9049
           then

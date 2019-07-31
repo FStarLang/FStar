@@ -123,11 +123,6 @@ let close_wp_lemma (#a:Type) (#b:Type) (#wp:(b -> GTot (st_wp a))) (#post:post a
   :Lemma (st_close_wp a b wp post m)
   = ()
 
-let assume_p_lemma (#a:Type) (#p:Type) (#wp:st_wp a) (#post:post a) (#m:memory)
-  (_:squash (p ==> wp post m))
-  :Lemma (st_assume_p a p wp post m)
-  = ()
-
 type bdata = int * term
 
 let pointsto_to_bdata (fp_refs:list term) (t:term) : Tac bdata =
@@ -180,7 +175,6 @@ type cmd =
   | Close     : cmd
   | WithFP    : cmd
   | ParWP     : twpa:term -> twpb:term -> th0:term -> cmd
-  | Assume    : cmd
   | Squash    : cmd
   | Implies   : cmd
   | Forall    : cmd
@@ -221,7 +215,6 @@ let peek_in (t:term) : Tac cmd =
      else if fv_is fv (`%st_ite_wp)             then Ite
      else if fv_is fv (`%st_if_then_else)       then IfThenElse
      else if fv_is fv (`%st_close_wp)           then Close
-     else if fv_is fv (`%st_assume_p)           then Assume
      else if fv_is fv (`%squash)                then Squash
      else if fv_is fv (`%l_imp)                 then Implies
      else if fv_is fv (`%l_Forall)              then Forall
@@ -447,11 +440,6 @@ let rec sl (i:int) : Tac unit =
   | Close ->
     apply_lemma (`close_wp_lemma);
     ignore (Tactics.Util.map proc_intro (forall_intros ()));
-    sl (i + 1)
-
-  | Assume ->
-    apply_lemma (`assume_p_lemma);
-    ignore (proc_intro (implies_intro ()));
     sl (i + 1)
 
   | Read ->

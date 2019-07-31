@@ -33,10 +33,10 @@
         "lemma_LowStar.Monotonic.Buffer.modifies_trans_linear",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Integers.Unsigned__0",
-        "refinement_interpretation_Tm_refine_12b2a182780bcecc4f0a7c5e19fc30a3",
+        "refinement_interpretation_Tm_refine_1e3e0aa208dbd196652d50fbf5e53808",
+        "refinement_interpretation_Tm_refine_248a648a446348195d1e7f333011eab4",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Tm_refine_96ee7b243fa463162bc5ae7b49acf9a2",
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "true_interp", "typing_FStar.Seq.Base.create",
         "typing_LowStar.Buffer.trivial_preorder",
@@ -46,7 +46,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "6a2bacd91c9fe7051647ea7a2c4394c9"
+      "d62e9b915272d70d6e84cd755771b0d2"
     ],
     [
       "LowStar.Ex2.prefix_equal",
@@ -54,22 +54,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W32",
-        "equality_tok_FStar.Integers.W32@tok", "equation_FStar.Integers.v",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt32.lte",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Ex2.lbuffer",
         "equation_LowStar.Monotonic.Buffer.length",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Integers.Unsigned__0",
         "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
-        "refinement_interpretation_Tm_refine_8807cc77b6a1b45afbe57dc1caa2253c"
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
       ],
       0,
-      "fd066604ede8b7b14883585d0f296ee7"
+      "6e079aa8c276127298a4905c3141b1fe"
     ],
     [
       "LowStar.Ex2.copy_correct",
@@ -86,9 +82,7 @@
         "equality_tok_FStar.Integers.W32@tok",
         "equality_tok_FStar.Integers.Winfinite@tok",
         "equation_FStar.HyperStack.ST.equal_domains",
-        "equation_FStar.Integers.int", "equation_FStar.Integers.int_t",
-        "equation_FStar.Integers.nat", "equation_FStar.Integers.uint_32",
-        "equation_FStar.Integers.v",
+        "equation_FStar.Integers.int_t", "equation_FStar.Integers.uint_32",
         "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.mem",
@@ -129,29 +123,26 @@
         "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
         "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
         "refinement_interpretation_Tm_refine_096dcb399122345db27f37346c43e5dc",
+        "refinement_interpretation_Tm_refine_16df3af87422f96c20dd0c313ab64b00",
+        "refinement_interpretation_Tm_refine_3b80a9de9cdfae4bf5872bfb10120fa5",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_b19956bfae0655ccba5f3c2047ea166d",
-        "refinement_interpretation_Tm_refine_b68b35499ebe222676fca06e701c3151",
-        "refinement_interpretation_Tm_refine_b87c6130a6862c5a75f4ae11bb49e5fd",
-        "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "refinement_interpretation_Tm_refine_c6c18a7ceb46d419c35ff8551117551e",
+        "refinement_interpretation_Tm_refine_812316291234d8a310a2c87c27bfa989",
+        "refinement_interpretation_Tm_refine_c99b4025e6018cbeec9a97bb9cd21b65",
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
         "refinement_interpretation_Tm_refine_df81b3f17797c6f405c1dbb191651292",
-        "refinement_interpretation_Tm_refine_ef3919256654f6b3ff3f6a54193365a0",
+        "refinement_interpretation_Tm_refine_e41fb2064b7e8eea120c4eaf7117764d",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "true_interp", "typing_FStar.Map.domain",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.UInt32.add", "typing_FStar.UInt32.lte",
-        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
-        "typing_LowStar.Buffer.trivial_preorder",
+        "typing_FStar.UInt32.v", "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.as_seq",
-        "typing_LowStar.Monotonic.Buffer.get",
         "typing_LowStar.Monotonic.Buffer.len",
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "e56b56cf0e686648ac9baa1790f24f9c"
+      "91ffa56a51b422fb9bfbf9c626792a2c"
     ],
     [
       "LowStar.Ex2.swap",
@@ -167,7 +158,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "f7789340e905ad659d35da75f19c0b9c"
+      "23305f12c456a4e7462788f9ca161fe3"
     ],
     [
       "LowStar.Ex2.prefix_equal",
@@ -175,22 +166,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W32",
-        "equality_tok_FStar.Integers.W32@tok", "equation_FStar.Integers.v",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt32.lte",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Ex2.lbuffer",
         "equation_LowStar.Monotonic.Buffer.length",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Integers.Unsigned__0",
         "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
-        "refinement_interpretation_Tm_refine_8807cc77b6a1b45afbe57dc1caa2253c"
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
       ],
       0,
-      "74a1e2798067980570e6792d6d4e0534"
+      "b40ee780eb2c968eeb6d08b34385ce5e"
     ],
     [
       "LowStar.Ex2.copy_correct",
@@ -203,7 +190,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8014412a88186c9c2c448a37fc621749"
+      "f73b130dd80f7b84049ca52cf9ca87c8"
     ]
   ]
 ]

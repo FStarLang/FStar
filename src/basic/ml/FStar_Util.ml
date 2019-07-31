@@ -356,8 +356,7 @@ module StringMap = BatMap.Make(StringOps)
 type 'value smap = 'value StringHashtbl.t
 let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = StringHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) =
-    StringHashtbl.remove m k; StringHashtbl.add m k v
+let smap_add (m:'value smap) k (v:'value) = StringHashtbl.replace m k v
 let smap_of_list (l: (string * 'value) list) =
   let s = StringHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
@@ -389,13 +388,16 @@ let psmap_find_map (m:'value psmap) f =
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
+let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
+  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
+
 module ZHashtbl = BatHashtbl.Make(Z)
 module ZMap = BatMap.Make(Z)
 
 type 'value imap = 'value ZHashtbl.t
 let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
 let imap_clear (s:('value imap)) = ZHashtbl.clear s
-let imap_add (m:'value imap) k (v:'value) = ZHashtbl.add m k v
+let imap_add (m:'value imap) k (v:'value) = ZHashtbl.replace m k v
 let imap_of_list (l: (Z.t * 'value) list) =
   let s = ZHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> imap_add s x y) l;
@@ -482,7 +484,7 @@ let default_printer =
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
-let print_raw s = pr "%s" s; flush stdout
+let print_raw s = set_binary_mode_out stdout true; pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
 let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])

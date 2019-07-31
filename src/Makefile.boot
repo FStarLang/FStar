@@ -44,7 +44,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
-		FStar.JsonHelper FStar.Interactive.Lsp		\
+		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
+		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main
@@ -70,7 +71,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
