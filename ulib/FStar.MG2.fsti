@@ -30,12 +30,6 @@ type cls (aloc: Type) : Type = | Cls:
     (requires (aloc_includes x1 x2 /\ aloc_includes x2 x3))
     (ensures (aloc_includes x1 x3))
   )) ->
-  (aloc_includes_equality: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    Lemma
-    (x1 `aloc_includes` x2 ==> x1 == x2)
-  )) ->
   (aloc_disjoint: (
     (x1: aloc) ->
     (x2: aloc) ->
@@ -46,12 +40,6 @@ type cls (aloc: Type) : Type = | Cls:
     (x2: aloc) ->
     Lemma
     (aloc_disjoint x1 x2 <==> aloc_disjoint x2 x1)
-  )) ->
-  (aloc_disjoint_inequality: (
-    (x1: aloc) ->
-    (x2: aloc) ->
-    Lemma
-    (x1 =!= x2 ==> aloc_disjoint x1 x2)
   )) ->
   (aloc_disjoint_not_includes: (
     (x1: aloc) ->
@@ -393,6 +381,18 @@ val framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h:HS.mem
     (requires (loc_disjoint l l0 /\ loc_includes (loc_used_in c h) l))
     (ensures (loc_disjoint l l1))
   )
+  (aloc_includes_equality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 `c.aloc_includes` x2 ==> x1 == x2)
+  ))
+  (aloc_disjoint_inequality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 =!= x2 ==> c.aloc_disjoint x1 x2)
+  ))
 : Lemma
   ((loc_unused_in c h `loc_union` l0) `loc_includes` (loc_union l0 l1))
 

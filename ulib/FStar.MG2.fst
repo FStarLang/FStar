@@ -389,6 +389,18 @@ let framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h: HS.me
     (requires (loc_disjoint l l0 /\ loc_includes (loc_used_in c h) l))
     (ensures (loc_disjoint l l1))
   )
+  (aloc_includes_equality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 `c.aloc_includes` x2 ==> x1 == x2)
+  ))
+  (aloc_disjoint_inequality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 =!= x2 ==> c.aloc_disjoint x1 x2)
+  ))
 : Lemma
   ((loc_unused_in c h `loc_union` l0) `loc_includes` (loc_union l0 l1)) =
   admit()
