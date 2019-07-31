@@ -272,19 +272,18 @@ let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
 private
 let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
   focus (fun () ->
-    or_else (fun () ->
+    try
       apply_lemma (`(sklem0 (`#(binder_to_term b))));
       if ngoals () <> 1 then fail "no";
       clear b;
       let bx = forall_intro () in
       let b' = implies_intro () in
       sk_binder' (bx::acc) b' (* We might have introduced a new existential, so possibly recurse *)
-    )
-    (fun () -> (acc, b)) (* If the above failed, just return *)
+    with | _ -> (acc, b) (* If the above failed, just return *)
   )
 
 (* Skolemizes a given binder for an existential, returning the introduced new binders
- * and the skolemizes formula. *)
+ * and the skolemized formula. *)
 let sk_binder b = sk_binder' [] b
 
 let skolem () =
