@@ -86,8 +86,79 @@ let reveal_modifies ()
 
 (* State effect indexed by resources *)
 
-let r_pre (res:resource) = imem (inv res) -> Type0
-let r_post res0 a res1 = imem (inv res0) -> x:a -> imem (inv (res1 x)) -> Type0
+let is_subresource_of (r0 r: resource) = exists (r1: resource). r `can_be_split_into` (r0, r1)
+
+let is_subresource_of_elim
+  (r0 r: resource)
+  (goal: Type)
+  (lemma: (r1: resource) -> Lemma (requires (r `can_be_split_into` (r0 , r1))) (ensures goal))
+: Lemma
+  (requires (r0 `is_subresource_of` r))
+  (ensures goal)
+  =
+  let pf: squash (exists (r1: resource). r `can_be_split_into` (r0, r1)) = () in
+  Classical.exists_elim goal #resource #(fun r1 -> r `can_be_split_into` (r0 , r1)) pf (fun r1 ->
+    lemma r1
+  )
+
+let is_subresource_of_intro (r0 r r1: resource) : Lemma
+  (requires (r `can_be_split_into` (r0, r1)))
+  (ensures (r0 `is_subresource_of` r))
+  = ()
+
+let selector r = r0:resource{r0 `is_subresource_of` r} -> GTot r0.t
+
+let mk_selector (r: resource) (h: imem (inv r)) : selector r  =
+  fun (r0:resource{r0 `is_subresource_of` r}) -> r0.view.sel h
+
+let hsprop (r: resource) : Type = selector r -> prop
+
+#push-options "--z3rlimit 30"
+
+let hsrefine (r:resource) (p:hsprop r) : resource =
+  let new_inv (h: HS.mem) = r.view.inv h /\ p (mk_selector r h) in
+  let new_view = { r.view with inv = new_inv } in
+  reveal_view ();
+  let open LowStar.Array in
+  assert(sel_reads_fp new_view.fp new_view.inv new_view.sel);
+  let aux (h0 h1: HS.mem) (loc: loc) : Lemma (
+    new_view.inv h0 /\
+    loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1 ==>
+    new_view.inv h1
+  ) =
+    let aux (_ : squash ( new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1)) : Lemma (new_view.inv h1) =
+      assert(r.view.inv h1);
+      assert(p (mk_selector r h0));
+      assert(r.view.sel h0 == r.view.sel h1);
+      let sel0 = mk_selector r h0 in
+      let sel1 = mk_selector r h1 in
+      let aux (r0: resource{r0 `is_subresource_of` r}) : Lemma (sel0 r0 == sel1 r0) =
+        reveal_can_be_split_into ();
+        assert(r0.view.sel h0 == r0.view.sel h1)
+      in
+      Classical.forall_intro aux;
+      let open FStar.FunctionalExtensionality in
+      let a = r0:resource{r0 `is_subresource_of` r} in
+      let b = fun r0 -> r0.t in
+      let fsel0 : arrow_g a b = sel0 in
+      let fsel1 : arrow_g a b = sel1 in
+      assert(feq_g sel0 sel1);
+      extensionality_g a b sel0 sel1;
+      assume(on_domain_g a fsel0 == fsel0);
+      assume(on_domain_g a fsel1 == fsel1);
+      assert(sel0 == sel1);
+      assert(p sel1)
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro_3 aux;
+  assert(inv_reads_fp new_view.fp new_view.inv);
+  { r with view = new_view }
+
+#pop-options
+
+let r_pre (res:resource) = selector res -> Type0
+let r_post res0 a res1 = selector res0 -> x:a -> selector res1 -> Type0
 
 abstract
 let rst_inv (res:resource) (h:HS.mem) : GTot prop =
