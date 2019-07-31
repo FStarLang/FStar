@@ -134,7 +134,7 @@ let rec sample_inner (t:u32 -> byte) (c:u32) : Tot (lbytes32 c) (decreases (v c)
     let rest = sample_inner t (sub c 1ul) in
     append rest (create 1ul b)
 
-let sample_multiple #s #srel (length:u32) :eff #s srel (lo (lbytes32 length)) =
+let sample_multiple #s #srel (length:u32) : eff #s srel (lo (lbytes32 length)) =
   fun (t, s) ->
   let b_string = sample_inner t length in
   Some b_string, s, length

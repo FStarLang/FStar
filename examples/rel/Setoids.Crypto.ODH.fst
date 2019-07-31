@@ -90,7 +90,9 @@ let odh_module (n:u32) (os:odh_scheme n) (km:module_t (key_write_sig n)) : modul
 
 let odh_functor n os
   : functor_t (key_write_sig n) (odh_sig n)
-  = fun (k:module_t (key_write_sig n)) -> odh_module n os k
+  = fun (k:module_t (key_write_sig n)) ->
+    admit()
+    //odh_module n os k
 
 let odh_composition n os
   : functor_t (key_sig n) (sig_prod (odh_sig n) (key_read_sig n))
@@ -110,7 +112,9 @@ let odh_adversary n = atk (sig_unit) (sig_prod (odh_sig n) (key_read_sig n))
 
 assume val odh_eps: n:u32 -> eps (sig_unit) (sig_prod (odh_sig n) (key_read_sig n))
 
-let odh_functor_rel n : per (functor_t (sig_unit) (sig_prod (odh_sig n) (key_read_sig n))) =
-  fun funct_a funct_b -> True
+let odh_rel n : per (functor_t (sig_unit) (sig_prod (odh_sig n) (key_read_sig n)))  = fun (odh0:functor_t (sig_unit) (sig_prod (odh_sig n) (key_read_sig n))) (odh1:functor_t (sig_unit) (sig_prod (odh_sig n) (key_read_sig n))) ->
+  let odh0_module = odh0 mod_unit in
+  let odh1_module = odh1 mod_unit in
+  sig_rel' (sig_prod (odh_sig n) (key_read_sig n)) odh0_module odh1_module
 
-//let odh_assumption n os = Perfect #(sig_unit) #(sig_prod (odh_sig n) (key_read_sig n)) #(fun _ _ -> True) (odh_game0 n os) (odh_game1 n os) ()
+assume val odh_assumption : n:u32 -> os:odh_scheme n -> eq (odh_rel n) (odh_eps n) (odh_game0 n os) (odh_game1 n os)

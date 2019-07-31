@@ -85,25 +85,25 @@ let dec_t (n:u32) (aes:ae_scheme n) =
 
 let dec0 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (dec_t n aes) =
   fun (c,nonce,h) ->
-  combined_state <-- get ;
-  let ae_st,k_st = combined_state in
-  let k_get : key_get_t n = get_oracle key_module ID_GET in
-  k <-- lift_right (k_get h);
-  let option_p = aes.dec c k nonce in
-  return option_p
+    combined_state <-- get ;
+    let ae_st,k_st = combined_state in
+    let k_get : key_get_t n = get_oracle key_module ID_GET in
+    k <-- lift_right (k_get h);
+    let option_p = aes.dec c k nonce in
+    return option_p
 
 let dec1 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (dec_t n aes) =
   fun (c,nonce,h) ->
-  combined_state <-- get ;
-  let ae_st,k_st : combined_state_t n aes = combined_state in
-  match DM.sel ae_st (h,nonce) with
-  | Some (c',p) -> // Nonce is not unique
-    if c = c' then
-      return (Some p)
-    else
+    combined_state <-- get ;
+    let ae_st,k_st : combined_state_t n aes = combined_state in
+    match DM.sel ae_st (h,nonce) with
+    | Some (c',p) -> // Nonce is not unique
+      if c = c' then
+        return (Some p)
+      else
+        return None
+    | None ->
       return None
-  | None ->
-    return None
 
 type ae_labels =
     | ENC
@@ -120,10 +120,10 @@ let ae_field_rels n aes : (l:ae_labels -> erel (ae_field_types n aes l)) =
         arrow
           (enc_inputs n aes)
           (eff_rel (combined_state_rel n aes) (lo bytes))
-    | DEC ->
-        arrow
-          (dec_inputs n aes)
-          (eff_rel (combined_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length}))))
+    | DEC -> fun _ _ -> True
+        //arrow
+        //  (dec_inputs n aes)
+        //  (eff_rel (combined_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length}))))
 
 let ae_sig (n:u32) (aes:ae_scheme n) = {
     labels = ae_labels;
@@ -145,12 +145,13 @@ let ae1_module (n:u32) (aes:ae_scheme n) (k:module_t (key_read_sig n)) : module_
 let ae0_functor (n:u32) (aes:ae_scheme n)
   : functor_t (key_read_sig n) (ae_sig n aes)
   = fun (k:module_t (key_read_sig n)) ->
-    ae0_module n aes k
+      admit()
+      //ae0_module n aes k
 
 let ae1_functor (n:u32) (aes:ae_scheme n)
   : functor_t (key_read_sig n) (ae_sig n aes)
   = fun (k:module_t (key_read_sig n)) ->
-    ae1_module n aes k
+      ae1_module n aes k
 
 let ae0_composition n (aes:ae_scheme n)
   : functor_t (key_sig n) (sig_prod (key_write_sig n) (ae_sig n aes)) =
@@ -183,4 +184,9 @@ assume val ae_eps: n:u32 -> aes:ae_scheme n -> eps (sig_unit) (sig_prod (key_wri
 let ae_functor_rel n aes : per (functor_t (sig_unit) (sig_prod (key_write_sig n) (ae_sig n aes))) =
   fun funct_a funct_b -> True
 
-let ae_assumption n aes = Perfect #(sig_unit) #(sig_prod (key_write_sig n) (ae_sig n aes)) #(fun _ _ -> True) (ae_game0 n aes) (ae_game1 n aes) ()
+let ae_rel n aes : per (functor_t (sig_unit) (sig_prod (key_write_sig n) (ae_sig n aes)))  = fun (ae0:functor_t (sig_unit) (sig_prod (key_write_sig n) (ae_sig n aes))) (ae1:functor_t (sig_unit) (sig_prod (key_write_sig n) (ae_sig n aes))) ->
+  let ae0_module = ae0 mod_unit in
+  let ae1_module = ae1 mod_unit in
+  sig_rel' (sig_prod (key_write_sig n) (ae_sig n aes)) ae0_module ae1_module
+
+assume val ae_assumption : n:u32 -> aes:ae_scheme n -> eq (ae_rel n aes) (ae_eps n aes) (ae_game0 n aes) (ae_game1 n aes)

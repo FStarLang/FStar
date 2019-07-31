@@ -559,6 +559,9 @@ let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)
       in
       e a'
 
+/// Formulate an assumption as follows:
+/// assume val eq ...
+
 // eq r eps x y
 //    x and y are related by `r`, up to eps
 // Maybe index by the set of hypotheses

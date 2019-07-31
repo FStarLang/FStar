@@ -47,7 +47,12 @@ let pkae_gen n aes (m:ae_odh_module n aes) : pkae_gen_t n aes
     let odh_gen : gen_dh_t n = get_oracle m (Inl GEN_DH) in
     lift_odh_state n aes (odh_gen ())
 
-let pkae_enc_inputs n (aes:ae_scheme n) = quatruple_rel (lo (pkey n)) (lo (pkey n)) (lo nonce) (lo (p:bytes{len p `lte` aes.max_plaintext_length}))
+let pkae_enc_inputs n (aes:ae_scheme n) =
+  quatruple_rel
+    (lo (pkey n))
+    (lo (pkey n))
+    (lo nonce)
+    (lo (p:bytes{len p `lte` aes.max_plaintext_length}))
 
 let pkae_enc_t n aes =
   pkae_enc_inputs n aes
@@ -61,7 +66,12 @@ let pkae_enc n aes (m:ae_odh_module n aes) : pkae_enc_t n aes =
     c <-- lift_ae_state n aes (ae_enc (p,nonce,h));
     return #(pkae_state n aes) #bytes #(pkae_state_rel n aes) c
 
-let pkae_dec_inputs n (aes:ae_scheme n) = quatruple_rel (lo (pkey n)) (lo (pkey n)) (lo nonce) (lo (c:bytes{len c `lte` aes.ciphertext_length aes.max_plaintext_length}))
+let pkae_dec_inputs n (aes:ae_scheme n) =
+  quatruple_rel
+    (lo (pkey n))
+    (lo (pkey n))
+    (lo nonce)
+    (lo (c:bytes{len c `lte` aes.ciphertext_length aes.max_plaintext_length}))
 
 let pkae_dec_t n aes =
   pkae_dec_inputs n aes
@@ -116,7 +126,8 @@ let pkae_module (n:u32) (aes:ae_scheme n) (m:ae_odh_module n aes) : module_t (pk
 let pkae_functor (n:u32) (aes:ae_scheme n)
   : functor_t (sig_prod (odh_sig n) (ae_sig n aes)) (pkae_sig n aes)
   = fun (m:module_t (sig_prod (odh_sig n) (ae_sig n aes))) ->
-      pkae_module n aes m
+      //pkae_module n aes m
+      admit()
 
 ///     ID_WRITE
 ///     -------- o KEY_0
@@ -143,36 +154,51 @@ let key1_id_composition n
 ///   ODH
 ///   ----
 ///   AE_0
-let protocol0_composition n aes
+let protocol0_composition n aes os
   : functor_t (sig_prod (key_write_sig n) (key_read_sig n)) (sig_prod (odh_sig n) (ae_sig n aes)) =
   functor_prod
-    (odh_functor n)
+    (odh_functor n os)
     (ae0_functor n aes)
 
 ///   ODH
 ///   ----
 ///   AE_1
-let protocol1_composition n aes
+let protocol1_composition n aes os
   : functor_t (sig_prod (key_write_sig n) (key_read_sig n)) (sig_prod (odh_sig n) (ae_sig n aes)) =
   functor_prod
-    (odh_functor n)
+    (odh_functor n os)
     (ae1_functor n aes)
 
 ///         ODH    ID_WRITE
 ///  PKAE o ---- o -------- o KEY_0
 ///         AE_0   ID_READ
-let pkae0_composition n aes
+let pkae0_composition n aes os
   : functor_t sig_unit (pkae_sig n aes) =
-    let prot = comp (protocol0_composition n aes) (key0_id_composition n) in
+    let prot = comp (protocol0_composition n aes os) (key0_id_composition n) in
+    comp (pkae_functor n aes) prot
+
+///         ODH    ID_WRITE
+///  PKAE o ---- o -------- o KEY_1
+///         AE_0   ID_READ
+let pkae_intermediate_composition n aes os
+  : functor_t sig_unit (pkae_sig n aes) =
+    let prot = comp (protocol0_composition n aes os) (key1_id_composition n) in
     comp (pkae_functor n aes) prot
 
 ///         ODH    ID_WRITE
 ///  PKAE o ---- o -------- o KEY_1
 ///         AE_1   ID_READ
-let pkae1_composition n aes
+let pkae1_composition n aes os
   : functor_t sig_unit (pkae_sig n aes) =
-    let prot = comp (protocol1_composition n aes) (key0_id_composition n) in
+    let prot = comp (protocol1_composition n aes os) (key0_id_composition n) in
     comp (pkae_functor n aes) prot
+
+let pkae_rel n aes : per (functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes)))  = fun (pkae0:functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes))) (pkae1:functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes))) ->
+  let pkae0_module = pkae0 mod_unit in
+  let pkae1_module = pkae1 mod_unit in
+  sig_rel' (sig_prod (odh_sig n) (ae_sig n aes)) pkae0_module pkae1_module
+
+/// The following doesn't verify. I'm just trying to hint at how I would imagine the proof would go.
 
 /// Proof:
 /// Assumptions:
@@ -184,13 +210,64 @@ let pkae1_composition n aes
 /// ---------------- o KEY_1 =  ---------------- o KEY_1
 ///  AE_0 o ID_READ              AE_1 o ID_READ
 ///
-/// First step: pull ODH assumption to the right and make sure the result is still equal.
-///         ID     ODH o ID_WRITE
-///  PKAE o ---- o --------------- o KEY_0
-///         AE_0      ID_READ
-///
 /// Goal: Show that we can instantiate an eq instance with pkae0 and pkae1
-let pkae_proof (n:u32) (aes:ae_scheme n) : unit =
-  let step1 = comp (pkae_functor n aes) (comp (functor_prod id_func (ae0_functor n aes)) (odh_game0 n)) in
-  assert(step1 == pkae0_composition n aes);
+/// Note, that for the full cryptographic proof, we would have to show `Perfect` equivalence with the actual PKAE security notion, which I have not yet encoded. However, that should be trivial, once we have make the following work.
+let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n) : eq (pkae_rel n aes) (sum (odh_eps n) (ae_eps n aes)) (pkae0_composition n aes os) (pkae1_composition n aes os) =
+  let starting_point = pkae0_composition n aes os in
+/// First step: pull ODH assumption to the right and make sure the result is
+/// still equal. Then idealize ODH and pull it back to the left.
+///         ODH    ID_WRITE
+///  PKAE o ---- o -------- o KEY_0
+///         AE_0   ID_READ
+/// to
+///         ID_ODH     ODH o ID_WRITE
+///  PKAE o ------ o ----------------- o KEY_0
+///         AE_0         ID_READ
+/// to
+///         ID_ODH     ODH o ID_WRITE
+///  PKAE o ------ o ----------------- o KEY_1
+///         AE_0         ID_READ
+/// to
+///         ODH    ID_WRITE
+///  PKAE o ---- o -------- o KEY_1
+///         AE_0   ID_READ
+  let step1_right_side = odh_game0 n os in
+  let step1_left_side = comp (pkae_functor n aes) (functor_prod id_func (ae0_functor n aes)) in
+  // Prove here, that pulling ODH to the right doesn't change anything.
+  let step1a_eq = Perfect #_ #_ #(pkae_rel n aes) starting_point (comp (step1_left_side) (step1_right_side)) () in
+  // Now apply the ODH assumption via the Ctx rule.
+  let step1b_eq = Ctx #_ #_ #(pkae_rel n aes) (odh_assumption n os) step1_left_side in
+  // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
+  let step1_final = pkae_intermediate_composition n aes os in
+  // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
+  let step1_final_eq = Perfect #_ #_ #(pkae_rel n aes) (comp (step1_left_side) (step1_right_side)) step1_final () in
+/// Second step: pull AE assumption to the right and make sure the result is
+/// still equal. Then idealize AE and pull it back to the left.
+///         ODH    ID_WRITE
+///  PKAE o ---- o -------- o KEY_1
+///         AE_0   ID_READ
+/// to
+///         ODH        ID_WRITE
+///  PKAE o ---- o ----------------- o KEY_1
+///         ID_AE    AE_0 o ID_READ
+/// to
+///         ODH        ID_WRITE
+///  PKAE o ---- o ----------------- o KEY_1
+///         ID_AE    AE_1 o ID_READ
+/// to
+///         ODH    ID_WRITE
+///  PKAE o ---- o -------- o KEY_1
+///         AE_1   ID_READ
+  let step2_right_side = ae_game0 n aes in
+  let step2_left_side = comp (pkae_functor n aes) (functor_prod (odh_functor n aes) id_func) in
+  // Prove here, that pulling AE to the right doesn't change anything.
+  let step2a_eq = Perfect #_ #_ #(pkae_rel n aes) step1_final (comp (step2_left_side) (step2_right_side)) () in
+  // Now apply the ODH assumption via the Ctx rule.
+  let step2b_eq = Ctx #_ #_ #(pkae_rel n aes) (ae_assumption n aes) step2_left_side in
+  // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
+  let step2_final = pkae1_composition n aes os in
+  // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
+  let step2_final_eq = Perfect #_ #_ #(pkae_rel n aes) (comp (step2_left_side) (step2_right_side)) step2_final () in
+  // Finally, connect all the created `eq` instances via the `Trans` rule to get the eq from pkae0_composition to pkae1_composition.
+  // ...
   admit()
