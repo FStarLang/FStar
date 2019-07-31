@@ -507,7 +507,7 @@ let module_snd (a:sig) (b:sig)
        m
 
 /// product of functors
-let functor_prod (a0 a1: sig) (b0 b1:sig)
+let functor_prod (#a0 #a1: sig) (#b0 #b1:sig)
                  (fa: functor_t a0 a1)
                  (fb: functor_t b0 b1)
    : functor_t (a0 `sig_prod` b0) (a1 `sig_prod` b1)
@@ -519,7 +519,7 @@ let functor_prod (a0 a1: sig) (b0 b1:sig)
        module_prod a1 b1 ma1 mb1
 
 /// product of functors with a shared input package
-let functor_prod_shared_sig (sig_in: sig) (sig_out_a sig_out_b:sig)
+let functor_prod_shared_sig (#sig_in: sig) (#sig_out_a #sig_out_b:sig)
                  (fa: functor_t sig_in sig_out_a)
                  (fb: functor_t sig_in sig_out_b)
    : functor_t sig_in (sig_out_a `sig_prod` sig_out_b)
