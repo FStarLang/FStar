@@ -25,6 +25,7 @@ let canon () = FStar.Tactics.Canon.canon()
 [@plugin]
 let check_canon () =
     canon ();
+    trivial ();
     or_else qed
             (fun () -> dump "`canon` left the following goals";
                        fail "")
