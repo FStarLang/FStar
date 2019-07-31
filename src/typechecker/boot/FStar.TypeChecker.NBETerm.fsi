@@ -53,7 +53,7 @@ and t
   | Unknown
   | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
-  | Reflect of t
+  | Reflect of (t * t)
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)

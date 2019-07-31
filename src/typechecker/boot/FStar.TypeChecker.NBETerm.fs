@@ -80,7 +80,7 @@ and t
   | Unknown (* For translating unknown types *)
   | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
-  | Reflect of t
+  | Reflect of t * t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
@@ -260,7 +260,7 @@ let rec t_to_string (x:t) =
     let t = fst (t ()) in
     "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
-  | Reflect t -> "Reflect " ^ t_to_string t
+  | Reflect (w, t) -> "Reflect (" ^ t_to_string w ^ ", " ^ t_to_string t ^ ")"
   | Quote _ -> "Quote _"
   | Lazy (BU.Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
   | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)

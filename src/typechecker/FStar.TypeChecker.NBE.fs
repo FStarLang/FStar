@@ -487,18 +487,22 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
 
-    | Tm_app({n=Tm_constant FC.Const_reify},   arg::more::args)
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg::more::args) ->
+    | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args) ->
       let head, _ = U.head_and_args e in
       let head = S.mk_Tm_app head [arg] None e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
 
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) when cfg.reifying ->
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg1::arg2::more::args) ->
+      let head, _ = U.head_and_args e in
+      let head = S.mk_Tm_app head [arg1; arg2] None e.pos in
+      translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
+
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(_, Some (Implicit _)); arg]) when cfg.reifying ->
       let cfg = {cfg with reifying=false} in
       translate cfg bs (fst arg)
 
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
-      Reflect (translate cfg bs (fst arg))
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(w, (Some (Implicit _))); arg]) ->
+      Reflect (translate cfg bs w, translate cfg bs (fst arg))
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.steps.reify_ ->
@@ -879,9 +883,10 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let body = readback cfg (f (mkAccuVar x)) in
       U.refine x body
 
-    | Reflect t ->
+    | Reflect (w, t) ->
+      let w  = readback cfg w in
       let tm = readback cfg t in
-      U.mk_reflect tm
+      U.mk_reflect w tm
 
     | Arrow (f, targs) ->
       let (args_rev, accus_rev) =
