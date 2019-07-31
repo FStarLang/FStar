@@ -2410,6 +2410,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               Inr None
     in
 
+    let maybe_unit (t:term) : term =
+        match (SS.compress t).n with
+        | Tm_name bv ->
+            if U.is_unit bv.sort
+            then U.exp_unit
+            else t
+        | _ -> t
+    in
+
     (* <rigid_rigid_delta>: are t1 and t2, with head symbols head1 and head2, compatible after some delta steps? *)
     let rigid_rigid_delta (env:Env.env) (torig:tprob) (wl:worklist)
                           (head1:term) (head2:term) (t1:term) (t2:term)
@@ -2421,6 +2430,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (Print.term_to_string t1)
                         (Print.term_to_string t2);
+        let t1 = maybe_unit t1 in
+        let t2 = maybe_unit t2 in
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
