@@ -36,9 +36,9 @@ let ptr_read (#a:Type)
            : RST a (ptr_resource ptr)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
-                   (fun h0 x h1 ->
-                      (sel (ptr_view ptr) h0).x == x /\
-                      sel (ptr_view ptr) h0 == sel (ptr_view ptr) h1) =
+                   (fun old x modern ->
+                      (old (ptr_resource ptr)).x == x /\
+                      old (ptr_resource ptr) == modern (ptr_resource ptr)) =
   reveal_ptr();
   A.index ptr 0ul
 
