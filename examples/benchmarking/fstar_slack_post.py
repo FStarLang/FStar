@@ -105,7 +105,7 @@ old_df = old_df.set_index('name')
 change_data = 100.*(new_df['time_secs']-old_df['time_secs'])/old_df['time_secs']
 change_data = change_data.sort_values()
 
-message_str = 'Performance of <%s|%s> [old] compared with <%s|%s> [new]:\n' % (args.github_commit_loc+old_short_hash, old_short_hash, args.github_commit_loc+new_short_hash, new_short_hash)
+message_str = 'Performance of <%s|%s> [new] compared with <%s|%s> [old]:\n' % (args.github_commit_loc+new_short_hash, new_short_hash, args.github_commit_loc+old_short_hash, old_short_hash)
 
 ## calculate top 3 improves, bottom 3 worst
 def long_pre_fn(title, series):
@@ -125,8 +125,8 @@ N = 3
 
 fn = simple_compact_fn
 best_worst_str = ''
-best_worst_str += fn('Best %s changes:'%str(N), change_data.head(N))
-best_worst_str += fn('Worst %s changes:'%str(N), change_data.sort_values(ascending=False).head(N))
+best_worst_str += fn('Best %s changes in runtime:'%str(N), change_data.head(N))
+best_worst_str += fn('Worst %s changes in runtime:'%str(N), change_data.sort_values(ascending=False).head(N))
 print(best_worst_str)
 
 message_str += best_worst_str
@@ -205,6 +205,6 @@ if args.verbose:
     print(message_str)
 
 #post_data_to_webhook(args.url, create_slack_text_message(message_str+full_results_str))
-post_data_to_webhook(args.url, create_slack_attachment_message(fallback='', color=color_code_str, text=message_str+full_results_str, footer=''))
+post_data_to_webhook(args.url, create_slack_attachment_message(fallback='', color=color_code_str, text=message_str+full_results_str, footer='-ve new faster/+ve new slower'))
 
 
