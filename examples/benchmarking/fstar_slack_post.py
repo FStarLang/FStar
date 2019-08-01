@@ -29,17 +29,15 @@ parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
 args = parser.parse_args()
 
-def get_dir_sorted_by_creation(d, filter=None):
+def get_dir_sorted_by_name(d, filter=None):
     xs = os.listdir(d)
     if not filter is None:
         xs = [x for x in xs if filter(x)]
     xs = [os.path.join(d, x) for x in xs]
-    xs = [(x, os.path.getctime(x)) for x in xs]
-    xs = sorted(xs, key=lambda xy: xy[1])
-    return [xy[0] for xy in xs]
+    return sorted(xs)
 
 def get_result_dir_from_run(d):
-    hash_dir = get_dir_sorted_by_creation(
+    hash_dir = get_dir_sorted_by_name(
         d,
         filter=lambda x: not x.startswith('logfile')
     )[-1]
@@ -53,7 +51,7 @@ new_daily_results = get_result_dir_from_run(new_daily_dir)
 
 # figure out the last daily run before new as the base
 new_timestamp = os.path.basename(new_daily_dir)
-old_daily_results = get_dir_sorted_by_creation(
+old_daily_results = get_dir_sorted_by_name(
         os.path.dirname(new_daily_dir),
         filter=lambda x: (not datestamp_pat.match(x) is None) and (x < new_timestamp)
     )[-1]
