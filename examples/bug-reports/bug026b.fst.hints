@@ -1,5 +1,5 @@
 [
-  "\u0017©½=ÊDÁçM>\rúP\u0017FÞ",
+  "q©›pÀ”B‡æP@JÎÕÇð",
   [
     [
       "Bug026b.bar",
@@ -8,19 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0fced0f654d253edfeb08beb576403fb"
-    ],
-    [
-      "Bug026b.bar",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug026b_Tm_refine_908043d23d9b610a14feef808af9da3d"
-      ],
-      0,
-      "bf24e7a1774fbac64dab6c87d545de77"
+      "abb99064bd5f5f18c11813283c7405f7"
     ]
   ]
 ]

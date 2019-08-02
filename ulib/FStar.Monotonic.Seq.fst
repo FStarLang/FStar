@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Monotonic.Seq
 
 open FStar.Seq
@@ -167,11 +182,6 @@ let itest r a k =
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   mr_witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
-               : ST unit (requires (fun _ -> HST.witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
-  let is = alloc_mref_iseq p r init in
-  let h = get () in
-  assert (i_sel h is == init)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Mapping functions over monotone sequences
@@ -184,7 +194,7 @@ let un_snoc #a s =
 val map: ('a -> Tot 'b) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec map f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.snoc (map f prefix) (f last)
 
@@ -282,7 +292,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.append (collect f prefix) (f last)
 
@@ -305,9 +315,7 @@ let collect_grows (f:'a -> Tot (seq 'b))
           let s2_prefix, s2_last = un_snoc s2 in
           collect_grows_aux f s1 s2_prefix
     in
-    //AR: wanted to use move_requires here, but that gives an error, probably because of decreases clause?
-    if StrongExcludedMiddle.strong_excluded_middle (grows s1 s2) then collect_grows_aux f s1 s2
-    else ()
+    Classical.arrow_to_impl #(grows s1 s2) #(grows (collect f s1) (collect f s2)) (fun _ -> collect_grows_aux f s1 s2)
   
 let collect_prefix (#a:Type) (#b:Type) (#i:rid)
 		   (r:m_rref i (seq a) grows)
@@ -365,8 +373,8 @@ type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
          (seqn_val i log max) //never more than the length of the log
 	 increases //increasing
 
-let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
-  : Lemma (stable_on_t l (at_most_log_len x l))
+let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
+  : Lemma (stable_on_t log (at_most_log_len x log))
   = ()
 
 let new_seqn (#a:Type) (#l:rid) (#max:nat)
@@ -381,7 +389,7 @@ let new_seqn (#a:Type) (#l:rid) (#max:nat)
 		   modifies_ref i Set.empty h0 h1 /\
 		   fresh_ref c h0 h1 /\
 		   HS.sel h1 c = init /\
-		   FStar.Map.contains h1.h i))
+		   FStar.Map.contains (HS.get_hmap h1) i))
   = recall log; recall_region i;
     mr_witness log (at_most_log_len init log);
     ralloc i init
@@ -414,4 +422,4 @@ let testify_seqn (#a:Type0) (#i:rid) (#l:rid) (#log:log_t l a) (#max:nat) (ctr:s
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
-  = assert (HS.sel h r = Heap.sel (FStar.Map.sel h.h i) (HS.as_ref r))
+  = assert (HS.sel h r = Heap.sel (FStar.Map.sel (HS.get_hmap h) i) (HS.as_ref r))

@@ -1,9 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Seq.Sorted
 
 open FStar.Seq
 
 type sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a) : Type0 =
-  forall (i j:k:nat{k<length s}). i <= j ==> f (index s i) (index s j)
+  forall (i j: (k:nat{k<length s})). i <= j ==> f (index s i) (index s j)
 
 val sorted_pred_tail :
   #a:eqtype ->
@@ -26,15 +41,15 @@ let rec sorted_pred_sorted_lemma #a f s =
   end
 
 let intro_sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a)
-  ($g:i:nat{i < length s} -> j:nat{j < length s} -> Lemma (requires (i <= j)) (ensures (f (index s i) (index s j))))
+  ($g:(i:nat{i < length s} -> j:nat{j < length s} -> Lemma (requires (i <= j)) (ensures (f (index s i) (index s j)))))
   : Lemma (sorted_pred #a f s)
-= let aux (i j : k:nat{k < length s}) (p:squash (i <= j)) : GTot (squash (f (index s i) (index s j))) =
+= let aux (i j : (k:nat{k < length s})) (p:squash (i <= j)) : GTot (squash (f (index s i) (index s j))) =
     FStar.Squash.give_proof p ;
     g i j ;
     FStar.Squash.get_proof (f (index s i) (index s j))
   in
-  FStar.Classical.forall_intro_2 (fun (i j:k:nat{k < length s}) ->
-    FStar.Classical.arrow_to_impl (aux i j) <: Lemma (i <= j ==> f (index s i) (index s j)))
+  FStar.Classical.forall_intro_2 (fun (i j:(k:nat{k < length s})) ->
+    FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (aux i j)) <: Lemma (i <= j ==> f (index s i) (index s j)))
 
 val sorted_pred_cons_lemma :
   #a:eqtype ->
@@ -42,7 +57,7 @@ val sorted_pred_cons_lemma :
   s:seq a{length s > 1} ->
   Lemma (requires (f (index s 0) (index s 1) /\ sorted_pred #a f (tail s))) (ensures (sorted_pred #a f s))
 let sorted_pred_cons_lemma #a f s =
-  let aux (i j : k:nat{k < length s}) : Lemma (requires (i <= j)) (ensures (f (index s i) (index s j))) =
+  let aux (i j : (k:nat{k < length s})) : Lemma (requires (i <= j)) (ensures (f (index s i) (index s j))) =
     if i = 0 then
       if j = 0 then ()
       else assert (f (index s 0) (index (tail s) 0) /\ f (index (tail s) 0) (index (tail s) (j-1)))
@@ -101,7 +116,7 @@ val sorted_pred_append_lemma :
     (ensures (sorted_pred #a f (append s1 s2)))
 let sorted_pred_append_lemma #a f s1 s2 =
   let s = append s1 s2 in
-  let aux (i j:k:nat{k < length s}) : Lemma (requires (i <= j)) (ensures (f (index s i) (index s j))) =
+  let aux (i j:(k:nat{k < length s})) : Lemma (requires (i <= j)) (ensures (f (index s i) (index s j))) =
     if i < length s1 then
       if j < length s1 then
         assert (f (index s1 i) (index s1 j))

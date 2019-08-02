@@ -1,6 +1,7 @@
-type int8 = int
-type t = int8
-type t' = t
+type int8 = int[@@deriving yojson,show]
+type uint32 = int
+type t = int8[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
            
 let v (x:int8) : Prims.int = Prims.parse_int (string_of_int x)
 
@@ -34,8 +35,9 @@ let lognot (a:int8) : int8 = lnot a
        
 let int_to_int8 (x:Prims.int) = int_of_string (Prims.to_string x) land 255
 
-let shift_right (a:int8) (b:int8) : int8 = a asr b
-let shift_left  (a:int8) (b:int8) : int8 = (a lsl b) land 255
+let shift_right (a:int8) (b:uint32) : int8 = a lsr b
+let shift_left  (a:int8) (b:uint32) : int8 = (a lsl b) land 255
+let shift_arithmetic_right (a:int8) (b:uint32) : int8 = a asr b
 
 (* Comparison operators *)
 let eq (a:int8) (b:int8) : bool = a = b

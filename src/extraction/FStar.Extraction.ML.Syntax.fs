@@ -56,7 +56,7 @@ let fsharpkeywords = [
   "override"; "private"; "public"; "rec"; "return"; "return!";
   "select"; "static"; "struct"; "then"; "to"; "true"; "try";
   "type"; "upcast"; "use"; "use!"; "val"; "void"; "when";
-  "while"; "with"; "yield"; "yield!"; 
+  "while"; "with"; "yield"; "yield!";
   // --mlcompatibility keywords
   "asr"; "land"; "lor";
   "lsl"; "lsr"; "lxor"; "mod"; "sig";
@@ -69,8 +69,8 @@ let fsharpkeywords = [
 ]
 
 let is_reserved k =
-  let reserved_keywords () = 
-      if Options.codegen_fsharp()
+  let reserved_keywords () =
+      if Options.codegen() = Some Options.FSharp
       then fsharpkeywords
       else ocamlkeywords
   in
@@ -79,28 +79,13 @@ let is_reserved k =
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
-type gensym_t = {
-    gensym: unit -> mlident;
-    reset:unit -> unit;
-}
-
-let gs =
-  let ctr = Util.mk_ref 0 in
-  let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)));
-   reset = (fun () -> ctr := 0; incr n_resets)}
-
-let gensym () = gs.gensym()
-let reset_gensym() = gs.reset()
+let gensym () =
+    let i = Ident.next_id() in
+   "_" ^ Util.string_of_int i
 let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
 
-(* -------------------------------------------------------------------- *)
-let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], x.ident.idText)
-    else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
@@ -122,6 +107,7 @@ type mlty =
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
 | MLTY_Top
+| MLTY_Erased //a type that extracts to unit
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
 
@@ -156,8 +142,18 @@ type meta =
   | GCType
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
+  | PpxDerivingYoJson
   | Comment of string
   | StackInline
+  | CPrologue of string
+  | CEpilogue of string
+  | CConst of string
+  | CCConv of string
+  | Erased
+  | CAbstract
+  | CIfDef
+  | CMacro
+  | Deprecated of string
 
 // rename
 type metadata = list<meta>
@@ -245,15 +241,15 @@ type mllib =
 
 (* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
+let ml_unit_ty = MLTY_Erased
 let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Options.codegen_fsharp() 
-                 then "FSharp.Compatibility.OCaml.Obj" 
+    let obj_ns = if Options.codegen() = Some Options.FSharp
+                 then "FSharp.Compatibility.OCaml.Obj"
                  else "Obj" in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
@@ -293,6 +289,12 @@ let bv_as_mlident (x:bv): mlident =
   || is_null_bv x || is_reserved x.ppname.idText
   then avoid_keyword <| x.ppname.idText ^ "_" ^ (string_of_int x.index)
   else avoid_keyword <| x.ppname.idText
+
+(* -------------------------------------------------------------------- *)
+let mlpath_of_lident (x : lident) : mlpath =
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    then ([], x.ident.idText)
+    else (List.map (fun x -> x.idText) x.ns, avoid_keyword x.ident.idText)
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in

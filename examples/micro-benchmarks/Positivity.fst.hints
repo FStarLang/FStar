@@ -1,5 +1,5 @@
 [
-  "‘ðˆÞ&ÀíÜÎ€ÇýÚÐ7Ü",
+  "ïÐÎHÅ³ê1\u0006Ê¥ëè\f‡5",
   [
     [
       "Positivity.mlist",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "d8cc7e54f52a8d6a27b70ed05879ee65"
-    ],
-    [
-      "Positivity.uu___is_MNil",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1535639d28de647ecfa580eb54626ed7"
-    ],
-    [
-      "Positivity.uu___is_MCons",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "52b75b325123227c697ce4a2cd166aa3"
+      "24e40214cc2ff4fcb9ea4b692eecdccc"
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -36,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "36ac444776db6b28b4bbdf615bf2e9a1"
+      "239411f2de6f460faf2111325c55b8fe"
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -49,28 +31,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "51ff7df316f5f32c4a49cf3774bdd5c4"
-    ],
-    [
-      "Positivity.uu___is_NNil",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1db104d0357d79e3fc3be299de64cb1d"
-    ],
-    [
-      "Positivity.uu___is_NCons",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2fba12676903533b521075a07e75adce"
+      "bdc6032d01012868f4a6da84ccd2295e"
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -80,10 +44,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "64235f4806216a9181f95db8afc752fc"
+      "09e9d4ec1e5a68f6b407d881e4c4bcd1"
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -93,10 +57,135 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "40ccf3218b516be5e35d796aac2f3d54"
+      "baa94015e264cee04994e7a35fed5044"
+    ],
+    [
+      "Positivity.l_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "c027d86419c709faf85eb1c6e48ae4ae"
+    ],
+    [
+      "Positivity.essai_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.list__uu___haseq", "equation_Positivity.l_868",
+        "equation_Prims.eqtype",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Positivity.essai_868@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Positivity.l_868"
+      ],
+      0,
+      "7487ac6fc692b87791a5a8bbfb2ee7d8"
+    ],
+    [
+      "Positivity.mlist",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "418a60fab634f20e84fc4311d46206fc"
+    ],
+    [
+      "Positivity.__proj__MCons__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+      ],
+      0,
+      "4fc97eca13b1c6ffca58b866a8bc2b5b"
+    ],
+    [
+      "Positivity.__proj__MCons__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+      ],
+      0,
+      "f5e4da2e924244a29acde49829e3d664"
+    ],
+    [
+      "Positivity.__proj__NCons__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+      ],
+      0,
+      "a37b0300e9683b2d7466f1effe59c21d"
+    ],
+    [
+      "Positivity.__proj__NCons__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+      ],
+      0,
+      "45cb7c478412d9e8ab7744898ee37e46"
+    ],
+    [
+      "Positivity.l_868",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "aa9f5221d637531588548bf2386ca180"
+    ],
+    [
+      "Positivity.essai_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.list__uu___haseq", "equation_Positivity.l_868",
+        "equation_Prims.eqtype",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Positivity.essai_868@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Positivity.l_868"
+      ],
+      0,
+      "d551c69d80af004d3824597befef7491"
     ]
   ]
 ]

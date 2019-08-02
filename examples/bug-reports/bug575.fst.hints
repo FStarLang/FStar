@@ -1,0 +1,303 @@
+[
+  "1øê\u001aˆ∂O™;6Ÿ¬Ñ\u001d\tÈ",
+  [
+    [
+      "Bug575.__proj__Multi_step0__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug575.Multi_step0_x",
+        "projection_inverse_Bug575.Multi_step0_x"
+      ],
+      0,
+      "760d1e5d931638569a9fd5d05b7477b8"
+    ],
+    [
+      "Bug575.__proj__Multi_step__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug575.Multi_step_x",
+        "projection_inverse_Bug575.Multi_step_x"
+      ],
+      0,
+      "52cd8defb77fbbefa323a630460e7e3b"
+    ],
+    [
+      "Bug575.__proj__FRReturn__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug575.FRReturn_x",
+        "projection_inverse_Bug575.FRReturn_x"
+      ],
+      0,
+      "7fe276e7be1315ae7d510e4ff64d4c82"
+    ],
+    [
+      "Bug575.__proj__Refl__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Refl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_0f4f98da9a374e716ef63572d08c0b40"
+      ],
+      0,
+      "3527f7d5c7ff8c0ef759516b8de8ad41"
+    ],
+    [
+      "Bug575.__proj__Step__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_828b4273d72803dc6fce0b89ab2a80ec"
+      ],
+      0,
+      "1c9c257b1632569a828e4799c0d594c2"
+    ],
+    [
+      "Bug575.__proj__Step__item__y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_828b4273d72803dc6fce0b89ab2a80ec"
+      ],
+      0,
+      "ae57e5c37df6ebb8f53fabb539871cfc"
+    ],
+    [
+      "Bug575.__proj__Step__item__z",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_828b4273d72803dc6fce0b89ab2a80ec"
+      ],
+      0,
+      "3c99052da371ae63f3c1b6b67cdfd069"
+    ],
+    [
+      "Bug575.__proj__Step__item__s",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step",
+        "proj_equation_Bug575.Step_x", "proj_equation_Bug575.Step_y",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug575.Step_x",
+        "projection_inverse_Bug575.Step_y",
+        "refinement_interpretation_Tm_refine_828b4273d72803dc6fce0b89ab2a80ec"
+      ],
+      0,
+      "65d75e5078fbfa77603afe7b0ca07412"
+    ],
+    [
+      "Bug575.__proj__Step__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step",
+        "proj_equation_Bug575.Step_y", "proj_equation_Bug575.Step_z",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug575.Step_y",
+        "projection_inverse_Bug575.Step_z",
+        "refinement_interpretation_Tm_refine_828b4273d72803dc6fce0b89ab2a80ec"
+      ],
+      0,
+      "823d713b4166b525f287903c2c758c79"
+    ],
+    [
+      "Bug575.__proj__Refl'__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Refl_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e842d8cdb49263b0948f29d3f459ae2c"
+      ],
+      0,
+      "7a58d68265e1556db1dfd02f1a83f8a9"
+    ],
+    [
+      "Bug575.__proj__Step'__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_61d1ce3e229164ce200b139c126ba8eb"
+      ],
+      0,
+      "d0fea184270f25325586682423dc576e"
+    ],
+    [
+      "Bug575.__proj__Step'__item__y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_61d1ce3e229164ce200b139c126ba8eb"
+      ],
+      0,
+      "9f0fd64d3e591b1989e319c24418ab5c"
+    ],
+    [
+      "Bug575.__proj__Step'__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Step_",
+        "proj_equation_Bug575.Step__x", "proj_equation_Bug575.Step__y",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug575.Step__x",
+        "projection_inverse_Bug575.Step__y",
+        "refinement_interpretation_Tm_refine_61d1ce3e229164ce200b139c126ba8eb"
+      ],
+      0,
+      "ee539832ecbe91f39e93a03d45f987d9"
+    ],
+    [
+      "Bug575.__proj__Trans'__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Trans_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_57dba81f8815aee5a52cbf2979f8572c"
+      ],
+      0,
+      "830ee46183617632c8194920afa68d25"
+    ],
+    [
+      "Bug575.__proj__Trans'__item__y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Trans_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_57dba81f8815aee5a52cbf2979f8572c"
+      ],
+      0,
+      "c9fb99d5444d61a6d8e831ecebe2999e"
+    ],
+    [
+      "Bug575.__proj__Trans'__item__z",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Trans_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_57dba81f8815aee5a52cbf2979f8572c"
+      ],
+      0,
+      "c8136b9d9024dec884f2f0e0a1f60f9a"
+    ],
+    [
+      "Bug575.__proj__Trans'__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Trans_",
+        "proj_equation_Bug575.Trans__x", "proj_equation_Bug575.Trans__y",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug575.Trans__x",
+        "projection_inverse_Bug575.Trans__y",
+        "refinement_interpretation_Tm_refine_57dba81f8815aee5a52cbf2979f8572c"
+      ],
+      0,
+      "0fc6548236f9018426e444b65116b804"
+    ],
+    [
+      "Bug575.__proj__Trans'__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug575.Trans_",
+        "proj_equation_Bug575.Trans__y", "proj_equation_Bug575.Trans__z",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug575.Trans__y",
+        "projection_inverse_Bug575.Trans__z",
+        "refinement_interpretation_Tm_refine_57dba81f8815aee5a52cbf2979f8572c"
+      ],
+      0,
+      "a7de808fe9661786b0120cc2a4e63900"
+    ],
+    [
+      "Bug575.i1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_26ba33b42ecba5e0c420454e72786286_4",
+        "data_elim_Bug575.Refl", "data_elim_Bug575.Step",
+        "disc_equation_Bug575.Refl", "disc_equation_Bug575.Step",
+        "equality_tok_Prims.LexTop@tok",
+        "fuel_guarded_inversion_Bug575.kleene",
+        "subterm_ordering_Bug575.Step"
+      ],
+      0,
+      "435fc1b8ae64ec28e539cbd99edc09c6"
+    ],
+    [
+      "Bug575.trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ce446f9138512fa9c22530c34572a2a7_6",
+        "data_elim_Bug575.Refl", "data_elim_Bug575.Step",
+        "disc_equation_Bug575.Refl", "disc_equation_Bug575.Step",
+        "equality_tok_Prims.LexTop@tok",
+        "fuel_guarded_inversion_Bug575.kleene",
+        "subterm_ordering_Bug575.Step"
+      ],
+      0,
+      "1f41a5f36c82fdf3b066e24dd8d5fe03"
+    ],
+    [
+      "Bug575.i2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1315446970fb4a599af8f8d826d04a3d_4",
+        "data_elim_Bug575.Refl_", "data_elim_Bug575.Step_",
+        "data_elim_Bug575.Trans_", "disc_equation_Bug575.Refl_",
+        "disc_equation_Bug575.Step_", "disc_equation_Bug575.Trans_",
+        "equality_tok_Prims.LexTop@tok",
+        "fuel_guarded_inversion_Bug575.kleene_",
+        "subterm_ordering_Bug575.Trans_"
+      ],
+      0,
+      "e1a2bea2e614d4ed9a7c5dda2b320289"
+    ]
+  ]
+]

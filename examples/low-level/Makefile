@@ -3,7 +3,7 @@ FSTAR_HOME=../..
 # using the hyperstack memory model, ulib/ml/Makefile.include used this variable to use appropriate ST files
 MEM=HST
 
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 FSTAR_ARGS=$(OTHERFLAGS)
@@ -39,11 +39,6 @@ extra:
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
-
-ulib: $(FSTARLIB_DIR)/fstarlib.cmxa
-
-$(FSTARLIB_DIR)/fstarlib.cmxa:
-	make -j 1 -C $(FSTAR_HOME)/ulib/ml MEM=HST clean all
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
@@ -170,7 +165,7 @@ CHACHA_AEAD_ODIR=chacha_aead
 
 chacha-aead-extract: ulib
 	mkdir -p $(CHACHA_AEAD_ODIR)
-	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.Test.fst --odir $(CHACHA_AEAD_ODIR) --__temp_no_proj Crypto.Symmetric.MAC
+	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.Test.fst --odir $(CHACHA_AEAD_ODIR)
 #	@sed -i.bak 's/^let mod.*/ /g' $(CHACHA_AEAD_ODIR)/FStar_UInt.ml ##HACK!--need to fix #310
 
 chacha-aead-compile: chacha-aead-extract
@@ -339,6 +334,5 @@ OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 
 # Cleaning
 clean:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp kremlin *~ *.exe ./crypto/*~

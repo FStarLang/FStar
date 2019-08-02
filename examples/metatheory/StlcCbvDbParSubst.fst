@@ -34,9 +34,10 @@ val shift_up_above : nat -> exp -> Tot exp
 let shift_up_above n e = subst (sub_inc_above n) e
 
 val extend_gen : var -> typ -> env -> Tot env
-let extend_gen x t g y = if y < x then g y
-                         else if y = x then Some t
-                         else g (y-1)
+let extend_gen x t g = if x = 0 then extend t g
+                       else (fun y -> if y < x then g y
+                                   else if y = x then Some t
+                                   else g (y-1))
 
 irreducible val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
@@ -76,8 +77,13 @@ let rec progress #e #t h =
    (it's also a special case of context invariance below) *)
 
 irreducible val typing_extensional : #e:exp -> #g:env -> #t:typ ->
-      h:(typing g e t) -> g':env{feq g g'} -> Tot (typing g' e t)
-let typing_extensional #e #g #t h _ = h
+      h:(typing g e t) -> g':env{feq g g'} -> Tot (typing g' e t) (decreases h)
+let rec typing_extensional #e #g #t h g' =
+  match h with
+  | TyVar x -> TyVar x
+  | TyLam t h -> TyLam t (typing_extensional h (extend t g'))
+  | TyApp h1 h2 -> TyApp (typing_extensional h1 g') (typing_extensional h2 g')
+  | TyUnit -> TyUnit
 
 val appears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec appears_free_in x e =
@@ -265,6 +271,9 @@ val extend_gen_0 : t:typ -> g:env ->
 let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
+let rec extend_gen_typing_conversion (#t:typ) (#g:env) (#e0:exp) (#t0:typ) (h:typing (extend t g) e0 t0)
+  :Tot (typing (extend_gen 0 t g) e0 t0) = h
+
 val preservation : #e:exp -> #t:typ -> h:typing empty e t{Some? (step e)} ->
       Tot (typing empty (Some?.v (step e)) t) (decreases e)
 let rec preservation #e #t h =
@@ -273,6 +282,6 @@ let rec preservation #e #t h =
      then (if is_value e2
            then let TyLam t_x hbody = h1 in
                 (extend_gen_0 t_x empty;
-                 substitution_preserves_typing 0 h2 hbody)
+                 substitution_preserves_typing 0 h2 (extend_gen_typing_conversion hbody))
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2

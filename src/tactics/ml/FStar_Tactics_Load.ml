@@ -20,24 +20,34 @@ let error_message : Dynlink.error -> string =
     | Inconsistent_implementation _ -> "Inconsistent_implementation"
     in s ^ ": " ^ Dynlink.error_message e
 
+let find_taclib () =
+  let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
+  match r with
+  | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
+      String.trim (List.hd stdout)
+  | _ ->
+      FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib"
+
+
 let load_tactic tac =
   let dynlink fname =
     try
+      print_string ("Loading plugin from " ^ fname ^ "\n");
       Dynlink.loadfile fname
     with Dynlink.Error e ->
       failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in
 
   if not !loaded_taclib then begin
-      dynlink (FStar_Options.fstar_home () ^ "/bin/fstar-tactics-lib/fstartaclib.cmxs");
-      loaded_taclib := true
-    end;
+    dynlink (find_taclib () ^ "/fstartaclib.cmxs");
+    loaded_taclib := true
+  end;
   dynlink tac;
   ignore (U.print1 "Dynlinked %s\n" tac)
 
 let load_tactics tacs =
     List.iter load_tactic tacs
 
- let load_tactics_dir dir =
+let load_tactics_dir dir =
     (* Dynlink all .cmxs files in the given directory *)
     Sys.readdir dir
     |> Array.to_list
@@ -45,8 +55,7 @@ let load_tactics tacs =
     |> List.map (fun s -> dir ^ "/" ^ s)
     |> List.iter load_tactic
 
- let compile_modules dir ms =
-   let fs_home = FStar_Options.fstar_home () in
+let compile_modules dir ms =
    let compile m =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
@@ -54,7 +63,8 @@ let load_tactics tacs =
                 @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
-     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
+     (* Note: not useful when in an OPAM setting *)
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/\"" FStar_Options.fstar_bin_directory in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0

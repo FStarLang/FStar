@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bloom
 
 open FStar.All
@@ -8,14 +23,14 @@ open FStar.Seq
 
 open Format
 
-logic type Pos (i: int) = (i > 0)
+type Pos (i: int) = (i > 0)
 type ln_t = ln:uint16{Pos ln}
 type hash = h:seq byte{Seq.length h >= 2}
 type text = seq byte
 type hash_fn = text -> Tot hash
 type bloom (ln:ln_t) = bl:seq bool{Seq.length bl = ln}
 
-logic type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) =
+type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) =
   forall i . (0 <= i && i < ln) ==> ((not (Seq.index bl1 i)) || (Seq.index bl2 i))
 
 val create: ln:ln_t -> Tot (bl:bloom ln)

@@ -1,5 +1,5 @@
 [
-  "zx\rÔQ—\fπ„>\u0018%√3°L",
+  "É‹Õ\t\u0004÷uVÕ‡√û¶+°Ü",
   [
     [
       "Ex04f.append",
@@ -14,7 +14,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9c1f8eb62c8f03fd0fdac232e35fdbc4"
+      "103871ec92e88475ed8705244263ddfa"
     ],
     [
       "Ex04f.reverse",
@@ -29,7 +29,35 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cc0e87e5f80f4a1c8d5378d60c2a80a9"
+      "3916bf1b20a8fbc8c93e5537a3927e43"
+    ],
+    [
+      "Ex04f.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "17de94c776b51d4314b8ac3a10bc59f6"
+    ],
+    [
+      "Ex04f.reverse",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "82385b939dd210b3ca8a29ebc5322fbd"
     ]
   ]
 ]

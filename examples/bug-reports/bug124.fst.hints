@@ -1,18 +1,9 @@
 [
-  "AÆVÊï®&Q×N^YØ¡f\u0004",
+  "<8WË¡'¡ÜìÉœ¦3¾&U",
   [
     [
       "Bug124.test",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3f9d060587ee5a0b925b85989cf45f0a"
-    ],
-    [
-      "Bug124.test",
-      2,
       2,
       1,
       [
@@ -21,25 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "40a77a25148a5295744564a114a058a5"
-    ],
-    [
-      "Bug124.test'",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ea6fe0feb5bcf68a60be115d37a2dd42"
-    ],
-    [
-      "Bug124.test'",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f3ec9fcf2f0480c7cec26612d201cfc2"
+      "207954c575dca6a8a6a71e6d32672f48"
     ]
   ]
 ]

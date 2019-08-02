@@ -24,7 +24,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
-open FStar.ToSyntax.Env
+open FStar.Syntax.DsEnv
 open FStar.Parser.AST
 open FStar.Ident
 
@@ -46,3 +46,7 @@ val add_modul_to_env: Syntax.modul
                     -> module_inclusion_info
                     -> erase_univs:(S.term -> S.term)
                     -> withenv<unit>
+
+val parse_attr_with_list : bool -> S.term -> lident -> option<(list<int>)> * bool
+
+val get_fail_attr : bool -> S.term -> option<(list<int> * bool)>

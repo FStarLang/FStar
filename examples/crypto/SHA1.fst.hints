@@ -1,5 +1,5 @@
 [
-  "ÔLÎ©È’≈a–‰ÿ≈ÅI°\u0019",
+  "1„'\u0019\u0002»™ÿåı\u0007=;Ωß?",
   [
     [
       "SHA1.key",
@@ -10,32 +10,20 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0182ea0904d5a58ed45b16ed3b74b6e1"
+      "3dc39e3b777d4e630608df475957c132"
     ],
     [
       "SHA1.sample",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "7e4da342d207d014c10892375b6e5516"
+      "f7805fcd32b71b2439ba2a1e56e7dc79"
     ],
     [
       "SHA1.sha1",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a56b4558a0f47ac9416d30d516ce8f8f"
-    ],
-    [
-      "SHA1.sha1",
-      2,
       2,
       1,
       [
@@ -43,7 +31,7 @@
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
       ],
       0,
-      "3f41611a4def49878b5d25a780c0256f"
+      "cfce39e8991817d3410362a4f7d525af"
     ],
     [
       "SHA1.hmac_sha1",
@@ -55,7 +43,42 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4012379e6169e4010ac610b25ddfb620"
+      "5c3f106611e3fc15f218f4d3d571f57c"
+    ],
+    [
+      "SHA1.key",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b7daf854f02860d44eb87054a7c2e44f"
+    ],
+    [
+      "SHA1.sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.SHA1",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
+      ],
+      0,
+      "eb4f878879e9ca95596d02671db92a1c"
+    ],
+    [
+      "SHA1.hmac_sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_SHA1.blocksize", "equation_SHA1.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "0f278ef9661c3b7ca221db31ed1781b5"
     ]
   ]
 ]

@@ -1,2 +1,2 @@
-type nonrec float = float
-type double = float
+type double = float[@@deriving yojson,show]
+type float = double[@@deriving yojson,show]

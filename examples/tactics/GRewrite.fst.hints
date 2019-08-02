@@ -1,5 +1,5 @@
 [
-  "«)—¸ò≈M\u007f∞\u0011Vç\u0018#\u0002e",
+  "Ò\bƒê¬IYqüí~÷Â6YA",
   [
     [
       "GRewrite.test_grewrite2",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "a44df98308db9fe7c28416641ebf8edf"
+      "c7915d9399b60fc2bc8b560622280b3c"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "bca38ccc60a3a5af2d328cd1d06407ad"
+      "1384b9130df683a3c7e27a07d48aeb0f"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "8a962a79c982c37f26c1508bd2d00afe"
+      "2cff7a4c0c2aa639c7ae203ac91241e5"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -38,7 +38,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b9b670a5aa4c08d18aa7259fd9f3fc04"
+      "84fc8b58412fd82cd95dd7d5e15efbe7"
     ],
     [
       "GRewrite.test_grewrite4",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "eq2-interp", "equation_Prims.eq2" ],
       0,
-      "55c052b2d4cb3f2a19c48542bd89a52f"
+      "74d722b232bfd7b8e6c13171ec5e8fc9"
     ],
     [
       "GRewrite.test_grewrite5",
@@ -57,20 +57,91 @@
       [
         "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
         "equation_Prims.squash",
-        "refinement_interpretation_GRewrite_Tm_refine_0866e3ea54045c0749975ccf24302e72",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_09041e6fff6fde49ee461fc74c5d26b5",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a63045621014e571e6447de56f339389"
+      "8b5c471245bf74d6a98113557499ef05"
     ],
     [
-      "GRewrite.guard",
+      "GRewrite.test_term_eq",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "true_interp" ],
       0,
-      "2ed6dea6216fdd08b1a9c1e4d0f80806"
+      "07d396631ca7c8c3b74f6c862595330d"
+    ],
+    [
+      "GRewrite.test_grewrite2",
+      5,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "bb268046a3d6723ba80bb9a61cbb7197"
+    ],
+    [
+      "GRewrite.test_grewrite2",
+      6,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "a5d8e40b970740bdc5b4423526ff3036"
+    ],
+    [
+      "GRewrite.test_grewrite2",
+      7,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "19dd4d6f778c7e3257dbc7083521df18"
+    ],
+    [
+      "GRewrite.test_grewrite2",
+      8,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "7bdd0fb61e8fa3474c23caf623525c8f"
+    ],
+    [
+      "GRewrite.test_grewrite4",
+      2,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "e7be6b3c1de5269c1a152dfeb9e721a2"
+    ],
+    [
+      "GRewrite.test_grewrite5",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_09041e6fff6fde49ee461fc74c5d26b5",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "bbf4219aaf98c60e2242cf401c81c7d5"
+    ],
+    [
+      "GRewrite.test_term_eq",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "8dfc6f8f30b1ffa9bec1e468a212837a"
     ]
   ]
 ]

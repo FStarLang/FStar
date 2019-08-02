@@ -1,5 +1,5 @@
 [
-  "\\ë pwÎœAz∂◊ :\u0018r\u000e",
+  "\u0000Ë3iÄù∞ÊÈ~ü\u0017%Â\u0014h",
   [
     [
       "Bug116.__proj__TyAbs__item___3",
@@ -7,14 +7,15 @@
       2,
       1,
       [
-        "@query", "proj_equation_Bug116.TyAbs_e1",
-        "proj_equation_Bug116.TyAbs_g", "proj_equation_Bug116.TyAbs_x",
-        "projection_inverse_Bug116.TyAbs_e1",
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Bug116.rtyping",
+        "proj_equation_Bug116.TyAbs_e1", "proj_equation_Bug116.TyAbs_g",
+        "proj_equation_Bug116.TyAbs_x", "projection_inverse_Bug116.TyAbs_e1",
         "projection_inverse_Bug116.TyAbs_g",
         "projection_inverse_Bug116.TyAbs_x"
       ],
       0,
-      "30d3b5279678f7996471c485b240bb77"
+      "2c110cc1933d3c2313c22ed5de82830c"
     ]
   ]
 ]

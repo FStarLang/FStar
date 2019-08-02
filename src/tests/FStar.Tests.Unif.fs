@@ -30,26 +30,31 @@ let guard_to_string g = match g with
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
+let success = BU.mk_ref true
+
+let fail msg =
+    BU.print_string msg;
+    success := false
+
 let guard_eq i g g' =
     let b, g, g' = match g, g' with
         | Trivial, Trivial -> true, g, g'
         | NonTrivial f, NonTrivial f' ->
-          let f = N.normalize  [N.EraseUniverses] (tcenv()) f in
-          let f' = N.normalize [N.EraseUniverses] (tcenv()) f' in
+          let f = N.normalize  [Env.EraseUniverses] (tcenv()) f in
+          let f' = N.normalize [Env.EraseUniverses] (tcenv()) f' in
           term_eq f f', NonTrivial f, NonTrivial f'
         | _ -> false, g, g' in
-    if not b then
-    let msg =
-        BU.format3 "Test %s failed:\n\t\
+    if not b
+    then fail <| BU.format3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
-                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g) in
-    raise_error (Errors.Fatal_UnexpectedGuard, msg) Range.dummyRange
+                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g);
+    success := !success && b
 
 let unify i x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
     FStar.Main.process_args () |> ignore; //set options
     BU.print2 "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
-    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
+    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) |> Rel.simplify_guard (tcenv()) in
     guard_eq i g.guard_f g';
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
@@ -58,7 +63,7 @@ let should_fail x y =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> failwith (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
+            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
     with Error(e, msg, r) -> BU.print1 "%s\n" msg
 
@@ -73,8 +78,8 @@ let norm t = N.normalize [] (tcenv()) t
 let inst n tm =
    let rec aux out n =
     if n=0 then out
-    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
-         let u, _ = Rel.new_uvar dummyRange [] t in
+    else let t, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange (init()) U.ktype0 in
+         let u, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange (init()) t in
          aux (u::out) (n - 1) in
    let us = aux [] n in
    norm (app tm us), us
@@ -109,7 +114,6 @@ let run_all () =
     unify 4 id id' Trivial; //(NonTrivial (pars "True /\ (forall x. True)"));
 
     //alpha equivalence 2
-
     unify 5 (tc "fun x y -> x")
             (tc "fun a b -> a")
             Trivial;
@@ -152,7 +156,7 @@ let run_all () =
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
     let tm2 = tc ("x:int -> y:int -> bool") in
     unify 11 tm1 tm2
-            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x <==> True)"));
+            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x)"));
 
     let tm1 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
     let tm2 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
@@ -170,12 +174,13 @@ let run_all () =
 
         let l = tc ("fun (p:unit -> Type0) -> p") in
         let unit = tc "()" in
-        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
+        let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
         tm1, tm2
     in
 
-    unify 13 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
+    unify 13 tm1 tm2 Trivial;
 
     let tm1, tm2 =
         let int_typ = tc "int" in
@@ -188,13 +193,16 @@ let run_all () =
 
         let l = tc ("fun (p:pure_post unit) -> p") in
         let unit = tc "()" in
-        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
+        let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
         tm1, tm2
     in
 
-    unify 14 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
+    unify 14 tm1 tm2 Trivial;
 
     Options.__clear_unit_tests();
 
-    BU.print_string "Unifier ok\n"
+    if !success
+    then BU.print_string "Unifier ok\n";
+    !success

@@ -1,77 +1,89 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Sequences
 
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Seq
 
-let is_seq_t t : tactic bool = 
+let is_seq_t t : Tac bool = 
     let hd, args = collect_app t in
-    tseq <-- quote seq; //Somehow, tseq ends up as (seq u#0), when we expect it to be (seq u#?), i.e., a unification variable
-    print ("This is the quoted term: " ^ (term_to_string tseq));;
-    print ("This is hd: " ^ (term_to_string hd));;
-    return (term_eq tseq hd)
+    let tseq = `seq in
+    debug ("This is the quoted term: " ^ (term_to_string tseq));
+    debug ("This is hd: " ^ (term_to_string hd));
+    term_eq tseq hd
 
-let clear_hypothesis (b:binder) : tactic unit = idtac
+let clear_hypothesis (b:binder) : Tac unit = ()
 
-let retain_only (nss:list string) : tactic unit = 
-  prune "";; //removes every top-level assertion which "" as a prefix; so prune everything
-  addns "Prims" ;; //keep prims always
-  _ig <-- mapM addns nss ;  //add back only things in nss
-  return ()
+let retain_only (nss:list string) : Tac unit = 
+  prune ""; //removes every top-level assertion which "" as a prefix; so prune everything
+  addns "Prims" ; //keep prims always
+  let _ig = map addns nss in //add back only things in nss
+  ()
 
 let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
     ()
   
-let prune_for_seq : tactic unit =
-  g <-- cur_env;
-  let bs = binders_of_env g in
+let prune_for_seq () : Tac unit =
+  let e = cur_env () in 
+  let bs = binders_of_env e in
   //prune the local environment
-  _ig <-- mapM (fun b ->
+  let _ = map (fun b ->
     match term_as_formula (type_of_binder b) with
-    | Comp Eq t _ _ ->
-      s <-- is_seq_t t;
-      if s then //this is a sequence equality; keep it
-        idtac
+    | Comp (Eq (Some t)) _ _ ->
+      if is_seq_t t then //this is a sequence equality; keep it
+        ()
       else clear_hypothesis b
-    | _ -> idtac) bs ; 
+    | _ -> ()) bs
+  in
   retain_only ["FStar.Seq"]
   
-let try_unref_eq : tactic unit =
-  g <-- cur_goal; //this is just the goal type
+let try_unref_eq () : Tac unit =
+  let g = cur_goal () in //this is just the goal type
   let f = term_as_formula g in
   match f with
-  | Comp Eq t l r ->
+  | Comp (Eq (Some t)) l r ->
     begin match inspect t with
     | Tv_Refine _ _ ->
-        apply_lemma (quote unrefine_eq_lem);;
+        apply_lemma (`unrefine_eq_lem);
         norm []
     | _ ->
         fail "done"
     end
   | _ -> fail "done"
 
-val sequence_pruning : tactic unit
-let sequence_pruning =
-  norm [] ;; //normalize the current goal
+val sequence_pruning : unit -> Tac unit
+let sequence_pruning () =
+  norm [] ; //normalize the current goal
   // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
-  repeat try_unref_eq;;
-  g <-- cur_goal; //this is just the goal type
-  dump "A";;
+  let _ = repeat try_unref_eq in
+  let g = cur_goal () in
   let f = term_as_formula g in
-  print ("This is the formula: " ^ (formula_to_string f));;
+  debug ("This is the formula: " ^ (formula_to_string f));
   match f with 
-  | Comp Eq t l r ->
-    dump "B";;
+  | Comp (Eq (Some t)) l r ->
     //could use inspect t, but in this case ...
-    b <-- is_seq_t t ; //use double everywhere in monadic notation (TODO)
-    if b
-    then (prune_for_seq ;; 
-          dump "After pruning" ;;
-          apply_lemma (quote lemma_eq_elim)) //ok, we have a sequence equality; we're going to try to process it
+    if is_seq_t t
+    then (prune_for_seq ();
+          (* dump "After pruning" ; *)
+          apply_lemma (`lemma_eq_elim)) //ok, we have a sequence equality; we're going to try to process it
     else fail "Not a sequence" //don't know about this goal, leave it untouched
   | _ -> fail "Not a sequence"
 
-(* tseqthe quoted term    print ("This is the quoted term: " ^ (term_to_string tseq));;     *)
+(* tseqthe quoted term    debug ("This is the quoted term: " ^ (term_to_string tseq));     *)
 
 (* This is a way to match more explicitly on an fvar
     match inspect hd with 
@@ -89,20 +101,20 @@ let sequence_pruning =
 let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}) (l:seq a) (y:nat) =
   assume (y == 17); //I would like to prune this out
   assume (l == snoc s x); //I would like to retain this fact from the local environment
-  assert_by_tactic (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
-                   (or_else sequence_pruning idtac)
+  assert (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
+      by (or_else sequence_pruning idtac)
 
 
 (* ////////////////// *)
 (* 1. We generate this WP for test: *)
 
-(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
-(*                                                   (by_tactic idtac (slice s from to == slice l from to) ==> (p /\ p ==> ...))) *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (with_tactic idtac (slice s from to == slice l from to) /\ *)
+(*                                                   (with_tactic idtac (slice s from to == slice l from to) ==> (p /\ p ==> ...))) *)
 
 (* 2. Then we process this WP *)
 
 (*  a. remove marker in negative position *)
-(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (with_tactic idtac (slice s from to == slice l from to) /\ *)
 (*                                                   (slice s from to == slice l from to ==> (p /\ p ==> ...)) *)
 (*  b. in positive position *)
 

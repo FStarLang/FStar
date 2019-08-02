@@ -72,8 +72,8 @@ assume val recv: unit -> ST message
 
 (* the meaning of MACs, as used in RPC *)
 
-logic type Signal : uint32 -> uint16 -> Type
-opaque logic type req (msg:message) =
+type Signal : uint32 -> uint16 -> Type
+opaque type req (msg:message) =
     (exists s c.   msg = Format.signal s c /\ Signal s c)
 
 let k = keygen req

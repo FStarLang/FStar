@@ -1,14 +1,14 @@
 [
-  "š\u0014ıüÛõBksWpèTæ¬",
+  "„©ÂHß»¼ê;Î‰) …\u0012",
   [
     [
       "Bug238.box",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "equation_Prims.l_False", "false_interp" ],
       0,
-      "ff092db54e7a90c2d88e9d05ee505190"
+      "59c395a9f9284962fd4f70c89bc84d7c"
     ]
   ]
 ]

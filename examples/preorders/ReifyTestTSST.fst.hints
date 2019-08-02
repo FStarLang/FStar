@@ -1,5 +1,5 @@
 [
-  "\\Z¢ °–ê…H´\u0014Ênntk",
+  "twáAb†…˙NÕWØ\fÂ©∞",
   [
     [
       "ReifyTestTSST.older_than_transitive",
@@ -11,7 +11,7 @@
         "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "62b4208a66d0bcaab06303215b47a927"
+      "b0001f86f0ecbf7b3681e8fc189309f6"
     ],
     [
       "ReifyTestTSST.older_than_antisymmetric",
@@ -23,10 +23,10 @@
         "equation_ReifyTestTSST.older_than",
         "equation_ReifyTestTSST.timestamp", "int_inversion",
         "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c15d93ae52cf97fdff3aafa1f1de1746"
+      "6cc52585e6fd6bb0011973304a78c6c9"
     ],
     [
       "ReifyTestTSST.state_rel",
@@ -35,13 +35,15 @@
       1,
       [
         "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_Prims.nat", "equation_ReifyTestTSST.state",
-        "interpretation_ReifyTestTSST_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.nat",
+        "equation_ReifyTestTSST.state",
+        "interpretation_Tm_abs_7ff78844d989c680ed3076243ce490a2",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d6ddff6d90ad98c92688c7d3860095e0"
+      "6ec37355bc8eb93514494d107cbdfa67"
     ],
     [
       "ReifyTestTSST.reify_recall_test",
@@ -49,25 +51,43 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FStar.Preorder.stable", "equation_Prims.nat",
         "equation_ReifyTestTSST.get_timestamp",
         "equation_ReifyTestTSST.older_than", "equation_ReifyTestTSST.state",
         "equation_ReifyTestTSST.state_rel",
         "equation_ReifyTestTSST.timestamp",
-        "function_token_typing_Prims.nat", "int_inversion",
-        "interpretation_ReifyTestTSST_Tm_abs_1661f7094403c88cb824263727456b29",
+        "equation_ReifyTestTSST.witnessed", "int_inversion",
+        "interpretation_Tm_abs_7ff78844d989c680ed3076243ce490a2",
+        "interpretation_Tm_abs_e528333b9d5eec3dd11db629fcea7508",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_ReifyTestTSST.get_state",
         "typing_ReifyTestTSST.get_timestamp"
       ],
       0,
-      "691a20149f3338a5d7e44ef90241013c"
+      "d191e1c4fae88798987be1253c3beb7f"
+    ],
+    [
+      "ReifyTestTSST.state_rel",
+      2,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.nat",
+        "equation_ReifyTestTSST.state",
+        "interpretation_Tm_abs_7ff78844d989c680ed3076243ce490a2",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f1d1ee0804394263a153af4254e37770"
     ]
   ]
 ]

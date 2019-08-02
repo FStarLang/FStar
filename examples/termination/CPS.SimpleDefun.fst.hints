@@ -1,5 +1,5 @@
 [
-  "àÙ€’ò}³Y\u0006“(±èŽDW",
+  "óç8\u0016ÏV\u0006ªÑ'ô,ð;Š6",
   [
     [
       "CPS.SimpleDefun.cont",
@@ -8,25 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4acdc275a00b1121f4418f08476b94dc"
-    ],
-    [
-      "CPS.SimpleDefun.uu___is_C0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "91103f258dbf219a7918781d3794052b"
-    ],
-    [
-      "CPS.SimpleDefun.uu___is_C1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f6c1ce32099650e216ead8aab504df98"
+      "5515950669b18c15ff550653e3b67bbc"
     ],
     [
       "CPS.SimpleDefun.__proj__C1__item___0",
@@ -36,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "1b8b5fbc78a159c1eeb1f982c5a74141"
+      "6a83945e7fd59d40bffd5bfc109d2866"
     ],
     [
       "CPS.SimpleDefun.__proj__C1__item___1",
@@ -49,10 +31,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "351c879933cd12912768d596040ec029"
+      "fccbbac0325b84478cd83e8157d72bd7"
     ],
     [
       "CPS.SimpleDefun.apply",
@@ -61,15 +43,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
         "disc_equation_CPS.SimpleDefun.C0",
         "disc_equation_CPS.SimpleDefun.C1",
-        "fuel_guarded_inversion_CPS.SimpleDefun.cont", "int_inversion",
+        "fuel_guarded_inversion_CPS.SimpleDefun.cont",
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0,
-      "5fd4cb60c32207913c717728b9d1d788"
+      "4b4792e924d9843481398395a7f65b42"
     ],
     [
       "CPS.SimpleDefun.add_cps",
@@ -78,13 +59,83 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "function_token_typing_Prims.__cache_version_number__",
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9c20ad280c4751ce8b56cd62a8e7442a"
+      "fec31a525e2b4da7ca3ceeb1d0198eb8"
+    ],
+    [
+      "CPS.SimpleDefun.cont",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c855c401a35e0650261289d271e2f666"
+    ],
+    [
+      "CPS.SimpleDefun.__proj__C1__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+      ],
+      0,
+      "50ac59a2906a3c033b887ecbbf453ecb"
+    ],
+    [
+      "CPS.SimpleDefun.__proj__C1__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+      ],
+      0,
+      "c16efe5dd72c2f7888d4a3d506788d46"
+    ],
+    [
+      "CPS.SimpleDefun.apply",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
+        "disc_equation_CPS.SimpleDefun.C0",
+        "disc_equation_CPS.SimpleDefun.C1",
+        "fuel_guarded_inversion_CPS.SimpleDefun.cont",
+        "subterm_ordering_CPS.SimpleDefun.C1"
+      ],
+      0,
+      "a6b65cfe85050e45520300fa7b11161c"
+    ],
+    [
+      "CPS.SimpleDefun.add_cps",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "abc3d33692f57109e90dddb2773a09d4"
     ]
   ]
 ]

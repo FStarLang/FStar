@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.DM4F.Continuations
 
 open FStar.FunctionalExtensionality
@@ -88,16 +103,14 @@ let em_wp (a:Type)
           (* 2] the overall result satisfies kspec (R _) _ *)
           (forall (x: either a (a -> Tot False)) (post' : False -> Type0). pbpost x post')
 
-
+//#push-options "--admit_smt_queries true"
 let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
   = fun (kspec : (either a (a -> Tot False)) -> (False -> Tot Type0) -> Tot Type0)
       (k : (x:(either a (a -> Tot False))) -> PURE False (kspec x)) ->
       begin
         let devil (x:a) : Tot False = k (L a (a -> Tot False) x) in
         k (R a (a -> Tot False) devil)
-        //<: PURE False (em_wp kspec)
       end
-
 
 
  let excluded_middle (a:Type)

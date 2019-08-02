@@ -1,34 +1,15 @@
 [
-  "\u0014š/\u001520µö?–ëf0}.<",
+  "¾ærâ\u0013Ý6.¯–\\WlUÐ",
   [
     [
-      "Bug292.shared",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0abeb64cb0602d232d656d2b4bbda4ce"
-    ],
-    [
       "Bug292.triple_a",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9c21308f23ebfa95a39358f3f5180829"
-    ],
-    [
-      "Bug292.triple_a",
-      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
-        "assumption_Prims.HasEq_int", "equation_Bug292.shared",
-        "equation_FStar.Pervasives.Native.fst",
+        "equation_Bug292.shared", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dsnd", "primitive_Prims.op_Addition",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -43,7 +24,7 @@
         "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
       ],
       0,
-      "0af3e5f3cf479982bb0116ab0c08ff26"
+      "c92cbeb1c5ff0b60eba5d9a09e04f828"
     ]
   ]
 ]

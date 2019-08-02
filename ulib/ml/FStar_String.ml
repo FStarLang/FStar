@@ -1,5 +1,6 @@
 let make i c = BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)
 let strcat s t = s ^ t
+let op_Hat s t =  strcat s t
 let split seps s =
   let rec repeat_split acc = function
     | [] -> acc
@@ -16,8 +17,7 @@ let strlen s = length s
 
 let substring s i j =
   BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))
-let sub s i j =
-   substring s i (Z.of_int (BatUTF8.length s - (Z.to_int j) + 1))
+let sub = substring
 
 let get s i = BatUChar.code (BatUTF8.get s (Z.to_int i))
 let collect f s =
@@ -25,7 +25,12 @@ let collect f s =
   BatUTF8.iter (fun c -> r := !r ^ f (BatUChar.code c)) s; !r
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
+let escaped = BatString.escaped
 let index = get
-let sub = substring
+exception Found of int
+let index_of s c =
+    let c = BatUChar.chr c in
+    try let _ = BatUTF8.iteri (fun c' i -> if c = c' then raise (Found i) else ()) s in Z.of_int (-1)
+    with Found i -> Z.of_int i
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))

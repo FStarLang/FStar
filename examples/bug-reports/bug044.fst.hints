@@ -1,5 +1,5 @@
 [
-  "V]ù¶˜¬%ë˙Ë`Á48Wı",
+  "Ü ÿM5B\u0019\bã_√%Ä%\u0005\\",
   [
     [
       "Bug044.nat",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "64c988d9372a6a01b004e90d090080cc"
-    ],
-    [
-      "Bug044.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c7bc05aa6796de02eeb69ead533a3b66"
-    ],
-    [
-      "Bug044.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f1f7586a7665671d1df68ff7da0175ec"
+      "5ead6bfb7b1ea6034c6448d23782f381"
     ],
     [
       "Bug044.__proj__S__item___0",
@@ -36,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug044.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug044_Tm_refine_cb990c8c018df02302626151fc4bc03a"
+        "refinement_interpretation_Tm_refine_cb990c8c018df02302626151fc4bc03a"
       ],
       0,
-      "9a16a50bfaafbc6c159aec7c4f8dcf98"
+      "57238da4cd0533bb563b777f469ffff6"
     ]
   ]
 ]

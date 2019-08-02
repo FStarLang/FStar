@@ -1,0 +1,17 @@
+[
+  "\"E1\u0010V\u0003\u0013\b¹®¸Ÿ§\u0000\u0017ù",
+  [
+    [
+      "DependentSynth.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "ed574615efa9a1f60bd028b6ce5fb30f"
+    ]
+  ]
+]

@@ -1,17 +1,28 @@
 [
-  "(ì€\u0018‡à]œgùÎ€\u001cŸ≤ñ",
+  "ÀÁÉGVó^ﬂ≥¨I\bÃﬂ €",
   [
+    [
+      "FStar.Monotonic.DependentMap.value_of",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.Monotonic.DependentMap.defined",
+        "refinement_interpretation_Tm_refine_29666485b5a0a190c9167fabb9b987b8"
+      ],
+      0,
+      "b7528ec85821b320767f17bc3654358e"
+    ],
     [
       "FStar.Monotonic.DependentMap.contains",
       1,
       2,
       1,
-      [
-        "@query", "b2t_def", "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_FStar.Monotonic.DependentMap.defined"
-      ],
+      [ "@query" ],
       0,
-      "33a8eb56926b9bc75fe293f201c49bef"
+      "b2ecf44d9f1742bc9fe0497a83ce6960"
     ],
     [
       "FStar.Monotonic.DependentMap.alloc",
@@ -20,33 +31,26 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.RRef.rid",
-        "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_b2967d9ab9ba1cfd9fec4aa29b50fa40",
-        "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_ffd890ccd7288c856f2f05ce06687083"
+        "equation_FStar.HyperStack.ST.erid",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_80c1a9e9a59b1f3e9fe89cca8db03bac"
       ],
       0,
-      "f27a02ede2784c773a06b43b96ad5da4"
+      "712a4e164037095cc6820c92ed8fbc19"
     ],
     [
       "FStar.Monotonic.DependentMap.extend",
       1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0,
-      "5ff1109b47d7a8f88ec0a942fc4525e8"
-    ],
-    [
-      "FStar.Monotonic.DependentMap.extend",
-      2,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d26da8773bb21e9f36eb5ac3cf88bdbf"
+      "9acc58e76bac9fe65e6fea4855693073"
     ],
     [
       "FStar.Monotonic.DependentMap.lookup",
@@ -55,14 +59,58 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.Some",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "efb35abc2502a8e1e31db3b64307d9f6"
+      "fb52252569397ffe18bbf23cab87e947"
+    ],
+    [
+      "FStar.Monotonic.DependentMap.forall_t",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.Monotonic.DependentMap.defined"
+      ],
+      0,
+      "e51d07ff1785e8f8af5024562606e444"
+    ],
+    [
+      "FStar.Monotonic.DependentMap.f_opt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f226944a663fface1177be4e60e10698"
+    ],
+    [
+      "FStar.Monotonic.DependentMap.map_f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.erid",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_ecc923c61561a744b55919cb2bbb6591"
+      ],
+      0,
+      "776efe050b8bd4720c498714eccf23dd"
     ]
   ]
 ]

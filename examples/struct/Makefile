@@ -1,7 +1,7 @@
 # Test the 'include' functionality
 
 FSTAR_HOME=../..
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
 # was: $(wildcard *.pos)
 POSTESTS=\

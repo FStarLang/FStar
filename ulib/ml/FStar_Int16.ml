@@ -1,6 +1,7 @@
-type int16 = int
-type t = int16
-type t' = t
+type int16 = int[@@deriving yojson,show]
+type uint32 = int
+type t = int16[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
 
 let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 
@@ -31,8 +32,9 @@ let lognot (a:int16) : int16 = lnot a
        
 let int_to_int16 (x:Prims.int) = int_of_string (Prims.to_string x) land 65535
 
-let shift_right (a:int16) (b:int16) : int16 = a asr b
-let shift_left  (a:int16) (b:int16) : int16 = (a lsl b) land 65535
+let shift_right (a:int16) (b:uint32) : int16 = a lsr b
+let shift_left  (a:int16) (b:uint32) : int16 = (a lsl b) land 65535
+let shift_arithmetic_right (a:int16) (b:uint32) : int16 = a asr b
 
 (* Comparison operators *)
 let eq (a:int16) (b:int16) : bool = a = b

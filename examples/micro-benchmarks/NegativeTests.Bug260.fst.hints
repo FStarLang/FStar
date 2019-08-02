@@ -1,5 +1,5 @@
 [
-  "ƒè:ÓS¸Æ’O2\u001cÏû\u0005Í#",
+  "Ï√˛®M\u0012”ã≥t®MπVp±",
   [
     [
       "NegativeTests.Bug260.pnat",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f6ae4bfc4cff31745d3792be5a5c982a"
-    ],
-    [
-      "NegativeTests.Bug260.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "abe2a2e5314392b10902a0957ffc4990"
-    ],
-    [
-      "NegativeTests.Bug260.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2b748025ed3023f017577694e6aefeee"
+      "53bcd0549648afd6f28c019462037c8e"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -37,19 +19,51 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_NegativeTests.Bug260.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+        "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "5db665dc204b31f840c5019d578c445c"
+      "ada31d16a487909b222f53c770ea0fc5"
     ],
     [
       "NegativeTests.Bug260.validity",
       1,
       2,
       1,
-      [ "@query", "assumption_NegativeTests.Bug260.pnat_haseq" ],
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "2e233bcfe75470a6ab30e51192a012c9"
+      "467a5b33a45fc5da881172bb5f9c38ad"
+    ],
+    [
+      "NegativeTests.Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4722a8e8bff6b3e26656dec71ba2a523"
+    ],
+    [
+      "NegativeTests.Bug260.__proj__S__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Bug260.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+      ],
+      0,
+      "efc085f1f537bc0b7811704550b85518"
+    ],
+    [
+      "NegativeTests.Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
+      0,
+      "7a21c0f350dfd5717ac35519d0f3424a"
     ]
   ]
 ]

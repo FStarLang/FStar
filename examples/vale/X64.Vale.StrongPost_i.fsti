@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module X64.Vale.StrongPost_i
 open X64.Machine_s
 open X64.Vale.State_i
@@ -174,20 +189,20 @@ let rec wp_code (inss : list ins) (post: state -> Type0) (s0:state) : Type0 =
     end
 
 let wp_code_delta = [
-  "X64.Vale.StrongPost_i.wp_code";
-  "X64.Vale.StrongPost_i.all_regs_match";
-  "X64.Vale.StrongPost_i.regs_match";
-  "X64.Vale.StrongPost_i.eval_operand_norm";
-  "X64.Vale.State_i.update_reg";
-  "X64.Vale.State_i.update_mem";
-  "X64.Semantics_s.eval_maddr";
-  "X64.Vale.State_i.__proj__Mkstate__item__regs";
-  "X64.Vale.State_i.__proj__Mkstate__item__ok" ;
-  "X64.Vale.State_i.__proj__Mkstate__item__flags";
-  "X64.Vale.State_i.__proj__Mkstate__item__mem";
-  "X64.Vale.StrongPost_i.valid_operand_norm";
-  "X64.Vale.StrongPost_i.valid_maddr_norm";
-  "X64.Vale.StrongPost_i.augment"
+  `%(wp_code);
+  `%(all_regs_match);
+  `%(regs_match);
+  `%(eval_operand_norm);
+  `%(update_reg);
+  `%(update_mem);
+  `%(eval_maddr);
+  `%(Mkstate?.regs);
+  `%(Mkstate?.ok);
+  `%(Mkstate?.flags);
+  `%(Mkstate?.mem);
+  `%(valid_operand_norm);
+  `%(valid_maddr_norm);
+  `%(augment)
   ]
 
 
@@ -201,7 +216,7 @@ val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit
         mem0 == s0.mem ==>
         s0.ok /\
         eval_code (va_Block (normalize_term (inss_to_codes inss))) s0 sN /\
-        Prims.norm [delta_only wp_code_delta; zeta; iota; primops]
+        norm [delta_only wp_code_delta; zeta; iota; primops]
                    (wp_code (normalize_term inss) (augment sN post)
                      ({ok=ok0; regs=regs0; flags=flags0; mem=mem0})))
 		     

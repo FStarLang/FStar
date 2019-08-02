@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -26,6 +27,9 @@ open FStar.Getopt
 open FStar.BaseTypes
 
 module FC = FStar.Common
+
+let debug_embedding = mk_ref false
+let eager_embedding = mk_ref false
 
 type debug_level_t =
   | Low
@@ -42,22 +46,15 @@ type option_val =
   | List of list<option_val>
   | Unset
 
-//These wrappers provide each constructor with the ML effect
-//They are needed to make type-inference work well with the
-//--eager_inference flag that is used during bootstrapping,
-//which explicitly disables some subtyping/sub-effecting
-let mk_bool   : bool -> option_val = Bool
-let mk_string : string -> option_val = String
-let mk_path   : string -> option_val = Path
-let mk_int    : int -> option_val = Int
-let mk_list   : list<option_val> -> option_val = List
-
-type options =
-    | Set
-    | Reset
-    | Restore
-
-
+type error_flag =
+  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
+  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
+                    //the compiler can progress after reporting them
+  | CError          //CError: these are reported as errors using log_issue
+                    //        but they can be turned into warnings or silenced
+  | CWarning        //CWarning: reported using log_issue as warnings by default;
+                    //          then can be silenced or escalated to errors
+  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -83,27 +80,74 @@ let as_list as_t x =
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
+let as_comma_string_list = function
+  | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
+  | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
+let copy_optionstate m = Util.smap_copy m
 
-let fstar_options : ref<list<optionstate> > = Util.mk_ref []
-let peek () = List.hd !fstar_options
-let pop  () =
+(* The option state is a stack of stacks. Why? First, we need to
+ * support #push-options and #pop-options, which provide the user with
+ * a stack-like option control, useful for rlimits and whatnot. Second,
+ * there's the interactive mode, which allows to traverse a file and
+ * backtrack over it, and must update this state accordingly. So for
+ * instance consider the following code:
+ *
+ *   1. #push-options "A"
+ *   2. let f = ...
+ *   3. #pop-options
+ *
+ * Running in batch mode starts with a singleton stack, then pushes,
+ * then pops. In the interactive mode, say we go over line 1. Then
+ * our current state is a stack with two elements (original state and
+ * state+"A"), but we need the previous state too to backtrack if we run
+ * C-c C-p or whatever. We can also go over line 3, and still we need
+ * to keep track of everything to backtrack. After processing the lines
+ * one-by-one in the interactive mode, the stacks are: (top at the head)
+ *
+ *      (orig)
+ *      (orig + A) (orig)
+ *      (orig)
+ *
+ * No stack should ever be empty! Any of these failwiths should never be
+ * triggered externally. IOW, the API should protect this invariant.
+ *)
+let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
+
+let internal_peek () = List.hd (List.hd !fstar_options)
+let peek () = internal_peek()
+let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
-let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let push () = // already signal-atomic
+    fstar_options := List.map copy_optionstate (List.hd !fstar_options) :: !fstar_options
+
+let internal_pop () =
+    let curstack = List.hd !fstar_options in
+    match curstack with
+    | [] -> failwith "impossible: empty current option stack"
+    | [_] -> false
+    | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
+
+let internal_push () =
+    let curstack = List.hd !fstar_options in
+    let stack' = copy_optionstate (List.hd curstack) :: curstack in
+    fstar_options := stack' :: List.tl !fstar_options
+
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
-    | _::os -> fstar_options := (o::os)
+    | []::_ -> failwith "set on empty current option stack"
+    | (_::tl)::os -> fstar_options := ((o::tl)::os)
+
+let snapshot () = Common.snapshot push fstar_options ()
+let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
-
-let with_saved_options f =
-  push (); let retv = f () in pop (); retv
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
@@ -111,38 +155,46 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 let defaults =
      [
       ("__temp_no_proj"               , List []);
+      ("__temp_fast_implicits"        , Bool false);
+      ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
+      ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
       ("debug_level"                  , List []);
+      ("defensive"                    , String "no");
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
-      ("eager_inference"              , Bool false);
+      ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
       ("fs_typ_app"                   , Bool false);
-      ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
-      ("gen_native_tactics"           , Unset);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("lsp"                          , Bool false);
       ("include"                      , List []);
-      ("indent"                       , Bool false);
+      ("print"                        , Bool false);
+      ("print_in_place"               , Bool false);
+      ("profile"                      , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
+      ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
@@ -151,11 +203,14 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
-      ("n_cores"                      , Int 1);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
+      ("no_smt"                       , Bool false);
+      ("no_plugins"                   , Bool false);
       ("no_tactics"                   , Bool false);
+      ("normalize_pure_terms_for_extraction"
+                                      , Bool false);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -175,9 +230,15 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("smtencoding.valid_intro"      , Bool true);
+      ("smtencoding.valid_elim"       , Bool false);
+      ("tactics_failhard"             , Bool false);
+      ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
+
+      ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -196,10 +257,33 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool false);
+      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "")]
+      ("__tactics_nbe"                , Bool false);
+      ("warn_error"                   , List []);
+      ("use_extracted_interfaces"     , Bool false);
+      ("use_nbe"                      , Bool false);
+      ("trivial_pre_for_unannotated_effectful_fns"
+                                      , Bool true);]
+
+let parse_warn_error_set_get =
+    let r = Util.mk_ref None in
+    let set (f:(string -> list<error_flag>)) =
+        match !r with
+        | None -> r := Some f
+        | _ -> failwith "Multiple initialization of FStar.Options"
+    in
+    let get () =
+        match !r with
+        | Some f -> f
+        | None ->
+          failwith "FStar.Options is improperly initialized"
+    in
+    set, get
+
+let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
+let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
    let o = peek () in
@@ -208,7 +292,7 @@ let init () =
 
 let clear () =
    let o = Util.smap_create 50 in
-   fstar_options := [o];                                 //clear and reset the options stack
+   fstar_options := [[o]];                               //clear and reset the options stack
    light_off_files := [];
    init()
 
@@ -222,36 +306,43 @@ let get_option s =
 let lookup_opt s c =
   c (get_option s)
 
+let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
+let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
-let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
+let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
-let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
-let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
-let get_indent                  ()      = lookup_opt "indent"                   as_bool
+let get_print                   ()      = lookup_opt "print"                    as_bool
+let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
+let get_profile                 ()      = lookup_opt "profile"                  as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
@@ -260,10 +351,13 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_n_cores                 ()      = lookup_opt "n_cores"                  as_int
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
+let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
+let get_normalize_pure_terms_for_extraction
+                                ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
@@ -282,9 +376,15 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
+let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
+let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"  as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
+let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
+let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
+let get_tactics_nbe             ()      = lookup_opt "__tactics_nbe"            as_bool
+let get_tcnorm                  ()      = lookup_opt "tcnorm"                   as_bool
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
@@ -308,7 +408,11 @@ let get_z3seed                  ()      = lookup_opt "z3seed"                   
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
-let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
+let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
+let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_trivial_pre_for_unannotated_effectful_fns
+                                ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -333,7 +437,7 @@ let universe_include_path_base_dirs =
 let _version = FStar.Util.mk_ref ""
 let _platform = FStar.Util.mk_ref ""
 let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref "<not set>"
 let _commit = FStar.Util.mk_ref ""
 
 let display_version () =
@@ -368,13 +472,14 @@ let mk_spec o : opt =
 
 let accumulated_option name value =
     let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
-    mk_list (value :: prev_values)
+    List (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    mk_list ((lookup_opt name as_list') @ [value])
+    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    List (prev_values @ [value])
 
 let accumulate_string name post_processor value =
-    set_option name (accumulated_option name (mk_string (post_processor value)))
+    set_option name (accumulated_option name (String (post_processor value)))
 
 let add_extract_module s =
     accumulate_string "extract_module" String.lowercase s
@@ -423,16 +528,16 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
     match typ with
     | Const c -> c
     | IntStr _ -> (match safe_int_of_string str_val with
-                  | Some v -> mk_int v
+                  | Some v -> Int v
                   | None -> raise (InvalidArgument opt_name))
-    | BoolStr -> mk_bool (if str_val = "true" then true
+    | BoolStr -> Bool (if str_val = "true" then true
                          else if str_val = "false" then false
                          else raise (InvalidArgument opt_name))
-    | PathStr _ -> mk_path str_val
-    | SimpleStr _ -> mk_string str_val
-    | EnumStr strs -> if List.mem str_val strs then mk_string str_val
+    | PathStr _ -> Path str_val
+    | SimpleStr _ -> String str_val
+    | EnumStr strs -> if List.mem str_val strs then String str_val
                      else raise (InvalidArgument opt_name)
-    | OpenEnumStr _ -> mk_string str_val
+    | OpenEnumStr _ -> String str_val
     | PostProcessed (pp, elem_spec) -> pp (parse_opt_val opt_name elem_spec str_val)
     | Accumulated elem_spec -> let v = parse_opt_val opt_name elem_spec str_val in
                               accumulated_option opt_name v
@@ -472,10 +577,19 @@ let pp_validate_dir p =
   p
 
 let pp_lowercase s =
-  mk_string (String.lowercase (as_string s))
+  String (String.lowercase (as_string s))
+
+let abort_counter : ref<int> =
+    mk_ref 0
 
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
+        "abort_on",
+        PostProcessed ((function Int x -> abort_counter := x; Int x
+                               | x -> failwith "?"), IntStr "non-negative integer"),
+        "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
+
+      ( noshort,
         "admit_smt_queries",
         BoolStr,
         "Admit SMT queries, unsafe! (default 'false')");
@@ -485,9 +599,15 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         SimpleStr "[symbol|(symbol, id)]",
         "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
+       ( noshort,
+         "already_cached",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tExpects all modules whose names or namespaces match the provided options \n\t\t\t\
+         to already have valid .checked files in the include path");
+
       ( noshort,
         "cache_checked_modules",
-        Const (mk_bool true),
+        Const (Bool true),
         "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
 
       ( noshort,
@@ -496,9 +616,19 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Read and write .checked and .checked.lax in directory <dir>");
 
       ( noshort,
+        "cache_off",
+        Const (Bool true),
+        "Do not read or write any .checked files");
+
+      ( noshort,
+        "cmi",
+        Const (Bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
+
+      ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"],
-        "Generate code for execution");
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
+        "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
         "codegen-lib",
@@ -515,9 +645,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
         "Control the verbosity of debugging info");
 
+       (noshort,
+        "defensive",
+        EnumStr ["no"; "warn"; "fail"],
+        "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
+         if 'no', no checks are performed\n\t\t\
+         if 'warn', checks are performed and raise a warning when they fail\n\t\t\
+         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         (default 'no')");
+
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"; "full"],
+        EnumStr ["make"; "graph"; "full"; "raw"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
@@ -525,19 +664,17 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "detail_errors",
-        Const (mk_bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
-         implies n_cores=1");
+        Const (Bool true),
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer");
 
        ( noshort,
         "detail_hint_replay",
-        Const (mk_bool true),
-         "Emit a detailed report for proof whose unsat core fails to replay;
-         implies n_cores=1");
+        Const (Bool true),
+         "Emit a detailed report for proof whose unsat core fails to replay");
 
        ( noshort,
         "doc",
-        Const (mk_bool true),
+        Const (Bool true),
          "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
@@ -545,10 +682,10 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Accumulated (SimpleStr "module_name"),
         "");
 
-       ( noshort,
-        "eager_inference",
-        Const (mk_bool true),
-        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+       (noshort,
+        "eager_subtyping",
+        Const (Bool true),
+        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
        ( noshort,
          "extract",
@@ -575,22 +712,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "expose_interfaces",
-        Const (mk_bool true),
+        Const (Bool true),
         "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
 
        ( noshort,
-        "fstar_home",
-        PathStr "dir",
-        "Set the FSTAR_HOME variable to <dir>");
-
-       ( noshort,
-         "gen_native_tactics",
-         PathStr "[path]",
-        "Compile all user tactics used in the module in <path>");
-
-       ( noshort,
         "hide_uvar_nums",
-        Const (mk_bool true),
+        Const (Bool true),
         "Don't print unification variable numbers");
 
        ( noshort,
@@ -600,18 +727,23 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "hint_info",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print information regarding hints (deprecated; use --query_stats instead)");
 
        ( noshort,
         "in",
-        Const (mk_bool true),
+        Const (Bool true),
         "Legacy interactive mode; reads input from stdin");
 
        ( noshort,
         "ide",
-        Const (mk_bool true),
+        Const (Bool true),
         "JSON-based interactive mode for IDEs");
+
+       ( noshort,
+        "lsp",
+        Const (Bool true),
+        "Language Server Protocol-based interactive mode for IDEs");
 
        ( noshort,
         "include",
@@ -619,9 +751,19 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "A directory in which to search for files included on the command line");
 
        ( noshort,
-        "indent",
-        Const (mk_bool true),
-        "Parses and outputs the files on the command line");
+        "print",
+        Const (Bool true),
+        "Parses and prettyprints the files included on the command line");
+
+       ( noshort,
+        "print_in_place",
+        Const (Bool true),
+        "Parses and prettyprints in place the files included on the command line");
+
+       ( noshort,
+        "profile",
+        Const (Bool true),
+        "Prints timing information for various operations in the compiler");
 
        ( noshort,
         "initial_fuel",
@@ -634,8 +776,13 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Number of unrolling of inductive datatypes to try at first (default 1)");
 
        ( noshort,
+        "keep_query_captions",
+        BoolStr,
+        "Retain comments in the logged SMT queries (requires --log_queries; default true)");
+
+       ( noshort,
         "lax",
-        Const (mk_bool true),
+        Const (Bool true),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
@@ -645,12 +792,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "log_types",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print types computed for data/val/let-bindings");
 
        ( noshort,
         "log_queries",
-        Const (mk_bool true),
+        Const (Bool true),
         "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
@@ -670,17 +817,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "MLish",
-        Const (mk_bool true),
+        Const (Bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
 
        ( noshort,
-        "n_cores",
-        IntStr "positive_integer", //; detail_errors := false),
-        "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
-
-       ( noshort,
         "no_default_includes",
-        Const (mk_bool true),
+        Const (Bool true),
         "Ignore the default module search paths");
 
        ( noshort,
@@ -690,8 +832,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "no_location_info",
-        Const (mk_bool true),
+        Const (Bool true),
         "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
+
+       ( noshort,
+        "no_smt",
+        Const (Bool true),
+        "Do not send any queries to the SMT solver, and fail on them instead");
+
+       ( noshort,
+        "normalize_pure_terms_for_extraction",
+        Const (Bool true),
+        "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
 
        ( noshort,
         "odir",
@@ -705,47 +857,47 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "print_bound_var_types",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print the types of bound variables");
 
        ( noshort,
         "print_effect_args",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print inferred predicate transformers for all computation types");
 
        ( noshort,
         "print_full_names",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print full names of variables");
 
        ( noshort,
         "print_implicits",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print implicit arguments");
 
        ( noshort,
         "print_universes",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print universes");
 
        ( noshort,
         "print_z3_statistics",
-        Const (mk_bool true),
-        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
+        Const (Bool true),
+        "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
 
        ( noshort,
         "prn",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "query_stats",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print SMT query statistics");
 
        ( noshort,
         "record_hints",
-        Const (mk_bool true),
+        Const (Bool true),
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
@@ -755,8 +907,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "silent",
-        Const (mk_bool true),
-        " ");
+        Const (Bool true),
+        "Disable all non-critical output");
 
        ( noshort,
         "smt",
@@ -785,14 +937,34 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                if 'native', use '+, -, -'; \n\t\t\
                (default 'boxwrap')");
 
+       (noshort,
+        "smtencoding.valid_intro",
+        BoolStr,
+        "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
+
+       (noshort,
+        "smtencoding.valid_elim",
+        BoolStr,
+        "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
+
        ( noshort,
         "tactic_raw_binders",
-        Const (mk_bool true),
+        Const (Bool true),
         "Do not use the lexical scope of tactics to improve binder names");
 
        ( noshort,
+        "tactics_failhard",
+        Const (Bool true),
+        "Do not recover from metaprogramming errors, and abort if one occurs");
+
+       ( noshort,
+        "tactics_info",
+        Const (Bool true),
+        "Print some rough information on tactics, such as the time they take to run");
+
+       ( noshort,
         "tactic_trace",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
 
        ( noshort,
@@ -801,44 +973,54 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Trace tactics up to a certain binding depth");
 
        ( noshort,
+        "__tactics_nbe",
+        Const (Bool true),
+        "Use NBE to evaluate metaprograms (experimental)");
+
+       ( noshort,
+        "tcnorm",
+        BoolStr,
+        "Attempt to normalize definitions marked as tcnorm (default 'true')");
+
+       ( noshort,
         "timing",
-        Const (mk_bool true),
+        Const (Bool true),
         "Print the time it takes to verify each top-level definition");
 
        ( noshort,
         "trace_error",
-        Const (mk_bool true),
+        Const (Bool true),
         "Don't print an error message; show an exception trace instead");
 
       ( noshort,
         "ugly",
-        Const (mk_bool true),
+        Const (Bool true),
         "Emit output formatted for debugging");
 
        ( noshort,
         "unthrottle_inductives",
-        Const (mk_bool true),
+        Const (Bool true),
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
         "unsafe_tactic_exec",
-        Const (mk_bool true),
+        Const (Bool true),
         "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
          using this option can have disastrous effects.");
 
        ( noshort,
         "use_eq_at_higher_order",
-        Const (mk_bool true),
+        Const (Bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
 
        ( noshort,
         "use_hints",
-        Const (mk_bool true),
+        Const (Bool true),
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
         "use_hint_hashes",
-        Const (mk_bool true),
+        Const (Bool true),
         "Admit queries if their hash matches the hash recorded in the hints database");
 
        ( noshort,
@@ -847,13 +1029,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Use compiled tactics from <path>");
 
        ( noshort,
+        "no_plugins",
+        Const (Bool true),
+        "Do not run plugins natively and interpret them as usual instead");
+
+       ( noshort,
         "no_tactics",
-        Const (mk_bool true),
+        Const (Bool true),
         "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
          "using_facts_from",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
+         ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
          For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
@@ -881,15 +1068,20 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Accumulated (SimpleStr "module_name"),
         "Don't generate projectors for this module");
 
+       ( noshort,
+        "__temp_fast_implicits",
+        Const (Bool true),
+        "Don't use this option yet");
+
        ( 'v',
          "version",
          WithSideEffect ((fun _ -> display_version(); exit 0),
-                         (Const (mk_bool true))),
+                         (Const (Bool true))),
          "Display version number");
 
        ( noshort,
          "warn_default_effects",
-         Const (mk_bool true),
+         Const (Bool true),
          "Warn when (a -> b) is desugared to (a -> Tot b)");
 
        ( noshort,
@@ -899,7 +1091,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "z3refresh",
-        Const (mk_bool true),
+        Const (Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
@@ -920,30 +1112,57 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "use_two_phase_tc",
         BoolStr,
-        "Use the two phase typechecker (default 'false')");
+        "Use the two phase typechecker (default 'true')");
 
        ( noshort,
         "__no_positivity",
-        Const (mk_bool true),
+        Const (Bool true),
         "Don't check positivity of inductive types");
 
        ( noshort,
         "__ml_no_eta_expand_coertions",
-        Const (mk_bool true),
+        Const (Bool true),
         "Do not eta-expand coertions in generated OCaml");
 
         ( noshort,
         "warn_error",
-        SimpleStr (""),
+        Accumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.");
 
+        ( noshort,
+         "use_extracted_interfaces",
+          BoolStr,
+         "Extract interfaces from the dependencies and use them for verification (default 'false')");
+
+        ( noshort,
+         "use_nbe",
+          BoolStr,
+         "Use normalization by evaluation as the default normalization strategy (default 'false')");
+
+        ( noshort,
+         "trivial_pre_for_unannotated_effectful_fns",
+          BoolStr,
+         "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
+
+        ( noshort,
+          "__debug_embedding",
+           WithSideEffect ((fun _ -> debug_embedding := true),
+                           (Const (Bool true))),
+          "Debug messages for embeddings/unembeddings of natively compiled terms");
+
+       ( noshort,
+        "eager_embedding",
+         WithSideEffect ((fun _ -> eager_embedding := true),
+                          (Const (Bool true))),
+        "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
-                                (Const (mk_bool true))),
+                                (Const (Bool true))),
         "Display this information")]
 
 and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
@@ -951,29 +1170,36 @@ and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode 
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
            (specs_with_types ())
 
-//Several options can only be set at the time the process is created, and not controlled interactively via pragmas
-//Additionaly, the --smt option is a security concern
+// Several options can only be set at the time the process is created,
+// and not controlled interactively via pragmas.
+// Additionaly, the --smt option is a security concern.
 let settable = function
-    | "admit_smt_queries"
+    | "abort_on"
     | "admit_except"
+    | "admit_smt_queries"
     | "debug"
     | "debug_level"
+    | "defensive"
     | "detail_errors"
     | "detail_hint_replay"
-    | "eager_inference"
+    | "eager_subtyping"
     | "hide_uvar_nums"
-    | "hint_info"
     | "hint_file"
+    | "hint_info"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
     | "load"
-    | "log_types"
     | "log_queries"
+    | "log_types"
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
-    | "ugly"
+    | "no_plugins"
+    | "__no_positivity"
+    | "normalize_pure_terms_for_extraction"
+    | "no_smt"
+    | "no_tactics"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_full_names"
@@ -982,68 +1208,61 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
+    | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
-    | "smtencoding.nl_arith_repr"
     | "smtencoding.l_arith_repr"
-    | "timing"
-    | "trace_error"
-    | "unthrottle_inductives"
-    | "use_eq_at_higher_order"
-    | "no_tactics"
+    | "smtencoding.nl_arith_repr"
+    | "smtencoding.valid_intro"
+    | "smtencoding.valid_elim"
     | "tactic_raw_binders"
+    | "tactics_failhard"
+    | "tactics_info"
+    | "__tactics_nbe"
     | "tactic_trace"
     | "tactic_trace_d"
+    | "tcnorm"
+    | "__temp_fast_implicits"
     | "__temp_no_proj"
-    | "reuse_hint_for"
-    | "warn_error"
-    | "z3rlimit_factor"
-    | "z3rlimit"
-    | "z3refresh"
+    | "timing"
+    | "trace_error"
+    | "ugly"
+    | "unthrottle_inductives"
+    | "use_eq_at_higher_order"
     | "use_two_phase_tc"
-    | "vcgen.optimize_bind_as_seq" -> true
+    | "using_facts_from"
+    | "vcgen.optimize_bind_as_seq"
+    | "warn_error"
+    | "z3cliopt"
+    | "z3refresh"
+    | "z3rlimit"
+    | "z3rlimit_factor"
+    | "z3seed"
+    | "trivial_pre_for_unannotated_effectful_fns"
+    -> true
+
     | _ -> false
 
-// the first two options below are options that are passed to z3 using
-// command-line arguments;
-// using_facts_from requires pruning the Z3 context.
-// All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
-let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let display_usage () = display_usage_aux (specs())
 
-let fstar_home () =
-    match get_fstar_home() with
-    | None ->
-      let x = Util.get_exec_dir () in
-      let x = x ^ "/.." in
-      // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", mk_string x);
-      x
-    | Some x ->
-      x
+let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
-let set_options o s =
-    let specs = match o with
-        | Set -> settable_specs
-        | Reset -> resettable_specs
-        | Restore -> all_specs in
+let set_options s =
     try
         if s = ""
         then Success
-        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+        else Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s
     with
-      | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
@@ -1060,7 +1279,7 @@ let restore_cmd_line_options should_clear =
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
     let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    set_option' ("verify_module", List (List.map mk_string old_verify_module));
+    set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
 let module_name_of_file_name f =
@@ -1076,7 +1295,9 @@ let should_verify m =
 
 let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
-let dont_gen_projectors m = List.contains m (get___temp_no_proj())
+let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
+
+let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
 
 let should_print_message m =
     if should_verify m
@@ -1084,29 +1305,53 @@ let should_print_message m =
     else false
 
 let include_path () =
+  let cache_dir =
+    match get_cache_dir() with
+    | None -> []
+    | Some c -> [c]
+  in
   if get_no_default_includes() then
-    get_include()
+    cache_dir @ get_include()
   else
-    let h = fstar_home () in
-    let defs = universe_include_path_base_dirs in
-    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let lib_paths =
+        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        | None ->
+          let fstar_home = fstar_bin_directory ^ "/.."  in
+          let defs = universe_include_path_base_dirs in
+          defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
+        | Some s -> [s]
+    in
+    cache_dir @ lib_paths @ get_include() @ [ "." ]
 
-let find_file filename =
-  if Util.is_path_absolute filename then
-    if Util.file_exists filename then
-      Some filename
-    else
-      None
-  else
-    (* In reverse, because the last directory has the highest precedence. *)
-    Util.find_map (List.rev (include_path ())) (fun p ->
-      let path =
-        if p = "." then filename
-        else Util.join_paths p filename in
-      if Util.file_exists path then
-        Some path
-      else
-        None)
+let find_file =
+  let file_map = FStar.Util.smap_create 100 in
+  fun filename ->
+     match Util.smap_try_find file_map filename with
+     | Some f -> f
+     | None ->
+       let result =
+          (try
+              if Util.is_path_absolute filename then
+                if Util.file_exists filename then
+                  Some filename
+                else
+                  None
+              else
+                (* In reverse, because the last directory has the highest precedence. *)
+                Util.find_map (List.rev (include_path ())) (fun p ->
+                  let path =
+                    if p = "." then filename
+                    else Util.join_paths p filename in
+                  if Util.file_exists path then
+                    Some path
+                  else
+                    None)
+           with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
+                  None)
+       in
+       if Option.isSome result
+       then Util.smap_add file_map filename result;
+       result
 
 let prims () =
   match get_prims() with
@@ -1149,64 +1394,112 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+//   --already_cached
+let path_of_text text = String.split ['.'] text
+
 let parse_settings ns : list<(list<string> * bool)> =
+    let cache = Util.smap_create 31 in
+    let with_cache f s =
+      match Util.smap_try_find cache s with
+      | Some s -> s
+      | None ->
+        let res = f s in
+        Util.smap_add cache s res;
+        res
+    in
     let parse_one_setting s =
         if s = "*" then ([], true)
+        else if s = "-*" then ([], false)
         else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+        then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
         else let s = if FStar.Util.starts_with s "+"
                      then FStar.Util.substring_from s 1
                      else s in
-             (FStar.Ident.path_of_text s, true)
+             (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-          FStar.Util.split s " "
-          |> List.map parse_one_setting)
-       |> List.rev
+      let s = FStar.Util.trim_string s in
+      if s = "" then []
+      else with_cache (fun s ->
+             let s = FStar.Util.replace_char s ' ' ',' in
+             FStar.Util.splitlines s
+             |> List.concatMap (fun s -> FStar.Util.split s ",")
+             |> List.filter (fun s -> s <> "")
+             |> List.map parse_one_setting) s)
+             |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
+let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
-let codegen                      () = get_codegen                     ()
+let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
+type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+let codegen                      () =
+    Util.map_opt
+           (get_codegen())
+           (function
+            | "OCaml" -> OCaml
+            | "FSharp" -> FSharp
+            | "Kremlin" -> Kremlin
+            | "Plugin" -> Plugin
+            | _ -> failwith "Impossible")
+
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
-let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
+let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
+let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let defensive                    () = get_defensive () <> "no"
+let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
-let dump_module                  s  = get_dump_module() |> List.contains s
-let eager_inference              () = get_eager_inference             ()
+let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
+let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
-let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
-                                    || get_query_stats                 ()
+                                    || get_query_stats                ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
-let indent                       () = get_indent                      ()
+let print                        () = get_print                       ()
+let print_in_place               () = get_print_in_place              ()
+let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
+    if get_profile()
+    then let a, time = Util.record_time f in
+         Util.print2 "Elapsed time %s ms: %s\n"
+                     (Util.string_of_int time)
+                     (msg a);
+         a
+    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
+let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
+let keep_query_captions          () = log_queries                     ()
+                                    && get_keep_query_captions        ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
-let no_extract                   s  = let s = String.lowercase s in
-    get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
+let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
+let normalize_pure_terms_for_extraction
+                                 () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
+let no_plugins                   () = get_no_plugins                  ()
+let no_smt                       () = get_no_smt                      ()
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
@@ -1215,7 +1508,6 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
-                                    || get_query_stats                ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
@@ -1226,9 +1518,15 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
+let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
+let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
+let tactics_failhard             () = get_tactics_failhard            ()
+let tactics_info                 () = get_tactics_info                ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
+let tactics_nbe                  () = get_tactics_nbe                 ()
+let tcnorm                       () = get_tcnorm                      ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
@@ -1256,31 +1554,66 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
+                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = get_warn_error                  ()
+let warn_error                   () = String.concat "" (get_warn_error ())
+let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+let use_nbe                      () = get_use_nbe                     ()
+let trivial_pre_for_unannotated_effectful_fns
+                                 () = get_trivial_pre_for_unannotated_effectful_fns ()
+
+let with_saved_options f =
+  // take some care to not mess up the stack on errors
+  // (unless we're trying to track down an error)
+  // TODO: This assumes `f` does not mess with the stack!
+  if not (trace_error ()) then begin
+      push ();
+      let r = try Inr (f ()) with | ex -> Inl ex in
+      pop ();
+      match r with
+      | Inr v  -> v
+      | Inl ex -> raise ex
+  end else begin
+      push ();
+      let retv = f () in
+      pop ();
+      retv
+  end
+
+let module_matches_namespace_filter m filter =
+    let m = String.lowercase m in
+    let setting = parse_settings filter in
+    let m_components = path_of_text m in
+    let rec matches_path m_components path =
+        match m_components, path with
+        | _, [] -> true
+        | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
+        | _ -> false
+    in
+    match setting
+          |> Util.try_find
+              (fun (path, _) -> matches_path m_components path)
+    with
+    | None -> false
+    | Some (_, flag) -> flag
+
 
 let should_extract m =
     let m = String.lowercase m in
     match get_extract() with
     | Some extract_setting -> //new option, using --extract '* -FStar' etc.
-      let _ = match get_no_extract(), get_extract_namespace(), get_extract_module () with
-              | [], [], [] -> ()
-              | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
+      let _ =
+        match get_no_extract(),
+              get_extract_namespace(),
+              get_extract_module ()
+        with
+        | [], [], [] -> ()
+        | _ -> failwith "Incompatible options: \
+                        --extract cannot be used with \
+                        --no_extract, --extract_namespace or --extract_module"
       in
-      let setting = parse_settings extract_setting in
-      let m_components = Ident.path_of_text m in
-      let rec matches_path m_components path =
-          match m_components, path with
-          | _, [] -> true
-          | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
-          | _ -> false
-      in
-      begin
-      match setting |> Util.try_find (fun (path, _) -> matches_path m_components path) with
-      | None -> false
-      | Some (_, flag) -> flag
-      end
+      module_matches_namespace_filter m extract_setting
     | None -> //old
         let should_extract_namespace m =
             match get_extract_namespace () with
@@ -1297,5 +1630,19 @@ let should_extract m =
         | [], [] -> true //neither is set
         | _ -> should_extract_namespace m || should_extract_module m)
 
-let codegen_fsharp () =
-    codegen() = Some "FSharp"
+let should_be_already_cached m =
+  match get_already_cached() with
+  | None -> false
+  | Some already_cached_setting ->
+    module_matches_namespace_filter m already_cached_setting
+
+let error_flags =
+    let cache : Util.smap<list<error_flag>> = Util.smap_create 10 in
+    fun () ->
+        let we = warn_error() in
+        match Util.smap_try_find cache we with
+        | None ->
+          let r = parse_warn_error we in
+          Util.smap_add cache we r;
+          r
+        | Some r -> r

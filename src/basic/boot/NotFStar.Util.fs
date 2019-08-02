@@ -25,6 +25,7 @@ open System.IO.Compression
 open System.Security.Cryptography
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Json
+open System.Text.RegularExpressions
 
 let return_all x = x
 
@@ -48,6 +49,14 @@ exception HardError of string
 
 let max_int = System.Int32.MaxValue
 
+// Interrupts are only handled in OCaml
+exception SigInt
+type sigint_handler = { placeholder: unit } // F* doesn't want hidden abbreviations
+let sigint_ignore = { placeholder = () }
+let sigint_raise = { placeholder = () }
+let with_sigint_handler (_: sigint_handler) f = f ()
+let set_sigint_handler (_: sigint_handler) = ()
+
 type proc = {m:Object;
              outbuf:StringBuilder;
              proc:Process;
@@ -62,15 +71,26 @@ let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
 let monitor_pulse m = System.Threading.Monitor.Pulse(m)
 let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
 let sleep n = System.Threading.Thread.Sleep(0+n)
+let with_monitor m f x =
+    try
+        System.Threading.Monitor.Enter(m);
+        f x
+    finally
+        System.Threading.Monitor.Exit(m)
 let atomically (f:unit -> 'a) =
-    System.Threading.Monitor.Enter(global_lock);
-    let result = f () in
-    System.Threading.Monitor.Exit(global_lock);
-    result
+    with_monitor global_lock f ()
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+// https://stackoverflow.com/questions/5510343/escape-command-line-arguments-in-c-sharp
+let quote_arg arg =
+  let arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1$1\" + "\"") in
+  "\"" + Regex.Replace(arg, @"(\\+)$", @"$1$1") + "\""
+
+let quote_args args =
+  String.concat " " (List.map quote_arg args)
+
+let start_process (id:string) (prog:string) (args: list<string>) (cond:string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -84,30 +104,30 @@ let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:strin
                         id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
 
     startInfo.FileName <- prog;
-    startInfo.Arguments <- args;
+    startInfo.Arguments <- quote_args args;
     startInfo.UseShellExecute <- false;
     startInfo.RedirectStandardOutput <- true;
+    startInfo.RedirectStandardError <- true;
     startInfo.RedirectStandardInput <- true;
     proc.EnableRaisingEvents <- true;
-    proc.OutputDataReceived.AddHandler(
-            DataReceivedEventHandler(
-                fun _ args ->
-                    if !killed then ()
-                    else
-                        ignore <| driverOutput.Append(args.Data);
-                        if not raw then (
-                            ignore <| driverOutput.Append("\n");
-                            if null = args.Data
-                                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                        );
-                        if null = args.Data || cond id args.Data
-                        then
-                            System.Threading.Monitor.Enter(signal);
-                            ignore (proc_wrapper.outbuf.Clear());
-                            ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
-                            ignore (driverOutput.Clear());
-                            System.Threading.Monitor.Pulse(signal);
-                            System.Threading.Monitor.Exit(signal)));
+    let handler _ (args:DataReceivedEventArgs) =
+        if !killed then ()
+        else
+            ignore <| driverOutput.Append(args.Data);
+            ignore <| driverOutput.Append("\n");
+            if null = args.Data
+                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+            if null = args.Data || cond args.Data
+            then
+                System.Threading.Monitor.Enter(signal);
+                ignore (proc_wrapper.outbuf.Clear());
+                ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
+                ignore (driverOutput.Clear());
+                System.Threading.Monitor.Pulse(signal);
+                System.Threading.Monitor.Exit(signal);
+    in
+    proc.OutputDataReceived.AddHandler(DataReceivedEventHandler handler);
+    proc.ErrorDataReceived.AddHandler(DataReceivedEventHandler handler);
     proc.Exited.AddHandler(
             EventHandler(fun _ _ ->
             if !killed then ()
@@ -121,12 +141,13 @@ let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:strin
     proc.StartInfo <- startInfo;
     proc.Start() |> ignore;
     proc.BeginOutputReadLine();
+    proc.BeginErrorReadLine();
     all_procs := proc_wrapper::!all_procs;
 //        Printf.printf "Started process %s\n" (proc.id);
     proc_wrapper
 let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int
 
-let ask_process (p:proc) (input:string) : string =
+let ask_process (p:proc) (input:string) (exn_handler: unit -> string): string =
     System.Threading.Monitor.Enter(p.m);
     //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
     //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
@@ -152,15 +173,10 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
-let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process raw id prog args cond in
-  let output = ask_process proc input in
-  kill_process proc; output
-
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
-let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
-  let pinfo = new ProcessStartInfo(name, args) in
+let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<string>) : string =
+  let pinfo = new ProcessStartInfo(prog, quote_args args) in
   pinfo.RedirectStandardOutput <- true;
   pinfo.RedirectStandardError <- true;
   pinfo.UseShellExecute <- false;
@@ -168,10 +184,11 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let proc = new Process() in
   proc.StartInfo <- pinfo;
   let result = proc.Start() in
-  proc.StandardInput.Write(stdin);
+  (match stdin with Some s -> proc.StandardInput.Write(s) | None -> ());
+  proc.StandardInput.Close();
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in
-  result, stdout, stderr
+  stdout ^ stderr
 
 let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)
@@ -185,6 +202,17 @@ let read_line (s:stream_reader) =
     if is_end_of_stream s
     then None
     else Some <| s.ReadLine()
+
+open FStar.String
+
+let nread (s:stream_reader) (count:int) =
+    if is_end_of_stream s
+    then None
+    else
+      let b = Array.create count 'a' in
+      s.Read(b, 0, count) |> ignore;
+      Some <| string_of_list (List.of_array b)
+
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()
 let clear_string_builder (s:string_builder) = s.Clear() |> ignore
@@ -193,6 +221,7 @@ let string_builder_append (s: string_builder) (t:string) = s.Append t |> ignore
 
 let message_of_exn (e:exn) = e.Message
 let trace_of_exn (e:exn) = e.StackTrace
+let stack_dump () = (System.Diagnostics.StackTrace ()).ToString ()
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
 let set_is_empty ((s, _):set<'a>) =
@@ -205,12 +234,12 @@ let new_set (cmp:'a -> 'a -> int) : set<'a> = as_set [] cmp
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
-        | [] -> out
+        | [] -> List.rev_append out []
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
                     else aux (hd::out) tl in
    aux [] s1
-let set_add a ((s, b):set<'a>) = (a::s, b)
+let set_add a ((s, b):set<'a>) = (s@[a], b)
 let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):set<'a>) = List.exists (b a) s
 let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = (s1@s2, b)//set_elements (s1,b)@set_elements (s2,b), b)
@@ -218,44 +247,49 @@ let set_intersect ((s1, eq):set<'a>) ((s2, _):set<'a>) = List.filter (fun y -> L
 let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y -> List.exists (eq y) s2) s1
 let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+let set_symmetric_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> =
+    set_union (set_difference (s1, eq) (s2, eq))
+              (set_difference (s2, eq) (s1, eq))
+let set_eq ((s1, eq):set<'a>) ((s2, _):set<'a>) : bool =
+    set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
 
 (* fifo_set is implemented with the same underlying representation as sets         *)
 (* (i.e. a list + equality) and the invariant that "insertion order" is preserved. *)
 (* The convention is that the first element in insertion order is at the end of the*)
 (* underlying list.                                                                *)
-type fifo_set<'a> = set<'a>
-
-let fifo_set_is_empty ((s, _):fifo_set<'a>) =
-    match s with
-    | [] -> true
-    | _ -> false
-
-let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    (l, fun x y -> cmp x y = 0)
-
-let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    as_fifo_set [] cmp
-
-(* The input list [s1] is in reverse order and we need to keep only the last       *)
-(* occurence of each elements in s1. Note that accumulating over such elements     *)
-(* will reverse the order of the input list so that we obtain back the insertion   *)
-(* order.                                                                          *)
-let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
-   let rec aux out = function
-        | [] -> out
-        | hd::tl -> if List.exists (eq hd) out
-                    then aux out tl
-                    else aux (hd::out) tl
-   in
-   aux [] s1
-let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
-let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
-let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
-let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
-let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
-  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+//type fifo_set<'a> = set<'a>
+//
+//let fifo_set_is_empty ((s, _):fifo_set<'a>) =
+//    match s with
+//    | [] -> true
+//    | _ -> false
+//
+//let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    (l, fun x y -> cmp x y = 0)
+//
+//let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    as_fifo_set [] cmp
+//
+//(* The input list [s1] is in reverse order and we need to keep only the last       *)
+//(* occurence of each elements in s1. Note that accumulating over such elements     *)
+//(* will reverse the order of the input list so that we obtain back the insertion   *)
+//(* order.                                                                          *)
+//let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
+//   let rec aux out = function
+//        | [] -> out
+//        | hd::tl -> if List.exists (eq hd) out
+//                    then aux out tl
+//                    else aux (hd::out) tl
+//   in
+//   aux [] s1
+//let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
+//let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
+//let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
+//let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
+//let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
+//let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
+//  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 type System.Collections.Generic.Dictionary<'K, 'V> with
   member x.TryFind(key) =
@@ -284,6 +318,9 @@ let smap_copy (m:smap<'value>) =
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
 let smap_size (m:smap<'value>) = m.Count
+let smap_iter<'a> (m: smap<'a>) (f: string -> 'a -> unit) =
+  for i in m  do
+    f i.Key i.Value
 
 type psmap<'value> = Collections.Map<string,'value>
 let psmap_empty (_: unit) : psmap<'value> = Collections.Map.empty
@@ -292,6 +329,17 @@ let psmap_find_default (map: psmap<'value>) (key: string) (dflt: 'value) =
   match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
 let psmap_try_find (map: psmap<'value>) (key: string) =
   Collections.Map.tryFind key map
+let psmap_fold (m:psmap<'value>) f a =
+  Collections.Map.fold (fun acc k v -> f k v acc) a m
+let psmap_find_map (m:psmap<'value>) f =
+  Collections.Map.tryPick f m
+let psmap_modify (m:psmap<'value>) (k: string) (upd: option<'value> -> 'value) =
+  Collections.Map.add k (upd <| Collections.Map.tryFind k m) m
+let psmap_merge (m1:psmap<'value>) (m2:psmap<'value>) =
+  (* Slow :(, but there doesn't seem to be a primitive for it:
+   * https://github.com/fsharp/fslang-suggestions/issues/560
+   *)
+  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
 
 type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
 let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
@@ -321,6 +369,8 @@ let pimap_find_default (map: pimap<'value>) (key: int) (dflt: 'value) =
   match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
 let pimap_try_find (map: pimap<'value>) (key: int) =
   Collections.Map.tryFind key map
+let pimap_fold (m:pimap<'value>) f a =
+  Collections.Map.fold (fun acc k v -> f k v acc) a m
 
 let format (fmt:string) (args:list<string>) =
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
@@ -522,14 +572,6 @@ let try_find_index f l = List.tryFindIndex f l
 
 let sort_with f l = List.sortWith f l
 
-let set_eq f l1 l2 =
-  let eq x y = f x y = 0 in
-  let l1 = sort_with f l1 |> remove_dups eq in
-  let l2 = sort_with f l2 |> remove_dups eq in
-  if List.length l1 <> List.length l2
-  then false
-  else List.forall2 eq l1 l2
-
 let bind_opt opt f =
     match opt with
     | None -> None
@@ -688,7 +730,10 @@ let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
   close_file fh
+let copy_file source_fn dest_fn = System.IO.File.Copy(source_fn, dest_fn)
 let flush_file (fh:file_handle) = fh.Flush()
+let delete_file (fn:string) =
+  System.IO.File.Delete fn
 let file_get_contents f =
   File.ReadAllText f
 let mkdir clean dname =
@@ -716,7 +761,9 @@ let get_exec_dir () =
     Path.GetDirectoryName(asm.Location)
 
 let expand_environment_variable s =
-  System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
+  let s = "%"^s^"%" in
+  let t = System.Environment.ExpandEnvironmentVariables s in
+  if s=t then None else Some t
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
@@ -794,11 +841,22 @@ let getcwd () =
 let readdir d =
   List.ofArray (System.IO.Directory.GetFiles d)
 
+let paths_to_same_file f g =
+    let path1 = Path.GetFullPath f in
+    let path2 = Path.GetFullPath g in
+    path1=path2
+
 let file_exists f =
   System.IO.File.Exists f || System.IO.Directory.Exists f
 
+let is_directory f =
+  System.IO.Directory.Exists f (* does not raise exceptions *)
+
 let basename f =
   System.IO.Path.GetFileName f
+
+let dirname f =
+  System.IO.Path.GetDirectoryName f
 
 let print_endline x =
   print_endline x
@@ -834,6 +892,37 @@ let load_value_from_file (fname:string) =
     printfn "Failed to load file because: %A" e;
     None
 
+let save_2values_to_file (fname:string) value1 value2 =
+  try
+    use writer = new System.IO.FileStream(fname,
+                                          FileMode.OpenOrCreate,
+                                          FileAccess.Write,
+                                          FileShare.Write) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    formatter.Serialize(writer, value1)
+    formatter.Serialize(writer, value2)
+  with
+  | e ->
+    printfn "Failed to write value to file because: %A" e;
+    raise e
+
+let load_2values_from_file (fname:string) =
+  try
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result1 = formatter.Deserialize(reader) :?> 'a in
+    let result2 = formatter.Deserialize(reader) :?> 'b in
+    Some (result1, result2)
+  with
+  | e ->
+    printfn "Failed to load file because: %A" e;
+    None
+
+
+
 let print_exn (e: exn): string =
   e.Message
 
@@ -865,8 +954,17 @@ let measure_execution_time tag f =
   let timer = new System.Diagnostics.Stopwatch () in
   timer.Start();
   let retv = f () in
+  timer.Stop();
   print2 "Execution time (%s): %s ms" tag (string_of_int64 timer.ElapsedMilliseconds);
   retv
+
+let return_execution_time f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let retv = f () in
+  timer.Stop();
+  (retv, float_of_int64 timer.ElapsedMilliseconds)
+
 
 (** Hints. *)
 type hint = {

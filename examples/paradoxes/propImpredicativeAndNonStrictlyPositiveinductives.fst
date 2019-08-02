@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module PropImpredicativeAndNonStrictlyPositiveInductives
 
 (* Only verifies with --__no_positivity *)
@@ -37,7 +52,11 @@ let f_injective (p p' : a -> prop) : Lemma (requires (f p == f p')) (ensures (p 
 
 (* As pointed out in the reference we use crucially the impredicativity of prop *)
 (* when squashing down an existential on p of type (a -> prop) from Type1 to prop *)
-let p0 : a -> prop = fun x -> exists p. f p == x /\ ~(p x)
+let p0 : a -> prop = fun x ->
+  exists (p:a -> prop).
+    //NS: 04/30/18 ... added the annotation on p as part of revising type inference
+    //Should be able to remove it as we move systematically to prop
+    f p == x /\ ~(p x)
 let x0 = f p0
 
 open FStar.Classical
@@ -49,7 +68,10 @@ let bad1 () : Lemma (requires (p0 x0)) (ensures (~(p0 x0))) =
   exists_elim (~(p0 x0)) (FStar.Squash.get_proof (p0 x0)) bidule
 
 let bad2 () : Lemma (requires (~(p0 x0))) (ensures (p0 x0)) =
-  exists_intro (fun p -> f p == x0 /\ ~(p x0)) p0
+  exists_intro (fun (p:a -> prop) ->
+    //NS: 04/30/18 ... added the annotation on p as part of revising type inference
+    //Should be able to remove it as we move systematically to prop
+    f p == x0 /\ ~(p x0)) p0
 
 let bad () : Lemma (p0 x0 <==> ~(p0 x0)) =
   move_requires bad1 () ;

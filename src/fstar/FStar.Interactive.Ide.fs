@@ -25,6 +25,9 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
+open FStar.Interactive.JsonHelper
+open FStar.Interactive.QueryHelper
+open FStar.Interactive.PushHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -33,31 +36,15 @@ open FStar.Interactive
 open FStar.Parser.ParseIt
 
 module SS = FStar.Syntax.Syntax
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
+module QH = FStar.Interactive.QueryHelper
 
-exception ExitREPL of int
-
-let push env msg =
-  let res = push_context env msg in
-  Options.push();
-  res
-
-let pop env msg =
-  pop_context env msg;
-  Options.pop()
-
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
-
-let set_check_kind env check_kind =
-  { env with lax = (check_kind = LaxCheck);
-             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
-
-let with_captured_errors' env f =
+let with_captured_errors' env sigint_handler f =
   try
-    f env
+    Util.with_sigint_handler sigint_handler (fun _ -> f env)
   with
   | Failure (msg) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
@@ -69,7 +56,10 @@ let with_captured_errors' env f =
     Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
     None
 
-  | Error(e, msg, r) ->
+  | Util.SigInt ->
+    Util.print_string "Interrupted"; None
+
+  | Error (e, msg, r) ->
     TcErr.add_errors env [(e, msg, r)];
     None
 
@@ -80,23 +70,15 @@ let with_captured_errors' env f =
   | Stop ->
     None
 
-let with_captured_errors env f =
+let with_captured_errors env sigint_handler f =
   if Options.trace_error () then f env
-  else with_captured_errors' env f
+  else with_captured_errors' env sigint_handler f
 
 (*************************)
 (* REPL tasks and states *)
 (*************************)
 
-type timed_fname =
-  { tf_fname: string;
-    tf_modtime: time }
-
 let t0 = Util.now ()
-
-let tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
@@ -113,44 +95,11 @@ type push_query =
     push_line: int; push_column: int;
     push_peek_only: bool }
 
-type optmod_t = option<Syntax.Syntax.modul>
-
-(** Tasks describing each snapshot of the REPL state.
-
-Every snapshot pushed in the repl stack is annotated with one of these.  The
-``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
-dependencies, as they carry enough information to determine whether a dependency
-is stale. **)
-type repl_task =
-  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
-  | LDSingle of timed_fname (* interface or implementation *)
-  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of input_frag (* code fragment *)
+(** Tasks describing each snapshot of the REPL state. **)
 
 type env_t = TcEnv.env
 
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_deps_stack: repl_stack_t;
-                    repl_curmod: optmod_t;
-                    repl_env: env_t;
-                    repl_stdin: stream_reader;
-                    repl_names: CTable.table }
-and repl_stack_t = list<completed_repl_task>
-and completed_repl_task = repl_task * repl_state
-
-let repl_stack: ref<repl_stack_t> = Util.mk_ref []
-
-let pop_repl st =
-  match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (_, st') :: stack ->
-    pop st.repl_env "#pop";
-    repl_stack := stack;
-    st'
-
-let push_repl push_kind task st =
-  repl_stack := (task, st) :: !repl_stack;
-  push (set_check_kind st.repl_env push_kind) ""
+let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -158,91 +107,6 @@ let nothing_left_to_pop st =
      dependency-loading entries, which the user may not pop (since they didn't
      push them). *)
   List.length !repl_stack = List.length st.repl_deps_stack
-
-(*****************)
-(* Name tracking *)
-(*****************)
-
-type name_tracking_event =
-| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
-| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
-| NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of binding
-
-let query_of_ids (ids: list<ident>) : CTable.query =
-  List.map text_of_id ids
-
-let query_of_lid (lid: lident) : CTable.query =
-  query_of_ids (lid.ns @ [lid.ident])
-
-let update_names_from_event cur_mod_str table evt =
-  let is_cur_mod lid = lid.str = cur_mod_str in
-  match evt with
-  | NTAlias (host, id, included) ->
-    if is_cur_mod host then
-      CTable.register_alias
-        table (text_of_id id) [] (query_of_lid included)
-    else
-      table
-  | NTOpen (host, (included, kind)) ->
-    if is_cur_mod host then
-      CTable.register_open
-        table (kind = DsEnv.Open_module) [] (query_of_lid included)
-    else
-      table
-  | NTInclude (host, included) ->
-    CTable.register_include
-      table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
-  | NTBinding binding ->
-    let lids =
-      match binding with
-      | Binding_lid (lid, _) -> [lid]
-      | Binding_sig (lids, _) -> lids
-      | Binding_sig_inst (lids, _, _) -> lids
-      | _ -> [] in
-    List.fold_left
-      (fun tbl lid ->
-         let ns_query = if lid.nsstr = cur_mod_str then []
-                        else query_of_ids lid.ns in
-         CTable.insert
-           tbl ns_query (text_of_id lid.ident) lid)
-      table lids
-
-let commit_name_tracking' cur_mod names name_events =
-  let cur_mod_str = match cur_mod with
-                    | None -> "" | Some md -> (SS.mod_name md).str in
-  let updater = update_names_from_event cur_mod_str in
-  List.fold_left updater names name_events
-
-let commit_name_tracking st name_events =
-  let names = commit_name_tracking' st.repl_curmod st.repl_names name_events in
-  { st with repl_names = names }
-
-let fresh_name_tracking_hooks () =
-  let events = Util.mk_ref [] in
-  let push_event evt = events := evt :: !events in
-  events,
-  { DsEnv.ds_push_module_abbrev_hook =
-      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
-    DsEnv.ds_push_include_hook =
-      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
-    DsEnv.ds_push_open_hook =
-      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
-  { TcEnv.tc_push_in_gamma_hook =
-      (fun _ s -> push_event (NTBinding s)) }
-
-let track_name_changes (env: env_t)
-    : env_t * (env_t -> env_t * list<name_tracking_event>) =
-  let set_hooks dshooks tchooks env =
-    let (), tcenv' = with_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
-    TcEnv.set_tc_hooks tcenv' tchooks in
-
-  let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
-  let events, new_dshooks, new_tchooks = fresh_name_tracking_hooks () in
-
-  set_hooks new_dshooks new_tchooks env,
-  (fun env -> set_hooks old_dshooks old_tchooks env,
-           List.rev !events)
 
 (*********************)
 (* Dependency checks *)
@@ -257,113 +121,33 @@ let string_of_repl_task = function
     Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
   | PushFragment frag ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
-
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one env intf_opt modf =
-  let _, env = tc_one_file env intf_opt modf in
-  env
-
-(** Load the file or files described by `task`.
-
-``task`` should not be a push fragment. **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t * env_t =
-  match task with
-  | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
-  | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname
-  | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment frag ->
-    tc_one_fragment curmod env frag
-
-(** Build a list of dependency loading tasks from a list of dependencies **)
-let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
-  let wrap = dummy_tf_of_fname in
-  let rec aux deps final_tasks =
-    match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
-    | intf_or_impl :: deps' ->
-      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
-    | [] -> final_tasks in
-  aux deps final_tasks
-
-(** Compute dependencies of `filename` and steps needed to load them.
-
-The dependencies are a list of file name.  The steps are a list of
-``repl_task`` elements, to be executed by ``run_repl_task``. **)
-let deps_and_repl_ld_tasks_of_our_file filename
-    : list<string>
-    * list<repl_task>
-    * FStar.Parser.Dep.deps =
-  let get_mod_name fname =
-    Parser.Dep.lowercase_module_name fname in
-  let our_mod_name =
-    get_mod_name filename in
-  let has_our_mod_name f =
-    (get_mod_name f = our_mod_name) in
-
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] in
-
-  let same_name, real_deps =
-    List.partition has_our_mod_name deps in
-
-  let intf_tasks =
-    match same_name with
-    | [intf; impl] ->
-      if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
-      if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
-      [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
-    | [impl] ->
-      []
-    | _ ->
-      let mods_str = String.concat " " same_name in
-      let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
-      [] in
-
-  let tasks =
-    repl_ld_tasks_of_deps real_deps intf_tasks in
-  real_deps, tasks, dep_graph
-
-(** Update timestamps in argument task to last modification times. **)
-let update_task_timestamps = function
-  | LDInterleaved (intf, impl) ->
-    LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
-  | LDSingle intf_or_impl ->
-    LDSingle (tf_of_fname intf_or_impl.tf_fname)
-  | LDInterfaceOfCurrentFile intf ->
-    LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
-  | PushFragment frag -> PushFragment frag
+  | Noop -> "Noop {}"
 
 (** Push, run `task`, and pop if it fails.
 
 If `must_rollback` is set, always pop.  Returns a pair: a boolean indicating
 success, and a new REPL state. **)
 let run_repl_transaction st push_kind must_rollback task =
-  let env = push_repl push_kind task st in
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+  let st = push_repl "run_repl_transaction" push_kind task st in
+  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking…
 
   let check_success () =
     get_err_count () = 0 && not must_rollback in
 
   // Run the task (and capture errors)
   let curmod, env, success =
-    match with_captured_errors env
-            (fun env -> Some <| run_repl_task st.repl_curmod env task) with
+    match with_captured_errors env Util.sigint_raise
+              (fun env -> Some <| run_repl_task st.repl_curmod env task) with
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
-  let env', name_events = finish_name_tracking env in // …end name tracking
+  let env, name_events = finish_name_tracking env in // …end name tracking
   let st =
-    { st with repl_env = env; repl_curmod = curmod } in
-  let st =
-    if success
-    then commit_name_tracking st name_events
-    else pop_repl st in
+    if success then
+      let st = { st with repl_env = env; repl_curmod = curmod } in
+      commit_name_tracking st name_events
+    else
+      pop_repl "run_repl_transaction" st in
 
   (success, st)
 
@@ -378,8 +162,11 @@ current file's interface comes last.
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
 already completed tasks.
 
-This function is stateful: it uses ``push_repl`` and ``pop_repl``. **)
-let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
+This function is stateful: it uses ``push_repl`` and ``pop_repl``.
+
+`progress_callback` is called once per task, right before the task is run. **)
+let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
+                             (progress_callback: repl_task -> unit) =
   let debug verb task =
     if Options.debug_any () then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
@@ -389,14 +176,18 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
   ``!repl_stack`` *)
   let rec revert_many st = function
     | [] -> st
-    | (task, _st') :: entries ->
-      assert (task = fst (List.hd !repl_stack));
+    | (_id, (task, _st')) :: entries ->
+      //NS: this assertion has been failing for a while in debug mode; not sure why
+      assert (task = fst (snd (List.hd !repl_stack)));
       debug "Reverting" task;
-      revert_many (pop_repl st) entries in
+      let st' = pop_repl "run_repl_ls_transactions" st in
+      let dep_graph = FStar.TypeChecker.Env.dep_graph st.repl_env in
+      let st' = {st' with repl_env=FStar.TypeChecker.Env.set_dep_graph st'.repl_env dep_graph} in
+      revert_many st' entries in
 
   let rec aux (st: repl_state)
               (tasks: list<repl_task>)
-              (previous: list<completed_repl_task>) =
+              (previous: list<repl_stack_entry_t>) =
     match tasks, previous with
     // All done: return the final state.
     | [], [] ->
@@ -406,6 +197,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
     // run ``task`` and record the updated dependency stack in ``st``.
     | task :: tasks, [] ->
       debug "Loading" task;
+      progress_callback task;
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
@@ -415,7 +207,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
 
     // We've already run ``task`` previously, and no update is needed: skip.
     | task :: tasks, prev :: previous
-        when (fst prev) = (update_task_timestamps task) ->
+        when fst (snd prev) = update_task_timestamps task ->
       debug "Skipping" task;
       aux st tasks previous
 
@@ -430,32 +222,6 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
 (* Reading queries and writing responses *)
 (*****************************************)
 
-let json_to_str = function
-  | JsonNull -> "null"
-  | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
-  | JsonStr s -> Util.format1 "string (%s)" s
-  | JsonList _ -> "list (...)"
-  | JsonAssoc _ -> "dictionary (...)"
-
-exception UnexpectedJsonType of string * json
-
-let js_fail expected got =
-  raise (UnexpectedJsonType (expected, got))
-
-let js_int = function
-  | JsonInt i -> i
-  | other -> js_fail "int" other
-let js_str = function
-  | JsonStr s -> s
-  | other -> js_fail "string" other
-let js_list k = function
-  | JsonList l -> List.map k l
-  | other -> js_fail "list" other
-let js_assoc = function
-  | JsonAssoc a -> a
-  | other -> js_fail "dictionary" other
-
 let js_pushkind s : push_kind = match js_str s with
   | "syntax" -> SyntaxCheck
   | "lax" -> LaxCheck
@@ -463,12 +229,12 @@ let js_pushkind s : push_kind = match js_str s with
   | _ -> js_fail "push_kind" s
 
 let js_reductionrule s = match js_str s with
-  | "beta" -> FStar.TypeChecker.Normalize.Beta
-  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
-  | "iota" -> FStar.TypeChecker.Normalize.Iota
-  | "zeta" -> FStar.TypeChecker.Normalize.Zeta
-  | "reify" -> FStar.TypeChecker.Normalize.Reify
-  | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
+  | "beta" -> FStar.TypeChecker.Env.Beta
+  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
+  | "iota" -> FStar.TypeChecker.Env.Iota
+  | "zeta" -> FStar.TypeChecker.Env.Zeta
+  | "reify" -> FStar.TypeChecker.Env.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
 type completion_context =
@@ -528,7 +294,7 @@ type query' =
 | VfsAdd of option<string> (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option<position> * list<string>
-| Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
+| Compute of string * option<list<FStar.TypeChecker.Env.step>>
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
@@ -548,18 +314,14 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"]
+   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
-exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
-
-let try_assoc key a =
-  Util.map_option snd (Util.try_find (fun (k, _) -> k = key) a)
 
 let wrap_js_failure qid expected got =
   { qid = qid;
     qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
-                            expected (json_to_str got)) }
+                            expected (json_debug got)) }
 
 let unpack_interactive_query json =
   let assoc errloc key a =
@@ -614,40 +376,25 @@ let unpack_interactive_query json =
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
-let read_interactive_query stream : query =
+let deserialize_interactive_query js_query =
   try
-    match Util.read_line stream with
-    | None -> raise (ExitREPL 0)
-    | Some line ->
-      match Util.json_of_string line with
-      | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> unpack_interactive_query request
+    unpack_interactive_query js_query
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
+let parse_interactive_query query_str : query =
+  match Util.json_of_string query_str with
+  | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
+  | Some request -> deserialize_interactive_query request
+
+let read_interactive_query stream : query =
+  match Util.read_line stream with
+  | None -> exit 0
+  | Some line -> parse_interactive_query line
+
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
-
-let json_of_pos pos =
-  JsonList [JsonInt (Range.line_of_pos pos); JsonInt (Range.col_of_pos pos)]
-
-let json_of_range_fields file b e =
-  JsonAssoc [("fname", JsonStr file);
-             ("beg", json_of_pos b);
-             ("end", json_of_pos e)]
-
-let json_of_use_range r =
-    json_of_range_fields
-            (Range.file_of_use_range r)
-            (Range.start_of_use_range r)
-            (Range.end_of_use_range r)
-
-let json_of_def_range r =
-    json_of_range_fields
-            (Range.file_of_range r)
-            (Range.start_of_range r)
-            (Range.end_of_range r)
 
 let json_of_issue_level i =
   JsonStr (match i with
@@ -668,12 +415,6 @@ let json_of_issue issue =
                               [json_of_def_range r]
                             | _ -> [])))]
 
-type symbol_lookup_result = { slr_name: string;
-                              slr_def_range: option<Range.range>;
-                              slr_typ: option<string>;
-                              slr_doc: option<string>;
-                              slr_def: option<string> }
-
 let alist_of_symbol_lookup_result lr =
   [("name", JsonStr lr.slr_name);
    ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
@@ -688,12 +429,10 @@ let alist_of_protocol_info =
 
 type fstar_option_permission_level =
 | OptSet
-| OptReset
 | OptReadOnly
 
 let string_of_option_permission_level = function
   | OptSet -> ""
-  | OptReset -> "requires #reset-options"
   | OptReadOnly -> "read-only"
 
 type fstar_option =
@@ -759,30 +498,36 @@ let alist_of_fstar_option opt =
 let json_of_fstar_option opt =
   JsonAssoc (alist_of_fstar_option opt)
 
-let write_json json =
-  Util.print_raw (Util.string_of_json json);
-  Util.print_raw "\n"
-
-let write_response qid status response =
+let json_of_response qid status response =
   let qid = JsonStr qid in
   let status = match status with
                | QueryOK -> JsonStr "success"
                | QueryNOK -> JsonStr "failure"
                | QueryViolatesProtocol -> JsonStr "protocol-violation" in
-  write_json (JsonAssoc [("kind", JsonStr "response");
-                         ("query-id", qid);
-                         ("status", status);
-                         ("response", response)])
+  JsonAssoc [("kind", JsonStr "response");
+             ("query-id", qid);
+             ("status", status);
+             ("response", response)]
 
-let write_message level contents =
-  write_json (JsonAssoc [("kind", JsonStr "message");
-                         ("level", JsonStr level);
-                         ("contents", contents)])
+let write_response qid status response =
+  write_json (json_of_response qid status response)
 
-let write_hello () =
+let json_of_message level js_contents =
+  JsonAssoc [("kind", JsonStr "message");
+             ("query-id", json_of_opt JsonStr !repl_current_qid);
+             ("level", JsonStr level);
+             ("contents", js_contents)]
+
+let forward_message callback level contents =
+  callback (json_of_message level contents)
+
+let json_of_hello =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
-  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info))
+  JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info)
+
+let write_hello () =
+  write_json json_of_hello
 
 (*****************)
 (* Options cache *)
@@ -808,7 +553,6 @@ let fstar_options_list_cache =
                opt_snippets = snippets_of_fstar_option name typ;
                opt_documentation = if doc = "" then None else Some doc;
                opt_permission_level = if Options.settable name then OptSet
-                                      else if Options.resettable name then OptReset
                                       else OptReadOnly }))
   |> List.sortWith (fun o1 o2 ->
         String.compare (String.lowercase (o1.opt_name))
@@ -837,28 +581,18 @@ let trim_option_name opt_name =
 (*************************)
 
 let json_of_repl_state st =
-  let filenames (task, _) =
+  let filenames (_, (task, _)) =
     match task with
     | LDInterleaved (intf, impl) -> [intf.tf_fname; impl.tf_fname]
     | LDSingle intf_or_impl -> [intf_or_impl.tf_fname]
     | LDInterfaceOfCurrentFile intf -> [intf.tf_fname]
-    | PushFragment _ -> [] in
+    | _ -> [] in
 
   JsonAssoc
     [("loaded-dependencies",
       JsonList (List.map JsonStr (List.concatMap filenames st.repl_deps_stack)));
      ("options",
       JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
-
-let with_printed_effect_args k =
-  Options.with_saved_options
-    (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
-
-let term_to_string tcenv t =
-  with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
-
-let sigelt_to_string se =
-  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
 
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
@@ -881,7 +615,10 @@ let collect_errors () =
   errors
 
 let run_segment (st: repl_state) (code: string) =
-  let frag = { frag_text = code; frag_line = 1; frag_col = 0 } in
+  // Unfortunately, frag_fname is a special case in the interactive mode,
+  // while in LSP, it is the only mode. To cope with this difference,
+  // pass a frag_fname that is expected by the Interactive mode.
+  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment frag with
@@ -890,7 +627,8 @@ let run_segment (st: repl_state) (code: string) =
     | Parser.Driver.Modul (Parser.AST.Module (_, decls))
     | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
 
-  match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
+  match with_captured_errors st.repl_env Util.sigint_ignore
+            (fun _ -> Some <| collect_decls ()) with
     | None ->
       let errors = collect_errors () |> List.map json_of_issue in
       ((QueryNOK, JsonList errors), Inl st)
@@ -910,22 +648,34 @@ let run_pop st =
   if nothing_left_to_pop st then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
-    let st' = pop_repl st in
+    let st' = pop_repl "pop_query" st in
     ((QueryOK, JsonNull), Inl st')
+
+let write_progress stage contents_alist =
+  let stage = match stage with Some s -> JsonStr s | None -> JsonNull in
+  let js_contents = ("stage", stage) :: contents_alist in
+  write_json (json_of_message "progress" (JsonAssoc js_contents))
+
+let write_repl_ld_task_progress task =
+  match task with
+  | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
+    let modname = Parser.Dep.module_name_of_file tf.tf_fname in
+    write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
+  | _ -> ()
 
 (** Compute and load all dependencies of `filename`.
 
 Return an new REPL state wrapped in ``Inr`` in case of failure, and a new REPL
 plus with a list of completed tasks wrapped in ``Inl`` in case of success. **)
 let load_deps st =
-  match with_captured_errors st.repl_env
+  match with_captured_errors st.repl_env Util.sigint_ignore
           (fun _env -> Some <| deps_and_repl_ld_tasks_of_our_file st.repl_fname) with
   | None -> Inr st
   | Some (deps, tasks, dep_graph) ->
     let st = {st with repl_env=FStar.TypeChecker.Env.set_dep_graph st.repl_env dep_graph} in
-    match run_repl_ld_transactions st tasks with
-    | Inr st -> Inr st
-    | Inl st -> Inl (st, deps)
+    match run_repl_ld_transactions st tasks write_repl_ld_task_progress with
+    | Inr st -> write_progress None []; Inr st
+    | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
@@ -939,7 +689,7 @@ let run_push_without_deps st query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  let frag = { frag_text = text; frag_line = line; frag_col = column } in
+  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
   TcEnv.toggle_id_info st.repl_env true;
   let st = set_nosynth_flag st peek_only in
@@ -950,32 +700,6 @@ let run_push_without_deps st query =
   let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
-
-let capitalize str =
-  if str = "" then str
-  else let first = String.substring str 0 1 in
-       String.uppercase first ^ String.substring str 1 (String.length str - 1)
-
-let add_module_completions this_fname deps table =
-  let mods =
-    FStar.Parser.Dep.build_inclusion_candidates_list () in
-  let loaded_mods_set =
-    List.fold_left
-      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
-      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
-  let loaded modname =
-    psmap_find_default loaded_mods_set modname false in
-  let this_mod_key =
-    Parser.Dep.lowercase_module_name this_fname in
-  List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
-      let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
-        table // Exclude current module from completion
-      else
-        let ns_query = Util.split (capitalize modname) "." in
-        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
-    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 let run_push_with_deps st query =
   if Options.debug_any () then
@@ -998,59 +722,9 @@ let run_push st query =
     run_push_without_deps st query
 
 let run_symbol_lookup st symbol pos_opt requested_info =
-  let tcenv = st.repl_env in
-
-  let info_of_lid_str lid_str =
-    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
-    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
-    try_lookup_lid tcenv lid |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
-
-  let docs_of_lid lid =
-    DsEnv.try_lookup_doc tcenv.dsenv lid |> Util.map_option fst in
-
-  let def_of_lid lid =
-    Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
-      | (Inr (se, _), _) -> Some (sigelt_to_string se)
-      | _ -> None) in
-
-  let info_at_pos_opt =
-    Util.bind_opt pos_opt (fun (file, row, col) ->
-      TcErr.info_at_pos tcenv file row col) in
-
-  let info_opt =
-    match info_at_pos_opt with
-    | Some _ -> info_at_pos_opt
-    | None -> if symbol = "" then None else info_of_lid_str symbol in
-
-  let response = match info_opt with
-    | None -> None
-    | Some (name_or_lid, typ, rng) ->
-      let name =
-        match name_or_lid with
-        | Inl name -> name
-        | Inr lid -> Ident.string_of_lid lid in
-      let typ_str =
-        if List.mem "type" requested_info then
-          Some (term_to_string tcenv typ)
-        else None in
-      let doc_str =
-        match name_or_lid with
-        | Inr lid when List.mem "documentation" requested_info -> docs_of_lid lid
-        | _ -> None in
-      let def_str =
-        match name_or_lid with
-        | Inr lid when List.mem "definition" requested_info -> def_of_lid lid
-        | _ -> None in
-      let def_range =
-        if List.mem "defined-at" requested_info then Some rng else None in
-
-      let result = { slr_name = name; slr_def_range = def_range;
-                     slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str } in
-      Some ("symbol", alist_of_symbol_lookup_result result) in
-
-  match response with
+  match QH.symlookup st.repl_env symbol pos_opt requested_info with
   | None -> Inl "Symbol not found"
-  | Some info -> Inr info
+  | Some result -> Inr ("symbol", alist_of_symbol_lookup_result result)
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
@@ -1089,18 +763,10 @@ let run_lookup st symbol context pos_opt requested_info =
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
-let code_autocomplete_mod_filter = function
-  | _, CTable.Namespace _
-  | _, CTable.Module { CTable.mod_loaded = true } -> None
-  | pth, CTable.Module md ->
-    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
-
 let run_code_autocomplete st search_term =
-  let needle = Util.split search_term "." in
-  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
-  let lids = CTable.autocomplete_lid st.repl_names needle in
-  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
-  ((QueryOK, JsonList json), Inl st)
+  let result = QH.ck_completion st search_term in
+  let js = List.map CTable.json_of_completion_result result in
+  ((QueryOK, JsonList js), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in
@@ -1112,7 +778,6 @@ let candidates_of_fstar_option match_len is_reset opt =
   let may_set, explanation =
     match opt.opt_permission_level with
     | OptSet -> true, ""
-    | OptReset -> is_reset, "#reset-only"
     | OptReadOnly -> false, "read-only" in
   let opt_type =
     kind_of_fstar_option_type opt.opt_type in
@@ -1147,18 +812,21 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_and_rewind st task =
-  let env' = push st.repl_env "#compute" in
-  let results = try Inl <| task st with e -> Inr e in
-  pop env' "#compute";
+let run_and_rewind st sigint_default task =
+  let st = push_repl "run_and_rewind" FullCheck Noop st in
+  let results =
+    try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
+    with | Util.SigInt -> Inl sigint_default
+         | e -> Inr e in
+  let st = pop_repl "run_and_rewind" st in
   match results with
   | Inl results -> (results, Inl st)
-  | Inr e -> raise e
+  | Inr e -> raise e // CPC fixme add a test with two computations
 
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
-    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+    { frag_fname = "<input>"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
   let find_let_body ses =
     match ses with
@@ -1178,43 +846,41 @@ let run_with_parsed_and_tc_term st term line column continuation =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
-  run_and_rewind st (fun st ->
+  run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
-    match st.repl_curmod with
-    | None -> (QueryNOK, JsonStr "Current module unset")
-    | _ ->
-      match parse frag with
-      | None -> (QueryNOK, JsonStr "Could not parse this term")
-      | Some decls ->
-        let aux () =
-          let decls = desugar tcenv decls in
-          let ses = typecheck tcenv decls in
-          match find_let_body ses with
-          | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some (univs, def) ->
-            let univs, def = Syntax.Subst.open_univ_vars univs def in
-            let tcenv = TcEnv.push_univ_vars tcenv univs in
-            continuation tcenv def in
-        if Options.trace_error () then
-          aux ()
-        else
-          try aux ()
-          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                 | None -> raise e)))
+    match parse frag with
+    | None -> (QueryNOK, JsonStr "Could not parse this term")
+    | Some decls ->
+      let aux () =
+        let decls = desugar tcenv decls in
+        let ses = typecheck tcenv decls in
+        match find_let_body ses with
+        | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
+        | Some (univs, def) ->
+          let univs, def = Syntax.Subst.open_univ_vars univs def in
+          let tcenv = TcEnv.push_univ_vars tcenv univs in
+          continuation tcenv def in
+      if Options.trace_error () then
+        aux ()
+      else
+        try aux ()
+        with | e -> (match FStar.Errors.issue_of_exn e with
+                    | Some issue -> (QueryNOK, JsonStr (FStar.Errors.format_issue issue))
+                    | None -> raise e))
 
 let run_compute st term rules =
   let rules =
     (match rules with
      | Some rules -> rules
-     | None -> [FStar.TypeChecker.Normalize.Beta;
-               FStar.TypeChecker.Normalize.Iota;
-               FStar.TypeChecker.Normalize.Zeta;
-               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
-    @ [FStar.TypeChecker.Normalize.Inlining;
-       FStar.TypeChecker.Normalize.Eager_unfolding;
-       FStar.TypeChecker.Normalize.Primops] in
+     | None -> [FStar.TypeChecker.Env.Beta;
+               FStar.TypeChecker.Env.Iota;
+               FStar.TypeChecker.Env.Zeta;
+               FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
+    @ [FStar.TypeChecker.Env.Inlining;
+       FStar.TypeChecker.Env.Eager_unfolding;
+       FStar.TypeChecker.Env.UnfoldTac;
+       FStar.TypeChecker.Env.Primops] in
 
   let normalize_term tcenv rules t =
     FStar.TypeChecker.Normalize.normalize rules tcenv t in
@@ -1324,7 +990,7 @@ let run_search st search_str =
   (results, Inl st)
 
 let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
-  match q with // First handle queries that support both partial and full states…
+  match q with
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
@@ -1348,19 +1014,47 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let rec go st : int =
-  let rec loop st : int =
-    let query = validate_query st (read_interactive_query st.repl_stdin) in
-    let (status, response), state_opt = run_query st query.qq in
-    write_response query.qid status response;
-    match state_opt with
-    | Inl st' -> loop st'
-    | Inr exitcode -> raise (ExitREPL exitcode) in
+let validate_and_run_query st query =
+  let query = validate_query st query in
+  repl_current_qid := Some query.qid;
+  run_query st query.qq
 
-  if Options.trace_error () then
-    loop st
-  else
-    try loop st with ExitREPL n -> n
+(** This is the body of the JavaScript port's main loop. **)
+let js_repl_eval st query =
+  let (status, response), st_opt = validate_and_run_query st query in
+  let js_response = json_of_response query.qid status response in
+  js_response, st_opt
+
+let js_repl_eval_js st query_js =
+  js_repl_eval st (deserialize_interactive_query query_js)
+
+let js_repl_eval_str st query_str =
+  let js_response, st_opt =
+    js_repl_eval st (parse_interactive_query query_str) in
+  (Util.string_of_json js_response), st_opt
+
+(** This too is called from FStar.js **)
+let js_repl_init_opts () =
+  let res, fnames = Options.parse_cmd_line () in
+  match res with
+  | Getopt.Error msg -> failwith ("repl_init: " ^ msg)
+  | Getopt.Help -> failwith "repl_init: --help unexpected"
+  | Getopt.Success ->
+    match fnames with
+    | [] ->
+      failwith "repl_init: No file name given in --ide invocation"
+    | h :: _ :: _ ->
+      failwith "repl_init: Too many file names given in --ide invocation"
+    | _ -> ()
+
+(** This is the main loop for the desktop version **)
+let rec go st : int =
+  let query = read_interactive_query st.repl_stdin in
+  let (status, response), state_opt = validate_and_run_query st query in
+  write_response query.qid status response;
+  match state_opt with
+  | Inl st' -> go st'
+  | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -1373,26 +1067,31 @@ let interactive_error_handler = // No printing here — collect everything for f
     eh_report = report;
     eh_clear = clear }
 
-let interactive_printer =
-  { printer_prinfo = (fun s -> write_message "info" (JsonStr s));
-    printer_prwarning = (fun s -> write_message "warning" (JsonStr s));
-    printer_prerror = (fun s -> write_message "error" (JsonStr s));
-    printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
+let interactive_printer printer =
+  { printer_prinfo = (fun s -> forward_message printer "info" (JsonStr s));
+    printer_prwarning = (fun s -> forward_message printer "warning" (JsonStr s));
+    printer_prerror = (fun s -> forward_message printer "error" (JsonStr s));
+    printer_prgeneric = (fun label get_string get_json ->
+                         forward_message printer label (get_json ())) }
+
+let install_ide_mode_hooks printer =
+  FStar.Util.set_printer (interactive_printer printer);
+  FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
-let interactive_mode' (filename: string): unit =
-  write_hello ();
-
+let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  let init_st =
-    { repl_line = 1; repl_column = 0; repl_fname = filename;
-      repl_curmod = None; repl_env = env; repl_deps_stack = [];
-      repl_stdin = open_stdin ();
-      repl_names = CompletionTable.empty } in
+  { repl_line = 1; repl_column = 0; repl_fname = filename;
+    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty }
+
+let interactive_mode' init_st =
+  write_hello ();
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
@@ -1402,18 +1101,21 @@ let interactive_mode' (filename: string): unit =
   exit exit_code
 
 let interactive_mode (filename:string): unit =
-  FStar.Util.set_printer interactive_printer;
+  install_ide_mode_hooks write_json;
+
+  // Ignore unexpected interrupts (some methods override this handler)
+  Util.set_sigint_handler Util.sigint_ignore;
 
   if Option.isSome (Options.codegen ()) then
     Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
+  let init = build_initial_repl_state filename in
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces
-    interactive_mode' filename
+    interactive_mode' init
   else
     try
-      FStar.Errors.set_handler interactive_error_handler;
-      interactive_mode' filename
+      interactive_mode' init
     with
     | e -> (// Revert to default handler since we won't have an opportunity to
            // print errors ourselves.

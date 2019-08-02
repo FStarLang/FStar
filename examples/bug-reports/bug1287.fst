@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 /// ==========================
 ///  Pattern-matching tactics
 /// ==========================
@@ -15,12 +30,6 @@ module Bug1287
 open FStar.Tactics
 
 #set-options "--admit_smt_queries true"
-(** A ``Tot`` version of ``zip``. **)
-val zip : #a:Type -> #b:Type -> list a -> list b -> list (a * b)
-let rec zip #a #b (l1: list a) (l2: list b) =
-  match l1, l2 with
-  | [], _ | _, [] -> []
-  | hd1 :: tl1, hd2 :: tl2 -> (hd1, hd2) :: zip tl1 tl2
 
 (** Like ``List.Tot.map``, for tactics. **)
 let rec tacmap (f: 'a -> Tac 'b) (ls: list 'a) : Tac (list 'b) =
@@ -35,44 +44,19 @@ let rec tacfold_left (f: 'a -> 'b -> Tac 'a) (x: 'a) (l:list 'b)
   | [] -> x
   | hd :: tl -> tacfold_left f (f x hd) tl
 
-(** Run tactics in `tacs` until one succeeds. **)
-let rec first #a (tacs: list (tactic a)) : Tac a (decreases tacs) =
-  match tacs with
-  | [] -> fail #a "All tactics failed" ()
-  | t1 :: tacs -> idtac ();
-                match trytac t1 () with
-                | Some r -> r
-                | None -> first tacs
+let implies_intro' () : Tac unit =
+  let _ = implies_intro () in ()
 
-(** Build a tactic to run tactics in `tacs` until one succeeds. **)
-let rec tfirst #a (tacs: list (tactic a)) : (tactic a) =
-  match tacs with
-  | [] -> fail #a "All tactics failed"
-  | t1 :: tacs -> idtac;; or_else t1 (tfirst #a tacs)
+let repeat' #a (f: unit -> Tac a) : Tac unit =
+  let _ = repeat f in ()
 
-(** Ensure that tactic `t` fails. **)
-let mustfail #a (t: tactic a) (message: string) : tactic unit =
-  fun () ->
-    match trytac t () with
-    | Some _ -> fail message ()
-    | None -> ()
-
-let implies_intro' : tactic unit =
-  _ <-- implies_intro; return ()
-
-let repeat' #a (f: tactic a) : tactic unit =
-  _ <-- repeat f; return ()
-
-let and_elim' (h: binder) : tactic unit =
-  and_elim (pack (Tv_Var h));;
+let and_elim' (h: binder) : Tac unit =
+  and_elim (pack (Tv_Var h));
   clear h
 
-let exact_hyp (a: Type0) (h: binder) : tactic unit =
-  hd <-- quote (FStar.Squash.return_squash #a);
-  exact (return (mk_app hd [((pack (Tv_Var h)), Q_Explicit)]))
-
-let print_binder (b: binder) : Tac unit =
-  print (term_to_string (type_of_binder b)) ()
+let exact_hyp (a: Type0) (h: binder) : Tac unit =
+  let hd = quote (FStar.Squash.return_squash #a) in
+  exact (mk_app hd [((pack (Tv_Var h)), Q_Explicit)])
 
 type varname = string
 
@@ -119,7 +103,7 @@ let term_head t : string =
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let b t1 t2 -> "Tv_Let"
+  | Tv_Let r b t1 t2 -> "Tv_Let"
   | Tv_Match t branches -> "Tv_Match"
   | Tv_Unknown -> "Tv_Unknown"
 
@@ -162,18 +146,9 @@ let raise #a (ex: match_exception) : match_res a =
 let lift_exn_tac #a #b (f: a -> match_res b) (aa: a) : Tac b =
   match f aa with
   | Success bb -> bb
-  | Failure ex -> Tactics.fail (string_of_match_exception ex) ()
-
-let lift_exn_tactic #a #b (f: a -> match_res b) (aa: a) : tactic b =
-  match f aa with
-  | Success bb -> Tactics.return bb
   | Failure ex -> Tactics.fail (string_of_match_exception ex)
 
 type bindings = list (varname * term)
-let string_of_bindings (bindings: bindings) =
-  String.concat "\n"
-    (List.Tot.map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
-                  bindings)
 
 (** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
@@ -197,7 +172,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     match inspect tm with
     | Tv_Type () -> return cur_bindings
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  let interp_app (p_hd p_arg: p:pattern{p << pat}) cur_bindings tm =
+  let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
     | Tv_App hd (arg, _) ->
       with_hd <-- interp_pattern_aux p_hd cur_bindings hd;
@@ -223,7 +198,7 @@ Raises an exception if the match fails.  This is mostly useful for debugging:
 use ``mgw`` to capture matches. **)
 let match_term pat : term -> Tac bindings =
   fun tm ->
-    lift_exn_tac (interp_pattern pat) (norm_term [] tm ())
+    lift_exn_tac (interp_pattern pat) (norm_term [] tm)
 
 let debug msg : Tac unit = () 
 
@@ -269,7 +244,7 @@ let string_of_matching_solution ms =
 let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
     : Tac b =
   match List.Tot.assoc key ls with
-  | None -> fail ("Not found: " ^ key) ()
+  | None -> fail ("Not found: " ^ key)
   | Some x -> x
 
 let ms_locate_hyp (a: Type) (solution: matching_solution)
@@ -279,7 +254,7 @@ let ms_locate_hyp (a: Type) (solution: matching_solution)
 let ms_locate_var (a: Type) (solution: matching_solution)
                   (name: varname) : Tac a =
   admit ();
-  unquote #a (assoc_varname_fail name solution.ms_vars) ()
+  unquote #a (assoc_varname_fail name solution.ms_vars)
 
 let ms_locate_unit (a: Type) _solution _binder_name : Tac unit =
   ()
@@ -298,19 +273,18 @@ let rec solve_mp_for_single_hyp #a
   admit ();
   match hypotheses with
   | [] ->
-    fail #a "No matching hypothesis" ()
+    fail #a "No matching hypothesis"
   | h :: hs ->
     or_else 
       (fun () ->
          match interp_pattern_aux pat part_sol.ms_vars (type_of_binder h) with
          | Failure ex ->
-           fail ("Failed to match hyp: " ^ (string_of_match_exception ex)) ()
+           fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
          | Success bindings ->
            let ms_hyps = (name, h) :: part_sol.ms_hyps in
            body ({ part_sol with ms_vars = bindings; ms_hyps = ms_hyps }))
       (fun () ->
          solve_mp_for_single_hyp name pat hs body part_sol)
-      ()
 
 (** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
 succeed. **)
@@ -340,8 +314,7 @@ let solve_mp #a (problem: matching_problem)
     | None -> { ms_vars = []; ms_hyps = [] }
     | Some pat ->
       match interp_pattern pat goal with
-      | Failure ex -> fail ("Failed to match goal: " ^
-                           (string_of_match_exception ex)) ()
+      | Failure ex -> fail ("Failed to match goal: " ^ (string_of_match_exception ex))
       | Success bindings -> { ms_vars = bindings; ms_hyps = [] } in
   solve_mp_for_hyps #a problem.mp_hyps hypotheses body goal_ps
 
@@ -421,7 +394,7 @@ let rec binders_and_body_of_abs tm : binders * term =
   | _ -> [], tm
 
 let cleanup_abspat (t: term) : Tac term =
-  norm_term [] t ()
+  norm_term [] t
 
 (** Parse a notation into a matching problem and a continuation.
 
@@ -484,15 +457,15 @@ let matching_problem_of_abs (tm: term)
 let arg_type_of_binder_kind binder_kind : Tac term =
   match binder_kind with
   | ABKVar typ -> typ
-  | ABKHyp -> quote binder ()
-  | ABKGoal -> quote unit ()
+  | ABKHyp -> quote binder
+  | ABKGoal -> quote unit
 
 (** Retrieve the function used to locate a value for a given abspat binder. **)
 let locate_fn_of_binder_kind binder_kind =
   match binder_kind with
-  | ABKVar _ -> quote_lid ["Bug1287"; "ms_locate_var"] ()
-  | ABKHyp -> quote_lid ["Bug1287"; "ms_locate_hyp"] ()
-  | ABKGoal -> quote_lid ["Bug1287"; "ms_locate_unit"] ()
+  | ABKVar _ -> `ms_locate_var
+  | ABKHyp   -> `ms_locate_hyp
+  | ABKGoal  -> `ms_locate_unit
 
 (** Construct a term fetching the value of an abspat argument from a quoted
 matching solution ``solution_term``. **)
@@ -523,7 +496,7 @@ bindings. **)
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
   admit ();
-  let solution_binder = fresh_binder (quote matching_solution ()) in
+  let solution_binder = fresh_binder (quote matching_solution) in
   let solution_term = pack (Tv_Var solution_binder) in
   let applied = specialize_abspat_continuation' continuation solution_term in
   let thunked = pack (Tv_Abs solution_binder applied) in
@@ -538,13 +511,13 @@ let interp_abspat_continuation a (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
   admit ();
   let applied = specialize_abspat_continuation continuation in
-  unquote #(matching_solution -> Tac a) applied ()
+  unquote #(matching_solution -> Tac a) applied
 
 (** Construct a matching problem from an abspat. **)
 let interp_abspat #a (abspat: a)
     : Tac (matching_problem * abspat_continuation) =
   admit ();
-  let abs = quote abspat () in
+  let abs = quote abspat in
   matching_problem_of_abs abs
 
 (** Construct an solve a matching problem.
@@ -564,8 +537,8 @@ let tpair #a #b : a -> Tac (b -> Tac (a * b)) =
 
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
-val gpm : #b:Type -> #a:Type -> a -> tactic b
-let gpm #b #a (abspat: a) : tactic b =
+val gpm : #b:Type -> #a:Type -> a -> unit -> Tac b
+let gpm #b #a (abspat : a) : unit -> Tac b =
   admit ();
   fun () ->
     let continuation, solution = match_abspat abspat tpair in
@@ -574,16 +547,16 @@ let gpm #b #a (abspat: a) : tactic b =
 open FStar.Tactics // needed again because we overrode return and bind
 
 let example #a #b #c: unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (repeat'
-      (gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
-                    clear h () <: Tac unit) `or_else`
-       gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
+  assert (a /\ b ==> c == b ==> c)
+    by (repeat'
+       (fun () -> gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
+                    clear h <: Tac unit) `or_else`
+       (fun () -> gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
                     implies_intro' () <: Tac unit) `or_else`
-       gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                    and_elim' h () <: Tac unit) `or_else`
-       gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
-                    rewrite h () <: Tac unit) `or_else`
+       (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
+                    and_elim' h <: Tac unit) `or_else`
+       (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
+                    rewrite h <: Tac unit) `or_else`
        gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
-                    exact_hyp a h () <: Tac unit));;
-     qed)
+                    exact_hyp a h <: Tac unit)))));
+      qed ())

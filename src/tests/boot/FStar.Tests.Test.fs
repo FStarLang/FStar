@@ -14,7 +14,7 @@ let main argv =
     try
         Pars.init() |> ignore;
         Norm.run_all ();
-        Unif.run_all ();
+        if Unif.run_all () then () else exit 1;
         exit 0
     with Error(err, msg, r) when not <| FStar.Options.trace_error() ->
          if r = FStar.Range.dummyRange

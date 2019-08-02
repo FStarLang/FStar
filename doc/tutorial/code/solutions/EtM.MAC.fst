@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module EtM.MAC
 
 open FStar.Seq
@@ -56,11 +71,11 @@ let genPost parent h0 (k:key) h1 =
   /\ extends k.region parent
   /\ HyperStack.fresh_region k.region h0 h1
   /\ contains h1 k.log
-  /\ sel h1 k.log == createEmpty
+  /\ sel h1 k.log == empty
   (* CH: equivalent definition makes gen fail:
          /\ (sel h1 k.log).length == 0
          can't even prove:
-           assert((createEmpty #key).length == 0); *)
+           assert((empty #key).length == 0); *)
 
 val keygen: parent:rid -> ST key
   (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
@@ -69,7 +84,7 @@ val keygen: parent:rid -> ST key
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region empty in
   Key #region raw log
 
 val mac: k:key -> m:msg -> ST tag

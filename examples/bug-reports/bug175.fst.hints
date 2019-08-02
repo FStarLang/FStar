@@ -1,5 +1,5 @@
 [
-  "aŸÉ8\tr¹±yP—ÍHI×`",
+  "Ü\u0015\u0016‡ÑÍA#Aâ|9k\u0004P¼",
   [
     [
       "Bug175.exp",
@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "0f9e4c8907b5b67ca83fd98136e78acf"
-    ],
-    [
-      "Bug175.uu___is_SApp1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fae9e35641590bc66b6e2bcd06e0f613"
+      "95f3fc0176ceae72459407b35848392e"
     ],
     [
       "Bug175.__proj__SApp1__item__h",
@@ -26,13 +17,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp1",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_a67958f432222acb1037b7352e3962fa"
+        "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "ad077b3b74a55b78e7fda889941394e4"
+      "51157cace9d34db72bd17466746ec7e6"
     ],
     [
       "Bug175.__proj__SApp1__item__e1",
@@ -41,13 +30,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp1",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_a67958f432222acb1037b7352e3962fa"
+        "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "522e3cce91e1f0bd33325f7d33219683"
+      "b0a007fe022ed6a333a2f376cfe329e5"
     ],
     [
       "Bug175.__proj__SApp1__item__e2",
@@ -56,22 +43,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp1",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_a67958f432222acb1037b7352e3962fa"
+        "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "21bca812bce753c90c420881f3d0a341"
-    ],
-    [
-      "Bug175.uu___is_SApp2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "cc87be603c1780257ce712c0e9dcde68"
+      "a95d6339b358c898a1fbca110bb26f43"
     ],
     [
       "Bug175.__proj__SApp2__item__h",
@@ -80,13 +56,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp2",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
+        "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "1d35279cb50d7ddede84d33dd264246d"
+      "73ede202c65933c3ef9bdf92bf686b26"
     ],
     [
       "Bug175.__proj__SApp2__item__e1",
@@ -95,13 +69,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp2",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
+        "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "72b460aedcfe7b5a510a69cae4124cd6"
+      "73585ba1c459767f3a7b5a0ad8e37104"
     ],
     [
       "Bug175.__proj__SApp2__item__e2",
@@ -110,13 +82,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp2",
-        "equation_Bug175.config", "equation_Bug175.heap",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug175_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
+        "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "cb3a345c7595d62e9ba391fb50ea4c83"
+      "3ddbf75bd1989ba8fb3d685fe3d0472c"
     ],
     [
       "Bug175.__proj__SApp2__item___3",
@@ -131,10 +101,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Bug175.SApp2_e2",
         "projection_inverse_Bug175.SApp2_h",
-        "refinement_interpretation_Bug175_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
+        "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "36ff9b89160d846e3a9d29224bcc4c91"
+      "b0c776bc25e6afe1b2e19e869fe0bb9a"
     ]
   ]
 ]

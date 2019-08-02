@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.SquashProperties
 
 open FStar.Constructive
@@ -12,7 +27,7 @@ val squash_arrow : #a:Type -> #p:(a -> Type) ->
 let squash_arrow #a #p f = squash_double_arrow (return_squash f)
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
-  $f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
+  $f:(x:a -> Lemma (p x)) -> Lemma (x:a -> GTot (p x))(* (forall (x:a). p x) *)
 let forall_intro #a #p f =
   let ff : (x:a -> GTot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
   give_proof #(x:a -> GTot (p x)) (squash_arrow #a #p ff)
@@ -49,11 +64,11 @@ val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
 let excluded_middle_squash p =
   bind_squash (excluded_middle p) (fun x ->
   if x then
-    map_squash (get_proof p) Left
+    map_squash (get_proof p) (Left #p)
   else
-    return_squash (Right (return_squash (fun (h:p) ->
-                          give_proof (return_squash h);
-                          false_elim #False ()))))
+    return_squash (Right #_ #(~p) (return_squash (fun (h:p) ->
+                                   give_proof (return_squash h);
+                                   false_elim #False ()))))
 
 (* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 

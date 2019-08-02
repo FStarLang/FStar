@@ -15,12 +15,16 @@ open FStar.Const
 open FStar.Ident
 open FStar.String
 (*
- We are expected to have only 7 shift-reduce conflicts.
+ We are expected to have only 5 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 (* TODO : these files should be deprecated and removed *)
+
+let logic_qualifier_deprecation_warning =
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
 %}
 %start inputFragment
 %start term
@@ -32,13 +36,18 @@ open FStar.String
 %token ASSUME
 %token ATTRIBUTES
 %token BACKTICK
+%token BACKTICK_AT
+%token BACKTICK_HASH
+%token BACKTICK_PERC
 %token BANG_LBRACE
 %token BAR
 %token BAR_RBRACK
 %token BEGIN
 %token BY
 %token <bytes> BYTEARRAY
+%token CALC
 %token <char> CHAR
+%token CLASS
 %token COLON
 %token COLON_COLON
 %token COLON_EQUALS
@@ -62,6 +71,7 @@ open FStar.String
 %token EXISTS
 %token FALSE
 %token FORALL
+%token FRIEND
 %token <fsdoc> FSDOC
 %token <fsdoc> FSDOC_STANDALONE
 %token FUN
@@ -76,6 +86,7 @@ open FStar.String
 %token INCLUDE
 %token INLINE
 %token INLINE_FOR_EXTRACTION
+%token INSTANCE
 %token <string * bool> INT
 %token <string * bool> INT16
 %token <string * bool> INT32
@@ -98,7 +109,6 @@ open FStar.String
 %token MATCH
 %token MINUS
 %token MODULE
-%token MUTABLE
 %token <string> NAME
 %token NEW
 %token NEW_EFFECT
@@ -121,16 +131,21 @@ open FStar.String
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
 %token PRAGMALIGHT
+%token PRAGMA_POP_OPTIONS
+%token PRAGMA_PUSH_OPTIONS
 %token PRAGMA_RESET_OPTIONS
+%token PRAGMA_RESTART_SOLVER
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
 %token QMARK
 %token QMARK_DOT
+%token QUOTE
 %token <string> RANGE
 %token RANGE_OF
 %token RARROW
 %token RBRACE
 %token RBRACK
+%token <string> REAL
 %token REC
 %token REFLECTABLE
 %token REIFIABLE
@@ -140,11 +155,13 @@ open FStar.String
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
 %token SET_RANGE_OF
+%token SPLICE
 %token SQUIGGLY_RARROW
 %token <string> STRING
 %token SUBKIND
 %token SUBTYPE
 %token SUB_EFFECT
+%token SYNTH
 %token THEN
 %token <string> TILDE
 %token TOTAL
@@ -177,9 +194,10 @@ open FStar.String
 %left OPINFIX0d
 %left PIPE_RIGHT
 %right OPINFIX1
-%left MINUS OPINFIX2
+%left MINUS OPINFIX2 QUOTE
 %left OPINFIX3
 %left BACKTICK
+%left BACKTICK_AT BACKTICK_HASH
 %right OPINFIX4
 %type <inputFragment> inputFragment
 %type <ident> lident
@@ -198,51 +216,49 @@ option___anonymous_1_:
   
     {    ( None )}
 | OF typ
-    {let (_10, t0) = ((), $2) in
-let x =
-  let t = t0 in
-  let _1 = _10 in
-                                                 (t)
-in
+    {let (_1, t) = ((), $2) in
+let x =                                                (t) in
     ( Some x )}
 
 option___anonymous_2_:
   
     {    ( None )}
 | OF typ
-    {let (_10, t0) = ((), $2) in
-let x =
-  let t = t0 in
-  let _1 = _10 in
-                                                          (t)
-in
+    {let (_1, t) = ((), $2) in
+let x =                                                         (t) in
     ( Some x )}
 
 option___anonymous_5_:
   
     {    ( None )}
-| BY typ
-    {let (_10, tactic0) = ((), $2) in
-let x =
-  let tactic = tactic0 in
-  let _1 = _10 in
-                                                              (tactic)
-in
+| BY thunk_atomicTerm_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                       (tactic) in
     ( Some x )}
 
-option___anonymous_7_:
+option___anonymous_6_:
+  
+    {    ( None )}
+| BY thunk_typ_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                    (tactic) in
+    ( Some x )}
+
+option___anonymous_8_:
+  
+    {    ( None )}
+| BY thunk2_typ_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                 (tactic) in
+    ( Some x )}
+
+option___anonymous_9_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
-    {let (_10, e00, _30) = ((), $2, ()) in
+    {let (_1, e, _3) = ((), $2, ()) in
 let x =
-  let _3 = _30 in
-  let e0 = e00 in
-  let _1 = _10 in
-  let phi =
-    let e = e0 in
-                    ( {e with level=Formula} )
-  in
+  let phi =                 ( {e with level=Formula} ) in
                                                (phi)
 in
     ( Some x )}
@@ -268,34 +284,27 @@ option_fsTypeArgs_:
     {let x = $1 in
     ( Some x )}
 
-option_mainDecl_:
-  
-    {    ( None )}
-| mainDecl
-    {let x = $1 in
-    ( Some x )}
-
 option_pair_hasSort_simpleTerm__:
   
     {    ( None )}
 | hasSort simpleTerm
-    {let (x0, y0) = ($1, $2) in
-let x =
-  let y = y0 in
-  let x = x0 in
-      ( (x, y) )
-in
+    {let (x, y) = ($1, $2) in
+let x =     ( (x, y) ) in
     ( Some x )}
 
 option_string_:
   
     {    ( None )}
 | STRING
-    {let s0 = $1 in
-let x =
-  let s = s0 in
-               ( s )
-in
+    {let s = $1 in
+let x =              ( s ) in
+    ( Some x )}
+
+option_term_:
+  
+    {    ( None )}
+| term
+    {let x = $1 in
     ( Some x )}
 
 boption_SQUIGGLY_RARROW_:
@@ -309,18 +318,21 @@ boption___anonymous_0_:
   
     {    ( false )}
 | PRAGMALIGHT STRING
-    {let (_10, _20) = ((), $2) in
-let _1 =
-  let _2 = _20 in
-  let _1 = _10 in
-                                          ( )
-in
+    {let (_1, _2) = ((), $2) in
+let _1 =                                         ( ) in
     ( true )}
 
 loption_separated_nonempty_list_COMMA_appTerm__:
   
     {    ( [] )}
 | separated_nonempty_list_COMMA_appTerm_
+    {let x = $1 in
+    ( x )}
+
+loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__:
+  
+    {    ( [] )}
+| separated_nonempty_list_SEMICOLON_lidentOrOperator_
     {let x = $1 in
     ( x )}
 
@@ -331,34 +343,24 @@ loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
     {let x = $1 in
     ( x )}
 
+list___anonymous_10_:
+  
+    {    ( [] )}
+| DOT qlident list___anonymous_10_
+    {let (_1, id, xs) = ((), $2, $3) in
+let x =                                                     (id) in
+    ( x :: xs )}
+
 list___anonymous_4_:
   
     {    ( [] )}
 | binder list___anonymous_4_
-    {let (b0, xs) = ($1, $2) in
-let x =
-  let b = b0 in
-                             ([b])
-in
+    {let (b, xs) = ($1, $2) in
+let x =                            ([b]) in
     ( x :: xs )}
 | multiBinder list___anonymous_4_
-    {let (bs0, xs) = ($1, $2) in
-let x =
-  let bs = bs0 in
-                                                    (bs)
-in
-    ( x :: xs )}
-
-list___anonymous_8_:
-  
-    {    ( [] )}
-| DOT qlident list___anonymous_8_
-    {let (_10, id0, xs) = ((), $2, $3) in
-let x =
-  let id = id0 in
-  let _1 = _10 in
-                                                      (id)
-in
+    {let (bs, xs) = ($1, $2) in
+let x =                                                   (bs) in
     ( x :: xs )}
 
 list_argTerm_:
@@ -372,6 +374,13 @@ list_atomicTerm_:
   
     {    ( [] )}
 | atomicTerm list_atomicTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+list_attr_letbinding_:
+  
+    {    ( [] )}
+| attr_letbinding list_attr_letbinding_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -443,78 +452,46 @@ nonempty_list_atomicUniverse_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+nonempty_list_calcStep_:
+  calcStep
+    {let x = $1 in
+    ( [ x ] )}
+| calcStep nonempty_list_calcStep_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 nonempty_list_dotOperator_:
   DOT_LPAREN term RPAREN
-    {let (_10, e0, _30) = ((), $2, ()) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                               ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3) = ((), $2, ()) in
+let x =                              ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
 | DOT_LBRACK term RBRACK
-    {let (_10, e0, _30) = ((), $2, ()) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                               ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3) = ((), $2, ()) in
+let x =                              ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
-| DOT_LBRACK_BAR term RBRACE
-    {let (_10, e0, _30) = ((), $2, ()) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+| DOT_LBRACK_BAR term BAR_RBRACK
+    {let (_1, e, _3) = ((), $2, ()) in
+let x =                                      ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
 | DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT
-    {let (_10, e0, _30) = ((), $2, ()) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                                                  ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3) = ((), $2, ()) in
+let x =                                                 ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
 | DOT_LPAREN term RPAREN nonempty_list_dotOperator_
-    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                               ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+let x =                              ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
 | DOT_LBRACK term RBRACK nonempty_list_dotOperator_
-    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                               ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+let x =                              ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
-| DOT_LBRACK_BAR term RBRACE nonempty_list_dotOperator_
-    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+| DOT_LBRACK_BAR term BAR_RBRACK nonempty_list_dotOperator_
+    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+let x =                                      ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
 | DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT nonempty_list_dotOperator_
-    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
-let x =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                                                  ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
-in
+    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+let x =                                                 ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
 
 nonempty_list_patternOrMultibinder_:
@@ -535,20 +512,12 @@ separated_nonempty_list_AND_letbinding_:
 
 separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__:
   option_FSDOC_ typeDecl
-    {let (x0, y0) = ($1, $2) in
-let x =
-  let y = y0 in
-  let x = x0 in
-      ( (x, y) )
-in
+    {let (x, y) = ($1, $2) in
+let x =     ( (x, y) ) in
     ( [ x ] )}
 | option_FSDOC_ typeDecl AND separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
-    {let (x0, y0, _2, xs) = ($1, $2, (), $4) in
-let x =
-  let y = y0 in
-  let x = x0 in
-      ( (x, y) )
-in
+    {let (x, y, _2, xs) = ($1, $2, (), $4) in
+let x =     ( (x, y) ) in
     ( x :: xs )}
 
 separated_nonempty_list_BAR_tuplePattern_:
@@ -623,11 +592,11 @@ separated_nonempty_list_SEMICOLON_effectDecl_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_SEMICOLON_fieldPattern_:
-  fieldPattern
+separated_nonempty_list_SEMICOLON_lidentOrOperator_:
+  lidentOrOperator
     {let x = $1 in
     ( [ x ] )}
-| fieldPattern SEMICOLON separated_nonempty_list_SEMICOLON_fieldPattern_
+| lidentOrOperator SEMICOLON separated_nonempty_list_SEMICOLON_lidentOrOperator_
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
@@ -640,42 +609,41 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
-    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
+  boption___anonymous_0_ list_decl_ EOF
+    {let (is_light, decls, _3) = ($1, $2, ()) in
       (
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      )}
-
-mainDecl:
-  SEMICOLON_SEMICOLON option_FSDOC_ term
-    {let (_1, doc, t) = ((), $2, $3) in
-      ( let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       )}
 
 pragma:
   PRAGMA_SET_OPTIONS STRING
-    {let (_1, s0) = ((), $2) in
-let s =
-  let s = s0 in
-               ( s )
-in
+    {let (_1, s) = ((), $2) in
+let s =              ( s ) in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
+| PRAGMA_PUSH_OPTIONS option_string_
+    {let (_1, s_opt) = ((), $2) in
+      ( PushOptions s_opt )}
+| PRAGMA_POP_OPTIONS
+    {let _1 = () in
+      ( PopOptions )}
+| PRAGMA_RESTART_SOLVER
+    {let _1 = () in
+      ( RestartSolver )}
+
+attribute:
+  LBRACK_AT list_atomicTerm_ RBRACK
+    {let (_1, x, _3) = ((), $2, ()) in
+      ( x )}
 
 decoration:
   FSDOC
     {let x = $1 in
       ( Doc x )}
-| LBRACK_AT list_atomicTerm_ RBRACK
-    {let (_1, x, _3) = ((), $2, ()) in
+| attribute
+    {let x = $1 in
       ( DeclAttributes x )}
 | qualifier
     {let x = $1 in
@@ -683,15 +651,47 @@ decoration:
 
 decl:
   ASSUME uident COLON noSeqTerm
-    {let (_1, lid, _3, e0) = ((), $2, (), $4) in
-let phi =
-  let e = e0 in
-                  ( {e with level=Formula} )
-in
+    {let (_1, lid, _3, e) = ((), $2, (), $4) in
+let phi =                 ( {e with level=Formula} ) in
       ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
 | list_decoration_ rawDecl
     {let (ds, decl) = ($1, $2) in
       ( mk_decl decl (rhs parseState 2) ds )}
+| list_decoration_ typeclassDecl
+    {let (ds, decl) = ($1, $2) in
+      ( let (decl, extra_attrs) = decl in
+        let d = mk_decl decl (rhs parseState 2) ds in
+        { d with attrs = extra_attrs @ d.attrs }
+      )}
+
+typeclassDecl:
+  CLASS option_FSDOC_ typeDecl
+    {let (_1, x, y) = ((), $2, $3) in
+let tcdef =     ( (x, y) ) in
+      (
+        (* Only a single type decl allowed, but construct it the same as for multiple ones.
+         * Only difference is the `true` below marking that this a class so desugaring
+         * adds the needed %splice. *)
+        let flip (a,b) = (b,a) in
+        let tcdef = flip tcdef in
+        let d = Tycon (false, true, [tcdef]) in
+
+        (* No attrs yet, but perhaps we want a `class` attribute *)
+        (d, [])
+      )}
+| INSTANCE letqualifier letbinding
+    {let (_1, q, lb) = ((), $2, $3) in
+      (
+        (* Making a single letbinding *)
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
+        let d = TopLevelLet(q, lbs) in
+
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      )}
 
 rawDecl:
   pragma
@@ -700,6 +700,9 @@ rawDecl:
 | OPEN quident
     {let (_1, uid) = ((), $2) in
       ( Open uid )}
+| FRIEND quident
+    {let (_1, uid) = ((), $2) in
+      ( Friend uid )}
 | INCLUDE quident
     {let (_1, uid) = ((), $2) in
       ( Include uid )}
@@ -711,10 +714,10 @@ rawDecl:
       (  TopLevelModule uid )}
 | TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
-      ( Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
@@ -732,6 +735,10 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       )}
+| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK thunk_atomicTerm_
+    {let (_1, _2, xs, _4, t) = ((), (), $3, (), $5) in
+let ids =     ( xs ) in
+      ( Splice (ids, t) )}
 | EXCEPTION uident option___anonymous_1_
     {let (_1, lid, t_opt) = ((), $2, $3) in
       ( Exception(lid, t_opt) )}
@@ -779,16 +786,11 @@ typeDefinition:
 recordFieldDecl:
   lident COLON typ
     {let (lid, _3, t) = ($1, (), $3) in
-let doc_opt =
-      ( None )
-in
+let doc_opt =     ( None ) in
       ( (lid, t, doc_opt) )}
 | FSDOC lident COLON typ
-    {let (x0, lid, _3, t) = ($1, $2, (), $4) in
-let doc_opt =
-  let x = x0 in
-      ( Some x )
-in
+    {let (x, lid, _3, t) = ($1, $2, (), $4) in
+let doc_opt =     ( Some x ) in
       ( (lid, t, doc_opt) )}
 
 constructorDecl:
@@ -798,6 +800,16 @@ constructorDecl:
 | BAR option_FSDOC_ uident option___anonymous_2_
     {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
                                                              ( (uid, t_opt, doc_opt, true) )}
+
+attr_letbinding:
+  AND letbinding
+    {let (_2, lb) = ((), $2) in
+let attr =     ( None ) in
+    ( attr, lb )}
+| attribute AND letbinding
+    {let (x, _2, lb) = ($1, (), $3) in
+let attr =     ( Some x ) in
+    ( attr, lb )}
 
 letbinding:
   maybeFocus lidentOrOperator nonempty_list_patternOrMultibinder_ option_ascribeTyp_ EQUALS term
@@ -838,21 +850,17 @@ effectDefinition:
 effectDecl:
   lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
     {let (src_eff, _2, tgt_eff, _4, lift) = ($1, (), $3, (), $5) in
       ( { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } )}
 | quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm RBRACE
-    {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _7) = ($1, (), $3, (), $5, (), $7, ()) in
-let lift2_opt =
-      ( None )
-in
+    {let (src_eff, _2, tgt_eff, _4, x, _2_inlined1, y, _7) = ($1, (), $3, (), $5, (), $7, ()) in
+let lift2_opt =     ( None ) in
 let lift1 =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
+  let _2 = _2_inlined1 in
       ( (x, y) )
 in
      (
@@ -876,30 +884,17 @@ in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
 | quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm SEMICOLON IDENT EQUALS simpleTerm RBRACE
-    {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _1000, id000, _200, y00, _7) = ($1, (), $3, (), $5, (), $7, (), $9, (), $11, ()) in
+    {let (src_eff, _2, tgt_eff, _4, x, _2_inlined1, y, _1, id, _2_inlined2, y_inlined1, _7) = ($1, (), $3, (), $5, (), $7, (), $9, (), $11, ()) in
 let lift2_opt =
-  let y0 = y00 in
-  let _20 = _200 in
-  let id00 = id000 in
-  let _100 = _1000 in
+  let (y, _2) = (y_inlined1, _2_inlined2) in
   let x =
-    let y = y0 in
-    let _2 = _20 in
-    let id0 = id00 in
-    let _10 = _100 in
-    let x =
-      let id = id0 in
-      let _1 = _10 in
-                                                                (id)
-    in
+    let x =                                                           (id) in
         ( (x, y) )
   in
       ( Some x )
 in
 let lift1 =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
+  let _2 = _2_inlined1 in
       ( (x, y) )
 in
      (
@@ -976,7 +971,9 @@ qualifier:
                   ( New )}
 | LOGIC
     {let _1 = () in
-                  ( Logic )}
+                  ( log_issue (lhs parseState) (Warning_logicqualifier,
+                                                logic_qualifier_deprecation_warning);
+                    Logic )}
 | OPAQUE
     {let _1 = () in
                   ( Opaque )}
@@ -996,9 +993,6 @@ letqualifier:
   REC
     {let _1 = () in
                 ( Rec )}
-| MUTABLE
-    {let _1 = () in
-                ( Mutable )}
 | 
     {                ( NoLetQualifier )}
 
@@ -1012,7 +1006,10 @@ aqual:
                      ( q )}
 
 aqualUniverses:
-  HASH
+  HASH LBRACK thunk_tmNoEq_ RBRACK
+    {let (_1, _2, t, _4) = ((), (), $3, ()) in
+                                       ( Meta t )}
+| HASH
     {let _1 = () in
               ( Implicit )}
 | DOLLAR
@@ -1044,7 +1041,7 @@ constructorPattern:
       ( pat )}
 
 atomicPattern:
-  LPAREN tuplePattern COLON typ refineOpt RPAREN
+  LPAREN tuplePattern COLON simpleArrow refineOpt RPAREN
     {let (_1, pat, _3, t, phi_opt, _6) = ((), $2, (), $4, $5, ()) in
       (
         let pos_t = rhs2 parseState 2 4 in
@@ -1052,13 +1049,10 @@ atomicPattern:
         mkRefinedPattern pat t true phi_opt pos_t pos
       )}
 | LBRACK loption_separated_nonempty_list_SEMICOLON_tuplePattern__ RBRACK
-    {let (_1, xs0, _3) = ((), $2, ()) in
-let pats =
-  let xs = xs0 in
-      ( xs )
-in
+    {let (_1, xs, _3) = ((), $2, ()) in
+let pats =     ( xs ) in
       ( mk_pattern (PatList pats) (rhs2 parseState 1 3) )}
-| LBRACE separated_nonempty_list_SEMICOLON_fieldPattern_ RBRACE
+| LBRACE right_flexible_nonempty_list_SEMICOLON_fieldPattern_ RBRACE
     {let (_1, record_pat, _3) = ((), $2, ()) in
       ( mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) )}
 | LENS_PAREN_LEFT constructorPattern COMMA separated_nonempty_list_COMMA_constructorPattern_ LENS_PAREN_RIGHT
@@ -1071,133 +1065,85 @@ in
     {let tv = $1 in
                               ( mk_pattern (PatTvar (tv, None)) (rhs parseState 1) )}
 | LPAREN OPPREFIX RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX3 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX4 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX0a RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX0b RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX0c RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX0d RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX1 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX2 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN PIPE_RIGHT RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident("|>", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident("|>", rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN COLON_EQUALS RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(":=", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident(":=", rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN COLON_COLON RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident("::", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident("::", rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident(op, rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OP_MIXFIX_ACCESS RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident(op, rhs parseState 1) ) in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
-      ( mk_pattern PatWild (rhs parseState 1) )}
+      ( mk_pattern (PatWild None) (rhs parseState 1) )}
 | HASH UNDERSCORE
     {let (_1, _2) = ((), ()) in
-      ( mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) )}
+      ( mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) )}
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
@@ -1210,23 +1156,42 @@ in
 
 fieldPattern:
   qlident EQUALS tuplePattern
-    {let (x0, _20, y0) = ($1, (), $3) in
-let p =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+    {let (x, _2, y) = ($1, (), $3) in
+let p =     ( (x, y) ) in
       ( p )}
 | qlident
     {let lid = $1 in
       ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
-  atomicPattern
+  LBRACK_BAR UNDERSCORE COLON simpleArrow BAR_RBRACK
+    {let (_1, _2, _3, t, _5) = ((), (), (), $4, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      )}
+| LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
+    {let (_1, i, _3, t, _5) = ((), $2, (), $4, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      )}
+| LBRACK_BAR simpleArrow BAR_RBRACK
+    {let (_1, t, _3) = ((), $2, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+                                 (rhs2 parseState 1 3) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
+      )}
+| atomicPattern
     {let pat = $1 in
                       ( [pat] )}
-| LPAREN aqualified_lident_ nonempty_list_aqualified_lident__ COLON typ refineOpt RPAREN
+| LPAREN aqualified_lident_ nonempty_list_aqualified_lident__ COLON simpleArrow refineOpt RPAREN
     {let (_1, qual_id0, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
       (
         let pos = rhs2 parseState 1 7 in
@@ -1247,7 +1212,7 @@ binder:
              ( mk_binder (TVariable tv) (rhs parseState 1) Kind None  )}
 
 multiBinder:
-  LPAREN nonempty_list_aqualified_lidentOrUnderscore__ COLON typ refineOpt RPAREN
+  LPAREN nonempty_list_aqualified_lidentOrUnderscore__ COLON simpleArrow refineOpt RPAREN
     {let (_1, qual_ids, _3, t, r, _6) = ((), $2, (), $4, $5, ()) in
      (
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
@@ -1261,48 +1226,32 @@ binders:
 
 aqualified_lident_:
   lident
-    {let y0 = $1 in
+    {let y = $1 in
 let x =
-  let y = y0 in
-  let x =
-        ( None )
-  in
+  let x =     ( None ) in
       ( (x, y) )
 in
                                                   ( x )}
 | aqualUniverses lident
-    {let (x00, y0) = ($1, $2) in
+    {let (x, y) = ($1, $2) in
 let x =
-  let y = y0 in
-  let x0 = x00 in
-  let x =
-    let x = x0 in
-        ( Some x )
-  in
+  let x =     ( Some x ) in
       ( (x, y) )
 in
                                                   ( x )}
 
 aqualified_lidentOrUnderscore_:
   lidentOrUnderscore
-    {let y0 = $1 in
+    {let y = $1 in
 let x =
-  let y = y0 in
-  let x =
-        ( None )
-  in
+  let x =     ( None ) in
       ( (x, y) )
 in
                                                   ( x )}
 | aqualUniverses lidentOrUnderscore
-    {let (x00, y0) = ($1, $2) in
+    {let (x, y) = ($1, $2) in
 let x =
-  let y = y0 in
-  let x0 = x00 in
-  let x =
-    let x = x0 in
-        ( Some x )
-  in
+  let x =     ( Some x ) in
       ( (x, y) )
 in
                                                   ( x )}
@@ -1346,126 +1295,78 @@ lidentOrOperator:
     {let id = $1 in
     ( mk_ident(id, rhs parseState 1) )}
 | LPAREN OPPREFIX RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let id =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let id =      ( mk_ident (op, rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX3 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let id =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let id =      ( mk_ident (op, rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX4 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let id =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let id =      ( mk_ident (op, rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0a RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0b RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0c RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0d RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX1 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX2 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let id =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN PIPE_RIGHT RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let id =
-  let op = op0 in
-       ( mk_ident("|>", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let id =      ( mk_ident("|>", rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_EQUALS RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let id =
-  let op = op0 in
-       ( mk_ident(":=", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let id =      ( mk_ident(":=", rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_COLON RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let id =
-  let op = op0 in
-       ( mk_ident("::", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let id =      ( mk_ident("::", rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let id =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let id =      ( mk_ident(op, rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OP_MIXFIX_ACCESS RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let id =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let id =      ( mk_ident(op, rhs parseState 1) ) in
     ( {id with idText = compile_op' id.idText id.idRange} )}
 
 lidentOrUnderscore:
@@ -1491,10 +1392,32 @@ tvar:
     {let tv = $1 in
             ( mk_ident(tv, rhs parseState 1) )}
 
+thunk_atomicTerm_:
+  atomicTerm
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_tmNoEq_:
+  tmNoEq
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_typ_:
+  typ
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk2_typ_:
+  typ
+    {let t = $1 in
+     ( let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
+       let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
+       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
 ascribeTyp:
-  COLON tmArrow_tmNoEq_
-    {let (_1, t) = ((), $2) in
-                            ( t )}
+  COLON tmArrow_tmNoEq_ option___anonymous_5_
+    {let (_1, t, tacopt) = ((), $2, $3) in
+                                                                                ( t, tacopt )}
 
 ascribeKind:
   COLON kind
@@ -1524,15 +1447,13 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE tmIff option___anonymous_5_
+| tmIff SUBTYPE tmIff option___anonymous_6_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
       ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
-    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+    {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
+  let _3 = _3_inlined1 in
                                ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
@@ -1540,35 +1461,29 @@ in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK term RBRACK LARROW noSeqTerm
-    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+    {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
+  let _3 = _3_inlined1 in
                                ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| atomicTermNotQUident DOT_LBRACK_BAR term RBRACE LARROW noSeqTerm
-    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+| atomicTermNotQUident DOT_LBRACK_BAR term BAR_RBRACK LARROW noSeqTerm
+    {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
-                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
+  let _3 = _3_inlined1 in
+                                       ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW noSeqTerm
-    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+    {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
-  let _3 = _30 in
-  let e = e0 in
-  let _1 = _10 in
+  let _3 = _3_inlined1 in
                                                   ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
@@ -1594,21 +1509,15 @@ in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       )}
 | TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
-    {let (_1, e1, _3, xs0) = ((), $2, (), $4) in
-let pbs =
-  let xs = xs0 in
-     ( List.rev xs )
-in
+    {let (_1, e1, _3, xs) = ((), $2, (), $4) in
+let pbs =    ( List.rev xs ) in
       (
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_6_
-    {let (_1, e, _3, xs0) = ((), $2, (), $4) in
-let pbs =
-  let xs = xs0 in
-     ( List.rev xs )
-in
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_7_
+    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+let pbs =    ( List.rev xs ) in
       (
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
@@ -1616,18 +1525,25 @@ in
 | LET OPEN quident IN term
     {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
       ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
-| LET letqualifier separated_nonempty_list_AND_letbinding_ IN term
-    {let (_1, q, lbs, _4, e) = ($1, $2, $3, (), $5) in
+| LET letqualifier letbinding list_attr_letbinding_ IN term
+    {let (_2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, (), $6) in
+let attrs =     ( None ) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
+      )}
+| attribute LET letqualifier letbinding list_attr_letbinding_ IN term
+    {let (x, _2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, $5, (), $7) in
+let attrs =     ( Some x ) in
+      (
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
       )}
 | FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_
-    {let (_1, xs0) = ((), $2) in
-let pbs =
-  let xs = xs0 in
-     ( List.rev xs )
-in
+    {let (_1, xs) = ((), $2) in
+let pbs =    ( List.rev xs ) in
       (
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
@@ -1635,36 +1551,74 @@ in
 | ASSUME atomicTerm
     {let (_1, e) = ((), $2) in
       ( let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
-| lident LARROW noSeqTerm
-    {let (id, _2, e) = ($1, (), $3) in
-      ( mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr )}
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+      )}
+| ASSERT atomicTerm option___anonymous_8_
+    {let (_1, e, tactic_opt) = ((), $2, $3) in
+      (
+        match tactic_opt with
+        | None ->
+          let a = set_lid_range assert_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+        | Some tac ->
+          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+      )}
+| UNDERSCORE BY thunk_atomicTerm_
+    {let (_1, _2, tactic) = ((), (), $3) in
+     (
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+     )}
+| SYNTH atomicTerm
+    {let (_1, tactic) = ((), $2) in
+     (
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+     )}
+| CALC atomicTerm LBRACE noSeqTerm SEMICOLON nonempty_list_calcStep_ RBRACE
+    {let (_1, rel, _3, init, _5, steps, _7) = ((), $2, (), $4, (), $6, ()) in
+     (
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+     )}
+
+calcStep:
+  binop LBRACE option_term_ RBRACE noSeqTerm SEMICOLON
+    {let (rel, _2, justif, _4, next, _6) = ($1, (), $3, (), $5, ()) in
+     (
+         let justif =
+             match justif with
+             | Some t -> t
+             | None -> mk_term (Const Const_unit) (rhs2 parseState 2 4) Expr
+         in
+         CalcStep (rel, justif, next)
+     )}
 
 typ:
   simpleTerm
     {let t = $1 in
-                  ( t )}
+                 ( t )}
 | FORALL binders DOT trigger noSeqTerm
-    {let (_10, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
-let q =
-  let _1 = _10 in
-             ( fun x -> QForall x )
-in
+    {let (_1, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+let q =            ( fun x -> QForall x ) in
       (
         match bs with
-            | [] -> raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
-            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
+        | _ ->
+          let idents = idents_of_binders bs (rhs2 parseState 1 3) in
+          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       )}
 | EXISTS binders DOT trigger noSeqTerm
-    {let (_10, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
-let q =
-  let _1 = _10 in
-             ( fun x -> QExists x)
-in
+    {let (_1, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+let q =            ( fun x -> QExists x) in
       (
         match bs with
-            | [] -> raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
-            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
+        | _ ->
+          let idents = idents_of_binders bs (rhs2 parseState 1 3) in
+          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       )}
 
 trigger:
@@ -1703,9 +1657,7 @@ maybeFocusArrow:
 patternBranch:
   disjunctivePattern maybeFocusArrow term
     {let (pat, focus, e) = ($1, $2, $3) in
-let when_opt =
-                           ( None )
-in
+let when_opt =                          ( None ) in
       (
         let pat = match pat with
           | [p] -> p
@@ -1714,10 +1666,9 @@ in
         (focus, (pat, when_opt, e))
       )}
 | disjunctivePattern WHEN tmFormula maybeFocusArrow term
-    {let (pat, _10, e0, focus, e) = ($1, (), $3, $4, $5) in
+    {let (pat, _1, e_inlined1, focus, e) = ($1, (), $3, $4, $5) in
 let when_opt =
-  let e = e0 in
-  let _1 = _10 in
+  let e = e_inlined1 in
                            ( Some e )
 in
       (
@@ -1746,14 +1697,8 @@ tmImplies:
 
 tmArrow_tmFormula_:
   LPAREN aqual tmFormula RPAREN RARROW tmArrow_tmFormula_
-    {let (_10, q0, dom_tm0, _40, _2, tgt) = ((), $2, $3, (), (), $6) in
-let dom =
-  let _4 = _40 in
-  let dom_tm = dom_tm0 in
-  let q = q0 in
-  let _1 = _10 in
-                                      ( Some q, dom_tm )
-in
+    {let (_1, q, dom_tm, _4, _2, tgt) = ((), $2, $3, (), (), $6) in
+let dom =                                     ( Some q, dom_tm ) in
      (
        let (aq_opt, dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
@@ -1763,12 +1708,9 @@ in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | tmFormula RARROW tmArrow_tmFormula_
-    {let (dom_tm0, _2, tgt) = ($1, (), $3) in
+    {let (dom_tm, _2, tgt) = ($1, (), $3) in
 let dom =
-  let dom_tm = dom_tm0 in
-  let aq_opt =
-        ( None )
-  in
+  let aq_opt =     ( None ) in
                                       ( aq_opt, dom_tm )
 in
      (
@@ -1780,14 +1722,9 @@ in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | aqual tmFormula RARROW tmArrow_tmFormula_
-    {let (x00, dom_tm0, _2, tgt) = ($1, $2, (), $4) in
+    {let (x, dom_tm, _2, tgt) = ($1, $2, (), $4) in
 let dom =
-  let dom_tm = dom_tm0 in
-  let x0 = x00 in
-  let aq_opt =
-    let x = x0 in
-        ( Some x )
-  in
+  let aq_opt =     ( Some x ) in
                                       ( aq_opt, dom_tm )
 in
      (
@@ -1804,14 +1741,8 @@ in
 
 tmArrow_tmNoEq_:
   LPAREN aqual tmNoEq RPAREN RARROW tmArrow_tmNoEq_
-    {let (_10, q0, dom_tm0, _40, _2, tgt) = ((), $2, $3, (), (), $6) in
-let dom =
-  let _4 = _40 in
-  let dom_tm = dom_tm0 in
-  let q = q0 in
-  let _1 = _10 in
-                                      ( Some q, dom_tm )
-in
+    {let (_1, q, dom_tm, _4, _2, tgt) = ((), $2, $3, (), (), $6) in
+let dom =                                     ( Some q, dom_tm ) in
      (
        let (aq_opt, dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
@@ -1821,12 +1752,9 @@ in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | tmNoEq RARROW tmArrow_tmNoEq_
-    {let (dom_tm0, _2, tgt) = ($1, (), $3) in
+    {let (dom_tm, _2, tgt) = ($1, (), $3) in
 let dom =
-  let dom_tm = dom_tm0 in
-  let aq_opt =
-        ( None )
-  in
+  let aq_opt =     ( None ) in
                                       ( aq_opt, dom_tm )
 in
      (
@@ -1838,14 +1766,9 @@ in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | aqual tmNoEq RARROW tmArrow_tmNoEq_
-    {let (x00, dom_tm0, _2, tgt) = ($1, $2, (), $4) in
+    {let (x, dom_tm, _2, tgt) = ($1, $2, (), $4) in
 let dom =
-  let dom_tm = dom_tm0 in
-  let x0 = x00 in
-  let aq_opt =
-    let x = x0 in
-        ( Some x )
-  in
+  let aq_opt =     ( Some x ) in
                                       ( aq_opt, dom_tm )
 in
      (
@@ -1859,6 +1782,31 @@ in
 | tmNoEq
     {let e = $1 in
          ( e )}
+
+simpleArrow:
+  simpleArrowDomain RARROW simpleArrow
+    {let (dom, _2, tgt) = ($1, (), $3) in
+     (
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     )}
+| tmEqNoRefinement
+    {let e = $1 in
+                       ( e )}
+
+simpleArrowDomain:
+  tmEqNoRefinement
+    {let dom_tm = $1 in
+let aq_opt =     ( None ) in
+                                                  ( aq_opt, dom_tm )}
+| aqual tmEqNoRefinement
+    {let (x, dom_tm) = ($1, $2) in
+let aq_opt =     ( Some x ) in
+                                                  ( aq_opt, dom_tm )}
 
 tmFormula:
   tmFormula DISJUNCTION tmConjunction
@@ -1885,95 +1833,262 @@ tmTuple:
           | components -> mkTuple components (rhs2 parseState 1 1)
       )}
 
-tmEq:
-  tmEq EQUALS tmEq
+tmEqWith_appTerm_:
+  tmEqWith_appTerm_ EQUALS tmEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq COLON_EQUALS tmEq
+| tmEqWith_appTerm_ COLON_EQUALS tmEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq PIPE_RIGHT tmEq
+| tmEqWith_appTerm_ PIPE_RIGHT tmEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX0a tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX0a tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX0b tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX0b tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX0c tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX0c tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX0d tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX0d tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX1 tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX1 tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq OPINFIX2 tmEq
-    {let (e1, op0, e2) = ($1, $2, $3) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+| tmEqWith_appTerm_ OPINFIX2 tmEqWith_appTerm_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmEq MINUS tmEq
+| tmEqWith_appTerm_ MINUS tmEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| MINUS tmEq
+| MINUS tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
       ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
-| tmNoEq
+| QUOTE tmEqWith_appTerm_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un )}
+| BACKTICK tmEqWith_appTerm_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_AT atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
+| BACKTICK_HASH atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
+| tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
 
-tmNoEq:
-  tmNoEq COLON_COLON tmNoEq
+tmEqWith_tmRefinement_:
+  tmEqWith_tmRefinement_ EQUALS tmEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ COLON_EQUALS tmEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ PIPE_RIGHT tmEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX0a tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX0b tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX0c tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX0d tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX1 tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ OPINFIX2 tmEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
+      ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEqWith_tmRefinement_ MINUS tmEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| MINUS tmEqWith_tmRefinement_
+    {let (_1, e) = ((), $2) in
+      ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
+| QUOTE tmEqWith_tmRefinement_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un )}
+| BACKTICK tmEqWith_tmRefinement_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_AT atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
+| BACKTICK_HASH atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
+| tmNoEqWith_tmRefinement_
+    {let e = $1 in
+      ( e )}
+
+tmNoEqWith_appTerm_:
+  tmNoEqWith_appTerm_ COLON_COLON tmNoEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       ( consTerm (rhs parseState 2) e1 e2 )}
-| tmNoEq AMP tmNoEq
+| tmNoEqWith_appTerm_ AMP tmNoEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       (
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
-| tmNoEq OPINFIX3 tmNoEq
+| tmNoEqWith_appTerm_ OPINFIX3 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmNoEq BACKTICK qlident BACKTICK tmNoEq
-    {let (e1, _2, id, _4, e2) = ($1, (), $3, (), $5) in
-      ( mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) )}
-| tmNoEq OPINFIX4 tmNoEq
+| tmNoEqWith_appTerm_ BACKTICK tmNoEqWith_appTerm_ BACKTICK tmNoEqWith_appTerm_
+    {let (e1, _2, op, _4, e2) = ($1, (), $3, (), $5) in
+      ( mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
+| tmNoEqWith_appTerm_ OPINFIX4 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| lidentOrUnderscore COLON appTerm refineOpt
+| LBRACE recordExp RBRACE
+    {let (_1, e, _3) = ((), $2, ()) in
+                              ( e )}
+| BACKTICK_PERC atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
+| TILDE atomicTerm
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
+| appTerm
+    {let e = $1 in
+        ( e )}
+
+tmNoEqWith_tmRefinement_:
+  tmNoEqWith_tmRefinement_ COLON_COLON tmNoEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( consTerm (rhs parseState 2) e1 e2 )}
+| tmNoEqWith_tmRefinement_ AMP tmNoEqWith_tmRefinement_
+    {let (e1, _2, e2) = ($1, (), $3) in
+      (
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+      )}
+| tmNoEqWith_tmRefinement_ OPINFIX3 tmNoEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+      ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmNoEqWith_tmRefinement_ BACKTICK tmNoEqWith_tmRefinement_ BACKTICK tmNoEqWith_tmRefinement_
+    {let (e1, _2, op, _4, e2) = ($1, (), $3, (), $5) in
+      ( mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
+| tmNoEqWith_tmRefinement_ OPINFIX4 tmNoEqWith_tmRefinement_
+    {let (e1, op, e2) = ($1, $2, $3) in
+      ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| LBRACE recordExp RBRACE
+    {let (_1, e, _3) = ((), $2, ()) in
+                              ( e )}
+| BACKTICK_PERC atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
+| TILDE atomicTerm
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
+| tmRefinement
+    {let e = $1 in
+        ( e )}
+
+binop:
+  OPINFIX0a
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX0b
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX0c
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| EQUALS
+    {let o = () in
+                ( let i = mk_ident ("=", rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX0d
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX1
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX2
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX3
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| OPINFIX4
+    {let o = $1 in
+                ( let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+| BACKTICK qlident BACKTICK
+    {let (_1, id, _3) = ((), $2, ()) in
+                                 ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
+| atomicTerm
+    {let t = $1 in
+                 ( t )}
+
+tmEqNoRefinement:
+  tmEqWith_appTerm_
+    {let e = $1 in
+                        ( e )}
+
+tmEq:
+  tmEqWith_tmRefinement_
+    {let e = $1 in
+                              ( e )}
+
+tmNoEq:
+  tmNoEqWith_tmRefinement_
+    {let e = $1 in
+                               ( e )}
+
+tmRefinement:
+  lidentOrUnderscore COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
         let t = match phi_opt with
@@ -1981,18 +2096,12 @@ tmNoEq:
           | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
         in mk_term t (rhs2 parseState 1 4) Type_level
       )}
-| LBRACE recordExp RBRACE
-    {let (_1, e, _3) = ((), $2, ()) in
-                              ( e )}
-| TILDE atomicTerm
-    {let (op, e) = ($1, $2) in
-      ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
 | appTerm
     {let e = $1 in
-              ( e )}
+               ( e )}
 
 refineOpt:
-  option___anonymous_7_
+  option___anonymous_9_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2006,13 +2115,8 @@ recordExp:
 
 simpleDef:
   qlident EQUALS noSeqTerm
-    {let (x0, _20, y0) = ($1, (), $3) in
-let e =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+    {let (x, _2, y) = ($1, (), $3) in
+let e =     ( (x, y) ) in
                                                  ( e )}
 | qlident
     {let lid = $1 in
@@ -2025,24 +2129,16 @@ appTerm:
 
 argTerm:
   indexingTerm
-    {let y0 = $1 in
+    {let y = $1 in
 let x =
-  let y = y0 in
-  let x =
-             ( Nothing )
-  in
+  let x =          ( Nothing ) in
       ( (x, y) )
 in
                                     ( x )}
 | HASH indexingTerm
-    {let (_100, y0) = ((), $2) in
+    {let (_1, y) = ((), $2) in
 let x =
-  let y = y0 in
-  let _10 = _100 in
-  let x =
-    let _1 = _10 in
-             ( Hash )
-  in
+  let x =          ( Hash ) in
       ( (x, y) )
 in
                                     ( x )}
@@ -2091,10 +2187,6 @@ atomicTermNotQUident:
   UNDERSCORE
     {let _1 = () in
                ( mk_term Wild (rhs parseState 1) Un )}
-| ASSERT
-    {let _1 = () in
-             ( let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
                 ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}
@@ -2105,131 +2197,83 @@ atomicTermNotQUident:
     {let x = $1 in
     ( x )}
 | LPAREN OPPREFIX RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX3 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX4 RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident (op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident (op, rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX0a RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX0b RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX0c RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX0d RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX1 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX2 RPAREN
-    {let (_1, op00, _3) = ((), $2, ()) in
+    {let (_1, op, _3) = ((), $2, ()) in
 let op =
-  let op0 = op00 in
-  let op =
-    let op = op0 in
-         ( mk_ident (op, rhs parseState 1) )
-  in
+  let op =      ( mk_ident (op, rhs parseState 1) ) in
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN PIPE_RIGHT RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident("|>", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident("|>", rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN COLON_EQUALS RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(":=", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident(":=", rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN COLON_COLON RPAREN
-    {let (_1, op0, _3) = ((), (), ()) in
-let op =
-  let op = op0 in
-       ( mk_ident("::", rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), (), ()) in
+let op =      ( mk_ident("::", rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident(op, rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OP_MIXFIX_ACCESS RPAREN
-    {let (_1, op0, _3) = ((), $2, ()) in
-let op =
-  let op = op0 in
-       ( mk_ident(op, rhs parseState 1) )
-in
+    {let (_1, op, _3) = ((), $2, ()) in
+let op =      ( mk_ident(op, rhs parseState 1) ) in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_8_
+| projectionLHS list___anonymous_10_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2256,42 +2300,37 @@ projectionLHS:
 | LPAREN term option_pair_hasSort_simpleTerm__ RPAREN
     {let (_1, e, sort_opt, _4) = ((), $2, $3, ()) in
       (
+        (* Note: we have to keep the parentheses here. Consider t * u * v. This
+         * is parsed as Op2( *, Op2( *, t, u), v). The desugaring phase then looks
+         * up * and figures out that it hasn't been overridden, meaning that
+         * it's a tuple type, and proceeds to flatten out the whole tuple. Now
+         * consider (t * u) * v. We keep the Paren node, which prevents the
+         * flattening from happening, hence ensuring the proper type is
+         * generated. *)
         let e1 = match sort_opt with
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       )}
 | LBRACK_BAR right_flexible_list_SEMICOLON_noSeqTerm_ BAR_RBRACK
-    {let (_1, l0, _3) = ((), $2, ()) in
-let es =
-  let l = l0 in
-                                                  ( l )
-in
+    {let (_1, l, _3) = ((), $2, ()) in
+let es =                                                 ( l ) in
       (
         let l = mkConsList (rhs2 parseState 1 3) es in
         let pos = (rhs2 parseState 1 3) in
         mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos Expr) [l] pos
       )}
 | LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
-    {let (_1, l0, _3) = ((), $2, ()) in
-let es =
-  let l = l0 in
-                                                  ( l )
-in
+    {let (_1, l, _3) = ((), $2, ()) in
+let es =                                                 ( l ) in
       ( mkConsList (rhs2 parseState 1 3) es )}
 | PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
-    {let (_1, l0, _3) = ((), $2, ()) in
-let es =
-  let l = l0 in
-                                                  ( l )
-in
+    {let (_1, l, _3) = ((), $2, ()) in
+let es =                                                 ( l ) in
       ( mkLexList (rhs2 parseState 1 3) es )}
 | BANG_LBRACE loption_separated_nonempty_list_COMMA_appTerm__ RBRACE
-    {let (_1, xs0, _3) = ((), $2, ()) in
-let es =
-  let xs = xs0 in
-      ( xs )
-in
+    {let (_1, xs, _3) = ((), $2, ()) in
+let es =     ( xs ) in
       ( mkRefSet (rhs2 parseState 1 3) es )}
 | quident QMARK_DOT lident
     {let (ns, _2, id) = ($1, (), $3) in
@@ -2358,6 +2397,9 @@ constant:
 | FALSE
     {let _1 = () in
           ( Const_bool false )}
+| REAL
+    {let r = $1 in
+           ( Const_real r )}
 | IEEE64
     {let f = $1 in
              ( Const_float f )}
@@ -2473,13 +2515,13 @@ warn_error:
 flag:
   OPINFIX1
     {let op = $1 in
-    ( if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op))}
+    ( if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op))}
 | OPINFIX2
     {let op = $1 in
     ( if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op))}
 | MINUS
     {let _1 = () in
-   ( CSilent )}
+          ( CSilent )}
 
 range:
   INT
@@ -2493,6 +2535,16 @@ some_fsTypeArgs_:
   fsTypeArgs
     {let x = $1 in
         ( Some x )}
+
+right_flexible_list_SEMICOLON_fieldPattern_:
+  
+    {        ( [] )}
+| fieldPattern
+    {let x = $1 in
+        ( [x] )}
+| fieldPattern SEMICOLON right_flexible_list_SEMICOLON_fieldPattern_
+    {let (x, _2, xs) = ($1, (), $3) in
+                                           ( x :: xs )}
 
 right_flexible_list_SEMICOLON_noSeqTerm_:
   
@@ -2524,6 +2576,14 @@ right_flexible_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
+right_flexible_nonempty_list_SEMICOLON_fieldPattern_:
+  fieldPattern
+    {let x = $1 in
+        ( [x] )}
+| fieldPattern SEMICOLON right_flexible_list_SEMICOLON_fieldPattern_
+    {let (x, _2, xs) = ($1, (), $3) in
+                                           ( x :: xs )}
+
 right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_:
   recordFieldDecl
     {let x = $1 in
@@ -2540,35 +2600,27 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
-reverse_left_flexible_list_BAR___anonymous_6_:
+reverse_left_flexible_list_BAR___anonymous_7_:
   
     {   ( [] )}
 | patternBranch
-    {let pb0 = $1 in
-let x =
-  let pb = pb0 in
-                                                                     (pb)
-in
+    {let pb = $1 in
+let x =                                                                    (pb) in
    ( [x] )}
-| reverse_left_flexible_list_BAR___anonymous_6_ BAR patternBranch
-    {let (xs, _2, pb0) = ($1, (), $3) in
-let x =
-  let pb = pb0 in
-                                                                     (pb)
-in
+| reverse_left_flexible_list_BAR___anonymous_7_ BAR patternBranch
+    {let (xs, _2, pb) = ($1, (), $3) in
+let x =                                                                    (pb) in
    ( x :: xs )}
 
 reverse_left_flexible_nonempty_list_BAR_patternBranch_:
   patternBranch
     {let x = $1 in
-let _1 =
-      ( None )
-in
+let _1 =     ( None ) in
    ( [x] )}
 | BAR patternBranch
-    {let (x0, x) = ((), $2) in
+    {let (x_inlined1, x) = ((), $2) in
 let _1 =
-  let x = x0 in
+  let x = x_inlined1 in
       ( Some x )
 in
    ( [x] )}
@@ -2577,6 +2629,4 @@ in
    ( x :: xs )}
 
 %%
-
-
 

@@ -44,7 +44,7 @@ module PC = FStar.Parser.Const
 type env = {
   // The type-checking environment which we abuse to store our DMFF-style types
   // when entering a binder.
-  env: FStar.TypeChecker.Env.env;
+  tcenv: FStar.TypeChecker.Env.env;
   // The substitution from every [x: C] to its [x^w: C*].
   subst: list<subst_elt>;
   // Hack to avoid a dependency NS: env already has a type_of, so why not reuse that?
@@ -54,7 +54,7 @@ type env = {
 
 
 let empty env tc_const = {
-  env = env;
+  tcenv = env;
   subst = [];
   tc_const = tc_const
 }
@@ -67,8 +67,8 @@ let gen_wps_for_free
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
-  let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
-  let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
+  let wp_a = N.normalize [Env.Beta; Env.EraseUniverses] env wp_a in
+  let a = { a with sort = N.normalize [ Env.EraseUniverses ] env a.sort } in
 
   // Debugging
   let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s in
@@ -280,7 +280,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar PC.ite_lid (S.Delta_defined_at_level 2) None in
+      let l_ite = fvar PC.ite_lid (S.Delta_constant_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -290,42 +290,6 @@ let gen_wps_for_free
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
-
-  (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
-                       Tot (st2_wp heap a)
-    let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
-  let wp_assert =
-    let q = S.gen_bv "q" None U.ktype in
-    let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar PC.and_lid (S.Delta_defined_at_level 1) None in
-    let body =
-      U.mk_app c_app (List.map S.as_arg [
-        U.mk_app c_pure (List.map S.as_arg [
-          U.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
-        S.bv_to_name wp])
-    in
-    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
-  in
-  let wp_assert = register env (mk_lid "wp_assert") wp_assert in
-  let wp_assert = mk_generic_app wp_assert in
-
-  (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
-                       Tot (st2_wp heap a)
-    let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
-  let wp_assume =
-    let q = S.gen_bv "q" None U.ktype in
-    let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar PC.imp_lid (S.Delta_defined_at_level 1) None in
-    let body =
-      U.mk_app c_app (List.map S.as_arg [
-        U.mk_app c_pure (List.map S.as_arg [
-          U.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
-        S.bv_to_name wp])
-    in
-    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
-  in
-  let wp_assume = register env (mk_lid "wp_assume") wp_assume in
-  let wp_assume = mk_generic_app wp_assume in
 
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                         f:(b->Tot (st2_wp heap a)) ->
@@ -371,7 +335,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
+    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -410,13 +374,13 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
+        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -440,7 +404,7 @@ let gen_wps_for_free
   let stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
 
-  let wp_ite =
+  let ite_wp =
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     // forall k: post a
@@ -453,9 +417,10 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free Delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
-          let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
+          let pattern_guarded_body =
+            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]]))) in
           U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
@@ -466,8 +431,8 @@ let gen_wps_for_free
     ) ret_gtot_type in
     U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_gtot_type
   in
-  let wp_ite = register env (mk_lid "wp_ite") wp_ite in
-  let wp_ite = mk_generic_app wp_ite in
+  let ite_wp = register env (mk_lid "ite_wp") ite_wp in
+  let ite_wp = mk_generic_app ite_wp in
 
   let null_wp =
     let wp = S.gen_bv "wp" None wp_a in
@@ -499,36 +464,32 @@ let gen_wps_for_free
   let c = close binders in
   List.rev !sigelts, { ed with
     if_then_else = ([], c wp_if_then_else);
-    assert_p     = ([], c wp_assert);
-    assume_p     = ([], c wp_assume);
     close_wp     = ([], c wp_close);
     stronger     = ([], c stronger);
     trivial      = ([], c wp_trivial);
-    ite_wp       = ([], c wp_ite);
-    null_wp      = ([], c null_wp)
+    ite_wp       = ([], c ite_wp);
   }
 
 
 // Some helpers for... --------------------------------------------------------
 type env_ = env
 
-let get_env env = env.env
-let set_env dmff_env env' = { dmff_env with env = env' }
+let get_env env = env.tcenv
+let set_env dmff_env env' = { dmff_env with tcenv = env' }
 
 type nm = | N of typ | M of typ
 
 type nm_ = nm
 
-let nm_of_comp = function
+let nm_of_comp c = match c.n with
   | Total (t, _) ->
       N t
   | Comp c when c.flags |> BU.for_some (function CPS -> true | _ -> false) ->
                 //lid_equals c.effect_name PC.monadic_lid ->
       M c.result_typ
-  | Comp c ->
-      failwith (BU.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
-  | GTotal _ ->
-      failwith "[nm_of_comp]: impossible (GTot)"
+  | _ ->
+      raise_error (Error_UnexpectedDM4FType,
+                     BU.format1 "[nm_of_comp]: unexpected computation type %s" (Print.comp_to_string c)) c.pos
 
 let string_of_nm = function
   | N t -> BU.format1 "N[%s]" (Print.term_to_string t)
@@ -536,13 +497,13 @@ let string_of_nm = function
 
 let is_monadic_arrow n =
   match n with
-  | Tm_arrow (_, { n = n}) ->
-      nm_of_comp n
+  | Tm_arrow (_, c) ->
+      nm_of_comp c
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
 
 let is_monadic_comp c =
-  match nm_of_comp c.n with
+  match nm_of_comp c with
   | M _ -> true
   | N _ -> false
 
@@ -653,11 +614,11 @@ and star_type' env t =
         ) ->
             true
         | Tm_fvar fv ->
-             let (_, ty), _ = Env.lookup_lid env.env fv.fv_name.v in
+             let (_, ty), _ = Env.lookup_lid env.tcenv fv.fv_name.v in
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.tcenv t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -690,7 +651,7 @@ and star_type' env t =
       // For parameterized data types... TODO: check that this only appears at
       // top-level
       let binders, repr = SS.open_term binders repr in
-      let env = { env with env = push_binders env.env binders } in
+      let env = { env with tcenv = push_binders env.tcenv binders } in
       let repr = star_type' env repr in
       U.abs binders repr something
 
@@ -726,6 +687,9 @@ and star_type' env t =
   | Tm_uinst _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uinst is outside of the definition language: %s"
         (Print.term_to_string t)))
+  | Tm_quoted _ ->
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_quoted is outside of the definition language: %s"
+        (Print.term_to_string t)))
   | Tm_constant _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_constant is outside of the definition language: %s"
         (Print.term_to_string t)))
@@ -741,6 +705,8 @@ and star_type' env t =
   | Tm_unknown ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_unknown is outside of the definition language: %s"
         (Print.term_to_string t)))
+
+  | Tm_lazy i -> star_type' env (U.unfold_lazy i)
 
   | Tm_delayed _ ->
       failwith "impossible"
@@ -772,7 +738,7 @@ let rec is_C (t: typ): bool =
         false
       end
   | Tm_arrow (binders, comp) ->
-      begin match nm_of_comp comp.n with
+      begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
             failwith "not a C (C -> C)";
@@ -815,7 +781,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
-      if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
+      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
         raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
@@ -854,8 +820,12 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_fvar _
   | Tm_abs _
   | Tm_constant _
+  | Tm_quoted _
   | Tm_app _ ->
       return_if (infer env e)
+
+  | Tm_lazy i ->
+    check env (U.unfold_lazy i) context_nm
 
   | Tm_let ((false, [ binding ]), e2) ->
       mk_let env binding e2
@@ -896,13 +866,16 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env.env in
+  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
 
   | Tm_name bv ->
       N bv.sort, e, e
+
+  | Tm_lazy i ->
+      infer env (U.unfold_lazy i)
 
   | Tm_abs (binders, body, rc_opt) ->
       let subst_rc_opt subst rc_opt =
@@ -920,7 +893,7 @@ and infer (env: env) (e: term): nm * term * term =
       let subst = SS.opening_of_binders binders in
       let body = SS.subst subst body in
       let rc_opt = subst_rc_opt subst rc_opt in
-      let env = { env with env = push_binders env.env binders } in
+      let env = { env with tcenv = push_binders env.tcenv binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
       let s_binders = List.map (fun (bv, qual) ->
@@ -999,7 +972,7 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      let _, t = fst <| Env.lookup_lid env.env lid in
+      let _, t = fst <| Env.lookup_lid env.tcenv lid in
       // Need to erase universes here! This is an F* type that is fully annotated.
       N (normalize t), e, e
 
@@ -1071,7 +1044,7 @@ and infer (env: env) (e: term): nm * term * term =
       let rec final_type subst (binders, comp) args =
         match binders, args with
         | [], [] ->
-            nm_of_comp (SS.subst_comp subst comp).n
+            nm_of_comp (SS.subst_comp subst comp)
         | binders, [] ->
             begin match (SS.compress (SS.subst subst (mk (Tm_arrow (binders, comp))))).n with
             | Tm_arrow (binders, comp) -> N (mk (Tm_arrow (binders, close_comp binders comp)))
@@ -1121,6 +1094,9 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_constant c ->
       N (env.tc_const c), e, e
 
+  | Tm_quoted (tm, qt) ->
+      N S.t_term, e, e
+
   | Tm_let _ ->
       failwith (BU.format1 "[infer]: Tm_let %s" (Print.term_to_string e))
   | Tm_type _ ->
@@ -1144,7 +1120,7 @@ and mk_match env e0 branches f =
   let nms, branches = List.split (List.map (fun b ->
     match open_branch b with
     | pat, None, body ->
-        let env = { env with env = List.fold_left push_bv env.env (pat_bvs pat) } in
+        let env = { env with tcenv = List.fold_left push_bv env.tcenv (pat_bvs pat) } in
         let nm, s_body, u_body = f env body in
         nm, (pat, None, (s_body, u_body, body))
     | _ ->
@@ -1218,7 +1194,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
         else binding
       in
       // Piggyback on the environment to carry our own special terms
-      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
+      let env = { env with tcenv = push_bv env.tcenv ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, s_e2, u_e2 = proceed env e2 in
       let s_binding = { binding with lbtyp = star_type' env binding.lbtyp } in
@@ -1229,7 +1205,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   | M t1, s_e1, u_e1 ->
       // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
       let u_binding = { binding with lbeff = PC.effect_PURE_lid ; lbtyp = t1 } in
-      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
+      let env = { env with tcenv = push_bv env.tcenv ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
       // p: A* -> Type
@@ -1289,7 +1265,13 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q'))) ;
+        if eq_aqual q q' <> Equal
+        then Errors.log_issue
+                    head.pos
+                    (Errors.Warning_IncoherentImplicitQualifier,
+                     BU.format2 "Incoherent implicit qualifiers %s %s\n"
+                                (print_implicit q)
+                                (print_implicit q')) ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->
@@ -1330,15 +1312,15 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
+let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 
 let star_type env t =
-  star_type' env (n env.env t)
+  star_type' env (n env.tcenv t)
 
 let star_expr env t =
-  check_n env (n env.env t)
+  check_n env (n env.tcenv t)
 
 let trans_F (env: env_) (c: typ) (wp: term): term =
-  trans_F_ env (n env.env c) (n env.env wp)
+  trans_F_ env (n env.tcenv c) (n env.tcenv wp)

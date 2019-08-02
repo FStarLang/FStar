@@ -1,5 +1,5 @@
 [
-  "ödÆD\u0000”ç¡Êtpœ¸ÛçA",
+  "^úq\f\u0003O\u0005\u0018XBã\u0014ë+uM",
   [
     [
       "Bug706.bind",
@@ -8,17 +8,51 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Bug706_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
+        "Bug706_interpretation_Tm_arrow_6e9cab30cb0eafb661d768f4364082e9",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Bug706.exnst",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption"
+      ],
+      0,
+      "495c867457ca85a8c162c05bd9e81e2f"
+    ],
+    [
+      "Bug706._dm4f_EXNST_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_None",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "255b7b48241214a009084d01f1b25339"
+      "2fa24dd2b133097bc0ea9cf0de395735"
+    ],
+    [
+      "Bug706._dm4f_EXNST_int_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "90de5cb19fdad53ad59c7428728a2735"
     ]
   ]
 ]

@@ -3,10 +3,9 @@ ifndef FSTAR_HOME
    $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
 endif
 
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/ulib/gmake/z3.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
-OTHERFLAGS+=--use_two_phase_tc true
 
 ifeq ($(OS),Windows_NT)
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
@@ -15,8 +14,10 @@ else
   MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
 endif
 
+# we ignore the return result in benchmark runs because we can have micro-benchmarks which
+# produce error asserts when executed with '--admit_smt_queries true'
 %.uver: %.fst
-	$(FSTAR) $^
+	$(BENCHMARK_PRE) $(FSTAR) --use_extracted_interfaces true $^
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

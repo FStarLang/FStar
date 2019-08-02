@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module EtM.AE
 
 open FStar.Seq
@@ -25,25 +40,25 @@ abstract noeq type key =
                  (disjoint( CPA.Key?.region ke) (MAC.Key?.region km)) } ->
                log:log_t region -> key
 
-let get_log (m:mem) (k:key) =
+abstract let get_log (m:mem) (k:key) =
   sel m k.log
 
 
-let get_mac_log (m:mem) (k:key) =
+abstract let get_mac_log (m:mem) (k:key) =
   sel m (MAC.Key?.log k.km)
 
-let get_cpa_log (m:mem) (k:key) =
+abstract let get_cpa_log (m:mem) (k:key) =
   sel m (CPA.Key?.log k.ke)
 
 
 // BEGIN: EtMAEInvariant
-let invariant (h:mem) (k:key) =
+abstract let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
-  Map.contains h.h k.region /\
-  Map.contains h.h (MAC.Key?.region k.km) /\
-  Map.contains h.h (CPA.Key?.region k.ke) /\
+  Map.contains (get_hmap h) k.region /\
+  Map.contains (get_hmap h) (MAC.Key?.region k.km) /\
+  Map.contains (get_hmap h) (CPA.Key?.region k.ke) /\
   Seq.length log = Seq.length mac_log /\
   Seq.length mac_log = Seq.length cpa_log /\
   (forall (i:int). indexable log i ==>
@@ -58,17 +73,17 @@ let invariant (h:mem) (k:key) =
 
 
 
-let genPost parent h0 (k:key) h1 =
+abstract let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
   /\ HyperStack.fresh_region k.region h0 h1
-  /\ Map.contains h1.h k.region
+  /\ Map.contains (get_hmap h1) k.region
   /\ contains h1 k.log
-  /\ sel h1 k.log == createEmpty
+  /\ sel h1 k.log == empty
   /\ invariant h1 k
 
 
-val keygen: parent:rid -> ST key
+abstract val keygen: parent:rid -> ST key
   (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
@@ -77,18 +92,22 @@ let keygen parent =
   let region = new_region parent in
   let ke = CPA.keygen region in
   let ka = MAC.keygen region in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region empty in
   Key #region ke ka log
 
 
-val encrypt: k:key -> m:Plain.plain -> ST cipher
+abstract let region_of (k:key) :rid = k.region
+
+abstract let log_of (k:key) :(log_t (region_of k)) = k.log
+
+abstract val encrypt: k:key -> m:Plain.plain -> ST cipher
   (requires (fun h0 -> invariant h0 k))
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
-     HyperStack.modifies_transitively (Set.singleton k.region) h0 h1
+     HyperStack.modifies_transitively (Set.singleton (region_of k)) h0 h1
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
+     /\ witnessed (at_least (Seq.length log0) (m, c) (log_of k))
      /\ invariant h1 k)))
 
 
@@ -102,7 +121,7 @@ let encrypt k plain =
   (c, t)
 // END: EtMAEEncrypt
 
-val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
+abstract val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\

@@ -34,12 +34,12 @@
   let sock_send sock str =
       let str = get_cbytes str in
       let len = String.length str in
-      send sock str 0 len []
+      send_substring sock str 0 len []
 
   let sock_recv sock maxlen =
       let str = Bytes.create maxlen in
       let recvlen = recv sock str 0 maxlen [] in
-      let str = String.sub str 0 recvlen in
+      let str = Bytes.sub_string str 0 recvlen in
       abytes str
 
   type 'a recv_result = 

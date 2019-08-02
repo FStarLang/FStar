@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Protocol
 
 open FStar.Seq
@@ -7,8 +22,6 @@ open FStar.Heap
 open FStar.ST
 
 open MonotonicArray
-
-#set-options "--use_two_phase_tc false"
 
 (***** an unstable sequence proof *****)
 
@@ -112,6 +125,18 @@ let recall_connection_liveness (c:connection)
     | S _ es_ref         -> ST.recall es_ref
     | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
+let lemma_sel_entries_equals_sel_tot_entries (c:connection) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (sel_tot h (entries_of c) == sel h (entries_of c)))
+	 [SMTPat (sel_tot h (entries_of c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (entries_of c)
+
+let lemma_sel_ctr_ref_equals_sel_tot_ctr_ref (c:connection{R? c}) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (let R _ _ ctr_ref = c in sel_tot h ctr_ref == sel h ctr_ref))
+	 [SMTPat (sel_tot h (R?.ctr c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (R?.ctr c)
+
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap{h `live_connection` c}) :Tot (seq message) =
   ArrayUtils.seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
@@ -125,9 +150,8 @@ let lemma_prefix_entries_implies_prefix_log
 
 (* current counter for the connection *)
 let ctr (c:connection) (h:heap{h `live_connection` c}) :Tot nat =
-  match c with
-  | S _ es_ref    -> length (sel_tot h es_ref)
-  | R _ _ ctr_ref -> sel_tot h ctr_ref
+  if S? c then length (sel_tot h (entries_of c))
+  else sel_tot h (R?.ctr c)
 
 (* recall_counter, as mentioned in the paper *)
 let recall_counter (c:connection)
@@ -216,7 +240,7 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 
 (* seq of ciphers sent so far on this connection *)
 let ciphers (c:connection) (h:heap) :GTot (seq network_message) =
-  ArrayUtils.seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
+  ArrayUtils.seq_map E?.cipher (sel h (entries_of c))
 
 assume val network_receive (c:connection)
   :ST (option (network_message * seq byte)) (requires (fun h0 -> h0 `live_connection` c))
@@ -236,7 +260,7 @@ assume val verify (c:connection{receiver c}) (cipher:network_message) (tag:seq b
 			(let E _ _ c t = Seq.index es i in
 			 c == cipher /\ t == tag)))))
 
-#set-options "--z3rlimit 50"
+#push-options "--z3rlimit 50"
 let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiver c})
   :ST (option nat) (requires (fun h0          -> Set.disjoint (connection_footprint c) (array_footprint buf)))
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
@@ -282,7 +306,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
         Some len
       else
         None
-#reset-options "--use_two_phase_tc false"
+#pop-options
 
 (***** sender and receiver *****)
 
@@ -296,16 +320,16 @@ let lemma_is_prefix_of_slice
 (*****)
 
 (*
- * assuming a flattening function that flattens a sequence of messages into sequence of bytes
- * and a couple of associated lemmas
- *)
+//  * assuming a flattening function that flattens a sequence of messages into sequence of bytes
+//  * and a couple of associated lemmas
+//  *)
 assume val flatten (s:seq message) :Tot (seq byte)
 
 assume val lemma_flatten_snoc (s:seq message) (m:message)
   :Lemma (requires True)
          (ensures  (flatten (snoc s m) == append (flatten s) m))
 
-assume val flatten_empty (u:unit) : Lemma (flatten Seq.createEmpty == Seq.createEmpty)
+assume val flatten_empty (u:unit) : Lemma (flatten Seq.empty == Seq.empty)
 
 (*****)
 
@@ -350,7 +374,7 @@ let slice_snoc2 #a (s:seq a) (x:a) (from:nat{from <= Seq.length s})
   : Lemma (slice (snoc s x) from (Seq.length s + 1) == snoc (slice s from (Seq.length s)) x)
   = assert (slice (snoc s x) from (Seq.length s + 1) `Seq.equal` snoc (slice s from (Seq.length s)) x)
 
-#set-options "--z3rlimit 100"
+#push-options "--z3rlimit 100"
 let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:heap{f `fully_initialized_in` h})
     : Lemma (let f0 = as_initialized_subseq f h 0 pos in
              let f1 = as_initialized_subseq f h 0 (pos + sent) in
@@ -377,13 +401,14 @@ let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:
       assert (f1 == Seq.slice sbs 0 (pos + sent));
       assert (sent_frag == Seq.slice sbs pos (pos + sent));
       lemma_seq_append_unstable sbs f0 sent_frag f1 pos sent
+#pop-options
 
 let lemma_sender_connection_ctr_equals_length_log
   (c:connection{sender c}) (h:heap{h `live_connection` c})
   :Lemma (ctr c h == Seq.length (log c h))
   = ()
 
-#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
+#push-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0"
 val send_aux 
           (#n:nat) 
           (file:iarray byte n) 
@@ -402,7 +427,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
-#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
+#push-options "--z3rlimit 500"
 let rec send_aux #n file c from pos
       = if pos = n then ()
         else
@@ -443,7 +468,7 @@ let rec send_aux #n file c from pos
             assert (sent_bytes f1 c from (ctr c h1) h1) 
          in
          send_aux file c from (pos + sent)
-
+#pop-options
 let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
   : ST unit 
        (requires (fun h -> True))
@@ -458,9 +483,9 @@ let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoi
     recall_connection_liveness c;
     let file_bytes0 = iarray_as_seq file in
     let from = ctr c h0 in
-    assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.createEmpty);
+    assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.empty);
     flatten_empty();
-    assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.createEmpty);
+    assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.empty);
     send_aux file c from 0;
     let h1 = ST.get () in
     let file_bytes1 = iarray_as_seq file in
@@ -472,6 +497,51 @@ let received (#n:nat) (file:iarray byte n) (c:connection) (h:heap) =
     file `fully_initialized_in` h /\
     sent (as_initialized_seq file h) c
 
+#push-options "--z3rlimit_factor 4"
+let append_filled #a #n (f:array a n) (pos:nat) (next:nat{pos + next <= n}) (h:heap)
+  : Lemma (let f0 = prefix f pos in
+           let f1 = prefix f (pos + next) in
+           f1 `fully_initialized_in` h ==> (
+           let b0 = as_initialized_seq f0 h in
+           let b1 = as_initialized_seq f1 h in
+           let received_frag = as_initialized_subseq (suffix f pos) h 0 next in
+           Seq.equal b1 (append b0 received_frag)))
+   = ()            //TAKES A LONG TIME
+#pop-options
+
+let extend_initialization #a #n (f:array a n) (pos:nat) (next:nat{pos+next <= n}) (h:heap)
+  : Lemma (requires (let f0 = prefix f pos in
+                     let f_next = prefix (suffix f pos) next in
+                     f0 `fully_initialized_in` h /\
+                     f_next `fully_initialized_in` h))
+          (ensures (prefix f (pos + next) `fully_initialized_in` h))
+  = let f0 = as_seq (prefix f pos) h in
+    let f_next = as_seq (prefix (suffix f pos) next) h in
+    let f1 = as_seq (prefix f (pos + next)) h in
+    let aux (i:nat{i < pos + next}) : Lemma (Some? (Seq.index (as_seq (prefix f (pos + next)) h) i)) =
+        if i < pos then assert (Seq.index f1 i == Seq.index f0 i)
+        else assert (Seq.index f1 i == Seq.index f_next (i - pos))
+    in
+    FStar.Classical.forall_intro aux
+
+let receive_aux_post
+          (#n:nat)
+          (file:array byte n)
+          (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+          (h_init:heap{h_init `live_connection` c})
+          (from:nat{from = ctr c h_init})
+          (pos:nat{fragment_size <= n - pos})
+          (ropt:option (r:nat{r <= n}))
+          (h1:heap{h1 `live_connection` c}) =
+          match ropt with
+          | None -> True
+          | Some r ->
+            let file_out = prefix file r in
+            all_init_i_j file_out 0 r /\
+            file_out `fully_initialized_in` h1 /\
+            from <= ctr c h1 /\
+            sent_bytes (as_initialized_seq file_out h1) c from (ctr c h1) h1
+            
 val receive_aux
           (#n:nat)
           (file:array byte n)
@@ -490,40 +560,9 @@ val receive_aux
         (ensures (fun h0 ropt h1 ->
                    modifies_r c file h0 h1 /\
                    h1 `live_connection` c /\
-                   (match ropt with
-                    | None -> True
-                    | Some r ->
-                      let file_out = prefix file r in
-                      all_init_i_j file_out 0 r /\
-                      file_out `fully_initialized_in` h1 /\
-                      from <= ctr c h1 /\
-                      sent_bytes (as_initialized_seq file_out h1) c from (ctr c h1) h1)))
+                   receive_aux_post #n file c h_init from pos ropt h1))
 
-let append_filled #a #n (f:array a n) (pos:nat) (next:nat{pos + next <= n}) (h:heap)
-  : Lemma (let f0 = prefix f pos in
-           let f1 = prefix f (pos + next) in
-           f1 `fully_initialized_in` h ==> (
-           let b0 = as_initialized_seq f0 h in
-           let b1 = as_initialized_seq f1 h in
-           let received_frag = as_initialized_subseq (suffix f pos) h 0 next in
-           Seq.equal b1 (append b0 received_frag)))
-   = ()            
-
-let extend_initialization #a #n (f:array a n) (pos:nat) (next:nat{pos+next <= n}) (h:heap)
-  : Lemma (requires (let f0 = prefix f pos in
-                     let f_next = prefix (suffix f pos) next in
-                     f0 `fully_initialized_in` h /\
-                     f_next `fully_initialized_in` h))
-          (ensures (prefix f (pos + next) `fully_initialized_in` h))
-  = let f0 = as_seq (prefix f pos) h in
-    let f_next = as_seq (prefix (suffix f pos) next) h in
-    let f1 = as_seq (prefix f (pos + next)) h in
-    let aux (i:nat{i < pos + next}) : Lemma (Some? (Seq.index (as_seq (prefix f (pos + next)) h) i)) =
-        if i < pos then assert (Seq.index f1 i == Seq.index f0 i)
-        else assert (Seq.index f1 i == Seq.index f_next (i - pos))
-    in
-    FStar.Classical.forall_intro aux
-
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20 --using_facts_from '* -ArrayUtils.lemma_get_some_equivalent_append'"
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in
@@ -533,10 +572,10 @@ let rec receive_aux #n file c h_init from pos
      assert (array_footprint sub_file == array_footprint file);
      match receive sub_file c with
        | None -> None
-       | Some k -> 
+       | Some k ->
          let h1 = ST.get () in
          let filled_bytes0' = iarray_as_seq filled0 in
-	 lemma_disjoint_sibling_suffix_prefix file pos;
+         lemma_disjoint_sibling_suffix_prefix file pos;
          assert (filled_bytes0 == filled_bytes0');
          let filled = prefix file (pos + k) in
          recall_all_init_i_j sub_file 0 k;
@@ -544,9 +583,9 @@ let rec receive_aux #n file c h_init from pos
          extend_initialization file pos k h1;
          witness_all_init filled;
          let filled_bytes1 = iarray_as_seq filled in
-	 let received_frag = read_subseq_i_j sub_file 0 k in
-	 let h2 = ST.get () in
-	 assert (h2 == h1);
+         let received_frag = read_subseq_i_j sub_file 0 k in
+         let h2 = ST.get () in
+         assert (h2 == h1);
          assert (log c h0 == log c h1);
          assert (sent_bytes filled_bytes0 c from (ctr c h0) h0);
          assert (filled_bytes0 == flatten (Seq.slice (log c h0) from (ctr c h0)));
@@ -557,11 +596,22 @@ let rec receive_aux #n file c h_init from pos
          assert (sent_bytes filled_bytes1 c from (ctr c h1) h1);
          if k < fragment_size 
          || pos + k = n
-         then Some (pos + k)
+         then (Some (pos + k))
          else if pos + k + fragment_size <= n
-         then receive_aux file c h_init from (pos + k)
+         then (let res = receive_aux file c h_init from (pos + k) in
+               let h_post = ST.get () in
+               assert (h_post `live_connection` c);
+               assert (modifies_r c file h1 h_post); //from receive_aux
+               assert (modifies_r c sub_file h0 h1); // from receive
+               assert (modifies_r c file h0 h1); //weaken
+               assert (modifies_r c file h0 h_post); //transitivity
+               assert (receive_aux_post #n file c h_init from pos res h_post);
+               assert (modifies_r c file h0 h_post /\
+                       h_post `live_connection` c /\
+                       receive_aux_post #n file c h_init from pos res h_post);
+               res)
          else None
-
+#reset-options
 val receive_file (#n:nat{fragment_size <= n})
             (file:array byte n)
             (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
@@ -598,9 +648,9 @@ let receive_file #n file c =
 
 (* seq of tags sent so far on this connection *)
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
-  ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
+  ArrayUtils.seq_map E?.tag (sel h (entries_of c))
 
-#reset-options "--z3rlimit 100 --use_two_phase_tc false"
+#reset-options "--z3rlimit 100"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
   (c0:connection{sender c0}) (c1:connection{sender c1})

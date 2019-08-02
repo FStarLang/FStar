@@ -1,5 +1,5 @@
 [
-  "®\u0000!6ë¡\rïÑPi˙¶œ8∆",
+  "+\u001aªãòıÌ#á\u0014ù”SqÖN",
   [
     [
       "NormVsSMT.l2",
@@ -8,61 +8,106 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.assert_norm",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "002bc93cc386bfabfe1f609c834b1871"
+      "dfb169ae01e4f6fb855f38c781585c24"
     ],
     [
-      "NormVsSMT.uu___13",
+      "NormVsSMT.uu___5",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "c243ac1ac9246ea188e45da3cc6ec097"
+      "99493e7f58e5a926d91ddbcca79179b9"
+    ],
+    [
+      "NormVsSMT.uu___6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a2cba16d1c2a75c7fff3fafb70176ac5"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9dabdb13e16d4ef10884656a179feede"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
+      ],
+      0,
+      "70f69ac23cefd911efc63758194ab7f7"
     ],
     [
       "NormVsSMT.uu___14",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
       0,
-      "fb42c972fb4921e146f7ae57f963be49"
+      "14e7fcdde08de786cdcca0732aa89305"
     ],
     [
-      "NormVsSMT.uu___15",
-      1,
+      "NormVsSMT.uu___5",
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "0513e484b85d780b691c04d9e3e673c2"
+      "9504898bc8856e0680f7f699f4cff065"
     ],
     [
-      "NormVsSMT.uu___19",
+      "NormVsSMT.uu___6",
+      2,
+      2,
       1,
+      [ "@query" ],
+      0,
+      "fd4b6d12712b501ce8b33854534c3844"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c1973ee84bb2f23ac7e215aca6d212db"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_NormVsSMT_Tm_refine_417497e72c9ba78cde76740d8f1356ba"
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
       ],
       0,
-      "ec654bf99f3c22c52e799dec2c542185"
+      "160e67bfbd7b879d86543b508a7f782f"
     ],
     [
-      "NormVsSMT.uu___20",
-      1,
+      "NormVsSMT.uu___14",
+      2,
       2,
       1,
-      [ "@query", "int_typing", "primitive_Prims.op_GreaterThanOrEqual" ],
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
       0,
-      "a3fa3c5bd4c086da8ca7e098b0e6b260"
+      "fda4f6636d6d209bb3d9e2efcf1de9d3"
     ]
   ]
 ]

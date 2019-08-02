@@ -1,5 +1,5 @@
 [
-  "\u0005¨è\u001b#ÚWân\u000f–£k¡÷°",
+  "f\u0013Gr∑O˚îA‚É‘“UoB",
   [
     [
       "Bug260.pnat",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8b6d6f08d680b3a1400d3bc77f36f45f"
-    ],
-    [
-      "Bug260.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "85da459ecc6063f794adac66385188af"
-    ],
-    [
-      "Bug260.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2720978d35532c91bfb8273189170c61"
+      "4c3ce2fb6f6d7d3f88db35bd64023c84"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -36,28 +18,28 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug260.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
+        "refinement_interpretation_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
       ],
       0,
-      "9f546ccad490f8a991780c527aa88f56"
+      "3cf388c026ea4b21580d75f4e647c960"
     ],
     [
       "Bug260.validity",
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "4f543d0bb54e8a5aabd8c6d77797206f"
+      "f482e8d0e42209ea76a5dcbc057f26e6"
     ],
     [
       "Bug260.validity'",
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "6e92a3554498ef8f9b10c524f02ed4c4"
+      "302b2cf4b2df7df36fb1cd03bc5d111d"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",
@@ -69,7 +51,7 @@
         "projection_inverse_Bug260.VSucc__n"
       ],
       0,
-      "982ac74422cd8b663770fdd66d9cf5d6"
+      "1121a60be30dab6b2ab9132238be3923"
     ],
     [
       "Bug260.validity'_empty",
@@ -84,7 +66,7 @@
         "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
       ],
       0,
-      "00d61ce5931b6cf4bc79b5c2a6d2e839"
+      "7656527515f799c29fd7541090949083"
     ]
   ]
 ]

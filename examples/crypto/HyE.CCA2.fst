@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
 open FStar.HyperStack.All
 open FStar.HyperStack.ST
@@ -24,7 +39,7 @@ type log_t (r:rid) = m_rref r (seq entry) grows
 noeq abstract type pkey = 
   | PKey: #region:rid -> rawpk:RSA.pkey -> log: log_t region -> pkey
 
-let access_pk_raw (pk:pkey) =
+abstract let access_pk_raw (pk:pkey) =
   PKey?.rawpk pk
 
 
@@ -35,7 +50,7 @@ val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} ->
 let keygen parent  =
   let pkey_raw, skey_raw = RSA.gen () in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   let pkey = PKey #region pkey_raw log in
   pkey, SKey skey_raw pkey
 

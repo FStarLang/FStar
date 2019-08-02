@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module SnapshotST
 
 (*
@@ -66,7 +81,9 @@ new_effect MSTATE = STATE_h t
 
 (* DIV is a sub-effect of the snapshots instance of the monotonic-state monad. *)
 
-sub_effect DIV ~> MSTATE = fun a wp p t -> wp (fun x -> p x t)
+(* AR: this failed when inline, investigate more *)
+unfold let div_lift (a:Type) (wp:pure_wp a) (p:mst_post a) (x:t) = wp (fun y -> p y x)
+sub_effect DIV ~> MSTATE = div_lift
 
 (* A pre- and postcondition version of this monotonic-state monad. *)
 

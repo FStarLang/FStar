@@ -5,9 +5,9 @@ open FStar.All
 
 open FStar.BaseTypes
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type signedness = | Unsigned | Signed
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type width = | Int8 | Int16 | Int32 | Int64
 
 (* NB:
@@ -23,7 +23,7 @@ type width = | Int8 | Int16 | Int32 | Int64
     eq_const below does that for you
 *)
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type sconst =
   | Const_effect
   | Const_unit
@@ -31,6 +31,7 @@ type sconst =
   | Const_int         of string * option<(signedness * width)> (* When None, means "mathematical integer", i.e. Prims.int. *)
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
   | Const_float       of double
+  | Const_real        of string
   | Const_bytearray   of array<byte> * Range.range
   | Const_string      of string * Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module BinarySearchTreeBasic
 
 type tree =
@@ -81,12 +96,19 @@ let rec insert'' x t =
                     else if x < n then Node n (insert'' x t1) t2
                     else               Node n t1 (insert'' x t2)
 
+#push-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+
 val insert_lemma : x:int -> t:tree{is_bst t} -> Lemma
       (is_bst (insert'' x t) /\
       (forall y. in_tree y (insert'' x t) <==> in_tree y t \/ x = y))
+//AR: tightening a bit here, since works locally but fails on CI
+#push-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let rec insert_lemma x t = match t with
   | Leaf -> ()
   | Node _ t1 t2 -> insert_lemma x t1; insert_lemma x t2
+#pop-options
+
+#pop-options
 
 val ge : int -> int -> Tot bool
 let ge n1 n2 = n1 >= n2

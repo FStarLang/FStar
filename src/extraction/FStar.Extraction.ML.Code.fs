@@ -24,7 +24,7 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Format
+open FStar.Pprint
 open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
@@ -60,6 +60,38 @@ let e_app_prio        = (10000, Infix Left)
 let min_op_prec = (-1, Infix NonAssoc)
 let max_op_prec = (max_int, Infix NonAssoc)
 
+(* Little helpers *)
+
+type doc = | Doc of string
+
+let empty    = Doc ""
+let hardline = Doc "\n"
+
+let text (s : string) = Doc s
+let num (i : int) = Doc (string_of_int i)
+
+let break1 = text " "
+
+let enclose (Doc l) (Doc r) (Doc x) =
+    Doc (l^x^r)
+
+let cbrackets (Doc d) = enclose (text "{") (text "}") (Doc d)
+let parens   (Doc d ) = enclose (text "(") (text ")") (Doc d)
+
+let cat (Doc d1) (Doc d2) = Doc (d1 ^ d2)
+
+let reduce (docs : list<doc>) =
+  List.fold_left cat empty docs
+
+let combine (Doc sep) (docs : list<doc>) =
+  let select (Doc d) = if d = "" then None else Some d in
+  let docs = List.choose select docs in
+  Doc (String.concat sep docs)
+
+let reduce1 (docs : list<doc>) =
+    combine break1 docs
+
+let hbox (d : doc) = d (* FIXME *)
 
 (*copied from ocaml-asttrans.fs*)
 
@@ -134,9 +166,9 @@ let infix_prim_ops = [
 
 (* -------------------------------------------------------------------- *)
 let prim_uni_ops () =
-    let op_minus = if Options.codegen_fsharp()
-                        then "-"
-                        else "~-" in
+    let op_minus = if Options.codegen() = Some Options.FSharp
+                   then "-"
+                   else "~-" in
     [ ("op_Negation", "not");
       ("op_Minus", op_minus);
       ("op_Bang","Support.ST.read") ]
@@ -304,9 +336,12 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
     | MLTY_Top ->
-      if Options.codegen_fsharp()
+      if Util.codegen_fsharp()
       then text "obj"
       else text "Obj.t"
+
+    | MLTY_Erased ->
+      text "unit"
 
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
@@ -316,7 +351,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     match e.expr with
     | MLE_Coerce (e, t, t') ->
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
-      if Options.codegen_fsharp()
+      if Util.codegen_fsharp()
       then parens (reduce [text "Prims.unsafe_coerce "; doc])
       else parens (reduce [text "Obj.magic "; parens doc])
 
@@ -415,14 +450,14 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Proj (e, f) ->
        let e = doc_of_expr  currentModule  (min_op_prec, NonAssoc) e in
        let doc =
-        if Options.codegen_fsharp() //field names are not qualified in F#
+        if Util.codegen_fsharp() //field names are not qualified in F#
         then reduce [e; text "."; text (snd f)]
         else reduce [e; text "."; text (ptsym currentModule f)] in
        doc
 
     | MLE_Fun (ids, body) ->
         let bvar_annot x xt =
-            if Options.codegen_fsharp() //type inference in F# is not complete, particularly for field projections; so these annotations are needed
+            if Util.codegen_fsharp() //type inference in F# is not complete, particularly for field projections; so these annotations are needed
             then reduce1 [text "("; text x ;
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
@@ -563,18 +598,13 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if (not pt) then text ""
             else
-            if Options.codegen_fsharp () && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            if Util.codegen_fsharp () && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
                     | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
                     | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
-//                      let ids = List.map (fun (x, _) -> text x) ids in
-//                      begin match ids with
-//                        | [] -> reduce1 [text ":"; ty]
-//                        | _ ->  reduce1 [text "<"; combine (text ", ") ids; text ">"; text ":"; ty]
-//                      end
             else if top_level
             then match tys with
                     | None ->
@@ -600,7 +630,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
 
 and doc_of_loc (lineno, file) =
-    if (Options.no_location_info()) || Options.codegen_fsharp () then
+    if (Options.no_location_info()) || Util.codegen_fsharp () || file="<dummy>" then
         empty
     else
         let file = BU.basename file in
@@ -758,7 +788,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
               [hardline;
                text ("open " ^ pervasives)]
         in
-        let head = reduce1 (if Options.codegen_fsharp()
+        let head = reduce1 (if Util.codegen_fsharp()
                             then [text "module";  text target_mod_name]
                             else if not istop
                             then [text "module";  text target_mod_name; text "="; text "struct"]
@@ -769,7 +799,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
         let doc  = Option.map (fun (_, m) -> doc_of_mod target_mod_name m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
-        let prefix = if Options.codegen_fsharp() then [cat (text "#light \"off\"") hardline] else [] in
+        let prefix = if Util.codegen_fsharp() then [cat (text "#light \"off\"") hardline] else [] in
         reduce <| (prefix @ [
             head;
             hardline;
@@ -790,13 +820,15 @@ let rec doc_of_mllib_r (MLLib mllib) =
     docs
 
 (* -------------------------------------------------------------------- *)
+let pretty (sz : int) (Doc doc) = doc
+
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
 let string_of_mlexpr cmod (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    pretty 0 doc
 
 let string_of_mlty (cmod) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    pretty 0 doc

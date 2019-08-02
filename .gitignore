@@ -8,6 +8,7 @@
 *.sav
 *.hints.fsval
 *.hints.mlval
+*.bench
 dump*
 cache/
 /VS/packages
@@ -45,6 +46,9 @@ queries*.smt2
 transcript
 dump
 
+# ignore .ml files on the root dir
+/*.ml
+
 *.cmi
 *.cmo
 *.cmx
@@ -69,7 +73,7 @@ tags
 
 *.checked
 *.checked.lax
-*.source
+*.dump
 
 /.nubuild
 /nucache/

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module VectorParsing
 
 open Parsing
@@ -123,7 +138,7 @@ let parse_vector =
 val encode_vector_data : v:vector -> b:bytes{length b == vector_length v}
 let rec encode_vector_data v =
   match v with
-  | [] -> createEmpty
+  | [] -> Seq.empty
   | e::es -> enc_elem e `append` encode_vector_data es
 
 val encode_vector : v:vector -> bytes
@@ -158,7 +173,7 @@ let do_while_readonly #t init #a buf inv f =
     let h1 = get() in
     let ptr_val = B.create #t init 1ul in
     assert (ptr_val `B.unused_in` h1 /\
-           B.frameOf ptr_val == h1.tip);
+           B.frameOf ptr_val == get_tip h1);
     let h = get() in
     let _ = begin
         do_while

@@ -1,15 +1,6 @@
 [
-  "u‰∏„çu€\u001aîeN?…‡%\u0001",
+  "û\u001b[\tﬁÅ+*d^∞R}Ÿ˝ñ",
   [
-    [
-      "OneTimePad.xor_b",
-      1,
-      0,
-      4,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "28762eca2c461bc92d6a5bcf3c0702a8"
-    ],
     [
       "OneTimePad.xor_properties",
       1,
@@ -17,11 +8,11 @@
       4,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "bool_inversion", "bool_typing",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "bool_inversion", "bool_typing",
         "data_elim_FStar.Pervasives.Native.Mktuple4",
         "equation_OneTimePad.nib", "equation_OneTimePad.xor",
-        "equation_OneTimePad.xor_b",
+        "equation_OneTimePad.xor_b", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
         "function_token_typing_Prims.bool", "primitive_Prims.op_Equality",
         "primitive_Prims.op_disEquality",
@@ -32,10 +23,216 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "3f5d86d1eb76adc9e1b1aea34b8dc7ab"
+      "4ef013e775cc756fafdcf15977bb6285"
+    ],
+    [
+      "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
+      1,
+      0,
+      4,
+      [ "@query" ],
+      0,
+      "82859affeaaf13013ed448384d31ccf7"
+    ],
+    [
+      "OneTimePad.RANDOM",
+      1,
+      0,
+      4,
+      [ "@query" ],
+      0,
+      "98d54a2d1277eda3702368b298fef346"
+    ],
+    [
+      "OneTimePad.related_tape",
+      1,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "equation_OneTimePad.nib", "equation_Prims.eqtype",
+        "function_token_typing_Prims.bool",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d728c0528e590083751c96ecaeb773d2"
+    ],
+    [
+      "OneTimePad.xor_at",
+      1,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OneTimePad_interpretation_Tm_arrow_8219266297ea508c644ea01d180cf9e2",
+        "bool_inversion", "data_elim_FStar.Pervasives.Native.Mktuple4",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.surjection", "equation_OneTimePad.id_nib",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_OneTimePad.xor",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "token_correspondence_OneTimePad.id_nib",
+        "token_correspondence_OneTimePad.xor"
+      ],
+      0,
+      "43df47a17b9982b08ffe730956484719"
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      1,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OneTimePad.__proj__RANDOM__item__rand_equality",
+        "OneTimePad_interpretation_Tm_arrow_9ea4c6dc50c4c3a862b8aacf05289049",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "bool_inversion", "bool_typing",
+        "data_elim_FStar.Pervasives.Native.Mktuple4",
+        "equation_OneTimePad.nib", "equation_OneTimePad.one_time_pad",
+        "equation_OneTimePad.related_tape", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_at", "equation_OneTimePad.xor_b",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.bool", "int_typing",
+        "interpretation_Tm_abs_67b52d1a93722be6e507b928b8ba9499",
+        "interpretation_Tm_abs_8097da73f7bef1b936d8a81686e3b972",
+        "interpretation_Tm_abs_eb2a79aac6815f897d2f7c468320d8a3",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_OneTimePad.xor",
+        "token_correspondence_OneTimePad.xor_at", "typing_OneTimePad.xor_b"
+      ],
+      0,
+      "9cec516685e37da71f1259b0263e4ba4"
+    ],
+    [
+      "OneTimePad.xor_properties",
+      2,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "bool_inversion", "bool_typing",
+        "data_elim_FStar.Pervasives.Native.Mktuple4",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_Prims.bool", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_OneTimePad.xor_b"
+      ],
+      0,
+      "675923c669e6e54077502a8a4bf87e5b"
+    ],
+    [
+      "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
+      2,
+      0,
+      4,
+      [ "@query" ],
+      0,
+      "31dd902f1bd0d4ffa20d8e705ae27c38"
+    ],
+    [
+      "OneTimePad.RANDOM",
+      2,
+      0,
+      4,
+      [ "@query" ],
+      0,
+      "2de139f1ffd3172ca1a45f049d925d6b"
+    ],
+    [
+      "OneTimePad.related_tape",
+      2,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "equation_OneTimePad.nib", "equation_Prims.eqtype",
+        "function_token_typing_Prims.bool",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "1d2002017069f123794dc4b9f173fd93"
+    ],
+    [
+      "OneTimePad.xor_at",
+      2,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OneTimePad_interpretation_Tm_arrow_8219266297ea508c644ea01d180cf9e2",
+        "bool_inversion", "data_elim_FStar.Pervasives.Native.Mktuple4",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.surjection", "equation_OneTimePad.id_nib",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_OneTimePad.xor",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "token_correspondence_OneTimePad.id_nib",
+        "token_correspondence_OneTimePad.xor"
+      ],
+      0,
+      "4d1bf2c10dec5ac82254b219a0e3b1f2"
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      2,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "equation_OneTimePad.nib", "equation_Prims.eqtype",
+        "function_token_typing_Prims.bool",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "080eaec0c134eda71d2ff78d0f83c7e0"
     ]
   ]
 ]

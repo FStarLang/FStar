@@ -78,7 +78,7 @@ type 'a puf = {
 }
 type 'a p_uvar = P of int
   [@printer fun fmt x -> Format.pp_print_string fmt "!!!"]
-  [@@deriving show]
+  [@@deriving yojson,show]
   (* failwith "cannot pretty-print a unification variable" *)
 
 let puf_empty () =

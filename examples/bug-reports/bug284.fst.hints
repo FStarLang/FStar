@@ -1,44 +1,17 @@
 [
-  "­·\u0013Ë²‡\u0015Ô\u0015q-(\u0000àO\"",
+  "×‡á›P\u001cã\u0007¬ÇÜ÷Y Ë×",
   [
     [
       "Bug284.foo",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "e81295d66349a7dfd42c798aa0121300"
-    ],
-    [
-      "Bug284.foo",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "6cbc37f3f2922c9c736d38063faba595"
-    ],
-    [
-      "Bug284.foo",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "1e71285842cf70c0c4d33ba08e46116b"
-    ],
-    [
-      "Bug284.foo",
-      4,
-      2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_85721560a0c745412eef4b2aa333de58"
       ],
       0,
-      "0fb9da6f838742d679a7ac357fc62fdb"
+      "92412c928fc7c1859f7ca4738dadde61"
     ]
   ]
 ]

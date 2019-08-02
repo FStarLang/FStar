@@ -1,10 +1,12 @@
 #light "off"
 module FStar.Errors
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
 open FStar.Util
 open FStar.Range
+open FStar.Options
 
 type raw_error =
   | Error_DependencyAnalysisFailed
@@ -71,6 +73,7 @@ type raw_error =
   | Fatal_ExpectTermGotFunction
   | Fatal_ExpectTrivialPreCondition
   | Fatal_FailToCompileNativeTactic
+  | Fatal_FailToExtractNativeTactic
   | Fatal_FailToProcessPragma
   | Fatal_FailToResolveImplicitArgument
   | Fatal_FailToSolveUniverseInEquality
@@ -148,7 +151,7 @@ type raw_error =
   | Fatal_NonLinearPatternVars
   | Fatal_NonSingletonTopLevel
   | Fatal_NonSingletonTopLevelModule
-  | Fatal_NonTopRecFunctionNotFullyEncoded
+  | Error_NonTopRecFunctionNotFullyEncoded
   | Fatal_NonTrivialPreConditionInPrims
   | Fatal_NonVariableInductiveTypeParameter
   | Fatal_NotApplicationOrFv
@@ -217,12 +220,13 @@ type raw_error =
   | Fatal_UnexpectedTerm
   | Fatal_UnexpectedTermInUniverse
   | Fatal_UnexpectedTermType
+  | Fatal_UnexpectedTermVQuote
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
   | Fatal_UnificationNotWellFormed
   | Fatal_Uninstantiated
-  | Fatal_UninstantiatedUnificationVarInTactic
+  | Error_UninstantiatedUnificationVarInTactic
   | Fatal_UninstantiatedVarInTactic
   | Fatal_UniverseMightContainSumOfTwoUnivVars
   | Fatal_UniversePolymorphicInnerLetBound
@@ -242,7 +246,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
   | Fatal_WhenClauseNotSupported
-  | Fatal_CallNotImplemented
+  | Unused01
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -271,11 +275,12 @@ type raw_error =
   | Warning_NormalizationFailure
   | Warning_NotDependentArrow
   | Warning_NotEmbedded
-  | Warning_PatternMissingBoundVar
+  | Warning_PatternMissingBoundVar  //AR: this is deprecated, use Warning_SMTPatternIllFormed instead
+                                    //    not removing it so as not to mess up the error numbers
   | Warning_RecursiveDependency
   | Warning_RedundantExplicitCurrying
   | Warning_SMTPatTDeprecated
-  | Warning_SMTPatternMissingBoundVar
+  | Warning_SMTPatternIllFormed
   | Warning_TopLevelEffect
   | Warning_UnboundModuleReference
   | Warning_UnexpectedFile
@@ -294,35 +299,68 @@ type raw_error =
   | Error_NoLetMutable
   | Error_BadImplicit
   | Warning_DeprecatedDefinition
+  | Fatal_SMTEncodingArityMismatch
+  | Warning_Defensive
+  | Warning_CantInspect
+  | Warning_NilGivenExplicitArgs
+  | Warning_ConsAppliedExplicitArgs
+  | Warning_UnembedBinderKnot
+  | Fatal_TacticProofRelevantGoal
+  | Warning_TacAdmit
+  | Fatal_IncoherentPatterns
+  | Error_NoSMTButNeeded
+  | Fatal_UnexpectedAntiquotation
+  | Fatal_SplicedUndef
+  | Fatal_SpliceUnembedFail
+  | Warning_ExtractionUnexpectedEffect
+  | Error_DidNotFail
+  | Warning_UnappliedFail
+  | Warning_QuantifierWithoutPattern
+  | Error_EmptyFailErrs
+  | Warning_logicqualifier
+  | Fatal_CyclicDependence
+  | Error_InductiveAnnotNotAType
+  | Fatal_FriendInterface
+  | Error_CannotRedefineConst
+  | Error_BadClassDecl
+  | Error_BadInductiveParam
+  | Error_FieldShadow
+  | Error_UnexpectedDM4FType
+  | Fatal_EffectAbbreviationResultTypeMismatch
+  | Error_AlreadyCachedAssertionFailure
+  | Error_MustEraseMissing
+  | Warning_EffectfulArgumentToErasedFunction
+  | Fatal_EmptySurfaceLet
+  | Warning_UnexpectedCheckedFile
+  | Fatal_ExtractionUnsupported
+  | Warning_SMTErrorReason
 
-// Needs review: Do we need CFatal, or can we just use CError?
-type flag =
-  | CError | CFatal | CWarning | CSilent
+type flag = error_flag
 
 // This list should be considered STABLE
 // Which means, if you need to add an error, APPEND it, to keep old error numbers the same
 // If an error is deprecated, do not remove it! Change its name (if needed)
 let default_flags =
- [(Error_DependencyAnalysisFailed                    , CError);
-  (Error_IDETooManyPops                              , CError);
-  (Error_IDEUnrecognized                             , CError);
-  (Error_InductiveTypeNotSatisfyPositivityCondition  , CError);
-  (Error_InvalidUniverseVar                          , CError);
-  (Error_MissingFileName                             , CError);
-  (Error_ModuleFileNameMismatch                      , CError);
-  (Error_OpPlusInUniverse                            , CError);
-  (Error_OutOfRange                                  , CError);
-  (Error_ProofObligationFailed                       , CError);
-  (Error_TooManyFiles                                , CError);
-  (Error_TypeCheckerFailToProve                      , CError);
-  (Error_TypeError                                   , CError);
-  (Error_UncontrainedUnificationVar                  , CError);
-  (Error_UnexpectedGTotComputation                   , CError);
-  (Error_UnexpectedInstance                          , CError);
-  (Error_UnknownFatal_AssertionFailure               , CError);
-  (Error_Z3InvocationError                           , CError);
-  (Error_IDEAssertionFailure                         , CError);
-  (Error_Z3SolverError                               , CError);
+ [(Error_DependencyAnalysisFailed                    , CAlwaysError); //0
+  (Error_IDETooManyPops                              , CAlwaysError);
+  (Error_IDEUnrecognized                             , CAlwaysError);
+  (Error_InductiveTypeNotSatisfyPositivityCondition  , CAlwaysError);
+  (Error_InvalidUniverseVar                          , CAlwaysError);
+  (Error_MissingFileName                             , CAlwaysError);
+  (Error_ModuleFileNameMismatch                      , CAlwaysError);
+  (Error_OpPlusInUniverse                            , CAlwaysError);
+  (Error_OutOfRange                                  , CAlwaysError);
+  (Error_ProofObligationFailed                       , CError);//9
+  (Error_TooManyFiles                                , CAlwaysError);
+  (Error_TypeCheckerFailToProve                      , CAlwaysError);
+  (Error_TypeError                                   , CAlwaysError);
+  (Error_UncontrainedUnificationVar                  , CAlwaysError);
+  (Error_UnexpectedGTotComputation                   , CAlwaysError);
+  (Error_UnexpectedInstance                          , CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure               , CError); //16
+  (Error_Z3InvocationError                           , CAlwaysError);
+  (Error_IDEAssertionFailure                         , CAlwaysError);
+  (Error_Z3SolverError                               , CError); //19
   (Fatal_AbstractTypeDeclarationInInterface          , CFatal);
   (Fatal_ActionMustHaveFunctionType                  , CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration           , CFatal);
@@ -366,6 +404,7 @@ let default_flags =
   (Fatal_ExpectNormalizedEffect                      , CFatal);
   (Fatal_ExpectTermGotFunction                       , CFatal);
   (Fatal_ExpectTrivialPreCondition                   , CFatal);
+  (Fatal_FailToExtractNativeTactic                   , CFatal);
   (Fatal_FailToCompileNativeTactic                   , CFatal);
   (Fatal_FailToProcessPragma                         , CFatal);
   (Fatal_FailToResolveImplicitArgument               , CFatal);
@@ -444,7 +483,7 @@ let default_flags =
   (Fatal_NonLinearPatternVars                        , CFatal);
   (Fatal_NonSingletonTopLevel                        , CFatal);
   (Fatal_NonSingletonTopLevelModule                  , CFatal);
-  (Fatal_NonTopRecFunctionNotFullyEncoded            , CFatal);
+  (Error_NonTopRecFunctionNotFullyEncoded            , CError);
   (Fatal_NonTrivialPreConditionInPrims               , CFatal);
   (Fatal_NonVariableInductiveTypeParameter           , CFatal);
   (Fatal_NotApplicationOrFv                          , CFatal);
@@ -513,12 +552,13 @@ let default_flags =
   (Fatal_UnexpectedTerm                              , CFatal);
   (Fatal_UnexpectedTermInUniverse                    , CFatal);
   (Fatal_UnexpectedTermType                          , CFatal);
+  (Fatal_UnexpectedTermVQuote                        , CFatal);
   (Fatal_UnexpectedUniversePolymorphicReturn         , CFatal);
   (Fatal_UnexpectedUniverseVariable                  , CFatal);
   (Fatal_UnfoldableDeprecated                        , CFatal);
   (Fatal_UnificationNotWellFormed                    , CFatal);
   (Fatal_Uninstantiated                              , CFatal);
-  (Fatal_UninstantiatedUnificationVarInTactic        , CFatal);
+  (Error_UninstantiatedUnificationVarInTactic        , CError);
   (Fatal_UninstantiatedVarInTactic                   , CFatal);
   (Fatal_UniverseMightContainSumOfTwoUnivVars        , CFatal);
   (Fatal_UniversePolymorphicInnerLetBound            , CFatal);
@@ -538,7 +578,7 @@ let default_flags =
   (Fatal_WrongResultTypeAfterConstrutor              , CFatal);
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
-  (Fatal_CallNotImplemented                          , CFatal);
+  (Unused01                                          , CFatal);
   (Warning_CallNotImplementedAsWarning               , CWarning);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
@@ -572,12 +612,12 @@ let default_flags =
   (Warning_RecursiveDependency                       , CWarning);
   (Warning_RedundantExplicitCurrying                 , CWarning);
   (Warning_SMTPatTDeprecated                         , CWarning);
-  (Warning_SMTPatternMissingBoundVar                 , CWarning);
+  (Warning_SMTPatternIllFormed                       , CWarning);
   (Warning_TopLevelEffect                            , CWarning);
   (Warning_UnboundModuleReference                    , CWarning);
   (Warning_UnexpectedFile                            , CWarning);
   (Warning_UnexpectedFsTypApp                        , CWarning);
-  (Warning_UnexpectedZ3Output                        , CWarning);
+  (Warning_UnexpectedZ3Output                        , CError);
   (Warning_UnprotectedTerm                           , CWarning);
   (Warning_UnrecognizedAttribute                     , CWarning);
   (Warning_UpperBoundCandidateAlreadyVisited         , CWarning);
@@ -587,11 +627,50 @@ let default_flags =
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
-  (Error_BadImplicit                                 , CError);
-  (Warning_DeprecatedDefinition                      , CWarning)]
+  (Error_NoLetMutable                                , CAlwaysError);
+  (Error_BadImplicit                                 , CAlwaysError);
+  (Warning_DeprecatedDefinition                      , CWarning);
+  (Fatal_SMTEncodingArityMismatch                    , CFatal);
+  (Warning_Defensive                                 , CWarning);
+  (Warning_CantInspect                               , CWarning);
+  (Warning_NilGivenExplicitArgs                      , CWarning);
+  (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  (Warning_UnembedBinderKnot                         , CWarning);
+  (Fatal_TacticProofRelevantGoal                     , CFatal);
+  (Warning_TacAdmit                                  , CWarning);
+  (Fatal_IncoherentPatterns                          , CFatal);
+  (Error_NoSMTButNeeded                              , CAlwaysError);
+  (Fatal_UnexpectedAntiquotation                     , CFatal);
+  (Fatal_SplicedUndef                                , CFatal);
+  (Fatal_SpliceUnembedFail                           , CFatal);
+  (Warning_ExtractionUnexpectedEffect                , CWarning);
+  (Error_DidNotFail                                  , CAlwaysError);
+  (Warning_UnappliedFail                             , CWarning);
+  (Warning_QuantifierWithoutPattern                  , CSilent);
+  (Error_EmptyFailErrs                               , CAlwaysError);
+  (Warning_logicqualifier                            , CWarning);
+  (Fatal_CyclicDependence                            , CFatal);
+  (Error_InductiveAnnotNotAType                      , CError);
+  (Fatal_FriendInterface                             , CFatal);
+  (Error_CannotRedefineConst                         , CError);
+  (Error_BadClassDecl                                , CError);
+  (Error_BadInductiveParam                           , CFatal);
+  (Error_FieldShadow                                 , CFatal);
+  (Error_UnexpectedDM4FType                          , CFatal);
+  (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
+  (Error_AlreadyCachedAssertionFailure               , CFatal);
+  (Error_MustEraseMissing                            , CWarning);
+  (Warning_EffectfulArgumentToErasedFunction         , CWarning);
+  (Fatal_EmptySurfaceLet                             , CFatal);
+  (Warning_UnexpectedCheckedFile                     , CWarning); //321
+  (Fatal_ExtractionUnsupported                       , CFatal);
+  (Warning_SMTErrorReason                            , CWarning);
+  (* Protip: if we keep the semicolon at the end, we modify exactly one
+   * line for each error we add. This means we get a cleaner git history/blame *)
+  ]
 
-exception Err of raw_error* string
-exception Error of raw_error * string * Range.range
+exception Err     of raw_error * string
+exception Error   of raw_error * string * Range.range
 exception Warning of raw_error * string * Range.range
 exception Stop
 
@@ -630,6 +709,7 @@ let format_issue issue =
     let range_str, see_also_str =
         match issue.issue_range with
         | None -> "", ""
+        | Some r when r = dummyRange -> "", ""
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
            (if use_range r = def_range r then ""
@@ -656,7 +736,7 @@ let compare_issues i1 i2 =
     | Some _, None -> 1
     | Some r1, Some r2 -> Range.compare_use_range r1 r2
 
-let default_handler =
+let mk_default_handler print =
     let errs : ref<list<issue>> = BU.mk_ref [] in
     let add_one (e: issue) =
         match e.issue_level with
@@ -666,7 +746,8 @@ let default_handler =
         List.length !errs in
     let report () =
         let sorted = List.sortWith compare_issues !errs in
-        List.iter print_issue sorted;
+        if print then
+            List.iter print_issue sorted;
         sorted in
     let clear () =
         errs := [] in
@@ -674,6 +755,8 @@ let default_handler =
       eh_count_errors = count_errors;
       eh_report = report;
       eh_clear = clear }
+
+let default_handler = mk_default_handler true
 
 let current_handler =
     BU.mk_ref default_handler
@@ -683,11 +766,19 @@ let mk_issue level range msg n =
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
+let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+    h.eh_add_one issue;
+    if issue.issue_level <> EInfo then begin
+      Options.abort_counter := !Options.abort_counter - 1;
+      if !Options.abort_counter = 0 then
+        failwith "Aborting due to --abort_on"
+    end
+
 let add_one issue =
-    atomically (fun () -> (!current_handler).eh_add_one issue)
+    atomically (fun () -> wrapped_eh_add_one (!current_handler) issue)
 
 let add_many issues =
-    atomically (fun () -> List.iter (!current_handler).eh_add_one issues)
+    atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
 
 let report_all () =
     (!current_handler).eh_report ()
@@ -719,22 +810,22 @@ let message_prefix =
 
 let findIndex l v = l |> List.index (function (e, _) when e=v -> true | _ -> false)
 let errno_of_error e = findIndex default_flags e
-let flags: ref<list<flag>> = mk_ref []
 
-let init_warn_error_flags =
-  let rec aux r l =
-    match l with
-    | [] -> r
-    | (e, f)::tl -> aux (r@[f]) tl
-  in
-  flags := aux [] default_flags
+let init_warn_error_flags = List.map snd default_flags
 
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
+let defensive_errno = errno_of_error Warning_Defensive
+let lookup flags errno =
+    if errno = defensive_errno && Options.defensive_fail ()
+    then CAlwaysError
+    else List.nth flags errno
+
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match List.nth !flags errno with
+  match lookup (Options.error_flags()) errno with
+  | CAlwaysError
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->
@@ -785,7 +876,8 @@ let raise_error (e, msg) r =
 let raise_err (e, msg) =
   raise (Err (e, msg))
 
-let update_flags l =
+let update_flags (l:list<(error_flag * string)>) : list<error_flag> =
+  let flags = init_warn_error_flags in
   let compare (_, (a, _)) (_, (b, _)) =
     if a > b then 1
     else if a < b then -1
@@ -793,13 +885,14 @@ let update_flags l =
   in
   let set_one_flag f d =
     match (f, d) with
-    | (CWarning, CError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
-    | (CSilent, CError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
+    | (CWarning, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
+    | (CError, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
+    | (CSilent, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
     | (_, CFatal) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot reset the error level of a fatal error")
     | _ -> f
   in
   let rec set_flag i l=
-    let d = List.nth !flags i in
+    let d = List.nth flags i in
     match l with
     | [] -> d
     | (f, (l, h))::tl ->
@@ -827,4 +920,15 @@ let update_flags l =
   in
   let range = compute_range [] l in
   let sorted = List.sortWith compare range in
-  flags := aux [] 0 !flags sorted
+  aux [] 0 init_warn_error_flags sorted
+
+let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
+    let newh = mk_default_handler false in
+    let old = !current_handler in
+    current_handler := newh;
+    let r = try let r = f () in Some r
+            with | ex -> err_exn ex; None
+    in
+    let errs = newh.eh_report() in
+    current_handler := old;
+    errs, r

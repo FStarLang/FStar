@@ -1,5 +1,5 @@
 [
-  "=P\u0007•®5s7&Mhñ‹ÌÍ\u0002",
+  "ð&žÔ\u000b4NŠ\u0010†[ÑþsÈÃ",
   [
     [
       "PureEncoder.encode_entry",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
-      "dd0507a838e0b9ce4b8808e57ff24f1a"
+      "e84a31d2ae8867f3ee942093047a7114"
     ],
     [
       "PureEncoder.encode_store",
@@ -19,16 +19,47 @@
         "@MaxIFuel_assumption", "@query", "data_elim_KeyValue.Store",
         "equation_FStar.UInt.uint_t",
         "fuel_guarded_inversion_KeyValue.store",
-        "lemma_FStar.Buffer.lemma_size",
+        "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt32.uv_inv",
         "proj_equation_KeyValue.Store_entries",
         "proj_equation_KeyValue.Store_num_entries",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "refinement_interpretation_KeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
-        "typing_FStar.UInt32.v",
+        "refinement_interpretation_Tm_refine_73061219acedf795ff1e97b86a9bc700",
+        "refinement_interpretation_Tm_refine_c6c18a7ceb46d419c35ff8551117551e",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
         "typing_KeyValue.__proj__Store__item__num_entries"
       ],
       0,
-      "8e6ff667500a0e5b305ade9bf799e28b"
+      "e736055d9150eeb8529dc69dc92dd209"
+    ],
+    [
+      "PureEncoder.encode_entry",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
+      0,
+      "28e876e75a1dc0e5dd2620890f4af50a"
+    ],
+    [
+      "PureEncoder.encode_store",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_KeyValue.Store",
+        "equation_FStar.UInt.uint_t",
+        "fuel_guarded_inversion_KeyValue.store",
+        "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt32.uv_inv",
+        "proj_equation_KeyValue.Store_entries",
+        "proj_equation_KeyValue.Store_num_entries",
+        "refinement_interpretation_Tm_refine_73061219acedf795ff1e97b86a9bc700",
+        "refinement_interpretation_Tm_refine_c6c18a7ceb46d419c35ff8551117551e",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
+        "typing_KeyValue.__proj__Store__item__num_entries"
+      ],
+      0,
+      "81695579fdde3407712602f6e2c8f12e"
     ]
   ]
 ]

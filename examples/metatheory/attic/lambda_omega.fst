@@ -527,7 +527,7 @@ let rec tappears_free_in x t =
   | TApp t1 t2 -> tappears_free_in x t1 || tappears_free_in x t2
   | TLam _ t1 -> tappears_free_in (x+1) t1
 
-opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
+opaque type EnvEqualT (t:typ) (g1:env) (g2:env) =
 		 (forall (x:var). tappears_free_in x t ==>
                     lookup_tvar g1 x = lookup_tvar g2 x)
 
@@ -550,7 +550,7 @@ let rec eappears_free_in x e =
 
 (* g1 and g2 are the same on the type variables,
    but they can vary on the unused term variables *)
-opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
+opaque type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==>
                     lookup_evar g1 x = lookup_evar g2 x) /\
 		 (FEq (MkEnv.a g1) (MkEnv.a g2))

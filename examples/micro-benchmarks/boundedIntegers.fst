@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.BoundedIntegers
 
 val int32_min_value : int
@@ -9,16 +24,16 @@ let int32_max_value = 2147483647
 assume val uint32_max_value : int
 (*let uint32_max_value = 4294967295*)
 
-opaque logic type Within_Int32 (i:int) =
+opaque type Within_Int32 (i:int) =
     int32_min_value <= i /\ i <= int32_max_value
 
-private opaque logic type Int32 (i:int) =
+private opaque type Int32 (i:int) =
   Within_Int32 i
 
-opaque logic type Within_UInt32 (i:int) =
+opaque type Within_UInt32 (i:int) =
     0 <= i /\ i <= uint32_max_value
 
-private opaque logic type UInt32 (i:int) =
+private opaque type UInt32 (i:int) =
    Within_UInt32 i
 
 type int32 = i:int{Int32 i}

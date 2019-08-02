@@ -18,13 +18,17 @@ if ! [[ -d ulib ]]; then
   echo "This script is intended to be run from the root of the F* repository"
   exit 1
 fi
-FSTAR_HOME=$PWD
+
+# We need two FSTAR_HOMEs in this script: one for the host (from where
+# we build F*) and one for the package (from where we test the
+# obtained binary). FSTAR_HOST_HOME is the former.
+FSTAR_HOST_HOME=$PWD
 
 # Expects to be called from $BN_BINARYSPATH_ROOT
 function cp_to_binaries () {
   local file=$1
-  echo "--" $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
-  cp $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
+  echo "--" $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
+  cp $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$file
 }
 
@@ -44,38 +48,41 @@ function cleanup_files () {
 
 # Constants for showing color in output window
 RED='\033[0;31m'
+YELLOW='\033[0;33m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+diag () {
+	echo -e "${YELLOW}$1${NC}"
+}
+
 CURRENT_VERSION=$(head -n 1 version.txt | tr -d '\r')
 
-echo "*** Clean up log files ***"
+diag "*** Clean up log files ***"
 if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
   rm src/ocaml-output/fstar/HelloOcamlOutput.log
 fi
-if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
-  rm src/ocaml-output/fstar/AllExamples.log
-fi
 
-echo "*** Make package (clean build directory first) ***"
+diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
 make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
-echo "*** Unzip and verify the Package  ***"
+diag "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%Y%m%d%H%M)
+COMMIT=_$(git rev-parse --short HEAD)
 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
-  MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
+  MINOR_ZIP_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
   cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
   unzip -o $MAJOR_ZIP_FILE
 else
   TYPE="_Linux_x86_64.tar.gz"
   MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
   if [[ -f $MAJOR_TAR_FILE ]]; then
-    MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
+    MINOR_TAR_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
     cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
     tar -x -f $MAJOR_TAR_FILE
   else
@@ -84,29 +91,75 @@ else
   fi
 fi
 
-echo "*** Make the examples ***"
+diag "*** Test the binary package ***"
 cd fstar
-make -C examples/hello ocaml | tee HelloOcamlOutput.log
-make -j6 -C examples | tee AllExamples.log
 
-echo "-- Verify hello ocaml -- should output Hello F*! *"
-if ! egrep 'F*!' HelloOcamlOutput.log; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - F*! was not found in HelloOcamlOutput.log"
+# We need two FSTAR_HOMEs in this script: one for the host (from where
+# we build F*) and one for the package (from where we test the
+# obtained binary). FSTAR_HOME is the latter. Most examples will
+# anyway redefine and overwrite FSTAR_HOME according to their location
+# within the package, *except* one: stringprinter in examples/tactics,
+# which needs KreMLin, which needs some FSTAR_HOME defined. So we have
+# to export it from here.
+export FSTAR_HOME="$PWD"
+
+diag "-- Versions --"
+bin/fstar.exe --version
+bin/z3 --version
+
+diag "-- Verify micro benchmarks --"
+make -C examples/micro-benchmarks
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
+  echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
 fi
 
-echo "-- Verify all examples -- Look for Success:"
-if ! egrep 'Success:' AllExamples.log; then
-  echo -e "* ${RED}FAIL!${NC} for all examples - Success: was not found in AllExamples.log"
+diag "-- Rebuilding ulib/ml (to make sure it works) --"
+make -C ulib/ml clean && make -C ulib install-fstarlib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
+fi
+
+diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
+make -C examples/hello hello | tee HelloOcamlOutput.log
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for examples/hello - make failed withexit code $?"
+  exit 1
+elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
+  echo -e "* ${RED}FAIL!${NC} for examples/hello - 'Hello F*!' was not found in HelloOcamlOutput.log"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
+fi
+
+diag "-- Verify ulib --"
+make -j6 -C ulib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for ulib"
+fi
+
+diag "-- Verify all examples --"
+make -j6 -C examples
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for all examples"
 fi
 
+# From this point on, we should no longer need FSTAR_HOME.
+export FSTAR_HOME=
+
 # Got to this point, so know it passed - copy minor version out
-echo "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
+diag "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
 BN_BINARYSPATH_ROOT=~/binaries
 BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
 BN_FILESTOKEEP=4
@@ -120,22 +173,22 @@ git fetch
 git checkout master
 git reset --hard origin/master
 
-echo "-- copy files and add to Github --"
-if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
+diag "-- copy files and add to Github --"
+if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   cp_to_binaries $MINOR_ZIP_FILE
 fi
-if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
+if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   cp_to_binaries $MINOR_TAR_FILE
 fi
 
 # Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
-echo "-- Delete oldest ZIP file if more than 4 exist --"
+diag "-- Delete oldest ZIP file if more than 4 exist --"
 cleanup_files "zip"
-echo "-- Delete oldest TAR file if more than 4 exist --"
+diag "-- Delete oldest TAR file if more than 4 exist --"
 cleanup_files "gz"
 
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
-echo "--- now commit it but keep history truncated ... then push --- "
+diag "--- now commit it but keep history truncated ... then push --- "
 git commit --amend -m "Adding new build package and removing oldest."
 git push git@github.com:FStarLang/binaries.git master --force
 

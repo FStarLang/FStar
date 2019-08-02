@@ -7,6 +7,7 @@ open FStar_Ulexing
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:Prims.int;
     frag_col:Prims.int
@@ -48,6 +49,18 @@ let get_file_last_modification_time filename =
   | Some (mtime, _contents) -> mtime
   | None -> U.get_file_last_modification_time filename
 
+let read_physical_file (filename: string) =
+  (* BatFile.with_file_in uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
+  try
+    let channel = open_in_bin filename in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> really_input_string channel (in_channel_length channel))
+      channel
+  with e ->
+    raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+
 let read_file (filename:string) =
   let debug = FStar_Options.debug_any () in
   match read_vfs_entry filename with
@@ -56,11 +69,8 @@ let read_file (filename:string) =
     filename, contents
   | None ->
     let filename = find_file filename in
-    try
-      if debug then U.print1 "Opening file %s\n" filename;
-      filename, BatFile.with_file_in filename BatIO.read_all
-    with e ->
-      raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+    if debug then U.print1 "Opening file %s\n" filename;
+    filename, read_physical_file filename
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -101,7 +111,7 @@ let parse fn =
          with _ -> raise_err (Fatal_InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Toplevel s
     | Fragment s ->
-      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
+      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
   in
 
   let lexer () =
@@ -134,21 +144,24 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r) ->
       ParseError (e, msg, r)
 
-    | e ->
+    | Parsing.Parse_error as e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
       ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
-  let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
-  let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
-    (tok, lexbuf.start_p, lexbuf.cur_p)
-  in
   let user_flags =
-    try
-      MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
-    with e ->
-      failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
+    if s = ""
+    then []
+    else
+      let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+      let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
+        (tok, lexbuf.start_p, lexbuf.cur_p)
+      in
+      try
+        MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
+      with e ->
+        failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
   in
-  FStar_Errors.update_flags user_flags 
+  FStar_Errors.update_flags user_flags

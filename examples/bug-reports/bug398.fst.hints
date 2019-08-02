@@ -1,26 +1,14 @@
 [
-  "À\u001dşƒE¾fç*ÔYjk9i\t",
+  "‘‰HÌŞä@)ø\u0002\bïµÂ¢",
   [
     [
       "Bug398.foo",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
-      0,
-      "d922cf162f6019b319126f3a276f801f"
-    ],
-    [
-      "Bug398.bar",
-      1,
-      2,
-      1,
       [ "@query" ],
       0,
-      "0ff5b01d66ea4239ede2fe49d6797861"
+      "fea94f07f5a24b7c233c6afc0f3e816f"
     ]
   ]
 ]

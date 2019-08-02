@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module EtM.AE
 open FStar.Seq
 open FStar.Monotonic.Seq
@@ -161,9 +176,9 @@ let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
-  Map.contains h.h k.region /\
-  Map.contains h.h (MAC.Key?.region k.km) /\
-  Map.contains h.h (CPA.Key?.region k.ke) /\
+  Map.contains (get_hmap h) k.region /\
+  Map.contains (get_hmap h) (MAC.Key?.region k.km) /\
+  Map.contains (get_hmap h) (CPA.Key?.region k.ke) /\
   EtM.CPA.invariant (Key?.ke k) h /\
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
@@ -243,14 +258,14 @@ let keygen (parent:rid)
     modifies Set.empty h0 h1    /\
     extends k.region parent     /\
     fresh_region k.region h0 h1 /\
-    Map.contains h1.h k.region /\
+    Map.contains (get_hmap h1) k.region /\
     contains h1 k.log /\
-    sel h1 k.log == createEmpty /\
+    sel h1 k.log == Seq.empty /\
     invariant h1 k)) =
   let region = new_region parent in
   let ke = CPA.keygen region in
   let ka = MAC.keygen region in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region ke ka log
 
 /// encrypt:

@@ -11,6 +11,320 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.7.0
+
+## Module system
+
+  * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
+
+## Core typechecker
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
+    F* now enforces that unannotated, effectful functions have a
+    trivial precondition (this is already the case for pure functions).
+
+    See some testcases in `examples/bug-reports/Bug1055.fst`.
+
+    The check is performed under a new flag `--trivial_pre_for_unannotated_effectful_fns`,
+    which is `true` by-default.
+
+    This is a breaking change, see this commit for how we fixed the F* examples:
+    https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
+
+
+  * Revised typechecking of nested patterns and ascriptions on
+    patterns, fixing unsoundnesses (issue #238, for example)
+
+## Libraries
+
+   * Two core axioms were discovered by Aseem Rastogi to be formulated
+     in an unsound manner.
+
+     FStar.FunctionalExtensionality has been reformulated to prevent
+     equivalence proofs of a function on a given domain to be
+     improperly extended to equivalence on a larger domain. The
+     library was fixed to ensure that domain type used to prove the
+     equivalence was recorded in the axiom. See
+     examples/micro-benchmarks/Test.FunctionalExtensionality.fst for
+     example uses.
+
+     FStar.PropositionalExtensionality was found to be incompatible
+     with the representation of `prop` as the type of all
+     sub-singletons. `prop` has been reformulated as the type of all
+     sub-types of `unit`.
+
+     See issue #1542 for more discussion.
+
+## Syntax
+
+   * We now overload `&` to construct both dependent and non-dependent
+     tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
+     `x:t1 & t2` is `dtuple2 t1 (fun x -> t2)`. See
+     examples/micro-benchmarks/TupleSyntax.fst. The main value
+     proposition here is that in contrast to `*`, which clashes with
+     the multiplication on integers, the `&` symbol can be used for
+     tuples while reserving `*` for multiplication.
+
+## Extraction
+
+   * Cross-module inlining: Declarations in interfaces marked with the
+     `inline_for_extraction` qualifier have their definitions inlined
+     in client code. Currently guarded by the --cmi flag, this will
+     soon be the default behavior. Also see:
+     https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
+     and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+## SMT Encoding
+
+   * A soundness bug was fixed in the encoding of recursive functions
+     to SMT. The flaw resulted from omitting typing guards in the
+     axioms corresponding to the equational behavior of pure and ghost
+     recursive functions. The fix makes reasoning about recursive
+     functions with SMT slightly more demanding: if the typing of an
+     application of a recursive functions requires some non-trivial
+     proof, the SMT solver may require some assistance with that proof
+     before it can unfold the definition of the recursive
+     function. For an example of the kind of additional proof that may
+     be needed, see these commits:
+     https://github.com/FStarLang/FStar/commit/936ce47f2479af52f3c3001bd87bed810dbf6e1f
+     and https://github.com/project-everest/hacl-star/commit/2220ab81bbae735495a42ced6485665d9facdb0b.
+     We need to call lemmas
+     to prove that the recursive function that appears in the
+     inductive hypothesis is well-typed
+     (e.g. calling `wp_monotone` lemma for well-typedness of `wp_compute` in the second commit) .
+     In some cases, it may also be possible to use the normalizer to
+     do the unfolding:
+     https://github.com/project-everest/hacl-star/commit/6e9175e607e591faa5b6a0d6052fc4a336f7bf41#diff-127ee9d47350eff0fa0d79847257d493R290.
+     Another kind of change required hoisting some type declarations:
+     https://github.com/FStarLang/FStar/commit/819ad64065f1e70aec3665f5df6b58a7d43cdce1
+     to get around imprecision in the SMT encoding. This can be handled in F*
+     with an additional SMT axiom on type constructors like `list`, but
+     we only found a couple of instances of this. So, for now, we are going with the
+     hoisting workaround.
+
+   * The encoding of nullary constants changed. See the documentation
+     in https://github.com/FStarLang/FStar/pull/1645
+
+   * An optimization of the SMT encoding removes, by default,
+     expensive axioms about validity from the prelude.
+
+     The axiom in question is the following:
+
+     ```
+       (assert (forall ((t Term))
+                       (! (iff (exists ((e Term)) (HasType e t))
+                               (Valid t))
+                        :pattern ((Valid t)))))
+     ```
+
+     The axiom is justified by our model of squash types and
+     effectively capture the monadic structure of squash: the forward
+     implication is related to `return_squash` and the backwards
+     direction to `bind_squash`.
+
+     However, this axiom is now excluded by default, for two reasons:
+
+     1. The axiom is very expensive for the SMT solver, showing up a
+        lot on most SMT profiles. Every occurrence of `Valid t`
+        introduces a quantifier in scope (and a skolemized occurrence
+        of `HasType e t`).
+
+     2. Most code doesn't actually need these axioms.
+
+     Instead, we now provide two flags to add versions of this axiom
+     on demand.
+
+     The option `--smtencoding.valid_intro true` adds the following
+     axiom to the prelude:
+
+      ```
+        (assert (forall ((e Term) (t Term))
+                      (! (implies (HasType e t)
+                                  (Valid t))
+                       :pattern ((HasType e t)
+                                 (Valid t))
+                       :qid __prelude_valid_intro)))
+      ```
+
+     The option `--smtencoding.valid_elim true` adds the following
+     axiom to the prelude:
+
+     ```
+       (assert (forall ((t Term))
+                      (! (implies (Valid t)
+                                  (exists ((e Term)) (HasType e t)))
+                       :pattern ((Valid t))
+                       :qid __prelude_valid_elim)))
+     ```
+
+     Currently, in the F* tree, these axioms are enabled in our
+     makefiles (see ulib/gmake/fstar.mk), since a few core libraries
+     (FStar.Squash, e.g.) rely on it. But we are working on more
+     tightly scoping the use of these axioms in the F* tree.
+
+     Meanwhile, other projects using F* in project-everest no longer
+     use these axioms by default.
+
+## Calculational proofs
+
+   * F\* now supports proofs in calculational style, i.e. where an
+     equality between two expressions is expressed via a sequence of
+     equalities each of which is proven individually. In fact, these
+     proofs can be done for any relation, provided that steps compose
+     properly (e.g., `a < b == c` implies `a < c`, but `a <= b == c`
+     does not imply `a < c`). For some examples, see `examples/calc/`.
+
+## Miscellaneous
+
+   * Development builds of F\* no longer report the date of the build
+     in `fstar --version`. This is to prevent needlessly rebuilding
+     F\* even when the code does not change.
+
+## Dependence analysis and build
+
+   * --already_cached provides a way to assert that some modules, and
+     only those modules, have already been verified, i.e, valid
+     .checked files exist for them. In case a module that is marked
+     `--already_cached` does not have a valid .checked file, Error 317
+     is raised. Otherwise, if we find a checked file for a module that
+     is not already_cached in a location that is not the same as its
+     expected output location, we raise Warning 321.
+
+## Command line options
+
+   * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
+     options take lists of namespaces as arguments
+     (`--already_cached`, `--extract`, `--using_facts_from`, etc.),
+     those lists of namespaces can be given under the form `+A -B +C`
+     (space-separated) or `+A,-B,+C` (comma-separated).
+
+## Editors
+
+   * Support for vscode via LSP (https://github.com/FStarLang/FStar/wiki/Using-F*-with-vscode)
+
+# Version 0.9.6.0
+
+## Command line options
+
+   F* reads .checked files by default unless the `--cache_off` option is provided.
+   To write .checked files, provide `--cache_checked_modules`
+
+   `--use_two_phase_tc true` is now the default. This improves type
+   inference for implicit arguments and reduces our trust in type
+   inference, since the result of type inference is type-checked
+   again.
+
+   `--use_extracted_interfaces` now takes a boolean string as an
+   option, i.e., `--use_extracted_interfaces true` or
+   `--use_extracted_interfaces false`. The latter is the default. The
+   next release of F* aims to turn this on always with no option to
+   turn it off. This feature is more demanding in enforcing
+   abstraction at module boundaries; without out it, some abstractions
+   leak. See
+   https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
+   for more information.
+
+   `--keep_query_captions true|false` (default `true`) when set to `true`,
+   and when `--log_queries` is enabled, causes .smt2 files to be logged with
+   comments; otherwise comments are not printed. Note, the comments
+   can be quite verbose.
+
+   `--already_cached "(* | [+|-]namespace)*"`, insists that .checked files be
+   present or absent for modules that match the namespace pattern provided.
+
+   `--smtencoding.valid_intro` and `--smtencoding.valid_elim`: See PR
+   #1710 and the discussion above in the SMT encoding section.
+
+## Type inference
+
+   We had a significant overhaul of the type inference algorithm and
+   representation of unification variables. The new algorithm performs
+   significantly better, particularly on memory consumption.
+
+   But, some of the heuristics changed slightly so you may have to add
+   annotations to programs that previously required none.
+
+   For the changes we had to make to existing code, see the commits
+   below:
+
+```
+commit d4c0161c22ab9ac6d72900acd7ed905d43cb92b7
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 8 15:27:19 2018 -0700
+
+    ***SOURCE CODE CHANGE*** in support of new inference; need an annotation in Synthesis.fst
+
+
+commit 362fa403c45def14fb2e2809e04405c39e88dfcb
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 1 15:55:08 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for inference; the inferred type is more precise than previously, which leads to failure later; annotated with a weaker type
+
+commit ec17efe04709e4a6434c05e5b6f1bf11b033353e
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:54 2018 -0700
+
+    ***SOURCE CODE CHANGE** for new inference; a repacking coercion needs an annotation
+
+commit f60cbf38fa73d5603606cff42a88c53ca17fbd37
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:17 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for new inference; arguably an improvement
+
+commit c97d42cae876772a18d20f54bba2a7d5fceecd69
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 20:59:50 2018 -0700
+
+    **SOURCE CODE CHANGE** for new type inference; arguably an improvement
+
+commit 936a5ff7a8404c5ddbdc87d0dbb3a86af234e71b
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 16:57:21 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for type inference; could be reverted once prop lands
+```
+
+
+# Version 0.9.6.0~alpha1
+
+## Syntax
+
+* The syntax of type annotations on binders has changed to eliminate a
+  parsing ambiguity. The annotation on a binder cannot itself contain
+  top-level binders. For example, all of the following previously
+  accepted forms are now forbidden:
+
+  ```
+    let g0 (f:x:a -> b) = ()
+    let g1 (f:x:int{x > 0}) = ()
+    let g2 (a b : x:int{x> 0}) = ()
+    let g3 (f:a -> x:b -> c) = ()
+   ```
+
+  Instead, you must write:
+
+
+  ```
+    let g0 (f: (x:a -> b)) = ()
+    let g1 (f: (x:int{x > 0})) = ()
+    let g2 (a b : (x:int{x> 0})) = ()
+    let g3 (f : (a -> x:b -> c)) = ()
+   ```
+
+  In the second case, this version is also supported and is preferred:
+
+  ```
+    let g1 (f:int{f > 0}) = ()
+  ```
+
+  See the following diffs for some of the changes that were made to
+  existing code:
+
+  https://github.com/FStarLang/FStar/commit/6bcaedef6d91726540e8969c5f7a6a08ee21b73c
+  https://github.com/FStarLang/FStar/commit/03a7a1be23a904807fa4c92ee006ab9c738375dc
+  https://github.com/FStarLang/FStar/commit/442cf7e4a99acb53fc653ebeaa91306c12c69969
+
 ## Basic type-checking and inference
 
 * A revision to implicit generalization of types
@@ -69,7 +383,7 @@ Guidelines for the changelog:
   3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
   4. `e1` is not a `let rec`
 
-  This is breaking change. Consider the following example (adapted
+  This is a breaking change. Consider the following example (adapted
   from `ulib/FStar.Algebra.Monoid.fst`):
 
   ```
@@ -110,25 +424,24 @@ Guidelines for the changelog:
 
   Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
 
+## IDE
+
+* F* now prints `progress` messages while loading dependencies in `--ide` mode
+  (https://github.com/FStarLang/FStar/commit/084638c12ae83ecfa975abd6bbc990f6a784a873)
+
+* Sending an interrupt (C-c / SIGINT) to F* in `--ide` mode does not kill the
+  process any more.  Instead, it interrupts the currently running query or
+  computation.  Not all queries support this (at the moment only `compute` and
+  `push` do); others simply ignore interrupts
+  (https://github.com/FStarLang/FStar/commit/417750b70ae0d0796a480627149dc0a09f9437d2).
+  This feature is experimental.
+
+* The `segment` query can now be used to split a document into a list of
+  top-level forms.
+
+* Some `proof-state` messages now contain location information.
+
 ## Standard library
-
-* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
-
-  The specifications for the machine integer libraries (`Int64.fst`,
-  `UInt64.fst`, etc) now forbid several forms of undefined behavior in
-  C.
-
-  The signed arithmetic `add_underspec`, `sub_underspec`, and `mul_underspec`
-  functions have been removed.
-
-  Shifts have a precondition that the shift is less than the bitwidth.
-
-  Existing code may need additional preconditions to verify (for example, see
-  a
-  [fix to HACL*](https://github.com/mitls/hacl-star/commit/c8a61ab189ce163705f8f9ff51e41cab2869f6d6)).
-  Code that relied on undefined behavior is unsafe, but it can be extracted
-  using `assume` or
-  `admit`.
 
 * Related to the change in implicit generalization of types, is the
   change to the standard libraries for state.
@@ -199,7 +512,7 @@ Guidelines for the changelog:
      18. `MR.ex_rid_of_rid` --> `HST.witness_region`
 
      See the following commits for examples:
-     
+
      https://github.com/mitls/mitls-fstar/commit/be1b8899a344e885bd3a83a26b099ffb4184fd06
      https://github.com/mitls/mitls-fstar/commit/73299b71075aca921aad6fbf78faeafe893731db
      https://github.com/mitls/hacl-star/commit/1fb9727e8193e798fe7a6091ad8b16887a72b98d
@@ -238,6 +551,21 @@ Guidelines for the changelog:
      above, in that there is no extra proof obligation when creating
      regions now.
 
+  5. `FStar.HyperStack.mem` is now `abstract`. The client changes include
+     the following mappings (where `h` has type `mem`):
+
+     1. `h.tip` --> `HS.get_tip h`
+     2. `h.h` --> `HS.get_hmap h`
+
+     The script `FStar/.scripts/renamings.sh` has a new option
+     `rename_hs_mem_projectors` that tries to do this renaming
+     in all the `fst` and `fsti` files. If you use this script,
+     make sure the gloss over the renamings (using `git diff`) to
+     see that the changes are fine.
+
+     The change is only syntactic in the clients, there shouldn't
+     be any other proof changes.
+
 * Consolidation of HyperHeap and HyperStack memory models, and
   corresponding APIs for `contains`, `modifies`, etc.
 
@@ -252,7 +580,7 @@ Guidelines for the changelog:
   5. `HH.modifies_just` --> `HS.modifies`
   6. `HH.modifies_one` --> `HS.modifies_one`
   7. ...
-  
+
   For a complete list of the mapping implemented as a crude script to
   rewrite source files, see:
   https://github.com/mitls/mitls-fstar/blob/quic2c/src/tls/renamings.sh
@@ -285,30 +613,30 @@ Guidelines for the changelog:
 
 ## Extraction
 
-* [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
-  `inline_for_extraction` on a type annotation now unfolds it at extraction
-  time. This can help to reveal first-order code for C extraction;
-  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
-
 * Pure terms are extracted while preserving their local `let`-structure.
 This avoids code blow-up problems observed in both HACL and miTLS.
-To recover the old behavior, at the cost of larger code size, 
+To recover the old behavior, at the cost of larger code size,
 use the option `--normalize_pure_terms_for_extraction`.
 Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
 
+* Since 393835080377fff79baeb0db5405157e8b7d4da2, erasure for
+  extraction is substantially revised. We now make use of a notion of
+  "must_erase" types, defined as follows:
+
+   ```
+   must_erase ::= unit
+               | Type
+               | FStar.Ghost.erased t
+               | x:must_erase{t'}            //any refinement of a must_erase type
+               | t1..tn -> PURE must_erase _ //any pure function returning a must_erase type
+               | t1..tn -> GHOST t' _        //any ghost function
+   ```
+
+  Any must_erase type is extracted to `unit`.
+  Any must_erase computation is extracted as `()`.
+  A top-level must_erase computation is not extracted at all.
+
 ## Command line options
-
-* --hint_stats and --check_hints are gone
-    b50c88930e3f2655704696902693941525f6cf9f. The former was rarely
-    used. The latter may be restored, but the code was too messy to
-    retain, given that the feature is also not much used.
-
-* --hint_info and --print_z3_statistics are deprecated. They are
-    subsumed by --query_stats.
-
-* --cache_checked_modules: writes out a .checked file from which the
-  typechecker can reconstruct its state, instead of re-verifying a
-  module every time
 
 * --verify_all, --verify_module, --extract_all, --explicit_deps are
     gone. The behavior of `--dep make` has changed. See the section on
@@ -355,7 +683,7 @@ Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
   imposed by an interface of `A`.
 
   In such a situation, you can run:
-  
+
      `fstar --expose_interfaces A.fsti A.fst B.fst`
 
   Note, this explicitly breaks the abstraction of the interface
@@ -381,20 +709,6 @@ Expected changes in the near future:
 
 ## Error reporting
 
-* The error reports from SMT query failures have been substantially
-  reworked. At least a diagnostic (i.e., an "Info" message) is issued
-  for each SMT query failure together with a reason provided by the
-  SMT solver. To see that diagnostic message, you at least need to
-  have '--debug yes'. Additionally, localized assertion failures will
-  be printed as errors. If no localized errors could be recovered
-  (e.g., because of a solver timeout) then the dreaded "Unknown
-  assertion failed" error is reported.
-
-* --query_stats now reports a reason for a hint failure as well as
-  localized errors for sub-proofs that failed to replay. This is
-  should provide a faster workflow than using --detail_hint_replay
-  (which still exists)
-
 * Every error or warning is now assigned a unique number. Error
   reports now look like this:
 
@@ -403,13 +717,9 @@ Expected changes in the near future:
 ```
 
   Notice the `19`: that's the unique error number.
-  
+
   Warnings can be silenced or turned into errors using the new
   `--warn_error` option.
-   
-## Miscellaneous
-
-* A file can now contain at most one module or interface
 
 ## Tactics
 
@@ -436,3 +746,63 @@ Expected changes in the near future:
 * `clear`, which removed the innermost binder from the context, now takes a binder as
    an argument an will attempt to remove it from any position (given that dependency allows it).
    The old behaviour can be recovered with `clear_top` instead.
+
+# Version 0.9.5.0
+
+## Standard library
+
+* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32) The specifications for the machine integer libraries (`Int64.fst`,
+  `UInt64.fst`, etc) now forbid several forms of undefined behavior in C.
+
+  The signed arithmetic `add_underspec`, `sub_underspec`, and `mul_underspec`
+  functions have been removed.
+
+  Shifts have a precondition that the shift is less than the bitwidth.
+
+  Existing code may need additional preconditions to verify (for example, see
+  a
+  [fix to HACL*](https://github.com/mitls/hacl-star/commit/c8a61ab189ce163705f8f9ff51e41cab2869f6d6)).
+  Code that relied on undefined behavior is unsafe, but it can be extracted
+  using `assume` or
+  `admit`.
+
+## C Extraction
+
+* [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
+  `inline_for_extraction` on a type annotation now unfolds it at extraction
+  time. This can help to reveal first-order code for C extraction;
+  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+
+## Command line options
+
+* --hint_stats and --check_hints are gone
+    b50c88930e3f2655704696902693941525f6cf9f. The former was rarely
+    used. The latter may be restored, but the code was too messy to
+    retain, given that the feature is also not much used.
+
+* --hint_info and --print_z3_statistics are deprecated. They are
+    subsumed by --query_stats.
+
+* --cache_checked_modules: writes out a .checked file from which the
+  typechecker can reconstruct its state, instead of re-verifying a
+  module every time
+
+## Error reporting
+
+* The error reports from SMT query failures have been substantially
+  reworked. At least a diagnostic (i.e., an "Info" message) is issued
+  for each SMT query failure together with a reason provided by the
+  SMT solver. To see that diagnostic message, you at least need to
+  have '--debug yes'. Additionally, localized assertion failures will
+  be printed as errors. If no localized errors could be recovered
+  (e.g., because of a solver timeout) then the dreaded "Unknown
+  assertion failed" error is reported.
+
+* --query_stats now reports a reason for a hint failure as well as
+  localized errors for sub-proofs that failed to replay. This is
+  should provide a faster workflow than using --detail_hint_replay
+  (which still exists)
+
+## Miscellaneous
+
+* A file can now contain at most one module or interface

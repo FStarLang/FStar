@@ -3,19 +3,43 @@ module Prims
 open System.Numerics
 module Obj = FSharp.Compatibility.OCaml.Obj
 
+module Z = FSharp.Compatibility.OCaml.Big_int
+
+(* Euclidean division and remainder:
+   Inefficient implementation based on the naive version at
+   https://en.wikipedia.org/wiki/Division_algorithm
+
+   Note, in OCaml, we use ZArith's ediv and erem
+*)
+let rec ediv_rem (n:Z) (d:Z.big_int) : t * t =
+    if Z.lt_big_int d Z.zero_big_int then
+      let q, r = ediv_rem n (Z.minus_big_int d) in
+      Z.minus_big_int q, r
+    else if Z.lt_big_int n Z.zero_big_int then
+      let q, r = ediv_rem (Z.minus_big_int n) d in
+      if r = Z.zero_big_int then
+        Z.minus_big_int q, Z.zero_big_int
+      else
+        Z.sub_big_int (Z.minus_big_int q) (Z.minus_big_int Z.unit_big_int),
+        Z.sub_big_int d r
+    else Z.quomod_big_int n d
+
 type int       = bigint
 type nonzero = int
 let ( + )  (x:bigint) (y:int) = x + y
 let ( - )  (x:int) (y:int) = x - y
 let ( * )  (x:int) (y:int) = x * y
-let ( / )  (x:int) (y:int) = x / y
-let ( <= ) (x:int) (y:int) = x <= y
-let ( >= ) (x:int) (y:int) = x >= y
+let ( / )  (x:int) (y:int) = fst (ediv_rem x y)
+let ( <= ) (x:int) (y:int)  = x <= y
+let ( >= ) (x:int) (y:int)  = x >= y
 let ( < )  (x:int) (y:int) = x < y
 let ( > )  (x:int) (y:int) = x > y
-let (mod) (x:int) (y:int) = x % y
+let (mod) (x:int) (y:int)  = snd (ediv_rem x y)
 let ( ~- ) (x:int) = (~-) x
 let abs (x:int) = BigInteger.Abs x
+let of_int (x:int) = BigInteger x
+let int_zero = of_int 0
+let int_one = of_int 1
 let parse_int = BigInteger.Parse
 let to_string (x:int) = x.ToString()
 

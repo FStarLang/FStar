@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module HyE.AE
 open FStar.HyperStack.ST
 open FStar.Seq
@@ -26,12 +41,16 @@ type log_t (r:rid) = m_rref r (seq (msg * cipher)) grows
 noeq abstract type key =
   | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
 
+abstract let key_region (k:key) :rid = k.region
+
+abstract let key_log (k:key) :log_t (key_region k) = k.log
+
 let genPost parent m0 (k:key) m1 =
     modifies Set.empty m0 m1
-  /\ extends k.region parent
-  /\ fresh_region k.region m0 m1
-  /\ contains m1 k.log
-  /\ sel m1 k.log == createEmpty
+  /\ extends (key_region k) parent
+  /\ fresh_region (key_region k) m0 m1
+  /\ contains m1 (key_log k)
+  /\ sel m1 (key_log k) == Seq.empty
 
 
 val keygen: parent:rid -> ST key
@@ -42,10 +61,10 @@ val keygen: parent:rid -> ST key
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region raw log
 
-val leak: k:key{not conf} -> Tot aes_key 
+abstract val leak: k:key{not conf} -> Tot aes_key 
 let leak k =
   k.raw
 
@@ -53,12 +72,12 @@ val encrypt: k:key -> m:msg -> ST cipher
   (requires (fun h0 -> True (* If we wanted to avoid recall:
                                m_contains k.log h0 *)))
   (ensures  (fun h0 c h1 ->
-    (let log0 = sel h0 k.log in
-     let log1 = sel h1 k.log in
-      modifies_one k.region h0 h1 /\
-      contains h1 k.log
+    (let log0 = sel h0 (key_log k) in
+     let log1 = sel h1 (key_log k) in
+      modifies_one (key_region k) h0 h1 /\
+      contains h1 (key_log k)
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
+     /\ witnessed (at_least (Seq.length log0) (m, c) (key_log k)))))
 
 let encrypt k m =
   recall k.log;
@@ -79,7 +98,7 @@ val decrypt: k:key -> c:cipher -> ST (option msg)
     ))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t int_ctxt /\ Some? res) ==> mem (Some?.v res,c) (sel h0 k.log)
+    ( (b2t int_ctxt /\ Some? res) ==> mem (Some?.v res,c) (sel h0 (key_log k))
     )
   )
   )

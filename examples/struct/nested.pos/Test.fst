@@ -1,18 +1,37 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Test
 open FStar.Pointer
 
-let nested_st: struct_typ =
-[
-  ("X", TBase TUInt32);
-  ("Y", TArray 5ul (TBase TUInt32))
-]
-
+let nested_st: struct_typ = {
+  name = "nested_st";
+  fields = [
+    ("X", TBase TUInt32);
+    ("Y", TArray 5ul (TBase TUInt32))
+  ]
+}
 
 let ty: typ =
-  TStruct [
-    ("A", TStruct nested_st);
-    ("B", TArray 3ul (TBase TUInt64))
-  ]
+  TStruct ({
+    name = "ty";
+    fields = [
+      ("A", TStruct nested_st);
+      ("B", TArray 3ul (TBase TUInt64))
+    ]
+  })
 
 val f : unit -> FStar.HyperStack.ST.Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
 

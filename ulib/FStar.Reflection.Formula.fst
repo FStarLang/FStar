@@ -1,70 +1,67 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Formula
 
-open FStar.Reflection.Types
-open FStar.Reflection.Data
+open FStar.Tactics.Effect
+open FStar.Tactics.Builtins
 open FStar.Reflection.Basic
-open FStar.Reflection.Syntax
-open FStar.Reflection.Syntax.Lemmas
+open FStar.Reflection.Types
+open FStar.Reflection.Derived
+open FStar.Reflection.Const
+open FStar.Reflection.Data
 
-type comparison =
-  | Eq            (* Propositional equality (eq2) *)
-  | BoolEq        (* Decidable, boolean equality (eq) *)
-  | Lt | Le       (* Orderings *)
+// Cannot open FStar.Tactics.Derived here
+let fresh_bv = fresh_bv_named "x"
+
+noeq type comparison =
+  | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
+  | BoolEq of option typ  (* Decidable, boolean equality (eq), maybe annotated *)
+  | Lt | Le | Gt | Ge     (* Orderings, at type `int` (and subtypes) *)
 
 noeq type formula =
   | True_  : formula
   | False_ : formula
-  | Comp   : comparison -> typ -> term -> term -> formula
+  | Comp   : comparison -> term -> term -> formula
   | And    : term -> term -> formula
   | Or     : term -> term -> formula
   | Not    : term -> formula
   | Implies: term -> term -> formula
   | Iff    : term -> term -> formula
-  | Forall : binder -> term -> formula
-  | Exists : binder -> term -> formula
+  | Forall : bv -> term -> formula
+  | Exists : bv -> term -> formula
   | App    : term -> term -> formula
-  | Name   : binder -> formula
+  | Name   : bv -> formula
   | FV     : fv -> formula
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
-let mk_Forall (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
-    Forall b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
+let mk_Forall (typ : term) (pred : term) : Tac formula =
+    let b = pack_bv ({ bv_ppname = "x";
+                       bv_sort = typ;
+                       bv_index = 0; }) in
+    Forall b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
-let mk_Exists (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
-    Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
+let mk_Exists (typ : term) (pred : term) : Tac formula =
+    let b = pack_bv ({ bv_ppname = "x";
+                       bv_sort = typ;
+                       bv_index = 0; }) in
+    Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
-val smaller : formula -> term -> Type0
-let smaller f t =
-    match f with
-    | And l r
-    | Or l r
-    | App l r
-    | Implies l r
-    | Iff l r ->
-        l << t /\ r << t
-
-    | Forall _ p
-    | Exists _ p
-    | Not p ->
-        p << t
-
-    | Comp _ typ l r ->
-        typ << t /\ l << t /\ r << t
-
-    | F_Unknown
-    | Name _
-    | FV _
-    | IntLit _
-    | True_
-    | False_ ->
-        True
-
-#reset-options "--z3rlimit 15"
-let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
-    match inspect t with
+let term_as_formula' (t:term) : Tac formula =
+    match inspect_ln t with
     | Tv_Var n ->
         Name n
 
@@ -80,16 +77,15 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
-        collect_app_order h0;
-        match inspect h, ts@[t] with
+        match inspect_ln h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->
             let qn = inspect_fv fv in
-            if      qn = eq2_qn then Comp Eq a1 a2 a3
-            else if qn = eq1_qn then Comp BoolEq a1 a2 a3
-            else if qn = lt_qn  then Comp Lt a1 a2 a3
-            else if qn = lte_qn then Comp Le a1 a2 a3
-            else if qn = gt_qn  then Comp Lt a1 a3 a2
-            else if qn = gte_qn then Comp Le a1 a3 a2
+            if      qn = eq2_qn then Comp (Eq     (Some a1)) a2 a3
+            else if qn = eq1_qn then Comp (BoolEq (Some a1)) a2 a3
+            else if qn = lt_qn  then Comp Lt a2 a3
+            else if qn = lte_qn then Comp Le a2 a3
+            else if qn = gt_qn  then Comp Gt a2 a3
+            else if qn = gte_qn then Comp Ge a2 a3
             else App h0 (fst t)
         | Tv_FVar fv, [(a1, Q_Explicit); (a2, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -97,14 +93,15 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             else if qn = and_qn then And a1 a2
             else if qn = iff_qn then Iff a1 a2
             else if qn = or_qn  then Or a1 a2
+            // Non-annotated comparisons
+            else if qn = eq2_qn then Comp (Eq     None) a1 a2
+            else if qn = eq1_qn then Comp (BoolEq None) a1 a2
             else App h0 (fst t)
 
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit)] ->
             let qn = inspect_fv fv in
-                 if qn = forall_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Forall a1 a2) //a1 is type, a2 predicate
-            else if qn = exists_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Exists a1 a2) //a1 is type, a2 predicate
+                 if qn = forall_qn then mk_Forall a1 a2
+            else if qn = exists_qn then mk_Exists a1 a2
             else App h0 (fst t)
         | Tv_FVar fv, [(a, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -117,11 +114,12 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     // This case is shady, our logical connectives are squashed and we
     // usually don't get arrows. Nevertheless keeping it in case it helps.
     | Tv_Arrow b c ->
+        let bv, _ = inspect_binder b in
         begin match inspect_comp c with
-        | C_Total t ->
-            if is_free b t
-            then Forall b t
-            else Implies (type_of_binder b) t
+        | C_Total t _ ->
+            if is_free bv t
+            then Forall bv t
+            else Implies (type_of_bv bv) t
         | _ -> F_Unknown
         end
 
@@ -137,7 +135,7 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
         F_Unknown
 
 let rec is_name_imp (nm : name) (t : term) : bool =
-    begin match inspect t with
+    begin match inspect_ln t with
     | Tv_FVar fv ->
         if inspect_fv fv = nm
         then true
@@ -148,40 +146,53 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     end
 
 let unsquash (t : term) : option term =
-    match inspect t with
+    match inspect_ln t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
         then Some r
         else None
     | _ -> None
 
+let unsquash_total (t : term) : term =
+    match inspect_ln t with
+    | Tv_App l (r, Q_Explicit) ->
+        if is_name_imp squash_qn l
+        then r
+        else t
+    | _ -> t
+
 // Unsquashing
-let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+let rec term_as_formula (t:term) : Tac formula =
     match unsquash t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
 
-#reset-options
+let rec term_as_formula_total (t:term) : Tac formula =
+    term_as_formula' (unsquash_total t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
-    let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
+    let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
     let e = Q_Explicit in
     let i = Q_Implicit in
     match f with
     | True_  -> Tv_FVar (pack_fv true_qn)
     | False_ -> Tv_FVar (pack_fv false_qn)
-    | Comp Eq t l r     -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [(t,i);(l,e);(r,e)]
-    | Comp BoolEq t l r -> mk_app' (Tv_FVar (pack_fv eq1_qn)) [(t,i);(l,e);(r,e)]
-    | Comp Lt t l r     -> mk_app' (Tv_FVar (pack_fv lt_qn))  [(t,i);(l,e);(r,e)]
-    | Comp Le t l r     -> mk_app' (Tv_FVar (pack_fv lte_qn)) [(t,i);(l,e);(r,e)]
-    | And p q           -> mk_app' (Tv_FVar (pack_fv and_qn)) [(p,e);(q,e)]
-    | Or  p q           -> mk_app' (Tv_FVar (pack_fv  or_qn)) [(p,e);(q,e)]
-    | Implies p q       -> mk_app' (Tv_FVar (pack_fv imp_qn)) [(p,e);(q,e)]
-    | Not p             -> mk_app' (Tv_FVar (pack_fv not_qn)) [(p,e)]
-    | Iff p q           -> mk_app' (Tv_FVar (pack_fv iff_qn)) [(p,e);(q,e)]
-    | Forall b t        -> Tv_Unknown // TODO: decide on meaning of this
-    | Exists b t        -> Tv_Unknown // TODO: ^
+    | Comp (Eq None)         l r -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [(l,e);(r,e)]
+    | Comp (Eq (Some t))     l r -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [(t,i);(l,e);(r,e)]
+    | Comp (BoolEq None)     l r -> mk_app' (Tv_FVar (pack_fv eq1_qn)) [(l,e);(r,e)]
+    | Comp (BoolEq (Some t)) l r -> mk_app' (Tv_FVar (pack_fv eq1_qn)) [(t,i);(l,e);(r,e)]
+    | Comp Lt l r     -> mk_app' (Tv_FVar (pack_fv lt_qn))  [(l,e);(r,e)]
+    | Comp Le l r     -> mk_app' (Tv_FVar (pack_fv lte_qn)) [(l,e);(r,e)]
+    | Comp Gt l r     -> mk_app' (Tv_FVar (pack_fv gt_qn))  [(l,e);(r,e)]
+    | Comp Ge l r     -> mk_app' (Tv_FVar (pack_fv gte_qn)) [(l,e);(r,e)]
+    | And p q         -> mk_app' (Tv_FVar (pack_fv and_qn)) [(p,e);(q,e)]
+    | Or  p q         -> mk_app' (Tv_FVar (pack_fv  or_qn)) [(p,e);(q,e)]
+    | Implies p q     -> mk_app' (Tv_FVar (pack_fv imp_qn)) [(p,e);(q,e)]
+    | Not p           -> mk_app' (Tv_FVar (pack_fv not_qn)) [(p,e)]
+    | Iff p q         -> mk_app' (Tv_FVar (pack_fv iff_qn)) [(p,e);(q,e)]
+    | Forall b t      -> Tv_Unknown // TODO: decide on meaning of this
+    | Exists b t      -> Tv_Unknown // TODO: ^
 
     | App p q ->
         Tv_App p (q, Q_Explicit)
@@ -199,16 +210,26 @@ let formula_as_term_view (f:formula) : Tot term_view =
         Tv_Unknown
 
 let formula_as_term (f:formula) : Tot term =
-    pack (formula_as_term_view f)
+    pack_ln (formula_as_term_view f)
 
 let formula_to_string (f:formula) : string =
     match f with
     | True_ -> "True_"
     | False_ -> "False_"
-    | Comp Eq t l r -> "Eq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
-    | Comp BoolEq t l r -> "BoolEq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
-    | Comp Lt t l r -> "Lt (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
-    | Comp Le t l r -> "Le (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp (Eq mt) l r -> "Eq" ^
+                        (match mt with
+                         | None -> ""
+                         | Some t -> " (" ^ term_to_string t ^ ")") ^
+                        " (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp (BoolEq mt) l r -> "BoolEq" ^
+                        (match mt with
+                         | None -> ""
+                         | Some t -> " (" ^ term_to_string t ^ ")") ^
+                        " (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Lt l r -> "Lt (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Le l r -> "Le (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Gt l r -> "Gt (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Ge l r -> "Ge (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
     | And p q -> "And (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Or  p q ->  "Or (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Implies p q ->  "Implies (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
@@ -217,7 +238,7 @@ let formula_to_string (f:formula) : string =
     | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
     | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Name b ->  "Name (" ^ inspect_bv b ^ ")"
+    | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"

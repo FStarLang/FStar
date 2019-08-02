@@ -1,26 +1,14 @@
 [
-  "´ˆü.C/åG†w\u0002û˚öwF",
+  "èn‚\"Q\u001b@∏yOr^\nùÿÇ",
   [
-    [
-      "Bug424.t",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "d34af5aa7f67000eed68251fe1420e33"
-    ],
     [
       "Bug424.get",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "d00880a730d787227b46df281d556172"
+      "999fc69eec8d59c566e713d43f690314"
     ]
   ]
 ]

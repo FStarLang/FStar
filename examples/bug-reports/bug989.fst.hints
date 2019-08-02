@@ -1,5 +1,5 @@
 [
-  "O)á“À¹xANÓ\"&ÛC÷[",
+  "Ïº\u0005­ä–\tHÀµíE«€\u0016•",
   [
     [
       "Bug989.g",
@@ -7,15 +7,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8ed1aa8a38e27c4072d384f85f1fb478"
+      "23b352667907dd5c6f74727d479d2c3b"
     ],
     [
       "Bug989.foo",
@@ -23,31 +25,17 @@
       1,
       0,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug989.g.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat",
         "equation_with_fuel_Bug989.g.fuel_instrumented",
-        "primitive_Prims.op_Equality"
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "8e99d3423c094ee10b7592b16a070e47"
-    ],
-    [
-      "Bug989.uu___is_A",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "4cf2e6e5425a8d7f77cd60207cce0303"
-    ],
-    [
-      "Bug989.uu___is_B",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "cbd5b0a150a87765576cd3c892a798a8"
+      "9ab4ad0aa76a0394ea6750dbbbbbb92d"
     ],
     [
       "Bug989.f",
@@ -55,12 +43,11 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Bug989.A",
-        "disc_equation_Bug989.A", "disc_equation_Bug989.B",
-        "equality_tok_Bug989.A@tok", "fuel_guarded_inversion_Bug989.t"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug989.A",
+        "disc_equation_Bug989.B", "fuel_guarded_inversion_Bug989.t"
       ],
       0,
-      "2f7d72b75369849d7250879b10e0f02c"
+      "e81bc90e4a8a92d2d2b618bb3c365b45"
     ]
   ]
 ]

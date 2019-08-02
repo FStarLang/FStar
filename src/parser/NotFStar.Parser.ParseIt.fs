@@ -23,6 +23,7 @@ open FStar.Errors
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:int;
     frag_col:int
@@ -116,7 +117,7 @@ let parse fn =
         0
     | Toplevel frag
     | Fragment frag ->
-        "<input>",
+        frag.frag_fname,
         new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader,
         frag.frag_text,
         frag.frag_line,
@@ -171,13 +172,15 @@ let parse fn =
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
-  let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromString s in
-  let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
   let user_flags =
-    try
-      Parse.warn_error_list lexer lexbuf 
-    with e ->
-      FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
-      []
-  in
-  FStar.Errors.update_flags user_flags 
+    if s = "" then []
+    else
+      let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromString s in
+      let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
+        try
+          Parse.warn_error_list lexer lexbuf
+        with e ->
+          FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
+          []
+   in
+   FStar.Errors.update_flags user_flags

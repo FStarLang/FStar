@@ -1,5 +1,5 @@
 [
-  "â½ª„˜õ'\u001e\u0006ux4\u0010\u0007\u001dx",
+  "ËËXþøäÙÿÎ»D\u0014E\\\u000fš",
   [
     [
       "Bug316.c",
@@ -7,11 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Bug316.a",
-        "haseqBug316_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+        "@MaxIFuel_assumption", "@query", "equation_Bug316.a",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_22e66b3cc5a2a795d66d00b6de2b1e50",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "190022715dea16539ec7323df6d00234"
+      "78f5430ccce6a1eba8ccf249141d7ddb"
     ],
     [
       "Bug316.r",
@@ -19,11 +21,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Bug316.a",
-        "haseqBug316_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+        "@MaxIFuel_assumption", "@query", "equation_Bug316.a",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_22e66b3cc5a2a795d66d00b6de2b1e50",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a7c4bb50901df6b8e38dfaf2a7c4eae1"
+      "bb95ff9c1aac61fee362a45f96b4b1fb"
     ]
   ]
 ]

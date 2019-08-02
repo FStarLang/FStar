@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reader
 let reader_pre_h  (heap:Type)          = heap -> GTot Type0
 let reader_post_h (a:Type)             = a -> GTot Type0
@@ -25,7 +40,7 @@ unfold let reader_ite_wp        (heap:Type) (a:Type)
                             (wp:reader_wp_h heap a)
                             (post:reader_post_h a) (h0:heap) =
      forall (k:reader_post_h a).
-	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
+	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
 	 ==> wp k h0
 unfold let reader_stronger  (heap:Type) (a:Type) (wp1:reader_wp_h heap a)
                         (wp2:reader_wp_h heap a) =
@@ -35,17 +50,6 @@ unfold let reader_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (reader_wp_h heap a)))
                              (p:reader_post_h a) (h:heap) =
      (forall (b:b). wp b p h)
-unfold let reader_assert_p      (heap:Type) (a:Type) (p:Type)
-                             (wp:reader_wp_h heap a)
-                             (q:reader_post_h a) (h:heap) =
-     p /\ wp q h
-unfold let reader_assume_p      (heap:Type) (a:Type) (p:Type)
-                             (wp:reader_wp_h heap a)
-                             (q:reader_post_h a) (h:heap) =
-     p ==> wp q h
-unfold let reader_null_wp       (heap:Type) (a:Type)
-                             (p:reader_post_h a) (h:heap) =
-     (forall (x:a). p x)
 unfold let reader_trivial       (heap:Type) (a:Type)
                              (wp:reader_wp_h heap a) =
      (forall h0. wp (fun r -> True) h0)
@@ -58,9 +62,6 @@ new_effect {
      ; ite_wp       = reader_ite_wp heap
      ; stronger     = reader_stronger heap
      ; close_wp     = reader_close_wp heap
-     ; assert_p     = reader_assert_p heap
-     ; assume_p     = reader_assume_p heap
-     ; null_wp      = reader_null_wp heap
      ; trivial      = reader_trivial heap
 }
 open FStar.Heap

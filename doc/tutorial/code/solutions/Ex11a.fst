@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Ex11a
 //robot
 
@@ -53,10 +68,10 @@ let arms_up (b:bot) (h:mem) =
   /\ sel h (Arm?.polar (Bot?.left b))  = 0
 
 type robot_inv (b:bot) (h:mem) =
-    Map.contains h.h (Bot?.r b)
-  /\ Map.contains h.h (Point?.r (Bot?.pos b))
-  /\ Map.contains h.h (Arm?.r (Bot?.left b))
-  /\ Map.contains h.h (Arm?.r (Bot?.right b))
+    Map.contains (get_hmap h) (Bot?.r b)
+  /\ Map.contains (get_hmap h) (Point?.r (Bot?.pos b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.left b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.right b))
   /\ (flying b h ==> arms_up b h)
 // END: Invariant
 

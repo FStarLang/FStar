@@ -4,7 +4,5 @@ ifndef FSTAR_HOME
    $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
 endif
 
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-
-OTHERFLAGS+=--use_two_phase_tc true
+include $(FSTAR_HOME)/ulib/gmake/z3.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk

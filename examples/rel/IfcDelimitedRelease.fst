@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module IfcDelimitedRelease
 
 open FStar.Heap
@@ -7,7 +22,7 @@ type label =
 | Low
 | High
 
-type env = nat ->  Tot label
+type env = nat ->  GTot label
 type iexpr = heap -> GTot int
 type bexpr = heap -> GTot bool
 
@@ -57,7 +72,8 @@ private val verify_test (x y z: ref int):
     let l = [x ; y ; z] in
     let y_add = addr_of y in
     let z_add = addr_of z in
-    let env r =
+    let env (r: nat) =  //AR: in the extracted interface, y_add and z_add are inlined in the following,
+                 //    which means the effect is now GTot, so i had to make env as ref int -> GTot label
       if r = y_add || r = z_add then High
       else Low
     in
@@ -127,18 +143,18 @@ let sum_att [x1;x2;x3;x4;x5;y] h =
 
 (* This does not verify, as expected *)
 (*
-val verify_sum_att (x1 x2 x3 x4 x5 y : ref int):
-  Lemma
-    (del_rel 6
-      (fun r ->
-        if r = y then Low
-        else if List.Tot.mem r [x1;x2;x3;x4;x5] then High
-        else Low)
-      [x1;x2;x3;x4;x5;y]
-      [fun h -> sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5]
-      sum_att)
-let verify_sum_att x1 x2 x3 x4 x5 y = ()
-*)
+// val verify_sum_att (x1 x2 x3 x4 x5 y : ref int):
+//   Lemma
+//     (del_rel 6
+//       (fun r ->
+//         if r = y then Low
+//         else if List.Tot.mem r [x1;x2;x3;x4;x5] then High
+//         else Low)
+//       [x1;x2;x3;x4;x5;y]
+//       [fun h -> sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5]
+//       sum_att)
+// let verify_sum_att x1 x2 x3 x4 x5 y = ()
+// *)
 
 
 val wallet : prog 3
@@ -181,17 +197,17 @@ let wallet_attack [n;x_h;k;x_l] h =
  wallet_attack_loop [n;x_h;k;x_l] h
 
 (* This does not verify, as expected
-   Howver, also does not verify wieht x_h : Low, which should be fine *)
+//    Howver, also does not verify wieht x_h : Low, which should be fine *)
 (*
-val verify_wallet_attack (n x_h k x_l : ref int):
-  Lemma
-    (del_rel 4
-      (fun r ->
-        if r = x_h then High
-        else Low)
-      [n; x_h; k; x_l]
-      []
-      [fun h -> sel h x_h >= sel h k]
-      wallet_attack)
-let verify_wallet_attack n x_h k x_l = ()
-*)
+// val verify_wallet_attack (n x_h k x_l : ref int):
+//   Lemma
+//     (del_rel 4
+//       (fun r ->
+//         if r = x_h then High
+//         else Low)
+//       [n; x_h; k; x_l]
+//       []
+//       [fun h -> sel h x_h >= sel h k]
+//       wallet_attack)
+// let verify_wallet_attack n x_h k x_l = ()
+// *)

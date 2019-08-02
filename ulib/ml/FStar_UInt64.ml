@@ -2,7 +2,7 @@ type uint64 = Stdint.Uint64.t
 type uint8 = int
 type t = uint64
 type t' = t
-           
+
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let n = Prims.parse_int "64"
@@ -38,7 +38,7 @@ let logand (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.logand a b
 let logxor (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.logxor a b
 let logor  (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.logor a b
 let lognot (a:uint64) : uint64 = Stdint.Uint64.lognot a
-                                              
+
 let int_to_uint64 (x:Prims.int) : uint64= Stdint.Uint64.of_string (Prims.to_string x)
 
 let shift_right (a:uint64) (b:uint8) : uint64 = Stdint.Uint64.shift_right a b
@@ -51,12 +51,12 @@ let gte (a:uint64) (b:uint64) : bool = a >= b
 let lt (a:uint64) (b:uint64) : bool = a < b
 let lte (a:uint64) (b:uint64) : bool =  a <= b
 
-(* Constant time operator (TODO!) *)
+(* NOT Constant time operators *)
 let eq_mask (a:uint64) (b:uint64) : uint64 = if a = b then Stdint.Uint64.pred Stdint.Uint64.zero
                                              else Stdint.Uint64.zero
 let gte_mask (a:uint64) (b:uint64) : uint64 = if a >= b then Stdint.Uint64.pred Stdint.Uint64.zero
                                              else Stdint.Uint64.zero
-                                               
+
 (* Infix notations *)
 let op_Plus_Hat = add
 let op_Plus_Question_Hat = add_underspec
@@ -69,7 +69,7 @@ let op_Star_Question_Hat = mul_underspec
 let op_Star_Percent_Hat = mul_mod
 let op_Slash_Hat = div
 let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
+let op_Hat_Hat = logxor
 let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
@@ -81,7 +81,8 @@ let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
 let to_string s = Stdint.Uint64.to_string s
+let to_string_hex s = Stdint.Uint64.to_string_hex s
 let of_string s = Stdint.Uint64.of_string s
-
+let to_int s = Stdint.Uint64.to_int s
 let uint_to_t s = Stdint.Uint64.of_string (Z.to_string s)
 let __uint_to_t = uint_to_t

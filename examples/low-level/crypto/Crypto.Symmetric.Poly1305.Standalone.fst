@@ -1,4 +1,19 @@
 (*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+(*
  *  The rest of the file provides a standalone Poly1305 MAC function proven
  *  functionally correct using an ideal log passed explicitly.
  *  It is not used in the Chacha20-Poly1305 AEAD construction.
@@ -134,7 +149,7 @@ val encode_bytes: txt:Seq.seq UInt8.t -> GTot text (decreases (Seq.length txt))
 let rec encode_bytes txt =
   let l = Seq.length txt in
   if l = 0 then
-    Seq.createEmpty
+    Seq.empty
   else
     let l0 = min l 16 in
     let w, txt = Seq.split txt l0 in
@@ -187,7 +202,7 @@ let append_as_seq h n m msg = ()
 
 val encode_bytes_empty: txt:Seq.seq UInt8.t -> Lemma
     (requires Seq.length txt == 0)
-    (ensures  encode_bytes txt == Seq.createEmpty)
+    (ensures  encode_bytes txt == Seq.empty)
     [SMTPat (encode_bytes txt); SMTPat (Seq.length txt == 0)]
 let encode_bytes_empty txt = ()
 
@@ -301,7 +316,7 @@ val poly1305_process:
 let poly1305_process msg len acc r =
   let h0 = ST.get () in
   let ctr, rem = U32.div len 16ul, U32.rem len 16ul in
-  let log0:log_t = if mac_log then Seq.createEmpty #word in
+  let log0:log_t = if mac_log then Seq.empty #word in
   if mac_log then poly_empty (ilog log0) (sel_elem h0 r);
   let log1 = poly1305_loop log0 msg acc r ctr in
   let h1 = ST.get () in

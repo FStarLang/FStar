@@ -1,0 +1,35 @@
+let _ =
+  FStar_Tactics_Native.register_tactic "CanonCommMonoid.canon_monoid_aux"
+    (Prims.parse_int "16")
+    (fun psc  ->
+      fun ncb ->
+        fun args  ->
+          match args with
+          | (tv_0,_)::(tv_1,_)::args_tail ->
+              (FStar_Tactics_InterpFuns.mk_tactic_interpretation_13
+                 (FStar_Tactics_Native.from_tactic_13 canon_monoid_aux)
+                 FStar_Reflection_Embeddings.e_term
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     FStar_Reflection_Embeddings.e_term
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_0))
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_0)
+                     FStar_Reflection_Embeddings.e_term)
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Syntax_Embeddings.e_any
+                 FStar_Reflection_Embeddings.e_term
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_1)
+                     FStar_Reflection_Embeddings.e_term)
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     FStar_Reflection_Embeddings.e_term
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_1))
+                 FStar_Syntax_Embeddings.e_any
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Syntax_Embeddings.e_unit
+                 psc ncb) args_tail
+          | _ -> failwith "arity mismatch")
+

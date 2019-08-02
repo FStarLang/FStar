@@ -1,4 +1,5 @@
 type int63 = int
+type uint32 = int
 type t = int63
 type t' = t
 
@@ -33,8 +34,9 @@ let lognot (a:int63) : int63 = lnot a
 let int_to_int63 (x:Prims.int) : int63 = int_of_string (Prims.to_string x)
 let int_to_t = int_to_int63
 
-let shift_right (a:int63) (b:int63) : int63 = a asr b
-let shift_left  (a:int63) (b:int63) : int63 = a lsl b
+let shift_right (a:int63) (b:uint32) : int63 = a lsr b
+let shift_left  (a:int63) (b:uint32) : int63 = a lsl b
+let shift_arithmetic_right (a:int63) (b:uint32) : int63 = a asr b
 
 (* Comparison operators *)
 let eq (a:int63) (b:int63) : bool = a = b
@@ -67,5 +69,5 @@ let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
 let to_string = string_of_int
-let int_to_t s = s
+let int_to_t s = int_to_int63 s
 let __int_to_t = int_to_t

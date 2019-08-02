@@ -40,7 +40,7 @@ let rec term_eq' t1 t2 =
         && List.forall2 (fun ((x, _):binder) ((y, _):binder) -> term_eq' x.sort y.sort) xs ys in
     let args_eq xs ys =
          List.length xs = List.length ys
-         && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && imp=imp') xs ys in
+         && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp'=U.Equal) xs ys in
     let comp_eq (c:S.comp) (d:S.comp) =
         match c.n, d.n with
             | S.Total (t, _), S.Total (s, _) -> term_eq' t s
@@ -50,11 +50,13 @@ let rec term_eq' t1 t2 =
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in
     match t1.n, t2.n with
+      | Tm_lazy l, _ -> term_eq' (must !lazy_chooser l.lkind l) t2
+      | _, Tm_lazy l -> term_eq' t1 (must !lazy_chooser l.lkind l)
       | Tm_bvar x, Tm_bvar y -> x.index = y.index
       | Tm_name x, Tm_name y -> S.bv_eq x y
       | Tm_fvar f, Tm_fvar g -> S.fv_eq f g
       | Tm_uinst (t, _), Tm_uinst(s, _) -> term_eq' t s
-      | Tm_constant c1, Tm_constant c2 -> c1=c2
+      | Tm_constant c1, Tm_constant c2 -> FStar.Const.eq_const c1 c2
       | Tm_type u, Tm_type v -> u=v
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) when (List.length xs = List.length ys) -> binders_eq xs ys && term_eq' t u
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) ->
@@ -83,7 +85,7 @@ let rec term_eq' t1 t2 =
         List.length lbs = List.length lbs'
         && List.forall2 (fun lb1 lb2 -> term_eq' lb1.lbtyp lb2.lbtyp && term_eq' lb1.lbdef lb2.lbdef) lbs lbs'
         && term_eq' t s
-      | Tm_uvar(u, _), Tm_uvar(u', _) -> UF.equiv u u'
+      | Tm_uvar (u,_), Tm_uvar (u',_) -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head
       | Tm_meta(t1, _), _ -> term_eq' t1 t2
       | _, Tm_meta(t2, _) -> term_eq' t1 t2
 

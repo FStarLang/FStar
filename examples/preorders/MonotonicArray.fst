@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module MonotonicArray
 
 open FStar.Preorder
@@ -255,8 +270,8 @@ abstract let fwrite (#a:Type0) (#n:nat) (arr:farray a n) (i:nat{i < n}) (x:a)
  * subarray
  *)
 abstract let sub (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) :t a len
-  = let A #m s_ref o = arr in
-    A #m s_ref (o + i)
+  = let A s_ref o = arr in
+    A s_ref (o + i)
 
 let suffix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr i (n - i)
 let prefix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr 0 i
@@ -317,7 +332,7 @@ let lemma_sub_is_mutable
  *)
 let lemma_sub_frozen
   (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (es:erased (Seq.seq a){frozen_with arr es})
-  :Lemma (requires True)
+  :Lemma (requires (Seq.length (reveal es) == n))
          (ensures  (frozen_with (sub arr i len) (hide (Seq.slice (reveal es) i (i + len)))))
 	 [SMTPat (frozen_with arr es); SMTPat (sub arr i len)]
   = let arr' = sub arr i len in
@@ -325,8 +340,8 @@ let lemma_sub_frozen
     lemma_functoriality (frozen_pred arr es) (frozen_pred arr' es')
 
 (*
- * if a subarray contains an init location, it remains init
- *)
+//  * if a subarray contains an init location, it remains init
+//  *)
 let lemma_sub_init_at
   (#a:Type0) (#n:nat) (arr:t a n) (i:index arr{arr `init_at` i})
   (j:index arr{j <= i}) (len:nat{j + len <= n /\ j + len > i})
@@ -352,7 +367,7 @@ abstract let recall_frozen (#a:Type0) (#n:nat) (arr:t a n) (es:erased (Seq.seq a
 abstract let recall_contains (#a:Type0) (#n:nat) (arr:t a n)
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ h0 `contains_array` arr))
-  = let A #_ #_ #_ s_ref _ = arr in
+  = let A s_ref _ = arr in
     ST.recall s_ref
 
 (* frozen implies init_at at all indices *)
@@ -395,6 +410,7 @@ abstract let recall_all_init (#a:Type0) (#n:nat) (arr:t a n{all_init arr})
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap arr h0))
   = recall_all_init_i_j arr 0 n
 
+#set-options "--z3rlimit 20"
 abstract let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n})
   :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))
@@ -432,7 +448,7 @@ abstract let read_subseq_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >=
       (ensures  (fun h0 s h1 -> h0 == h1                        /\
                              init_arr_in_heap_i_j arr h0 i j /\
                              s == as_initialized_subseq arr h0 i j))
-  = let A #_ #_ #_ s_ref off = arr in
+  = let A s_ref off = arr in
     let (s, _) = !s_ref in
     let s = Seq.slice s off (off + n) in
     recall_all_init_i_j arr i j;
@@ -495,7 +511,7 @@ let lemma_disjoint_sibling_remain_same_transitive
          (ensures  (disjoint_siblings_remain_same arr h0 h2))
   = ()
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 250"
 private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
            (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\

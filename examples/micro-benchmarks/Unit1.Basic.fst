@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Unit1.Basic
 open FStar.All
 open FStar.BaseTypes
@@ -23,6 +38,8 @@ let assert_0_eq_0 x = assert (0=0)
 type zero = x:int{x=0}
 val z: unit -> Tot zero
 let z x = 0
+
+let one = match (fun x -> x) with | f -> f 1
 
 val list_zero_to_int_assert : list zero -> Tot int
 let list_zero_to_int_assert l = match l with
@@ -51,7 +68,7 @@ let hd_int_pure l = match l with
 val square_is_nat: x:int -> Tot nat
 let square_is_nat x = op_Multiply x x
 
-(* logic val infer_nat: x:int -> Tot nat *)
+(* val infer_nat: x:int -> Tot nat *)
 let infer_nat x = if x < 0 then -x else x
 
 val check_nat: x:int -> Tot nat
@@ -286,3 +303,57 @@ let test_odd2 = assert (odd 5 = true)
 assume val f_eq: #a:Type -> #p:(a -> Type) -> $arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
 assume val g_eq_c: u:unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
 let h_test_eq : nat = f_eq #int g_eq_c //NS: 05.28: Needed to add the #int
+
+
+(** AR: 05/14: adding testcases for now deprecated logic qualifier **)
+val logic_test0: int -> GTot Type0
+let logic_test0 n = True \/ True
+
+val logic_test1 : Type0
+let logic_test1 = forall (_:unit). True
+
+val logic_test2:
+	#a : Type ->
+	#b : Type ->
+	#c : Type ->
+	g : (b -> c -> Tot Type0) ->
+	f : (a -> b -> Tot Type0) ->
+	Tot (a -> c -> Tot Type0)
+let logic_test2 #a #b #c g f = fun x z -> exists (y : b). True
+
+val logic_test3:
+	#a : Type ->
+	#b : Type ->
+	#c : Type ->
+	g : (b -> c -> Tot Type0) ->
+	f : (a -> b -> Tot Type0) ->
+	Lemma (ensures ( forall (x : a) (z : c).
+		((logic_test2 #a #b #c g f) x z) <==> (exists (y : b). True)
+	))
+let logic_test3 #a #b #c g f = ()
+
+val logic_test4: a:Type -> Tot Type0
+let logic_test4 a = exists (x : a). True
+
+val logic_test5: a:Type -> Lemma (ensures ((logic_test4 a) <==> (exists (x : a). True)))
+let logic_test5 a = ()
+
+(*
+ * #1078
+ *)
+unfold let language_1078 = string -> GTot Type
+
+noeq type star_1078 (l: string -> GTot Type) : language_1078 =
+  | Star_nil : star_1078 l ""
+  | Star_append : s1:string -> s2:string ->
+      l s1 -> star_1078 l s2 -> star_1078 l s1
+
+(*
+ * Testing bind
+ *)
+assume type bind_test_p :Type0
+assume val lemma_bind_test_p (_:unit) :Tot (squash bind_test_p)
+
+let bind_test1 () :Lemma bind_test_p = lemma_bind_test_p ()
+let bind_test2 () :Lemma bind_test_p = let _ = lemma_bind_test_p () in ()
+let bind_test3 () :Lemma bind_test_p = let x = lemma_bind_test_p () in x

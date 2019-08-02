@@ -1,49 +1,41 @@
 [
-  "¸o1P—\u000fÓ÷Ö\u000fóñ~ûý,",
+  "WÃ$à—;”œŠ\u001c^\b8³\u000eê",
   [
     [
       "Ex12c.Format.append_inj_lemma",
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "d941e883c8146adad413df82c63f81b5"
+      "fae3543b099b86e5abe08def9615e5ef"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       2,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.UInt8.t__uu___haseq",
+        "equation_Ex12c.Format.message", "equation_FStar.Seq.Base.op_At_Bar",
+        "equation_Platform.Bytes.bytes", "equation_Prims.eqtype",
+        "function_token_typing_FStar.UInt8.t",
+        "refinement_interpretation_Tm_refine_1c0effbdef48f9b00a1efb7b571fbb69",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
+      ],
       0,
-      "23c7eb6320c64159549333cd270a63b2"
+      "fc26d7d5eb32cf668414072c059f25d8"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       3,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "7cf914484261d47c1e9e9689f69404c2"
-    ],
-    [
-      "Ex12c.Format.append_inj_lemma",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt8.t_haseq",
-        "equation_Ex12c.Format.message", "equation_FStar.Seq.Base.op_At_Bar",
-        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
-      ],
-      0,
-      "091d4611cfeeba8385829bdcfd7c7167"
+      "b36e56abcfda1e27df3cc003b456cdc3"
     ]
   ]
 ]

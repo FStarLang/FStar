@@ -1,0 +1,45 @@
+[
+  "EÌ¯0ì¡~Ùñ[Ç¬À…8¬",
+  [
+    [
+      "Bug1470.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_Prims.nat",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "20ab9eb2cab9ca46026b6fd3514d0b5d"
+    ],
+    [
+      "Bug1470.length1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "4a7a99047259eb561b522cadb57bcc96"
+    ],
+    [
+      "Bug1470.test",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f3a309fd18fb30c242602784337aa7c8"
+      ],
+      0,
+      "042e7893dcd7e099361a82373231a5d6"
+    ]
+  ]
+]

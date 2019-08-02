@@ -1,0 +1,32 @@
+[
+  "\u001bf\r]xÕ¿ÝíÆæ–>cì\u001c",
+  [
+    [
+      "Bug1601.log",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c9f70ab639c9ae669e58190eb4c1b5c9_0",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
+      ],
+      0,
+      "a79e22af4fa848a74a7b9dd0ceb40967"
+    ],
+    [
+      "Bug1601.foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "10c287f9b8add2167cddc1bef23de962"
+    ]
+  ]
+]

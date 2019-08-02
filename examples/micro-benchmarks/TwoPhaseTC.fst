@@ -1,6 +1,21 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module TwoPhaseTC
 
-#set-options "--use_two_phase_tc true --ugly"
+#set-options "--ugly"
 
 open FStar.Classical
 module PropExt = FStar.PropositionalExtensionality
@@ -80,29 +95,81 @@ let f17 (x:int) :Lemma (requires True) (ensures f15) [SMTPat (f16 x)] = admit ()
 
 (* We were dropping the comp from the ascription in the second phase, this testcase tests the fix *)
 let f18 (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
-  = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
+  = FStar.Classical.forall_intro #int #p (fun (x:int) -> (FStar.Classical.give_witness_from_squash (f x) <: Lemma (p x)))
 
 (*
  * This tests the type annotations on the dependent patterns.
  * Consider ExIntro IP hp in the function f21.
- * In the first phase, it is elaborated to: ExIntro (#uu1:Type0) (#uu2:@0 -> Type0) IP (hp:@0 IP)
- * Where @0, @1 etc. are de-bruijn variables.
- * When it is typechecked in the second phase, the annotation @0 IP for hp is typechecked
- * and the typechecker tries to prove that IP has type #uu1, which it fails to prove without any contextual information.
- * To prove it, we need the information that the scrutinee h is equal to the pattern ExIntro ... and then
- * type equalities kick in, I think.
+ * In the first phase, it is elaborated to: ExIntro (#.uu1:Type0) (#.uu2:.uu1 -> Type0) IP (hp:@0 IP)
+ * The second phase re-uses the solutions to the dot patterns computed in the first phase
  *)
 type f19 =
   | IP : f19
 
-noeq type f20 : a:Type0 -> (a -> Type0) -> Type u#1 =
-  | ExIntro : #a:Type0 -> #p:(a -> Type0) -> x:a -> p x -> f20 a p
+noeq type f20 (a:Type0) (p:a -> Type0) : Type u#1 =
+  | ExIntro : x:a -> p x -> f20 a p
 
 val f21 : f20 f19 (fun (p:f19) -> unit) -> Tot unit
   let f21 h =
   let ExIntro IP hp = h in
   ()
 
+(*
+ * #1451
+ *)
+let bar_1451 (#a:Type) (l1:option _) (l2:option a) = ~ (l1 === l2)
+
+let foo_1451 () = assert (bar_1451 (Some 0) (Some true))
+
+
+(*
+ * #1129
+ *)
+assume type t_1129 (a:Type) : (n:nat) -> Type
+assume T_hasEq_1129: forall a n. hasEq a ==> hasEq (t_1129 a n)
+type t2_1129:eqtype = t_1129 bool 0
+type t3_1129:eqtype = {r:t2_1129}
+
+(*
+ * #1124
+ *)
+open FStar.List.Tot
+
+type solve_1124 (#a:Type) (e1:a) (e2:a): Type =
+| By: t:unit{e1 == e2} -> solve_1124 e1 e2
+
+val nth_tot_1124: l:list 'a -> n:nat{n < length l} -> Tot 'a
+let rec nth_tot_1124 l n = 
+  match nth l n with
+  | None -> magic()
+  | Some x -> x
+
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+assume val calc_1124: #a:Type -> es:list ((e:(a*a)) & (solve_1124 (fst e) (snd e))){Cons? es} -> 
+  Lemma (normalize(fst (dfst (hd es)) == snd (dfst (nth_tot_1124 es ((length es) - 1)))))
+
+(*
+ * #754
+ *)
+assume type good_754 : list nat -> Type0
+
+//Adding this line (i.e., moving to Type0), makes everything work fine
+//type eqtype = a:Type0{hasEq a}
+
+val copy'_754: #a:eqtype -> list a -> Tot (list a)
+let rec copy'_754 #a l = match l with
+  | [] -> []
+  | hd::tl -> hd :: copy'_754 tl
+
+unfold val copy_754:  #a:eqtype -> l:list a -> Tot (list a)
+let copy_754 (#a:eqtype) (l:list a) = normalize_term (copy'_754 l)
+
+val test2_754 : r1:nat -> Lemma
+  (requires good_754 (copy_754 [r1]))
+  (ensures True)
+//this blows up with a universe variable not found
+let test2_754 r1 = ()
+ 
 
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All

@@ -20,15 +20,13 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IntStoreFixed.uver \
 	FStar.DM4F.IntStoreExcFixed.uver \
 	FStar.DM4F.Heap.Random.uver \
-	FStar.DM4F.Random.uver
+	FStar.DM4F.Random.uver \
+	FStar.DM4F.Id.uver
 
 old:
 	$(MAKE) -C old
 
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps
-
-%.uver: %.fst
-	$(FSTAR) $^
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include

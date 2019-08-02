@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Examples
 
 open FStar.Tactics
@@ -38,10 +53,8 @@ let increment_ok (h:heap) (r:addr) (n:t) =
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
 
-#set-options "--use_two_phase_tc false"
 (*
  * Swapping two refs
- * TODO: fails with two phases
  *)
 let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in

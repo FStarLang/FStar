@@ -1,42 +1,62 @@
-.PHONY: indent extra
+.PHONY: verify-core verify-extra
 
-FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/Makefile.tmpl
+# List the files that should be verified by verify-extra and verify-all
+EXTRA=FStar.Pointer.Base.fst
 
-EXTRA=
-FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
-# This was unused, and out previous idea of putting them first in
-# FSTAR_FILES doesn't really work, since we will first generate .depend
-# and then follow its order, which is not related to this one.
-#EXPENSIVE=FStar.Pointer.Base.fst
+# List the files that should NOT be verified at all
+FLAKY=FStar.Relational.State.fst
 
-FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
+# List the files that should be verified by verify-core and verify-all
+# Those files are the roots from where all dependencies are computed
+FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))  $(wildcard LowStar.*.fst LowStar.*.fsti)
 
-extra: $(addsuffix -ver, $(EXTRA))
+USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
 
-OTHERFLAGS+=--use_two_phase_tc true
+OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
 
-indent: $(addsuffix -indent, $(ALL))
+include gmake/z3.mk
+include gmake/fstar.mk
+include gmake/Makefile.tmpl
 
-%-ver: %
-	$(FSTAR) $^
-	touch $@
+FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
+LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
+
+# Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
 	@echo --use_hints --hint_info
 
-%.fst-indent: %.fst
-	$(FSTAR) --indent $^ > $^.indent.fst
+LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 
-%.fsti-indent: %.fsti
-	$(FSTAR) --indent $^ > $^.indent.fsti
+verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
-verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
+verify-extra: $(addsuffix .checked, $(EXTRA))
 
-%-verindent: %
-	$(FSTAR) $^
+# Benchmarking rules
+#
+# we want to run FStar with just the target file as that being checked
+# ideally all the .checked files will exist and we will:
+#  - move them to the side
+#  - execute the benchmark
+#  - move the checked file back
+#
+# phony-benchmark target to ensure bench rules always run on:
+#  make -C ulib benchmark
 
-wc:
-	wc -l prims.fst $(ALL)
+.PHONY: phony-benchmark
+
+phony-benchmark:
+
+# a.fst.bench will move the a.fst.checked binary and then move it back
+%.fst.bench: %.fst phony-benchmark
+	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
+	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
+
+# a.fsti.bench will move the a.fsti.checked binary and then move it back
+%.fsti.bench: %.fsti phony-benchmark
+	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
+	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
+
+verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))

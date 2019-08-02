@@ -18,8 +18,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\parser\parser.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\fstar\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "format", "..\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "extraction", "..\extraction\extraction.fsproj", "{55398B56-03CF-4E11-ADB0-A4274B7DBB35}"

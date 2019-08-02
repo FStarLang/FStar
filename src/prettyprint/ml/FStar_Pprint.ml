@@ -19,9 +19,10 @@
 include PPrint
 
 (* FIXME(adl) also print the char in a comment if it's representable *)
-let doc_of_char = PPrintOCaml.int
+let doc_of_char c = PPrintOCaml.char (Char.chr c)
 let doc_of_string = PPrint.string
 let doc_of_bool b = PPrint.string (string_of_bool b)
+let blank_buffer_doc = [ ("", PPrint.empty) ]
 
 let substring s ofs len =
     PPrint.substring s (Z.to_int ofs) (Z.to_int len)

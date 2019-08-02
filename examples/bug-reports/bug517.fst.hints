@@ -1,15 +1,6 @@
 [
-  "`°7z Œ≤Ãÿ:çæ÷X\u0007\u0016",
+  ";Ê®\u0017=Gê˝\u0005⁄\u001b{X/Û",
   [
-    [
-      "Bug517.new_int",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "84d969eba69a786ca2fe15f27f845b59"
-    ],
     [
       "Bug517.add",
       1,
@@ -18,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
       ],
       0,
-      "87503040e829d5253e3c2ceda95ce06e"
+      "1ad64df9fd2fa93577db14f2a35dd846"
     ],
     [
       "Bug517.add'",
@@ -31,10 +22,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
       ],
       0,
-      "d36ab92223644ad86c3a822193136861"
+      "36919728257382882b34a3030931be8d"
     ]
   ]
 ]

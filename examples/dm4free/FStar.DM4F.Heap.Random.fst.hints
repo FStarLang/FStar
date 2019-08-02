@@ -1,5 +1,5 @@
 [
-  "h˜RX`}¦tè,×ù\u0003Â\u0002K",
+  "Õ1\u007f¨ÇZRØaŽ†Û¬ôøY",
   [
     [
       "FStar.DM4F.Heap.Random.id",
@@ -7,13 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "56a30a4b8039442b111bd137de18bbda"
+      "b2b167a00aae0e5fe8c8c30fffe57593"
     ],
     [
       "FStar.DM4F.Heap.Random.tape",
@@ -22,22 +22,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Seq.Base.seq_haseq",
-        "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.id",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_FStar.DM4F.Heap.Random.elem",
-        "function_token_typing_FStar.DM4F.Heap.Random.id",
-        "function_token_typing_FStar.DM4F.Heap.Random.q",
-        "haseqFStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "int_inversion",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "equation_FStar.DM4F.Heap.Random.elem", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_c45738073e069418e791c7f105cc9178",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "ad15057381cc77a6843dcc85a20db424"
+      "b50c57be42bb0b1de02aee12dcda2b55"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",
@@ -46,20 +40,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.incrementable",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_48a6547554ba276d1f51713ada86d6e1",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_704d8d13f27c4dc76ad704087a7f94d4"
       ],
       0,
-      "0da0d0930c16467bb9468aa30bbffd58"
+      "147ecbd42cf6648cc5f7ea6dac0f4a02"
     ],
     [
       "FStar.DM4F.Heap.Random.index",
@@ -68,15 +59,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.id",
-        "equation_FStar.DM4F.Heap.Random.size",
-        "equation_FStar.DM4F.Heap.Random.tape", "equation_Prims.nat",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+        "equation_FStar.DM4F.Heap.Random.tape",
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "e678bef27930ca0d420f08e1d26c90c4"
+      "e7b98469991b377b997046ad885a27f7"
     ],
     [
       "FStar.DM4F.Heap.Random.upd",
@@ -85,21 +72,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.id",
-        "equation_FStar.DM4F.Heap.Random.size",
         "equation_FStar.DM4F.Heap.Random.tape", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.elem",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "lemma_FStar.Seq.Base.lemma_len_upd",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_len_upd",
+        "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178",
+        "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "801eba97af59f9463db61fb5e91ba9a4"
+      "cdbbb8fc9ebbe20a3f41b69ae2753dd9"
     ],
     [
       "FStar.DM4F.Heap.Random.create",
@@ -108,17 +93,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.elem",
-        "function_token_typing_FStar.DM4F.Heap.Random.size",
+        "function_token_typing_FStar.DM4F.Heap.Random.elem", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
       ],
       0,
-      "6d35f9d0e2983a3a9ddaf9204de5edfe"
+      "5ab8ca4a9855f6c2d0a349cc7da7822a"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_intro",
@@ -127,22 +111,18 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.equal",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size",
         "equation_FStar.DM4F.Heap.Random.tape", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_9d9e10402f79d6a95207c3b97fa31898",
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "38cebea41f3a19d42b936f9309b6a061"
+      "517f3e24f403365fd8c1df1d70c75581"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_elim",
@@ -153,14 +133,13 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.equal",
-        "equation_FStar.DM4F.Heap.Random.size",
         "equation_FStar.DM4F.Heap.Random.tape",
-        "function_token_typing_FStar.DM4F.Heap.Random.elem",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933",
+        "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "e8f5349834302d88e12a697c9147fbb8"
+      "8e85d0bb7e75d062ac40d89750aa2475"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd1",
@@ -169,20 +148,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size",
         "equation_FStar.DM4F.Heap.Random.tape",
         "equation_FStar.DM4F.Heap.Random.upd", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "43f0ddd4bd0c7bb742bff36a1c095f46"
+      "da41bf812d45e4da71e3c0e1f9e9b934"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd2",
@@ -191,21 +169,20 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size",
         "equation_FStar.DM4F.Heap.Random.tape",
         "equation_FStar.DM4F.Heap.Random.upd", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933",
+        "refinement_interpretation_Tm_refine_c214c9b992936e25888fdce6a55eb676",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "df99b3553b755080715f9d42356dd8e2"
+      "a4a7c4d779893c0f72cb5e715943a980"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_create",
@@ -213,20 +190,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.DM4F.Heap.Random.create",
-        "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.id",
+        "@query", "equation_FStar.DM4F.Heap.Random.create",
         "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "equation_FStar.DM4F.Heap.Random.size",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ad4ede57e2bc5e195429fae31e76cb08"
+      "9de5a95e4f1f80a1db905c7675300c40"
     ]
   ]
 ]

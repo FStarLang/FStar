@@ -42,15 +42,17 @@ let rec parse (opts:opt list) def ar ix max i =
         | None -> Error ("unrecognized option '" ^ arg ^ "'\n")
       else go_on ()
 
+let parse_array specs others args offset =
+  parse specs others args offset (Array.length args - 1) 0
+
 let parse_cmdline specs others =
-  let len = Array.length Sys.argv in
-  let go_on () = parse specs others Sys.argv 1 (len - 1) 0 in
-  if len = 1 then Help
-  else go_on ()
+  if Array.length Sys.argv = 1 then Help
+  else parse_array specs others Sys.argv 1
 
 let parse_string specs others (str:string) =
     let split_spaces (str:string) =
-        Str.split (Str.regexp "[ \t]+") str
+      let seps = [int_of_char ' '; int_of_char '\t'] in
+      FStar_List.filter (fun s -> s != "") (FStar_String.split seps str)
     in
     (* to match the style of the F# code in FStar.GetOpt.fs *)
     let index_of str c =
@@ -79,5 +81,7 @@ let parse_string specs others (str:string) =
     match split_quoted_fragments str with
     | None -> Error("Failed to parse options; unmatched quote \"'\"")
     | Some args ->
-      let args = Array.of_list args in
-      parse specs others args 0 (Array.length args - 1) 0
+      parse_array specs others (Array.of_list args) 0
+
+let cmdline () =
+   Array.to_list (Sys.argv)

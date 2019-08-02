@@ -1,0 +1,18 @@
+[
+  "ÑÚ«!--Œ\u0015î|a\u001aªgó©",
+  [
+    [
+      "Bug1319b.map_rev",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "3974648899b6ce6cd2bf185ec0f7977f"
+    ]
+  ]
+]

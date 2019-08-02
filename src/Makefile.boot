@@ -1,14 +1,10 @@
 include Makefile.config
 
-# FSTAR_C: This is the way in which we invoke F* for boostrapping
-#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
-#   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 INCLUDE_PATHS = \
 	../ulib \
 	boot \
 	basic \
 	extraction \
-	format \
 	fsdoc \
 	fstar \
 	parser \
@@ -21,8 +17,18 @@ INCLUDE_PATHS = \
 	typechecker \
 	tests
 
-FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules --eager_inference --lax --MLish --no_location_info \
-		   --odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))
+CACHE_DIR?=./.cache.boot
+
+FSTAR_BOOT ?= $(FSTAR)
+
+# FSTAR_C: This is the way in which we invoke F* for boostrapping
+#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
+#   -- MLish and lax tune type-inference for use with unverified ML programs
+FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
+	--use_extracted_interfaces false                                \
+	--lax --MLish --no_location_info				\
+	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
+	--warn_error -272-241-319 --cache_dir $(CACHE_DIR)
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -36,10 +42,13 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 # specific namespace. So, we mention extracting those explicitly.
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
-		FStar.Format FStar.Order FStar.Dependencies		\
+		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
+		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
+		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
-		FStar.Universal FStar.Indent FStar.Main
+		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
+		FStar.Main
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
@@ -55,14 +64,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # file was already up to date, it doesn't touch it. Touching it here
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
-%.checked.lax: %
-	$(FSTAR_C) $*
+%.checked.lax:
+	$(FSTAR_C) $< --already_cached "* -$(basename $(notdir $<))"
 	touch $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(FSTAR_C) $(subst .checked.lax,,$<) --codegen OCaml --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+                   --codegen OCaml \
+                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 # --------------------------------------------------------------------
 # Dependency analysis for bootstrapping
@@ -72,13 +83,17 @@ ocaml-output/%.ml:
 # file as the roots, mentioning the the modules that are to be
 # extracted. This emits dependences for each of the ML files we want
 # to produce.
+#
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 
 .depend:
 	$(FSTAR_C) --dep full                 \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
-		   $(EXTRACT)		      \
-		   --codegen OCaml > .depend
+		   $(EXTRACT)		      > ._depend
+	mv ._depend .depend
+	mkdir -p $(CACHE_DIR)
 
 depend: .depend
 

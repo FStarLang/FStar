@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.UInt128
 
 open FStar.Mul
@@ -12,11 +27,18 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#set-options "--normalize_pure_terms_for_extraction"
 
+// This type gets a special treatment in KreMLin and its definition is never
+// printed in the resulting C file.
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
 
+let _ = intro_ambient n
+let _ = intro_ambient t
+
+noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
@@ -273,7 +295,7 @@ let to_vec_v (a: t) :
   Lemma (vec128 a == Seq.append (vec64 a.high) (vec64 a.low)) =
   to_vec_append (U64.v a.low) (U64.v a.high)
 
-val logand_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logand_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logand_vec a1 b1) (BV.logand_vec a2 b2) ==
          BV.logand_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logand_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -294,7 +316,7 @@ let logand (a b: t) : Pure t
   assert (vec128 r == BV.logand_vec (vec128 a) (vec128 b));
   r
 
-val logxor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logxor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logxor_vec a1 b1) (BV.logxor_vec a2 b2) ==
          BV.logxor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logxor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -315,7 +337,7 @@ let logxor (a b: t) : Pure t
   assert (vec128 r == BV.logxor_vec (vec128 a) (vec128 b));
   r
 
-val logor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logor_vec a1 b1) (BV.logor_vec a2 b2) ==
         BV.logor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -336,7 +358,7 @@ let logor (a b: t) : Pure t
   assert (vec128 r == BV.logor_vec (vec128 a) (vec128 b));
   r
 
-val lognot_vec_append (#n1 #n2: n:nat{n > 0}) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
+val lognot_vec_append (#n1 #n2: pos) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
   Lemma (Seq.append (BV.lognot_vec a1) (BV.lognot_vec a2) ==
         BV.lognot_vec #(n1 + n2) (Seq.append a1 a2))
 let lognot_vec_append #n1 #n2 a1 a2 =
@@ -420,6 +442,7 @@ let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --z3rlimit 40"
+#set-options "--normalize_pure_terms_for_extraction"
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
@@ -436,7 +459,8 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 s);
   mod_mul_pow2 (U64.v hi) (64 - s) s;
   U64.add high low
-#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3cliopt 'smt.case_split=3'"
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#set-options "--normalize_pure_terms_for_extraction"
 
 
 let div_plus_multiple (a:nat) (b:nat) (k:pos) :
@@ -448,12 +472,14 @@ let div_plus_multiple (a:nat) (b:nat) (k:pos) :
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
         (ensures (k1*m / (k1*k2) == (n + k1*m) / (k1*k2)))
+#push-options "--z3rlimit_factor 20"
 let div_add_small n m k1 k2 =
   div_product (k1*m) k1 k2;
   div_product (n+k1*m) k1 k2;
   mul_div_cancel m k1;
   assert (k1*m/k1 == m);
   div_plus_multiple n m k1
+#pop-options
 #set-options "--z3rlimit 5"
 
 val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
@@ -553,7 +579,8 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 80"
+#reset-options "--normalize_pure_terms_for_extraction"
+#set-options "--z3rlimit 300"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -570,7 +597,8 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
-
+#reset-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--normalize_pure_terms_for_extraction --z3rlimit 150"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -582,7 +610,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 64"
+#set-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 0"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -792,10 +820,12 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
+#push-options "--z3rlimit 40"
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
+#pop-options
 
 // generalization of Math.lemma_mult_le_left (relaxed bounds on arguments)
 val lemma_mult_le_left: a:nat -> b:int -> c:int -> Lemma
@@ -940,6 +970,9 @@ val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
   xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
 let u64_32_product xl xh yl yh =
+  assert (xh >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
+  assert (pow2 32 >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
+  assert (xh*pow2 32 >= 0);
   product_sums xl (xh*pow2 32) yl (yh*pow2 32);
   mul_abc_to_acb xh (pow2 32) yl;
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
@@ -985,6 +1018,7 @@ let mul_wide_low_ok (x y: U64.t) :
 
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
+#push-options "--z3rlimit_factor 10"
 let product_high32 x y =
   Math.pow2_plus 32 32;
   product_expand x y;
@@ -992,18 +1026,19 @@ let product_high32 x y =
   mul_div_cancel (phh x y * pow2 32) (pow2 32);
   mul_div_cancel (plh x y + phl x y + pll_h x y) (pow2 32);
   Math.small_division_lemma_1 (pll_l x y) (pow2 32)
+#pop-options
 
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
 
-#set-options "--z3rlimit 20"
+#push-options "--z3rlimit 80"
 let product_high_expand x y =
   Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
   product_high32 x y;
   Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y);
   ()
-#set-options "--z3rlimit 5"
+#pop-options
 
 val mod_spec_multiply : n:nat -> k:pos ->
   Lemma ((n - n%k) / k * k == n - n%k)
@@ -1038,6 +1073,7 @@ let n_minus_mod_exact (n:nat) (k:pos) :
 let sub_mod_gt_0 (n:nat) (k:pos) :
   Lemma (0 <= n - n % k) = ()
 
+#set-options "--z3rlimit 20"
 val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
   Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
 let sum_rounded_mod_exact n m k =
@@ -1048,7 +1084,6 @@ let sum_rounded_mod_exact n m k =
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
-#set-options "--z3rlimit 20"
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =
@@ -1078,6 +1113,7 @@ let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 
+#set-options "--z3rlimit 100"
 let mul_wide (x y:U64.t) : Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y)) =

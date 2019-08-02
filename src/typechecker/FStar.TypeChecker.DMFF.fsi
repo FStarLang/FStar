@@ -25,7 +25,7 @@ open FStar.Syntax.Syntax
 type env = {
   // The type-checking environment which we abuse to store our DMFF-style types
   // when entering a binder.
-  env: FStar.TypeChecker.Env.env;
+  tcenv: FStar.TypeChecker.Env.env;
   // The substitution from every [x: C] to its [x^w: C*].
   subst: list<subst_elt>;
   // Hack to avoid a dependency

@@ -1,2 +1,2 @@
-{"kind": "[...]"}
+{"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": "Unknown query 'repl-info'", "status": "protocol-violation"}

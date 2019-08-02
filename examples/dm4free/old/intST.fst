@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module IntST
 
 (* Note: this module implements a very explicit style of defining new monads; in
@@ -27,7 +42,7 @@ unfold let ite_wp        (a:Type)
                             (wp:wp a)
                             (h0:int) (q:post a) =
      forall (k:post a).
-         (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
+         (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} q (x, h) ==> k (x, h))
          ==> wp h0 k
 unfold let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
      (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)

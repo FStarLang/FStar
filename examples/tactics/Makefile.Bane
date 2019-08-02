@@ -1,0 +1,29 @@
+FSTAR?=fstar $(OTHERFLAGS) --admit_smt_queries true --cache_checked_modules
+
+all: Bane.test
+
+.depend:
+	$(FSTAR) --dep full Bane.Test.fst > .depend
+
+include .depend
+
+
+%.fst.checked:
+	$(FSTAR) $<
+
+%.fsti.checked:
+	$(FSTAR) $<
+
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
+CACHE = _cache
+
+%.cmxs: %.Lib.fst.checked
+	mkdir -p $(CACHE)_$*
+	$(FSTAR) --gen_native_tactics $(CACHE)_$* $*.Lib.fst
+
+%.test: %.Test.fst %.cmxs
+	rm -f Bane.Test.fst.checked
+	$(FSTAR) --use_native_tactics $(CACHE)_$* $<
+
+clean:
+	rm -rf Bane.Test.fst.checked Bane.Lib.fst.checked $(CACHE)_Bane

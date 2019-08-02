@@ -1,0 +1,109 @@
+[
+  ",i£,ê)œú\u000eQ\u001aÔtQ™\u001e",
+  [
+    [
+      "Sum_and_swap.sum_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "equation_HighComp.mint", "equation_HighComp.monotonic",
+        "equation_HighComp.state", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_FStar.UInt32.t",
+        "function_token_typing_HighComp.state",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_Tm_abs_40df6cfad88a14a99c3abe39ea404877",
+        "primitive_Prims.op_Addition",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d35473f13f04892bffcb4688af276905"
+    ],
+    [
+      "Sum_and_swap.wp_impl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_HighComp.hread",
+        "equation_HighComp.hwrite", "equation_HighComp.mint",
+        "equation_HighComp.state",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_Tm_abs_54699eb1638e10bfc6105d8e13b8c557",
+        "interpretation_Tm_abs_c952206c46a99bd455aa4f15bdd38d10",
+        "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_HighComp.hread",
+        "token_correspondence_HighComp.hwrite", "unit_typing"
+      ],
+      0,
+      "49296f6f219e25b8f35fb150ca7c8f3c"
+    ],
+    [
+      "Sum_and_swap.sum_post",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
+      0,
+      "45d731bd9250f6152b4cf40006b26122"
+    ],
+    [
+      "Sum_and_swap.hswap_and_sum",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_HighComp.mint",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "adceeae0aaee35607dde77b2d24a33f0"
+    ],
+    [
+      "Sum_and_swap.lswap_and_sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_HighComp.hread",
+        "equation_HighComp.hwrite", "equation_HighComp.mint",
+        "equation_HighComp.state",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_Tm_abs_54699eb1638e10bfc6105d8e13b8c557",
+        "interpretation_Tm_abs_c952206c46a99bd455aa4f15bdd38d10",
+        "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_HighComp.hread",
+        "token_correspondence_HighComp.hwrite", "unit_typing"
+      ],
+      0,
+      "99009e2504042cfcc766cbd25d01b8b4"
+    ]
+  ]
+]
