@@ -47,28 +47,26 @@ val par (#in1 #in2:resource)
    TODO: Enhance the metatheory to model locks
 *)
 
-// We take a lock on an array. TODO: Should it be on an array resource instead?
+// We take a lock on a resource.
 // The lock has a predicate on the resource view associated.
 // This is all we know about the locked memory contents.
 // It must be proven correct at lock creation, and each time a lock is released
 assume
-val lock (#a:Type) (b:array a) : Type
+val lock (r:resource) : Type
 // Locks could possibly be implemented as exactly the associated predicate.
 // We have to ensure that the definition is abstract to prevent users to
 // create them without using the creation functions
 assume
-val get_lock_pred (#a:Type) (#b:array a) (l:lock b) : Seq.lseq a (vlength b) -> Type
+val get_lock_pred (#r:resource) (l:lock r) : r.t -> Type
 
-(* We are only allowed to take a lock on a resource with write permission.
-   We could also remove this restriction and store the permission in the lock, but
-   we probably don't need locks on shareable, read only permissions *)
+(* We are now allowed to take a lock on any resource.
+   The write permission associated to the lock resource must be part of the invariant *)
 assume
-val new_lock (#a:Type) (b:array a) (pred:Seq.lseq a (vlength b) -> Type)
-  : RST (lock b)
-        (RA.array_resource b) (fun _ -> empty_resource)
+val new_lock (r:resource) (pred:r.t -> Type)
+  : RST (lock r)
+        r (fun _ -> empty_resource)
         (fun h ->
-          pred (sel (RA.array_view b) h).RA.s /\
-          P.allows_write (Ghost.reveal (sel (RA.array_view b) h).RA.p))
+          pred (sel r.view h))
         (fun _ l _ -> get_lock_pred l == pred)
 
 /// This model could allow a thread to acquire a lock, and create a new lock
@@ -83,22 +81,20 @@ val new_lock (#a:Type) (b:array a) (pred:Seq.lseq a (vlength b) -> Type)
    We only know about its contents what was stored in the lock
    *)
 assume
-val acquire (#a:Type) (b:array a) (l:lock b)
+val acquire (r:resource) (l:lock r)
   : RST unit
         (empty_resource)
-        (fun _ -> RA.array_resource b)
+        (fun _ -> r)
         (fun _ -> True)
         (fun _ _ h1 ->
-          (get_lock_pred l) (sel (RA.array_view b) h1).RA.s /\
-          P.allows_write (Ghost.reveal (sel (RA.array_view b) h1).RA.p))
+          (get_lock_pred l) (sel r.view h1))
 
 (* Release is similar to new_lock, without the new value creation *)
 assume
-val release (#a:Type) (b:array a) (l:lock b)
+val release (r:resource) (l:lock r)
   : RST unit
-        (RA.array_resource b)
+        (r)
         (fun _ -> empty_resource)
         (fun h ->
-          (get_lock_pred l) (sel (RA.array_view b) h).RA.s /\
-          P.allows_write (Ghost.reveal (sel (RA.array_view b) h).RA.p))
+          (get_lock_pred l) (sel r.view h))
         (fun _ _ _ -> True)
