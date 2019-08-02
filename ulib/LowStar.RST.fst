@@ -140,7 +140,7 @@ let mk_selector
 =
   on_dom_g (r0:resource{r0 `is_subresource_of` r}) (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
-let focus_selector (r: resource) (s: selector r) (r0: resource{r0 `is_subresource_of` r}) : s':selector r0{
+let focus_selector (#r: resource) (s: selector r) (r0: resource{r0 `is_subresource_of` r}) : s':selector r0{
     forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'
   } =
   on_dom_g (r0':resource{r0' `is_subresource_of` r0}) (fun (r0':resource{r0' `is_subresource_of` r0}) ->
@@ -150,8 +150,8 @@ let focus_selector (r: resource) (s: selector r) (r0: resource{r0 `is_subresourc
 let sprop r = selector r -> Type0
 
 
-let extend_sprop (r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_of` r}) : sprop r =
-  fun s -> p (focus_selector r s r0)
+let extend_sprop (#r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_of` r}) : sprop r =
+  fun s -> p (focus_selector #r s r0)
 
 #push-options "--z3rlimit 30"
 
@@ -238,7 +238,7 @@ unfold let frame_pre
   (delta:resource{frame_delta_pre outer0 inner0 delta})
   (pre:r_pre inner0)
   (old: selector outer0) =
-  pre (focus_selector outer0 old inner0)
+  pre (focus_selector old inner0)
 
 unfold
 let frame_post
@@ -256,9 +256,9 @@ let frame_post
 =
   reveal_can_be_split_into ();
   post
-    (focus_selector outer0 old inner0)
+    (focus_selector old inner0)
     x
-    (focus_selector (outer1 x) modern (inner1 x)) /\
+    (focus_selector modern (inner1 x)) /\
   old delta == modern delta
 
 
@@ -279,10 +279,10 @@ let get (r: resource) : RST
 let focus_selector_equality (outer inner: resource) (h: HS.mem)
   : Lemma
   (requires (inv outer h /\ inner `is_subresource_of` outer))
-  (ensures (focus_selector outer (mk_selector outer h) inner == mk_selector inner h))
+  (ensures (focus_selector (mk_selector outer h) inner == mk_selector inner h))
   =
   let souter = mk_selector outer h in
-  let focused = focus_selector outer souter inner in
+  let focused = focus_selector souter inner in
   let original = mk_selector inner h in
   extensionality_g
     (r0:resource{r0 `is_subresource_of` inner})
@@ -309,14 +309,14 @@ inline_for_extraction noextract let rst_frame
   : RST a outer0 outer1
     (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
       fun old ->
-        pre (focus_selector outer0 old inner0)
+        pre (focus_selector old inner0)
     )
     (reveal_can_be_split_into ();
       fun old x modern ->
         post
-          (focus_selector outer0 old inner0)
+          (focus_selector old inner0)
           x
-          (focus_selector (outer1 x) modern (inner1 x)) /\
+          (focus_selector modern (inner1 x)) /\
         old delta == modern delta
     )
   =
