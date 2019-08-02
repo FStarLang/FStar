@@ -31,11 +31,11 @@ include LowStar.RST.Array.Views
 val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)
           (fun _ -> array_resource b)
-          (fun h0 -> UInt32.v i < A.vlength b)
-          (fun h0 x h1 ->
+          (fun old -> UInt32.v i < A.vlength b)
+          (fun old x modern ->
           UInt32.v i < A.vlength b /\
-          Seq.index (sel (array_view b) h0).s (UInt32.v i) == x /\
-          h0 == h1
+          Seq.index (old (array_resource b)).s (UInt32.v i) == x /\
+          old == modern
           )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
