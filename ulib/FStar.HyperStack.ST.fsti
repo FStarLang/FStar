@@ -498,7 +498,7 @@ val testify_forall (#c:Type) (#p:(c -> mem -> Type0))
   :ST unit (requires (fun h      -> True))
            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
 
-val testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
+val testify_forall_region_contains_pred (#c:Type) (#p:(c -> GTot rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\

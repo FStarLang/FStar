@@ -32,11 +32,11 @@ let (mk_ident : (Prims.string * FStar_Range.range) -> ident) =
   
 let (reserved_prefix : Prims.string) = "uu___" 
 let (_gen : ((unit -> Prims.int) * (unit -> unit))) =
-  let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let x = FStar_Util.mk_ref Prims.int_zero  in
   let next_id uu____174 =
     let v1 = FStar_ST.op_Bang x  in
-    FStar_ST.op_Colon_Equals x (v1 + (Prims.parse_int "1")); v1  in
-  let reset uu____226 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0")  in
+    FStar_ST.op_Colon_Equals x (v1 + Prims.int_one); v1  in
+  let reset uu____226 = FStar_ST.op_Colon_Equals x Prims.int_zero  in
   (next_id, reset) 
 let (next_id : unit -> Prims.int) =
   fun uu____262  -> FStar_Pervasives_Native.fst _gen () 

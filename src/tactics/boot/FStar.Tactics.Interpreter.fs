@@ -48,6 +48,10 @@ let mktot1' uarity nm f ea er nf ena enr =
   { mktot1  uarity nm f ea er nf ena enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
+let mktot1'_psc uarity nm f ea er nf ena enr =
+  { mktot1_psc  uarity nm f ea er nf ena enr
+    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+
 let mktot2' uarity nm f ea eb er nf ena enb enr =
   { mktot2  uarity nm f ea eb er nf ena enb enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
@@ -92,8 +96,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
     (* Sigh, due to lack to expressive typing we need to duplicate a bunch of information here,
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
-    [ mktot1' 0 "tracepoint"  tracepoint E.e_proofstate e_unit
-                              tracepoint E.e_proofstate_nbe NBET.e_unit;
+    [ mktot1'_psc 0 "tracepoint"  tracepoint E.e_proofstate e_unit
+                                  tracepoint E.e_proofstate_nbe NBET.e_unit;
 
       mktot2' 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;
@@ -219,8 +223,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "debugging"     debugging e_unit e_bool
                                debugging NBET.e_unit NBET.e_bool;
 
-      mktac1 0 "dump"          print_proof_state e_string e_unit
-                               print_proof_state NBET.e_string NBET.e_unit;
+      mktac1 0 "dump"          dump e_string e_unit
+                               dump NBET.e_string NBET.e_unit;
 
       mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
                                pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
@@ -287,7 +291,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
                                   (fun _ _ _ -> fail "sorry, `lset` does not work in NBE")
                                         NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
-    ] @ reflection_primops @ (native_tactics_steps ())
+    ] @ (native_tactics_steps ())
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
@@ -324,11 +328,11 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
                  then NBE.normalize
                  else N.normalize_with_primitive_steps
     in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
 
     // F* requires more annotations.
     // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result ncb in
@@ -476,11 +480,11 @@ let run_tactic_on_typ
         // /implicits
 
         if !tacdbg then
-            dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
+            do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)
 
     | Failed (e, ps) ->
-        dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
+        do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
         let texn_to_string e =
             match e with
             | TacticFailure s ->
@@ -520,7 +524,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
-    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         begin match pol with
         | Pos ->

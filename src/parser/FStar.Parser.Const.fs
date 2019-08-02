@@ -117,15 +117,17 @@ let c_eq2_lid  = pconst "equals"
 let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
-let cons_lid        = pconst  "Cons"
-let nil_lid         = pconst  "Nil"
-let some_lid        = psnconst  "Some"
-let none_lid        = psnconst  "None"
-let assume_lid      = pconst  "_assume"
-let assert_lid      = pconst  "_assert"
-let assert_norm_lid = p2l ["FStar"; "Pervasives"; "assert_norm"]
+let cons_lid            = pconst  "Cons"
+let nil_lid             = pconst  "Nil"
+let some_lid            = psnconst  "Some"
+let none_lid            = psnconst  "None"
+let assume_lid          = pconst  "_assume"
+let assert_lid          = pconst  "_assert"
+let pure_assert_wp_lid  = pconst "pure_assert_wp"
+let pure_assume_wp_lid  = pconst "pure_assume_wp"
+let assert_norm_lid     = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
-let list_append_lid = p2l ["FStar"; "List"; "append"]
+let list_append_lid     = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 
@@ -292,6 +294,8 @@ let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
+let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
+let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"

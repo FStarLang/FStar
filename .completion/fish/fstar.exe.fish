@@ -34,7 +34,6 @@ complete -c fstar.exe -l max_fuel -r --description "Number of unrolling of recur
 complete -c fstar.exe -l max_ifuel -r --description "Number of unrolling of inductive datatypes to try at most (default 2)"
 complete -c fstar.exe -l min_fuel -r --description "Minimum number of unrolling of recursive functions to try (default 1)"
 complete -c fstar.exe -l MLish --description "Trigger various specializations for compiling the F* compiler itself (not meant for user code)"
-complete -c fstar.exe -l n_cores -r --description "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)"
 complete -c fstar.exe -l no_default_includes --description "Ignore the default module search paths"
 complete -c fstar.exe -l no_extract -r --description "Do not extract code from this module"
 complete -c fstar.exe -l no_location_info --description "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)"

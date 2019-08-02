@@ -14,14 +14,14 @@ let (__proj__Mkvops_t__item__next_minor :
     match projectee with | { next_major; next_minor;_} -> next_minor
   
 let (vops : vops_t) =
-  let major = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let minor = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let major = FStar_Util.mk_ref Prims.int_zero  in
+  let minor = FStar_Util.mk_ref Prims.int_zero  in
   let next_major uu____85 =
-    FStar_ST.op_Colon_Equals minor (Prims.parse_int "0");
+    FStar_ST.op_Colon_Equals minor Prims.int_zero;
     (let uu____109 = FStar_Util.incr major; FStar_ST.op_Bang major  in
      {
        FStar_Syntax_Syntax.major = uu____109;
-       FStar_Syntax_Syntax.minor = (Prims.parse_int "0")
+       FStar_Syntax_Syntax.minor = Prims.int_zero
      })
      in
   let next_minor uu____139 =

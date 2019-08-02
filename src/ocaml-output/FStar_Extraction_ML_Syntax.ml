@@ -186,10 +186,10 @@ let (gensym : unit -> Prims.string) =
 let rec (gensyms : Prims.int -> Prims.string Prims.list) =
   fun x  ->
     match x with
-    | _438 when _438 = (Prims.parse_int "0") -> []
+    | _438 when _438 = Prims.int_zero -> []
     | n1 ->
         let uu____442 = gensym ()  in
-        let uu____444 = gensyms (n1 - (Prims.parse_int "1"))  in uu____442 ::
+        let uu____444 = gensyms (n1 - Prims.int_one)  in uu____442 ::
           uu____444
   
 type mlidents = mlident Prims.list
@@ -211,7 +211,7 @@ let (uu___is_E_IMPURE : e_tag -> Prims.bool) =
     match projectee with | E_IMPURE  -> true | uu____487 -> false
   
 type mlloc = (Prims.int * Prims.string)
-let (dummy_loc : mlloc) = ((Prims.parse_int "0"), "") 
+let (dummy_loc : mlloc) = (Prims.int_zero, "") 
 type mlty =
   | MLTY_Var of mlident 
   | MLTY_Fun of (mlty * e_tag * mlty) 
