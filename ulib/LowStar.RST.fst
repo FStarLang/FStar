@@ -136,9 +136,9 @@ let selector r = restricted_g_t (r0:resource{r0 `is_subresource_of` r}) (fun r0 
 let mk_selector
   (r: resource)
   (h: imem (inv r)) :
-  (s:selector r{forall (r0:resource{r0 `is_subresource_of` r}). s r0 == r0.view.sel h})
+  (s:selector r{forall (r0:resource{r0 `is_subresource_of` r}). s r0 == sel r0.view h})
 =
-  on_dom_g (r0:resource{r0 `is_subresource_of` r}) (fun (r0:resource{r0 `is_subresource_of` r}) -> r0.view.sel h)
+  on_dom_g (r0:resource{r0 `is_subresource_of` r}) (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
 let focus_selector (r: resource) (s: selector r) (r0: resource{r0 `is_subresource_of` r}) : s':selector r0{
     forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'
@@ -147,14 +147,15 @@ let focus_selector (r: resource) (s: selector r) (r0: resource{r0 `is_subresourc
     s r0'
   )
 
-let hsprop (r: resource) : Type = selector r -> Type0
+let sprop r = selector r -> Type0
 
-let extend_hsprop (r0: resource) (p: hsprop r0) (r: resource{r0 `is_subresource_of` r}) : hsprop r =
+
+let extend_sprop (r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_of` r}) : sprop r =
   fun s -> p (focus_selector r s r0)
 
 #push-options "--z3rlimit 30"
 
-let hsrefine (r:resource) (p:hsprop r) : resource =
+let hsrefine (r:resource) (p:sprop r) : resource =
   let new_inv (h: HS.mem) = r.view.inv h /\ p (mk_selector r h) in
   let new_view = { r.view with inv = new_inv } in
   reveal_view ();
@@ -187,12 +188,12 @@ let hsrefine (r:resource) (p:hsprop r) : resource =
 
 #pop-options
 
-let r_pre (res:resource) =  hsprop res
+let r_pre (res:resource) =  sprop res
 let r_post
   (res0: resource)
   (a: Type)
   (res1: a -> resource) =
-  selector res0 -> x:a -> hsprop (res1 x)
+  selector res0 -> x:a -> sprop (res1 x)
 
 abstract
 let rst_inv (res:resource) (h:HS.mem) : GTot prop =
@@ -220,6 +221,7 @@ effect RST
   a
   (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_selector res0 h0))
   (fun h0 x h1 ->
+    inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_selector res0 h0) /\
     inv (res1 x) h1 /\
     rst_inv (res1 x) h1 /\
     modifies res0 (res1 x) h0 h1 /\
@@ -294,8 +296,6 @@ inline_for_extraction noextract let rst_frame
   (#a:Type)
   (outer1:a -> resource)
   (#inner1:a -> resource)
-  (#pre:r_pre inner0)
-  (#post:r_post inner0 a inner1)
   (#[resolve_delta ()]
      delta:resource{
        FStar.Tactics.with_tactic
@@ -303,21 +303,23 @@ inline_for_extraction noextract let rst_frame
          (frame_delta outer0 inner0 outer1 inner1 delta)
      }
    )
+  (#pre:r_pre inner0)
+  (#post:r_post inner0 a inner1)
    ($f:unit -> RST a inner0 inner1 pre post)
-: RST a outer0 outer1
-  (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
-     fun old ->
-       pre (focus_selector outer0 old inner0)
-  )
-  (reveal_can_be_split_into ();
-    fun old x modern ->
-      post
-        (focus_selector outer0 old inner0)
-        x
-        (focus_selector (outer1 x) modern (inner1 x)) /\
-      old delta == modern delta
-  )
-=
+  : RST a outer0 outer1
+    (FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+      fun old ->
+        pre (focus_selector outer0 old inner0)
+    )
+    (reveal_can_be_split_into ();
+      fun old x modern ->
+        post
+          (focus_selector outer0 old inner0)
+          x
+          (focus_selector (outer1 x) modern (inner1 x)) /\
+        old delta == modern delta
+    )
+  =
   reveal_view ();
   reveal_can_be_split_into ();
   reveal_rst_inv ();

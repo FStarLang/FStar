@@ -15,7 +15,11 @@
 *)
 module LowStar.RST.Array
 
-let index (#a:Type) (b:A.array a) (i:UInt32.t) = reveal_array(); A.index b i
+let index (#a:Type) (b:A.array a) (i:UInt32.t) =
+  (**) reveal_array();
+  (**) let h0 = HST.get () in
+  (**) let old = mk_selector (array_resource b) h0 in
+  A.index b i
 
 let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   (**) reveal_array();

@@ -284,7 +284,7 @@ val share_cells
 
 let rec share_cells #a b i pid =
   (**) let h0 = HST.get() in
-  if U32.v i >= vlength b then
+  if U32.v i >= U32.v (tot_length b) then
     (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
   else begin
@@ -489,7 +489,7 @@ val gather_cells:
 
 let rec gather_cells #a b b1 i =
   (**) let h0 = HST.get () in
-  if U32.v i >= vlength b then begin
+  if U32.v i >= U32.v (tot_length b) then begin
     (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ());
     (**) MG.loc_union_loc_none_l #ucell #cls (MG.loc_none)
@@ -630,7 +630,7 @@ val move_cells
 
 let rec move_cells #a b i pid =
   (**) let h0 = HST.get() in
-  if U32.v i >= vlength b then
+  if U32.v i >= U32.v (tot_length b) then
     (**) MG.modifies_loc_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
   else begin

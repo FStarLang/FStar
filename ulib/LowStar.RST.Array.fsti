@@ -30,63 +30,64 @@ include LowStar.RST.Array.Views
 
 val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)
-          (fun _ -> array_resource b)
-          (fun old -> UInt32.v i < A.vlength b)
-          (fun old x modern ->
-          UInt32.v i < A.vlength b /\
-          Seq.index (old (array_resource b)).s (UInt32.v i) == x /\
-          old == modern
-          )
+    (fun _ -> array_resource b)
+    (fun _ -> UInt32.v i < A.vlength b)
+    (fun old x modern ->
+      UInt32.v i < A.vlength b /\
+      Seq.index (as_seq b old) (UInt32.v i) == x /\
+      old == modern
+    )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
   : RST unit (array_resource b)
-             (fun _ -> array_resource b)
-             (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (Ghost.reveal (sel (array_view b) h0).p))
-             (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
-             (sel (array_view b) h1).s ==
-             Seq.upd (sel (array_view b) h0).s (UInt32.v i) v /\
-             (sel (array_view b) h1).p == (sel (array_view b) h0).p
-             )
+    (fun _ -> array_resource b)
+    (fun old -> UInt32.v i < A.vlength b /\ P.allows_write (get_perm b old))
+    (fun old _ modern -> UInt32.v i < A.vlength b /\
+      as_seq b modern ==
+      Seq.upd (as_seq b old) (UInt32.v i) v /\
+      get_perm b modern == get_perm b old
+    )
 
 val alloc (#a:Type) (init:a) (len:UInt32.t)
   : RST (A.array a)
-        (empty_resource)
-        (fun b -> array_resource b)
-        (fun _ -> UInt32.v len > 0)
-        (fun _ b h1 ->
-        A.freeable b /\
-        (sel (array_view b) h1).s == Seq.create (UInt32.v len) init /\
-        Ghost.reveal (sel (array_view b) h1).p = FStar.Real.one
-        )
+    (empty_resource)
+    (fun b -> array_resource b)
+    (fun _ -> UInt32.v len > 0)
+    (fun _ b modern ->
+      A.freeable b /\
+      as_seq b modern == Seq.create (UInt32.v len) init /\
+      get_perm b modern = FStar.Real.one
+    )
 
 val free (#a:Type) (b:A.array a)
   : RST unit (array_resource b)
-             (fun _ -> empty_resource)
-             (fun h0 -> A.freeable b /\ P.allows_write (Ghost.reveal (sel (array_view b) h0).p))
-             (fun _ _ _ -> True)
+    (fun _ -> empty_resource)
+    (fun old -> A.freeable b /\ P.allows_write (get_perm b old))
+    (fun _ _ _ -> True)
 
 val share (#a:Type) (b:A.array a)
   : RST (A.array a)
         (array_resource b)
         (fun b' -> array_resource b <*> array_resource b')
-        (fun h0 -> A.vlength b > 0)
-        (fun h0 b' h1 ->
-          A.vlength b == A.vlength b' /\
-          (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
-          (sel (array_view b') h1).s == (sel (array_view b) h1).s /\
-          Ghost.reveal (sel (array_view b) h1).p == P.half_permission (Ghost.reveal (sel (array_view b) h0).p) /\
-          Ghost.reveal (sel (array_view b') h1).p == P.half_permission (Ghost.reveal (sel (array_view b) h0).p) /\
-          summable_permissions h1 b b')
+        (fun _ -> A.vlength b > 0)
+        (fun old b' modern ->
+          A.vlength b' = A.vlength b /\
+          as_seq b old == as_seq b modern /\
+          as_seq b' modern == as_seq b modern /\
+          get_perm b modern == P.half_permission (get_perm b old) /\
+          get_perm b' modern  == P.half_permission (get_perm b old) /\
+          summable_permissions b b' modern
+        )
 
 val gather (#a:Type) (b b':A.array a)
   : RST unit (array_resource b <*> array_resource b')
-             (fun _ -> array_resource b)
-             (fun h0 -> A.gatherable b b' /\ summable_permissions h0 b b')
-             (fun h0 _ h1 ->
-               summable_permissions h0 b b' /\
-               (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
-               Ghost.reveal (sel (array_view b) h1).p ==
-                 P.sum_permissions (Ghost.reveal (sel (array_view b) h0).p) (Ghost.reveal (sel (array_view b') h0).p))
+    (fun _ -> array_resource b)
+    (fun old -> A.gatherable b b' /\ summable_permissions b b' old)
+    (fun old _ modern ->
+      summable_permissions b b' old /\
+      as_seq b old == as_seq b modern /\
+      get_perm b modern == P.sum_permissions (get_perm b old) (get_perm b' old)
+    )
 
 
 val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b})
@@ -94,20 +95,20 @@ val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v 
     (array_resource b)
     (fun p -> array_resource (fst p) <*> array_resource (snd p))
     (fun _ -> True)
-    (fun h0 (b1, b2) h1 ->
-      A.is_split_into b (b1, b2) /\
-      (sel (array_view b1) h1).s == Seq.slice (sel (array_view b) h0).s 0 (UInt32.v idx) /\
-      (sel (array_view b2) h1).s == Seq.slice (sel (array_view b) h0).s (UInt32.v idx) (A.vlength b) /\
-      (sel (array_view b) h0).p == (sel (array_view b1) h1).p /\
-      (sel (array_view b) h0).p == (sel (array_view b2) h1).p
+    (fun old bs modern ->
+      A.is_split_into b (fst bs, snd bs) /\
+      as_seq (fst bs) modern == Seq.slice (as_seq b old) 0 (UInt32.v idx) /\
+      as_seq (snd bs) modern == Seq.slice (as_seq b old) (UInt32.v idx) (A.vlength b) /\
+      get_perm (fst bs) modern == get_perm b old /\
+      get_perm (snd bs) modern == get_perm b old
     )
 
 val glue (#a: Type) (b b1 b2: A.array a)
   : RST unit
     (array_resource b1 <*> array_resource b2)
     (fun _ -> array_resource b)
-    (fun h0 -> A.is_split_into b (b1, b2) /\  (sel (array_view b1) h0).p == (sel (array_view b2) h0).p)
-    (fun h0 _ h1 ->
-      (sel (array_view b) h1).s == Seq.append (sel (array_view b1) h0).s (sel (array_view b2) h0).s /\
-      (sel (array_view b) h1).p == (sel (array_view b1) h0).p
+    (fun old -> A.is_split_into b (b1, b2) /\ get_perm b1 old == get_perm b2 old)
+    (fun old _ modern ->
+      as_seq b modern == Seq.append (as_seq b1 old) (as_seq b2 old) /\
+      get_perm b modern == get_perm b1 old
     )

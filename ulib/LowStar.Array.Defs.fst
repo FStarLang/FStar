@@ -12,7 +12,6 @@ open LowStar.Permissions
 
 open FStar.Real
 
-
 type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   let (v, p) = vp in
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
@@ -28,6 +27,8 @@ noeq type array (a:Type0) :Type0 =
     array a
 
 let length #a b = b.length
+
+let tot_length (#a: Type0) (b:array a) : Tot (l:U32.t{U32.v l > 0}) = b.length
 
 let as_seq #a h b =
   let s = HS.sel h b.content in
