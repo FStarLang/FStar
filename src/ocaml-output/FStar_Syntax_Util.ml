@@ -4581,38 +4581,38 @@ let (smt_lemma_as_forall :
 let (maybe_map_machine_int_constructor :
   FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.fv) =
   let as_fv l =
-    let uu____19477 = FStar_Parser_Const.p2l l  in
-    FStar_Syntax_Syntax.lid_as_fv uu____19477
-      (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+    let uu____19753 = FStar_Parser_Const.p2l l  in
+    FStar_Syntax_Syntax.lid_as_fv uu____19753
+      (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
       FStar_Pervasives_Native.None
      in
   let bounded_unsigned_int_types =
     FStar_All.pipe_right ["UInt8"; "UInt16"; "UInt32"; "UInt64"]
       (FStar_List.map
          (fun m  ->
-            let uu____19514 = FStar_Parser_Const.p2l ["FStar"; m; "Mk"]  in
-            let uu____19521 = as_fv ["FStar"; m; "uint_to_t"]  in
-            (uu____19514, uu____19521)))
+            let uu____19790 = FStar_Parser_Const.p2l ["FStar"; m; "Mk"]  in
+            let uu____19797 = as_fv ["FStar"; m; "uint_to_t"]  in
+            (uu____19790, uu____19797)))
      in
   let bounded_signed_int_types =
     FStar_All.pipe_right ["Int8"; "Int16"; "Int32"; "Int64"]
       (FStar_List.map
          (fun m  ->
-            let uu____19563 = FStar_Parser_Const.p2l ["FStar"; m; "Mk"]  in
-            let uu____19570 = as_fv ["FStar"; m; "int_to_t"]  in
-            (uu____19563, uu____19570)))
+            let uu____19839 = FStar_Parser_Const.p2l ["FStar"; m; "Mk"]  in
+            let uu____19846 = as_fv ["FStar"; m; "int_to_t"]  in
+            (uu____19839, uu____19846)))
      in
   let machine_int_constructors =
     FStar_List.append bounded_unsigned_int_types bounded_signed_int_types  in
   fun fv  ->
-    let uu____19589 =
+    let uu____19865 =
       FStar_Util.try_find
-        (fun uu____19603  ->
-           match uu____19603 with
-           | (x,uu____19610) -> FStar_Syntax_Syntax.fv_eq_lid fv x)
+        (fun uu____19879  ->
+           match uu____19879 with
+           | (x,uu____19886) -> FStar_Syntax_Syntax.fv_eq_lid fv x)
         machine_int_constructors
        in
-    match uu____19589 with
+    match uu____19865 with
     | FStar_Pervasives_Native.None  -> fv
-    | FStar_Pervasives_Native.Some (uu____19615,fv') -> fv'
+    | FStar_Pervasives_Native.Some (uu____19891,fv') -> fv'
   
