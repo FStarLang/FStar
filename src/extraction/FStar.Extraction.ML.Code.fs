@@ -24,7 +24,7 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Format
+open FStar.Pprint
 open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
@@ -60,6 +60,38 @@ let e_app_prio        = (10000, Infix Left)
 let min_op_prec = (-1, Infix NonAssoc)
 let max_op_prec = (max_int, Infix NonAssoc)
 
+(* Little helpers *)
+
+type doc = | Doc of string
+
+let empty    = Doc ""
+let hardline = Doc "\n"
+
+let text (s : string) = Doc s
+let num (i : int) = Doc (string_of_int i)
+
+let break1 = text " "
+
+let enclose (Doc l) (Doc r) (Doc x) =
+    Doc (l^x^r)
+
+let cbrackets (Doc d) = enclose (text "{") (text "}") (Doc d)
+let parens   (Doc d ) = enclose (text "(") (text ")") (Doc d)
+
+let cat (Doc d1) (Doc d2) = Doc (d1 ^ d2)
+
+let reduce (docs : list<doc>) =
+  List.fold_left cat empty docs
+
+let combine (Doc sep) (docs : list<doc>) =
+  let select (Doc d) = if d = "" then None else Some d in
+  let docs = List.choose select docs in
+  Doc (String.concat sep docs)
+
+let reduce1 (docs : list<doc>) =
+    combine break1 docs
+
+let hbox (d : doc) = d (* FIXME *)
 
 (*copied from ocaml-asttrans.fs*)
 
@@ -133,11 +165,13 @@ let infix_prim_ops = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_uni_ops = [
-    ("op_Negation", "not");
-    ("op_Minus", "~-");
-    ("op_Bang","Support.ST.read")
-]
+let prim_uni_ops () =
+    let op_minus = if Options.codegen() = Some Options.FSharp
+                   then "-"
+                   else "~-" in
+    [ ("op_Negation", "not");
+      ("op_Minus", op_minus);
+      ("op_Bang","Support.ST.read") ]
 
 (* -------------------------------------------------------------------- *)
 let prim_types = []
@@ -168,7 +202,7 @@ let is_bin_op (p : mlpath) =
 (* -------------------------------------------------------------------- *)
 let as_uni_op ((ns, x) : mlpath) =
     if is_prims_ns ns then
-        List.tryFind (fun (y, _) -> x = y) prim_uni_ops
+        List.tryFind (fun (y, _) -> x = y) (prim_uni_ops ())
     else
         None
 
@@ -250,7 +284,7 @@ let string_of_mlconstant (sctt : mlconstant) =
 
   | MLC_Bytes bytes ->
       (* A byte buffer. Not meant to be readable. *)
-      "\"" ^ FStar.Bytes.f_encode escape_byte_hex bytes ^ "\""
+      "\"" ^ FStar.Compiler.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
       (* It was a string literal. Escape what was (likely) escaped originally.
@@ -306,6 +340,9 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
       then text "obj"
       else text "Obj.t"
 
+    | MLTY_Erased ->
+      text "unit"
+
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 
@@ -315,7 +352,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Coerce (e, t, t') ->
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
       if Util.codegen_fsharp()
-      then parens (reduce [text "Prims.checked_cast"; doc])
+      then parens (reduce [text "Prims.unsafe_coerce "; doc])
       else parens (reduce [text "Obj.magic "; parens doc])
 
     | MLE_Seq es ->
@@ -366,7 +403,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         let docs = parens (combine (text ", ") docs) in
         docs
 
-    | MLE_Let ((rec_, _, lets), body) ->
+    | MLE_Let ((rec_, lets), body) ->
         let pre =
             if e.loc <> dummy_loc
             then reduce [hardline; doc_of_loc e.loc]
@@ -568,11 +605,6 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                     | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
-//                      let ids = List.map (fun (x, _) -> text x) ids in
-//                      begin match ids with
-//                        | [] -> reduce1 [text ":"; ty]
-//                        | _ ->  reduce1 [text "<"; combine (text ", ") ids; text ">"; text ":"; ty]
-//                      end
             else if top_level
             then match tys with
                     | None ->
@@ -598,7 +630,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
 
 and doc_of_loc (lineno, file) =
-    if (Options.no_location_info()) || Util.codegen_fsharp () then
+    if (Options.no_location_info()) || Util.codegen_fsharp () || file="<dummy>" then
         empty
     else
         let file = BU.basename file in
@@ -709,7 +741,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     | MLM_Ty decls ->
         doc_of_mltydecl currentModule decls
 
-    | MLM_Let (rec_, _, lets) ->
+    | MLM_Let (rec_, lets) ->
       doc_of_lets currentModule (rec_, true, lets)
 
     | MLM_Top e ->
@@ -767,7 +799,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
         let doc  = Option.map (fun (_, m) -> doc_of_mod target_mod_name m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
-        let prefix = if Util.codegen_fsharp () then [cat (text "#light \"off\"") hardline] else [] in
+        let prefix = if Util.codegen_fsharp() then [cat (text "#light \"off\"") hardline] else [] in
         reduce <| (prefix @ [
             head;
             hardline;
@@ -788,13 +820,15 @@ let rec doc_of_mllib_r (MLLib mllib) =
     docs
 
 (* -------------------------------------------------------------------- *)
+let pretty (sz : int) (Doc doc) = doc
+
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
 let string_of_mlexpr cmod (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    pretty 0 doc
 
 let string_of_mlty (cmod) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    pretty 0 doc

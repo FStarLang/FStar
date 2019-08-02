@@ -1,0 +1,17 @@
+[
+  "GS/E\u0018WøÕÐÆÿÌ+¦bâ",
+  [
+    [
+      "Bug605.steps_preserves_red",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug605.ieq",
+        "fuel_guarded_inversion_Bug605.peq"
+      ],
+      0,
+      "06f5a2584903464c735c3992af2ed357"
+    ]
+  ]
+]

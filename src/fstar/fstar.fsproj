@@ -10,10 +10,10 @@
     <RootNamespace>FStar</RootNamespace>
     <AssemblyName>fstar</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>FStar</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\VS\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,14 +28,14 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--smt C:\dev\z3-vs-debug\z3\Debug\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics --log_queries foo.fst</StartArguments>
+    <StartArguments>--codegen OCaml A.fst --debug yes --trace_error --debug A --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test2\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
@@ -45,8 +45,8 @@
     <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
-    <StartArguments>--smt c:\dev\z3\bld_rel\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics foo.fst</StartArguments>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
+    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -70,12 +70,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FStar.Dependencies.fs" />
+    <Compile Include="FStar.CheckedFiles.fsi" />
+    <Compile Include="FStar.CheckedFiles.fs" />
     <Compile Include="FStar.Universal.fs" />
     <Compile Include="FStar.Interactive.CompletionTable.fsi" />
     <Compile Include="FStar.Interactive.CompletionTable.fs" />
+    <Compile Include="FStar.Interactive.JsonHelper.fsi" />
+    <Compile Include="FStar.Interactive.JsonHelper.fs" />
+    <Compile Include="FStar.Interactive.QueryHelper.fsi" />
+    <Compile Include="FStar.Interactive.QueryHelper.fs" />
+    <Compile Include="FStar.Interactive.PushHelper.fsi" />
+    <Compile Include="FStar.Interactive.PushHelper.fs" />
+    <Compile Include="FStar.Interactive.Lsp.fs" />
     <Compile Include="FStar.Interactive.Ide.fs" />
     <Compile Include="FStar.Interactive.Legacy.fs" />
-    <Compile Include="FStar.Indent.fs" />
+    <Compile Include="FStar.Prettyprint.fs" />
     <Compile Include="FStar.Main.fs" />
     <Compile Include="FStar.Top.fs" />
     <None Include="app.config" />
@@ -117,6 +126,16 @@
       <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\reflection\reflection.fsproj">
+      <Name>reflection</Name>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tactics\tactics.fsproj">
+      <Name>tactics</Name>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
@@ -129,21 +148,17 @@
       <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\format\format.fsproj">
-      <Name>format</Name>
-      <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\parser\parser.fsproj">
@@ -157,7 +172,7 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

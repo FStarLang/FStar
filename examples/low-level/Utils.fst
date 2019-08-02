@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Utils
 
 open FStar.Seq
@@ -49,7 +64,7 @@ val xor_seq_bytes: s1:Seq.seq UInt8.t -> s2:Seq.seq UInt8.t -> len:nat -> Pure (
   (ensures  (fun z -> Seq.length z = len))
   (decreases len)
 let rec xor_seq_bytes s1 s2 len =
-  if len = 0 then Seq.createEmpty #UInt8.t
+  if len = 0 then Seq.empty #UInt8.t
   else begin
     let i = len - 1 in
     let s1i = Seq.index s1 i in
@@ -62,7 +77,7 @@ val f_seq: #a:Type -> f:(a -> a -> Tot a) -> s1:Seq.seq a -> s2:Seq.seq a -> len
   (ensures  (fun z -> Seq.length z = len))
   (decreases len)
 let rec f_seq #a f s1 s2 len =
-  if len = 0 then Seq.createEmpty #a
+  if len = 0 then Seq.empty #a
   else begin
     let i = len - 1 in
     let s1i = Seq.index s1 i in
@@ -178,7 +193,7 @@ val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} ->
 let rec xor_bytes_inplace output in1 len =
   if UInt32.eq len 0ul then
     let h = ST.get() in
-    Seq.lemma_eq_intro (Seq.slice (to_seq8 h output) 0 0) (Seq.createEmpty #UInt8.t)
+    Seq.lemma_eq_intro (Seq.slice (to_seq8 h output) 0 0) (Seq.empty #UInt8.t)
   else
     begin
       let h0 = ST.get() in
@@ -210,7 +225,7 @@ val xor_u16s_inplace: output:u16s -> in1:u16s{disjoint in1 output} ->
 let rec xor_u16s_inplace output in1 len =
   if UInt32.eq len 0ul then
     let h = ST.get() in
-    Seq.lemma_eq_intro (Seq.slice (to_seq16 h output) 0 0) (Seq.createEmpty #UInt16.t)
+    Seq.lemma_eq_intro (Seq.slice (to_seq16 h output) 0 0) (Seq.empty #UInt16.t)
   else
     begin
       let h0 = ST.get() in

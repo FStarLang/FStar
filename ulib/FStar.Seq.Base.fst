@@ -20,7 +20,7 @@ module FStar.Seq.Base
 
 module List = FStar.List.Tot
 
-abstract type seq (a:Type) =
+abstract type seq (a:Type u#a) :Type u#a =
   | MkSeq: l:list a -> seq a
 
 (* Destructors *)
@@ -30,47 +30,37 @@ let length #a s = List.length (MkSeq?.l s)
 abstract val index:  #a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
 let index #a s i = List.index (MkSeq?.l s) i
 
-private val cons: #a:Type -> x:a -> s:seq a -> Tot (seq a)
+private abstract val cons: #a:Type -> x:a -> s:seq a -> Tot (seq a)
 let cons #a x s = MkSeq (x::(MkSeq?.l s))
 
-private val hd: #a:Type -> s:seq a{Cons? (MkSeq?.l s)} -> Tot a
+private abstract val hd: #a:Type -> s:seq a{length s > 0} -> Tot a
 let hd #a s = List.hd (MkSeq?.l s)
 
-private val tl: #a:Type -> s:seq a{Cons? (MkSeq?.l s)} -> Tot (seq a)
+private abstract val tl: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tl #a s = MkSeq (List.tl (MkSeq?.l s))
 
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let rec create #a len v = if len = 0 then MkSeq [] else cons v (create (len - 1) v)
 
-abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
-private
-let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
-  : Tot (seq a) (decreases (len - k))
-= if k + 1 = len then MkSeq [contents k] else cons (contents k) (init_aux len (k+1) contents)
+private abstract let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
+  :Tot (seq a) (decreases (len - k))
+  = if k + 1 = len
+    then MkSeq [contents k]
+    else cons (contents k) (init_aux len (k+1) contents)
 
-let rec init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
+inline_for_extraction abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
+inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
 
-abstract val of_list: #a:Type -> list a -> Tot (seq a)
-let of_list #a l = MkSeq l
+abstract
+let empty #a : Tot (s:(seq a){length s=0}) = MkSeq []
 
-abstract val lemma_of_list_length: #a:Type -> s:seq a -> l:list a -> Lemma
-  (requires (s == of_list #a l))
-  (ensures (length s = List.length l))
-  [SMTPat (length s = List.length l)]
-let lemma_of_list_length #a s l  = ()
+[@(deprecated "Seq.empty")]
+unfold
+let createEmpty (#a:Type)
+    : Tot (s:(seq a){length s=0})
+    = empty #a
 
-abstract val lemma_of_list: #a:Type -> s:seq a -> l:list a -> i:nat{i < length s} -> Lemma
-  (requires (s == of_list l))
-  (ensures (s == of_list l /\ List.length l = length s /\ index s i == List.index l i))
-  [SMTPat (index s i == List.index l i)]
-let lemma_of_list #a s l i = ()
-
-private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
-let exFalso0 a n = ()
-
-(* CH: Seq.empty or emptySeq would be a better name for this? *)
-abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
-let createEmpty #a = MkSeq []
+let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == empty #a) = ()
 
 abstract val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a) (decreases (length s))
 let rec upd #a s n v = if n = 0 then cons v (tl s) else cons (hd s) (upd (tl s) (n - 1) v)
@@ -137,8 +127,8 @@ abstract val lemma_index_create: #a:Type -> n:nat -> v:a -> i:nat{i < n} -> Lemm
   [SMTPat (index (create n v) i)]
 let rec lemma_index_create #a n v i =
   if n = 0 then ()
-  else
-    if i = 0 then () else lemma_index_create #a (n - 1) v (i - 1)
+  else if i = 0 then ()
+       else (lemma_create_len (n - 1) v; lemma_index_create #a (n - 1) v (i - 1))
 
 abstract val lemma_index_upd1: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> Lemma
   (requires True)
@@ -148,7 +138,8 @@ let rec lemma_index_upd1 #a s n v = if n = 0 then () else lemma_index_upd1 #a (t
 
 abstract val lemma_index_upd2: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i<>n /\ i < length s} -> Lemma
   (requires True)
-  (ensures (index (upd s n v) i == index s i)) (decreases (length s))
+  (ensures (index (upd s n v) i == index s i))
+  (decreases (length s))
   [SMTPat (index (upd s n v) i)]
 let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
   | []     -> ()
@@ -156,16 +147,18 @@ let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
     if i = 0 then ()
     else
       if n = 0 then ()
-      else lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1)
+      else (lemma_len_upd (n - 1) v (MkSeq tl); lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1))
 
 abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)
   (ensures (index (append s1 s2) i == index s1 i)) (decreases (length s1))
   [SMTPat (index (append s1 s2) i)]
-let rec lemma_index_app1 #a s1 s2 i  = match (MkSeq?.l s1) with
+let rec lemma_index_app1 #a s1 s2 i  =
+  match (MkSeq?.l s1) with
   | []    -> ()
   | hd::tl ->
-    if i = 0 then () else lemma_index_app1 #a (MkSeq tl) s2 (i - 1)
+    if i = 0 then ()
+    else (lemma_len_append (MkSeq tl) s2; lemma_index_app1 #a (MkSeq tl) s2 (i - 1))
 
 abstract val lemma_index_app2: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1 + length s2 /\ length s1 <= i} -> Lemma
   (requires True)
@@ -211,19 +204,19 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
                /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i))))
      (ensures (equal s1 s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (s1 == s2))
      (ensures (equal s1 s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (equal s1 s2))
      (ensures (s1==s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_elim #a s1 s2  =
   assert ( length s1 == List.length (MkSeq?.l s1) );
   assert ( length s2 == List.length (MkSeq?.l s2) );
@@ -244,14 +237,14 @@ abstract let append_empty_l
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append createEmpty s == s))
+  (ensures (append empty s == s))
 = List.append_nil_l (MkSeq?.l s)
 
 abstract let append_empty_r
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append s createEmpty == s))
+  (ensures (append s empty == s))
 = List.append_l_nil (MkSeq?.l s)
 
 
@@ -259,7 +252,6 @@ abstract
 val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
     (ensures (forall (i:nat{i < len}). index (init len contents) i == contents i))
-    [SMTPat (index (init len contents))]
 
 private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
@@ -278,3 +270,17 @@ let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i
 
 let init_index #a len contents =
   if len = 0 then () else init_index_aux #a len 0 contents
+
+abstract
+let init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
+  : Lemma (requires j < len)
+    (ensures (index (init len contents) j == contents j))
+    [SMTPat (index (init len contents) j)]
+=
+  init_index len contents
+
+let lemma_equal_instances_implies_equal_types ()
+  :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)
+  = ()
+
+

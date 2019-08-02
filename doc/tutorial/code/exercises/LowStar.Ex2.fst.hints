@@ -1,0 +1,43 @@
+[
+  "J«¸ù¡√«\u0007æ—9pFv}n",
+  [
+    [
+      "LowStar.Ex2.prefix_equal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
+        "equation_LowStar.Buffer.trivial_preorder",
+        "equation_LowStar.Ex2.lbuffer",
+        "equation_LowStar.Monotonic.Buffer.length",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
+      ],
+      0,
+      "83e51ce04e73f8f208ab1309f7340c13"
+    ],
+    [
+      "LowStar.Ex2.prefix_equal",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt32.lte",
+        "equation_LowStar.Buffer.trivial_preorder",
+        "equation_LowStar.Ex2.lbuffer",
+        "equation_LowStar.Monotonic.Buffer.length",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_058782b7d4bb5815b5309774af61e92e",
+        "refinement_interpretation_Tm_refine_c97172742a96c0b17199622a0241325b"
+      ],
+      0,
+      "2c1ac751dc2e055abe1f841230206877"
+    ]
+  ]
+]

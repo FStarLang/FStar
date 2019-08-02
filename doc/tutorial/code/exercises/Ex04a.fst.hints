@@ -1,5 +1,5 @@
 [
-  "ùîÙ5Ò\u000f*&ımdeQ\u0017„C",
+  "ú\u000faM~æF±ƒ«À⁄§+v\u0007",
   [
     [
       "Ex04a.length",
@@ -12,11 +12,11 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d7d2af293853e5ce4a683e6ede8d3389"
+      "466d14af85367af664c8d21b48ddc1f4"
     ],
     [
       "Ex04a.append",
@@ -25,12 +25,43 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_099eb87e5bbf2ec48455272706edb9bc_0",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "92a1bb6a6310afe8635a7432d8274cac"
+      "d7e6c35835757534135aecdc5c3c8c38"
+    ],
+    [
+      "Ex04a.length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "f2cff01d13ebd55caa46dfa05f1bbac0"
+    ],
+    [
+      "Ex04a.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "427215615b60fe27191e4aad71fd5f0d"
     ]
   ]
 ]

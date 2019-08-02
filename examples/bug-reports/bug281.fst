@@ -1,13 +1,29 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug281
 
 (* Test of substitution on big terms *)
 
 open FStar.Classical
+open FStar.StrongExcludedMiddle
 
 type exp =
 | EVar : nat -> exp
-| EApp : exp -> exp -> exp 
-| ELam : exp -> exp 
+| EApp : exp -> exp -> exp
+| ELam : exp -> exp
 
 type sub = nat -> Tot (exp)
 
@@ -15,7 +31,7 @@ type renaming (s:sub) = (forall x. EVar? (s x))
 
 val is_renaming : s:sub -> GTot nat
 let is_renaming s =
-  if (excluded_middle (renaming s)) then 0 else 1
+  if (strong_excluded_middle (renaming s)) then 0 else 1
 
 val is_evar : exp -> Tot nat
 let is_evar e = if (EVar? e) then 0 else 1
@@ -32,7 +48,7 @@ let rec sub_elam s =
 let res : sub = fun x ->
 if x = 0 then EVar 0 else esubst (sub_einc) (s (x-1))
 in res
-and esubst s e = 
+and esubst s e =
 match e with
 | EVar x -> s x
 | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)

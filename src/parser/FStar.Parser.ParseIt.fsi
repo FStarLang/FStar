@@ -20,19 +20,34 @@ open FStar.All
 open FStar.Parser
 open FStar.Util
 open FStar
+open FStar.Errors
 
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:int;
     frag_col:int
 }
 
+val read_vfs_entry : string -> option<(time * string)>
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well
 val get_file_last_modification_time: fname:string -> time
 
-val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+type parse_frag =
+    | Filename of filename
+    | Toplevel of input_frag
+    | Fragment of input_frag
+
+type parse_result =
+    | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
+    | Term of AST.term
+    | ParseError of (Errors.raw_error * string * Range.range)
+
+val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
+
+val parse_warn_error: string -> list<FStar.Options.error_flag>

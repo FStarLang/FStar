@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module QuickSort.Seq
 open FStar.Seq
 
@@ -6,9 +21,7 @@ FStar namespace, Seq resolves to QuickSort.Seq instead of FStar.Seq,
 so we have to fix this explicitly as a module abbrev. *)
 module Seq = FStar.Seq
 
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 100 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->

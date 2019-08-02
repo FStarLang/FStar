@@ -10,7 +10,6 @@
     <RootNamespace>basic</RootNamespace>
     <AssemblyName>basic</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>basic</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\VS\</SolutionDir>
@@ -29,7 +28,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
@@ -70,29 +69,34 @@
     <Compile Include="mul-fake.fs" />
     <Compile Include="fs/char.fsi" />
     <Compile Include="fs/char.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="boot/FStar.String.fsi" />
     <Compile Include="boot/FStar.String.fs" />
     <Compile Include="boot/FStar.List.fsi" />
     <Compile Include="boot/FStar.List.fs" />
     <Compile Include="boot/FStar.Util.fsi" />
-    <Compile Include="boot/FStar.Util.fs" />
-    <Compile Include="boot/FStar.Bytes.fsi" />
-    <Compile Include="boot/FStar.Bytes.fs" />
+    <Compile Include="boot/NotFStar.Util.fs" />
+    <Compile Include="boot/FStar.Compiler.Bytes.fsi" />
+    <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
-    <Compile Include="boot/FStar.Dyn.fs" />
+    <Compile Include="boot/NotFStar.Dyn.fs" />
+    <Compile Include="boot/FStar.StringBuffer.fsi" />
+    <Compile Include="boot/FStar.StringBuffer.fs" />
     <Compile Include="profiling.fs" />
-    <Compile Include="FStar.Range.fsi" />
-    <Compile Include="FStar.Range.fs" />
     <Compile Include="FStar.Platform.fsi" />
-    <Compile Include="FStar.Platform.fs" />
+    <Compile Include="NotFStar.Platform.fs" />
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
-    <Compile Include="FStar.Getopt.fs" />
+    <Compile Include="NotFStar.Getopt.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
-    <Compile Include="FStar.Unionfind.fsi" />
-    <Compile Include="FStar.Unionfind.fs" />
+    <Compile Include="FStar.Range.fsi" />
+    <Compile Include="FStar.Range.fs" />
+    <Compile Include="FStar.Ident.fsi" />
     <Compile Include="FStar.Ident.fs" />
+    <Compile Include="FStar.Unionfind.fsi" />
+    <Compile Include="NotFStar.Unionfind.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
@@ -105,15 +109,16 @@
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="FSharp.PPrint">
       <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">
       <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

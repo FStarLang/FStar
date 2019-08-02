@@ -1,0 +1,89 @@
+[
+  "\u0001–½PÏ°ÀbR÷ß×ý\u001d)U",
+  [
+    [
+      "RangeStep.__proj__Success__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_RangeStep.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_30105c1426a2dffc017b47ba8a15b498"
+      ],
+      0,
+      "4b8636270d23cca42a5f326b9406261f"
+    ],
+    [
+      "RangeStep.__proj__Failed__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_RangeStep.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_933a2345b5e878accdf9565aab041e3d"
+      ],
+      0,
+      "556da6309d72318840a4ea7ed763e504"
+    ],
+    [
+      "RangeStep.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "RangeStep_interpretation_Tm_arrow_814c564a07615031ba408e0d9f3d0c14",
+        "disc_equation_RangeStep.Failed", "disc_equation_RangeStep.Success",
+        "equation_RangeStep.tac", "fuel_guarded_inversion_RangeStep.result",
+        "typing_FStar.Range.prims_to_fstar_range",
+        "typing_RangeStep.set_proofstate_range"
+      ],
+      0,
+      "168b27ce1f272a70444886a057afe17b"
+    ],
+    [
+      "RangeStep.__proj__Success__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_RangeStep.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_30105c1426a2dffc017b47ba8a15b498"
+      ],
+      0,
+      "afc38a59a14454b02d3d2279d3d23f68"
+    ],
+    [
+      "RangeStep.__proj__Failed__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_RangeStep.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_933a2345b5e878accdf9565aab041e3d"
+      ],
+      0,
+      "62efa1e4a0c43abc792d22f98ac6875e"
+    ],
+    [
+      "RangeStep.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "RangeStep_interpretation_Tm_arrow_814c564a07615031ba408e0d9f3d0c14",
+        "disc_equation_RangeStep.Failed", "disc_equation_RangeStep.Success",
+        "equation_RangeStep.tac", "fuel_guarded_inversion_RangeStep.result",
+        "typing_FStar.Range.prims_to_fstar_range",
+        "typing_RangeStep.set_proofstate_range"
+      ],
+      0,
+      "54e9ad5262bd908cf2744ba214f225fd"
+    ]
+  ]
+]

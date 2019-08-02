@@ -1,6 +1,21 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug186b
 
-open Classical
+open FStar.Classical
 
 type typ =
   | TArr : typ -> typ -> typ
@@ -74,7 +89,7 @@ assume opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       (decreases h)
 
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x)))) 
+  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x))))
 
 val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
@@ -82,10 +97,10 @@ val substitution :
       hs:subst_typing s g1 g2 ->
       Tot (typing g2 (subst s e) t) (decreases h1)
 (* This makes F* explode. It is likely because of the call to weakening *)
-let rec substitution g1 e t s g2 h1 hs = 
+let rec substitution g1 e t s g2 h1 hs =
 match h1 with
-| TyLam tlam hbody -> 
-let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y -> 
+| TyLam tlam hbody ->
+let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y ->
   let hgamma2 = hs (y - 1) in weakening 0 tlam hgamma2
 in magic()
 | _ -> magic()

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Crypto.AEAD.Invariant
 // We implement ideal AEAD on top of ideal Chacha20 and ideal Poly1305. 
 // We precisely relate AEAD's log to their underlying state.
@@ -188,7 +203,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
   let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
   let remaining = to_pos - from_pos in
   if remaining = 0 then
-    Seq.createEmpty
+    Seq.empty
   else
     let l0 = minNat remaining blockl in
     let l_32 = UInt32.uint_to_t l0 in
@@ -573,7 +588,7 @@ let counterblocks_emp   (i:id)
 			(to_pos:nat{to_pos <= l /\ safelen i 0 PRF.(x.ctr)})
 			(plain:Plain.plain i l)
 			(cipher:lbytes l)
-   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.empty)
    = ()
 
 (*+ Lemmas about searching for entries in prf_blocks **)

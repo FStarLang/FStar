@@ -1,0 +1,14 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"contents": {"depth": 0, "goals": [{"goal": {"type": "squash l_True", "witness": "(*?u[...]*) _"}, "hyps": []}, {"goal": {"type": "squash l_True", "witness": "(*?u[...]*) _"}, "hyps": []}], "label": "at the time of failure", "location": "<location removed>", "smt-goals": []}, "kind": "message", "level": "proof-state", "query-id": "2"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "user tactic failed: A", "ranges": [{"beg": [5, 2], "end": [5, 18], "fname": "<input>"}, {"beg": [6, 25], "end": [6, 33], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "3", "response": [], "status": "success"}
+{"contents": {"depth": 0, "goals": [{"goal": {"type": "squash l_True", "witness": "(*?u[...]*) _"}, "hyps": [{"name": "uu___", "type": "unit"}]}, {"goal": {"type": "squash l_True", "witness": "(*?u[...]*) _"}, "hyps": [{"name": "uu___", "type": "unit"}]}], "label": "at the time of failure", "location": "<location removed>", "smt-goals": []}, "kind": "message", "level": "proof-state", "query-id": "4"}
+{"kind": "response", "query-id": "4", "response": [{"level": "error", "message": "user tactic failed: B", "ranges": [{"beg": [8, 11], "end": [9, 2], "fname": "<input>"}, {"beg": [10, 25], "end": [10, 33], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "5", "response": [], "status": "success"}
+{"contents": {"depth": 0, "goals": [{"goal": {"type": "squash (l_True /\\ l_True)", "witness": "(*?u[...]*) _"}, "hyps": []}], "label": "at the time of failure", "location": "<location removed>", "smt-goals": []}, "kind": "message", "level": "proof-state", "query-id": "6"}
+{"kind": "response", "query-id": "6", "response": [{"level": "error", "message": "user tactic failed: C", "ranges": [{"beg": [13, 2], "end": [13, 18], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "7", "response": [], "status": "success"}
+{"contents": {"depth": 0, "goals": [{"goal": {"type": "squash (l_True /\\ l_True)", "witness": "(*?u[...]*) _"}, "hyps": [{"name": "uu___", "type": "unit"}]}], "label": "at the time of failure", "location": "<location removed>", "smt-goals": []}, "kind": "message", "level": "proof-state", "query-id": "8"}
+{"kind": "response", "query-id": "8", "response": [{"level": "error", "message": "user tactic failed: D", "ranges": [{"beg": [16, 11], "end": [17, 2], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "9", "response": [], "status": "success"}

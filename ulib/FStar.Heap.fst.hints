@@ -1,5 +1,5 @@
 [
-  "¶Е=!Е¦\u000bСк@[їч(З\u0011",
+  "БыуxJѕdзяЯв<ХZх",
   [
     [
       "FStar.Heap.trivial_preorder",
@@ -8,12 +8,30 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
         "true_interp"
       ],
       0,
-      "aba699da47449ce9216d026494b64361"
+      "886e25105f009fa07417651821a7ac6c"
+    ],
+    [
+      "FStar.Heap.trivial_preorder",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "true_interp"
+      ],
+      0,
+      "f05b8a2278da4e17ac9399601f0bbb84"
     ]
   ]
 ]

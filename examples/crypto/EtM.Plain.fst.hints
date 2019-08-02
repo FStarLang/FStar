@@ -1,1 +1,79 @@
-[ "p-,ê\u0007ˇ˚ \rw\u007fı9T\u0001ç", [] ]
+[
+  "ÌùQè√„I£r∆f˙¶Î†ã",
+  [
+    [
+      "EtM.Plain.plain",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "859ee4c9564501cf2e819f6a19ea9a99"
+    ],
+    [
+      "EtM.Plain.reveal_hide",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal" ],
+      0,
+      "3c8d412a66b0110da189190b498ef369"
+    ],
+    [
+      "EtM.Plain.hide_reveal",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal" ],
+      0,
+      "c7ba156f9dc99cd14db8973539e43719"
+    ],
+    [
+      "EtM.Plain.repr",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.reveal" ],
+      0,
+      "8e7159e7efbe3da19f68be81170aaadc"
+    ],
+    [
+      "EtM.Plain.coerce",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide" ],
+      0,
+      "53ed5cacfd678ede02cd63d4db8af27a"
+    ],
+    [
+      "EtM.Plain.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_EtM.Plain.reveal",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "06e90d620cce31aa070c9b0e6d937b7b"
+    ],
+    [
+      "EtM.Plain.length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "319dc7e2bf1b070fb1ccc443bd7f54f6"
+    ]
+  ]
+]

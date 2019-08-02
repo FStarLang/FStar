@@ -36,16 +36,6 @@ let rhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
   let p1,p2 = parseState.InputRange(n) in
   mksyn_range p1 p2
 
-exception WrappedError of exn * range
-exception ReportedError
-exception StopProcessing
-
-let warningHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorAndWarningCount = ref 0
-let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
-let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
-
 let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
     lexbuf.EndPos <- lexbuf.EndPos.NextLine
 

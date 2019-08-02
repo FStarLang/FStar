@@ -121,7 +121,7 @@ let disentangle_abbrevs_from_bundle
                       | Some se ->
                           if FStar.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
                           then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" fv.fv_name.v.str in
-                               raise (Error (msg, range_of_lid fv.fv_name.v))
+                               raise_error (Errors.Fatal_CycleInRecTypeAbbreviation, msg) (range_of_lid fv.fv_name.v)
                           else unfold_abbrev se
                       | _ -> t
                   end
@@ -129,11 +129,11 @@ let disentangle_abbrevs_from_bundle
         (* Start unfolding in a type abbreviation that has not occurred before. *)
         and unfold_abbrev (x: sigelt) = match x.sigel with
             | Sig_let ((false, [lb]), _) ->
-	        (* eliminate some qualifiers for definitions *)
-	        let quals = x.sigquals |> List.filter begin function
-	        | Noeq -> false
-	        | _ -> true
-	        end in
+                (* eliminate some qualifiers for definitions *)
+                let quals = x.sigquals |> List.filter begin function
+                | Noeq -> false
+                | _ -> true
+                end in
                 let lid = match lb.lbname with
                     | Inr fv -> fv.fv_name.v
                     | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"

@@ -1,0 +1,56 @@
+[
+  "H\u001a\\YŽØ\u0019kã/é/²*¯˜",
+  [
+    [
+      "Bug213.__proj__ExIntro__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug213.ExIntro_x",
+        "projection_inverse_Bug213.ExIntro_x"
+      ],
+      0,
+      "4094e36645dab3a8028cb8043fa36314"
+    ],
+    [
+      "Bug213.__proj__ExIntro'__item__p",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug213.ExIntro__a",
+        "projection_inverse_Bug213.ExIntro__a"
+      ],
+      0,
+      "152b277c46a7a9299e58ff6c16ae6618"
+    ],
+    [
+      "Bug213.__proj__ExIntro'__item__x",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug213.ExIntro__a",
+        "projection_inverse_Bug213.ExIntro__a"
+      ],
+      0,
+      "76ba258e5b80b091e698b3ba9ea9b927"
+    ],
+    [
+      "Bug213.__proj__ExIntro'__item___3",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug213.ExIntro__p",
+        "proj_equation_Bug213.ExIntro__x",
+        "projection_inverse_Bug213.ExIntro__p",
+        "projection_inverse_Bug213.ExIntro__x",
+        "token_correspondence_Bug213.__proj__ExIntro___item__p"
+      ],
+      0,
+      "fe710546264c2916afc00d5a35c24fb6"
+    ]
+  ]
+]

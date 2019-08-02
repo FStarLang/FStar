@@ -183,7 +183,7 @@ type list (a:Type) =
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type -> pattern
+  | SMTPat  : a:Type -> pattern
 //  | SMTPatOr : list (list pattern) -> pattern //TODO: rechecking this fails some universe checks
 
 assume type decreases : #a:Type -> a -> Type0
@@ -536,9 +536,9 @@ val dsnd : #a:Type -> #b:(a -> Type) -> t:(x:a & b x) -> Tot (b (MkDTuple2._1 t)
 let dsnd #a #b t = MkDTuple2._2 t
 
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
-logic type InductionHyp : #a:Type -> a -> Type -> Type
+type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-logic type Using : #a:Type -> Type -> a -> Type
+type Using : #a:Type -> Type -> a -> Type
 assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a

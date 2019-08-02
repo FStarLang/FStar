@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Low.Bytes
 
 open FStar.Mul
@@ -91,7 +106,7 @@ val to_seq_bytes: #t:serializable -> s:Seq.seq t ->
   Tot (s':Seq.seq UInt8.t{Seq.length s' = sizeof t * Seq.length s}) 
   (decreases (Seq.length s))
 let rec to_seq_bytes #t s =
-  if Seq.length s = 0 then Seq.createEmpty #UInt8.t
+  if Seq.length s = 0 then Seq.empty #UInt8.t
   else Seq.append (serialize #t (Seq.index s 0)) (to_seq_bytes (Seq.slice s 1 (Seq.length s)))
 
 assume val lemma_aux_0: x:nat -> y:pos -> Lemma
@@ -102,7 +117,7 @@ val of_seq_bytes: t:serializable -> s:Seq.seq UInt8.t{Seq.length s % sizeof t = 
   Tot (s':Seq.seq t{Seq.length s = sizeof t * Seq.length s'})
   (decreases (Seq.length s))
 let rec of_seq_bytes t s =
-  if Seq.length s = 0 then Seq.createEmpty #t
+  if Seq.length s = 0 then Seq.empty #t
   else begin
     lemma_aux_0 (Seq.length s) (sizeof t);
     Seq.append (Seq.create 1 (inflate t (Seq.slice s 0 (sizeof t)))) (of_seq_bytes t (Seq.slice s (sizeof t) (Seq.length s)))
@@ -119,62 +134,62 @@ let length #a (b:buffer a) : GTot nat = length b / sizeof a
 val lemma_live_b_to_u16s: h:mem -> b:bytes{Buffer.length b % sizeof UInt16.t = 0} -> Lemma
   (requires (Buffer.live h b))
   (ensures  (live h (bytes_to_u16s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (bytes_to_u16s b)]
+  [SMTPat (Buffer.live h b); SMTPat (bytes_to_u16s b)]
 let lemma_live_b_to_u16s h b = ()
 val lemma_live_b_to_u32s: h:mem -> b:bytes{Buffer.length b % sizeof UInt32.t = 0} -> Lemma
   (requires (Buffer.live h b))
   (ensures  (live h (bytes_to_u32s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (bytes_to_u32s b)]
+  [SMTPat (Buffer.live h b); SMTPat (bytes_to_u32s b)]
 let lemma_live_b_to_u32s h b = ()
 val lemma_live_b_to_u64s: h:mem -> b:bytes{Buffer.length b % sizeof UInt64.t = 0} -> Lemma
   (requires (Buffer.live h b))
   (ensures  (live h (bytes_to_u64s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (bytes_to_u64s b)]
+  [SMTPat (Buffer.live h b); SMTPat (bytes_to_u64s b)]
 let lemma_live_b_to_u64s h b = ()
 val lemma_live_u16s_to_bytes: h:mem -> b:u16s -> Lemma
   (requires (live h b))
   (ensures  (live h (u16s_to_bytes b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u16s_to_bytes b)]
+  [SMTPat (Buffer.live h b); SMTPat (u16s_to_bytes b)]
 let lemma_live_u16s_to_bytes h b = ()
 val lemma_live_u16s_to_u32s: h:mem -> b:u16s{Buffer.length b % sizeof UInt32.t = 0} -> Lemma
   (requires (live h b))
   (ensures  (live h (u16s_to_u32s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u16s_to_u32s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u16s_to_u32s b)]
 let lemma_live_u16s_to_u32s h b = ()
 val lemma_live_u16s_to_u64s: h:mem -> b:u16s{Buffer.length b % sizeof UInt64.t = 0} -> Lemma
   (requires (live h b))
   (ensures  (live h (u16s_to_u64s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u16s_to_u64s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u16s_to_u64s b)]
 let lemma_live_u16s_to_u64s h b = ()
 val lemma_live_u32s_to_bytes: h:mem -> b:u32s -> Lemma
   (requires (live h b))
   (ensures  (live h (u32s_to_bytes b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u32s_to_bytes b)]
+  [SMTPat (Buffer.live h b); SMTPat (u32s_to_bytes b)]
 let lemma_live_u32s_to_bytes h b = ()
 val lemma_live_u32s_to_u16s: h:mem -> b:u32s -> Lemma
   (requires (live h b))
   (ensures  (live h (u32s_to_u16s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u32s_to_u16s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u32s_to_u16s b)]
 let lemma_live_u32s_to_u16s h b = ()
 val lemma_live_u32s_to_u64s: h:mem -> b:u32s{Buffer.length b % sizeof UInt64.t = 0} -> Lemma
   (requires (live h b))
   (ensures  (live h (u32s_to_u64s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u32s_to_u64s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u32s_to_u64s b)]
 let lemma_live_u32s_to_u64s h b = ()
 val lemma_live_u64s_to_bytes: h:mem -> b:u64s -> Lemma
   (requires (live h b))
   (ensures  (live h (u64s_to_bytes b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u64s_to_bytes b)]
+  [SMTPat (Buffer.live h b); SMTPat (u64s_to_bytes b)]
 let lemma_live_u64s_to_bytes h b = ()
 val lemma_live_u64s_to_u16s: h:mem -> b:u64s -> Lemma
   (requires (live h b))
   (ensures  (live h (u64s_to_u16s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u64s_to_u16s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u64s_to_u16s b)]
 let lemma_live_u64s_to_u16s h b = ()
 val lemma_live_u64s_to_u32s: h:mem -> b:u64s -> Lemma
   (requires (live h b))
   (ensures  (live h (u64s_to_u32s b)))
-  [SMTPatT (Buffer.live h b); SMTPat (u64s_to_u32s b)]
+  [SMTPat (Buffer.live h b); SMTPat (u64s_to_u32s b)]
 let lemma_live_u64s_to_u32s h b = ()
 
 (* Mapping from mem * buffer 'a -> Seq 'a to sequences *)

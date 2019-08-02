@@ -11,9 +11,11 @@ OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../../ && ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml \
-  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml \
+  -I src/prettyprint/ml -I src/tactics/ml -I src/tests/ml -I ulib/ml \
   -j 24 -build-dir src/ocaml-output/_build -use-ocamlfind
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
+COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
+		FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx	\
+		FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
 GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
@@ -28,7 +30,6 @@ DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
-DATE_EXEC := $(shell gdate --version 2>/dev/null | cut -c -4 | head -n 1)
 FIND=$(shell which gfind >/dev/null 2>&1 && echo gfind || echo find)
 ifdef INSTALL_EXEC
    INSTALL_EXEC := ginstall
@@ -36,25 +37,13 @@ else
    INSTALL_EXEC := install
 endif
 
-ifdef DATE_EXEC
-   DATE_EXEC := gdate
-else
-   DATE_EXEC := date
-endif
-
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
-
-.PHONY: fstar.exe ../extraction/ml/FStar_Extraction_ML_PrintML.ml
 
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe install-compiler-lib
-
-# Choose the correct version of the ML prettyprinter, based on OCaml version
-../extraction/ml/FStar_Extraction_ML_PrintML.ml:
-	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_BRANCH).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
+all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -63,8 +52,8 @@ all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fs
 #   control
 parse.mly: ../parser/parse.mly
 ifeq ($(HAS_VALID_MENHIR), 1)
-	# TODO : call menhir directly when positions are fixed instead of
-	# letting OCamlbuild go through ocamlyacc
+	@# TODO : call menhir directly when positions are fixed instead of
+	@# letting OCamlbuild go through ocamlyacc
 	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
 else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
@@ -72,7 +61,7 @@ endif
 
 # This is about the F# parser, which we sed-transform from the parse.mly
 # obtained via the rule above.
-../parser/boot/parse.fsy: parse.mly
+../parser/parse.fsy: parse.mly
 	echo "%{" > $@
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
@@ -89,29 +78,39 @@ endif
 	echo "open FStar.Const" >> $@
 	echo "open FStar.Ident" >> $@
 	echo "open FStar.String" >> $@
-	# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
+	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
 	cat parse.mly | sed -e '/%{/d' \
 	                    -e '/^open /d' \
 	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%token.*->.*/d' \
 	                    -e '/%type.*->.*/d' \
-	                    >> $@
+	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native
-	cp -f _build/src/fstar/ml/main.native ../../bin/$@
-	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
+$(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+$(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
+	$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 
-install-compiler-lib: fstar.exe
+../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	mkdir -p ../../bin/fstar-compiler-lib/
-	$(FIND) -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
+	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
+	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
+	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
+	touch $@
 
 FStar_Parser_Parse.ml: parse.mly
-	# We are opening the same module twice but we need these modules
-	# open for the definition of tokens
+	@# We are opening the same module twice but we need these modules
+	@# open for the definition of tokens
 	echo "open Prims" > $@
 	echo "open FStar_Errors" >> $@
 	echo "open FStar_List" >> $@
@@ -126,16 +125,24 @@ FStar_Parser_Parse.ml: parse.mly
 	echo "open FStar_Const" >> $@
 	echo "open FStar_Ident" >> $@
 	echo "open FStar_String" >> $@
-	# TODO: create a proper OCamlbuild rule for this production so that
-	# OCamlbuild knows how to generate parse.mly first (possibly using
-	# menhir) and removes the production as needed.
+	@# TODO: create a proper OCamlbuild rule for this production so that
+	@# OCamlbuild knows how to generate parse.mly first (possibly using
+	@# menhir) and removes the production as needed.
 	ocamlyacc parse.mly 2> yac-log
 	cat yac-log
-	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
+	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
+	fi
+	@if grep -q "reduce/reduce" yac-log ; then \
+	  echo "A reduce-reduce conflict was introduced; please fix" && exit 255; \
 	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
+
+../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+../../bin/tests.exe: ../../bin/fstar.exe
+	$(OCAMLBUILD) FStar_Tests_Main.native
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -150,8 +157,9 @@ else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
 COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell $(DATE_EXEC) -Iseconds)
+DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
 COMMIT = $(shell ../tools/get_commit)
+COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset) # If a system does not have git, or we are not in a git repo, fallback with "unset"
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
@@ -160,7 +168,8 @@ FStar_Version.ml:
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	echo 'FStar_Options._date := "$(DATE)";;' >> $@
+	# We deliberately use commitdate instead of date, so that rebuilds are no-ops
+	echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
 	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 
@@ -175,16 +184,29 @@ FStar_Version.ml:
 #  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
-# Install FStar into $(PREFIX) using the standard Unix directory structure.
+# install the standard library binary files
+install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
+
+# Install FStar into $(PREFIX) using the standard Unix directory
+# structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
+# fstar-tactics-lib and fstar-compiler-lib packages. It works with the
+# opam package, but it has not been tested in any other settings.
 install: all
-        # Install the binary
-	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-        # Then the rest of the static files.
+	@# Install the binary
+	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
+	@# Then the standard library
 	$(call install_dir,ulib,lib/fstar)
+	@# Then the binary library
+	cd ../../bin/fstarlib && ocamlfind install fstarlib *
+	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
+	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
+	@# Then the rest of the static files.
+	@# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
+	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
-        # Build the tutorial first
+	@# Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
 endif
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
@@ -207,53 +229,38 @@ endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
 Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
-.PHONY: ulib
-ulib:
-	make -C ../../ulib/ml
-
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 package: all
-	$(MAKE) ulib
-        # Clean previous packages.
+	@# Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
-        # Install the F* binary
+	@# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-        # Then the standard library.
+	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
+	@# Then the standard library.
 	$(call fexport,ulib)
-	# Do not provide ml/fs sources, however. From ulib/ml, only
-	# preserve Makefile.include
-	mv $(PREFIX)/ulib/ml/Makefile.include $(PREFIX)/ulib/ml_Makefile.include
-	rm -rf $(PREFIX)/ulib/ml $(PREFIX)/ulib/fs
-	mkdir -p $(PREFIX)/ulib/ml
-	mv $(PREFIX)/ulib/ml_Makefile.include $(PREFIX)/ulib/ml/Makefile.include
-	# Only provide the Makefile suited for verification
-	rm -f $(PREFIX)/ulib/Makefile
-	mv $(PREFIX)/ulib/Makefile.verify $(PREFIX)/ulib/Makefile
-	# Then the rest of the static files.
+	mkdir -p $(PREFIX)/src/ocaml-output/
+	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
+	cp ../../version.txt $(PREFIX)/
+	cp ../../_tags $(PREFIX)/
+	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-	$(call fexport-all,bin/fstarlib)
 
 ifeq ($(MADOKO),Madoko)
-        # Build the tutorial
+	@# Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
 else
 	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
 	false
 endif
-        # Documentation and licenses
+	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 
-        # Some new things used by examples/Makefile
-	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
-
-	# Z3
+	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin

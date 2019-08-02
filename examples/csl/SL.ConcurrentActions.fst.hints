@@ -1,0 +1,18 @@
+[
+  "´õå÷'à\u0015=ùY\r\u001eÈ6y1",
+  [
+    [
+      "SL.ConcurrentActions.par_wp'_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_SL.ConcurrentActions.par_comp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5f8341072ee87db28d65467baddc3cae"
+    ]
+  ]
+]

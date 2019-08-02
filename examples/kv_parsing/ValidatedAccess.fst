@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module ValidatedAccess
 
 open KeyValue
@@ -55,7 +70,7 @@ let for_readonly #t init start finish inv f =
   let h1 = get() in
   let ptr_state = B.create #t init 1ul in
   assert (ptr_state `B.unused_in` h1 /\
-          B.frameOf ptr_state == h1.tip);
+          B.frameOf ptr_state == (HS.get_tip h1));
   let h = get() in
   lemma_pop_is_popped h;
   B.lemma_modifies_0_push_pop h0 h1 h (pop h);
@@ -134,7 +149,7 @@ let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
   let h1 = get() in
   let ptr_state = B.create #t init 1ul in
   assert (ptr_state `B.unused_in` h1 /\
-          B.frameOf ptr_state == h1.tip);
+          B.frameOf ptr_state == get_tip h1);
   let h = get() in
   let (i, break) = begin
     interruptible_for start finish

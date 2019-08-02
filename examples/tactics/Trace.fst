@@ -1,6 +1,22 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Trace
 
 (* Instrumenting recursive functions to provide a trace of their calls *)
+(* TODO: update to make use of metaprogrammed let-recs and splicing *)
 
 (* We take a function such as
  *
@@ -34,7 +50,7 @@ type mynat =
     | Z
     | S of mynat
 
-let rec tick_last ns =
+let rec tick_last (ns:list string) =
   match ns with
   | [] -> []
   | [x] -> [x ^ "'"] // forgetting braces gave me a uvar explosion
@@ -62,18 +78,17 @@ type ins_info = {
     trace_arg : term;
 }
 
-let rec instrument_body (ii : ins_info) (t : term) : tactic term =
-  admit(); // admit termination for now
+let rec instrument_body (ii : ins_info) (t : term) : Tac term =
   match inspect t with
   // descend into matches
   | Tv_Match t brs -> begin
-    brs' <-- mapM (ins_br ii) brs;
-    return (pack (Tv_Match t brs'))
+    let brs' = map (ins_br ii) brs in
+    pack (Tv_Match t brs')
     end
   // descend into lets
-  | Tv_Let b t1 t2 -> begin
-    t2' <-- instrument_body ii t2;
-    return (pack (Tv_Let b t1 t2'))
+  | Tv_Let r b t1 t2 -> begin
+    let t2' = instrument_body ii t2 in
+    pack (Tv_Let r b t1 t2')
     end
   | _ -> begin
     let hd, args = collect_app t in
@@ -83,17 +98,17 @@ let rec instrument_body (ii : ins_info) (t : term) : tactic term =
         // modify the tail call
         // turn `nm <b1,...,bn>` into `nm' (<a1,...,an>::tr) <b1,...,bn>`
         let f' = pack (Tv_FVar ii.ins_name) in
-        return (mk_app f' (args @ [mk_cons argpack ii.trace_arg, Q_Explicit]))
+        mk_app f' (args @ [mk_cons argpack ii.trace_arg, Q_Explicit])
     end else begin
         // not a tail call, record the current set of args and be done
-        return (mkpair (mk_cons argpack ii.trace_arg) t)
+        mkpair (mk_cons argpack ii.trace_arg) t
     end
    end
 
-and ins_br (ii : ins_info) (br : branch) : tactic branch =
+and ins_br (ii : ins_info) (br : branch) : Tac branch =
   let (p, t) = br in
-  t' <-- instrument_body ii t;
-  return (p, t')
+  let t' = instrument_body ii t in
+  (p, t')
 
 let rec cutlast (l : list 'a) : list 'a * 'a =
     match l with
@@ -101,31 +116,32 @@ let rec cutlast (l : list 'a) : list 'a * 'a =
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
-let instrument (f : 'a) : tactic unit =
-    t <-- quote f;
+let instrument (f : 'a) : Tac unit =
+    let t = quote f in
     // name
-    n <-- (match inspect t with
-           | Tv_FVar fv -> return fv
-           | _ -> fail "Not a top-level");
+    let n = match inspect t with
+            | Tv_FVar fv -> fv
+            | _ -> fail "Not a top-level"
+    in
     let n' = tick n in
-    all_args <-- intros;
+    let all_args = intros () in
     let real, trace_arg = cutlast all_args in 
-    let real = List.Tot.map (fun b -> pack (Tv_Var b)) real in
+    let real = map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
     let ii = {
         orig_name = n;
         ins_name = n';
         args = real;
-        trace_arg = pack (Tv_Var trace_arg)
+        trace_arg = pack (Tv_Var (bv_of_binder trace_arg))
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
-    t <-- norm_term [delta] (mk_e_app t ii.args);
-    dup;;
-    t <-- instrument_body ii t;
-    dump "";;
-    exact (return t);;
-    norm [];;
-    trefl
+    let t = norm_term [delta] (mk_e_app t ii.args) in
+    dup ();
+    let t = instrument_body ii t in
+    (* dump ""; *)
+    let _ = focus (fun () -> exact_guard t; repeat smt) in
+    norm [];
+    trefl ()
 
 let rec fall (n : mynat) : Tot mynat =
     match n with
@@ -135,10 +151,10 @@ let rec fall (n : mynat) : Tot mynat =
 // Because of the way we're building this recursive function, its termination is unprovable.
 // So admit queries for now.
 #set-options "--admit_smt_queries true"
-let rec fall' (n : mynat) =
+let rec fall' (n : mynat) (l : list mynat) =
     // We need to annotate the result type.. which sucks.
     // But we could use a tactic later :)
-    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (instrument fall) n
+    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n l
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
@@ -155,7 +171,7 @@ let rec fact (n : nat) : Tot nat = fact_aux n 1
 
 #set-options "--admit_smt_queries true"
 let rec fact_aux' (n acc : nat) (tr : list (nat * nat)) : Tot (list (nat * nat) * nat) =
-    synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (instrument fact_aux) n acc tr
+    synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (fun () -> instrument fact_aux) n acc tr
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 5); (5, 1)], 120))
@@ -165,7 +181,7 @@ let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 
 #set-options "--admit_smt_queries true"
 // TODO: I have to use `int` for the codomains or it complains... why? I'm even admitting SMT
 let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
-    synth_by_tactic #(nat -> list nat -> (list nat * int)) (instrument fact) n tr
+    synth_by_tactic #(nat -> list nat -> (list nat * int)) (fun () -> instrument fact) n tr
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fact' 5 [] == ([5], 120))

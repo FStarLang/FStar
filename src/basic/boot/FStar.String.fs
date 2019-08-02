@@ -15,6 +15,7 @@
 *)
 module FStar.String
 open FSharp.Compatibility.OCaml
+let make (n:int) (c:char) = FSharp.Compatibility.OCaml.String.make n c
 let split (chars:list<char>) s = String.split chars s
 let strcat s1 s2 = s1 ^ s2
 let concat (s:string) (ts:list<string>) = String.concat s ts
@@ -24,6 +25,7 @@ let length s = String.length s
 let collect f s = String.collect f s
 let lowercase s = String.lowercase s
 let uppercase s = String.uppercase s
+let escaped s = FSharp.Compatibility.OCaml.String.escaped s
 
 (* may fail with index out of bounds *)
 let substring s i j = String.sub s i j
@@ -31,3 +33,7 @@ let get s i = String.get s i
 
 let rec list_of_string (s:string) = [for c in s -> c]
 let string_of_list (l:list<char>) = List.fold_right (fun c a -> (string c) ^ a) l ""
+
+let index_of s i = FStar.BigInt.of_int (String.index s i)
+let index s i = get s (FStar.BigInt.to_int i)
+let (^) s1 s2 = strcat s1 s2

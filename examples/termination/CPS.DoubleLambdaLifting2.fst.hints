@@ -1,5 +1,5 @@
 [
-  "»ê9∞h\u00155ûr¿⁄Éﬂ/È>",
+  "3E\u0016÷‹?\u001e°\u000eÉ%ﬁó»çÓ",
   [
     [
       "CPS.DoubleLambdaLifting2.eval_cps",
@@ -14,7 +14,22 @@
         "subterm_ordering_CPS.Expr.Plus"
       ],
       0,
-      "406f2bbeb92509925968cb779cf1a74c"
+      "422445817a0caa988dd85de64fa5a94f"
+    ],
+    [
+      "CPS.DoubleLambdaLifting2.eval_cps",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0c607185f6c6768f1786fe5f14f15ea1_2",
+        "disc_equation_CPS.Expr.Const", "disc_equation_CPS.Expr.Plus",
+        "fuel_guarded_inversion_CPS.Expr.expr",
+        "subterm_ordering_CPS.Expr.Plus"
+      ],
+      0,
+      "dd48c645a0735924663629d67c30b363"
     ]
   ]
 ]

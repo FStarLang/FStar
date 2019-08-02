@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Test
 
 module TU = FStar.TaggedUnion
@@ -9,8 +24,11 @@ module P = FStar.Pointer
 
 (** Either *)
 
-let either_l (a b : P.typ) : P.union_typ =
-  [("left", a); ("right", b)]
+// TODO: how do I choose a name depending on the type parameters?
+let either_l (a b : P.typ) : P.union_typ = {
+  P.name = "either_l";
+  P.fields = [("left", a); ("right", b)];
+}
 
 let either_typ (a b : P.typ) : P.typ =
   TU.typ (either_l a b)
@@ -24,8 +42,11 @@ let either (a b : P.typ) : Type0 =
 
 (** Option *)
 
-let option_l (a : P.typ) : P.union_typ =
-  [("none", P.(TBase TUnit)); ("some", a)]
+// TODO: how do I choose a name depending on the type parameters?
+let option_l (a : P.typ) : P.union_typ = {
+  P.name = "option_l";
+  P.fields = [("none", P.(TBase TUnit)); ("some", a)];
+}
 
 let option_typ (a : P.typ) : P.typ =
   TU.typ (option_l a)
@@ -38,7 +59,11 @@ let option (a : P.typ) : Type0 =
 
 (*******************)
 
-let s_l : P.struct_typ = [("x", P.(TBase TUInt8)); ("y", P.(TBase TUInt8))]
+let s_l : P.struct_typ = {
+  P.name = "s_l";
+  P.fields = [("x", P.(TBase TUInt8)); ("y", P.(TBase TUInt8))]
+}
+
 // FIXME?
 let s_x : P.struct_field s_l = "x"
 let s_y : P.struct_field s_l = "y"

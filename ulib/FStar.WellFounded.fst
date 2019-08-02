@@ -36,7 +36,7 @@ val axiom1 : #a:Type -> #b:Type -> f:(a -> Tot b) -> x:a ->
              Lemma (precedes (f x) f)
 let axiom1 #a #b f x = axiom1_dep f x
 
-let apply (#a:Type) (#b:a -> Type) (f: x:a -> Tot (b x)) (x:a)
+let apply (#a:Type) (#b:a -> Type) (f: (x:a -> Tot (b x))) (x:a)
   : Pure (b x) (requires True) (ensures (fun r -> r == f x /\ f x << f))
 =
   axiom1_dep #a #b f x ; f x

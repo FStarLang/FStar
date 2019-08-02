@@ -1,30 +1,74 @@
 FSTAR_HOME=../..
-CACHE = _cache
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+# Tests for which the native tactics used in module named Sample.Test.fst are
+# declared in a corresponding module named Sample.fst
+TAC_MODULES=Print\
+    Split\
+    BV\
+    UnitTests\
+    Bane\
+    Canon\
+    Simple\
+    SimpleTactic\
+    Evens\
+    Embeddings\
+    Plugins\
+    Registers.List
 
-OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
-INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+# Tests for which the native tatics are declared and used in the same module
+ALL=Apply\
+    Arith\
+    CanonDeep\
+    Clear\
+    Cut\
+    DependentSynth\
+    Fail\
+    Imp\
+    Logic\
+    Nest\
+    Pruning\
+    Rename\
+    Retype\
+    Sequences\
+    Simplifier\
+    Tutorial\
+    Unify
 
-.PRECIOUS: %.cmxs
+OTHERFLAGS += --use_extracted_interfaces false --use_two_phase_tc false
+
+all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
+
+# .depend:
+# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
+
+# include .depend
+
 .PHONY: %.test
+.PRECIOUS: %.ml
 
-MODULES=Print Split Canon
+%.test: %.fst %.ml
+	$(FSTAR) $*.fst --load $*
+	touch $@
 
-all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
+%.sep.test: %.fst %.ml
+	$(FSTAR) $*.Test.fst --load $*
+	touch $@
 
-fstartaclib.cmxs:
-	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
+%.ml: %.fst
+	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
+	touch $@
 
-$(CACHE):
-	mkdir $@
+%.clean:
+	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
 
-%.cmxs: %.Test.fst fstartaclib.cmxs $(CACHE)
-	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
+%.native: %.fst Registers.List.ml
+	$(FSTAR) $*.fst --load Registers.List --warn_error -266
 
-%.test: %.Test.fst %.cmxs
-	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $<
+%.interp: %.fst Registers.List.fst
+	$(FSTAR) $*.fst
+
 
 clean:
-	rm -f $(CACHE)/*.ml $(CACHE)/*.cm* $(CACHE)/*.o
+	rm -f *.test *.ml *.o *.cm[ix] *.cmxs

@@ -1,6 +1,6 @@
-type uint16 = int
-type t = uint16
-type t' = t
+type uint16 = int[@@deriving yojson,show]
+type t = uint16[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
@@ -44,6 +44,10 @@ let gte (a:uint16) (b:uint16) : bool = a >= b
 let lt (a:uint16) (b:uint16) : bool = a < b
 let lte (a:uint16) (b:uint16) : bool =  a <= b
 
+(* NOT Constant time comparison operators *)
+let gte_mask (a:uint16) (b:uint16) : uint16 = if a >= b then 0xFFFF else 0
+let eq_mask (a:uint16) (b:uint16) : uint16 = if a = b then 0xFFFF else 0
+
 (* Infix notations *)
 let op_Plus_Hat = add
 let op_Plus_Question_Hat = add_underspec
@@ -69,3 +73,4 @@ let op_Less_Equals_Hat = lte
 
 let to_string s = string_of_int s
 let uint_to_t s = int_to_uint16 s
+let __uint_to_t = uint_to_t

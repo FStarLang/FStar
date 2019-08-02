@@ -1,5 +1,5 @@
 [
-  "◊j\u0007Áß¡û˙k?Îé\u0019Nºû",
+  "IkŸÅ≤/`x{Mo?˘k“\u0003",
   [
     [
       "TestSet.should_succeed",
@@ -7,19 +7,31 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.l_or", "equation_Prims.squash",
-        "function_token_typing_TestSet.a", "function_token_typing_TestSet.b",
-        "function_token_typing_TestSet.elt", "l_or-interp",
+        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
         "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
-        "unit_typing"
+        "typing_TestSet.a", "typing_TestSet.b"
       ],
       0,
-      "7727e1e15879d32e231b091b05224243"
+      "144df0db249225fb6829aa085766ace6"
+    ],
+    [
+      "TestSet.should_succeed",
+      2,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
+        "lemma_FStar.TSet.lemma_equal_intro",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
+        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
+        "typing_TestSet.a", "typing_TestSet.b"
+      ],
+      0,
+      "0a22b75fddd3957fbcf30a5727fa103b"
     ]
   ]
 ]

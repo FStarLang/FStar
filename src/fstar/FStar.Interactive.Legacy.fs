@@ -25,8 +25,9 @@ open FStar.Ident
 
 open FStar.Universal
 open FStar.TypeChecker.Env
+open FStar.Parser
 
-module DsEnv   = FStar.ToSyntax.Env
+module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
@@ -35,19 +36,14 @@ let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * 
   let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, env = tc_one_file env (Some intf) impl in
+          let _, env = tc_one_file_for_ide env (Some intf) impl Dep.empty_parsing_data in
           (Some intf, impl), env, remaining
         | intf_or_impl :: remaining ->
-          let _, env = tc_one_file env None intf_or_impl in
+          let _, env = tc_one_file_for_ide env None intf_or_impl Dep.empty_parsing_data in
           (None, intf_or_impl), env, remaining
         | [] -> failwith "Impossible"
   in
   (intf, impl), env, remaining
-
-// Ibid.
-let tc_prims () = //:uenv =
-  let _, env = tc_prims (init_env ()) in
-  env
 
 // The interactive mode has its own notion of a stack that is super flaky,
 // seeing that there's a lot of mutable state under the hood. This is most
@@ -63,12 +59,12 @@ type stack_t = list<(env_t * modul_t)>
 // pop).
 
 let pop env msg =
-    pop_context env msg;
+    ignore (TypeChecker.Tc.pop_context env msg);
     Options.pop()
 
 let push_with_kind env lax restore_cmd_line_options msg =
     let env = { env with lax = lax } in
-    let res = push_context env msg in
+    let res = TypeChecker.Tc.push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
@@ -78,12 +74,12 @@ let check_frag (env:TcEnv.env) curmod frag =
         let m, env = tc_one_fragment curmod env frag in
         Some (m, env, FStar.Errors.get_err_count())
     with
-        | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, r)];
+        | FStar.Errors.Error(e, msg, r) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, r)];
           None
 
-        | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+        | FStar.Errors.Err (e, msg) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env)];
           None
 
 let report_fail () =
@@ -177,7 +173,7 @@ let rec read_chunk () =
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
             | [l; c]         -> false, Util.int_of_string l, Util.int_of_string c
             | _              ->
-              Util.print_warning ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax);
+              Errors. log_issue Range.dummyRange (Errors.Warning_WrongErrorLocation, ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax));
               false, 1, 0
         in
         Push lc)
@@ -190,7 +186,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
-        Util.print_error ("Unrecognized \"#info\" request: " ^l);
+        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#info\" request: " ^l);
         exit 1
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
@@ -198,7 +194,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Completions (prefix)
       | _ ->
-        Util.print_error ("Unrecognized \"#completions\" request: " ^ l);
+        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else
@@ -229,22 +225,22 @@ let deps_of_our_file filename =
    * and lax-check everything but the current module we're editing. This
    * function may, optionally, return an interface if the currently edited
    * module is an implementation and an interface was found. *)
-  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] FStar.CheckedFiles.load_parsing_data_from_cache in
   let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
   ) deps in
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Util.print_warning (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
+          Errors. log_issue Range.dummyRange (Errors.Warning_MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
         Some intf
     | [ impl ] ->
         None
     | _ ->
-        Util.print_warning (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
+        Errors. log_issue Range.dummyRange (Errors.Warning_UnexpectedFile, (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name)));
         None
   in
-  deps, maybe_intf
+  deps, maybe_intf, dep_graph
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
@@ -355,7 +351,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   in
 
   (* Well, the file list hasn't changed, so our (single) file is still there. *)
-  let filenames, _ = deps_of_our_file filename in
+  let filenames, _, dep_graph = deps_of_our_file filename in
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
@@ -441,7 +437,7 @@ let rec go (line_col:(int*int))
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
-      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path env.dsenv prefix naked_match in
+      let stripped_ns, shortened = Syntax.DsEnv.shorten_module_path env.dsenv prefix naked_match in
       (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
     let prepare_candidate (prefix, matched, stripped_ns, match_len) =
       if prefix = "" then
@@ -492,7 +488,7 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              match FStar.ToSyntax.Env.resolve_module_name env.dsenv l true with
+              match FStar.Syntax.DsEnv.resolve_module_name env.dsenv l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->
@@ -516,7 +512,7 @@ let rec go (line_col:(int*int))
       pop env msg;
       let (env, curmod), stack =
         match stack with
-        | [] -> Util.print_error "too many pops"; exit 1
+        | [] -> Errors. log_issue Range.dummyRange (Errors.Error_IDETooManyPops,  "too many pops"); exit 1
         | hd::tl -> hd, tl
       in
       go line_col filename stack curmod env ts
@@ -542,10 +538,11 @@ let rec go (line_col:(int*int))
         go line_col filename stack curmod tcenv ts
       in
 
-      let frag = {frag_text=text;
+      let frag = {frag_fname="<input>";
+                  frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-      let res = check_frag env curmod (frag, false) in begin
+      let res = check_frag env curmod frag in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
@@ -561,13 +558,13 @@ end
 let interactive_mode (filename:string): unit =
 
   if Option.isSome (Options.codegen())
-  then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
+  then Errors. log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "code-generation is not supported in interactive mode, ignoring the codegen flag");
 
   //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
-  let env = tc_prims () in
+  let filenames, maybe_intf, dep_graph = deps_of_our_file filename in
+  let env = init_env dep_graph in
   let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let initial_range = Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
   let env =
     match maybe_intf with

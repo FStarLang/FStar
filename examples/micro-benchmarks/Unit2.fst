@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Unit2
 
 (* Proving alpha equivalence in the solver *)
@@ -13,8 +28,17 @@ type geq (z:int) = x:int{x >= z}
 
 let test5 _ = assert (nat == zat)
 
+//SMT encoding does not encode delta equivalence
+//It used to work accidentally for types that are equivalent
+//for the unfolding of nullary constants
+//But, not anymore, since the fix to bug #1750
+//Instead of SMT, this fact can be proven by normalization
+[@(expect_failure [19])]
 let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:zat -> Tot (vector b y)))
+
+let test7 _ = assert_norm ((a:Type -> x:nat -> Tot (vector a x)) ==
+                          (b:Type -> y:zat -> Tot (vector b y)))
 
 (* let test7 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) == *)
 (*                       (b:Type -> y:int{y>=0} -> Tot (vector b y))) *)

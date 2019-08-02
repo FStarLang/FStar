@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Messages2
 
 open FStar.Mul
@@ -68,7 +83,7 @@ assume val to_seq: #a:sized_type -> h:mem -> b:buffer a ->
 (* let to_seq #a h b = *)
 (*   let seq_bytes = as_seq h b in *)
 (*   let rec mk_seq_a (s:Seq.seq UInt8.t) : Tot (s':Seq.seq a) (decreases (Seq.length s)) = *)
-(*     if Seq.length s = 0 then Seq.createEmpty #a *)
+(*     if Seq.length s = 0 then Seq.empty #a *)
 (*     else Seq.append #a (mk_seq_a (Seq.slice s (sizeof a) (Seq.length s))) (Seq.create 1 (inflate a (Seq.slice s 0 (sizeof a)))) in *)
 (*   mk_seq_a seq_bytes *)
 

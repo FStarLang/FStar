@@ -1,10 +1,22 @@
-module Bug209_EDITED
+(*
+   Copyright 2008-2018 Microsoft Research
 
-val foo : #t:Type -> x:t -> Lemma (x = x)
-let foo (#t:Type) x = ()
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-val foo2 : t:Type -> x:t -> Lemma (x = x)
-let foo2 (t:Type) x = ()
+       http://www.apache.org/licenses/LICENSE-2.0
 
-val foo3 : x:'a -> Lemma (x = x)
-let foo3 'a x = ()
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+module Bug209b
+
+val foo : #t:Type{hasEq t} -> x:t -> Lemma (x = x)
+let foo (#t:Type{hasEq t}) x = ()
+
+val foo2 : t:Type{hasEq t} -> x:t -> Lemma (x = x)
+let foo2 (t:Type{hasEq t}) x = ()

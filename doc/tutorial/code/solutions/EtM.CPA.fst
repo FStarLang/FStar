@@ -1,11 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module EtM.CPA
 
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.Monotonic.RRef
+open FStar.HyperStack.ST
 
 open EtM.Ideal
 
@@ -15,8 +28,11 @@ open CoreCrypto
 
 module B = Platform.Bytes
 
+module HST = FStar.HyperStack.ST
+
 open EtM.Plain
 
+type rid = HST.erid
 let ivsize = blockSize AES_128_CBC
 let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
@@ -40,35 +56,35 @@ noeq type key =
 let genPost parent m0 (k:key) m1 =
     modifies Set.empty m0 m1
   /\ extends k.region parent
-  /\ fresh_region k.region m0.h m1.h
-  /\ m_contains k.log m1
-  /\ m_sel m1 k.log == createEmpty
+  /\ HyperStack.fresh_region k.region m0 m1
+  /\ contains m1 k.log
+  /\ sel m1 k.log == empty
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region empty in
   Key #region raw log
 
 val encrypt: k:key -> m:msg -> ST cipher
   (requires (fun h0 -> True (* If we wanted to avoid recall:
-                               m_contains k.log h0 *)))
+                               contains h0 k.log *)))
   (ensures  (fun h0 c h1 ->
-    (let log0 = m_sel h0 k.log in
-     let log1 = m_sel h1 k.log in
+    (let log0 = sel h0 k.log in
+     let log1 = sel h1 k.log in
       modifies_one k.region h0 h1 /\
-      m_contains k.log h1
+      contains h1 k.log
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
 
 // BEGIN: EtMCPAEncrypt
 let encrypt k m =
-  m_recall k.log;
+  recall k.log;
   let iv = random ivsize in
   let text = if ind_cpa then createBytes (length m) 0z else repr m in
   let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
@@ -96,8 +112,8 @@ let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 // BEGIN: EtMCPADecryptRequires
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
-    Map.contains h0.h k.region /\
-    (let log0 = m_sel h0 k.log in
+    Map.contains (get_hmap h0) k.region /\
+    (let log0 = sel h0 k.log in
       (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0 )
     )
   ))
@@ -106,8 +122,8 @@ val decrypt: k:key -> c:cipher -> ST msg
      requires a stronger precondition *)
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
-     (* (let log0 = m_sel h0 k.log in *)
+    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (sel h0 k.log)
+     (* (let log0 = sel h0 k.log in *)
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  Some? found /\ fst (Some.v found) = res) *)
     )
@@ -116,7 +132,7 @@ val decrypt: k:key -> c:cipher -> ST msg
 // BEGIN: EtMCPADecrypt
 let decrypt k c =
   if ind_cpa_rest_adv then
-    let log = m_read k.log in
+    let log = !k.log in
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> fst mc
   else

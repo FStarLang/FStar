@@ -1,4 +1,4 @@
-{"query-id":"1","query":"push","args":{"kind":"full","code":"module Test\n","line":1,"column":0}}
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Integration\n","line":1,"column":0}}
 {"query-id":"2","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
 {"query-id":"3","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
 {"query-id":"4","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
@@ -68,7 +68,7 @@
 {"query-id":"68","query":"pop","args":{}}
 {"query-id":"69","query":"pop","args":{}}
 {"query-id":"70","query":"pop","args":{}}
-{"query-id":"71","query":"push","args":{"kind":"full","code":"module Test\n","line":1,"column":0}}
+{"query-id":"71","query":"push","args":{"kind":"full","code":"module Integration\n","line":1,"column":0}}
 {"query-id":"72","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
 {"query-id":"73","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
 {"query-id":"74","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}

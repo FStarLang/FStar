@@ -35,3 +35,4 @@ type parse_cmdline_res =
 
 val parse_cmdline: list<opt> -> (string -> 'a) -> parse_cmdline_res
 val parse_string: list<opt> -> (string -> 'a) -> string -> parse_cmdline_res
+val cmdline: unit -> list<string>

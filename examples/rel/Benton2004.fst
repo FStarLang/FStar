@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Benton2004
 
 include Benton2004.Aux
@@ -328,6 +343,7 @@ let exec_equiv_sym
   [SMTPat (exec_equiv p p' f f')]
 = ()
 
+#push-options "--z3rlimit 5 --max_fuel 0 --max_ifuel 0"
 let eval_equiv_trans
   (#t: Type0)
   (p: sttype)
@@ -335,8 +351,20 @@ let eval_equiv_trans
   (f1 f2 f3 : exp t)
 : Lemma
   (requires (is_per e /\ interpolable p /\ eval_equiv p e f1 f2 /\ eval_equiv p e f2 f3))
-  (ensures (eval_equiv p e f1 f3))
-= Classical.forall_intro_2 (fun x -> Classical.move_requires (interpolable_elim p x))
+  (ensures eval_equiv p e f1 f3)
+= let lem (s1 s3:heap)
+    : Lemma (requires holds p s1 s3)
+            (ensures (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f3 s3))))
+    = let w = interpolable_elim p s1 s3 in
+      Classical.exists_elim
+        (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f3 s3)))
+        w
+        (fun (s2:heap{holds p s1 s2 /\ holds p s2 s3}) ->
+          assert (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f2 s2)));
+          assert (holds e (fst (reify_exp f2 s2)) (fst (reify_exp f3 s3))))
+  in
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (lem x))
+#pop-options
 
 let exec_equiv_reified_trans
   (p p': sttype)
@@ -394,7 +422,7 @@ let exec_equiv_trans
   [SMTPatOr [
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3)];
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3)];
-    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
+    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c1 c3)];
   ]]
 = let z1 = reify_computation c1 in
   let z2 = reify_computation c2 in
@@ -738,8 +766,14 @@ let d_lu2
       end else ()
     end else ()
   in
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
+  let prf1' (s0:heap) (fuel:nat) :Lemma (fst (fl fuel s0) == true ==> fr fuel s0 == fl fuel s0)
+    = Classical.move_requires (prf1 s0) fuel
+  in
+  let prf2' (s0:heap) (fuel:nat) :Lemma (fst (fr fuel s0) == true ==> fl (fuel + fuel) s0 == fr fuel s0)
+    = Classical.move_requires (prf2 s0) fuel
+  in
+  Classical.forall_intro_2 prf1';  //AR: same pattern as in Pointer, see the comment there
+  Classical.forall_intro_2 prf2'
 
 (* 3.2 Optimizing Transformations *)
 
@@ -755,6 +789,8 @@ let d_bre
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c1))
 *)
 
+let mention (#a:Type) (x:a) = True
+
 let d_bre
   (c1 c2 c0: computation)
   (phi phi' : sttype)
@@ -766,5 +802,4 @@ let d_bre
   ))
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c0))
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c0)]
-= let ec = reify_exp b in // TODO: WHY is this necessary?
-  ()
+= assert (mention (reify_exp b)) //Just mentioning `reify_exp b` triggers the necessary reduction; not sure exactly why though

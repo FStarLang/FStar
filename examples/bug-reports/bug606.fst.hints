@@ -1,0 +1,148 @@
+[
+  "eñó\u0002\u000f(òþT´\u0015\u0003±N¨E",
+  [
+    [
+      "Bug606.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0", "bool_typing",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "740df08f569ee26f501800eb6ca5e496"
+    ],
+    [
+      "Bug606.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0", "bool_typing",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "e500d43295adc99918800783b1368cf3"
+    ],
+    [
+      "Bug606.f_eq_g",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug606.f.fuel_instrumented",
+        "@fuel_correspondence_Bug606.g.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.f.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.g.fuel_instrumented", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0", "bool_typing",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list",
+        "equation_with_fuel_Bug606.f.fuel_instrumented",
+        "equation_with_fuel_Bug606.g.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "a37059d862b07fd5c5762b65ea54dfe5"
+    ],
+    [
+      "Bug606.h",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_Bug606.f.fuel_instrumented",
+        "@fuel_correspondence_Bug606.g.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.f.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.g.fuel_instrumented", "@query",
+        "lemma_Bug606.f_eq_g"
+      ],
+      0,
+      "790c11750d2b1170388ab796206e6c2a"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5cf625c9649f3be05ce3ef5a0042c3a4"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8dbdb8eb5fd6c98f7906e0ff31a420e4"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Bug606.n",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_9723ee2ab2be8767c46351843c3d3f1a",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt64.v"
+      ],
+      0,
+      "fe8c34896c351570fae9f0014fc40212"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c064b0746fda75806f026cfd1e3a45bf"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "41a3738fcb0cb626c275ac1ec2e8ad96"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Bug606.n",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_9723ee2ab2be8767c46351843c3d3f1a"
+      ],
+      0,
+      "d606cc6f3352012c0c4eaab15bd5ca80"
+    ]
+  ]
+]

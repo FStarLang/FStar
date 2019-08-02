@@ -1,23 +1,31 @@
 [
-  "ò\u001cÑ14\u000bk7\u000b‘q¹Ý´Äi",
+  "'¯’\u0004‹Hqh®~F&ð¬\u0010L",
   [
-    [
-      "FStar.All.uu___is_Failure",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f4dc6f716149a9f91da9d07519d813c5"
-    ],
     [
       "FStar.All.__proj__Failure__item__uu___",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
+      ],
       0,
-      "df574f4a9f8fee594c85b8399a95cb0a"
+      "a669aab527ef728de51459a3902f6b74"
+    ],
+    [
+      "FStar.All.__proj__Failure__item__uu___",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
+      ],
+      0,
+      "f7da628b7daa2a5f0e229f68a0fc361a"
     ]
   ]
 ]

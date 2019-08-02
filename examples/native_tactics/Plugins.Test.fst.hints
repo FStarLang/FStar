@@ -1,0 +1,61 @@
+[
+  "‚@ú†5^ã8í ™\n¯\u0018iá",
+  [
+    [
+      "Plugins.Test.uu___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9bdcab2efe93a80602f4360fd1e912b8"
+    ],
+    [
+      "Plugins.Test.uu___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "9ccc64ae60fa4d501f91949c2e56a2fa"
+    ],
+    [
+      "Plugins.Test.uu___1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "012115183b47cf9d8d28225e6924cc3e"
+    ],
+    [
+      "Plugins.Test.uu___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "b6149dbf40d762d534c54328b9b51eb4"
+    ],
+    [
+      "Plugins.Test.uu___2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9f712e24f2fc4d25b404e6ff218a3ec2"
+    ]
+  ]
+]

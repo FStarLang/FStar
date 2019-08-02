@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Crypto.Symmetric.PRF
 
 (* This file models our idealization of symmetric ciphers used only in
@@ -172,7 +187,7 @@ val gen: rgn:region -> i:id -> ST (state i)
     s.rgn == rgn /\
     (prf i ==>
         ~ (h0 `HS.contains` (itable i s))
-    /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
+    /\ HS.sel h1 (itable i s) == Seq.empty #(entry s.mac_rgn i))))
 let gen rgn i =
   push_frame();
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
@@ -183,7 +198,7 @@ let gen rgn i =
   Block.init #i key keystate;
   let table: table_t rgn mac_rgn i =
     if prf i then
-      mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
+      mktable i rgn mac_rgn (ralloc rgn (Seq.empty #(entry mac_rgn i)))
     else ()
   in
   pop_frame();

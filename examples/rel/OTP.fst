@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module OTP
 
 open FStar.DM4F.OTP.Heap
@@ -5,7 +20,7 @@ open FStar.DM4F.OTP.Random
 
 open FStar.BitVector
 
-let op_Hat_Hat = logxor_vec
+let op_Hat_Hat #n = logxor_vec #n
 
 val xor_idempotent: x:elem -> y:elem -> Lemma
   (requires True)
@@ -48,14 +63,18 @@ let one_time_pad () : Rand ((elem -> elem) * (elem -> elem)) =
   let decrypt (cipher:elem) = cipher ^^ key in
   encrypt, decrypt
 
-let one_time_pad_ok x0 x1 t0 t1 : Lemma
-  (requires (t1 == (bij (x1 ^^ x0)).f t0))
-  (ensures (let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
-            let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
-            dec0 (enc0 x0) == x0 /\
-            dec1 (enc1 x1) == x1 /\
-            enc0 x0 == enc1 x1))
-   = let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
-     let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
-     assert (enc0 x0 == x0 ^^ (index t0 (to_id 0)));
-     assert (enc1 x1 == x1 ^^ (index t1 (to_id 0)))
+(*
+ * AR: 03/07/18: this relies on abstraction leaks in FStar.DM4F.OTP.Heap
+ *               admitting, see the changes in that file alongside this commit
+ *)		 
+// let one_time_pad_ok x0 x1 t0 t1 : Lemma
+//   (requires (t1 == (bij (x1 ^^ x0)).f t0))
+//   (ensures (let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
+//             let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
+//             dec0 (enc0 x0) == x0 /\
+//             dec1 (enc1 x1) == x1 /\
+//             enc0 x0 == enc1 x1))
+//    = let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
+//      let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
+//      assert (enc0 x0 == x0 ^^ (index t0 (to_id 0)));
+//      assert (enc1 x1 == x1 ^^ (index t1 (to_id 0)))

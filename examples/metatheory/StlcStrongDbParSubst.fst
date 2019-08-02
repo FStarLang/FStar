@@ -67,22 +67,19 @@ let renaming_sub_inc _ = ()
 
 let is_var (e:exp) : int = if EVar? e then 0 else 1
 
+val sub_elam: s:sub -> var -> Tot (e:exp{renaming s ==> EVar? e})
+                                (decreases %[1;is_renaming s; 0; EVar 0])
 val subst : s:sub -> e:exp -> Pure exp (requires True)
      (ensures (fun e' -> (renaming s /\ EVar? e) ==> EVar? e'))
-     (decreases %[is_var e; is_renaming s; e])
+     (decreases %[is_var e; is_renaming s; 1; e])
 let rec subst s e =
   match e with
   | EVar x -> s x
-  | ELam t e1 ->
-     let sub_elam : y:var -> Tot (e:exp{renaming s ==> EVar? e}) =
-       fun y -> if y=0 then EVar y
-                       else subst sub_inc (s (y-1))            (* shift +1 *)
-     in ELam t (subst sub_elam e1)
+  | ELam t e1 -> ELam t (subst (sub_elam s) e1)
   | EApp e1 e2 -> EApp (subst s e1) (subst s e2)
   | EUnit -> EUnit
 
-val sub_elam: s:sub -> Tot sub
-let sub_elam s y = if y=0 then EVar y
+and sub_elam s y = if y=0 then EVar y
                    else subst sub_inc (s (y-1))
 
 val sub_beta : exp -> Tot sub
@@ -163,7 +160,18 @@ val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->
                        Lemma (requires True)
                              (ensures (subst s1 e = subst s2 e))
                              [SMTPat (subst s1 e); SMTPat (subst s2 e)]
-let subst_extensional s1 s2 e = ()
+let rec subst_extensional s1 s2 e =
+  let open FStar.Tactics in
+  match e with
+  | EVar _ -> ()
+  | ELam t e1 ->
+    assert (subst s1 (ELam t e1) == ELam t (subst (sub_elam s1) e1))
+      by norm [delta_only [`%subst]];
+    assert (subst s2 (ELam t e1) == ELam t (subst (sub_elam s2) e1))
+      by norm [delta_only [`%subst]];
+    subst_extensional (sub_elam s1) (sub_elam s2) e1
+  | EApp e1 e2 -> subst_extensional s1 s2 e1; subst_extensional s1 s2 e2
+  | _ -> ()
 
 (* Typing of substitutions (very easy, actually) *)
 type subst_typing (s:sub) (g1:env) (g2:env) =
@@ -187,7 +195,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
      let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
        fun y -> if y = 0 then TyVar y
              else let n:var = y - 1 in //Silly limitation of implicits and refinements
-                  substitution #_ #_ #(Some?.v (g1 n)) sub_inc #_ (hs n) hs'' //NS: needed to instantiate the Some?.v 
+                  substitution sub_inc (hs n) hs'' //NS: needed to instantiate the Some?.v 
      in TyLam tlam (substitution (sub_elam s) hbody hs')
   | TyUnit -> TyUnit
 
@@ -210,6 +218,6 @@ val preservation : #e:exp -> #e':exp -> #g:env -> #t:typ ->
        Tot (typing g e' t) (decreases ht)
 let rec preservation #e #e' #g #t (TyApp h1 h2) hs =
   match hs with
-  | SBeta tx e1' e2' -> substitution_beta #e1' #_ #_ #t #_ h2 (TyLam?.hbody h1)
+  | SBeta tx e1' e2' -> substitution_beta h2 (TyLam?.hbody h1)
   | SApp1 e2' hs1   -> TyApp (preservation h1 hs1) h2
   | SApp2 e1' hs2   -> TyApp h1 (preservation h2 hs2)

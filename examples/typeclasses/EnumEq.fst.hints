@@ -1,0 +1,25 @@
+[
+  "ûUtš„\u0010‚à )øX-qÝ\u0004",
+  [
+    [
+      "EnumEq.enum_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Enum.bounded",
+        "equation_Enum.toInt", "equation_Prims.eqtype", "equation_Prims.nat",
+        "fuel_guarded_inversion_Enum.enum",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_4a6eaf440e75ef17916cf0f682fb32c5",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "proj_equation_Enum.Mkenum_max",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt",
+        "token_correspondence_Enum.toInt"
+      ],
+      0,
+      "101d2732ca28e144143253ad9024f2e7"
+    ]
+  ]
+]

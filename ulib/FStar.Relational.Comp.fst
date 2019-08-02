@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Relational.Comp
 open FStar.ST
 open FStar.All
@@ -8,9 +23,10 @@ type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2
 let st2_Pre = st_pre_h heap2
-let st2_Post (a:Type) = st_post_h heap2 a
+let st2_Post' (a:Type) (pre:Type) = st_post_h' heap2 a pre
+let st2_Post  (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
-effect ST2 (a:Type) (pre:st2_Pre) (post: (heap2 -> Tot (st2_Post a))) =
+effect ST2 (a:Type) (pre:st2_Pre) (post: (h:heap2 -> Tot (st2_Post' a (pre h)))) =
     STATE2 a
       (fun (p:st2_Post a) (h:heap2) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)

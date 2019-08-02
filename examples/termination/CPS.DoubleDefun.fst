@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 (* *****************************************************************************)
 (* * Proving termination of its defunctionalized version is known to be hard ***)
 (* *****************************************************************************)
@@ -20,10 +35,10 @@ let rec stack = function
   | C2 k e -> e::(stack k)
 
 (* Order on call stacks *)
-assume Rstack0: forall (e:expr) (l:list expr). l << (e::l)
-assume Rstack1: forall (e1:expr) (e:expr) (l:list expr).
+assume Rstack0: forall (e:expr) (l:list expr).{:pattern (Prims.precedes l (Cons e l))} l << e::l
+assume Rstack1: forall (e1:expr) (e:expr) (l:list expr).{:pattern (Prims.precedes (Cons e1 l) (Cons e l))}
     e1 << e ==> (e1::l) << (e::l)
-assume Rstack2: forall (e1:expr) (e2:expr) (e:expr) (l:list expr).
+assume Rstack2: forall (e1:expr) (e2:expr) (e:expr) (l:list expr).{:pattern (Prims.precedes (Cons e1 (Cons e2 l)) (Cons e l))}
     e1 << e ==> e2 << e ==> (e1::e2::l) << (e::l)
 
 val apply : e:expr -> k:cont -> int -> Tot int (decreases %[e::(stack k);k;0])

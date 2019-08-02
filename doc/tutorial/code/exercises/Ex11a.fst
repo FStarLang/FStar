@@ -1,13 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Ex11a
-open FStar.HyperStack.ST
 //robot
 
 open FStar.Set
 open FStar.HyperStack
-
-module HH = FStar.HyperHeap
-
-type rid = HH.rid
+open FStar.HyperStack.ST
 
 let only (#t:eqtype) (i:t) =
   singleton i
@@ -19,30 +30,30 @@ let op_Plus_Plus_Hat (s:set rid) (r2:rid) =
   union s (singleton r2)
 
 type distinct (r:rid) (s:set rid) =
-  forall x. Set.mem x s ==> HH.disjoint x r
+  forall x. Set.mem x s ==> disjoint x r
 
 // BEGIN: Types
 noeq type point =
   | Point : r:rid
-          -> x:ref int{x.id = r}
-          -> y:ref int{y.id = r}
-          -> z:ref int{z.id = r /\ as_addr x <> as_addr y /\ as_addr y <> as_addr z /\ as_addr x <> as_addr z}
+          -> x:ref int{frameOf x = r}
+          -> y:ref int{frameOf y = r}
+          -> z:ref int{frameOf z = r /\ as_addr x <> as_addr y /\ as_addr y <> as_addr z /\ as_addr x <> as_addr z}
           -> point
 
 noeq type arm =
   | Arm : r:rid
-       -> polar:ref int{polar.id = r}
-       -> azim:ref int{azim.id = r /\ as_addr polar <> as_addr azim}
+       -> polar:ref int{frameOf polar = r}
+       -> azim:ref int{frameOf azim = r /\ as_addr polar <> as_addr azim}
        -> arm
 
 noeq type bot =
   | Bot : r:rid
-        -> pos  :point{HH.includes r (Point?.r pos)}
-        -> left :arm  {HH.includes r (Arm?.r left)}
-        -> right:arm  {HH.includes r (Arm?.r right)
-                      /\ HH.disjoint (Point?.r pos) (Arm?.r left)
-                      /\ HH.disjoint (Point?.r pos) (Arm?.r right)
-                      /\ HH.disjoint (Arm?.r left)  (Arm?.r right)}
+        -> pos  :point{includes r (Point?.r pos)}
+        -> left :arm  {includes r (Arm?.r left)}
+        -> right:arm  {includes r (Arm?.r right)
+                      /\ disjoint (Point?.r pos) (Arm?.r left)
+                      /\ disjoint (Point?.r pos) (Arm?.r right)
+                      /\ disjoint (Arm?.r left)  (Arm?.r right)}
         -> bot
 // END: Types
 
@@ -55,10 +66,10 @@ let arms_up (b:bot) (h:mem) =
   /\ sel h (Arm?.polar (Bot?.left b))  = 0
 
 type robot_inv (b:bot) (h:mem) =
-    Map.contains h.h (Bot?.r b)
-  /\ Map.contains h.h (Point?.r (Bot?.pos b))
-  /\ Map.contains h.h (Arm?.r (Bot?.left b))
-  /\ Map.contains h.h (Arm?.r (Bot?.right b))
+    Map.contains (get_hmap h) (Bot?.r b)
+  /\ Map.contains (get_hmap h) (Point?.r (Bot?.pos b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.left b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.right b))
   /\ (flying b h ==> arms_up b h)
 // END: Invariant
 
@@ -67,8 +78,8 @@ val new_point: r0:rid{is_eternal_region r0} -> x:int -> y:int -> z:int -> ST poi
   (requires (fun h0 -> True))
   (ensures (fun h0 p h1 ->
               modifies empty h0 h1
-            /\ HH.extends (Point?.r p) r0
-            /\ HH.fresh_region (Point?.r p) h0.h h1.h
+            /\ extends (Point?.r p) r0
+            /\ fresh_region (Point?.r p) h0 h1
             /\ sel h1 (Point?.x p) = x
             /\ sel h1 (Point?.y p) = y
             /\ sel h1 (Point?.z p) = z))
@@ -83,8 +94,8 @@ val new_arm: r0:rid{is_eternal_region r0} -> ST arm
   (requires (fun h0 -> True))
   (ensures (fun h0 x h1 ->
               modifies empty h0 h1
-            /\ HH.extends (Arm?.r x) r0
-            /\ HH.fresh_region (Arm?.r x) h0.h h1.h))
+            /\ extends (Arm?.r x) r0
+            /\ fresh_region (Arm?.r x) h0 h1))
 let new_arm r0 =
   let r = new_region r0 in
   let p = ralloc r 0 in
@@ -95,9 +106,10 @@ val new_robot: r0:rid{is_eternal_region r0} -> ST bot
   (requires (fun h0 -> True))
   (ensures (fun h0 x h1 ->
 	      modifies empty h0 h1
-            /\ HH.extends (Bot?.r x) r0
-            /\ HH.fresh_region (Bot?.r x) h0.h h1.h
+            /\ extends (Bot?.r x) r0
+            /\ fresh_region (Bot?.r x) h0 h1
             /\ robot_inv x h1))
+#set-options "--z3rlimit 20"
 let new_robot r0 =
   let r = new_region r0 in
   let p = new_point r 0 0 0 in
@@ -140,7 +152,7 @@ let fly b =
 // END: Fly
 
 // BEGIN: FlyBoth
-val fly_both: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)}
+val fly_both: b0:bot -> b1:bot{disjoint (Bot?.r b0) (Bot?.r b1)}
   -> ST unit
   (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h))
   (ensures (fun h0 x h1 ->
@@ -155,8 +167,8 @@ let fly_both b0 b1 =
   fly b1
 // END: FlyBoth
 
-#reset-options
-val fly_one: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
+#reset-options "--z3rlimit 10"
+val fly_one: b0:bot -> b1:bot{disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
   (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h /\ ~(flying b1 h)))
   (ensures (fun h0 x h1 ->
               modifies_transitively (only (Bot?.r b0)) h0 h1
@@ -192,20 +204,21 @@ let rec lemma_mem_rid #rs bs b =
 val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{Cons? bs}
   -> Lemma (requires True)
           (ensures (forall b. let Cons hd tl = bs in
-			 mem b tl ==> HH.disjoint (Bot?.r b) (Bot?.r hd)))
+			 mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))
 let lemma_bots_tl_disjoint #rs bs = ()
 
 //implement this function
 assume val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
-  (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h
-                          /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
+  (ensures  (fun h0 _u h1 ->   modifies_transitively rs h0 h1 /\
+                            (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
 
 val main: unit -> ST unit
     (requires (fun _ -> True))
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let main () =
-  let b1 = new_robot HH.root in
-  let b2 = new_robot HH.root in
+  witness_region root;
+  let b1 = new_robot root in
+  let b2 = new_robot root in
   fly_both b1 b2

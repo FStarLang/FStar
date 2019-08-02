@@ -10,7 +10,6 @@
     <RootNamespace>tosyntax</RootNamespace>
     <AssemblyName>tosyntax</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>tosyntax</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
@@ -31,7 +30,7 @@
     <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
@@ -71,8 +70,6 @@
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" />
   <ItemGroup>
-    <Compile Include="FStar.ToSyntax.Env.fsi" />
-    <Compile Include="FStar.ToSyntax.Env.fs" />
     <Compile Include="FStar.ToSyntax.Interleave.fsi" />
     <Compile Include="FStar.ToSyntax.Interleave.fs" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />
@@ -107,13 +104,14 @@
       <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>

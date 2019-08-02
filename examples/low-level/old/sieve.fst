@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Sieve
 open FStar.Regions.RSTWhile
 open StackAndHeap
@@ -84,7 +99,7 @@ val multiplesMarkedAsDividesIff :
    (requires (markedIffDividesOrInit2 n lo (reveal initv) (reveal newv)))
    (ensures (markedIffDividesOrInit n lo (reveal initv) (reveal newv)))
 
-      [SMTPatT (markedIffDividesOrInit n lo (reveal initv) (reveal newv))]
+      [SMTPat (markedIffDividesOrInit n lo (reveal initv) (reveal newv))]
 
 let multiplesMarkedAsDividesIff n initv newv lo = (multiplesMarkedAsDivides n newv lo)
 
@@ -117,7 +132,7 @@ let innerLoop n lo li res initres =
       memwrite li (liv+1);
       mark res (lov * liv)))
 
-    (*the part below has no computaional content; why does SMTPatT not work?*)
+    (*the part below has no computaional content; why does SMTPat not work?*)
       //let newv = memread res in
       //let lov = memread lo in
     (*      (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array
@@ -135,7 +150,7 @@ val markedIffHasDivisorSmallerThanInc :
       (requires (markedIffHasDivisorSmallerThan n lo (reveal old))
               /\ markedIffDividesOrInit2 n lo (reveal old) (reveal neww))
       (ensures (markedIffHasDivisorSmallerThan n (lo+1) (reveal neww)))
-      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+      (*[SMTPat (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
 let markedIffHasDivisorSmallerThanInc n lo old neww  = ((multiplesMarkedAsDividesIff n old neww lo))
 
 type allUnmarked

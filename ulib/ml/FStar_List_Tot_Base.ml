@@ -8,10 +8,11 @@ let length l = Z.of_int (BatList.length l)
 let nth l i = try Some (BatList.nth l (Z.to_int i)) with _ -> None
 let index l i = BatList.nth l (Z.to_int i)
 let count _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: count"
-let rev_acc _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: rev_acc"
+let rev_acc l r = BatList.rev_append l r
 let rev = BatList.rev
 let append = BatList.append
 let op_At = append
+let snoc (x, y) = append x [y]
 let flatten = BatList.flatten
 let map = BatList.map
 let mapi_init _ _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: mapi_init"
@@ -36,12 +37,19 @@ let subset _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: subset"
 let noRepeats _ = failwith "FStar_List_Tot_Base.ml: Not implemented: noRepeats"
 let assoc x l = match List.assoc x l with exception Not_found -> None | x -> Some x
 let split = BatList.split
+let splitAt n l = BatList.split_at (Z.to_int n) l
+let unsnoc l = let l1, l2 = splitAt (Z.sub (length l) Z.one) l in l1, hd l2
+let split3 l i = let a, a1 = splitAt i l in let b :: c = a1 in a, b, c
 let unzip = split
 let rec unzip3 = function
   | [] -> ([],[],[])
   | (x,y,z)::xyzs ->
      let (xs,ys,zs) = unzip3 xyzs in
      (x::xs,y::ys,z::zs)
-let bool_of_compare _ _ _ = failwith "FStar_List.Tot.Base.ml: Not implemented: bool_of_compare"
-let compare_of_bool _ _ _ = failwith "FStar_List.Tot.Base.ml: Not implemented: compare_of_bool"
+let bool_of_compare f x y = Z.gt (f x y) Z.zero
+let compare_of_bool =
+  fun rel -> fun x -> fun y -> if (rel x y) then Z.one else (if x = y then Z.zero else (Z.neg Z.one))
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
+let list_unref l = l
+let list_ref _ l = l
+let list_refb _ l = l

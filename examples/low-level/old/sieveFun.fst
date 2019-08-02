@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module SieveFun
 open FStar.Regions.RSTWhile
 open StackAndHeap
@@ -100,7 +115,7 @@ val multiplesMarkedAsDividesIff :
   -> Lemma
     (requires (markedIffDividesOrInit2 n lo initv newv))
     (ensures (markedIffDividesOrInit n lo initv newv))
-    (*[SMTPatT (markedIffDividesOrInit2 n lo initv newv)]*)
+    (*[SMTPat (markedIffDividesOrInit2 n lo initv newv)]*)
 let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n newv lo)
 
 type  innerLoopInv (n:nat) (lo: lref nat)  (li : lref nat) (res:lref ((k:nat{k<n}) -> Tot bool))
@@ -136,7 +151,7 @@ let innerLoop n lo li res initres =
       let resv = memread res in
       memwrite li (liv+1);
       memwrite res (mark n resv (lov * liv))));
-    (*the part below has no computaional content; why does SMTPatT not work?*)
+    (*the part below has no computaional content; why does SMTPat not work?*)
       let newv = memread res in
       let lov = memread lo in
       (multiplesMarkedAsDividesIff n initres newv lov)
@@ -160,7 +175,7 @@ val markedIffHasDivisorSmallerThanInc :
       (requires (markedIffHasDivisorSmallerThan n lo old)
               /\ markedIffDividesOrInit n lo old neww)
       (ensures (markedIffHasDivisorSmallerThan n (lo+1) neww))
-      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+      (*[SMTPat (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
 let markedIffHasDivisorSmallerThanInc n lo old neww  = ()
 
 type allUnmarked
@@ -362,7 +377,7 @@ let sieveUnfolded3 n u =
               memwrite li (liv+1);
               memwrite res (mark n resv (lov * liv))));
 
-          (*the part below has no computaional content; why does SMTPatT not work?*)
+          (*the part below has no computaional content; why does SMTPat not work?*)
         let newv = memread res in
         (multiplesMarkedAsDividesIff n initres newv lov);
         let newres = memread res in
@@ -403,7 +418,7 @@ let sieveUnfolded2 n u =
               memwrite li (liv+1);
               memwrite res (mark n resv (lov * liv))));
 
-          (*the part below has no computaional content; why does SMTPatT not work?*)
+          (*the part below has no computaional content; why does SMTPat not work?*)
         let newv = memread res in
         (multiplesMarkedAsDividesIff n initres newv lov);
         let newres = memread res in

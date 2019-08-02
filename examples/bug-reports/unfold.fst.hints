@@ -1,0 +1,18 @@
+[
+  "\u0010‘ƒAm‡\u007f–²qEM_zNˆ",
+  [
+    [
+      "Unfold.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Unfold.test2", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "9686efb6c9dcc544d90ce8a2082531dd"
+    ]
+  ]
+]

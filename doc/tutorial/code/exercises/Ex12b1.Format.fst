@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Ex12b1.Format
 
 open FStar.String
@@ -23,12 +38,12 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (Seq.length s1 = Seq.length s2
                /\ (forall (i:nat{i < Seq.length s1}).{:pattern (Seq.index s1 i); (Seq.index s2 i)} (Seq.index s1 i == Seq.index s2 i))))
      (ensures (Seq.equal s1 s2))
-     [SMTPatT (Seq.equal s1 s2)]
+     [SMTPat (Seq.equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 (* ----- from strings to bytestring and back *)
 
-logic type uInt16 (i:int) = (0 <= i /\ i < 65536)
+type uInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{uInt16 i}
 
 (*val utf8:
@@ -60,8 +75,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 (Char.char_of_int 0)
-let tag1 = createBytes 1 (Char.char_of_int 1)
+let tag0 = createBytes 1 0uy
+let tag1 = createBytes 1 1uy
 
 let request s = tag0 @| (utf8 s)
 

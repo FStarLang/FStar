@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -10,8 +10,6 @@
     <RootNamespace>reflection</RootNamespace>
     <AssemblyName>reflection</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>reflection</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -28,22 +26,23 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\prettyprint.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\reflection.XML</DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -52,7 +51,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FStar.Reflection.Data.fs" />
+    <Compile Include="FStar.Reflection.Basic.fsi" />
     <Compile Include="FStar.Reflection.Basic.fs" />
+    <Compile Include="FStar.Reflection.Embeddings.fsi" />
+    <Compile Include="FStar.Reflection.Embeddings.fs" />
+    <Compile Include="FStar.Reflection.NBEEmbeddings.fsi" />
+    <Compile Include="FStar.Reflection.NBEEmbeddings.fs" />
     <Compile Include="FStar.Reflection.Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>

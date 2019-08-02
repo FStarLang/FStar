@@ -1,0 +1,31 @@
+[
+  "šEr\u001cˆæ_”ýÞ“:\u0015.f¢",
+  [
+    [
+      "Bug1252.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "function_token_typing_Bug1252.p1",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0353096f143f2ff8b39fa9dbff075ac5"
+    ],
+    [
+      "Bug1252.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "function_token_typing_Bug1252.p1",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "63fbc80dd87635744db12f581bb4a058"
+    ]
+  ]
+]

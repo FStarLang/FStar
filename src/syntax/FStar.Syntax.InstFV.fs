@@ -42,8 +42,11 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_type _
       | Tm_bvar _
       | Tm_constant _
+      | Tm_quoted _
       | Tm_unknown
       | Tm_uinst _ -> t
+
+      | Tm_lazy _ -> t
 
       | Tm_fvar fv ->
         s t fv
@@ -89,8 +92,8 @@ let rec inst (s:term -> fv -> term) t =
         let lbs = fst lbs, snd lbs |> List.map (fun lb -> {lb with lbtyp=inst s lb.lbtyp; lbdef=inst s lb.lbdef}) in
         mk (Tm_let(lbs, inst s t))
 
-      | Tm_meta(t, Meta_pattern args) ->
-        mk (Tm_meta(inst s t, Meta_pattern (args |> List.map (inst_args s))))
+      | Tm_meta(t, Meta_pattern (bvs, args)) ->
+        mk (Tm_meta(inst s t, Meta_pattern (bvs, args |> List.map (inst_args s))))
 
       | Tm_meta(t, Meta_monadic (m, t')) ->
         mk (Tm_meta(inst s t, Meta_monadic(m, inst s t')))

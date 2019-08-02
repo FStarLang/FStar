@@ -49,6 +49,24 @@ be nonempty at type-checking time). Named as in: tl in OCaml, F#, Coq
 val tl : list 'a -> ML (list 'a)
 let tl l = tail l
 
+(** [last l] returns the last element of [l]. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val last: list 'a -> ML 'a
+let rec last = function
+  | [hd] -> hd
+  | _::tl -> last tl
+  | _ -> failwith "last of empty list"
+
+(** [init l] returns [l] without its last element. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val init: list 'a -> ML (list 'a)
+let rec init = function
+  | [_] -> []
+  | hd::tl -> hd::(init tl)
+  | _ -> failwith "init of empty list"
+
 (** [nth l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th) if [l] is long enough, or raises an exception
 otherwise (thus, [nth] hides [List.Tot.nth] which has [option] type.)
@@ -310,8 +328,8 @@ let rec splitAt n l =
     match l with
       | []     -> failwith "splitAt index is more that list length"
       | hd::tl ->
-	let l1, l2 = splitAt (n - 1) tl in
-	hd::l1, l2
+        let l1, l2 = splitAt (n - 1) tl in
+        hd::l1, l2
 
 (** [filter_map f l] returns the list of [y] for all elements [x]
 appearing in [l] such that [f x = Some y] for some [y]. (Implemented

@@ -1,0 +1,30 @@
+[
+  "uÚSRÜ±vˆ\u001bó×D@¢„[",
+  [
+    [
+      "NormBinderType.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
+      ],
+      0,
+      "ead9943cbb14aabc1194e3b03b5f8cac"
+    ],
+    [
+      "NormBinderType.g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_NormBinderType.f",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_6d065d00df42c579750cf75aca13b8a2"
+      ],
+      0,
+      "cd3e0b4e8ba7a817aaf51bc14e47a626"
+    ]
+  ]
+]

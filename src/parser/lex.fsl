@@ -27,15 +27,16 @@ open FStar.Parser.Parse
 open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Errors
+open FStar.Compiler
 
 let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
 let trim_right  lexbuf n = trim_both lexbuf 0 n
 let trim_left   lexbuf n = trim_both lexbuf n 0
 
-let fail lexbuf msg dflt =
+let fail lexbuf (e, msg) dflt =
      let m = getLexerRange lexbuf in
-     errorR(Error(msg,m));
+     raise_error (e, msg) m;
      dflt
 
 let trim_right_char s c =
@@ -55,26 +56,26 @@ let inline trim_and_check_range lexbuf (check: string -> 'a) (max: int64) (descr
   else
     let n =
       try int64 s
-      with _ -> fail lexbuf "This number is outside the allowable range" 0L in
+      with _ -> fail lexbuf (Errors.Error_OutOfRange, "This number is outside the allowable range") 0L in
     // we allow MAX_INT+1 to be represented as a valid token even though it's
     // outside of the admissible range, because it might be preceded by -, in
     // which case it becomes MIN_INT, which is admissible
     if n = max
     then s, true
     else try ignore (check s); s, false
-    with _ -> fail lexbuf ("This number is outside the allowable range for " ^ descr ^ " integers") ("0", false)
+    with _ -> fail lexbuf (Errors.Error_OutOfRange, "This number is outside the allowable range for " ^ descr ^ " integers") ("0", false)
 
 let inline trim_and_check_range_u lexbuf narrow descr =
   let s = stripped_integer lexbuf in
   try ignore (narrow s); s
-  with _ -> fail lexbuf ("This number is outside the allowable range for " ^ descr ^ " integers") "0"
+  with _ -> fail lexbuf (Errors.Error_OutOfRange, "This number is outside the allowable range for " ^ descr ^ " integers") "0"
 
 let checkExprOp lexbuf =
   if String.contains (ulexeme lexbuf)  ':'
-  then errorR(Error("':' is no longer permitted as a character in operator names" , getLexerRange lexbuf))
+  then raise_error (Errors.Fatal_IllegalCharInOperatorName, "':' is no longer permitted as a character in operator names") (getLexerRange lexbuf)
 
 let unexpected_char lexbuf =
-    failwith ("Unexpected character '"^(lexeme lexbuf)^"'")
+    raise_err (Errors.Fatal_UnexpectedChar, "Unexpected character '"^(lexeme lexbuf)^"'")
 
 let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
     let buf = Bytes.create 100 in
@@ -88,7 +89,7 @@ let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*Unicode
                         if Lexhelp.stringbuf_is_bytes buf then
                             BYTEARRAY (Lexhelp.stringbuf_as_bytes buf)
                         else (
-                            fail lexbuf "This byte array literal contains characters that do not encode as a single byte" ();
+                            fail lexbuf (Errors.Fatal_IllegalCharInByteArray, "This byte array literal contains characters that do not encode as a single byte") ();
                             BYTEARRAY (Lexhelp.stringbuf_as_bytes buf)
                         )
                      else
@@ -111,7 +112,7 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
    let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
    let balanced (contents : string) pos =
     if Util.char_at contents pos <> '<' then
-      (printfn "Unexpected position"; failwith "die!");
+      raise_err (Errors.Fatal_UnexpectedPosition, "Unexpected position. die!");
     let d = {angle=ref 1; paren=ref 0} in
     let upd i = match Util.char_at contents i with
       | '(' -> incr d.paren
@@ -170,8 +171,10 @@ let char8 = any_integer 'z'
 let floatp = digit+ '.' digit*
 let floate = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
 let float = floatp | floate
+let range = digit+ '.' '.' digit+
 let bigint =  integer 'I'
 let bignum =  integer 'N'
+let real   = floatp 'R'
 let ieee64 = float
 (* let ieee64d = (float | integer) ('d' | 'D')  *)
 let ieee32 = float ('f' | 'F')
@@ -228,8 +231,18 @@ let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let tvar_alt = constructor_start_char+
 
 rule token args = parse
+ | "%splice"
+     { SPLICE }
+ | "`%"
+     { BACKTICK_PERC }
+ | "quote"
+     { QUOTE }
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
+ | "`#"
+     { BACKTICK_HASH }
+ | "`@"
+     { BACKTICK_AT }
  | '`'
      { BACKTICK }
  | constructor
@@ -242,11 +255,15 @@ rule token args = parse
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
- | char8
-  { CHAR (Util.char_of_int (Util.int_of_string (trim_and_check_range_u lexbuf uint8 "character"))) }
+ | "#restart-solver"
+     { PRAGMA_RESTART_SOLVER }
+ | "#push-options"
+     { PRAGMA_PUSH_OPTIONS }
+ | "#pop-options"
+     { PRAGMA_POP_OPTIONS }
  | int8
   { INT8 (trim_and_check_range lexbuf int8 0x80L "8-bit signed integer") }
- | uint8
+ | (uint8 | char8)
   { UINT8 (trim_and_check_range_u lexbuf uint8 "8-bit unsigned integer") }
  | int16
   { INT16 (trim_and_check_range lexbuf int16 0x8000L "16-bit signed integer") }
@@ -265,9 +282,14 @@ rule token args = parse
      {
        let s = ulexeme lexbuf in INT(s, false)
      }
+ 
+ | range { let s = ulexeme lexbuf in RANGE(s) }
 
+ | real
+     { REAL (string_trim_both (ulexeme lexbuf) 0 1) }
+     
  | ieee64
-     { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf "Invalid floating point number" 0.0) }
+     { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf (Errors.Fatal_InvalidFloatingPointNumber, "Invalid floating point number") 0.0) }
 
  | xieee64
      {
@@ -275,7 +297,7 @@ rule token args = parse
        IEEE64 (System.BitConverter.Int64BitsToDouble(n64)) }
 
  | (integer | xinteger | float) ident_char+
-       { fail lexbuf "This is not a valid numeric literal. Sample formats include 4, 0x4, 0b0100, 4L, 4UL, 4u, 4s, 4us, 4y, 4uy, 4.0, 4.0f, 4N, 4I" (INT32("0",false)) }
+       { fail lexbuf (Errors.Fatal_InvalidNumericLiteral, "This is not a valid numeric literal. Sample formats include 4, 0x4, 0b0100, 4L, 4UL, 4u, 4s, 4us, 4y, 4uy, 4.0, 4.0f, 4N, 4I") (INT32("0",false)) }
 
  | char
      {
@@ -299,7 +321,7 @@ rule token args = parse
  | "\\/"   { DISJUNCTION }
  | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
- | '\'' unicodegraph_long '\''  { failwith "This unicode encoding is only valid in string literals" }
+ | '\'' unicodegraph_long '\''  { raise_err (Errors.Fatal_InvalidUnicodeInStringLiteral, "This unicode encoding is only valid in string literals") }
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
 
@@ -367,7 +389,9 @@ rule token args = parse
  | "?." { QMARK_DOT }
  | "?" { QMARK }
  | ".[" { DOT_LBRACK }
+ | ".(|" { DOT_LENS_PAREN_LEFT } 
  | ".(" { DOT_LPAREN }
+ | ".[|" { DOT_LBRACK_BAR } 
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
@@ -398,7 +422,15 @@ rule token args = parse
  | op_infix2  symbolchar* { OPINFIX2 (ulexeme lexbuf) }
  | "**"       symbolchar* { OPINFIX4 (ulexeme lexbuf) }
  | op_infix3  symbolchar* { OPINFIX3 (ulexeme lexbuf) }
-
+ | ".[]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".()<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".(||)<-"              { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".[||]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ 
+ | ".[]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".()"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".(||)"                { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".[||]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }
  | eof { lc := 1; EOF }
 
@@ -605,7 +637,7 @@ and fsdoc_kw cargs = parse
  | ['a'-'z' 'A'-'Z']+
      { let n,doc,kw = cargs in
 	   fsdoc_kw_arg(n,doc,kw,ulexeme lexbuf,"") lexbuf }
- | _ { fail lexbuf "Invalid FSDoc keyword" EOF }
+ | _ { fail lexbuf (Errors.Fatal_InvalidFSDocKeyword, "Invalid FSDoc keyword") EOF }
 
 and fsdoc_kw_arg cargs = parse
  | newline

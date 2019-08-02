@@ -1,22 +1,30 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Caller
 
 open FStar.Tactics
 
-(*
- * Testing tactics for requires clauses
- *
- * Seems to work, but might too brittle... what if the axiom spawns off a VC?
- *)
+(* Testing tactics for requires clauses *)
 
-let tau : tactic unit =
-    let proof : b2t (3 > 0) = magic () in
-    exact (quote proof)
-
-assume val ax : i:int -> Pure int (requires (by_tactic tau (i > 0)))
+assume val ax : tau:(unit -> Tac unit) ->
+                i:int -> Pure int (requires (with_tactic tau (squash (i > 0))))
                                   (ensures (fun i' -> i' == i + 1))
 
 (* No tactic should run before this line *)
 
-(* Will call tau to discharge the `b2t (3 > 0)` goal. We might want a way to specify the tactic on each call site *)
+(* Will call tau to discharge the `b2t (3 > 0)` goal. *)
 let f () : int =
-    ax 3
+    ax (fun () -> debug "Hello!"; trivial ()) 3

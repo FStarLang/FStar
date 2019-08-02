@@ -25,6 +25,7 @@ open FStar.ST
 FStar namespace,Array resolves to QuickSort.Array instead of
 FStar.Array, so we have to fix this explicitly as a module abbrev. *)
 module Array = FStar.Array
+module Seq   = FStar.Seq
 
 type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
@@ -64,7 +65,7 @@ val partition: #a:eqtype -> f:tot_ord a
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
-  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (only x) h0 h1))
+  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (Array.only x) h0 h1))
 let rec partition #a f start len pivot back x =
   let h0 = get() in
   if pivot = back
@@ -110,7 +111,6 @@ let rec partition #a f start len pivot back x =
         begin
           Array.swap x (pivot + 1) back; (* the back moves backward *)
 	  let h1 = get () in
-          let _ = admit() in
 // (* ghost *)           let s = Array.sel h0 x in
 // (* ghost *)           let s' = Array.sel h1 x in
 // (* ghost *)           swap_frame_lo' s start pivot (pivot + 1) back;
@@ -141,17 +141,17 @@ let lemma_slice_cons_pv #a s i pivot j pv =
   cut (Seq.equal (slice s i j) (append lo (cons pv hi)))
 
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 15"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 50"
 val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
-  (requires (fun h -> contains h x /\ j <= length (sel h x)))
-  (ensures (fun h0 u h1 -> (modifies (only x) h0 h1
-                            /\ j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
-                            /\ contains h1 x                                            (* the array is still in the heap *)
-                            /\ (length (sel h0 x) = length (sel h1 x))                  (* its length has not changed *)
-                            /\ sorted f (slice (sel h1 x) i j)                          (* it is sorted between [i, j) *)
-                            /\ (sel h1 x == splice (sel h0 x) i (sel h1 x) j)           (* the rest of it is unchanged *)
-                            /\ permutation a (slice (sel h0 x) i j) (slice (sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
+  (requires (fun h -> Array.contains h x /\ j <= length (Array.sel h x)))
+  (ensures (fun h0 u h1 -> (modifies (Array.only x) h0 h1
+                            /\ j <= length (Array.sel h0 x)                                      (* carrying this along from the requires clause *)
+                            /\ Array.contains h1 x                                            (* the array is still in the heap *)
+                            /\ (length (Array.sel h0 x) = length (Array.sel h1 x))                  (* its length has not changed *)
+                            /\ sorted f (slice (Array.sel h1 x) i j)                          (* it is sorted between [i, j) *)
+                            /\ (Array.sel h1 x == splice (Array.sel h0 x) i (Array.sel h1 x) j)           (* the rest of it is unchanged *)
+                            /\ permutation a (slice (Array.sel h0 x) i j) (slice (Array.sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
 let rec sort #a f i j x =
   let h0 = ST.get () in
   if i=j
@@ -189,9 +189,9 @@ let rec sort #a f i j x =
 
 
 val qsort: #a:eqtype -> f:tot_ord a -> x:array a -> ST unit
-  (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> modifies (only x) h0 h1
-                        /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
+  (requires (fun h -> Array.contains h x))
+  (ensures (fun h0 u h1 -> modifies (Array.only x) h0 h1
+                        /\ Array.contains h1 x /\ sorted f (Array.sel h1 x) /\ permutation a (Array.sel h0 x) (Array.sel h1 x)))
 let qsort #a f x =
   let h0 = get() in
 

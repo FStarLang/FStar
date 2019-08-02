@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Universe
 
 (** This module implements some basic facilities to raise the universe of a type *
@@ -6,11 +21,25 @@ module FStar.Universe
   * from [a] to [raise_t a] and back.                                            **)
 
 
-(** [raise_t a] is an isomorphic copy of [a] (living in universe 'ua) in universe ['ub + 1] **)
-val raise_t : Type u#a -> Type u#(max a (b + 1))
+(** [raise_t a] is an isomorphic copy of [a] (living in universe 'ua) in universe [max 'ua 'ub] **)
+val raise_t : Type u#a -> Type u#(max a b)
 
 (** [raise_val x] injects a value [x] of type [a] to [raise_t a] **)
 val raise_val : #a:Type u#a -> x:a -> raise_t u#a u#b a
 
 (** [downgrade_val x] projects a value [x] of type [raise_t a] to [a] **)
 val downgrade_val : #a:Type u#a -> x:raise_t u#a u#b a -> a
+
+val downgrade_val_raise_val
+  (#a: Type u#a)
+  (x: a)
+: Lemma
+  (downgrade_val u#a u#b (raise_val x) == x)
+  [SMTPat (downgrade_val u#a u#b (raise_val x))]
+
+val raise_val_downgrade_val
+  (#a: Type u#a)
+  (x: raise_t u#a u#b a)
+: Lemma
+  (raise_val (downgrade_val x) == x)
+  [SMTPat (raise_val u#a u#b (downgrade_val x))]

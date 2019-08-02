@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug194
 
 open FStar.Constructive
@@ -39,7 +54,7 @@ assume type red : typ -> exp -> Type
 
 assume val red_halts : #t:typ -> #e:exp -> red t e -> Tot (halts e)
 (* let red_halts t e h = match h with R_arrow _ _ _ hh _ -> hh *)
-                                                           
+
 assume val red_typable_empty : #t:typ -> #e:exp -> red t e -> Tot (typing empty e t)
 (* let red_typable_empty t e h = match h with | R_arrow k1 k2 ht k3 k4 -> ht *)
 

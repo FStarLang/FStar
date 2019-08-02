@@ -1,2 +1,8 @@
+PKG batteries
 PKG compiler-libs
-B ../../ocaml-output/_build
+PKG zarith
+PKG ocaml-migrate-parsetree
+
+B ../../ocaml-output/_build/src/ocaml-output
+B ../../ocaml-output/_build/src/basic/ml
+B ../../ocaml-output/_build/ulib/ml

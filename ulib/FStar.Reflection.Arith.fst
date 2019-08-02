@@ -1,11 +1,22 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Arith
 
-open FStar.Reflection.Syntax
-open FStar.Reflection.Types
-open FStar.Reflection.Syntax.Lemmas
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
 open FStar.Tactics
+open FStar.Reflection
 module O = FStar.Order
 
 (*
@@ -22,13 +33,15 @@ noeq
 type expr =
     | Lit     : int -> expr
     // atom, contains both a numerical ID and the actual term encountered
-    | Atom    : nat -> term -> expr 
+    | Atom    : nat -> term -> expr
     | Plus    : expr -> expr -> expr
     | Mult    : expr -> expr -> expr
     | Minus   : expr -> expr -> expr
     | Land    : expr -> expr -> expr
     | Lxor    : expr -> expr -> expr
     | Lor     : expr -> expr -> expr
+    | Ladd    : expr -> expr -> expr
+    | Lsub    : expr -> expr -> expr
     | Shl     : expr -> expr -> expr
     | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
@@ -58,12 +71,16 @@ let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
 private let st = p:(nat * list term){fst p == List.length (snd p)}
-private let tm a = st -> either string (a * st)
+private let tm a = st -> Tac (either string (a * st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
 private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
-             | Inl s -> Inl s
              | Inr (x, j) -> f x j
+             | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
+
+val lift : ('a -> Tac 'b) -> ('a -> tm 'b)
+let lift f x st =
+    Inr (f x, st)
 
 val liftM : ('a -> 'b) -> (tm 'a -> tm 'b)
 let liftM f x =
@@ -103,21 +120,27 @@ private let atom (t:term) : tm expr = fun (n, atoms) ->
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
-    match l with
-    | [] -> True
-    | x::xs -> p x /\ forall_list p xs
+let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
 
-val is_arith_expr : term -> tm expr
-let rec is_arith_expr (t:term) =
+val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.memP x l ==> p x})
+let rec list_unref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_unref xs
+
+let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun (a:argv) -> fst a << t)) =
+  collect_app_ref t
+
+val as_arith_expr : term -> tm expr
+#push-options "--initial_fuel 4 --max_fuel 4"
+let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
-    // Admitting this subtyping on lists for now, it's provable, but tedious right now
-    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
-    match inspect hd, tl with
+    let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
+    match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
-      let e2' = is_arith_expr e2 in
-      let e3' = is_arith_expr e3 in
+      let e2' = as_arith_expr e2 in
+      let e3' = as_arith_expr e3 in
       if qn = land_qn then liftM2 Land e2' e3'
       else if qn = lxor_qn then liftM2 Lxor e2' e3'
       else if qn = lor_qn then liftM2 Lor e2' e3'
@@ -126,54 +149,71 @@ let rec is_arith_expr (t:term) =
       else if qn = udiv_qn then liftM2 Udiv e2' e3'
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
-      else fail ("triary: " ^ fv_to_string fv)
+      else if qn = ladd_qn then liftM2 Ladd e2' e3'
+      else if qn = lsub_qn then liftM2 Lsub e2' e3'
+      else atom t
     | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
         // Have to go through hoops to get F* to typecheck this.
         // Maybe the do notation is twisting the terms somehow unexpected?
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
         if      qn = add_qn   then liftM2 Plus ll rr
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
-        else fail ("binary (ee): " ^ fv_to_string fv)
+        else atom t
     | Tv_FVar fv, [(l, Q_Implicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
-             if qn = nat_bv_qn then liftM NatToBv rr
-        else fail ("binary (ie): " ^ fv_to_string fv)
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
+        if qn = nat_bv_qn then liftM NatToBv rr
+        else atom t
     | Tv_FVar fv, [(a, Q_Explicit)] ->
         let qn = inspect_fv fv in
-        let aa = is_arith_expr a in
+        let aa = as_arith_expr a in
         if qn = neg_qn then liftM Neg aa
-        else fail ("unary: " ^ fv_to_string fv)
+        else atom t
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
-    | Tv_FVar _ , []
-    | Tv_Var _ , [] ->
+    | _ ->
         atom t
-    | _, _ ->
-        fail ("unk (" ^ term_to_string t ^ ")")
+#pop-options
 
-val is_arith_prop : term -> tm prop
-let rec is_arith_prop (t:term) =
-    match term_as_formula t with
-    | Comp Eq _ l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp BoolEq _ l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp Lt _ l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
-    | Comp Le _ l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
-    | And l r           -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
-    | Or l r            -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _                 -> fail ("connector (" ^ term_to_string t ^ ")")
+val is_arith_expr : term -> tm expr
+let is_arith_expr t =
+  a <-- as_arith_expr t ;
+  match a with
+  | Atom _ t -> begin
+    let hd, tl = collect_app_ref t in
+    match inspect_ln hd, tl with
+    | Tv_FVar _, []
+    | Tv_BVar _, []
+    | Tv_Var _, [] -> return a
+    | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
+  end
+  | _ -> return a
+
+// Cannot use this...
+// val is_arith_prop : term -> tm prop
+val is_arith_prop : term -> st -> Tac (either string (prop * st))
+let rec is_arith_prop (t:term) = fun i ->
+    (f <-- lift term_as_formula t;
+    match f with
+    | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp Lt l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
+    | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
+    | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
+    | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
+    | _               -> fail ("connector (" ^ term_to_string t ^ ")")) i
 
 
 // Run the monadic computations, disregard the counter
-let run_tm (m : tm 'a) : either string 'a =
+let run_tm (m : tm 'a) : Tac (either string 'a) =
     match m (0, []) with
-    | Inl s -> Inl s
     | Inr (x, _) -> Inr x
+    | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
 
 let rec expr_to_string (e:expr) : string =
     match e with
@@ -186,10 +226,11 @@ let rec expr_to_string (e:expr) : string =
     | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
     | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
     | Lxor l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Ladd l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | Lsub l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
-    | Neg l -> "~ " ^ (expr_to_string l)
     | Udiv l r -> "(" ^ (expr_to_string l) ^ " / " ^ (expr_to_string r) ^ ")"
     | Umod l r -> "(" ^ (expr_to_string l) ^ " % " ^ (expr_to_string r) ^ ")"
     | MulMod l r -> "(" ^ (expr_to_string l) ^ " ** " ^ (expr_to_string r) ^ ")"

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug237
 
 (* Can only reproduce one of the problems with k_foralle.
@@ -66,10 +81,10 @@ and ktsubst s k =
 
 (* Can't reproduce it with this either *)
 assume type esub
-assume val esub_id : esub 
+assume val esub_id : esub
 assume val esub_inc : esub
 
-noeq type sub = 
+noeq type sub =
 | Sub : es:esub -> ts:tsub -> sub
 
 assume val esub_tlam: s:sub -> Tot esub
@@ -86,15 +101,15 @@ val tsubst : s:sub -> t:typ -> Pure typ (requires True)
       (decreases %[is_tvar t; is_renaming s;1; t])
 val ksubst : s:sub -> k:knd -> Tot knd
       (decreases %[1; is_renaming s; 1; k])
-val tsub_elam : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t}) 
+val tsub_elam : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t})
       (decreases %[1; is_renaming s; 0; TVar 0])
-val tsub_tlam : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t}) 
+val tsub_tlam : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t})
       (decreases %[1; is_renaming s; 0; TVar 0])
-val tsub_elam2 : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t}) 
+val tsub_elam2 : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t})
       (decreases %[1; is_renaming s; 0; TVar 0])
 
 let rec tsub_elam s =
-fun a -> tsubst (Sub esub_inc tsub_id) (Sub?.ts s a) 
+fun a -> tsubst (Sub esub_inc tsub_id) (Sub?.ts s a)
 
 and tsub_tlam s =
 fun a -> if a = 0 then TVar a
@@ -114,10 +129,10 @@ and tsubst s t =
 and ksubst s k =
   match k with
   | KType -> KType
-  | KKArr k kbody -> 
+  | KKArr k kbody ->
      let sub_tlam = Sub (esub_tlam s) (tsub_tlam s) in
      KKArr (ksubst s k) (ksubst sub_tlam kbody)
-  | KTArr t kbody -> 
+  | KTArr t kbody ->
      let sub_elam = Sub (esub_elam s) (tsub_elam s) in
      (KTArr (tsubst s t) (ksubst sub_elam kbody))
 

@@ -1,0 +1,18 @@
+[
+  "¥›Ş ;cŒ†6şfË\u0011Ä'",
+  [
+    [
+      "Bug589.h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "b3b635516e07b470891f19c6c0b09aaa"
+    ]
+  ]
+]

@@ -29,7 +29,10 @@ Ex12c.Format.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
-Ex12g.TMAC2.fst
+Ex12g.TMAC2.fst \
+LowStar.Ex1.fst \
+LowStar.Ex2.fst \
+LowStar.Ex3.fst
 
 FSTAR_HOME=../../../../
 include ../Makefile.include
@@ -37,7 +40,7 @@ include ../Makefile.include
 HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
 
 verify-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+	$(FSTAR) --use_extracted_interfaces true --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
 
 all: uall sall
@@ -54,7 +57,6 @@ out:
 	mkdir -p out
 
 Ex01a-ocaml: out Ex01a.fst
-	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
 	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
 	-./Ex01a.exe
@@ -63,4 +65,3 @@ Ex01a-ocaml: out Ex01a.fst
 # %.fst-in: 
 # 	@echo $(OPTIONS) \
 # 	--include $(FSTAR_HOME)/ulib/hyperstack \
-# 	--verify_module $(basename $(notdir $@))

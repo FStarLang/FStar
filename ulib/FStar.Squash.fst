@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Squash
 
 (* This file shows that there is another natural model for some of the
@@ -16,7 +31,7 @@ let give_proof (#p:Type) _ = ()
 
 let proof_irrelevance (p:Type) x y = ()
 
-let squash_double_arrow (#a:Type) (#p:(a -> Type)) f =
+let squash_double_arrow #a #p f =
     bind_squash f push_squash
 
 let push_sum (#a:Type) (#b:(a -> Type)) ($p : dtuple2 a (fun (x:a) -> squash (b x))) =

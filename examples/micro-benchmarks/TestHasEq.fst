@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module TestHasEq
 
 type mlist (a:Type) =
@@ -34,3 +49,22 @@ assume type tp (t:Type0) : Type0
 
 type t2 (t:Type0{tp t}) =
   | Bad: t2 t
+
+(*
+ * hasEq (t3 a) depends on hasEq a, so the eqtype annotation fails
+ *)
+[@expect_failure]
+type t3 (a:Type0) :eqtype =
+  | C3: x:a -> t3 a
+
+type t4 (a:Type0) :eqtype =  //this succeeds, since independent of a, t4 hasEq
+  | C4 : x:nat -> t4 a
+
+(*
+ * Reducing basic hasEq axioms in the normalizer
+ *)
+#push-options "--no_smt"
+let test_1514 () =
+  assert (hasEq int); assert (hasEq bool); assert (hasEq string); assert (hasEq unit);
+  assert (hasEq (x:int{x > 2}))
+#pop-options

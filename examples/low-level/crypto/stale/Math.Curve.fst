@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Math.Curve
 
 open FStar.Ghost
@@ -101,15 +116,15 @@ assume val lemma_equal_intro: e1:celem -> e2:celem -> Lemma
   (requires (Curve.Inf? e1 /\ Curve.Inf? e2) 
 	     \/ (Curve.Finite? e1 /\ Curve.Finite? e2 /\ get_x e1 == get_x e2 /\ get_y e1 == get_y e2))
   (ensures (equal e1 e2))
-  [SMTPatT (equal e1 e2)]
+  [SMTPat (equal e1 e2)]
 assume val lemma_equal_elim: e1:celem -> e2:celem -> Lemma
     (requires (equal e1 e2))
     (ensures  (e1 = e2))
-    [SMTPatT (equal e1 e2)]
+    [SMTPat (equal e1 e2)]
 assume val lemma_equal_refl: e1:celem -> e2:celem -> Lemma
     (requires (e1 = e2))
     (ensures  (equal e1 e2))
-    [SMTPatT (equal e1 e2)]
+    [SMTPat (equal e1 e2)]
 
 (* General lemmas *)
 val add_equality: a:celem -> b:celem -> c:celem -> d:celem ->

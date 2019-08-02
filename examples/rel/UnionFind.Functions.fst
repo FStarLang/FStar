@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module UnionFind.Functions
 
 open FStar.Seq
@@ -18,7 +33,7 @@ unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t =
  * well-formed conditions on the forest, essentially the invariants needed for proving the termination of operations
  * my suspicion is that these patterns are not too helpful
  *)
-abstract let well_formed (#n:nat) (uf:uf_forest n) (h:heap) =
+let well_formed (#n:nat) (uf:uf_forest n) (h:heap) =
   forall (i:id n). {:pattern (sel h (index uf i))}
              (let p = parent uf i h in
 	      let s = subtree uf i h in

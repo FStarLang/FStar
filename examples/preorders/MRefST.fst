@@ -1,7 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module MRefST
 
-open FStar.Preorder
 open MRefHeap
+
+open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 ////////////////////////////////////////////////////////////////////////////////
 // In the DM sub-language
@@ -105,7 +122,7 @@ let ist_put x = ISTATE?.put x
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed : (p:predicate heap{stable p heap_rel}) -> Type0
+let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed heap_rel p
 
 assume val ist_witness : p:predicate heap{stable p heap_rel} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
@@ -119,6 +136,7 @@ assume val ist_recall :  p:predicate heap{stable p heap_rel} ->
 
 (* References. *)
 
+let mref0 = mref
 type mref (a:Type) (r:preorder a) = m:mref a r{ist_witnessed (contains m)}
 
 

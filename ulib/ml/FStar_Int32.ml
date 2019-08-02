@@ -1,4 +1,5 @@
 type int32 = int
+type uint32 = int
 type t = int32
 type t' = t
 
@@ -31,8 +32,9 @@ let lognot (a:int32) : int32 = lnot a
        
 let int_to_int32 (x:Prims.int) = int_of_string (Prims.to_string x) land 4294967295
 
-let shift_right (a:int32) (b:int32) : int32 = a asr b
-let shift_left  (a:int32) (b:int32) : int32 = (a lsl b) land 4294967295
+let shift_right (a:int32) (b:uint32) : int32 = a lsr b
+let shift_left  (a:int32) (b:uint32) : int32 = (a lsl b) land 4294967295
+let shift_arithmetic_right (a:int32) (b:uint32) : int32 = a asr b
 
 (* Comparison operators *)
 let eq (a:int32) (b:int32) : bool = a = b
@@ -69,3 +71,4 @@ let cmod x =
 
 let to_string s = string_of_int (cmod s)
 let int_to_t s = int_to_int32 s
+let __int_to_t = int_to_t

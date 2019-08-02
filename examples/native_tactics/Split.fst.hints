@@ -1,0 +1,17 @@
+[
+  "EµÈ‹SÇ\u0017SìùBak|á%",
+  [
+    [
+      "Split.split_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "98e533542837caf909fe06e37aa219a2"
+    ]
+  ]
+]

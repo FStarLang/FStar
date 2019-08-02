@@ -1,0 +1,72 @@
+[
+  "f\u0013Gr·Oû”AâƒÔÒUoB",
+  [
+    [
+      "Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4c3ce2fb6f6d7d3f88db35bd64023c84"
+    ],
+    [
+      "Bug260.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug260.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
+      ],
+      0,
+      "3cf388c026ea4b21580d75f4e647c960"
+    ],
+    [
+      "Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
+      0,
+      "f482e8d0e42209ea76a5dcbc057f26e6"
+    ],
+    [
+      "Bug260.validity'",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
+      0,
+      "302b2cf4b2df7df36fb1cd03bc5d111d"
+    ],
+    [
+      "Bug260.__proj__VSucc'__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug260.VSucc__n",
+        "projection_inverse_Bug260.VSucc__n"
+      ],
+      0,
+      "1121a60be30dab6b2ab9132238be3923"
+    ],
+    [
+      "Bug260.validity'_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9092173dacc7c806816e845a428fbe8f_0",
+        "binder_x_bc3bc53b54e64d3a6235a24efa65ce59_1",
+        "fuel_guarded_inversion_Bug260.validity_",
+        "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
+      ],
+      0,
+      "7656527515f799c29fd7541090949083"
+    ]
+  ]
+]

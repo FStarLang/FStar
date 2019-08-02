@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.DM4F.Heap.Random
 
 (***** Random tape *****)
@@ -13,26 +28,26 @@ let elem = n:nat{n < q}
 abstract type id : eqtype = i:nat{i < size}
 abstract type tape : eqtype = h:seq elem{length h == size}
 
-let to_id (n:nat{n < size}) : id = n
+abstract let to_id (n:nat{n < size}) : id = n
 
-val incrementable: id -> bool
+abstract val incrementable: id -> bool
 let incrementable (i:id) = i + 1 < size
 
-let incr (i:id{incrementable i}) : id = to_id (i + 1)
+abstract let incr (i:id{incrementable i}) : id = to_id (i + 1)
 
-let index (h:tape) (i:id) : Tot elem = index h i
+abstract let index (h:tape) (i:id) : Tot elem = index h i
 let sel = index
-let upd (h:tape) (i:id) (x:elem) : Tot tape = upd h i x
+abstract let upd (h:tape) (i:id) (x:elem) : Tot tape = upd h i x
 
-let create (x:elem) : Tot tape = create #elem size x
+abstract let create (x:elem) : Tot tape = create #elem size x
 
-val equal: tape -> tape -> GTot Type0
+abstract val equal: tape -> tape -> GTot Type0
 let equal (t1:tape) (t2:tape) = Seq.equal t1 t2
 
 abstract val lemma_eq_intro: s1:tape -> s2:tape -> Lemma
   (requires ((forall (i:id).{:pattern (index s1 i); (index s2 i)} index s1 i == index s2 i)))
   (ensures (equal s1 s2))
-  [SMTPatT (equal s1 s2)]
+  [SMTPat (equal s1 s2)]
 let lemma_eq_intro s1 s2 =
   assert (forall (i:id). index s1 i == Seq.index s1 i);
   assert (forall (i:id). index s2 i == Seq.index s2 i);
@@ -41,7 +56,7 @@ let lemma_eq_intro s1 s2 =
 abstract val lemma_eq_elim: s1:tape -> s2:tape -> Lemma
   (requires (equal s1 s2))
   (ensures (s1==s2))
-  [SMTPatT (equal s1 s2)]
+  [SMTPat (equal s1 s2)]
 let lemma_eq_elim s1 s2 = ()
 
 abstract val lemma_index_upd1: s:tape -> n:id -> v:elem -> Lemma

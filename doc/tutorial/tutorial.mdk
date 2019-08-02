@@ -113,19 +113,20 @@ It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
 with [Haskell]---we provide a quick review of some basic concepts if you're
 a little rusty, but if you feel you need more background, there are many useful
-resources freely available on the web, e.g., [TryF#],
-[F# for fun and profit], [Introduction to Caml], or the
-[Real World OCaml] book.
+resources freely available on the web, e.g., [Learn F#],
+[F# for fun and profit], [Introduction to Caml], the
+[Real World OCaml] book, or the [OCaml MOOC].
 
 [OCaml]: https://ocaml.org
 [F#]: http://fsharp.org/
 [Standard ML]: http://sml-family.org/
 [Haskell]: https://www.haskell.org
 
+[Learn F#]: https://fsharp.org/learn.html
 [F# for fun and profit]: http://fsharpforfunandprofit.com/
-[TryF#]: http://www.tryfsharp.org
 [Introduction to Caml]: https://pl.cs.jhu.edu/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
+[OCaml MOOC]: https://www.fun-mooc.fr/courses/course-v1:parisdiderot+56002+session03/about
 
 ~KK
 Without any experience in ML or Ocaml my experience has been that the later
@@ -370,8 +371,8 @@ type-checker knows that the `read f` call is safe.
 Write a function called `checkedWrite` that takes a filename `f` and a
 string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
-is not writable your `checkedWrite` should raise an exception. As for
-`checkedRead`, your `checkedRead` should have no preconditions.
+is not writable your `checkedWrite` should raise an exception. As with
+`checkedRead`, your `checkedWrite` should have no preconditions.
 ~~ ExerciseFragment {exname=Ex01a}
 [INCLUDE=code/exercises/Ex01a.fst:CheckedWriteType]
 ~~
@@ -674,7 +675,7 @@ Let's take a look at the factorial function:
       if n = 0 then 1 else n * (factorial (n - 1))
 
 ~ Remark
-By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as typles. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
+By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as tuples. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
 ~
 
 For a recursive function, without further annotation, F\* attempts to
@@ -1389,7 +1390,7 @@ strengthen the induction hypothesis, and possibly to prove that `append` is
 associative)
 ~~ ExerciseFragment {exname=Ex04f}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
-      Lemma (fold_left Cons l l' = append (reverse l) l')
+      Lemma (fold_left Cons l l' == append (reverse l) l')
 ~~
 ~~ AnswerFragment {exname=Ex04f}
 [INCLUDE=code/solutions/Ex04f.fst:FoldLeftInteresting]
@@ -2185,8 +2186,8 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
       Without a way to do this maintaining this document and keeping it consistent
       will be a nightmare.) -->
 
-[sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
-[sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
+[sf-stlc]: https://softwarefoundations.cis.upenn.edu/plf-current/Stlc.html
+[sf-stlc-prop]: https://softwarefoundations.cis.upenn.edu/plf-current/StlcProp.html
 
 We now look at a larger case study: proving the soundness of a type-checker
 for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with
@@ -5846,9 +5847,51 @@ let test() =
 
 -->
 
+<!----------------------------------------------------------------------------------------->
+
+# Low\* Examples
+
+## Exercise 1: Machine integers
+
+
+~ Fragment {link="code/exercises/LowStar.Ex1.fst"}
+[INCLUDE=code/exercises/LowStar.Ex1.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex1.fst"}
+[INCLUDE=code/solutions/LowStar.Ex1.fst:DisplayFrag]
+~
+
+## Exercise 2: References and buffers
+
+~ Fragment {link="code/exercises/LowStar.Ex2.fst"}
+[INCLUDE=code/exercises/LowStar.Ex2.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex2.fst"}
+[INCLUDE=code/solutions/LowStar.Ex2.fst:DisplayFrag]
+~
+
+## Exercise 3: Finite lists
+
+~ Fragment {link="code/exercises/LowStar.Ex3.fst"}
+[INCLUDE=code/exercises/LowStar.Ex3.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex3.fst"}
+[INCLUDE=code/solutions/LowStar.Ex3.fst:DisplayFrag]
+~
+
+
 # A note on this document 
 
-This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
+This document was created using Daan Leijen's <https://madoko.net> markdown processor.
 
 If` you find any errors in it, or would like to improve it in any way,
 this is how you do it: 

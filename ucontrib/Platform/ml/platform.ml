@@ -32,23 +32,23 @@ module Bytes = struct
 
   let lemma_repr_bytes_values n = ()
 
-  let cbyte (b:bytes) : byte =
-    try (Char.code (String.get b 0))
+  let cbyte (b:bytes) =
+    try int_of_char (String.get b 0)
     with _ -> failwith "cbyte: called on empty string"
 
-  let cbyte2 (b:bytes) : (byte * byte)  =
-    try (Char.code (String.get b 0), Char.code (String.get b 1))
+  let cbyte2 (b:bytes) =
+    try (int_of_char (String.get b 0), int_of_char (String.get b 1))
     with _ -> failwith "cbyte2: need at least length 2"
 
-  let index (b:bytes) (i : Z.t) : byte =
-    try Char.code (String.get b (Z.to_int i))
+  let index (b:bytes) i =
+    try int_of_char (String.get b (Z.to_int i))
     with _ -> failwith "index: called out of bound"
 
   let get_cbytes (b:bytes) = b
   let abytes (ba:cbytes) = ba
-  let abyte (ba:byte) = String.make 1 (Char.chr ba)
+  let abyte (ba:byte) = String.make 1 (char_of_int ba)
   let abyte2 (ba1,ba2) =
-    String.init 2 (fun i -> if i = 0 then Char.chr ba1 else Char.chr ba2)
+    String.init 2 (fun i -> if i = 0 then char_of_int ba1 else char_of_int ba2)
 
   let (@|) (a:bytes) (b:bytes) = a ^ b
   let op_At_Bar a b = a @| b
@@ -65,14 +65,14 @@ module Bytes = struct
   let length (b:bytes) = Z.of_int (String.length b)
 
   let empty_bytes = ""
-  let createBytes len (value:byte) : bytes =
+  let createBytes len (value:int) : bytes =
       let len = Z.to_int len in
-      try abytes (String.make len (Char.chr value))
+      try abytes (String.make len (char_of_int value))
       with _ -> failwith "Default integer for createBytes was greater than max_value"
 
   let initBytes len f : bytes =
       let len = Z.to_int len in
-      try abytes (String.init len (fun i -> Char.chr (f (Z.of_int i))))
+      try abytes (String.init len (fun i -> char_of_int (f (Z.of_int i))))
       with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
 
   type 'a lbytes = bytes
@@ -126,7 +126,7 @@ module Bytes = struct
       res := !res ^ (Printf.sprintf "%02X" (int_of_char s.[i]));
     done; !res
 
-  let byte_of_int i = char_of_int (Z.to_int i)
+  let byte_of_int i = Z.to_int i
 
   (* Some helpers to deal with the conversation from hex literals to bytes and
    * conversely. Mostly for tests. *)

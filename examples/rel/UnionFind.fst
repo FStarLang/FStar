@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module UnionFind
 
 open FStar.Seq
@@ -152,7 +167,9 @@ let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{l
   = let r_1, _ = reify (find uf i_1 h) h in
     let r_2, _ = reify (find uf i_2 h) h in
     ()
+#reset-options
 
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 4 --max_ifuel 4 --z3rlimit 80"
 let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
   :Lemma (requires True)
          (ensures  (let r_1, _ = reify (find uf i_1 h) h in

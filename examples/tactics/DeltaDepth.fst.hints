@@ -1,0 +1,83 @@
+[
+  "˛◊-IÈ5+°ï\u0004'ùßï\b˚",
+  [
+    [
+      "DeltaDepth.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "142ed3aca88c77a05c54c688d9a6d8ba"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "fb2b301443c789d3d6ed799d83c4b613"
+    ],
+    [
+      "DeltaDepth.m",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "a1d06142ac637deee5bca9b72ed1a262"
+    ],
+    [
+      "DeltaDepth.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "320031d21ee309cf9ddddd3929fd15c3"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "757d9a7fd28ab8d1b88c8fbbf2e30b1d"
+    ],
+    [
+      "DeltaDepth.m",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "9a25e9f653a6e9b1fada91e0af7ca1fa"
+    ]
+  ]
+]

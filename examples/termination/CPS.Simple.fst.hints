@@ -8,13 +8,32 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_2",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "function_token_typing_Prims.__cache_version_number__",
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fbf4c8ef44424f916befedc342d8e8bf"
+      "aa333a1ebd88ffaa2d29197d7afa9881"
+    ],
+    [
+      "CPS.Simple.add_cps",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "62041402c8728b715f9d36219573fb78"
     ]
   ]
 ]

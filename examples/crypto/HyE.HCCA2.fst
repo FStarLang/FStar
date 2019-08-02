@@ -1,10 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module HyE.HCCA2
 open FStar.HyperStack.All
 open FStar.HyperStack.ST
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
-open FStar.HyperHeap
 open FStar.HyperStack
 
 module B = Platform.Bytes
@@ -19,9 +33,9 @@ module RSA = HyE.RSA
 type rid = FStar.Monotonic.Seq.rid
 
 noeq abstract type pkey =
-  | PKey: #region:rid -> rawpk:RSA.pkey -> cca_pk:C.pkey  -> pkey
+  | PKey: #region:rid{HyperStack.ST.witnessed (region_contains_pred region)} -> rawpk:RSA.pkey -> cca_pk:C.pkey  -> pkey
 
-let access_pkraw (pk:pkey) =
+abstract let access_pkraw (pk:pkey) =
   PKey?.rawpk pk
 
 noeq abstract type skey =
@@ -29,12 +43,12 @@ noeq abstract type skey =
 
 type c = C.cipher * A.cipher //lbytes(C.ciphersize + A.ciphersize)
 
-val keygen: rid -> ML (pkey * skey)
+val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
 val encrypt: pkey -> p -> ML c
 val decrypt: skey -> c -> ML (option p )
 
 
-let keygen (parent:rid) =
+let keygen parent =
   let cca_pk, cca_sk = C.keygen parent in
   let region = new_region parent in
   let pkey = PKey #region (C.access_pk_raw cca_pk) cca_pk in

@@ -1,5 +1,5 @@
 [
-  "y•\u0001eшoО]UіA(ЩБвю",
+  "rє<аЂ\u0004а«N\f+\u000bWW4$",
   [
     [
       "Ex04e.option",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b5de185f235538a31039f0fbfba26170"
-    ],
-    [
-      "Ex04e.uu___is_None",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ea3dcd7b072691b785045b9828b083c7"
-    ],
-    [
-      "Ex04e.uu___is_Some",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7d4e82d3ce5f654da064677786c6251b"
+      "38f3be55c75dce0c5717aded7859f7ea"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -36,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.Some",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
+        "refinement_interpretation_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "8935e3383de45c6ebc424b48129dac4f"
+      "a1db71c18ca06437d3aaf8cea6f8b3d6"
     ],
     [
       "Ex04e.find",
@@ -48,13 +30,48 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_57e226bd9dfa480ee29b2942c7e00f21_1",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d633fb43694f182081100c05b2fff396"
+      "6fc1dc5aa8d5aabac0f0a86c94c97114"
+    ],
+    [
+      "Ex04e.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e3680afffded13ef97a324b655526060"
+    ],
+    [
+      "Ex04e.__proj__Some__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
+      ],
+      0,
+      "faf77ad6134001677ae7a5461f41d71e"
+    ],
+    [
+      "Ex04e.find",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "5c70b59025f23eda3e4d2fc65d5549b9"
     ]
   ]
 ]

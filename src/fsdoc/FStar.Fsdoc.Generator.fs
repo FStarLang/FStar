@@ -28,6 +28,7 @@ open FStar
 open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
+open FStar.Errors
 
 module O = FStar.Options
 module P = FStar.Parser.Driver
@@ -121,6 +122,7 @@ let string_of_decl' d =
   | TopLevelModule l -> "module " ^ l.str // SI: should never get here
   | Open l -> "open " ^ l.str
   | Include l -> "include " ^ l.str
+  | Friend l -> "friend " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | TopLevelLet(_, pats) ->
         let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in
@@ -128,8 +130,9 @@ let string_of_decl' d =
         "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
   | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
-  | Tycon(_, tys) ->
-            "type " ^
+  | Tycon(_, tc, tys) ->
+        let s = if tc then "class" else "type" in
+            s ^
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
@@ -138,6 +141,7 @@ let string_of_decl' d =
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
+  | Splice (ids, t) -> "splice " ^ term_to_string t
   | Fsdoc (comm,_) -> comm
 
 // A decl is documented if either:
@@ -164,7 +168,7 @@ let decl_documented (d:decl) =
         // or it's an fsdoc
         | Fsdoc _ -> true
         // or the tycon is documented
-        | Tycon(_,ty) -> tycon_documented ty
+        | Tycon(_,_,ty) -> tycon_documented ty
         // no other way to document a decl right now
         | _ -> false
         end
@@ -194,7 +198,7 @@ let document_toplevel name topdecl =
         | None -> None, Some(doc)
         | Some (_, summary) -> Some(summary), Some(doc))
     | None -> None, None)
-  | _ -> raise(FStar.Errors.Err("Not a TopLevelModule"))
+  | _ -> Errors.raise_err (Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -228,7 +232,7 @@ let document_module (m:modul) =
           close_file fd;
           name
         end
-    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
+    | None -> Errors.raise_err (Errors.Fatal_NonSingletonTopLevel, (Util.format1 "No singleton toplevel in module %s" name.str))
 
 ///////////////////////////////////////////////////////////////////////////////
 // entry point

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.StackHeap2
 
 open FStar.Map
@@ -160,7 +175,7 @@ let lemma_modifies_ref_1 #a r s s0 s1 x = ()
 val lemma_modifies_ref_2: #a:Type -> y:stacked a -> s0:t -> s1:t -> x:stacked a -> Lemma
   (requires (contains s0 x /\ modifies_ref (frameOf y) !{as_ref y} s0 s1 /\ modifies_one (frameOf y) s0 s1 /\ (frameOf x <> frameOf y \/ (frameOf x = frameOf y /\ y <> x))))
   (ensures (sel s1 x = sel s0 x))
-  [SMTPat (modifies_ref (frameOf y) !{as_ref y} s0 s1); SMTPatT (x <> y)]
+  [SMTPat (modifies_ref (frameOf y) !{as_ref y} s0 s1); SMTPat (x <> y)]
 let lemma_modifies_ref_2 #a y s0 s1 x = ()
 
 open FStar.Set
@@ -209,7 +224,7 @@ val domain_equality_lemma_1: h0:t -> h1:t -> h2:t -> h3:t -> Lemma
 	     /\ h3 = pop_top_frame h2))
   (ensures (domain_equality h0 h3))
   [SMTPat (h1 = push_empty_frame h0); SMTPat (frame_ids h2 = frame_ids h1);
-   SMTPatT (domain_equality (pop_top_frame h1) (pop_top_frame h2)); SMTPat (h3 = pop_top_frame h2)]
+   SMTPat (domain_equality (pop_top_frame h1) (pop_top_frame h2)); SMTPat (h3 = pop_top_frame h2)]
 let domain_equality_lemma_1 h0 h1 h2 h3 = ()
 
 assume val domain_equality_lemma_2: h0:t{poppable h0} -> h1:t{frame_ids h0 = frame_ids h1} -> Lemma

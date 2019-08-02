@@ -45,12 +45,12 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (Seq.length s1 = Seq.length s2
                /\ (forall (i:nat{i < Seq.length s1}).{:pattern (Seq.index s1 i); (Seq.index s2 i)} (Seq.index s1 i == Seq.index s2 i))))
      (ensures (Seq.equal s1 s2))
-     [SMTPatT (Seq.equal s1 s2)]
+     [SMTPat (Seq.equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 (* ----- from strings to bytestring and back *)
 
-logic type uInt16 (i:int) = (0 <= i /\ i < 65536)
+type uInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{uInt16 i}
 
 (*val utf8:
@@ -81,8 +81,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = Bytes.createBytes 1 (Char.char_of_int 0)
-let tag1 = Bytes.createBytes 1 (Char.char_of_int 1)
+let tag0 = Bytes.createBytes 1 0uy
+let tag1 = Bytes.createBytes 1 1uy
 
 let request s = tag0 @| (Bytes.utf8 s)
 
@@ -110,8 +110,8 @@ val req_resp_distinct:
 let req_resp_distinct s s' t' = 
   Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s));
   Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s'));
-  assert (Seq.index (request s) 0 == Char.char_of_int 0);
-  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
+  assert (Seq.index (request s) 0 == 0uy);
+  assert (Seq.index (response s' t') 0 == 1uy)
 
 val req_components_corr:
   s0:string -> s1:string ->

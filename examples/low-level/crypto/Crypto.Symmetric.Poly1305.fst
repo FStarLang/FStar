@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 (* Implementation of Poly1305 based on the rfc7539 *)
 module Crypto.Symmetric.Poly1305
 
@@ -87,7 +102,7 @@ val read_word: len:u32 -> b:wordB{length b == w len} -> ST word
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ r == (sel_word h1 b)))
 let read_word len b =
   let h = ST.get() in
-  let s0 = Seq.createEmpty #byte in
+  let s0 = Seq.empty #byte in
   Seq.lemma_eq_intro s0 (Seq.slice (sel_word h b) 0 0);
   _read_word len b s0 0ul
 
@@ -853,7 +868,7 @@ val encode_bytes: txt:Seq.seq UInt8.t -> GTot text (decreases (Seq.length txt))
 let rec encode_bytes txt =
   let l = Seq.length txt in
   if l = 0 then
-    Seq.createEmpty
+    Seq.empty
   else
     let l0 = min l 16 in
     let w, txt = Seq.split txt l0 in
@@ -867,7 +882,7 @@ let rec encode_bytes txt =
 val append_empty: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
   (requires (Seq.length s1 == 0))
   (ensures  (Seq.append s1 s2 == s2))
-  [SMTPat (Seq.append s1 s2); SMTPatT (Seq.length s1 == 0)]
+  [SMTPat (Seq.append s1 s2); SMTPat (Seq.length s1 == 0)]
 let append_empty #a s1 s2 =
   Seq.lemma_eq_intro (Seq.append s1 s2) s2
   
@@ -910,8 +925,8 @@ let append_as_seq h n m msg = ()
 
 val encode_bytes_empty: txt:Seq.seq UInt8.t -> Lemma
     (requires Seq.length txt == 0)
-    (ensures  encode_bytes txt == Seq.createEmpty)
-    [SMTPat (encode_bytes txt); SMTPatT (Seq.length txt == 0)]
+    (ensures  encode_bytes txt == Seq.empty)
+    [SMTPat (encode_bytes txt); SMTPat (Seq.length txt == 0)]
 let encode_bytes_empty txt = ()
 
 val snoc_encode_bytes: s:Seq.seq UInt8.t -> w:word_16 -> Lemma
@@ -1027,7 +1042,7 @@ val poly1305_process:
 let poly1305_process msg len acc r =
   let h0 = ST.get () in
   let ctr, rem = U32.div len 16ul, U32.rem len 16ul in
-  let log0:log_t = if mac_log then Seq.createEmpty #word in
+  let log0:log_t = if mac_log then Seq.empty #word in
   if mac_log then poly_empty (ilog log0) (sel_elem h0 r);
   let log1 = poly1305_loop log0 msg acc r ctr in
   let h1 = ST.get () in

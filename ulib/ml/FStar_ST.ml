@@ -6,6 +6,9 @@ type ('a, 'b) mref = ('a, 'b) FStar_Monotonic_Heap.mref
    
 type 'a ref = 'a FStar_Monotonic_Heap.ref
 
+let ref_to_yojson _ _ = `Null
+let ref_of_yojson _ _ = failwith "cannot readback"
+
 let read = read
 
 let op_Bang = op_Bang

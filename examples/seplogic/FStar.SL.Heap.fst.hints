@@ -1,0 +1,33 @@
+[
+  "ª\n{˜ÊG\u001d“O„\u0012~'j¯µ",
+  [
+    [
+      "FStar.SL.Heap.trivial_preorder",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.SL.Heap.trivial_rel", "equation_Prims.l_True",
+        "interpretation_FStar.SL.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
+      ],
+      0,
+      "f23f1cf7ce0fcc4fd59304c2ac7187a9"
+    ],
+    [
+      "FStar.SL.Heap.trivial_preorder",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.SL.Heap.trivial_rel", "equation_Prims.l_True",
+        "interpretation_FStar.SL.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
+      ],
+      0,
+      "3a7ce5be43372a20dc89789e5f9c0353"
+    ]
+  ]
+]

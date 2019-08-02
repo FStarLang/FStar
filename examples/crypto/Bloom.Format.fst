@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bloom.Format
 
 open FStar.Seq
@@ -14,7 +29,7 @@ let rec max_int i =
     256 * max_int (i-1)
   else 256
 
-logic type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
+type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
 type ulint (len:pint) = i:int{UInt len i}
 type uint16 = i:int{UInt 2 i}
 let uint16_max = (max_int 2) - 1

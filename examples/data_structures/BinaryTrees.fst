@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module BinaryTrees
 
 type tree =
@@ -107,7 +122,7 @@ val revert_injective : t1:tree -> t2:tree ->
 let rec revert_injective t1 t2 =
   match t1, t2 with
   | Leaf, Leaf -> ()
-  | Node n t11 t12, Node n t21 t22 -> revert_injective t11 t21;
+  | Node n1 t11 t12, Node n2 t21 t22 -> revert_injective t11 t21;
                                       revert_injective t12 t22
 
 val revert_fold : t:tree ->

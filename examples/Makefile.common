@@ -1,0 +1,69 @@
+FSTAR_HOME?=..
+include $(FSTAR_HOME)/ulib/gmake/z3.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+
+#################################################################################
+# Customize these variables for your project
+#################################################################################
+
+# The root files of your project, from which to begin scanning dependences
+FSTAR_FILES ?=
+
+# The paths to related files which to include for scanning
+#   -- No need to add FSTAR_HOME/ulib; it is included by default
+INCLUDE_PATHS ?=
+
+# The executable file you want to produce
+PROGRAM ?=
+
+# A driver in ML to call into your program
+TOP_LEVEL_FILE ?=
+
+# A place to put all the emitted .ml files
+OUTPUT_DIRECTORY ?= _output
+
+# A place to put all the .checked files
+CACHE_DIR ?= _cache
+
+# Additionaly flags to pass to F*
+OTHERFLAGS += --use_extracted_interfaces true --use_hints
+
+################################################################################
+# YOU SHOULDN'T NEED TO TOUCH THE REST
+################################################################################
+
+MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
+		  --odir $(OUTPUT_DIRECTORY)                \
+		  --cache_dir $(CACHE_DIR)                  \
+		  $(addprefix --include , $(INCLUDE_PATHS)) \
+		  $(OTHERFLAGS)
+
+#--------------------------------------------------------------------------------
+# Default target: verify all FSTAR_FILES
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+# Include the .depend before any other target
+# since we rely on the dependences it computes in other rules
+#--------------------------------------------------------------------------------
+.depend: $(FSTAR_FILES)
+	$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
+
+depend: .depend
+
+include .depend
+#--------------------------------------------------------------------------------
+
+# a.fst.checked is the binary, checked version of a.fst
+%.fst.checked:
+	$(MY_FSTAR) $<
+	touch -c $@
+
+# a.fsti.checked is the binary, checked version of a.fsti
+%.fsti.checked:
+	$(MY_FSTAR) $<
+	touch -c $@
+
+clean:
+	rm -rf $(CACHE_DIR)

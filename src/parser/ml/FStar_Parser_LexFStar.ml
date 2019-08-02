@@ -5,6 +5,7 @@ module String  = BatString
 module Hashtbl = BatHashtbl
 module Ulexing = FStar_Ulexing
 module L = Ulexing
+module E = FStar_Errors
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
@@ -48,6 +49,8 @@ let () =
   Hashtbl.add keywords "assume"        ASSUME      ;
   Hashtbl.add keywords "begin"         BEGIN       ;
   Hashtbl.add keywords "by"            BY          ;
+  Hashtbl.add keywords "calc"          CALC        ;
+  Hashtbl.add keywords "class"         CLASS       ;
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "effect"        EFFECT      ;
   Hashtbl.add keywords "else"          ELSE        ;
@@ -56,6 +59,7 @@ let () =
   Hashtbl.add keywords "exception"     EXCEPTION   ;
   Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
+  Hashtbl.add keywords "friend"        FRIEND      ;
   Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
@@ -65,12 +69,12 @@ let () =
   Hashtbl.add keywords "include"       INCLUDE     ;
   Hashtbl.add keywords "inline"        INLINE      ;
   Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
+  Hashtbl.add keywords "instance"      INSTANCE    ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
   Hashtbl.add keywords "let"           (LET false) ;
   Hashtbl.add keywords "logic"         LOGIC       ;
   Hashtbl.add keywords "match"         MATCH       ;
   Hashtbl.add keywords "module"        MODULE      ;
-  Hashtbl.add keywords "mutable"       MUTABLE     ;
   Hashtbl.add keywords "new"           NEW         ;
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;
@@ -78,12 +82,15 @@ let () =
   Hashtbl.add keywords "open"          OPEN        ;
   Hashtbl.add keywords "opaque"        OPAQUE      ;
   Hashtbl.add keywords "private"       PRIVATE     ;
+  Hashtbl.add keywords "range_of"      RANGE_OF    ;
   Hashtbl.add keywords "rec"           REC         ;
   Hashtbl.add keywords "reifiable"     REIFIABLE   ;
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
+  Hashtbl.add keywords "set_range_of"  SET_RANGE_OF;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
+  Hashtbl.add keywords "synth"         SYNTH       ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
   Hashtbl.add keywords "true"          TRUE        ;
@@ -120,29 +127,93 @@ let () =
   Hashtbl.add constructors "ℤ"         (IDENT "int");
   Hashtbl.add constructors "𝔹"         (IDENT "bool");
   let l =
-    ["~", TILDE "~"; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
-     "<:", SUBTYPE; "<@", SUBKIND; "(|", LENS_PAREN_LEFT; "|)", LENS_PAREN_RIGHT;
-     "#", HASH; "u#", UNIV_HASH; "&", AMP; "()", LPAREN_RPAREN; "(", LPAREN;
-     ")", RPAREN; ",", COMMA; "~>", SQUIGGLY_RARROW; "->", RARROW;
-     "<--", LONG_LEFT_ARROW; "<-", LARROW; "<==>", IFF; "==>", IMPLIES;
-     ".", DOT; "?.", QMARK_DOT; "?", QMARK; ".[", DOT_LBRACK; ".(", DOT_LPAREN;
-     "{:pattern", LBRACE_COLON_PATTERN; ":", COLON; "::", COLON_COLON;
-     ":=", COLON_EQUALS; ";;", SEMICOLON_SEMICOLON; ";", SEMICOLON; "=", EQUALS;
-     "%[", PERCENT_LBRACK; "!{", BANG_LBRACE; "[@", LBRACK_AT; "[", LBRACK;
-     "[|", LBRACK_BAR; "|>", PIPE_RIGHT; "]", RBRACK; "|]", BAR_RBRACK;
-     "{", LBRACE; "|", BAR; "}", RBRACE; "$", DOLLAR;
+  ["~", TILDE "~";
+   "-", MINUS;
+   "/\\", CONJUNCTION;
+   "\\/", DISJUNCTION;
+   "<:", SUBTYPE;
+   "<@", SUBKIND;
+   "(|", LENS_PAREN_LEFT;
+   "|)", LENS_PAREN_RIGHT;
+   "#", HASH;
+   "u#", UNIV_HASH;
+   "&", AMP;
+   "()", LPAREN_RPAREN;
+   "(", LPAREN;
+   ")", RPAREN;
+   ",", COMMA;
+   "~>", SQUIGGLY_RARROW;
+   "->", RARROW;
+   "<--", LONG_LEFT_ARROW;
+   "<-", LARROW;
+   "<==>", IFF;
+   "==>", IMPLIES;
+   ".", DOT;
+   "?.", QMARK_DOT;
+   "?", QMARK;
+   ".[", DOT_LBRACK;
+   ".(|", DOT_LENS_PAREN_LEFT;
+   ".(", DOT_LPAREN;
+   ".[|", DOT_LBRACK_BAR;   
+   "{:pattern", LBRACE_COLON_PATTERN;
+   ":", COLON;
+   "::", COLON_COLON;
+   ":=", COLON_EQUALS;
+   ";;", SEMICOLON_SEMICOLON;
+   ";", SEMICOLON;
+   "=", EQUALS;
+   "%[", PERCENT_LBRACK;
+   "!{", BANG_LBRACE;
+   "[@", LBRACK_AT;
+   "[", LBRACK;
+   "[|", LBRACK_BAR;
+   "|>", PIPE_RIGHT;
+   "]", RBRACK;
+   "|]", BAR_RBRACK;
+   "{", LBRACE;
+   "|", BAR;
+   "}", RBRACE;
+   "$", DOLLAR;
      (* New Unicode equivalents *)
-     "∀", FORALL; "∃", EXISTS; "⊤", NAME "True"; "⊥", NAME "False";
-     "⟹", IMPLIES; "⟺", IFF; "→", RARROW; "←", LARROW;
-     "⟵", LONG_LEFT_ARROW; "↝", SQUIGGLY_RARROW; "≔", COLON_EQUALS;
-     "∧", CONJUNCTION; "∨", DISJUNCTION; "¬", TILDE "~";
-     "⸬", COLON_COLON; "▹", PIPE_RIGHT; "÷", OPINFIX3 "÷";
-     "‖", OPINFIX0a "||"; "×", IDENT "op_Multiply"; "∗", OPINFIX3 "*";
-     "⇒", OPINFIX0c "=>"; "≥", OPINFIX0c ">="; "≤", OPINFIX0c "<=";
-     "≠", OPINFIX0c "<>"; "≪", OPINFIX0c "<<"; "◃", OPINFIX0c "<|";
-     "±", OPPREFIX "±"; "∁", OPPREFIX "∁"; "∂", OPPREFIX "∂"; "√", OPPREFIX "√";
+   "∀", FORALL;
+   "∃", EXISTS;
+   "⊤", NAME "True";
+   "⊥", NAME "False";
+   "⟹", IMPLIES;
+   "⟺", IFF;
+   "→", RARROW;
+   "←", LARROW;
+   "⟵", LONG_LEFT_ARROW;
+   "↝", SQUIGGLY_RARROW;
+   "≔", COLON_EQUALS;
+   "∧", CONJUNCTION;
+   "∨", DISJUNCTION;
+   "¬", TILDE "~";
+   "⸬", COLON_COLON;
+   "▹", PIPE_RIGHT;
+   "÷", OPINFIX3 "÷";
+   "‖", OPINFIX0a "||";
+   "×", IDENT "op_Multiply";
+   "∗", OPINFIX3 "*";
+   "⇒", OPINFIX0c "=>";
+   "≥", OPINFIX0c ">=";
+   "≤", OPINFIX0c "<=";
+   "≠", OPINFIX0c "<>";
+   "≪", OPINFIX0c "<<";
+   "◃", OPINFIX0c "<|";
+   "±", OPPREFIX "±";
+   "∁", OPPREFIX "∁";
+   "∂", OPPREFIX "∂";
+   "√", OPPREFIX "√";
     ] in
    List.iter (fun (k,v) -> Hashtbl.add operators k v) l
+
+let current_range lexbuf =
+    FStar_Parser_Util.mksyn_range (fst (L.range lexbuf)) (snd (L.range lexbuf))
+
+let fail lexbuf (e, msg) =
+     let m = current_range lexbuf in
+     E.raise_error (e, msg) m
 
 type delimiters = { angle:int ref; paren:int ref; }
 let n_typ_apps = ref 0
@@ -160,7 +231,7 @@ let is_typ_app lexbuf =
       | c when c >= '0' && c <= '9' -> true
       | _ -> false in
     let balanced (contents:string) pos =
-      if contents.[pos] <> '<' then (failwith  "Unexpected position in is_typ_lapp");
+      if contents.[pos] <> '<' then (fail lexbuf (E.Fatal_SyntaxError, "Unexpected position in is_typ_lapp"));
       let d = {angle=ref 1; paren=ref 0} in
       let upd i = match contents.[i] with
         | '(' -> incr d.paren
@@ -212,21 +283,21 @@ let maybe_trim_lines start_column comment =
 let comment_buffer = Buffer.create 128
 
 let start_comment lexbuf =
-  Buffer.add_bytes comment_buffer "(*" ;
+  Buffer.add_string comment_buffer "(*" ;
   (false, comment_buffer, fst (L.range lexbuf))
 
 let terminate_comment buffer startpos lexbuf =
   let endpos = snd (L.range lexbuf) in
-  Buffer.add_bytes buffer "*)" ;
+  Buffer.add_string buffer "*)" ;
   let comment = Buffer.contents buffer in
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
   comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
 
-let push_one_line_comment lexbuf =
+let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
   assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
-  comments := (L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
+  comments := (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 
 (** Unicode class definitions
   Auto-generated from http:/ /www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -308,9 +379,9 @@ let regexp ignored_op_char = [".$"]
 let regexp op_token =
   "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" |
   "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
-  "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[" | ".(" | "$" |
-  "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@" | "[" | "[|" | "|>" | "]" | "|]" | "{" | "|" | "}"
+  "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" |
+  "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
+  "!{" | "[@" | "[|" | "[" | "|>" | "]" | "|]" | "{" | "|" | "}"
 
 (* -------------------------------------------------------------------- *)
 let regexp xinteger =
@@ -328,12 +399,14 @@ let regexp int32 = any_integer 'l'
 let regexp uint32 = any_integer unsigned 'l'
 let regexp int64 = any_integer 'L'
 let regexp uint64 = any_integer unsigned 'L'
-let regexp charint = any_integer 'z'
+let regexp char8 = any_integer 'z'
 
 let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
+let regexp real     = floatp 'R'
 let regexp ieee64     = floatp | floate
 let regexp xieee64    = xinteger 'L' 'F'
+let regexp range      = digit+ '.' '.' digit+
 
 let regexp op_prefix  = ["!~?"]
 let regexp op_infix0a = ["|"] (* left *)
@@ -364,9 +437,17 @@ let regexp ident       = ident_start_char ident_char*
 let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
 let rec token = lexer
+ | "%splice" -> SPLICE
+ | "`%" -> BACKTICK_PERC
+ | "`#" -> BACKTICK_HASH
+ | "`@" -> BACKTICK_AT
+ | "quote" -> QUOTE
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
+ | "#push-options" -> PRAGMA_PUSH_OPTIONS
+ | "#pop-options" -> PRAGMA_POP_OPTIONS
+ | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 
@@ -379,15 +460,22 @@ let rec token = lexer
  | '`' -> BACKTICK
 
  | ident -> let id = L.lexeme lexbuf in
+   if FStar_Util.starts_with id FStar_Ident.reserved_prefix
+   then FStar_Errors.raise_error
+                    (FStar_Errors.Fatal_ReservedPrefix,
+                     FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")
+                    (current_range lexbuf);
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
  | constructor -> let id = L.lexeme lexbuf in
    Hashtbl.find_option constructors id |> Option.default (NAME id)
 
  | tvar -> TVAR (L.lexeme lexbuf)
  | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
- (* TODO: check bounds!! *)
- | uint8 -> UINT8 (clean_number (L.lexeme lexbuf))
- | charint -> CHAR (int_of_string (clean_number (L.lexeme lexbuf)))
+ | (uint8 | char8) ->
+   let c = clean_number (L.lexeme lexbuf) in
+   let cv = int_of_string c in
+   if cv < 0 || cv > 255 then fail lexbuf (E.Fatal_SyntaxError, "Out-of-range character literal")
+   else UINT8 (c)
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
  | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
@@ -395,10 +483,12 @@ let rec token = lexer
  | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | range -> RANGE (L.lexeme lexbuf)
+ | real -> REAL(trim_right lexbuf 1)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
-   failwith "This is not a valid numeric literal."
+   fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
  | "(*" '*'* "*)" -> token lexbuf (* avoid confusion with fsdoc *)
  | "(**" -> fsdoc (1,"",[]) lexbuf
@@ -407,7 +497,11 @@ let rec token = lexer
    let inner, buffer, startpos = start_comment lexbuf in
    comment inner buffer startpos lexbuf
 
- | "//" [^ 10 13 0x2028 0x2029]* -> push_one_line_comment lexbuf; token lexbuf
+ | "// IN F*:" -> token lexbuf
+ | "//" ->
+     (* Only match on "//" to allow the longest-match rule to catch IN F*. This
+      * creates a lexing conflict with op_infix3 which is caught below. *)
+     one_line_comment (L.lexeme lexbuf) lexbuf
 
  | '"' -> string (Buffer.create 0) lexbuf
 
@@ -426,15 +520,31 @@ let rec token = lexer
  | op_infix0d symbolchar* -> OPINFIX0d (L.lexeme lexbuf)
  | op_infix1  symbolchar* -> OPINFIX1 (L.lexeme lexbuf)
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
- | op_infix3  symbolchar* -> OPINFIX3 (L.lexeme lexbuf)
+ | op_infix3  symbolchar* -> 
+     let l = L.lexeme lexbuf in
+     if String.length l >= 2 && String.sub l 0 2 = "//" then
+       one_line_comment l lexbuf
+     else
+        OPINFIX3 l
  | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
+ | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".[||]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".[]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".()"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".(||)"                 -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".[||]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in
    Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
  | eof -> EOF
- | _ -> failwith "unexpected char"
+ | _ -> fail lexbuf (E.Fatal_SyntaxError, "unexpected char")
+
+and one_line_comment pre = lexer
+ | [^ 10 13 0x2028 0x2029]* -> push_one_line_comment pre lexbuf; token lexbuf
 
 and symbolchar_parser = lexer
  | symbolchar* -> OPINFIX0c (">" ^  L.lexeme lexbuf)
@@ -448,11 +558,11 @@ and string buffer = lexer
    Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
    string buffer lexbuf
  | '"' -> STRING (Buffer.contents buffer)
- | '"''B' -> BYTEARRAY (ba_of_string (Buffer.to_bytes buffer))
+ | '"''B' -> BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    string buffer lexbuf
- | eof -> failwith "unterminated string"
+ | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
 
 and comment inner buffer startpos = lexer
  | "(*" ->
@@ -499,3 +609,4 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf
+

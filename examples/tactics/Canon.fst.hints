@@ -1,5 +1,5 @@
 [
-  "i´K!o\u0004¨ ö∫O\\[X¡ú",
+  "·´¿ÕÉÁ´]\u0012ç∂Ø\u0019‚\u000f*",
   [
     [
       "Canon.lem1",
@@ -11,7 +11,54 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3937b64024f0533cb3821cbdae09e2be"
+      "26378aa8923eb44025729658758b6229"
+    ],
+    [
+      "Canon.lem8",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "829a54819c771bf482a3a656e7818a00"
+    ],
+    [
+      "Canon.check_canon",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_Prims.eqtype", "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "719bcdbfe0d11d071d4f9957f33f0d67"
+    ],
+    [
+      "Canon.lem1",
+      2,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "4b1ef1a4c1eb88fd1bcd67e214801e28"
+    ],
+    [
+      "Canon.lem8",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "c0fa022da5e51bd3b3e9c4f67864ce75"
     ]
   ]
 ]

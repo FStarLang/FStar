@@ -172,6 +172,6 @@ let rec preservation #e #t h =
      then (if is_value e2
            then let TyAbs t_x hbody = h1 in
                 substitution_preserves_typing 0 h2 hbody
-           else TyApp #_ #_ #(Some?.v (step e2)) #_ #_ h1 (preservation h2)) 
+           else TyApp h1 (preservation h2)) 
                            //^^^^^^^^^^^^^^^^^
-     else TyApp #_ #(Some?.v (step e1)) #_ #_ #_ (preservation h1) h2
+     else TyApp (preservation h1) h2

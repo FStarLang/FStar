@@ -69,3 +69,4 @@ let op_Less_Equals_Hat = lte
 
 let to_string s = Int64.to_string (Int64.logand (Int64.of_int s) (Int64.of_string "0x7fffffffffffffff"))
 let uint_to_t s = int_to_uint63 s
+let __uint_to_t = uint_to_t

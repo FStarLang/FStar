@@ -1,15 +1,6 @@
 [
-  "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
+  "$˚∑,ÆÑ∞˚”æ\u000evÊÑ’Q",
   [
-    [
-      "FStar.WellFounded.__proj__AccIntro__item___0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5a5de3137c1666eee616b2766995ec1a"
-    ],
     [
       "FStar.WellFounded.acc_inv",
       1,
@@ -20,16 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "acf2d2990d273d4cafa16add2071ca9d"
-    ],
-    [
-      "FStar.WellFounded.axiom1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "530f60201fe698c15ac468ff8433fcbd"
+      "fd24fb0f84dd9fa2066dd7bfc4db0778"
     ],
     [
       "FStar.WellFounded.apply",
@@ -38,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "2ad0a87d984c51d0996ecb470f14ea69"
+      "38dad116ed7cb2291990112b8ab1bd9d"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -47,14 +29,51 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_f744f63ab9a82765f30b542dd6ad1ecf_7",
+        "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.WellFounded.acc_inv",
         "fuel_guarded_inversion_FStar.WellFounded.acc",
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "2c96307b735082140f8b0824ec6a36b5"
+      "2864849f68d4a39b1547301ffcbe386e"
+    ],
+    [
+      "FStar.WellFounded.acc_inv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "119ea653188fa98e82e922bdec16c36e"
+    ],
+    [
+      "FStar.WellFounded.apply",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9a56998bbfa9c66201c5426ab1e7fe20"
+    ],
+    [
+      "FStar.WellFounded.fix_F",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.WellFounded.acc_inv",
+        "fuel_guarded_inversion_FStar.WellFounded.acc",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "32de7ae7c10f695cdd67d18cbb1c1a0a"
     ]
   ]
 ]

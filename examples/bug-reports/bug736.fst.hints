@@ -1,0 +1,73 @@
+[
+  "‘8™<\u0012\f\fµÇ±ˆ­#_Žf",
+  [
+    [
+      "Bug736.__proj__Goal__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.Goal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
+      ],
+      0,
+      "8a8bc4059afff55ba21836e00ad3e129"
+    ],
+    [
+      "Bug736.__proj__Goal__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.Goal",
+        "proj_equation_Bug736.Goal_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug736.Goal_a",
+        "refinement_interpretation_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
+      ],
+      0,
+      "4911bb6a0fe24162d6ad690e448ca687"
+    ],
+    [
+      "Bug736.__proj__AHyp__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
+      ],
+      0,
+      "92f5d4f3d65d2d2f8b45a42e8c54dc89"
+    ],
+    [
+      "Bug736.__proj__AHyp__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
+        "proj_equation_Bug736.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug736.AHyp_a",
+        "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
+      ],
+      0,
+      "d9a61f18fb94f54e7557c1faaedcc8d6"
+    ],
+    [
+      "Bug736.__proj__AHyp__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
+        "proj_equation_Bug736.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Bug736.AHyp_a",
+        "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
+      ],
+      0,
+      "6a14d05b57d83d0695dde6cc0ac7295c"
+    ]
+  ]
+]

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Crypto.Symmetric.GF128.Spec
 
 open Crypto.Symmetric.Bytes 
@@ -18,7 +33,7 @@ val add_loop: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
 val add_loop: l:nat{ l <= 16 } -> lbytes l -> lbytes l -> Tot (lbytes l)
 let rec add_loop l a b = 
-  if l = 0 then Seq.createEmpty 
+  if l = 0 then Seq.empty 
   else
     let r = add_loop (l-1) (tail a) (tail b) in 
     cons (UInt8.logxor (head a) (head b)) r

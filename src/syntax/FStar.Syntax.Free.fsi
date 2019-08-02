@@ -27,9 +27,13 @@ open FStar.Syntax.Syntax
 val new_uv_set : unit -> uvars
 val new_universe_uvar_set : unit -> set<universe_uvar>
 
+val empty: set<bv>
 val names: term -> set<bv>
-val uvars: term -> set<(uvar*typ)>
+val uvars: term -> set<ctx_uvar>
 val univs: term -> set<universe_uvar>
-val univnames: term -> fifo_set<univ_name>
+val univnames: term -> set<univ_name>
+val univnames_comp: comp -> set<univ_name>
 val fvars: term -> set<Ident.lident>
 val names_of_binders: binders -> set<bv>
+
+val uvars_uncached: term -> set<ctx_uvar>

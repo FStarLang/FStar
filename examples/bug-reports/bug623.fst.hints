@@ -1,0 +1,19 @@
+[
+  "ÚêÌOx„0²–jîY\u000bê»‚",
+  [
+    [
+      "Bug623.null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Prims.eqtype",
+        "function_token_typing_Prims.unit",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a3f8901ad4d7c48dcf1b9f6fca016ddb"
+    ]
+  ]
+]

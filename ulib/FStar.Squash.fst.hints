@@ -1,5 +1,5 @@
 [
-  "tMm&nRf<ìóÄª\bãE2",
+  "¨ƒ\u0018µKdV±cá¯\u0012OéYõ",
   [
     [
       "FStar.Squash.return_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ca30e58534940698a3dedf9f2156386a"
+      "432d661250e6484ac905c70f2a68617f"
     ],
     [
       "FStar.Squash.get_proof",
@@ -16,14 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c80629d60db4976b3a1317d1fec26953"
+      "92978beac22661bb7bd96dec077b5503"
     ],
     [
       "FStar.Squash.give_proof",
@@ -32,11 +29,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "64d2ee107f80bd19ce21700ec6a9f488"
+      "3fe14122302c9ad9cbd68a7bb3567541"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -45,29 +41,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "unit_inversion"
       ],
       0,
-      "dbb6103b434b574d711087762af9a1d4"
-    ],
-    [
-      "FStar.Squash.push_sum",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "05abd960bf0f8ef9453b0f95d4f33526"
-    ],
-    [
-      "FStar.Squash.squash_double_sum",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3c7a9ffe3f6463037d1a2b5280d11601"
+      "8af67f547857240566ba940a92fb3f2d"
     ]
   ]
 ]

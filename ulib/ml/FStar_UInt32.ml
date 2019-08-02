@@ -44,6 +44,7 @@ let gte (a:uint32) (b:uint32) : bool = a >= b
 let lt (a:uint32) (b:uint32) : bool = a < b
 let lte (a:uint32) (b:uint32) : bool =  a <= b
 
+(* NOT Constant time comparison operators *)
 let eq_mask (a:uint32) (b:uint32) : uint32 =
   if a = b then -1 else 0
 let gte_mask (a:uint32) (b:uint32) : uint32 =
@@ -76,3 +77,4 @@ let of_string s = int_of_string s
 let to_string s = string_of_int s
 let to_int s = s
 let uint_to_t s = int_to_uint32 s
+let __uint_to_t = uint_to_t

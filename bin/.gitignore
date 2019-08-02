@@ -5,5 +5,7 @@ z3
 fstar-mono.exe
 tests-mono.exe
 fstar.exe
+fstar.fsharp
 FsLexYacc.Runtime.dll
 *.XML
+*lib/META

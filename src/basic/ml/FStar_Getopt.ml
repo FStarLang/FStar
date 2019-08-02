@@ -42,16 +42,46 @@ let rec parse (opts:opt list) def ar ix max i =
         | None -> Error ("unrecognized option '" ^ arg ^ "'\n")
       else go_on ()
 
+let parse_array specs others args offset =
+  parse specs others args offset (Array.length args - 1) 0
+
 let parse_cmdline specs others =
-  let len = Array.length Sys.argv in
-  let go_on () = parse specs others Sys.argv 1 (len - 1) 0 in
-  if len = 1 then Help
-  else go_on ()
+  if Array.length Sys.argv = 1 then Help
+  else parse_array specs others Sys.argv 1
 
 let parse_string specs others (str:string) =
-  let args = Str.split (Str.regexp "[ \t]+") str in
-  let args = Array.of_list args in
-  parse specs others args 0 (Array.length args - 1) 0
+    let split_spaces (str:string) =
+      let seps = [int_of_char ' '; int_of_char '\t'] in
+      FStar_List.filter (fun s -> s != "") (FStar_String.split seps str)
+    in
+    (* to match the style of the F# code in FStar.GetOpt.fs *)
+    let index_of str c =
+      try
+        String.index str c
+      with Not_found -> -1
+    in
+    let substring_from s j =
+        let len = String.length s - j in
+        String.sub s j len
+    in
+    let rec split_quoted_fragments (str:string) =
+        let i = index_of str '\'' in
+        if i < 0 then Some (split_spaces str)
+        else let prefix = String.sub str 0 i in
+             let suffix = substring_from str (i + 1) in
+             let j = index_of suffix '\'' in
+             if j < 0 then None
+             else let quoted_frag = String.sub suffix 0 j in
+                  let rest = split_quoted_fragments (substring_from suffix (j + 1)) in
+                  match rest with
+                  | None -> None
+                  | Some rest -> Some (split_spaces prefix @ quoted_frag::rest)
 
+    in
+    match split_quoted_fragments str with
+    | None -> Error("Failed to parse options; unmatched quote \"'\"")
+    | Some args ->
+      parse_array specs others (Array.of_list args) 0
 
-
+let cmdline () =
+   Array.to_list (Sys.argv)

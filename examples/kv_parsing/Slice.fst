@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Slice
 
 open FStar.Seq
@@ -86,7 +101,7 @@ let modifies_prefix (b:bslice) (len:U32.t{U32.v len <= U32.v b.len}) =
 let u32_max (a b:U32.t) : max:U32.t{U32.lte a max /\ U32.lte b max} =
   if U32.gt a b then a else b
 
-let modifies_prefix_plus (b:bslice) (len1 len2: off:U32.t{U32.v off <= U32.v b.len}) h h' h''
+let modifies_prefix_plus (b:bslice) (len1 len2: (off:U32.t{U32.v off <= U32.v b.len})) h h' h''
   : Lemma (requires (modifies_prefix b len1 h h' /\
                      modifies_prefix b len2 h' h''))
           (ensures (modifies_prefix b (u32_max len1 len2) h h'')) =
@@ -110,7 +125,7 @@ let modifies_prefix_times (b:bslice) (len1: U32.t) (len2: U32.t{U32.v len1 + U32
 let same_ref (#a:Type) (b1 b2:B.buffer a) =
     B.frameOf b1 == B.frameOf b2 /\
     B.max_length b1 == B.max_length b2 /\
-    B.content b1 == B.content b2
+    B.content b1 === B.content b2
 
 // XXX: why is this not in the standard library?
 let same_ref_equivalence (#a:Type) :

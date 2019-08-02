@@ -1,217 +1,36 @@
 [
-  "‚vE¢ìdX\u001ei´¸\u0007Äý\u0000r",
+  "\u0007'ByE·-†ÙÊžŒ@jÎ\u0013",
   [
-    [
-      "FStar.Tactics.Simplifier.lem_iff_refl",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "af52ab042fe0a9735614d61c9860c0c2"
-    ],
     [
       "FStar.Tactics.Simplifier.lem_iff_trans",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b0b13d6cd3529f385cd38481825110fb"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_true_and_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "85b59fe575246a3831ee36ec9d7871df"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_and_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "9997acf799cf6a8a882c97d2de4002f9"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_false_and_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "2be488dfc77a88e0d006093bd12f11e7"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_and_false",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "5ffadc12063eb18de9958cf694a54c09"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_true_or_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "ea291c3a2a67defe896008d152ce60a0"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_or_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "d602566c2312206a22ff1973eb998b47"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_false_or_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "51a24bf24b75cec3481120045139aecb"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_or_false",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "77b5f5ed1431a82b660d2d7d46bf5333"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_true_imp_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "714452c6f40d31f9e31abd2e5092f1a1"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_imp_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "e3cb97ce25efe1bd798fd1620d27035f"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_false_imp_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "a24c5102dc49afc64cc797e7a87cc0fd"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_fa_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "d7f7f311db311307cb9ad5ab275d49e1"
+      "a33a9dd5810fd01d17c42cb9f39371e9"
     ],
     [
       "FStar.Tactics.Simplifier.lem_fa_false",
       1,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "bd88512171c51601a8a3bbdb60856d3e"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_ex_false",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "a5246dd526144ccf47333bc450f8c35e"
+      "170aa9974b22d0725ca09dd99ac0732c"
     ],
     [
       "FStar.Tactics.Simplifier.lem_ex_true",
       1,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "bf02ef10d6b9f1ac9a26ad6257e862a7"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_neg_false",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "68aa60532b4176271cfab0cd176a4bf3"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_neg_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "f6fefe2a097759d35902539d45f57ae2"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_true_iff_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "c9f4210432a9a951d123741cb0ae793c"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_false_iff_p",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "7aaf0436969efcecf2104c6ad8880a2d"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_iff_true",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "4e120997ba174ad52848f63137620c1f"
-    ],
-    [
-      "FStar.Tactics.Simplifier.lem_p_iff_false",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "97b5d85c6e290799f9818252228a2db8"
+      "9646e51a4fa940fdfc012998efd3fee8"
     ],
     [
       "FStar.Tactics.Simplifier.and_cong",
@@ -219,13 +38,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f3788966779075b13bca4d6dcd8f181b"
+      "05d6e731e465b625f95f95bc06d97ffb"
     ],
     [
       "FStar.Tactics.Simplifier.or_cong",
@@ -233,13 +51,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9030b7950e2763fd851dc28c1d9318a4"
+      "665e5a21235eb67e3c767a2fa6c17a1d"
     ],
     [
       "FStar.Tactics.Simplifier.imp_cong",
@@ -247,13 +64,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e4c5955780e6906eae01071b0d24fb10"
+      "b683fbc3fcd402dcf5879ec80a512b4e"
     ],
     [
       "FStar.Tactics.Simplifier.neg_cong",
@@ -261,13 +77,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "8a152b498b596060730684d9a9c21aed"
+      "8b56b4840433f892e2da51c2157e3f13"
     ],
     [
       "FStar.Tactics.Simplifier.iff_cong",
@@ -275,116 +90,28 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_iff-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "afe00007f511b91a8e045c50da8a4075"
-    ],
-    [
-      "FStar.Tactics.Simplifier.is_true",
-      1,
-      2,
-      1,
-      [ "@query", "disc_equation_FStar.Reflection.Syntax.Tv_App" ],
-      0,
-      "8001ed616effa08204d846d6df4f2098"
-    ],
-    [
-      "FStar.Tactics.Simplifier.is_false",
-      1,
-      2,
-      1,
-      [ "@query", "disc_equation_FStar.Reflection.Syntax.Tv_App" ],
-      0,
-      "a8c974a6462363209e72207291f5a411"
+      "d44cc090126a0939cf8fc0a7deba4b92"
     ],
     [
       "FStar.Tactics.Simplifier.inhabit",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
-      ],
-      0,
-      "6b6a60e75a94b1a334c78c2406ed47e4"
-    ],
-    [
-      "FStar.Tactics.Simplifier.inhabit",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
-      ],
-      0,
-      "16cec041d64a9d24dc2992b1323f03e4"
-    ],
-    [
-      "FStar.Tactics.Simplifier.inhabit",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
-      ],
-      0,
-      "a3354a7ec798a0307b5937b303ff1522"
-    ],
-    [
-      "FStar.Tactics.Simplifier.inhabit",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.Tactics.Builtins.exact",
-        "equation_FStar.Tactics.Derived.fail", "unit_typing"
-      ],
-      0,
-      "27ada7a4a1e3238fdd8982a0a30f47b5"
-    ],
-    [
-      "FStar.Tactics.Simplifier.simplify_point",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.Tactics.Builtins.apply_lemma",
-        "equation_FStar.Tactics.Derived.or_else",
-        "equation_FStar.Tactics.Effect.bind",
-        "equation_FStar.Tactics.Simplifier.step",
-        "equation_FStar.Tactics.Simplifier.tiff", "unit_typing"
+        "assumption_Prims.list__uu___haseq",
+        "equation_FStar.Reflection.Types.typ", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "539b747ffe9788ca88f154a8a83c8959"
-    ],
-    [
-      "FStar.Tactics.Simplifier.simplify_point",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.Tactics.Effect.bind",
-        "equation_FStar.Tactics.Simplifier.tiff", "unit_typing"
-      ],
-      0,
-      "771879b9b448c3a5985c090629f6e59c"
+      "dc63f873c107f8d0ffbd6a226e77c235"
     ],
     [
       "FStar.Tactics.Simplifier.equiv",
@@ -392,13 +119,28 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_iff-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.squash", "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ac7420f1af33fb5f5e5c965a2d23a848"
+      "3ce843648db0589c6256dfa74b602db7"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq",
+        "equation_FStar.Reflection.Types.typ", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "98882067763a35f16cf09c2db38bbb5c"
     ]
   ]
 ]

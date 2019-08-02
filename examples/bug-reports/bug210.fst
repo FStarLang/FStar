@@ -1,13 +1,28 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug210
 
 (* This is a working version; the problem is that we were forced into this.
    See 210b.fst for what we actually wanted to write. *)
 
-type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
+noeq type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
 
 (* Working around silly implicit argument stuff in F*,
-   can't name these things otherwise in function body 
+   can't name these things otherwise in function body
    + putting this just before fix_F also causes lots of troubles
      (see all the commented out admitPs in fix_F;
       even transitivity doesn't work) *)

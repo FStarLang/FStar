@@ -1,0 +1,287 @@
+[
+  "(é}\u00141é\u0010Ž3Ó\u001bh¿\u0011\u0003Q",
+  [
+    [
+      "Enum.bounded_by",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Enum.bound",
+        "equation_Prims.nat", "function_token_typing_Prims.nat",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "d7678103bcbe5f186a8f7099035bf6a0"
+    ],
+    [
+      "Enum.succ",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None", "equation_Enum.bound",
+        "equation_Prims.nat", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "5b49b439d238f6d565490e4c37562540"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__toInt",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_max"
+      ],
+      0,
+      "fdba1beafa658195963153e7aedf5f98"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__fromInt",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_max"
+      ],
+      0,
+      "646123748210b5ea5c7d302d73284891"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__inv1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_fromInt",
+        "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_Enum.Mkenum_fromInt",
+        "projection_inverse_Enum.Mkenum_toInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
+      ],
+      0,
+      "4d9cfd202eb65a30444c0b6396c7b324"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__inv2",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_fromInt",
+        "proj_equation_Enum.Mkenum_max", "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_Enum.Mkenum_fromInt",
+        "projection_inverse_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_toInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
+      ],
+      0,
+      "8d996e4f6272e20045ef6ae30ad7c1f6"
+    ],
+    [
+      "Enum.enum_nat",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "equation_Enum.bounded", "equation_Enum.bounded_by",
+        "equation_FStar.Pervasives.id", "equation_Prims.nat",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "6c7b8bdce6237691e5de3c26f2e68427"
+    ],
+    [
+      "Enum.enum_opt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Enum_interpretation_Tm_arrow_b2965591e68d8d0b596d026bc6d4b27f",
+        "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_Enum.Mkenum", "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "equation_Enum.bound",
+        "equation_Enum.bounded", "equation_Enum.bounded_by",
+        "equation_Enum.succ", "equation_Prims.nat",
+        "fuel_guarded_inversion_Enum.enum",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "proj_equation_Enum.Mkenum_max", "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Tm_refine_4a6eaf440e75ef17916cf0f682fb32c5",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt",
+        "typing_Enum.__proj__Mkenum__item__max", "typing_Enum.succ",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "4da527c238cdb24f3ddaa4348e603e6d"
+    ],
+    [
+      "Enum.bounded_by",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Enum.bound",
+        "equation_Prims.nat", "function_token_typing_Prims.nat",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "814e98d77658ddff77595783f85132bc"
+    ],
+    [
+      "Enum.succ",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None", "equation_Enum.bound",
+        "equation_Prims.nat", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "53577e94bb6381e43f8a1a3798976949"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__toInt",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_max"
+      ],
+      0,
+      "614738e81b746b322f8feb779224480e"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__fromInt",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_max"
+      ],
+      0,
+      "d807bace6acd8b1d710ed8a40fdeecbe"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__inv1",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_fromInt",
+        "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_Enum.Mkenum_fromInt",
+        "projection_inverse_Enum.Mkenum_toInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
+      ],
+      0,
+      "9729dbd2da92b84939168e2fd710a19d"
+    ],
+    [
+      "Enum.__proj__Mkenum__item__inv2",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Enum.Mkenum_fromInt",
+        "proj_equation_Enum.Mkenum_max", "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_Enum.Mkenum_fromInt",
+        "projection_inverse_Enum.Mkenum_max",
+        "projection_inverse_Enum.Mkenum_toInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
+      ],
+      0,
+      "312ea1346f6223eadaa704c22e1eb9ea"
+    ],
+    [
+      "Enum.enum_nat",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "equation_Enum.bounded", "equation_Enum.bounded_by",
+        "equation_FStar.Pervasives.id", "equation_Prims.nat",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "08e787af91705c50eb8e8948d4590b6f"
+    ],
+    [
+      "Enum.enum_opt",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Enum_interpretation_Tm_arrow_b2965591e68d8d0b596d026bc6d4b27f",
+        "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_Enum.Mkenum", "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "equation_Enum.bound",
+        "equation_Enum.bounded", "equation_Enum.bounded_by",
+        "equation_Enum.succ", "equation_Prims.nat",
+        "fuel_guarded_inversion_Enum.enum",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "proj_equation_Enum.Mkenum_max", "proj_equation_Enum.Mkenum_toInt",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Tm_refine_4a6eaf440e75ef17916cf0f682fb32c5",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt",
+        "typing_Enum.__proj__Mkenum__item__max", "typing_Enum.succ",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "8fbe89756f5d4fd84438e4b3588b2802"
+    ]
+  ]
+]

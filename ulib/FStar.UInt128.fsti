@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.UInt128
 
 open FStar.UInt
@@ -6,12 +21,15 @@ open FStar.Mul
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
+noextract
 let n = 128
 
 val t: (x:Type0{hasEq x})
 
+noextract
 val v (x:t) : Tot (uint_t n)
 
+noextract
 val uint_to_t: x:uint_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))

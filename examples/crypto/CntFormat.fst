@@ -83,9 +83,9 @@ val response: s:string{ Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} -> string
 
 (* -------- implementation *)
 
-let tag0 = Bytes.createBytes 1 (Char.char_of_int 0)
-let tag1 = Bytes.createBytes 1 (Char.char_of_int 1)
-let tag2 = Bytes.createBytes 1 (Char.char_of_int 2)
+let tag0 = Bytes.createBytes 1 0uy
+let tag1 = Bytes.createBytes 1 1uy
+let tag2 = Bytes.createBytes 1 2uy
 
 let request s = tag0 @| (Bytes.utf8 s)
 

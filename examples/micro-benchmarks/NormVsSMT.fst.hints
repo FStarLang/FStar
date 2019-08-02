@@ -1,0 +1,113 @@
+[
+  "+\u001aªãòıÌ#á\u0014ù”SqÖN",
+  [
+    [
+      "NormVsSMT.l2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "dfb169ae01e4f6fb855f38c781585c24"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "99493e7f58e5a926d91ddbcca79179b9"
+    ],
+    [
+      "NormVsSMT.uu___6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a2cba16d1c2a75c7fff3fafb70176ac5"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9dabdb13e16d4ef10884656a179feede"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
+      ],
+      0,
+      "70f69ac23cefd911efc63758194ab7f7"
+    ],
+    [
+      "NormVsSMT.uu___14",
+      1,
+      2,
+      1,
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
+      0,
+      "14e7fcdde08de786cdcca0732aa89305"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9504898bc8856e0680f7f699f4cff065"
+    ],
+    [
+      "NormVsSMT.uu___6",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fd4b6d12712b501ce8b33854534c3844"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c1973ee84bb2f23ac7e215aca6d212db"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
+      ],
+      0,
+      "160e67bfbd7b879d86543b508a7f782f"
+    ],
+    [
+      "NormVsSMT.uu___14",
+      2,
+      2,
+      1,
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
+      0,
+      "fda4f6636d6d209bb3d9e2efcf1de9d3"
+    ]
+  ]
+]

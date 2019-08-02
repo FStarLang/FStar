@@ -54,5 +54,12 @@ let op_Array_Assignment b n v = upd b n v
 
 let recall = fun b -> ()
 
+let of_ocaml_array a = {
+   content = a;
+   idx = 0;
+   length = Array.length a
+}
+
 (* AR: revisit. This is used in the idealization code of AEAD encrypt *)
 let to_seq_full b = Obj.magic ()
+

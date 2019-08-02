@@ -1,79 +1,68 @@
 [
-  "ÐãÒO±Rv\u001d\u0014î\u0011€£\u0004êd",
+  "A,ê3H‚\u0007ðzö‚“\u0007_ü…",
   [
     [
       "NegativeTests.False.foo",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_85721560a0c745412eef4b2aa333de58"
+      ],
       0,
-      "1c3dc6bcb2ea1239db8283cf05aaa2a3"
+      "92412c928fc7c1859f7ca4738dadde61"
+    ],
+    [
+      "NegativeTests.False.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "function_token_typing_Prims.unit",
+        "haseqTm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f6516d3e1692910b0bb8024bc2b03e32"
+    ],
+    [
+      "NegativeTests.False.f",
+      2,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "1cac002d5b6282c8749130d1420acd17"
     ],
     [
       "NegativeTests.False.foo",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_85721560a0c745412eef4b2aa333de58"
+      ],
       0,
-      "a6632220bdd3d436a9b61b31b00b9953"
+      "c0eee7e159596ed37bdae05e7e23777e"
     ],
     [
-      "NegativeTests.False.foo",
+      "NegativeTests.False.f",
       3,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "a4f6b5d470d6e85403ad8617b5411748"
-    ],
-    [
-      "NegativeTests.False.foo",
-      4,
-      2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "function_token_typing_Prims.unit",
+        "haseqTm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "005d8522d8a3fe33d6a51603a961f399"
-    ],
-    [
-      "NegativeTests.False.f",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
-        "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
-      ],
-      0,
-      "20529089c342f91351c9ba7ca53cef39"
-    ],
-    [
-      "NegativeTests.False.f",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_FStar.Classical_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "unit_inversion", "unit_typing"
-      ],
-      0,
-      "44d173e24443898f74d27a7f7cb99943"
-    ],
-    [
-      "NegativeTests.False.absurd",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0,
-      "1e7a38b5873d817d3882b65c70447366"
+      "d58781e43724fac6f1a4f4bd5734131c"
     ]
   ]
 ]

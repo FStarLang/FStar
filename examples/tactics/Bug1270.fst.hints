@@ -1,0 +1,73 @@
+[
+  "Bà\u0003\u001a…≈S\u0011√u\u0002\u0011\u0000\u001eÚ)",
+  [
+    [
+      "Bug1270.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "b3469cae8332cd3733a7bcbf316080a7"
+    ],
+    [
+      "Bug1270.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "72a2daa088ad9e3cecac850d81aa8dfc"
+    ],
+    [
+      "Bug1270.test",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "67e95c4f7ca17d7a6f331715dc50ca4c"
+    ],
+    [
+      "Bug1270.test",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "bacede59a80dab4155b132dbc807286f"
+    ]
+  ]
+]

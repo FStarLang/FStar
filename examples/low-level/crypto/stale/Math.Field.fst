@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Math.Field
 
 open Math.Definitions
@@ -26,15 +41,15 @@ assume new type equal: felem -> felem -> Type
 assume val lemma_equal_intro: x:felem -> y:felem -> Lemma
   (requires (x == y))
   (ensures (equal x y))
-  [SMTPatT (equal x y)]
+  [SMTPat (equal x y)]
 assume val lemma_equal_elim: x:felem -> y:felem -> Lemma
   (requires (equal x y))
   (ensures (x = y))
-  [SMTPatT (equal x y)]
+  [SMTPat (equal x y)]
 assume val lemma_equal_refl: x:felem -> y:felem -> Lemma
   (requires (x = y))
   (ensures (equal x y))
-  [SMTPatT (equal x y)]
+  [SMTPat (equal x y)]
 
 (* Subtraction and division definitions *)
 val sub: x:felem -> y:felem -> Tot felem

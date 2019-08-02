@@ -1,11 +1,15 @@
 FSTAR_HOME=../..
-include ../Makefile.include
-all: uall
+FSTAR_FILES = ParSubst.fst StlcCbvDbPntSubstNoLists.fst		\
+	      StlcStrongDbParSubst.fst StlcCbvDbParSubst.fst	\
+	      LambdaOmega.fst StackMachine.fst indind.fst
 
-uall: ParSubst.uver StlcCbvDbPntSubstNoLists.uver StlcStrongDbParSubst.uver StlcCbvDbParSubst.uver LambdaOmega StackMachine.uver
+all:
+	mkdir -p $(CACHE_DIR)
+	$(MAKE) verify-all
 
-LambdaOmega:
-	$(FSTAR) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
+include ../Makefile.common
+
+verify-all: $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
 
 # This takes forever to verify
 StlcCbvDbPntSubstLists:

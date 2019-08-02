@@ -1,7 +1,21 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.TaggedUnion
 
 module P = FStar.Pointer
-module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
@@ -19,18 +33,21 @@ val typ (l: P.union_typ) : P.typ
   `tags l` defines "physical tags" (i.e. integers) for the fields of `l`.
 *)
 
-let tags (l: P.union_typ) : Tot Type0 =
+let tags' (l: P.struct_typ') : Tot Type0 =
   tl: list UInt32.t {
     List.Tot.length tl == List.Tot.length l /\
     List.Tot.noRepeats tl
   }
 
+let tags (l: P.union_typ) : Tot Type0 =
+  tags' l.P.fields
+
 (* Get a field from its physical tag. *)
-let rec field_of_tag
-  (#l: P.union_typ)
-  (tgs: tags l)
+let rec field_of_tag'
+  (#l: P.struct_typ')
+  (tgs: tags' l)
   (t: UInt32.t)
-: Pure (P.struct_field l)
+: Pure (P.struct_field' l)
   (requires (List.Tot.mem t tgs))
   (ensures (fun _ -> True))
 = let ((f, _) :: l') = l in
@@ -38,15 +55,24 @@ let rec field_of_tag
   if t = t' then f
   else (
     assert (Cons? l');
-    let ff' : string = field_of_tag #l' tgs' t in
+    let ff' : string = field_of_tag' #l' tgs' t in
     ff'
   )
 
-(* Get the physical tag corresponding to a field. *)
-let rec tag_of_field
+let field_of_tag
   (#l: P.union_typ)
   (tgs: tags l)
-  (f: P.struct_field l)
+  (t: UInt32.t)
+: Pure (P.struct_field l)
+  (requires (List.Tot.mem t tgs))
+  (ensures (fun _ -> True))
+= field_of_tag' tgs t
+
+(* Get the physical tag corresponding to a field. *)
+let rec tag_of_field'
+  (#l: P.struct_typ')
+  (tgs: tags' l)
+  (f: P.struct_field' l)
 : Pure UInt32.t
   (requires True)
   (ensures (fun t -> List.Tot.mem t tgs))
@@ -56,8 +82,17 @@ let rec tag_of_field
   else (
     assert (Cons? l');
     let ff : string = f in
-    tag_of_field #l' tgs' ff
+    tag_of_field' #l' tgs' ff
   )
+
+let tag_of_field
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (f: P.struct_field l)
+: Pure UInt32.t
+  (requires True)
+  (ensures (fun t -> List.Tot.mem t tgs))
+= tag_of_field' tgs f
 
 (* Abstract predicate providing a proof that some field matches some tag.
 

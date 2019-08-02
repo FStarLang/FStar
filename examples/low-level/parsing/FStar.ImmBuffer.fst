@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module ImmBuffer
 
 open FStar.Seq
@@ -114,7 +129,7 @@ val of_seq_bytes: #t:sizeof_t -> #ty:serializable t  ->
   Tot (result (s':Seq.seq t)) (decreases (Seq.length s))
 let rec of_seq_bytes #t #ty s =
   let Serializable serialize parse = ty in
-  if Seq.length s = 0 then Correct (Seq.createEmpty #t)
+  if Seq.length s = 0 then Correct (Seq.empty #t)
   else begin
     lemma_aux_0 (Seq.length s) (sizeof t);
     let a = parse (Seq.slice s 0 (sizeof t)) in
@@ -129,7 +144,7 @@ val to_seq_bytes: #t:sizeof_t -> #ty:serializable t -> s:Seq.seq t ->
   Tot (s':Seq.seq byte) (decreases (Seq.length s))
 let rec to_seq_bytes #t #ty s =
   let Serializable serialize parse = ty in
-  if Seq.length s = 0 then Seq.createEmpty #UInt8.t
+  if Seq.length s = 0 then Seq.empty #UInt8.t
   else Seq.append (serialize (Seq.index s 0)) (to_seq_bytes (Seq.slice s 1 (Seq.length s)))
 
 (* Buffer of serializable types *)

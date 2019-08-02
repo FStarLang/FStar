@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module ProgramEquivalence
 
 open FStar.List.Tot
@@ -26,7 +41,10 @@ private type ctr_t (inv:heap -> fp -> Type0) = incr_t inv * get_t inv
 noeq type counter =
   | C: inv:(heap -> fp -> Type0) -> fp:fp -> c:(ctr_t inv) -> counter
 
-abstract let live (c:counter) (h:heap) = (C?.inv c) h (C?.fp c)
+(*
+ * AR: 06/03: proofs below rely on this being non-abstract
+ *)
+let live (c:counter) (h:heap) = (C?.inv c) h (C?.fp c)
 
 (*
  * TODO: make this abstract,  should be allowed with abstract

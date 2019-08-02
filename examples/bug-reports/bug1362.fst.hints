@@ -1,0 +1,75 @@
+[
+  " ù’\fiŒÙ\n\u0007EˇœŒg¥\u0014",
+  [
+    [
+      "Bug1362.f0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "57cf19d73cc8e6134dc36adf57c42244"
+    ],
+    [
+      "Bug1362.f1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "1745d100d9f119b4d0b2da43ccb5cfc7"
+    ],
+    [
+      "Bug1362.f2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug1362_interpretation_Tm_arrow_b71b847c8a1dce9fbabbfc40fd470d89",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "c837e41a54a036cf3fe2f0e86e12376e"
+    ],
+    [
+      "Bug1362.f3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cef5d168cc01e91b1b9b0283e82fb1a2"
+    ],
+    [
+      "Bug1362.f4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "int_inversion", "int_typing",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "5ec1af7e508cbeb0e19ffe2a7b3cd1ab"
+    ]
+  ]
+]

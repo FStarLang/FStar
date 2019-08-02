@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Buffer
 
 open FStar.Seq
@@ -14,7 +29,7 @@ let u32 = UInt32.t
 
 let lemma_size (x:int) (pos:nat) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
-				     [SMTPatT (UInt.size x n)]
+				     [SMTPat (UInt.size x n)]
   = ()
 
 (* Buffer general type, fully implemented on FStar's arrays *)
@@ -110,39 +125,39 @@ let disjoint_only_lemma #t #t' b b' = ()
 let equal_lemma #a rid h0 h1 b bufs : 
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_buf rid bufs Set.empty h0 h1))
 	(ensures (equal h0 b h1 b))
-	[SMTPatT (disjointSet b bufs); SMTPatT (modifies_buf rid bufs Set.empty h0 h1)]
+	[SMTPat (disjointSet b bufs); SMTPat (modifies_buf rid bufs Set.empty h0 h1)]
  = ()
 
 let equal_lemma_2 #a h0 h1 rid b bufs refs : 
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ disjointRef b refs /\ modifies_buf rid bufs refs h0 h1))
 	(ensures (equal h0 b h1 b))
-	[SMTPatT (equal h0 b h1 b)]
+	[SMTPat (equal h0 b h1 b)]
  = ()
 
 let modifies_trans #rid bufs h0 h1 h2 :
   Lemma (requires (modifies_buf rid bufs Set.empty h0 h1 /\ modifies_buf rid bufs Set.empty h1 h2))
 	(ensures (modifies_buf rid bufs Set.empty h0 h2))
-	[SMTPatT (modifies_buf rid bufs Set.empty h0 h1); SMTPatT (modifies_buf rid bufs Set.empty h1 h2)]
+	[SMTPat (modifies_buf rid bufs Set.empty h0 h1); SMTPat (modifies_buf rid bufs Set.empty h1 h2)]
  = ()
 
 let modifies_trans_2 #rid bufs refs h0 h1 h2 :
   Lemma (requires (modifies_buf rid bufs refs h0 h1 /\ modifies_buf rid bufs refs h1 h2))
 	(ensures (modifies_buf rid bufs refs h0 h2))
-	[SMTPatT (modifies_buf rid bufs refs h0 h1); SMTPatT (modifies_buf rid bufs refs h1 h2)]
+	[SMTPat (modifies_buf rid bufs refs h0 h1); SMTPat (modifies_buf rid bufs refs h1 h2)]
  = ()
 
 let modifies_sub #rid bufs subbufs h0 h1 :
   Lemma
     (requires (Set.subset subbufs bufs /\ modifies_buf rid subbufs Set.empty h0 h1))
     (ensures (modifies_buf rid bufs Set.empty h0 h1))
-    [SMTPatT (modifies_buf rid subbufs Set.empty h0 h1); SMTPat (Set.subset subbufs bufs)]
+    [SMTPat (modifies_buf rid subbufs Set.empty h0 h1); SMTPat (Set.subset subbufs bufs)]
  = ()
 
 let modifies_sub_2 #rid bufs subbufs refs subrefs h0 h1 :
   Lemma 
     (requires (Set.subset subbufs bufs /\ Set.subset subrefs refs /\ modifies_buf rid subbufs refs h0 h1))
     (ensures (modifies_buf rid bufs refs h0 h1))
-    [SMTPatT (modifies_buf rid subbufs refs h0 h1); SMTPat (Set.subset subbufs bufs); SMTPatT (Set.subset subrefs refs)]
+    [SMTPat (modifies_buf rid subbufs refs h0 h1); SMTPat (Set.subset subbufs bufs); SMTPat (Set.subset subrefs refs)]
  = ()
 
 let modifies_none h : Lemma (modifies Set.empty h h) = ()
@@ -152,7 +167,7 @@ let modifies_none h : Lemma (modifies Set.empty h h) = ()
 (* 	       /\ modifies (Set.singleton h0.tip) h0 h1 *)
 (* 	       /\ modifies_buf h0.tip (bufs ++ b) refs h0 h1)) *)
 (*     (ensures (modifies_buf (frameOf b) bufs refs h0 h1)) *)
-(*     [SMTPat (~(contains h0 b)); SMTPatT (modifies_buf (frameOf b) (bufs ++ b) refs h0 h1)] *)
+(*     [SMTPat (~(contains h0 b)); SMTPat (modifies_buf (frameOf b) (bufs ++ b) refs h0 h1)] *)
 (*  = () *)
 
 val lemma_aux_0: #a:Type -> #a':Type -> h0:mem -> h1:mem -> bufs:Set.set abuffer -> refs:Set.set Heap.aref -> b:buffer a -> b':buffer a' -> Lemma
@@ -169,7 +184,7 @@ let lemma_aux_3 #a #a' h b b' = ()
 val lemma_aux_2: #a:Type -> #a':Type -> h:mem -> b:buffer a -> b':buffer a' -> Lemma
   (requires (live h b /\ ~(contains h b')))
   (ensures (disjoint b b'))
-  [SMTPatT (disjoint b b')]
+  [SMTPat (disjoint b b')]
 let lemma_aux_2 #a #a' h b b' = lemma_live_1 h (content b) (content b')
 
 val lemma_aux_1: #a:Type -> #a':Type -> h0:mem -> h1:mem -> bufs:Set.set abuffer -> refs:Set.set Heap.aref -> b:buffer a -> b':buffer a' -> Lemma

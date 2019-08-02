@@ -63,48 +63,39 @@ let renaming_sub_inc _ = ()
 let is_var (e:exp) : int = if EVar? e then 0 else 1
 
 
+val subst_eabs: s:sub -> y:var -> Tot (e:exp{renaming s ==> EVar? e})
+                                    (decreases %[1;is_renaming s; 0; EVar 0])
+
 val subst : e:exp -> s:sub -> Pure exp (requires True)
                                        (ensures (fun e' -> renaming s /\ EVar? e ==> EVar? e'))
-                                       (decreases %[is_var e; is_renaming s; e])
+                                       (decreases %[is_var e; is_renaming s; 1; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
 
   | EAbs t e1 ->
-     let subst_eabs : y:var -> Tot (e:exp{renaming s ==> EVar? e}) = fun y ->
-       if y=0
-       then EVar y
-       else ((* renaming_sub_inc (); --unnecessary hint *)
-             (* Why does the next recursive call terminate?
-                1. If s is a renaming, we're done; since e is not a var, and s (y - 1) is, the lex ordering strictly decreases.
-                2. If s is not a renaming, then since e is not a var, the first component of the lex order remains the same;
-                   But, sub_inc is a renaming, so the second component decreases and we're done again.
-              *)
-             subst (s (y - 1)) sub_inc) in
-     (* assert (renaming s ==> renaming subst_eabs); --unnecessary hint *)
-     (* Why does the next recursive call terminate?
-        1. If e1 is a var, we're done since e is not a var and so the first component decreases
-        2. If not, e1 is a non-var proper sub-term of e; so the first component remains the same; the third component strictly decreases;
-                   We have to show that the second comonent remains the same; i.e., subst_eabs is a renaming if s is a renaming.
-                   Which we have done above.
-      *)
-     EAbs t (subst e1 subst_eabs)
+     EAbs t (subst e1 (subst_eabs s))
 
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
 
-(*
-   The above proof is nice, but you really want to use subst_eabs at the top-level.
-   So, hoist it by hand ...
-*)
-val subst_eabs: s:sub -> Tot sub
-let subst_eabs s y =
+and subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
 val subst_extensional: e:exp -> s1:sub -> s2:sub{feq s1 s2} ->
                Lemma (requires True) (ensures (subst e s1 = subst e s2))
                      [SMTPat (subst e s1);  SMTPat (subst e s2)]
-let subst_extensional e s1 s2 = ()
+let rec subst_extensional e s1 s2 =
+  let open FStar.Tactics in
+  match e with
+  | EVar _ -> ()
+  | EAbs t e1 ->
+    assert (subst (EAbs t e1) s1 == EAbs t (subst e1 (subst_eabs s1)))
+      by norm [delta_only [`%subst]];
+    assert (subst (EAbs t e1) s2 == EAbs t (subst e1 (subst_eabs s2)))
+      by norm [delta_only [`%subst]];
+    subst_extensional e1 (subst_eabs s1) (subst_eabs s2)
+  | EApp e1 e2 -> subst_extensional e1 s1 s2; subst_extensional e2 s1 s2
 
 let test_hoist (t:ty) (e:exp) (s:sub) =
   assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s)))

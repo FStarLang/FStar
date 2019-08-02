@@ -1,13 +1,29 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Serializing
 
 open Slice
 
-open FStar.Ghost
 open FStar.Seq
 module List = FStar.List.Tot
 open FStar.HyperStack
 open FStar.HyperStack.ST
 module B = FStar.Buffer
+
+open FStar.Ghost
 
 // kremlib libraries
 module C = C
@@ -34,7 +50,7 @@ module Cast = FStar.Int.Cast
 val encode_many : #t:Type -> l:list t -> enc:(t -> bytes) -> n:nat{n <= List.length l} -> bytes
 let rec encode_many #t l enc n =
   match n with
-  | 0 -> Seq.createEmpty
+  | 0 -> Seq.empty
   | _ -> enc (List.hd l) `append`
         encode_many (List.tail l) enc (n-1)
 
@@ -64,7 +80,7 @@ let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem)
 /// on.
 let buffer_fun (inputs:erased (TSet.set bslice)) =
     f:(h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b} -> GTot bytes){
-      forall (h0 h1: h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b}).
+      forall (h0 h1: (h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b})).
       (forall b. TSet.mem b (reveal inputs) ==> as_seq h0 b == as_seq h1 b) ==>
       f h0 == f h1}
 
