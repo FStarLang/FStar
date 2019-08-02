@@ -25,7 +25,8 @@ let _ : squash (inversion t) =
 unfold
 let tt (_:t) = True
 
-[@unfold_for_smt]
+[@unfold_for_smt
+  (strict_on_arguments [0])]
 let v (a:t)
   : Tot (uint_t n)
   = a.v
