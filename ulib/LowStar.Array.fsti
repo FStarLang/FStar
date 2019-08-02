@@ -44,7 +44,8 @@ val alloc (#a:Type0) (init:a) (len:U32.t)
          fresh_loc (loc_array b) h0 h1 /\
          writeable h1 b /\
          freeable b /\
-         as_seq h1 b == Seq.create (U32.v len) init)
+         as_seq h1 b == Seq.create (U32.v len) init /\
+         length b = len)
 
 
 /// As per the C semantics, you can only free the entire allocation unit returned to you by `malloc`. This behavior is enforced by the
