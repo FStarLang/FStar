@@ -11,8 +11,8 @@ module MG = FStar.ModifiesGen
 open LowStar.Resource
 open LowStar.RST
 
-noeq type varray (a: Type) = {
-  s: Seq.seq a;
+noeq type varray (a: Type) (n:nat) = {
+  s: Seq.lseq a n;
   p: Ghost.erased P.permission
 }
 
@@ -34,13 +34,13 @@ let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:A.array a) : Lem
 #set-options "--z3rlimit 20"
 
 abstract
-let array_view (#a:Type) (b:A.array a) : view (varray a) =
+let array_view (#a:Type) (b:A.array a) : view (varray a (A.vlength b)) =
   reveal_view ();
   let fp = Ghost.hide (A.loc_array b) in
   let inv h =
     A.live h b /\ constant_perm_seq h b
   in
-  let sel (h: HS.mem) : GTot (varray a) = { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) } in
+  let sel (h: HS.mem) : GTot (varray a (A.vlength b)) = { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) } in
   {
     fp = fp;
     inv = inv;

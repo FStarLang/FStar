@@ -71,6 +71,7 @@ val share (#a:Type) (b:A.array a)
         (fun b' -> array_resource b <*> array_resource b')
         (fun h0 -> A.vlength b > 0)
         (fun h0 b' h1 ->
+          A.vlength b == A.vlength b' /\
           (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
           (sel (array_view b') h1).s == (sel (array_view b) h1).s /\
           Ghost.reveal (sel (array_view b) h1).p == P.half_permission (Ghost.reveal (sel (array_view b) h0).p) /\
