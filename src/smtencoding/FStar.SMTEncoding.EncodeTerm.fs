@@ -126,7 +126,9 @@ let mk_Apply e (vars:fvs) =
     vars |> List.fold_left (fun out var ->
             match fv_sort var with
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
-            | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
+            | s ->
+              // let _ = if s <> Term_sort then (printfn "Expected Term_sort; got %A" s; failwith "DIE!") in
+              mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
 let raise_arity_mismatch head arity n_args rng =
     Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,

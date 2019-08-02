@@ -907,7 +907,8 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
   FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
   FStar_TypeChecker_Env.Primops;
   FStar_TypeChecker_Env.Unascribe;
-  FStar_TypeChecker_Env.ForExtraction] 
+  FStar_TypeChecker_Env.ForExtraction;
+  FStar_TypeChecker_Env.NBE] 
 let (comp_no_args :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)

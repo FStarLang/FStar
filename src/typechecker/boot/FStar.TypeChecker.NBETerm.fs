@@ -69,7 +69,7 @@ and t
   | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
          * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
          * int                     // arity
-         * option<(unit -> residual_comp)> // thunked residual comp
+         * option<(list<t> -> residual_comp)> // optional residual comp
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)

@@ -597,7 +597,8 @@ let extraction_norm_steps =
      Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;
-     Env.ForExtraction]
+     Env.ForExtraction;
+     Env.NBE]
 
 let comp_no_args c =
     match c.n with
@@ -752,6 +753,11 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
+    // if TcEnv.debug g.env_tcenv <| Options.Other "Extraction"
+    // || TcEnv.debug g.env_tcenv <| Options.Other "ExtractNorm"
+    // then
+    BU.print1 "Starting to normalize type %s\n"
+                   (Print.term_to_string t0);
     let t = N.normalize extraction_norm_steps g.env_tcenv t0 in
     translate_term_to_mlty g t
 

@@ -3,6 +3,7 @@ module FStar.TypeChecker.NBE
 open FStar.All
 open FStar.Exn
 open FStar
+open FStar.TypeChecker.Cfg
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
@@ -211,7 +212,7 @@ let is_constr (q : qninfo) : bool =
   | Some (BU.Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
   | _ -> false
 
-let translate_univ (bs:list<t>) (u:universe) : universe =
+let translate_univ (cfg:Cfg.cfg) (bs:list<t>) (u:universe) : universe =
   let rec aux u =
     let u = SS.compress_univ u in
       match u with
@@ -220,6 +221,8 @@ let translate_univ (bs:list<t>) (u:universe) : universe =
         then
           let u' = List.nth bs i in //it has to be a Univ term at position i
           (un_univ u')
+        else if cfg.steps.allow_unbound_universes
+        then U_zero
         else failwith "Universe index out of bounds"
 
       | U_succ u -> U_succ (aux u)
@@ -446,10 +449,10 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
                                                               (List.map P.univ_to_string us |> String.concat ", "));
-      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ bs x))) us)
+      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ cfg bs x))) us)
 
     | Tm_type u ->
-      Type_t (translate_univ bs u)
+      Type_t (translate_univ cfg bs u)
 
     | Tm_arrow (xs, c) ->
       Arrow ((fun ys -> translate_comp cfg (List.rev_append ys bs) c),
@@ -482,7 +485,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
                              next_formal :: formals)
                           xs
                           [],
-           List.length xs, BU.map_opt resc (fun c -> (fun () -> translate_residual_comp cfg bs c)))
+           List.length xs,
+           BU.map_opt resc (fun c -> (fun formals -> translate_residual_comp cfg (List.rev_append formals bs) c)))
 
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
@@ -629,8 +633,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
-  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ bs) u)
-  | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ bs) u)
+  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
+  | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ cfg bs) u)
   | S.Comp   ctyp      -> Comp (translate_comp_typ cfg bs ctyp)
 
 and readback_comp cfg (c: comp) : S.comp =
@@ -647,7 +651,7 @@ and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
       ; S.result_typ  = result_typ
       ; S.effect_args = effect_args
       ; S.flags       = flags } = c in
-  { comp_univs = List.map (translate_univ bs) comp_univs;
+  { comp_univs = List.map (translate_univ cfg bs) comp_univs;
     effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
     effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) effect_args;
@@ -870,9 +874,12 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
                          ([], [])
                          targs
       in
-      let body = readback cfg (f (List.rev accus_rev)) in
+      let accus = List.rev accus_rev in
+      let body = readback cfg (f accus) in
       // GM: Isn't this closing the binders over the body/lcomp? Why?
-      U.abs (List.rev args_rev) body (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk ())))
+      U.abs (List.rev args_rev)
+            body
+            (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk accus)))
 
     | Refinement (f, targ) ->
       let x =  S.new_bv None (readback cfg (fst (targ ()))) in

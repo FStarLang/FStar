@@ -175,10 +175,12 @@ let bundle_as_inductive_families env ses quals attrs
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
-            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
+            | Sig_inductive_typ(l, us, bs, t, _mut_i, datas) ->
+                let _us, t = SS.open_univ_vars us t in
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
-                    | Sig_datacon(d, _, t, l', nparams, _) when Ident.lid_equals l l' ->
+                    | Sig_datacon(d, us, t, l', nparams, _) when Ident.lid_equals l l' ->
+                        let _us, t = SS.open_univ_vars us t in
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
                         let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
