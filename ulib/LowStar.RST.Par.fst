@@ -57,13 +57,13 @@ val lock (#a:Type) (b:array a) : Type
 // We have to ensure that the definition is abstract to prevent users to
 // create them without using the creation functions
 assume
-val get_lock_pred (#a:Type) (#b:array a) (l:lock b) : Seq.seq a -> Type
+val get_lock_pred (#a:Type) (#b:array a) (l:lock b) : Seq.lseq a (vlength b) -> Type
 
 (* We are only allowed to take a lock on a resource with write permission.
    We could also remove this restriction and store the permission in the lock, but
    we probably don't need locks on shareable, read only permissions *)
 assume
-val new_lock (#a:Type) (b:array a) (pred:Seq.seq a -> Type)
+val new_lock (#a:Type) (b:array a) (pred:Seq.lseq a (vlength b) -> Type)
   : RST (lock b)
         (RA.array_resource b) (fun _ -> empty_resource)
         (fun h ->
