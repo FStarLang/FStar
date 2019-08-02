@@ -34,6 +34,7 @@ let singleton #a x = F.on_dom a (fun y -> y = x)
 let union #a s1 s2 = F.on_dom a (fun x -> s1 x || s2 x)
 let intersect #a s1 s2 = F.on_dom a (fun x -> s1 x && s2 x)
 let complement #a s = F.on_dom a (fun x -> not (s x))
+let intension #a f = F.on_dom a f
 
 (* Properties *)
 let mem_empty      #a x       = ()
@@ -41,6 +42,7 @@ let mem_singleton  #a x y     = ()
 let mem_union      #a x s1 s2 = ()
 let mem_intersect  #a x s1 s2 = ()
 let mem_complement #a x s     = ()
+let mem_intension  #a x f      = ()
 let mem_subset     #a s1 s2   = ()
 let subset_mem     #a s1 s2   = ()
 

@@ -65,7 +65,6 @@
 
 module IntervalIntersect
 
-#set-options "--use_two_phase_tc true"
 /// Activates the new `two phase commit`_ feature.
 /// .. _`two phase commit` https://github.com/FStarLang/FStar/issues?utf8=%E2%9C%93&q=label%3Acomponent%2Ftwo-phase-tc+
 ///
@@ -275,6 +274,12 @@ let intersect (is1 is2:intervals) =
 
 let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <=^ z &&
   z <^ t)
+
+let mem_rangeGT (f t:offset) (x:offset)
+: Lemma
+  (Set.mem x (rangeGT f t) == (f <=^ x && x <^ t))
+  [SMTPat (Set.mem x (rangeGT f t))]
+= Set.mem_intension x (fun z -> f <=^ z && z <^ t)
 
 /// Because of the immaturity of F\* and the need for abstraction to
 /// simultaneously support verification and extraction, I had to fix and extend
