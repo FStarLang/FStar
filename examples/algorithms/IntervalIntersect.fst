@@ -589,7 +589,7 @@ let rec ppIntervals' (is:intervals): ML unit =
 
 let toI f t = I (int_to_t f) (int_to_t t)
 
-let ppIntervals is = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
+let ppIntervals is : ML string = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
 let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 10 14])
 
 /// And the winner is!
