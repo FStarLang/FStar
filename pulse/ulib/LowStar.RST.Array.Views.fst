@@ -7,12 +7,13 @@ module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
 module P = LowStar.Permissions
 module MG = FStar.ModifiesGen
+module U32 = FStar.UInt32
 
 open LowStar.Resource
 open LowStar.RST
 
-noeq type varray (a: Type) (n:nat) = {
-  s: Seq.lseq a n;
+noeq type varray (#a: Type) (b: A.array a) = {
+  s: Seq.lseq a (A.vlength b);
   p: Ghost.erased P.permission
 }
 
@@ -34,38 +35,35 @@ let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:A.array a) : Lem
 #set-options "--z3rlimit 20"
 
 abstract
-let array_view (#a:Type) (b:A.array a) : view (varray a (A.vlength b)) =
+let array_view (#a:Type) (b:A.array a) : Tot (view (varray b)) =
   reveal_view ();
   let fp = Ghost.hide (A.loc_array b) in
   let inv h =
     A.live h b /\ constant_perm_seq h b
   in
-  let sel (h: HS.mem) : GTot (varray a (A.vlength b)) = { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) } in
+  let sel (h: HS.mem) : GTot (varray b) = { s = A.as_seq h b; p = Ghost.hide (A.get_perm h b 0) } in
   {
     fp = fp;
     inv = inv;
     sel = sel
   }
 
-let array_view_same_as_as_seq (#a: Type) (b: A.array a) (h: HS.mem)
-  : Lemma ((sel (array_view b) h).s == A.as_seq h b)
-  [SMTPat ((sel (array_view b) h).s)]
-  = ()
-
-let as_seq (#a: Type) (h: HS.mem) (b: A.array a)  =
-  (sel (array_view b) h).s
-
-let get_perm (#a: Type) (h: HS.mem) (b: A.array a)  =
-  (sel (array_view b) h).p
-
-val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
-  (requires (array_view b).inv h)
-  (ensures A.vlength b == Seq.length (sel (array_view b) h).s)
-  [SMTPat (sel (array_view b) h).s]
-
-unfold let array_resource (#a:Type) (b:A.array a) =
+unfold let array_resource (#a:Type) (b:A.array a) : Tot resource =
   as_resource (array_view b)
 
+let as_seq
+  (#a: Type)
+  (b: A.array a)
+  (#r: resource{array_resource #a b `is_subresource_of` r})
+  (sel: selector r) : GTot (Seq.lseq a (A.vlength b))  =
+  (sel (array_resource b)).s
+
+let get_perm
+  (#a: Type)
+  (b: A.array a)
+  (#r: resource{array_resource #a b `is_subresource_of` r})
+  (sel: selector r) : GTot P.permission =
+  Ghost.reveal (sel (array_resource b)).p
 
 let reveal_array ()
   : Lemma (
@@ -80,8 +78,7 @@ let reveal_array ()
     ) =
   ()
 
-let length_view_as_seq #a h b = ()
 
-let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}) (b':A.array a{(array_view b').inv h}) =
+let summable_permissions (#a:Type) (b:A.array a) (b':A.array a) (s: selector (array_resource b <*> array_resource b')) =
   A.gatherable b b' /\
-  P.summable_permissions (Ghost.reveal (sel (array_view b) h).p) (Ghost.reveal (sel (array_view b') h).p)
+  P.summable_permissions (get_perm b s) (get_perm b' s)

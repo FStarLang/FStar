@@ -28,29 +28,64 @@ open LowStar.RST.Pointer.Views
 
 include LowStar.RST.Pointer.Views
 
-(* Reading and writing using a pointer resource *)
+(**** Unscoped allocation and deallocation of pointer resources *)
+
+let ptr_alloc
+  (#a:Type)
+  (init:a)
+  : RST (pointer a) (empty_resource)
+    (fun ptr -> ptr_resource ptr)
+    (fun _ -> True)
+    (fun _ ptr modern ->
+      A.freeable ptr /\
+      get ptr modern == init /\
+      get_perm ptr modern = FStar.Real.one
+    ) =
+  reveal_ptr();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  A.alloc init 1ul
+
+let ptr_free
+  (#a:Type)
+  (ptr:pointer a)
+  : RST unit (ptr_resource ptr)
+    (fun ptr -> empty_resource)
+    (fun old -> A.freeable ptr /\ P.allows_write (get_perm ptr old))
+    (fun _ _ _ -> True) =
+  reveal_ptr();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  reveal_empty_resource ();
+  A.free ptr
+
+(**** Reading and writing using a pointer resource *)
 
 
-let ptr_read (#a:Type)
-             (ptr:pointer a)
-           : RST a (ptr_resource ptr)
-                   (fun _ -> ptr_resource ptr)
-                   (fun _ -> True)
-                   (fun old x modern ->
-                      (old (ptr_resource ptr)).x == x /\
-                      old (ptr_resource ptr) == modern (ptr_resource ptr)) =
+let ptr_read
+  (#a:Type)
+  (ptr:pointer a)
+  : RST a (ptr_resource ptr)
+    (fun _ -> ptr_resource ptr)
+    (fun _ -> True)
+    (fun old x modern ->
+      get ptr old == x /\
+      old (ptr_resource ptr) == modern (ptr_resource ptr)
+    ) =
   reveal_ptr();
   A.index ptr 0ul
 
-let ptr_write (#a:Type)
-              (ptr:pointer a)
-              (x:a)
-            : RST unit (ptr_resource ptr)
-                       (fun _ -> ptr_resource ptr)
-                       (fun h -> P.allows_write (Ghost.reveal (sel (ptr_view ptr) h).p))
-                       (fun h0 _ h1 ->
-                          (sel (ptr_view ptr) h0).p == (sel (ptr_view ptr) h1).p /\
-                          (sel (ptr_view ptr) h1).x == x) =
+let ptr_write
+  (#a:Type)
+  (ptr:pointer a)
+  (x:a)
+  : RST unit (ptr_resource ptr)
+    (fun _ -> ptr_resource ptr)
+    (fun old -> P.allows_write (get_perm ptr old))
+    (fun old _ modern ->
+      get_perm ptr old == get_perm ptr modern /\
+      get ptr modern == x
+    ) =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
@@ -59,47 +94,20 @@ let ptr_write (#a:Type)
   (**) A.live_array_used_in ptr h1
 
 
-(* Unscoped allocation and deallocation of pointer resources *)
-
-let ptr_alloc (#a:Type)
-              (init:a)
-            : RST (pointer a) (empty_resource)
-                                (fun ptr -> ptr_resource ptr)
-                                (fun _ -> True)
-                                (fun _ ptr h1 ->
-                                   A.freeable ptr /\
-                                   sel (ptr_view ptr) h1 == {x = init; p = (Ghost.hide FStar.Real.one)}) =
-  reveal_ptr();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  A.alloc init 1ul
-
-let ptr_free (#a:Type)
-             (ptr:pointer a)
-           : RST unit (ptr_resource ptr)
-                      (fun ptr -> empty_resource)
-                      (fun h -> A.freeable ptr /\ P.allows_write (Ghost.reveal (sel (ptr_view ptr) h).p))
-                      (fun _ ptr h1 -> True) =
-  reveal_ptr();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  reveal_empty_resource ();
-  A.free ptr
-
 let ptr_share
   (#a: Type)
   (ptr: pointer a)
   : RST (pointer a)
     (ptr_resource ptr)
     (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
-    (fun h0 -> True)
-    (fun h0 ptr1 h1 ->
-      (sel (ptr_view ptr) h0).x == (sel (ptr_view ptr) h1).x /\
-      (sel (ptr_view ptr) h1).x == (sel (ptr_view ptr1) h1).x /\
-      Ghost.reveal (sel (ptr_view ptr) h1).p == P.half_permission (Ghost.reveal (sel (ptr_view ptr) h0).p) /\
-      Ghost.reveal (sel (ptr_view ptr1) h1).p == P.half_permission (Ghost.reveal (sel (ptr_view ptr) h0).p) /\
+    (fun _ -> True)
+    (fun old ptr1 modern ->
+      get ptr modern == get ptr old  /\
+      get ptr1 modern == get ptr old  /\
+      get_perm ptr modern == P.half_permission (get_perm ptr old) /\
+      get_perm ptr1 modern == P.half_permission (get_perm ptr old) /\
       A.gatherable ptr ptr1 /\
-      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr) h1).p) (Ghost.reveal (sel (ptr_view ptr1) h1).p))
+      P.summable_permissions (get_perm ptr modern) (get_perm ptr1 modern))
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -117,13 +125,14 @@ let ptr_merge
   : RST unit
     (ptr_resource ptr1 <*> ptr_resource ptr2)
     (fun _ -> ptr_resource ptr1)
-    (fun h0 -> A.gatherable ptr1 ptr2 /\
-      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p))
-    (fun h0 _ h1 ->
-      P.summable_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p) /\
-      (sel (ptr_view ptr1) h0).x == (sel (ptr_view ptr1) h1).x /\
-      Ghost.reveal (sel (ptr_view ptr1) h1).p ==
-        P.sum_permissions (Ghost.reveal (sel (ptr_view ptr1) h0).p) (Ghost.reveal (sel (ptr_view ptr2) h0).p))
+    (fun old -> A.gatherable ptr1 ptr2 /\
+      P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old)
+    )
+    (fun old _ modern ->
+      P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old) /\
+      get ptr1 modern == get ptr1 old /\
+      get_perm ptr1 modern == P.sum_permissions (get_perm ptr1 old) (get_perm ptr2 old)
+     )
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -132,59 +141,3 @@ let ptr_merge
   A.gather ptr1 ptr2;
   (**) let h1 = HST.get () in
   (**) A.live_array_used_in ptr1 h1
-
-
-(* Scoped allocation of (heap-allocated, freeable) pointer resources *)
-
-unfold
-let with_new_ptr_pre (res:resource) =
-  pre:r_pre res{forall h0 h1 .
-                  pre h0 /\
-                  sel (view_of res) h0 == sel (view_of res) h1
-                  ==>
-                  pre h1}
-
-unfold
-let with_new_ptr_post (res0:resource) (a:Type) (res1:a -> resource) =
-  post:r_post res0 a res1{forall h0 h1 x h2 h3 .
-                            sel (view_of res0) h0 == sel (view_of res0) h1 /\
-                            post h1 x h2 /\
-                            sel (view_of (res1 x)) h2 == sel (view_of (res1 x)) h3
-                            ==>
-                            post h0 x h3}
-(*
-let with_new_ptr (#res:resource)
-                 (#a:Type)
-                 (init:a)
-                 (#b:Type)
-                 (#pre:with_new_ptr_pre res)
-                 (#post:with_new_ptr_post res b (fun _ -> res))
-                 (f:(ptr:pointer a -> RST b (res <*> (ptr_resource ptr))
-                                              (fun _ -> res <*> (ptr_resource ptr))
-                                              (fun h -> pre h /\ sel (ptr_view ptr) h == {x = init; p = FStar.Real.one})
-                                              (fun h0 x h1 -> post h0 x h1 /\ P.allows_write (sel (ptr_view ptr) h1).p)))
-               : RST b res (fun _ -> res) pre post =
-  reveal_empty_resource ();
-  reveal_rst_inv ();
-  reveal_ptr ();
-  reveal_star ();
-  let ptr =
-    rst_frame
-      res
-      #empty_resource
-      (fun ptr -> res <*> ptr_resource ptr)
-      #(fun ptr -> ptr_resource ptr)
-      #res
-      (fun _ -> ptr_alloc init)
-  in
-  admit();
-  let x = f ptr in
-  rst_frame
-    (res <*> ptr_resource ptr)
-    #(ptr_resource ptr)
-    (fun _ -> res)
-    #(fun _ -> empty_resource)
-    #res
-    (fun _ -> ptr_free ptr);
-    admit();
-  *)

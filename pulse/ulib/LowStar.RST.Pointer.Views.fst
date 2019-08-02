@@ -44,3 +44,17 @@ let reveal_ptr ()
            (forall a (ptr:pointer a) h .{:pattern sel (ptr_view ptr) h}
              sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = Ghost.hide (A.get_perm h ptr 0)})) =
   ()
+
+let get
+  (#a: Type)
+  (ptr: pointer a)
+  (#r: resource{ptr_resource #a ptr `is_subresource_of` r})
+  (sel: selector r) : GTot a =
+  (sel (ptr_resource ptr)).x
+
+let get_perm
+  (#a: Type)
+  (ptr: pointer a)
+  (#r: resource{ptr_resource #a ptr `is_subresource_of` r})
+  (sel: selector r) : GTot P.permission =
+  Ghost.reveal (sel (ptr_resource ptr)).p
