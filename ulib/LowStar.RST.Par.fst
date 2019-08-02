@@ -36,8 +36,17 @@ val par (#in1 #in2:resource)
         : RST (a & b)
               (in1 <*> in2)
               (fun p -> out1 (fst p) <*> out2 (snd p))
-              (fun h -> pre1 h /\ pre2 h)
-              (fun h0 (x, y) h1 -> post1 h0 x h1 /\ post2 h0 y h1)
+              (fun old -> pre1 (focus_selector old in1) /\ pre2 ((focus_selector old in2)))
+              (fun old x modern ->
+                post1
+                  (focus_selector old in1)
+                  (fst x)
+                  (focus_selector modern (out1 (fst x))) /\
+                post2
+                  (focus_selector old in2)
+                  (snd x)
+                  (focus_selector modern (out2 (snd x)))
+              )
 
 (* We now model locks to permit the sharing of read/write resources. We currently model locks as values, which are therefore in scope of both threads when calling par.
    Locks have blocking semantics: Preconditions on acquire are minimal, but the freedom of the lock is checked at runtime. A program will halt until the required lock
@@ -65,8 +74,8 @@ assume
 val new_lock (r:resource) (pred:r.t -> Type)
   : RST (lock r)
         r (fun _ -> empty_resource)
-        (fun h ->
-          pred (sel r.view h))
+        (fun old ->
+          pred (old r))
         (fun _ l _ -> get_lock_pred l == pred)
 
 /// This model could allow a thread to acquire a lock, and create a new lock
@@ -86,8 +95,8 @@ val acquire (#r:resource) (l:lock r)
         (empty_resource)
         (fun _ -> r)
         (fun _ -> True)
-        (fun _ _ h1 ->
-          (get_lock_pred l) (sel r.view h1))
+        (fun _ _ modern ->
+          (get_lock_pred l) (modern r))
 
 (* Release is similar to new_lock, without the new value creation *)
 assume
@@ -95,6 +104,6 @@ val release (#r:resource) (l:lock r)
   : RST unit
         (r)
         (fun _ -> empty_resource)
-        (fun h ->
-          (get_lock_pred l) (sel r.view h))
+        (fun old ->
+          (get_lock_pred l) (old r))
         (fun _ _ _ -> True)
