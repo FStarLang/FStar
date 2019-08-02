@@ -81,7 +81,7 @@ val new_lock (r:resource) (pred:r.t -> Type)
    We only know about its contents what was stored in the lock
    *)
 assume
-val acquire (r:resource) (l:lock r)
+val acquire (#r:resource) (l:lock r)
   : RST unit
         (empty_resource)
         (fun _ -> r)
@@ -91,7 +91,7 @@ val acquire (r:resource) (l:lock r)
 
 (* Release is similar to new_lock, without the new value creation *)
 assume
-val release (r:resource) (l:lock r)
+val release (#r:resource) (l:lock r)
   : RST unit
         (r)
         (fun _ -> empty_resource)
