@@ -65,17 +65,6 @@ let basic_locked_update (b:array UInt32.t) (l:lock b) : RST unit
   A.upd b 0ul (x `UInt32.add_mod` 1ul);
   release b l
 
-let basic_par_locked_update (b:array UInt32.t) (l:lock b) : RST unit
-  (empty_resource <*> empty_resource)
-  (fun _ -> empty_resource <*> empty_resource)
-  // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
-  // In this case, the lock is assumed trivial
-  (fun h -> vlength b = 1 /\ (forall s. get_lock_pred l s))
-  (fun _ _ _ -> True)
-  = let _ = par (fun () -> basic_locked_update b l) (fun () -> basic_locked_update b l) in
-  ()
-
-
 let test_shared_lock () : RST unit
   (empty_resource)
   (fun _ -> empty_resource)
@@ -84,13 +73,46 @@ let test_shared_lock () : RST unit
   =
   let b = A.alloc 1ul 1ul in
   let l = new_lock b (fun _ -> True) in
-  rst_frame (empty_resource) (fun _ -> empty_resource) (fun () -> basic_par_locked_update b l);
+  // Frame is here needed to unify empty_resource with empty <*> empty
+  // Unclear why inlining the framed function does not work and points to prims (112- 150)
+  let f = fun () -> par (fun () -> basic_locked_update b l) (fun () -> basic_locked_update b l) in
+  let _ = rst_frame (empty_resource) (fun _ -> empty_resource) f in
   acquire b l;
   let x = A.index b 0ul in
   // Here, we do not know anything about the contents of b since no invariant is associated to the lock
   release b l
+
+
+let locked_update2 (b:array UInt32.t) (l:lock b) (v:UInt32.t) : RST unit
+  (empty_resource)
+  (fun _ -> empty_resource)
+  // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
+  // If we do not care about logical predicates regarding contents when acquiring the lock, an implication is enough
+  (fun h -> vlength b = 2 /\ (forall s. UInt32.v (Seq.index s 0) >= UInt32.v (Seq.index s 1) ==> get_lock_pred l s))
+  (fun _ _ _ -> True)
+  =
+  acquire b l;
+  let x = A.index b 0ul in
+  if x `UInt32.gte` v then
+    A.upd b 1ul v
+  else ();
+  release b l
+
+let test_shared_lock2 () : RST unit
+  (empty_resource)
+  (fun _ -> empty_resource)
+  (fun h -> True)
+  (fun _ _ _ -> True)
+  =
+  let b = A.alloc 1ul 2ul in
+  let l = new_lock b (fun s -> UInt32.v (Seq.index s 0) >= UInt32.v (Seq.index s 1)) in
   // Frame is here needed to unify empty_resource with empty <*> empty
-  // Unclear why inlining the framed function does not work
-  // let _ = rst_frame (empty_resource) (fun _ -> empty_resource) (fun () -> par
-  //   (fun () -> basic_locked_update b l) (fun () -> basic_locked_update b l)) in
-  //  ()
+  // Unclear why inlining the framed function does not work and points to prims (112- 150)
+  let f = fun () -> par (fun () -> locked_update2 b l 5ul) (fun () -> locked_update2 b l 10ul) in
+  let _ = rst_frame (empty_resource) (fun _ -> empty_resource) f in
+  acquire b l;
+  let x = A.index b 0ul in
+  let y = A.index b 1ul in
+  // We only know what happened is given by the lock invariant here
+  assert (UInt32.v x >= UInt32.v x);
+  release b l
