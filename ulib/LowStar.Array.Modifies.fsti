@@ -198,7 +198,6 @@ val modifies_trans_linear (l l_goal:loc) (h1 h2 h3:HS.mem)
           (ensures  (modifies l_goal h1 h3))
 	  [SMTPat (modifies l h1 h2); SMTPat (modifies l_goal h1 h3)]
 
-
 val unused_in_used_in_disjoint_2
   (l1 l2 l1' l2': loc)
   (h: HS.mem)

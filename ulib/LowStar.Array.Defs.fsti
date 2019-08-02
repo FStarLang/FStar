@@ -14,8 +14,8 @@ val array (a:Type0): Type0
 
 (**** Definitions of ghost operations and predicates on arrays *)
 
-val length (#a:Type) (b:array a) : l:U32.t{U32.v l > 0}
-let vlength (#a:Type) (b:array a) : pos = U32.v (length b)
+val length (#a:Type) (b:array a) : GTot (l:U32.t{U32.v l > 0})
+let vlength (#a:Type) (b:array a) : GTot pos = U32.v (length b)
 
 /// A array is viewed as an `FStar.Seq.seq`. However, since these arrays have permissions attached to them, `as_seq` is doubled by an
 /// `as_seq_perm` which returns the list of permission held by the array on each of its cells.
