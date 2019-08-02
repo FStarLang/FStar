@@ -40,7 +40,7 @@ val singleton (#a:eqtype) (x:a)
 val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 val complement : #a:eqtype -> set a -> Tot (set a)
-val intension  : #a:eqtype -> (a -> bool) -> GTot (set a)
+val intension  : #a:eqtype -> (a -> Tot bool) -> GTot (set a)
 
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
@@ -76,7 +76,7 @@ val mem_complement: #a:eqtype -> x:a -> s:set a -> Lemma
    (ensures (mem x (complement s) = not (mem x s)))
    [SMTPat (mem x (complement s))]
 
-val mem_intension: #a:eqtype -> x:a -> f:(a -> bool) -> Lemma
+val mem_intension: #a:eqtype -> x:a -> f:(a -> Tot bool) -> Lemma
   (requires True)
   (ensures (mem x (intension f) = f x))
 
