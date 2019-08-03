@@ -2521,6 +2521,8 @@ let normalize_with_primitive_steps ps s e t =
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end else begin
+      log_top c (fun () -> BU.print1 "Calling normalizer from: %s\n"
+                          (BU.stack_dump()));
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
       let (r, ms) = BU.record_time (fun () -> norm c [] [] t) in

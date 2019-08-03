@@ -992,23 +992,42 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                 (Print.term_to_string t1)
                 (Print.term_to_string t2)
                 (string_of_match_result r);
+        let maybe_normalize_refinement steps env t =
+            let head, _ = U.head_and_args t in
+            let t' = normalize_refinement steps env t in
+            let head', _ = U.head_and_args t' in
+            match head_matches env head head' with
+            | FullMatch
+            | HeadMatch _ ->
+              None //we didn't actually reduce anything
+            | _ ->
+              Some t'
+        in
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-          let t1, t2 = if d1_greater_than_d2
-                       then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
-                            t1', t2
-                       else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
-                            t1, t2' in
-          aux retry (n_delta + 1) t1 t2
+          let t1', t2' = if d1_greater_than_d2
+                       then let t1' = maybe_normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
+                            t1', Some t2
+                       else let t2' = maybe_normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
+                            Some t1, t2' in
+          match t1', t2' with
+          | Some t1, Some t2 ->
+            aux retry (n_delta + 1) t1 t2
+          | _ ->
+            fail n_delta r t1 t2
         in
 
         let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-            let t2 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
-            aux retry (n_delta + 1) t1 t2
+            let t1' = maybe_normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
+            let t2' = maybe_normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
+            match t1', t2' with
+            | Some t1, Some t2 ->
+              aux retry (n_delta + 1) t1 t2
+            | _ ->
+              fail n_delta r t1 t2
         in
 
         match r with
