@@ -207,7 +207,7 @@ let bv_uext_lid        = bvconst "bv_uext"
 
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]
-let array_mk_array_lid = p2l ["FStar"; "Array"; "mk_array"]
+let array_of_list_lid = p2l ["FStar"; "Array"; "of_list"]
 
 (* Stateful constants *)
 let st_lid       = p2l ["FStar"; "ST"]

@@ -464,7 +464,7 @@ let (is_array : FStar_Parser_AST.term -> Prims.bool) =
            FStar_Parser_AST.level = uu____1424;_},l,FStar_Parser_AST.Nothing
          )
         ->
-        (FStar_Ident.lid_equals lid FStar_Parser_Const.array_mk_array_lid) &&
+        (FStar_Ident.lid_equals lid FStar_Parser_Const.array_of_list_lid) &&
           (is_list l)
     | uu____1426 -> false
   
