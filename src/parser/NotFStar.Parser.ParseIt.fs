@@ -23,6 +23,7 @@ open FStar.Errors
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:int;
     frag_col:int
@@ -116,7 +117,7 @@ let parse fn =
         0
     | Toplevel frag
     | Fragment frag ->
-        "<input>",
+        frag.frag_fname,
         new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader,
         frag.frag_text,
         frag.frag_line,

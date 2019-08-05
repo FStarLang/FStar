@@ -404,12 +404,12 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
     let pack_lid = fstar_refl_basic_lid (Prims.op_Hat "pack" s)  in
     let inspect_fv =
       FStar_Syntax_Syntax.lid_as_fv inspect_lid
-        (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+        (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
         FStar_Pervasives_Native.None
        in
     let pack_fv =
       FStar_Syntax_Syntax.lid_as_fv pack_lid
-        (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
+        (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
         FStar_Pervasives_Native.None
        in
     let inspect =

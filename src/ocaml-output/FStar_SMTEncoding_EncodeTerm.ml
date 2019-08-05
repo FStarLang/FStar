@@ -70,7 +70,7 @@ let (mkForall_fuel :
       (FStar_SMTEncoding_Term.pat Prims.list Prims.list *
         FStar_SMTEncoding_Term.fvs * FStar_SMTEncoding_Term.term) ->
         FStar_SMTEncoding_Term.term)
-  = fun mname  -> fun r  -> mkForall_fuel' mname r (Prims.parse_int "1") 
+  = fun mname  -> fun r  -> mkForall_fuel' mname r Prims.int_one 
 let (head_normal :
   FStar_SMTEncoding_Env.env_t -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun env  ->
@@ -1456,7 +1456,7 @@ and (encode_term :
                 in
              let tkey_hash = FStar_SMTEncoding_Term.hash_of_term tok  in
              let uu____5098 =
-               if fvb.FStar_SMTEncoding_Env.smt_arity > (Prims.parse_int "0")
+               if fvb.FStar_SMTEncoding_Env.smt_arity > Prims.int_zero
                then
                  match tok.FStar_SMTEncoding_Term.tm with
                  | FStar_SMTEncoding_Term.FreeV uu____5122 ->
@@ -3977,7 +3977,7 @@ and (encode_formula :
                         (FStar_Syntax_Syntax.Implicit uu____11148) -> false
                     | uu____11151 -> true)) args
            in
-        if (FStar_List.length rf) <> (Prims.parse_int "2")
+        if (FStar_List.length rf) <> (Prims.of_int (2))
         then
           let uu____11170 =
             FStar_Util.format1
@@ -3991,7 +3991,7 @@ and (encode_formula :
          in
       let eq3_op r args =
         let n1 = FStar_List.length args  in
-        if n1 = (Prims.parse_int "4")
+        if n1 = (Prims.of_int (4))
         then
           let uu____11255 =
             enc
@@ -4018,7 +4018,7 @@ and (encode_formula :
          in
       let h_equals_op r args =
         let n1 = FStar_List.length args  in
-        if n1 = (Prims.parse_int "4")
+        if n1 = (Prims.of_int (4))
         then
           let uu____11362 =
             enc

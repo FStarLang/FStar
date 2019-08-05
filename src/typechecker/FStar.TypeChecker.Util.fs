@@ -425,6 +425,35 @@ let return_value env u_t_opt t v =
                     (N.comp_to_string env c);
   c
 
+
+(* private *)
+(*
+ * Helper function used by weaken_comp and strengthen_comp
+ * wp1 is a (pure_wp unit), md is an effect, wp2 is a (M.wp res_t)
+ * The code basically does M.bind_wp (lift_PURE_M wp1) (fun _ -> wp2)
+ *)
+let lift_wp_and_bind_with env (wp1:term) (md:eff_decl) (u_res_t:universe) (res_t:typ) (wp2:term) : term =
+  let r = Env.get_range env in
+  (* lift wp1 to c.effect_name *)
+  let edge =
+    match Env.monad_leq env C.effect_PURE_lid md.mname with
+    | Some edge -> edge
+    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ md.mname.str)
+  in
+  let wp1 = edge.mlift.mlift_wp S.U_zero S.t_unit wp1 in
+
+  (* now bind it with fun _ -> wp *)
+  mk_Tm_app
+    (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
+    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
+      S.as_arg <| S.t_unit;
+      S.as_arg res_t;
+      S.as_arg wp1;
+      S.as_arg <| U.abs [null_binder S.t_unit] wp2 (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
+    None
+    wp2.pos
+
+
 let weaken_flags flags =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
     then [SHOULD_NOT_INLINE]
@@ -439,10 +468,30 @@ let weaken_comp env (c:comp) (formula:term) : comp =
     else let c = Env.unfold_effect_abbrev env c in
          let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
-         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)
-                            [S.as_arg res_t; S.as_arg formula; S.as_arg wp]
-                            None wp.pos in
-         mk_comp md u_res_t res_t wp (weaken_flags c.flags)
+         let r = Env.get_range env in
+
+         (*
+          * The following code does:
+          *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
+          *)
+
+         (*
+          * lookup the pure_assume_wp from prims
+          * its type is p:Type -> pure_wp unit
+          *  and it is not universe polymorphic
+          *)
+         let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
+
+         (* apply it to f, after decorating f with the reason *)
+         let pure_assume_wp = mk_Tm_app
+           pure_assume_wp
+           [ S.as_arg <| formula ]
+           None
+           r
+         in
+         
+         let w_wp = lift_wp_and_bind_with env pure_assume_wp md u_res_t res_t wp in
+         mk_comp md u_res_t res_t w_wp (weaken_flags c.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
@@ -462,16 +511,32 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
     if env.lax
     then c
     else let c = Env.unfold_effect_abbrev env c in
+         let r = Env.get_range env in
          let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
-         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
-                            [S.as_arg res_t;
-                             S.as_arg <| label_opt env reason (Env.get_range env) f;
-                             S.as_arg wp]
-                            None
-                            wp.pos
+
+         (*
+          * The following code does:
+          *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
+          *)
+
+         (*
+          * lookup the pure_assert_wp from prims
+          * its type is p:Type -> pure_wp unit
+          *  and it is not universe polymorphic
+          *)
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
+
+         (* apply it to f, after decorating f with the reason *)
+         let pure_assert_wp = mk_Tm_app
+           pure_assert_wp
+           [ S.as_arg <| label_opt env reason r f ]
+           None
+           r
          in
-         mk_comp md u_res_t res_t wp flags
+
+         let s_wp = lift_wp_and_bind_with env pure_assert_wp md u_res_t res_t wp in
+         mk_comp md u_res_t res_t s_wp flags
 
 let strengthen_precondition
             (reason:option<(unit -> string)>)
@@ -937,7 +1002,18 @@ let universe_of_comp env u_res c =
                         c.pos
          | Some tm -> env.universe_of env tm
 
-
+let check_trivial_precondition env c =
+  let ct = c |> Env.unfold_effect_abbrev env in
+  let md = Env.get_effect_decl env ct.effect_name in
+  let u_t, t, wp = destruct_comp ct in
+  let vc = mk_Tm_app
+    (inst_effect_fun_with [u_t] env md md.trivial)
+    [S.as_arg t; S.as_arg wp]
+    None
+    (Env.get_range env)
+  in
+  
+  ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     if env.is_pattern then e, lc else
@@ -1544,15 +1620,11 @@ let check_top_level env g lc : (bool * comp) =
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
-              |> Normalize.normalize_comp steps env
-              |> Env.comp_to_comp_typ env in
-       let md = Env.get_effect_decl env c.effect_name in
-       let u_t, t, wp = destruct_comp c in
-       let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] None (Env.get_range env) in
+              |> Normalize.normalize_comp steps env in
+       let ct, vc, g = check_trivial_precondition env c in
        if Env.debug env <| Options.Other "Simplification"
        then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
-       let g = Env.conj_guard g (Env.guard_of_guard_formula <| NonTrivial vc) in
-       discharge g, mk_Comp c
+       discharge g, ct |> mk_Comp
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,

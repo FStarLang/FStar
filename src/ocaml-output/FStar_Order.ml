@@ -25,9 +25,7 @@ let (lex : order -> (unit -> order) -> order) =
   
 let (order_from_int : Prims.int -> order) =
   fun i  ->
-    if i < (Prims.parse_int "0")
-    then Lt
-    else if i = (Prims.parse_int "0") then Eq else Gt
+    if i < Prims.int_zero then Lt else if i = Prims.int_zero then Eq else Gt
   
 let (compare_int : Prims.int -> Prims.int -> order) =
   fun i  -> fun j  -> order_from_int (i - j) 

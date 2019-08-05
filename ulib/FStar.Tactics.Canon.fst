@@ -273,5 +273,4 @@ let canon_point_entry () : Tac unit =
         fail ("impossible: " ^ term_to_string g)
 
 let canon () : Tac unit =
-    seq (fun () -> pointwise canon_point_entry)
-        (fun () -> simpl (); let _ = trytac trivial in ())
+    pointwise canon_point_entry

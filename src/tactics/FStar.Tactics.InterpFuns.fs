@@ -435,7 +435,7 @@ let mkt nm arity nunivs interp nbe_interp =
   ; Cfg.univ_arity                   = nunivs
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
-  ; Cfg.requires_binder_substitution = false
+  ; Cfg.requires_binder_substitution = true
   ; Cfg.interpretation               = timing_int nm interp
   ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
@@ -445,6 +445,13 @@ let mk_total_interpretation_1 (f:'a -> 'r)
                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
   BU.bind_opt (extract_1 ea ncb args) (fun a ->
   let r = f a in
+  Some (embed er (Cfg.psc_range psc) r ncb))
+
+let mk_total_interpretation_1_psc (f:Cfg.psc -> 'a -> 'r)
+                              (ea:embedding<'a>) (er:embedding<'r>)
+                              (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
+  BU.bind_opt (extract_1 ea ncb args) (fun a ->
+  let r = f psc a in
   Some (embed er (Cfg.psc_range psc) r ncb))
 
 let mk_total_interpretation_2 (f:'a -> 'b -> 'r)
@@ -459,6 +466,13 @@ let mk_total_nbe_interpretation_1 cb (f:'a -> 'r)
                               (args:NBETerm.args) : option<NBETerm.t> =
   BU.bind_opt (extract_1_nbe cb ea args) (fun a ->
   let r = f a in
+  Some (NBETerm.embed er cb r))
+
+let mk_total_nbe_interpretation_1_psc cb (f:Cfg.psc -> 'a -> 'r)
+                              (ea:NBETerm.embedding<'a>) (er:NBETerm.embedding<'r>)
+                              (args:NBETerm.args) : option<NBETerm.t> =
+  BU.bind_opt (extract_1_nbe cb ea args) (fun a ->
+  let r = f Cfg.null_psc a in // TODO: why don't we have a psc here?
   Some (NBETerm.embed er cb r))
 
 let mk_total_nbe_interpretation_2 cb (f:'a -> 'b -> 'r)
@@ -480,6 +494,17 @@ let mktot1 (nunivs:int) (name : string)
            : Cfg.primitive_step =
     mkt name 1 nunivs (mk_total_interpretation_1     f  ea  er)
                       (fun cb args -> mk_total_nbe_interpretation_1 cb nf nea ner (drop nunivs args))
+
+let mktot1_psc (nunivs:int) (name : string)
+           (f : Cfg.psc -> 'a -> 'r)
+           (ea : embedding<'a>)
+           (er : embedding<'r>)
+           (nf : Cfg.psc -> 'na -> 'nr)
+           (nea : NBETerm.embedding<'na>)
+           (ner : NBETerm.embedding<'nr>)
+           : Cfg.primitive_step =
+    mkt name 1 nunivs (mk_total_interpretation_1_psc     f  ea  er)
+                      (fun cb args -> mk_total_nbe_interpretation_1_psc cb nf nea ner (drop nunivs args))
 
 let mktot2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'r)

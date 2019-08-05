@@ -39,6 +39,7 @@ let assoc x l = match List.assoc x l with exception Not_found -> None | x -> Som
 let split = BatList.split
 let splitAt n l = BatList.split_at (Z.to_int n) l
 let unsnoc l = let l1, l2 = splitAt (Z.sub (length l) Z.one) l in l1, hd l2
+let split3 l i = let a, a1 = splitAt i l in let b :: c = a1 in a, b, c
 let unzip = split
 let rec unzip3 = function
   | [] -> ([],[],[])

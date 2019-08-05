@@ -11,7 +11,7 @@ let (has_cygpath : Prims.bool) =
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
   with | uu___1_17 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
-  let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
+  let cache = FStar_Util.smap_create (Prims.of_int (20))  in
   fun s  ->
     if has_cygpath && (FStar_Util.starts_with s "/")
     then
@@ -53,14 +53,12 @@ let rollback :
     fun stackref  ->
       fun depth  ->
         let rec aux n1 =
-          if n1 <= (Prims.parse_int "0")
+          if n1 <= Prims.int_zero
           then failwith "Too many pops"
           else
-            if n1 = (Prims.parse_int "1")
+            if n1 = Prims.int_one
             then pop ()
-            else
-              ((let uu____218 = pop ()  in ());
-               aux (n1 - (Prims.parse_int "1")))
+            else ((let uu____218 = pop ()  in ()); aux (n1 - Prims.int_one))
            in
         let curdepth =
           let uu____221 = FStar_ST.op_Bang stackref  in
@@ -68,7 +66,7 @@ let rollback :
         let n1 =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
-          | FStar_Pervasives_Native.None  -> (Prims.parse_int "1")  in
+          | FStar_Pervasives_Native.None  -> Prims.int_one  in
         FStar_Util.atomically (fun uu____256  -> aux n1)
   
 let raise_failed_assertion : 'Auu____262 . Prims.string -> 'Auu____262 =
@@ -129,8 +127,7 @@ let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
         if i < n1
         then
           let uu____576 = f i  in
-          let uu____577 = aux (i + (Prims.parse_int "1"))  in uu____576 ::
-            uu____577
+          let uu____577 = aux (i + Prims.int_one)  in uu____576 :: uu____577
         else []  in
-      aux (Prims.parse_int "0")
+      aux Prims.int_zero
   

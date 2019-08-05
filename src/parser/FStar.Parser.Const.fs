@@ -117,15 +117,17 @@ let c_eq2_lid  = pconst "equals"
 let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
-let cons_lid        = pconst  "Cons"
-let nil_lid         = pconst  "Nil"
-let some_lid        = psnconst  "Some"
-let none_lid        = psnconst  "None"
-let assume_lid      = pconst  "_assume"
-let assert_lid      = pconst  "_assert"
-let assert_norm_lid = p2l ["FStar"; "Pervasives"; "assert_norm"]
+let cons_lid            = pconst  "Cons"
+let nil_lid             = pconst  "Nil"
+let some_lid            = psnconst  "Some"
+let none_lid            = psnconst  "None"
+let assume_lid          = pconst  "_assume"
+let assert_lid          = pconst  "_assert"
+let pure_assert_wp_lid  = pconst "pure_assert_wp"
+let pure_assume_wp_lid  = pconst "pure_assume_wp"
+let assert_norm_lid     = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
-let list_append_lid = p2l ["FStar"; "List"; "append"]
+let list_append_lid     = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 
@@ -205,7 +207,7 @@ let bv_uext_lid        = bvconst "bv_uext"
 
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]
-let array_mk_array_lid = p2l ["FStar"; "Array"; "mk_array"]
+let array_of_list_lid = p2l ["FStar"; "Array"; "of_list"]
 
 (* Stateful constants *)
 let st_lid       = p2l ["FStar"; "ST"]

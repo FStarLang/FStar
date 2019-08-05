@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "c8a9f4636c7c83ad4bfd5b482fd7515f"
+      "a0872c6d3262dc084e464adc67071662"
     ],
     [
       "FStar.Monotonic.HyperHeap.color",
@@ -20,7 +20,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "dc4f7da5a1d381b89623d78a583077f0"
+      "1b2e7a24060edd84f96c8112b17d80de"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_root_has_color_zero",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_7f37da2c7bc73049d03abda609f5f8b3"
       ],
       0,
-      "f2b95b3c8a7b5efeabc997686f078d5b"
+      "6facedfd59c6fc4981845d9f0c85c637"
     ],
     [
       "FStar.Monotonic.HyperHeap.root_has_color_zero",
@@ -56,7 +56,7 @@
         "typing_FStar.Monotonic.HyperHeap.root"
       ],
       0,
-      "dfe30e5a6624777da301f541ad565e40"
+      "ef83376ba40f070b78e773e7d7328122"
     ],
     [
       "FStar.Monotonic.HyperHeap.rid_tail",
@@ -82,7 +82,7 @@
         "typing_FStar.Monotonic.HyperHeap.rid_length"
       ],
       0,
-      "96359d32df27a1907b457e9907f8292f"
+      "58453efffe2cb4a218f7159b35e863b3"
     ],
     [
       "FStar.Monotonic.HyperHeap.includes",
@@ -129,7 +129,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "edd82a7e215e7490ca2edf875663f225"
+      "584a502d411ff7218a8347b6276854c1"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_aux",
@@ -138,7 +138,7 @@
       1,
       [ "@query" ],
       0,
-      "41ab6a2ab19cd04ebb4b117539a89847"
+      "12f10286664c7f15d9f9f4f83cc913a3"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_aux",
@@ -193,7 +193,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4b2e701bdc05a33fa5f8b2380e1d8f42"
+      "5f8256b38ed9b1c625b7dfcb7d88c39b"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_disjoint_includes",
@@ -254,7 +254,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "4a5ff757bf2ebdf5b2253d3d7ccdfea6"
+      "70b8117ef3022bb5204a0adac8d5d20d"
     ],
     [
       "FStar.Monotonic.HyperHeap.extends",
@@ -280,7 +280,7 @@
         "typing_FStar.Monotonic.HyperHeap.reveal"
       ],
       0,
-      "6de46b500d41342ac90050ef9c4e8ed2"
+      "25dcebd407283e6be24a4e50c8c154ca"
     ],
     [
       "FStar.Monotonic.HyperHeap.parent",
@@ -310,7 +310,7 @@
         "typing_FStar.Monotonic.HyperHeap.reveal"
       ],
       0,
-      "679403fbeca4bc0f3efe78f8e65f566a"
+      "42b6376c6301f9f0aab6f94733fd7add"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_includes_refl",
@@ -325,7 +325,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "34ee7209f5c138305e238b1d17db3c2d"
+      "5b005313559b3cec0a52972d0ae96977"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_includes",
@@ -379,7 +379,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "0e4c0fe128f9916673359c245cc4456b"
+      "3d9b8d8e649b1863eb266caf4788440a"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_includes_anti_symmetric",
@@ -397,7 +397,7 @@
         "typing_FStar.Monotonic.HyperHeap.includes"
       ],
       0,
-      "fe9910ce7cff81ab7c08062f223af09f"
+      "99f5d7a2454654487df079b3b9e89029"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_disjoint",
@@ -450,7 +450,7 @@
         "typing_Tm_abs_832e8f0f89e2b19d6d4f91c84e73067f"
       ],
       0,
-      "bdf19e4147abd3de918add1995811993"
+      "e9c7a34103b3dfbdb50969ebcdff4e22"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_parent",
@@ -475,7 +475,7 @@
         "typing_FStar.Monotonic.HyperHeap.reveal"
       ],
       0,
-      "1e19e550c774d3a59250f568bd754364"
+      "2a38bc41b1395ff4813cf4c105f6fa83"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_not_root",
@@ -496,7 +496,7 @@
         "refinement_interpretation_Tm_refine_cbd24d5334c6bfffa6fd8a84fb787f7a"
       ],
       0,
-      "e73fa1eea82c30f4756fe5fa3e04537e"
+      "0381f4254fe19ea2add36cfa5941157a"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
@@ -508,7 +508,7 @@
         "lemma_FStar.Monotonic.HyperHeap.lemma_extends_not_root"
       ],
       0,
-      "ca19edcc44b99df7a3ecc1004845cf21"
+      "d09afc2f04ca4d8ba4de3ab27d2d1e20"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
@@ -525,7 +525,7 @@
         "refinement_interpretation_Tm_refine_cbd24d5334c6bfffa6fd8a84fb787f7a"
       ],
       0,
-      "5ddb9c69532de143638b021256bd9cb6"
+      "532acbdfa03d41d8c26f807ab4c8c5f0"
     ],
     [
       "FStar.Monotonic.HyperHeap.test0",
@@ -584,7 +584,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "21febdadb154cdf0bb93cfda868995ab"
+      "d36f8801524330eb9b515206444864d8"
     ],
     [
       "FStar.Monotonic.HyperHeap.test1",
@@ -639,7 +639,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "29f8d33e34389bb92d01178f0fee1e63"
+      "d251243010321d67ede9c71f4ce4769a"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_just_trans",
@@ -671,7 +671,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "5cda949edd82c220391208de6d3e596e"
+      "49f304f763e850634f29e6ca0facae7f"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_trans",
@@ -702,7 +702,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.mem"
       ],
       0,
-      "3b4c50024b318eefe7af6beec37c44f7"
+      "d85d54e180c8ee417e6e43177638e5b3"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_includes_trans",
@@ -758,7 +758,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "f6de34c49bb4dffb812b5cd558e77d8b"
+      "6b0fcb00ef50cec47b7b4a4777fbb10f"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modset",
@@ -770,7 +770,7 @@
         "equation_FStar.Monotonic.HyperHeap.rid", "equation_FStar.Set.subset"
       ],
       0,
-      "ee27a77aa1042758878b0b9a2ec86c7f"
+      "d704da8e66d0c3fac8a07e0f20cdfe68"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_includes",
@@ -782,7 +782,7 @@
         "equation_FStar.Monotonic.HyperHeap.modifies"
       ],
       0,
-      "aa2e9bab8aa40085eb8675672415ab2e"
+      "37cc2e7720f29ff50c3a674c3bdb213a"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_includes2",
@@ -794,7 +794,7 @@
         "equation_FStar.Monotonic.HyperHeap.modifies"
       ],
       0,
-      "d6225e058468853b155258afb02883e7"
+      "15d3db9d6a658e1c8441078a501034db"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_disjoint_parents",
@@ -821,7 +821,7 @@
         "typing_FStar.Monotonic.HyperHeap.includes"
       ],
       0,
-      "00245f3953634b80b1958fe8c9d5403d"
+      "603c633ea5cbe8a899f6faa19e251dae"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_include_cons",
@@ -853,7 +853,7 @@
         "typing_FStar.Monotonic.HyperHeap.rid_length"
       ],
       0,
-      "541a8b5c6bf33616259de05c44e5993a"
+      "6a7437ba275f31bbff55c5e989c7f7b6"
     ],
     [
       "FStar.Monotonic.HyperHeap.extends_parent",
@@ -912,7 +912,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "eb1925e71db155e6627f9c8cdb3a8c1e"
+      "65816d04b9b7f1c72308b90e7783bdd9"
     ],
     [
       "FStar.Monotonic.HyperHeap.includes_child",
@@ -934,7 +934,7 @@
         "typing_FStar.Monotonic.HyperHeap.parent"
       ],
       0,
-      "de4e9d02a44cc13d32fed038209110da"
+      "fbcc1d103d61b105098528c564b9d2e7"
     ],
     [
       "FStar.Monotonic.HyperHeap.root_is_root",
@@ -967,7 +967,7 @@
         "typing_FStar.Monotonic.HyperHeap.root"
       ],
       0,
-      "541b69d13d62fe35980007237a58d125"
+      "e6d59d3d236a929c2d314801cf65a134"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend",
@@ -976,7 +976,7 @@
       1,
       [ "@query" ],
       0,
-      "ac6bde734d0f2a7209b42770b9ca3906"
+      "b40a809cc75a5aa396bab877048b3f59"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend",
@@ -1023,7 +1023,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "2cd05ae2bc6506af3bd0bf38491f8ee0"
+      "27017d77a0117614b74aaf66de5c7a1b"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend_monochrome",
@@ -1032,7 +1032,7 @@
       1,
       [ "@query" ],
       0,
-      "ff3f722fd5ec3af3171571a83f4b6772"
+      "52ecdebf85e368c659c73abc2115fb28"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend_monochrome",
@@ -1082,7 +1082,7 @@
         "typing_Tm_abs_9462dbdb991d49b8eb29778d00b08fad"
       ],
       0,
-      "3ecf5d45a02a5c816d43d21b2e0eb9a9"
+      "a0eedac03a4c8a0efb0ea05492c5b600"
     ]
   ]
 ]
