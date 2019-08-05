@@ -11,42 +11,42 @@ open FStar.Mul
 inline_for_extraction
 val while
   (res:resource)
-  (inv: (res.t -> Type0))
-  (guard: (res.t -> GTot bool))
+  (inv: (selector res -> Type0))
+  (guard: (selector res -> GTot bool))
   (test: (unit -> RST bool
     res
     (fun _ -> res)
-    (requires fun old -> inv (old res))
+    (requires fun old -> inv old)
     (ensures fun old b modern ->
-      b == guard (old res) /\
+      b == guard old /\
       old res == modern res)
   ))
   (body: (unit -> RST unit
     res
     (fun _ -> res)
-    (requires fun old -> guard (old res) /\ inv (old res))
-    (ensures fun old _ modern -> inv (modern res))
+    (requires fun old -> guard old /\ inv old)
+    (ensures fun old _ modern -> inv modern)
   ))
   : RST unit
     res
     (fun _ -> res)
-    (requires fun old -> inv (old res))
-    (ensures fun _ _ modern -> inv (modern res) /\ ~(guard (modern res)))
+    (requires fun old -> inv old)
+    (ensures fun _ _ modern -> inv modern /\ ~(guard modern))
 
 inline_for_extraction
 val for
   (start:U32.t)
   (finish:U32.t{U32.v finish >= U32.v start})
   (context: resource)
-  (loop_inv: (context.t -> nat -> Type0))
+  (loop_inv: (selector context -> nat -> Type0))
   (f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> RST unit
     (context)
     (fun _ -> context)
-    (requires (fun old -> loop_inv (old context) (U32.v i)))
-    (ensures (fun old _ modern -> U32.(loop_inv (old context) (v i) /\ loop_inv (modern context) (v i + 1))))
+    (requires (fun old -> loop_inv old (U32.v i)))
+    (ensures (fun old _ modern -> U32.(loop_inv old (v i) /\ loop_inv modern (v i + 1))))
   ))
   : RST unit
     (context)
     (fun _ -> context)
-    (requires (fun old -> loop_inv (old context) (U32.v start)))
-    (ensures (fun _ _ modern -> loop_inv (modern context) (U32.v finish)))
+    (requires (fun old -> loop_inv old (U32.v start)))
+    (ensures (fun _ _ modern -> loop_inv modern (U32.v finish)))

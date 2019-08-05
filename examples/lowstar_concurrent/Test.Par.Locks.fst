@@ -14,9 +14,9 @@ open LowStar.RST
 let test_create_lock (b:array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
-  (fun h -> vlength b = 1 /\ 
-         P.allows_write (Ghost.reveal (sel (A.array_view b) h).A.p) /\
-         (sel (A.array_view b) h).A.s == Seq.create 1 1ul
+  (fun old -> vlength b = 1 /\
+         P.allows_write (A.get_perm b old) /\
+         A.as_seq b old == Seq.create 1 1ul
          )
   (fun _ l _ ->
     (forall s. get_lock_pred l s <==> (Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) ) )
@@ -32,10 +32,10 @@ let test_create_lock (b:array UInt32.t) : RST (lock (A.array_resource b))
 let test_create_lock2 (b:array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
-  (fun h -> vlength b = 2 /\ 
-         P.allows_write (Ghost.reveal (sel (A.array_view b) h).A.p)
+  (fun old -> vlength b = 2 /\
+         P.allows_write (A.get_perm b old)
          )
-  (fun _ l _ -> 
+  (fun _ l _ ->
     (forall s. get_lock_pred l s <==> Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) )
   =
   A.upd b 0ul 1ul;
@@ -46,8 +46,8 @@ let test_create_lock2 (b:array UInt32.t) : RST (lock (A.array_resource b))
   let y = A.index b 1ul in
   assert (UInt32.v x == 1);
   // assert (UInt32.v y == 1);
-  // This assertion is not provable, as expected: 
-  // The invariant in the lock doesn't provide talk about the second index of b, 
+  // This assertion is not provable, as expected:
+  // The invariant in the lock doesn't provide talk about the second index of b,
   // so any information about it is lost once the lock is created
   release l;
   l
@@ -58,7 +58,7 @@ let basic_locked_update (b:array UInt32.t) (l:lock (A.array_resource b)) : RST u
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
   // In this case, the lock is almost trivial, but needs to specify the write permission
-  (fun h -> vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write (Ghost.reveal s.A.p)))
+  (fun old -> vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write (Ghost.reveal s.A.p)))
   (fun _ _ _ -> True)
   =
   acquire l;
@@ -69,7 +69,7 @@ let basic_locked_update (b:array UInt32.t) (l:lock (A.array_resource b)) : RST u
 let test_shared_lock () : RST unit
   (empty_resource)
   (fun _ -> empty_resource)
-  (fun h -> True)
+  (fun old -> True)
   (fun _ _ _ -> True)
   =
   let b = A.alloc 1ul 1ul in
@@ -88,7 +88,7 @@ let locked_update2 (b:array UInt32.t) (l:lock (A.array_resource b)) (v:UInt32.t)
   (empty_resource)
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
-  (fun h -> vlength b = 2 /\ (forall s. (
+  (fun old -> vlength b = 2 /\ (forall s. (
     P.allows_write (Ghost.reveal s.A.p) /\
     UInt32.v (Seq.index s.A.s 0) >= UInt32.v (Seq.index s.A.s 1)) <==> get_lock_pred l s))
   (fun _ _ _ -> True)
@@ -103,7 +103,7 @@ let locked_update2 (b:array UInt32.t) (l:lock (A.array_resource b)) (v:UInt32.t)
 let test_shared_lock2 () : RST unit
   (empty_resource)
   (fun _ -> empty_resource)
-  (fun h -> True)
+  (fun old -> True)
   (fun _ _ _ -> True)
   =
   let b = A.alloc 1ul 2ul in
