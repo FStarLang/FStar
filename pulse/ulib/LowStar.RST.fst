@@ -131,7 +131,7 @@ let is_subresource_of_refl (r: resource) : Lemma(r `is_subresource_of` r)
 
 open FStar.FunctionalExtensionality
 
-let selector r = restricted_g_t (r0:resource{r0 `is_subresource_of` r}) (fun r0 -> r0.t)
+let selector (r: resource) = restricted_g_t (r0:resource{r0 `is_subresource_of` r}) (fun r0 -> r0.t)
 
 let mk_selector
   (r: resource)
