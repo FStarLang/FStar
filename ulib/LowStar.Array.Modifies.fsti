@@ -167,6 +167,31 @@ val modifies_array_elim
     [ SMTPat (modifies p h h'); SMTPat (live h' b) ];
   ]]
 
+val modifies_array_writeable_elim
+  (#t: Type)
+  (b: array t)
+  (p : loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    writeable h b /\
+    loc_disjoint (loc_array b) p /\
+    modifies p h h'
+  ))
+  (ensures (
+    as_seq h b  == as_seq h' b /\
+    as_perm_seq h b == as_perm_seq h' b /\
+    writeable h' b
+  ))
+  [SMTPatOr [
+    [ SMTPat (modifies p h h'); SMTPat (as_seq h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (as_perm_seq h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (live h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (as_seq h' b) ];
+    [ SMTPat (modifies p h h'); SMTPat (as_perm_seq h' b) ];
+    [ SMTPat (modifies p h h'); SMTPat (live h' b) ];
+  ]]
+
 val modifies_refl
   (s: loc)
   (h: HS.mem)

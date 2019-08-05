@@ -752,6 +752,27 @@ let modifies_array_elim #t b p h h' =
   assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
   assert(live_cell h' b 0 /\ HS.contains h' b.content)
 
+let modifies_array_writeable_elim #t b p h h' =
+  lemma_disjoint_loc_from_array_disjoint_from_cells #t b p;
+  assert(forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p);
+  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved (aloc_cell b i) h h')) =
+    MG.modifies_aloc_elim #ucell #cls
+      (aloc_cell b i) p h h'
+  in
+  Classical.forall_intro aux;
+  assert(forall(i:nat{i < vlength b}). ucell_preserved (aloc_cell b i) h h');
+  assert(forall(i:nat{i < vlength b}). sel h b i == sel h' b i);
+  assert(forall(i:nat{i < vlength b}). (sel h b i).wp_v == Seq.index (as_seq h b) i /\ (sel h' b i).wp_v == Seq.index (as_seq h' b) i);
+  assert(forall(i:nat{i < vlength b}).
+    (sel h b i).wp_perm == Seq.index (as_perm_seq h b) i /\
+    (sel h' b i).wp_perm == Seq.index (as_perm_seq h' b) i
+  );
+  Seq.lemma_eq_intro (as_seq h b) (as_seq h' b);
+  Seq.lemma_eq_intro (as_perm_seq h b) (as_perm_seq h' b);
+  assert(as_seq h b  == as_seq h' b);
+  assert(as_perm_seq h b  == as_perm_seq h' b);
+  assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
+  assert(live_cell h' b 0 /\ HS.contains h' b.content)
 
 let modifies_refl s h = MG.modifies_refl s h
 
