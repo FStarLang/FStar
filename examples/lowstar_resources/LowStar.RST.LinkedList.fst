@@ -18,8 +18,7 @@ module LowStar.RST.LinkedList
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module L = FStar.List.Tot
-module B = LowStar.Buffer
-module MO = LowStar.Modifies
+module A = LowStar.Array
 
 open LowStar.Resource
 open LowStar.RST
@@ -35,7 +34,7 @@ open LowStar.BufferOps
 /// `B.pointer_or_null`, the type of buffers of length 1 or 0.
 noeq
 type t (a: Type0) =
-  B.pointer_or_null (cell a)
+  b:A.array (cell a){A.vlength b <= 1}
 
 and cell (a: Type0) = {
   next: t a;
@@ -48,8 +47,8 @@ and cell (a: Type0) = {
 abstract
 let empty_list (#a:Type) (ptr:t a) : resource =
   reveal_view();
-  let fp = Ghost.hide (B.loc_buffer ptr) in
-  let inv h = B.g_is_null ptr /\ True in
+  let fp = Ghost.hide (A.loc_array ptr) in
+  let inv h = A.writeable h ptr /\ A.vlength ptr == 0 in
   let sel h : list a = [] in
   let (view:view (list a)) = {
     fp = fp;
@@ -64,9 +63,10 @@ let empty_list (#a:Type) (ptr:t a) : resource =
 abstract
 let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
   reveal_view();
-  let fp = Ghost.hide (B.loc_addr_of_buffer ptr) in
-  let inv h = B.live h ptr /\ B.freeable ptr /\ Seq.index (B.as_seq h ptr) 0 == v in
-  let sel (h:imem inv) = v.data in
+  let fp = Ghost.hide (A.loc_array ptr) in
+  let inv h = A.vlength ptr == 1 /\ A.freeable ptr /\ A.writeable h ptr /\
+    Seq.index (A.as_seq h ptr) 0 == v in
+  let sel h = v.data in
   let (view:view a) = {
     fp = fp;
     inv = inv;
@@ -89,9 +89,9 @@ let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
 abstract
 let dummy_cell (#a:Type) (ptr:t a) : resource =
   reveal_view();
-  let fp = Ghost.hide (B.loc_addr_of_buffer ptr) in
-  let inv h = B.live h ptr /\ B.freeable ptr in
-  let sel (h:imem inv) = () in
+  let fp = Ghost.hide (A.loc_array ptr) in
+  let inv h = A.freeable ptr /\ A.writeable h ptr /\ A.vlength ptr == 1 in
+  let sel h = () in
   let view = {
     fp = fp;
     inv = inv;
@@ -110,7 +110,7 @@ let cell_alloc (#a:Type)
                         (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
-  B.malloc HS.root init 1ul
+  A.alloc init 1ul
 
 let cell_free (#a:Type)
               (ptr:t a)
@@ -122,7 +122,7 @@ let cell_free (#a:Type)
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_empty_resource ();
-  B.free ptr
+  A.free ptr
 
 let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
   : RST unit
@@ -132,7 +132,9 @@ let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
-    ptr *= c
+    A.upd ptr 0ul c;
+    let h1 = HyperStack.ST.get() in
+    A.live_array_used_in ptr h1
 
 let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
   : RST unit
@@ -142,9 +144,11 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
-    let node = !* ptr in
+    let node = A.index ptr 0ul in
     let node' = {node with data = v} in
-    ptr *= node'
+    A.upd ptr 0ul node';
+    let h1 = HyperStack.ST.get() in
+    A.live_array_used_in ptr h1
 
 (* We provide two versions of cons.
    The first one assumes there is an unused (dummy) node, that we can just set to be the head.
@@ -160,7 +164,8 @@ let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
   rst_frame 
     (dummy_cell hd <*> slist ptr l)
     (fun _ -> pts_to hd new_cell <*> slist ptr l)
-    (fun _ -> set_dummy_cell hd new_cell)
+    (fun _ -> set_dummy_cell hd new_cell);
+  admit()
 
 let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   : RST (t a)
