@@ -37,11 +37,13 @@ val closure (#a:Type0) (r:relation a) : preorder a
 (** `closure r` includes `r` *)
 val closure_step: #a:Type0 -> r:relation a -> x:a -> y:a
   -> Lemma (requires r x y) (ensures closure r x y)
+    [SMTPat (closure r x y)]
 
 (** `closure r` is the smallest preorder that includes `r` *)
 val closure_inversion: #a:Type0 -> r:relation a -> x:a -> y:a
   -> Lemma (requires closure r x y)
           (ensures  x == y \/ (exists z. r x z /\ closure r z y))
+          [SMTPat (closure r x y)]
 
 (**
 * A predicate that is stable on `r` is stable on `closure r`

@@ -644,9 +644,6 @@ let eff_decl_to_string' for_free r q ed =
       ; ite_wp      = %s\n\
       ; stronger    = %s\n\
       ; close_wp    = %s\n\
-      ; assert_p    = %s\n\
-      ; assume_p    = %s\n\
-      ; null_wp     = %s\n\
       ; trivial     = %s\n\
       ; repr        = %s\n\
       ; bind_repr   = %s\n\
@@ -663,9 +660,6 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
-         tscheme_to_string ed.assert_p;
-         tscheme_to_string ed.assume_p;
-         tscheme_to_string ed.null_wp;
          tscheme_to_string ed.trivial;
          term_to_string ed.repr;
          tscheme_to_string ed.bind_repr;
@@ -747,7 +741,7 @@ let rec sigelt_to_string (x: sigelt) =
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
       in
       match x.sigattrs with
-      | [] -> basic
+      | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg

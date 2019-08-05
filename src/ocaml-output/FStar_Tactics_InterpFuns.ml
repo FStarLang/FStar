@@ -1321,10 +1321,10 @@ let (step_from_native_step :
     {
       FStar_TypeChecker_Cfg.name = (s.FStar_Tactics_Native.name);
       FStar_TypeChecker_Cfg.arity = (s.FStar_Tactics_Native.arity);
-      FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
+      FStar_TypeChecker_Cfg.univ_arity = Prims.int_zero;
       FStar_TypeChecker_Cfg.auto_reflect =
         (FStar_Pervasives_Native.Some
-           (s.FStar_Tactics_Native.arity - (Prims.parse_int "1")));
+           (s.FStar_Tactics_Native.arity - Prims.int_one));
       FStar_TypeChecker_Cfg.strong_reduction_ok =
         (s.FStar_Tactics_Native.strong_reduction_ok);
       FStar_TypeChecker_Cfg.requires_binder_substitution = false;
@@ -1378,7 +1378,7 @@ let (mk :
               FStar_TypeChecker_Cfg.arity = arity;
               FStar_TypeChecker_Cfg.univ_arity = nunivs;
               FStar_TypeChecker_Cfg.auto_reflect =
-                (FStar_Pervasives_Native.Some (arity - (Prims.parse_int "1")));
+                (FStar_Pervasives_Native.Some (arity - Prims.int_one));
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
               FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
@@ -1401,12 +1401,12 @@ let rec drop :
   =
   fun n1  ->
     fun l  ->
-      if n1 = (Prims.parse_int "0")
+      if n1 = Prims.int_zero
       then l
       else
         (match l with
          | [] -> failwith "drop: impossible"
-         | uu____6954::xs -> drop (n1 - (Prims.parse_int "1")) xs)
+         | uu____6954::xs -> drop (n1 - Prims.int_one) xs)
   
 let mktac1 :
   'a 'na 'nr 'r .
@@ -1428,7 +1428,7 @@ let mktac1 :
             fun nf  ->
               fun nea  ->
                 fun ner  ->
-                  mk name (Prims.parse_int "2") nunivs
+                  mk name (Prims.of_int (2)) nunivs
                     (mk_tactic_interpretation_1 f ea er)
                     (fun cb  ->
                        fun args  ->
@@ -1460,7 +1460,7 @@ let mktac2 :
                 fun nea  ->
                   fun neb  ->
                     fun ner  ->
-                      mk name (Prims.parse_int "3") nunivs
+                      mk name (Prims.of_int (3)) nunivs
                         (mk_tactic_interpretation_2 f ea eb er)
                         (fun cb  ->
                            fun args  ->
@@ -1496,7 +1496,7 @@ let mktac3 :
                     fun neb  ->
                       fun nec  ->
                         fun ner  ->
-                          mk name (Prims.parse_int "4") nunivs
+                          mk name (Prims.of_int (4)) nunivs
                             (mk_tactic_interpretation_3 f ea eb ec er)
                             (fun cb  ->
                                fun args  ->
@@ -1537,7 +1537,7 @@ let mktac4 :
                         fun nec  ->
                           fun ned  ->
                             fun ner  ->
-                              mk name (Prims.parse_int "5") nunivs
+                              mk name (Prims.of_int (5)) nunivs
                                 (mk_tactic_interpretation_4 f ea eb ec ed er)
                                 (fun cb  ->
                                    fun args  ->
@@ -1584,7 +1584,7 @@ let mktac5 :
                             fun ned  ->
                               fun nee  ->
                                 fun ner  ->
-                                  mk name (Prims.parse_int "6") nunivs
+                                  mk name (Prims.of_int (6)) nunivs
                                     (mk_tactic_interpretation_5 f ea eb ec ed
                                        ee er)
                                     (fun cb  ->
@@ -1622,7 +1622,7 @@ let (mkt :
               FStar_TypeChecker_Cfg.auto_reflect =
                 FStar_Pervasives_Native.None;
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
-              FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+              FStar_TypeChecker_Cfg.requires_binder_substitution = true;
               FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
               FStar_TypeChecker_Cfg.interpretation_nbe =
                 (timing_nbe nm1 nbe_interp)
@@ -1653,6 +1653,31 @@ let mk_total_interpretation_1 :
                      embed er uu____8084 r ncb  in
                    FStar_Pervasives_Native.Some uu____8083)
   
+let mk_total_interpretation_1_psc :
+  'a 'r .
+    (FStar_TypeChecker_Cfg.psc -> 'a -> 'r) ->
+      'a FStar_Syntax_Embeddings.embedding ->
+        'r FStar_Syntax_Embeddings.embedding ->
+          FStar_TypeChecker_Cfg.psc ->
+            FStar_Syntax_Embeddings.norm_cb ->
+              FStar_Syntax_Syntax.args ->
+                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
+  fun f  ->
+    fun ea  ->
+      fun er  ->
+        fun psc  ->
+          fun ncb  ->
+            fun args  ->
+              let uu____8156 = extract_1 ea ncb args  in
+              FStar_Util.bind_opt uu____8156
+                (fun a  ->
+                   let r = f psc a  in
+                   let uu____8164 =
+                     let uu____8165 = FStar_TypeChecker_Cfg.psc_range psc  in
+                     embed er uu____8165 r ncb  in
+                   FStar_Pervasives_Native.Some uu____8164)
+  
 let mk_total_interpretation_2 :
   'a 'b 'r .
     ('a -> 'b -> 'r) ->
@@ -1671,17 +1696,17 @@ let mk_total_interpretation_2 :
           fun psc  ->
             fun ncb  ->
               fun args  ->
-                let uu____8170 = extract_2 ea eb ncb args  in
-                FStar_Util.bind_opt uu____8170
-                  (fun uu____8186  ->
-                     match uu____8186 with
+                let uu____8251 = extract_2 ea eb ncb args  in
+                FStar_Util.bind_opt uu____8251
+                  (fun uu____8267  ->
+                     match uu____8267 with
                      | (a,b) ->
                          let r = f a b  in
-                         let uu____8196 =
-                           let uu____8197 =
+                         let uu____8277 =
+                           let uu____8278 =
                              FStar_TypeChecker_Cfg.psc_range psc  in
-                           embed er uu____8197 r ncb  in
-                         FStar_Pervasives_Native.Some uu____8196)
+                           embed er uu____8278 r ncb  in
+                         FStar_Pervasives_Native.Some uu____8277)
   
 let mk_total_nbe_interpretation_1 :
   'a 'r .
@@ -1697,12 +1722,33 @@ let mk_total_nbe_interpretation_1 :
       fun ea  ->
         fun er  ->
           fun args  ->
-            let uu____8255 = extract_1_nbe cb ea args  in
-            FStar_Util.bind_opt uu____8255
+            let uu____8336 = extract_1_nbe cb ea args  in
+            FStar_Util.bind_opt uu____8336
               (fun a  ->
                  let r = f a  in
-                 let uu____8263 = FStar_TypeChecker_NBETerm.embed er cb r  in
-                 FStar_Pervasives_Native.Some uu____8263)
+                 let uu____8344 = FStar_TypeChecker_NBETerm.embed er cb r  in
+                 FStar_Pervasives_Native.Some uu____8344)
+  
+let mk_total_nbe_interpretation_1_psc :
+  'a 'r .
+    FStar_TypeChecker_NBETerm.nbe_cbs ->
+      (FStar_TypeChecker_Cfg.psc -> 'a -> 'r) ->
+        'a FStar_TypeChecker_NBETerm.embedding ->
+          'r FStar_TypeChecker_NBETerm.embedding ->
+            FStar_TypeChecker_NBETerm.args ->
+              FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option
+  =
+  fun cb  ->
+    fun f  ->
+      fun ea  ->
+        fun er  ->
+          fun args  ->
+            let uu____8407 = extract_1_nbe cb ea args  in
+            FStar_Util.bind_opt uu____8407
+              (fun a  ->
+                 let r = f FStar_TypeChecker_Cfg.null_psc a  in
+                 let uu____8415 = FStar_TypeChecker_NBETerm.embed er cb r  in
+                 FStar_Pervasives_Native.Some uu____8415)
   
 let mk_total_nbe_interpretation_2 :
   'a 'b 'r .
@@ -1720,15 +1766,15 @@ let mk_total_nbe_interpretation_2 :
         fun eb  ->
           fun er  ->
             fun args  ->
-              let uu____8340 = extract_2_nbe cb ea eb args  in
-              FStar_Util.bind_opt uu____8340
-                (fun uu____8356  ->
-                   match uu____8356 with
+              let uu____8492 = extract_2_nbe cb ea eb args  in
+              FStar_Util.bind_opt uu____8492
+                (fun uu____8508  ->
+                   match uu____8508 with
                    | (a,b) ->
                        let r = f a b  in
-                       let uu____8366 =
+                       let uu____8518 =
                          FStar_TypeChecker_NBETerm.embed er cb r  in
-                       FStar_Pervasives_Native.Some uu____8366)
+                       FStar_Pervasives_Native.Some uu____8518)
   
 let mktot1 :
   'a 'na 'nr 'r .
@@ -1750,13 +1796,41 @@ let mktot1 :
             fun nf  ->
               fun nea  ->
                 fun ner  ->
-                  mkt name (Prims.parse_int "1") nunivs
+                  mkt name Prims.int_one nunivs
                     (mk_total_interpretation_1 f ea er)
                     (fun cb  ->
                        fun args  ->
-                         let uu____8472 = drop nunivs args  in
+                         let uu____8624 = drop nunivs args  in
                          mk_total_nbe_interpretation_1 cb nf nea ner
-                           uu____8472)
+                           uu____8624)
+  
+let mktot1_psc :
+  'a 'na 'nr 'r .
+    Prims.int ->
+      Prims.string ->
+        (FStar_TypeChecker_Cfg.psc -> 'a -> 'r) ->
+          'a FStar_Syntax_Embeddings.embedding ->
+            'r FStar_Syntax_Embeddings.embedding ->
+              (FStar_TypeChecker_Cfg.psc -> 'na -> 'nr) ->
+                'na FStar_TypeChecker_NBETerm.embedding ->
+                  'nr FStar_TypeChecker_NBETerm.embedding ->
+                    FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun ea  ->
+          fun er  ->
+            fun nf  ->
+              fun nea  ->
+                fun ner  ->
+                  mkt name Prims.int_one nunivs
+                    (mk_total_interpretation_1_psc f ea er)
+                    (fun cb  ->
+                       fun args  ->
+                         let uu____8744 = drop nunivs args  in
+                         mk_total_nbe_interpretation_1_psc cb nf nea ner
+                           uu____8744)
   
 let mktot2 :
   'a 'b 'na 'nb 'nr 'r .
@@ -1782,11 +1856,11 @@ let mktot2 :
                 fun nea  ->
                   fun neb  ->
                     fun ner  ->
-                      mkt name (Prims.parse_int "2") nunivs
+                      mkt name (Prims.of_int (2)) nunivs
                         (mk_total_interpretation_2 f ea eb er)
                         (fun cb  ->
                            fun args  ->
-                             let uu____8620 = drop nunivs args  in
+                             let uu____8892 = drop nunivs args  in
                              mk_total_nbe_interpretation_2 cb nf nea neb ner
-                               uu____8620)
+                               uu____8892)
   

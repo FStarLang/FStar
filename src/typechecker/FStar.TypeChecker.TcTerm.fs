@@ -158,46 +158,37 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
      then mk_GTotal (U.comp_result c)
      else failwith "Impossible: Expected pure_or_ghost comp"
   in
-  (*
-   * AR: Following code has the logic for determining expected comp, comp,
-   *       and after checking sub-comp whether we should return comp, rather than the expected comp
-   *     If the input expected comp, copt, is Some, then that becomes the
-   *       expected comp and that's what we return
-   *     If the input expected comp is not set, and we are in Tot/Pure, GTot, ML case
-   *       then expected comp is Tot/GTot/ML, and we return the expected comp
-   *     When we are in an effectful case, and expected comp is not set, we check that
-   *       c <: M.null_wp to make sure that c has a trivial precondition, cf. #1055
-   *     But in this case, we still return c so that callers can use the postconditions
-   *)
-  let expected_c_opt, c, should_return_c =
+
+  let expected_c_opt, c, gopt =
     let ct = U.comp_result c in
     match copt with
-    | Some _ -> copt, c, false
+    | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
         if (Options.ml_ish()
             && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp ct e.pos), c, false
+        then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
-        then None, tot_or_gtot c, false //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
+        then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
-        then Some (tot_or_gtot c), c, false
+        then Some (tot_or_gtot c), c, None
         else if Options.trivial_pre_for_unannotated_effectful_fns ()
-        then (*
-              * AR: note that Env.null_wp_for_eff does the normalization of effects
-              *     the true flag indicates that check sub-comp but return c
-              *)
-             Some (Env.null_wp_for_eff env (U.comp_effect_name c) (ct |> env.universe_of env) ct), c, true
-        else None, c, true
+        then None, c, (
+               let _, _, g = TcUtil.check_trivial_precondition env c in
+               Some g)
+        else None, c, None
   in
-  let c0 = c in
   let c = norm_c env c in
   match expected_c_opt with
     | None ->
-      e, c, Env.trivial_guard
+      e, c, (match gopt with | None -> Env.trivial_guard | Some g -> g)
     | Some expected_c -> //expected effects should already be normalized
+       let _ = match gopt with
+         | None -> ()
+         | Some _ -> failwith "Impossible! check_expected_effect, gopt should have been None"
+       in
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
        if debug env <| Options.Low then
@@ -210,7 +201,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
                          (Range.string_of_range e.pos)
                          (guard_to_string env g);
        let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
-       e, (if should_return_c then c0 else expected_c), g
+       e, expected_c, g
 
 let no_logical_guard env (te, kt, f) =
   match guard_form f with
@@ -1198,7 +1189,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
                              | Some g_env ->
                                 TcUtil.label_guard
-                                    (Env.get_range env)
+                                    hd.sort.pos
                                     "Type annotation on parameter incompatible with the expected type"
                                     g_env
                       in
@@ -1401,7 +1392,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *     topt : option<term> -- the original annotation
      *     tfun_opt : option<term> -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
      *     tfun_computed : term -- computed type of the abstraction
-     *     
+     *
      *     the following code has the logic for which type to package the input expression with
      *     if tfun_opt is Some we are guaranteed that topt is also Some, and in that case, we use Some?.v topt
      *       in this case earlier we were returning Some?.v tfun_opt but that means we lost out on the user annotation
@@ -2434,8 +2425,54 @@ and check_top_level_let env e =
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
 
-         (* the result has the same effect as c1, except it returns unit *)
-         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
+         (*
+          * AR: we now compute comp for the whole `let x = e1 in e2`, where e2 = ()
+          *
+          *     we have already checked that c1 has a trivial precondition
+          *       and in most cases, c1 is some variant of PURE (top-level functions)
+          *     so if that's the case, we simply make cres as Tot unit
+          *
+          *     if c1 is not PURE, then we take a longer route and compute:
+          *       M.bind wp1 (fun _ -> (M.return_wp unit))
+          *
+          *     all this to remove the earlier usage of M.null_wp
+          *)
+         let cres =
+           if U.is_pure_or_ghost_comp c1 then S.mk_Total' S.t_unit (Some S.U_zero)
+           else let c1_comp_typ = c1 |> Env.unfold_effect_abbrev env in
+                let c1_wp =
+                  match c1_comp_typ.effect_args with
+                  | [(wp, _)] -> wp
+                  | _ -> failwith "Impossible! check_top_level_let: got unexpected effect args"
+                in
+                let c1_eff_decl = Env.get_effect_decl env c1_comp_typ.effect_name in
+
+                (* wp2 = M.return_wp unit () *)
+                let wp2 = mk_Tm_app
+                  (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl c1_eff_decl.ret_wp)
+                  [S.as_arg S.t_unit; S.as_arg S.unit_const]
+                  None
+                  e2.pos
+                in
+
+                (* wp = M.bind wp_c1 (fun _ -> wp2) *)
+                let wp = mk_Tm_app
+                  (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl c1_eff_decl.bind_wp)
+                  [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
+                    S.as_arg <| c1_comp_typ.result_typ;
+                    S.as_arg S.t_unit;
+                    S.as_arg c1_wp;
+                    S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
+                  None
+                  lb.lbpos
+                in
+                mk_Comp ({
+                  comp_univs=[S.U_zero];
+                  effect_name=c1_comp_typ.effect_name;
+                  result_typ=S.t_unit;
+                  effect_args=[S.as_arg wp];
+                  flags=[]})
+         in
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let((false, [lb]), e2))

@@ -388,6 +388,9 @@ let psmap_find_map (m:'value psmap) f =
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
+let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
+  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
+
 module ZHashtbl = BatHashtbl.Make(Z)
 module ZMap = BatMap.Make(Z)
 
@@ -481,7 +484,7 @@ let default_printer =
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
-let print_raw s = pr "%s" s; flush stdout
+let print_raw s = set_binary_mode_out stdout true; pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
 let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])

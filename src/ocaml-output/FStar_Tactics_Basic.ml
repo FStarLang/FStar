@@ -141,9 +141,9 @@ let (unshadow :
               Prims.op_Hat "'" uu____406  in
             Prims.op_Hat b uu____404  in
           let uu____409 = f t1  in
-          if uu____409 then t1 else aux (i + (Prims.parse_int "1"))  in
-        let uu____416 = f b  in
-        if uu____416 then b else aux (Prims.parse_int "0")  in
+          if uu____409 then t1 else aux (i + Prims.int_one)  in
+        let uu____416 = f b  in if uu____416 then b else aux Prims.int_zero
+         in
       let rec go seen subst1 bs1 bs' t1 =
         match bs1 with
         | [] ->
@@ -347,7 +347,7 @@ let (ps_to_string :
                    fun g  ->
                      goal_to_string "Goal"
                        (FStar_Pervasives_Native.Some
-                          (((Prims.parse_int "1") + i), n1)) ps g)
+                          ((Prims.int_one + i), n1)) ps g)
                 ps.FStar_Tactics_Types.goals
                in
             let uu____1060 =
@@ -356,8 +356,8 @@ let (ps_to_string :
                    fun g  ->
                      goal_to_string "SMT Goal"
                        (FStar_Pervasives_Native.Some
-                          ((((Prims.parse_int "1") + n_active) + i), n1)) ps
-                       g) ps.FStar_Tactics_Types.smt_goals
+                          (((Prims.int_one + n_active) + i), n1)) ps g)
+                ps.FStar_Tactics_Types.smt_goals
                in
             FStar_List.append uu____1040 uu____1060  in
           FStar_List.append uu____992 uu____1036  in
@@ -456,7 +456,7 @@ let (ps_to_json :
           FStar_List.append uu____1242 uu____1327  in
         FStar_Util.JsonAssoc uu____1234
   
-let (dump_proofstate :
+let (do_dump_proofstate :
   FStar_Tactics_Types.proofstate -> Prims.string -> unit) =
   fun ps  ->
     fun msg  ->
@@ -467,7 +467,7 @@ let (dump_proofstate :
            FStar_Util.print_generic "proof-state" ps_to_string ps_to_json
              (msg, ps))
   
-let (print_proof_state : Prims.string -> unit tac) =
+let (dump : Prims.string -> unit tac) =
   fun msg  ->
     mk_tac
       (fun ps  ->
@@ -475,7 +475,7 @@ let (print_proof_state : Prims.string -> unit tac) =
          let subst1 = FStar_TypeChecker_Cfg.psc_subst psc  in
          (let uu____1420 = FStar_Tactics_Types.subst_proof_state subst1 ps
              in
-          dump_proofstate uu____1420 msg);
+          do_dump_proofstate uu____1420 msg);
          FStar_Tactics_Result.Success ((), ps))
   
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
@@ -491,7 +491,7 @@ let fail : 'a . Prims.string -> 'a tac =
               (FStar_Options.Other "TacFail")
              in
           if uu____1493
-          then dump_proofstate ps (Prims.op_Hat "TACTIC FAILING: " msg)
+          then do_dump_proofstate ps (Prims.op_Hat "TACTIC FAILING: " msg)
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Types.TacticFailure msg), ps))
@@ -1048,8 +1048,7 @@ let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
             }))
   
 let (dismiss_all : unit tac) = set_goals [] 
-let (nwarn : Prims.int FStar_ST.ref) =
-  FStar_Util.mk_ref (Prims.parse_int "0") 
+let (nwarn : Prims.int FStar_ST.ref) = FStar_Util.mk_ref Prims.int_zero 
 let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
   fun g  ->
     let uu____2426 = FStar_Options.defensive ()  in
@@ -1081,7 +1080,7 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
       let uu____2475 =
         (let uu____2479 = aux b2 env  in Prims.op_Negation uu____2479) &&
           (let uu____2482 = FStar_ST.op_Bang nwarn  in
-           uu____2482 < (Prims.parse_int "5"))
+           uu____2482 < (Prims.of_int (5)))
          in
       (if uu____2475
        then
@@ -1099,7 +1098,7 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
            FStar_Errors.log_issue uu____2508 uu____2512);
           (let uu____2524 =
              let uu____2526 = FStar_ST.op_Bang nwarn  in
-             uu____2526 + (Prims.parse_int "1")  in
+             uu____2526 + Prims.int_one  in
            FStar_ST.op_Colon_Equals nwarn uu____2524))
        else ())
     else ()
@@ -1381,7 +1380,7 @@ let (fresh : unit -> FStar_BigInt.t tac) =
                (uu___466_2934.FStar_Tactics_Types.entry_range);
              FStar_Tactics_Types.guard_policy =
                (uu___466_2934.FStar_Tactics_Types.guard_policy);
-             FStar_Tactics_Types.freshness = (n1 + (Prims.parse_int "1"));
+             FStar_Tactics_Types.freshness = (n1 + Prims.int_one);
              FStar_Tactics_Types.tac_verb_dbg =
                (uu___466_2934.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
@@ -1521,7 +1520,9 @@ let (__tc :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___484_3058.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___484_3058.FStar_TypeChecker_Env.nbe)
+                      (uu___484_3058.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___484_3058.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___488_3070  ->
@@ -1654,7 +1655,9 @@ let (__tc_ghost :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___505_3194.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___505_3194.FStar_TypeChecker_Env.nbe)
+                      (uu___505_3194.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___505_3194.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___509_3209  ->
@@ -1791,7 +1794,9 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___530_3345.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___530_3345.FStar_TypeChecker_Env.nbe)
+                      (uu___530_3345.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___530_3345.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 let e2 =
                   let uu___533_3348 = e1  in
@@ -1880,7 +1885,9 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.dsenv =
                       (uu___533_3348.FStar_TypeChecker_Env.dsenv);
                     FStar_TypeChecker_Env.nbe =
-                      (uu___533_3348.FStar_TypeChecker_Env.nbe)
+                      (uu___533_3348.FStar_TypeChecker_Env.nbe);
+                    FStar_TypeChecker_Env.strict_args_tab =
+                      (uu___533_3348.FStar_TypeChecker_Env.strict_args_tab)
                   }  in
                 try
                   (fun uu___537_3360  ->
@@ -3601,7 +3608,10 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> unit tac) =
                                                                     (uu___1011_7283.FStar_TypeChecker_Env.dsenv);
                                                                     FStar_TypeChecker_Env.nbe
                                                                     =
-                                                                    (uu___1011_7283.FStar_TypeChecker_Env.nbe)
+                                                                    (uu___1011_7283.FStar_TypeChecker_Env.nbe);
+                                                                    FStar_TypeChecker_Env.strict_args_tab
+                                                                    =
+                                                                    (uu___1011_7283.FStar_TypeChecker_Env.strict_args_tab)
                                                                     }  in
                                                                     let g_typ
                                                                     =
@@ -4721,7 +4731,9 @@ let (pointwise_rec :
                      FStar_TypeChecker_Env.dsenv =
                        (uu___1409_9935.FStar_TypeChecker_Env.dsenv);
                      FStar_TypeChecker_Env.nbe =
-                       (uu___1409_9935.FStar_TypeChecker_Env.nbe)
+                       (uu___1409_9935.FStar_TypeChecker_Env.nbe);
+                     FStar_TypeChecker_Env.strict_args_tab =
+                       (uu___1409_9935.FStar_TypeChecker_Env.strict_args_tab)
                    }) t
                  in
               match uu____9926 with
@@ -5092,7 +5104,9 @@ let (rewrite_rec :
                                    FStar_TypeChecker_Env.dsenv =
                                      (uu___1516_10917.FStar_TypeChecker_Env.dsenv);
                                    FStar_TypeChecker_Env.nbe =
-                                     (uu___1516_10917.FStar_TypeChecker_Env.nbe)
+                                     (uu___1516_10917.FStar_TypeChecker_Env.nbe);
+                                   FStar_TypeChecker_Env.strict_args_tab =
+                                     (uu___1516_10917.FStar_TypeChecker_Env.strict_args_tab)
                                  }) t1
                                in
                             match uu____10908 with
@@ -5481,8 +5495,7 @@ let (join_goals :
                                 let uu___1647_11818 =
                                   FStar_Tactics_Types.goal_env g1  in
                                 let uu____11819 =
-                                  FStar_Util.smap_create
-                                    (Prims.parse_int "100")
+                                  FStar_Util.smap_create (Prims.of_int (100))
                                    in
                                 {
                                   FStar_TypeChecker_Env.solver =
@@ -5571,7 +5584,9 @@ let (join_goals :
                                   FStar_TypeChecker_Env.dsenv =
                                     (uu___1647_11818.FStar_TypeChecker_Env.dsenv);
                                   FStar_TypeChecker_Env.nbe =
-                                    (uu___1647_11818.FStar_TypeChecker_Env.nbe)
+                                    (uu___1647_11818.FStar_TypeChecker_Env.nbe);
+                                  FStar_TypeChecker_Env.strict_args_tab =
+                                    (uu___1647_11818.FStar_TypeChecker_Env.strict_args_tab)
                                 }  in
                               let uu____11823 =
                                 mk_irrelevant_goal "joined" nenv ng
@@ -5868,7 +5883,9 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit tac) =
                    FStar_TypeChecker_Env.dsenv =
                      (uu___1727_12248.FStar_TypeChecker_Env.dsenv);
                    FStar_TypeChecker_Env.nbe =
-                     (uu___1727_12248.FStar_TypeChecker_Env.nbe)
+                     (uu___1727_12248.FStar_TypeChecker_Env.nbe);
+                   FStar_TypeChecker_Env.strict_args_tab =
+                     (uu___1727_12248.FStar_TypeChecker_Env.strict_args_tab)
                  }  in
                let g =
                  FStar_Tactics_Types.mk_goal env1 ctx_uvar opts false ""  in
@@ -6469,7 +6486,10 @@ let (t_destruct :
                                                                     (uu___1891_13776.FStar_TypeChecker_Env.dsenv);
                                                                     FStar_TypeChecker_Env.nbe
                                                                     =
-                                                                    (uu___1891_13776.FStar_TypeChecker_Env.nbe)
+                                                                    (uu___1891_13776.FStar_TypeChecker_Env.nbe);
+                                                                    FStar_TypeChecker_Env.strict_args_tab
+                                                                    =
+                                                                    (uu___1891_13776.FStar_TypeChecker_Env.strict_args_tab)
                                                                     }) s_ty
                                                                     pat  in
                                                                     match uu____13759
@@ -7102,16 +7122,15 @@ let (proofstate_of_goal_ty :
                   (g_u.FStar_TypeChecker_Env.implicits);
                 FStar_Tactics_Types.goals = [g];
                 FStar_Tactics_Types.smt_goals = [];
-                FStar_Tactics_Types.depth = (Prims.parse_int "0");
-                FStar_Tactics_Types.__dump =
-                  (fun ps  -> fun msg  -> dump_proofstate ps msg);
+                FStar_Tactics_Types.depth = Prims.int_zero;
+                FStar_Tactics_Types.__dump = do_dump_proofstate;
                 FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
                 FStar_Tactics_Types.entry_range = rng;
                 FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
-                FStar_Tactics_Types.freshness = (Prims.parse_int "0");
+                FStar_Tactics_Types.freshness = Prims.int_zero;
                 FStar_Tactics_Types.tac_verb_dbg = uu____15751;
                 FStar_Tactics_Types.local_state = uu____15754
               }  in
-            let uu____15764 = FStar_Tactics_Types.goal_witness g  in
-            (ps, uu____15764)
+            let uu____15759 = FStar_Tactics_Types.goal_witness g  in
+            (ps, uu____15759)
   

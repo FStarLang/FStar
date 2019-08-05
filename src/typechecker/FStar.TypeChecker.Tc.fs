@@ -152,9 +152,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; ite_wp      =op ed.ite_wp
             ; stronger    =op ed.stronger
             ; close_wp    =op ed.close_wp
-            ; assert_p    =op ed.assert_p
-            ; assume_p    =op ed.assume_p
-            ; null_wp     =op ed.null_wp
             ; trivial     =op ed.trivial
             ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
@@ -255,25 +252,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let expected_k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder b_wp_a]
                                 (S.mk_Total wp_a) in
     check_and_gen' env ed.close_wp expected_k in
-
-  let assert_p =
-    let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.assert_p expected_k in
-
-  let assume_p =
-    let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.assume_p expected_k in
-
-  let null_wp =
-    let expected_k = U.arrow [S.mk_binder a]
-                                (S.mk_Total wp_a) in
-    check_and_gen' env ed.null_wp expected_k in
 
   let trivial_wp =
     let t, _ = U.type_u() in
@@ -528,9 +506,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     ; ite_wp      = close 0 ite_wp
     ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
-    ; assert_p    = close 0 assert_p
-    ; assume_p    = close 0 assume_p
-    ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
     ; repr        = (snd (close 0 ([], repr)))
     ; return_repr = close 0 return_repr
