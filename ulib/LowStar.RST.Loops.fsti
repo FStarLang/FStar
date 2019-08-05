@@ -17,21 +17,21 @@ val while
     res
     (fun _ -> res)
     (requires fun old -> inv old)
-    (ensures fun old b modern ->
+    (ensures fun old b cur ->
       b == guard old /\
-      old res == modern res)
+      old == cur)
   ))
   (body: (unit -> RST unit
     res
     (fun _ -> res)
     (requires fun old -> guard old /\ inv old)
-    (ensures fun old _ modern -> inv modern)
+    (ensures fun old _ cur -> inv cur)
   ))
   : RST unit
     res
     (fun _ -> res)
     (requires fun old -> inv old)
-    (ensures fun _ _ modern -> inv modern /\ ~(guard modern))
+    (ensures fun _ _ cur -> inv cur /\ ~(guard cur))
 
 inline_for_extraction
 val for
@@ -43,10 +43,10 @@ val for
     (context)
     (fun _ -> context)
     (requires (fun old -> loop_inv old (U32.v i)))
-    (ensures (fun old _ modern -> U32.(loop_inv old (v i) /\ loop_inv modern (v i + 1))))
+    (ensures (fun old _ cur -> U32.(loop_inv old (v i) /\ loop_inv cur (v i + 1))))
   ))
   : RST unit
     (context)
     (fun _ -> context)
     (requires (fun old -> loop_inv old (U32.v start)))
-    (ensures (fun _ _ modern -> loop_inv modern (U32.v finish)))
+    (ensures (fun _ _ cur -> loop_inv cur (U32.v finish)))
