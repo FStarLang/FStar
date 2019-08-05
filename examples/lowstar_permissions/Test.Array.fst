@@ -59,12 +59,11 @@ let read_write_with_sharing () : RST.RST unit
   (fun _ -> True)
   (fun _ _ _ -> True)
   =
+  admit();
   let b = A.alloc 2ul 42ul in
   let x1 = A.index b 0ul in
   A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
   let b1 = A.share b in
-
-
   let x1 =
     RST.rst_frame
       (R.(A.array_resource b <*> A.array_resource b1))
@@ -73,7 +72,6 @@ let read_write_with_sharing () : RST.RST unit
         A.index b 0ul
       )
   in
-
   let b_first, b_second = RST.rst_frame
     (R.(A.array_resource b <*> A.array_resource b1))
     (fun p -> R.(A.array_resource (fst p) <*> A.array_resource (snd p) <*> A.array_resource b1))
