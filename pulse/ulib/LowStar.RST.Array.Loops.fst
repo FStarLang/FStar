@@ -13,12 +13,9 @@ module L = LowStar.RST.Loops
 
 open FStar.Mul
 
-#set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
 
 let iteri #a b context loop_inv f len =
-  (**) let hinit = HST.get () in
-  (**) R.reveal_star ();
-  (**) RST.reveal_rst_inv ();
   (**) let init = RST.get (R.(AR.array_resource b <*> context)) in
   (**) let correct_inv (sel : RST.selector ((R.(AR.array_resource b <*> context)))) (i : nat) =
   (**)  loop_inv (RST.focus_selector sel context) i /\
@@ -43,8 +40,6 @@ let iteri #a b context loop_inv f len =
       (fun _ -> R.(AR.array_resource b <*> context))
       (fun _ -> AR.index b i)
     in
-    let h1 = HST.get () in
-    RST.focus_selector_equality (R.(AR.array_resource b <*> context)) context h1;
     let f' () : RST.RST unit // TODO: figure out why we cannot remove this superfluous let-binding
       (context)
       (fun _ -> context)
@@ -53,13 +48,11 @@ let iteri #a b context loop_inv f len =
       =
       f i x
     in
-    admit();
     RST.rst_frame
       R.(AR.array_resource b <*> context)
       (fun _ -> R.(AR.array_resource b <*> context))
       f'
   in
-  (**)
   L.for
     0ul
     len

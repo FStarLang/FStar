@@ -141,7 +141,7 @@ let mk_selector
   on_dom_g (r0:resource{r0 `is_subresource_of` r}) (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
 let focus_selector (#r: resource) (s: selector r) (r0: resource{r0 `is_subresource_of` r}) : s':selector r0{
-    forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'
+    forall (r0':resource{r0' `is_subresource_of` r0}). {:pattern (s' r0') }s' r0' == s r0'
   } =
   on_dom_g (r0':resource{r0' `is_subresource_of` r0}) (fun (r0':resource{r0' `is_subresource_of` r0}) ->
     s r0'
@@ -274,8 +274,6 @@ let get (r: resource) : RST
   let h = HST.get () in
   mk_selector r h
 
-#set-options "--z3rlimit 20 --max_fuel 2 --max_ifuel 2"
-
 let focus_selector_equality (outer inner: resource) (h: HS.mem)
   : Lemma
   (requires (inv outer h /\ inner `is_subresource_of` outer))
@@ -289,6 +287,8 @@ let focus_selector_equality (outer inner: resource) (h: HS.mem)
     (fun r0 -> r0.t)
     focused
     original
+
+#set-options "--z3rlimit 400 --max_fuel 1 --max_ifuel 1"
 
 inline_for_extraction noextract let rst_frame
   (outer0:resource)
@@ -317,16 +317,28 @@ inline_for_extraction noextract let rst_frame
           (focus_selector old inner0)
           x
           (focus_selector cur (inner1 x)) /\
-        old delta == cur delta
+        (assert(delta `is_subresource_of` outer0); assert(delta `is_subresource_of` outer1 x);
+        focus_selector old delta == focus_selector cur delta)
     )
   =
-  reveal_view ();
-  reveal_can_be_split_into ();
-  reveal_rst_inv ();
-  FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
-  let h0 = HST.get () in
-  focus_selector_equality outer0 inner0 h0;
+  (**) reveal_view ();
+  (**) reveal_can_be_split_into ();
+  (**) reveal_rst_inv ();
+  (**) FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  (**) let h0 = HST.get () in
+  (**) focus_selector_equality outer0 inner0 h0;
+  (**) focus_selector_equality outer0 delta h0;
   let x = f () in
-  let h1 = HST.get () in
-  focus_selector_equality (outer1 x) (inner1 x) h1;
+  (**) let h1 = HST.get () in
+  (**) focus_selector_equality (outer1 x) (inner1 x) h1;
+  (**) focus_selector_equality (outer1 x) delta h1;
+  (**) let old = mk_selector outer0 h0 in
+  (**) let cur = mk_selector (outer1 x) h1 in
+  (**) let old_delta = focus_selector old delta in
+  (**) let cur_delta = focus_selector cur delta in
+  (**) extensionality_g
+  (**)  (r0:resource{r0 `is_subresource_of` delta})
+  (**)  (fun r0 -> r0.t)
+  (**)  old_delta
+  (**)  cur_delta;
   x
