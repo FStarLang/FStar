@@ -36,10 +36,10 @@ let ptr_alloc
   : RST (pointer a) (empty_resource)
     (fun ptr -> ptr_resource ptr)
     (fun _ -> True)
-    (fun _ ptr modern ->
+    (fun _ ptr cur ->
       A.freeable ptr /\
-      get ptr modern == init /\
-      get_perm ptr modern = FStar.Real.one
+      get ptr cur == init /\
+      get_perm ptr cur = FStar.Real.one
     ) =
   reveal_ptr();
   reveal_rst_inv ();
@@ -68,9 +68,9 @@ let ptr_read
   : RST a (ptr_resource ptr)
     (fun _ -> ptr_resource ptr)
     (fun _ -> True)
-    (fun old x modern ->
+    (fun old x cur ->
       get ptr old == x /\
-      old (ptr_resource ptr) == modern (ptr_resource ptr)
+      old (ptr_resource ptr) == cur (ptr_resource ptr)
     ) =
   reveal_ptr();
   A.index ptr 0ul
@@ -82,9 +82,9 @@ let ptr_write
   : RST unit (ptr_resource ptr)
     (fun _ -> ptr_resource ptr)
     (fun old -> P.allows_write (get_perm ptr old))
-    (fun old _ modern ->
-      get_perm ptr old == get_perm ptr modern /\
-      get ptr modern == x
+    (fun old _ cur ->
+      get_perm ptr old == get_perm ptr cur /\
+      get ptr cur == x
     ) =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -101,13 +101,13 @@ let ptr_share
     (ptr_resource ptr)
     (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
     (fun _ -> True)
-    (fun old ptr1 modern ->
-      get ptr modern == get ptr old  /\
-      get ptr1 modern == get ptr old  /\
-      get_perm ptr modern == P.half_permission (get_perm ptr old) /\
-      get_perm ptr1 modern == P.half_permission (get_perm ptr old) /\
+    (fun old ptr1 cur ->
+      get ptr cur == get ptr old  /\
+      get ptr1 cur == get ptr old  /\
+      get_perm ptr cur == P.half_permission (get_perm ptr old) /\
+      get_perm ptr1 cur == P.half_permission (get_perm ptr old) /\
       A.gatherable ptr ptr1 /\
-      P.summable_permissions (get_perm ptr modern) (get_perm ptr1 modern))
+      P.summable_permissions (get_perm ptr cur) (get_perm ptr1 cur))
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -128,10 +128,10 @@ let ptr_merge
     (fun old -> A.gatherable ptr1 ptr2 /\
       P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old)
     )
-    (fun old _ modern ->
+    (fun old _ cur ->
       P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old) /\
-      get ptr1 modern == get ptr1 old /\
-      get_perm ptr1 modern == P.sum_permissions (get_perm ptr1 old) (get_perm ptr2 old)
+      get ptr1 cur == get ptr1 old /\
+      get_perm ptr1 cur == P.sum_permissions (get_perm ptr1 old) (get_perm ptr2 old)
      )
   =
   (**) reveal_ptr();

@@ -37,15 +37,15 @@ val par (#in1 #in2:resource)
               (in1 <*> in2)
               (fun p -> out1 (fst p) <*> out2 (snd p))
               (fun old -> pre1 (focus_selector old in1) /\ pre2 ((focus_selector old in2)))
-              (fun old x modern ->
+              (fun old x cur ->
                 post1
                   (focus_selector old in1)
                   (fst x)
-                  (focus_selector modern (out1 (fst x))) /\
+                  (focus_selector cur (out1 (fst x))) /\
                 post2
                   (focus_selector old in2)
                   (snd x)
-                  (focus_selector modern (out2 (snd x)))
+                  (focus_selector cur (out2 (snd x)))
               )
 
 (* We now model locks to permit the sharing of read/write resources. We currently model locks as values, which are therefore in scope of both threads when calling par.
@@ -95,8 +95,8 @@ val acquire (#r:resource) (l:lock r)
         (empty_resource)
         (fun _ -> r)
         (fun _ -> True)
-        (fun _ _ modern ->
-          (get_lock_pred l) (modern r))
+        (fun _ _ cur ->
+          (get_lock_pred l) (cur r))
 
 (* Release is similar to new_lock, without the new value creation *)
 assume

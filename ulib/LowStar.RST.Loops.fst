@@ -14,11 +14,9 @@ open FStar.Mul
 
 inline_for_extraction let rec while res inv guard test body =
   if test () then begin
-    admit();
     body ();
     while res inv guard test body
-  end;
-  admit()
+  end
 
 inline_for_extraction let rec for start finish context loop_inv f =
   if start = finish then
