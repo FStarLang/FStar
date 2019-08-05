@@ -252,14 +252,14 @@ let frame_post
   (post:r_post inner0 a inner1)
   (old:selector outer0)
   (x:a)
-  (modern:selector (outer1 x))
+  (cur:selector (outer1 x))
 =
   reveal_can_be_split_into ();
   post
     (focus_selector old inner0)
     x
-    (focus_selector modern (inner1 x)) /\
-  old delta == modern delta
+    (focus_selector cur (inner1 x)) /\
+  old delta == cur delta
 
 
 #set-options "--no_tactics"
@@ -269,7 +269,7 @@ let get (r: resource) : RST
   (r)
   (fun _ -> r)
   (fun _ -> True)
-  (fun _ _ _ -> True)
+  (fun old returned cur -> returned == old /\ old == cur)
   =
   let h = HST.get () in
   mk_selector r h
@@ -312,12 +312,12 @@ inline_for_extraction noextract let rst_frame
         pre (focus_selector old inner0)
     )
     (reveal_can_be_split_into ();
-      fun old x modern ->
+      fun old x cur ->
         post
           (focus_selector old inner0)
           x
-          (focus_selector modern (inner1 x)) /\
-        old delta == modern delta
+          (focus_selector cur (inner1 x)) /\
+        old delta == cur delta
     )
   =
   reveal_view ();

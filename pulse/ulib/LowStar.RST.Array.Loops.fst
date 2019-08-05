@@ -31,36 +31,35 @@ let iteri #a b context loop_inv f len =
       (requires (fun old ->
         correct_inv old (U32.v i)
       ))
-      (ensures (fun old _ modern -> U32.(
+      (ensures (fun old _ cur -> U32.(
         correct_inv old (v i) /\
-        correct_inv modern (v i + 1)
+        correct_inv cur (v i + 1)
       )))
   =
-    let old = RST.get (R.(AR.array_resource b <*> context)) in
-    assume(loop_inv (RST.focus_selector old context) (U32.v i));
-    assume(init (AR.array_resource b) == (old (AR.array_resource b)));
-    assert(correct_inv old (U32.v i));
-    admit();
     let h0 = HST.get () in
+    RST.focus_selector_equality (R.(AR.array_resource b <*> context)) context h0; (* TODO: trigger automatically ?*)
     let x = RST.rst_frame
       (R.(AR.array_resource b <*> context))
       (fun _ -> R.(AR.array_resource b <*> context))
       (fun _ -> AR.index b i)
     in
+    let h1 = HST.get () in
+    RST.focus_selector_equality (R.(AR.array_resource b <*> context)) context h1;
     let f' () : RST.RST unit // TODO: figure out why we cannot remove this superfluous let-binding
       (context)
       (fun _ -> context)
       (fun old -> loop_inv old (U32.v i))
-      (fun old _ modern -> loop_inv old (U32.v i) /\ loop_inv modern (U32.v i + 1))
+      (fun old _ cur -> loop_inv old (U32.v i) /\ loop_inv cur (U32.v i + 1))
       =
       f i x
     in
+    admit();
     RST.rst_frame
       R.(AR.array_resource b <*> context)
       (fun _ -> R.(AR.array_resource b <*> context))
       f'
   in
-  (**) admit();
+  (**)
   L.for
     0ul
     len
