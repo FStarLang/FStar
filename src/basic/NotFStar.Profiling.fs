@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,9 +21,25 @@ open FSharp.Compatibility.OCaml
 open FStar.Options
 
 module BU = FStar.Util
-let profiling = ref false
 
-exception ProfilingException of string
+type counter_id = Options.profile_t * string
+type counter = {
+  cid:counter_id;
+  total_time:int
+}
+let new_counter cid = {
+  cid = cid;
+  total_time = 0
+}
+let all_counters : smap<counter> = BU.smap_create 20
+let cid_key cid = Options.string_of_profile_t (fst cid) ^ ":" ^ snd cid
+let create_or_lookup_counter cid =
+  match BU.smap_try_find all_counters (cid_key cid) with
+  | Some c -> c
+  | None ->
+    let c = new_counter cid in
+    BU.smap_add all_counters (cid_key cid) c;
+    c
 
 type counter = {
   total_time:int ref;

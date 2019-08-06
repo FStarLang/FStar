@@ -38,6 +38,8 @@ type profile_t =
   | ProfileSMT
   | Profile of string
 
+val string_of_profile_t : profile_t -> string
+
 type option_val =
   | Bool of bool
   | String of string
