@@ -171,7 +171,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     bind_repr    =op ed.bind_repr;
     actions      = List.map (fun a ->
       { a with action_defn = snd (op (a.action_univs, a.action_defn));
-               action_typ  = snd (op (a.action_univs, a.action_defn)) }) ed.actions;
+               action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions;
   } in
 
   if Env.debug env0 <| Options.Other "ED" then
@@ -179,7 +179,8 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
 
   let env = Env.push_binders (Env.push_univ_vars env0 ed_univs) ed_bs in
 
-  let check_and_gen' comb n (us, t) k =
+  let check_and_gen' comb n env_opt (us, t) k =
+    let env = if is_some env_opt then env_opt |> must else env in
     let us, t = SS.open_univ_vars us t in
     let t =
       match k with
@@ -209,7 +210,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
               Range.dummyRange  //TODO: FIXME: range
   in
 
-  let signature = check_and_gen' "signature" 1 ed.signature None in
+  let signature = check_and_gen' "signature" 1 None ed.signature None in
 
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
@@ -233,7 +234,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   let ret_wp =
     let a, wp_sort = fresh_a_and_wp () in
     let k = U.arrow [ S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_sort) in
-    check_and_gen' "ret_wp" 1 ed.ret_wp (Some k) in
+    check_and_gen' "ret_wp" 1 None ed.ret_wp (Some k) in
 
   log_combinator "ret_wp" ret_wp;
 
@@ -249,7 +250,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a_b ] (S.mk_Total wp_sort_b) in
 
-    check_and_gen' "bind_wp" 2 ed.bind_wp (Some k) in
+    check_and_gen' "bind_wp" 2 None ed.bind_wp (Some k) in
 
   log_combinator "bind_wp" bind_wp;
 
@@ -262,14 +263,14 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a ] (S.mk_Total wp_sort_a) in
 
-    check_and_gen' "if_then_else" 1 ed.if_then_else (Some k) in
+    check_and_gen' "if_then_else" 1 None ed.if_then_else (Some k) in
 
   log_combinator "if_then_else" if_then_else;
 
   let ite_wp =
     let a, wp_sort_a = fresh_a_and_wp () in
     let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_Total wp_sort_a) in
-    check_and_gen' "ite_wp" 1 ed.ite_wp (Some k) in
+    check_and_gen' "ite_wp" 1 None ed.ite_wp (Some k) in
 
   log_combinator "ite_wp" ite_wp;
 
@@ -280,7 +281,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
       S.mk_binder a;
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a ] (S.mk_Total t) in
-    check_and_gen' "stronger" 1 ed.stronger (Some k) in
+    check_and_gen' "stronger" 1 None ed.stronger (Some k) in
 
   log_combinator "stronger" stronger;
 
@@ -290,22 +291,196 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     let wp_sort_b_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_sort_a) in
 
     let k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder wp_sort_b_a] (S.mk_Total wp_sort_a) in
-    check_and_gen' "close_wp" 2 ed.close_wp (Some k) in
+    check_and_gen' "close_wp" 2 None ed.close_wp (Some k) in
 
   log_combinator "close_wp" close_wp;
 
   let trivial =
     let a, wp_sort_a = fresh_a_and_wp () in
-    let t, _ = U.type_u() in
+    let t, _ = U.type_u () in
     let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
-    check_and_gen' "trivial" 1 ed.trivial (Some k) in
+    check_and_gen' "trivial" 1 None ed.trivial (Some k) in
 
   log_combinator "trivial" trivial;
 
-  let _ =
+  let repr, return_repr, bind_repr, actions =
     match (SS.compress (snd ed.repr)).n with
-    | Tm_unknown -> ()
-    | _ -> failwith "NYI"
+    | Tm_unknown -> ed.repr, ed.return_repr, ed.bind_repr, ed.actions
+    | _ ->
+      let repr =
+        let a, wp_sort_a = fresh_a_and_wp () in
+        let t, _ = U.type_u () in
+        let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
+        check_and_gen' "repr" 1 None ed.repr (Some k) in
+
+      log_combinator "repr" repr;
+
+      let mk_repr' t wp =
+        let _, repr = Env.inst_tscheme repr in
+        let repr = N.normalize [EraseUniverses; AllowUnboundUniverses] env repr in
+        mk (Tm_app (repr, [t |> as_arg; wp |> as_arg])) None Range.dummyRange in
+      let mk_repr a wp = mk_repr' (S.bv_to_name a) wp in
+      let destruct_repr t =
+        match (SS.compress t).n with
+        | Tm_app(_, [(t, _); (wp, _)]) -> t, wp
+        | _ -> failwith "Unexpected repr type" in
+
+      let return_repr =
+        let a, _ = fresh_a_and_wp () in
+        let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+        let res =
+          let wp = mk_Tm_app
+            (Env.inst_tscheme ret_wp |> snd)
+            [S.bv_to_name a |> S.as_arg; S.bv_to_name x_a |> S.as_arg] None Range.dummyRange in
+          mk_repr a wp in
+        let k = U.arrow [S.mk_binder a; S.mk_binder x_a] (S.mk_Total res) in
+        let k, _, _ = tc_tot_or_gtot_term env k in
+        let env = Some (Env.set_range env (snd (ed.return_repr)).pos) in
+        check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in  //TODO: set env range
+    
+      log_combinator "return_repr" return_repr;
+
+      let bind_repr =
+        let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
+        let a, wp_sort_a = fresh_a_and_wp () in
+        let b, wp_sort_b = fresh_a_and_wp () in
+        let wp_sort_a_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_sort_b) in
+        let wp_f = S.gen_bv "wp_f" None wp_sort_a in
+        let wp_g = S.gen_bv "wp_g" None wp_sort_a_b in
+        let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+        let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [S.bv_to_name x_a |> S.as_arg] None Range.dummyRange in
+        let res =
+          let wp = mk_Tm_app
+            (Env.inst_tscheme bind_wp |> snd)
+            (List.map as_arg [r; S.bv_to_name a; S.bv_to_name b; S.bv_to_name wp_f; S.bv_to_name wp_g])
+            None Range.dummyRange in
+          mk_repr b wp in
+
+        let maybe_range_arg =
+          if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+          then [S.null_binder S.t_range; S.null_binder S.t_range]
+          else [] in
+       
+        let k = U.arrow ([S.mk_binder a; S.mk_binder b] @
+                         maybe_range_arg @
+                         [S.mk_binder wp_f;
+                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
+                          S.mk_binder wp_g;
+                          S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
+                        (S.mk_Total res) in
+        let k, _, _ = tc_tot_or_gtot_term env k in
+        let env = Env.set_range env (snd (ed.bind_repr)).pos in
+        let env = {env with lax=true} |> Some in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
+        check_and_gen' "bind_repr" 2 env ed.bind_repr (Some k) in
+
+      log_combinator "bind_repr" bind_repr;
+
+      let actions =
+        let check_action (act:action) =
+          (* We should not have action params anymore, they should have been handled by dmff below *)
+          if List.length act.action_params <> 0 then failwith "tc_eff_decl: expected action_params to be empty";
+
+          // 0) The action definition has a (possibly) useless type; the
+          // action cps'd type contains the "good" wp that tells us EVERYTHING
+          // about what this action does. Please note that this "good" wp is
+          // of the form [binders -> repr ...], i.e. is it properly curried.
+
+          //in case action has universes, open the action type etc. first
+          let env, act =
+            if act.action_univs = [] then env, act
+            else
+              let usubst, uvs = SS.univ_var_opening act.action_univs in
+              Env.push_univ_vars env uvs,
+              //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
+              { act with
+                action_univs = uvs;
+                action_params = [];
+                action_defn = SS.subst usubst act.action_defn;
+                action_typ = SS.subst usubst act.action_typ }
+          in
+
+          //AR: if the act typ is already in the effect monad (e.g. in the second phase),
+          //    then, convert it to repr, so that the code after it can work as it is
+          //    perhaps should open/close binders properly
+          let act_typ =
+            match (SS.compress act.action_typ).n with
+            | Tm_arrow (bs, c) ->
+              let c = comp_to_comp_typ c in
+              if lid_equals c.effect_name ed.mname
+              then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args))))
+              else act.action_typ
+            | _ -> act.action_typ
+          in
+
+          let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
+
+          // 1) Check action definition, setting its expected type to
+          //    [action_typ]
+          let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
+          if Env.debug env (Options.Other "ED") then
+            BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
+              (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
+              (Print.term_to_string act_typ);
+          let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
+
+          let act_defn = N.normalize [ Env.UnfoldUntil S.delta_constant ] env act_defn in
+          let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Eager_unfolding; Env.Beta ] env act_typ in
+          // 2) This implies that [action_typ] has Type(k): good for us!
+
+          // 3) Unify [action_typ] against [expected_k], because we also need
+          // to check that the action typ is of the form [binders -> repr ...]
+          let expected_k, g_k =
+            let act_typ = SS.compress act_typ in
+            match act_typ.n with
+            | Tm_arrow(bs, c) ->
+              let bs, _ = SS.open_comp bs c in
+              let res = mk_repr' S.tun S.tun in
+              let k = U.arrow bs (S.mk_Total res) in
+              let k, _, g = tc_tot_or_gtot_term env k in
+              k, g
+            | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, (BU.format2
+              "Actions must have function types (not: %s, a.k.a. %s)"
+                (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
+          in
+          let g = Rel.teq env act_typ expected_k in
+          Rel.force_trivial_guard env (Env.conj_guard g_a (Env.conj_guard g_k (Env.conj_guard g_t g)));
+
+          // 4) Do a bunch of plumbing to assign a type in the new monad to
+          //    the action
+          let act_typ = match (SS.compress expected_k).n with
+              | Tm_arrow(bs, c) ->
+                let bs, c = SS.open_comp bs c in
+                let a, wp = destruct_repr (U.comp_result c) in
+                let c = {
+                  comp_univs=[env.universe_of env a];
+                          effect_name = ed.mname;
+                  result_typ = a;
+                  effect_args = [as_arg wp];
+                  flags = []
+                } in
+                U.arrow bs (S.mk_Comp c)
+              | _ -> failwith "Impossible (expected_k is an arrow)" in
+
+          (* printfn "Checked action %s against type %s\n" *)
+          (*         (Print.term_to_string act_defn) *)
+          (*         (Print.term_to_string (N.normalize [Env.Beta] env act_typ)); *)
+
+          //AR: if the action universes were already annotated, simply close, else generalize
+          let univs, act_defn =
+            if act.action_univs = []
+            then TcUtil.generalize_universes env act_defn
+            else act.action_univs, SS.close_univ_vars act.action_univs act_defn
+          in
+          let act_typ = N.normalize [Env.Beta] env act_typ in
+          let act_typ = Subst.close_univ_vars univs act_typ in
+          {act with
+           action_univs=univs;
+           action_defn=act_defn;
+           action_typ =act_typ }
+        in
+        ed.actions |> List.map check_action in
+
+      repr, return_repr, bind_repr, actions
   in
 
   let cl ts =
@@ -322,7 +497,15 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     ite_wp       =cl ite_wp;
     stronger     =cl stronger;
     close_wp     =cl close_wp;
-    trivial      =cl trivial } in
+    trivial      =cl trivial;
+    repr         =cl repr;
+    return_repr  =cl return_repr;
+    bind_repr    =cl bind_repr;
+    actions      =
+      List.map (fun a ->
+        { a with
+          action_typ  = cl (a.action_univs, a.action_typ) |> snd;
+          action_defn = cl (a.action_univs, a.action_defn) |> snd }) actions } in
 
   if Env.debug env <| Options.Other "ED" then
     BU.print1 "Typechecked effect declaration:\n\t%s\n" (Print.eff_decl_to_string false ed);

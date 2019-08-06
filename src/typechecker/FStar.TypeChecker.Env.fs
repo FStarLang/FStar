@@ -1272,7 +1272,7 @@ let effect_repr_aux only_reifiable env c u_c =  (* AR: TODO: FIXME *)
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
               raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
-          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr |> snd) in
+          let repr = inst_effect_fun_with [u_c] env ed ed.repr in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
