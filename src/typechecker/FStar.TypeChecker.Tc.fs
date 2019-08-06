@@ -123,25 +123,26 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
 
     //ed.binders are effect parameters (e.g. heap in STATE_h), typecheck them after opening them
     let bs = SS.open_binders (SS.subst_binders ed_univs_subst ed.binders) in
-    let bs, _, _ = tc_tparams (Env.push_univ_vars env0 ed_univs) bs in  //forces the guard from checking the binders
+    let bs, _, _ = tc_tparams (Env.push_univ_vars env0 ed_univs) bs in  //tc_tparams forces the guard from checking the binders
 
     //generalize the universes in bs
+    //bs are closed with us and closed
     let us, bs =
-      let tmp_t = U.arrow bs (S.mk_Total' S.t_unit (U_zero |> Some)) in  //create a bs -> Tot unit
+      let tmp_t = U.arrow bs (S.mk_Total' S.t_unit (U_zero |> Some)) in  //create a temporary bs -> Tot unit
       let us, tmp_t = TcUtil.generalize_universes env0 tmp_t in
       us, tmp_t |> U.arrow_formals |> fst |> SS.close_binders in
 
     match ed_univs with
-    | [] -> us, bs
+    | [] -> us, bs  //if no annotated universes, return us, bs
     | _ ->
-      //if ed.univs is already set, it must be the case that us = ed.univs, else generalize us, and close bs
+      //if ed.univs is already set, it must be the case that us = ed.univs, else error out
       if List.length ed_univs = List.length us &&
          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us
       then us, bs
       else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
              (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
                ed.mname.str (BU.string_of_int (List.length ed_univs)) (BU.string_of_int (List.length us))))
-              Range.dummyRange  //TODO: FIXME: range
+             (range_of_lid ed.mname)
   in
 
   //at this points, bs are closed and closed with us also
@@ -153,33 +154,41 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   let ed_univs_subst, ed_univs = SS.univ_var_opening us in
   let ed_bs, ed_bs_subst = SS.open_binders' (SS.subst_binders ed_univs_subst bs) in
   
-  let op (us, t) =
-    let t = SS.subst (SS.shift_subst (List.length ed_bs + List.length us) ed_univs_subst) t in
-    us, SS.subst (SS.shift_subst (List.length us) ed_bs_subst) t in
   
-  let ed = { ed with
-    signature    =op ed.signature;
-    ret_wp       =op ed.ret_wp;
-    bind_wp      =op ed.bind_wp;
-    if_then_else =op ed.if_then_else;
-    ite_wp       =op ed.ite_wp;
-    stronger     =op ed.stronger;
-    close_wp     =op ed.close_wp;
-    trivial      =op ed.trivial;
-    repr         =op ed.repr;
-    return_repr  =op ed.return_repr;
-    bind_repr    =op ed.bind_repr;
-    actions      = List.map (fun a ->
-      { a with action_defn = snd (op (a.action_univs, a.action_defn));
-               action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions;
-  } in
+  let ed =
+    let op (us, t) =
+      let t = SS.subst (SS.shift_subst (List.length ed_bs + List.length us) ed_univs_subst) t in
+      us, SS.subst (SS.shift_subst (List.length us) ed_bs_subst) t in
+
+    { ed with
+      signature    =op ed.signature;
+      ret_wp       =op ed.ret_wp;
+      bind_wp      =op ed.bind_wp;
+      if_then_else =op ed.if_then_else;
+      ite_wp       =op ed.ite_wp;
+      stronger     =op ed.stronger;
+      close_wp     =op ed.close_wp;
+      trivial      =op ed.trivial;
+      repr         =op ed.repr;
+      return_repr  =op ed.return_repr;
+      bind_repr    =op ed.bind_repr;
+      actions      = List.map (fun a ->
+        { a with action_defn = snd (op (a.action_univs, a.action_defn));
+                 action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions;
+    } in
 
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "After typechecking binders eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
   let env = Env.push_binders (Env.push_univ_vars env0 ed_univs) ed_bs in
 
-  let check_and_gen' comb n env_opt (us, t) k =
+  (*
+   * AR: check that (us, t) has type k, and generalize (us, t)
+   *     comb is the name of the combinator (useful for error messages)
+   *     n is the expected number of free universes (after generalization)
+   *     env_opt is an optional env (e.g. bind_repr is typechecked lax)
+   *)
+  let check_and_gen' (comb:string) (n:int) env_opt (us, t) k : tscheme =
     let env = if is_some env_opt then env_opt |> must else env in
     let us, t = SS.open_univ_vars us t in
     let t =
@@ -190,24 +199,24 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
         Rel.force_trivial_guard env g;
         t in
     let g_us, t = TcUtil.generalize_universes env t in
+    //check that n = List.length g_us and that if us is set, it is same as g_us
     begin
-      let m = List.length g_us in
-      if m <> n then
-        let error = BU.format3
-          "Expected %s to be universe-polymorphic in %s universes, found %s"
-          comb (string_of_int n) (string_of_int m) in
-        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) Range.dummyRange  //TODO: FIXME: range
+      if List.length g_us <> n then
+        let error = BU.format4
+          "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
+          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int) in
+        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos
     end;
     match us with
     | [] -> g_us, t
     | _ ->
      if List.length us = List.length g_us &&
-         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
-      then g_us, t
-      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-             (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
-               "" (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
-              Range.dummyRange  //TODO: FIXME: range
+        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     then g_us, t
+     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+            (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
+               ed.mname.str comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
+            t.pos
   in
 
   let signature = check_and_gen' "signature" 1 None ed.signature None in
@@ -215,8 +224,12 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
 
+  (*
+   * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a) 
+   *)
   let fresh_a_and_wp () =
-    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) Range.dummyRange in  //TODO: FIXME: range
+    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (snd ed.signature).pos in
+    //instantiate with fresh universes
     let _, signature = Env.inst_tscheme signature in
     match (SS.compress signature).n with
     | Tm_arrow (bs, _) ->
@@ -229,7 +242,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
 
   let log_combinator s ts =
     if Env.debug env <| Options.Other "ED" then
-      BU.print2 "Typechecked %s = %s\n" s (Print.tscheme_to_string ts) in
+      BU.print3 "Typechecked %s:%s = %s\n" ed.mname.str s (Print.tscheme_to_string ts) in
 
   let ret_wp =
     let a, wp_sort = fresh_a_and_wp () in
@@ -336,7 +349,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
         let k = U.arrow [S.mk_binder a; S.mk_binder x_a] (S.mk_Total res) in
         let k, _, _ = tc_tot_or_gtot_term env k in
         let env = Some (Env.set_range env (snd (ed.return_repr)).pos) in
-        check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in  //TODO: set env range
+        check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in
     
       log_combinator "return_repr" return_repr;
 
@@ -391,13 +404,10 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
             else
               let usubst, uvs = SS.univ_var_opening act.action_univs in
               Env.push_univ_vars env uvs,
-              //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
               { act with
                 action_univs = uvs;
-                action_params = [];
-                action_defn = SS.subst usubst act.action_defn;
-                action_typ = SS.subst usubst act.action_typ }
-          in
+                action_defn  = SS.subst usubst act.action_defn;
+                action_typ   = SS.subst usubst act.action_typ } in
 
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
@@ -453,7 +463,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-                          effect_name = ed.mname;
+                  effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = []
@@ -483,6 +493,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
       repr, return_repr, bind_repr, actions
   in
 
+  //close the ed_univs and ed_bs
   let cl ts =
     let ts = SS.close_tscheme ed_bs ts in
     let ed_univs_closing = SS.univ_var_closing ed_univs in
