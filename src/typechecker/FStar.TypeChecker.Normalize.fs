@@ -2530,12 +2530,10 @@ let normalize_with_primitive_steps ps s e t =
     end
 
 let normalize s e t =
-  let r, _ =
     P.profile (fun () -> normalize_with_primitive_steps [] s e t)
-              (fun () -> Print.term_to_string t)
-              Options.ProfileNormalize
-  in
-  r
+              (Ident.string_of_lid (Env.current_module e))
+              "Normalizer"
+
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 

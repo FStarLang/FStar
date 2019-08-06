@@ -100,7 +100,7 @@
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
     <Compile Include="FStar.Profiling.fsi" />
-    <Compile Include="NotFStar.Profiling.fs" />
+    <Compile Include="FStar.Profiling.fs" />
     <Compile Include="FStar.Version.fsi" />
     <Compile Include="FStar.Version.fs" />
     <Content Include="packages.config" />

@@ -2,6 +2,9 @@
 module FStar.Profiling
 open FStar.All
 
-val init_profiler         : unit -> unit
-val profile               : (unit -> 'b) -> (unit -> string) -> Options.profile_t -> 'b * int
-val disable_profiler      : unit -> unit
+val profile : f:(unit -> 'b)
+            -> module_name:string
+            -> phase_name:string
+            -> 'b
+
+val report_and_clear: unit -> unit

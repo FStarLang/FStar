@@ -599,12 +599,13 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
   let (status, statistics), elapsed_time =
     P.profile
       (fun () ->
-        try doZ3Exe log_file r fresh input label_messages
+        try
+          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages)
         with e ->
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
-      (fun () -> name)
-      Options.ProfileSMT
+      (query_logging.get_module_name())
+      "SMT"
   in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
