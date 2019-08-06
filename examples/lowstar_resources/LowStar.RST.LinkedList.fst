@@ -19,13 +19,15 @@ open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module L = FStar.List.Tot
 module A = LowStar.Array
+module RA = LowStar.RST.Array
 
 open LowStar.Resource
 open LowStar.RST
+module P = LowStar.Permissions
 
 open LowStar.BufferOps
 
-#set-options "--__no_positivity --use_two_phase_tc true"
+#reset-options "--__no_positivity --use_two_phase_tc true"
 
 (* The definition of linked lists comes from kremlin/test/LinkedList4.fst *)
 
@@ -44,41 +46,49 @@ and cell (a: Type0) = {
 (* Ideally, this would be bootstrapped for clients to use a "t' a".
    The hidden (abstract) type definition would be a (t a) & list (cell a) *)
 
-abstract
-let empty_list (#a:Type) (ptr:t a) : resource =
-  reveal_view();
-  let fp = Ghost.hide (A.loc_array ptr) in
-  let inv h = A.writeable h ptr /\ A.vlength ptr == 0 in
-  let sel h : list a = [] in
-  let (view:view (list a)) = {
-    fp = fp;
-    inv = inv;
-    sel = sel
-  } in
-  {
-    t = list a;
-    view = view
-  }
+let empty_inv (#a:Type) (#ptr:t a) (s:selector (RA.array_resource ptr)) =
+  A.vlength ptr == 0
+
+let node_inv (#a:Type) (#ptr:t a) (s:selector (RA.array_resource ptr)) = 
+  P.allows_write (RA.get_perm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
+//  A.vlength ptr == 1 /\ A.freeable ptr /\ A.writeable h ptr
 
 abstract
-let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
-  reveal_view();
-  let fp = Ghost.hide (A.loc_array ptr) in
-  let inv h = A.vlength ptr == 1 /\ A.freeable ptr /\ A.writeable h ptr /\
-    Seq.index (A.as_seq h ptr) 0 == v in
-  let sel h = v.data in
-  let (view:view a) = {
-    fp = fp;
-    inv = inv;
-    sel = sel
-  }
-  in
-  {
-    t = a;
-    view = view
-  }
+let empty_list (#a:Type) (ptr:t a) : resource = 
+  hsrefine (RA.array_resource ptr) empty_inv
+  
+  // reveal_view();
+  // let fp = Ghost.hide (A.loc_array ptr) in
+  // let inv h = A.writeable h ptr /\ A.vlength ptr == 0 in
+  // let sel h : list a = [] in
+  // let (view:view (list a)) = {
+  //   fp = fp;
+  //   inv = inv;
+  //   sel = sel
+  // } in
+  // {
+  //   t = list a;
+  //   view = view
+  // }
 
 abstract
+let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource = 
+  hsrefine (RA.array_resource ptr) (fun s -> node_inv s /\ Seq.index (RA.as_seq ptr s) 0 == v)
+  // reveal_view();
+  // let fp = Ghost.hide (A.loc_array ptr) in
+  // let inv h = node_inv h ptr /\ Seq.index (A.as_seq h ptr) 0 == v in
+  // let sel h = v.data in
+  // let (view:view a) = {
+  //   fp = fp;
+  //   inv = inv;
+  //   sel = sel
+  // }
+  // in
+  // {
+  //   t = a;
+  //   view = view
+  // }
+
 let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
   (decreases l) 
   =
@@ -87,20 +97,21 @@ let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
   | hd::tl -> pts_to ptr hd <*> slist hd.next tl
 
 abstract
-let dummy_cell (#a:Type) (ptr:t a) : resource =
-  reveal_view();
-  let fp = Ghost.hide (A.loc_array ptr) in
-  let inv h = A.freeable ptr /\ A.writeable h ptr /\ A.vlength ptr == 1 in
-  let sel h = () in
-  let view = {
-    fp = fp;
-    inv = inv;
-    sel = sel
-  } in
-  {
-    t = unit;
-    view = view
-  }
+let dummy_cell (#a:Type) (ptr:t a) : resource = 
+  hsrefine (RA.array_resource ptr) node_inv
+  // reveal_view();
+  // let fp = Ghost.hide (A.loc_array ptr) in
+  // let inv h = node_inv h ptr in
+  // let sel h = () in
+  // let view = {
+  //   fp = fp;
+  //   inv = inv;
+  //   sel = sel
+  // } in
+  // {
+  //   t = unit;
+  //   view = view
+  // }
 
 let cell_alloc (#a:Type)
               (init:cell a)
@@ -110,7 +121,7 @@ let cell_alloc (#a:Type)
                         (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
-  A.alloc init 1ul
+  RA.alloc init 1ul
 
 let cell_free (#a:Type)
               (ptr:t a)
@@ -118,37 +129,40 @@ let cell_free (#a:Type)
            : RST unit (pts_to ptr v)
                       (fun ptr -> empty_resource)
                       (fun _ -> True)
+                      // (fun old -> A.freeable ptr /\ P.allows_write (RA.get_perm ptr old))
                       (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_empty_resource ();
-  A.free ptr
+  RA.free ptr
 
 let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
   : RST unit
     (dummy_cell ptr)
     (fun _ -> pts_to ptr c)
     (fun _ -> True)
+    // (fun old -> P.allows_write (RA.get_perm ptr old))
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
-    A.upd ptr 0ul c;
-    let h1 = HyperStack.ST.get() in
-    A.live_array_used_in ptr h1
+    RA.upd ptr 0ul c
+    // let h1 = HyperStack.ST.get() in
+    // A.live_array_used_in ptr h1
 
 let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
   : RST unit
     (pts_to ptr c)
     (fun _ -> pts_to ptr ({c with data = v}))
     (fun _ -> True)
+    // (fun old -> P.allows_write (RA.get_perm ptr old))
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
-    let node = A.index ptr 0ul in
+    let node = RA.index ptr 0ul in
     let node' = {node with data = v} in
-    A.upd ptr 0ul node';
-    let h1 = HyperStack.ST.get() in
-    A.live_array_used_in ptr h1
+    RA.upd ptr 0ul node'
+    // let h1 = HyperStack.ST.get() in
+    // A.live_array_used_in ptr h1
 
 (* We provide two versions of cons.
    The first one assumes there is an unused (dummy) node, that we can just set to be the head.
@@ -157,13 +171,20 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
 let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
   : RST unit
   (dummy_cell hd <*> slist ptr l)
+//  (fun _ -> pts_to hd ({data = v; next = ptr}) <*> slist ptr l)
   (fun _ -> slist hd ({data = v; next = ptr} :: l))
   (fun _ -> True)
+  // (fun old -> P.allows_write (RA.get_perm hd old))
   (fun _ _ _ -> True) =
+  reveal_modifies();
+  reveal_star();
   let new_cell = {data = v; next = ptr} in
   rst_frame 
     (dummy_cell hd <*> slist ptr l)
+    // #_ #_
     (fun _ -> pts_to hd new_cell <*> slist ptr l)
+    // #_
+    // #(slist ptr l)
     (fun _ -> set_dummy_cell hd new_cell);
   admit()
 
@@ -176,7 +197,10 @@ let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   let new_cell = {data = v; next = ptr} in
   let new_head = rst_frame 
     (slist ptr l)
+    #_ #_
     (fun ret -> pts_to ret new_cell <*> slist ptr l)
+    #_
+    #(slist ptr l)    
     (fun _ -> cell_alloc new_cell)
   in
   new_head
