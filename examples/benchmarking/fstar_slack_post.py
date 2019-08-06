@@ -11,7 +11,7 @@ import urllib.parse
 import urllib.request
 
 
-DEFAULT_GITHUB_COMMIT_LOC='https://github.com/FStarLang/FStar/commit/'
+DEFAULT_GITHUB_COMPARE_LOC='https://github.com/FStarLang/FStar/compare/'
 DEFAULT_CODESPEED_REV_FMT='http://bench2.ocamllabs.io:8070/changes/?rev=%s'
 RED_THRESH = 20. # percentage change of all benchmarks worse than this
 GREY_THRESH = 10. # percentage change of a benchmark worse than this
@@ -22,7 +22,7 @@ GREY_THRESH = 10. # percentage change of a benchmark worse than this
 parser = argparse.ArgumentParser(description='Post a message to a slack webhook')
 parser.add_argument('url', type=str, help='webhook url to post to')
 parser.add_argument('last_daily_dir', type=str, help='directory with last daily data (e.g. /local/scratch/ctk21/FStar_bench/daily)')
-parser.add_argument('--github_commit_loc', type=str, help='web link for finding github commits (e.g. %s)'%DEFAULT_GITHUB_COMMIT_LOC, default=DEFAULT_GITHUB_COMMIT_LOC)
+parser.add_argument('--github_compare_loc', type=str, help='web link for finding github compare (e.g. %s)'%DEFAULT_GITHUB_COMPARE_LOC, default=DEFAULT_GITHUB_COMPARE_LOC)
 parser.add_argument('--codespeed_rev_fmt', type=str, help='web link for codespeed changes page (e.g. %s)'%DEFAULT_CODESPEED_REV_FMT, default=DEFAULT_CODESPEED_REV_FMT)
 parser.add_argument('--dry_run', action='store_true', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
@@ -57,9 +57,9 @@ old_daily_results = get_dir_sorted_by_name(
     )[-1]
 old_daily_results = get_result_dir_from_run(old_daily_results)
 
-def get_hash_from_result_dir(d):
+def get_hash_from_result_dir(d, end=12):
     d = os.path.dirname(d) ## remove 'result_dir'
-    return os.path.basename(d)[0:12]
+    return os.path.basename(d)[0:end]
 
 new_short_hash = get_hash_from_result_dir(new_daily_results)
 old_short_hash = get_hash_from_result_dir(old_daily_results)
@@ -103,7 +103,7 @@ old_df = old_df.set_index('name')
 change_data = 100.*(new_df['time_secs']-old_df['time_secs'])/old_df['time_secs']
 change_data = change_data.sort_values()
 
-message_str = 'Performance of <%s|%s> [new] compared with <%s|%s> [old]:\n' % (args.github_commit_loc+new_short_hash, new_short_hash, args.github_commit_loc+old_short_hash, old_short_hash)
+message_str = 'Performance of <%s|%s [new] compared with %s [old]>:\n' % (args.github_compare_loc+('%s...%s'%(get_hash_from_result_dir(old_daily_results, -1),get_hash_from_result_dir(new_daily_results, -1))), new_short_hash, old_short_hash)
 
 ## calculate top 3 improves, bottom 3 worst
 def long_pre_fn(title, series):
