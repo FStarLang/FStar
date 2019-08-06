@@ -2852,7 +2852,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
 
     | Sig_new_effect ed ->
-      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders (ed.signature |> snd) in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in
         univs_opening, SS.univ_var_closing univs
@@ -2914,7 +2914,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                univs        = univs;
                binders      = binders;
-               signature    = signature;
+               signature    = ([], signature);
                ret_wp       = elim_tscheme ed.ret_wp;
                bind_wp      = elim_tscheme ed.bind_wp;
                if_then_else = elim_tscheme ed.if_then_else;
@@ -2922,7 +2922,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
                trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
+               repr         = elim_tscheme ed.repr;
                return_repr  = elim_tscheme ed.return_repr;
                bind_repr    = elim_tscheme ed.bind_repr;
                actions      = List.map elim_action ed.actions } in

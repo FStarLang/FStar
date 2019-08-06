@@ -373,12 +373,12 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflag>;
-    mname       :lident;
-    univs       :univ_names;
-    binders     :binders;
-    signature   :term;
-    ret_wp      :tscheme;
+    cattributes :list<cflag>;      //default cflags
+    mname       :lident;           //STATE_h
+    univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
+    binders     :binders;          //heap:Type
+    signature   :tscheme;             //: result:Type ... -> Effect
+    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
@@ -387,7 +387,7 @@ type eff_decl = {
     trivial     :tscheme;
     //NEW FIELDS
     //representation of the effect as pure type
-    repr        :term;
+    repr        :tscheme;
     //operations on the representation
     return_repr :tscheme;
     bind_repr   :tscheme;

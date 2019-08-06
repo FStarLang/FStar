@@ -592,7 +592,7 @@ let effect_signature us_opt se =
     in
     match se.sigel with
     | Sig_new_effect(ne) ->
-        Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
+        Some (inst_tscheme (ne.univs, U.arrow ne.binders (ne.signature |> snd |> mk_Total)), se.sigrng)
 
     | Sig_effect_abbrev (lid, us, binders, _, _) ->
         Some (inst_tscheme (us, U.arrow binders (mk_Total teff)), se.sigrng)
@@ -1059,7 +1059,7 @@ let wp_sig_aux decls m =
   match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
   | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some (md, _q) ->
-    let _, s = inst_tscheme (md.univs, md.signature) in
+    let _, s = inst_tscheme (md.univs, md.signature |> snd) in
     let s = Subst.compress s in
     match md.binders, s.n with
       | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
@@ -1241,7 +1241,7 @@ let effect_repr_aux only_reifiable env c u_c =
     match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
-        match ed.repr.n with
+        match (snd ed.repr).n with
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
@@ -1255,7 +1255,7 @@ let effect_repr_aux only_reifiable env c u_c =
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
               raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
-          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr |> snd) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c

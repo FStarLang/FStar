@@ -122,14 +122,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let n_effect_params = List.length ed.binders in
   let effect_params_un, signature_un, opening =
       SS.open_term' (open_univs_binders 0 ed.binders)
-                    (open_univs n_effect_params ed.signature) in
+                    (open_univs n_effect_params (snd ed.signature)) in
 
   let env = Env.push_univ_vars env0 annotated_univ_names in  //AR: push the univs in the environment
 
   let effect_params, env, _ = tc_tparams env effect_params_un in
   let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=effect_params;
-                    signature=signature} in
+                    signature=([], signature)} in
   //open ed's operations with respect to the effect parameters that are already in scope
   let ed =
     match effect_params, annotated_univ_names with
@@ -151,7 +151,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; stronger    =op ed.stronger
             ; close_wp    =op ed.close_wp
             ; trivial     =op ed.trivial
-            ; repr        = snd (op ([], ed.repr))
+            ; repr        =op ed.repr
             ; actions     = List.map (fun a ->
             { a with
                 action_defn = snd (op (a.action_univs, a.action_defn));  //AR: can't assume that the action univs are empty
@@ -173,7 +173,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
          end
        | _ -> fail signature
   in
-  let a, wp_a = wp_with_fresh_result_type env ed.mname ed.signature in
+  let a, wp_a = wp_with_fresh_result_type env ed.mname (snd ed.signature) in
   let fresh_effect_signature ()  =
       match annotated_univ_names with
       | [] ->
@@ -188,13 +188,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   in
 
   //put the signature in the environment to prevent generalizing its free universe variables until we're done
-  let env = Env.push_bv env (S.new_bv None ed.signature) in
+  let env = Env.push_bv env (S.new_bv None (snd ed.signature)) in
 
   if Env.debug env0 <| Options.Other "ED"
   then BU.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
-                        (Print.term_to_string ed.signature)
+                        (Print.tscheme_to_string ed.signature)
                         (Print.term_to_string (S.bv_to_name a))
                         (Print.term_to_string a.sort);
 
@@ -259,7 +259,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      match (SS.compress ed.repr).n with
+      match (SS.compress (snd ed.repr)).n with
       | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
         ed.repr, ed.bind_repr, ed.return_repr, ed.actions
       | _ ->
@@ -271,7 +271,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
             (* printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr) (Print.term_to_string expected_k); *)
-            tc_check_trivial_guard env ed.repr expected_k in
+            tc_check_trivial_guard env (snd ed.repr) expected_k in
 
         let mk_repr' t wp =
             let repr = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env repr in
@@ -444,12 +444,12 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               action_typ =act_typ }
         in
         ed.actions |> List.map check_action in
-      repr, bind_repr, return_repr, actions
+      ([], repr), bind_repr, return_repr, actions
   in
 
   //generalize and close
   (* QUESTION (KM) : Why do we close with ed.binders and not effect_params ?? *)
-  let t0 = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let t0 = U.arrow ed.binders (ed.signature |> snd |> S.mk_Total) in
   let (univs, t) =
       let gen_univs, t = TcUtil.generalize_universes env0 t0 in
       match annotated_univ_names with
@@ -463,7 +463,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format2 "Expected an effect definition with %s universes; but found %s"
                                         (BU.string_of_int (List.length annotated_univ_names))
                                         (BU.string_of_int (List.length gen_univs))))
-                          ed.signature.pos
+                          (snd ed.signature).pos
   in
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
@@ -497,7 +497,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
-    ; signature   = signature
+    ; signature   = ([], signature)
     ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
     ; if_then_else= close 0 if_then_else
@@ -505,7 +505,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
     ; trivial     = close 0 trivial_wp
-    ; repr        = (snd (close 0 ([], repr)))
+    ; repr        = close 0 repr
     ; return_repr = close 0 return_repr
     ; bind_repr   = close 1 bind_repr
     ; actions     = List.map close_action actions} in
@@ -518,7 +518,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
 let cps_and_elaborate env ed =
   // Using [STInt: a:Type -> Effect] as an example...
-  let effect_binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let effect_binders_un, signature_un = SS.open_term ed.binders (snd ed.signature) in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
   let effect_binders, env, _ = tc_tparams env effect_binders_un in
   // [signature] is a:Type -> effect
@@ -562,7 +562,7 @@ let cps_and_elaborate env ed =
   let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check env [] ed.repr in
+  let repr, _comp = open_and_check env [] (snd ed.repr) in
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
@@ -819,8 +819,8 @@ let cps_and_elaborate env ed =
   ignore (register "wp" wp_type);
 
   let ed = { ed with
-    signature = close effect_binders effect_signature;
-    repr = apply_close repr;
+    signature = ([], close effect_binders effect_signature);
+    repr = ([], apply_close repr);
     ret_wp = [], apply_close return_wp;
     bind_wp = [], apply_close bind_wp;
     return_repr = [], apply_close return_elab;
@@ -1210,7 +1210,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
-          let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
+          let repr = Env.inst_effect_fun_with [U_unknown] env ed ed.repr in
           mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =
