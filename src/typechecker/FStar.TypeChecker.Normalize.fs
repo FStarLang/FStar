@@ -2852,6 +2852,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
 
     | Sig_new_effect ed ->
+      //AR: S.t_unit is just a dummy comp type, we only care about the binders
       let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in

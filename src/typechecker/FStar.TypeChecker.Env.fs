@@ -592,12 +592,21 @@ let effect_signature us_opt se =
   in
   match se.sigel with
   | Sig_new_effect(ne) ->
+    (*
+     * AR: opening of signature with us_opt is a bit involved now
+     *     there are ed.univs (free universes in the effect binders) and free universes of the signature itself
+     *
+     *     if us_opt is None, then we first inst_tscheme the ne.signature, and then inst_tscheme the ne.binders -> signature
+     *     else we assert that passed in universes are ne.univs + signature.univs, and split, and inst
+     *)
     let ne_us, sig_us =
       match us_opt with
       | None -> None, None
       | Some us ->
         if List.length us <> List.length ne.univs + List.length (fst ne.signature)
-        then failwith "effect_signature: insufficient number of universes"
+        then failwith ("effect_signature: insufficient number of universes for the signature of " ^
+          ne.mname.str ^ ", expected " ^ (string_of_int (List.length ne.univs + List.length (fst ne.signature))) ^
+          ", got " ^ (string_of_int (List.length us)))
         else
           let ne_us, sig_us = List.splitAt (List.length ne.univs) us in
           Some ne_us, Some sig_us
@@ -1253,7 +1262,7 @@ let rec unfold_effect_abbrev env comp =
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
-let effect_repr_aux only_reifiable env c u_c =  (* AR: TODO: FIXME *)
+let effect_repr_aux only_reifiable env c u_c =
     let effect_name = norm_eff_name env (U.comp_effect_name c) in
     match effect_decl_opt env effect_name with
     | None -> None
