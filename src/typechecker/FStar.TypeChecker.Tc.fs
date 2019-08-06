@@ -33,6 +33,8 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
+open FStar.Syntax
+
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
@@ -110,7 +112,193 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
+let tc_eff_decl_new env0 (ed:S.eff_decl) : eff_decl =
+  if Env.debug env0 <| Options.Other "ED" then
+    BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
+
+  let us, bs =
+    //ed.univs are free universes in the binders
+    //first open them
+    let ed_univs_subst, ed_univs = SS.univ_var_opening ed.univs in
+
+    //ed.binders are effect parameters (e.g. heap in STATE_h), typecheck them after opening them
+    let bs = SS.open_binders (SS.subst_binders ed_univs_subst ed.binders) in
+    let bs, _, _ = tc_tparams (Env.push_univ_vars env0 ed_univs) bs in  //forces the guard from checking the binders
+
+    //generalize the universes in bs
+    let us, bs =
+      let tmp_t = U.arrow bs (S.mk_Total' S.t_unit (U_zero |> Some)) in  //create a bs -> Tot unit
+      let us, tmp_t = TcUtil.generalize_universes env0 tmp_t in
+      us, tmp_t |> U.arrow_formals |> fst |> SS.close_binders in
+
+    match ed_univs with
+    | [] -> us, bs
+    | _ ->
+      //if ed.univs is already set, it must be the case that us = ed.univs, else generalize us, and close bs
+      if List.length ed_univs = List.length us &&
+         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us
+      then us, bs
+      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+             (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
+               ed.mname.str (BU.string_of_int (List.length ed_univs)) (BU.string_of_int (List.length us))))
+              Range.dummyRange  //TODO: FIXME: range
+  in
+
+  //at this points, bs are closed and closed with us also
+  //they are in scope for rest of the ed
+
+  let ed = { ed with univs = us; binders = bs } in
+
+  //now open rest of the ed with us and bs
+  let ed_univs_subst, ed_univs = SS.univ_var_opening us in
+  let ed_bs, ed_bs_subst = SS.open_binders' (SS.subst_binders ed_univs_subst bs) in
+  
+  let op (us, t) =
+    let t = SS.subst (SS.shift_subst (List.length ed_bs + List.length us) ed_univs_subst) t in
+    us, SS.subst (SS.shift_subst (List.length us) ed_bs_subst) t in
+  
+  let ed = { ed with
+    signature    =op ed.signature;
+    ret_wp       =op ed.ret_wp;
+    bind_wp      =op ed.bind_wp;
+    if_then_else =op ed.if_then_else;
+    ite_wp       =op ed.ite_wp;
+    stronger     =op ed.stronger;
+    close_wp     =op ed.close_wp;
+    trivial      =op ed.trivial;
+    repr         =op ed.repr;
+    return_repr  =op ed.return_repr;
+    bind_repr    =op ed.bind_repr;
+    actions      = List.map (fun a ->
+      { a with action_defn = snd (op (a.action_univs, a.action_defn));
+               action_typ  = snd (op (a.action_univs, a.action_defn)) }) ed.actions;
+  } in
+
+  if Env.debug env0 <| Options.Other "ED" then
+    BU.print1 "After typechecking binders eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
+
+  let env = Env.push_binders (Env.push_univ_vars env0 ed_univs) ed_bs in
+
+  let check_and_gen' (us, t) k =
+    let us, t = SS.open_univ_vars us t in
+    let t =
+      let env = Env.push_univ_vars env us in
+      match k with
+      | Some k -> tc_check_trivial_guard env t k
+      | None ->
+        let t, _, g = tc_tot_or_gtot_term env t in
+        Rel.force_trivial_guard env g;
+        t in
+    let g_us, t = TcUtil.generalize_universes env t in
+    match us with
+    | [] -> g_us, t
+    | _ ->
+     if List.length us = List.length g_us &&
+         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+      then g_us, t
+      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+             (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
+               "" (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
+              Range.dummyRange  //TODO: FIXME: range
+  in
+
+  let signature = check_and_gen' ed.signature None in
+
+  if Env.debug env0 <| Options.Other "ED" then
+    BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
+
+  let fresh_a_and_wp () =
+    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) Range.dummyRange in  //TODO: FIXME: range
+    let _, signature = Env.inst_tscheme signature in
+    match (SS.compress signature).n with
+    | Tm_arrow (bs, _) ->
+      let bs = SS.open_binders bs in
+      (match bs with
+       | [(a, _); (wp, _)] -> a, wp.sort
+       | _ -> fail signature)
+    | _ -> fail signature
+  in
+
+  let log_combinator s ts =
+    if Env.debug env <| Options.Other "ED" then
+      BU.print2 "Typechecked %s = %s\n" s (Print.tscheme_to_string ts) in
+
+  let ret_wp =
+    let a, wp_sort = fresh_a_and_wp () in
+    let k = U.arrow [ S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_sort) in
+    check_and_gen' ed.ret_wp (Some k) in
+
+  log_combinator "ret_wp" ret_wp;
+
+  let bind_wp =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let b, wp_sort_b = fresh_a_and_wp () in
+    let wp_sort_a_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_sort_b) in
+
+    let k = U.arrow [
+      S.null_binder t_range;
+      S.mk_binder a;
+      S.mk_binder b;
+      S.null_binder wp_sort_a;
+      S.null_binder wp_sort_a_b ] (S.mk_Total wp_sort_b) in
+
+    check_and_gen' ed.bind_wp (Some k) in
+
+  log_combinator "bind_wp" bind_wp;
+
+  let if_then_else =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let k = U.arrow [
+      S.mk_binder a;
+      S.mk_binder p;
+      S.null_binder wp_sort_a;
+      S.null_binder wp_sort_a ] (S.mk_Total wp_sort_a) in
+
+    check_and_gen' ed.if_then_else (Some k) in
+
+  log_combinator "if_then_else" if_then_else;
+
+  let ite_wp =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_Total wp_sort_a) in
+    check_and_gen' ed.ite_wp (Some k) in
+
+  log_combinator "ite_wp" ite_wp;
+
+  let stronger =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let t, _ = U.type_u() in
+    let k = U.arrow [
+      S.mk_binder a;
+      S.null_binder wp_sort_a;
+      S.null_binder wp_sort_a ] (S.mk_Total t) in
+    check_and_gen' ed.stronger (Some k) in
+
+  log_combinator "stronger" stronger;
+
+  let close_wp =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let wp_sort_b_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_sort_a) in
+
+    let k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder wp_sort_b_a] (S.mk_Total wp_sort_a) in
+    check_and_gen' ed.close_wp (Some k) in
+
+  log_combinator "close_wp" close_wp;
+
+  let trivial =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let t, _ = U.type_u() in
+    let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
+    check_and_gen' ed.trivial (Some k) in
+
+  log_combinator "trivial" trivial;
+
+  ed
+
 let tc_eff_decl env0 (ed:Syntax.eff_decl) =
+  tc_eff_decl_new env0 ed |> ignore;
 //  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
   let open_annotated_univs, annotated_univ_names = SS.univ_var_opening ed.univs in
   let open_univs n_binders t =
