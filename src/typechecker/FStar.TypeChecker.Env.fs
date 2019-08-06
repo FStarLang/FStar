@@ -585,19 +585,31 @@ let lookup_type_of_let us_opt se lid =
     | _ -> None
 
 let effect_signature us_opt se =
-    let inst_tscheme ts =
-       match us_opt with
-       | None -> inst_tscheme ts
-       | Some us -> inst_tscheme_with ts us
+  let inst_tscheme us_opt ts =
+    match us_opt with
+    | None -> inst_tscheme ts
+    | Some us -> inst_tscheme_with ts us
+  in
+  match se.sigel with
+  | Sig_new_effect(ne) ->
+    let ne_us, sig_us =
+      match us_opt with
+      | None -> None, None
+      | Some us ->
+        if List.length us <> List.length ne.univs + List.length (fst ne.signature)
+        then failwith "effect_signature: insufficient number of universes"
+        else
+          let ne_us, sig_us = List.splitAt (List.length ne.univs) us in
+          Some ne_us, Some sig_us
     in
-    match se.sigel with
-    | Sig_new_effect(ne) ->
-        Some (inst_tscheme (ne.univs, U.arrow ne.binders (ne.signature |> snd |> mk_Total)), se.sigrng)
+    let sig_us, signature_t = inst_tscheme sig_us ne.signature in
+    let ne_us, signature_t = inst_tscheme ne_us (ne.univs, U.arrow ne.binders (mk_Total signature_t)) in
+    Some ((ne_us @ sig_us, signature_t), se.sigrng)
 
-    | Sig_effect_abbrev (lid, us, binders, _, _) ->
-        Some (inst_tscheme (us, U.arrow binders (mk_Total teff)), se.sigrng)
+  | Sig_effect_abbrev (lid, us, binders, _, _) ->
+    Some (inst_tscheme us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
 
-    | _ -> None
+  | _ -> None
 
 let try_lookup_lid_aux us_opt env lid =
   let inst_tscheme ts =
@@ -1059,7 +1071,12 @@ let wp_sig_aux decls m =
   match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
   | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some (md, _q) ->
-    let _, s = inst_tscheme (md.univs, md.signature |> snd) in
+    (*
+     * AR: this code used to be inst_tscheme md.univs md.signature
+     *     i.e. implicitly there was an assumption that ed.binders is empty
+     *     now when signature is itself a tscheme, this just translates to the following
+     *)
+    let _, s = inst_tscheme md.signature in
     let s = Subst.compress s in
     match md.binders, s.n with
       | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
@@ -1236,7 +1253,7 @@ let rec unfold_effect_abbrev env comp =
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
-let effect_repr_aux only_reifiable env c u_c =
+let effect_repr_aux only_reifiable env c u_c =  (* AR: TODO: FIXME *)
     let effect_name = norm_eff_name env (U.comp_effect_name c) in
     match effect_decl_opt env effect_name with
     | None -> None

@@ -310,7 +310,8 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
 
   let cl ts =
     let ts = SS.close_tscheme ed_bs ts in
-    SS.close_univ_vars_tscheme ed_univs ts in 
+    let ed_univs_closing = SS.univ_var_closing ed_univs in
+    SS.subst_tscheme (SS.shift_subst (List.length ed_bs) ed_univs_closing) ts in
   
   //univs and binders have already been set
   let ed = { ed with
