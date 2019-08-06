@@ -156,7 +156,7 @@ let extend_sprop (#r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_o
 #push-options "--z3rlimit 30"
 
 let hsrefine (r:resource) (p:sprop r) : resource =
-  let new_inv (h: HS.mem) = r.view.inv h /\ p (mk_selector r h) in
+  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_selector r h) in
   let new_view = { r.view with inv = new_inv } in
   reveal_view ();
   let open LowStar.Array in

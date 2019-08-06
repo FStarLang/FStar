@@ -25,7 +25,7 @@ abstract
 let ptr_view (#a:Type) (ptr:pointer a) : view (vptr a) =
   reveal_view ();
   let fp = Ghost.hide (A.loc_array ptr) in
-  let inv h = A.live h ptr /\ A.vlength ptr = 1 in
+  let inv (h: HS.mem): prop = A.live h ptr /\ A.vlength ptr = 1 in
   let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = Ghost.hide (A.get_perm h ptr 0)} in
   {
     fp = fp;
