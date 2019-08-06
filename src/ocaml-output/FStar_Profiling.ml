@@ -49,60 +49,64 @@ let (create_or_lookup_counter : Prims.string -> counter) =
         let c = new_counter cid  in
         (FStar_Util.smap_add all_counters cid c; c)
   
-let profile : 'a . (unit -> 'a) -> Prims.string -> Prims.string -> 'a =
+let profile :
+  'a .
+    (unit -> 'a) ->
+      Prims.string FStar_Pervasives_Native.option -> Prims.string -> 'a
+  =
   fun f  ->
     fun module_name  ->
       fun cid  ->
-        let uu____241 = FStar_Options.profile_enabled module_name cid  in
-        if uu____241
+        let uu____245 = FStar_Options.profile_enabled module_name cid  in
+        if uu____245
         then
           let c = create_or_lookup_counter cid  in
-          let uu____245 = FStar_ST.op_Bang c.running  in
-          (if uu____245
+          let uu____249 = FStar_ST.op_Bang c.running  in
+          (if uu____249
            then f ()
            else
              (try
-                (fun uu___31_278  ->
+                (fun uu___31_282  ->
                    match () with
                    | () ->
                        (FStar_ST.op_Colon_Equals c.running true;
-                        (let uu____302 = FStar_Util.record_time f  in
-                         match uu____302 with
+                        (let uu____306 = FStar_Util.record_time f  in
+                         match uu____306 with
                          | (res,elapsed) ->
-                             ((let uu____313 =
-                                 let uu____315 =
+                             ((let uu____317 =
+                                 let uu____319 =
                                    FStar_ST.op_Bang c.total_time  in
-                                 uu____315 + elapsed  in
+                                 uu____319 + elapsed  in
                                FStar_ST.op_Colon_Equals c.total_time
-                                 uu____313);
+                                 uu____317);
                               FStar_ST.op_Colon_Equals c.running false;
                               res)))) ()
               with
-              | uu___30_385 ->
+              | uu___30_389 ->
                   (FStar_ST.op_Colon_Equals c.running false;
                    FStar_ST.op_Colon_Equals c.undercount true;
-                   FStar_Exn.raise uu___30_385)))
+                   FStar_Exn.raise uu___30_389)))
         else f ()
   
 let (report_and_clear : unit -> unit) =
-  fun uu____439  ->
+  fun uu____443  ->
     FStar_Util.smap_iter all_counters
-      (fun uu____445  ->
+      (fun uu____449  ->
          fun c  ->
            let warn =
-             let uu____450 = FStar_ST.op_Bang c.running  in
-             if uu____450
+             let uu____454 = FStar_ST.op_Bang c.running  in
+             if uu____454
              then " (Warning, this counter is still running)"
              else
-               (let uu____478 = FStar_ST.op_Bang c.undercount  in
-                if uu____478
+               (let uu____482 = FStar_ST.op_Bang c.undercount  in
+                if uu____482
                 then
                   " (Warning, some operations raised exceptions and we not accounted for)"
                 else "")
               in
-           let uu____507 =
-             let uu____509 = FStar_ST.op_Bang c.total_time  in
-             FStar_Util.string_of_int uu____509  in
-           FStar_Util.print3 "Profiled %s:\t %s ms%s\n" c.cid uu____507 warn);
+           let uu____511 =
+             let uu____513 = FStar_ST.op_Bang c.total_time  in
+             FStar_Util.string_of_int uu____513  in
+           FStar_Util.print3 "Profiled %s:\t %s ms%s\n" c.cid uu____511 warn);
     FStar_Util.smap_clear all_counters
   

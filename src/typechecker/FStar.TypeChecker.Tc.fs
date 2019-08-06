@@ -1849,7 +1849,7 @@ let tc_decls env ses =
     let r =
       Profiling.profile
                  (fun () -> process_one_decl acc se)
-                 (Ident.string_of_lid (Env.current_module env))
+                 (Some (Ident.string_of_lid (Env.current_module env)))
                  "TypeCheckDecl"
     in
     if Options.profile_group_by_decls() then Profiling.report_and_clear();

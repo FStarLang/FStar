@@ -55,7 +55,7 @@ let create_or_lookup_counter cid =
     c
 
 (* Time an operation, if the the profiler is enabled *)
-let profile  (f: unit -> 'a) (module_name:string) (cid:string) : 'a =
+let profile  (f: unit -> 'a) (module_name:option<string>) (cid:string) : 'a =
   if Options.profile_enabled module_name cid
   then let c = create_or_lookup_counter cid in
        if !c.running

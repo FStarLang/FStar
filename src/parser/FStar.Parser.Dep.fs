@@ -38,7 +38,7 @@ open FStar.Errors
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
-let profile f = Profiling.profile f "" "Dependencies"
+let profile f = Profiling.profile f None "Dependencies"
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
@@ -1204,7 +1204,7 @@ let collect (all_cmd_line_files: list<file_name>)
   in
 
   let parse_results = BU.smap_create 40 in
-
+  
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
   let rec discover_one (file_name:file_name) =

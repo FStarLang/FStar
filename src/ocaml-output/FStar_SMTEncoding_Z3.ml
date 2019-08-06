@@ -1048,20 +1048,22 @@ let z3_job :
               fun name  ->
                 fun uu____5279  ->
                   let uu____5288 =
-                    let uu____5298 = query_logging.get_module_name ()  in
+                    let uu____5298 =
+                      let uu____5302 = query_logging.get_module_name ()  in
+                      FStar_Pervasives_Native.Some uu____5302  in
                     FStar_Profiling.profile
-                      (fun uu____5310  ->
+                      (fun uu____5315  ->
                          try
-                           (fun uu___501_5321  ->
+                           (fun uu___501_5326  ->
                               match () with
                               | () ->
                                   FStar_Util.record_time
-                                    (fun uu____5336  ->
+                                    (fun uu____5341  ->
                                        doZ3Exe log_file r fresh input
                                          label_messages)) ()
                          with
-                         | uu___500_5339 ->
-                             (refresh (); FStar_Exn.raise uu___500_5339))
+                         | uu___500_5344 ->
+                             (refresh (); FStar_Exn.raise uu___500_5344))
                       uu____5298 "SMT"
                      in
                   match uu____5288 with
@@ -1107,19 +1109,19 @@ let (ask :
                            (FStar_List.append qry
                               [FStar_SMTEncoding_Term.Pop]))
                        in
-                    let uu____5519 = filter_theory theory1  in
-                    match uu____5519 with
+                    let uu____5524 = filter_theory theory1  in
+                    match uu____5524 with
                     | (theory2,_used_unsat_core) ->
-                        let uu____5535 = mk_input fresh theory2  in
-                        (match uu____5535 with
+                        let uu____5540 = mk_input fresh theory2  in
+                        (match uu____5540 with
                          | (input,qhash,log_file_name) ->
-                             let uu____5566 =
-                               let uu____5568 =
+                             let uu____5571 =
+                               let uu____5573 =
                                  fresh &&
                                    (cache_hit log_file_name cache qhash cb)
                                   in
-                               Prims.op_Negation uu____5568  in
-                             if uu____5566
+                               Prims.op_Negation uu____5573  in
+                             if uu____5571
                              then
                                run_job
                                  {

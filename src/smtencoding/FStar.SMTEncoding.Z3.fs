@@ -604,7 +604,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
         with e ->
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
-      (query_logging.get_module_name())
+      (Some (query_logging.get_module_name()))
       "SMT"
   in
   { z3result_status     = status;

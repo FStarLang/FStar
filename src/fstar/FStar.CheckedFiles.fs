@@ -388,7 +388,7 @@ let load_module_from_cache =
     in
     Profiling.profile
       load_it
-      ""
+      None
       "LoadCheckedFile"
 
 

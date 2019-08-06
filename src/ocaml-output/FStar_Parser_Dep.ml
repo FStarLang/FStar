@@ -1,6 +1,8 @@
 open Prims
 let profile : 'Auu____14 . (unit -> 'Auu____14) -> 'Auu____14 =
-  fun f  -> FStar_Profiling.profile f "" "Dependencies" 
+  fun f  ->
+    FStar_Profiling.profile f FStar_Pervasives_Native.None "Dependencies"
+  
 type verify_mode =
   | VerifyAll 
   | VerifyUserList 

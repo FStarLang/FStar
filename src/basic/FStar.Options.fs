@@ -269,7 +269,7 @@ let defaults =
                                       , Bool true);
       ("profile_group_by_decl"        , Bool false);
       ("profile_phase"                , List []);
-      ("profile_module"               , List []);
+      ("profile_module"               , Unset);
       ]
 
 let parse_warn_error_set_get =
@@ -417,9 +417,9 @@ let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" 
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_phase           ()      = lookup_opt "profile_phase"            as_comma_string_list
-let get_profile_module          ()      = lookup_opt "profile_module"           as_comma_string_list
 
 let dlevel = function
    | "Low" -> Low
@@ -1172,10 +1172,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Accumulated (OpenEnumStr (["Normalize"; "SMT"], "...")),
         "Control which phase to profile");
 
-        ( noshort,
-        "profile_module",
-        Accumulated (OpenEnumStr ([], "...")),
-        "Control which module to profile");
+       ( noshort,
+         "profile",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\Profile the compiler when processing only those modules whose names or namespaces match selector.\n\t\t\t\
+          See the help for extract, using_facts_from, etc. for how to use module and namespace selectors");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
@@ -1469,10 +1470,6 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
-let profile_enabled modul l2 =
-  (modul = "" ||
-   get_profile_module () |> (List.existsb (module_name_eq modul)))
-  && List.contains l2 (get_profile_phase())
 let profile_group_by_decls () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
@@ -1661,3 +1658,16 @@ let error_flags =
           Util.smap_add cache we r;
           r
         | Some r -> r
+
+let profile_enabled modul_opt phase =
+  let phase_enabled p = List.contains phase (get_profile_phase()) in
+  match modul_opt with
+  | None -> //the phase is not associated with a module
+    phase_enabled phase
+
+  | Some modul ->
+     match get_profile () with
+     | None -> false //all module profiling phases are disabled
+     | Some filter ->
+       module_matches_namespace_filter modul filter
+       && phase_enabled phase

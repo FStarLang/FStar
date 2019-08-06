@@ -2531,7 +2531,7 @@ let normalize_with_primitive_steps ps s e t =
 
 let normalize s e t =
     P.profile (fun () -> normalize_with_primitive_steps [] s e t)
-              (Ident.string_of_lid (Env.current_module e))
+              (Some (Ident.string_of_lid (Env.current_module e)))
               "Normalizer"
 
 let normalize_comp s e t = norm_comp (config s e) [] t

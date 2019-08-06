@@ -3,7 +3,7 @@ module FStar.Profiling
 open FStar.All
 
 val profile : f:(unit -> 'b)
-            -> module_name:string
+            -> module_name:option<string>
             -> phase_name:string
             -> 'b
 

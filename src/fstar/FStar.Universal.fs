@@ -315,7 +315,7 @@ let tc_one_file
 
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
-                              fmod.name.str
+                              (Some fmod.name.str)
                               "Typechecker"
           in
 
@@ -391,7 +391,7 @@ let tc_one_file
         let env =
           Profiling.profile
             (fun () -> with_tcenv_of_env env (extend_tcenv tcmod) |> snd)
-            ""
+            None
             "ExtendTcEnv"
         in
 
