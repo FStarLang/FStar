@@ -1356,7 +1356,8 @@ let (eff_decl_to_string' :
                         in
                      let uu____3822 =
                        let uu____3826 =
-                         term_to_string ed.FStar_Syntax_Syntax.signature  in
+                         tscheme_to_string ed.FStar_Syntax_Syntax.signature
+                          in
                        let uu____3828 =
                          let uu____3832 =
                            tscheme_to_string ed.FStar_Syntax_Syntax.ret_wp
@@ -1392,7 +1393,7 @@ let (eff_decl_to_string' :
                                         in
                                      let uu____3870 =
                                        let uu____3874 =
-                                         term_to_string
+                                         tscheme_to_string
                                            ed.FStar_Syntax_Syntax.repr
                                           in
                                        let uu____3876 =
