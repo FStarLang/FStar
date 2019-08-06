@@ -661,3 +661,20 @@ let tlabel' (l:string) =
 let focus_all () : Tac unit =
     set_goals (goals () @ smt_goals ());
     set_smt_goals []
+
+private
+let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+  match n, l with
+  | _, [] -> None
+  | 0, hd::tl -> Some (hd, tl)
+  | _, hd::tl -> begin
+    match extract_nth (n-1) tl with
+    | Some (hd', tl') -> Some (hd', hd::tl')
+    | None -> None
+  end
+
+let bump_nth (n:pos) : Tac unit =
+  // n-1 since goal numbering begins at 1
+  match extract_nth (n - 1) (goals ()) with
+  | None -> fail "bump_nth: not that many goals"
+  | Some (h, t) -> set_goals (h :: t)
