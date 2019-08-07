@@ -210,7 +210,7 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
   log_combinator "repr" repr;
 
-  let fresh_repr (r:Range.range) env u (a_bv:bv) : term * guard_t =
+  let fresh_repr (r:Range.range) env u a_tm : term * guard_t =
     let signature = let us, t, _ = signature in (us, t) in
     let fail t = raise_error (Err.unexpected_signature_for_monad env0 ed.mname t) (snd ed.signature).pos in
     let _, signature = Env.inst_tscheme signature in
@@ -222,13 +222,13 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
          let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
            let t, _, g_t = TcUtil.new_implicit_var "" r env (SS.subst substs b.sort) in  //AR: TODO: FIXME: set the empty string properly
            is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
-         ) ([], Env.trivial_guard, [NT (fst a, bv_to_name a_bv)]) bs in
+         ) ([], Env.trivial_guard, [NT (fst a, a_tm)]) bs in
          
          let repr_ts = let us, t, _ = repr in (us, t) in
          let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
          S.mk_Tm_app
            repr
-           (List.map S.as_arg ((S.bv_to_name a_bv)::is))
+           (List.map S.as_arg (a_tm::is))
            None r, g
        | _ -> fail signature)
     | _ -> fail signature in
@@ -253,7 +253,7 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
          | _ -> failwith "Impossible!")
       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
     let bs = a::x_a::rest_bs in
-    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a) in
+    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
@@ -282,13 +282,13 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
     let bs = a::b::rest_bs in
     let f, g_f =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a) in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
     let g, g_g =
       let x_a = fresh_x_a "x" a in
-      let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (fst b) in
+      let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (fst b |> S.bv_to_name) in
       S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some u_b))) |> S.mk_binder, g in
-    let repr, g_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b) in
+    let repr, g_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b |> S.bv_to_name) in
     let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
     let g_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [g_f; g_g; g_repr; g_eq];
@@ -297,6 +297,15 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   log_combinator "bind_repr" bind_repr;
 
   //AR: TODO: FIXME: rest of the combinators
+
+  let tc_action env (act:action) : action =
+    if List.length act.action_params <> 0
+    then failwith "tc_layered_eff_decl: expected action_params to be empty";
+
+    let env, act =
+      let usubst, us = SS.univ_var_opening act.action_univs in
+
+  act in
 
   let fst (a, _, _) = a in
   let snd (_, b, _) = b in
