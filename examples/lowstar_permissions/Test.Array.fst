@@ -52,7 +52,7 @@ let read_write_without_sharing () : RST.RST unit
   A.free b;
   ()
 
-#set-options "--warn_error '-271-296' --z3rlimit 1000"
+#set-options "--z3rlimit 20"
 let read_write_with_sharing () : RST.RST unit
   (R.empty_resource)
   (fun _ -> R.empty_resource)
@@ -87,7 +87,6 @@ let read_write_with_sharing () : RST.RST unit
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
     (fun _ -> A.glue b b_first b_second);
-
   let sel = RST.get R.(A.array_resource b <*> A.array_resource b1) in
   assume(A.summable_permissions b b1 sel);
   A.gather b b1;
