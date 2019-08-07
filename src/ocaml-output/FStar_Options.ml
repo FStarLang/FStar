@@ -1257,12 +1257,12 @@ let rec (specs_with_types :
       (Accumulated
          (SimpleStr
             "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'")),
-      "\n\t\nSpecific source locations in the compiler are instrumented with profiling counters.\n\t\n          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t\n          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+      "\n\tSpecific source locations in the compiler are instrumented with profiling counters.\n\tPass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\tThis option is a module or namespace selector, like many other options (e.g., `--extract`)");
     (FStar_Getopt.noshort, "profile",
       (Accumulated
          (SimpleStr
             "One or more space-separated occurrences of '[+|-]( * | namespace | module)'")),
-      "\n\t\nProfiling can be enabled when the compiler is processing a given set of source modules.\n\t\n          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t\n          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+      "\n\tProfiling can be enabled when the compiler is processing a given set of source modules.\n\tPass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\tThis option is a module or namespace selector, like many other options (e.g., `--extract`)");
     (104, "help",
       (WithSideEffect
          (((fun uu____7114  ->
