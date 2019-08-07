@@ -38,7 +38,7 @@ open FStar.Errors
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
-let profile f = Profiling.profile f None "Dependencies"
+let profile f c = Profiling.profile f None c
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
@@ -1237,7 +1237,7 @@ let collect (all_cmd_line_files: list<file_name>)
                       (deps @ mo_roots))
     end
   in
-  profile (fun () -> List.iter discover_one all_cmd_line_files);
+  profile (fun () -> List.iter discover_one all_cmd_line_files) "FStar.Parser.Dep.discover";
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected dep_graph cycle filename =
@@ -1351,6 +1351,7 @@ let collect (all_cmd_line_files: list<file_name>)
            inlining_ifaces
            all_cmd_line_files
            (Options.codegen()<>None))
+      "FStar.Parser.Dep.topological_dependences_of"
   in
   if Options.debug_any()
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
@@ -1512,10 +1513,7 @@ let print_full (deps:deps) : unit =
             in
             let files = List.map norm_path files in
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-            let files =
-                profile
-                  (fun () -> String.concat "\\\n\t" files)
-            in
+            let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
             let all_checked_files =
@@ -1539,6 +1537,7 @@ let print_full (deps:deps) : unit =
                      deps.interfaces_with_inlining
                      [file_name]
                      widened)
+                    "FStar.Parser.Dep.topological_dependences_of_2"
               else
                    let maybe_widen_deps (f_deps:dependences) =
                       List.map
@@ -1625,7 +1624,7 @@ let print_full (deps:deps) : unit =
           in
           all_checked_files
         in
-        profile process_one_key)
+        profile process_one_key "FStar.Parser.Dep.process_one_key")
         []
     in
     let all_fst_files =
@@ -1673,7 +1672,7 @@ let print deps =
   | Some "make" ->
       print_make deps
   | Some "full" ->
-      profile (fun () -> print_full deps)
+      profile (fun () -> print_full deps) "FStar.Parser.Deps.print_full_deps"
   | Some "graph" ->
       print_graph deps.dep_graph
   | Some "raw" ->

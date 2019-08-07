@@ -389,7 +389,7 @@ let load_module_from_cache =
     Profiling.profile
       load_it
       None
-      "LoadCheckedFile"
+      "FStar.CheckedFiles"
 
 
 (*

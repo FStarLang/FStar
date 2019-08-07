@@ -2532,7 +2532,7 @@ let normalize_with_primitive_steps ps s e t =
 let normalize s e t =
     P.profile (fun () -> normalize_with_primitive_steps [] s e t)
               (Some (Ident.string_of_lid (Env.current_module e)))
-              "Normalizer"
+              "FStar.TypeChecker.Normalize"
 
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u

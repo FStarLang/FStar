@@ -1668,8 +1668,8 @@ let error_flags =
 let profile_enabled modul_opt phase =
   match modul_opt with
   | None -> //the phase is not associated with a module
-    module_matches_namespace_filter_opt phase (get_profile_phase())
+    matches_namespace_filter_opt phase (get_profile_component())
 
   | Some modul ->
-    module_matches_namespace_filter modul (get_profile())
-    && module_matches_namespace_filter_opt phase (get_profile_phase())
+    matches_namespace_filter_opt modul (get_profile())
+    && matches_namespace_filter_opt phase (get_profile_component())

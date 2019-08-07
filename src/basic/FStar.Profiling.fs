@@ -56,7 +56,7 @@ let create_or_lookup_counter cid =
 
 (* Time an operation, if the the profiler is enabled *)
 let profile  (f: unit -> 'a) (module_name:option<string>) (cid:string) : 'a =
-  if Options.profile_enabled module_name cid
+  if Options.profile_enabled  module_name cid
   then let c = create_or_lookup_counter cid in
        if !c.running
        then f ()
@@ -76,17 +76,24 @@ let profile  (f: unit -> 'a) (module_name:option<string>) (cid:string) : 'a =
   else f()
 
 (* Report all profiles and clear all counters *)
-let report_and_clear () =
-    BU.smap_iter all_counters
-      (fun _ c ->
+let report_and_clear tag =
+    let ctrs =
+      BU.smap_fold all_counters (fun _ v l -> v :: l) []
+    in
+    BU.smap_clear all_counters;
+    let ctrs =
+      BU.sort_with (fun c1 c2 -> !c2.total_time - !c1.total_time) ctrs
+    in
+    ctrs |> List.iter
+      (fun c ->
         let warn = if !c.running
                    then " (Warning, this counter is still running)"
                    else if !c.undercount
                    then " (Warning, some operations raised exceptions and we not accounted for)"
                    else ""
         in
-        BU.print3 "Profiled %s:\t %s ms%s\n"
+        BU.print4 "%s, profiled %s:\t %s ms%s\n"
+                      tag
                       c.cid
                       (BU.string_of_int (!c.total_time))
-                      warn);
-    BU.smap_clear all_counters
+                      warn)

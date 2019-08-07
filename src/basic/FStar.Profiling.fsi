@@ -7,4 +7,4 @@ val profile : f:(unit -> 'b)
             -> phase_name:string
             -> 'b
 
-val report_and_clear: unit -> unit
+val report_and_clear: tag:string -> unit

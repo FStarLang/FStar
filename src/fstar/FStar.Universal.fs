@@ -316,7 +316,7 @@ let tc_one_file
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
                               (Some fmod.name.str)
-                              "Typechecker"
+                              "FStar.Universal.tc_source_file"
           in
 
           let tc_time = 0 in
@@ -392,7 +392,7 @@ let tc_one_file
           Profiling.profile
             (fun () -> with_tcenv_of_env env (extend_tcenv tcmod) |> snd)
             None
-            "ExtendTcEnv"
+            "FStar.Universal.extend_tcenv"
         in
 
 
@@ -446,12 +446,12 @@ let tc_one_file_from_remaining (remaining:list<string>) (env:uenv)
         | intf :: impl :: remaining when needs_interleaving intf impl ->
           let m, mllib, env = tc_one_file env (Some intf) impl
                                           (impl |> FStar.Parser.Dep.parsing_data_of deps) in
-          remaining, ([m], mllib, env)
+          remaining, (m, mllib, env)
         | intf_or_impl :: remaining ->
           let m, mllib, env = tc_one_file env None intf_or_impl
                                           (intf_or_impl |> FStar.Parser.Dep.parsing_data_of deps) in
-          remaining, ([m], mllib, env)
-        | [] -> [], ([], None, env)
+          remaining, (m, mllib, env)
+        | [] -> failwith "Impossible: Empty remaining modules"
   in
   remaining, nmods, mllib, env
 
@@ -463,9 +463,10 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
     | [] -> acc
     | _  ->
       let mods, mllibs, env = acc in
-      let remaining, nmods, mllib, env = tc_one_file_from_remaining remaining env deps in
-      if not (Options.profile_group_by_decls()) then Profiling.report_and_clear();
-      tc_fold_interleave deps (mods@nmods, mllibs@as_list mllib, env) remaining
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env deps in
+      if not (Options.profile_group_by_decls())
+      then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
+      tc_fold_interleave deps (mods@[nmod], mllibs@as_list mllib, env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)

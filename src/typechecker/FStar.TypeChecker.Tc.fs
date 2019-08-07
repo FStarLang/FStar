@@ -1850,9 +1850,17 @@ let tc_decls env ses =
       Profiling.profile
                  (fun () -> process_one_decl acc se)
                  (Some (Ident.string_of_lid (Env.current_module env)))
-                 "TypeCheckDecl"
+                 "FStar.TypeChecker.Tc.process_one_decl"
     in
-    if Options.profile_group_by_decls() then Profiling.report_and_clear();
+    if Options.profile_group_by_decls()
+    then begin
+         let tag =
+          match lids_of_sigelt se with
+          | hd::_ -> Ident.string_of_lid hd
+          | _ -> Range.string_of_range (range_of_sigelt se)
+         in
+         Profiling.report_and_clear tag
+    end;
     r
   in
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
