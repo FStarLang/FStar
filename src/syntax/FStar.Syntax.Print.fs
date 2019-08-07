@@ -637,7 +637,7 @@ let eff_decl_to_string' for_free r q ed =
         List.map action_to_string |>
         String.concat ",\n\t" in
     let eff_name = if ed.is_layered then "layered_effect" else "new_effect" in
-    let match_wps =
+    let match_wps_string =
       match ed.match_wps with
       | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->
         U.format3 "{\n\
@@ -667,15 +667,15 @@ let eff_decl_to_string' for_free r q ed =
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
-         term_to_string ed.signature;
+         tscheme_to_string ed.signature;
          tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.stronger;
-         match_wps;
+         match_wps_string;
          (match ed.trivial with
           | None -> ""
           | Some t -> tscheme_to_string t);
-         term_to_string ed.repr;
+         tscheme_to_string ed.repr;
          tscheme_to_string ed.return_repr;
          tscheme_to_string ed.bind_repr;
          (match ed.stronger_repr with

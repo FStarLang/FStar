@@ -84,7 +84,7 @@ let is_definition_of x d =
       val b
       let b
 
-   Essentially, we need to check that the definition of a matches
+   Essentially, we need to check that the definition of `a` matches
    its signature in `val a : ta` before we allow `a` to be used
    in the signature `val b : tb` and its corresponding definition
    `let b : eb`.
@@ -179,6 +179,10 @@ let rec prefix_with_iface_decls
             let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
             rest_iface, iface_hd::take_iface@[impl]
 
+
+     | Pragma _ ->
+        (* Don't interleave pragmas on interface into implementation *)
+        prefix_with_iface_decls iface_tl impl
 
      | _ ->
        let iface, ds = prefix_with_iface_decls iface_tl impl in

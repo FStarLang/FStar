@@ -1352,13 +1352,13 @@ type eff_decl =
   mname: FStar_Ident.lident ;
   univs: univ_names ;
   binders: binders ;
-  signature: term ;
+  signature: tscheme ;
   ret_wp: tscheme ;
   bind_wp: tscheme ;
   stronger: tscheme ;
   match_wps: (match_with_close,match_with_subst) FStar_Util.either ;
   trivial: tscheme FStar_Pervasives_Native.option ;
-  repr: term ;
+  repr: tscheme ;
   return_repr: tscheme ;
   bind_repr: tscheme ;
   stronger_repr: tscheme FStar_Pervasives_Native.option ;
@@ -1399,7 +1399,7 @@ let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
         bind_wp; stronger; match_wps; trivial; repr; return_repr; bind_repr;
         stronger_repr; actions; eff_attrs;_} -> binders
   
-let (__proj__Mkeff_decl__item__signature : eff_decl -> term) =
+let (__proj__Mkeff_decl__item__signature : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
     | { is_layered; cattributes; mname; univs; binders; signature; ret_wp;
@@ -1443,7 +1443,7 @@ let (__proj__Mkeff_decl__item__trivial :
         bind_wp; stronger; match_wps; trivial; repr; return_repr; bind_repr;
         stronger_repr; actions; eff_attrs;_} -> trivial
   
-let (__proj__Mkeff_decl__item__repr : eff_decl -> term) =
+let (__proj__Mkeff_decl__item__repr : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
     | { is_layered; cattributes; mname; univs; binders; signature; ret_wp;

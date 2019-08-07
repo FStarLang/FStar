@@ -2459,13 +2459,13 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
              cattributes   = [];
              univs         = [];
              binders       = binders;
-             signature     = eff_t;
+             signature     = ([], eff_t);
              ret_wp        = dummy_tscheme;
              bind_wp       = dummy_tscheme;
              stronger      = dummy_tscheme;
              match_wps     = match_wps;
              trivial       = None;
-             repr          = snd (lookup "repr");
+             repr          = lookup "repr";
              return_repr   = lookup "return";
              bind_repr     = lookup "bind";
              stronger_repr = None;
@@ -2484,13 +2484,13 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
              cattributes   = [];
              univs         = [];
              binders       = binders;
-             signature     = eff_t;
+             signature     = ([], eff_t);
              ret_wp        = dummy_tscheme;
              bind_wp       = dummy_tscheme;
              stronger      = dummy_tscheme;
              match_wps     = Inr ({ conjunction = lookup "conjunction" });
              trivial       = None;
-             repr          = snd <| lookup "repr";
+             repr          = lookup "repr";
              return_repr   = lookup "return";
              bind_repr     = lookup "bind";
              stronger_repr = Some (lookup "stronger");
@@ -2517,13 +2517,13 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
              cattributes   = [];
              univs         = [];
              binders       = binders;
-             signature     = eff_t;
+             signature     = ([], eff_t);
              ret_wp        = lookup "return_wp";
              bind_wp       = lookup "bind_wp";
              stronger      = lookup "stronger";
              match_wps     = match_wps;
              trivial       = Some (lookup "trivial");
-             repr          = (if rr then snd <| lookup "repr" else S.tun);
+             repr          = (if rr then lookup "repr" else ([], S.tun));
              return_repr   = (if rr then lookup "return" else un_ts);
              bind_repr     = (if rr then lookup "bind" else un_ts);
              stronger_repr = None;
@@ -2585,15 +2585,15 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             cattributes   = cattributes;
             univs         = ed.univs;
             binders       = binders;
-            signature     = snd (sub ([], ed.signature));
-            ret_wp        = sub ed.ret_wp;
-            bind_wp       = sub ed.bind_wp;
-            stronger      = sub ed.stronger;
+            signature     =sub ed.signature;
+            ret_wp        =sub ed.ret_wp;
+            bind_wp       =sub ed.bind_wp;
+            stronger      =sub ed.stronger;
             match_wps     = U.map_match_wps sub ed.match_wps;
             trivial       = map_opt ed.trivial sub;
-            repr          = snd (sub ([], ed.repr));
-            return_repr   = sub ed.return_repr;
-            bind_repr     = sub ed.bind_repr;
+            repr          =sub ed.repr;
+            return_repr   =sub ed.return_repr;
+            bind_repr     =sub ed.bind_repr;
             stronger_repr = map_opt ed.stronger_repr sub;
             actions       = List.map (fun action ->
                 let nparam = List.length action.action_params in
@@ -2614,7 +2614,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     } in
     let se =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
-      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
+      let for_free = List.length (fst (ed.signature |> snd |> U.arrow_formals)) = 1 in
       { sigel = if for_free then Sig_new_effect_for_free (ed) else Sig_new_effect (ed);
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
@@ -2979,10 +2979,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
     let attrs = d.attrs in
-    let env, l = desugar_effect env d quals false eff_name eff_binders eff_typ eff_decls attrs in
-    BU.print1 "Desugared layered effect: %s"
-      (List.fold_left (fun s sigelt -> s ^ "\n\n" ^ (Print.sigelt_to_string sigelt)) "" l);
-    env, l
+    desugar_effect env d quals false eff_name eff_binders eff_typ eff_decls attrs
 
   | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
@@ -3156,19 +3153,19 @@ let add_modul_to_env (m:Syntax.modul)
                 }
           in
             { ed with
-               univs         = [];
-               binders       = Subst.close_binders binders;
-               signature     = erase_term ed.signature;
-               ret_wp        = erase_tscheme ed.ret_wp;
-               bind_wp       = erase_tscheme ed.bind_wp;
-               stronger      = erase_tscheme ed.stronger;
-               match_wps     = U.map_match_wps erase_tscheme ed.match_wps;
-               trivial       = map_opt ed.trivial erase_tscheme;
-               repr          = erase_term ed.repr;
-               return_repr   = erase_tscheme ed.return_repr;
-               bind_repr     = erase_tscheme ed.bind_repr;
-               stronger_repr = map_opt ed.stronger_repr erase_tscheme;
-               actions       = List.map erase_action ed.actions
+              univs         = [];
+              binders       = Subst.close_binders binders;
+              signature     = erase_tscheme ed.signature;
+              ret_wp        = erase_tscheme ed.ret_wp;
+              bind_wp       = erase_tscheme ed.bind_wp;
+              stronger      = erase_tscheme ed.stronger;
+              match_wps     = U.map_match_wps erase_tscheme ed.match_wps;
+              trivial       = map_opt ed.trivial erase_tscheme;
+              repr          = erase_tscheme ed.repr;
+              return_repr   = erase_tscheme ed.return_repr;
+              bind_repr     = erase_tscheme ed.bind_repr;
+              stronger_repr = map_opt ed.stronger_repr erase_tscheme;
+              actions       = List.map erase_action ed.actions
           }
       in
       let push_sigelt env se =

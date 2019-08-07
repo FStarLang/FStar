@@ -1345,7 +1345,7 @@ let (eff_decl_to_string' :
                if ed.FStar_Syntax_Syntax.is_layered
                then "layered_effect"
                else "new_effect"  in
-             let match_wps =
+             let match_wps_string =
                match ed.FStar_Syntax_Syntax.match_wps with
                | FStar_Util.Inl
                    { FStar_Syntax_Syntax.if_then_else = t1;
@@ -1379,7 +1379,7 @@ let (eff_decl_to_string' :
                           in
                        let uu____3851 =
                          let uu____3855 =
-                           term_to_string ed.FStar_Syntax_Syntax.signature
+                           tscheme_to_string ed.FStar_Syntax_Syntax.signature
                             in
                          let uu____3857 =
                            let uu____3861 =
@@ -1406,7 +1406,7 @@ let (eff_decl_to_string' :
                                       in
                                    let uu____3888 =
                                      let uu____3892 =
-                                       term_to_string
+                                       tscheme_to_string
                                          ed.FStar_Syntax_Syntax.repr
                                         in
                                      let uu____3894 =
@@ -1439,7 +1439,7 @@ let (eff_decl_to_string' :
                                        uu____3898 :: uu____3900  in
                                      uu____3892 :: uu____3894  in
                                    uu____3883 :: uu____3888  in
-                                 match_wps :: uu____3879  in
+                                 match_wps_string :: uu____3879  in
                                uu____3873 :: uu____3875  in
                              uu____3867 :: uu____3869  in
                            uu____3861 :: uu____3863  in

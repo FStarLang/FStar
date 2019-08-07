@@ -1,18 +1,18 @@
 module LowStar.STExn
 
-type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
+// type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 
-let return (a:Type) (x:a)
-: repr a 1 (fun p -> p x)
-= fun _ -> x
+// let return (a:Type) (x:a)
+// : repr a 1 (fun p -> p x)
+// = fun _ -> x
 
-let bind (a:Type) (b:Type)
-  (n1:nat) (wp1:pure_wp a)
-  (n2:a -> nat) (wp2:a -> pure_wp b)
-  (f:repr a n1 wp1) (g:(x:a -> repr b (n2 x) (wp2 x)))
-: repr b 
+// let bind (a:Type) (b:Type)
+//   (n1:nat) (wp1:pure_wp a)
+//   (n2:a -> nat) (wp2:a -> pure_wp b)
+//   (f:repr a n1 wp1) (g:(x:a -> repr b (n2 x) (wp2 x)))
+// : repr b 
 
-// open FStar.Heap
+// // open FStar.Heap
 // open FStar.ST
 
 // type pre_t = heap -> Type0
