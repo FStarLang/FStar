@@ -1,5 +1,82 @@
 module LowStar.STExn
 
+open FStar.Heap
+open FStar.ST
+
+type pre_t = heap -> Type0
+type post_t (a:Type) = heap -> a -> heap -> Type0
+
+type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
+  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
+
+let return (a:Type) (x:a)
+: repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
+= fun _ -> x
+
+let bind (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
+  (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
+: repr b
+  (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
+  (fun h0 y h2 -> exists (x:a) (h1:heap). post_f h0 x h1 /\ post_g x h1 y h2)
+= fun _ ->
+  let x = f () in
+  g x ()
+
+let stronger (a:Type)
+  (pre_g:pre_t) (post_g:post_t a)
+  (pre_f:pre_t) (post_f:post_t a)
+  (f:repr a pre_f post_f)
+: Pure (repr a pre_g post_g)
+  (requires
+    (forall (h:heap). pre_g h ==> pre_f h) /\
+    (forall (h0 h1:heap) (x:a). post_f h0 x h1 ==> post_g h0 x h1))
+  (ensures fun _ -> True)
+= f
+
+let conjunction (a:Type)
+  (pre_f:pre_t) (post_f:post_t a)
+  (pre_g:pre_t) (post_g:post_t a)
+  : Type
+= repr a
+  (fun h -> pre_f h /\ pre_g h)
+  (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1)
+
+let conjunction_is_stronger_f (a:Type)
+  (pre_f:pre_t) (post_f:post_t a)
+  (pre_g:pre_t) (post_g:post_t a)
+  (f:repr a pre_f post_f)
+: Tot _
+= stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_f post_f f
+
+let conjunction_is_stronger_g (a:Type)
+  (pre_f:pre_t) (post_f:post_t a)
+  (pre_g:pre_t) (post_g:post_t a)
+  (f:repr a pre_g post_g)
+: Tot _
+= stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
+
+let read (a:Type0) (r:ref a)
+: repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
+= fun _ -> read r 
+
+let write (a:Type0) (r:ref a) (x:a)
+: repr unit (fun _ -> True) (fun h0 _ h1 -> sel h1 r == x)
+= fun _ -> write r x
+
+layered_effect {
+  HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
+  with repr        = repr;
+       return      = return;
+       bind        = bind;
+       stronger    = stronger;
+       conjunction = conjunction;
+
+       read = read;
+       write = write
+}
+
+
 // type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 
 // let return (a:Type) (x:a)
@@ -12,83 +89,6 @@ module LowStar.STExn
 //   (f:repr a n1 wp1) (g:(x:a -> repr b (n2 x) (wp2 x)))
 // : repr b 
 
-// // open FStar.Heap
-// open FStar.ST
-
-// type pre_t = heap -> Type0
-// type post_t (a:Type) = heap -> a -> heap -> Type0
-
-// #set-options "--print_universes"
-
-// type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
-//   unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
-
-// let return (a:Type) (x:a)
-// : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
-// = fun _ -> x
-
-// let bind (a:Type) (b:Type)
-//   (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
-//   (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
-// : repr b
-//   (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
-//   (fun h0 y h2 -> exists (x:a) (h1:heap). post_f h0 x h1 /\ post_g x h1 y h2)
-// = fun _ ->
-//   let x = f () in
-//   g x ()
-
-// let stronger (a:Type)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (f:repr a pre_f post_f)
-// : Pure (repr a pre_g post_g)
-//   (requires
-//     (forall (h:heap). pre_g h ==> pre_f h) /\
-//     (forall (h0 h1:heap) (x:a). post_f h0 x h1 ==> post_g h0 x h1))
-//   (ensures fun _ -> True)
-// = f
-
-// let conjunction (a:Type)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   : Type
-// = repr a
-//   (fun h -> pre_f h /\ pre_g h)
-//   (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1)
-
-// let conjunction_is_stronger_f (a:Type)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   (f:repr a pre_f post_f)
-// : Tot _
-// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_f post_f f
-
-// let conjunction_is_stronger_g (a:Type)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   (f:repr a pre_g post_g)
-// : Tot _
-// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
-
-// let read (a:Type0) (r:ref a)
-// : repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
-// = fun _ -> read r 
-
-// let write (a:Type0) (r:ref a) (x:a)
-// : repr unit (fun _ -> True) (fun h0 _ h1 -> sel h1 r == x)
-// = fun _ -> write r x
-
-// layered_effect {
-//   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
-//   with repr        = repr;
-//        return      = return;
-//        bind        = bind;
-//        stronger    = stronger;
-//        conjunction = conjunction;
-
-//        read = read;
-//        write = write
-// }
 
 
 // let mread = HoareST?.read

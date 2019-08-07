@@ -30,8 +30,6 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
-open FStar.TypeChecker.Rel
-open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
 
 module S  = FStar.Syntax.Syntax
@@ -112,87 +110,149 @@ let monad_signature env m s =
   | _ -> fail()
 
 let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
-  failwith "NYI"
-  // if List.length ed.binders <> 0 then
-  //   raise_err (Errors.Error_TypeError,
-  //     "Effect parameters are not yet supported for layered effects: " ^ (string_of_lid ed.mname));
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
+
+  if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
+    raise_error
+      (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ ed.mname.str ^")")
+      (range_of_lid ed.mname);
+
+  let check_and_gen' (comb:string) (n:int) env_opt (us, t) : (univ_names * term * typ) =
+    let env = if is_some env_opt then env_opt |> must else env0 in
+    let us, t = SS.open_univ_vars us t in
+    let t, ty =
+      let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
+      Rel.force_trivial_guard env g;
+      t, lc.res_typ in
+    let g_us, t = TcUtil.generalize_universes env t in
+    let ty = SS.close_univ_vars g_us ty in
+    //check that n = List.length g_us and that if us is set, it is same as g_us
+    begin
+      if List.length g_us <> n then
+        let error = BU.format4
+          "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
+          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int) in
+        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos
+    end;
+    match us with
+    | [] -> g_us, t, ty
+    | _ ->
+     if List.length us = List.length g_us &&
+        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     then g_us, t, ty
+     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+            (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
+               ed.mname.str comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
+            t.pos
+  in
+
+  let log_combinator s (us, t, ty) =
+    if Env.debug env0 <| Options.Other "LayeredEffects" then
+      BU.print4 "Typechecked %s:%s = %s:%s\n"
+        ed.mname.str s
+        (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
   
-  // let univs_opening, annotated_univ_names = SS.univ_var_opening ed.univs in
+  //AR: TODO: FIXME: check that it is of the form a:Type -> ...is... -> Effect, also in tc_eff_decl
+  let signature = check_and_gen' "signature" 1 None ed.signature in
 
-  // let env_uvs = Env.push_univ_vars env0 annotated_univ_names in
-  
-  // //open the effect signature and typecheck it
-  // //TODO: where do we check that the final type is Effect?
-  // let signature0 = ed.signature in  //save the unannotated signature -- will be used later to get a fresh instance when typechecking bind etc.
-  // let signature, _ = tc_trivial_guard env_uvs (SS.subst univs_opening ed.signature) in
-  // let ed = { ed with signature = signature } in
+  log_combinator "signature" signature;
 
-  // //add ed.signature to the environment so that its universe is not generalized until we are done
-  // let env = Env.push_bv env_uvs (S.new_bv None ed.signature) in
+  //AR: TODO: FIXME: check that repr has the type a:Type -> ...is... -> Type
+  let repr = check_and_gen' "repr" 1 None ed.repr in
 
-  // //open effect combinators w.r.t. univs_opening
-  // //we expect other fields to be unset, in particular we will override them
-  // let ed =
-  //   match annotated_univ_names with
-  //   | [] -> ed
-  //   | _ ->
-  //     let op (us, t) = us, SS.subst (SS.shift_subst (List.length us) univs_opening) t in
-  //     { ed with
-  //          univs         = annotated_univ_names;
-  //          match_wps     = U.map_match_wps op ed.match_wps;
-  //          repr          = snd (op ([], ed.repr));
-  //          return_repr   = op ed.return_repr;
-  //          bind_repr     = op ed.bind_repr;
-  //          stronger_repr = map_opt ed.stronger_repr op;
-  //       }
-  // in
+  log_combinator "repr" repr;
 
-  // let get_binders_from_signature signature =
-  //   let fail () = raise_error (Err.unexpected_signature_for_monad env ed.mname signature) (range_of_lid ed.mname) in
-  //   match (SS.compress signature).n with
-  //   | Tm_arrow (bs, c) ->  //TODO: flatten binders in case someone writes a -> Tot (b -> ...)?
-  //     (match bs with
-  //      | (a, _)::indices when List.length indices >= 1 ->
-  //        (match (SS.compress a.sort).n with
-  //         | Tm_type _ -> bs
-  //         | _ -> fail ()) 
-  //      | _ -> fail ())
-  //   | _ -> fail ()
-  // in
+  let fresh_a_and_u_a (a:string) = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
+  let fresh_x_a (x:string) (a:binder) = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
 
-  // //bs are the default (closed) binders that we will work with
-  // let bs =  get_binders_from_signature ed.signature in //a:Type, indices
+  let fresh_repr (r:Range.range) env u (a_bv:bv) : term * guard_t =
+    let signature = let us, t, ty = signature in (us, t) in
+    let fail t = raise_error (Err.unexpected_signature_for_monad env0 ed.mname t) (snd ed.signature).pos in
+    let _, signature = Env.inst_tscheme signature in
+    match (SS.compress signature).n with
+    | Tm_arrow (bs, _) ->
+      let bs = SS.open_binders bs in
+      (match bs with
+       | a::is ->
+         let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
+           let t, _, g_t = TcUtil.new_implicit_var "" r env (SS.subst substs b.sort) in
+           is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
+         ) ([], Env.trivial_guard, [NT (fst a, bv_to_name a_bv)]) is in
+         
+         let repr_ts = let us, t, _ = repr in (us, t) in
+         let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
+         S.mk_Tm_app
+           repr
+           (List.map S.as_arg ((S.bv_to_name a_bv)::is))
+           None r, g
+       | _ -> fail signature)
+    | _ -> fail signature in
 
-  // let check_and_gen env (us, t) k =
-  //   match annotated_univ_names with
-  //   | [] -> check_and_gen env t k
-  //   | _ ->
-  //     let (us, t) = SS.subst_tscheme univs_opening (us, t) in
-  //     let us, t = SS.open_univ_vars us t in
-  //     let t = tc_check_trivial_guard (Env.push_univ_vars env us) t k in
-  //     us, SS.close_univ_vars us t
-  // in
 
-  // //typecheck repr
 
-  // //save the unannotated repr -- will be used later to get a fresh instance when typechecking bind etc.
-  // let repr0 = ed.repr in
-  
-  // let tc_repr repr bs =
-  //   //repr should have the type a:Type -> .. indices .. -> Type
-  //   let expected_repr_type =
-  //     let t, u = U.type_u () in
-  //     U.arrow bs (S.mk_Total' t (Some u)) in
+  let return_repr =
+    let r = (snd ed.return_repr).pos in
+    let ret_us, ret_t, ret_ty = check_and_gen' "return_repr" 1 None ed.return_repr in
 
-  //   let repr = tc_check_trivial_guard env repr expected_repr_type in
+    let us, ty = SS.open_univ_vars ret_us ret_ty in
+    let env = Env.push_univ_vars env0 us in
 
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "Checked repr: %s against expected repr type: %s\n"
-  //       (Print.term_to_string repr) (Print.term_to_string expected_repr_type);
-  //   repr in
-  
-  // let repr = tc_repr ed.repr bs in  //typechecked repr w.r.t. bs binders
+    let a, u_a = fresh_a_and_u_a "a" in
+    let x_a = fresh_x_a "x" a in
+    let rest_bs =
+      match (SS.compress ty).n with
+      | Tm_arrow ((a', _)::(x_a', _)::bs, _) ->
+        let substs = [NT (a', bv_to_name (fst a)); NT (x_a', bv_to_name (fst x_a))] in
+        SS.subst_binders substs bs
+      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+    let bs = a::x_a::rest_bs in
+    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a) in
+    let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
+    let g_eq = Rel.teq env ty k in
+    Rel.force_trivial_guard env (Env.conj_guard g g_eq);
+    ret_us, ret_t, SS.close_univ_vars us k in
 
+  log_combinator "return_repr" return_repr;
+
+  let bind_repr =
+    let r = (snd ed.bind_repr).pos in
+    let bind_us, bind_t, bind_ty = check_and_gen' "bind_repr" 2 None ed.bind_repr in
+
+    let us, ty = SS.open_univ_vars bind_us bind_ty in
+    let env = Env.push_univ_vars env0 us in
+
+    let a, u_a = fresh_a_and_u_a "a" in
+    let b, u_b = fresh_a_and_u_a "b" in
+    let rest_bs =
+      match (SS.compress ty).n with
+      | Tm_arrow ((a', _)::(b', _)::bs, _) when List.length bs >= 2 ->
+        let bs, _ = List.splitAt (List.length bs - 2) bs in
+        let substs = [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] in
+        SS.subst_binders substs bs
+      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+    let bs = a::b::rest_bs in
+    let f, g_f =
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a) in
+      S.gen_bv "f" None repr |> S.mk_binder, g in
+    let g, g_g =
+      let x_a = fresh_x_a "x" a in
+      let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (fst b) in
+      S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some u_b))) |> S.mk_binder, g in
+    let repr, g_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b) in
+    let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
+    let g_eq = Rel.teq env ty k in
+    List.iter (Rel.force_trivial_guard (Env.push_binders env bs)) [g_f; g_g; g_repr; g_eq];
+    bind_us, bind_t, SS.close_univ_vars bind_us k in
+
+  log_combinator "bind_repr" bind_repr;
+
+  failwith "That's it folks!";
+
+  ed
+
+
+ 
   // //typecheck return
   // let return_repr, return_wp =
   //   //return should have the type a:Type -> x:a -> repr a ?u1 ... ?un for n indices
