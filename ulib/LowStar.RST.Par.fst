@@ -36,19 +36,19 @@ val par (#in1 #in2:resource)
         : RST (a & b)
               (in1 <*> in2)
               (fun p -> out1 (fst p) <*> out2 (snd p))
-              (fun old -> pre1 (focus_selector old in1) /\ pre2 ((focus_selector old in2)))
-              (fun old x cur ->
+              (fun h -> pre1 (focus_rmem h in1) /\ pre2 ((focus_rmem h in2)))
+              (fun h0 x h1 ->
                 post1
-                  (focus_selector old in1)
+                  (focus_rmem h0 in1)
                   (fst x)
-                  (focus_selector cur (out1 (fst x))) /\
+                  (focus_rmem h1 (out1 (fst x))) /\
                 post2
-                  (focus_selector old in2)
+                  (focus_rmem h0 in2)
                   (snd x)
-                  (focus_selector cur (out2 (snd x)))
+                  (focus_rmem h1 (out2 (snd x)))
               )
 
-(* We now model locks to permit the sharing of read/write resources. We currently model locks as values, which are therefore in scope of both threads when calling par.
+(* We now model locks to permit the sharing of read/write resources. We h1rently model locks as values, which are therefore in scope of both threads when calling par.
    Locks have blocking semantics: Preconditions on acquire are minimal, but the freedom of the lock is checked at runtime. A program will halt until the required lock
    becomes available.
    This model should prevent data races, but is inadequate to prove absence of deadlocks (for instance, we can try to acquire twice the same lock in a thread)
@@ -74,8 +74,8 @@ assume
 val new_lock (r:resource) (pred:r.t -> Type)
   : RST (lock r)
         r (fun _ -> empty_resource)
-        (fun old ->
-          pred (old r))
+        (fun h ->
+          pred (h r))
         (fun _ l _ -> get_lock_pred l == pred)
 
 /// This model could allow a thread to acquire a lock, and create a new lock
@@ -95,8 +95,8 @@ val acquire (#r:resource) (l:lock r)
         (empty_resource)
         (fun _ -> r)
         (fun _ -> True)
-        (fun _ _ cur ->
-          (get_lock_pred l) (cur r))
+        (fun _ _ h1 ->
+          (get_lock_pred l) (h1 r))
 
 (* Release is similar to new_lock, without the new value creation *)
 assume
@@ -104,6 +104,6 @@ val release (#r:resource) (l:lock r)
   : RST unit
         (r)
         (fun _ -> empty_resource)
-        (fun old ->
-          (get_lock_pred l) (old r))
+        (fun h ->
+          (get_lock_pred l) (h r))
         (fun _ _ _ -> True)
