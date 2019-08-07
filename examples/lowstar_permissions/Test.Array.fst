@@ -76,20 +76,35 @@ let read_write_with_sharing () : RST.RST unit
     (fun p -> R.(A.array_resource (fst p) <*> A.array_resource (snd p) <*> A.array_resource b1))
     (let f = fun _ -> A.split #FStar.UInt32.t b 1ul in f) //TODO: remove let binding
   in
+    let h0 =
+    RST.get R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)
+  in
+  assert(A.get_perm b_first h0 == A.get_perm b_second h0);
   let x2 = RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)))
     (fun _ -> A.index b_second 0ul)
   in
-  let sel = RST.get R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1) in
-  assume(A.get_perm b_first sel == A.get_perm b_second sel);
+  let h1 =
+    RST.get R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)
+  in
+  assume(
+    RST.focus_rmem h0 R.(A.array_resource b_first <*> A.array_resource b_second) ==
+    RST.focus_rmem h1 R.(A.array_resource b_first <*> A.array_resource b_second)
+  );
+  assume(
+    RST.focus_rmem h0 R.(A.array_resource b1) ==
+    RST.focus_rmem h1 R.(A.array_resource b1)
+  );
   RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
     (fun _ -> A.glue b b_first b_second);
-  let sel = RST.get R.(A.array_resource b <*> A.array_resource b1) in
-  assume(A.summable_permissions b b1 sel);
+  let h2 = RST.get R.(A.array_resource b <*> A.array_resource b1) in
+  assume(
+    RST.focus_rmem h1 R.(A.array_resource b1) ==
+    RST.focus_rmem h2 R.(A.array_resource b1)
+  );
   A.gather b b1;
-  let sel = RST.get R.(A.array_resource b) in
-  assume(P.allows_write (A.get_perm b sel));
+  let h = RST.get R.(A.array_resource b) in
   A.free b
