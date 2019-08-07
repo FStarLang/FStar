@@ -131,11 +131,10 @@ let hsrefine r p =
   in
   Classical.forall_intro_3 aux;
   assert(inv_reads_fp new_view.fp new_view.inv);
-  { r with view = new_view }
+  let r' = { r with view = new_view } in
+  r'
 
 #pop-options
-
-let reveal_hsrefine r p = ()
 
 let rst_inv res h =
   loc_includes (loc_used_in  h) (as_loc (fp res)) /\ True
