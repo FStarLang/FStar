@@ -52,7 +52,7 @@ let read_write_without_sharing () : RST.RST unit
   A.free b;
   ()
 
-#set-options "--warn_error '-271-296' --z3rlimit 60"
+#set-options "--warn_error '-271-296' --z3rlimit 1000"
 let read_write_with_sharing () : RST.RST unit
   (R.empty_resource)
   (fun _ -> R.empty_resource)
