@@ -38,8 +38,6 @@ type debug_level_t =
   | Extreme
   | Other of string
 
-type profile_phase_t = string
-
 type option_val =
   | Bool of bool
   | String of string
@@ -268,8 +266,8 @@ let defaults =
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
       ("profile_group_by_decl"        , Bool false);
-      ("profile_phase"                , List []);
-      ("profile_module"               , Unset);
+      ("profile_component"            , Unset);
+      ("profile"                      , Unset);
       ]
 
 let parse_warn_error_set_get =
@@ -419,7 +417,7 @@ let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
-let get_profile_phase           ()      = lookup_opt "profile_phase"            as_comma_string_list
+let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
 let dlevel = function
    | "Low" -> Low
@@ -1167,16 +1165,19 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          Const (Bool true),
         "Emit profiles grouped by declaration rather than by module");
 
-        ( noshort,
-        "profile_phase",
-        Accumulated (OpenEnumStr (["Normalize"; "SMT"], "...")),
-        "Control which phase to profile");
+       ( noshort,
+        "profile_component",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
+        "\n\t\nSpecific source locations in the compiler are instrumented with profiling counters.\n\t
+          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ( noshort,
          "profile",
          Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
-        "\n\t\Profile the compiler when processing only those modules whose names or namespaces match selector.\n\t\t\t\
-          See the help for extract, using_facts_from, etc. for how to use module and namespace selectors");
+        "\n\t\nProfiling can be enabled when the compiler is processing a given set of source modules.\n\t
+          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
@@ -1258,8 +1259,8 @@ let settable = function
     | "z3seed"
     | "trivial_pre_for_unannotated_effectful_fns"
     | "profile_group_by_decl"
-    | "profile_phase"
-    | "profile_module" -> true
+    | "profile_component"
+    | "profile" -> true
     | _ -> false
 
 let all_specs = specs ()
@@ -1470,7 +1471,7 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
-let profile_group_by_decls () = get_profile_group_by_decl ()
+let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
@@ -1610,6 +1611,11 @@ let module_matches_namespace_filter m filter =
     | None -> false
     | Some (_, flag) -> flag
 
+let matches_namespace_filter_opt m =
+  function
+  | None -> false
+  | Some filter -> module_matches_namespace_filter m filter
+
 
 let should_extract m =
     let m = String.lowercase m in
@@ -1660,14 +1666,10 @@ let error_flags =
         | Some r -> r
 
 let profile_enabled modul_opt phase =
-  let phase_enabled p = List.contains phase (get_profile_phase()) in
   match modul_opt with
   | None -> //the phase is not associated with a module
-    phase_enabled phase
+    module_matches_namespace_filter_opt phase (get_profile_phase())
 
   | Some modul ->
-     match get_profile () with
-     | None -> false //all module profiling phases are disabled
-     | Some filter ->
-       module_matches_namespace_filter modul filter
-       && phase_enabled phase
+    module_matches_namespace_filter modul (get_profile())
+    && module_matches_namespace_filter_opt phase (get_profile_phase())
