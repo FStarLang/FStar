@@ -153,32 +153,76 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
         ed.mname.str s
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
   
-  //AR: TODO: FIXME: check that it is of the form a:Type -> ...is... -> Effect, also in tc_eff_decl
-  let signature = check_and_gen' "signature" 1 None ed.signature in
+  let fresh_a_and_u_a (a:string) = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
+  let fresh_x_a (x:string) (a:binder) = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
+
+  let signature =
+    let r = (snd ed.signature).pos in
+    let sig_us, sig_t, sig_ty = check_and_gen' "signature" 1 None ed.signature in
+
+    let us, t = SS.open_univ_vars sig_us sig_t in
+    let env = Env.push_univ_vars env0 us in
+
+    let a, _ = fresh_a_and_u_a "a" in
+    let rest_bs =
+      match (SS.compress t).n with
+      | Tm_arrow (bs, _) when List.length bs >= 1 ->
+        (match SS.open_binders bs with
+         | (a', _)::bs ->
+           let substs = [NT (a', bv_to_name (fst a))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
+      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+    let bs = a::rest_bs in
+    let k = U.arrow bs (S.mk_Total S.teff) in
+    let g_eq = Rel.teq env t k in
+    Rel.force_trivial_guard env g_eq;
+    sig_us, SS.close_univ_vars us (N.normalize [Beta] env k), sig_ty in
 
   log_combinator "signature" signature;
 
   //AR: TODO: FIXME: check that repr has the type a:Type -> ...is... -> Type
-  let repr = check_and_gen' "repr" 1 None ed.repr in
+  let repr =
+    let r = (snd ed.repr).pos in
+    let repr_us, repr_t, repr_ty = check_and_gen' "repr" 1 None ed.repr in
+    
+    let us, ty = SS.open_univ_vars repr_us repr_ty in
+    let env = Env.push_univ_vars env0 us in
+
+    let a, _ = fresh_a_and_u_a "a" in
+    let rest_bs =
+      let signature_ts = let us, t, _ = signature in (us, t) in
+      let _, signature = Env.inst_tscheme signature_ts in
+      match (SS.compress signature).n with
+      | Tm_arrow (bs, _) ->
+        let bs = SS.open_binders bs in
+        (match bs with
+         | (a', _)::bs ->
+           let substs = [NT (a', bv_to_name (fst a))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
+      | _ -> failwith "Impossible!" in
+    let bs = a::rest_bs in
+    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some u))) in
+    let g = Rel.teq env ty k in
+    Rel.force_trivial_guard env g;
+    repr_us, repr_t, SS.close_univ_vars us (N.normalize [Beta] env k) in
 
   log_combinator "repr" repr;
 
-  let fresh_a_and_u_a (a:string) = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
-  let fresh_x_a (x:string) (a:binder) = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
-
   let fresh_repr (r:Range.range) env u (a_bv:bv) : term * guard_t =
-    let signature = let us, t, ty = signature in (us, t) in
+    let signature = let us, t, _ = signature in (us, t) in
     let fail t = raise_error (Err.unexpected_signature_for_monad env0 ed.mname t) (snd ed.signature).pos in
     let _, signature = Env.inst_tscheme signature in
     match (SS.compress signature).n with
     | Tm_arrow (bs, _) ->
       let bs = SS.open_binders bs in
       (match bs with
-       | a::is ->
+       | a::bs ->
          let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
-           let t, _, g_t = TcUtil.new_implicit_var "" r env (SS.subst substs b.sort) in
+           let t, _, g_t = TcUtil.new_implicit_var "" r env (SS.subst substs b.sort) in  //AR: TODO: FIXME: set the empty string properly
            is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
-         ) ([], Env.trivial_guard, [NT (fst a, bv_to_name a_bv)]) is in
+         ) ([], Env.trivial_guard, [NT (fst a, bv_to_name a_bv)]) bs in
          
          let repr_ts = let us, t, _ = repr in (us, t) in
          let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
@@ -188,7 +232,6 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
            None r, g
        | _ -> fail signature)
     | _ -> fail signature in
-
 
 
   let return_repr =
@@ -202,16 +245,19 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let x_a = fresh_x_a "x" a in
     let rest_bs =
       match (SS.compress ty).n with
-      | Tm_arrow ((a', _)::(x_a', _)::bs, _) ->
-        let substs = [NT (a', bv_to_name (fst a)); NT (x_a', bv_to_name (fst x_a))] in
-        SS.subst_binders substs bs
+      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+        (match SS.open_binders bs with
+         | (a', _)::(x_a', _)::bs ->
+           let substs = [NT (a', bv_to_name (fst a)); NT (x_a', bv_to_name (fst x_a))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
     let bs = a::x_a::rest_bs in
     let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
-    ret_us, ret_t, SS.close_univ_vars us k in
+    ret_us, ret_t, SS.close_univ_vars us (N.normalize [Beta] env k) in
 
   log_combinator "return_repr" return_repr;
 
@@ -226,10 +272,13 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let b, u_b = fresh_a_and_u_a "b" in
     let rest_bs =
       match (SS.compress ty).n with
-      | Tm_arrow ((a', _)::(b', _)::bs, _) when List.length bs >= 2 ->
-        let bs, _ = List.splitAt (List.length bs - 2) bs in
-        let substs = [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] in
-        SS.subst_binders substs bs
+      | Tm_arrow (bs, _) when List.length bs >= 4 ->
+        (match SS.open_binders bs with
+         | (a', _)::(b', _)::bs ->
+           let bs, _ = List.splitAt (List.length bs - 2) bs in
+           let substs = [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
     let bs = a::b::rest_bs in
     let f, g_f =
@@ -242,15 +291,24 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let repr, g_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b) in
     let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
     let g_eq = Rel.teq env ty k in
-    List.iter (Rel.force_trivial_guard (Env.push_binders env bs)) [g_f; g_g; g_repr; g_eq];
-    bind_us, bind_t, SS.close_univ_vars bind_us k in
+    List.iter (Rel.force_trivial_guard env) [g_f; g_g; g_repr; g_eq];
+    bind_us, bind_t, SS.close_univ_vars bind_us (N.normalize [Beta] env k) in
 
   log_combinator "bind_repr" bind_repr;
 
-  failwith "That's it folks!";
+  //AR: TODO: FIXME: rest of the combinators
 
-  ed
+  let fst (a, _, _) = a in
+  let snd (_, b, _) = b in
+  let thd (_, _, c) = c in
 
+  { ed with
+    signature   = (fst signature, snd signature);
+    ret_wp      = (fst return_repr, thd return_repr);
+    bind_wp     = (fst bind_repr, thd bind_repr);
+    repr        = (fst repr, snd repr);
+    return_repr = (fst return_repr, snd return_repr);
+    bind_repr   = (fst bind_repr, snd bind_repr); }
 
  
   // //typecheck return
