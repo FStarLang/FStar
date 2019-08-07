@@ -84,37 +84,37 @@ let is_subresource_of_refl r =
 
 open FStar.FunctionalExtensionality
 
-let mk_selector r h =
+let mk_rmem r h =
    Fext.on_dom_g (r0:R.resource{r0 `is_subresource_of` r}) (fun (r0:R.resource{r0 `is_subresource_of` r}) -> R.sel r0.R.view h)
 
-let focus_selector' (#r: R.resource) (s: selector r) (r0: R.resource{r0 `is_subresource_of` r})
-  : Tot (s':selector r0{forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'}) =
+let focus_rmem' (#r: R.resource) (s: rmem r) (r0: R.resource{r0 `is_subresource_of` r})
+  : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'}) =
    let r' = Fext.on_dom_g (r0':R.resource{r0' `is_subresource_of` r0}) (fun (r0':R.resource{r0' `is_subresource_of` r0}) ->
     s r0'
   ) in r'
 
 
-let focus_selector #r s r0 =
-  focus_selector' #r s r0
+let focus_rmem #r s r0 =
+  focus_rmem' #r s r0
 
 
-let focus_selector_equality outer inner h =
-  let souter = mk_selector outer h in
-  let focused = focus_selector souter inner in
-  let original = mk_selector inner h in
+let focus_rmem_equality outer inner h =
+  let souter = mk_rmem outer h in
+  let focused = focus_rmem souter inner in
+  let original = mk_rmem inner h in
   extensionality_g
     (r0:resource{r0 `is_subresource_of` inner})
     (fun r0 -> r0.t)
     focused
     original
 
-let extend_sprop (#r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_of` r}) : Tot (sprop r) =
-  fun s -> p (focus_selector #r s r0)
+let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r}) : Tot (rprop r) =
+  fun s -> p (focus_rmem #r s r0)
 
 #push-options "--z3rlimit 30"
 
 let hsrefine r p =
-  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_selector r h) in
+  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_rmem r h) in
   let new_view = { r.view with inv = new_inv } in
   reveal_view ();
   let open LowStar.Array in
@@ -126,9 +126,9 @@ let hsrefine r p =
   ) =
     let aux (_ : squash ( new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1)) : Lemma (new_view.inv h1) =
       assert(r.view.inv h1);
-      assert(p (mk_selector r h0));
-      let sel0 = mk_selector r h0 in
-      let sel1 = mk_selector r h1 in
+      assert(p (mk_rmem r h0));
+      let sel0 = mk_rmem r h0 in
+      let sel1 = mk_rmem r h1 in
       let aux (r0: resource{r0 `is_subresource_of` r}) : Lemma (sel0 r0 == sel1 r0) =
         reveal_can_be_split_into ();
         assert(r0.view.sel h0 == r0.view.sel h1)
@@ -164,7 +164,7 @@ open LowStar.RST.Tactics
 
 let get r =
   let h = HST.get () in
-  mk_selector r h
+  mk_rmem r h
 
 #set-options "--z3rlimit 50 --max_fuel 1 --max_ifuel 1"
 
@@ -176,16 +176,16 @@ inline_for_extraction noextract let rst_frame
   (**) reveal_rst_inv ();
   (**) FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
   (**) let h0 = HST.get () in
-  (**) focus_selector_equality outer0 inner0 h0;
-  (**) focus_selector_equality outer0 delta h0;
+  (**) focus_rmem_equality outer0 inner0 h0;
+  (**) focus_rmem_equality outer0 delta h0;
   let x = f () in
   (**) let h1 = HST.get () in
-  (**) focus_selector_equality (outer1 x) (inner1 x) h1;
-  (**) focus_selector_equality (outer1 x) delta h1;
-  (**) let old = mk_selector outer0 h0 in
-  (**) let cur = mk_selector (outer1 x) h1 in
-  (**) let old_delta = focus_selector old delta in
-  (**) let cur_delta = focus_selector cur delta in
+  (**) focus_rmem_equality (outer1 x) (inner1 x) h1;
+  (**) focus_rmem_equality (outer1 x) delta h1;
+  (**) let old = mk_rmem outer0 h0 in
+  (**) let cur = mk_rmem (outer1 x) h1 in
+  (**) let old_delta = focus_rmem old delta in
+  (**) let cur_delta = focus_rmem cur delta in
   (**) extensionality_g
   (**)  (r0:resource{r0 `is_subresource_of` delta})
   (**)  (fun r0 -> r0.t)

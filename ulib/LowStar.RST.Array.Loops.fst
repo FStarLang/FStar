@@ -31,25 +31,25 @@ open FStar.Mul
 #set-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
 
 let iteri #a b context loop_inv f len =
-  (**) let init = RST.get (R.(AR.array_resource b <*> context)) in
-  (**) let correct_inv (sel : RST.selector ((R.(AR.array_resource b <*> context)))) (i : nat) =
-  (**)  loop_inv (RST.focus_selector sel context) i /\
-  (**)  init (AR.array_resource b) == (sel (AR.array_resource b))
+  (**) let hinit = RST.get (R.(AR.array_resource b <*> context)) in
+  (**) let correct_inv (h : RST.rmem ((R.(AR.array_resource b <*> context)))) (i : nat) =
+  (**)  loop_inv (RST.focus_rmem h context) i /\
+  (**)  RST.focus_rmem h (AR.array_resource b) == RST.focus_rmem hinit (AR.array_resource b)
   (**) in
   let correct_f (i:U32.t{U32.(0 <= v i /\ v i < A.vlength b)})
     : RST.RST unit
       (R.(AR.array_resource b <*> context))
       (fun _ -> R.(AR.array_resource b <*> context))
-      (requires (fun old ->
-        correct_inv old (U32.v i)
+      (requires (fun h0 ->
+        correct_inv h0 (U32.v i)
       ))
-      (ensures (fun old _ cur -> U32.(
-        correct_inv old (v i) /\
-        correct_inv cur (v i + 1)
+      (ensures (fun h0 _ h1 -> U32.(
+        correct_inv h0 (v i) /\
+        correct_inv h1 (v i + 1)
       )))
   =
     let h0 = HST.get () in
-    RST.focus_selector_equality (R.(AR.array_resource b <*> context)) context h0; (* TODO: trigger automatically ?*)
+    RST.focus_rmem_equality (R.(AR.array_resource b <*> context)) context h0; (* TODO: trigger automatically ?*)
     let x = RST.rst_frame
       (R.(AR.array_resource b <*> context))
       (fun _ -> R.(AR.array_resource b <*> context))
@@ -58,8 +58,8 @@ let iteri #a b context loop_inv f len =
     let f' () : RST.RST unit // TODO: figure out why we cannot remove this superfluous let-binding
       (context)
       (fun _ -> context)
-      (fun old -> loop_inv old (U32.v i))
-      (fun old _ cur -> loop_inv old (U32.v i) /\ loop_inv cur (U32.v i + 1))
+      (fun h0 -> loop_inv h0 (U32.v i))
+      (fun h0 _ h1 -> loop_inv h0 (U32.v i) /\ loop_inv h1 (U32.v i + 1))
       =
       f i x
     in
