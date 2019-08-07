@@ -70,15 +70,15 @@ let as_seq
   (#a: Type)
   (b: A.array a)
   (#r: resource{array_resource #a b `is_subresource_of` r})
-  (sel: selector r) : GTot (Seq.lseq a (A.vlength b))  =
-  (sel (array_resource b)).s
+  (h: rmem r) : GTot (Seq.lseq a (A.vlength b))  =
+  (h (array_resource b)).s
 
 let get_perm
   (#a: Type)
   (b: A.array a)
   (#r: resource{array_resource #a b `is_subresource_of` r})
-  (sel: selector r) : GTot P.permission =
-  Ghost.reveal (sel (array_resource b)).p
+  (h: rmem r) : GTot P.permission =
+  Ghost.reveal (h (array_resource b)).p
 
 let reveal_array ()
   : Lemma (
@@ -94,6 +94,6 @@ let reveal_array ()
   ()
 
 
-let summable_permissions (#a:Type) (b:A.array a) (b':A.array a) (s: selector (array_resource b <*> array_resource b')) =
+let summable_permissions (#a:Type) (b:A.array a) (b':A.array a) (h: rmem (array_resource b <*> array_resource b')) =
   A.gatherable b b' /\
-  P.summable_permissions (get_perm b s) (get_perm b' s)
+  P.summable_permissions (get_perm b h) (get_perm b' h)

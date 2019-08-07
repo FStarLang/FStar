@@ -36,10 +36,10 @@ let ptr_alloc
   : RST (pointer a) (empty_resource)
     (fun ptr -> ptr_resource ptr)
     (fun _ -> True)
-    (fun _ ptr cur ->
+    (fun _ ptr h1 ->
       A.freeable ptr /\
-      get ptr cur == init /\
-      get_perm ptr cur = FStar.Real.one
+      get ptr h1 == init /\
+      get_perm ptr h1 = FStar.Real.one
     ) =
   reveal_ptr();
   reveal_rst_inv ();
@@ -51,7 +51,7 @@ let ptr_free
   (ptr:pointer a)
   : RST unit (ptr_resource ptr)
     (fun ptr -> empty_resource)
-    (fun old -> A.freeable ptr /\ P.allows_write (get_perm ptr old))
+    (fun h0 -> A.freeable ptr /\ P.allows_write (get_perm ptr h0))
     (fun _ _ _ -> True) =
   reveal_ptr();
   reveal_rst_inv ();
@@ -68,9 +68,9 @@ let ptr_read
   : RST a (ptr_resource ptr)
     (fun _ -> ptr_resource ptr)
     (fun _ -> True)
-    (fun old x cur ->
-      get ptr old == x /\
-      old (ptr_resource ptr) == cur (ptr_resource ptr)
+    (fun h0 x h1 ->
+      get ptr h0 == x /\
+      h0 (ptr_resource ptr) == h1 (ptr_resource ptr)
     ) =
   reveal_ptr();
   A.index ptr 0ul
@@ -81,10 +81,10 @@ let ptr_write
   (x:a)
   : RST unit (ptr_resource ptr)
     (fun _ -> ptr_resource ptr)
-    (fun old -> P.allows_write (get_perm ptr old))
-    (fun old _ cur ->
-      get_perm ptr old == get_perm ptr cur /\
-      get ptr cur == x
+    (fun h0 -> P.allows_write (get_perm ptr h0))
+    (fun h0 _ h1 ->
+      get_perm ptr h0 == get_perm ptr h1 /\
+      get ptr h1 == x
     ) =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -101,13 +101,13 @@ let ptr_share
     (ptr_resource ptr)
     (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
     (fun _ -> True)
-    (fun old ptr1 cur ->
-      get ptr cur == get ptr old  /\
-      get ptr1 cur == get ptr old  /\
-      get_perm ptr cur == P.half_permission (get_perm ptr old) /\
-      get_perm ptr1 cur == P.half_permission (get_perm ptr old) /\
+    (fun h0 ptr1 h1 ->
+      get ptr h1 == get ptr h0  /\
+      get ptr1 h1 == get ptr h0  /\
+      get_perm ptr h1 == P.half_permission (get_perm ptr h0) /\
+      get_perm ptr1 h1 == P.half_permission (get_perm ptr h0) /\
       A.gatherable ptr ptr1 /\
-      P.summable_permissions (get_perm ptr cur) (get_perm ptr1 cur))
+      P.summable_permissions (get_perm ptr h1) (get_perm ptr1 h1))
   =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
@@ -125,13 +125,13 @@ let ptr_merge
   : RST unit
     (ptr_resource ptr1 <*> ptr_resource ptr2)
     (fun _ -> ptr_resource ptr1)
-    (fun old -> A.gatherable ptr1 ptr2 /\
-      P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old)
+    (fun h0 -> A.gatherable ptr1 ptr2 /\
+      P.summable_permissions (get_perm ptr1 h0) (get_perm ptr2 h0)
     )
-    (fun old _ cur ->
-      P.summable_permissions (get_perm ptr1 old) (get_perm ptr2 old) /\
-      get ptr1 cur == get ptr1 old /\
-      get_perm ptr1 cur == P.sum_permissions (get_perm ptr1 old) (get_perm ptr2 old)
+    (fun h0 _ h1 ->
+      P.summable_permissions (get_perm ptr1 h0) (get_perm ptr2 h0) /\
+      get ptr1 h1 == get ptr1 h0 /\
+      get_perm ptr1 h1 == P.sum_permissions (get_perm ptr1 h0) (get_perm ptr2 h0)
      )
   =
   (**) reveal_ptr();

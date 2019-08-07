@@ -49,12 +49,12 @@ let get
   (#a: Type)
   (ptr: pointer a)
   (#r: resource{ptr_resource #a ptr `is_subresource_of` r})
-  (sel: selector r) : GTot a =
-  (sel (ptr_resource ptr)).x
+  (h: rmem r) : GTot a =
+  (h (ptr_resource ptr)).x
 
 let get_perm
   (#a: Type)
   (ptr: pointer a)
   (#r: resource{ptr_resource #a ptr `is_subresource_of` r})
-  (sel: selector r) : GTot P.permission =
-  Ghost.reveal (sel (ptr_resource ptr)).p
+  (h: rmem r) : GTot P.permission =
+  Ghost.reveal (h (ptr_resource ptr)).p

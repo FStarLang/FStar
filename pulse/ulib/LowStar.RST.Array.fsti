@@ -32,20 +32,20 @@ val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)
     (fun _ -> array_resource b)
     (fun _ -> UInt32.v i < A.vlength b)
-    (fun old x cur ->
+    (fun h0 x h1 ->
       UInt32.v i < A.vlength b /\
-      Seq.index (as_seq b old) (UInt32.v i) == x /\
-      old == cur
+      Seq.index (as_seq b h0) (UInt32.v i) == x /\
+      h0 == h1
     )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
   : RST unit (array_resource b)
     (fun _ -> array_resource b)
-    (fun old -> UInt32.v i < A.vlength b /\ P.allows_write (get_perm b old))
-    (fun old _ cur -> UInt32.v i < A.vlength b /\
-      as_seq b cur ==
-      Seq.upd (as_seq b old) (UInt32.v i) v /\
-      get_perm b cur == get_perm b old
+    (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (get_perm b h0))
+    (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
+      as_seq b h1 ==
+      Seq.upd (as_seq b h0) (UInt32.v i) v /\
+      get_perm b h1 == get_perm b h0
     )
 
 val alloc (#a:Type) (init:a) (len:UInt32.t)
@@ -53,16 +53,16 @@ val alloc (#a:Type) (init:a) (len:UInt32.t)
     (empty_resource)
     (fun b -> array_resource b)
     (fun _ -> UInt32.v len > 0)
-    (fun _ b cur ->
+    (fun _ b h1 ->
       A.freeable b /\
-      as_seq b cur == Seq.create (UInt32.v len) init /\
-      get_perm b cur = FStar.Real.one
+      as_seq b h1 == Seq.create (UInt32.v len) init /\
+      get_perm b h1 = FStar.Real.one
     )
 
 val free (#a:Type) (b:A.array a)
   : RST unit (array_resource b)
     (fun _ -> empty_resource)
-    (fun old -> A.freeable b /\ P.allows_write (get_perm b old))
+    (fun h0 -> A.freeable b /\ P.allows_write (get_perm b h0))
     (fun _ _ _ -> True)
 
 val share (#a:Type) (b:A.array a)
@@ -70,23 +70,23 @@ val share (#a:Type) (b:A.array a)
         (array_resource b)
         (fun b' -> array_resource b <*> array_resource b')
         (fun _ -> A.vlength b > 0)
-        (fun old b' cur ->
+        (fun h0 b' h1 ->
           A.vlength b' = A.vlength b /\
-          as_seq b old == as_seq b cur /\
-          as_seq b' cur == as_seq b cur /\
-          get_perm b cur == P.half_permission (get_perm b old) /\
-          get_perm b' cur  == P.half_permission (get_perm b old) /\
-          summable_permissions b b' cur
+          as_seq b h0 == as_seq b h1 /\
+          as_seq b' h1 == as_seq b h1 /\
+          get_perm b h1 == P.half_permission (get_perm b h0) /\
+          get_perm b' h1  == P.half_permission (get_perm b h0) /\
+          summable_permissions b b' h1
         )
 
 val gather (#a:Type) (b b':A.array a)
   : RST unit (array_resource b <*> array_resource b')
     (fun _ -> array_resource b)
-    (fun old -> A.gatherable b b' /\ summable_permissions b b' old)
-    (fun old _ cur ->
-      summable_permissions b b' old /\
-      as_seq b old == as_seq b cur /\
-      get_perm b cur == P.sum_permissions (get_perm b old) (get_perm b' old)
+    (fun h0 -> A.gatherable b b' /\ summable_permissions b b' h0)
+    (fun h0 _ h1 ->
+      summable_permissions b b' h0 /\
+      as_seq b h0 == as_seq b h1 /\
+      get_perm b h1 == P.sum_permissions (get_perm b h0) (get_perm b' h0)
     )
 
 
@@ -95,20 +95,20 @@ val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v 
     (array_resource b)
     (fun p -> array_resource (fst p) <*> array_resource (snd p))
     (fun _ -> True)
-    (fun old bs cur ->
+    (fun h0 bs h1 ->
       A.is_split_into b (fst bs, snd bs) /\
-      as_seq (fst bs) cur == Seq.slice (as_seq b old) 0 (UInt32.v idx) /\
-      as_seq (snd bs) cur == Seq.slice (as_seq b old) (UInt32.v idx) (A.vlength b) /\
-      get_perm (fst bs) cur == get_perm b old /\
-      get_perm (snd bs) cur == get_perm b old
+      as_seq (fst bs) h1 == Seq.slice (as_seq b h0) 0 (UInt32.v idx) /\
+      as_seq (snd bs) h1 == Seq.slice (as_seq b h0) (UInt32.v idx) (A.vlength b) /\
+      get_perm (fst bs) h1 == get_perm b h0 /\
+      get_perm (snd bs) h1 == get_perm b h0
     )
 
 val glue (#a: Type) (b b1 b2: A.array a)
   : RST unit
     (array_resource b1 <*> array_resource b2)
     (fun _ -> array_resource b)
-    (fun old -> A.is_split_into b (b1, b2) /\ get_perm b1 old == get_perm b2 old)
-    (fun old _ cur ->
-      as_seq b cur == Seq.append (as_seq b1 old) (as_seq b2 old) /\
-      get_perm b cur == get_perm b1 old
+    (fun h0 -> A.is_split_into b (b1, b2) /\ get_perm b1 h0 == get_perm b2 h0)
+    (fun h0 _ h1 ->
+      as_seq b h1 == Seq.append (as_seq b1 h0) (as_seq b2 h0) /\
+      get_perm b h1 == get_perm b1 h0
     )
