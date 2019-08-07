@@ -2318,7 +2318,7 @@ let es =                                                 ( l ) in
       (
         let l = mkConsList (rhs2 parseState 1 3) es in
         let pos = (rhs2 parseState 1 3) in
-        mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos Expr) [l] pos
+        mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
       )}
 | LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
     {let (_1, l, _3) = ((), $2, ()) in

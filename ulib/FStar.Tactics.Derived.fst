@@ -389,7 +389,7 @@ let pose_as (s:string) (t:term) : Tac binder =
     b
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
-    map f (binders_of_env (cur_env ()))
+    map f (cur_binders ())
 
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
@@ -415,7 +415,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
         __assumption_aux bs
 
 let assumption () : Tac unit =
-    __assumption_aux (binders_of_env (cur_env ()))
+    __assumption_aux (cur_binders ())
 
 let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
@@ -457,21 +457,15 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        begin match term_as_formula_total (type_of_binder x_t) with
-        | Comp (Eq _) lhs _ ->
-            begin match inspect_ln lhs with
-            | Tv_Var _ -> rewrite x_t
-            | _ -> ()
-            end
-        | _ -> () end;
+        (try rewrite x_t with | _ -> ());
         rewrite_all_context_equalities bs
     end
 
 let rewrite_eqs_from_context () : Tac unit =
-    rewrite_all_context_equalities (binders_of_env (cur_env ()))
+    rewrite_all_context_equalities (cur_binders ())
 
 let rewrite_equality (t:term) : Tac unit =
-    try_rewrite_equality t (binders_of_env (cur_env ()))
+    try_rewrite_equality t (cur_binders ())
 
 let unfold_def (t:term) : Tac unit =
     match inspect t with
@@ -538,28 +532,24 @@ let rec apply_squash_or_lem d t =
     try apply t with | _ ->
     try apply (`FStar.Squash.return_squash); apply t with | _ ->
     try apply_lemma t with | _ ->
+
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
-    let g = cur_goal () in
+
     let ty = tc t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->
        begin
-       (* What I would really like to do here is unify `mk_squash post` and the goal,
-        * but it didn't work on a first try, so just doing this for now *)
-       match trytac (fun () -> apply_lemma t) with
-       | Some _ -> () // Success
-       | None ->
-           let post = norm_term [] post in
-           (* Is the lemma an implication? We can try to intro *)
-           match term_as_formula' post with
-           | Implies p q ->
-               apply_lemma (`push1);
-               apply_squash_or_lem (d-1) t
+       let post = norm_term [] post in
+       (* Is the lemma an implication? We can try to intro *)
+       match term_as_formula' post with
+       | Implies p q ->
+           apply_lemma (`push1);
+           apply_squash_or_lem (d-1) t
 
-           | _ ->
-               fail "mapply: can't apply (1)"
+       | _ ->
+           fail "mapply: can't apply (1)"
        end
     | C_Total rt _ ->
        begin match unsquash rt with
@@ -567,41 +557,31 @@ let rec apply_squash_or_lem d t =
        | Some rt ->
         // DUPLICATED, refactor!
          begin
-         (* What I would really like to do here is unify `mk_squash post` and the goal,
-          * but it didn't work on a first try, so just doing this for now *)
-         match trytac (fun () -> apply_lemma t) with
-         | Some _ -> () // Success
-         | None ->
-             let rt = norm_term [] rt in
-             (* Is the lemma an implication? We can try to intro *)
-             match term_as_formula' rt with
-             | Implies p q ->
-                 apply_lemma (`push1);
-                 apply_squash_or_lem (d-1) t
+         let rt = norm_term [] rt in
+         (* Is the lemma an implication? We can try to intro *)
+         match term_as_formula' rt with
+         | Implies p q ->
+             apply_lemma (`push1);
+             apply_squash_or_lem (d-1) t
 
-             | _ ->
-                 fail "mapply: can't apply (1)"
+         | _ ->
+             fail "mapply: can't apply (1)"
          end
 
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
         // DUPLICATED, refactor!
          begin
-         (* What I would really like to do here is unify `mk_squash post` and the goal,
-          * but it didn't work on a first try, so just doing this for now *)
-         match trytac (fun () -> apply_lemma t) with
-         | Some _ -> () // Success
-         | None ->
-             let rt = norm_term [] rt in
-             (* Is the lemma an implication? We can try to intro *)
-             match term_as_formula' rt with
-             | Implies p q ->
-                 apply_lemma (`push1);
-                 apply_squash_or_lem (d-1) t
+         let rt = norm_term [] rt in
+         (* Is the lemma an implication? We can try to intro *)
+         match term_as_formula' rt with
+         | Implies p q ->
+             apply_lemma (`push1);
+             apply_squash_or_lem (d-1) t
 
-             | _ ->
-                 apply (`FStar.Squash.return_squash);
-                 apply t
+         | _ ->
+             apply (`FStar.Squash.return_squash);
+             apply t
          end
        end
     | _ -> fail "mapply: can't apply (2)"
