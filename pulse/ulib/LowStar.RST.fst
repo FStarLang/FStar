@@ -51,7 +51,7 @@ let modifies_trans res0 res1 res2 h0 h1 h2 =
   modifies_loc_disjoint (as_loc (fp res0)) (as_loc (fp res1)) h0 h1 h2
 
 
-let is_subresource_of r0 r = exists (r1: R.resource). r `R.can_be_split_into` (r0, r1)
+let is_subresource_of r0 r = exists (r1: resource). r `can_be_split_into` (r0, r1)
 
 
 let is_subresource_of_elim r0 r goal lemma =
@@ -64,7 +64,7 @@ let can_be_split_into_intro_star r0 r1 = ()
 
 let is_subresource_of_intro1 r0 r r1 = ()
 
-let is_subresource_of_intro2 r0 r r1 = R.reveal_can_be_split_into ()
+let is_subresource_of_intro2 r0 r r1 = reveal_can_be_split_into ()
 
 let is_subresource_of_trans r1 r2 r3 =
   is_subresource_of_elim r1 r2 (r1 `is_subresource_of` r3) (fun delta12 ->
@@ -85,13 +85,19 @@ let is_subresource_of_refl r =
 open FStar.FunctionalExtensionality
 
 let mk_rmem r h =
-   Fext.on_dom_g (r0:R.resource{r0 `is_subresource_of` r}) (fun (r0:R.resource{r0 `is_subresource_of` r}) -> R.sel r0.R.view h)
+   Fext.on_dom_g
+     (r0:resource{r0 `is_subresource_of` r})
+     (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
-let focus_rmem' (#r: R.resource) (s: rmem r) (r0: R.resource{r0 `is_subresource_of` r})
+let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` r})
   : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'}) =
-   let r' = Fext.on_dom_g (r0':R.resource{r0' `is_subresource_of` r0}) (fun (r0':R.resource{r0' `is_subresource_of` r0}) ->
-    s r0'
-  ) in r'
+  let r' =
+    Fext.on_dom_g
+      (r0':resource{r0' `is_subresource_of` r0})
+      (fun (r0':resource{r0' `is_subresource_of` r0}) ->
+        s r0'
+      )
+  in r'
 
 
 let focus_rmem #r s r0 =
@@ -108,7 +114,8 @@ let focus_rmem_equality outer inner h =
     focused
     original
 
-let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r}) : Tot (rprop r) =
+let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
+  : Tot (rprop r) =
   fun s -> p (focus_rmem #r s r0)
 
 #push-options "--z3rlimit 30"
@@ -124,7 +131,9 @@ let hsrefine r p =
     loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1 ==>
     new_view.inv h1
   ) =
-    let aux (_ : squash ( new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1)) : Lemma (new_view.inv h1) =
+    let aux (_ : squash (
+      new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1
+    )) : Lemma (new_view.inv h1) =
       assert(r.view.inv h1);
       assert(p (mk_rmem r h0));
       let sel0 = mk_rmem r h0 in
@@ -174,7 +183,8 @@ inline_for_extraction noextract let rst_frame
   (**) reveal_view ();
   (**) reveal_can_be_split_into ();
   (**) reveal_rst_inv ();
-  (**) FStar.Tactics.by_tactic_seman resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
+  (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
   (**) let h0 = HST.get () in
   (**) focus_rmem_equality outer0 inner0 h0;
   (**) focus_rmem_equality outer0 delta h0;

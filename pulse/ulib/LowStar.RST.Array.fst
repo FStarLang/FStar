@@ -15,6 +15,9 @@
 *)
 module LowStar.RST.Array
 
+open LowStar.RST
+
+
 let index (#a:Type) (b:A.array a) (i:UInt32.t) =
   (**) reveal_array();
   A.index b i
@@ -37,7 +40,8 @@ let alloc (#a:Type) (init:a) (len:UInt32.t) =
   (**) reveal_modifies();
   let b = A.alloc init len in
   (**) let h1 = HST.get () in
-  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one); // Find out how to trigger that
+  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one);
+  // Find out how to trigger that
   (**) A.live_array_used_in b h1;
   b
 
