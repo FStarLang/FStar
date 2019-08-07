@@ -25,7 +25,6 @@ open FStar.BaseTypes
 open FStar.Util
 
 module BU = FStar.Util
-module P = FStar.Profiling
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -596,8 +595,15 @@ let cache_hit
         false
 
 let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+  //This code is a little ugly:
+  //We insert a profiling call to accumulate total time spent in Z3
+  //But, we also record the time of this particular call so that we can
+  //record the elapsed time in the z3result_time field.
+  //That field is printed out in the query-stats output, which is a separate
+  //profiling feature. We could try in the future to unify all the different
+  //kinds of profiling features ... but that's beyond scope for now.
   let (status, statistics), elapsed_time =
-    P.profile
+    Profiling.profile
       (fun () ->
         try
           BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages)

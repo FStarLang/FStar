@@ -26,6 +26,8 @@ module BU = FStar.Util
    A counter id is the name of a profiling phase;
    The total_time is the cumulative time attributed to this phase.
    The running flag records if this phase is currently being measured
+   The undercount field is set if the total time is known to be undercounted,
+     e.g., because an exception was raised
 *)
 type counter = {
   cid:string;
@@ -56,32 +58,33 @@ let create_or_lookup_counter cid =
 
 (* Time an operation, if the the profiler is enabled *)
 let profile  (f: unit -> 'a) (module_name:option<string>) (cid:string) : 'a =
-  if Options.profile_enabled  module_name cid
+  if Options.profile_enabled module_name cid
   then let c = create_or_lookup_counter cid in
-       if !c.running
-       then f ()
+       if !c.running //if the counter is already running
+       then f ()     //this is a re-entrant call ... don't measure
        else begin
          try
-           c.running := true;
+           c.running := true; //mark the counter as running
            let res, elapsed = BU.record_time f in
-           c.total_time := !c.total_time + elapsed;
-           c.running := false;
+           c.total_time := !c.total_time + elapsed; //accumulate the time
+           c.running := false; //finally mark the counter as not running
            res
          with
-         | e ->
-           c.running := false;
-           c.undercount := true;
-           raise e
+         | e -> //finally
+           c.running := false; //mark the counter as not running
+           c.undercount := true; //but also set the undercount flag,
+                                 //since we didn't get the full elapsed time
+           raise e //and propagate the exception
       end
   else f()
 
 (* Report all profiles and clear all counters *)
 let report_and_clear tag =
-    let ctrs =
+    let ctrs = //all the counters as a list
       BU.smap_fold all_counters (fun _ v l -> v :: l) []
     in
-    BU.smap_clear all_counters;
-    let ctrs =
+    BU.smap_clear all_counters; //remove them all
+    let ctrs = //sort counters in descending order by elapsed time
       BU.sort_with (fun c1 c2 -> !c2.total_time - !c1.total_time) ctrs
     in
     ctrs |> List.iter
@@ -92,6 +95,7 @@ let report_and_clear tag =
                    then " (Warning, some operations raised exceptions and we not accounted for)"
                    else ""
         in
+        //print each counter's profile
         BU.print4 "%s, profiled %s:\t %s ms%s\n"
                       tag
                       c.cid

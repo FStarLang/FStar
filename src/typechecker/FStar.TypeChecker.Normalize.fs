@@ -43,7 +43,6 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
-module P = FStar.Profiling
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -2530,9 +2529,9 @@ let normalize_with_primitive_steps ps s e t =
     end
 
 let normalize s e t =
-    P.profile (fun () -> normalize_with_primitive_steps [] s e t)
-              (Some (Ident.string_of_lid (Env.current_module e)))
-              "FStar.TypeChecker.Normalize"
+    Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
+                      (Some (Ident.string_of_lid (Env.current_module e)))
+                      "FStar.TypeChecker.Normalize"
 
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u

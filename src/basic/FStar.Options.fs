@@ -1168,15 +1168,15 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "profile_component",
          Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
-        "\n\t\nSpecific source locations in the compiler are instrumented with profiling counters.\n\t
-          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t
+        "\n\tSpecific source locations in the compiler are instrumented with profiling counters.\n\t\
+          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t\
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ( noshort,
          "profile",
          Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
-        "\n\t\nProfiling can be enabled when the compiler is processing a given set of source modules.\n\t
-          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t
+        "\n\tProfiling can be enabled when the compiler is processing a given set of source modules.\n\t\
+          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t\
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ('h',
