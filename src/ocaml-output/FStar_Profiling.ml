@@ -88,25 +88,38 @@ let profile :
                    FStar_Exn.raise uu___30_389)))
         else f ()
   
-let (report_and_clear : unit -> unit) =
-  fun uu____443  ->
-    FStar_Util.smap_iter all_counters
-      (fun uu____449  ->
-         fun c  ->
-           let warn =
-             let uu____454 = FStar_ST.op_Bang c.running  in
-             if uu____454
-             then " (Warning, this counter is still running)"
-             else
-               (let uu____482 = FStar_ST.op_Bang c.undercount  in
-                if uu____482
-                then
-                  " (Warning, some operations raised exceptions and we not accounted for)"
-                else "")
-              in
-           let uu____511 =
-             let uu____513 = FStar_ST.op_Bang c.total_time  in
-             FStar_Util.string_of_int uu____513  in
-           FStar_Util.print3 "Profiled %s:\t %s ms%s\n" c.cid uu____511 warn);
-    FStar_Util.smap_clear all_counters
+let (report_and_clear : Prims.string -> unit) =
+  fun tag  ->
+    let ctrs =
+      FStar_Util.smap_fold all_counters
+        (fun uu____454  -> fun v1  -> fun l  -> v1 :: l) []
+       in
+    FStar_Util.smap_clear all_counters;
+    (let ctrs1 =
+       FStar_Util.sort_with
+         (fun c1  ->
+            fun c2  ->
+              let uu____470 = FStar_ST.op_Bang c2.total_time  in
+              let uu____493 = FStar_ST.op_Bang c1.total_time  in
+              uu____470 - uu____493) ctrs
+        in
+     FStar_All.pipe_right ctrs1
+       (FStar_List.iter
+          (fun c  ->
+             let warn =
+               let uu____524 = FStar_ST.op_Bang c.running  in
+               if uu____524
+               then " (Warning, this counter is still running)"
+               else
+                 (let uu____552 = FStar_ST.op_Bang c.undercount  in
+                  if uu____552
+                  then
+                    " (Warning, some operations raised exceptions and we not accounted for)"
+                  else "")
+                in
+             let uu____581 =
+               let uu____583 = FStar_ST.op_Bang c.total_time  in
+               FStar_Util.string_of_int uu____583  in
+             FStar_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag c.cid
+               uu____581 warn)))
   

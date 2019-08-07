@@ -7723,7 +7723,7 @@ let (normalize :
           FStar_Pervasives_Native.Some uu____26116  in
         FStar_Profiling.profile
           (fun uu____26121  -> normalize_with_primitive_steps [] s e t)
-          uu____26112 "Normalizer"
+          uu____26112 "FStar.TypeChecker.Normalize"
   
 let (normalize_comp :
   FStar_TypeChecker_Env.steps ->

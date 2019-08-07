@@ -591,8 +591,7 @@ let (detail_hint_replay :
                  FStar_Pervasives_Native.None
                  (fun r  ->
                     FStar_ST.op_Colon_Equals res
-                      (FStar_Pervasives_Native.Some r)) false
-                 settings.query_name);
+                      (FStar_Pervasives_Native.Some r)) false);
               (let uu____2091 = FStar_ST.op_Bang res  in
                FStar_Option.get uu____2091)
                in
@@ -716,7 +715,7 @@ let (report_errors : query_settings -> unit) =
             FStar_Pervasives_Native.None
             (fun r  ->
                FStar_ST.op_Colon_Equals res (FStar_Pervasives_Native.Some r))
-            false settings.query_name);
+            false);
          (let uu____2478 = FStar_ST.op_Bang res  in
           FStar_Option.get uu____2478)
           in
@@ -1269,7 +1268,7 @@ let (ask_and_report_errors :
                     FStar_SMTEncoding_Z3.ask config1.query_range
                       (filter_assertions config1.query_env config1.query_hint)
                       config1.query_hash config1.query_all_labels uu____3831
-                      uu____3834 k (used_hint config1) config1.query_name)
+                      uu____3834 k (used_hint config1))
                     in
                  let check_all_configs configs =
                    let report1 errs =

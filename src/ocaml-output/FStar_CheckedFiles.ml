@@ -477,7 +477,7 @@ let (load_module_from_cache :
               "load_checked_file_tc_result must have an Invalid or Valid entry"
          in
       FStar_Profiling.profile load_it FStar_Pervasives_Native.None
-        "LoadCheckedFile"
+        "FStar.CheckedFiles"
   
 let (store_values_to_cache :
   Prims.string ->
