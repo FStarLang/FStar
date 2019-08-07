@@ -69,7 +69,7 @@ val modifies_trans (res0 res1 res2:R.resource) (h0 h1 h2:HS.mem)
 (**** Subresources *)
 
 /// `LowStar.Resource` defines `can_be_split_into`, but we need here an existential predicate to not carry around all the splitting deltas.
-let is_subresource_of (r0 r: R.resource) = exists (r1: R.resource). r `R.can_be_split_into` (r0, r1)
+val is_subresource_of (r0 r: R.resource) : Type0
 
 val is_subresource_of_elim
   (r0 r: R.resource)
@@ -79,10 +79,23 @@ val is_subresource_of_elim
     (requires (r0 `is_subresource_of` r))
     (ensures goal)
 
-val is_subresource_of_intro (r0 r r1: R.resource)
+val can_be_split_into_intro_star (r0 r1: R.resource)
+  : Lemma
+    (requires (True))
+    (ensures (R.(r0 <*> r1) `R.can_be_split_into` (r0, r1)))
+  [SMTPat R.(r0 <*> r1)]
+
+val is_subresource_of_intro1 (r0 r r1: R.resource)
   : Lemma
     (requires (r `R.can_be_split_into` (r0, r1)))
     (ensures (r0 `is_subresource_of` r))
+  [SMTPat (r `R.can_be_split_into` (r0, r1)); SMTPat (r0 `is_subresource_of` r)]
+
+val is_subresource_of_intro2 (r0 r r1: R.resource)
+  : Lemma
+    (requires (r `R.can_be_split_into` (r1, r0)))
+    (ensures (r0 `is_subresource_of` r))
+  [SMTPat (r `R.can_be_split_into` (r1, r0)); SMTPat (r0 `is_subresource_of` r)]
 
 val is_subresource_of_trans (r1 r2 r3: R.resource)
   : Lemma
@@ -119,8 +132,12 @@ val focus_selector (#r: R.resource) (s: selector r) (r0: R.resource{r0 `is_subre
 val focus_selector_equality (outer inner: R.resource) (h: HS.mem)
   : Lemma
     (requires (R.inv outer h /\ inner `is_subresource_of` outer))
-    (ensures (focus_selector (mk_selector outer h) inner == mk_selector inner h))
-    [SMTPat (focus_selector (mk_selector outer h) inner)]
+    (ensures (is_subresource_of_elim inner outer (R.inv inner h) (fun _ -> ());
+      focus_selector (mk_selector outer h) inner == mk_selector inner h))
+    [SMTPatOr [
+      [SMTPat (focus_selector (mk_selector outer h) inner)];
+      [SMTPat (mk_selector inner h); SMTPat (inner `is_subresource_of` outer)]
+    ]]
 
 /// In the ST state, pre and postconditions depended on the entire heap. Here, theses conditions depend only on a `selector` for the
 /// resource at hand (derived from a heap state).
@@ -194,10 +211,22 @@ val get (r: R.resource) : RST
   (fun _ -> True)
   (fun old returned cur -> returned == old /\ old == cur)
 
+
+(**** The frame rule *)
+
 #set-options "--no_tactics"
 
 open LowStar.RST.Tactics
 
+/// Finally, the workhorse separation logic rule that will be pervasive in Steel programs: the frame rule. All calls to RST functions
+/// should be encapsulated inside `rst_frame`. The rule takes 3 mandatory arguments:
+///  * `outer0` is the resource summming up all the live heap objects when the function `f` is called;
+///  * `outer1 x` is the resource summing up all the live heap objects after the function `f` returns with return value `x`;
+///  * `f` is the RST function you want to call, with pre and post resources `inner0` and `outer1 x`.
+/// Morally, you want to call `f` on `inner0` which is a fraction of your `outer0` resource context. What this rule does is to find
+/// automatically (thanks to a tactic) the `delta` such that `outer0 == inner0 <*> delta`. Then it checks that the `outer1 x` you
+/// provided does indeed satisfy `outer1 x == inner1 x <*> delta`. The postcondition of `f` is propagated to `outer1`, as well as the
+/// core information provided by the frame rule: the `delta` does not change.
 inline_for_extraction noextract val rst_frame
   (outer0:R.resource)
   (#inner0:R.resource)

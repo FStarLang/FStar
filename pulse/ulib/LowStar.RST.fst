@@ -50,13 +50,21 @@ let modifies_refl res h = ()
 let modifies_trans res0 res1 res2 h0 h1 h2 =
   modifies_loc_disjoint (as_loc (fp res0)) (as_loc (fp res1)) h0 h1 h2
 
+
+let is_subresource_of r0 r = exists (r1: R.resource). r `R.can_be_split_into` (r0, r1)
+
+
 let is_subresource_of_elim r0 r goal lemma =
   let pf: squash (exists (r1: resource). r `can_be_split_into` (r0, r1)) = () in
   Classical.exists_elim goal #resource #(fun r1 -> r `can_be_split_into` (r0 , r1)) pf (fun r1 ->
     lemma r1
   )
 
-let is_subresource_of_intro r0 r r1 = ()
+let can_be_split_into_intro_star r0 r1 = ()
+
+let is_subresource_of_intro1 r0 r r1 = ()
+
+let is_subresource_of_intro2 r0 r r1 = R.reveal_can_be_split_into ()
 
 let is_subresource_of_trans r1 r2 r3 =
   is_subresource_of_elim r1 r2 (r1 `is_subresource_of` r3) (fun delta12 ->
@@ -67,8 +75,7 @@ let is_subresource_of_trans r1 r2 r3 =
       reveal_star ();
       let delta13 = delta12 <*> delta23 in
       loc_union_assoc (as_loc (fp delta23)) (as_loc (fp delta12)) (as_loc (fp r1));
-      assert(r3 `can_be_split_into` (r1, delta13));
-      is_subresource_of_intro r1 r3 delta13
+      assert(r3 `can_be_split_into` (r1, delta13))
     )
   )
 
@@ -80,10 +87,15 @@ open FStar.FunctionalExtensionality
 let mk_selector r h =
    Fext.on_dom_g (r0:R.resource{r0 `is_subresource_of` r}) (fun (r0:R.resource{r0 `is_subresource_of` r}) -> R.sel r0.R.view h)
 
-let focus_selector #r s r0 =
-  let r' = Fext.on_dom_g (r0':R.resource{r0' `is_subresource_of` r0}) (fun (r0':R.resource{r0' `is_subresource_of` r0}) ->
+let focus_selector' (#r: R.resource) (s: selector r) (r0: R.resource{r0 `is_subresource_of` r})
+  : Tot (s':selector r0{forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'}) =
+   let r' = Fext.on_dom_g (r0':R.resource{r0' `is_subresource_of` r0}) (fun (r0':R.resource{r0' `is_subresource_of` r0}) ->
     s r0'
   ) in r'
+
+
+let focus_selector #r s r0 =
+  focus_selector' #r s r0
 
 
 let focus_selector_equality outer inner h =
@@ -94,8 +106,7 @@ let focus_selector_equality outer inner h =
     (r0:resource{r0 `is_subresource_of` inner})
     (fun r0 -> r0.t)
     focused
-    original;
-  admit()
+    original
 
 let extend_sprop (#r0: resource) (p: sprop r0) (r: resource{r0 `is_subresource_of` r}) : Tot (sprop r) =
   fun s -> p (focus_selector #r s r0)
