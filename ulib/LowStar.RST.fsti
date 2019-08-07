@@ -129,18 +129,11 @@ let sprop r = selector r -> Type0
 /// `extend_sprop` is the dual of `focus_selector`.
 val extend_sprop (#r0: R.resource) (p: sprop r0) (r: R.resource{r0 `is_subresource_of` r}) : Tot (sprop r)
 
-/// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant of a resource.
-val hsrefine (r:R.resource) (p:sprop r) : R.resource
-
-val reveal_hsrefine (r:R.resource) (p: sprop r)
-  : Lemma (
-    let r' = hsrefine r p in
-    forall (h: R.imem (R.inv r)).
-      r'.R.t == r.R.t /\
-      R.sel r'.R.view h == R.sel r.R.view h /\
-      R.fp r' == R.fp r /\
-      (R.inv r' h <==> R.inv r h /\ p (mk_selector r h))
-  )
+// /// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant of a resource.
+val hsrefine (r:R.resource) (p:sprop r) : Tot (r':R.resource{
+    r'.R.t == r.R.t /\
+    r'.R.view == {r.R.view with R.inv = fun h -> r.R.view.R.inv h /\ p (mk_selector r h)}
+  })
 
 (**** The RST effect *)
 
