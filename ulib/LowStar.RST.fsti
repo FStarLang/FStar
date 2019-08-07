@@ -19,7 +19,8 @@ module ST = FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module A = LowStar.Array
-module R = LowStar.Resource
+
+include LowStar.Resource
 
 /// The `RST` effect is the top concept of the Steel framework. It offers a way of specifying
 /// function in terms of resources, abstracting away the `modifies` theory of `LowStar.Array`.
@@ -54,20 +55,20 @@ val frame_usedness_preservation_elim (l1 l2: A.loc) (h0 h1:HS.mem) (frame: A.loc
     (ensures (A.loc_disjoint frame l2 /\ A.loc_includes (A.loc_used_in h1) frame))
 
 /// We can now define our new `modifies` in terms of resources.
-val modifies (res0 res1:R.resource) (h0 h1:HS.mem) : prop
+val modifies (res0 res1:resource) (h0 h1:HS.mem) : prop
 
 val reveal_modifies (_ : unit)
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}
     modifies res0 res1 h0 h1 <==>
-      A.modifies (R.as_loc (R.fp res0)) h0 h1 /\
-      frame_usedness_preservation (R.as_loc (R.fp res0)) (R.as_loc (R.fp res1)) h0 h1
+      A.modifies (as_loc (fp res0)) h0 h1 /\
+      frame_usedness_preservation (as_loc (fp res0)) (as_loc (fp res1)) h0 h1
    )
 
-val modifies_refl (res:R.resource) (h:HS.mem)
+val modifies_refl (res:resource) (h:HS.mem)
   : Lemma (modifies res res h h)
   [SMTPat (modifies res res h h)]
 
-val modifies_trans (res0 res1 res2:R.resource) (h0 h1 h2:HS.mem)
+val modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
   : Lemma
     (requires (modifies res0 res1 h0 h1 /\ modifies res1 res2 h1 h2))
     (ensures (modifies res0 res2 h0 h2))
@@ -77,42 +78,42 @@ val modifies_trans (res0 res1 res2:R.resource) (h0 h1 h2:HS.mem)
 
 /// `LowStar.Resource` defines `can_be_split_into`, but we need here an existential predicate to not
 /// carry around all the splitting deltas.
-val is_subresource_of (r0 r: R.resource) : Type0
+val is_subresource_of (r0 r: resource) : Type0
 
 val is_subresource_of_elim
-  (r0 r: R.resource)
+  (r0 r: resource)
   (goal: Type)
-  (lemma: (r1: R.resource) -> Lemma (requires (r `R.can_be_split_into` (r0 , r1))) (ensures goal))
+  (lemma: (r1: resource) -> Lemma (requires (r `can_be_split_into` (r0 , r1))) (ensures goal))
   : Lemma
     (requires (r0 `is_subresource_of` r))
     (ensures goal)
 
-val can_be_split_into_intro_star (r0 r1: R.resource)
+val can_be_split_into_intro_star (r0 r1: resource)
   : Lemma
     (requires (True))
-    (ensures (R.(r0 <*> r1) `R.can_be_split_into` (r0, r1)))
-  [SMTPat R.(r0 <*> r1)]
+    (ensures ((r0 <*> r1) `can_be_split_into` (r0, r1)))
+  [SMTPat (r0 <*> r1)]
 
-val is_subresource_of_intro1 (r0 r r1: R.resource)
+val is_subresource_of_intro1 (r0 r r1: resource)
   : Lemma
-    (requires (r `R.can_be_split_into` (r0, r1)))
+    (requires (r `can_be_split_into` (r0, r1)))
     (ensures (r0 `is_subresource_of` r))
-  [SMTPat (r `R.can_be_split_into` (r0, r1)); SMTPat (r0 `is_subresource_of` r)]
+  [SMTPat (r `can_be_split_into` (r0, r1)); SMTPat (r0 `is_subresource_of` r)]
 
-val is_subresource_of_intro2 (r0 r r1: R.resource)
+val is_subresource_of_intro2 (r0 r r1: resource)
   : Lemma
-    (requires (r `R.can_be_split_into` (r1, r0)))
+    (requires (r `can_be_split_into` (r1, r0)))
     (ensures (r0 `is_subresource_of` r))
-  [SMTPat (r `R.can_be_split_into` (r1, r0)); SMTPat (r0 `is_subresource_of` r)]
+  [SMTPat (r `can_be_split_into` (r1, r0)); SMTPat (r0 `is_subresource_of` r)]
 
-val is_subresource_of_trans (r1 r2 r3: R.resource)
+val is_subresource_of_trans (r1 r2 r3: resource)
   : Lemma
     (requires (r1 `is_subresource_of` r2 /\ r2 `is_subresource_of` r3))
     (ensures (r1 `is_subresource_of` r3))
   [SMTPat (r1 `is_subresource_of` r2); SMTPat (r2 `is_subresource_of` r3);
    SMTPat (r1 `is_subresource_of` r3)]
 
-val is_subresource_of_refl (r: R.resource) : Lemma(r `is_subresource_of` r)
+val is_subresource_of_refl (r: resource) : Lemma(r `is_subresource_of` r)
   [SMTPat (r `is_subresource_of` r)]
 
 (**** Selectors *)
@@ -126,27 +127,27 @@ module Fext =  FStar.FunctionalExtensionality
 
 /// We extend on the `LowStar.Resource.sel_t` selector type by allowing our new selectors to also
 /// talk about the subresources contained inside the enclosing resource. Selectors are morally
-/// `(r0:R.resource{r0 is_subresource_of r}) -> r0.R.t`, but we need to define them with functional
+/// `(r0:resource{r0 is_subresource_of r}) -> r0.t`, but we need to define them with functional
 /// extensionality. Since selectors are morally a heap restricted to a resource, we call them rmem.
-let rmem (r: R.resource) : Type =
-  Fext.restricted_g_t (r0:R.resource{r0 `is_subresource_of` r}) (fun r0 -> r0.R.t)
+let rmem (r: resource) : Type =
+  Fext.restricted_g_t (r0:resource{r0 `is_subresource_of` r}) (fun r0 -> r0.t)
 
 /// The main way to make a selector is to derive one from a particular state of the heap.
 /// `mk_rmem r h` effectively restricts your access to the heap to accesses that are valid and
 /// within the resource you consider.
 val mk_rmem
-  (r: R.resource)
-  (h: R.imem (R.inv r)) :
-  Tot (rh:rmem r{forall (r0:R.resource{r0 `is_subresource_of` r}). rh r0 == R.sel r0.R.view h})
+  (r: resource)
+  (h: imem (inv r)) :
+  Tot (rh:rmem r{forall (r0:resource{r0 `is_subresource_of` r}). rh r0 == sel r0.view h})
 
 /// The only other transformation allowed on selectors is focusing on a subresource.
-val focus_rmem (#r: R.resource) (h: rmem r) (r0: R.resource{r0 `is_subresource_of` r})
+val focus_rmem (#r: resource) (h: rmem r) (r0: resource{r0 `is_subresource_of` r})
   : Tot (rmem r0)
 
-val focus_rmem_equality (outer inner: R.resource) (h: HS.mem)
+val focus_rmem_equality (outer inner: resource) (h: HS.mem)
   : Lemma
-    (requires (R.inv outer h /\ inner `is_subresource_of` outer))
-    (ensures (is_subresource_of_elim inner outer (R.inv inner h) (fun _ -> ());
+    (requires (inv outer h /\ inner `is_subresource_of` outer))
+    (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
       focus_rmem (mk_rmem outer h) inner == mk_rmem inner h))
     [SMTPatOr [
       [SMTPat (focus_rmem (mk_rmem outer h) inner)];
@@ -158,37 +159,37 @@ val focus_rmem_equality (outer inner: R.resource) (h: HS.mem)
 let rprop r = rmem r -> Type0
 
 /// `extend_rprop` is the dual of `focus_rmem`.
-val extend_rprop (#r0: R.resource) (p: rprop r0) (r: R.resource{r0 `is_subresource_of` r})
+val extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
   : Tot (rprop r)
 
 /// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
 /// of a resource.
-val hsrefine (r:R.resource) (p:rprop r) : Tot (r':R.resource{
-    r'.R.t == r.R.t /\
-    r'.R.view == {r.R.view with R.inv = fun h -> r.R.view.R.inv h /\ p (mk_rmem r h)}
+val hsrefine (r:resource) (p:rprop r) : Tot (r':resource{
+    r'.t == r.t /\
+    r'.view == {r.view with inv = fun h -> r.view.inv h /\ p (mk_rmem r h)}
   })
 
 (**** The RST effect *)
 
 /// On top of the invariants of the resource at hand, we add another global invariant governing how
 /// resources are used : the footprint of resources used in Steel functions have to be used.
-val rst_inv (res:R.resource) (h:HS.mem) : GTot prop
+val rst_inv (res:resource) (h:HS.mem) : GTot prop
 
 val reveal_rst_inv (_ : unit)
   : Lemma (forall res h .
     rst_inv res h <==>
-      A.loc_includes (A.loc_used_in h) (R.as_loc (R.fp res))
+      A.loc_includes (A.loc_used_in h) (as_loc (fp res))
   )
 
-val rst_inv_star (res0 res1: R.resource) (h: HS.mem)
-  : Lemma (rst_inv R.(res0 <*> res1) h <==> rst_inv R.(res1 <*> res0) h)
-  [SMTPat (rst_inv R.(res0 <*> res1) h)]
+val rst_inv_star (res0 res1: resource) (h: HS.mem)
+  : Lemma (rst_inv (res0 <*> res1) h <==> rst_inv (res1 <*> res0) h)
+  [SMTPat (rst_inv (res0 <*> res1) h)]
 
-let r_pre (res:R.resource) =  rprop res
+let r_pre (res:resource) =  rprop res
 let r_post
-  (res0: R.resource)
+  (res0: resource)
   (a: Type)
-  (res1: a -> R.resource) =
+  (res1: a -> resource) =
   rmem res0 -> x:a -> rprop (res1 x)
 
 
@@ -210,16 +211,16 @@ let r_post
 /// these functional specification can only depend on the views of the resources you're handling.
 effect RST
   (a: Type)
-  (res0: R.resource)
-  (res1: a -> R.resource)
+  (res0: resource)
+  (res1: a -> resource)
   (pre: rprop res0)
   (post: rmem res0 -> (x:a) -> rprop (res1 x))
 = ST.ST
   a
-  (fun h0 -> R.inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
+  (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
   (fun h0 x h1 ->
-    R.inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0) /\
-    R.inv (res1 x) h1 /\
+    inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0) /\
+    inv (res1 x) h1 /\
     rst_inv (res1 x) h1 /\
     modifies res0 (res1 x) h0 h1 /\
     post (mk_rmem res0 h0) x (mk_rmem (res1 x) h1)
@@ -227,7 +228,7 @@ effect RST
 
 /// Similar to `FStar.Hyperstack.ST.get`, this helper gives you a rmem based on the current state of
 /// the heap
-val get (r: R.resource) : RST
+val get (r: resource) : RST
   (rmem r)
   (r)
   (fun _ -> r)
@@ -256,13 +257,13 @@ open LowStar.RST.Tactics
 /// satisfy `outer1 x == inner1 x <*> delta`. The postcondition of `f` is propagated to `outer1`,
 /// as well as the core information provided by the frame rule: the `delta` does not change.
 inline_for_extraction noextract val rst_frame
-  (outer0:R.resource)
-  (#inner0:R.resource)
+  (outer0:resource)
+  (#inner0:resource)
   (#a:Type)
-  (outer1:a -> R.resource)
-  (#inner1:a -> R.resource)
+  (outer1:a -> resource)
+  (#inner1:a -> resource)
   (#[resolve_delta ()]
-     delta:R.resource{
+     delta:resource{
        FStar.Tactics.with_tactic
          resolve_frame_delta
          (frame_delta outer0 inner0 outer1 inner1 delta)
@@ -277,7 +278,7 @@ inline_for_extraction noextract val rst_frame
       fun h ->
         pre (focus_rmem h inner0)
     )
-    (R.reveal_can_be_split_into ();
+    (reveal_can_be_split_into ();
       fun h0 x h1 ->
         post
           (focus_rmem h0 inner0)
