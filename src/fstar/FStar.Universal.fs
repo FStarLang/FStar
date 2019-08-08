@@ -294,9 +294,8 @@ let tc_one_file
       let fmod, env = parse env pre_fn fn in
       let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
-          let ((tcmod, smt_decls), env), tc_time =
-            FStar.Util.record_time (fun () ->
-               with_tcenv_of_env env (fun tcenv ->
+          let check env =
+              with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
@@ -311,9 +310,16 @@ let tc_one_file
                         smt_decls
                    else [], []
                  in
-                 ((modul, smt_decls), env)
-            ))
+                 ((modul, smt_decls), env))
+            in
+
+          let ((tcmod, smt_decls), env) =
+            Profiling.profile (fun () -> check env)
+                              (Some fmod.name.str)
+                              "FStar.Universal.tc_source_file"
           in
+
+          let tc_time = 0 in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
           let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
           {
@@ -383,10 +389,11 @@ let tc_one_file
         in
 
         let env =
-          Options.profile
+          Profiling.profile
             (fun () -> with_tcenv_of_env env (extend_tcenv tcmod) |> snd)
-            (fun _ -> BU.format1 "Extending environment with module %s"
-                                 tcmod.name.str) in
+            None
+            "FStar.Universal.extend_tcenv"
+        in
 
 
         (* If we have to extract this module, then do it first *)
@@ -439,12 +446,12 @@ let tc_one_file_from_remaining (remaining:list<string>) (env:uenv)
         | intf :: impl :: remaining when needs_interleaving intf impl ->
           let m, mllib, env = tc_one_file env (Some intf) impl
                                           (impl |> FStar.Parser.Dep.parsing_data_of deps) in
-          remaining, ([m], mllib, env)
+          remaining, (m, mllib, env)
         | intf_or_impl :: remaining ->
           let m, mllib, env = tc_one_file env None intf_or_impl
                                           (intf_or_impl |> FStar.Parser.Dep.parsing_data_of deps) in
-          remaining, ([m], mllib, env)
-        | [] -> [], ([], None, env)
+          remaining, (m, mllib, env)
+        | [] -> failwith "Impossible: Empty remaining modules"
   in
   remaining, nmods, mllib, env
 
@@ -456,8 +463,10 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
     | [] -> acc
     | _  ->
       let mods, mllibs, env = acc in
-      let remaining, nmods, mllib, env = tc_one_file_from_remaining remaining env deps in
-      tc_fold_interleave deps (mods@nmods, mllibs@as_list mllib, env) remaining
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env deps in
+      if not (Options.profile_group_by_decls())
+      then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
+      tc_fold_interleave deps (mods@[nmod], mllibs@as_list mllib, env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
