@@ -52,7 +52,7 @@ let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:array a) : Lemma
 abstract
 let array_view (#a:Type) (b:array a) : Tot (view (varray b)) =
   reveal_view ();
-  let fp = Ghost.hide (loc_array b) in
+  let fp (h: HS.mem) = loc_array b in
   let inv (h: HS.mem) : prop =
     live h b /\ constant_perm_seq h b
   in
@@ -82,8 +82,8 @@ let get_rperm
 
 let reveal_array ()
   : Lemma (
-    (forall a (b:array a) .{:pattern as_loc (fp (array_resource b))}
-      as_loc (fp (array_resource b)) == loc_array b) /\
+    (forall a (b:array a) h .{:pattern as_loc (fp (array_resource b)) h}
+      as_loc (fp (array_resource b)) h == loc_array b) /\
       (forall a (b:array a) h .{:pattern inv (array_resource b) h}
         inv (array_resource b) h <==> live h b /\ constant_perm_seq h b
       ) /\

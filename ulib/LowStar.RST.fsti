@@ -60,8 +60,8 @@ val modifies (res0 res1:resource) (h0 h1:HS.mem) : prop
 val reveal_modifies (_ : unit)
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}
     modifies res0 res1 h0 h1 <==>
-      A.modifies (as_loc (fp res0)) h0 h1 /\
-      frame_usedness_preservation (as_loc (fp res0)) (as_loc (fp res1)) h0 h1
+      A.modifies (as_loc (fp res0) h0) h0 h1 /\
+      frame_usedness_preservation (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1
    )
 
 val modifies_refl (res:resource) (h:HS.mem)
@@ -178,7 +178,7 @@ val rst_inv (res:resource) (h:HS.mem) : GTot prop
 val reveal_rst_inv (_ : unit)
   : Lemma (forall res h .
     rst_inv res h <==>
-      A.loc_includes (A.loc_used_in h) (as_loc (fp res))
+      A.loc_includes (A.loc_used_in h) (as_loc (fp res) h)
   )
 
 val rst_inv_star (res0 res1: resource) (h: HS.mem)
