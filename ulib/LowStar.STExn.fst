@@ -76,6 +76,8 @@ layered_effect {
        write = write
 }
 
+let mread = HoareST?.read
+let mwrite = HoareST?.write
 
 // type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 

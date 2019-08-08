@@ -299,13 +299,106 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   //AR: TODO: FIXME: rest of the combinators
 
   let tc_action env (act:action) : action =
+    let r = act.action_defn.pos in
     if List.length act.action_params <> 0
     then failwith "tc_layered_eff_decl: expected action_params to be empty";
 
     let env, act =
       let usubst, us = SS.univ_var_opening act.action_univs in
+      Env.push_univ_vars env us,
+      { act with 
+        action_univs = us;
+        action_defn  = SS.subst usubst act.action_defn;
+        action_typ   = SS.subst usubst act.action_typ } in
+    
+    let act_typ =
+      match (SS.compress act.action_typ).n with
+      | Tm_arrow (bs, c) ->
+        let ct = U.comp_to_comp_typ c in
+        if lid_equals ct.effect_name ed.mname
+        then
+          let repr_ts = let us, t, _ = repr in (us, t) in
+          let repr = Env.inst_tscheme_with repr_ts ct.comp_univs |> snd in
+          let c =
+            (S.mk_Tm_app
+              repr
+              (S.as_arg ct.result_typ::ct.effect_args)
+              None r)
+            |> S.mk_Total in
+          U.arrow bs c
+        else act.action_typ
+      | _ -> act.action_typ in
+    
+    let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
+    let act_defn, _, g_d = tc_tot_or_gtot_term
+      ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
+      act.action_defn in
+    
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print2 "Typechecked action definition: %s and action type: %s\n"
+        (Print.term_to_string act_defn) (Print.term_to_string act_typ);
 
-  act in
+    let k, g_k =
+      let act_typ = N.normalize [Beta] env act_typ in
+      match (SS.compress act_typ).n with
+      | Tm_arrow (bs, c) ->
+        let bs = SS.open_binders bs in
+        let env = Env.push_binders env bs in
+        let t, u = U.type_u () in
+        let a_tm, _, g_tm = TcUtil.new_implicit_var "" r env t in
+        let repr, g = fresh_repr r env u a_tm in
+        U.arrow bs (S.mk_Total' repr (Env.new_u_univ () |> Some)), Env.conj_guard g g_tm
+      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, "") r in  //AR: TODO: FIXME: ""
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
+
+    let g = Rel.teq env act_typ k in
+    List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "Expected action type after unification: %s\n" (Print.term_to_string k);
+    
+    let act_typ =
+      let repr_args t : universes * term * args =
+        match (SS.compress t).n with
+        | Tm_app (head, a::is) ->
+          (match (SS.compress head).n with
+           | Tm_uinst (_, us) -> us, fst a, is
+           | _ -> failwith "Impossible!")
+        | _ -> failwith "Impossible!" in
+
+      let k = N.normalize [Beta] env k in
+      match (SS.compress k).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let us, a, is = repr_args (U.comp_result c) in
+        let ct = {
+          comp_univs = us;
+          effect_name = ed.mname;
+          result_typ = a;
+          effect_args = is;
+          flags = [] } in
+        U.arrow bs (S.mk_Comp ct)
+      | _ -> failwith "Impossible!" in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
+    
+    let act =
+      if act.action_univs = []
+      then
+        let us, act_defn = TcUtil.generalize_universes env act_defn in
+        { act with
+          action_univs = us;
+          action_defn = act_defn;
+          action_typ = SS.close_univ_vars us act_typ }
+      else
+        { act with
+          action_defn = SS.close_univ_vars act.action_univs act_defn;
+          action_typ = SS.close_univ_vars act.action_univs act_typ } in
+
+    act in
 
   let fst (a, _, _) = a in
   let snd (_, b, _) = b in
@@ -317,309 +410,8 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     bind_wp     = (fst bind_repr, thd bind_repr);
     repr        = (fst repr, snd repr);
     return_repr = (fst return_repr, snd return_repr);
-    bind_repr   = (fst bind_repr, snd bind_repr); }
-
- 
-  // //typecheck return
-  // let return_repr, return_wp =
-  //   //return should have the type a:Type -> x:a -> repr a ?u1 ... ?un for n indices
-  //   let bs = SS.open_binders bs in
-  //   let a, bs_indices = List.hd bs, List.tl bs in
-  //   let r = range_of_lid ed.mname in
-
-  //   let bs = [a; S.null_binder (a |> fst |> S.bv_to_name)] in  //binders for return_repr
-
-  //   let uvars, gs, _ =
-  //     let env = Env.push_binders env bs in
-  //     List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
-  //       let t, _, g = TcUtil.new_implicit_var "" r env (SS.subst bs_substs b.sort) in
-  //       uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
-  //     ) ([], [], []) bs_indices in
-
-  //   let expected_return_repr_type =
-  //     let repr_args = (U.arg_of_non_null_binder a)::uvars in
-  //     let repr_comp = S.mk_Total (mk_Tm_app repr repr_args None r) in
-  //     let repr_comp = SS.close_comp bs repr_comp in
-  //     let bs = SS.close_binders bs in
-
-  //     U.arrow bs repr_comp in
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "Checking return_repr: %s against expected return_repr type: %s\n"
-  //       (Print.tscheme_to_string ed.return_repr) (Print.term_to_string expected_return_repr_type);
-    
-
-  //   let return_repr = check_and_gen ({ env with use_eq = true }) ed.return_repr expected_return_repr_type in
-  //   List.iter (Rel.force_trivial_guard env) gs;
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "Checked return_repr: %s against expected return_repr type: %s\n"
-  //       (Print.tscheme_to_string return_repr) (Print.term_to_string expected_return_repr_type);
-    
-  //   let indices = uvars |> List.map fst |> List.map SS.compress in  //indices are now indices for M.return in Gamma = bs
-  //   let embedded_indices = EMB.embed (EMB.e_list EMB.e_any) indices Range.dummyRange None EMB.id_norm_cb in
-
-  //   let return_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None |> TcUtil.generalize_universes env in
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print1 "return_wp: %s\n" (Print.tscheme_to_string return_wp);
-
-  //   return_repr, return_wp in
-
-  // let bind_repr, bind_wp =
-  //   let bs = SS.open_binders bs in
-  //   let a, bs_indices = List.hd bs, List.tl bs in
-  //   let r = range_of_lid ed.mname in
-
-  //   //we now need fresh instances of binders and repr
-  //   let b_bs, b_repr =
-  //     match annotated_univ_names with
-  //     | [] ->
-  //       let signature, _ = tc_trivial_guard env signature0 in
-  //       let b_bs = get_binders_from_signature signature in
-  //       let repr = tc_repr repr0 b_bs in
-  //       b_bs, repr
-  //     | _ ->
-  //       let _, signature = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names ed.signature) in
-  //       let _, repr = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names repr) in
-  //       get_binders_from_signature signature, repr in
-
-  //   let b_bs = SS.open_binders b_bs in
-  //   let b, b_bs_indices = List.hd b_bs, List.tl b_bs in
-  //   let b_bs_indices_arrow = b_bs_indices |> List.map (fun (b, q) -> (({b with sort = U.arrow [S.null_binder (a |> fst |> S.bv_to_name)] (S.mk_Total b.sort)}), q)) in
-    
-  //   let f_b = S.null_binder (mk_Tm_app repr (a::bs_indices |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg) None Range.dummyRange) in
-
-  //   let g_b =
-  //     let b_arg = b |> fst |> S.bv_to_name |> S.as_arg in
-  //     let x = S.null_binder (a |> fst |> S.bv_to_name) in
-  //     let b_indices_args = b_bs_indices_arrow |> List.map fst |> List.map S.bv_to_name |> List.map (fun t -> mk_Tm_app t [x |> fst |> S.bv_to_name |> S.as_arg] None Range.dummyRange |> S.as_arg) in
-  //     let repr_app = mk_Tm_app b_repr (b_arg::b_indices_args) None Range.dummyRange in
-  //     S.null_binder (U.arrow [x] (S.mk_Total repr_app))
-  //   in
-
-  //   let bs = a::b::(bs_indices @ b_bs_indices_arrow @ [f_b; g_b]) in
-
-  //   let uvars, gs, _ =
-  //     let env = Env.push_binders env bs in
-  //     List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
-  //       let t, _, g = TcUtil.new_implicit_var "" r env (SS.subst bs_substs b.sort) in
-  //       uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
-  //     ) ([], [], []) b_bs_indices in
-
-  //   let expected_bind_repr_type =
-  //     let repr_args = (U.arg_of_non_null_binder b)::uvars in
-  //     let repr_comp = S.mk_Total (mk_Tm_app b_repr repr_args None r) in
-  //     let repr_comp = SS.close_comp bs repr_comp in
-  //     let bs = SS.close_binders bs in
-
-  //     U.arrow bs repr_comp in
-    
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "Checking bind_repr: %s against expected bind_repr type: %s\n"
-  //       (Print.tscheme_to_string ed.bind_repr) (Print.term_to_string expected_bind_repr_type);
-
-  //   let bind_repr = check_and_gen ({ env with use_eq = true }) ed.bind_repr expected_bind_repr_type in
-  //   List.iter (Rel.force_trivial_guard env) gs;
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "Checked bind_repr: %s against expected bind_repr type: %s\n"
-  //       (Print.tscheme_to_string bind_repr) (Print.term_to_string expected_bind_repr_type);
-    
-  //   //TODO: WE SHOULD CHECK f and g don't appear in the indices??
-  //   let bs = a::b::(bs_indices @ b_bs_indices_arrow) in
-  //   let indices = uvars |> List.map fst |> List.map SS.compress in  //indices are now indices for M.bind in Gamma = bs
-  //   let embedded_indices = EMB.embed (EMB.e_list EMB.e_any) indices Range.dummyRange None EMB.id_norm_cb in
-
-  //   let bind_wp = U.abs (SS.close_binders bs) (SS.close bs embedded_indices) None |> TcUtil.generalize_universes env in
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print1 "bind_wp: %s\n" (Print.tscheme_to_string bind_wp);
-
-  //   bind_repr, bind_wp
-  // in
-
-  // //TODO: other combinators
-
-  // //TODO: clean it up! e.g. factor out common code from tc_eff_decl
-  // let tc_action env0 (act:action) : action =
-  //   if List.length act.action_params <> 0 then failwith ("tc_layered_eff_decl: action_params are not empty for " ^ act.action_name.str);
-
-  //   //open action univs if present
-  //   let univs, univ_subst, act, env =
-  //     match act.action_univs with
-  //     | [] -> [], [], act, env0
-  //     | us ->
-  //       let univ_subst, univs = SS.univ_var_opening us in
-  //       univs, univ_subst, ({ act with
-  //          action_univs = univs;
-  //          action_defn = SS.subst univ_subst act.action_defn;
-  //          action_typ = SS.subst univ_subst act.action_typ
-  //       }), Env.push_univ_vars env0 univs in
-
-  //   let act_typ =
-  //     match (SS.compress act.action_typ).n with
-  //     | Tm_arrow (bs, c) ->
-  //       let ct = comp_to_comp_typ c in
-  //       if lid_equals ct.effect_name ed.mname
-  //       then let c = repr
-  //              |> N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env
-  //              |> (fun repr -> mk_Tm_app repr ((ct.result_typ |> S.as_arg)::ct.effect_args) None Range.dummyRange)
-  //              |> S.mk_Total in
-  //            U.arrow bs c
-  //       else act.action_typ
-  //      | _ -> act.action_typ in
-    
-  //   let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
-
-  //   let act_defn, _, g_a = tc_tot_or_gtot_term
-  //     ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
-  //     act.action_defn in
-    
-  //   let act_typ = N.normalize [Env.Beta] env act_typ in
-
-  //   let expected_act_typ, repr_comp, guvars, g =
-  //     let act_bs, act_repr =
-  //       match annotated_univ_names with
-  //       | [] ->
-  //         let signature, _ = tc_trivial_guard env signature0 in
-  //         let b_bs = get_binders_from_signature signature in
-  //         let repr = tc_repr repr0 b_bs in
-  //         b_bs, repr
-  //       | _ ->
-  //         let _, signature = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names ed.signature) in
-  //         let _, repr = Env.inst_tscheme (annotated_univ_names, SS.close_univ_vars annotated_univ_names repr) in
-  //         get_binders_from_signature signature, repr in
-
-  //     let act_bs = SS.open_binders act_bs in
-
-  //     let act_typ_bs, act_typ_c =
-  //       match (SS.compress act_typ).n with
-  //       | Tm_arrow (bs, c) -> SS.open_comp bs c
-  //       | _ -> failwith "tc_layered_eff_decl: actions must have arrow types" in
-
-  //     let uvars, gs, _ =
-  //       let env = Env.push_binders env act_typ_bs in
-  //       List.fold_left (fun (uvars, gs, bs_substs) (b, _) ->
-  //         let t, _, g = TcUtil.new_implicit_var "" Range.dummyRange env (SS.subst bs_substs b.sort) in
-  //         uvars @ [t |> S.as_arg], gs @ [g], bs_substs @ [NT (b, t)]
-  //       ) ([], [], []) act_bs in
-
-  //     let repr_comp = S.mk_Total (mk_Tm_app act_repr uvars None Range.dummyRange) in
-
-  //     let expected_act_typ = U.arrow act_typ_bs repr_comp in //, repr_comp, gs
-    
-  //     if Env.debug env <| Options.Other "LayeredEffects" then
-  //       BU.print2 "Trying teq of act_typ: %s and expected_act_typ: %s\n"
-  //         (Print.term_to_string (U.arrow act_typ_bs act_typ_c))
-  //         (Print.term_to_string expected_act_typ);
-
-  //     let g = Rel.teq env (U.arrow act_typ_bs act_typ_c) expected_act_typ in
-  //     expected_act_typ, repr_comp, gs, g in
-    
-  //   (g_t::g_a::g::guvars) |> List.iter (Rel.force_trivial_guard env);
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print4 "For action %s, act_typ: %s, expected_act_typ: %s, repr_comp: %s\n"
-  //       act.action_name.str
-  //       (Print.term_to_string act_typ)
-  //       (Print.term_to_string expected_act_typ)
-  //       (Print.comp_to_string repr_comp);
-    
-  //   let expected_act_typ = expected_act_typ |> N.normalize [Env.Beta] env in
-
-  //   let act_typ =
-  //     match (SS.compress expected_act_typ).n with
-  //     | Tm_arrow (bs, c) ->
-  //       let bs, c = SS.open_comp bs c in
-  //       let us, t, args =
-  //         match (U.comp_result c |> SS.compress).n with
-  //         | Tm_app (hd, t::args) ->
-  //           let us =
-  //             match (SS.compress hd).n with
-  //             | Tm_uinst (_, us) -> []
-  //             | _ -> [] in
-  //           us, t, args
-  //         | _ -> failwith ("tc_layered_eff_decl: unexpected expected act_typ with comp_result: " ^ Print.term_to_string (U.comp_result c))
-  //       in
-  //       let c = {
-  //         effect_name = ed.mname;
-  //         comp_univs = us;
-  //         result_typ = t |> fst;
-  //         effect_args = args;
-  //         flags = []
-  //       } in
-  //       U.arrow bs (S.mk_Comp c)
-  //     | _ -> failwith "tc_layered_eff_decl: expected expected_act_typ to be an arrow"
-  //   in
-
-  //   if Env.debug env <| Options.Other "LayeredEffects" then
-  //     BU.print2 "After injecting into the monad, action %s has type %s\n"
-  //       act.action_name.str
-  //       (Print.term_to_string act_typ);
-    
-  //   let univs, act_defn =
-  //     if List.length univs = 0 then TcUtil.generalize_universes env0 act_defn
-  //     else univs, SS.close_univ_vars univs act_defn in
-    
-  //   let act_typ = act_typ |> N.normalize [Env.Beta] env |> SS.close_univ_vars univs in
-
-  //   ({ act with
-  //      action_univs = univs;
-  //      action_defn = act_defn;
-  //      action_typ = act_typ
-  //   })
-  // in
-
-  // let actions = List.map (tc_action env) ed.actions in
-
-  // //close the signature now
-  // let univs, signature =
-  //   let univs, signature = TcUtil.generalize_universes env0 ed.signature in
-  //   match annotated_univ_names with
-  //   | [] -> univs, signature
-  //   | _ -> 
-  //     if List.length univs = List.length annotated_univ_names
-  //     && List.forall2 (fun u1 u2 -> FStar.Syntax.Syntax.order_univ_name u1 u2 = 0)
-  //                      univs
-  //                      annotated_univ_names
-  //     then univs, signature
-  //     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format2 "Expected an effect definition with %s universes; but found %s"
-  //                                     (BU.string_of_int (List.length annotated_univ_names))
-  //                                     (BU.string_of_int (List.length univs))))
-  //                       ed.signature.pos
-  // in
-  
-  // let close n ts =
-  //   let ts = SS.close_univ_vars_tscheme univs ts in
-  //   let m = List.length (fst ts) in
-  //   if n >= 0 && not (is_unknown (snd ts)) && m <> n
-  //   then begin
-  //     let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
-  //     let err_msg =
-  //       BU.format4 "The effect combinator is %s (m,n=%s,%s) (%s)"
-  //         error (string_of_int m) (string_of_int n) (Print.tscheme_to_string ts)
-  //     in
-  //     raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg) (snd ts ).pos
-  //   end ;
-  //   ts in
-
-  // let ed = { ed with
-  //      univs         = univs;
-  //      binders       = [];
-  //      signature     = signature;
-  //      ret_wp        = close 0 return_wp;
-  //      bind_wp       = close 1 bind_wp;
-  //      repr          = repr;
-  //      return_repr   = close 0 return_repr;
-  //      bind_repr     = close 1 bind_repr;
-  //      actions       = actions;
-  //   } in
-
-  // if Env.debug env0 <| Options.Other "LayeredEffects" then
-  //   BU.print1 "Typechecked layered effect: %s\n" (Print.eff_decl_to_string false ed);
-  
-  // ed
+    bind_repr   = (fst bind_repr, snd bind_repr);
+    actions     = List.map (tc_action env0) ed.actions }
 
 let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
