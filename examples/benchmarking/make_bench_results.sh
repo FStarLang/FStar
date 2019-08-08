@@ -50,7 +50,8 @@ make clean
 make -C src clean_boot
 make -C src clean
 git checkout -- src/ocaml-output
-rm src/.cache.boot/*.checked.lax
+rm -f src/.cache.boot/*.checked.lax
+rm -f ulib/.cache.lax/*.checked.lax
 
 # log the git state of the tree
 git log -n 1 2>&1 | tee -a ${BENCH_OUTDIR}/git_info.log
