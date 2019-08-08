@@ -25,24 +25,30 @@ open LowStar.Array
 
 (* Views and resources *)
 
+let fp_reads_fp fp =
+  forall (h0 h1: HS.mem) (loc: loc). {:pattern (modifies loc h0 h1); (fp h1) }
+    loc_disjoint (as_loc fp h0) loc /\
+    modifies loc h0 h1 ==>
+    as_loc fp h0 == as_loc fp h1
+
 let sel_reads_fp #b fp inv sel =
   forall (h0 h1:imem inv) loc. {:pattern (modifies loc h0 h1); (sel h1)}
-    loc_disjoint (as_loc fp) loc /\
+    loc_disjoint (as_loc fp h0) loc /\
     modifies loc h0 h1 ==>
     sel h0 == sel h1
 
 let inv_reads_fp fp inv =
   forall h0 h1 loc.{:pattern (modifies loc h0 h1); (inv h1)}
     inv h0 /\
-    loc_disjoint (as_loc fp) loc /\
+    loc_disjoint (as_loc fp h0) loc /\
     modifies loc h0 h1 ==>
     inv h1
 
 let reveal_view () = ()
 
 let ( <*> ) (res1 res2:resource) : res:resource =
-  let inv (h: HS.mem) : prop = inv res1 h /\ inv res2 h /\ loc_disjoint (as_loc (fp res1)) (as_loc (fp res2)) in
-  let fp = Ghost.hide (loc_union (as_loc (fp res1)) (as_loc (fp res2))) in
+  let inv (h: HS.mem) : prop = inv res1 h /\ inv res2 h /\ loc_disjoint (as_loc (fp res1) h) (as_loc (fp res2) h) in
+  let fp (h: HS.mem) = loc_union (as_loc (fp res1) h) (as_loc (fp res2) h) in
   let sel (h: HS.mem) : GTot (res1.t & res2.t) = (sel res1.view h,sel res2.view h) in
   let t = res1.t & res2.t in
   let view = {
@@ -64,7 +70,7 @@ let reveal_star () = ()
 
 let empty_resource : resource =
   reveal_view ();
-  let fp = Ghost.hide loc_none in
+  let fp (h: HS.mem) : GTot loc = loc_none in
   let inv (h : HS.mem) : prop = True in
   let sel h = () in
   let t = unit in
@@ -81,10 +87,13 @@ let empty_resource : resource =
 
 let reveal_empty_resource () = ()
 
+let can_be_split_into_h (outer:resource) ((inner,delta):resource & resource) (h: HS.mem) =
+  (as_loc (fp outer) h == loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
+      (inv outer h <==>
+        inv inner h /\ inv delta h /\ loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
 
 let can_be_split_into (outer:resource) ((inner,delta):resource & resource) =
-    as_loc (fp outer) == loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-    (forall h . inv outer h <==> inv inner h /\ inv delta h /\ loc_disjoint (as_loc (fp delta)) (as_loc (fp inner)))
+    (forall (h: HS.mem). can_be_split_into_h outer (inner, delta) h)
 
 let reveal_can_be_split_into () = ()
 
@@ -120,8 +129,12 @@ let equal_comm_monoid_right_unit res = ()
 let equal_comm_monoid_commutativity res1 res2 = ()
 
 let equal_comm_monoid_associativity res1 res2 res3 =
-  loc_union_assoc (as_loc (fp res1)) (as_loc (fp res2)) (as_loc (fp res3));
-  ()
+  let aux (h: HS.mem) : Lemma (
+    can_be_split_into_h ((res1 <*> res2) <*> res3) (res1 <*> (res2 <*> res3), empty_resource) h
+  ) =
+    loc_union_assoc (as_loc (fp res1) h) (as_loc (fp res2) h) (as_loc (fp res3) h)
+  in
+  Classical.forall_intro aux
 
 let equal_comm_monoid_cong res1 res2 res3 res4 = ()
 

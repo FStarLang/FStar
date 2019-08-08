@@ -40,15 +40,15 @@ let frame_usedness_preservation_intro l1 l2 h0 h1 lemma =
 let frame_usedness_preservation_elim l1 l2 h0 h1 frame = ()
 
 let modifies res0 res1 h0 h1 =
-    modifies (as_loc (fp res0)) h0 h1 /\
-    frame_usedness_preservation (as_loc (fp res0)) (as_loc (fp res1)) h0 h1
+    modifies (as_loc (fp res0) h0) h0 h1 /\
+    frame_usedness_preservation (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1
 
 let reveal_modifies () = ()
 
 let modifies_refl res h = ()
 
 let modifies_trans res0 res1 res2 h0 h1 h2 =
-  modifies_loc_disjoint (as_loc (fp res0)) (as_loc (fp res1)) h0 h1 h2
+  modifies_loc_disjoint (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1 h2
 
 
 let is_subresource_of r0 r = exists (r1: resource). r `can_be_split_into` (r0, r1)
@@ -74,7 +74,18 @@ let is_subresource_of_trans r1 r2 r3 =
       reveal_can_be_split_into ();
       reveal_star ();
       let delta13 = delta12 <*> delta23 in
-      loc_union_assoc (as_loc (fp delta23)) (as_loc (fp delta12)) (as_loc (fp r1));
+      let outer = r3 in
+      let inner = r1 in
+      let delta = delta13 in
+      let goal h =
+        (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
+        (inv outer h <==>
+          inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+      in
+      let aux (h: HS.mem) : Lemma (goal h) =
+        loc_union_assoc (as_loc (fp delta23) h) (as_loc (fp delta12) h) (as_loc (fp r1) h)
+      in
+      Classical.forall_intro aux;
       assert(r3 `can_be_split_into` (r1, delta13))
     )
   )
@@ -128,11 +139,11 @@ let hsrefine r p =
   assert(sel_reads_fp new_view.fp new_view.inv new_view.sel);
   let aux (h0 h1: HS.mem) (loc: loc) : Lemma (
     new_view.inv h0 /\
-    loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1 ==>
+    loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1 ==>
     new_view.inv h1
   ) =
     let aux (_ : squash (
-      new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp) loc /\ modifies loc h0 h1
+      new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1
     )) : Lemma (new_view.inv h1) =
       assert(r.view.inv h1);
       assert(p (mk_rmem r h0));
@@ -157,7 +168,7 @@ let hsrefine r p =
 #pop-options
 
 let rst_inv res h =
-  loc_includes (loc_used_in  h) (as_loc (fp res)) /\ True
+  loc_includes (loc_used_in h) (as_loc (fp res) h) /\ True
 
 let reveal_rst_inv () = ()
 
@@ -175,7 +186,7 @@ let get r =
   let h = HST.get () in
   mk_rmem r h
 
-#set-options "--z3rlimit 50 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
 
 inline_for_extraction noextract let rst_frame
   outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
