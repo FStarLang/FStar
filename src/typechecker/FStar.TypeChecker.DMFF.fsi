@@ -40,3 +40,5 @@ val double_star: typ -> typ
 val star_type: env -> typ -> typ
 val star_expr: env -> term -> typ * term * term
 val trans_F  : env -> typ -> term -> term
+val recheck_debug : string -> FStar.TypeChecker.Env.env -> term -> term
+val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list<sigelt> * eff_decl * option<sigelt>)
