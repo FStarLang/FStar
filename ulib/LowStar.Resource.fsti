@@ -51,15 +51,15 @@ let as_loc (fp:fp_t) (h: HS.mem) : GTot A.loc = fp h
 unfold
 let sel_t (a: Type) = HS.mem -> GTot a
 
-val fp_reads_fp (fp: fp_t) : prop
+val fp_reads_fp (fp: fp_t) (inv: inv_t) : prop
 
 /// `sel_reads_fp` reformulate the core principle of the `modifies` theory: resource views should be
 /// preserved as long as the resource footprint is not part of the modified area.
-val sel_reads_fp (#b: Type) (fp: fp_t) (inv:HS.mem -> prop) (sel:imem inv -> GTot b) : prop
+val sel_reads_fp (#b: Type) (fp: fp_t) (inv:inv_t) (sel:imem inv -> GTot b) : prop
 
 
 /// Similarly, invariants should be preserved when the footprint is not modified.
-val inv_reads_fp (fp: fp_t) (inv: HS.mem -> prop) : prop
+val inv_reads_fp (fp: fp_t) (inv:inv_t) : prop
 
 /// Armed with this concept, we can define the core definition of the resource framework : the view.
 /// The view combines invariant, footprint and selector into a coherent object that behaves nicely
@@ -70,7 +70,7 @@ noeq type view_aux (a: Type) = {
   sel: sel_t a
 }
 let view (a: Type) = view:view_aux a{
-  fp_reads_fp view.fp /\
+  fp_reads_fp view.fp view.inv /\
   sel_reads_fp view.fp view.inv view.sel /\
   inv_reads_fp view.fp view.inv
 }
@@ -80,11 +80,11 @@ let view (a: Type) = view:view_aux a{
 /// resources with regular modifies-based Low*.
 val reveal_view (_ : unit)
   : Lemma (
-    (forall (fp: fp_t). {:pattern fp_reads_fp fp}
-      fp_reads_fp fp <==>
-      (forall (h0 h1: HS.mem) (loc: A.loc). {:pattern (A.modifies loc h0 h1); (fp h1) }
+    (forall (fp: fp_t) (inv: inv_t). {:pattern fp_reads_fp fp inv}
+      fp_reads_fp fp inv <==>
+      (forall (h0 h1: HS.mem) (loc: A.loc). {:pattern (A.modifies loc h0 h1); (fp h1); inv h0 }
         A.loc_disjoint (as_loc fp h0) loc /\
-        A.modifies loc h0 h1 ==>
+        A.modifies loc h0 h1 /\ inv h0 ==>
           as_loc fp h0 == as_loc fp h1
       )
     ) /\
