@@ -79,6 +79,29 @@ layered_effect {
 let mread = HoareST?.read
 let mwrite = HoareST?.write
 
+assume val wp_monotonic_pure (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a).
+       (forall (p q:pure_post a).
+          (forall (x:a). p x ==> q x) ==>
+          (wp p ==> wp q)))
+
+assume val wp_monotonic_st (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:st_wp a).
+       (forall (p q:st_post a).
+          (forall (x:a) (h:heap). p x h ==> q x h) ==>
+          (forall (h:heap). wp p h ==> wp q h)))
+
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (post:post_t a) (f:unit -> PURE a wp)
+: repr a (fun h -> wp (fun x -> post h x h)) post
+= wp_monotonic_st ();
+  wp_monotonic_pure ();
+  fun _ ->
+  f ()
+
+sub_effect PURE ~> HoareST = lift_pure_hoarest
+
 // type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 
 // let return (a:Type) (x:a)

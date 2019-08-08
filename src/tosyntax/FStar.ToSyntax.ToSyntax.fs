@@ -2987,22 +2987,43 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
-    let lookup l = match Env.try_lookup_effect_name env l with
+    let lookup l = match Env.try_lookup_effect_defn env l with
         | None -> raise_error (Errors.Fatal_EffectNotFound, ("Effect name " ^Print.lid_to_string l^ " not found")) d.drange
         | Some l -> l in
-    let src = lookup l.msource in
-    let dst = lookup l.mdest in
-    let lift_wp, lift = match l.lift_op with
-        | NonReifiableLift t -> Some ([],desugar_term env t), None
-        | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
-        | LiftForFree t -> None, Some ([],desugar_term env t)
-    in
-    let se = { sigel = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift});
-               sigquals = [];
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
-    env, [se]
+    let src_ed = lookup l.msource in
+    let dst_ed = lookup l.mdest in
+    if not (src_ed.is_layered || dst_ed.is_layered)
+    then let lift_wp, lift = match l.lift_op with
+           | NonReifiableLift t -> Some ([],desugar_term env t), None
+           | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
+           | LiftForFree t -> None, Some ([],desugar_term env t)
+         in
+         let se = { sigel = Sig_sub_effect({source=src_ed.mname; target=dst_ed.mname; lift_wp=lift_wp; lift=lift});
+                    sigquals = [];
+                    sigrng = d.drange;
+                    sigmeta = default_sigmeta  ;
+                    sigattrs = [] } in
+         env, [se]
+    else if src_ed.is_layered
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+      "Lifts from layered effects (" ^ (Print.lid_to_string src_ed.mname) ^ ") are not yet supported")
+      d.drange
+    else
+      (match l.lift_op with
+       | NonReifiableLift t ->
+         let sub_eff = {
+           source = src_ed.mname;
+           target = dst_ed.mname;
+           lift_wp = None;
+           lift = Some ([], desugar_term env t)
+         } in
+         env, [{
+           sigel = Sig_sub_effect sub_eff;
+           sigquals = [];
+           sigrng = d.drange;
+           sigmeta = default_sigmeta;
+           sigattrs = [] }]
+       | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
   | Splice (ids, t) ->
     let t = desugar_term env t in

@@ -200,29 +200,10 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
   log_combinator "repr" repr;
 
-  let fresh_repr (r:Range.range) env u a_tm : term * guard_t =
-    let signature = let us, t, _ = signature in (us, t) in
-    let fail t = raise_error (Err.unexpected_signature_for_monad env0 ed.mname t) (snd ed.signature).pos in
-    let _, signature = Env.inst_tscheme signature in
-    match (SS.compress signature).n with
-    | Tm_arrow (bs, _) ->
-      let bs = SS.open_binders bs in
-      (match bs with
-       | a::bs ->
-         let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
-           let t, _, g_t = TcUtil.new_implicit_var "" r env (SS.subst substs b.sort) in  //AR: TODO: FIXME: set the empty string properly
-           is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
-         ) ([], Env.trivial_guard, [NT (fst a, a_tm)]) bs in
-         
-         let repr_ts = let us, t, _ = repr in (us, t) in
-         let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
-         S.mk_Tm_app
-           repr
-           (List.map S.as_arg (a_tm::is))
-           None r, g
-       | _ -> fail signature)
-    | _ -> fail signature in
-
+  let fresh_repr r env u a_tm =
+    let signature_ts = let us, t, _ = signature in (us, t) in
+    let repr_ts = let us, t, _ = repr in (us, t) in
+    TcUtil.fresh_layered_effect_repr env r ed.mname signature_ts repr_ts u a_tm in
 
   let return_repr =
     let r = (snd ed.return_repr).pos in
@@ -402,6 +383,88 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     return_repr = (fst return_repr, snd return_repr);
     bind_repr   = (fst bind_repr, snd bind_repr);
     actions     = List.map (tc_action env0) ed.actions }
+
+let tc_layered_lift env0 (sub:sub_eff) : sub_eff =
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
+
+  let us, lift = sub.lift |> must in
+  let r = lift.pos in
+
+  if List.length us <> 0
+  then failwith ("Unexpected number of universes in typechecking %s" ^ (Print.sub_eff_to_string sub));
+
+  let lift, lc, g = tc_tot_or_gtot_term env0 lift in
+  Rel.force_trivial_guard env0 g;
+
+  let lift_ty = lc.res_typ |> N.normalize [Beta] env0 in
+
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
+      (Print.term_to_string lift) (Print.term_to_string lift_ty);
+
+  let k, g_k =
+    let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
+    
+    let a', wp_sort_a' = monad_signature env0 sub.source (Env.lookup_effect_lid env0 sub.source) in
+    let src_wp_sort_a = SS.subst [NT (a', a |> fst |> S.bv_to_name)] wp_sort_a' in
+
+    let wp = S.gen_bv "wp" None src_wp_sort_a |> S.mk_binder in
+
+    let rest_bs =
+      match (SS.compress lift_ty).n with
+      | Tm_arrow (bs, _) when List.length bs >= 3 ->
+        (match SS.open_binders bs with
+         | (a', _)::(wp', _)::bs ->
+           let bs, _ = List.splitAt (List.length bs - 1) bs in
+           let substs = [NT (a', bv_to_name (fst a)); NT (wp', bv_to_name (fst wp))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
+      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+        
+    let f =
+      let f_sort = U.arrow
+        [S.null_binder S.t_unit]
+        (S.mk_Comp ({
+          comp_univs = [u_a];
+          effect_name = sub.source;
+          result_typ = a |> fst |> S.bv_to_name;
+          effect_args = [wp |> fst |> S.bv_to_name |> S.as_arg];
+          flags = []
+        })) in
+      S.gen_bv "f" None f_sort |> S.mk_binder in
+     
+    let bs = a::wp::(rest_bs@[f]) in
+
+    let repr, g_repr = TcUtil.fresh_layered_effect_repr_en
+      (Env.push_binders env0 bs)
+      r sub.target u_a (a |> fst |> S.bv_to_name) in
+    
+    U.arrow bs (mk_Total' repr (new_u_univ () |> Some)), g_repr in
+
+   if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "Before unification k: %s\n" (Print.term_to_string k);
+
+  let g = Rel.teq env0 lift_ty k in
+  Rel.force_trivial_guard env0 g_k; Rel.force_trivial_guard env0 g;
+
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "After unification k: %s\n" (Print.term_to_string k);
+  
+  let us, lift = TcUtil.generalize_universes env0 lift in
+  let lift_wp = k |> N.remove_uvar_solutions (Env.push_univ_vars env0 us) |> SS.close_univ_vars us in
+  //AR: TODO: FIXME: do this remove uvar solutions other places too?
+  //AR: TODO: FIXME: check that List.length us = 1
+
+  let sub = { sub with
+    lift = Some (us, lift);
+    lift_wp = Some (us, lift_wp) } in
+
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
+
+  sub
+  
 
 let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
@@ -1171,80 +1234,86 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let ed_src = Env.get_effect_decl env sub.source in
     let ed_tgt = Env.get_effect_decl env sub.target in
-    let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-    let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
-    let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
-    let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
-    let repr_type eff_name a wp =
-      if not (is_reifiable_effect env eff_name) then
-          raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" eff_name.str)) (Env.get_range env);
-      match Env.effect_decl_opt env eff_name with
-      | None -> failwith "internal error: reifiable effect has no decl?"
-      | Some (ed, qualifiers) ->
+
+    if ed_src.is_layered || ed_tgt.is_layered
+    then
+      let sub = tc_layered_lift env0 sub in
+      [{ se with sigel = Sig_sub_effect(sub) }], [], env0
+    else
+      let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+      let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
+      let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
+      let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
+      let repr_type eff_name a wp =
+        if not (is_reifiable_effect env eff_name) then
+            raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" eff_name.str)) (Env.get_range env);
+        match Env.effect_decl_opt env eff_name with
+        | None -> failwith "internal error: reifiable effect has no decl?"
+        | Some (ed, qualifiers) ->
           let repr = Env.inst_effect_fun_with [U_unknown] env ed ed.repr in
           mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
-    in
-    let lift, lift_wp =
-      match sub.lift, sub.lift_wp with
-      | None, None ->
-        failwith "Impossible (parser)"
-      | lift, Some (uvs, lift_wp) ->
-        //AR: open the universes, if present (two phases)
-        let env, lift_wp =
-          if List.length uvs > 0 then
-            let usubst, uvs = SS.univ_var_opening uvs in
-            Env.push_univ_vars env uvs, SS.subst usubst lift_wp
-          else env, lift_wp
-        in
-        (* Covers both the "classic" format and the reifiable case. *)
-        //AR: if universes are already annotated, simply close, else generalize
-        let lift_wp = if List.length uvs = 0 then check_and_gen env lift_wp expected_k
-                      else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
-        in
-        lift, lift_wp
-      (* Sub-effect for free case *)
-      | Some (what, lift), None ->
-        //AR: open the universes if present (two phases)
-        let uvs, lift =
-          if List.length what > 0 then
-            let usubst, uvs = SS.univ_var_opening what in
-            uvs, SS.subst usubst lift
-          else [], lift
-        in
-        if Env.debug env (Options.Other "ED") then
-            BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
-        let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-        let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
-        (* TODO : Check that comp is pure ? *)
-        let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
-        let lift_wp = DMFF.recheck_debug "lift-wp" env lift_wp in
-        let lift_elab = DMFF.recheck_debug "lift-elab" env lift_elab in
-        if List.length uvs = 0 then Some (TcUtil.generalize_universes env lift_elab), TcUtil.generalize_universes env lift_wp
-        else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
-    in
-    (* we do not expect the lift to verify, *)
-    (* since that requires internalizing monotonicity of WPs *)
-    let env = {env with lax=true} in
-    let lift = match lift with
-    | None -> None
-    | Some (uvs, lift) ->
-      let env, lift =
-        let usubst, uvs = SS.univ_var_opening uvs in
-        Env.push_univ_vars env uvs, SS.subst usubst lift
       in
-      let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-      let wp_a = S.new_bv None wp_a_src in
-      let a_typ = S.bv_to_name a in
-      let wp_a_typ = S.bv_to_name wp_a in
-      let repr_f = repr_type sub.source a_typ wp_a_typ in
-      let repr_result =
-        let lift_wp = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env (snd lift_wp) in
-        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
-        repr_type sub.target a_typ lift_wp_a in
-      let expected_k =
-        U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
-                    (S.mk_Total repr_result) in
-//          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
+      let lift, lift_wp =
+        match sub.lift, sub.lift_wp with
+        | None, None ->
+          failwith "Impossible (parser)"
+        | lift, Some (uvs, lift_wp) ->
+          //AR: open the universes, if present (two phases)
+          let env, lift_wp =
+            if List.length uvs > 0 then
+              let usubst, uvs = SS.univ_var_opening uvs in
+              Env.push_univ_vars env uvs, SS.subst usubst lift_wp
+            else env, lift_wp
+          in
+          (* Covers both the "classic" format and the reifiable case. *)
+          //AR: if universes are already annotated, simply close, else generalize
+          let lift_wp = if List.length uvs = 0 then check_and_gen env lift_wp expected_k
+                        else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
+          in
+          lift, lift_wp
+        (* Sub-effect for free case *)
+        | Some (what, lift), None ->
+          //AR: open the universes if present (two phases)
+          let uvs, lift =
+            if List.length what > 0 then
+              let usubst, uvs = SS.univ_var_opening what in
+              uvs, SS.subst usubst lift
+            else [], lift
+          in
+          if Env.debug env (Options.Other "ED") then
+              BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
+          let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
+          let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
+          (* TODO : Check that comp is pure ? *)
+          let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
+          let lift_wp = DMFF.recheck_debug "lift-wp" env lift_wp in
+          let lift_elab = DMFF.recheck_debug "lift-elab" env lift_elab in
+          if List.length uvs = 0 then Some (TcUtil.generalize_universes env lift_elab), TcUtil.generalize_universes env lift_wp
+          else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
+      in
+      (* we do not expect the lift to verify, *)
+      (* since that requires internalizing monotonicity of WPs *)
+      let env = {env with lax=true} in
+      let lift = match lift with
+      | None -> None
+      | Some (uvs, lift) ->
+        let env, lift =
+          let usubst, uvs = SS.univ_var_opening uvs in
+          Env.push_univ_vars env uvs, SS.subst usubst lift
+        in
+        let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+        let wp_a = S.new_bv None wp_a_src in
+        let a_typ = S.bv_to_name a in
+        let wp_a_typ = S.bv_to_name wp_a in
+        let repr_f = repr_type sub.source a_typ wp_a_typ in
+        let repr_result =
+          let lift_wp = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env (snd lift_wp) in
+          let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+          repr_type sub.target a_typ lift_wp_a in
+        let expected_k =
+          U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
+                      (S.mk_Total repr_result) in
+//           printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
         let expected_k, _, _ =
           tc_tot_or_gtot_term env expected_k in
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
@@ -1252,23 +1321,22 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           if List.length uvs = 0 then check_and_gen env lift expected_k
           else
             let lift = tc_check_trivial_guard env lift expected_k in
-            uvs, SS.close_univ_vars uvs lift
-        in
-//          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
+            uvs, SS.close_univ_vars uvs lift in
+//            printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
-    in
-    //check that sub effecting is universe polymorphic in exactly one universe
-    if lift_wp |> fst |> List.length <> 1 then
+      in
+      //check that sub effecting is universe polymorphic in exactly one universe
+      if lift_wp |> fst |> List.length <> 1 then
       raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                                                              (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
                                                              (lift_wp |> fst |> List.length |> string_of_int))) r;
-    if is_some lift && lift |> must |> fst |> List.length <> 1 then
-      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
-                                                             (lift |> must |> fst |> List.length |> string_of_int))) r;
-    let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
-    let se = { se with sigel = Sig_sub_effect(sub) } in
-    [se], [], env0
+      if is_some lift && lift |> must |> fst |> List.length <> 1 then
+        raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                                               (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                               (lift |> must |> fst |> List.length |> string_of_int))) r;
+      let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
+      let se = { se with sigel = Sig_sub_effect(sub) } in
+      [se], [], env0
 
   | Sig_effect_abbrev(lid, uvs, tps, c, flags) ->
     //assert (uvs = []); AR: not necessarily, two phases

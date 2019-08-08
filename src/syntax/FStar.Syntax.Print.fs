@@ -686,6 +686,14 @@ let eff_decl_to_string' for_free r q ed =
 let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
+let sub_eff_to_string se =
+  let tsopt_to_string ts_opt =
+    if is_some ts_opt then ts_opt |> must |> tscheme_to_string
+    else "<None>" in
+  U.format4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
+    (lid_to_string se.source) (lid_to_string se.target)
+    (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
+
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
  //    let e = Resugar.resugar_sigelt x in
@@ -732,20 +740,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
       | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
-      | Sig_sub_effect (se) ->
-        let lift_wp = match se.lift_wp, se.lift with
-          // TODO pretty-print this better
-          | None, None ->
-              failwith "impossible"
-          | Some lift_wp, _ ->
-              lift_wp
-          | _, Some lift ->
-              lift
-        in
-        let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
-        U.format4 "sub_effect %s ~> %s : <%s> %s"
-            (lid_to_string se.source) (lid_to_string se.target)
-            (univ_names_to_string us) (term_to_string t)
+      | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())
         then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in

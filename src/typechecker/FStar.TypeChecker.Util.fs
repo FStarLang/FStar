@@ -1924,3 +1924,30 @@ let must_erase_for_extraction (g:env) (t:typ) =
         res
     in
     aux g t
+
+let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
+  let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
+  
+  let _, signature = Env.inst_tscheme signature_ts in
+
+  match (SS.compress signature).n with
+  | Tm_arrow (bs, _) ->
+    let bs = SS.open_binders bs in
+    (match bs with
+     | a::bs ->
+       let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
+         let t, _, g_t = new_implicit_var "" r env (SS.subst substs b.sort) in  //AR: TODO: FIXME: set the empty string properly
+         is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
+         ) ([], Env.trivial_guard, [NT (fst a, a_tm)]) bs in
+         
+         let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
+         S.mk_Tm_app
+           repr
+           (List.map S.as_arg (a_tm::is))
+           None r, g
+       | _ -> fail signature)
+  | _ -> fail signature
+
+let fresh_layered_effect_repr_en env r eff_name u a_tm =
+  let ed = Env.get_effect_decl env eff_name in
+  fresh_layered_effect_repr env r eff_name ed.signature ed.repr u a_tm
