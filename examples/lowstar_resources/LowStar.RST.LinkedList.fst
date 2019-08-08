@@ -43,6 +43,7 @@ and cell (a: Type0) = {
   data: a;
 }
 
+let selector = rmem
 (* Ideally, this would be bootstrapped for clients to use a "t' a".
    The hidden (abstract) type definition would be a (t a) & list (cell a) *)
 
@@ -95,6 +96,10 @@ let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
   match l with
   | [] -> empty_list ptr
   | hd::tl -> pts_to ptr hd <*> slist hd.next tl
+
+[@(strict_on_arguments [2])]
+let slist' #a (ptr:t a) l = slist ptr l
+let test (ptr:t nat) (l: list (cell nat)) = slist' ptr []
 
 abstract
 let dummy_cell (#a:Type) (ptr:t a) : resource =
@@ -170,7 +175,8 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
 (* We provide two versions of cons.
    The first one assumes there is an unused (dummy) node, that we can just set to be the head.
    The second performs an allocation *)
-
+#set-options "--tactic_trace_d 1"
+open FStar.Tactics
 let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
   : RST unit
   (dummy_cell hd <*> slist ptr l)
@@ -184,12 +190,21 @@ let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
   // reveal_can_be_split_into();
   // assert (can_be_split_into (RA.array_resource ptr) (RA.array_resource ptr, empty_resource));
   // assert (exists r1. can_be_split_into (RA.array_resource ptr) (RA.array_resource ptr, r1));
-  let new_cell = {data = v; next = ptr} in
-  rst_frame
-    (dummy_cell hd <*> slist ptr l)
-    (fun _ -> pts_to hd new_cell <*> slist ptr l)
-    (fun _ -> set_dummy_cell hd new_cell);
+  // let new_cell = {data = v; next = ptr} in
+  let x : (delta:resource{ (equal (dummy_cell hd <*> delta) (slist ptr l <*> dummy_cell hd)) }) = _ by
+    LowStar.RST.Tactics.(
+      refine_intro();
+      flip();
+      FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid req rm)
+  in
   admit()
+
+  // resource
+  // rst_frame
+  //   (dummy_cell hd <*> slist ptr l)
+  //   (fun _ -> pts_to hd new_cell <*> slist ptr l)
+  //   (fun _ -> set_dummy_cell hd new_cell);
+  // admit()
 
 let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   : RST (t a)

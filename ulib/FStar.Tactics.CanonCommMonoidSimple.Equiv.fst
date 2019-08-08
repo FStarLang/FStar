@@ -60,7 +60,7 @@ let select (#a:Type) (x:atom) (am:amap a) : Tot a =
   match assoc #atom #a x (fst am) with
   | Some a -> a
   | _ -> snd am
-let update (#a:Type) (x:atom) (xa:a) (am:amap a) : amap a =
+let update (#a:Type) (x:atom) (xa:a) (am:amap a) : Tac (amap a) =
   (x, xa)::fst am, snd am
 
 let rec mdenote (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e:exp) : a =
@@ -303,8 +303,12 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
   let fatom (t:term) (ts:list term) (am:amap a) : Tac (exp * list term * amap a) =
     match where t ts with
     | Some v -> (Atom v, ts, am)
-    | None -> let vfresh = length ts in let z = unquote t in
-              (Atom vfresh, ts @ [t], update vfresh z am)
+    | None -> let vfresh = length ts in 
+             dump ("Extending map with " ^ term_to_string t);
+             let z = unquote t in
+             let am' = update vfresh z am in
+             dump ("Extended map is ... " ^ term_to_string (quote am'));             
+             (Atom vfresh, ts @ [t], am')
   in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
@@ -320,9 +324,11 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
 
 let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t:term) :
     Tac (exp * list term * amap a) =
-  let mult = norm_term [delta] (quote (CM?.mult m)) in
-  let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let t    = norm_term [delta] t in
+  let mult = norm_term [] (quote (CM?.mult m)) in
+  let unit = norm_term [] (quote (CM?.unit m)) in
+  dump ("reifying before ... "  ^ term_to_string t);
+  let t    = norm_term [] t in
+  dump ("reifying after ... "  ^ term_to_string t);
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
@@ -337,27 +343,30 @@ let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit
                     )
 
 let canon_lhs_rhs (#a:Type) (eq:equiv a) (m:cm a eq) (lhs rhs:term) : Tac unit =
+  dump ("lhs = " ^ term_to_string lhs);
+  dump ("rhs = " ^ term_to_string rhs);
   let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in
+  dump ("am1 = " ^ term_to_string (quote am));  
+  dump ("r1 = " ^ term_to_string (quote (mdenote eq m am r1)));
   let (r2, _, am) = reification eq m ts am rhs in
-  //dump ("am = " ^ term_to_string (quote am));
-  //dump ("r1 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r1))));
-  //dump ("r2 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r2))));
-  //dump ("before = " ^ term_to_string (norm_term [hnf;delta;primops]
-  //   (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
-  //dump ("current goal" ^ term_to_string (cur_goal ()));
+  dump ("am2 = " ^ term_to_string (quote am));
+  dump ("r2 = " ^ term_to_string (quote (mdenote eq m am r2)));
+  dump ("before = " ^ term_to_string (
+    (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
+  dump ("current goal" ^ term_to_string (cur_goal ()));
   change_sq (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2));
-  //dump ("expected after = " ^ term_to_string (norm_term [delta;primops]
-  //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
-  //           xsdenote eq m am (canon r2)))));
+  dump ("expected after = " ^ term_to_string (
+    (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
+            xsdenote eq m am (canon r2)))));
   apply (`monoid_reflect);
-  //dump ("after apply monoid_reflect");
+  dump ("after apply monoid_reflect");
   norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
                     `%(@); `%append; `%List.Tot.Base.sortWith;
                     `%List.Tot.Base.partition; `%bool_of_compare; 
                     `%compare_of_bool;
        ]; primops];
-  //dump "before refl";
+  dump "before refl";
   or_else (fun _ -> apply_lemma (quote (EQ?.reflexivity eq)))
           (fun _ -> repeat_cong_right_identity eq m)
 
