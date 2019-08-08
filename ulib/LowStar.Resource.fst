@@ -25,10 +25,10 @@ open LowStar.Array
 
 (* Views and resources *)
 
-let fp_reads_fp fp =
+let fp_reads_fp fp inv =
   forall (h0 h1: HS.mem) (loc: loc). {:pattern (modifies loc h0 h1); (fp h1) }
     loc_disjoint (as_loc fp h0) loc /\
-    modifies loc h0 h1 ==>
+    modifies loc h0 h1 /\ inv h0 ==>
     as_loc fp h0 == as_loc fp h1
 
 let sel_reads_fp #b fp inv sel =
