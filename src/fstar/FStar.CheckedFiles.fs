@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.CheckedFiles
+open FStar
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -385,15 +386,10 @@ let load_module_from_cache =
         Some tc_result
       | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry"
     in
-    Options.profile load_it (fun res ->
-      let msg =
-        if Option.isSome res
-        then "ok"
-        else "failed"
-      in
-      BU.format2 "Loading checked file %s ... %s"
-                 (Dep.cache_file_name fn)
-                 msg)
+    Profiling.profile
+      load_it
+      None
+      "FStar.CheckedFiles"
 
 
 (*

@@ -191,7 +191,6 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
-      ("profile"                      , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -265,7 +264,11 @@ let defaults =
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
-                                      , Bool true);]
+                                      , Bool true);
+      ("profile_group_by_decl"        , Bool false);
+      ("profile_component"            , Unset);
+      ("profile"                      , Unset);
+      ]
 
 let parse_warn_error_set_get =
     let r = Util.mk_ref None in
@@ -339,7 +342,6 @@ let get_lsp                     ()      = lookup_opt "lsp"                      
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
-let get_profile                 ()      = lookup_opt "profile"                  as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -413,6 +415,9 @@ let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" 
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
+let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
+let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
 let dlevel = function
    | "Low" -> Low
@@ -759,11 +764,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "print_in_place",
         Const (Bool true),
         "Parses and prettyprints in place the files included on the command line");
-
-       ( noshort,
-        "profile",
-        Const (Bool true),
-        "Prints timing information for various operations in the compiler");
 
        ( noshort,
         "initial_fuel",
@@ -1160,6 +1160,25 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                           (Const (Bool true))),
         "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
 
+       ( noshort,
+        "profile_group_by_decl",
+         Const (Bool true),
+        "Emit profiles grouped by declaration rather than by module");
+
+       ( noshort,
+        "profile_component",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
+        "\n\tSpecific source locations in the compiler are instrumented with profiling counters.\n\t\
+          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t\
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+
+       ( noshort,
+         "profile",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\tProfiling can be enabled when the compiler is processing a given set of source modules.\n\t\
+          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t\
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (Bool true))),
@@ -1239,8 +1258,9 @@ let settable = function
     | "z3rlimit_factor"
     | "z3seed"
     | "trivial_pre_for_unannotated_effectful_fns"
-    -> true
-
+    | "profile_group_by_decl"
+    | "profile_component"
+    | "profile" -> true
     | _ -> false
 
 let all_specs = specs ()
@@ -1451,6 +1471,7 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
@@ -1469,14 +1490,6 @@ let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
-let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
-    if get_profile()
-    then let a, time = Util.record_time f in
-         Util.print2 "Elapsed time %s ms: %s\n"
-                     (Util.string_of_int time)
-                     (msg a);
-         a
-    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
@@ -1598,6 +1611,11 @@ let module_matches_namespace_filter m filter =
     | None -> false
     | Some (_, flag) -> flag
 
+let matches_namespace_filter_opt m =
+  function
+  | None -> false
+  | Some filter -> module_matches_namespace_filter m filter
+
 
 let should_extract m =
     let m = String.lowercase m in
@@ -1646,3 +1664,12 @@ let error_flags =
           Util.smap_add cache we r;
           r
         | Some r -> r
+
+let profile_enabled modul_opt phase =
+  match modul_opt with
+  | None -> //the phase is not associated with a module
+    matches_namespace_filter_opt phase (get_profile_component())
+
+  | Some modul ->
+    matches_namespace_filter_opt modul (get_profile())
+    && matches_namespace_filter_opt phase (get_profile_component())
