@@ -4780,3 +4780,115 @@ let (must_erase_for_extraction :
         res
        in aux g t
   
+let (fresh_layered_effect_repr :
+  FStar_TypeChecker_Env.env ->
+    FStar_Range.range ->
+      FStar_Ident.lident ->
+        FStar_Syntax_Syntax.tscheme ->
+          FStar_Syntax_Syntax.tscheme ->
+            FStar_Syntax_Syntax.universe ->
+              FStar_Syntax_Syntax.term ->
+                (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env  ->
+    fun r  ->
+      fun eff_name  ->
+        fun signature_ts  ->
+          fun repr_ts  ->
+            fun u  ->
+              fun a_tm  ->
+                let fail1 t =
+                  let uu____12041 =
+                    FStar_TypeChecker_Err.unexpected_signature_for_monad env
+                      eff_name t
+                     in
+                  FStar_Errors.raise_error uu____12041 r  in
+                let uu____12051 =
+                  FStar_TypeChecker_Env.inst_tscheme signature_ts  in
+                match uu____12051 with
+                | (uu____12060,signature) ->
+                    let uu____12062 =
+                      let uu____12063 = FStar_Syntax_Subst.compress signature
+                         in
+                      uu____12063.FStar_Syntax_Syntax.n  in
+                    (match uu____12062 with
+                     | FStar_Syntax_Syntax.Tm_arrow (bs,uu____12071) ->
+                         let bs1 = FStar_Syntax_Subst.open_binders bs  in
+                         (match bs1 with
+                          | a::bs2 ->
+                              let uu____12119 =
+                                FStar_List.fold_left
+                                  (fun uu____12158  ->
+                                     fun uu____12159  ->
+                                       match (uu____12158, uu____12159) with
+                                       | ((is,g,substs),(b,uu____12206)) ->
+                                           let uu____12235 =
+                                             let uu____12248 =
+                                               FStar_Syntax_Subst.subst
+                                                 substs
+                                                 b.FStar_Syntax_Syntax.sort
+                                                in
+                                             new_implicit_var "" r env
+                                               uu____12248
+                                              in
+                                           (match uu____12235 with
+                                            | (t,uu____12261,g_t) ->
+                                                let uu____12275 =
+                                                  FStar_TypeChecker_Env.conj_guard
+                                                    g g_t
+                                                   in
+                                                ((FStar_List.append is [t]),
+                                                  uu____12275,
+                                                  (FStar_List.append substs
+                                                     [FStar_Syntax_Syntax.NT
+                                                        (b, t)]))))
+                                  ([], FStar_TypeChecker_Env.trivial_guard,
+                                    [FStar_Syntax_Syntax.NT
+                                       ((FStar_Pervasives_Native.fst a),
+                                         a_tm)]) bs2
+                                 in
+                              (match uu____12119 with
+                               | (is,g,uu____12296) ->
+                                   let repr =
+                                     let uu____12306 =
+                                       FStar_TypeChecker_Env.inst_tscheme_with
+                                         repr_ts [u]
+                                        in
+                                     FStar_All.pipe_right uu____12306
+                                       FStar_Pervasives_Native.snd
+                                      in
+                                   let uu____12315 =
+                                     let uu____12316 =
+                                       let uu____12321 =
+                                         FStar_List.map
+                                           FStar_Syntax_Syntax.as_arg (a_tm
+                                           :: is)
+                                          in
+                                       FStar_Syntax_Syntax.mk_Tm_app repr
+                                         uu____12321
+                                        in
+                                     uu____12316 FStar_Pervasives_Native.None
+                                       r
+                                      in
+                                   (uu____12315, g))
+                          | uu____12330 -> fail1 signature)
+                     | uu____12331 -> fail1 signature)
+  
+let (fresh_layered_effect_repr_en :
+  FStar_TypeChecker_Env.env ->
+    FStar_Range.range ->
+      FStar_Ident.lident ->
+        FStar_Syntax_Syntax.universe ->
+          FStar_Syntax_Syntax.term ->
+            (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env  ->
+    fun r  ->
+      fun eff_name  ->
+        fun u  ->
+          fun a_tm  ->
+            let ed = FStar_TypeChecker_Env.get_effect_decl env eff_name  in
+            fresh_layered_effect_repr env r eff_name
+              ed.FStar_Syntax_Syntax.signature ed.FStar_Syntax_Syntax.repr u
+              a_tm
+  
