@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,26 +15,25 @@
 *)
 module FStar.Tactics.CanonCommSemiring
 
-(*
-Commutative semiring (a ring with commutative multiplication and without an additive inverse)
-This requires the following properties:
-- addition is commutative and associative, where zero is the additive identity
-- multiplication is commutative and associative, where one is the multiplicative identity
-- multiplication distributes over addition
-Currently, this module performs the following actions to canonize a term:
-- apply distributivity until the term is in sum-of-products form, where each product may have
-  multiplications but no additions
-- apply CanonCommMonoid to canonize each product, with constants on the outside of each product
-  (example: ((((x * y) * z) * 3) * 2)
-This module does not yet canonize the sum itself.  For integer arithmetic, Z3's nonlinear
-reasoning can handle this.
-*)
+/// A tactic to solve equalities on commutative semirings
+///
+/// This requires the following properties:
+/// - addition is commutative and associative, where zero is the additive identity
+/// - multiplication is commutative and associative, where one is the multiplicative identity
+/// - multiplication distributes over addition
+///
+/// Based on the legacy second version of Coq's ring tactic:
+///   https://github.com/coq-contribs/legacy-ring/
+///
+/// In contrast to FStar.Tactics.CanonCommSemiring in master,
+/// the tactic defined here canonizes products and additions, gathers duplicate monomials, and eliminates trivial expressions.
 
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
 open FStar.Algebra.CommMonoid
+
 module CCM = FStar.Tactics.CanonCommMonoid
 
 (* Only dump when debugging is on *)
@@ -79,187 +78,563 @@ let int_cr : cr int =
 
 (***** Expression syntax *)
 
-unfold let var = CCM.var
+let index : eqtype = nat
 
-type exp : Type =
-  | Var : var -> exp
-  | Add : exp -> exp -> exp
-  | Mult : exp -> exp -> exp
+type varlist : Type =
+  | Nil_var : varlist
+  | Cons_var : index -> varlist -> varlist
 
-let rec exp_to_string (e:exp) : string =
-  match e with
-  | Var x -> "Var " ^ string_of_int (x <: var)
-  | Add e1 e2 -> "Add (" ^ exp_to_string e1 ^ ") (" ^ exp_to_string e2 ^ ")"
-  | Mult e1 e2 -> "Mult (" ^ exp_to_string e1 ^ ") (" ^ exp_to_string e2 ^ ")"
+type canonical_sum (a:Type) : Type =
+  | Nil_monom : canonical_sum a
+  | Cons_monom : a -> varlist -> canonical_sum a -> canonical_sum a
+  | Cons_varlist : varlist -> canonical_sum a -> canonical_sum a
 
-let rec quote_exp (e:exp) : Tac term =
-  match e with
-  | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
-  | Add e1 e2 -> mk_e_app (`Add) [quote_exp e1; quote_exp e2]
-  | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
+(* Order on monoms *)
 
-
-(***** Expression denotation *)
-
-unfold let vmap = CCM.vmap
-
-[@canon_attr]
-unfold let select = CCM.select
+(* That's the lexicographic order on varlist, extended by :
+  - A constant is less than every monom
+  - The relation between two varlist is preserved by multiplication by a
+  constant.
+  Examples :
+  3 < x < y
+  x*y < x*y*y*z
+  2*x*y < x*y*y*z
+  x*y < 54*x*y*y*z
+  4*x*y < 59*x*y*y*z
+*)
 
 [@canon_attr]
-let rec rdenote (#a #b:Type) (r:cr a) (vm:vmap a b) (e:exp) : a =
-  match e with
-  | Var x -> select x vm
-  | Add e1 e2 -> cm_op r.cm_add (rdenote r vm e1) (rdenote r vm e2)
-  | Mult e1 e2 -> cm_op r.cm_mult (rdenote r vm e1) (rdenote r vm e2)
+let rec varlist_lt (x y:varlist) : bool =
+  match x, y with
+  | Nil_var, Cons_var _ _ -> true
+  | Cons_var i xrest, Cons_var j yrest ->
+      if i < j
+      then true
+      else i = j && varlist_lt xrest yrest
+  | _, _ -> false
 
-(***** Distributing expressions to sum-of-products *)
-
-type sum_of_products : Type =
-  | Product : CCM.exp -> sum_of_products
-  | Sum : sum_of_products -> sum_of_products -> sum_of_products
 
 [@canon_attr]
-let rec sum_denote (#a #b:Type) (r:cr a) (vm:vmap a b) (e:sum_of_products) : a =
-  match e with
-  | Product ce -> CCM.mdenote r.cm_mult vm ce
-  | Sum e1 e2 -> cm_op r.cm_add (sum_denote r vm e1) (sum_denote r vm e2)
-
-// turn x * y into sum of products
-[@canon_attr]
-let rec multiply_sums (x y:sum_of_products) : sum_of_products =
-  match (x, y) with
-  | (Product px, Product py) -> Product (CCM.Mult px py)
-  | (Sum s1 s2, _) -> Sum (multiply_sums s1 y) (multiply_sums s2 y)
-  | (_, Sum s1 s2) -> Sum (multiply_sums x s1) (multiply_sums x s2)
+val varlist_merge: l1:varlist -> l2:varlist -> Tot varlist (decreases %[l1; l2; 0])
 
 [@canon_attr]
-let rec exp_to_sum (e:exp) : sum_of_products =
-  match e with
-  | Var x -> Product (CCM.Var x)
-  | Add e1 e2 -> Sum (exp_to_sum e1) (exp_to_sum e2)
-  | Mult e1 e2 -> multiply_sums (exp_to_sum e1) (exp_to_sum e2)
+val vm_aux: index -> t1:varlist -> l2:varlist -> Tot varlist (decreases %[t1; l2; 1])
 
-let rec multiply_sums_correct (#a #b:Type) (r:cr a) (vm:vmap a b) (x y:sum_of_products) :
-  Lemma
-    (ensures (
-      let ( * ) = cm_op r.cm_mult in
-      sum_denote r vm (multiply_sums x y) == sum_denote r vm x * sum_denote r vm y
-    ))
-  =
-  match (x, y) with
-  | (Product _, Product _) -> ()
-  | (Sum s1 s2, _) ->
-    (
-      multiply_sums_correct r vm s1 y;
-      multiply_sums_correct r vm s2 y;
-      distribute_right r (sum_denote r vm s1) (sum_denote r vm s2) (sum_denote r vm y)
-    )
-  | (_, Sum s1 s2) ->
-    (
-      multiply_sums_correct r vm x s1;
-      multiply_sums_correct r vm x s2;
-      r.distribute (sum_denote r vm x) (sum_denote r vm s1) (sum_denote r vm s2)
-    )
+(* merges two variables lists *)
+[@canon_attr]
+let rec varlist_merge l1 l2 =
+  match l1, l2 with
+  | Cons_var v1 t1, Nil_var -> l1
+  | Cons_var v1 t1, Cons_var v2 t2 -> vm_aux v1 t1 l2
+  | Nil_var, _ -> l2
+and vm_aux v1 t1 l2 =
+  match l2 with
+  | Cons_var v2 t2 ->
+    if v1 < v2
+    then Cons_var v1 (varlist_merge t1 l2)
+    else Cons_var v2 (vm_aux v1 t1 t2)
+ | _ -> Cons_var v1 t1
 
-let rec exp_to_sum_correct (#a #b:Type) (r:cr a) (vm:vmap a b) (e:exp) : Lemma
-  (sum_denote r vm (exp_to_sum e) == rdenote r vm e)
-  =
-  match e with
-  | Var x -> ()
-  | Add e1 e2 ->
-    (
-      exp_to_sum_correct r vm e1;
-      exp_to_sum_correct r vm e2;
-      ()
-    )
-  | Mult e1 e2 ->
-    (
-      exp_to_sum_correct r vm e1;
-      exp_to_sum_correct r vm e2;
-      multiply_sums_correct r vm (exp_to_sum e1) (exp_to_sum e2)
-    )
 
-(***** Canonicalization tactics *)
-
-unfold let permute = CCM.permute
-unfold let permute_correct = CCM.permute_correct
-unfold let sort = CCM.sort
-unfold let sort_correct = CCM.sort_correct
-unfold let is_const = CCM.is_const
-unfold let const_last = CCM.const_last
-unfold let where = CCM.where
-unfold let const = CCM.const
-unfold let update = CCM.update
+(* returns the sum of two canonical sums  *)
+[@canon_attr]
+val canonical_sum_merge : #a:Type0 -> cr a -> s1:canonical_sum a
+  -> s2:canonical_sum a -> Tot (canonical_sum a) (decreases %[s1; s2; 0])
 
 [@canon_attr]
-let rec cdenote (#a #b:Type) (p:permute b) (r:cr a) (vm:vmap a b) (s:sum_of_products) : a
-  =
+val csm_aux: #a:Type0 -> r:cr a -> c1:a -> l1:varlist -> t1:canonical_sum a
+  -> s2:canonical_sum a -> Tot (canonical_sum a) (decreases %[t1; s2; 1])
+
+[@canon_attr]
+val csm_aux2: #a:Type0 -> r:cr a -> l1:varlist -> t1:canonical_sum a
+  -> s2:canonical_sum a -> Tot (canonical_sum a) (decreases %[t1; s2; 1])
+
+[@canon_attr]
+let rec canonical_sum_merge #a r s1 s2 =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_mult in
+  match s1 with
+  | Cons_monom c1 l1 t1 -> csm_aux #a r c1 l1 t1 s2
+  | Cons_varlist l1 t1 -> csm_aux2 #a r l1 t1 s2
+  | Nil_monom -> s2
+
+and csm_aux #a r c1 l1 t1 s2 =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_mult in
+  match s2 with
+  | Cons_monom c2 l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus c1 c2) l1 (canonical_sum_merge #a r t1 t2)
+      else
+       if varlist_lt l1 l2
+       then Cons_monom c1 l1 (canonical_sum_merge r t1 s2)
+       else Cons_monom c2 l2 (csm_aux #a r c1 l1 t1 t2)
+  | Cons_varlist l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus c1 aone) l1 (canonical_sum_merge r t1 t2)
+      else
+       if varlist_lt l1 l2
+       then Cons_monom c1 l1 (canonical_sum_merge r t1 s2)
+       else Cons_varlist l2 (csm_aux #a r c1 l1 t1 t2)
+  | Nil_monom -> Cons_monom c1 l1 t1
+
+and csm_aux2 #a r l1 t1 s2 =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_mult in
+  match s2 with
+  | Cons_monom c2 l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus aone c2) l1 (canonical_sum_merge r t1 t2)
+      else
+       if varlist_lt l1 l2
+       then Cons_varlist l1 (canonical_sum_merge r t1 s2)
+       else Cons_monom c2 l2 (csm_aux2 #a r l1 t1 t2)
+  | Cons_varlist l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus aone aone) l1 (canonical_sum_merge r t1 t2)
+      else
+       if varlist_lt l1 l2
+       then Cons_varlist l1 (canonical_sum_merge r t1 s2)
+       else Cons_varlist l2 (csm_aux2 #a r l1 t1 t2)
+  | Nil_monom -> Cons_varlist l1 t1
+
+
+[@canon_attr]
+let rec monom_insert (#a:Type) (r:cr a) (c1:a) (l1:varlist) (s2:canonical_sum a) :
+ canonical_sum a =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_add in
+  match s2 with
+  | Cons_monom c2 l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus c1 c2) l1 t2
+      else
+       if varlist_lt l1 l2
+       then Cons_monom c1 l1 s2
+       else Cons_monom c2 l2 (monom_insert r c1 l1 t2)
+  | Cons_varlist l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus c1 aone) l1 t2
+      else
+       if varlist_lt l1 l2
+       then Cons_monom c1 l1 s2
+       else Cons_varlist l2 (monom_insert r c1 l1 t2)
+  | Nil_monom -> Cons_monom c1 l1 Nil_monom
+
+[@canon_attr]
+let rec varlist_insert (#a:Type) (r:cr a) (l1:varlist) (s2:canonical_sum a) :
+ canonical_sum a =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_add in
+  match s2 with
+  | Cons_monom c2 l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus aone c2) l1 t2
+      else
+       if varlist_lt l1 l2
+       then Cons_varlist l1 s2
+       else Cons_monom c2 l2 (varlist_insert r l1 t2)
+  | Cons_varlist l2 t2 ->
+      if l1 = l2
+      then Cons_monom (aplus aone aone) l1 t2
+      else
+       if varlist_lt l1 l2
+       then Cons_varlist l1 s2
+       else Cons_varlist l2 (varlist_insert r l1 t2)
+  | Nil_monom -> Cons_varlist l1 Nil_monom
+
+[@canon_attr]
+let rec canonical_sum_scalar (#a:Type) (r:cr a) (c0:a) (s:canonical_sum a) :
+ canonical_sum a =
+  let amult = cm_op r.cm_mult in
   match s with
-  | Product ce -> CCM.xsdenote (r.cm_mult) vm (CCM.canon vm p ce)
-  | Sum s1 s2 -> cm_op r.cm_add (cdenote p r vm s1) (cdenote p r vm s2)
+  | Cons_monom c l t -> Cons_monom (amult c0 c) l (canonical_sum_scalar r c0 t)
+  | Cons_varlist l t -> Cons_monom c0 l (canonical_sum_scalar r c0 t)
+  | Nil_monom -> Nil_monom
 
-let rec cdenote_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
-    (r:cr a) (vm:vmap a b) (s:sum_of_products) :
-  Lemma (cdenote p r vm s == sum_denote r vm s)
-  =
+(* Computes l0*s  *)
+[@canon_attr]
+let rec canonical_sum_scalar2 (#a:Type) (r:cr a) (l0:varlist) (s:canonical_sum a) :
+ canonical_sum a =
   match s with
-  | Product ce -> CCM.canon_correct p pc r.cm_mult vm ce
-  | Sum s1 s2 ->
-    (
-      cdenote_correct p pc r vm s1;
-      cdenote_correct p pc r vm s2;
-      ()
-    )
+  | Cons_monom c l t ->
+    monom_insert r c (varlist_merge l0 l) (canonical_sum_scalar2 r l0 t)
+  | Cons_varlist l t ->
+    varlist_insert r (varlist_merge l0 l) (canonical_sum_scalar2 r l0 t)
+  | Nil_monom -> Nil_monom
 
-let canon_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
-    (r:cr a) (vm:vmap a b) (e:exp) :
-  Lemma (cdenote p r vm (exp_to_sum e) == rdenote r vm e)
-  =
-  exp_to_sum_correct r vm e;
-  cdenote_correct p pc r vm (exp_to_sum e)
+(* Computes c0*l0*s  *)
+[@canon_attr]
+let rec canonical_sum_scalar3 (#a:Type) (r:cr a) (c0:a) (l0:varlist)
+ (s:canonical_sum a) : canonical_sum a =
+  let amult = cm_op r.cm_mult in
+  match s with
+  | Cons_monom c l t ->
+     monom_insert r (amult c0 c) (varlist_merge l0 l)
+       (canonical_sum_scalar3 r c0 l0 t)
+  | Cons_varlist l t ->
+     monom_insert r c0 (varlist_merge l0 l) (canonical_sum_scalar3 r c0 l0 t)
+  | Nil_monom -> Nil_monom
 
-let semiring_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
-    (r:cr a) (vm:vmap a b) (e1 e2:exp) (a1 a2:a)
-    (_ : squash (
-      cdenote p r vm (exp_to_sum e1) ==
-      cdenote p r vm (exp_to_sum e2)))
-    (_ : squash (a1 == rdenote r vm e1))
-    (_ : squash (a2 == rdenote r vm e2)) :
-    squash (a1 == a2)
-  =
-  canon_correct p pc r vm e1;
-  canon_correct p pc r vm e2;
-  ()
+(* returns the product of two canonical sums *)
+[@canon_attr]
+let rec canonical_sum_prod (#a:Type) (r:cr a) (s1 s2:canonical_sum a) :
+ canonical_sum a =
+  match s1 with
+  | Cons_monom c1 l1 t1 ->
+      canonical_sum_merge r (canonical_sum_scalar3 r c1 l1 s2)
+        (canonical_sum_prod r t1 s2)
+  | Cons_varlist l1 t1 ->
+      canonical_sum_merge r (canonical_sum_scalar2 r l1 s2)
+        (canonical_sum_prod r t1 s2)
+  | Nil_monom -> Nil_monom
 
-let make_fvar (#a #b:Type) (f:term -> Tac b) (t:term) (unquotea:term->Tac a) (ts:list term) (vm:vmap a b) : Tac
-    (exp * list term * vmap a b) =
-  match where t ts with
-  | Some v -> (Var v, ts, vm)
+(* The type to represent concrete semi-ring polynomials *)
+type spolynomial (a:Type) : Type =
+  | SPvar : index -> spolynomial a
+  | SPconst : a -> spolynomial a
+  | SPplus : spolynomial a -> spolynomial a -> spolynomial a
+  | SPmult : spolynomial a -> spolynomial a -> spolynomial a
+
+
+[@canon_attr]
+let rec spolynomial_normalize (#a:Type) (r:cr a) (p:spolynomial a) : canonical_sum a =
+  match p with
+  | SPvar i -> Cons_varlist (Cons_var i Nil_var) Nil_monom
+  | SPconst c -> Cons_monom c Nil_var Nil_monom
+  | SPplus l q ->
+    canonical_sum_merge r (spolynomial_normalize r l) (spolynomial_normalize r q)
+  | SPmult l q ->
+    canonical_sum_prod r (spolynomial_normalize r l) (spolynomial_normalize r q)
+
+(* Deletion of useless 0 and 1 in canonical sums *)
+[@canon_attr]
+let rec canonical_sum_simplify (#a:eqtype) (r:cr a) (s:canonical_sum a) : canonical_sum a =
+  let azero = CM?.unit r.cm_add in
+  let aone = CM?.unit r.cm_mult in
+  match s with
+  | Cons_monom c l t ->
+      if c = azero
+      then canonical_sum_simplify r t
+      else
+       if c = aone
+       then Cons_varlist l (canonical_sum_simplify r t)
+       else Cons_monom c l (canonical_sum_simplify r t)
+  | Cons_varlist l t -> Cons_varlist l (canonical_sum_simplify r t)
+  | Nil_monom -> Nil_monom
+
+[@canon_attr]
+let spolynomial_simplify (#a:eqtype) (r:cr a) (x:spolynomial a) =
+  canonical_sum_simplify r (spolynomial_normalize r x)
+
+(* End definitions. *)
+
+(* Section interpretation. *)
+
+(* Here a variable map is defined and the interpetation of a spolynom
+  acording to a certain variables map. Once again the choosen definition
+  is generic and could be changed *)
+
+let vmap (a:Type) = CCM.vmap a unit
+
+(* Interpretation of list of variables
+ * [x1; ... ; xn ] is interpreted as (find v x1)* ... *(find v xn)
+ * The unbound variables are mapped to 0. Normally this case sould
+ * never occur. Since we want only to prove correctness theorems, which form
+ * is : for any varmap and any spolynom ... this is a safe and pain-saving
+ * choice *)
+[@canon_attr]
+let interp_var (#a:Type) (vm:vmap a) (i:index) =
+  match assoc i (fst vm) with
+  | Some (x, _) -> x
+  | _ -> fst (snd vm)
+
+[@canon_attr]
+private
+let rec ivl_aux (#a:Type) (r:cr a) (vm:vmap a) (x:index) (t:varlist)
+  : Tot a (decreases t) =
+  let amult = cm_op r.cm_mult in
+  match t with
+  | Nil_var -> interp_var vm x
+  | Cons_var x' t' -> amult (interp_var vm x) (ivl_aux r vm x' t')
+
+[@canon_attr]
+let interp_vl (#a:Type) (r:cr a) (vm:vmap a) (l:varlist) =
+  let aone = CM?.unit r.cm_mult in
+  match l with
+  | Nil_var -> aone
+  | Cons_var x t -> ivl_aux r vm x t
+
+[@canon_attr]
+private
+let rec interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
+  let amult = cm_op r.cm_mult in
+  match l with
+  | Nil_var -> c
+  | Cons_var x t -> amult c (ivl_aux r vm x t)
+
+[@canon_attr]
+private
+let rec ics_aux (#a:Type) (r:cr a) (vm:vmap a) (x:a) (s:canonical_sum a)
+  : Tot a (decreases s) =
+  let aplus = cm_op r.cm_add in
+  match s with
+  | Nil_monom -> x
+  | Cons_varlist l t -> aplus x (ics_aux r vm (interp_vl r vm l) t)
+  | Cons_monom c l t -> aplus x (ics_aux r vm (interp_m r vm c l) t)
+
+(* Interpretation of a canonical sum *)
+[@canon_attr]
+let interp_cs (#a:Type) (r:cr a) (vm:vmap a) (s:canonical_sum a) : a =
+  let azero = CM?.unit r.cm_add in
+  match s with
+  | Nil_monom -> azero
+  | Cons_varlist l t -> ics_aux r vm (interp_vl r vm l) t
+  | Cons_monom c l t -> ics_aux r vm (interp_m r vm c l) t
+
+[@canon_attr]
+let rec interp_sp (#a:Type) (r:cr a) (vm:vmap a) (p:spolynomial a) : a =
+  let aplus = cm_op r.cm_add in
+  let amult = cm_op r.cm_mult in
+  match p with
+  | SPconst c -> c
+  | SPvar i -> interp_var vm i
+  | SPplus p1 p2 -> aplus (interp_sp r vm p1) (interp_sp r vm p2)
+  | SPmult p1 p2 -> amult (interp_sp r vm p1) (interp_sp r vm p2)
+
+(* End interpretation. *)
+
+val ivl_aux_ok (#a:eqtype) (r:cr a) (vm:vmap a) (v:varlist) (i:index) : Lemma
+  (ivl_aux r vm i v == cm_op r.cm_mult (interp_var vm i) (interp_vl r vm v))
+let ivl_aux_ok #a r vm v i =
+  match v with
+  | Nil_var ->
+    begin
+    CM?.commutativity r.cm_mult (CM?.unit r.cm_mult) (interp_var vm i);
+    CM?.identity r.cm_mult (interp_var vm i)
+    end
+  | Cons_var x xs -> ()
+
+val varlist_merge_ok (#a:eqtype) (r:cr a) (vm:vmap a) (x y:varlist) :
+  Lemma (interp_vl r vm (varlist_merge x y) ==
+         cm_op r.cm_mult (interp_vl r vm x) (interp_vl r vm y))
+let rec varlist_merge_ok #a r vm x y =
+  let amult = cm_op r.cm_mult in
+  match x, y with
+  | Cons_var v1 t1, Nil_var ->
+    begin
+    CM?.identity r.cm_mult (interp_vl r vm x);
+    CM?.commutativity r.cm_mult (CM?.unit r.cm_mult) (interp_vl r vm x)
+    end
+  | Cons_var v1 t1, Cons_var v2 t2 ->
+    if v1 < v2
+    then
+      begin
+      varlist_merge_ok r vm t1 y;
+      assert (
+        interp_vl r vm (varlist_merge x y) ==
+        amult (interp_var vm v1) (amult (interp_vl r vm t1) (interp_vl r vm y)));
+      CM?.associativity r.cm_mult
+        (interp_var vm v1) (interp_vl r vm t1) (interp_vl r vm y)
+      end
+    else
+      begin
+      varlist_merge_ok r vm t1 t2;
+      assert (
+        interp_vl r vm (varlist_merge x y) ==
+        amult (interp_var vm v2) (interp_vl r vm (vm_aux v1 t1 t2)));
+      ivl_aux_ok r vm t1 v1;
+      ivl_aux_ok r vm t2 v2;
+      CM?.associativity r.cm_mult
+        (interp_var vm v2) (interp_vl r vm t1) (interp_vl r vm t2);
+       admit()
+      end
+  | Nil_var, _ ->
+    begin
+    CM?.identity r.cm_mult (interp_vl r vm y);
+    CM?.commutativity r.cm_mult (CM?.unit r.cm_mult) (interp_vl r vm y)
+    end
+
+val ics_aux_ok: #a:Type -> r:cr a -> vm:vmap a -> x:a -> s:canonical_sum a ->
+  Lemma (ensures ics_aux r vm x s == cm_op r.cm_add x (interp_cs r vm s))
+  (decreases s)
+let rec ics_aux_ok #a r vm x s =
+  match s with
+  | Nil_monom ->
+    CM?.identity r.cm_add x;
+    CM?.commutativity r.cm_add x (CM?.unit r.cm_add)
+  | Cons_varlist l t ->
+    ics_aux_ok r vm (interp_vl r vm l) t
+  | Cons_monom c l t ->
+    ics_aux_ok r vm (interp_m r vm c l) t
+
+val interp_m_ok: #a:Type -> r:cr a -> vm:vmap a -> x:a -> l:varlist ->
+  Lemma (interp_m r vm x l == cm_op r.cm_mult x (interp_vl r vm l))
+let interp_m_ok #a r vm x l =
+  match l with
+  | Nil_var ->
+    CM?.identity r.cm_mult x;
+    CM?.commutativity r.cm_mult x (CM?.unit r.cm_mult)
+  | _ -> ()
+
+
+val aplus_assoc_4: #a:Type -> r:cr a -> w:a -> x:a -> y:a -> z:a -> Lemma
+  (let aplus = cm_op r.cm_add in
+   aplus (aplus w x) (aplus y z) == aplus (aplus w y) (aplus x z))
+let aplus_assoc_4 #a r w x y z =
+  let aplus = cm_op r.cm_add in
+  let assoc = CM?.associativity r.cm_add in
+  let comm = CM?.commutativity r.cm_add in
+  calc (==) {
+    aplus (aplus w x) (aplus y z);
+    == { assoc w x (aplus y z) }
+    aplus w (aplus x (aplus y z));
+    == { comm x (aplus y z) }
+    aplus w (aplus (aplus y z) x);
+    == { assoc w (aplus y z) x }
+    aplus (aplus w (aplus y z)) x;
+    == { assoc w y z }
+    aplus (aplus (aplus w y) z) x;
+    == { assoc (aplus w y) z x }
+    aplus (aplus w y) (aplus z x);
+    == { comm z x }
+    aplus (aplus w y) (aplus x z);
+  }
+
+val canonical_sum_merge_ok: #a:Type -> r:cr a -> vm:vmap a -> x:canonical_sum a -> y:canonical_sum a ->
+  Lemma (interp_cs r vm (canonical_sum_merge r x y) ==
+         cm_op r.cm_add (interp_cs r vm x) (interp_cs r vm y))
+let rec canonical_sum_merge_ok #a r vm x y =
+  let aplus = cm_op r.cm_add in
+  let aone = CM?.unit r.cm_mult in
+  let amult = cm_op r.cm_mult in
+  match x with
+  | Nil_monom ->
+    CM?.identity r.cm_add (interp_cs r vm y);
+    CM?.commutativity r.cm_add (interp_cs r vm y) (CM?.unit r.cm_add)
+  | Cons_monom c1 l1 t1 ->
+    begin
+    match y with
+    | Nil_monom ->
+      CM?.identity r.cm_add (interp_cs r vm x);
+      CM?.commutativity r.cm_add (interp_cs r vm x) (CM?.unit r.cm_add)
+
+    | Cons_monom c2 l2 t2 ->
+      if l1 = l2 then
+        begin
+        calc (==) {
+          interp_cs r vm (canonical_sum_merge r x y);
+          == { }
+          ics_aux r vm (interp_m r vm (aplus c1 c2) l1)
+                       (canonical_sum_merge r t1 t2);
+          == { ics_aux_ok r vm (interp_m r vm (aplus c1 c2) l1)
+                               (canonical_sum_merge r t1 t2) }
+          aplus (interp_m r vm (aplus c1 c2) l1)
+                (interp_cs r vm (canonical_sum_merge r t1 t2));
+          == { interp_m_ok r vm (aplus c1 c2) l1 }
+          aplus (amult (aplus c1 c2) (interp_vl r vm l1))
+                (interp_cs r vm (canonical_sum_merge r t1 t2));
+          == { canonical_sum_merge_ok r vm t1 t2 }
+          aplus (amult (aplus c1 c2) (interp_vl r vm l1))
+                (aplus (interp_cs r vm t1) (interp_cs r vm t2));
+          == { distribute_right r c1 c2 (interp_vl r vm l1) }
+          aplus (aplus (amult c1 (interp_vl r vm l1))
+                       (amult c2 (interp_vl r vm l2)))
+                (aplus (interp_cs r vm t1)
+                       (interp_cs r vm t2));
+          == { aplus_assoc_4 r
+                 (amult c1 (interp_vl r vm l1))
+                 (amult c2 (interp_vl r vm l2))
+                 (interp_cs r vm t1)
+                 (interp_cs r vm t2) }
+          aplus (aplus (amult c1 (interp_vl r vm l1)) (interp_cs r vm t1))
+                (aplus (amult c2 (interp_vl r vm l2)) (interp_cs r vm t2));
+          == { ics_aux_ok r vm (amult c1 (interp_vl r vm l1)) t1;
+               interp_m_ok r vm c1 l1 }
+          aplus (interp_cs r vm x)
+                (aplus (amult c2 (interp_vl r vm l2)) (interp_cs r vm t2));
+          == { ics_aux_ok r vm (amult c2 (interp_vl r vm l2)) t2;
+               interp_m_ok r vm c2 l2 }
+          aplus (interp_cs r vm x) (interp_cs r vm y);
+        }
+        end
+      else if varlist_lt l1 l2 then
+        begin
+        calc (==) {
+          interp_cs r vm (canonical_sum_merge r x y);
+          == { }
+          ics_aux r vm (interp_m r vm c1 l1)
+                       (canonical_sum_merge r t1 y);
+          == { ics_aux_ok r vm (interp_m r vm c1 l1)
+                               (canonical_sum_merge r t1 y) }
+          aplus (interp_m r vm c1 l1)
+                (interp_cs r vm (canonical_sum_merge r t1 y));
+          == { interp_m_ok r vm c1 l1 }
+          aplus (amult c1 (interp_vl r vm l1))
+                (interp_cs r vm (canonical_sum_merge r t1 y));
+          == { canonical_sum_merge_ok r vm t1 y }
+          aplus (amult c1 (interp_vl r vm l1))
+                (aplus (interp_cs r vm t1) (interp_cs r vm y));
+          == { admit() }
+          aplus (aplus (amult c1 (interp_vl r vm l1))
+                       (interp_cs r vm t1))
+                (interp_cs r vm y);
+          == { ics_aux_ok r vm (amult c1 (interp_vl r vm l1)) t1;
+               interp_m_ok r vm c1 l1 }
+          aplus (interp_cs r vm x) (interp_cs r vm y);
+        }
+       end
+      else admit()
+    | _ -> admit()
+    end
+  | _ -> admit()
+
+val spolynomial_normalize_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:spolynomial a ->
+  Lemma (interp_cs r vm (spolynomial_normalize r p) == interp_sp r vm p)
+let spolynomial_normalize_ok #a r vm p =
+  admit()
+
+val canonical_sum_simplify_ok: #a:eqtype -> r:cr a -> vm:vmap a -> s:canonical_sum a ->
+  Lemma (interp_cs r vm (canonical_sum_simplify r s) == interp_cs r vm s)
+let canonical_sum_simplify_ok #a r vm s =
+  admit()
+
+val spolynomial_simplify_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:spolynomial a ->
+  Lemma (interp_cs r vm (spolynomial_simplify r p) == interp_sp r vm p)
+let spolynomial_simplify_ok #a r vm p =
+  canonical_sum_simplify_ok r vm (spolynomial_normalize r p);
+  spolynomial_normalize_ok r vm p
+
+
+/// Tactic
+
+let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) : Tac
+    (spolynomial a * list term * vmap a) =
+  match CCM.where t ts with
+  | Some v -> (SPvar v, ts, vm)
   | None ->
     let vfresh = length ts in
     let z = unquotea t in
-    (Var vfresh, ts @ [t], update vfresh z (f t) vm)
+    (SPvar vfresh, ts @ [t], CCM.update vfresh z () vm)
 
 // This expects that add, mult, and t have already been normalized
-let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term) (vm:vmap a b) (f:term -> Tac b)
-    (add mult t: term) : Tac (exp * list term * vmap a b) =
+let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add mult t: term) : Tac (spolynomial a * list term * vmap a) =
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
   | (Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)]) ->
-    let binop (op:exp -> exp -> exp) : Tac (exp * list term * vmap a b) =
-      let (e1, ts, vm) = reification_aux unquotea ts vm f add mult t1 in
-      let (e2, ts, vm) = reification_aux unquotea ts vm f add mult t2 in
+    let binop (op:spolynomial a -> spolynomial a -> spolynomial a) : Tac (spolynomial a * list term * vmap a) =
+      let (e1, ts, vm) = reification_aux unquotea ts vm add mult t1 in
+      let (e2, ts, vm) = reification_aux unquotea ts vm add mult t2 in
       (op e1 e2, ts, vm)
       in
-    if term_eq (pack (Tv_FVar fv)) add then binop Add else
-    if term_eq (pack (Tv_FVar fv)) mult then binop Mult else
-    make_fvar f t unquotea ts vm
-  | (_, _) -> make_fvar f t unquotea ts vm
+    if term_eq (pack (Tv_FVar fv)) add then binop SPplus else
+    if term_eq (pack (Tv_FVar fv)) mult then binop SPmult else
+    make_fvar t unquotea ts vm
+  | (_, _) -> make_fvar t unquotea ts vm
 
-let reification (b:Type) (f:term -> Tac b) (def:b) (#a:Type)
+let reification (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tadd tmult:term) (munit:a) (ts:list term) :
-    Tac (list exp * vmap a b) =
+    Tac (list (spolynomial a) * vmap a) =
   let add = norm_term [delta] tadd in
   let mult = norm_term [delta] tmult in
   let ts = Tactics.Util.map (norm_term [delta]) ts in
@@ -267,11 +642,10 @@ let reification (b:Type) (f:term -> Tac b) (def:b) (#a:Type)
   let (es, _, vm) =
     Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
-        let (e,vs,vm) = reification_aux unquotea vs vm f add mult t
+        let (e,vs,vm) = reification_aux unquotea vs vm add mult t
         in (e::es,vs,vm))
-      ([],[], const munit def) ts
+      ([],[], ([], (munit, ()))) ts
   in (List.rev es,vm)
-
 
 let canon_norm () : Tac unit =
   norm [
@@ -283,6 +657,7 @@ let canon_norm () : Tac unit =
       "FStar.Algebra.CommMonoid.int_plus_cm";
       "FStar.Algebra.CommMonoid.int_multiply_cm";
       "FStar.Algebra.CommMonoid.__proj__CM__item__mult";
+      "FStar.Algebra.CommMonoid.__proj__CM__item__unit";
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_add";
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_mult";
       "FStar.Tactics.CanonCommMonoid.canon";
@@ -308,11 +683,30 @@ let canon_norm () : Tac unit =
     ]
   ]
 
+
+let rec quote_spolynomial (#a:Type) (e:spolynomial a) : Tac term =
+  match e with
+  | SPconst c -> quote (SPconst c)
+  | SPvar x -> mk_e_app (`SPvar) [pack (Tv_Const (C_Int x))]
+  | SPplus e1 e2 -> mk_e_app (`SPplus) [quote_spolynomial e1; quote_spolynomial e2]
+  | SPmult e1 e2 -> mk_e_app (`SPmult) [quote_spolynomial e1; quote_spolynomial e2]
+
+let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
+    (_ : squash (
+      interp_cs r vm (spolynomial_simplify r e1) ==
+      interp_cs r vm (spolynomial_simplify r e2)))
+    (_ : squash (a1 == interp_sp r vm e1))
+    (_ : squash (a2 == interp_sp r vm e2)) :
+    squash (a1 == a2)
+  =
+  spolynomial_simplify_ok r vm e1;
+  spolynomial_simplify_ok r vm e2
+
 [@plugin]
 let canon_semiring_aux
-    (a b: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
-    (tr tadd tmult: term) (munit: a) (tb: term) (quoteb:b->Tac term)
-    (f:term->Tac b) (def:b) (tp:term) (tpc:term): Tac unit =
+    (a: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
+    (tr tadd tmult: term) (munit: a) (tb: term)
+  : Tac unit =
   focus (fun () ->
   norm [];
   let g = cur_goal () in
@@ -322,10 +716,11 @@ let canon_semiring_aux
       //ddump ("t1 = " ^ term_to_string t1 ^ "; t2 = " ^ term_to_string t2);
       if term_eq t ta then
       (
-        match reification b f def unquotea quotea tadd tmult munit [t1; t2] with
+        match reification unquotea quotea tadd tmult munit [t1; t2] with
         | ([e1; e2], vm) ->
           (
-            (*
+(*
+            let r : cr a = unquote tr in
             ddump (
               "e1 = " ^ exp_to_string e1 ^
               "; e2 = " ^ exp_to_string e2);
@@ -336,24 +731,24 @@ let canon_semiring_aux
               (quote (
                 cdenote p r vm (exp_to_sum e1) ==
                 cdenote p r vm (exp_to_sum e2)))));
-            *)
+*)
             // let q_app0 = quote (semiring_reflect #a #b p pc r vm e1 e2) in
-            // ddump (term_to_string t1);
-            let tvm = CCM.quote_vm ta tb quotea quoteb vm in
-            let te1 = quote_exp e1 in
+            ddump (term_to_string t1);
+            let tvm = CCM.quote_vm ta tb quotea (fun _ -> `()) vm in
+            let te1 = quote_spolynomial e1 in
             // ddump (exp_to_string e1);
             // ddump (term_to_string te1);
-            let te2 = quote_exp e2 in
+            let te2 = quote_spolynomial e2 in
             // ddump (term_to_string te2);
-            mapply (`(semiring_reflect #(`#ta) #(`#tb) (`#tp) (`#tpc) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
-            unfold_def tp;
+            mapply (`(semiring_reflect #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
+            //unfold_def tp;
             canon_norm ();
             later ();
             canon_norm ();
-            //ddump ("after norm-left");
+            ddump ("after norm-left");
             trefl ();
             canon_norm ();
-            //ddump ("after norm-right");
+            ddump ("after norm-right");
             trefl ();
             (* ddump "done"; *)
             ()
@@ -365,97 +760,81 @@ let canon_semiring_aux
   | _ -> fail "Goal should be an equality")
 
 
-let canon_semiring_with
-    (b:Type) (f:term -> Tac b) (def:b) (tp:term) (tpc:term)
-    (#a:Type) (r:cr a) : Tac unit =
-  canon_semiring_aux a b
+let canon_semiring_with (#a:Type) (r:cr a) : Tac unit =
+  canon_semiring_aux a
     (quote a) (unquote #a) (fun (x:a) -> quote x)
-    (quote r) (quote (cm_op (r.cm_add))) (quote (cm_op (r.cm_mult))) (CM?.unit (r.cm_add))
-    (quote b) (fun (x:b) -> quote x) f def tp tpc
-
-let is_not_const (t:term) : Tac bool =
-  let (hd, tl) = collect_app_ref t in
-  match (inspect hd, list_unref tl) with
-  | (Tv_Const _, []) -> false
-  | (Tv_FVar fv, [(t1, _)]) ->
-    (
-      match (inspect_fv fv, inspect t1) with
-      | (x, Tv_Const _) -> not (x = neg_qn)
-      | _ -> true
-    )
-  | _ -> true
-
-// GM: Jul 10 2018 (POPL-30h): Having this as a top-level means it's
-// typechecked only once, and we save a few queries.
-let const_last_correct : permute_correct const_last =
-    (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs)
+    (quote r) (quote (cm_op (r.cm_add))) (quote (cm_op (r.cm_mult))) (CM?.unit (r.cm_add)) (quote unit)
 
 let canon_semiring (#a:Type) (r:cr a) : Tac unit =
-  canon_semiring_with bool is_not_const true (quote const_last)
-    (quote (fun #a -> const_last_correct #a)) // eta the implicit due to a bug in inference
-    r
+  canon_semiring_with r
 
-#reset-options "--z3cliopt smt.arith.nl=false"
 
-let lem0 (a b c d : int) =
-  let open FStar.Mul in
-  //assert ((a + b) * (c + d) == a * d + c * b + b * d + a * c);
-  assert_by_tactic ((a + b + b) * (c + d) == a * d + 2 * c * b + b * 2 * d + a * c)
-    (fun _ -> canon_semiring int_cr)
+/// Examples
 
 open FStar.Mul
 
-val lemma_poly_multiply : n:int -> p:int -> r:int -> h:int -> r0:int -> r1:int -> h0:int -> h1:int -> h2:int -> s1:int -> d0:int -> d1:int -> d2:int -> hh:int -> Lemma
-  (requires
-    p > 0 /\
-    r1 >= 0 /\
-    n > 0 /\
-    4 * (n * n) == p + 5 /\
-    r == r1 * n + r0 /\
-    h == h2 * (n * n) + h1 * n + h0 /\
-    s1 == r1 + (r1 / 4) /\
-    r1 % 4 == 0 /\
-    d0 == h0 * r0 + h1 * s1 /\
-    d1 == h0 * r1 + h1 * r0 + h2 * s1 /\
-    d2 == h2 * r0 /\
-    hh == d2 * (n * n) + d1 * n + d0
-  )
-  (ensures (h * r) % p == hh % p)
+#set-options "--no_smt"
 
-// These assumptions are proven in https://github.com/project-everest/vale/blob/fstar/src/lib/math/Math.Lemmas.Int_i.fsti
-assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
-assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
+let poly (a b c:int) =
+  assert ( a * b + c + b * b == (b + a) * b + c)
+  by (canon_semiring int_cr)
 
-let lemma_poly_multiply n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
-  let r1_4 = r1 / 4 in
-  let h_r_expand = (h2 * (n * n) + h1 * n + h0) * ((r1_4 * 4) * n + r0) in
-  let hh_expand = (h2 * r0) * (n * n) + (h0 * (r1_4 * 4) + h1 * r0 + h2 * (5 * r1_4)) * n
-    + (h0 * r0 + h1 * (5 * r1_4)) in
-  //assert (h * r == h_r_expand);
-  //assert (hh == hh_expand);
-  let b = ((h2 * n + h1) * r1_4) in
-  modulo_addition_lemma hh_expand p b;
-  assert_by_tactic (h_r_expand == hh_expand + b * (n * n * 4 + (-5)))
-    (fun _ -> canon_semiring int_cr);
-  ()
+assume
+val ring: eqtype
 
-val lemma_poly_reduce : n:int -> p:int -> h:int -> h2:int -> h10:int -> c:int -> hh:int -> Lemma
-  (requires
-    p > 0 /\
-    4 * (n * n) == p + 5 /\
-    h2 == h / (n * n) /\
-    h10 == h % (n * n) /\
-    c == (h2 / 4) + (h2 / 4) * 4 /\
-    hh == h10 + c + (h2 % 4) * (n * n))
-  (ensures h % p == hh % p)
+assume
+val zero: ring
 
-let lemma_poly_reduce n p h h2 h10 c hh =
-  let h2_4 = h2 / 4 in
-  let h2_m = h2 % 4 in
-  let h_expand = h10 + (h2_4 * 4 + h2_m) * (n * n) in
-  let hh_expand = h10 + (h2_m) * (n * n) + h2_4 * 5 in
-  lemma_div_mod h (n * n);
-  modulo_addition_lemma hh_expand p h2_4;
-  assert_by_tactic (h_expand == hh_expand + h2_4 * (n * n * 4 + (-5)))
-    (fun _ -> canon_semiring int_cr);
-  ()
+assume
+val one: ring
+
+assume
+val ( +. ) : a:ring -> b:ring -> ring
+
+assume
+val ( *. ) : a:ring -> b:ring -> ring
+
+assume
+val add_identity: a:ring -> Lemma (zero +. a == a)
+
+assume
+val add_associativity: a:ring -> b:ring -> c:ring
+  -> Lemma (a +. b +. c == a +. (b +. c))
+
+assume
+val add_commutativity: a:ring -> b:ring -> Lemma (a +. b == b +. a)
+
+assume
+val mul_identity: a:ring -> Lemma (one *. a == a)
+
+assume
+val mul_associativity: a:ring -> b:ring -> c:ring
+  -> Lemma (a *. b *. c == a *. (b *. c))
+
+assume
+val mul_commutativity: a:ring -> b:ring -> Lemma (a *. b == b *. a)
+
+[@canon_attr]
+let ring_add_cm : cm ring =
+  CM zero ( +. ) add_identity add_associativity add_commutativity
+
+[@canon_attr]
+let ring_mul_cm : cm ring =
+  CM one ( *. ) mul_identity mul_associativity mul_commutativity
+
+assume
+val mul_add_distr: distribute_left_lemma ring ring_add_cm ring_mul_cm
+
+[@canon_attr]
+let ring_cr : cr ring = CR ring_add_cm ring_mul_cm mul_add_distr
+
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 1"
+
+let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) : Lemma
+  ((((a *. (r *. r)) +. c) *. (r *. r)) +. ((b *. (r *. r)) +. d) *. r ==
+   (((((a *. (r *. r)) +. b *. r) +. c) *. r) +. d) *. r)
+=
+  assert (
+    (((a *. (r *. r)) +. c) *. (r *. r)) +. ((b *. (r *. r)) +. d) *. r ==
+    ((a *. (r *. r) +. b *. r +. c) *. r +. d) *. r)
+  by (canon_semiring ring_cr)
