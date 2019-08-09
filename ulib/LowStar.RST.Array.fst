@@ -126,3 +126,5 @@ let glue #a b b1 b2 =
   (**) A.loc_union_is_split_into b b1 b2
 
 #pop-options
+
+let copy #a o i = admit()
