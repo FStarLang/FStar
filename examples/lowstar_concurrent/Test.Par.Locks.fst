@@ -15,8 +15,8 @@ let test_create_lock (b:array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
   (fun old -> vlength b = 1 /\
-         P.allows_write (A.get_perm b old) /\
-         A.as_seq b old == Seq.create 1 1ul
+         P.allows_write (A.get_rperm b old) /\
+         A.as_rseq b old == Seq.create 1 1ul
          )
   (fun _ l _ ->
     (forall s. get_lock_pred l s <==> (Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) ) )
@@ -33,7 +33,7 @@ let test_create_lock2 (b:array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
   (fun old -> vlength b = 2 /\
-         P.allows_write (A.get_perm b old)
+         P.allows_write (A.get_rperm b old)
          )
   (fun _ l _ ->
     (forall s. get_lock_pred l s <==> Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) )

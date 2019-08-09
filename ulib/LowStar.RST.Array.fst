@@ -15,10 +15,11 @@
 *)
 module LowStar.RST.Array
 
+open LowStar.RST
+
+
 let index (#a:Type) (b:A.array a) (i:UInt32.t) =
   (**) reveal_array();
-  (**) let h0 = HST.get () in
-  (**) let old = mk_selector (array_resource b) h0 in
   A.index b i
 
 let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
@@ -29,7 +30,7 @@ let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   A.upd b i v;
   (**) let h1 = HST.get () in
   (**) assert(modifies (array_resource b) (array_resource b) h0 h1);
-  (**) assert(A.loc_includes (A.loc_used_in h0) (as_loc (fp (array_resource b))));
+  (**) assert(A.loc_includes (A.loc_used_in h0) (as_loc (fp (array_resource b)) h0));
   (**) A.live_array_used_in b h1;
   (**) same_perm_seq_always_constant h0 h1 b
 
@@ -39,7 +40,8 @@ let alloc (#a:Type) (init:a) (len:UInt32.t) =
   (**) reveal_modifies();
   let b = A.alloc init len in
   (**) let h1 = HST.get () in
-  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one); // Find out how to trigger that
+  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one);
+  // Find out how to trigger that
   (**) A.live_array_used_in b h1;
   b
 

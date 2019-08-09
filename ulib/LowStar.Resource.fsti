@@ -20,68 +20,85 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module A = LowStar.Array
 
-/// Resources are the fundamental abstraction of Steel, the framework that allows reasonning on Low* program with separation logic
-/// concepts. They rely on the premice that most functions only talk about and modify a small portion of the heap, and the effect used
-/// to specify those function should have a structured way to talk about these small footprints as opposed to passing the entire heap as
-/// it is done in the `ST` effect.
+/// Resources are the fundamental abstraction of Steel, the framework that allows reasonning on Low*
+/// program with separation logic concepts. They rely on the premice that most functions only talk
+/// about and modify a small portion of the heap, and the effect used to specify those function
+/// should have a structured way to talk about these small footprints as opposed to passing the
+/// entire heap as it is done in the `ST` effect.
 ///
-/// Resources are built upon `LowStar.Array`, which is our low-level model of memory allocations unit.
+/// Resources are built upon `LowStar.Array`, which is our low-level model of memory allocations
+/// unit.
 
 (**** Views and resources *)
 
 
-/// The first concept is the heap invariant. We want to be able to attach invariants to heap objects, that are maintained throughtout the
-/// program
+/// The first concept is the heap invariant. We want to be able to attach invariants to heap
+/// objects, that are maintained throughtout the program
 let inv_t = HS.mem -> prop
 let imem (inv: inv_t) = m:HS.mem{inv m}
 
-/// The second concept is the footprint. It is simply a location as defined in `LowStar.Array.Modifies`.
-let eloc = Ghost.erased A.loc
-let as_loc (x:eloc) : GTot A.loc = Ghost.reveal x
+/// The second concept is the footprint. It is simply a location as defined in
+/// `LowStar.Array.Modifies`.
+let fp_t = (h:HS.mem) -> GTot A.loc
+let as_loc (fp:fp_t) (h: HS.mem) : GTot A.loc = fp h
 
-/// The third concept is the selector. Each memory footprint represents a high-level object, which we call the view attached to this
-/// footprint. This view is provided by a selector, abbreviated `sel`, which reads a heap satisfying an invariant.
+/// The third concept is the selector. Each memory footprint represents a high-level object, which
+/// we call the view attached to this footprint. This view is provided by a selector, abbreviated
+/// `sel`, which reads a heap satisfying an invariant.
 ///
-/// These three concepts form the resource trinity. A resource is a memory footprint satisfying an invariant valable for any heap, from which you can extract a view.
+/// These three concepts form the resource trinity. A resource is a memory footprint satisfying an
+/// invariant valable for any heap, from which you can extract a view.
 unfold
 let sel_t (a: Type) = HS.mem -> GTot a
 
+val fp_reads_fp (fp: fp_t) (inv: inv_t) : prop
 
-/// `sel_reads_fp` reformulate the core principle of the `modifies` theory: resource views should be preserved as long as the resource
-/// footprint is not part of the modified area.
-val sel_reads_fp (#b: Type) (fp: eloc) (inv:HS.mem -> prop) (sel:imem inv -> GTot b) : prop
+/// `sel_reads_fp` reformulate the core principle of the `modifies` theory: resource views should be
+/// preserved as long as the resource footprint is not part of the modified area.
+val sel_reads_fp (#b: Type) (fp: fp_t) (inv:inv_t) (sel:imem inv -> GTot b) : prop
 
 
 /// Similarly, invariants should be preserved when the footprint is not modified.
-val inv_reads_fp (fp: eloc) (inv: HS.mem -> prop) : prop
+val inv_reads_fp (fp: fp_t) (inv:inv_t) : prop
 
-/// Armed with this concept, we can define the core definition of the resource framework : the view. The view combines invariant, footprint
-/// and selector into a coherent object that behaves nicely with respect to the modifies theory
+/// Armed with this concept, we can define the core definition of the resource framework : the view.
+/// The view combines invariant, footprint and selector into a coherent object that behaves nicely
+/// with respect to the modifies theory
 noeq type view_aux (a: Type) = {
-  fp: eloc;
+  fp: fp_t;
   inv: inv_t;
   sel: sel_t a
 }
 let view (a: Type) = view:view_aux a{
+  fp_reads_fp view.fp view.inv /\
   sel_reads_fp view.fp view.inv view.sel /\
   inv_reads_fp view.fp view.inv
 }
 
 
-/// While the resource is abstract, we provide `reveal` methods that allow you to interoperate resources with regular modifies-based Low*.
+/// While the resource is abstract, we provide `reveal` methods that allow you to interoperate
+/// resources with regular modifies-based Low*.
 val reveal_view (_ : unit)
   : Lemma (
-    (forall (#b: Type) (fp: eloc) (inv:inv_t) (sel:sel_t b) . {:pattern sel_reads_fp fp inv sel}
+    (forall (fp: fp_t) (inv: inv_t). {:pattern fp_reads_fp fp inv}
+      fp_reads_fp fp inv <==>
+      (forall (h0 h1: HS.mem) (loc: A.loc). {:pattern (A.modifies loc h0 h1); (fp h1); inv h0 }
+        A.loc_disjoint (as_loc fp h0) loc /\
+        A.modifies loc h0 h1 /\ inv h0 ==>
+          as_loc fp h0 == as_loc fp h1
+      )
+    ) /\
+    (forall (#b: Type) (fp: fp_t) (inv:inv_t) (sel:sel_t b) . {:pattern sel_reads_fp fp inv sel}
       sel_reads_fp fp inv sel <==>
       (forall (h0 h1:imem inv) (loc: A.loc). {:pattern  (A.modifies loc h0 h1); (sel h1)}
-        A.loc_disjoint (as_loc fp) loc /\ A.modifies loc h0 h1 ==>
+        A.loc_disjoint (as_loc fp h0) loc /\ A.modifies loc h0 h1 ==>
           sel h0 == sel h1
       )
     ) /\
-    (forall (fp: eloc) (inv: inv_t). {:pattern inv_reads_fp fp inv}
+    (forall (fp: fp_t) (inv: inv_t). {:pattern inv_reads_fp fp inv}
       inv_reads_fp fp inv <==>
       (forall (h0 h1: HS.mem) (loc: A.loc). {:pattern (A.modifies loc h0 h1); (inv h1)}
-        inv h0 /\ A.loc_disjoint (as_loc fp) loc /\ A.modifies loc h0 h1 ==>
+        inv h0 /\ A.loc_disjoint (as_loc fp h0) loc /\ A.modifies loc h0 h1 ==>
           inv h1
       )
     )
@@ -101,7 +118,7 @@ let as_resource (#a:Type) (view:view a) : resource = {
 /// Helper functions to get the components of a resource
 let view_of (res:resource) : view res.t =
   res.view
-let fp (res:resource) : eloc =
+let fp (res:resource) : fp_t =
   res.view.fp
 let inv (res:resource) (h:HS.mem) : prop =
   res.view.inv h
@@ -110,15 +127,17 @@ let sel (#a:Type) (view:view a) (h: HS.mem) : GTot a =
 
 (**** Separating conjunction on views and resources *)
 
-/// Core operator, offering a flavor of separation logic for resources. `res1 <*> res2` is a new resource whose footprint is the disjoint
-/// union of those of `res1` and `res2`, the invariant is the conjunction of the two invariants and the view is the pair o
+/// Core operator, offering a flavor of separation logic for resources. `res1 <*> res2` is a new
+/// resource whose footprint is the disjoint union of those of `res1` and `res2`, the invariant is
+/// the conjunction of the two invariants and the view is the pair of the two.
 val ( <*> ) (res1 res2:resource) : res:resource
 
-/// DA: we might consider removing this SMTPat at the cost of having to have expicitly call reveals in specs involving <*>.
+/// DA: we might consider removing this SMTPat at the cost of having to have expicitly call reveals
+/// in specs involving <*>.
 val reveal_star_inv (res1 res2:resource) (h:HS.mem)
   : Lemma (
     (inv (res1 <*> res2) h) <==>
-      (inv res1 h /\ inv res2 h /\ A.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2)))
+      (inv res1 h /\ inv res2 h /\ A.loc_disjoint (as_loc (fp res1) h) (as_loc (fp res2) h))
   )
   [SMTPat (inv (res1 <*> res2) h)]
 
@@ -131,8 +150,8 @@ val reveal_star_sel (res1 res2:resource) (h:HS.mem)
 
 val reveal_star (_: unit)
   : Lemma (
-    (forall res1 res2 .{:pattern as_loc (fp (res1 <*> res2))}
-      as_loc (fp (res1 <*> res2)) == A.loc_union (as_loc (fp res1)) (as_loc (fp res2))
+    (forall res1 res2 h .{:pattern as_loc (fp (res1 <*> res2)) h}
+      as_loc (fp (res1 <*> res2)) h == A.loc_union (as_loc (fp res1) h) (as_loc (fp res2) h )
     ) /\
     (forall res1 res2 .{:pattern (res1 <*> res2).t}
       (res1 <*> res2).t == res1.t & res2.t
@@ -148,7 +167,7 @@ val empty_resource: resource
 
 val reveal_empty_resource (_ : unit)
   : Lemma (
-    (fp empty_resource == Ghost.hide A.loc_none) /\
+    (forall h. {:pattern fp empty_resource h} fp empty_resource h == A.loc_none) /\
     (forall h .{:pattern inv empty_resource h} inv empty_resource h <==> True) /\
     (empty_resource.t == unit) /\
     (forall h .{:pattern sel empty_resource.view h} sel empty_resource.view h == ())
@@ -156,22 +175,26 @@ val reveal_empty_resource (_ : unit)
 
 (**** Splitting resources *)
 
-/// Splitting resources into smaller constituents. Its main use case is for stating resource inclusion for framing, where by
+/// Splitting resources into smaller constituents. Its main use case is for stating resource
+/// inclusion for framing, where by
 /// ```
 /// res1 `can_be_split_into` (res2,res3)
 /// ```
-/// we intuitively mean that the inner (re framing) resource `res2` is included in the outer (re framing) resource `res1`, as
-/// witnessed by `res3` that is the formal delta-resource `res3`.
+/// we intuitively mean that the inner (re framing) resource `res2` is included in the outer
+/// (re framing) resource `res1`, as witnessed by `res3` that is the formal delta-resource `res3`.
 
-/// The footprint of the outer resource is union of delta and the inner resource. The outer invariant is equivalent to delta and
-/// the inner invariant (when they are disjoint).
+/// The footprint of the outer resource is union of delta and the inner resource. The outer
+/// invariant is equivalent to delta and the inner invariant (when they are disjoint).
 val can_be_split_into (outer:resource) (inner_delta:resource & resource) : prop
 
 val reveal_can_be_split_into (_ : unit)
   : Lemma (forall (outer inner delta: resource) .
     outer `can_be_split_into` (inner,delta) <==>
-      (as_loc (fp outer) == A.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-      (forall h . inv outer h <==> inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta)) (as_loc (fp inner))))
+      (forall (h: HS.mem).
+        (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
+        (inv outer h <==>
+          inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+      )
   )
 
 /// SMT-patterns to reveal some of the properties of abstract can_be_split_into in specs

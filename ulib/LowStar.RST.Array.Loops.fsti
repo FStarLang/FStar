@@ -32,18 +32,18 @@ val iteri
   (#a: Type0)
   (b: A.array a)
   (context: R.resource)
-  (loop_inv:(RST.selector context -> nat -> Type))
+  (loop_inv:(RST.rmem context -> nat -> Type))
   (f: (i:U32.t{U32.v i < A.vlength b} -> x:a -> RST.RST unit
     (context)
     (fun _ -> context)
-    (fun old -> loop_inv old (U32.v i))
-    (fun old _ modern -> loop_inv modern (U32.v i + 1))
+    (fun h0 -> loop_inv h0 (U32.v i))
+    (fun h0 _ h1 -> loop_inv h1 (U32.v i + 1))
   ))
   (len: U32.t{len = A.length b})
   : RST.RST unit
     (R.(AR.array_resource b <*> context))
     (fun _ -> R.(AR.array_resource b <*> context))
-    (fun old -> loop_inv (RST.focus_selector old context) 0)
-    (fun old _ modern -> loop_inv (RST.focus_selector modern context) (A.vlength b) /\
-      old (AR.array_resource b) == modern (AR.array_resource b)
+    (fun h0 -> loop_inv (RST.focus_rmem h0 context) 0)
+    (fun h0 _ h1 -> loop_inv (RST.focus_rmem h1 context) (A.vlength b) /\
+      RST.focus_rmem h0 (AR.array_resource b) == RST.focus_rmem h1 (AR.array_resource b)
     )

@@ -8,54 +8,63 @@ module P = LowStar.Permissions
 
 open LowStar.Array.Defs
 
-/// This module instantiates the `FStar.ModifiesGen` theory with our arrays. All the implementation details are hidden behind abstract
-/// types, the comments inclue a brief description of what happens behind the scenes.
+/// This module instantiates the `FStar.ModifiesGen` theory with our arrays. All the implementation
+/// details are hidden behind abstract types, the comments inclue a brief description of what
+/// happens behind the scenes.
 
 (**** Instantiation of the `FStar.ModifiesGen` theory **)
 
 
-/// The atomic locations of this theory are each of the array cells, augmented with the permission identifier.
+/// The atomic locations of this theory are each of the array cells, augmented with the permission
+/// identifier.
 val loc:Type0
 
 val loc_none: loc
 
 val loc_union (s1 s2: loc) : GTot loc
 
-/// Disjointness is defined as inequality between the memory address, the absolute index in the array or the permission identifier.
+/// Disjointness is defined as inequality between the memory address, the absolute index in the
+/// array or the permission identifier.
 val loc_disjoint (s1 s2: loc) : GTot Type0
 
 /// Inclusion for atomic locations is simply equality.
 val loc_includes (s1 s2: loc) : GTot Type0
 
-/// The location of the array is simply the `loc_union` of all the atomic locations of the cells composing it.
+/// The location of the array is simply the `loc_union` of all the atomic locations of the cells
+/// composing it.
 val loc_array (#a:Type0) (b:array a) : GTot loc
 
-/// The notion of unused locations is the most tricky part of the instantiation. We have to set it up such that both allocation of a new
-/// array and creation of a new reference from an existing array return a fresh location. Thus, we defined unusedness for an atomic
-/// location (array cell) as a disjunction:
+/// The notion of unused locations is the most tricky part of the instantiation. We have to set it
+/// up such that both allocation of a new array and creation of a new reference from an existing
+/// array return a fresh location. Thus, we defined unusedness for an atomic location (array cell)
+/// as a disjunction:
 ///  * either there is nothing allocated a the memory address pointed by the cell;
-///  * either there is something allocated but it is not an array that has a sufficient length to contain the cell;
-///  * or there is an allocated array of any length susceptible to contain the cell, but the permission identifier used by this cell in
-///    the array is unused.
+///  * either there is something allocated but it is not an array that has a sufficient length to
+///    contain the cell;
+///  * or there is an allocated array of any length susceptible to contain the cell, but the
+///    permission identifier used by this cell in the array is unused.
 ///
-/// Cell usedness is defined as the logical negation of unusedness; however it can be shown to imply the existence of an allocated array
-/// that uses the permission identifier of the cell.
+/// Cell usedness is defined as the logical negation of unusedness; however it can be shown to
+/// imply the existence of an allocated array that uses the permission identifier of the cell.
 ///
-/// Permission identifiers are used if they are below the current maximal permission identifier of the permission map
-/// (see `LowStar.Permissions`).
+/// Permission identifiers are used if they are below the current maximal permission identifier
+/// of the permission map (see `LowStar.Permissions`).
 val loc_unused_in (h: HS.mem) : GTot loc
 val loc_used_in (h: HS.mem) : GTot loc
 let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
   (loc_unused_in h `loc_includes` l /\
   loc_used_in h' `loc_includes` l)
 
-/// The modifies clauses specifies conservatively the largest location susceptible to have been modified between two heap states `h0` and
-/// `h1`. Everything that was not modified and live in `h0` should still be live in `h1` with its contents untouched.
+/// The modifies clauses specifies conservatively the largest location susceptible to have been
+/// modified between two heap states `h0` and  `h1`. Everything that was not modified and live in
+/// `h0` should still be live in `h1` with its contents untouched.
 val modifies (s: loc) (h1 h2: HS.mem) : GTot Type0
 
 (**** The lemma loft ***)
 
-/// The `FStar.ModifiesGen` theory provides a bunch of lemmas describing the behavior of all its elements. For proof convenience, somme of these lemmas are reproduced here with `SMTPat`s. The lemma attic also contains array-specific lemmas.
+/// The `FStar.ModifiesGen` theory provides a bunch of lemmas describing the behavior of all its
+/// elements. For proof convenience, somme of these lemmas are reproduced here with `SMTPat`s.
+/// The lemma attic also contains array-specific lemmas.
 
 (***** Locations: inclusion, disjointness, union *)
 
@@ -227,9 +236,14 @@ val unused_in_used_in_disjoint_2
   (l1 l2 l1' l2': loc)
   (h: HS.mem)
 : Lemma
-  (requires (loc_unused_in h `loc_includes` l1 /\ loc_used_in h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
+  (requires (
+    loc_unused_in h `loc_includes` l1 /\ loc_used_in h `loc_includes` l2 /\
+    l1 `loc_includes` l1' /\ l2 `loc_includes` l2'
+  ))
   (ensures (loc_disjoint l1'  l2' ))
-  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_used_in h `loc_includes` l2)]
+  [SMTPat (loc_disjoint l1' l2');
+   SMTPat (loc_unused_in h `loc_includes` l1);
+   SMTPat (loc_used_in h `loc_includes` l2)]
 
 
 val modifies_only_used_in
@@ -275,18 +289,31 @@ val live_array_used_in (#t: Type) (b: array t) (h: HS.mem) : Lemma
 (***** Locations: splitting arrays *)
 
 val loc_union_gsub (#a:Type0) (b:array a) (i len1 len2:U32.t)
-  :Lemma (requires (U32.v len1 > 0 /\ U32.v len2 > 0 /\ U32.v i + U32.v len1 + U32.v len2 <= vlength b))
-         (ensures loc_union (loc_array (gsub b i len1)) (loc_array (gsub b (i `U32.add` len1) len2))
-                  == loc_array (gsub b i (len1 `U32.add` len2)))
+  : Lemma
+    (requires (
+      U32.v len1 > 0 /\ U32.v len2 > 0 /\ U32.v i + U32.v len1 + U32.v len2 <= vlength b
+    ))
+    (ensures (
+      loc_union (loc_array (gsub b i len1)) (loc_array (gsub b (i `U32.add` len1) len2)) ==
+      loc_array (gsub b i (len1 `U32.add` len2))
+    ))
 
 
 val loc_union_is_split_into (#a: Type) (b b1 b2: array a) : Lemma
   (requires (is_split_into b (b1, b2)))
   (ensures (loc_array b == loc_array b1 `loc_union` loc_array b2))
 
-val disjoint_gsubs (#a:Type0) (b:array a) (i1 i2:U32.t) (len1:U32.t{U32.v len1 > 0}) (len2:U32.t{U32.v len2 > 0})
-  :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (vlength b) /\
-                    UInt32.v i2 + UInt32.v len2 <= (vlength b) /\
-		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
-                     UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
-         (ensures  (loc_disjoint (loc_array (gsub b i1 len1)) (loc_array (gsub b i2 len2))))
+val disjoint_gsubs
+  (#a:Type0)
+  (b:array a)
+  (i1 i2:U32.t)
+  (len1:U32.t{U32.v len1 > 0})
+  (len2:U32.t{U32.v len2 > 0})
+  : Lemma
+    (requires (
+      UInt32.v i1 + UInt32.v len1 <= (vlength b) /\
+      UInt32.v i2 + UInt32.v len2 <= (vlength b) /\
+      (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
+       UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)
+    ))
+    (ensures  (loc_disjoint (loc_array (gsub b i1 len1)) (loc_array (gsub b i2 len2))))
