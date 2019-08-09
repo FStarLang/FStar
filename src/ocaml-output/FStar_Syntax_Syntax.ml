@@ -1318,7 +1318,7 @@ type eff_decl =
   mname: FStar_Ident.lident ;
   univs: univ_names ;
   binders: binders ;
-  signature: term ;
+  signature: tscheme ;
   ret_wp: tscheme ;
   bind_wp: tscheme ;
   if_then_else: tscheme ;
@@ -1326,7 +1326,7 @@ type eff_decl =
   stronger: tscheme ;
   close_wp: tscheme ;
   trivial: tscheme ;
-  repr: term ;
+  repr: tscheme ;
   return_repr: tscheme ;
   bind_repr: tscheme ;
   actions: action Prims.list ;
@@ -1359,7 +1359,7 @@ let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
         if_then_else; ite_wp; stronger; close_wp; trivial; repr; return_repr;
         bind_repr; actions; eff_attrs;_} -> binders
   
-let (__proj__Mkeff_decl__item__signature : eff_decl -> term) =
+let (__proj__Mkeff_decl__item__signature : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
     | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
@@ -1415,7 +1415,7 @@ let (__proj__Mkeff_decl__item__trivial : eff_decl -> tscheme) =
         if_then_else; ite_wp; stronger; close_wp; trivial; repr; return_repr;
         bind_repr; actions; eff_attrs;_} -> trivial
   
-let (__proj__Mkeff_decl__item__repr : eff_decl -> term) =
+let (__proj__Mkeff_decl__item__repr : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
     | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
