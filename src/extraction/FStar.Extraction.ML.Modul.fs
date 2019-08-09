@@ -634,8 +634,11 @@ let extract_iface (g:env_t) modul =
     else extract_iface' g modul
 
 let extend_with_iface (g:env_t) (iface:iface) =
+     let mlident_map = List.fold_left
+        (fun acc (_,x) -> BU.psmap_add acc x.exp_b_name "") g.env_mlident_map iface.iface_bindings in
      { g with
          env_bindings=List.map Fv iface.iface_bindings@g.env_bindings;
+         env_mlident_map = mlident_map;
          tydefs=iface.iface_tydefs@g.tydefs;
          type_names=iface.iface_type_names@g.type_names}
 
