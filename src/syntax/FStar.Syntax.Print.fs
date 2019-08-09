@@ -653,7 +653,7 @@ let eff_decl_to_string' for_free r q ed =
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
-         term_to_string ed.signature;
+         tscheme_to_string ed.signature;
          tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.if_then_else;
@@ -661,7 +661,7 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
          tscheme_to_string ed.trivial;
-         term_to_string ed.repr;
+         tscheme_to_string ed.repr;
          tscheme_to_string ed.bind_repr;
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]

@@ -2528,7 +2528,11 @@ let normalize_with_primitive_steps ps s e t =
       r
     end
 
-let normalize s e t = normalize_with_primitive_steps [] s e t
+let normalize s e t =
+    Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
+                      (Some (Ident.string_of_lid (Env.current_module e)))
+                      "FStar.TypeChecker.Normalize"
+
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
@@ -2852,7 +2856,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
 
     | Sig_new_effect ed ->
-      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      //AR: S.t_unit is just a dummy comp type, we only care about the binders
+      let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in
         univs_opening, SS.univ_var_closing univs
@@ -2871,8 +2876,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
             b_opening |> SS.shift_subst n_us,
             b_closing |> SS.shift_subst n_us in
         let univs_opening, univs_closing =
-            univs_opening |> SS.shift_subst n_us,
-            univs_closing |> SS.shift_subst n_us in
+            univs_opening |> SS.shift_subst (n_us + n_binders),
+            univs_closing |> SS.shift_subst (n_us + n_binders) in
         let t = SS.subst univs_opening (SS.subst b_opening t) in
         let _, _, t = elim_uvars_aux_t env [] [] t in
         let t = SS.subst univs_closing (SS.subst b_closing (SS.close_univ_vars us t)) in
@@ -2914,7 +2919,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                univs        = univs;
                binders      = binders;
-               signature    = signature;
+               signature    = elim_tscheme ed.signature;
                ret_wp       = elim_tscheme ed.ret_wp;
                bind_wp      = elim_tscheme ed.bind_wp;
                if_then_else = elim_tscheme ed.if_then_else;
@@ -2922,7 +2927,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
                trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
+               repr         = elim_tscheme ed.repr;
                return_repr  = elim_tscheme ed.return_repr;
                bind_repr    = elim_tscheme ed.bind_repr;
                actions      = List.map elim_action ed.actions } in
