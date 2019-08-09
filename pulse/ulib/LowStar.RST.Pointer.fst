@@ -70,7 +70,7 @@ let ptr_read
     (fun _ -> True)
     (fun h0 x h1 ->
       get ptr h0 == x /\
-      h0 (ptr_resource ptr) == h1 (ptr_resource ptr)
+      h0 == h1
     ) =
   reveal_ptr();
   A.index ptr 0ul

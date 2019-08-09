@@ -18,23 +18,32 @@ noeq type vector_view_t (a: Type0) = {
 
 val vector_view (#a:Type0)  (v:vector a) : Tot (view (vector_view_t a))
 
-let vector_resource (#a:Type0) (v:vector a) =
+let vector_resource (#a:Type0) (v:vector a) : Tot resource =
    as_resource (vector_view v)
 
-val create: #a:Type0 -> init:a -> max:UInt32.t -> RST (vector a)
+let get_capacity (#a: Type0) (v: vector a) (h: rmem (vector_resource v)): GTot U32.t =
+   (h (vector_resource v)).v_capacity
+
+let as_rseq (#a: Type0) (v: vector a) (h: rmem (vector_resource v)): GTot (S.seq a) =
+   (h (vector_resource v)).v_arr
+
+let get_perm (#a: Type0) (v: vector a) (h: rmem (vector_resource v)): GTot Perm.permission =
+   Ghost.reveal (h (vector_resource v)).v_perm
+
+val create: #a:Type0 -> init:a -> max:UInt32.t{U32.v max > 0} -> RST (vector a)
   empty_resource
   (fun v -> vector_resource v)
   (fun _ -> U32.v max > 0)
   (fun h0 v h1 -> let view = h1 (vector_resource v) in
-   view.v_arr `S.equal` S.empty /\
-   view.v_capacity = 1ul /\
-   view.v_perm == Ghost.hide FStar.Real.one
+   as_rseq v h1 `S.equal` S.empty /\
+   get_capacity v h1 = max /\
+   get_perm v h1 == FStar.Real.one
   )
 
 val push: #a:Type0 -> v:vector a -> x:a -> RST unit
   (vector_resource v)
   (fun _ -> vector_resource v)
-  (fun _ -> True)
+  (fun h -> Perm.allows_write (get_perm v h) /\ S.length (as_rseq v h) < UInt.max_int 32)
   (fun h0 _ h1 ->
     let v0 = h0 (vector_resource v)  in
     let v1 = h1 (vector_resource v) in

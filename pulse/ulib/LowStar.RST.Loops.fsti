@@ -42,11 +42,11 @@ val for
   (f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> RST unit
     (context)
     (fun _ -> context)
-    (requires (fun h -> loop_inv h (U32.v i)))
-    (ensures (fun h0 _ h1 -> U32.(loop_inv h0 (v i) /\ loop_inv h1 (v i + 1))))
+    (fun h -> loop_inv h (U32.v i))
+    (fun h0 _ h1 -> U32.(loop_inv h0 (v i) /\ loop_inv h1 (v i + 1)))
   ))
   : RST unit
     (context)
     (fun _ -> context)
-    (requires (fun h -> loop_inv h (U32.v start)))
-    (ensures (fun _ _ h1 -> loop_inv h1 (U32.v finish)))
+    (fun h -> loop_inv h (U32.v start))
+    (fun _ _ h1 -> loop_inv h1 (U32.v finish))

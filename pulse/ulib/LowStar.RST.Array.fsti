@@ -111,3 +111,17 @@ val glue (#a: Type) (b b1 b2: A.array a)
       as_rseq b h1 == Seq.append (as_rseq b1 h0) (as_rseq b2 h0) /\
       get_rperm b h1 == get_rperm b1 h0
     )
+
+val copy (#a: Type) (o: array a) (i: array a) : RST unit
+  (array_resource o <*> array_resource i)
+  (fun _ -> array_resource o <*> array_resource i)
+  (fun h ->
+    A.vlength o = A.vlength i /\
+    P.allows_write (get_rperm o h)
+  )
+  (fun h0 _ h1 ->
+    A.vlength o = A.vlength i /\
+    focus_rmem h0 (array_resource i) == focus_rmem h1 (array_resource i) /\
+    as_rseq o h1 == as_rseq i h0 /\
+    get_rperm o h1 == get_rperm o h0
+  )
