@@ -2037,7 +2037,6 @@ let (tc_eff_decl :
                                                                FStar_TypeChecker_Normalize.normalize
                                                                  [FStar_TypeChecker_Env.UnfoldUntil
                                                                     FStar_Syntax_Syntax.delta_constant;
-                                                                 FStar_TypeChecker_Env.Eager_unfolding;
                                                                  FStar_TypeChecker_Env.Beta]
                                                                  env1
                                                                  act_typ1
@@ -9256,7 +9255,6 @@ let (check_module :
                        let n1 =
                          FStar_TypeChecker_Normalize.normalize
                            [FStar_TypeChecker_Env.Beta;
-                           FStar_TypeChecker_Env.Eager_unfolding;
                            FStar_TypeChecker_Env.Reify;
                            FStar_TypeChecker_Env.Inlining;
                            FStar_TypeChecker_Env.Primops;
