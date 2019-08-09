@@ -14,14 +14,14 @@ open LowStar.Resource
 let frame_delta_pre (outer0 inner0 delta:resource) =
   outer0 `can_be_split_into` (inner0,delta)
 
-let frame_delta_post (#a:Type) (outer1 inner1:a -> resource) (delta:resource) =
+let frame_delta_post (#a:Type) (outer1 inner1:a -> GTot resource) (delta:resource) =
   forall x. (outer1 x) `can_be_split_into` (inner1 x,delta)
 
 let frame_delta (outer0:resource)
                 (inner0:resource)
                 (#a:Type)
-                (outer1:a -> resource)
-                (inner1:a -> resource)
+                (outer1:a -> GTot resource)
+                (inner1:a -> GTot resource)
                 (delta:resource) =
     frame_delta_pre outer0 inner0 delta /\
     frame_delta_post outer1 inner1 delta

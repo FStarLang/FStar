@@ -28,18 +28,22 @@ module L = LowStar.RST.Loops
 
 open FStar.Mul
 
+open FStar.Tactics
+open FStar.Tactics.CanonCommMonoidSimple.Equiv
+
 #set-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
 
 let iteri #a b context loop_inv f len =
-  (**) let hinit = RST.get (R.(AR.array_resource b <*> context)) in
-  (**) let correct_inv (h : RST.rmem ((R.(AR.array_resource b <*> context)))) (i : nat) =
-  (**)  loop_inv (RST.focus_rmem h context) i /\
-  (**)  RST.focus_rmem h (AR.array_resource b) == RST.focus_rmem hinit (AR.array_resource b)
+  (**) let h0 = HST.get() in
+  (**) let correct_inv (h : RST.rmem (Ghost.reveal (Ghost.hide ((R.(AR.array_resource b <*> Ghost.reveal context)))))) (i : nat) =
+  (**)  loop_inv (RST.focus_rmem #(Ghost.reveal (Ghost.hide ((R.(AR.array_resource b <*> Ghost.reveal context))))) h (Ghost.reveal context)) i /\
+  (**)  RST.focus_rmem #(Ghost.reveal (Ghost.hide ((R.(AR.array_resource b <*> Ghost.reveal context))))) h (AR.array_resource b) ==
+          RST.focus_rmem  #(R.(AR.array_resource b <*> Ghost.reveal context)) (RST.mk_rmem (R.(AR.array_resource b <*> Ghost.reveal context)) h0) (AR.array_resource b)
   (**) in
   let correct_f (i:U32.t{U32.(0 <= v i /\ v i < A.vlength b)})
     : RST.RST unit
-      (R.(AR.array_resource b <*> context))
-      (fun _ -> R.(AR.array_resource b <*> context))
+      (Ghost.reveal (Ghost.hide (R.(AR.array_resource b <*> Ghost.reveal context))))
+      (fun _ -> Ghost.reveal (Ghost.hide (R.(AR.array_resource b <*> Ghost.reveal context))))
       (requires (fun h0 ->
         correct_inv h0 (U32.v i)
       ))
@@ -49,28 +53,32 @@ let iteri #a b context loop_inv f len =
       )))
   =
     let h0 = HST.get () in
-    RST.focus_rmem_equality (R.(AR.array_resource b <*> context)) context h0; (* TODO: trigger automatically ?*)
+    RST.focus_rmem_equality (R.(AR.array_resource b <*> Ghost.reveal context)) (Ghost.reveal context) h0; (* TODO: trigger automatically ?*)
     let x = RST.rst_frame
-      (R.(AR.array_resource b <*> context))
-      (fun _ -> R.(AR.array_resource b <*> context))
+      (fun () -> R.(AR.array_resource b <*> Ghost.reveal context))
+      #_ #_
+      (fun _ -> R.(AR.array_resource b <*> Ghost.reveal context))
+      #_ #(fun () -> Ghost.reveal context)
       (fun _ -> AR.index b i)
     in
     let f' () : RST.RST unit // TODO: figure out why we cannot remove this superfluous let-binding
-      (context)
-      (fun _ -> context)
+      (Ghost.reveal context)
+      (fun _ -> Ghost.reveal context)
       (fun h0 -> loop_inv h0 (U32.v i))
       (fun h0 _ h1 -> loop_inv h0 (U32.v i) /\ loop_inv h1 (U32.v i + 1))
       =
       f i x
     in
     RST.rst_frame
-      R.(AR.array_resource b <*> context)
-      (fun _ -> R.(AR.array_resource b <*> context))
+      (fun _ -> R.(AR.array_resource b <*> Ghost.reveal context))
+      #_ #_
+      (fun _ -> R.(AR.array_resource b <*> Ghost.reveal context))
+      #_ #(fun () -> AR.array_resource b)
       f'
   in
   L.for
     0ul
     len
-    R.(AR.array_resource b <*> context)
+    (Ghost.hide (R.(AR.array_resource b <*> Ghost.reveal context)))
     correct_inv
     correct_f

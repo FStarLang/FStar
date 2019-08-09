@@ -322,7 +322,7 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
     Tac (exp * list term * amap a) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let t    = norm_term [] t in
+  let t    = norm_term [delta] t in
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
@@ -330,11 +330,12 @@ let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit
                     // WARNING: right_identity is currently fixed to types at u#1 
                     // because otherwise Meta-F* picks up a universe level u#0 for 
                     // types that are in u#1, such as, LowStar.Resource.resource
-          (fun _ -> apply_lemma (quote (CM?.congruence m));
-                    split ();
-                    apply_lemma (quote (EQ?.reflexivity eq));
-                    repeat_cong_right_identity eq m
-                    )
+          (fun _ -> or_else (fun _ -> apply_lemma (quote (EQ?.reflexivity eq)))
+                   (fun _ -> apply_lemma (quote (CM?.congruence m));
+                     split ();
+                     apply_lemma (quote (EQ?.reflexivity eq));
+                     repeat_cong_right_identity eq m
+                     ))
 
 let canon_lhs_rhs (#a:Type) (eq:equiv a) (m:cm a eq) (lhs rhs:term) : Tac unit =
   let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in

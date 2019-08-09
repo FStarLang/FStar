@@ -62,14 +62,14 @@ let read_write_with_sharing () : RST.RST unit
   let b1 = A.share b in
   let x1 =
     RST.rst_frame
-      (RST.(A.array_resource b <*> A.array_resource b1))
+      (fun _ -> RST.(A.array_resource b <*> A.array_resource b1))
       (fun _ -> RST.(A.array_resource b <*> A.array_resource b1))
       (fun _ ->
         A.index b 0ul
       )
   in
   let b_first, b_second = RST.rst_frame
-    (RST.(A.array_resource b <*> A.array_resource b1))
+    (fun _ -> RST.(A.array_resource b <*> A.array_resource b1))
     (fun p -> RST.(A.array_resource (fst p) <*> A.array_resource (snd p) <*> A.array_resource b1))
     (let f = fun _ -> A.split #FStar.UInt32.t b 1ul in f) //TODO: remove let binding
   in
@@ -78,7 +78,7 @@ let read_write_with_sharing () : RST.RST unit
   in
   assert(A.get_rperm b_first h0 == A.get_rperm b_second h0);
   let x2 = RST.rst_frame
-    (RST.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
+    (fun _ -> RST.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> (RST.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)))
     (fun _ -> A.index b_second 0ul)
   in
@@ -94,7 +94,7 @@ let read_write_with_sharing () : RST.RST unit
     RST.focus_rmem h1 RST.(A.array_resource b1)
   );
   RST.rst_frame
-    (RST.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
+    (fun _ -> RST.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> RST.(A.array_resource b <*> A.array_resource b1))
     (fun _ -> A.glue b b_first b_second);
   let h2 = RST.get RST.(A.array_resource b <*> A.array_resource b1) in

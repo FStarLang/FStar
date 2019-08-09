@@ -186,7 +186,7 @@ let get r =
   let h = HST.get () in
   mk_rmem r h
 
-#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 400 --max_fuel 0 --max_ifuel 0 --query_stats"
 
 inline_for_extraction noextract let rst_frame
   outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
@@ -195,21 +195,26 @@ inline_for_extraction noextract let rst_frame
   (**) reveal_can_be_split_into ();
   (**) reveal_rst_inv ();
   (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
-  (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
+  (**)   (frame_delta (outer0 ()) (inner0 ()) outer1 inner1 (delta ()));
   (**) let h0 = HST.get () in
-  (**) focus_rmem_equality outer0 inner0 h0;
-  (**) focus_rmem_equality outer0 delta h0;
+  (**) focus_rmem_equality (outer0 ()) (inner0 ()) h0;
+  (**) focus_rmem_equality (outer0 ()) (delta ()) h0;
   let x = f () in
   (**) let h1 = HST.get () in
   (**) focus_rmem_equality (outer1 x) (inner1 x) h1;
-  (**) focus_rmem_equality (outer1 x) delta h1;
-  (**) let old = mk_rmem outer0 h0 in
-  (**) let cur = mk_rmem (outer1 x) h1 in
-  (**) let old_delta = focus_rmem old delta in
-  (**) let cur_delta = focus_rmem cur delta in
-  (**) extensionality_g
-  (**)  (r0:resource{r0 `is_subresource_of` delta})
-  (**)  (fun r0 -> r0.t)
-  (**)  old_delta
-  (**)  cur_delta;
+  (**) focus_rmem_equality (outer1 x) (delta ()) h1;
+  (**) let aux () : Lemma (focus_rmem #(outer0()) (mk_rmem (outer0 ()) h0) (delta ()) == focus_rmem #(outer1 x) (mk_rmem (outer1 x) h1) (delta ())) = 
+    (**) let old = mk_rmem (outer0 ()) h0 in
+    (**) let cur = mk_rmem (outer1 x) h1 in
+    
+    (**) let old_delta = focus_rmem #(outer0 ()) old (delta ()) in
+    (**) let cur_delta = focus_rmem #(outer1 x) cur (delta ()) in
+    
+    (**) extensionality_g
+    (**)  (r0:resource{r0 `is_subresource_of` (delta ())})
+    (**)  (fun r0 -> r0.t)
+    (**)  old_delta
+    (**)  cur_delta;
+    admit()
+  (**) in aux();
   x

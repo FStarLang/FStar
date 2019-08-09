@@ -20,7 +20,7 @@ open FStar.Mul
 unopteq
 type equiv (a:Type) =
   | EQ :
-    eq:(a -> a -> Type0) -> 
+    eq:(a -> a -> GTot Type0) -> 
     reflexivity:(x:a -> Lemma (x `eq` x)) ->
     symmetry:(x:a -> y:a -> Lemma (requires (x `eq` y)) (ensures (y `eq` x))) ->
     transitivity:(x:a -> y:a -> z:a -> Lemma (requires (x `eq` y /\ y `eq` z)) (ensures (x `eq` z))) ->

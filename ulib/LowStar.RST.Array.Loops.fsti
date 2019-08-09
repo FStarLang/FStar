@@ -31,19 +31,19 @@ open FStar.Mul
 val iteri
   (#a: Type0)
   (b: A.array a)
-  (context: R.resource)
-  (loop_inv:(RST.rmem context -> nat -> Type))
+  (context: Ghost.erased (R.resource))
+  (loop_inv:(RST.rmem (Ghost.reveal context) -> nat -> Type))
   (f: (i:U32.t{U32.v i < A.vlength b} -> x:a -> RST.RST unit
-    (context)
-    (fun _ -> context)
+    (Ghost.reveal context)
+    (fun _ -> Ghost.reveal context)
     (fun h0 -> loop_inv h0 (U32.v i))
     (fun h0 _ h1 -> loop_inv h1 (U32.v i + 1))
   ))
   (len: U32.t{len = A.length b})
   : RST.RST unit
-    (R.(AR.array_resource b <*> context))
-    (fun _ -> R.(AR.array_resource b <*> context))
-    (fun h0 -> loop_inv (RST.focus_rmem h0 context) 0)
-    (fun h0 _ h1 -> loop_inv (RST.focus_rmem h1 context) (A.vlength b) /\
-      RST.focus_rmem h0 (AR.array_resource b) == RST.focus_rmem h1 (AR.array_resource b)
+    (R.(AR.array_resource b <*> Ghost.reveal context))
+    (fun _ -> R.(AR.array_resource b <*> Ghost.reveal context))
+    (fun h0 -> loop_inv (RST.focus_rmem #(R.(AR.array_resource b <*> Ghost.reveal context)) h0 (Ghost.reveal context)) 0)
+    (fun h0 _ h1 -> loop_inv (RST.focus_rmem #(R.(AR.array_resource b <*> Ghost.reveal context)) h1 (Ghost.reveal context)) (A.vlength b) /\
+      RST.focus_rmem #(R.(AR.array_resource b <*> Ghost.reveal context))  h0 (AR.array_resource b) == RST.focus_rmem #(R.(AR.array_resource b <*> Ghost.reveal context)) h1 (AR.array_resource b)
     )

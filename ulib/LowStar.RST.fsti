@@ -212,9 +212,9 @@ let r_post
 effect RST
   (a: Type)
   (res0: resource)
-  (res1: a -> resource)
+  (res1: a -> GTot resource)
   (pre: rprop res0)
-  (post: rmem res0 -> (x:a) -> rprop (res1 x))
+  (post: rmem res0 -> (x:a) -> Tot (rprop (res1 x)))
 = ST.ST
   a
   (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
@@ -257,33 +257,33 @@ open LowStar.RST.Tactics
 /// satisfy `outer1 x == inner1 x <*> delta`. The postcondition of `f` is propagated to `outer1`,
 /// as well as the core information provided by the frame rule: the `delta` does not change.
 inline_for_extraction noextract val rst_frame
-  (outer0:resource)
-  (#inner0:resource)
+  (outer0:unit -> GTot resource)
+  (#inner0:unit -> GTot resource)
   (#a:Type)
-  (outer1:a -> resource)
-  (#inner1:a -> resource)
+  (outer1:a -> GTot resource)
+  (#inner1:a -> GTot resource)
   (#[resolve_delta ()]
-     delta:resource{
+     delta:unit -> GTot resource{
        FStar.Tactics.with_tactic
          resolve_frame_delta
-         (frame_delta outer0 inner0 outer1 inner1 delta)
+         (frame_delta (outer0 ()) (inner0 ()) outer1 inner1 (delta ()))
      }
    )
-  (#pre:rprop inner0)
-  (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
-   ($f:unit -> RST a inner0 inner1 pre post)
-  : RST a outer0 outer1
+  (#pre:rprop (inner0 ()))
+  (#post:rmem (inner0 ()) -> (x:a) -> rprop (inner1 x))
+   ($f:unit -> RST a (inner0 ()) inner1 pre post)
+  : RST a (outer0 ()) outer1
     (FStar.Tactics.by_tactic_seman resolve_frame_delta
-      (frame_delta outer0 inner0 outer1 inner1 delta);
+      (frame_delta (outer0 ()) (inner0 ()) outer1 inner1 (delta ()));
       fun h ->
-        pre (focus_rmem h inner0)
+        pre (focus_rmem #(outer0 ()) h (inner0 ()))
     )
     (reveal_can_be_split_into ();
       fun h0 x h1 ->
         post
-          (focus_rmem h0 inner0)
+          (focus_rmem #(outer0 ()) h0 (inner0 ()))
           x
-          (focus_rmem h1 (inner1 x)) /\
-        (assert(delta `is_subresource_of` outer0); assert(delta `is_subresource_of` outer1 x);
-        focus_rmem h0 delta == focus_rmem h1 delta)
+          (focus_rmem #(outer1 x) h1 (inner1 x)) /\
+        (assert((delta ()) `is_subresource_of` (outer0 ())); assert((delta ()) `is_subresource_of` outer1 x);
+        focus_rmem #(outer0 ()) h0 (delta ()) == focus_rmem #(outer1 x) h1 (delta ()))
     )
