@@ -71,6 +71,7 @@ type delta_level =
 (* computations [e] of type [Msource.repr t wp] to a computation of type *)
 (* [Mtarget.repr t (lift_wp t wp)] *)
 type mlift = {
+  mlift_t:option<tscheme>;
   mlift_wp:universe -> typ -> typ -> typ ;
   mlift_term:option<(universe -> typ -> typ -> term -> term)>
   (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)

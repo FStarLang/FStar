@@ -103,3 +103,4 @@ val must_erase_for_extraction: env -> term -> bool
 //layered effect utilities
 val fresh_layered_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> universe -> term -> term * guard_t
 val fresh_layered_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
+//val lift_to_layered_effect: env -> comp -> lident -> comp * guard_t
