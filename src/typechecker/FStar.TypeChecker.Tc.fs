@@ -425,7 +425,7 @@ let tc_layered_lift env0 (sub:sub_eff) : sub_eff =
       let f_sort = U.arrow
         [S.null_binder S.t_unit]
         (S.mk_Comp ({
-          comp_univs = [u_a];
+          comp_univs = [u_a];  //AR: TODO: FIXME: this is wrong, this should be the universe of sub.source not that of a
           effect_name = sub.source;
           result_typ = a |> fst |> S.bv_to_name;
           effect_args = [wp |> fst |> S.bv_to_name |> S.as_arg];
