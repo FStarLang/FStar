@@ -48,17 +48,17 @@ and cell (a: Type0) = {
 (* Ideally, this would be bootstrapped for clients to use a "t' a".
    The hidden (abstract) type definition would be a (t a) & list (cell a) *)
 
-let empty_inv (#a:Type) (#ptr:t a) (s:selector (RA.array_resource ptr)) =
+let empty_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
   A.vlength ptr == 0
 
-let node_inv (#a:Type) (#ptr:t a) (s:selector (RA.array_resource ptr)) =
-  P.allows_write (RA.get_perm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
+let node_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
+  P.allows_write (RA.get_rperm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
 
 let empty_list (#a:Type) (ptr:t a) : resource =
   hsrefine (RA.array_resource ptr) empty_inv
 
 let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
-  hsrefine (RA.array_resource ptr) (fun (s:selector (RA.array_resource ptr)) -> node_inv s /\ Seq.index (RA.as_seq ptr s) 0 == v)
+  hsrefine (RA.array_resource ptr) (fun (s:rmem (RA.array_resource ptr)) -> node_inv s /\ Seq.index (RA.as_rseq ptr s) 0 == v)
 
 
 let rec slist' (#a:Type) (ptr:t a) (l:list (cell a)) : Tot resource
@@ -115,9 +115,15 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
+    let h0 = HyperStack.ST.get() in
     let node = RA.index ptr 0ul in
     let node' = {node with data = v} in
-    RA.upd ptr 0ul node'
+    let h0' = HyperStack.ST.get() in
+    RA.upd ptr 0ul node';
+    let h1 = HyperStack.ST.get() in
+    // Unclear why modifies_trans does not trigger automatically
+    assert (modifies (pts_to ptr c) (pts_to ptr c) h0 h0');
+    assert (modifies (pts_to ptr c) (pts_to ptr node') h0' h1)
 
 #reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1 --z3cliopt smt.QI.EAGER_THRESHOLD=2"
 
