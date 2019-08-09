@@ -119,7 +119,7 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
     let node' = {node with data = v} in
     RA.upd ptr 0ul node'
 
-#reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1 --z3cliopt smt.QI.EAGER_THRESHOLD=2"
 
 (* We provide two versions of cons.
    The first one assumes there is an unused (dummy) node, that we can just set to be the head.
@@ -193,17 +193,20 @@ val map (#a:Type) (f:a -> a) (ptr:t a) (l:list (cell a))
         (requires fun _ -> True)
         (ensures fun _ _ _ -> True)
 
+
+// LowStar.Array does not yet have a notion of null pointers. In the meantime, we assume this
+// stateful function. It is currently incorrect as it should be y <==> g_is_null b, 
+// and we will also need to change the definition of an empty node to a null array
 assume
 val is_null (#a:Type0) (b:LowStar.Array.array a)
   :HyperStack.ST.Stack bool (requires (fun h -> A.live h b))
-                  (ensures  (fun h y h' -> h == h' /\ y <==> A.vlength b == 0))
-
+                  (ensures  fun h y h' -> h == h' /\ (y <==> A.vlength b == 0))
 
 let rec map #a f ptr l =
   RA.reveal_array();
+  let h0 = HyperStack.ST.get() in
   if is_null ptr then ()
   else (
-    admit();
     let node = LowStar.Array.index ptr 0ul in
     let next = node.next in
     let l_tl = L.tl l in
@@ -211,16 +214,9 @@ let rec map #a f ptr l =
       (pts_to ptr node <*> slist next l_tl)
       (fun _ -> pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
       (fun _ -> set_cell ptr node (f node.data));
-    // otherwise resolve_delta in rst_frame below fails with a
-    // universe mismatch error; the error seems to be stemming
-    // from the canonicalizer identifying three distinct
-    // resource-terms between the outer and inner resources
-    // instead of the expected two (which is what happens when
-    // one gives an explicit name r to pts_to ptr ... below)
-    let r = pts_to ptr ({node with data = f node.data}) in
     rst_frame
-      (r <*> slist next l_tl)
-      (fun _ -> r <*>
+      (pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
+      (fun _ -> pts_to ptr ({node with data = f node.data}) <*>
              slist next (L.map (fun x -> ({x with data = f x.data})) l_tl))
       (fun _ -> map f next l_tl)
   )
@@ -245,8 +241,9 @@ let llist_cons #a x v =
   (ptr, ({data = v; next = init_ptr} :: init_l))
 
 let llist_head #a x =
+  RA.reveal_array();
   let init_ptr = fst x in
-  let node = !*init_ptr in
+  let node = LowStar.Array.index init_ptr 0ul in
   node.data
 
 let llist_tail #a x =
