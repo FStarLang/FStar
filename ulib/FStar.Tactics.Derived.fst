@@ -474,16 +474,6 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-let grewrite' (t1 t2 eq : term) : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l _ ->
-        if term_eq l t1
-        then exact eq
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
 (** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
@@ -503,7 +493,8 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
+    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    pointwise (fun () -> try exact e with | _ -> trefl ())
 
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
