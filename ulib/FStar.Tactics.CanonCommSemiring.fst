@@ -1339,13 +1339,13 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
 
 (** This expects that add, mult, and t have already been normalized *)
 let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add mult t: term) : Tac (spolynomial a * list term * vmap a) =
-  // dump ("term = " ^ term_to_string t ^ "\n");
+  // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, _) ; (t2, _)] ->
-    //dump ("add = " ^ term_to_string add ^ "
+    //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
-    //dump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
+    //ddump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
     let binop (op:spolynomial a -> spolynomial a -> spolynomial a) : Tac (spolynomial a * list term * vmap a) =
       let (e1, ts, vm) = reification_aux unquotea ts vm add mult t1 in
       let (e2, ts, vm) = reification_aux unquotea ts vm add mult t2 in
@@ -1442,38 +1442,36 @@ let canon_semiring_aux
       begin
       match reification unquotea quotea tadd tmult munit [t1; t2] with
       | ([e1; e2], vm) ->
-        //ddump (term_to_string t1);
-        //ddump (term_to_string t2);
-        //
-        //let r : cr a = unquote tr in
-        //ddump ("e1 = " ^ exp_to_string e1 ^ "\ne2 = " ^ exp_to_string e2);
-        dump ("vm = " ^ term_to_string (quote vm));
-        //ddump ("before = " ^ term_to_string (norm_term [delta; primops]
-        //  (quote (interp_sp r vm e1 == interp_sp r vm e2))));
-        //ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
-        //  (quote (
-        //    interp_vs r vm (spolynomial_simplify r e1) ==
-        //    interp_vs r vm (spolynomial_simplify r e2))));
+        (*
+        ddump (term_to_string t1);
+        ddump (term_to_string t2);
+        let r : cr a = unquote tr in
+        ddump ("vm = " ^ term_to_string (quote vm));
+        ddump ("before = " ^ term_to_string (norm_term [delta; primops]
+            (quote (interp_sp r vm e1 == interp_sp r vm e2))));
+        ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
+            (quote (
+              interp_cs r vm (spolynomial_simplify r e1) ==
+              interp_cs r vm (spolynomial_simplify r e2)))));
+        *)
         let tvm = quote_vm ta quotea vm in
         let te1 = quote_spolynomial e1 in
-        //dump ("te1 = " ^ term_to_string te1);
+        //ddump ("te1 = " ^ term_to_string te1);
         let te2 = quote_spolynomial e2 in
-        //dump ("te2 = " ^ term_to_string te2);
+        //ddump ("te2 = " ^ term_to_string te2);
         mapply (`(semiring_reflect
           #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
-        //dump "Before norm1";
+        //ddump "Before canonization";
         canon_norm ();
-        //dump "After norm1";
+        //ddump "After canonization";
         later ();
-        //dump "Before norm2";
+        //ddump "Before normalizing left-hand side";
         canon_norm ();
-        //dump "After norm2";
-        //ddump ("after normalizing left-hand side");
+        //ddump "After normalizing left-hand side";
         trefl ();
-        //dump "Before norm3";
+        //ddump "Before normalizing right-hand side";
         canon_norm ();
-        //dump "After norm3";
-        //ddump ("after normalizing right-hand side");
+        //ddump "After normalizing right-hand side";
         trefl ()
       | _ -> fail "Unexpected"
       end
@@ -1487,17 +1485,16 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
     (quote r.cm_add.mult) (quote r.cm_mult.mult) r.cm_add.unit
 
+(** 
+ *  Giving explicitly the addition and multiplication operations,
+ *  normalized as much as required to match the expression to reify
+**)
 let canon_semiring_with (#a:eqtype) (r:cr a) (add:a -> a -> a) (mul:a -> a -> a)
   : Tac unit =
   canon_semiring_aux a
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
     (quote add) (quote mul) r.cm_add.unit
 
-///
-/// Examples
-///
-
-open FStar.Mul
 
 ///  Ring of integers
 
@@ -1505,20 +1502,11 @@ open FStar.Mul
 let int_cr : cr int =
   CR int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x -> ())
 
-#push-options "--no_smt --tactic_trace_d 1" // Look, no SMT!
-
 let int_semiring () : Tac unit =
   canon_semiring_with #int int_cr Prims.op_Addition Prims.op_Multiply
 
-let test1 (a:int) =
+#set-options "--tactic_trace_d  1 --no_smt"
+
+let test (a:int) =
+  let open FStar.Mul in
   assert (a + a == 2 * a) by (int_semiring ())
-
-let test2 (a b:int) =
-  assert (b + a + a + a + 4 + a + 3 * (a + b) + 7 ==
-          a * 3 + 2 * b + b + a + b * 1 + 7 + (2 + 1) * a + 4)
-  by (int_semiring ())
-
-let test3 (a b c:int) =
-  assert (a * b + c + b * b == (b + a) * b + c) by (int_semiring())
-
-#pop-options
