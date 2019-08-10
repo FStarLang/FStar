@@ -400,9 +400,8 @@ let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table  ->
     fun enabled  ->
       let uu___166_1583 = table  in
-      let uu____1584 = enabled && (FStar_Options.ide ())  in
       {
-        id_info_enabled = uu____1584;
+        id_info_enabled = enabled;
         id_info_db = (uu___166_1583.id_info_db);
         id_info_buffer = (uu___166_1583.id_info_buffer)
       }
@@ -413,14 +412,14 @@ let (id_info_promote :
   =
   fun table  ->
     fun ty_map  ->
-      let uu___170_1602 = table  in
-      let uu____1603 =
+      let uu___170_1600 = table  in
+      let uu____1601 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer
          in
       {
-        id_info_enabled = (uu___170_1602.id_info_enabled);
-        id_info_db = uu____1603;
+        id_info_enabled = (uu___170_1600.id_info_enabled);
+        id_info_db = uu____1601;
         id_info_buffer = []
       }
   
@@ -435,17 +434,17 @@ let (id_info_at_pos :
       fun row  ->
         fun col  ->
           let rows =
-            let uu____1647 = FStar_Util.pimap_empty ()  in
-            FStar_Util.psmap_find_default table.id_info_db fn uu____1647  in
+            let uu____1645 = FStar_Util.pimap_empty ()  in
+            FStar_Util.psmap_find_default table.id_info_db fn uu____1645  in
           let cols = FStar_Util.pimap_find_default rows row []  in
-          let uu____1654 = find_nearest_preceding_col_info col cols  in
-          match uu____1654 with
+          let uu____1652 = find_nearest_preceding_col_info col cols  in
+          match uu____1652 with
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some info ->
               let last_col =
-                let uu____1662 =
+                let uu____1660 =
                   FStar_Range.end_of_range info.identifier_range  in
-                FStar_Range.col_of_pos uu____1662  in
+                FStar_Range.col_of_pos uu____1660  in
               if col <= last_col
               then FStar_Pervasives_Native.Some info
               else FStar_Pervasives_Native.None
@@ -462,58 +461,58 @@ let (check_uvar_ctx_invariant :
         fun g  ->
           fun bs  ->
             let print_gamma gamma =
-              let uu____1709 =
+              let uu____1707 =
                 FStar_All.pipe_right gamma
                   (FStar_List.map
-                     (fun uu___3_1722  ->
-                        match uu___3_1722 with
+                     (fun uu___3_1720  ->
+                        match uu___3_1720 with
                         | FStar_Syntax_Syntax.Binding_var x ->
-                            let uu____1725 =
+                            let uu____1723 =
                               FStar_Syntax_Print.bv_to_string x  in
-                            Prims.op_Hat "Binding_var " uu____1725
+                            Prims.op_Hat "Binding_var " uu____1723
                         | FStar_Syntax_Syntax.Binding_univ u ->
                             Prims.op_Hat "Binding_univ " u.FStar_Ident.idText
-                        | FStar_Syntax_Syntax.Binding_lid (l,uu____1731) ->
-                            let uu____1748 = FStar_Ident.string_of_lid l  in
-                            Prims.op_Hat "Binding_lid " uu____1748))
+                        | FStar_Syntax_Syntax.Binding_lid (l,uu____1729) ->
+                            let uu____1746 = FStar_Ident.string_of_lid l  in
+                            Prims.op_Hat "Binding_lid " uu____1746))
                  in
-              FStar_All.pipe_right uu____1709 (FStar_String.concat "::\n")
+              FStar_All.pipe_right uu____1707 (FStar_String.concat "::\n")
                in
-            let fail1 uu____1761 =
-              let uu____1762 =
-                let uu____1764 = FStar_Range.string_of_range r  in
-                let uu____1766 = print_gamma g  in
-                let uu____1768 = FStar_Syntax_Print.binders_to_string ", " bs
+            let fail1 uu____1759 =
+              let uu____1760 =
+                let uu____1762 = FStar_Range.string_of_range r  in
+                let uu____1764 = print_gamma g  in
+                let uu____1766 = FStar_Syntax_Print.binders_to_string ", " bs
                    in
                 FStar_Util.format5
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
-                  reason uu____1764
-                  (if should_check then "true" else "false") uu____1766
-                  uu____1768
+                  reason uu____1762
+                  (if should_check then "true" else "false") uu____1764
+                  uu____1766
                  in
-              failwith uu____1762  in
+              failwith uu____1760  in
             if Prims.op_Negation should_check
             then ()
             else
-              (let uu____1781 =
-                 let uu____1806 =
+              (let uu____1779 =
+                 let uu____1804 =
                    FStar_Util.prefix_until
-                     (fun uu___4_1821  ->
-                        match uu___4_1821 with
-                        | FStar_Syntax_Syntax.Binding_var uu____1823 -> true
-                        | uu____1825 -> false) g
+                     (fun uu___4_1819  ->
+                        match uu___4_1819 with
+                        | FStar_Syntax_Syntax.Binding_var uu____1821 -> true
+                        | uu____1823 -> false) g
                     in
-                 (uu____1806, bs)  in
-               match uu____1781 with
+                 (uu____1804, bs)  in
+               match uu____1779 with
                | (FStar_Pervasives_Native.None ,[]) -> ()
                | (FStar_Pervasives_Native.Some
-                  (uu____1883,hd1,gamma_tail),uu____1886::uu____1887) ->
-                   let uu____1946 = FStar_Util.prefix bs  in
-                   (match uu____1946 with
-                    | (uu____1971,(x,uu____1973)) ->
+                  (uu____1881,hd1,gamma_tail),uu____1884::uu____1885) ->
+                   let uu____1944 = FStar_Util.prefix bs  in
+                   (match uu____1944 with
+                    | (uu____1969,(x,uu____1971)) ->
                         (match hd1 with
                          | FStar_Syntax_Syntax.Binding_var x' when
                              FStar_Syntax_Syntax.bv_eq x x' -> ()
-                         | uu____2001 -> fail1 ()))
-               | uu____2002 -> fail1 ())
+                         | uu____1999 -> fail1 ()))
+               | uu____2000 -> fail1 ())
   

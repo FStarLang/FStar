@@ -159,8 +159,8 @@ let (bv_mul_lid : FStar_Ident.lident) = bvconst "bvmul"
 let (bv_ult_lid : FStar_Ident.lident) = bvconst "bvult" 
 let (bv_uext_lid : FStar_Ident.lident) = bvconst "bv_uext" 
 let (array_lid : FStar_Ident.lident) = p2l ["FStar"; "Array"; "array"] 
-let (array_mk_array_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Array"; "mk_array"] 
+let (array_of_list_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Array"; "of_list"] 
 let (st_lid : FStar_Ident.lident) = p2l ["FStar"; "ST"] 
 let (write_lid : FStar_Ident.lident) = p2l ["FStar"; "ST"; "write"] 
 let (read_lid : FStar_Ident.lident) = p2l ["FStar"; "ST"; "read"] 

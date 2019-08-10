@@ -1052,7 +1052,7 @@ let resugar_eff_decl' env for_free r q ed =
       mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
   in
   let eff_name = ed.mname.ident in
-  let eff_binders, eff_typ = SS.open_term ed.binders ed.signature in
+  let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
@@ -1063,7 +1063,7 @@ let resugar_eff_decl' env for_free r q ed =
   let stronger = resugar_tscheme'' env "stronger" ed.stronger in
   let close_wp = resugar_tscheme'' env "close_wp" ed.close_wp in
   let trivial = resugar_tscheme'' env "trivial" ed.trivial in
-  let repr = resugar_tscheme'' env "repr" ([], ed.repr) in
+  let repr = resugar_tscheme'' env "repr" ed.repr in
   let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
   let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
   let mandatory_members_decls =

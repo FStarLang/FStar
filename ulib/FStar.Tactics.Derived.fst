@@ -24,6 +24,13 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
+
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
@@ -264,7 +271,8 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r  /\ Failed?.ps r == ps))
+                                                       else Failed? r))
+        (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then
         fail "guard failed"
@@ -381,13 +389,17 @@ let pose_as (s:string) (t:term) : Tac binder =
     b
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
-    map f (binders_of_env (cur_env ()))
+    map f (cur_binders ())
 
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | _::tl -> revert ();
                revert_all tl
+
+(* Some syntax utility functions *)
+let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
+let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
 
 // Cannot define this inside `assumption` due to #1091
 private
@@ -396,11 +408,14 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack_ln (Tv_Var (bv_of_binder b)) in
-        or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
+        let t = binder_to_term b in
+        try exact t with | _ ->
+        try (apply (`FStar.Squash.return_squash);
+             exact t) with | _ ->
+        __assumption_aux bs
 
 let assumption () : Tac unit =
-    __assumption_aux (binders_of_env (cur_env ()))
+    __assumption_aux (cur_binders ())
 
 let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
@@ -442,21 +457,15 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        begin match term_as_formula_total (type_of_binder x_t) with
-        | Comp (Eq _) lhs _ ->
-            begin match inspect_ln lhs with
-            | Tv_Var _ -> rewrite x_t
-            | _ -> ()
-            end
-        | _ -> () end;
+        (try rewrite x_t with | _ -> ());
         rewrite_all_context_equalities bs
     end
 
 let rewrite_eqs_from_context () : Tac unit =
-    rewrite_all_context_equalities (binders_of_env (cur_env ()))
+    rewrite_all_context_equalities (cur_binders ())
 
 let rewrite_equality (t:term) : Tac unit =
-    try_rewrite_equality t (binders_of_env (cur_env ()))
+    try_rewrite_equality t (cur_binders ())
 
 let unfold_def (t:term) : Tac unit =
     match inspect t with
@@ -464,16 +473,6 @@ let unfold_def (t:term) : Tac unit =
         let n = String.concat "." (inspect_fv fv) in
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
-
-let grewrite' (t1 t2 eq : term) : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l _ ->
-        if term_eq l t1
-        then exact eq
-        else trefl ()
-    | _ ->
-        fail "impossible"
 
 (** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
 let l_to_r (lems:list term) : Tac unit =
@@ -494,7 +493,8 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
+    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    pointwise (fun () -> try exact e with | _ -> trefl ())
 
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
@@ -507,43 +507,73 @@ private val push1 : (#p:Type) -> (#q:Type) ->
                         squash q
 private let push1 #p #q f u = ()
 
+private val push1' : (#p:Type) -> (#q:Type) ->
+                         (p ==> q) ->
+                         squash p ->
+                         squash q
+private let push1' #p #q f u = ()
+
 (*
  * Some easier applying, which should prevent frustation
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
+    (* Before anything, try a vanilla apply and apply_lemma *)
+    try apply t with | _ ->
+    try apply (`FStar.Squash.return_squash); apply t with | _ ->
+    try apply_lemma t with | _ ->
+
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
-    let g = cur_goal () in
+
     let ty = tc t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->
        begin
-       (* What I would really like to do here is unify `mk_squash post` and the goal,
-        * but it didn't work on a first try, so just doing this for now *)
-       match trytac (fun () -> apply_lemma t) with
-       | Some _ -> () // Success
-       | None ->
-           let post = norm_term [] post in
-           (* Is the lemma an implication? We can try to intro *)
-           match term_as_formula' post with
-           | Implies p q ->
-               apply_lemma (`push1);
-               apply_squash_or_lem (d-1) t
+       let post = norm_term [] post in
+       (* Is the lemma an implication? We can try to intro *)
+       match term_as_formula' post with
+       | Implies p q ->
+           apply_lemma (`push1);
+           apply_squash_or_lem (d-1) t
 
-           | _ ->
-               fail "mapply: can't apply (1)"
+       | _ ->
+           fail "mapply: can't apply (1)"
        end
     | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply_lemma t
+       | Some rt ->
+        // DUPLICATED, refactor!
+         begin
+         let rt = norm_term [] rt in
+         (* Is the lemma an implication? We can try to intro *)
+         match term_as_formula' rt with
+         | Implies p q ->
+             apply_lemma (`push1);
+             apply_squash_or_lem (d-1) t
+
+         | _ ->
+             fail "mapply: can't apply (1)"
+         end
+
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
-           apply (`FStar.Squash.return_squash);
-           apply t
+        // DUPLICATED, refactor!
+         begin
+         let rt = norm_term [] rt in
+         (* Is the lemma an implication? We can try to intro *)
+         match term_as_formula' rt with
+         | Implies p q ->
+             apply_lemma (`push1);
+             apply_squash_or_lem (d-1) t
+
+         | _ ->
+             apply (`FStar.Squash.return_squash);
+             apply t
+         end
        end
     | _ -> fail "mapply: can't apply (2)"
     end
@@ -588,10 +618,6 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
     )
   )
 
-(* Some syntax utility functions *)
-let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
-
 (*
  * Specialize a function by partially evaluating it
  * For example:
@@ -626,3 +652,20 @@ let tlabel' (l:string) =
 let focus_all () : Tac unit =
     set_goals (goals () @ smt_goals ());
     set_smt_goals []
+
+private
+let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+  match n, l with
+  | _, [] -> None
+  | 0, hd::tl -> Some (hd, tl)
+  | _, hd::tl -> begin
+    match extract_nth (n-1) tl with
+    | Some (hd', tl') -> Some (hd', hd::tl')
+    | None -> None
+  end
+
+let bump_nth (n:pos) : Tac unit =
+  // n-1 since goal numbering begins at 1
+  match extract_nth (n - 1) (goals ()) with
+  | None -> fail "bump_nth: not that many goals"
+  | Some (h, t) -> set_goals (h :: t)

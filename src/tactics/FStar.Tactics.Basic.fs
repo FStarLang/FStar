@@ -222,16 +222,16 @@ let ps_to_json (msg, ps) =
                  then [("location", Range.json_of_def_range ps.entry_range)]
                  else []))
 
-let dump_proofstate ps msg =
+let do_dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
 
-let print_proof_state (msg:string) : tac<unit> =
+let dump (msg:string) : tac<unit> =
     mk_tac (fun ps ->
                    let psc = ps.psc in
                    let subst = Cfg.psc_subst psc in
-                   dump_proofstate (subst_proof_state subst ps) msg;
+                   do_dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
 let mlog f (cont : unit -> tac<'a>) : tac<'a> =
@@ -243,7 +243,7 @@ let traise e =
 let fail (msg:string) =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps ("TACTIC FAILING: " ^ msg);
+        then do_dump_proofstate ps ("TACTIC FAILING: " ^ msg);
         Failed (TacticFailure msg, ps)
     )
 
@@ -2101,7 +2101,7 @@ let proofstate_of_goal_ty rng env typ =
         goals = [g];
         smt_goals = [];
         depth = 0;
-        __dump = (fun ps msg -> dump_proofstate ps msg);
+        __dump = do_dump_proofstate;
         psc = Cfg.null_psc;
         entry_range = rng;
         guard_policy = SMT;

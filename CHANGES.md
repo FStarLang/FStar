@@ -197,6 +197,16 @@ Guidelines for the changelog:
      those lists of namespaces can be given under the form `+A -B +C`
      (space-separated) or `+A,-B,+C` (comma-separated).
 
+   * [PR #1985](https://github.com/FStarLang/FStar/pull/1985): The
+     `--profile` flag changed to take instead a set of modules on
+     which to enable profiling. The output of F* on its finished
+     message changed to not print the time it took to verify a module.
+
+
+## Editors
+
+   * Support for vscode via LSP (https://github.com/FStarLang/FStar/wiki/Using-F*-with-vscode)
+
 # Version 0.9.6.0
 
 ## Command line options
