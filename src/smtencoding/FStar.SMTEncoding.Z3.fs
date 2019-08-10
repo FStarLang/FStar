@@ -23,6 +23,7 @@ open FStar
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
+
 module BU = FStar.Util
 
 (****************************************************************************)
@@ -594,14 +595,24 @@ let cache_hit
         false
 
 let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e ->
-        refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
-        raise e
+  //This code is a little ugly:
+  //We insert a profiling call to accumulate total time spent in Z3
+  //But, we also record the time of this particular call so that we can
+  //record the elapsed time in the z3result_time field.
+  //That field is printed out in the query-stats output, which is a separate
+  //profiling feature. We could try in the future to unify all the different
+  //kinds of profiling features ... but that's beyond scope for now.
+  let (status, statistics), elapsed_time =
+    Profiling.profile
+      (fun () ->
+        try
+          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages)
+        with e ->
+          refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
+          raise e)
+      (Some (query_logging.get_module_name()))
+      "FStar.SMTEncoding.Z3"
   in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;

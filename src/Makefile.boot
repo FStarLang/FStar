@@ -36,7 +36,7 @@ FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
 EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker
+		   FStar.TypeChecker FStar.Profiling
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.

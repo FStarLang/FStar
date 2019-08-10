@@ -48,7 +48,6 @@ module PC = FStar.Parser.Const
 module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
 
-
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
     //if the tbl has a counter for lid, we use that, else we start from 0
@@ -1853,14 +1852,23 @@ let tc_decls env ses =
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
     let (_, _, env, _) = acc in
-    let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
-    if Env.debug env (Options.Other "TCDeclTime")
-     || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
-     || Options.timing ()
-    then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
+    let r =
+      Profiling.profile
+                 (fun () -> process_one_decl acc se)
+                 (Some (Ident.string_of_lid (Env.current_module env)))
+                 "FStar.TypeChecker.Tc.process_one_decl"
+    in
+    if Options.profile_group_by_decls()
+    then begin
+         let tag =
+          match lids_of_sigelt se with
+          | hd::_ -> Ident.string_of_lid hd
+          | _ -> Range.string_of_range (range_of_sigelt se)
+         in
+         Profiling.report_and_clear tag
+    end;
     r
   in
-
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 

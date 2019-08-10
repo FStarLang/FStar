@@ -1044,31 +1044,34 @@ let (z3_job :
           fun input  ->
             fun qhash  ->
               fun uu____5255  ->
-                let start = FStar_Util.now ()  in
-                let uu____5265 =
-                  try
-                    (fun uu___500_5275  ->
-                       match () with
-                       | () -> doZ3Exe log_file r fresh input label_messages)
-                      ()
-                  with
-                  | uu___499_5282 ->
-                      (refresh (); FStar_Exn.raise uu___499_5282)
+                let uu____5264 =
+                  let uu____5274 =
+                    let uu____5278 = query_logging.get_module_name ()  in
+                    FStar_Pervasives_Native.Some uu____5278  in
+                  FStar_Profiling.profile
+                    (fun uu____5291  ->
+                       try
+                         (fun uu___500_5302  ->
+                            match () with
+                            | () ->
+                                FStar_Util.record_time
+                                  (fun uu____5317  ->
+                                     doZ3Exe log_file r fresh input
+                                       label_messages)) ()
+                       with
+                       | uu___499_5320 ->
+                           (refresh (); FStar_Exn.raise uu___499_5320))
+                    uu____5274 "FStar.SMTEncoding.Z3"
                    in
-                match uu____5265 with
-                | (status,statistics) ->
-                    let uu____5294 =
-                      let uu____5300 = FStar_Util.now ()  in
-                      FStar_Util.time_diff start uu____5300  in
-                    (match uu____5294 with
-                     | (uu____5301,elapsed_time) ->
-                         {
-                           z3result_status = status;
-                           z3result_time = elapsed_time;
-                           z3result_statistics = statistics;
-                           z3result_query_hash = qhash;
-                           z3result_log_file = log_file
-                         })
+                match uu____5264 with
+                | ((status,statistics),elapsed_time) ->
+                    {
+                      z3result_status = status;
+                      z3result_time = elapsed_time;
+                      z3result_statistics = statistics;
+                      z3result_query_hash = qhash;
+                      z3result_log_file = log_file
+                    }
   
 let (ask :
   FStar_Range.range ->
@@ -1101,19 +1104,19 @@ let (ask :
                       (FStar_List.append [FStar_SMTEncoding_Term.Push]
                          (FStar_List.append qry [FStar_SMTEncoding_Term.Pop]))
                      in
-                  let uu____5448 = filter_theory theory1  in
-                  match uu____5448 with
+                  let uu____5493 = filter_theory theory1  in
+                  match uu____5493 with
                   | (theory2,_used_unsat_core) ->
-                      let uu____5464 = mk_input fresh theory2  in
-                      (match uu____5464 with
+                      let uu____5509 = mk_input fresh theory2  in
+                      (match uu____5509 with
                        | (input,qhash,log_file_name) ->
-                           let uu____5495 =
-                             let uu____5497 =
+                           let uu____5540 =
+                             let uu____5542 =
                                fresh &&
                                  (cache_hit log_file_name cache qhash cb)
                                 in
-                             Prims.op_Negation uu____5497  in
-                           if uu____5495
+                             Prims.op_Negation uu____5542  in
+                           if uu____5540
                            then
                              run_job
                                {

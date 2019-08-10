@@ -121,6 +121,9 @@ let poly_semiring () : Tac unit = canon_semiring_with ring_cr ( +% ) ( *% )
 let test_poly1 (a b:ring) =
   assert (a +% b == b +% a) by (poly_semiring ())
 
+#set-options "--tactic_trace_d 1"
+
+// Can't be proved using the old tactic
 let test_poly2 (a b c:ring) =
   assert ((a +% b) *% c == a *% c +% b *% c) by (poly_semiring ())
 
@@ -143,3 +146,29 @@ let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) :
     (((a *% (r *% r)) +% c) *% (r *% r)) +% ((b *% (r *% r)) +% d) *% r ==
     ((a *% (r *% r) +% b *% r +% c) *% r +% d) *% r)
   by (poly_semiring ())
+
+#set-options "--tactic_trace_d 0 --no_smt"
+
+// The old tactic can only prove this using Z3
+[@tcdecltime]
+let horner (r a0 a1 a2 a3 a4 a5 a6 a7:int) =
+  assert (
+    (((((((((((((a0 + a1) * r) + a2) * r) + a3) * r) + a4) * r) + a5) * r) + a6) * r) + a7) * r
+    ==
+    a7 * r +
+      a6 * r * r +
+        a5 * r * r * r +
+          a4 * r * r * r * r +
+            a3 * r * r * r * r * r +
+              a2 * r * r * r * r * r * r +
+                a1 * r * r * r * r * r * r * r +
+                  a0 * r * r * r * r * r * r * r )
+   by (int_semiring ())
+
+[@tcdecltime]
+let foo (x y z:int) =
+assert (
+(x * x + 1) * (x * y + 2) * (y *  z + 1) * (y *  z + 1) * (y *  z + 1)
+==
+x * x * x * y * y * y * y * z * z * z + 3 * x * x * x * y * y * y * z * z + 3 * x * x * x * y * y * z + x * x * x * y + 2 * x * x * y * y * y * z * z * z + 6 * x * x * y * y * z * z + 6 * x * x * y * z + 2 * x * x + x * y * y * y * y * z * z * z + 3 * x * y * y * y * z * z + 3 * x * y * y * z + x * y + 2 * y * y * y * z * z * z + 6 * y * y * z * z + 6 * y * z + 2)
+by (int_semiring ())
