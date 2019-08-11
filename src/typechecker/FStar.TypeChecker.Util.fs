@@ -253,8 +253,15 @@ let comp_univ_opt c =
 
 let lcomp_univ_opt lc = lc |> lcomp_comp |> comp_univ_opt
 
+let destruct_comp c : (universe * typ * typ) =
+  let wp = match c.effect_args with
+    | [(wp, _)] -> wp
+    | _ -> failwith (BU.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
+      (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
+  List.hd c.comp_univs, c.result_typ, wp
+
 let lift_comp c m lift =
-  let u, _, wp = U.destruct_comp c in
+  let u, _, wp = destruct_comp c in
   {comp_univs=[u];
    effect_name=m;
    result_typ=c.result_typ;
@@ -279,7 +286,7 @@ let lift_and_destruct env c1 c2 =
   let m2 = lift_comp c2 m lift2 in
   let md = Env.get_effect_decl env m in
   let a, kwp = Env.wp_signature env md.mname in
-  (md, a, kwp), U.destruct_comp m1, U.destruct_comp m2
+  (md, a, kwp), destruct_comp m1, destruct_comp m2
 
 
 //AR: TODO: FIXME: convert failwiths to errors
@@ -298,7 +305,7 @@ let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
       | None -> failwith ("Could not find an edge from " ^ src_ed.mname.str ^ " to " ^ dst_ed.mname.str)
       | Some lift -> lift.mlift.mlift_t |> must in
 
-    let u, a, wp = U.destruct_comp ct in
+    let u, a, wp = destruct_comp ct in
 
     //lift_t is now the arrow type: <u>a:Type -> wp -> ..bs.. -> f -> repr a is
     let _, lift_t = Env.inst_tscheme_with lift_t [u] in
@@ -399,7 +406,7 @@ let close_comp env bvs (c:comp) =
                   mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
-            let u_res_t, res_t, wp = U.destruct_comp c in
+            let u_res_t, res_t, wp = destruct_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
             mk_comp md u_res_t c.result_typ wp c.flags
@@ -518,7 +525,7 @@ let weaken_comp env (c:comp) (formula:term) : comp =
     if U.is_ml_comp c
     then c
     else let c = Env.unfold_effect_abbrev env c in
-         let u_res_t, res_t, wp = U.destruct_comp c in
+         let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
          let r = Env.get_range env in
 
@@ -564,7 +571,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
     then c
     else let c = Env.unfold_effect_abbrev env c in
          let r = Env.get_range env in
-         let u_res_t, res_t, wp = U.destruct_comp c in
+         let u_res_t, res_t, wp = destruct_comp c in
          let md = Env.get_effect_decl env c.effect_name in
 
          (*
@@ -862,7 +869,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let c2 = Env.unfold_effect_abbrev env c2 in
                 let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
                 let c2 = S.mk_Comp (lift_comp c2 m lift2) in
-                let u1, t1, wp1 = U.destruct_comp c1 in
+                let u1, t1, wp1 = destruct_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
                 let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
                                     [S.as_arg t1; S.as_arg wp1]
@@ -873,7 +880,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let c1_typ = Env.unfold_effect_abbrev env c1 in
-            let u_res_t1, res_t1, _ = U.destruct_comp c1_typ in
+            let u_res_t1, res_t1, _ = destruct_comp c1_typ in
             //c1 and c2 are bound to the input comps
             if Option.isSome b
             && should_return env e1opt lc1
@@ -1100,7 +1107,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             | _ ->
               let comp = Env.comp_to_comp_typ env comp in
               let md = Env.get_effect_decl env comp.effect_name in
-              let _, _, wp = U.destruct_comp comp in
+              let _, _, wp = destruct_comp comp in
               let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
               let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                  [S.as_arg res_t; S.as_arg wp]
@@ -1143,7 +1150,7 @@ let universe_of_comp env u_res c =
 let check_trivial_precondition env c =
   let ct = c |> Env.unfold_effect_abbrev env in
   let md = Env.get_effect_decl env ct.effect_name in
-  let u_t, t, wp = U.destruct_comp ct in
+  let u_t, t, wp = destruct_comp ct in
   let vc = mk_Tm_app
     (inst_effect_fun_with [u_t] env md (md.trivial |> must))
     [S.as_arg t; S.as_arg wp]
