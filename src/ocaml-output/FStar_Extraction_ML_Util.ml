@@ -536,7 +536,7 @@ let (is_xtuple :
         if uu____1287
         then
           let uu____1299 =
-            let uu____1301 = FStar_Util.char_at n1 (Prims.of_int (7))  in
+            let uu____1301 = FStar_Util.char_at n1 (Prims.parse_int "7")  in
             FStar_Util.int_of_char uu____1301  in
           FStar_Pervasives_Native.Some uu____1299
         else FStar_Pervasives_Native.None
@@ -593,7 +593,7 @@ let (is_xtuple_ty :
         if uu____1464
         then
           let uu____1476 =
-            let uu____1478 = FStar_Util.char_at n1 (Prims.of_int (5))  in
+            let uu____1478 = FStar_Util.char_at n1 (Prims.parse_int "5")  in
             FStar_Util.int_of_char uu____1478  in
           FStar_Pervasives_Native.Some uu____1476
         else FStar_Pervasives_Native.None
@@ -955,10 +955,11 @@ let (interpret_plugin_as_term_fun :
                                 let uu____2492 =
                                   let uu____2501 =
                                     FStar_Parser_Const.mk_tuple_lid
-                                      (Prims.of_int (2))
+                                      (Prims.parse_int "2")
                                       FStar_Range.dummyRange
                                      in
-                                  (uu____2501, (Prims.of_int (2)), "tuple2")
+                                  (uu____2501, (Prims.parse_int "2"),
+                                    "tuple2")
                                    in
                                 (uu____2492, Syntax_term)  in
                               let uu____2515 =
@@ -968,7 +969,9 @@ let (interpret_plugin_as_term_fun :
                                       FStar_Reflection_Data.fstar_refl_types_lid
                                         "term"
                                        in
-                                    (uu____2552, Prims.int_zero, "term")  in
+                                    (uu____2552, (Prims.parse_int "0"),
+                                      "term")
+                                     in
                                   (uu____2543, Refl_emb)  in
                                 let uu____2566 =
                                   let uu____2581 =
@@ -977,7 +980,9 @@ let (interpret_plugin_as_term_fun :
                                         FStar_Reflection_Data.fstar_refl_types_lid
                                           "fv"
                                          in
-                                      (uu____2603, Prims.int_zero, "fv")  in
+                                      (uu____2603, (Prims.parse_int "0"),
+                                        "fv")
+                                       in
                                     (uu____2594, Refl_emb)  in
                                   let uu____2617 =
                                     let uu____2632 =
@@ -986,7 +991,7 @@ let (interpret_plugin_as_term_fun :
                                           FStar_Reflection_Data.fstar_refl_types_lid
                                             "binder"
                                            in
-                                        (uu____2654, Prims.int_zero,
+                                        (uu____2654, (Prims.parse_int "0"),
                                           "binder")
                                          in
                                       (uu____2645, Refl_emb)  in
@@ -997,7 +1002,7 @@ let (interpret_plugin_as_term_fun :
                                             FStar_Reflection_Data.fstar_refl_syntax_lid
                                               "binders"
                                              in
-                                          (uu____2705, Prims.int_zero,
+                                          (uu____2705, (Prims.parse_int "0"),
                                             "binders")
                                            in
                                         (uu____2696, Refl_emb)  in
@@ -1008,8 +1013,8 @@ let (interpret_plugin_as_term_fun :
                                               FStar_Reflection_Data.fstar_refl_data_lid
                                                 "exp"
                                                in
-                                            (uu____2756, Prims.int_zero,
-                                              "exp")
+                                            (uu____2756,
+                                              (Prims.parse_int "0"), "exp")
                                              in
                                           (uu____2747, Refl_emb)  in
                                         [uu____2734]  in
@@ -1018,29 +1023,31 @@ let (interpret_plugin_as_term_fun :
                                   uu____2581 :: uu____2617  in
                                 uu____2530 :: uu____2566  in
                               uu____2479 :: uu____2515  in
-                            ((FStar_Parser_Const.option_lid, Prims.int_one,
-                               "option"), Syntax_term)
+                            ((FStar_Parser_Const.option_lid,
+                               (Prims.parse_int "1"), "option"), Syntax_term)
                               :: uu____2464
                              in
-                          ((FStar_Parser_Const.list_lid, Prims.int_one,
-                             "list"), Syntax_term)
+                          ((FStar_Parser_Const.list_lid,
+                             (Prims.parse_int "1"), "list"), Syntax_term)
                             :: uu____2449
                            in
-                        ((FStar_Parser_Const.norm_step_lid, Prims.int_zero,
-                           "norm_step"), Syntax_term)
+                        ((FStar_Parser_Const.norm_step_lid,
+                           (Prims.parse_int "0"), "norm_step"), Syntax_term)
                           :: uu____2434
                          in
-                      ((FStar_Parser_Const.string_lid, Prims.int_zero,
+                      ((FStar_Parser_Const.string_lid, (Prims.parse_int "0"),
                          "string"), Syntax_term)
                         :: uu____2419
                        in
-                    ((FStar_Parser_Const.unit_lid, Prims.int_zero, "unit"),
-                      Syntax_term) :: uu____2404
+                    ((FStar_Parser_Const.unit_lid, (Prims.parse_int "0"),
+                       "unit"), Syntax_term)
+                      :: uu____2404
                      in
-                  ((FStar_Parser_Const.bool_lid, Prims.int_zero, "bool"),
-                    Syntax_term) :: uu____2389
+                  ((FStar_Parser_Const.bool_lid, (Prims.parse_int "0"),
+                     "bool"), Syntax_term)
+                    :: uu____2389
                    in
-                ((FStar_Parser_Const.int_lid, Prims.int_zero, "int"),
+                ((FStar_Parser_Const.int_lid, (Prims.parse_int "0"), "int"),
                   Syntax_term) :: uu____2374
                  in
               let nbe_cs =
@@ -1161,8 +1168,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | _3810 when _3810 = Prims.int_zero ->
-                                      head2
+                                  | _3810 when _3810 = (Prims.parse_int "0")
+                                      -> head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -1219,8 +1226,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | _4053 when _4053 = Prims.int_zero ->
-                                      head2
+                                  | _4053 when _4053 = (Prims.parse_int "0")
+                                      -> head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -1277,8 +1284,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | _4306 when _4306 = Prims.int_zero ->
-                                      head2
+                                  | _4306 when _4306 = (Prims.parse_int "0")
+                                      -> head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -1664,7 +1671,8 @@ let (interpret_plugin_as_term_fun :
                                      let uu____5396 =
                                        let uu____5397 = mk_lam "ncb" tabs  in
                                        mk_lam "psc" uu____5397  in
-                                     (uu____5396, (arity + Prims.int_one),
+                                     (uu____5396,
+                                       (arity + (Prims.parse_int "1")),
                                        false)
                                    else
                                      (let uu____5406 =

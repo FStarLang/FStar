@@ -25,17 +25,10 @@ open LowStar.Resource
 open LowStar.RST
 module P = LowStar.Permissions
 
-//open LowStar.BufferOps
-//open LowStar.RST.LinkedList.Base
+effect Rst (a:Type) (pre:resource) (post: a -> resource) = 
+  RST a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-#reset-options "--__no_positivity --use_two_phase_tc true"
-
-
-(* The definition of linked lists comes from kremlin/test/LinkedList4.fst *)
-
-/// We revisit the classic example of lists, but in a low-level
-/// setting, using linked lists. This second version uses
-/// `B.pointer_or_null`, the type of buffers of length 1 or 0.
+#push-options "--__no_positivity"
 noeq
 type t (a: Type0) =
   b:A.array (cell a){A.vlength b <= 1}
@@ -45,17 +38,52 @@ and cell (a: Type0) = {
   next: t a;
   data: a;
 }
+#pop-options
 
-assume HasEqT : forall a.{:pattern (hasEq (t a))} hasEq (t a)
+irreducible
+let hd (l:list 'a)
+  : Pure 'a
+  (requires
+    Cons? l)
+  (ensures fun x -> 
+    x == Cons?.hd l)
+  = Cons?.hd l
 
-let ptr a : eqtype = t a
+irreducible
+let tl (l:list 'a)
+  : Pure (list 'a)
+  (requires
+    Cons? l)
+  (ensures fun x -> 
+    x == Cons?.tl l)
+  = Cons?.tl l
 
-(* Ideally, this would be bootstrapped for clients to use a "t' a".
-   The hidden (abstract) type definition would be a (t a) & list (cell a) *)
+irreducible
+let prev (c:cell 'a) : t 'a = c.prev
 
-let empty_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
-  A.vlength ptr == 0
+irreducible
+let next (c:cell 'a) : t 'a = c.next
 
+irreducible
+let data (c:cell 'a) : 'a = c.data
+
+assume
+val mk_cell (p n: t 'a) (d:'a) 
+  : Pure (cell 'a)
+    (requires True)
+    (ensures fun c -> 
+      prev c == p /\
+      next c == n /\
+      data c == d)
+
+    
+assume
+val ptr_eq (#a:Type) (x y:t a)
+  : Pure bool
+    (requires True)
+    (ensures fun b ->
+      if b then x == y else x =!= y)
+    
 let node_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
   P.allows_write (RA.get_rperm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
 
@@ -68,11 +96,12 @@ let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
 irreducible
 let pure (p:prop) : resource = hsrefine empty_resource (fun _ -> p)
 
-// dlist (ptr, left, 
+assume
+val elim_pure (p:prop) (h:HS.mem)
+  : Lemma (inv (pure p) h ==> p)
 
-// left ---> {_; prev=_; next=_} 
-     
-//[@(strict_on_arguments [4])]
+assume val null_dlist (#a:Type) : t a
+   
 irreducible
 let rec dlist (#a:Type) (left:t a) 
                         (ptr:t a)
@@ -82,70 +111,183 @@ let rec dlist (#a:Type) (left:t a)
       (decreases l) 
     =
     match l with
-    | [] -> pure (right == ptr)
+    | [] -> 
+      pure (right == ptr)
+            
     | hd :: tl -> 
-      pure (ptr =!= right) <*>
+      pure (right =!= ptr) <*>
       pts_to ptr hd <*> 
       pure (hd.prev == left) <*>
       dlist ptr hd.next right tl
 
-// //[@(strict_on_arguments [4])]
-// irrelet dlist (#a:Type) (left:t a) 
-//                     (ptr:t a)
-//                     (right:t a)
-//                     (l:list (cell a)) =
-//     dlist' left ptr right l
+assume
+val pts_to_injective (#a:_) (p:t a) (v1 v2: cell a) (h:HS.mem)
+  : Lemma 
+    (requires
+      inv (pts_to p v1) h /\
+      inv (pts_to p v2) h)
+    (ensures
+      v1 == v2)
 
-effect Rst (a:Type) (pre:resource) (post: a -> resource) = 
-  RST a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-let unfold_dlist_nil (#a:Type) (left:t a) 
-                                (ptr:t a)
-                                (right:t a)
-                                (l:list (cell a){Nil? l})
+assume
+val pts_to_non_null_lemma (#a:_) (p:t a) (v: cell a) (h:HS.mem)
+  : Lemma
+    (requires
+      inv (pts_to p v) h)
+    (ensures
+      p =!= null_dlist)
+
+let pts_to_non_null (#a:_) (p:t a) (v: cell a)
+  : RST unit
+    (requires
+      pts_to p v)
+    (ensures fun _ ->
+      pts_to p v)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> 
+      p =!= null_dlist)
+  = let h = FStar.HyperStack.ST.get () in
+    pts_to_non_null_lemma p v h
+
+
+let rec dlist_injective #a (left ptr right : t a)
+                           (l1 l2:list (cell a))
+                           (h:HS.mem)
+  : Lemma
+    (requires 
+      inv (dlist left ptr right l1) h /\
+      inv (dlist left ptr right l2) h)    
+    (ensures
+      l1 == l2)
+   (decreases l1)
+  = admit();
+  match l1, l2 with
+  | [], [] -> ()
+  | hd1::tl1, hd2::tl2 -> 
+    pts_to_injective ptr hd1 hd2 h; 
+    assert (hd1 == hd2);
+    dlist_injective ptr hd1.next right tl1 tl2 h
+      
+  | [], hd::tl
+  | hd::tl, [] ->
+    elim_pure (right == ptr) h;
+    elim_pure (right =!= ptr) h
+
+
+assume
+val intro_dlist_nil (#a:Type) (left right:t a) 
    : Rst unit                           
-     (dlist left ptr right l)
-     (fun _ -> 
+     (requires
+       empty_resource)
+     (ensures fun _ -> 
+       dlist left right right [])
+
+assume
+val invert_dlist_nil_eq (#a:Type) (left left' ptr right:t a) (l:list (cell a)) 
+    : RST unit                           
+     (requires
+       dlist left ptr right l)
+     (ensures fun _ -> 
+       dlist left' right right [])
+     (requires fun _ -> 
+       ptr == right)
+     (ensures fun _ _ _ -> 
+       l==[])
+
+assume
+val invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a)) 
+    : RST unit                           
+     (requires
+       dlist left ptr right l)
+     (ensures fun _ -> 
+       dlist left ptr right l)
+     (requires fun _ -> 
+       ptr =!= right)
+     (ensures fun _ _ _ -> 
+       Cons? l)
+
+
+assume
+val elim_dlist_nil (#a:Type) (left:t a) 
+                             (ptr:t a)
+                             (right:t a)
+                             (l:list (cell a){Nil? l})
+   : Rst unit                           
+     (requires 
+       dlist left ptr right l)
+     (ensures fun _ -> 
        pure (right == ptr))
-   = admit()       
 
 
+let b2p (b:bool) : prop = b == true
 irreducible
 let dlist_cons (#a:Type) (left:t a) 
                          (ptr:t a)
                          (right:t a)
-                         (l:list (cell a){Cons? l}) : resource =
-    let hd = Cons?.hd l in
+                         (hd:cell a)
+                         (tl:list (cell a)) : resource =
     pure (ptr =!= right) <*>
     pts_to ptr hd <*> 
-    pure (hd.prev == left) <*>
-    dlist ptr hd.next right (Cons?.tl l)
-                         
-let unfold_dlist_cons (#a:Type) (left:t a) 
-                                (ptr:t a)
-                                (right:t a)
-                                (l:list (cell a){Cons? l})
-   : Rst unit                           
-     (requires
-       dlist left ptr right l)
-     (ensures fun _ -> 
-       dlist_cons left ptr right l)
-   = admit()       
+    pure (prev hd == left) <*>
+    dlist ptr (next hd) right tl
 
-let read_ptr (#a:_) (left ptr right:t a) (l:list (cell a){Cons? l})
+assume
+val intro_dlist_cons (#a:Type) (left:t a) 
+                               (ptr:t a)
+                               (right:t a)
+                               (hd: cell a)
+                               (tl: list (cell a))
+   : RST unit                           
+     (requires
+       pts_to ptr hd <*>
+       dlist ptr (next hd) right tl)
+     (ensures fun _ -> 
+       dlist left ptr right (hd::tl))
+     (requires fun _ ->
+       prev hd == left /\
+       ptr =!= right)
+     (ensures fun _ _ _ -> True)
+
+assume
+val elim_dlist_cons (#a:Type) (left:t a) 
+                              (ptr:t a)
+                              (right:t a)
+                              (hd:cell a)
+                              (tl:list (cell a))
+   : RST unit                           
+     (requires
+       dlist left ptr right (hd::tl))
+     (ensures fun _ -> 
+       pts_to ptr hd <*>
+       dlist ptr (next hd) right tl)
+     (requires fun _ -> True)
+     (ensures fun _ _ _ ->
+       prev hd == left /\
+       ptr =!= null_dlist /\
+       ptr =!= right)
+
+assume
+val read_ptr (#a:_) (ptr:t a) (c:cell a)
   : RST (cell a)
-    (dlist_cons left ptr right l)
-    (fun _ -> 
-      pts_to ptr (Cons?.hd l))
-    (requires fun _ -> True)
-    (ensures fun _ v _ ->  v == Cons?.hd l)
-  = admit();
-    reveal_rst_inv ();
-    reveal_modifies ();
-    RA.index ptr 0ul
+        (requires pts_to ptr c)
+        (ensures fun _ -> pts_to ptr c)
+        (requires fun _ -> True)
+        (ensures fun _ c' _ -> c == c')
     
-  
-assume val null_dlist (#a:Type) : t a
+
+
+assume
+val alloc_cell (#a:_) (c:cell a)
+  : RST (t a)
+    (requires
+      empty_resource)
+    (ensures fun p ->
+      pts_to p c)
+    (requires fun _ -> 
+      True)
+    (ensures fun _ p _ -> 
+      p =!= null_dlist)
 
 let resource_assertion (r:resource) 
   : RST unit
@@ -155,60 +297,259 @@ let resource_assertion (r:resource)
         (fun _ _ _ -> True)
   = ()        
 
-let new_dlist (#a:Type) (left:t a) (init:a) (right: t a)
+//#set-options "--tactic_trace_d  1"
+let new_dlist (#a:Type) (init:a)
   : Rst (t a)
-    (requires empty_resource)
+    (requires
+      empty_resource)
     (ensures fun ptr ->
-      dlist left ptr right [{prev = left;
-                             next = right;
-                             data = init}])
+      dlist null_dlist ptr null_dlist [mk_cell null_dlist null_dlist init])
   = reveal_rst_inv ();
     reveal_modifies ();
     reveal_empty_resource();
     reveal_star();
-    let cell = {
-        prev = left;
-        next = right;
-        data = init
-    } in
-    // let h0 = FStar.HyperStack.ST.get () in      
-    let p = RA.alloc cell 1ul in
-    assume (p =!= right);
-    // let h1 = FStar.HyperStack.ST.get () in    
-    // resource_assertion (pts_to p cell <*> pure (cell.prev == null_dlist));
-    // resource_assertion (pts_to p cell <*> dlist p null_dlist null_dlist []);
-    // resource_assertion (pts_to p cell <*> pure (cell.prev == null_dlist) <*> dlist p null_dlist null_dlist []);    
-    // assert (dlist null_dlist p null_dlist [cell] ==
-    //         (pts_to p cell <*> pure (cell.prev == null_dlist) <*> dlist p null_dlist null_dlist []));
-    // resource_assertion (dlist null_dlist p null_dlist [cell]);
-    // let h2 = FStar.HyperStack.ST.get () in
-    // assert (as_loc (fp (dlist null_dlist p null_dlist [cell])) h2 ==
-    //         as_loc (fp (pts_to p cell)) h2);
-    // assert (modifies empty_resource (pts_to p cell) h0 h1);
-    // assert (modifies empty_resource (dlist null_dlist p null_dlist [cell]) h0 h1);
+    let cell = mk_cell null_dlist null_dlist init in
+    let h0 = FStar.HyperStack.ST.get () in      
+    let p = alloc_cell cell in
+    rst_frame (pts_to p cell <*> empty_resource)
+              (fun _ -> pts_to p cell <*> dlist p null_dlist null_dlist [])
+              (fun _ -> intro_dlist_nil p null_dlist);
+    intro_dlist_cons null_dlist p null_dlist cell [];
+    resource_assertion (dlist null_dlist p null_dlist [cell]);
+    let h1 = FStar.HyperStack.ST.get () in
+    assume (modifies empty_resource (dlist null_dlist p null_dlist [cell]) h0 h1);
     // NS: This is pretty fragile
     //     Requires reasoning about transitivity of modifies
     p
 
-#set-options "--tactic_trace_d  1"
+assume
+val write_ptr (#a:_) (ptr:t a) (c0 c1:cell a)
+  : Rst unit
+        (requires pts_to ptr c0)
+        (ensures fun _ -> pts_to ptr c1)
+
+let rewrite_resource (r0 r1:resource)
+  : RST unit
+    (requires r0)
+    (ensures fun _ -> r1)
+    (requires fun _ -> r0 == r1)
+    (ensures fun _ _ _ -> True)
+  = ()
+
+let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a) (hd:cell a) (tl:list (cell a))
+  : RST (cell a)
+        (requires 
+          dlist from0 ptr0 to0 (hd::tl))
+        (ensures fun _ ->
+          dlist from0 ptr0 to0 (hd::tl))
+        (requires fun _ -> 
+          True)
+        (ensures fun _ v _ -> 
+          v == hd)
+  =  reveal_rst_inv ();
+     reveal_modifies ();
+     reveal_empty_resource();
+     reveal_star();
+
+     let h0 = FStar.HyperStack.ST.get () in
+     
+     //1: unfold dlist to dlist cons
+     elim_dlist_cons from0 ptr0 to0 hd tl;
+
+     //2: read the ptr0 to get cell0
+     let c0 =
+       rst_frame
+         (pts_to ptr0 hd <*> dlist ptr0 (next hd) to0 tl)
+         (fun _ -> pts_to ptr0 hd <*> dlist ptr0 (next hd) to0 tl)
+         (fun _ -> read_ptr ptr0 hd) in
+
+     intro_dlist_cons from0 ptr0 to0 hd tl;
+
+     let h1 = FStar.HyperStack.ST.get () in
+     assume (modifies (dlist from0 ptr0 to0 (hd::tl))
+                      (dlist from0 ptr0 to0 (hd::tl)) h0 h1);
+     c0
+
+assume 
+val resource_assumption (r:resource) 
+  : RST unit
+        empty_resource
+        (fun _ -> r)
+        (fun _ -> True)
+        (fun _ _ _ -> True)
+
+#push-options "--z3rlimit_factor 3 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2 --z3cliopt 'smt.qi.eager_threshold=100'"
 let rec concat (#a:Type)
                (from0:t a) (ptr0:t a) (to0: t a) (l0:list (cell a))
-               (from1:t a) (ptr1:t a) (to1: t a) (l1:list (cell a))
-   : RST unit                     
+               (from1:t a) (ptr1:t a) (l1:list (cell a))
+   : RST (list (cell a))
      (requires 
        dlist from0 ptr0 to0 l0 <*>
-       dlist from1 ptr1 to1 l1)
-     (ensures fun _ ->
-       dlist from0 ptr0 to1 (l0@l1))
-     (requires fun _ -> Cons? l0)
+       dlist from1 ptr1 null_dlist l1)
+     (ensures fun l ->
+       dlist from0 ptr0 null_dlist l)
+     (requires fun _ -> Cons? l0 /\ Cons? l1)
      (ensures fun _ _ _ -> True)
   =  reveal_rst_inv ();
      reveal_modifies ();
      reveal_empty_resource();
      reveal_star();
-     if ptr0 = to0
-     then assert false
-     else 
+     let h0 = FStar.HyperStack.ST.get () in
+
+     let l = l0@l1 in
+
+     //not naming these leads to unification failures in rst_frame
+     let hd0 = hd l0 in
+     let tl0 = tl l0 in
+     
+     let hd1 = hd l1 in
+     let tl1 = tl l1 in
+     let to1 = null_dlist in
+
+     //1: read the ptr0 to get cell0
+     let c0 = 
+       rst_frame
+         (dlist from0 ptr0 to0 (hd0 :: tl0) <*> dlist from1 ptr1 to1 l1)
+         (fun _ -> dlist from0 ptr0 to0 (hd0 :: tl0) <*> dlist from1 ptr1 to1 l1)
+         (fun _ -> read_head from0 ptr0 to0 hd0 tl0)
+     in
+
+
+     //2: unfold dlist to dlist cons
+     rst_frame
+       (dlist from0 ptr0 to0 (hd0 :: tl0) <*> dlist from1 ptr1 to1 l1)
+       (fun _ -> pts_to ptr0 hd0 <*> dlist ptr0 (next hd0) to0 tl0 <*> dlist from1 ptr1 to1 l1) //<--
+       (fun _ -> elim_dlist_cons from0 ptr0 to0 hd0 tl0);
+
+     if ptr_eq (next c0) to0
+     then begin //we are at the end of l0
+       // 3. invert dlist tl0 to dlist []
+       rst_frame
+         (pts_to ptr0 hd0 <*> dlist ptr0 (next hd0) to0 tl0 <*> dlist from1 ptr1 to1 l1)
+         (fun _ -> pts_to ptr0 hd0 <*> dlist ptr0 to0 to0 [] <*> dlist from1 ptr1 to1 l1)
+         (fun _ -> invert_dlist_nil_eq ptr0 ptr0 (next hd0) to0 tl0);
+
+     
+       // This is a long-winded way of saying:
+       //   p0.next <- p1
+       let c0' = mk_cell (prev c0) ptr1 (data c0) in
+       rst_frame 
+           (pts_to ptr0 hd0 <*> dlist from1 ptr1 to1 l1)       
+           (fun _ -> pts_to ptr0 c0' <*> dlist from1 ptr1 to1 l1)
+           (fun _ -> write_ptr ptr0 hd0 c0');
+
+       let c1 =
+         rst_frame 
+           (pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
+           (fun _ -> pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
+           (fun _ -> read_head from1 ptr1 to1 hd1 tl1) in
+
+       rst_frame
+           (pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
+           (fun _ -> pts_to ptr0 c0' <*> pts_to ptr1 hd1 <*> dlist ptr1 (next hd1) to1 tl1)
+           (fun _ -> elim_dlist_cons from1 ptr1 to1 hd1 tl1);
+
+       // This is a long-winded way of saying:
+       //   p1.prev <- p0
+       let c1' = mk_cell ptr0 (next c1) (data c1) in
+       rst_frame 
+           (pts_to ptr0 c0' <*> pts_to ptr1 hd1 <*> dlist ptr1 (next hd1) to1 tl1)       
+           (fun _ -> pts_to ptr0 c0' <*> pts_to ptr1 c1' <*> dlist ptr1 (next hd1) to1 tl1)
+           (fun _ -> write_ptr ptr1 hd1 c1');
+
+       rst_frame 
+           (pts_to ptr0 c0' <*> pts_to ptr1 c1' <*> dlist ptr1 (next c1') to1 tl1)
+           (fun _ -> pts_to ptr0 c0' <*> dlist ptr0 ptr1 to1 (c1'::tl1))
+           (fun _ -> intro_dlist_cons ptr0 ptr1 to1 c1' tl1);
+
+       intro_dlist_cons from0 ptr0 to1 c0' (c1'::tl1);
+       
+       let l = c0'::c1'::tl1 in       
+       resource_assertion (dlist from0 ptr0 null_dlist l);
+       admit();
+       // let h1 = FStar.HyperStack.ST.get () in
+       // assume (modifies (dlist from0 ptr0 to0 l0 <*> dlist from1 ptr1 null_dlist l1)
+       //                  (dlist from0 ptr0 null_dlist l) 
+       //                  h0 h1);
+       l
+     end
+     else begin admit() end
+       //pts_to ptr0 hd0 <*> dlist ptr0 (next hd0) to0 tl0 <*> dlist from1 ptr1 to1 l1
+       //next c0 =!= t0
+       rst_frame 
+          (pts_to ptr0 hd0 <*> dlist ptr0 (next c0) to0 tl0 <*> dlist from1 ptr1 null_dlist l1)
+          (fun _ -> pts_to ptr0 hd0 <*> dlist ptr0 (next c0) to0 tl0 <*> dlist from1 ptr1 null_dlist l1)
+          (fun _ -> invert_dlist_cons_neq ptr0 (next c0) to0 tl0);
+
+       let l = 
+         rst_frame 
+           (pts_to ptr0 hd0 <*> dlist ptr0 (next c0) to0 tl0 <*> dlist from1 ptr1 null_dlist l1)
+           (fun l -> pts_to ptr0 hd0 <*> dlist ptr0 (next c0) null_dlist l)
+           (fun _ -> concat ptr0 (next c0) to0 tl0 from1 ptr1 l1)
+       in 
+       intro_dlist_cons from0 ptr0 null_dlist hd0 l;
+       resource_assertion (dlist from0 ptr0 to1 (hd0::l));
+       let l = hd0::l in
+       let h1 = FStar.HyperStack.ST.get () in
+       assume (modifies (dlist from0 ptr0 to0 l0 <*> dlist from1 ptr1 to1 l1)
+                        (dlist from0 ptr0 to1 l)
+                        h0 h1);
+       l
+     end
+
+     
+     
+     admit()
+       //pts_to ptr0 c1 <*> dlist to0 ptr1 to1 l1
+       //c1.next == ptr1
+       //
+       //==================================
+       //dlist from0 ptr0 to1 (c::l1)
+       
+       assert (prev c1 == from0);
+       assert (ptr0 =!= to1);
+       
+       //ptr0 <> to0
+
+       admit()
+       // if ptr_eq ptr1 to1
+       // then begin
+       //   rst_frame
+       //     (pts_to ptr0 c1 <*> dlist ptr0 to0 to0 [] <*> dlist from1 ptr1 to1 l1)
+       //     (fun _ -> pts_to ptr0 c1 <*> dlist ptr0 to0 to0 [] <*> dlist ptr0 to1 to1 [])  
+       //     (fun _ -> invert_dlist_nil_eq from1 ptr0 ptr1 to1 l1);
+  
+       //   rst_frame
+       //     (pts_to ptr0 c1 <*> dlist ptr0 to0 to0 [] <*> dlist ptr0 to1 to1 [])           
+       //     (fun _ -> pts_to ptr0 c1 <*> dlist ptr0 to0 to0 [] <*> dlist ptr0 (next c1) to1 [])
+       //     (fun _ -> rewrite_resource (dlist ptr0 to1 to1 []) (dlist ptr0 (next c1) to1 []));
+
+       //   rst_frame
+       //     (pts_to ptr0 c1 <*> dlist ptr0 to0 to0 [] <*> dlist ptr0 (next c1) to1 [])
+       //     (fun _ -> dlist from0 ptr0 to1 [c1] <*> dlist ptr0 to0 to0 [])
+       //     (fun _ -> intro_dlist_cons from0 ptr0 to1 c1 []);
+
+       //   resource_assertion (dlist from0 ptr0 to1 [c1]);
+       //   admit()
+       // end
+       // else admit()
+     end
+     else admit()
+     in
+     let h1 = FStar.HyperStack.ST.get () in
+     assume (modifies (dlist from0 ptr0 to0 l0 <*> dlist from1 ptr1 to1 l1)
+                      (dlist from0 ptr0 to1 (l0@l1))
+                      h0 h1);
+     l
+
+     
+     empty_resource (dlist null_dlist p null_dlist [cell]) h0 h1);     
+
+
+     admit()
+
+       
+     
        let c0 = RA.index ptr0 0ul in
        if c0.next = to0
        then //last node in l0 ...here's where we hook it up
