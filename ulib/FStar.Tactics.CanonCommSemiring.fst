@@ -1370,20 +1370,20 @@ let steps =
     zeta;
     delta_attr [`%canon_attr];
     delta_only [
-      "FStar.Mul.op_Star";                        // For integer ring
-      "FStar.Algebra.CommMonoid.int_plus_cm";     // For integer ring
-      "FStar.Algebra.CommMonoid.int_multiply_cm"; // For integer ring
-      "FStar.Algebra.CommMonoid.__proj__CM__item__mult";
-      "FStar.Algebra.CommMonoid.__proj__CM__item__unit";
-      "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_add";
-      "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_mult";
-      "FStar.List.Tot.Base.assoc";
-      "FStar.Pervasives.Native.fst";
-      "FStar.Pervasives.Native.snd";
-      "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-      "FStar.Pervasives.Native.__proj__Mktuple2__item___2";
-      "FStar.List.Tot.Base.op_At";
-      "FStar.List.Tot.Base.append";
+      `%FStar.Mul.op_Star;                        // For integer ring
+      `%FStar.Algebra.CommMonoid.int_plus_cm;     // For integer ring
+      `%FStar.Algebra.CommMonoid.int_multiply_cm; // For integer ring
+      `%FStar.Algebra.CommMonoid.__proj__CM__item__mult;
+      `%FStar.Algebra.CommMonoid.__proj__CM__item__unit;
+      `%__proj__CR__item__cm_add;
+      `%__proj__CR__item__cm_mult;
+      `%FStar.List.Tot.Base.assoc;
+      `%FStar.Pervasives.Native.fst;
+      `%FStar.Pervasives.Native.snd;
+      `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
+      `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+      `%FStar.List.Tot.Base.op_At;
+      `%FStar.List.Tot.Base.append;
     ]
   ]
 
