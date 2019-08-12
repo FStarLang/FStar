@@ -51,18 +51,29 @@ val op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
                               sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\
                               modifies Set.empty h0 h1))
 
+unfold let create_post (#a:Type0) (s:seq a)
+: heap -> array a -> heap -> Type0
+= fun h0 x h1 ->
+  x `unused_in` h0 /\
+  contains h1 x /\
+  modifies Set.empty h0 h1 /\
+  sel h1 x== s
+  
 val of_seq (#a:Type0) (s:seq a)
-  : ST (array a)
-       (requires (fun h -> True))
-       (ensures  (fun h0 x h1 -> x `unused_in` h0 /\
-                              contains h1 x /\
-                              modifies Set.empty h0 h1 /\
-                              sel h1 x == s))
+: ST (array a)
+  (requires fun _ -> True)
+  (ensures create_post s)
 
 val to_seq (#a:Type0) (s:array a)
   : ST (seq a)
        (requires (fun h -> contains h s))
        (ensures  (fun h0 x h1 -> (sel h0 s == x /\ h0 == h1)))
+
+// Used by the compiler for array litterals
+val of_list (#a:Type0) (l:list a)
+: ST (array a)
+  (requires fun _ -> True)
+  (ensures create_post (of_list l))
 
 val create (#a:Type0) (n:nat) (init:a)
   : ST (array a)

@@ -122,6 +122,8 @@ val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_module                : string  -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
+val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
+val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>
@@ -147,7 +149,6 @@ val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
-val profile                     :  (unit -> 'a) -> ('a -> string) -> 'a
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool

@@ -197,7 +197,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
    So switch to a supported OCaml version by running the following commands:
   ```sh
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.07.1+mingw32c
+  $ opam switch create ocaml-variants.4.07.1+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
