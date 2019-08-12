@@ -378,7 +378,7 @@ val resource_assumption (r:resource)
         (fun _ -> True)
         (fun _ _ _ -> True)
 
-#push-options "--z3rlimit_factor 3 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2 --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--z3rlimit_factor 20 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
 let rec concat (#a:Type)
                (from0:t a) (ptr0:t a) (to0: t a) (l0:list (cell a))
                (from1:t a) (ptr1:t a) (l1:list (cell a))
@@ -390,11 +390,13 @@ let rec concat (#a:Type)
        dlist from0 ptr0 null_dlist l)
      (requires fun _ -> Cons? l0 /\ Cons? l1)
      (ensures fun _ _ _ -> True)
-  =  reveal_rst_inv ();
+   =     
+     let h0 = FStar.HyperStack.ST.get () in
+     reveal_rst_inv ();
      reveal_modifies ();
      reveal_empty_resource();
      reveal_star();
-     let h0 = FStar.HyperStack.ST.get () in
+
 
      let l = l0@l1 in
 
@@ -429,7 +431,6 @@ let rec concat (#a:Type)
          (fun _ -> pts_to ptr0 hd0 <*> dlist ptr0 to0 to0 [] <*> dlist from1 ptr1 to1 l1)
          (fun _ -> invert_dlist_nil_eq ptr0 ptr0 (next hd0) to0 tl0);
 
-     
        // This is a long-winded way of saying:
        //   p0.next <- p1
        let c0' = mk_cell (prev c0) ptr1 (data c0) in
@@ -438,11 +439,13 @@ let rec concat (#a:Type)
            (fun _ -> pts_to ptr0 c0' <*> dlist from1 ptr1 to1 l1)
            (fun _ -> write_ptr ptr0 hd0 c0');
 
+
        let c1 =
          rst_frame 
            (pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
            (fun _ -> pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
            (fun _ -> read_head from1 ptr1 to1 hd1 tl1) in
+
 
        rst_frame
            (pts_to ptr0 c0' <*> dlist from1 ptr1 to1 (hd1::tl1))
@@ -466,14 +469,13 @@ let rec concat (#a:Type)
        
        let l = c0'::c1'::tl1 in       
        resource_assertion (dlist from0 ptr0 null_dlist l);
-       admit();
-       // let h1 = FStar.HyperStack.ST.get () in
-       // assume (modifies (dlist from0 ptr0 to0 l0 <*> dlist from1 ptr1 null_dlist l1)
-       //                  (dlist from0 ptr0 null_dlist l) 
-       //                  h0 h1);
+       let h1 = FStar.HyperStack.ST.get () in
+       assume (modifies (dlist from0 ptr0 to0 l0 <*> dlist from1 ptr1 null_dlist l1)
+                        (dlist from0 ptr0 null_dlist l) 
+                        h0 h1);
        l
      end
-     else begin admit() end
+     else begin 
        //pts_to ptr0 hd0 <*> dlist ptr0 (next hd0) to0 tl0 <*> dlist from1 ptr1 to1 l1
        //next c0 =!= t0
        rst_frame 
