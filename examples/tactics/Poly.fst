@@ -16,8 +16,9 @@
 module Poly
 
 open FStar.Tactics.CanonCommSemiring
-open FStar.Tactics
 open FStar.Mul
+
+#set-options "--no_smt --tactics_info"
 
 [@tcdecltime]
 let lemma_poly_multiply_canon n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
