@@ -10,7 +10,7 @@ let (tc_tycon :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_TypeChecker_Env.env_t * FStar_Syntax_Syntax.sigelt *
-        FStar_Syntax_Syntax.universe * FStar_TypeChecker_Env.guard_t))
+        FStar_Syntax_Syntax.universe * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun s  ->
@@ -238,7 +238,7 @@ let (tc_data :
   FStar_TypeChecker_Env.env_t ->
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list ->
       FStar_Syntax_Syntax.sigelt ->
-        (FStar_Syntax_Syntax.sigelt * FStar_TypeChecker_Env.guard_t))
+        (FStar_Syntax_Syntax.sigelt * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun tcs  ->
@@ -2608,16 +2608,16 @@ let (check_inductive_well_typedness :
                            let g2 =
                              let uu___976_7178 = g1  in
                              {
-                               FStar_TypeChecker_Env.guard_f =
-                                 (uu___976_7178.FStar_TypeChecker_Env.guard_f);
-                               FStar_TypeChecker_Env.deferred =
-                                 (uu___976_7178.FStar_TypeChecker_Env.deferred);
-                               FStar_TypeChecker_Env.univ_ineqs =
+                               FStar_TypeChecker_Common.guard_f =
+                                 (uu___976_7178.FStar_TypeChecker_Common.guard_f);
+                               FStar_TypeChecker_Common.deferred =
+                                 (uu___976_7178.FStar_TypeChecker_Common.deferred);
+                               FStar_TypeChecker_Common.univ_ineqs =
                                  (tc_universe_vars,
                                    (FStar_Pervasives_Native.snd
-                                      g1.FStar_TypeChecker_Env.univ_ineqs));
-                               FStar_TypeChecker_Env.implicits =
-                                 (uu___976_7178.FStar_TypeChecker_Env.implicits)
+                                      g1.FStar_TypeChecker_Common.univ_ineqs));
+                               FStar_TypeChecker_Common.implicits =
+                                 (uu___976_7178.FStar_TypeChecker_Common.implicits)
                              }  in
                            (let uu____7188 =
                               FStar_All.pipe_left

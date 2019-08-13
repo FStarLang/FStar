@@ -16,7 +16,7 @@ let (new_implicit_var :
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.typ ->
           (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.ctx_uvar *
-            FStar_Range.range) Prims.list * FStar_TypeChecker_Env.guard_t))
+            FStar_Range.range) Prims.list * FStar_TypeChecker_Common.guard_t))
   =
   fun reason  ->
     fun r  ->
@@ -28,7 +28,7 @@ let (new_implicit_var :
 let (close_guard_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
-      FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
+      FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
   =
   fun env  ->
     fun xs  ->
@@ -40,7 +40,7 @@ let (close_guard_implicits :
         then g
         else
           (let uu____93 =
-             FStar_All.pipe_right g.FStar_TypeChecker_Env.deferred
+             FStar_All.pipe_right g.FStar_TypeChecker_Common.deferred
                (FStar_List.partition
                   (fun uu____145  ->
                      match uu____145 with
@@ -78,25 +78,25 @@ let (close_guard_implicits :
                    FStar_TypeChecker_Rel.solve_deferred_constraints env
                      (let uu___46_247 = g  in
                       {
-                        FStar_TypeChecker_Env.guard_f =
-                          (uu___46_247.FStar_TypeChecker_Env.guard_f);
-                        FStar_TypeChecker_Env.deferred = solve_now;
-                        FStar_TypeChecker_Env.univ_ineqs =
-                          (uu___46_247.FStar_TypeChecker_Env.univ_ineqs);
-                        FStar_TypeChecker_Env.implicits =
-                          (uu___46_247.FStar_TypeChecker_Env.implicits)
+                        FStar_TypeChecker_Common.guard_f =
+                          (uu___46_247.FStar_TypeChecker_Common.guard_f);
+                        FStar_TypeChecker_Common.deferred = solve_now;
+                        FStar_TypeChecker_Common.univ_ineqs =
+                          (uu___46_247.FStar_TypeChecker_Common.univ_ineqs);
+                        FStar_TypeChecker_Common.implicits =
+                          (uu___46_247.FStar_TypeChecker_Common.implicits)
                       })
                     in
                  let g2 =
                    let uu___49_249 = g1  in
                    {
-                     FStar_TypeChecker_Env.guard_f =
-                       (uu___49_249.FStar_TypeChecker_Env.guard_f);
-                     FStar_TypeChecker_Env.deferred = defer;
-                     FStar_TypeChecker_Env.univ_ineqs =
-                       (uu___49_249.FStar_TypeChecker_Env.univ_ineqs);
-                     FStar_TypeChecker_Env.implicits =
-                       (uu___49_249.FStar_TypeChecker_Env.implicits)
+                     FStar_TypeChecker_Common.guard_f =
+                       (uu___49_249.FStar_TypeChecker_Common.guard_f);
+                     FStar_TypeChecker_Common.deferred = defer;
+                     FStar_TypeChecker_Common.univ_ineqs =
+                       (uu___49_249.FStar_TypeChecker_Common.univ_ineqs);
+                     FStar_TypeChecker_Common.implicits =
+                       (uu___49_249.FStar_TypeChecker_Common.implicits)
                    }  in
                  g2)))
   
@@ -422,7 +422,7 @@ let (lift_to_layered_effect :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+        (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun c  ->
@@ -764,12 +764,12 @@ let (label_opt :
 let (label_guard :
   FStar_Range.range ->
     Prims.string ->
-      FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
+      FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
   =
   fun r  ->
     fun reason  ->
       fun g  ->
-        match g.FStar_TypeChecker_Env.guard_f with
+        match g.FStar_TypeChecker_Common.guard_f with
         | FStar_TypeChecker_Common.Trivial  -> g
         | FStar_TypeChecker_Common.NonTrivial f ->
             let uu___311_2497 = g  in
@@ -777,13 +777,13 @@ let (label_guard :
               let uu____2499 = label reason r f  in
               FStar_TypeChecker_Common.NonTrivial uu____2499  in
             {
-              FStar_TypeChecker_Env.guard_f = uu____2498;
-              FStar_TypeChecker_Env.deferred =
-                (uu___311_2497.FStar_TypeChecker_Env.deferred);
-              FStar_TypeChecker_Env.univ_ineqs =
-                (uu___311_2497.FStar_TypeChecker_Env.univ_ineqs);
-              FStar_TypeChecker_Env.implicits =
-                (uu___311_2497.FStar_TypeChecker_Env.implicits)
+              FStar_TypeChecker_Common.guard_f = uu____2498;
+              FStar_TypeChecker_Common.deferred =
+                (uu___311_2497.FStar_TypeChecker_Common.deferred);
+              FStar_TypeChecker_Common.univ_ineqs =
+                (uu___311_2497.FStar_TypeChecker_Common.univ_ineqs);
+              FStar_TypeChecker_Common.implicits =
+                (uu___311_2497.FStar_TypeChecker_Common.implicits)
             }
   
 let (close_comp :
@@ -1310,8 +1310,9 @@ let (strengthen_precondition :
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         FStar_TypeChecker_Common.lcomp ->
-          FStar_TypeChecker_Env.guard_t ->
-            (FStar_TypeChecker_Common.lcomp * FStar_TypeChecker_Env.guard_t))
+          FStar_TypeChecker_Common.guard_t ->
+            (FStar_TypeChecker_Common.lcomp *
+              FStar_TypeChecker_Common.guard_t))
   =
   fun reason  ->
     fun env  ->
@@ -1397,14 +1398,14 @@ let (strengthen_precondition :
                (uu____3712,
                  (let uu___488_3715 = g0  in
                   {
-                    FStar_TypeChecker_Env.guard_f =
+                    FStar_TypeChecker_Common.guard_f =
                       FStar_TypeChecker_Common.Trivial;
-                    FStar_TypeChecker_Env.deferred =
-                      (uu___488_3715.FStar_TypeChecker_Env.deferred);
-                    FStar_TypeChecker_Env.univ_ineqs =
-                      (uu___488_3715.FStar_TypeChecker_Env.univ_ineqs);
-                    FStar_TypeChecker_Env.implicits =
-                      (uu___488_3715.FStar_TypeChecker_Env.implicits)
+                    FStar_TypeChecker_Common.deferred =
+                      (uu___488_3715.FStar_TypeChecker_Common.deferred);
+                    FStar_TypeChecker_Common.univ_ineqs =
+                      (uu___488_3715.FStar_TypeChecker_Common.univ_ineqs);
+                    FStar_TypeChecker_Common.implicits =
+                      (uu___488_3715.FStar_TypeChecker_Common.implicits)
                   })))
   
 let (lcomp_has_trivial_postcondition :
@@ -2999,7 +3000,7 @@ let (check_comp :
       FStar_Syntax_Syntax.comp ->
         FStar_Syntax_Syntax.comp ->
           (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
-            FStar_TypeChecker_Env.guard_t))
+            FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -3076,7 +3077,7 @@ let (check_trivial_precondition :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
       (FStar_Syntax_Syntax.comp_typ * FStar_Syntax_Syntax.formula *
-        FStar_TypeChecker_Env.guard_t))
+        FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun c  ->
@@ -3195,7 +3196,7 @@ let (weaken_result_typ :
       FStar_TypeChecker_Common.lcomp ->
         FStar_Syntax_Syntax.typ ->
           (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
-            FStar_TypeChecker_Env.guard_t))
+            FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -3380,14 +3381,14 @@ let (weaken_result_typ :
                     let g1 =
                       let uu___1011_8106 = g  in
                       {
-                        FStar_TypeChecker_Env.guard_f =
+                        FStar_TypeChecker_Common.guard_f =
                           FStar_TypeChecker_Common.Trivial;
-                        FStar_TypeChecker_Env.deferred =
-                          (uu___1011_8106.FStar_TypeChecker_Env.deferred);
-                        FStar_TypeChecker_Env.univ_ineqs =
-                          (uu___1011_8106.FStar_TypeChecker_Env.univ_ineqs);
-                        FStar_TypeChecker_Env.implicits =
-                          (uu___1011_8106.FStar_TypeChecker_Env.implicits)
+                        FStar_TypeChecker_Common.deferred =
+                          (uu___1011_8106.FStar_TypeChecker_Common.deferred);
+                        FStar_TypeChecker_Common.univ_ineqs =
+                          (uu___1011_8106.FStar_TypeChecker_Common.univ_ineqs);
+                        FStar_TypeChecker_Common.implicits =
+                          (uu___1011_8106.FStar_TypeChecker_Common.implicits)
                       }  in
                     let strengthen uu____8112 =
                       let uu____8113 =
@@ -3579,14 +3580,14 @@ let (weaken_result_typ :
                     let g2 =
                       let uu___1057_8277 = g1  in
                       {
-                        FStar_TypeChecker_Env.guard_f =
+                        FStar_TypeChecker_Common.guard_f =
                           FStar_TypeChecker_Common.Trivial;
-                        FStar_TypeChecker_Env.deferred =
-                          (uu___1057_8277.FStar_TypeChecker_Env.deferred);
-                        FStar_TypeChecker_Env.univ_ineqs =
-                          (uu___1057_8277.FStar_TypeChecker_Env.univ_ineqs);
-                        FStar_TypeChecker_Env.implicits =
-                          (uu___1057_8277.FStar_TypeChecker_Env.implicits)
+                        FStar_TypeChecker_Common.deferred =
+                          (uu___1057_8277.FStar_TypeChecker_Common.deferred);
+                        FStar_TypeChecker_Common.univ_ineqs =
+                          (uu___1057_8277.FStar_TypeChecker_Common.univ_ineqs);
+                        FStar_TypeChecker_Common.implicits =
+                          (uu___1057_8277.FStar_TypeChecker_Common.implicits)
                       }  in
                     (e, lc1, g2)))
   
@@ -3861,7 +3862,7 @@ let (maybe_instantiate :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
         (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
-          FStar_TypeChecker_Env.guard_t))
+          FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -4798,7 +4799,7 @@ let (check_and_ascribe :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.typ ->
-          (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
+          (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -4966,7 +4967,7 @@ let (check_and_ascribe :
   
 let (check_top_level :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Env.guard_t ->
+    FStar_TypeChecker_Common.guard_t ->
       FStar_TypeChecker_Common.lcomp ->
         (Prims.bool * FStar_Syntax_Syntax.comp))
   =
@@ -5723,7 +5724,7 @@ let (fresh_layered_effect_repr :
           FStar_Syntax_Syntax.tscheme ->
             FStar_Syntax_Syntax.universe ->
               FStar_Syntax_Syntax.term ->
-                (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
+                (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun r  ->
@@ -5815,7 +5816,7 @@ let (fresh_layered_effect_repr_en :
       FStar_Ident.lident ->
         FStar_Syntax_Syntax.universe ->
           FStar_Syntax_Syntax.term ->
-            (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
+            (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun r  ->

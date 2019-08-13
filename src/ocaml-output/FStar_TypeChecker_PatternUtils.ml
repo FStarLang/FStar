@@ -181,7 +181,7 @@ let (pat_as_exp :
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.pat ->
         (FStar_Syntax_Syntax.bv Prims.list * FStar_Syntax_Syntax.term *
-          FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.pat))
+          FStar_TypeChecker_Common.guard_t * FStar_Syntax_Syntax.pat))
   =
   fun introduce_bv_uvars  ->
     fun env  ->

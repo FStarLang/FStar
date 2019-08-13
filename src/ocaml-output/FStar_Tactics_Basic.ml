@@ -297,7 +297,7 @@ let (ps_to_string :
     | (msg,ps) ->
         let p_imp imp =
           FStar_Syntax_Print.uvar_to_string
-            (imp.FStar_TypeChecker_Env.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
            in
         let n_active = FStar_List.length ps.FStar_Tactics_Types.goals  in
         let n_smt = FStar_List.length ps.FStar_Tactics_Types.smt_goals  in
@@ -715,7 +715,8 @@ let (__do_unify :
                     | FStar_Pervasives_Native.None  -> ret false
                     | FStar_Pervasives_Native.Some g ->
                         let uu____2045 =
-                          add_implicits g.FStar_TypeChecker_Env.implicits  in
+                          add_implicits g.FStar_TypeChecker_Common.implicits
+                           in
                         bind uu____2045 (fun uu____2050  -> ret true)))) ()
          with
          | FStar_Errors.Err (uu____2060,msg) ->
@@ -737,13 +738,13 @@ let (compress_implicits : unit tac) =
        let g =
          let uu___324_2099 = FStar_TypeChecker_Env.trivial_guard  in
          {
-           FStar_TypeChecker_Env.guard_f =
-             (uu___324_2099.FStar_TypeChecker_Env.guard_f);
-           FStar_TypeChecker_Env.deferred =
-             (uu___324_2099.FStar_TypeChecker_Env.deferred);
-           FStar_TypeChecker_Env.univ_ineqs =
-             (uu___324_2099.FStar_TypeChecker_Env.univ_ineqs);
-           FStar_TypeChecker_Env.implicits = imps
+           FStar_TypeChecker_Common.guard_f =
+             (uu___324_2099.FStar_TypeChecker_Common.guard_f);
+           FStar_TypeChecker_Common.deferred =
+             (uu___324_2099.FStar_TypeChecker_Common.deferred);
+           FStar_TypeChecker_Common.univ_ineqs =
+             (uu___324_2099.FStar_TypeChecker_Common.univ_ineqs);
+           FStar_TypeChecker_Common.implicits = imps
          }  in
        let g1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac
@@ -757,7 +758,7 @@ let (compress_implicits : unit tac) =
            FStar_Tactics_Types.main_goal =
              (uu___328_2102.FStar_Tactics_Types.main_goal);
            FStar_Tactics_Types.all_implicits =
-             (g1.FStar_TypeChecker_Env.implicits);
+             (g1.FStar_TypeChecker_Common.implicits);
            FStar_Tactics_Types.goals =
              (uu___328_2102.FStar_Tactics_Types.goals);
            FStar_Tactics_Types.smt_goals =
@@ -1266,7 +1267,7 @@ let (new_uvar :
         match uu____2701 with
         | (u,ctx_uvar,g_u) ->
             let uu____2739 =
-              add_implicits g_u.FStar_TypeChecker_Env.implicits  in
+              add_implicits g_u.FStar_TypeChecker_Common.implicits  in
             bind uu____2739
               (fun uu____2748  ->
                  let uu____2749 =
@@ -1422,7 +1423,7 @@ let (__tc :
   env ->
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
-        FStar_TypeChecker_Env.guard_t) tac)
+        FStar_TypeChecker_Common.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -1557,7 +1558,7 @@ let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
-        FStar_TypeChecker_Env.guard_t) tac)
+        FStar_TypeChecker_Common.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -1697,7 +1698,7 @@ let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
-        FStar_TypeChecker_Env.guard_t) tac)
+        FStar_TypeChecker_Common.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -1993,7 +1994,7 @@ let (getopts : FStar_Options.optionstate tac) =
            let uu____3541 = FStar_Options.peek ()  in ret uu____3541)
   
 let (proc_guard :
-  Prims.string -> env -> FStar_TypeChecker_Env.guard_t -> unit tac) =
+  Prims.string -> env -> FStar_TypeChecker_Common.guard_t -> unit tac) =
   fun reason  ->
     fun e  ->
       fun g  ->
@@ -2002,8 +2003,8 @@ let (proc_guard :
              let uu____3567 = FStar_TypeChecker_Rel.guard_to_string e g  in
              FStar_Util.print2 "Processing guard (%s:%s)\n" reason uu____3567)
           (fun uu____3572  ->
-             let uu____3573 = add_implicits g.FStar_TypeChecker_Env.implicits
-                in
+             let uu____3573 =
+               add_implicits g.FStar_TypeChecker_Common.implicits  in
              bind uu____3573
                (fun uu____3577  ->
                   bind getopts
@@ -2011,7 +2012,7 @@ let (proc_guard :
                        let uu____3581 =
                          let uu____3582 =
                            FStar_TypeChecker_Rel.simplify_guard e g  in
-                         uu____3582.FStar_TypeChecker_Env.guard_f  in
+                         uu____3582.FStar_TypeChecker_Common.guard_f  in
                        match uu____3581 with
                        | FStar_TypeChecker_Common.Trivial  -> ret ()
                        | FStar_TypeChecker_Common.NonTrivial f ->
@@ -7081,7 +7082,7 @@ let (lset :
 let (goal_of_goal_ty :
   env ->
     FStar_Reflection_Data.typ ->
-      (FStar_Tactics_Types.goal * FStar_TypeChecker_Env.guard_t))
+      (FStar_Tactics_Types.goal * FStar_TypeChecker_Common.guard_t))
   =
   fun env  ->
     fun typ  ->
@@ -7123,7 +7124,7 @@ let (proofstate_of_goal_ty :
                 FStar_Tactics_Types.main_context = env;
                 FStar_Tactics_Types.main_goal = g;
                 FStar_Tactics_Types.all_implicits =
-                  (g_u.FStar_TypeChecker_Env.implicits);
+                  (g_u.FStar_TypeChecker_Common.implicits);
                 FStar_Tactics_Types.goals = [g];
                 FStar_Tactics_Types.smt_goals = [];
                 FStar_Tactics_Types.depth = Prims.int_zero;
