@@ -51,7 +51,7 @@ let load_tactics_dir dir =
     (* Dynlink all .cmxs files in the given directory *)
     Sys.readdir dir
     |> Array.to_list
-    |> List.filter (fun s -> String.sub s (String.length s - 4) 4 = "cmxs")
+    |> List.filter (fun s -> String.length s >= 5 && String.sub s (String.length s - 5) 5 = ".cmxs")
     |> List.map (fun s -> dir ^ "/" ^ s)
     |> List.iter load_tactic
 
