@@ -27,6 +27,7 @@ LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 	@echo --use_hints --hint_info
 
 LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
+LowStar.STExn.fst.checked: USE_EXTRACTED_INTERFACES=
 
 verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
