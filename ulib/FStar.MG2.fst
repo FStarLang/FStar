@@ -384,6 +384,24 @@ let modifies_only_used_in
     end
   )
 
+let loc_used_in_mem
+  (#al: Type)
+  (c: cls al)
+  (h: HS.mem)
+  (x: al)
+: Lemma
+  (x `GSet.mem` loc_used_in c h <==> (~ (x `c.aloc_unused_in` h)))
+= ()
+
+let loc_unused_in_mem
+  (#al: Type)
+  (c: cls al)
+  (h: HS.mem)
+  (x: al)
+: Lemma
+  (x `GSet.mem` loc_unused_in c h <==> (x `c.aloc_unused_in` h))
+= ()
+
 let framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h: HS.mem)
   (framing: (l : loc c) -> Lemma
     (requires (loc_disjoint l l0 /\ loc_includes (loc_used_in c h) l))
@@ -403,23 +421,78 @@ let framing_loc_still_unused_in (#al: Type) (#c: cls al) (l0 l1:loc c) (h: HS.me
   ))
 : Lemma
   ((loc_unused_in c h `loc_union` l0) `loc_includes` (loc_union l0 l1)) =
-  admit()
+  let f
+    (x: al)
+  : Lemma
+    (requires (x `GSet.mem` l1))
+    (ensures (x `GSet.mem` (loc_unused_in c h `loc_union` l0) /\ x `c.aloc_includes` x))
+  = c.aloc_includes_refl x;
+    if StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_unused_in` h)
+    then
+      ()
+    else if StrongExcludedMiddle.strong_excluded_middle (x `GSet.mem` l0)
+    then
+      ()
+    else begin
+      loc_used_in_mem c h x;
+      let incl (y: al) : Lemma
+        (y `GSet.mem` loc_of_aloc #_ #c x <==> y == x)
+      = aloc_includes_equality x y
+      in
+      let disj (l: loc c) : Lemma
+        (loc_disjoint (loc_of_aloc x) l <==> (~ (x `GSet.mem` l)))
+      = Classical.forall_intro incl;
+        let f
+          (y: al)
+        : Lemma
+          (requires (y `GSet.mem` l /\ (~ (x `GSet.mem` l))))
+          (ensures (x `c.aloc_disjoint` y))
+        = aloc_disjoint_inequality x y
+        in
+        Classical.forall_intro (Classical.move_requires f);
+        let g () : Lemma
+          (requires (loc_disjoint (loc_of_aloc x) l /\ x `GSet.mem` l))
+          (ensures False)
+        = c.aloc_disjoint_not_includes x x
+        in
+        Classical.move_requires g ()
+      in
+      disj l0;
+      disj l1;
+      framing (loc_of_aloc x)
+    end
+  in
+  Classical.forall_intro (Classical.move_requires f);
+  loc_includes_refl l0;
+  loc_includes_union_l (loc_unused_in c h) l0 l0;
+  loc_includes_union_l (loc_unused_in c h `loc_union` l0) l0 l1
 
 let loc_used_in_preserved
   (#al: Type)
   (#c: cls al)
   (h0 h1: HS.mem)
   (l l': loc c)
+  (aloc_includes_equality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 `c.aloc_includes` x2 ==> x1 == x2)
+  ))
 : Lemma
   (requires (loc_disjoint l' l /\ loc_includes (loc_used_in c h0) l' /\ modifies l h0 h1))
   (ensures (loc_includes (loc_used_in c h1) l')) =
-  admit()
-  (*
-     Proving this will surely require preservation to also preserve aloc usedness. If this is the case, feel free to add this as an
-     instantiation requirement. The downside is that the footprint of `free` cannot be just the loc_array if we remove the memory
-     location from the heap (aka with HS.free). But it is possible to simply not remove the memory addresses from the heap, thus
-     ensuring that they are not reused by another call to malloc.
-  *)
+  let f
+    (smaller: al)
+    (larger: al)
+  : Lemma
+    (requires (smaller `GSet.mem` l' /\ larger `GSet.mem` loc_used_in c h0 /\ larger `c.aloc_includes` smaller))
+    (ensures (smaller `GSet.mem` l' /\ larger `GSet.mem` loc_used_in c h1 /\ larger `c.aloc_includes` smaller))
+  = loc_used_in_mem c h0 larger;
+    loc_used_in_mem c h1 larger;
+    aloc_includes_equality larger smaller;
+    c.aloc_preserved_still_used larger h0 h1
+  in
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (f x))
 
 let aloc_unused_in_intro #al (c: cls al) (l: al) (h: HS.mem) : Lemma
   (requires (l `c.aloc_unused_in` h))

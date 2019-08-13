@@ -855,7 +855,7 @@ let loc_disjoint_used_in_modifies (h0 h1:HS.mem) (l l':loc)
                      loc_includes (loc_used_in h0) l' /\
                      modifies l h0 h1))
           (ensures  (loc_includes (loc_used_in h1) l'))
-  = MG.loc_used_in_preserved h0 h1 l l'
+  = MG.loc_used_in_preserved h0 h1 l l' (fun _ _ -> ())
 
 let rec live_array_used_in' (#t: Type) (b: array t) (h: HS.mem) (i:nat{i <= vlength b}) : Lemma
   (requires (live h b))

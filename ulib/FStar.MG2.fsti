@@ -401,6 +401,12 @@ val loc_used_in_preserved
   (#c: cls al)
   (h0 h1: HS.mem)
   (l l': loc c)
+  (aloc_includes_equality: (
+    (x1: al) ->
+    (x2: al) ->
+    Lemma
+    (x1 `c.aloc_includes` x2 ==> x1 == x2)
+  ))
 : Lemma
   (requires (loc_disjoint l' l /\ loc_includes (loc_used_in c h0) l' /\ modifies l h0 h1))
   (ensures (loc_includes (loc_used_in c h1) l'))
