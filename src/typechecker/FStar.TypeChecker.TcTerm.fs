@@ -731,6 +731,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
+    let chead = TcComm.lcomp_comp chead in
     let e, c, g = if not env.lax && not (Options.lax()) && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
                        // //TODO: this is not efficient:
@@ -1431,7 +1432,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 and check_application_args env head chead ghead args expected_topt : term * lcomp * guard_t=
     let n_args = List.length args in
     let r = Env.get_range env in
-    let thead = chead.res_typ in
+    let thead = U.comp_result chead in
     if debug env Options.High then BU.print2 "(%s) Type of head is %s\n" (Range.string_of_range head.pos) (Print.term_to_string thead);
 
     (* given |- head : chead | ghead
@@ -1462,8 +1463,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
     =
-      let rt, g0 = check_no_escape (Some head) env fvs cres.res_typ in
-      let cres = {cres with res_typ=rt} in
+      let rt, g0 = check_no_escape (Some head) env fvs (U.comp_result cres) in
+      let cres = U.set_result_typ cres rt in
       let cres, guard =
           match bs with
           | [] -> (* full app *)
@@ -1479,9 +1480,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
           | _ ->  (* partial app *)
               let g = Env.conj_guard g0 (Env.conj_guard ghead guard |> Rel.solve_deferred_constraints env) in
-              TcComm.lcomp_of_comp <| mk_Total  (U.arrow bs (TcComm.lcomp_comp cres)), g
+              mk_Total (U.arrow bs cres), g
       in
-      if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (TcComm.lcomp_to_string cres);
+      if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.comp_to_string cres);
+
+      let chead, cres = SS.subst_comp subst chead |> TcComm.lcomp_of_comp, SS.subst_comp subst cres |> TcComm.lcomp_of_comp in
 
       (* Note: The arg_comps_rev are in reverse order. e.g., f e1 e2 e3, we have *)
       (* arg_comps_rev = [(e3, _, c3); (e2; _; c2); (e1; _; c1)] *)
@@ -1551,8 +1554,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           if TcComm.is_pure_or_ghost_lcomp chead
           then TcUtil.bind head.pos env (Some head) chead (None, comp)
           else TcUtil.bind head.pos env None chead (None, comp) in
-
-      let comp = TcUtil.subst_lcomp subst comp in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
@@ -1639,7 +1640,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       app, comp, g
     in
 
-    let rec tc_args (head_info:(term * lcomp * guard_t * lcomp)) //the head of the application, its lcomp and guard, returning a bs -> cres
+    let rec tc_args (head_info:(term * comp * guard_t * comp)) //the head of the application, its comp and guard, returning a bs -> cres
                     (subst,   (* substituting actuals for formals seen so far, when actual is pure *)
                      outargs, (* type-checked actual arguments, so far; in reverse order *)
                      arg_rets,(* The results of each argument at the logic level, in reverse order *)
@@ -1725,12 +1726,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
         | [], arg::_ -> (* too many args, except maybe c returns a function *)
             let head, chead, ghead = monadic_application head_info subst outargs arg_rets g fvs [] in
+            let chead = TcComm.lcomp_comp chead in
             let rec aux norm solve ghead tres =
                 let tres = SS.compress tres |> U.unrefine in
                 match tres.n with
                 | Tm_arrow(bs, cres') ->
                         let bs, cres' = SS.open_comp bs cres' in
-                        let head_info = (head, chead, ghead, TcComm.lcomp_of_comp cres') in
+                        let head_info = (head, chead, ghead, cres') in
                         if debug env Options.Low
                         then FStar.Errors.log_issue tres.pos
                                (Errors.Warning_RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
@@ -1755,7 +1757,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                                       (BU.string_of_int n_args)
                                                       (Print.term_to_string tres))
                                        (argpos arg) in
-            aux false false ghead chead.res_typ
+            aux false false ghead (U.comp_result chead)
     in //end tc_args
 
     let rec check_function_app tf guard =
@@ -1788,7 +1790,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
-            let head_info = head, chead, ghead, TcComm.lcomp_of_comp c in
+            let head_info = head, chead, ghead, c in
             if Env.debug env Options.Extreme
             then BU.print4 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
                                   (Print.term_to_string head)
@@ -1816,7 +1818,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 (******************************************************************************)
 and check_short_circuit_args env head chead g_head args expected_topt : term * lcomp * guard_t =
     let r = Env.get_range env in
-    let tf = SS.compress chead.res_typ in
+    let tf = SS.compress (U.comp_result chead) in
     match tf.n with
         | Tm_arrow(bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in

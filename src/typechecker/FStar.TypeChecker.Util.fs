@@ -371,10 +371,6 @@ let lax_mk_tot_or_comp_l mname u_result result flags =
     then S.mk_Total' result (Some u_result)
     else mk_comp_l mname u_result result S.tun flags
 
-let subst_lcomp subst lc =
-    TcComm.mk_lcomp lc.eff_name (SS.subst subst lc.res_typ) lc.cflags
-                    (fun () -> SS.subst_comp subst (TcComm.lcomp_comp lc))
-
 let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
     | _ -> false
