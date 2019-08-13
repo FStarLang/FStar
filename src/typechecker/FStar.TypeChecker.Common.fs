@@ -241,6 +241,23 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
         end
      | _ -> fail()
 
+// Reason, term and uvar, and (rough) position where it is introduced
+// The term is just a Tm_uvar of the ctx_uvar
+type implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+}
+type implicits = list<implicit>
+
+type guard_t = {
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<universe> * list<univ_ineq>;
+  implicits:  implicits;
+}
+
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;

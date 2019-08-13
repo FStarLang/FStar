@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 
 module BU = FStar.Util
+module TcComm = FStar.TypeChecker.Common
 
 type step =
   | Beta
@@ -162,23 +163,13 @@ and solver_t = {
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
-and guard_t = {
-  guard_f:    guard_formula;
-  deferred:   deferred;
-  univ_ineqs: list<universe> * list<univ_ineq>;
-  implicits:  implicits;
-}
-// Reason, term and uvar, and (rough) position where it is introduced
-// The term is just a Tm_uvar of the ctx_uvar
-and implicit = {
-    imp_reason : string;                  // Reason (in text) why the implicit was introduced
-    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
-    imp_tm     : term;                    // The term, made up of the ctx_uvar
-    imp_range  : Range.range;             // Position where it was introduced
-}
-and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
+
+type implicit = TcComm.implicit
+type implicits = TcComm.implicits
+type guard_t = TcComm.guard_t
+
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
 val postprocess : env -> term -> typ -> term -> term
