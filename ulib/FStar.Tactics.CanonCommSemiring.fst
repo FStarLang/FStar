@@ -101,7 +101,7 @@ let index: eqtype = nat
 (*
  * A list of variables represents a sorted product of one or more variables.
  * We do not need to prove sortedness to prove correctness, so we never
- *  make it explicit.
+ * make it explicit.
  *)
 type varlist =
   | Nil_var : varlist
@@ -112,7 +112,6 @@ type varlist =
  * Each monomial is either:
  * - a varlist (a product of variables): x1 * ... * xk
  * - a product of a scalar and a varlist: c * x1 * ... * xk
- * - a monomial without a scalar plus a canonical expression x1 * ... * xk + s
  *
  * The order on monomials is the lexicographic order on varlist, with the
  * additional convention that monomials with a scalar are less than monomials
@@ -1406,12 +1405,14 @@ let reification (#a:Type)
       ([],[], ([], munit)) ts
   in (List.rev es, vm)
 
-let rec quote_spolynomial (#a:Type) (e:spolynomial a) : Tac term =
+let rec quote_spolynomial (#a:Type) (quotea: a -> Tac term) (e:spolynomial a) : Tac term =
   match e with
-  | SPconst c -> quote (SPconst c)
+  | SPconst c -> mk_e_app (`SPconst) [quotea c]
   | SPvar x -> mk_e_app (`SPvar) [pack (Tv_Const (C_Int x))]
-  | SPplus e1 e2 -> mk_e_app (`SPplus) [quote_spolynomial e1; quote_spolynomial e2]
-  | SPmult e1 e2 -> mk_e_app (`SPmult) [quote_spolynomial e1; quote_spolynomial e2]
+  | SPplus e1 e2 ->
+    mk_e_app (`SPplus) [quote_spolynomial quotea e1; quote_spolynomial quotea e2]
+  | SPmult e1 e2 ->
+    mk_e_app (`SPmult) [quote_spolynomial quotea e1; quote_spolynomial quotea e2]
 
 (* Constructs the 3 main goals of the tactic *)
 let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
@@ -1455,9 +1456,9 @@ let canon_semiring_aux
               interp_cs r vm (spolynomial_simplify r e2)))));
         *)
         let tvm = quote_vm ta quotea vm in
-        let te1 = quote_spolynomial e1 in
+        let te1 = quote_spolynomial quotea e1 in
         //ddump ("te1 = " ^ term_to_string te1);
-        let te2 = quote_spolynomial e2 in
+        let te2 = quote_spolynomial quotea e2 in
         //ddump ("te2 = " ^ term_to_string te2);
         mapply (`(semiring_reflect
           #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
@@ -1485,7 +1486,7 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
     (quote r.cm_add.mult) (quote r.cm_mult.mult) r.cm_add.unit
 
-(** 
+(**
  *  Giving explicitly the addition and multiplication operations,
  *  normalized as much as required to match the expression to reify
 **)
