@@ -32,9 +32,47 @@ noeq type varray (#a: Type) (b: array a) = {
   p: Ghost.erased P.permission
 }
 
-let constant_perm_seq (#a: Type) (h: HS.mem) (b: array a) : Type =
-  (forall (i:nat{i < vlength b}) (j:nat{j < vlength b}). {:pattern (get_perm h b i); (get_perm h b j) }
-      get_perm h b i == get_perm h b j // Array resource cells have uniform permissions
+/// Array resource cells have uniform permissions
+let constant_perm_seq (#a: Type) (h: HS.mem) (b: array a) =
+  (forall (i:nat{i < vlength b}) (j:nat{j < vlength b}).
+      get_perm h b i == get_perm h b j
+  )
+
+let constant_perm_seq_elim
+  (#a: Type)
+  (h: HS.mem)
+  (b: array a)
+  (i:nat{i < vlength b})
+  (j:nat{j < vlength b})
+  : Lemma
+    (requires (constant_perm_seq #a h b))
+    (ensures (get_perm h b i == get_perm h b j))
+  = ()
+
+let constant_perm_seq_intro
+  (#a: Type)
+  (h: HS.mem)
+  (b: array a)
+  (lemma: (i:nat{i < vlength b}) -> (j:nat{j < vlength b}) -> Lemma
+    (ensures (get_perm h b i == get_perm h b j))
+  ) : Lemma
+    (constant_perm_seq #a h b)
+  =
+  let aux (i:nat{i < vlength b}) (j:nat{j < vlength b}) : Lemma (get_perm h b i == get_perm h b j) =
+    lemma i j
+  in
+  Classical.forall_intro_2 aux
+
+let constant_perm_seq_preserved_by_sub (#a: Type) (h: HS.mem) (b: array a)
+  (start:U32.t) (len:U32.t{U32.v len > 0}) : Lemma
+    (requires (U32.v start + U32.v len <= vlength b) /\ constant_perm_seq #a h b)
+    (ensures (constant_perm_seq #a h (gsub b start len)))
+    [SMTPat (constant_perm_seq #a h (gsub b start len))]
+  =
+  let b' : array a = gsub b start len in
+  constant_perm_seq_intro #a h b' (fun i j ->
+    assert(get_perm h b' i == get_perm h b U32.(i + v start));
+    assert(get_perm h b' j == get_perm h b U32.(j + v start))
   )
 
 let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:array a) : Lemma

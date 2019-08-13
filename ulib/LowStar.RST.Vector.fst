@@ -6,6 +6,7 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module A = LowStar.RST.Array
 module Arr = LowStar.Array
+module M = LowStar.Array.Modifies
 module P = LowStar.RST.Pointer
 module U32 = FStar.UInt32
 module L = LowStar.RST.Loops
@@ -80,7 +81,7 @@ let create #a init max =
   let ptr = P.ptr_alloc v in
   ptr
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 30"
 
 let push #a v x =
   (**) reveal_empty_resource ();
@@ -104,33 +105,40 @@ let push #a v x =
     (**) )
   end else begin
     let max_uint32 = UInt32.uint_to_t (UInt.max_int 32) in
-    let new_contents_lenght =
+    let new_contents_length =
       if U32.(max >^ max_uint32 /^ 2ul) then
         max_uint32
       else
         U32.(2ul *^ max)
     in
-    let new_contents = A.alloc x new_contents_lenght in
+    let new_contents = rst_frame
+      (A.array_resource v_record.arr)
+      (fun b -> A.array_resource b <*> A.array_resource v_record.arr)
+      (fun _ -> A.alloc x new_contents_length)
+    in
     (**) let h1 = HST.get () in
     (**) let sub_new = LowStar.Array.sub new_contents 0ul len in
-    (**) reveal_star_inv (A.array_resource sub_new) (A.array_resource v_record.arr) h1;
-    (**) assert(inv (A.array_resource v_record.arr) h1);
-    (**) assume(inv (A.array_resource sub_new) h1);
-    (**) assume(A.fresh_loc (A.loc_array new_contents) h0 h1);
-    (**) assume(A.loc_disjoint (A.loc_array sub_new) (A.loc_array v_record.arr));
-    (**) assume(rst_inv (A.array_resource sub_new <*> A.array_resource v_record.arr) h1);
+    (**) M.loc_union_gsub #a new_contents 0ul len U32.(new_contents_length -^ len);
+    (**) A.gsub_zero_length new_contents;
     A.copy sub_new v_record.arr;
     (**) let h2 = HST.get () in
     A.free v_record.arr;
     (**) let h3 = HST.get () in
-    let new_v_record = Vector len max new_contents in
-    (**) assume(inv (P.ptr_resource v) h3);
-    (**) assume(rst_inv (P.ptr_resource v) h3);
-    (**) assume(Perm.allows_write (A.get_perm h3 v 0));
+    let new_v_record = Vector U32.(len +^ 1ul) new_contents_length new_contents in
     P.ptr_write v new_v_record;
     (**) let h4 = HST.get () in
-    (**) assume(inv (vector_resource v) h4);
     (**) assume(rst_inv (vector_resource v) h4);
-    (**) assume(A.modifies (as_loc (fp (vector_resource v)) h0) h0 h4);
-    (**) assume(frame_usedness_preservation (as_loc (fp ((vector_resource v))) h0) (as_loc (fp ((vector_resource v))) h4) h0 h4)
+    (**) assume(modifies (vector_resource v) (vector_resource v) h0 h4);
+    (**) assert(inv (P.ptr_resource v) h4);
+    (**) assume(inv (hget_arr_r h4 v) h4);
+    (**) assert((as_loc (fp (P.ptr_resource v)) h4) `A.loc_disjoint`
+    (**)  (as_loc (fp (A.array_resource (hget_arr h4 v))) h4));
+    (**) assume(A.length (hget_arr h4 v) = hget_max h4 v);
+    (**) assert(U32.v (hget_len h4 v) <= U32.v (hget_max h4 v));
+    (**) assert(U32.v (hget_len h4 v) >= 0);
+    (**) assert(Ghost.reveal (hget_perm h4 v) = A.get_perm h4 v 0);
+    (**) assert(A.freeable (hget_arr h4 v));
+    (**) assume(S.slice (hget_seq h4 v) 0 (U32.v new_contents_length) ==
+    (**)   S.slice (hget_seq h0 v) 0 (U32.v len)
+    (**) )
   end
