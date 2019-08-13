@@ -110,7 +110,7 @@ type identifier_info = {
     identifier_range:Range.range;
 }
 
-let insert_col_info col info col_infos =
+let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * identifier_info)>) =
     // Tail recursive helper
     let rec __insert aux rest =
         match rest with
@@ -123,7 +123,7 @@ let insert_col_info col info col_infos =
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info col col_infos =
+let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_info)>) =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->
