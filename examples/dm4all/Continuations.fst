@@ -5,7 +5,7 @@ let repr (a:Type) = (a -> Type0) -> Type0
 let return (a:Type) (x:a) : repr a = fun k -> k x
 
 let bind (a : Type) (b : Type)
-    (l : repr a) (f : a -> repr b) =
+    (l : repr a) (f : a -> repr b) : repr b =
     fun k -> l (fun x -> f x k)
 
 (* interpretation as pure wp *)

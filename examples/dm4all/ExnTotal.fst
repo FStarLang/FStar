@@ -6,9 +6,9 @@ module ExnTotal
 
 let repr (a:Type) = either a exn
 
-let return (a:Type) (x:a) = Inl x
+let return (a:Type) (x:a) : repr a = Inl x
 
-let bind (a : Type) (b : Type) (l : repr a) (f : a -> repr b) =
+let bind (a : Type) (b : Type) (l : repr a) (f : a -> repr b) : repr b =
   match l with
   | Inl x -> f x
   | Inr e -> Inr e

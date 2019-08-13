@@ -4,10 +4,10 @@ assume type ans
 
 let repr (a:Type) = (a -> ans) -> ans
 
-let return (a:Type) (x:a) = fun k -> k x
+let return (a:Type) (x:a) : repr a = fun k -> k x
 
 let bind (a : Type) (b : Type)
-    (l : repr a) (f : a -> repr b) =
+    (l : repr a) (f : a -> repr b) : repr b =
     fun k -> l (fun x -> f x k)
 
 let wpty a = (a -> pure_wp ans) -> pure_wp ans
