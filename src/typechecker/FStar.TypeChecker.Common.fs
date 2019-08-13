@@ -258,13 +258,15 @@ type guard_t = {
   implicits:  implicits;
 }
 
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
+    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
 }
-    
+
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
@@ -274,18 +276,18 @@ let mk_lcomp eff_name res_typ cflags comp_thunk =
 let lcomp_comp lc =
     match !(lc.comp_thunk) with
     | Inl thunk ->
-      let c = thunk () in
+      let c, g = thunk () in
       lc.comp_thunk := Inr c;
-      c
-    | Inr c -> c
+      c, g
+    | Inr c -> c, trivial_guard
 
 let lcomp_to_string lc =
     if Options.print_effect_args () then
-        Print.comp_to_string (lcomp_comp lc)
+        Print.comp_to_string (lc |> lcomp_comp |> fst)
     else
         BU.format2 "%s %s" (Print.lid_to_string lc.eff_name) (Print.term_to_string lc.res_typ)
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
+let lcomp_set_flags lc fs =
     let comp_typ_set_flags (c:comp) =
         match c.n with
         | Total _
@@ -297,7 +299,7 @@ let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
     mk_lcomp lc.eff_name
              lc.res_typ
              fs
-             (fun () -> comp_typ_set_flags (lcomp_comp lc))
+             (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
 
 let is_total_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
 
@@ -316,7 +318,7 @@ let is_pure_or_ghost_lcomp lc =
     is_pure_lcomp lc || U.is_ghost_effect lc.eff_name
 
 let set_result_typ_lc lc t =
-  mk_lcomp lc.eff_name t lc.cflags (fun _ -> U.set_result_typ (lcomp_comp lc) t)
+  mk_lcomp lc.eff_name t lc.cflags (fun () -> lc |> lcomp_comp |> (fun (c, g) -> U.set_result_typ c t, g))
 
 let residual_comp_of_lcomp lc = {
     residual_effect=lc.eff_name;
@@ -330,4 +332,4 @@ let lcomp_of_comp c0 =
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0)
+    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, trivial_guard)

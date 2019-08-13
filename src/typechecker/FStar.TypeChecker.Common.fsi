@@ -135,20 +135,22 @@ type guard_t = {
   implicits:  implicits;
 }
 
+val trivial_guard : guard_t
+
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
+    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
 }
 
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
     cflags: list<cflag> ->
-    comp_thunk: (unit -> comp) -> lcomp
+    comp_thunk: (unit -> (comp * guard_t)) -> lcomp
 
-val lcomp_comp: lcomp -> comp
+val lcomp_comp: lcomp -> (comp * guard_t)
 
 val lcomp_to_string : lcomp -> string
 val lcomp_set_flags : lcomp -> list<S.cflag> -> lcomp

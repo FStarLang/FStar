@@ -1570,7 +1570,7 @@ let is_trivial_guard_formula g = match g with
     | {guard_f=Trivial} -> true
     | _ -> false
 
-let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+let trivial_guard = TcComm.trivial_guard
 
 let abstract_guard_n bs g =
     match g.guard_f with
