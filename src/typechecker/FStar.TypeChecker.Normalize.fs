@@ -30,6 +30,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
@@ -2580,8 +2581,8 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           S.mk_lcomp pure_eff lc.res_typ lc.cflags
-                      (fun () -> ghost_to_pure env (lcomp_comp lc))
+           mk_lcomp pure_eff lc.res_typ lc.cflags
+                    (fun () -> ghost_to_pure env (lcomp_comp lc))
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc

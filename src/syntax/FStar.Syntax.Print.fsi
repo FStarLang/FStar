@@ -41,7 +41,6 @@ val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
 val modul_to_string       : modul -> string
-val lcomp_to_string       : lcomp -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
 val attrs_to_string       : list<attribute> -> string

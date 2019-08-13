@@ -478,7 +478,7 @@ let (tc_data :
                                                  (let ty =
                                                     let uu____1291 =
                                                       unfold_whnf env2
-                                                        res_lcomp.FStar_Syntax_Syntax.res_typ
+                                                        res_lcomp.FStar_TypeChecker_Common.res_typ
                                                        in
                                                     FStar_All.pipe_right
                                                       uu____1291

@@ -427,12 +427,6 @@ and attrs_to_string = function
     | [] -> ""
     | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
-and lcomp_to_string lc =
-    if Options.print_effect_args () then
-        comp_to_string (lcomp_comp lc)
-    else
-        U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
-
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
 //   then
@@ -769,18 +763,18 @@ let rec modul_to_string (m:modul) =
                                                                      (List.map sigelt_to_string m.exports |> String.concat "\n")
 
 
-let abs_ascription_to_string ascription =
-  let strb = U.new_string_builder () in
-  begin match ascription with
-      | None -> U.string_builder_append strb "None"
-      | Some (Inl lc) ->
-          U.string_builder_append strb "Some Inr " ;
-          U.string_builder_append strb (Ident.text_of_lid lc.eff_name)
-      | Some (Inr lid) ->
-          U.string_builder_append strb "Some Inr " ;
-          U.string_builder_append strb (Ident.text_of_lid lid)
-  end ;
-  U.string_of_string_builder strb
+//let abs_ascription_to_string ascription =
+//  let strb = U.new_string_builder () in
+//  begin match ascription with
+//      | None -> U.string_builder_append strb "None"
+//      | Some (Inl lc) ->
+//          U.string_builder_append strb "Some Inr " ;
+//          U.string_builder_append strb (Ident.text_of_lid lc.eff_name)
+//      | Some (Inr lid) ->
+//          U.string_builder_append strb "Some Inr " ;
+//          U.string_builder_append strb (Ident.text_of_lid lid)
+//  end ;
+//  U.string_of_string_builder strb
 
 let list_to_string f elts =
     match elts with

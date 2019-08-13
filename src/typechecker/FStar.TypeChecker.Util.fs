@@ -25,6 +25,7 @@ open FStar.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Rel
 open FStar.Syntax.Syntax
@@ -41,6 +42,7 @@ module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
+module TcComm = FStar.TypeChecker.Common
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 
@@ -251,7 +253,7 @@ let comp_univ_opt c =
       | [] -> None
       | hd::_ -> Some hd
 
-let lcomp_univ_opt lc = lc |> lcomp_comp |> comp_univ_opt
+let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> comp_univ_opt
 
 let destruct_comp c : (universe * typ * typ) =
   let wp = match c.effect_args with
@@ -273,8 +275,8 @@ let join_effects env l1 l2 =
   m
 
 let join_lcomp env c1 c2 =
-  if U.is_total_lcomp c1
-  && U.is_total_lcomp c2
+  if TcComm.is_total_lcomp c1
+  && TcComm.is_total_lcomp c2
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
@@ -370,8 +372,8 @@ let lax_mk_tot_or_comp_l mname u_result result flags =
     else mk_comp_l mname u_result result S.tun flags
 
 let subst_lcomp subst lc =
-    S.mk_lcomp lc.eff_name (SS.subst subst lc.res_typ) lc.cflags
-               (fun () -> SS.subst_comp subst (lcomp_comp lc))
+    TcComm.mk_lcomp lc.eff_name (SS.subst subst lc.res_typ) lc.cflags
+                    (fun () -> SS.subst_comp subst (TcComm.lcomp_comp lc))
 
 let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
@@ -413,8 +415,8 @@ let close_comp env bvs (c:comp) =
         end
 
 let close_lcomp env bvs (lc:lcomp) =
-    S.mk_lcomp lc.eff_name lc.res_typ lc.cflags
-               (fun () -> close_comp env bvs (lcomp_comp lc))
+    TcComm.mk_lcomp lc.eff_name lc.res_typ lc.cflags
+                    (fun () -> close_comp env bvs (TcComm.lcomp_comp lc))
 
 let close_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
   let t = N.normalize_refinement N.whnf_steps env t in
@@ -443,7 +445,7 @@ let should_return env eopt lc =
     match eopt with
     | None -> false //no term to return
     | Some e ->
-      U.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
+      TcComm.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
       not lc_is_unit_or_effectful                &&  //condition (b)
       (let head, _ = U.head_and_args' e in
        match (U.un_uinst head).n with
@@ -554,7 +556,7 @@ let weaken_comp env (c:comp) (formula:term) : comp =
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
-      let c = lcomp_comp lc in
+      let c = TcComm.lcomp_comp lc in
       if env.lax
       && Options.ml_ish() //NS: Disabling this optimization temporarily
       then c
@@ -563,7 +565,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
            | NonTrivial f ->
              weaken_comp env c f
   in
-  S.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
+  TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
 
 let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags =
@@ -608,7 +610,7 @@ let strengthen_precondition
     then lc, g0
     else let flags =
             let maybe_trivial_post, flags =
-              if U.is_tot_or_gtot_lcomp lc then true, [TRIVIAL_POSTCONDITION] else false, []
+              if TcComm.is_tot_or_gtot_lcomp lc then true, [TRIVIAL_POSTCONDITION] else false, []
             in
             flags @ (
             lc.cflags
@@ -623,7 +625,7 @@ let strengthen_precondition
                  | _ -> []))
          in
          let strengthen () =
-            let c = lcomp_comp lc in
+            let c = TcComm.lcomp_comp lc in
             if env.lax
             then c
             else let g0 = Rel.simplify_guard env g0 in
@@ -636,20 +638,20 @@ let strengthen_precondition
                                     (N.term_to_string env f);
                     strengthen_comp env reason c f flags
          in
-       S.mk_lcomp (norm_eff_name env lc.eff_name)
-                  lc.res_typ
-                  flags
-                  strengthen,
+       TcComm.mk_lcomp (norm_eff_name env lc.eff_name)
+                       lc.res_typ
+                       flags
+                       strengthen,
        {g0 with guard_f=Trivial}
 
 
 let lcomp_has_trivial_postcondition lc =
-    U.is_tot_or_gtot_lcomp lc
+    TcComm.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
 
 let maybe_add_with_type env uopt lc e =
-    if U.is_lcomp_partial_return lc
+    if TcComm.is_lcomp_partial_return lc
     || env.lax
     then e
     else if lcomp_has_trivial_postcondition lc
@@ -675,14 +677,14 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || should_not_inline_lc lc2
       then [SHOULD_NOT_INLINE]
       else let flags =
-              if U.is_total_lcomp lc1
-              then if U.is_total_lcomp lc2
+              if TcComm.is_total_lcomp lc1
+              then if TcComm.is_total_lcomp lc2
                    then [TOTAL]
-                   else if U.is_tot_or_gtot_lcomp lc2
+                   else if TcComm.is_tot_or_gtot_lcomp lc2
                    then [SOMETRIVIAL]
                    else []
-              else if U.is_tot_or_gtot_lcomp lc1
-                   && U.is_tot_or_gtot_lcomp lc2
+              else if TcComm.is_tot_or_gtot_lcomp lc1
+                   && TcComm.is_tot_or_gtot_lcomp lc2
               then [SOMETRIVIAL]
               else []
           in
@@ -697,8 +699,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
          let u_t = env.universe_of env lc2.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ []  //AR: TODO: FIXME: fix for layered effects
       else begin
-          let c1 = lcomp_comp lc1 in
-          let c2 = lcomp_comp lc2 in
+          let c1 = TcComm.lcomp_comp lc1 in
+          let c2 = TcComm.lcomp_comp lc2 in
           debug (fun () ->
             BU.print3 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n(1. end bind)\n"
             (Print.comp_to_string c1)
@@ -984,11 +986,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
             else mk_bind c1 b c2
       end
-  in S.mk_lcomp joined_eff
-                lc2.res_typ
+  in TcComm.mk_lcomp joined_eff
+                     lc2.res_typ
       (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
-                bind_flags
-                bind_it
+                     bind_flags
+                     bind_it
 
 let weaken_guard g1 g2 = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
@@ -1001,17 +1003,17 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
        not (env.lax)
     && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
     && should_return env (Some e) lc
-    && not (U.is_lcomp_partial_return lc)
+    && not (TcComm.is_lcomp_partial_return lc)
   in
   let flags =
     if should_return
-    then if U.is_total_lcomp lc
+    then if TcComm.is_total_lcomp lc
          then RETURN::lc.cflags
          else PARTIAL_RETURN::lc.cflags
     else lc.cflags
   in
   let refine () =
-      let c = lcomp_comp lc in
+      let c = TcComm.lcomp_comp lc in
       let u_t =
           match comp_univ_opt c with
           | Some u_t -> u_t
@@ -1032,14 +1034,14 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
             let x = S.new_bv (Some t.pos) t in
             let xexp = S.bv_to_name x in
             let ret =
-                U.lcomp_of_comp
+                TcComm.lcomp_of_comp
                 <| U.comp_set_flags (return_value env (Some u_t) t xexp) [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
             let eq_ret = weaken_precondition env ret (NonTrivial eq) in
-            U.comp_set_flags (S.lcomp_comp (bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret))) flags
+            U.comp_set_flags (TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret))) flags
   in
   if not should_return then lc
-  else S.mk_lcomp lc.eff_name lc.res_typ flags refine
+  else TcComm.mk_lcomp lc.eff_name lc.res_typ flags refine
 
 let maybe_return_e2_and_bind
         (r:Range.range)
@@ -1099,7 +1101,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             in
             let comp = List.fold_right (fun (g, eff_label, _, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) =
-                        lift_and_destruct env (S.lcomp_comp (maybe_return eff_label cthen)) celse in
+                        lift_and_destruct env (TcComm.lcomp_comp (maybe_return eff_label cthen)) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
             match lcases with
             | []
@@ -1116,7 +1118,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
               mk_comp md u_res_t res_t wp bind_cases_flags
         end
     in
-    S.mk_lcomp eff res_t bind_cases_flags bind_cases
+    TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
@@ -1174,7 +1176,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
           && is_type t ->
       let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
       let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_constant_at_level 1) None in
-      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
+      let lc = bind e.pos env (Some e) lc (None, TcComm.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
       let e = mk_Tm_app b2t [S.as_arg e] None e.pos in
       e, lc
     | _ ->
@@ -1184,7 +1186,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   if Env.debug env Options.High then
     BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
             (Print.term_to_string e)
-            (Print.lcomp_to_string lc)
+            (TcComm.lcomp_to_string lc)
             (Print.term_to_string t);
   let use_eq =
     env.use_eq ||
@@ -1212,7 +1214,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
            *     so we should capture the precision before setting the comp type to t (see e.g. #1500, #1470)
            *)
           let strengthen_trivial () =
-            let c = lcomp_comp lc in
+            let c = TcComm.lcomp_comp lc in
             let res_t = Util.comp_result c in
 
             let set_result_typ (c:comp) :comp = Util.set_result_typ c t in
@@ -1235,11 +1237,11 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
               if is_res_t_refinement then
                 let x = S.new_bv (Some res_t.pos) res_t in
                 let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
-                let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
+                let lc = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
                 if Env.debug env <| Options.Extreme
                 then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
-                               (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
-                set_result_typ (lcomp_comp lc)
+                               (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (TcComm.lcomp_to_string lc);
+                set_result_typ (TcComm.lcomp_comp lc)
               else begin
                 if Env.debug env <| Options.Extreme
                 then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
@@ -1247,7 +1249,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 set_result_typ c
               end
           in
-          let lc = S.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
+          let lc = TcComm.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
           e, lc, g
 
         | NonTrivial f ->
@@ -1256,7 +1258,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
               if env.lax
               && Options.ml_ish() //NS: disabling this optimization temporarily
               then
-                lcomp_comp lc
+                TcComm.lcomp_comp lc
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
@@ -1264,10 +1266,10 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
                         let lc = {lc with res_typ=t} in //NS: what's the point of this?
-                        lcomp_comp lc
+                        TcComm.lcomp_comp lc
 
                       | _ ->
-                          let c = lcomp_comp lc in
+                          let c = TcComm.lcomp_comp lc in
                           if Env.debug env <| Options.Extreme
                           then BU.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
                                   (N.term_to_string env lc.res_typ)
@@ -1287,12 +1289,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                               strengthen_precondition (Some <| Err.subtyping_failed env lc.res_typ t)
                                                       (Env.set_range env e.pos)
                                                       e  //use e for debugging only
-                                                      (U.lcomp_of_comp cret)
+                                                      (TcComm.lcomp_of_comp cret)
                                                       (guard_of_guard_formula <| NonTrivial guard)
                           in
                           let x = {x with sort=lc.res_typ} in
-                          let c = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, eq_ret) in
-                          let c = lcomp_comp c in
+                          let c = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
+                          let c = TcComm.lcomp_comp c in
                           if Env.debug env <| Options.Extreme
                           then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
                           c
@@ -1303,7 +1305,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                                  | CPS -> [CPS] // KM : Not exactly sure if it is necessary
                                                  | _ -> [])
           in
-          let lc = S.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
+          let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
           let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
@@ -1754,14 +1756,14 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
   if debug env Options.Low then
-    BU.print1 "check_top_level, lc = %s\n" (Print.lcomp_to_string lc);
+    BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
-    U.is_pure_lcomp lc in
+    TcComm.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
-  if U.is_total_lcomp lc
-  then discharge g, lcomp_comp lc
-  else let c = lcomp_comp lc in
+  if TcComm.is_total_lcomp lc
+  then discharge g, TcComm.lcomp_comp lc
+  else let c = TcComm.lcomp_comp lc in
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp

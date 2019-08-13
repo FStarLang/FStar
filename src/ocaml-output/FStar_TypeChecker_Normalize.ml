@@ -7847,7 +7847,7 @@ let (ghost_to_pure :
   
 let (ghost_to_pure_lcomp :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.lcomp -> FStar_Syntax_Syntax.lcomp)
+    FStar_TypeChecker_Common.lcomp -> FStar_TypeChecker_Common.lcomp)
   =
   fun env  ->
     fun lc  ->
@@ -7865,19 +7865,22 @@ let (ghost_to_pure_lcomp :
         let uu____26266 = norm cfg [] [] t  in
         FStar_Syntax_Util.non_informative uu____26266  in
       let uu____26273 =
-        (FStar_Syntax_Util.is_ghost_effect lc.FStar_Syntax_Syntax.eff_name)
-          && (non_info lc.FStar_Syntax_Syntax.res_typ)
+        (FStar_Syntax_Util.is_ghost_effect
+           lc.FStar_TypeChecker_Common.eff_name)
+          && (non_info lc.FStar_TypeChecker_Common.res_typ)
          in
       if uu____26273
       then
         let uu____26276 =
-          downgrade_ghost_effect_name lc.FStar_Syntax_Syntax.eff_name  in
+          downgrade_ghost_effect_name lc.FStar_TypeChecker_Common.eff_name
+           in
         match uu____26276 with
         | FStar_Pervasives_Native.Some pure_eff ->
-            FStar_Syntax_Syntax.mk_lcomp pure_eff
-              lc.FStar_Syntax_Syntax.res_typ lc.FStar_Syntax_Syntax.cflags
+            FStar_TypeChecker_Common.mk_lcomp pure_eff
+              lc.FStar_TypeChecker_Common.res_typ
+              lc.FStar_TypeChecker_Common.cflags
               (fun uu____26282  ->
-                 let uu____26283 = FStar_Syntax_Syntax.lcomp_comp lc  in
+                 let uu____26283 = FStar_TypeChecker_Common.lcomp_comp lc  in
                  ghost_to_pure env uu____26283)
         | FStar_Pervasives_Native.None  -> lc
       else lc

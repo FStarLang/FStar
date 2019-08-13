@@ -328,7 +328,7 @@ type env =
   tc_term:
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t)
+        (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp * guard_t)
     ;
   type_of:
     env ->
@@ -764,7 +764,7 @@ let (__proj__Mkenv__item__tc_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t))
+        (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp * guard_t))
   =
   fun projectee  ->
     match projectee with
@@ -1416,7 +1416,8 @@ let (initial_env :
   FStar_Parser_Dep.deps ->
     (env ->
        FStar_Syntax_Syntax.term ->
-         (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t))
+         (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
+           guard_t))
       ->
       (env ->
          FStar_Syntax_Syntax.term ->

@@ -21,6 +21,7 @@ open FStar.All
 
 open FStar
 open FStar.TypeChecker
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Util
 open FStar.Ident
@@ -34,6 +35,7 @@ open FStar.Const
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
+module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module BU = FStar.Util //basic util
@@ -310,7 +312,7 @@ let gen_wps_for_free
   let wp_close = mk_generic_app wp_close in
 
   let ret_tot_type = Some (U.residual_tot U.ktype) in
-  let ret_gtot_type = Some (U.residual_comp_of_lcomp (U.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
+  let ret_gtot_type = Some (TcComm.residual_comp_of_lcomp (TcComm.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
     S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) None Range.dummyRange
   in
@@ -1414,8 +1416,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     let u_item, item = item in
     // TODO: assert no universe polymorphism
     let item, item_comp = open_and_check env other_binders item in
-    if not (U.is_total_lcomp item_comp) then
-      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
+    if not (TcComm.is_total_lcomp item_comp) then
+      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (TcComm.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = star_expr dmff_env item in
     let _ = recheck_debug "*" env item_wp in
     let _ = recheck_debug "_" env item_elab in

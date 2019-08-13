@@ -22,6 +22,7 @@ open FStar.All
 open FStar
 open FStar.Errors
 open FStar.TypeChecker
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Util
 open FStar.Ident
@@ -36,6 +37,7 @@ module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
+module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
@@ -390,7 +392,7 @@ let tc_layered_lift env0 (sub:sub_eff) : sub_eff =
   let us, lift = sub.lift |> must in
   let r = lift.pos in
 
-  if List.length us <> 0
+  if List.length us <> 0  //TODO: FIXME: this breaks use_extracted_flags, see ulib/Makefile.verify
   then failwith ("Unexpected number of universes in typechecking %s" ^ (Print.sub_eff_to_string sub));
 
   let lift, lc, g = tc_tot_or_gtot_term env0 lift in
@@ -1435,7 +1437,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env t_unit in
     let e, c, g1 = tc_term env e in
-    let e, _, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, lcomp_comp c) in
+    let e, _, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, TcComm.lcomp_comp c) in
     Rel.force_trivial_guard env (Env.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
     [se], [], env0

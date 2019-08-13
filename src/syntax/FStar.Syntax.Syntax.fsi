@@ -279,13 +279,6 @@ and arg_qualifier =
   | Equality
 and aqual = option<arg_qualifier>
 
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
-
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
 val lookup_aq : bv -> antiquotations -> option<term>
 
@@ -491,12 +484,6 @@ val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
-val mk_lcomp:
-    eff_name: lident ->
-    res_typ: typ ->
-    cflags: list<cflag> ->
-    comp_thunk: (unit -> comp) -> lcomp
-val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>

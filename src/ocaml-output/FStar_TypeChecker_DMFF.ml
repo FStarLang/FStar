@@ -724,10 +724,12 @@ let (gen_wps_for_free :
                           FStar_Syntax_Syntax.mk_GTotal
                             FStar_Syntax_Util.ktype
                            in
-                        FStar_All.pipe_left FStar_Syntax_Util.lcomp_of_comp
-                          uu____2048
+                        FStar_All.pipe_left
+                          FStar_TypeChecker_Common.lcomp_of_comp uu____2048
                          in
-                      FStar_Syntax_Util.residual_comp_of_lcomp uu____2047  in
+                      FStar_TypeChecker_Common.residual_comp_of_lcomp
+                        uu____2047
+                       in
                     FStar_Pervasives_Native.Some uu____2046  in
                   let mk_forall1 x body =
                     let uu____2060 =
@@ -3905,7 +3907,7 @@ let (cps_and_elaborate :
                                        | (item2,item_comp) ->
                                            ((let uu____13774 =
                                                let uu____13776 =
-                                                 FStar_Syntax_Util.is_total_lcomp
+                                                 FStar_TypeChecker_Common.is_total_lcomp
                                                    item_comp
                                                   in
                                                Prims.op_Negation uu____13776
@@ -3919,7 +3921,7 @@ let (cps_and_elaborate :
                                                        item2
                                                       in
                                                    let uu____13789 =
-                                                     FStar_Syntax_Print.lcomp_to_string
+                                                     FStar_TypeChecker_Common.lcomp_to_string
                                                        item_comp
                                                       in
                                                    FStar_Util.format2

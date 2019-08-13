@@ -297,28 +297,8 @@ and arg_qualifier =
   | Equality
 and aqual = option<arg_qualifier>
 
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
-
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
-
-let mk_lcomp eff_name res_typ cflags comp_thunk =
-    { eff_name = eff_name;
-      res_typ = res_typ;
-      cflags = cflags;
-      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
-let lcomp_comp lc =
-    match !(lc.comp_thunk) with
-    | Inl thunk ->
-      let c = thunk () in
-      lc.comp_thunk := Inr c;
-      c
-    | Inr c -> c
 
 type freenames_l = list<bv>
 type formula = typ

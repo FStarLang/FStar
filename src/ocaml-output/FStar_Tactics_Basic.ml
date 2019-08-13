@@ -1668,8 +1668,9 @@ let (__tc_ghost :
                             in
                          (match uu____3218 with
                           | (t1,lc,g) ->
-                              ret (t1, (lc.FStar_Syntax_Syntax.res_typ), g)))
-                    ()
+                              ret
+                                (t1, (lc.FStar_TypeChecker_Common.res_typ),
+                                  g))) ()
                 with
                 | FStar_Errors.Err (uu____3256,msg) ->
                     let uu____3260 = tts e1 t  in
@@ -1695,7 +1696,7 @@ let (__tc_ghost :
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+      (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
         FStar_TypeChecker_Env.guard_t) tac)
   =
   fun e  ->
@@ -2187,7 +2188,8 @@ let (tcc : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.comp tac) =
              (fun uu____3737  ->
                 match uu____3737 with
                 | (uu____3746,lc,uu____3748) ->
-                    let uu____3749 = FStar_Syntax_Syntax.lcomp_comp lc  in
+                    let uu____3749 = FStar_TypeChecker_Common.lcomp_comp lc
+                       in
                     ret uu____3749))
        in
     FStar_All.pipe_left (wrap_err "tcc") uu____3707
@@ -4740,7 +4742,8 @@ let (pointwise_rec :
               | (t1,lcomp,g) ->
                   let uu____9942 =
                     (let uu____9946 =
-                       FStar_Syntax_Util.is_pure_or_ghost_lcomp lcomp  in
+                       FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp
+                        in
                      Prims.op_Negation uu____9946) ||
                       (let uu____9949 = FStar_TypeChecker_Env.is_trivial g
                           in
@@ -4750,7 +4753,7 @@ let (pointwise_rec :
                   then ret t1
                   else
                     (let rewrite_eq =
-                       let typ = lcomp.FStar_Syntax_Syntax.res_typ  in
+                       let typ = lcomp.FStar_TypeChecker_Common.res_typ  in
                        let uu____9960 = new_uvar "pointwise_rec" env typ  in
                        bind uu____9960
                          (fun uu____9977  ->
@@ -5113,7 +5116,7 @@ let (rewrite_rec :
                             | (t2,lcomp,g) ->
                                 let uu____10928 =
                                   (let uu____10932 =
-                                     FStar_Syntax_Util.is_pure_or_ghost_lcomp
+                                     FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
                                        lcomp
                                       in
                                    Prims.op_Negation uu____10932) ||
@@ -5125,7 +5128,8 @@ let (rewrite_rec :
                                 then ret (t2, globalStop)
                                 else
                                   (let typ =
-                                     lcomp.FStar_Syntax_Syntax.res_typ  in
+                                     lcomp.FStar_TypeChecker_Common.res_typ
+                                      in
                                    let uu____10951 =
                                      new_uvar "pointwise_rec" env typ  in
                                    bind uu____10951

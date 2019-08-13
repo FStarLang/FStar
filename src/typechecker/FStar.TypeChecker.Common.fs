@@ -25,8 +25,11 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
 module S = FStar.Syntax.Syntax
+module Print = FStar.Syntax.Print
+module U = FStar.Syntax.Util
 
 module BU = FStar.Util
+module PC = FStar.Parser.Const
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -237,3 +240,77 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
        | _ -> fail()
         end
      | _ -> fail()
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflag>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
+    
+let mk_lcomp eff_name res_typ cflags comp_thunk =
+    { eff_name = eff_name;
+      res_typ = res_typ;
+      cflags = cflags;
+      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+
+let lcomp_comp lc =
+    match !(lc.comp_thunk) with
+    | Inl thunk ->
+      let c = thunk () in
+      lc.comp_thunk := Inr c;
+      c
+    | Inr c -> c
+
+let lcomp_to_string lc =
+    if Options.print_effect_args () then
+        Print.comp_to_string (lcomp_comp lc)
+    else
+        BU.format2 "%s %s" (Print.lid_to_string lc.eff_name) (Print.term_to_string lc.res_typ)
+
+let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
+    let comp_typ_set_flags (c:comp) =
+        match c.n with
+        | Total _
+        | GTotal _ -> c
+        | Comp ct ->
+          let ct = {ct with flags=fs} in
+          {c with n=Comp ct}
+    in
+    mk_lcomp lc.eff_name
+             lc.res_typ
+             fs
+             (fun () -> comp_typ_set_flags (lcomp_comp lc))
+
+let is_total_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
+                             || lid_equals c.eff_name PC.effect_GTot_lid
+                             || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let is_lcomp_partial_return c = c.cflags |> BU.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+
+let is_pure_lcomp lc =
+    is_total_lcomp lc
+    || U.is_pure_effect lc.eff_name
+    || lc.cflags |> BU.for_some (function LEMMA -> true | _ -> false)
+
+let is_pure_or_ghost_lcomp lc =
+    is_pure_lcomp lc || U.is_ghost_effect lc.eff_name
+
+let set_result_typ_lc lc t =
+  mk_lcomp lc.eff_name t lc.cflags (fun _ -> U.set_result_typ (lcomp_comp lc) t)
+
+let residual_comp_of_lcomp lc = {
+    residual_effect=lc.eff_name;
+    residual_typ=Some (lc.res_typ);
+    residual_flags=lc.cflags
+  }
+
+let lcomp_of_comp c0 =
+    let eff_name, flags =
+        match c0.n with
+        | Total _ -> PC.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.flags in
+    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0)

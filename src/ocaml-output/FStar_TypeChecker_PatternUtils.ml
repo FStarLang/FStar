@@ -1,7 +1,7 @@
 open Prims
 type lcomp_with_binder =
   (FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option *
-    FStar_Syntax_Syntax.lcomp)
+    FStar_TypeChecker_Common.lcomp)
 let rec (elaborate_pat :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.pat -> FStar_Syntax_Syntax.pat)

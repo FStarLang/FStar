@@ -347,7 +347,7 @@ let (tc_layered_eff_decl :
                     match uu____514 with
                     | (t2,lc,g) ->
                         (FStar_TypeChecker_Rel.force_trivial_guard env g;
-                         (t2, (lc.FStar_Syntax_Syntax.res_typ)))
+                         (t2, (lc.FStar_TypeChecker_Common.res_typ)))
                      in
                   (match uu____509 with
                    | (t2,ty) ->
@@ -1468,7 +1468,7 @@ let (tc_layered_lift :
              | (lift1,lc,g) ->
                  (FStar_TypeChecker_Rel.force_trivial_guard env0 g;
                   (let lift_ty =
-                     FStar_All.pipe_right lc.FStar_Syntax_Syntax.res_typ
+                     FStar_All.pipe_right lc.FStar_TypeChecker_Common.res_typ
                        (FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Beta] env0)
                       in
@@ -6026,7 +6026,8 @@ let (tc_decl' :
                        in
                     FStar_Pervasives_Native.Some uu____11329  in
                   let uu____11330 =
-                    let uu____11335 = FStar_Syntax_Syntax.lcomp_comp c  in
+                    let uu____11335 = FStar_TypeChecker_Common.lcomp_comp c
+                       in
                     (e1, uu____11335)  in
                   FStar_TypeChecker_TcTerm.check_expected_effect env2
                     uu____11326 uu____11330
