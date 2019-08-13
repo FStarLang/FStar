@@ -1,7 +1,7 @@
 open Prims
 type ident = {
   idText: Prims.string ;
-  idRange: FStar_Range.range }[@@deriving yojson,show]
+  idRange: FStar_Range.range }[@@deriving yojson,show,yojson,show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee  -> match projectee with | { idText; idRange;_} -> idText 
 let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
@@ -12,7 +12,7 @@ type lident =
   ns: ident Prims.list ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }[@@deriving yojson,show]
+  str: Prims.string }[@@deriving yojson,show,yojson,show]
 let (__proj__Mklident__item__ns : lident -> ident Prims.list) =
   fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> ns 
 let (__proj__Mklident__item__ident : lident -> ident) =
@@ -32,11 +32,11 @@ let (mk_ident : (Prims.string * FStar_Range.range) -> ident) =
   
 let (reserved_prefix : Prims.string) = "uu___" 
 let (_gen : ((unit -> Prims.int) * (unit -> unit))) =
-  let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let x = FStar_Util.mk_ref Prims.int_zero  in
   let next_id uu____174 =
     let v1 = FStar_ST.op_Bang x  in
-    FStar_ST.op_Colon_Equals x (v1 + (Prims.parse_int "1")); v1  in
-  let reset uu____226 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0")  in
+    FStar_ST.op_Colon_Equals x (v1 + Prims.int_one); v1  in
+  let reset uu____226 = FStar_ST.op_Colon_Equals x Prims.int_zero  in
   (next_id, reset) 
 let (next_id : unit -> Prims.int) =
   fun uu____262  -> FStar_Pervasives_Native.fst _gen () 
