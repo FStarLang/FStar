@@ -320,8 +320,8 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
 
 let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t:term) :
     Tac (exp * list term * amap a) =
-  let mult = norm_term [] (quote (CM?.mult m)) in
-  let unit = norm_term [] (quote (CM?.unit m)) in
+  let mult = norm_term [delta] (quote (CM?.mult m)) in
+  let unit = norm_term [delta] (quote (CM?.unit m)) in
   let t    = norm_term [] t in
   reification_aux ts am mult unit t
 

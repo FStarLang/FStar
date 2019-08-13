@@ -193,6 +193,10 @@ let r_post
   rmem res0 -> x:a -> rprop (res1 x)
 
 
+effect ST (a:Type) (pre:ST.st_pre) (post: (m0:HS.mem -> Tot (ST.st_post' a (pre m0)))) =
+       ST.STATE a
+             (fun (p:ST.st_post a) (h:HS.mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+
 /// Finally, the RST effect. Eventually with the layered effects, its definition will be hidden
 /// here. It has five indexes:
 ///  * the return type;
@@ -215,7 +219,7 @@ effect RST
   (res1: a -> resource)
   (pre: rprop res0)
   (post: rmem res0 -> (x:a) -> rprop (res1 x))
-= ST.ST
+= ST
   a
   (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
   (fun h0 x h1 ->
