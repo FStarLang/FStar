@@ -238,7 +238,7 @@ val get (r: resource) : RST
 
 (**** The frame rule *)
 
-#set-options "--no_tactics"
+#reset-options "--no_tactics"
 
 open LowStar.RST.Tactics
 
