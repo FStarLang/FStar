@@ -203,6 +203,7 @@ tutorial: fstarlib
 uexamples: fstarlib
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
+	+$(MAKE) -C ../examples semiring.all
 
 # Interactive mode regressions
 interactive-test:

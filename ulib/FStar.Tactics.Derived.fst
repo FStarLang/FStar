@@ -119,10 +119,15 @@ let later () : Tac unit =
     | _ -> fail "later: no goals"
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
+[t] in [Gamma]. *)
 let exact (t : term) : Tac unit =
     with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
 
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
@@ -474,16 +479,6 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-let grewrite' (t1 t2 eq : term) : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l _ ->
-        if term_eq l t1
-        then exact eq
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
 (** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
@@ -503,7 +498,8 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
+    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    pointwise (fun () -> try exact e with | _ -> trefl ())
 
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
@@ -661,3 +657,20 @@ let tlabel' (l:string) =
 let focus_all () : Tac unit =
     set_goals (goals () @ smt_goals ());
     set_smt_goals []
+
+private
+let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+  match n, l with
+  | _, [] -> None
+  | 0, hd::tl -> Some (hd, tl)
+  | _, hd::tl -> begin
+    match extract_nth (n-1) tl with
+    | Some (hd', tl') -> Some (hd', hd::tl')
+    | None -> None
+  end
+
+let bump_nth (n:pos) : Tac unit =
+  // n-1 since goal numbering begins at 1
+  match extract_nth (n - 1) (goals ()) with
+  | None -> fail "bump_nth: not that many goals"
+  | Some (h, t) -> set_goals (h :: t)
