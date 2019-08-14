@@ -50,7 +50,7 @@ val generalize_universes: env -> term -> tscheme
 //operations on computation types
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<bv> * lcomp
-val lcomp_univ_opt: lcomp -> option<universe>
+val lcomp_univ_opt: lcomp -> (option<universe> * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool

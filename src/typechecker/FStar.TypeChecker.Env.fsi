@@ -339,7 +339,7 @@ val closed'         : term -> bool
 
 (* Operations on guard_t *)
 val close_guard_univs         : universes -> binders -> guard_t -> guard_t
-val close_guard               : env -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t  //this closes the guard formula with bs
 val apply_guard               : guard_t -> term -> guard_t
 val map_guard                 : guard_t -> (term -> term) -> guard_t
 val always_map_guard          : guard_t -> (term -> term) -> guard_t

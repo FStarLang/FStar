@@ -281,6 +281,13 @@ let lcomp_comp lc =
       c, g
     | Inr c -> c, trivial_guard
 
+let apply_lcomp fc fg lc =
+  mk_lcomp
+    lc.eff_name lc.res_typ lc.cflags
+    (fun () ->
+     let (c, g) = lcomp_comp lc in
+     fc c, fg g)
+
 let lcomp_to_string lc =
     if Options.print_effect_args () then
         Print.comp_to_string (lc |> lcomp_comp |> fst)

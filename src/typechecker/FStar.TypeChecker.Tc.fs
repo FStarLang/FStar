@@ -1437,7 +1437,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env t_unit in
     let e, c, g1 = tc_term env e in
-    let e, _, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, TcComm.lcomp_comp c) in
+    let e, _, g =
+      let c, g_lc = TcComm.lcomp_comp c in
+      let e, _x, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, c) in
+      e, _x, Env.conj_guard g_lc g in
     Rel.force_trivial_guard env (Env.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
     [se], [], env0

@@ -151,7 +151,7 @@ val mk_lcomp:
     comp_thunk: (unit -> (comp * guard_t)) -> lcomp
 
 val lcomp_comp: lcomp -> (comp * guard_t)
-
+val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
 val lcomp_to_string : lcomp -> string
 val lcomp_set_flags : lcomp -> list<S.cflag> -> lcomp
 val is_total_lcomp : lcomp -> bool

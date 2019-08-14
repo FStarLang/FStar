@@ -666,7 +666,7 @@ let tcc (t : term) : tac<comp> = wrap_err "tcc" <|
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
-    ret (TcComm.lcomp_comp lc)
+    ret (TcComm.lcomp_comp lc |> fst)  //dropping the guard from lcomp_comp too!
     ))
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|

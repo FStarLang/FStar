@@ -45,6 +45,8 @@ module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
+module TcComm = FStar.TypeChecker.Common
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -2581,8 +2583,8 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           mk_lcomp pure_eff lc.res_typ lc.cflags
-                    (fun () -> ghost_to_pure env (lcomp_comp lc))
+           { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc
+             with eff_name = pure_eff }
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
