@@ -61,7 +61,9 @@ let nwft_bind0 (#a #b:Type) (f : a -> nwft b) (init : either (nwft a) (nwft b)) 
 let nwft_bind (#a #b:Type) (m:nwft a) (f : a -> nwft b) : nwft b = nwft_bind0 f (Inl m)
 
 let ret_bind_p (#a #b:Type) (f : a -> nwft b) ((t1,t2):nwft b*nwft b) = t2 == nwft_bind0 f (Inr t1)
-let ret_bind_p_bisim0 (#a #b:Type) (f : a -> nwft b) (t12:nwft b*nwft b)
-  : Lemma (requires ret_bind_p f t12) (ensures nwf_trees_bisim0 (coerce (ret_bind_p f)) t12) = ()
 
-let bind_ret_p ((t1,t2):nwft a*nwft a) : prop = t2 == nwft_bind t1 nwft_ret
+(* let ret_bind_p_bisim0 (#a #b:Type) (f : a -> nwft b) (t12:nwft b*nwft b) *)
+(*   : Lemma (requires ret_bind_p f t12) (ensures nwf_trees_bisim0 (coerce (ret_bind_p f)) t12) = *)
+(*   () *)
+
+let bind_ret_p #a ((t1,t2):nwft a*nwft a) : prop = t2 == nwft_bind t1 nwft_ret
