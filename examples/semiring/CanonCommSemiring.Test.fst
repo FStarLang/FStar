@@ -1,4 +1,4 @@
-module Semiring
+module CanonCommSemiring.Test
 
 open FStar.Algebra.CommMonoid
 open CanonCommSemiring

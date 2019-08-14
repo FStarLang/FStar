@@ -23,7 +23,7 @@ all: CanonCommSemiring.interpreted CanonCommSemiring.native
 	$(FSTAR) --load $* $*.Test.fst
 
 %.interpreted: %.fst.checked
-	$(FSTAR) Semiring.fst
+	$(FSTAR) $*.Test.fst
 
 clean:
 	rm -f *.checked *.ml *.o *.cm[ix] *.cmxs *~
