@@ -10705,7 +10705,7 @@ let (teq :
                   FStar_Pervasives_Native.None t2 t1
                  in
               FStar_Errors.log_issue uu____28192 uu____28193);
-             FStar_TypeChecker_Env.trivial_guard)
+             FStar_TypeChecker_Common.trivial_guard)
         | FStar_Pervasives_Native.Some g ->
             ((let uu____28201 =
                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -11856,7 +11856,7 @@ let (universe_inequality :
   =
   fun u1  ->
     fun u2  ->
-      let uu___4078_29773 = FStar_TypeChecker_Env.trivial_guard  in
+      let uu___4078_29773 = FStar_TypeChecker_Common.trivial_guard  in
       {
         FStar_TypeChecker_Common.guard_f =
           (uu___4078_29773.FStar_TypeChecker_Common.guard_f);

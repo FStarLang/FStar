@@ -238,7 +238,8 @@ let (pat_as_exp :
                       (FStar_Syntax_Syntax.Tm_constant c)
                       FStar_Pervasives_Native.None p1.FStar_Syntax_Syntax.p
                  in
-              ([], [], [], env1, e, FStar_TypeChecker_Env.trivial_guard, p1)
+              ([], [], [], env1, e, FStar_TypeChecker_Common.trivial_guard,
+                p1)
           | FStar_Syntax_Syntax.Pat_dot_term (x,uu____965) ->
               let uu____970 = FStar_Syntax_Util.type_u ()  in
               (match uu____970 with
@@ -324,7 +325,7 @@ let (pat_as_exp :
                                      (arg :: args), uu____1648, ((pat, imp)
                                      :: pats1))))
                      ([], [], [], env1, [],
-                       FStar_TypeChecker_Env.trivial_guard, []))
+                       FStar_TypeChecker_Common.trivial_guard, []))
                  in
               (match uu____1220 with
                | (b,a,w,env2,args,guard,pats1) ->
