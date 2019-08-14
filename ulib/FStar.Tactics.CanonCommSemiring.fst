@@ -384,7 +384,7 @@ let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term 
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
   let tylist = mk_e_app (`list) [tyentry] in
   mk_app (`Mktuple2) [(tylist, Q_Implicit); (ta, Q_Implicit);
-                      (tlist, Q_Explicit); (quote (snd vm), Q_Explicit)]
+                      (tlist, Q_Explicit); (quotea (snd vm), Q_Explicit)]
 
 (**
  * A varlist is interpreted as the product of the entries in the variable map
@@ -1506,7 +1506,7 @@ let int_cr : cr int =
 let int_semiring () : Tac unit =
   canon_semiring_with #int int_cr Prims.op_Addition Prims.op_Multiply
 
-#set-options "--tactic_trace_d  1 --no_smt"
+#set-options "--tactic_trace_d 0 --no_smt"
 
 let test (a:int) =
   let open FStar.Mul in
