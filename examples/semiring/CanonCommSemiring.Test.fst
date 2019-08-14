@@ -1,18 +1,19 @@
 module Semiring
 
 open FStar.Algebra.CommMonoid
-open FStar.Tactics.CanonCommSemiring
+open CanonCommSemiring
 open FStar.Tactics
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 10"
+#set-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 10 --tactics_info"
 
 ///
 ///  Ring of integers
 ///
 
-#push-options "--no_smt --tactic_trace_d 1" // Look, no SMT!
+#push-options "--no_smt --tactic_trace_d 0" // Look, no SMT!
 
+[@tcdecltime]
 let test1 (a:int) =
   assert (a + a + a == 3 * a) by (int_semiring ())
 
@@ -24,7 +25,6 @@ let test2 (a b:int) =
 let test3 (a b c:int) =
   assert (a * b + c + b * b == (b + a) * b + c) by (int_semiring())
 
-[@tcdecltime]
 let horner (r a0 a1 a2 a3 a4 a5 a6 a7:int) =
   assert (
     (((((((((((((a0 + a1) * r) + a2) * r) + a3) * r) + a4) * r) + a5) * r) + a6) * r) + a7) * r
@@ -39,7 +39,6 @@ let horner (r a0 a1 a2 a3 a4 a5 a6 a7:int) =
                   a0 * r * r * r * r * r * r * r )
    by (int_semiring ())
 
-[@tcdecltime]
 let product (x y z:int) =
   assert (
     (x * x + 1) * (x * y + 2) * (y *  z + 1) * (y *  z + 1) * (y *  z + 1)
@@ -177,7 +176,6 @@ let test_poly3 (a b c:ring) =
   assert (two *% (a +% b) *% c == two *% b *% c +% two *% a *% c)
   by (poly_semiring ())
 
-[@tcdecltime]
 let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) :
   Lemma
   ( (((a *% (r *% r)) +% c) *% (r *% r)) +% ((b *% (r *% r)) +% d) *% r ==

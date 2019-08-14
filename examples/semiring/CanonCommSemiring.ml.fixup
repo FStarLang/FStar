@@ -1,0 +1,160 @@
+let unembed = FStar_Reflection_Interpreter.unembed
+
+let embed = FStar_Reflection_Interpreter.embed
+
+let extract_8 :
+  'a 'b 'c 'd 'e 'f 'g 'h.
+    'a FStar_Syntax_Embeddings.embedding ->
+      'b FStar_Syntax_Embeddings.embedding ->
+        'c FStar_Syntax_Embeddings.embedding ->
+          'd FStar_Syntax_Embeddings.embedding ->
+            'e FStar_Syntax_Embeddings.embedding ->
+              'f FStar_Syntax_Embeddings.embedding ->
+                'g FStar_Syntax_Embeddings.embedding ->
+                  'h FStar_Syntax_Embeddings.embedding ->
+                  FStar_Syntax_Embeddings.norm_cb ->
+                    FStar_Syntax_Syntax.args ->
+                      ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h)
+                        FStar_Pervasives_Native.option
+  =
+  fun ea  ->
+    fun eb  ->
+      fun ec  ->
+        fun ed  ->
+          fun ee  ->
+            fun ef  ->
+              fun eg  ->
+              fun eh  ->
+                fun ncb  ->
+                  fun args  ->
+                    match args with
+                    | (a,uu____1497)::(b,uu____1499)::(c,uu____1501)::
+                        (d,uu____1503)::(e,uu____1505)::(f,uu____1507)::
+                        (g,uu____1509)::(h,uu____2000)::[] ->
+                        let uu____1630 = unembed ea a ncb  in
+                        FStar_Util.bind_opt uu____1630
+                          (fun a1  ->
+                             let uu____1650 = unembed eb b ncb  in
+                             FStar_Util.bind_opt uu____1650
+                               (fun b1  ->
+                                  let uu____1670 = unembed ec c ncb  in
+                                  FStar_Util.bind_opt uu____1670
+                                    (fun c1  ->
+                                       let uu____1690 = unembed ed d ncb  in
+                                       FStar_Util.bind_opt uu____1690
+                                         (fun d1  ->
+                                            let uu____1710 = unembed ee e ncb
+                                               in
+                                            FStar_Util.bind_opt uu____1710
+                                              (fun e1  ->
+                                                 let uu____1730 =
+                                                   unembed ef f ncb  in
+                                                 FStar_Util.bind_opt
+                                                   uu____1730
+                                                   (fun f1  ->
+                                                      let uu____1750 =
+                                                        unembed eg g ncb  in
+                                                     FStar_Util.bind_opt
+                                                        uu____1750
+                                                    (fun g1 ->
+                                                      let uu____2002 =
+                                                        unembed eh h ncb  in
+                                                      FStar_Util.bind_opt
+                                                        uu____2002
+                                                        (fun h1  ->
+                                                           FStar_Pervasives_Native.Some
+                                                             (a1, b1, c1, d1,
+                                                               e1, f1, g1, h1)))))))))
+                    | uu____1783 ->
+                        failwith "extract_8: wrong number of arguments"
+
+
+let mk_tactic_interpretation_7 :
+  'a 'b 'c 'd 'e 'f 'g 'r .
+    ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'r FStar_Tactics_Basic.tac) ->
+      'a FStar_Syntax_Embeddings.embedding ->
+        'b FStar_Syntax_Embeddings.embedding ->
+          'c FStar_Syntax_Embeddings.embedding ->
+            'd FStar_Syntax_Embeddings.embedding ->
+              'e FStar_Syntax_Embeddings.embedding ->
+                'f FStar_Syntax_Embeddings.embedding ->
+                 'g FStar_Syntax_Embeddings.embedding ->
+                  'r FStar_Syntax_Embeddings.embedding ->
+                    FStar_TypeChecker_Cfg.psc ->
+                      FStar_Syntax_Embeddings.norm_cb ->
+                        FStar_Syntax_Syntax.args ->
+                          FStar_Syntax_Syntax.term
+                            FStar_Pervasives_Native.option
+  =
+  fun t  ->
+    fun ea  ->
+      fun eb  ->
+        fun ec  ->
+          fun ed  ->
+            fun ee  ->
+              fun ef  ->
+               fun eg ->
+                fun er  ->
+                  fun psc  ->
+                    fun ncb  ->
+                      fun args  ->
+                        let uu____5170 =
+                          extract_8 ea eb ec ed ee ef eg
+                            FStar_Tactics_Embedding.e_proofstate ncb args
+                           in
+                        FStar_Util.bind_opt uu____5170
+                          (fun uu____5212  ->
+                             match uu____5212 with
+                             | (a,b,c,d,e,f,g,ps) ->
+                                 let ps1 =
+                                   FStar_Tactics_Types.set_ps_psc psc ps  in
+                                 let r =
+                                   let uu____5240 = t a b c d e f g in
+                                   FStar_Tactics_Basic.run_safe uu____5240
+                                     ps1
+                                    in
+                                 let uu____5243 =
+                                   let uu____5244 =
+                                     FStar_Tactics_Embedding.e_result er  in
+                                   let uu____5249 =
+                                     FStar_TypeChecker_Cfg.psc_range psc  in
+                                   embed uu____5244 uu____5249 r ncb  in
+                                 FStar_Pervasives_Native.Some uu____5243)
+
+let from_tactic_7 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> ('h, unit) FStar_Tactics_Effect._dm4f_TAC_repr): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h FStar_Tactics_Basic.tac) =
+    fun (x: 'a) ->
+        fun (y: 'b) ->
+            fun (z: 'c) ->
+                fun (w: 'd) ->
+                    fun (v: 'e) ->
+                        fun (u: 'f) ->
+                          fun (a: 'g) ->
+                            (fun (ps:FStar_Tactics_Types.proofstate) ->
+                                FStar_Util.print_string "In compiled code (7)\n";
+                                FStar_Tactics_Native.interpret_tactic ps (t x y z w v u a)) |> FStar_Tactics_Basic.mk_tac
+
+
+let _ =
+  FStar_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
+    (Prims.parse_int "9")
+    (fun psc  ->
+      fun ncb ->
+        fun args  ->
+          match args with
+          | (tv_0,_)::args_tail ->
+              (mk_tactic_interpretation_7
+                 (from_tactic_7 canon_semiring_aux)
+                 FStar_Reflection_Embeddings.e_term
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     FStar_Reflection_Embeddings.e_term
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_0))
+                 (FStar_Tactics_Interpreter.e_tactic_1_alt
+                     (FStar_Syntax_Embeddings.mk_any_emb tv_0)
+                     FStar_Reflection_Embeddings.e_term)
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Syntax_Embeddings.e_any
+                 FStar_Syntax_Embeddings.e_unit
+                 psc ncb) args_tail
+          | _ -> failwith "arity mismatch")
