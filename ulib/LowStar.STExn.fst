@@ -3,6 +3,8 @@ module LowStar.STExn
 open FStar.Heap
 open FStar.ST
 
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0
 
@@ -24,8 +26,8 @@ let bind (a:Type) (b:Type)
   g x ()
 
 let stronger (a:Type)
-  (pre_g:pre_t) (post_g:post_t a)
   (pre_f:pre_t) (post_f:post_t a)
+  (pre_g:pre_t) (post_g:post_t a)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
   (requires
@@ -42,19 +44,19 @@ let conjunction (a:Type)
   (fun h -> pre_f h /\ pre_g h)
   (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1)
 
-let conjunction_is_stronger_f (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
-  (f:repr a pre_f post_f)
-: Tot _
-= stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_f post_f f
+// let conjunction_is_stronger_f (a:Type)
+//   (pre_f:pre_t) (post_f:post_t a)
+//   (pre_g:pre_t) (post_g:post_t a)
+//   (f:repr a pre_f post_f)
+// : Tot _
+// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_f post_f f
 
-let conjunction_is_stronger_g (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
-  (f:repr a pre_g post_g)
-: Tot _
-= stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
+// let conjunction_is_stronger_g (a:Type)
+//   (pre_f:pre_t) (post_f:post_t a)
+//   (pre_g:pre_t) (post_g:post_t a)
+//   (f:repr a pre_g post_g)
+// : Tot _
+// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
 
 let read (a:Type0) (r:ref a)
 : repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
@@ -79,28 +81,28 @@ layered_effect {
 let mread = HoareST?.read
 let mwrite = HoareST?.write
 
-assume val wp_monotonic_pure (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
+// assume val wp_monotonic_pure (_:unit)
+//   : Lemma
+//     (forall (a:Type) (wp:pure_wp a).
+//        (forall (p q:pure_post a).
+//           (forall (x:a). p x ==> q x) ==>
+//           (wp p ==> wp q)))
 
-assume val wp_monotonic_st (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:st_wp a).
-       (forall (p q:st_post a).
-          (forall (x:a) (h:heap). p x h ==> q x h) ==>
-          (forall (h:heap). wp p h ==> wp q h)))
+// assume val wp_monotonic_st (_:unit)
+//   : Lemma
+//     (forall (a:Type) (wp:st_wp a).
+//        (forall (p q:st_post a).
+//           (forall (x:a) (h:heap). p x h ==> q x h) ==>
+//           (forall (h:heap). wp p h ==> wp q h)))
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (post:post_t a) (f:unit -> PURE a wp)
-: repr a (fun h -> wp (fun x -> post h x h)) post
-= wp_monotonic_st ();
-  wp_monotonic_pure ();
-  fun _ ->
-  f ()
+// let lift_pure_hoarest (a:Type) (wp:pure_wp a) (post:post_t a) (f:unit -> PURE a wp)
+// : repr a (fun h -> wp (fun x -> post h x h)) post
+// = wp_monotonic_st ();
+//   wp_monotonic_pure ();
+//   fun _ ->
+//   f ()
 
-sub_effect PURE ~> HoareST = lift_pure_hoarest
+// sub_effect PURE ~> HoareST = lift_pure_hoarest
 
 // type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 
