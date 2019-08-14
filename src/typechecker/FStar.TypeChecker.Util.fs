@@ -2098,3 +2098,14 @@ let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
 let fresh_layered_effect_repr_en env r eff_name u a_tm =
   let ed = Env.get_effect_decl env eff_name in
   fresh_layered_effect_repr env r eff_name ed.signature ed.repr u a_tm
+
+//AR: TODO: FIXME: impossibles to errors?
+let layered_effect_indices_as_binders sig_ts u a_tm =
+  let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in
+  match (SS.compress sig_tm).n with
+  | Tm_arrow (bs, _) ->
+    let bs = SS.open_binders bs in
+    (match bs with
+     | (a', _)::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
+     | _ -> failwith "Impossible!")
+  | _ -> failwith "Impossible"

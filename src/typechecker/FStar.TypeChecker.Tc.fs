@@ -154,16 +154,8 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let us, t = SS.open_univ_vars sig_us sig_t in
     let env = Env.push_univ_vars env0 us in
 
-    let a, _ = fresh_a_and_u_a "a" in
-    let rest_bs =
-      match (SS.compress t).n with
-      | Tm_arrow (bs, _) when List.length bs >= 1 ->
-        (match SS.open_binders bs with
-         | (a', _)::bs ->
-           let substs = [NT (a', bv_to_name (fst a))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+    let a, u = fresh_a_and_u_a "a" in
+    let rest_bs = TcUtil.layered_effect_indices_as_binders (sig_us, sig_t) u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (S.mk_Total S.teff) in
     let g_eq = Rel.teq env t k in
@@ -180,19 +172,10 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let us, ty = SS.open_univ_vars repr_us repr_ty in
     let env = Env.push_univ_vars env0 us in
 
-    let a, _ = fresh_a_and_u_a "a" in
+    let a, u = fresh_a_and_u_a "a" in
     let rest_bs =
       let signature_ts = let us, t, _ = signature in (us, t) in
-      let _, signature = Env.inst_tscheme signature_ts in
-      match (SS.compress signature).n with
-      | Tm_arrow (bs, _) ->
-        let bs = SS.open_binders bs in
-        (match bs with
-         | (a', _)::bs ->
-           let substs = [NT (a', bv_to_name (fst a))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> failwith "Impossible!" in
+      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some u))) in
     let g = Rel.teq env ty k in
@@ -267,6 +250,72 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     bind_us, bind_t, SS.close_univ_vars bind_us (N.normalize [Beta] env k) in
 
   log_combinator "bind_repr" bind_repr;
+
+  let stronger_repr =
+    let stronger_repr = ed.stronger_repr |> must in
+    let r = (snd stronger_repr).pos in
+
+    let stronger_us, stronger_t, stronger_ty = check_and_gen' "stronger_repr" 1 None stronger_repr in
+
+    if Env.debug env0 <| Options.Other "LayeredEffects" then
+      BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
+        (Print.tscheme_to_string (stronger_us, stronger_t))
+        (Print.tscheme_to_string (stronger_us, stronger_ty));
+
+    let us, ty = SS.open_univ_vars stronger_us stronger_ty in
+    let env = Env.push_univ_vars env0 us in
+
+    let a, u = fresh_a_and_u_a "a" in
+    let f_is_bs =
+      let signature_ts = let us, t, _ = signature in (us, t) in
+      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
+    let g_is_bs =
+      let signature_ts = let us, t, _ = signature in (us, t) in
+      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
+    let f_b =
+      let repr_ts = let (us, t, _) = repr in (us, t) in
+      let _, repr = Env.inst_tscheme_with repr_ts [u] in
+      let repr = S.mk_Tm_app
+        repr
+        ((a::f_is_bs) |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+        None r in
+      S.gen_bv "f" None repr |> S.mk_binder in
+    let ret_t =
+      let repr_ts = let (us, t, _) = repr in (us, t) in
+      let _, repr = Env.inst_tscheme_with repr_ts [u] in
+      S.mk_Tm_app
+        repr
+        ((a::g_is_bs) |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+        None r in
+    let pure_wp_t =
+      let pure_wp_ts = Env.lookup_definition [NoDelta] env PC.pure_wp_lid |> must in
+      let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
+      S.mk_Tm_app
+        pure_wp_t
+        [ret_t |> S.as_arg]
+        None r in
+
+    let pure_wp_uvar, _, g_pure_wp_uvar =
+      TcUtil.new_implicit_var "" r (Env.push_binders env (a::(f_is_bs@g_is_bs))) pure_wp_t in
+    let c = S.mk_Comp ({
+      comp_univs = [ Env.new_u_univ () ];  //AR: TODO: FIXME: not sure if this is getting resolved properly
+      effect_name = PC.effect_PURE_lid;
+      result_typ = ret_t;
+      effect_args = [ pure_wp_uvar |> S.as_arg ];
+      flags = [] }) in
+
+    let k = U.arrow (a::(f_is_bs@g_is_bs@[f_b])) c in
+
+    if Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "Expected type before unification: %s\n"
+        (Print.term_to_string k);
+
+    let g = Rel.teq env ty k in
+    Rel.force_trivial_guard env (Env.conj_guard g_pure_wp_uvar g);
+    let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
+    stronger_us, stronger_t, SS.close_univ_vars stronger_us k in
+
+  log_combinator "stronger_repr" stronger_repr;
 
   //AR: TODO: FIXME: rest of the combinators
 
@@ -377,13 +426,15 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
   let thd (_, _, c) = c in
 
   { ed with
-    signature   = (fst signature, snd signature);
-    ret_wp      = (fst return_repr, thd return_repr);
-    bind_wp     = (fst bind_repr, thd bind_repr);
-    repr        = (fst repr, snd repr);
-    return_repr = (fst return_repr, snd return_repr);
-    bind_repr   = (fst bind_repr, snd bind_repr);
-    actions     = List.map (tc_action env0) ed.actions }
+    signature     = (fst signature, snd signature);
+    ret_wp        = (fst return_repr, thd return_repr);
+    bind_wp       = (fst bind_repr, thd bind_repr);
+    stronger      = (fst stronger_repr, thd stronger_repr);
+    repr          = (fst repr, snd repr);
+    return_repr   = (fst return_repr, snd return_repr);
+    bind_repr     = (fst bind_repr, snd bind_repr);
+    stronger_repr = (fst stronger_repr, snd stronger_repr) |> Some;
+    actions       = List.map (tc_action env0) ed.actions }
 
 let tc_layered_lift env0 (sub:sub_eff) : sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then

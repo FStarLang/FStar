@@ -123,6 +123,7 @@ let some_lid            = psnconst  "Some"
 let none_lid            = psnconst  "None"
 let assume_lid          = pconst  "_assume"
 let assert_lid          = pconst  "_assert"
+let pure_wp_lid         = pconst "pure_wp"
 let pure_assert_wp_lid  = pconst "pure_assert_wp"
 let pure_assume_wp_lid  = pconst "pure_assume_wp"
 let assert_norm_lid     = p2l ["FStar"; "Pervasives"; "assert_norm"]
