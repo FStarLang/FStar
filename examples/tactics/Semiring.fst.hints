@@ -1,0 +1,437 @@
+[
+  "†¬ó6ÜO‡óèˆhÔÁWm\u0014",
+  [
+    [
+      "Semiring.prime",
+      1,
+      0,
+      0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "3c72912d58198b861c992abf090f9b40"
+    ],
+    [
+      "Semiring.ring",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "6c86e1afed23e4a0d33676230b26e73d"
+    ],
+    [
+      "Semiring.zero",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "19b78ffb29f1f81854c19c81cd54c0b6"
+    ],
+    [
+      "Semiring.one",
+      1,
+      0,
+      0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "5adf1ded6099fb7104a4dfab83c74b57"
+    ],
+    [
+      "Semiring.op_Plus_Percent",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_Semiring.prime",
+        "equation_Semiring.ring", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "e94fcf2d037cc4ad6ed933eb5f7e0f79"
+    ],
+    [
+      "Semiring.op_Star_Percent",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_Semiring.prime",
+        "equation_Semiring.ring", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "eafa5781a400e1b7933471c48d5822b5"
+    ],
+    [
+      "Semiring.add_identity",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Plus_Percent", "equation_Semiring.ring",
+        "equation_Semiring.zero", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.op_Plus_Percent", "typing_Semiring.zero"
+      ],
+      0,
+      "222a8430ca84c195375a0f0ca79c854d"
+    ],
+    [
+      "Semiring.mul_identity",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.one", "equation_Semiring.op_Star_Percent",
+        "equation_Semiring.ring", "int_inversion",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.one", "typing_Semiring.op_Star_Percent"
+      ],
+      0,
+      "aabead1baa4f7d4bd788c663ce3302e3"
+    ],
+    [
+      "Semiring.add_associativity",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Plus_Percent", "equation_Semiring.ring",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.op_Plus_Percent"
+      ],
+      0,
+      "54dbacafd8049d644b3e361c1047ceb7"
+    ],
+    [
+      "Semiring.add_commutativity",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Semiring.op_Plus_Percent",
+        "primitive_Prims.op_Addition"
+      ],
+      0,
+      "477aef87ed03d919f3b39e071ddc2cb6"
+    ],
+    [
+      "Semiring.mul_associativity",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_Semiring.op_Star_Percent",
+        "equation_Semiring.prime", "equation_Semiring.ring", "int_inversion",
+        "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.op_Star_Percent", "typing_Semiring.prime"
+      ],
+      0,
+      "95f5f1fcc0e738dccbb62bf70bd71af7"
+    ],
+    [
+      "Semiring.mul_commutativity",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Semiring.op_Star_Percent",
+        "primitive_Prims.op_Multiply"
+      ],
+      0,
+      "64d70050459a220223190bdb9b128b18"
+    ],
+    [
+      "Semiring.mul_add_distr",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Plus_Percent",
+        "equation_Semiring.op_Star_Percent", "equation_Semiring.ring",
+        "equation_Semiring.ring_add_cm", "equation_Semiring.ring_mul_cm",
+        "function_token_typing_Semiring.op_Plus_Percent",
+        "function_token_typing_Semiring.op_Star_Percent", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
+      ],
+      0,
+      "1e30ba8d274fc30cb973e27996e2795d"
+    ],
+    [
+      "Semiring.mul_zero_l",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Star_Percent", "equation_Semiring.ring",
+        "equation_Semiring.ring_add_cm", "equation_Semiring.ring_mul_cm",
+        "equation_Semiring.zero", "int_inversion",
+        "primitive_Prims.op_Multiply",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult",
+        "token_correspondence_Semiring.op_Star_Percent"
+      ],
+      0,
+      "15c29f6c2f1586a5eaedee2661a00aae"
+    ],
+    [
+      "Semiring.test_poly1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "814168f73a71587b1e96937ad5159982"
+    ],
+    [
+      "Semiring.test_poly2",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "eee9c78a92b46d67ba5e2d3dd19ae581"
+    ],
+    [
+      "Semiring.poly_update_repeat_blocks_multi_lemma2_simplify",
+      1,
+      0,
+      0,
+      [ "@query", "true_interp" ],
+      0,
+      "20409cfe4f44c3b872e8fa88416126d4"
+    ],
+    [
+      "Semiring.poly_update_repeat_blocks_multi_lemma2_simplify",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "bb214477769e26fafacac424d60fb2c4"
+    ],
+    [
+      "Semiring.prime",
+      2,
+      0,
+      0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "4d473cde9df14e84864f9e27a658a1b3"
+    ],
+    [
+      "Semiring.ring",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "28302429175433d8fb6d166c7dbcb055"
+    ],
+    [
+      "Semiring.zero",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "8b204c1105e37bbe53b86736f56a4dc5"
+    ],
+    [
+      "Semiring.one",
+      2,
+      0,
+      0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "9c2a6c8701e7ffb1314855a8b57f1d2a"
+    ],
+    [
+      "Semiring.op_Plus_Percent",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_Semiring.prime",
+        "equation_Semiring.ring", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "be3d43873b248e16a7e8f4c15de5f9db"
+    ],
+    [
+      "Semiring.op_Star_Percent",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_Semiring.prime",
+        "equation_Semiring.ring", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "47af3cd993a3a92245c24266ee43a4c1"
+    ],
+    [
+      "Semiring.mul_add_distr",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Plus_Percent",
+        "equation_Semiring.op_Star_Percent", "equation_Semiring.ring",
+        "equation_Semiring.ring_add_cm", "equation_Semiring.ring_mul_cm",
+        "function_token_typing_Semiring.op_Plus_Percent",
+        "function_token_typing_Semiring.op_Star_Percent", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
+      ],
+      0,
+      "3a16a7b8665ed59b96eec3cc60b0ad27"
+    ],
+    [
+      "Semiring.mul_zero_l",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Semiring.op_Star_Percent", "equation_Semiring.ring",
+        "equation_Semiring.ring_add_cm", "equation_Semiring.ring_mul_cm",
+        "equation_Semiring.zero", "int_inversion",
+        "primitive_Prims.op_Multiply",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
+        "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
+        "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_acc7a268c8bcffc7b18ec8739e43badf",
+        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult",
+        "token_correspondence_Semiring.op_Star_Percent"
+      ],
+      0,
+      "81ee49756425871934c08be2b46bdcf4"
+    ],
+    [
+      "Semiring.test_poly1",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "ef34df250890c5198c3ae38dbf74caa9"
+    ],
+    [
+      "Semiring.test_poly2",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_Semiring.prime",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Semiring.prime"
+      ],
+      0,
+      "759397b665035285be4ad78bd45e1d57"
+    ]
+  ]
+]
