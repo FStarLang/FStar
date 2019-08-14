@@ -6060,3 +6060,29 @@ let (fresh_layered_effect_repr_en :
               ed.FStar_Syntax_Syntax.signature ed.FStar_Syntax_Syntax.repr u
               a_tm
   
+let (layered_effect_indices_as_binders :
+  FStar_Syntax_Syntax.tscheme ->
+    FStar_Syntax_Syntax.universe ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.binders)
+  =
+  fun sig_ts  ->
+    fun u  ->
+      fun a_tm  ->
+        let uu____15300 = FStar_TypeChecker_Env.inst_tscheme_with sig_ts [u]
+           in
+        match uu____15300 with
+        | (uu____15305,sig_tm) ->
+            let uu____15307 =
+              let uu____15308 = FStar_Syntax_Subst.compress sig_tm  in
+              uu____15308.FStar_Syntax_Syntax.n  in
+            (match uu____15307 with
+             | FStar_Syntax_Syntax.Tm_arrow (bs,uu____15312) ->
+                 let bs1 = FStar_Syntax_Subst.open_binders bs  in
+                 (match bs1 with
+                  | (a',uu____15335)::bs2 ->
+                      FStar_All.pipe_right bs2
+                        (FStar_Syntax_Subst.subst_binders
+                           [FStar_Syntax_Syntax.NT (a', a_tm)])
+                  | uu____15357 -> failwith "Impossible!")
+             | uu____15359 -> failwith "Impossible")
+  
