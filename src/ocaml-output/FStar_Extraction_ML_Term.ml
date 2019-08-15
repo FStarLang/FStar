@@ -2597,13 +2597,13 @@ and (term_as_mlexpr' :
            (match uu____9142 with
             | (uu____9155,ty,uu____9157) ->
                 let ml_ty = term_as_mlty g ty  in
-                let uu____9159 =
+                let ml_c =
                   let uu____9160 =
                     FStar_Extraction_ML_Util.mlexpr_of_const
                       t.FStar_Syntax_Syntax.pos c
                      in
                   FStar_Extraction_ML_Syntax.with_ty ml_ty uu____9160  in
-                (uu____9159, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
+                (ml_c, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
        | FStar_Syntax_Syntax.Tm_name uu____9161 ->
            let uu____9162 = is_type g t  in
            if uu____9162
@@ -3369,21 +3369,21 @@ and (term_as_mlexpr' :
                        FStar_Util.left lb.FStar_Syntax_Syntax.lbname  in
                      FStar_Syntax_Syntax.freshen_bv uu____11956  in
                    let lb1 =
-                     let uu___1710_11958 = lb  in
+                     let uu___1711_11958 = lb  in
                      {
                        FStar_Syntax_Syntax.lbname = (FStar_Util.Inl x);
                        FStar_Syntax_Syntax.lbunivs =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbunivs);
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbunivs);
                        FStar_Syntax_Syntax.lbtyp =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbtyp);
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbtyp);
                        FStar_Syntax_Syntax.lbeff =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbeff);
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbeff);
                        FStar_Syntax_Syntax.lbdef =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbdef);
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbdef);
                        FStar_Syntax_Syntax.lbattrs =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbattrs);
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbattrs);
                        FStar_Syntax_Syntax.lbpos =
-                         (uu___1710_11958.FStar_Syntax_Syntax.lbpos)
+                         (uu___1711_11958.FStar_Syntax_Syntax.lbpos)
                      }  in
                    let e'1 =
                      FStar_Syntax_Subst.subst
@@ -3467,21 +3467,21 @@ and (term_as_mlexpr' :
                                      a))
                                  else norm_call ())
                                in
-                            let uu___1728_12051 = lb  in
+                            let uu___1729_12051 = lb  in
                             {
                               FStar_Syntax_Syntax.lbname =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbname);
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbname);
                               FStar_Syntax_Syntax.lbunivs =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbunivs);
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbunivs);
                               FStar_Syntax_Syntax.lbtyp =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbtyp);
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbtyp);
                               FStar_Syntax_Syntax.lbeff =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbeff);
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbeff);
                               FStar_Syntax_Syntax.lbdef = lbdef;
                               FStar_Syntax_Syntax.lbattrs =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbattrs);
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbattrs);
                               FStar_Syntax_Syntax.lbpos =
-                                (uu___1728_12051.FStar_Syntax_Syntax.lbpos)
+                                (uu___1729_12051.FStar_Syntax_Syntax.lbpos)
                             }))
                   else lbs1  in
                 let check_lb env uu____12104 =

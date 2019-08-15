@@ -639,7 +639,7 @@ let (extend_fv :
       fun t_x  ->
         fun add_unit  ->
           fun is_rec  ->
-            let y = FStar_Syntax_Util.maybe_map_machine_int_constructor x  in
+            let y = x  in
             let mlp =
               FStar_Extraction_ML_Syntax.mlpath_of_lident
                 (y.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v

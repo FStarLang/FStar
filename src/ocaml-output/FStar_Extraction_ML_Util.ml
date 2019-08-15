@@ -1710,3 +1710,36 @@ let (interpret_plugin_as_term_fun :
                                    t1.FStar_Syntax_Syntax.pos uu____5568 msg);
                                 FStar_Pervasives_Native.None))))
   
+let (machine_int_types :
+  ((Prims.string Prims.list * Prims.string) * (Prims.string Prims.list *
+    Prims.string)) Prims.list)
+  =
+  let bounded_unsigned_int_types =
+    FStar_All.pipe_right ["UInt8"; "UInt16"; "UInt32"; "UInt64"]
+      (FStar_List.map
+         (fun m  -> ((["FStar"; m], "Mk"), (["FStar"; m], "uint_to_t"))))
+     in
+  let bounded_signed_int_types =
+    FStar_All.pipe_right ["Int8"; "Int16"; "Int32"; "Int64"]
+      (FStar_List.map
+         (fun m  -> ((["FStar"; m], "Mk"), (["FStar"; m], "int_to_t"))))
+     in
+  FStar_List.append bounded_unsigned_int_types bounded_signed_int_types 
+let (is_machine_int : FStar_Extraction_ML_Syntax.mlpath -> Prims.bool) =
+  fun mlp  ->
+    FStar_Util.for_some
+      (fun uu____5875  -> match uu____5875 with | (x,uu____5890) -> x = mlp)
+      machine_int_types
+  
+let (maybe_map_machine_int_constructor :
+  FStar_Extraction_ML_Syntax.mlpath -> FStar_Extraction_ML_Syntax.mlpath) =
+  fun mlp  ->
+    let uu____5913 =
+      FStar_Util.try_find
+        (fun uu____5943  -> match uu____5943 with | (x,uu____5958) -> x = mlp)
+        machine_int_types
+       in
+    match uu____5913 with
+    | FStar_Pervasives_Native.None  -> mlp
+    | FStar_Pervasives_Native.Some (uu____5987,mlp') -> mlp'
+  
