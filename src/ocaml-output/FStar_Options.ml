@@ -846,7 +846,7 @@ let rec (specs_with_types :
           let uu____2949 = let uu____2950 = mk_bool true  in Const uu____2950
              in
           (FStar_Getopt.noshort, "cache_checked_modules", uu____2949,
-            "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying")
+            "Write a '.checked' file for each module after verification")
            in
         let uu____2951 =
           let uu____2962 =
