@@ -1192,7 +1192,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_constant c ->
           let _, ty, _ = TcTerm.type_of_tot_term g.env_tcenv t in
           let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
+          let ml_c = with_ty ml_ty (mlexpr_of_const t.pos c) in
+          ml_c, E_PURE, ml_ty
 
         | Tm_name _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
           if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it

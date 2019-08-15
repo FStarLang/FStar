@@ -68,3 +68,6 @@ val interpret_plugin_as_term_fun :
             -> arity:option<int>
             -> ml_fv:mlexpr'
             -> option<(mlexpr * mlexpr * int * bool)>
+
+val is_machine_int: mlpath -> bool
+val maybe_map_machine_int_constructor: mlpath -> mlpath

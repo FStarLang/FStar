@@ -384,6 +384,12 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
            ptctor currentModule  ctor in
         text name
 
+    | MLE_CTor (ctor_name, [ arg ])
+        when Util.is_machine_int ctor_name ->
+      let mlp =
+        with_ty MLTY_Top (MLE_Name (Util.maybe_map_machine_int_constructor ctor_name)) in
+      doc_of_expr currentModule outer ({e with expr = MLE_App(mlp, [ arg ])})
+
     | MLE_CTor (ctor, args) ->
        let name =
          if is_standard_constructor ctor then

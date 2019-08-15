@@ -726,3 +726,28 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
     | NoTacticEmbedding msg ->
       not_implemented_warning t.pos (FStar.Syntax.Print.fv_to_string fv) msg;
       None
+
+let machine_int_types =
+  let bounded_unsigned_int_types =
+        [ "UInt8"; "UInt16"; "UInt32"; "UInt64" ]
+        |> List.map (fun m -> (["FStar"; m], "Mk"),
+                          (["FStar"; m], "uint_to_t"))
+  in
+  let bounded_signed_int_types =
+        [ "Int8"; "Int16"; "Int32"; "Int64" ]
+        |> List.map (fun m -> (["FStar"; m], "Mk"),
+                          (["FStar"; m], "int_to_t"))
+  in
+  bounded_unsigned_int_types
+  @ bounded_signed_int_types
+
+let is_machine_int mlp =
+  BU.for_some (fun (x, _) -> x = mlp) machine_int_types
+
+let maybe_map_machine_int_constructor mlp =
+      match FStar.Util.try_find
+                (fun (x, _) -> x = mlp)
+                machine_int_types
+      with
+      | None -> mlp
+      | Some (_, mlp') -> mlp'
