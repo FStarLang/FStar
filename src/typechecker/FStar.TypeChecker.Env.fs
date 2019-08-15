@@ -873,16 +873,18 @@ let fv_has_strict_args env fv =
     match BU.smap_try_find env.strict_args_tab s with
     | None ->
       let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
-      let res =
-        match attrs with
-        | None -> None
-        | Some attrs ->
-          BU.find_map attrs (fun x ->
-            fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
-                  false x FStar.Parser.Const.strict_on_arguments_attr))
-      in
-      BU.smap_add env.strict_args_tab s res;
-      res
+      begin
+      match attrs with
+      | None -> None
+      | Some attrs ->
+          let res =
+            BU.find_map attrs (fun x ->
+              fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                     false x FStar.Parser.Const.strict_on_arguments_attr))
+          in
+          BU.smap_add env.strict_args_tab s res;
+          res
+      end
     | Some l -> l
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =

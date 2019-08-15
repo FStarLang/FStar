@@ -3283,19 +3283,19 @@ let (fv_has_strict_args :
           let attrs =
             let uu____19305 = FStar_Syntax_Syntax.lid_of_fv fv  in
             lookup_attrs_of_lid env uu____19305  in
-          let res =
-            match attrs with
-            | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-            | FStar_Pervasives_Native.Some attrs1 ->
-                FStar_Util.find_map attrs1
-                  (fun x  ->
-                     let uu____19333 =
-                       FStar_ToSyntax_ToSyntax.parse_attr_with_list false x
-                         FStar_Parser_Const.strict_on_arguments_attr
-                        in
-                     FStar_Pervasives_Native.fst uu____19333)
-             in
-          (FStar_Util.smap_add env.strict_args_tab s res; res)
+          (match attrs with
+           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+           | FStar_Pervasives_Native.Some attrs1 ->
+               let res =
+                 FStar_Util.find_map attrs1
+                   (fun x  ->
+                      let uu____19333 =
+                        FStar_ToSyntax_ToSyntax.parse_attr_with_list false x
+                          FStar_Parser_Const.strict_on_arguments_attr
+                         in
+                      FStar_Pervasives_Native.fst uu____19333)
+                  in
+               (FStar_Util.smap_add env.strict_args_tab s res; res))
       | FStar_Pervasives_Native.Some l -> l
   
 let (try_lookup_effect_lid :

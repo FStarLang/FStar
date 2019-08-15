@@ -35,7 +35,6 @@ val compress_univ:      universe -> universe
 
 val close:                binders -> term -> term
 val close_comp:           binders -> comp -> comp
-val close_lcomp:          binders -> lcomp -> lcomp
 val close_binders:        binders -> binders
 val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
