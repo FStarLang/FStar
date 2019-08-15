@@ -1052,6 +1052,9 @@ let get_effect_decl env l =
     | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
+let is_layered_effect env l =
+  l |> get_effect_decl env |> (fun ed -> ed.is_layered)
+
 let identity_mlift : mlift =
   { mlift_t=None;
     mlift_wp=(fun _ t wp -> wp) ;
