@@ -32,3 +32,16 @@ let test_fail ()
   (fun h0 r h1 -> True)
 = let y = f 3 in
   y
+
+
+open HoareST2
+
+assume val f2 (x:int) : HoareST2 int (fun _ -> x > 2) (fun r _ -> r == 2)
+
+[@expect_failure]
+let test3 ()
+: HoareST2 int
+  (fun _ -> True)
+  (fun _ r -> True)
+= let y = f2 3 in
+  y
