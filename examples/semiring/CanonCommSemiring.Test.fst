@@ -161,7 +161,7 @@ let mul_zero_l a = assert_norm (0 % prime == 0)
 [@canon_attr]
 let ring_cr : cr ring = CR ring_add_cm ring_mul_cm mul_add_distr mul_zero_l
 
-let poly_semiring () : Tac unit = canon_semiring_with ring_cr ( +% ) ( *% )
+let poly_semiring () : Tac unit = canon_semiring ring_cr
 
 let test_poly1 (a b:ring) =
   assert (a +% b == b +% a) by (poly_semiring ())

@@ -1480,22 +1480,12 @@ let canon_semiring_aux
     end
   | _ -> fail "Goal should be an equality")
 
-
 let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
   canon_semiring_aux a
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
-    (quote r.cm_add.mult) (quote r.cm_mult.mult) r.cm_add.unit
-
-(**
- *  Giving explicitly the addition and multiplication operations,
- *  normalized as much as required to match the expression to reify
-**)
-let canon_semiring_with (#a:eqtype) (r:cr a) (add:a -> a -> a) (mul:a -> a -> a)
-  : Tac unit =
-  canon_semiring_aux a
-    (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
-    (quote add) (quote mul) r.cm_add.unit
-
+    (norm_term steps (quote r.cm_add.mult))
+    (norm_term steps (quote r.cm_mult.mult))
+    r.cm_add.unit
 
 ///  Ring of integers
 
@@ -1503,8 +1493,7 @@ let canon_semiring_with (#a:eqtype) (r:cr a) (add:a -> a -> a) (mul:a -> a -> a)
 let int_cr : cr int =
   CR int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x -> ())
 
-let int_semiring () : Tac unit =
-  canon_semiring_with #int int_cr Prims.op_Addition Prims.op_Multiply
+let int_semiring () : Tac unit = canon_semiring int_cr
 
 #set-options "--tactic_trace_d 0 --no_smt"
 
