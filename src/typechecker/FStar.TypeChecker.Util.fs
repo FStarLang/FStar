@@ -697,18 +697,18 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
             let mk_layered_bind c1 b c2 =  //AR: TODO: FIXME: failwith to errors
-              let c1, _, _, c2, c2_ed =
-                let c1_ed = Env.get_effect_decl env (U.comp_effect_name c1) in
-                let c2_ed = Env.get_effect_decl env (U.comp_effect_name c2) in
+              let ct1 = Env.unfold_effect_abbrev env c1 in
+              let ct2 = Env.unfold_effect_abbrev env c2 in
+              let ct1, _, _, ct2, c2_ed =
+                let c1_ed = Env.get_effect_decl env ct1.effect_name in
+                let c2_ed = Env.get_effect_decl env ct2.effect_name in
                 match Env.monad_leq env c1_ed.mname c2_ed.mname with
                 | None ->
                   (match Env.monad_leq env c2_ed.mname c1_ed.mname with
                    | None -> failwith ("Cannot bind " ^ c1_ed.mname.str ^ " and " ^ c2_ed.mname.str)
-                   | Some ed -> c2, c2_ed, ed, c1, c1_ed)
-                | Some ed -> c1, c1_ed, ed, c2, c2_ed in
-              let c1, g_lift = Env.lift_to_layered_effect env c1 c2_ed.mname in
-
-              let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
+                   | Some ed -> ct2, c2_ed, ed, ct1, c1_ed)
+                | Some ed -> ct1, c1_ed, ed, ct2, c2_ed in
+              let ct1, g_lift = Env.lift_to_layered_effect env (S.mk_Comp ct1) c2_ed.mname |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
               let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
               let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
@@ -817,7 +817,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 strengthen_comp env None c2 vc1 bind_flags, Env.conj_guard g_c1 g_c2
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
-            if Env.is_layered_effect env (U.comp_effect_name c1) || Env.is_layered_effect env (U.comp_effect_name c2)
+            if (let ct1 = Env.unfold_effect_abbrev env c1 in  //AR: TODO: FIXME: we immediately unfold c's again in mk_layered_bind -- FIX
+                let ct2 = Env.unfold_effect_abbrev env c2 in
+                Env.is_layered_effect env ct1.effect_name || Env.is_layered_effect env ct2.effect_name)
             then mk_layered_bind c1 b c2
             else
               let c1_typ = Env.unfold_effect_abbrev env c1 in
