@@ -238,9 +238,9 @@ val get (r: resource) : RST
 
 (**** The frame rule *)
 
-#reset-options "--no_tactics"
-
 open LowStar.RST.Tactics
+
+#reset-options "--no_tactics"
 
 /// Finally, the workhorse separation logic rule that will be pervasive in Steel programs: the frame
 /// rule. All calls to RST functions should be encapsulated inside `rst_frame`. The rule takes 3
