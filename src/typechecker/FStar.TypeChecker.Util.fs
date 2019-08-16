@@ -697,23 +697,43 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
             let mk_layered_bind c1 b c2 =  //AR: TODO: FIXME: failwith to errors
+              if Env.debug env <| Options.Other "LayeredEffects" then
+                BU.print2 "Binding c1:%s and c2:%s {\n"
+                  (Print.comp_to_string c1) (Print.comp_to_string c2);
+
               let ct1 = Env.unfold_effect_abbrev env c1 in
               let ct2 = Env.unfold_effect_abbrev env c2 in
-              let ct1, _, _, ct2, c2_ed =
+              let ct1, ct2, ed, g_lift =
                 let c1_ed = Env.get_effect_decl env ct1.effect_name in
                 let c2_ed = Env.get_effect_decl env ct2.effect_name in
                 match Env.monad_leq env c1_ed.mname c2_ed.mname with
                 | None ->
                   (match Env.monad_leq env c2_ed.mname c1_ed.mname with
                    | None -> failwith ("Cannot bind " ^ c1_ed.mname.str ^ " and " ^ c2_ed.mname.str)
-                   | Some ed -> ct2, c2_ed, ed, ct1, c1_ed)
-                | Some ed -> ct1, c1_ed, ed, ct2, c2_ed in
-              let ct1, g_lift = Env.lift_to_layered_effect env (S.mk_Comp ct1) c2_ed.mname |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                   | Some _ ->
+                     let ct2, g_lift =
+                       Env.lift_to_layered_effect
+                         env
+                         (S.mk_Comp ct2) c1_ed.mname
+                       |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                     ct1, ct2, c1_ed, g_lift)
+                | Some _ ->
+                  let ct1, g_lift =
+                    Env.lift_to_layered_effect
+                      env
+                      (S.mk_Comp ct1) c2_ed.mname
+                    |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                  ct1, ct2, c2_ed, g_lift in
+
+              if Env.debug env <| Options.Other "LayeredEffects" then
+                BU.print2 "After lifting, ct1: %s and ct2: %s\n"
+                  (ct1 |> S.mk_Comp |> Print.comp_to_string)
+                  (ct2 |> S.mk_Comp |> Print.comp_to_string);
 
               let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
               let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
 
-              let _, bind_t = Env.inst_tscheme_with c2_ed.bind_wp [u1; u2] in
+              let _, bind_t = Env.inst_tscheme_with ed.bind_wp [u1; u2] in
               let bind_bs, bind_ct =
                 match (SS.compress bind_t).n with
                 | Tm_arrow (bs, c) -> SS.open_comp bs c |> (fun (bs, c) -> bs, c |> U.comp_to_comp_typ)
@@ -774,13 +794,18 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             
               let g = List.fold_left2 (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env i1 g_i1)) g is2 g_sort_is in
             
-              mk_Comp ({
+              let c = mk_Comp ({
                 comp_univs = u_m;
-                effect_name = c2_ed.mname;
+                effect_name = ed.mname;
                 result_typ = t2;
                 effect_args = List.map S.as_arg is;
                 flags = []  //AR: TODO: FIXME: set properly
-              }), (Env.conj_guard g (Env.conj_guard g_c1 g_c2))
+              }) in
+
+              if Env.debug env <| Options.Other "LayeredEffects" then
+                BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
+
+              c, (Env.conj_guard g (Env.conj_guard g_c1 g_c2))
             in
             let mk_bind c1 b c2 =                      (* AR: end code for inlining pure and ghost terms *)
                 let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
