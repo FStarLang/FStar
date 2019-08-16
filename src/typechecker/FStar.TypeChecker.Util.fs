@@ -725,17 +725,20 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   let rest_bs, f_b, g_b = List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
                   a_b, b_b, rest_bs, f_b, g_b
                 | _ -> failwith ("bind_t: " ^ (Print.term_to_string bind_t) ^ " does not have enough binders") in
-            
+
+              let rest_bs = SS.subst_binders [NT (a_b |> fst, t1); NT (b_b |> fst, t2)] rest_bs in
+
               let u_m, is =
                 match (SS.compress bind_ct.result_typ).n with
                 | Tm_app (_, _::is) -> bind_ct.comp_univs, List.map fst is
                 | _ -> failwith ("bind_t: " ^ (Print.term_to_string bind_t) ^ " does not have repr return type") in
             
               let rest_bs_uvars, g_uvars = 
-                let _, rest_bs_uvars, g = List.fold_left (fun (env, is_uvars, g) b ->
-                let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env (fst b).sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
-                push_binders env [b], is_uvars@[t], conj_guard g g_t
-                ) (push_binders env [a_b; b_b], [], trivial_guard) rest_bs in
+                let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
+                  let sort = SS.subst substs (fst b).sort in
+                  let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+                  substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
+                  ) ([], [], trivial_guard) rest_bs in
                 rest_bs_uvars, g in
 
               let subst = List.map2

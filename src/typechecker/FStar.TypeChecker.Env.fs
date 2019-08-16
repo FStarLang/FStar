@@ -1108,11 +1108,12 @@ let build_lattice env se = match se.sigel with
         mlift_wp = (fun _ _ _ -> S.tun);
         mlift_term = None }) } in
       let dummy_mlift = { mlift_t = None; mlift_wp = (fun _ _ _ -> S.tun); mlift_term = None } in
-      let n_join = (src_ed.mname, dst_ed.mname, dst_ed.mname, dummy_mlift, dummy_mlift) in
+      let n_join1 = (src_ed.mname, dst_ed.mname, dst_ed.mname, dummy_mlift, dummy_mlift) in
+      let n_join2 = (dst_ed.mname, src_ed.mname, dst_ed.mname, dummy_mlift, dummy_mlift) in
       { env with
         effects = ({ env.effects with
          order = edge::env.effects.order;
-         joins   = n_join::env.effects.joins }) }
+         joins   = n_join1::n_join2::env.effects.joins }) }
     else
       let compose_edges e1 e2 : edge =
         let composed_lift =
