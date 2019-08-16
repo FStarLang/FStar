@@ -2874,7 +2874,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let sub_prob : worklist -> term -> rel -> term -> string -> prob * worklist =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
-    let solve_eq c1_comp c2_comp =
+    let solve_eq c1_comp c2_comp imps =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print2 "solve_c is using an equality constraint (%s vs %s)\n"
                             (Print.comp_to_string (mk_Comp c1_comp))
@@ -2895,6 +2895,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              in
              let sub_probs = ret_sub_prob :: arg_sub_probs in
              let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+             let wl = { wl with wl_implicits = imps@wl.wl_implicits } in
              let wl = solve_prob orig (Some guard) [] wl in
              solve env (attempt sub_probs wl)
     in
@@ -2915,19 +2916,42 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         then c1, Env.trivial_guard
         else Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
-      let _, stronger_t = c2.effect_name |> Env.get_effect_decl env |> (fun ed -> ed.stronger |> Env.inst_tscheme) in
+      if problem.relation = EQ
+      then solve_eq c1 c2 g_lift.implicits  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
+      else
+        let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
+        let is_sub_probs, wl =
+          List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
+            match (SS.compress a1).n with
+            | Tm_uvar _
+            | Tm_uinst ({ n = Tm_uvar _ }, _)
+            | Tm_app ({ n = Tm_uvar _ }, _) ->
+              let p, wl = sub_prob wl a1 EQ a2 "effect index" in
+              p::is_sub_probs, wl
+            | _ -> is_sub_probs, wl) c1.effect_args c2.effect_args ([], wl) in
 
-      // let bs, fml =
-      //   match (SS.compress stronger_t).n with
-      //   | Tm_arrow (bs, c) ->
-      //     let bs, c = SS.open_comp bs c in
-      //     let _, _, wp = U.destruct_comp c in
-      //     let fml = S.mk_Tm_app
-      //       wp
-      //       [Const.trivial_pure_post_lid |> S.lid_as_fv |> S.fv_to_tm |> S.as_arg]
-        
+        let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
-      () in
+        let _, stronger_t = c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger [U_zero]) in  //AR: TODO: FIXME: this should not be u#0, but rather u of the repr type, need a function in Env to return universe of the repr type for a layered effect
+
+        let bs, fml =
+          match (SS.compress stronger_t).n with
+          | Tm_arrow (bs, c) ->
+            let bs, c = SS.open_comp bs c in
+            List.splitAt (List.length bs - 1) bs |> fst, U.comp_result c
+          | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: fail more gracefully
+  
+        let substs = List.map2
+          (fun b t -> NT (b |> fst, t))
+          bs (c2.result_typ::((c1.effect_args@c2.effect_args) |> List.map fst)) in
+
+        let fml = SS.subst substs fml in
+
+        let sub_probs = ret_sub_prob::is_sub_probs in
+        let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+
+        let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
+        solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
         let r = Env.get_range env in
@@ -2947,8 +2971,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                 flags=c1.flags
              }
         in
-        if problem.relation = EQ
-        then solve_eq (lift_c1 ()) c2
+        if Env.is_layered_effect env c2.effect_name
+        then solve_layered_sub c1 edge c2
+        else if problem.relation = EQ
+        then solve_eq (lift_c1 ()) c2 []
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
@@ -3053,7 +3079,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                             then c1_comp, c2_comp
                             else Env.unfold_effect_abbrev env c1,
                                  Env.unfold_effect_abbrev env c2 in
-                      solve_eq c1_comp c2_comp
+                      solve_eq c1_comp c2_comp []
                  else begin
                     let c1 = Env.unfold_effect_abbrev env c1 in
                     let c2 = Env.unfold_effect_abbrev env c2 in
