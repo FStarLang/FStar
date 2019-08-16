@@ -2899,6 +2899,36 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              solve env (attempt sub_probs wl)
     in
 
+    let solve_layered_sub c1 (edge:edge) c2 =
+      let _ =
+        let supported =
+          (lid_equals c1.effect_name c2.effect_name && Env.is_layered_effect env c1.effect_name) ||
+          (Env.is_layered_effect env c2.effect_name && not (Env.is_layered_effect env c1.effect_name)) in
+        if not supported
+        then failwith (BU.format2
+          "Unsupported case for solve_layered_sub c1: %s and c2: %s"
+          (c1 |> S.mk_Comp |> Print.comp_to_string)
+          (c2 |> S.mk_Comp |> Print.comp_to_string)); () in
+
+      let c1, g_lift =
+        if lid_equals c1.effect_name c2.effect_name
+        then c1, Env.trivial_guard
+        else Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+
+      let _, stronger_t = c2.effect_name |> Env.get_effect_decl env |> (fun ed -> ed.stronger |> Env.inst_tscheme) in
+
+      // let bs, fml =
+      //   match (SS.compress stronger_t).n with
+      //   | Tm_arrow (bs, c) ->
+      //     let bs, c = SS.open_comp bs c in
+      //     let _, _, wp = U.destruct_comp c in
+      //     let fml = S.mk_Tm_app
+      //       wp
+      //       [Const.trivial_pure_post_lid |> S.lid_as_fv |> S.fv_to_tm |> S.as_arg]
+        
+
+      () in
+
     let solve_sub c1 edge c2 =
         let r = Env.get_range env in
         let lift_c1 () =

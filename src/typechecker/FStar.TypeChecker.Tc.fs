@@ -312,8 +312,27 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
 
     let g = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g_pure_wp_uvar g);
-    let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
-    stronger_us, stronger_t, SS.close_univ_vars stronger_us k in
+    let k =
+      let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
+      match (SS.compress k).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let u, _, wp = c |> U.comp_to_comp_typ |> U.destruct_comp in
+        let trivial_post =
+          let ts = Env.lookup_definition [NoDelta] env PC.trivial_pure_post_lid |> must in
+          let _, t = Env.inst_tscheme_with ts [u] in
+          S.mk_Tm_app
+            t
+            [ret_t |> S.as_arg]
+            None r in
+        let fml = S.mk_Tm_app
+          wp
+          [trivial_post |> S.as_arg]
+          None r in
+        U.arrow bs (S.mk_Total' fml (Some S.U_zero))
+      | _ -> failwith "Impossible!" in //AR: TODO: FIXME: error out respectfully
+
+    stronger_us, stronger_t, k |> N.normalize [Beta; Eager_unfolding] env |> SS.close_univ_vars stronger_us in
 
   log_combinator "stronger_repr" stronger_repr;
 

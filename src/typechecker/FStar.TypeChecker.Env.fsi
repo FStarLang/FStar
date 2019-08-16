@@ -294,17 +294,17 @@ val univnames    : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
 
 (* operations on monads *)
-val identity_mlift      : mlift
-val join                : env -> lident -> lident -> lident * mlift * mlift
-val monad_leq           : env -> lident -> lident -> option<edge>
-val effect_decl_opt     : env -> lident -> option<(eff_decl * list<qualifier>)>
-val get_effect_decl     : env -> lident -> eff_decl
-val is_layered_effect   : env -> lident -> bool
-val wp_signature        : env -> lident -> (bv * term)
-val comp_to_comp_typ    : env -> comp -> comp_typ
-val unfold_effect_abbrev: env -> comp -> comp_typ
-val effect_repr         : env -> comp -> universe -> option<term>
-val reify_comp          : env -> comp -> universe -> term
+val identity_mlift         : mlift
+val join                   : env -> lident -> lident -> lident * mlift * mlift
+val monad_leq              : env -> lident -> lident -> option<edge>
+val effect_decl_opt        : env -> lident -> option<(eff_decl * list<qualifier>)>
+val get_effect_decl        : env -> lident -> eff_decl
+val is_layered_effect      : env -> lident -> bool
+val wp_signature           : env -> lident -> (bv * term)
+val comp_to_comp_typ       : env -> comp -> comp_typ
+val unfold_effect_abbrev   : env -> comp -> comp_typ
+val effect_repr            : env -> comp -> universe -> option<term>
+val reify_comp             : env -> comp -> universe -> term
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
@@ -363,5 +363,7 @@ val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> u
 val close_forall              : env -> binders -> term -> term
 
 val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+
+val lift_to_layered_effect : env -> comp -> lident -> (comp * guard_t)
 
 val print_gamma : gamma -> string

@@ -1112,7 +1112,7 @@ let build_lattice env se = match se.sigel with
       { env with
         effects = ({ env.effects with
          order = edge::env.effects.order;
-        joins   = n_join::env.effects.joins }) }
+         joins   = n_join::env.effects.joins }) }
     else
       let compose_edges e1 e2 : edge =
         let composed_lift =
@@ -1249,6 +1249,7 @@ let build_lattice env se = match se.sigel with
       {env with effects=effects}
 
   | _ -> env
+
 
 let comp_to_comp_typ (env:env) c =
     let c = match c.n with
@@ -1710,6 +1711,63 @@ let new_implicit_var_aux reason r env k should_check meta =
       t, [(ctx_uvar, r)], g
 
 (***************************************************)
+
+//AR: TODO: FIXME: convert failwiths to errors
+let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
+  let ct = unfold_effect_abbrev env c in
+
+  if lid_equals ct.effect_name  eff_name then c, trivial_guard
+  else
+    let src_ed = get_effect_decl env ct.effect_name in
+    let dst_ed = get_effect_decl env eff_name in
+    if src_ed.is_layered || not dst_ed.is_layered then
+      failwith "lift_to_layered_effect called with layered src or non-layered dst";
+
+    let lift_t =
+      match monad_leq env src_ed.mname dst_ed.mname with
+      | None -> failwith ("Could not find an edge from " ^ src_ed.mname.str ^ " to " ^ dst_ed.mname.str)
+      | Some lift -> lift.mlift.mlift_t |> must in
+
+    let u, a, wp = U.destruct_comp ct in
+
+    //lift_t is now the arrow type: <u>a:Type -> wp -> ..bs.. -> f -> repr a is
+    let _, lift_t = inst_tscheme_with lift_t [u] in
+    let lift_bs, lift_ct =
+      match (SS.compress lift_t).n with
+      | Tm_arrow (bs, c) -> SS.open_comp bs c |> (fun (bs, c) -> bs, U.comp_to_comp_typ c)
+      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " is not an arrow type") in
+
+    let a_b, wp_b, rest_bs =
+      match lift_bs with
+      | a_b::wp_b::bs when List.length bs >= 1 ->
+        a_b, wp_b, List.splitAt (List.length bs - 1) bs |> fst
+      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have enough binders") in
+
+    let u_m, is =
+      match (SS.compress lift_ct.result_typ).n with
+      | Tm_app (_, _::is) -> lift_ct.comp_univs, List.map fst is 
+      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have a repr return type") in
+
+    let rest_bs_uvars, g =
+      let _, rest_bs_uvars, g = List.fold_left (fun (env, is_uvars, g) b ->
+        let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env (fst b).sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+        push_binders env [b], is_uvars@[t], conj_guard g g_t
+      ) (push_binders env [a_b; wp_b], [], trivial_guard) rest_bs in
+      rest_bs_uvars, g in
+
+    let subst_for_is = List.map2
+      (fun b t -> NT(b |> fst, t))
+      (a_b::wp_b::rest_bs) (a::wp::rest_bs_uvars) in
+
+    let is = List.map (SS.subst subst_for_is) is in
+
+    mk_Comp ({
+      comp_univs = u_m;
+      effect_name = eff_name;
+      result_typ = a;
+      effect_args = List.map S.as_arg is;
+      flags = []
+    }), g
 
 (* <Move> this out of here *)
 let dummy_solver = {

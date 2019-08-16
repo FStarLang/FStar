@@ -240,6 +240,16 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+let destruct_comp c : (universe * typ * typ) =
+  let wp = match c.effect_args with
+    | [(wp, _)] -> wp
+    | _ ->
+      failwith (U.format2
+        "Impossible: Got a computation %s with %s effect args"
+        c.effect_name.str
+        (c.effect_args |> List.length |> string_of_int)) in
+  List.hd c.comp_univs, c.result_typ, wp
+
 let is_named_tot c =
     match c.n with
         | Comp c -> lid_equals c.effect_name PC.effect_Tot_lid

@@ -255,12 +255,7 @@ let comp_univ_opt c =
 
 let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
 
-let destruct_comp c : (universe * typ * typ) =
-  let wp = match c.effect_args with
-    | [(wp, _)] -> wp
-    | _ -> failwith (BU.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
-      (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
-  List.hd c.comp_univs, c.result_typ, wp
+let destruct_comp c : (universe * typ * typ) = U.destruct_comp c
 
 let lift_comp c m lift =
   let u, _, wp = destruct_comp c in
@@ -289,64 +284,6 @@ let lift_and_destruct env c1 c2 =
   let md = Env.get_effect_decl env m in
   let a, kwp = Env.wp_signature env md.mname in
   (md, a, kwp), destruct_comp m1, destruct_comp m2
-
-
-//AR: TODO: FIXME: convert failwiths to errors
-let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
-  let ct = Env.unfold_effect_abbrev env c in
-
-  if lid_equals ct.effect_name  eff_name then c, trivial_guard
-  else
-    let src_ed = Env.get_effect_decl env ct.effect_name in
-    let dst_ed = Env.get_effect_decl env eff_name in
-    if src_ed.is_layered || not dst_ed.is_layered then
-      failwith "lift_to_layered_effect called with layered src or non-layered dst";
-
-    let lift_t =
-      match monad_leq env src_ed.mname dst_ed.mname with
-      | None -> failwith ("Could not find an edge from " ^ src_ed.mname.str ^ " to " ^ dst_ed.mname.str)
-      | Some lift -> lift.mlift.mlift_t |> must in
-
-    let u, a, wp = destruct_comp ct in
-
-    //lift_t is now the arrow type: <u>a:Type -> wp -> ..bs.. -> f -> repr a is
-    let _, lift_t = Env.inst_tscheme_with lift_t [u] in
-    let lift_bs, lift_ct =
-      match (SS.compress lift_t).n with
-      | Tm_arrow (bs, c) -> SS.open_comp bs c |> (fun (bs, c) -> bs, U.comp_to_comp_typ c)
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " is not an arrow type") in
-
-    let a_b, wp_b, rest_bs =
-      match lift_bs with
-      | a_b::wp_b::bs when List.length bs >= 1 ->
-        a_b, wp_b, List.splitAt (List.length bs - 1) bs |> fst
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have enough binders") in
-
-    let u_m, is =
-      match (SS.compress lift_ct.result_typ).n with
-      | Tm_app (_, _::is) -> lift_ct.comp_univs, List.map fst is 
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have a repr return type") in
-
-    let rest_bs_uvars, g =
-      let _, rest_bs_uvars, g = List.fold_left (fun (env, is_uvars, g) b ->
-        let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env (fst b).sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
-        push_binders env [b], is_uvars@[t], conj_guard g g_t
-      ) (push_binders env [a_b; wp_b], [], trivial_guard) rest_bs in
-      rest_bs_uvars, g in
-
-    let subst_for_is = List.map2
-      (fun b t -> NT(b |> fst, t))
-      (a_b::wp_b::rest_bs) (a::wp::rest_bs_uvars) in
-
-    let is = List.map (SS.subst subst_for_is) is in
-
-    mk_Comp ({
-      comp_univs = u_m;
-      effect_name = eff_name;
-      result_typ = a;
-      effect_args = List.map S.as_arg is;
-      flags = []
-    }), g
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -769,7 +706,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                    | None -> failwith ("Cannot bind " ^ c1_ed.mname.str ^ " and " ^ c2_ed.mname.str)
                    | Some ed -> c2, c2_ed, ed, c1, c1_ed)
                 | Some ed -> c1, c1_ed, ed, c2, c2_ed in
-              let c1, g_lift = lift_to_layered_effect env c1 c2_ed.mname in
+              let c1, g_lift = Env.lift_to_layered_effect env c1 c2_ed.mname in
 
               let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
 
