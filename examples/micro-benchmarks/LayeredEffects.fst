@@ -22,3 +22,13 @@ let test2 ()
   let y = f x in
   g y
 
+
+assume val f_fail (x:int) : HoareST int (fun _ -> True)  (fun h0 r h1 -> True)
+
+[@expect_failure]
+let test_fail ()
+: HoareST int
+  (fun _ -> True)
+  (fun h0 r h1 -> True)
+= let y = f 3 in
+  y
