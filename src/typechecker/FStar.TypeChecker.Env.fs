@@ -1714,6 +1714,10 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 //AR: TODO: FIXME: convert failwiths to errors
 let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
+  if debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Lifting comp %s to layered effect %s {\n"
+      (Print.comp_to_string c) (Print.lid_to_string eff_name);
+
   let ct = unfold_effect_abbrev env c in
 
   if lid_equals ct.effect_name  eff_name then c, trivial_guard
@@ -1743,31 +1747,39 @@ let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
         a_b, wp_b, List.splitAt (List.length bs - 1) bs |> fst
       | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have enough binders") in
 
+    let rest_bs = SS.subst_binders [NT (a_b |> fst, a); NT (wp_b |> fst, wp)] rest_bs in
+
     let u_m, is =
       match (SS.compress lift_ct.result_typ).n with
       | Tm_app (_, _::is) -> lift_ct.comp_univs, List.map fst is 
       | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have a repr return type") in
 
     let rest_bs_uvars, g =
-      let _, rest_bs_uvars, g = List.fold_left (fun (env, is_uvars, g) b ->
-        let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env (fst b).sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
-        push_binders env [b], is_uvars@[t], conj_guard g g_t
-      ) (push_binders env [a_b; wp_b], [], trivial_guard) rest_bs in
+      let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
+        let sort = SS.subst substs (fst b).sort in
+        let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+        substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
+      ) ([], [], trivial_guard) rest_bs in
       rest_bs_uvars, g in
 
     let subst_for_is = List.map2
-      (fun b t -> NT(b |> fst, t))
+      (fun b t -> NT (b |> fst, t))
       (a_b::wp_b::rest_bs) (a::wp::rest_bs_uvars) in
 
     let is = List.map (SS.subst subst_for_is) is in
 
-    mk_Comp ({
+    let c = mk_Comp ({
       comp_univs = u_m;
       effect_name = eff_name;
       result_typ = a;
       effect_args = List.map S.as_arg is;
       flags = []
-    }), g
+    }) in
+
+    if debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
+
+    c, g
 
 (* <Move> this out of here *)
 let dummy_solver = {
