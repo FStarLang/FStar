@@ -36,6 +36,7 @@ let iteri #a b context loop_inv f len =
   (**)  loop_inv (RST.focus_rmem h context) i /\
   (**)  RST.focus_rmem h (AR.array_resource b) == RST.focus_rmem hinit (AR.array_resource b)
   (**) in
+  admit()(*
   let correct_f (i:U32.t{U32.(0 <= v i /\ v i < A.vlength b)})
     : RST.RST unit
       (R.(AR.array_resource b <*> context))
@@ -74,3 +75,4 @@ let iteri #a b context loop_inv f len =
     R.(AR.array_resource b <*> context)
     correct_inv
     correct_f
+*)
