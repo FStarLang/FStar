@@ -16,12 +16,20 @@ let return (a:Type) (x:a)
 = fun _ -> x
 
 let bind (a:Type) (b:Type)
-  (pre_f:pre_t) (post_f:post_t a) (post_g:post_t b)
-  (f:repr a pre_f post_f) (g:(x:a -> repr b (post_f x) post_g))
-: repr b pre_f post_g
+  (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:post_t b)
+  (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) post_g))
+: repr b (fun h -> pre_f h /\ (forall (x:a) (h1:heap). post_f x h1 ==> pre_g x h1)) post_g
 = fun _ ->
   let x = f () in
   g x ()
+
+// let bind (a:Type) (b:Type)
+//   (pre_f:pre_t) (post_f:post_t a) (post_g:post_t b)
+//   (f:repr a pre_f post_f) (g:(x:a -> repr b (post_f x) post_g))
+// : repr b pre_f post_g
+// = fun _ ->
+//   let x = f () in
+//   g x ()
 
 let stronger (a:Type)
   (pre_f:pre_t) (post_f:post_t a)

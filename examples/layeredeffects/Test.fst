@@ -38,10 +38,9 @@ open HoareST2
 
 assume val f2 (x:int) : HoareST2 int (fun _ -> x > 2) (fun r _ -> r == 2)
 
-// [@expect_failure]
-// let test3 ()
-// : HoareST2 int
-//   (fun _ -> True)
-//   (fun _ r -> True)
-// = let y = f2 3 in
-//   y
+let test3 ()
+: HoareST2 int
+  (fun _ -> True)
+  (fun r _ -> r > 1)
+= let y = f2 3 in
+  y

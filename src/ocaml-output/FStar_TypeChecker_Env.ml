@@ -6038,9 +6038,9 @@ let (lift_to_layered_effect :
                                      let uu____25906 =
                                        let uu____25915 =
                                          FStar_List.fold_left
-                                           (fun uu____25954  ->
+                                           (fun uu____25955  ->
                                               fun b  ->
-                                                match uu____25954 with
+                                                match uu____25955 with
                                                 | (substs,is_uvars,g) ->
                                                     let sort =
                                                       FStar_Syntax_Subst.subst
@@ -6048,51 +6048,75 @@ let (lift_to_layered_effect :
                                                         (FStar_Pervasives_Native.fst
                                                            b).FStar_Syntax_Syntax.sort
                                                        in
-                                                    let uu____25996 =
+                                                    let uu____25997 =
                                                       new_implicit_var_aux ""
                                                         FStar_Range.dummyRange
                                                         env sort
                                                         FStar_Syntax_Syntax.Strict
                                                         FStar_Pervasives_Native.None
                                                        in
-                                                    (match uu____25996 with
-                                                     | (t,uu____26025,g_t) ->
-                                                         let uu____26039 =
-                                                           let uu____26042 =
-                                                             let uu____26045
+                                                    (match uu____25997 with
+                                                     | (t,uu____26026,g_t) ->
+                                                         ((let uu____26041 =
+                                                             FStar_All.pipe_left
+                                                               (debug env)
+                                                               (FStar_Options.Other
+                                                                  "LayeredEffects")
+                                                              in
+                                                           if uu____26041
+                                                           then
+                                                             let uu____26046
                                                                =
-                                                               let uu____26046
+                                                               FStar_Syntax_Print.term_to_string
+                                                                 t
+                                                                in
+                                                             let uu____26048
+                                                               =
+                                                               FStar_Syntax_Print.binder_to_string
+                                                                 b
+                                                                in
+                                                             FStar_Util.print2
+                                                               "lift_to_layered_effect: introduced uvar %s for binder %s\n"
+                                                               uu____26046
+                                                               uu____26048
+                                                           else ());
+                                                          (let uu____26053 =
+                                                             let uu____26056
+                                                               =
+                                                               let uu____26059
                                                                  =
-                                                                 let uu____26053
+                                                                 let uu____26060
                                                                    =
-                                                                   FStar_All.pipe_right
+                                                                   let uu____26067
+                                                                    =
+                                                                    FStar_All.pipe_right
                                                                     b
                                                                     FStar_Pervasives_Native.fst
+                                                                     in
+                                                                   (uu____26067,
+                                                                    t)
                                                                     in
-                                                                 (uu____26053,
-                                                                   t)
+                                                                 FStar_Syntax_Syntax.NT
+                                                                   uu____26060
                                                                   in
-                                                               FStar_Syntax_Syntax.NT
-                                                                 uu____26046
+                                                               [uu____26059]
                                                                 in
-                                                             [uu____26045]
+                                                             FStar_List.append
+                                                               substs
+                                                               uu____26056
                                                               in
-                                                           FStar_List.append
-                                                             substs
-                                                             uu____26042
-                                                            in
-                                                         let uu____26064 =
-                                                           conj_guard g g_t
-                                                            in
-                                                         (uu____26039,
-                                                           (FStar_List.append
-                                                              is_uvars 
-                                                              [t]),
-                                                           uu____26064)))
+                                                           let uu____26078 =
+                                                             conj_guard g g_t
+                                                              in
+                                                           (uu____26053,
+                                                             (FStar_List.append
+                                                                is_uvars 
+                                                                [t]),
+                                                             uu____26078)))))
                                            ([], [], trivial_guard) rest_bs1
                                           in
                                        match uu____25915 with
-                                       | (uu____26081,rest_bs_uvars,g) ->
+                                       | (uu____26095,rest_bs_uvars,g) ->
                                            (rest_bs_uvars, g)
                                         in
                                      (match uu____25906 with
@@ -6101,14 +6125,14 @@ let (lift_to_layered_effect :
                                             FStar_List.map2
                                               (fun b  ->
                                                  fun t  ->
-                                                   let uu____26134 =
-                                                     let uu____26141 =
+                                                   let uu____26148 =
+                                                     let uu____26155 =
                                                        FStar_All.pipe_right b
                                                          FStar_Pervasives_Native.fst
                                                         in
-                                                     (uu____26141, t)  in
+                                                     (uu____26155, t)  in
                                                    FStar_Syntax_Syntax.NT
-                                                     uu____26134) (a_b ::
+                                                     uu____26148) (a_b ::
                                               wp_b :: rest_bs1) (a :: wp ::
                                               rest_bs_uvars)
                                              in
@@ -6118,8 +6142,8 @@ let (lift_to_layered_effect :
                                                  subst_for_is) is
                                              in
                                           let c1 =
-                                            let uu____26172 =
-                                              let uu____26173 =
+                                            let uu____26186 =
+                                              let uu____26187 =
                                                 FStar_List.map
                                                   FStar_Syntax_Syntax.as_arg
                                                   is1
@@ -6132,48 +6156,48 @@ let (lift_to_layered_effect :
                                                 FStar_Syntax_Syntax.result_typ
                                                   = a;
                                                 FStar_Syntax_Syntax.effect_args
-                                                  = uu____26173;
+                                                  = uu____26187;
                                                 FStar_Syntax_Syntax.flags =
                                                   []
                                               }  in
                                             FStar_Syntax_Syntax.mk_Comp
-                                              uu____26172
+                                              uu____26186
                                              in
-                                          ((let uu____26193 =
+                                          ((let uu____26207 =
                                               FStar_All.pipe_left (debug env)
                                                 (FStar_Options.Other
                                                    "LayeredEffects")
                                                in
-                                            if uu____26193
+                                            if uu____26207
                                             then
-                                              let uu____26198 =
+                                              let uu____26212 =
                                                 FStar_Syntax_Print.comp_to_string
                                                   c1
                                                  in
                                               FStar_Util.print1
                                                 "} Lifted comp: %s\n"
-                                                uu____26198
+                                                uu____26212
                                             else ());
                                            (c1, g))))))))))
   
 let (dummy_solver : solver_t) =
   {
-    init = (fun uu____26206  -> ());
-    push = (fun uu____26208  -> ());
-    pop = (fun uu____26211  -> ());
+    init = (fun uu____26220  -> ());
+    push = (fun uu____26222  -> ());
+    pop = (fun uu____26225  -> ());
     snapshot =
-      (fun uu____26214  ->
+      (fun uu____26228  ->
          ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
-    rollback = (fun uu____26233  -> fun uu____26234  -> ());
-    encode_sig = (fun uu____26249  -> fun uu____26250  -> ());
+    rollback = (fun uu____26247  -> fun uu____26248  -> ());
+    encode_sig = (fun uu____26263  -> fun uu____26264  -> ());
     preprocess =
       (fun e  ->
          fun g  ->
-           let uu____26256 =
-             let uu____26263 = FStar_Options.peek ()  in (e, g, uu____26263)
+           let uu____26270 =
+             let uu____26277 = FStar_Options.peek ()  in (e, g, uu____26277)
               in
-           [uu____26256]);
-    solve = (fun uu____26279  -> fun uu____26280  -> fun uu____26281  -> ());
-    finish = (fun uu____26288  -> ());
-    refresh = (fun uu____26290  -> ())
+           [uu____26270]);
+    solve = (fun uu____26293  -> fun uu____26294  -> fun uu____26295  -> ());
+    finish = (fun uu____26302  -> ());
+    refresh = (fun uu____26304  -> ())
   } 
