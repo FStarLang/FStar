@@ -1759,6 +1759,9 @@ let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
       let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
         let sort = SS.subst substs (fst b).sort in
         let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+        if debug env <| Options.Other "LayeredEffects" then
+          BU.print2 "lift_to_layered_effect: introduced uvar %s for binder %s\n"
+            (Print.term_to_string t) (Print.binder_to_string b);
         substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
       ) ([], [], trivial_guard) rest_bs in
       rest_bs_uvars, g in
