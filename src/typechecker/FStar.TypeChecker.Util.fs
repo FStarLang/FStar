@@ -757,6 +757,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
                   let sort = SS.subst substs (fst b).sort in
                   let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+                  if Env.debug env <| Options.Other "LayeredEffects" then
+                    BU.print2 "mk_layered_bind: introducing uvar : %s for binder %s of bind\n"
+                      (Print.term_to_string t) (Print.binder_to_string b);
                   substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
                   ) ([], [], trivial_guard) rest_bs in
                 rest_bs_uvars, g in
@@ -773,11 +776,12 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   is |> List.map fst |> List.map (SS.subst subst)
                 | _ -> failwith ("Type of f in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a repr type") in
 
+              let x_a =
+                match b with
+                | None -> S.null_binder t1
+                | Some x -> S.mk_binder x in
+
               let g_sort_is =
-                let x_a =
-                  match b with
-                  | None -> S.null_binder t1
-                  | Some x -> S.mk_binder x in
                 match (SS.compress (g_b |> fst).sort).n with
                 | Tm_arrow (bs, c) ->
                   let bs, c = SS.open_comp bs c in
@@ -788,11 +792,17 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                      is |> List.map fst |> List.map (SS.subst subst)
                    | _ -> failwith ("Type of g in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a repr type"))
                 | _ -> failwith ("Type of g in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a arrow type") in
-                  
+
               let g = List.fold_left2 (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
                 (Env.conj_guard g_uvars g_lift) is1 f_sort_is in 
             
-              let g = List.fold_left2 (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env i1 g_i1)) g is2 g_sort_is in
+              let g =
+                let env_g = Env.push_binders env [x_a] in
+                let g_guard = List.fold_left2 (fun g i1 g_i1 ->
+                  Env.conj_guard g (Rel.teq env_g i1 g_i1)
+                ) Env.trivial_guard is2 g_sort_is in
+                let g_guard = Env.close_guard env [x_a] g_guard in
+                Env.conj_guard g g_guard in
             
               let c = mk_Comp ({
                 comp_univs = u_m;
