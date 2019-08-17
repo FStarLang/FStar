@@ -1,4 +1,4 @@
-module LowStar.STExn
+module HoareST
 
 open FStar.Heap
 open FStar.ST

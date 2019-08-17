@@ -1,8 +1,8 @@
-module LayeredEffects
+module Test
 
 #set-options "--max_fuel 0 --max_ifuel 0"
 
-open LowStar.STExn
+open HoareST
 
 assume val f (x:int) : HoareST int (fun _ -> x > 2)  (fun h0 r h1 -> h0 == h1 /\ r == 2)
 assume val g (x:int) : HoareST int (fun _ -> x == 2) (fun h0 r h1 -> h0 == h1 /\ r == 3)
@@ -38,10 +38,10 @@ open HoareST2
 
 assume val f2 (x:int) : HoareST2 int (fun _ -> x > 2) (fun r _ -> r == 2)
 
-[@expect_failure]
-let test3 ()
-: HoareST2 int
-  (fun _ -> True)
-  (fun _ r -> True)
-= let y = f2 3 in
-  y
+// [@expect_failure]
+// let test3 ()
+// : HoareST2 int
+//   (fun _ -> True)
+//   (fun _ r -> True)
+// = let y = f2 3 in
+//   y
