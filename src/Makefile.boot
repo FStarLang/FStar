@@ -9,8 +9,7 @@ FSTAR_BOOT ?= $(FSTAR)
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules     \
-	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))
+FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
