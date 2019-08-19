@@ -1,34 +1,16 @@
 include Makefile.config
 
-INCLUDE_PATHS = \
-	../ulib \
-	boot \
-	basic \
-	extraction \
-	fsdoc \
-	fstar \
-	parser \
-	prettyprint \
-	reflection \
-	smtencoding \
-	syntax \
-	tactics \
-	tosyntax \
-	typechecker \
-	tests
+FSTAR_HOME ?= ..
 
-CACHE_DIR?=./.cache.boot
+include Makefile.boot.common  #provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS, and CACHE_DIR, shared with interactive mode targets
 
 FSTAR_BOOT ?= $(FSTAR)
 
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
-	--use_extracted_interfaces false                                \
-	--lax --MLish --no_location_info				\
-	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
-	--warn_error -272-241-319 --cache_dir $(CACHE_DIR)
+FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules     \
+	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
