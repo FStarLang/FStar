@@ -1,20 +1,17 @@
 module Test.Par.Locks
 
 module P = LowStar.Permissions
-module A = LowStar.RST.Array
+module A = Steel.Array
 module HST = FStar.HyperStack.ST
-open LowStar.RST.Par
-open LowStar.Array
-
-open LowStar.Resource
-open LowStar.RST
+open Steel.Par
+open Steel.RST
 
 #reset-options "--z3rlimit 50 --max_fuel 0 --max_ifuel 0 --z3cliopt smt.qi.eager_threshold=100"
 
-let test_create_lock (b:array UInt32.t) : RST (lock (A.array_resource b))
+let test_create_lock (b:A.array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
-  (fun old -> vlength b = 1 /\
+  (fun old -> A.vlength b = 1 /\
          P.allows_write (A.get_rperm b old) /\
          A.as_rseq b old == Seq.create 1 1ul
          )
@@ -29,10 +26,10 @@ let test_create_lock (b:array UInt32.t) : RST (lock (A.array_resource b))
   release l;
   l
 
-let test_create_lock2 (b:array UInt32.t) : RST (lock (A.array_resource b))
+let test_create_lock2 (b:A.array UInt32.t) : RST (lock (A.array_resource b))
   (A.array_resource b)
   (fun _ -> empty_resource)
-  (fun old -> vlength b = 2 /\
+  (fun old -> A.vlength b = 2 /\
          P.allows_write (A.get_rperm b old)
          )
   (fun _ l _ ->
@@ -53,12 +50,12 @@ let test_create_lock2 (b:array UInt32.t) : RST (lock (A.array_resource b))
   l
 
 
-let basic_locked_update (b:array UInt32.t) (l:lock (A.array_resource b)) : RST unit
+let basic_locked_update (b:A.array UInt32.t) (l:lock (A.array_resource b)) : RST unit
   (empty_resource)
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
   // In this case, the lock is almost trivial, but needs to specify the write permission
-  (fun old -> vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write (Ghost.reveal s.A.p)))
+  (fun old -> A.vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write (Ghost.reveal s.A.p)))
   (fun _ _ _ -> True)
   =
   acquire l;
@@ -84,11 +81,11 @@ let test_shared_lock () : RST unit
   release l
 
 
-let locked_update2 (b:array UInt32.t) (l:lock (A.array_resource b)) (v:UInt32.t) : RST unit
+let locked_update2 (b:A.array UInt32.t) (l:lock (A.array_resource b)) (v:UInt32.t) : RST unit
   (empty_resource)
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
-  (fun old -> vlength b = 2 /\ (forall s. (
+  (fun old -> A.vlength b = 2 /\ (forall s. (
     P.allows_write (Ghost.reveal s.A.p) /\
     UInt32.v (Seq.index s.A.s 0) >= UInt32.v (Seq.index s.A.s 1)) <==> get_lock_pred l s))
   (fun _ _ _ -> True)

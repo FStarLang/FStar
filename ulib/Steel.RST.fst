@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST
+module Steel.RST
 
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 open LowStar.Array
-open LowStar.Resource
+open Steel.Resource
 
 
 let frame_usedness_preservation_intro l1 l2 h0 h1 lemma =
@@ -176,7 +176,7 @@ let rst_inv_star res0 res1 h = reveal_star ()
 
 
 
-open LowStar.RST.Tactics
+open Steel.Tactics
 
 (* Generic framing operation for RST (through resource inclusion) *)
 

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.Array.Views
+module Steel.Array.Views
 
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
@@ -23,7 +23,7 @@ module P = LowStar.Permissions
 module MG = FStar.ModifiesGen
 module U32 = FStar.UInt32
 
-open LowStar.RST
+open Steel.RST
 
 include LowStar.Array
 

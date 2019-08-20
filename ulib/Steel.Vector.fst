@@ -1,15 +1,15 @@
-module LowStar.RST.Vector
+module Steel.Vector
 
 
-open LowStar.RST
+open Steel.RST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module A = LowStar.RST.Array
+module A = Steel.Array
 module Arr = LowStar.Array
 module M = LowStar.Array.Modifies
-module P = LowStar.RST.Pointer
+module P = Steel.Pointer
 module U32 = FStar.UInt32
-module L = LowStar.RST.Loops
+module L = Steel.Loops
 module S = FStar.Seq
 module Perm = LowStar.Permissions
 #set-options "--max_fuel 0 --max_ifuel 0"

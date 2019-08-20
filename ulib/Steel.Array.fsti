@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.Array
+module Steel.Array
 
 open FStar.HyperStack.ST
 module A = LowStar.Array
@@ -21,11 +21,11 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
 module P = LowStar.Permissions
-module MG = FStar.ModifiesGen
+module MG = LowStar.ModifiesGen
 
-open LowStar.RST
+open Steel.RST
 
-include LowStar.RST.Array.Views
+include Steel.Array.Views
 
 val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)

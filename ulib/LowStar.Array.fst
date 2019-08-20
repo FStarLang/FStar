@@ -21,7 +21,7 @@ open FStar.HyperStack.ST
 module F = FStar.FunctionalExtensionality
 module G = FStar.Ghost
 module U32 = FStar.UInt32
-module MG = FStar.MG2
+module MG = LowStar.ModifiesGen
 
 open LowStar.Permissions
 

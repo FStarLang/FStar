@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST
+module Steel.RST
 
 module ST = FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module A = LowStar.Array
 
-include LowStar.Resource
+include Steel.Resource
 
 /// The `RST` effect is the top concept of the Steel framework. It offers a way of specifying
 /// function in terms of resources, abstracting away the `modifies` theory of `LowStar.Array`.
@@ -238,7 +238,7 @@ val get (r: resource) : RST
 
 (**** The frame rule *)
 
-open LowStar.RST.Tactics
+open Steel.Tactics
 
 #reset-options "--no_tactics"
 

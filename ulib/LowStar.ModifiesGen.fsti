@@ -1,4 +1,4 @@
-module FStar.MG2
+module LowStar.ModifiesGen
 
 (*** The modifies clause *)
 

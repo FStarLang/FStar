@@ -40,8 +40,7 @@ doublylinkedlist \
 regional \
 generic \
 calc \
-lowstar_lenses \
-lowstar_concurrent
+steel
 
 # low-level \  ... NS: removing from CI for this branch
 

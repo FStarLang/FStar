@@ -1,4 +1,4 @@
-module LowStar.RST.Pointer.Views
+module Steel.Pointer.Views
 
 open FStar.HyperStack.ST
 module A = LowStar.Array
@@ -7,8 +7,8 @@ module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
 module P = LowStar.Permissions
 
-open LowStar.Resource
-open LowStar.RST
+open Steel.Resource
+open Steel.RST
 
 open LowStar.BufferOps
 

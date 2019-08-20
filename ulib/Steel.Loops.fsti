@@ -1,10 +1,8 @@
-module LowStar.RST.Loops
+module Steel.Loops
 
-open LowStar.Resource
-open LowStar.RST
+open Steel.RST
 module HS = FStar.HyperStack
-module AR = LowStar.RST.Array
-module A = LowStar.Array
+module A = Steel.Array
 module U32 = FStar.UInt32
 open FStar.Mul
 

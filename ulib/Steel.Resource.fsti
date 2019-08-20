@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.Resource
+module Steel.Resource
 
 module ST = FStar.HyperStack.ST
 module HS = FStar.HyperStack

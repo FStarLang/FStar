@@ -2,7 +2,7 @@ module FStar.MGRef
 
 (* Tentative class to instantiate MG2 with HyperStack monotonic references *)
 
-open FStar.MG2
+open LowStar.ModifiesGen
 open FStar.HyperStack
 
 let aloc = (rid & nat)

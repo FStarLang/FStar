@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.Pointer
+module Steel.Pointer
 
 open FStar.HyperStack.ST
 module A = LowStar.Array
@@ -22,11 +22,11 @@ module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
 module P = LowStar.Permissions
 
-open LowStar.Resource
-open LowStar.RST
-open LowStar.RST.Pointer.Views
+open Steel.Resource
+open Steel.RST
+open Steel.Pointer.Views
 
-include LowStar.RST.Pointer.Views
+include Steel.Pointer.Views
 
 (**** Unscoped allocation and deallocation of pointer resources *)
 

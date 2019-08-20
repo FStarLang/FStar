@@ -9,7 +9,7 @@ open FStar.HyperStack.ST
 module F = FStar.FunctionalExtensionality
 module G = FStar.Ghost
 module U32 = FStar.UInt32
-module MG = FStar.MG2
+module MG = LowStar.ModifiesGen
 
 open LowStar.Permissions
 
@@ -869,7 +869,7 @@ let rec live_array_used_in' (#t: Type) (b: array t) (h: HS.mem) (i:nat{i <= vlen
     P.lemma_live_pid_smaller_max (Ghost.reveal perm_map) cell.b_pid;
     ucell_used_in_intro cell h t b cell;
     assert(ucell_used_in cell h);
-    MG2.aloc_used_in_intro cls cell h;
+    MG.aloc_used_in_intro cls cell h;
     live_array_used_in' b h (i+1)
   end
 

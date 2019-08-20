@@ -1,10 +1,7 @@
-module LowStar.RST.Loops
+module Steel.Loops
 
-
-module R = LowStar.Resource
-module RST = LowStar.RST
-module A = LowStar.Array
-module AR = LowStar.RST.Array
+open Steel.RST
+module A = Steel.Array
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = LowStar.Permissions

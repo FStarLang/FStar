@@ -1,8 +1,8 @@
-module LowStar.RST.Vector
+module Steel.Vector
 
-open LowStar.RST
-module A = LowStar.RST.Array
-module P = LowStar.RST.Pointer
+open Steel.RST
+module A = Steel.Array
+module P = Steel.Pointer
 module U32 = FStar.UInt32
 module Perm = LowStar.Permissions
 
