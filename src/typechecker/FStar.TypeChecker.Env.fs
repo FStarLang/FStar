@@ -452,16 +452,22 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
+let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
+  if List.length ed.univs <> 0 || List.length ed.binders <> 0
+  then 
+    let msg = BU.format2
+      "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
+      (Print.lid_to_string ed.mname)
+      (Print.binders_to_string ", " ed.binders) in
+    raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
+
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
-    match ed.binders with
-        | [] ->
-          let univs = ed.univs@us in
-          if List.length insts <> List.length univs
-          then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
-                            (string_of_int <| List.length univs) (string_of_int <| List.length insts)
-                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
-          snd (inst_tscheme_with (ed.univs@us, t) insts)
-        | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
+  check_effect_is_not_a_template ed env.range;
+  if List.length insts <> List.length us
+  then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
+                   (string_of_int <| List.length us) (string_of_int <| List.length insts)
+                   (Print.lid_to_string ed.mname) (Print.term_to_string t));
+  snd (inst_tscheme_with (us, t) insts)
 
 type tri =
     | Yes
@@ -584,39 +590,28 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature us_opt se =
-  let inst_tscheme us_opt ts =
+let effect_signature (us_opt:option<universes>) (se:sigelt) rng : option<((universes * typ) * Range.range)> =
+  let inst_ts us_opt ts =
     match us_opt with
     | None -> inst_tscheme ts
     | Some us -> inst_tscheme_with ts us
   in
   match se.sigel with
-  | Sig_new_effect(ne) ->
-    (*
-     * AR: opening of signature with us_opt is a bit involved now
-     *     there are ed.univs (free universes in the effect binders) and free universes of the signature itself
-     *
-     *     if us_opt is None, then we first inst_tscheme the ne.signature, and then inst_tscheme the ne.binders -> signature
-     *     else we assert that passed in universes are ne.univs + signature.univs, and split, and inst
-     *)
-    let ne_us, sig_us =
-      match us_opt with
-      | None -> None, None
-      | Some us ->
-        if List.length us <> List.length ne.univs + List.length (fst ne.signature)
-        then failwith ("effect_signature: insufficient number of universes for the signature of " ^
-          ne.mname.str ^ ", expected " ^ (string_of_int (List.length ne.univs + List.length (fst ne.signature))) ^
-          ", got " ^ (string_of_int (List.length us)))
-        else
-          let ne_us, sig_us = List.splitAt (List.length ne.univs) us in
-          Some ne_us, Some sig_us
-    in
-    let sig_us, signature_t = inst_tscheme sig_us ne.signature in
-    let ne_us, signature_t = inst_tscheme ne_us (ne.univs, U.arrow ne.binders (mk_Total signature_t)) in
-    Some ((ne_us @ sig_us, signature_t), se.sigrng)
+  | Sig_new_effect ne ->
+    check_effect_is_not_a_template ne rng;
+    (match us_opt with
+     | None -> ()
+     | Some us ->
+       if List.length us <> List.length (fst ne.signature)
+       then failwith ("effect_signature: incorrect number of universes for the signature of " ^
+         ne.mname.str ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
+         ", got " ^ (string_of_int (List.length us)))
+       else ());
+
+    Some (inst_ts us_opt ne.signature, se.sigrng)
 
   | Sig_effect_abbrev (lid, us, binders, _, _) ->
-    Some (inst_tscheme us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
+    Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
 
   | _ -> None
 
@@ -659,7 +654,7 @@ let try_lookup_lid_aux us_opt env lid =
           lookup_type_of_let us_opt (fst se) lid
 
         | _ ->
-          effect_signature us_opt (fst se)
+          effect_signature us_opt (fst se) env.range
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
@@ -890,7 +885,7 @@ let fv_has_strict_args env fv =
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature None se with
+      begin match effect_signature None se env.range with
         | None -> None
         | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
