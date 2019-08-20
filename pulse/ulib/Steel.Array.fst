@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.Array
+module Steel.Array
 
-open LowStar.RST
+open Steel.RST
 
 
 let index (#a:Type) (b:A.array a) (i:UInt32.t) =

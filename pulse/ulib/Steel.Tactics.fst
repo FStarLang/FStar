@@ -1,12 +1,11 @@
-module LowStar.RST.Tactics
+module Steel.Tactics
 
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-// open FStar.ModifiesGen
 open LowStar.Array
-open LowStar.Resource
+open Steel.Resource
 
 
 (* Generic framing operation for RSTATE (through resource inclusion) *)
@@ -45,7 +44,7 @@ inline_for_extraction noextract let rm : cm resource req =
      equal_comm_monoid_commutativity
      equal_comm_monoid_cong
 
-let squash_and p q (x:squash (p /\ q)) : (p /\ q) = 
+let squash_and p q (x:squash (p /\ q)) : (p /\ q) =
   let x : squash (p `c_and` q) = FStar.Squash.join_squash x in
   x
 

@@ -1,9 +1,7 @@
-module LowStar.RST.Par
+module Steel.Par
 
-open LowStar.Resource
-open LowStar.RST
-open LowStar.Array
-module RA = LowStar.RST.Array
+open Steel.RST
+module A = Steel.Array
 module P = LowStar.Permissions
 
 (*
