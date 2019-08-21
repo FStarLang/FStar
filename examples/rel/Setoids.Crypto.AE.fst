@@ -26,7 +26,7 @@ let ae_log_value #n (aes:ae_scheme n) = fun (h,nonce) -> option (bytes*p:bytes{l
 
 /// Map from nonces to a maps from ciphertext to plaintexts
 /// Should the state be dependent on the AE scheme?
-let ae_log #n (aes:ae_scheme n) =
+abstract let ae_log #n (aes:ae_scheme n) =
   DM.t (handle*bytes) (ae_log_value aes)
 
 let ae_log_rel (#n:u32) (aes:ae_scheme n) = lo (ae_log aes)

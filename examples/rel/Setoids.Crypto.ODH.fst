@@ -17,9 +17,10 @@ type odh_scheme (n:u32) =
   | OS:
   exponentiate: (x:share n -> y:exponent n -> share n) ->
   generator: share n ->
+  generate_exponent: (eff (lo unit) (lo (exponent n))) ->
   odh_scheme n
 
-let odh_state n = Map.t (share n) (option (exponent n))
+abstract let odh_state n = Map.t (share n) (option (exponent n))
 
 let gen_dh_t n =
   (lo unit)
@@ -29,7 +30,7 @@ let gen_dh n (os:odh_scheme n) : gen_dh_t n =
     combined_state  <-- get ;
     let odh_st = fst combined_state in
     let key_st = snd combined_state in
-    x_exp <-- sample_multiple #(odh_state n * key_state n) n;
+    x_exp <-- lift_tape #_ #(lo (odh_state n) ** lo (key_state n)) #_ #(lo (exponent n)) os.generate_exponent;
     let x = os.exponentiate os.generator x_exp in
     let s':odh_state n = Map.upd odh_st x (Some x_exp) in
     put (s',key_st) ;;
