@@ -35,12 +35,13 @@ csl \
 hello \
 extraction \
 demos \
-refinement \
 indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-calc
+calc \
+steel
+
 # low-level \  ... NS: removing from CI for this branch
 
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))

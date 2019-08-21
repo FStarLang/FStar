@@ -8,7 +8,7 @@ FLAKY=FStar.Relational.State.fst LowStar.STExn
 
 # List the files that should be verified by verify-core and verify-all
 # Those files are the roots from where all dependencies are computed
-FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))  $(wildcard LowStar.*.fst LowStar.*.fsti)
+FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))  $(wildcard LowStar.*.fst LowStar.*.fsti) $(wildcard Steel.*.fst Steel.*.fsti)
 
 USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
 

@@ -1,18 +1,3 @@
-(*
-   Copyright 2008-2018 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
 module Sum_and_swap
 
 
@@ -79,12 +64,11 @@ let force_eq #a #wp ($f:comp_wp a wp) : comp_wp a wp = f
 
 val swap_and_sum' : comp_wp int sum_wp_full
 let swap_and_sum' =
-    admit (); // GM: added this Oct 22, 2018; so CI passes
-            (bind_elab (hread 0) (fun x0 ->
-             bind_elab (hread 1) (fun x1 ->
-             bind_elab (hwrite 0 x1) (fun _ ->
-             bind_elab (hwrite 1 x0) (fun _ ->
-             return_elab (U32.v x0 + U32.v x1))))))
+  (bind_elab (hread_elab 0) (fun x0 ->
+   bind_elab (hread_elab 1) (fun x1 ->
+   bind_elab (hwrite_elab 0 x1) (fun _ ->
+   bind_elab (hwrite_elab 1 x0) (fun _ ->
+   return_elab (U32.v x0 + U32.v x1))))))
   
 val lswap_and_sum : unit -> lcomp_wp int sum_wp_full (reif sum_wp_full hswap_and_sum)
 let lswap_and_sum () =  

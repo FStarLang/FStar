@@ -3492,7 +3492,7 @@ let resolve_implicits' env must_total forcelax g =
                     in
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
-                    until_fixpoint (out, true) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (extra @ tl)
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
@@ -3539,13 +3539,29 @@ let resolve_implicits_tac env g = resolve_implicits' env false true  g
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
-        | [] -> ignore <| discharge_guard env g
-        | imp::_ ->
+    | [] -> ignore <| discharge_guard env g
+    | imp::_ ->
+      match Env.lookup_attr env Const.resolve_implicits_attr_string with
+      | {sigel=Sig_let (_, [lid])}::_ ->
+        let qn = Env.lookup_qname env lid in
+        let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+        let dd =
+          match Env.delta_depth_of_qninfo fv qn with
+          | Some dd -> dd
+          | None -> failwith "Expected a dd"
+        in
+        let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
+        env.try_solve_implicits_hook env term g.implicits;
+        ignore <| discharge_guard env g
+
+      | _ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
                                     (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                     (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                     imp.imp_reason) imp.imp_range
+
+
 
 let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
     match teq_nosmt env t1 t2 with

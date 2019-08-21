@@ -1,18 +1,3 @@
-(*
-   Copyright 2008-2018 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
 module LowComp
 
 open HighComp
@@ -22,6 +7,7 @@ open LowStar.Buffer
 open LowStar.BufferOps
 open LowStar.Modifies
 open Mem_eq
+open Relations
 
 module H = FStar.Monotonic.Heap
 module B = LowStar.Buffer
@@ -30,6 +16,7 @@ module HS = FStar.HyperStack
 module U32 = FStar.UInt32
 module Map = FStar.Map
 module M = LowStar.Modifies
+
 
 type lstate = pointer mint * pointer mint
 
@@ -70,6 +57,23 @@ let state_as_lstate_put_get h ls bs =
   assert (get h2 b2 0 == s2);
   ()
 
+val state_as_lstate_get_put : h:HS.mem -> ls:lstate{well_formed h ls} ->
+    Lemma (state_as_lstate h ls (lstate_as_state h ls) == h)
+let state_as_lstate_get_put h ls = 
+    let (b1, b2) = ls in
+    let s1 = B.get h b1 0 in 
+    let s2 = B.get h b2 0 in 
+    
+    let h1 = g_upd b1 0 s1 h in
+    let l1 = g_upd_preserves_live h b1 b2 s1 in
+    let h2 = g_upd b2 0 s2 h1 in
+    let l2 = g_upd_preserves_live h1 b2 b1 s2 in
+
+    let p1 = get_upd_eq h b1 0 s1 in
+    assert (h1 == h);
+    let p2 = get_upd_eq h b2 0 s2 in 
+    assert (h2 == h);
+    ()
 
 val state_as_lstate_put_put : h:HS.mem -> ls:lstate{well_formed h ls} -> bs1:state -> bs2:state ->
     Lemma (state_as_lstate h ls bs2 == state_as_lstate (state_as_lstate h ls bs1) ls bs2)
@@ -102,8 +106,7 @@ let state_as_lstate_put_put h ls bs1 bs2 =
 
 (** ** Low computations and their WPs **)
 
-let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp)
-  =
+let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
   ls:lstate ->
   Stack a
      (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
@@ -120,8 +123,7 @@ let lcomp (a : Type) pre post (c : comp_p a pre post) =
 //Rather than get into trouble with applying `c` directly in a context
 //where we have to think about the VC of the continuation,
 //let's factor this into a `run`, which makes things a lot more predictable
-let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : Tot (a * state) =
-  c s0
+let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : Tot (a * state) = c s0
 
 type lwp a = lstate -> (mem -> (a * mem -> Type) -> Type)
 
@@ -156,22 +158,37 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) =
   lwp_eq (as_lwp c1) (as_lwp c2)
 
-// GM, Oct 23 2018: This looks very shady to me now. `l_eq` completely ignores `lc1` and `lc2`.
+assume val on_wp (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (lc : lcomp_wp a wp c) : lcomp_wp a wp c
+
+(* unused for now *)
+assume val on_wp_idem (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (lc : lcomp_wp a wp c)
+  : Lemma (on_wp c (on_wp c lc) == lc)
+let l_eq_refl #a (#wp:hwp_mon a) (#c:comp_wp a wp) (lc: lcomp_wp a wp c) : Lemma (l_eq lc lc) = ()
+
+let l_eq_symm #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
+                 (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) (_ : squash (l_eq lc1 lc2)) : Lemma (l_eq lc2 lc1) = ()
+
+let l_eq_trans #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1)
+                  (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2)
+                  (#wp3:hwp_mon a) (#c3:comp_wp a wp2) (lc3:lcomp_wp a wp2 c2)
+                  (_ : squash (l_eq lc1 lc2)) (_ : squash (l_eq lc2 lc3)) : Lemma (l_eq lc1 lc3) = ()
+
+let uncurry3 #a #b #c (r : #a -> #b -> c -> #a -> #b -> c -> Type) : relation (a * b * c) =
+  fun (x, y, z) (x', y', z') -> r x y z x' y' z'
+
+let l_eq' #a : relation (wp:hwp_mon a & c:comp_wp a wp & lcomp_wp a wp c) =
+  fun (|x, y, z|) (|x', y', z'|) -> l_eq #a #x #y z #x' #y' z'
+
+(* TODO : generic curry - uncurry operators for dependent pairs *)
+
+instance l_eq_equiv #a : equiv (l_eq' #a) = { refl'  = (fun x -> ());
+                                              symm'  = (fun x y p -> ());
+                                              trans' = (fun x y z p1 p2 -> ()); }
+
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
-                        Lemma (requires (l_eq lc1 lc2)) (ensures (lc1 === lc2))
-
-// Guido
-   let gh1 : comp_wp int (fun _ _ -> False) = return_elab 1
-   let gh2 : comp_wp int (fun _ _ -> False) = return_elab 2
-
-   let gl1 : lcomp_wp int (fun _ _ -> False) gh1 = fun ls -> 1
-   let gl2 : lcomp_wp int (fun _ _ -> False) gh2 = fun ls -> 2
-
-   // GM, Oct 23 2018: Is this OK? I don't think so, but also not sure it implies a contradiction.
-   let test () : Lemma (gl1 == gl2) =
-     l_eq_axiom #int #(fun _ _ -> False) #gh1 gl1 #(fun _ _ -> False) #gh2 gl2
-// /Guido
+                        Lemma (requires (l_eq lc1 lc2))
+                              (ensures (on_wp c1 lc1 === on_wp c2 lc2))
 
 // Lifting of high programs to low programs
 let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
@@ -427,9 +444,6 @@ let h_eq_implies_l_eq (#a:Type) (wp1:hwp_mon a) (c1:comp_wp a wp1) (lc1:lcomp_wp
 
 let h_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : Lemma (h_eq wp wp c c) = ()
 
-let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) :
-  Lemma (l_eq l l) = ()
-
 let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) :
   Lemma (l_eq lc1 lc2) = ()
 
@@ -454,21 +468,11 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
 
 (** ** Commutation of morphism **)
 
-(*
- * AR: 06/19: The following proofs (seem to) rely on the Valid intro and elim axioms
- *            that are no longer default in the smt encoding. So unless your .emacs
- *            adds those options (--smtencoding.valid_intro true --smtencoding.valid_elim true),
- *            the following proofs will fail in the interactive mode.
- *            (I could manage to work some proofs without those options though.)
- *)
-(* GM: Jun 25, 2019: Adding a set-options for them *)
-#set-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
-
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   Lemma
     (requires (c === return_elab x))
     (ensures (return_inv c x;
-              morph wp c == lreturn x)) =
+              on_wp c (morph wp c) == on_wp c (lreturn x))) =
   let p = return_inv c x in
   assert (subsumes (return_wp x) wp);
   assert (l_eq #a
@@ -488,7 +492,7 @@ let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
   Lemma
     (requires (c === hread_elab i))
     (ensures (read_inv c i;
-              morph wp c == lread' i)) =
+              on_wp c (morph wp c) == on_wp c (lread' i))) =
   let p = read_inv c i in
   assert (subsumes (read_wp i) wp);
   assert (l_eq #mint
@@ -503,7 +507,7 @@ let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : 
   Lemma
     (requires (c === hwrite_elab i v))
     (ensures (write_inv c i v;
-              morph wp c == lwrite' i v)) =
+              on_wp c (morph wp c) == on_wp c (lwrite' i v))) =
   let p = write_inv c i in
   assert (subsumes (write_wp i v) wp);
   assert (l_eq #unit
@@ -519,7 +523,7 @@ let morph_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     (wp : hwp_mon b) (c : comp_wp b wp) :
   Lemma (requires (c === bind_elab c1 c2))
         (ensures (bind_inv c1 c2 c;
-                  morph wp c == lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) =
+                  on_wp c (morph wp c) == on_wp c (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x)))))) =
   let p = bind_inv c1 c2 c in
   assert (subsumes (bind_wp wp1 wp2) wp);
   assert (l_eq #b
@@ -537,7 +541,7 @@ let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (
     (wp : hwp_mon unit) (c : comp_wp unit wp) :
   Lemma (requires (c === for_elab lo hi f))
         (ensures (for_inv lo hi f c;
-                  morph wp c == lfor lo hi (fun i -> morph (wp1 i) (f i)))) =
+                  on_wp c (morph wp c) == on_wp c (lfor lo hi (fun i -> morph (wp1 i) (f i))))) =
   let p = for_inv lo hi f c in
   assert (subsumes (for_wp wp1 lo hi) wp);
   assert (l_eq #unit
@@ -557,7 +561,7 @@ let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit (fun h0
                (wp : hwp_mon unit) (c : comp_wp unit wp) :
   Lemma (requires (c === for_elab' inv f lo hi))
         (ensures (for_inv' inv f lo hi c;
-                  morph wp c == lfor' inv f (fun i -> morph _ (f i)) lo hi)) =
+                  on_wp c (morph wp c) == on_wp c (lfor' inv f (fun i -> morph _ (f i)) lo hi))) =
   let p = for_inv' inv f lo hi c in
   assert (l_eq #unit
                #wp #(cast wp (for_elab' inv f lo hi)) (morph wp (cast wp (for_elab' inv f lo hi)))
@@ -576,7 +580,7 @@ let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     (wp : hwp_mon a) (c : comp_wp a wp):
   Lemma (requires (c === ite_elab b c1 c2))
         (ensures (ite_inv b c1 c2 c;
-                  morph wp c == lite b (morph wp1 c1) (morph wp2 c2))) =
+                  on_wp c (morph wp c) == on_wp c (lite b (morph wp1 c1) (morph wp2 c2)))) =
   let p = ite_inv b c1 c2 c in
   assert (subsumes (ite_wp b wp1 wp2) wp);
   assert (l_eq #a

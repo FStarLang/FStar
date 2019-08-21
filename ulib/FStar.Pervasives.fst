@@ -416,6 +416,13 @@ let unifier_hint_injective : unit = ()
 irreducible
 let strict_on_arguments (x:list int) : unit = ()
 
+(**
+ * An attribute to tag a tactic designated to solve any 
+ * unsolved implicit arguments remaining at the end of type inference.
+ **)
+irreducible
+let resolve_implicits : unit = ()
+
 (*********************************************************************************)
 (* Marking terms for normalization *)
 (*********************************************************************************)

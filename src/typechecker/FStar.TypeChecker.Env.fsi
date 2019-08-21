@@ -140,6 +140,7 @@ type env = {
   fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)

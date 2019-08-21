@@ -172,7 +172,8 @@ type env = {
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap<delta_depth>;              (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
-  synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  synth_hook     :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  try_solve_implicits_hook: env -> term -> implicits -> unit;
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
@@ -282,6 +283,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     fv_delta_depths = BU.smap_create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
+    try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
     splice = (fun e tau -> failwith "no splicer available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     is_native_tactic = (fun _ -> false);

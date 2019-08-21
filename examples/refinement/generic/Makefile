@@ -1,6 +1,6 @@
-FSTAR_HOME=../..
-include ../Makefile.include
-ROOTS=HighComp.fst LowComp.fst sum_and_swap.fst
+FSTAR_HOME=../../../
+include ../../Makefile.include
+ROOTS=Lens.fst FibState.fst
 
 all: verify-all
 
