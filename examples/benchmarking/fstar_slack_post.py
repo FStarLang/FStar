@@ -115,7 +115,7 @@ def long_pre_fn(title, series):
     return s
 
 def simple_compact_fn(title, series):
-    return '```' + title + '\n  ' + ', '.join(['%s %.1f%%'%(index,value) for index,value in series.items()] ) + '```\n'
+    return '```\n' + title + '\n  ' + ', '.join(['%s %.1f%%'%(index,value) for index,value in series.items()] ) + '\n```\n'
 
 N = 3
 #print('Best %s improvements:\n %s'%(str(N), change_data.head(N)))
