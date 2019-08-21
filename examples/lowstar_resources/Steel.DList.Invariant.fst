@@ -44,7 +44,6 @@ let mk_cell (p n: t 'a) (d:'a) = {
 let hd l = Cons?.hd l
 let tl l = Cons?.tl l
 
-
 let null_dlist (#a:Type) = admit()
 let ptr_eq (#a:Type) (x y:t a) = admit()
 
