@@ -17,7 +17,7 @@ noeq type ae_scheme (n:u32) =
   | AES:
   max_plaintext_length: u32 ->
   ciphertext_length: (plaintext_length:u32{plaintext_length `lte` max_plaintext_length} -> u32) ->
-  enc: (p:bytes -> k:key n -> nonce:bytes -> c:bytes) ->
+  enc: (p:bytes -> k:key n -> nonce:bytes -> eff (lo unit ) (lo bytes)) ->
   dec: (c:bytes -> k:key n -> nonce:bytes -> option (p:bytes{len p `lte` max_plaintext_length})) ->
   ae_scheme n
 
@@ -55,7 +55,7 @@ let enc0 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc
     | None ->
       let k_get : key_get_t n = get_oracle key_module ID_GET in
       k <-- lift_right (k_get h);
-      let c = aes.enc p k nonce in
+      c <-- lift_tape (aes.enc p k nonce);
       let ae_st' = DM.upd ae_st (h,nonce) (Some (c,p)) in
       put (ae_st',k_st);;
       return c
@@ -120,10 +120,10 @@ let ae_field_rels n aes : (l:ae_labels -> erel (ae_field_types n aes l)) =
         arrow
           (enc_inputs n aes)
           (eff_rel (combined_state_rel n aes) (lo bytes))
-    | DEC -> fun _ _ -> True
-        //arrow
-        //  (dec_inputs n aes)
-        //  (eff_rel (combined_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length}))))
+    | DEC ->
+        arrow
+          (dec_inputs n aes)
+          (eff_rel (combined_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length}))))
 
 let ae_sig (n:u32) (aes:ae_scheme n) = {
     labels = ae_labels;

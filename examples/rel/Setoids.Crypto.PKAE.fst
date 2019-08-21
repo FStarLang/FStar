@@ -4,86 +4,166 @@ open FStar.UInt32
 open FStar.Map
 open Setoids
 open Setoids.Crypto
-open Setoids.Crypto.KEY
-open Setoids.Crypto.AE
-open Setoids.Crypto.ODH
 
 module DM = FStar.DependentMap
 
 #set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
-let pkey n = share n
+let pkey n = lbytes32 n
+let skey n = lbytes32 n
 let nonce = bytes
 
-let pkae_state n aes = (ae_log #n aes * odh_state n) * key_state n
+noeq type pkae_scheme (n:u32) =
+  | PKAES:
+  max_plaintext_length: u32 ->
+  ciphertext_length: (plaintext_length:u32{plaintext_length `lte` max_plaintext_length} -> u32) ->
+  gen: (eff (lo unit) (lo (pkey n) ** lo (skey n))) ->
+  enc: (p:bytes -> pk:pkey n -> sk:skey n -> nonce:bytes -> eff (lo unit) (lo bytes)) ->
+  dec: (c:bytes -> pk:pkey n -> sk:skey n -> nonce:bytes -> option (p:bytes{len p `lte` max_plaintext_length})) ->
+  pkae_scheme n
 
-let pkae_state_rel n aes = ((lo (ae_log #n aes)) ** (lo (odh_state n))) ** (lo (key_state n))
+let handle = bytes * bytes
 
-#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 1"
-let lift_ae_state #a (#arel:erel a) n aes (f:eff (lo (ae_log #n aes) ** lo (key_state n)) arel)
-  : eff (pkae_state_rel n aes) arel
-  = fun (t, ((ae_st, odh_st), key_st)) ->
-      match f (t, (ae_st, key_st)) with
-      | None, (ae_st', key_st'), t -> None, ((ae_st',odh_st), key_st'), t
-      | Some x, (ae_st', key_st'), t -> Some x, ((ae_st',odh_st), key_st'), t
+let pkae_log_key = handle*bytes
+let pkae_log_value n (pkaes:pkae_scheme n) = fun (h,nonce) -> option (bytes*p:bytes{len p `lte` pkaes.max_plaintext_length})
 
-let lift_odh_state #a (#arel:erel a) n aes (f:eff (lo (odh_state n) ** lo (key_state n)) arel)
-  : eff (pkae_state_rel n aes) arel
-  = fun (t, ((ae_st, odh_st), key_st)) ->
-      match f (t, (odh_st, key_st)) with
-      | None, (odh_st', key_st'), t -> None, ((ae_st,odh_st'), key_st'), t
-      | Some x, (odh_st', key_st'), t -> Some x, ((ae_st,odh_st'), key_st'), t
+/// Map from nonces to a maps from ciphertext to plaintexts
+/// Should the state be dependent on the AE scheme?
+abstract let pkae_log n (pkaes:pkae_scheme n) =
+  DM.t (handle*bytes) (pkae_log_value n pkaes)
+
+let pkae_log_rel (n:u32) (pkaes:pkae_scheme n) = lo (pkae_log n pkaes)
+
+abstract let skey_log n =
+  DM.t (pkey n) (fun pk -> option (skey n))
+
+let skey_log_rel n = lo (skey_log n)
+
+let pkae_state n pkaes = pkae_log n pkaes * skey_log n
+
+let pkae_state_rel n pkaes = pkae_log_rel n pkaes ** skey_log_rel n
+
+let pkae_gen_t n pkaes =
+  (lo unit)
+    ^--> eff_rel (hi (pkae_log n pkaes) ** lo (skey_log n)) (lo (pkey n))
 
 #set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
-let ae_odh_sig n aes = sig_prod (odh_sig n) (ae_sig n aes)
-let ae_odh_module n aes = module_t (ae_odh_sig n aes)
-
-let pkae_gen_t n aes =
-  (lo unit)
-    ^--> eff_rel (((hi (ae_log #n aes)) ** (lo (odh_state n))) ** (lo (key_state n))) (lo (share n))
-
-let pkae_gen n aes (m:ae_odh_module n aes) : pkae_gen_t n aes
+let pkae_gen n pkaes : pkae_gen_t n pkaes
   =
   fun _ ->
-    let odh_gen : gen_dh_t n = get_oracle m (Inl GEN_DH) in
-    lift_odh_state n aes (odh_gen ())
+    keypair <-- lift_tape pkaes.gen;
+    let pk,sk = keypair in
+    s <-- get;
+    let sk_log:skey_log n = snd s in
+    let pkae_log = fst s in
+    let sk_log':skey_log n = DM.upd sk_log pk (Some sk) in
+    put (pkae_log,sk_log') ;;
+    return pk
 
-let pkae_enc_inputs n (aes:ae_scheme n) =
+let pkae_enc_inputs n (pkaes:pkae_scheme n) =
   quatruple_rel
     (lo (pkey n))
     (lo (pkey n))
     (lo nonce)
-    (lo (p:bytes{len p `lte` aes.max_plaintext_length}))
+    (lo (p:bytes{len p `lte` pkaes.max_plaintext_length}))
 
-let pkae_enc_t n aes =
-  pkae_enc_inputs n aes
-    ^--> eff_rel (pkae_state_rel n aes) (lo bytes)
+let pkae_enc_t n pkaes =
+  pkae_enc_inputs n pkaes
+    ^--> eff_rel (pkae_state_rel n pkaes) (lo bytes)
 
-let pkae_enc n aes (m:ae_odh_module n aes) : pkae_enc_t n aes =
+let pkae0_enc n pkaes : pkae_enc_t n pkaes =
   fun (sender_pk, receiver_pk, nonce, p) ->
-    let odh_exp : odh_t n = get_oracle m (Inl ODH) in
-    let ae_enc : enc_t n aes = get_oracle m (Inr ENC) in
-    h <-- lift_odh_state n aes (odh_exp (sender_pk, receiver_pk));
-    c <-- lift_ae_state n aes (ae_enc (p,nonce,h));
-    return #(pkae_state n aes) #bytes #(pkae_state_rel n aes) c
+    s <-- get;
+    let sk_log:skey_log n = snd s in
+    let pkae_log = fst s in
+    match DM.sel sk_log sender_pk with
+    | None ->
+      raise
+    | Some sk ->
+      let h =
+        if int_of_bytes sender_pk <= int_of_bytes receiver_pk then
+          (sender_pk,receiver_pk)
+        else
+          (receiver_pk,sender_pk)
+      in
+      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      | Some _ ->
+        raise
+      | None ->
+        c <-- lift_tape (pkaes.enc p receiver_pk sk nonce);
+        let pkae_log' = DM.upd #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) (Some (c,p)) in
+        put (pkae_log',sk_log);;
+        return c
 
-let pkae_dec_inputs n (aes:ae_scheme n) =
+let pkae1_enc n pkaes : pkae_enc_t n pkaes =
+  fun (sender_pk, receiver_pk, nonce, p) ->
+    s <-- get;
+    let sk_log:skey_log n = snd s in
+    let pkae_log = fst s in
+    match DM.sel sk_log sender_pk with
+    | None ->
+      raise
+    | Some sk ->
+      let h =
+        if int_of_bytes sender_pk <= int_of_bytes receiver_pk then
+          (sender_pk,receiver_pk)
+        else
+          (receiver_pk,sender_pk)
+      in
+      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      | Some _ ->
+        raise
+      | None ->
+        c <-- sample_multiple (pkaes.ciphertext_length (len p));
+        let pkae_log' = DM.upd #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) (Some (c,p)) in
+        put (pkae_log',sk_log);;
+        return #_ #bytes c
+
+let pkae_dec_inputs n (pkaes:pkae_scheme n) =
   quatruple_rel
     (lo (pkey n))
     (lo (pkey n))
     (lo nonce)
-    (lo (c:bytes{len c `lte` aes.ciphertext_length aes.max_plaintext_length}))
+    (lo (c:bytes{len c `lte` pkaes.ciphertext_length pkaes.max_plaintext_length}))
 
-let pkae_dec_t n aes =
-  pkae_dec_inputs n aes
-    ^--> eff_rel (pkae_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length})))
+let pkae_dec_t n pkaes =
+  pkae_dec_inputs n pkaes
+    ^--> eff_rel (pkae_state_rel n pkaes) (option_rel (lo (p:bytes{len p `lte` pkaes.max_plaintext_length})))
 
-let pkae_dec n aes (m:ae_odh_module n aes) : pkae_dec_t n aes =
+let pkae0_dec n pkaes : pkae_dec_t n pkaes =
   fun (sender_pk, receiver_pk, nonce, c) ->
-    let odh_exp : odh_t n = get_oracle m (Inl ODH) in
-    let ae_dec : dec_t n aes = get_oracle m (Inr DEC) in
-    h <-- lift_odh_state n aes (odh_exp (sender_pk, receiver_pk));
-    p <-- lift_ae_state n aes (ae_dec (c,nonce,h));
-    return p
+    s <-- get;
+    let sk_log:skey_log n = snd s in
+    let pkae_log = fst s in
+    match DM.sel sk_log receiver_pk with
+    | None ->
+      raise
+    | Some sk ->
+      let option_p = pkaes.dec c sender_pk sk nonce in
+      return option_p
+
+let pkae1_dec n pkaes : pkae_dec_t n pkaes =
+  fun (sender_pk, receiver_pk, nonce, c) ->
+    s <-- get;
+    let sk_log:skey_log n = snd s in
+    let pkae_log = fst s in
+    match DM.sel sk_log receiver_pk with
+    | None ->
+      raise
+    | Some sk ->
+      let h =
+        if int_of_bytes sender_pk <= int_of_bytes receiver_pk then
+          (sender_pk,receiver_pk)
+        else
+          (receiver_pk,sender_pk)
+      in
+      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      | Some (c',p) ->
+        if c = c' then
+          return (Some p)
+        else
+          return None
+      | None ->
+        return None
 
 type pkae_labels =
     | GEN
@@ -91,234 +171,50 @@ type pkae_labels =
     | DEC
 
 #set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 1"
-let pkae_field_types n aes : pkae_labels -> Type =
-    function  GEN -> pkae_gen_t n aes
-            | ENC -> pkae_enc_t n aes
-            | DEC -> pkae_dec_t n aes
+let pkae_field_types n pkaes : pkae_labels -> Type =
+    function  GEN -> pkae_gen_t n pkaes
+            | ENC -> pkae_enc_t n pkaes
+            | DEC -> pkae_dec_t n pkaes
 
-let pkae_field_rels n aes : (l:pkae_labels -> erel (pkae_field_types n aes l)) =
+let pkae_field_rels n pkaes : (l:pkae_labels -> erel (pkae_field_types n pkaes l)) =
   function
       GEN ->
       arrow
         (lo unit)
-        (eff_rel (((hi (ae_log #n aes)) ** (lo (odh_state n))) ** (lo (key_state n))) (lo (share n)))
+        (eff_rel (hi (pkae_log n pkaes) ** lo (skey_log n)) (lo (pkey n)))
     | ENC ->
       arrow
-        (pkae_enc_inputs n aes)
-        (eff_rel (pkae_state_rel n aes) (lo bytes))
+        (pkae_enc_inputs n pkaes)
+        (eff_rel (pkae_state_rel n pkaes) (lo bytes))
     | DEC ->
       arrow
-        (pkae_dec_inputs n aes)
-        (eff_rel (pkae_state_rel n aes) (option_rel (lo (p:bytes{len p `lte` aes.max_plaintext_length}))))
+        (pkae_dec_inputs n pkaes)
+        (eff_rel (pkae_state_rel n pkaes) (option_rel (lo (p:bytes{len p `lte` pkaes.max_plaintext_length}))))
 
-let pkae_sig (n:u32) (aes:ae_scheme n) = {
+let pkae_sig (n:u32) (pkaes:pkae_scheme n) = {
     labels = pkae_labels;
-    ops = pkae_field_types n aes;
-    rels = pkae_field_rels n aes
+    ops = pkae_field_types n pkaes;
+    rels = pkae_field_rels n pkaes
   }
 
-let pkae_module (n:u32) (aes:ae_scheme n) (m:ae_odh_module n aes) : module_t (pkae_sig n aes) =
-  DM.create #_ #(pkae_sig n aes).ops
-    (function GEN -> pkae_gen n aes m
-            | ENC -> pkae_enc n aes m
-            | DEC -> pkae_dec n aes m)
+let pkae0_module (n:u32) (pkaes:pkae_scheme n) : module_t (pkae_sig n pkaes) =
+  DM.create #_ #(pkae_sig n pkaes).ops
+    (function GEN -> pkae_gen n pkaes
+            | ENC -> pkae0_enc n pkaes
+            | DEC -> pkae0_dec n pkaes)
 
-let pkae_functor (n:u32) (aes:ae_scheme n)
-  : functor_t (sig_prod (odh_sig n) (ae_sig n aes)) (pkae_sig n aes)
-  = fun (m:module_t (sig_prod (odh_sig n) (ae_sig n aes))) ->
-      //pkae_module n aes m
-      admit()
+let pkae1_module (n:u32) (pkaes:pkae_scheme n) : module_t (pkae_sig n pkaes) =
+  DM.create #_ #(pkae_sig n pkaes).ops
+    (function GEN -> pkae_gen n pkaes
+            | ENC -> pkae1_enc n pkaes
+            | DEC -> pkae1_dec n pkaes)
 
-///     ID_WRITE
-///     -------- o KEY_0
-///     ID_READ
-let key0_id_composition n
-  : functor_t sig_unit (sig_prod (key_write_sig n) (key_read_sig n)) =
-  let id_composition =
-    functor_prod_shared_sig
-      (key_write_functor n)
-      (key_read_functor n) in
-  comp id_composition (KEY.key0_functor n)
+let pkae0_functor (n:u32) (pkaes:pkae_scheme n)
+  : functor_t (sig_unit) (pkae_sig n pkaes)
+  = fun _ ->
+      pkae0_module n pkaes
 
-///     ID_WRITE
-///     -------- o KEY_1
-///     ID_READ
-let key1_id_composition n
-  : functor_t sig_unit (sig_prod (key_write_sig n) (key_read_sig n)) =
-  let id_composition =
-    functor_prod_shared_sig
-      (key_write_functor n)
-      (key_read_functor n) in
-  comp id_composition (KEY.key1_functor n)
-
-///   ODH
-///   ----
-///   AE_0
-let protocol0_composition n aes os
-  : functor_t (sig_prod (key_write_sig n) (key_read_sig n)) (sig_prod (odh_sig n) (ae_sig n aes)) =
-  functor_prod
-    (odh_functor n os)
-    (ae0_functor n aes)
-
-///   ODH
-///   ----
-///   AE_1
-let protocol1_composition n aes os
-  : functor_t (sig_prod (key_write_sig n) (key_read_sig n)) (sig_prod (odh_sig n) (ae_sig n aes)) =
-  functor_prod
-    (odh_functor n os)
-    (ae1_functor n aes)
-
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_0
-///         AE_0   ID_READ
-let pkae0_composition n aes os
-  : functor_t sig_unit (pkae_sig n aes) =
-    let prot = comp (protocol0_composition n aes os) (key0_id_composition n) in
-    comp (pkae_functor n aes) prot
-
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_1
-///         AE_0   ID_READ
-let pkae_intermediate_composition n aes os
-  : functor_t sig_unit (pkae_sig n aes) =
-    let prot = comp (protocol0_composition n aes os) (key1_id_composition n) in
-    comp (pkae_functor n aes) prot
-
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_1
-///         AE_1   ID_READ
-let pkae1_composition n aes os
-  : functor_t sig_unit (pkae_sig n aes) =
-    let prot = comp (protocol1_composition n aes os) (key0_id_composition n) in
-    comp (pkae_functor n aes) prot
-
-let pkae_rel n aes : per (functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes)))  = fun (pkae0:functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes))) (pkae1:functor_t (sig_unit) (sig_prod (odh_sig n) (ae_sig n aes))) ->
-  let pkae0_module = pkae0 mod_unit in
-  let pkae1_module = pkae1 mod_unit in
-  sig_rel' (sig_prod (odh_sig n) (ae_sig n aes)) pkae0_module pkae1_module
-
-/// The following doesn't verify. I'm just trying to hint at how I would imagine the proof would go.
-
-/// Proof:
-/// Assumptions:
-/// ODH o ID_WRITE            ODH o ID_WRITE
-/// -------------- o KEY_0 =  -------------- o KEY_1
-///    ID_READ                    ID_READ
-
-///    ID_WRITE                     ID_WRITE
-/// ---------------- o KEY_1 =  ---------------- o KEY_1
-///  AE_0 o ID_READ              AE_1 o ID_READ
-///
-/// Goal: Show that we can instantiate an eq instance with pkae0 and pkae1
-/// Note, that for the full cryptographic proof, we would have to show `Perfect`
-/// equivalence with the actual PKAE security notion, which I have not yet
-/// encoded. However, that should be trivial, once we have make the following
-/// work.
-let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
-  : eq (pkae_rel n aes)
-       (sum (odh_eps n) (ae_eps n aes))
-       (pkae0_composition n aes os)
-       (pkae1_composition n aes os) =
-  let starting_point = pkae0_composition n aes os in
-/// First step: pull ODH assumption to the right and make sure the result is
-/// still equal. Then idealize ODH and pull it back to the left.
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_0
-///         AE_0   ID_READ
-/// to
-///         ID_ODH     ODH o ID_WRITE
-///  PKAE o ------ o ----------------- o KEY_0
-///         AE_0         ID_READ
-/// to
-///         ID_ODH     ODH o ID_WRITE
-///  PKAE o ------ o ----------------- o KEY_1
-///         AE_0         ID_READ
-/// to
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_1
-///         AE_0   ID_READ
-  let step1_right_side = odh_game0 n os in
-  let step1_left_side =
-    comp (pkae_functor n aes)
-         (functor_prod
-           id_func
-           (ae0_functor n aes))
-  in
-  // Prove here, that pulling ODH to the right doesn't change anything.
-  let step1a_eq =
-    Perfect #_ #_ #(pkae_rel n aes)
-      starting_point
-      (comp
-        (step1_left_side)
-        (step1_right_side))
-      ()
-  in
-  // Now apply the ODH assumption via the Ctx rule.
-  let step1b_eq =
-    Ctx #_ #_ #(pkae_rel n aes)
-      (odh_assumption n os)
-      step1_left_side
-  in
-  // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
-  let step1_final = pkae_intermediate_composition n aes os in
-  // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
-  let step1_final_eq =
-    Perfect #_ #_ #(pkae_rel n aes)
-      (comp
-        (step1_left_side)
-        (step1_right_side))
-      step1_final ()
-  in
-/// Second step: pull AE assumption to the right and make sure the result is
-/// still equal. Then idealize AE and pull it back to the left.
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_1
-///         AE_0   ID_READ
-/// to
-///         ODH        ID_WRITE
-///  PKAE o ---- o ----------------- o KEY_1
-///         ID_AE    AE_0 o ID_READ
-/// to
-///         ODH        ID_WRITE
-///  PKAE o ---- o ----------------- o KEY_1
-///         ID_AE    AE_1 o ID_READ
-/// to
-///         ODH    ID_WRITE
-///  PKAE o ---- o -------- o KEY_1
-///         AE_1   ID_READ
-  let step2_right_side = ae_game0 n aes in
-  let step2_left_side =
-    comp
-      (pkae_functor n aes)
-      (functor_prod (odh_functor n aes) id_func)
-  in
-  // Prove here, that pulling AE to the right doesn't change anything.
-  let step2a_eq =
-    Perfect #_ #_ #(pkae_rel n aes)
-      step1_final
-      (comp
-        (step2_left_side)
-        (step2_right_side))
-      ()
-  in
-  // Now apply the ODH assumption via the Ctx rule.
-  let step2b_eq =
-    Ctx #_ #_ #(pkae_rel n aes)
-      (ae_assumption n aes)
-      step2_left_side
-  in
-  // Finish the first step by pulling ODH to the left again. Note, that the KEY package is now idealized (KEY_0 -> KEY_1).
-  let step2_final = pkae1_composition n aes os in
-  // And prove again, that nothing changes by pulling ODH back to the left (now with KEY_1 instead of KEY_0).
-  let step2_final_eq =
-    Perfect #_ #_ #(pkae_rel n aes)
-      (comp
-        (step2_left_side)
-        (step2_right_side))
-      step2_final
-      ()
-  in
-  // Finally, connect all the created `eq` instances via the `Trans` rule to get the eq from pkae0_composition to pkae1_composition.
-  // ...
-  admit()
+let pkae1_functor (n:u32) (pkaes:pkae_scheme n)
+  : functor_t (sig_unit) (pkae_sig n pkaes)
+  = fun _ ->
+      pkae1_module n pkaes

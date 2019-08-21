@@ -114,19 +114,22 @@ let int_container_functor
   = fun (k:module_t (sig_unit)) ->
       int_container_module
 
-let eq_checker_st = int
-let eq_checker_state_rel = lo int
+/// The eq_checker has no state.
+let eq_checker_st = unit
+let eq_checker_state_rel = lo unit
 
 let combined_state_rel = int_container_state_rel ** eq_checker_state_rel
 
-/// This function compares the input of the function with either
-/// 1. the value in the composed int_container
+/// This function compares the input of the function with
+/// the value in the composed int_container by either
+/// 1. using the "get" function exposed by the int_container
 /// or
-/// 2. the value in the eq_checker itself.
+/// 2. accessing the state of the int_container directly.
 /// The whole module only casts to a functor if 2. is the case.
-let is_eq_t = lo int ^--> eff_rel combined_state_rel (lo bool)
-let is_eq (ih:module_t int_container_sig) : is_eq_t =
-  fun x ->
+let is_eq_t = ((sig_rel int_container_sig) ** lo int) ^--> eff_rel combined_state_rel (lo bool)
+let is_eq_t_trunc = (lo int) ^--> eff_rel combined_state_rel (lo bool)
+let is_eq  : is_eq_t =
+  fun (ih,x) ->
     let get_int : get_int_t = get_oracle ih GET in
     // 1:
     st <--
@@ -143,7 +146,7 @@ type eq_checker_labels =
 
 #set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 1"
 let eq_checker_field_types : eq_checker_labels -> Type =
-    function  IS_EQ -> is_eq_t
+    function  IS_EQ -> is_eq_t_trunc
 
 let eq_checker_field_rels : (l:eq_checker_labels -> erel (eq_checker_field_types l)) =
   function
@@ -158,12 +161,15 @@ let eq_checker_sig = {
     rels = eq_checker_field_rels
   }
 
-let eq_checker_module (ih:module_t int_container_sig) : module_t (eq_checker_sig) =
-  DM.create #_ #(eq_checker_sig).ops
-    (function IS_EQ -> is_eq ih)
-
-#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 1350 --max_fuel 0 --max_ifuel 1"
 #set-options "--query_stats"
+let eq_checker_module_t = (sig_rel int_container_sig) ^--> (sig_rel (eq_checker_sig))
+let eq_checker_module : eq_checker_module_t =
+  fun ih ->
+  let is_eq' : is_eq_t_trunc = fun x -> is_eq (ih,x) in
+  DM.create #_ #(eq_checker_sig).ops
+    (function IS_EQ -> is_eq')
+
 let eq_checker_functor
   : functor_t (int_container_sig) (eq_checker_sig)
   = fun (ih:module_t (int_container_sig)) ->

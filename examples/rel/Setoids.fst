@@ -548,6 +548,25 @@ let eps s t = atk s t -> nat
 let eps_z #s #t : eps s t = fun m -> 0
 let sum #s #t (e1 e2:eps s t) : eps s t = fun m -> e1 m + e2 m
 
+let commutativity_sum_lemma #s #t (e1 e2:eps s t) : Lemma
+  (ensures
+    (sum e1 e2 == sum e2 e1)
+    )
+    [SMTPat (sum #s #t e1 e2)]
+  =
+  admit()
+
+#set-options "--z3rlimit 350 --max_fuel 3 --max_ifuel 0 --query_stats"
+let eps_z_sum_lemma #s #t (e1 e2:eps s t) : Lemma
+  (ensures
+    (e1 == eps_z ==> sum e1 e2 == e2) /\
+    (e2 == eps_z ==> sum e1 e2 == e1)
+    )
+    [SMTPat (sum #s #t e1 e2)]
+  =
+  admit()
+
+
 /// Given an attacker on `s -> t`, and a functor `f: t -> r` we can
 /// adapt the advantage to apply it to `s -> r`
 let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)

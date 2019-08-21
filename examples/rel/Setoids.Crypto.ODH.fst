@@ -89,7 +89,7 @@ let odh_module (n:u32) (os:odh_scheme n) (km:module_t (key_write_sig n)) : modul
     (function GEN_DH -> gen_dh n os
             | ODH -> odh n os km)
 
-let odh_functor n os
+let odh_functor n (os:odh_scheme n)
   : functor_t (key_write_sig n) (odh_sig n)
   = fun (k:module_t (key_write_sig n)) ->
     admit()

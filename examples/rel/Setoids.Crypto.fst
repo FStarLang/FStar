@@ -159,8 +159,16 @@ let lift_right #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2{s2rel == lo s2}) #a (#ar
   : eff (s1rel ** s2rel) arel
   = fun (t, (s1, s2)) ->
       match f (t, s2) with
-      | None, s2', t -> None, (s1, s2'), t
-      | Some x, s2', t -> Some x, (s1, s2'), t
+      | None, s2', n -> None, (s1, s2'), n
+      | Some x, s2', n -> Some x, (s1, s2'), n
+
+// For non-deterministic, non-stateful functions.
+let lift_tape #s (#srel:erel s) #a (#arel:erel a) (f:eff (lo unit) arel)
+  : eff srel arel
+  = fun (t, s) ->
+      match f (t, ()) with
+      | None, _, n -> None, s, n
+      | Some x, _, n -> Some x, s, n
 
 let get_oracle #sig (m:module_t sig) (o:sig.labels) : sig.ops o = DM.sel m o
 
