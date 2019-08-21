@@ -2185,7 +2185,7 @@ let load_checked_module (en:env) (m:modul) :env =
              //that may be marked "abstract" externally to be visible internally
              //populating the cache enables this behavior, rather indirectly, sadly : (
              let lids = Util.lids_of_sigelt se in
-             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
+             lids |> List.iter (fun lid -> ignore (Env.lookup_sigelt env lid));
              env)
              env
              m.declarations in
