@@ -1,16 +1,11 @@
 module Steel.Pointer.Views
 
-open FStar.HyperStack.ST
 module A = LowStar.Array
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
-module Seq = FStar.Seq
 module P = LowStar.Permissions
 
-open Steel.Resource
 open Steel.RST
 
-open LowStar.BufferOps
 
 (* View and resource for (heap-allocated, freeable) pointer resources *)
 
@@ -45,7 +40,7 @@ let reveal_ptr ()
              sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = Ghost.hide (A.get_perm h ptr 0)})) =
   ()
 
-let get
+let get_val
   (#a: Type)
   (ptr: pointer a)
   (#r: resource{ptr_resource #a ptr `is_subresource_of` r})

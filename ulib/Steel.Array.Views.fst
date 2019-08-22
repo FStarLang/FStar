@@ -15,7 +15,6 @@
 *)
 module Steel.Array.Views
 
-open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
