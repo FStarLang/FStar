@@ -114,7 +114,7 @@ let get_rperm
   (#a: Type)
   (b: array a)
   (#r: resource{array_resource #a b `is_subresource_of` r})
-  (h: rmem r) : GTot P.permission =
+  (h: rmem r) : GTot P.permission  =
   Ghost.reveal (h (array_resource b)).p
 
 let reveal_array ()
