@@ -46,4 +46,4 @@ let test3 ()
 : RST nat r1 (fun _ -> r3)
   (fun rm -> rm r1 == 2)
   (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 2)
-= f1 0; f2 0; f3 3; 2
+= f1 0; f2 0; f3 3; 2  //expected failure since need to use rst_frame for 2
