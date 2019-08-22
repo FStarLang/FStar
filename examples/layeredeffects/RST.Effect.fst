@@ -17,7 +17,8 @@ let rst_wp_monotonic (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp' 
     (forall x h. p x h ==> q x h) ==>
     (forall h. wp p h ==> wp q h)
 
-type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) = wp:rst_wp' a r_in r_out{rst_wp_monotonic a r_in r_out wp}
+type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) =
+  wp:rst_wp' a r_in r_out{rst_wp_monotonic a r_in r_out wp}
 
 type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out) =
   unit -> 
@@ -34,7 +35,7 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out
 unfold let emp = empty_resource
 
 let return (a:Type) (x:a)
-: repr a emp (fun _ -> emp) (fun p rm -> p x rm)
+: repr a emp (fun _ -> emp) (fun p -> p x)
 = fun _ -> x
 
 let bind (a:Type) (b:Type)
@@ -42,7 +43,7 @@ let bind (a:Type) (b:Type)
   (r_out_g:b -> resource) (wp_g:(x:a -> rst_wp b (r_out_f x) r_out_g))
   (f:repr a r_in_f r_out_f wp_f)
   (g:(x:a -> repr b (r_out_f x) r_out_g (wp_g x)))
-: repr b r_in_f r_out_g (fun p rm0 -> wp_f (fun x rm1 -> (wp_g x) p rm1) rm0)
+: repr b r_in_f r_out_g (fun p -> wp_f (fun x -> (wp_g x) p))
 = fun _ ->
   let x = f () in
   g x ()
