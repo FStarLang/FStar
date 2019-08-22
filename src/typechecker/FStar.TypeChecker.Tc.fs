@@ -266,27 +266,22 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let env = Env.push_univ_vars env0 us in
 
     let a, u = fresh_a_and_u_a "a" in
-    let f_is_bs =
-      let signature_ts = let us, t, _ = signature in (us, t) in
-      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
-    let g_is_bs =
-      let signature_ts = let us, t, _ = signature in (us, t) in
-      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
-    let f_b =
-      let repr_ts = let (us, t, _) = repr in (us, t) in
-      let _, repr = Env.inst_tscheme_with repr_ts [u] in
-      let repr = S.mk_Tm_app
-        repr
-        ((a::f_is_bs) |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
-        None r in
-      S.gen_bv "f" None repr |> S.mk_binder in
-    let ret_t =
-      let repr_ts = let (us, t, _) = repr in (us, t) in
-      let _, repr = Env.inst_tscheme_with repr_ts [u] in
-      S.mk_Tm_app
-        repr
-        ((a::g_is_bs) |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
-        None r in
+    let rest_bs =
+      match (SS.compress ty).n with
+      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+        (match SS.open_binders bs with
+         | (a', _)::bs ->
+           let bs, _ = List.splitAt (List.length bs - 1) bs in
+           let substs = [NT (a', bv_to_name (fst a))] in
+           SS.subst_binders substs bs
+         | _ -> failwith "Impossible!")
+      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+    let bs = a::rest_bs in
+    let f, g_f =
+      let repr, g = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
+      S.gen_bv "f" None repr |> S.mk_binder, g in
+    let ret_t, g_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
+
     let pure_wp_t =
       let pure_wp_ts = Env.lookup_definition [NoDelta] env PC.pure_wp_lid |> must in
       let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
@@ -294,9 +289,8 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
         pure_wp_t
         [ret_t |> S.as_arg]
         None r in
-
     let pure_wp_uvar, _, g_pure_wp_uvar =
-      TcUtil.new_implicit_var "" r (Env.push_binders env (a::(f_is_bs@g_is_bs))) pure_wp_t in
+      TcUtil.new_implicit_var "" r (Env.push_binders env bs) pure_wp_t in
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];  //AR: TODO: FIXME: not sure if this is getting resolved properly
       effect_name = PC.effect_PURE_lid;
@@ -304,33 +298,32 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
       effect_args = [ pure_wp_uvar |> S.as_arg ];
       flags = [] }) in
 
-    let k = U.arrow (a::(f_is_bs@g_is_bs@[f_b])) c in
+    let k = U.arrow (bs@[f]) c in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print1 "Expected type before unification: %s\n"
         (Print.term_to_string k);
 
     let g = Rel.teq env ty k in
-    Rel.force_trivial_guard env (Env.conj_guard g_pure_wp_uvar g);
-    let k =
-      let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
-      match (SS.compress k).n with
-      | Tm_arrow (bs, c) ->
-        let bs, c = SS.open_comp bs c in
-        let u, _, wp = c |> U.comp_to_comp_typ |> U.destruct_comp in
-        let trivial_post =
-          let ts = Env.lookup_definition [NoDelta] env PC.trivial_pure_post_lid |> must in
-          let _, t = Env.inst_tscheme_with ts [u] in
-          S.mk_Tm_app
-            t
-            [ret_t |> S.as_arg]
-            None r in
-        let fml = S.mk_Tm_app
-          wp
-          [trivial_post |> S.as_arg]
-          None r in
-        U.arrow bs (S.mk_Total' fml (Some S.U_zero))
-      | _ -> failwith "Impossible!" in //AR: TODO: FIXME: error out respectfully
+    List.iter (Rel.force_trivial_guard env) [g_f; g_ret_t; g_pure_wp_uvar];
+    let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
+      // match (SS.compress k).n with
+      // | Tm_arrow (bs, c) ->
+      //   let bs, c = SS.open_comp bs c in
+      //   let u, _, wp = c |> U.comp_to_comp_typ |> U.destruct_comp in
+      //   let trivial_post =
+      //     let ts = Env.lookup_definition [NoDelta] env PC.trivial_pure_post_lid |> must in
+      //     let _, t = Env.inst_tscheme_with ts [u] in
+      //     S.mk_Tm_app
+      //       t
+      //       [ret_t |> S.as_arg]
+      //       None r in
+      //   let fml = S.mk_Tm_app
+      //     wp
+      //     [trivial_post |> S.as_arg]
+      //     None r in
+      //   U.arrow bs (S.mk_Total' fml (Some S.U_zero))  //U_Zero?
+      // | _ -> failwith "Impossible!" in //AR: TODO: FIXME: error out respectfully
 
     stronger_us, stronger_t, k |> N.normalize [Beta; Eager_unfolding] env |> SS.close_univ_vars stronger_us in
 
