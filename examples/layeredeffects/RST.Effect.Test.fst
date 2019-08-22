@@ -54,6 +54,6 @@ let test3 ()
 let test4 ()
 : RST nat r1 (fun _ -> r3)
   (fun rm -> rm r1 == 2)
-  (fun rm_in x rm_out -> rm_out r3 > 2)
+  (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 2)
 = f1 0; f2 0; f3 3;
   rst_frame r3 (fun _ -> r3) r3 test1
