@@ -15,44 +15,23 @@
 *)
 module Steel.Pointer
 
-open FStar.HyperStack.ST
-module A = LowStar.Array
-module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
-module Seq = FStar.Seq
 module P = LowStar.Permissions
-
-open Steel.Resource
-open Steel.RST
-open Steel.Pointer.Views
+module A = LowStar.Array
+module HST = FStar.HyperStack.ST
 
 include Steel.Pointer.Views
 
+open Steel.RST
+
 (**** Unscoped allocation and deallocation of pointer resources *)
 
-let ptr_alloc
-  (#a:Type)
-  (init:a)
-  : RST (pointer a) (empty_resource)
-    (fun ptr -> ptr_resource ptr)
-    (fun _ -> True)
-    (fun _ ptr h1 ->
-      A.freeable ptr /\
-      get ptr h1 == init /\
-      get_perm ptr h1 = FStar.Real.one
-    ) =
+let ptr_alloc #a init =
   reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();
   A.alloc init 1ul
 
-let ptr_free
-  (#a:Type)
-  (ptr:pointer a)
-  : RST unit (ptr_resource ptr)
-    (fun ptr -> empty_resource)
-    (fun h0 -> A.freeable ptr /\ P.allows_write (get_perm ptr h0))
-    (fun _ _ _ -> True) =
+let ptr_free #a ptr =
   reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();
@@ -62,30 +41,11 @@ let ptr_free
 (**** Reading and writing using a pointer resource *)
 
 
-let ptr_read
-  (#a:Type)
-  (ptr:pointer a)
-  : RST a (ptr_resource ptr)
-    (fun _ -> ptr_resource ptr)
-    (fun _ -> True)
-    (fun h0 x h1 ->
-      get ptr h0 == x /\
-      h0 == h1
-    ) =
+let ptr_read #a ptr =
   reveal_ptr();
   A.index ptr 0ul
 
-let ptr_write
-  (#a:Type)
-  (ptr:pointer a)
-  (x:a)
-  : RST unit (ptr_resource ptr)
-    (fun _ -> ptr_resource ptr)
-    (fun h0 -> P.allows_write (get_perm ptr h0))
-    (fun h0 _ h1 ->
-      get_perm ptr h0 == get_perm ptr h1 /\
-      get ptr h1 == x
-    ) =
+let ptr_write #a ptr x =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
@@ -94,21 +54,7 @@ let ptr_write
   (**) A.live_array_used_in ptr h1
 
 
-let ptr_share
-  (#a: Type)
-  (ptr: pointer a)
-  : RST (pointer a)
-    (ptr_resource ptr)
-    (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
-    (fun _ -> True)
-    (fun h0 ptr1 h1 ->
-      get ptr h1 == get ptr h0  /\
-      get ptr1 h1 == get ptr h0  /\
-      get_perm ptr h1 == P.half_permission (get_perm ptr h0) /\
-      get_perm ptr1 h1 == P.half_permission (get_perm ptr h0) /\
-      A.gatherable ptr ptr1 /\
-      P.summable_permissions (get_perm ptr h1) (get_perm ptr1 h1))
-  =
+let ptr_share #a ptr =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
@@ -118,22 +64,7 @@ let ptr_share
   (**) A.live_array_used_in ptr h1;
   ptr1
 
-let ptr_merge
-  (#a: Type)
-  (ptr1: pointer a)
-  (ptr2: pointer a)
-  : RST unit
-    (ptr_resource ptr1 <*> ptr_resource ptr2)
-    (fun _ -> ptr_resource ptr1)
-    (fun h0 -> A.gatherable ptr1 ptr2 /\
-      P.summable_permissions (get_perm ptr1 h0) (get_perm ptr2 h0)
-    )
-    (fun h0 _ h1 ->
-      P.summable_permissions (get_perm ptr1 h0) (get_perm ptr2 h0) /\
-      get ptr1 h1 == get ptr1 h0 /\
-      get_perm ptr1 h1 == P.sum_permissions (get_perm ptr1 h0) (get_perm ptr2 h0)
-     )
-  =
+let ptr_merge #a ptr1 ptr2 =
   (**) reveal_ptr();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
