@@ -89,6 +89,32 @@ effect RST (a:Type)
 = RSTATE a r_in r_out
   (fun (p:rst_post a r_out) (h0:rmem r_in) -> pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1))
 
+assume val rst_frame (#a:Type)
+  (r_in_outer:resource)
+  (#r_in_inner:resource)
+  (#r_out_inner:a -> resource)
+  (r_out_outer:a -> resource)
+  (delta:resource)
+  (#pre:rprop r_in_inner)
+  (#post:rmem r_in_inner -> (x:a) -> rprop (r_out_inner x))
+  ($f:unit -> RST a r_in_inner r_out_inner pre post)
+: RST a r_in_outer r_out_outer
+  (fun rm_in ->
+    r_in_outer `can_be_split_into` (r_in_inner, delta) /\
+    pre (focus_rmem rm_in r_in_inner))
+  (fun rm_in x rm_out ->
+    r_in_outer `can_be_split_into` (r_in_inner, delta) /\
+    (r_out_outer x) `can_be_split_into` (r_out_inner x, delta) /\
+    (forall (r:resource).
+       (r `is_subresource_of` delta /\
+        r `is_subresource_of` r_in_outer /\
+        r `is_subresource_of` (r_out_outer x)) ==> rm_in r == rm_out r) /\
+    //focus_rmem rm_in delta == focus_rmem rm_out delta /\  -- this doesn't work (see test4 in RST.Effect.Test.fst)
+    post (focus_rmem rm_in r_in_inner) x (focus_rmem rm_out (r_out_inner x)))
+
+
+
+
 
 
 // type pre_t (r:resource) = rprop r

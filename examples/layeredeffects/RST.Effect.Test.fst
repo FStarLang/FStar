@@ -8,7 +8,7 @@ open RST.Effect
 #set-options "--max_fuel 0 --max_ifuel 0"
 
 let test1 ()
-: RST int emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r > 1)
+: RST nat emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r == 2)
 = 2
 
 
@@ -41,9 +41,19 @@ let test2 ()
   (fun rm_in x rm_out -> rm_out r3 > 2)
 = f1 0; f2 0; f3 3
 
-[@expect_failure]
+assume Can_be_split_into_emp:
+  forall (r:resource). r `can_be_split_into` (r, emp) /\ r `can_be_split_into` (emp, r)
+
 let test3 ()
 : RST nat r1 (fun _ -> r3)
   (fun rm -> rm r1 == 2)
-  (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 2)
-= f1 0; f2 0; f3 3; 2  //expected failure since need to use rst_frame for 2
+  (fun rm_in x rm_out -> True) //rm_out r3 > 2)
+= f1 0; f2 0; f3 3;
+  rst_frame r3 (fun _ -> r3) r3 test1
+
+let test4 ()
+: RST nat r1 (fun _ -> r3)
+  (fun rm -> rm r1 == 2)
+  (fun rm_in x rm_out -> rm_out r3 > 2)
+= f1 0; f2 0; f3 3;
+  rst_frame r3 (fun _ -> r3) r3 test1
