@@ -114,8 +114,18 @@ let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` 
 let focus_rmem #r s r0 =
   focus_rmem' #r s r0
 
-
 let focus_rmem_equality outer inner h =
+  let focused = focus_rmem h inner in
+  let aux (arg:resource{arg `is_subresource_of` inner}) : Lemma (focused arg == h arg) =
+    extensionality_g
+      (r0:resource{r0 `is_subresource_of` inner})
+      (fun r0 -> r0.t)
+      focused
+      h
+  in
+  Classical.forall_intro aux
+
+let focus_mk_rmem_equality outer inner h =
   let souter = mk_rmem outer h in
   let focused = focus_rmem souter inner in
   let original = mk_rmem inner h in
@@ -197,16 +207,14 @@ inline_for_extraction noextract let rst_frame
   (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
   (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
   (**) let h0 = HST.get () in
-  (**) focus_rmem_equality outer0 inner0 h0;
-  (**) focus_rmem_equality outer0 delta h0;
+  (**) focus_mk_rmem_equality outer0 inner0 h0;
+  (**) focus_mk_rmem_equality outer0 delta h0;
   let x = f () in
-  (**) let h1 = HST.get () in
-  (**) focus_rmem_equality (outer1 x) (inner1 x) h1;
-  (**) focus_rmem_equality (outer1 x) delta h1;
-  (**) let old = mk_rmem outer0 h0 in
-  (**) let cur = mk_rmem (outer1 x) h1 in
-  (**) let old_delta = focus_rmem old delta in
-  (**) let cur_delta = focus_rmem cur delta in
+  (**) let h1 = HST.get ()in
+  (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
+  (**) focus_mk_rmem_equality (outer1 x) delta h1;
+  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
+  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) delta in
   (**) extensionality_g
   (**)  (r0:resource{r0 `is_subresource_of` delta})
   (**)  (fun r0 -> r0.t)
