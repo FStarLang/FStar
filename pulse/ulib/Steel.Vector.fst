@@ -15,86 +15,185 @@ module Perm = LowStar.Permissions
 #set-options "--max_fuel 0 --max_ifuel 0"
 
 noeq
-type vector_s (a: Type0) =
+type contents_t (a: Type0) =
 | Vector:
     len:U32.t -> // number of elements in the vector
     max:U32.t -> // capacity
     arr:A.array a ->
-    vector_s a
+    contents_t a
 
-let vector (a: Type0) = P.pointer (vector_s a)
+let vector (a: Type0) = P.pointer (contents_t a)
 
-let hget_arr (h: HS.mem) (#a: Type0) (v:vector a) : GTot (A.array a) =
-  (Seq.index (A.as_seq h v) 0).arr
-let hget_len (h: HS.mem) (#a: Type0) (v:vector a) : GTot U32.t = (Seq.index (A.as_seq h v) 0).len
-let hget_max (h: HS.mem) (#a: Type0) (v:vector a) : GTot U32.t = (Seq.index (A.as_seq h v) 0).max
-let hget_perm (h : HS.mem) (#a: Type0) (v:vector a)
-  : GTot (Ghost.erased LowStar.Permissions.permission) =
-  Ghost.hide (A.get_perm h (hget_arr h v) 0)
-let hget_seq (h: HS.mem) (#a: Type0) (v:vector a) : GTot (Seq.seq a) =
-  A.as_seq h (hget_arr h v)
-let hget_arr_r (h: HS.mem) (#a: Type0) (v:vector a) : GTot resource =
-  A.array_resource (hget_arr h v)
+let as_contents (h: HS.mem) (#a: Type0) (v:vector a) : GTot (contents_t a) =
+  (Seq.index (A.as_seq h v) 0)
 
 let vector_view (#a : Type0) (v : vector a) : Tot (view (vector_view_t a)) =
   let v_ptr_r : resource = P.ptr_resource v in
   reveal_view ();
   P.reveal_ptr ();
   A.reveal_array ();
-
+  reveal_star ();
   let fp_r (h: HS.mem) =
-    (as_loc (fp (P.ptr_resource v)) h)
-    `A.loc_union`
-    (as_loc (fp (A.array_resource (hget_arr h v))) h)
+    as_loc (fp (P.ptr_resource v <*> A.array_resource (as_contents h v).arr)) h
   in
   let inv_r (h: HS.mem) : prop =
-    inv v_ptr_r h /\ inv (hget_arr_r h v) h /\
-    (as_loc (fp (P.ptr_resource v)) h) `A.loc_disjoint`
-      (as_loc (fp (A.array_resource (hget_arr h v))) h) /\
-    A.length (hget_arr h v) = hget_max h v /\
-    U32.v (hget_len h v) <= U32.v (hget_max h v) /\
-    U32.v (hget_len h v) >= 0 /\
-    Ghost.reveal (hget_perm h v) = A.get_perm h v 0 /\
-    A.freeable (hget_arr h v)
+    inv (P.ptr_resource v <*> A.array_resource (as_contents h v).arr) h /\
+    A.length (as_contents h v).arr = (as_contents h v).max /\
+    U32.v (as_contents h v).len <= U32.v (as_contents h v).max /\
+    U32.v (as_contents h v).len >= 0 /\
+    A.get_rperm
+      (as_contents h v).arr
+      #(A.array_resource (as_contents h v).arr)
+      (mk_rmem (A.array_resource (as_contents h v).arr) h) =
+      P.get_perm v #(P.ptr_resource v) (mk_rmem (P.ptr_resource v) h) /\
+    A.freeable (as_contents h v).arr
   in
   let sel_r (h: HS.mem) : GTot (vector_view_t a) =
-    let len = U32.v  (hget_len h v) in
-    let correct_len = if len >= 0 && len <= S.length (hget_seq h v) then len else 0 in
+    let len = U32.v (as_contents h v).len in
+    let correct_len = if len >= 0 && len <= A.vlength (as_contents h v).arr then len else 0 in
     {
-      v_capacity = hget_max h v;
-      v_arr = S.slice (hget_seq h v) 0 correct_len;
-      v_perm = hget_perm h v;
+      v_capacity = (as_contents h v).max;
+      v_arr = S.slice (A.as_seq h (as_contents h v).arr) 0 correct_len;
+      v_perm = Ghost.hide (A.get_perm h v 0);
     }
   in
   { fp = fp_r ; inv = inv_r; sel = sel_r }
 
+val reveal_vector (#a: Type) (v: vector a) : RST (contents_t a)
+  (vector_resource v)
+  (fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
+  (fun _ -> True)
+  (fun h0 contents h1 ->
+    A.length contents.arr = contents.max /\
+    U32.v contents.len <= U32.v contents.max /\
+    U32.v contents.len >= 0 /\
+    A.get_rperm
+      contents.arr
+      #(A.array_resource contents.arr) (focus_rmem h1 (A.array_resource contents.arr)) =
+      P.get_perm v #(P.ptr_resource v) (focus_rmem h1 (P.ptr_resource v)) /\
+    A.freeable contents.arr /\
+    (h0 (vector_resource v)).v_capacity == contents.max /\
+    as_rseq v h0 == S.slice (A.as_rseq contents.arr h1) 0 (U32.v contents.len)
+  )
+let reveal_vector #a v =
+  P.reveal_ptr ();
+  A.reveal_array ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  reveal_star ();
+  P.ptr_read v
+
+val pack_vector (#a: Type) (contents: contents_t a) (v:P.pointer (contents_t a)) : RST unit
+  (A.array_resource contents.arr <*> P.ptr_resource v)
+  (fun _ -> vector_resource v)
+  (fun h0 ->
+    P.get_val v h0 == contents /\
+    A.length contents.arr = contents.max /\
+    U32.v contents.len <= U32.v contents.max /\
+    U32.v contents.len >= 0 /\
+    A.freeable contents.arr /\
+    A.get_rperm
+      contents.arr
+      #(A.array_resource contents.arr) (focus_rmem h0 (A.array_resource contents.arr)) =
+      P.get_perm v #(P.ptr_resource v) (focus_rmem h0 (P.ptr_resource v))
+  )
+  (fun h0 _ h1 ->
+    P.get_val v h0 == contents /\
+    U32.v contents.len <= U32.v contents.max /\
+    U32.v contents.len >= 0 /\
+    A.length contents.arr = contents.max /\
+   (h1 (vector_resource v)).v_capacity == contents.max /\
+     as_rseq v h1 == S.slice (A.as_rseq contents.arr h0) 0 (U32.v contents.len)
+  )
+let pack_vector #a contents v =
+  P.reveal_ptr ();
+  A.reveal_array ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  reveal_star ()
 
 let create #a init max =
-  (**) reveal_empty_resource ();
-  (**) reveal_rst_inv ();
-  (**) reveal_view ();
-  (**) P.reveal_ptr ();
-  (**) A.reveal_array ();
-  (**) reveal_modifies ();
-  let contents = A.alloc init max in
-  let v = Vector 0ul max contents in
-  let ptr = P.ptr_alloc v in
-  ptr
-
+  P.reveal_ptr ();
+  A.reveal_array ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h0 = HST.get () in
+  let arr = rst_frame
+    empty_resource
+    (fun arr -> A.array_resource arr)
+    (fun _ -> A.alloc init max)
+  in
+  let contents = Vector 0ul max arr in
+  let f : unit -> RST (P.pointer (contents_t a))
+    (empty_resource)
+    (fun ptr -> P.ptr_resource ptr)
+    (fun _ -> True)
+    (fun _ ptr h1 ->
+      A.freeable ptr /\
+      P.get_val ptr h1 == contents /\
+      P.get_perm ptr h1 = FStar.Real.one
+    )
+  =
+    fun _ -> P.ptr_alloc contents (* TODO: figure out why we need this let binding *)
+  in
+  let v = rst_frame
+    (A.array_resource arr)
+    (fun v -> P.ptr_resource v <*> A.array_resource arr)
+    f
+  in
+admit()
+ (*
+  rst_frame
+    (P.ptr_resource v <*> A.array_resource contents.arr)
+    (fun _ -> vector_resource v)
+    (fun _ -> pack_vector contents v);
+  let h1 = HST.get () in
+  v
+*)
 #set-options "--z3rlimit 30"
 
 let push #a v x =
-  (**) reveal_empty_resource ();
-  (**) reveal_rst_inv ();
-  (**) reveal_view ();
-  (**) reveal_star ();
-  (**) P.reveal_ptr ();
-  (**) A.reveal_array ();
-  (**) reveal_modifies ();
-  let v_record = P.ptr_read v in
+  P.reveal_ptr ();
+  A.reveal_array ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  reveal_star ();
+  admit()
+
+(*
+  let h0 = HST.get () in
+  let v_record = rst_frame
+    (P.ptr_resource v)
+    (fun v_record -> A.array_resource v_record.arr <*> P.ptr_resource v)
+    (fun _ -> reveal_vector v)
+  in
   let max = v_record.max in
   let len = v_record.len in
-  (**) let h0 = HST.get () in
+  let arr = v_record.arr in
+   if U32.(len <^ max) then begin
+   rst_frame
+      (A.array_resource arr <*> P.ptr_resource v)
+      (fun _ ->  A.array_resource arr <*> P.ptr_resource v)
+      (fun _ -> A.upd arr len x);
+    let new_v_record = Vector U32.(len +^ 1ul) max arr in
+    let h = HST.get () in
+    assume(A.get_perm h v 0 = 1.0R);
+    rst_frame
+      (P.ptr_resource v <*> A.array_resource arr)
+      (fun _ -> P.ptr_resource v <*> A.array_resource arr)
+      (fun _ -> P.ptr_write v new_v_record);
+    (**) let h1 = HST.get () in
+    (**) assume(
+    (**)   S.slice (A.as_seq h1 arr) 0 (U32.v len + 1) `S.equal`
+    (**)     S.snoc (S.slice (A.as_seq h0 arr) 0 (U32.v len)) x
+    (**) )
+  end else begin
+    admit()
+  end
+*)
+
+
+(*
   if U32.(len <^ max) then begin
     A.upd v_record.arr len x;
     P.ptr_write v (Vector U32.(v_record.len +^ 1ul) v_record.max v_record.arr);
@@ -143,3 +242,4 @@ let push #a v x =
     (**)   S.slice (hget_seq h0 v) 0 (U32.v len)
     (**) )
   end
+*)
