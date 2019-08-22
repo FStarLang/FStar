@@ -122,6 +122,7 @@ let push #a v x =
     (**) A.gsub_zero_length new_contents;
     A.copy sub_new v_record.arr;
     (**) let h2 = HST.get () in
+    admit();
     A.free v_record.arr;
     (**) let h3 = HST.get () in
     let new_v_record = Vector U32.(len +^ 1ul) new_contents_length new_contents in
