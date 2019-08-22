@@ -144,15 +144,18 @@ val mk_rmem
 val focus_rmem (#r: resource) (h: rmem r) (r0: resource{r0 `is_subresource_of` r})
   : Tot (rmem r0)
 
-val focus_rmem_equality (outer inner: resource) (h: HS.mem)
+val focus_rmem_equality (outer inner: resource) (h: rmem outer) : Lemma
+  (requires (inner `is_subresource_of` outer))
+  (ensures (let focused = focus_rmem h inner in
+    forall (arg:resource{arg `is_subresource_of` inner}). {:pattern focused arg; h arg} focused arg == h arg
+  ))
+  [SMTPat (focus_rmem #outer h inner)]
+
+val focus_mk_rmem_equality (outer inner: resource) (h: HS.mem)
   : Lemma
     (requires (inv outer h /\ inner `is_subresource_of` outer))
     (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
       focus_rmem (mk_rmem outer h) inner == mk_rmem inner h))
-    [SMTPatOr [
-      [SMTPat (focus_rmem (mk_rmem outer h) inner)];
-      [SMTPat (mk_rmem inner h); SMTPat (inner `is_subresource_of` outer)]
-    ]]
 
 /// In the ST state, pre and postconditions depended on the entire heap. Here, theses conditions
 /// depend only on a `rmem` for the resource at hand (derived from a heap state).
