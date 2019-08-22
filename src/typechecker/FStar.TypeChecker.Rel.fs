@@ -2943,21 +2943,73 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
         let _, stronger_t = c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger [U_zero]) in  //AR: TODO: FIXME: this should not be u#0, but rather u of the repr type, need a function in Env to return universe of the repr type for a layered effect
-
-        let bs, fml =
+        let stronger_bs, stronger_c =
           match (SS.compress stronger_t).n with
-          | Tm_arrow (bs, c) ->
-            let bs, c = SS.open_comp bs c in
-            List.splitAt (List.length bs - 1) bs |> fst, U.comp_result c
-          | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: fail more gracefully
-  
+          | Tm_arrow (bs, c) -> SS.open_comp bs c
+          | _ -> failwith ("stronger_t: "^ (Print.term_to_string stronger_t) ^ " is not an arrow") in
+
+        let a_b, rest_bs, f_b = 
+          match stronger_bs with
+          | a::bs when List.length bs >= 1 ->
+            let rest_bs, f_bs = List.splitAt (List.length bs - 1) bs |> (fun (l1, l2) -> l1, List.hd l2) in
+            a, rest_bs, f_bs
+          | _ -> failwith ("stronger_t: "^ (Print.term_to_string stronger_t) ^ " does not have enough binders") in
+
+        let rest_bs = SS.subst_binders [NT (a_b |> fst, c2.result_typ)] rest_bs in
+
+        let rest_bs_uvars, g_uvars =
+          let _, rest_bs_uvars, g = List.fold_left (fun (substs, uvars, g) b ->
+            let sort = SS.subst substs (fst b).sort in
+            let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+            substs@[NT (b |> fst, t)], uvars@[t], Env.conj_guard g g_t
+          ) ([], [], Env.trivial_guard) rest_bs in
+          rest_bs_uvars, g in
+
+        let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
+
         let substs = List.map2
           (fun b t -> NT (b |> fst, t))
-          bs (c2.result_typ::((c1.effect_args@c2.effect_args) |> List.map fst)) in
+          (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
 
-        let fml = SS.subst substs fml in
+        let f_sort_is =
+          match (SS.compress (f_b |> fst).sort).n with
+          | Tm_app (_, _::is) ->
+            is |> List.map fst |> List.map (SS.subst substs)
+          | _ -> failwith ("Type of f in stronger_t: " ^ (Print.term_to_string stronger_t) ^ " is not a repr type") in
 
-        let sub_probs = ret_sub_prob::is_sub_probs in
+        let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+
+        let g_sort_is =
+          match (SS.compress stronger_ct.result_typ).n with
+          | Tm_app (_, _::is) -> is |> List.map fst
+          | _ -> failwith ("Return type of stronger_t: " ^ (Print.term_to_string stronger_t) ^ " is not a repr type") in
+
+        let f_sub_probs, wl =
+          List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+            let p, wl = sub_prob wl f_sort_i EQ c1_i "index of c1" in
+            ps@[p], wl) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
+
+        let g_sub_probs, wl =
+          List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
+            let p, wl = sub_prob wl g_sort_i EQ c2_i "index of c2" in
+            ps@[p], wl) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
+
+        let fml =
+          let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
+          let trivial_post =
+            let ts = Env.lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
+            let _, t = Env.inst_tscheme_with ts [u] in
+            S.mk_Tm_app
+              t
+              [stronger_ct.result_typ |> S.as_arg]
+              None Range.dummyRange in
+          let fml = S.mk_Tm_app
+            wp
+            [trivial_post |> S.as_arg]
+            None Range.dummyRange in
+          SS.subst substs fml in
+
+        let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs) in
         let guard = U.mk_conj_l (List.map p_guard sub_probs) in
 
         let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
