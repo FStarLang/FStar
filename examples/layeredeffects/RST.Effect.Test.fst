@@ -20,17 +20,30 @@ assume val r3 : r:resource{r.t == nat}
 assume val f1
 : x:nat ->
   RST unit r1 (fun _ -> r2)
-  (fun (rm:rmem r1) -> rm r1 > 2)
-  (fun (rm_in:rmem r1) _ (rm_out:rmem r2) -> x == rm_in r1 /\ rm_out r2 == rm_in r1 + x)
+  (fun (rm:rmem r1) -> rm r1 == 2)
+  (fun (rm_in:rmem r1) _ (rm_out:rmem r2) -> rm_out r2 == rm_in r1 + x)
 
 assume val f2
 : x:nat ->
   RST unit r2 (fun _ -> r3)
-  (fun rm -> rm r2 > 2)
+  (fun rm -> rm r2 == 2)
   (fun rm_in _ rm_out -> rm_out r3 == rm_in r2 + x)
+
+assume val f3
+: x:nat ->
+  RST unit r3 (fun _ -> r3)
+  (fun rm -> rm r3 == 2)
+  (fun rm_in _ rm_out -> rm_out r3 == rm_in r3 + x)
 
 let test2 ()
 : RST unit r1 (fun _ -> r3)
-  (fun rm -> rm r1 > 3)
-  (fun rm_in _ rm_out -> rm_out r3 > 3)
-= f1 0; f2 0
+  (fun rm -> rm r1 == 2)
+  (fun rm_in x rm_out -> rm_out r3 > 2)
+= f1 0; f2 0; f3 3
+
+[@expect_failure]
+let test3 ()
+: RST nat r1 (fun _ -> r3)
+  (fun rm -> rm r1 == 2)
+  (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 2)
+= f1 0; f2 0; f3 3; 2
