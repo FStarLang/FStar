@@ -89,10 +89,6 @@ effect RST (a:Type)
 = RSTATE a r_in r_out
   (fun (p:rst_post a r_out) (h0:rmem r_in) -> pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1))
 
-#set-options "--log_queries --z3refresh"
-let test ()
-: RST int emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r > 1)
-= 2
 
 
 // type pre_t (r:resource) = rprop r
