@@ -197,17 +197,17 @@ let tc_layered_eff_decl env0 (ed:eff_decl) : eff_decl =
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
-    let x_a = fresh_x_a "x" a in
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
         (match SS.open_binders bs with
-         | (a', _)::(x_a', _)::bs ->
-           let substs = [NT (a', bv_to_name (fst a)); NT (x_a', bv_to_name (fst x_a))] in
+         | (a', _)::bs ->
+           let bs, _ = List.splitAt (List.length bs - 1) bs in
+           let substs = [NT (a', bv_to_name (fst a))] in
            SS.subst_binders substs bs
          | _ -> failwith "Impossible!")
       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
-    let bs = a::x_a::rest_bs in
+    let bs = a::(rest_bs@[fresh_x_a "x" a]) in
     let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
