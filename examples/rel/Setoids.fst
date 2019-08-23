@@ -541,42 +541,58 @@ let functor_prod_shared_sig (#sig_in: sig) (#sig_out_a #sig_out_b:sig)
 /// can interact with it.
 let atk (s t : sig) = functor_t t s
 
+open FStar.FunctionalExtensionality
+
 /// The advantage is a probability associated with an attacker
-let eps s t = atk s t -> nat
+let eps s t = atk s t ^-> nat
 
 /// Advantages have a zero and can be summed
-let eps_z #s #t : eps s t = fun m -> 0
-let sum #s #t (e1 e2:eps s t) : eps s t = fun m -> e1 m + e2 m
+let eps_z #s #t : eps s t = on (atk s t) (fun m -> 0 <: nat)
+
+let sum #s #t (e1 e2:eps s t) : eps s t = on (atk s t) (fun m -> e1 m + e2 m <: nat)
 
 let commutativity_sum_lemma #s #t (e1 e2:eps s t) : Lemma
   (ensures
-    (sum e1 e2 == sum e2 e1)
+    sum e1 e2 == sum e2 e1
     )
     [SMTPat (sum #s #t e1 e2)]
   =
-  admit()
+  assert(feq #(atk s t) (sum e1 e2) (sum e2 e1));
+  assert(on (atk s t) (fun m -> e1 m + e2 m <: nat) == on (atk s t) (fun m -> e2 m + e1 m <: nat))
 
-#set-options "--z3rlimit 350 --max_fuel 3 --max_ifuel 0 --query_stats"
-let eps_z_sum_lemma #s #t (e1 e2:eps s t) : Lemma
+let eps_z_sum_lemma #s #t (e:eps s t) : Lemma
   (ensures
-    (e1 == eps_z ==> sum e1 e2 == e2) /\
-    (e2 == eps_z ==> sum e1 e2 == e1)
+    (sum eps_z e == e) /\
+    (sum e eps_z == e)
     )
-    [SMTPat (sum #s #t e1 e2)]
+    [SMTPat (sum #s #t eps_z e); SMTPat (sum #s #t e eps_z)]
   =
-  admit()
+  assert (feq #(atk s t) (sum eps_z e) e)
+
 
 
 /// Given an attacker on `s -> t`, and a functor `f: t -> r` we can
 /// adapt the advantage to apply it to `s -> r`
 let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)
   : eps s r
-  = fun (a:atk s r) ->
-      let a':atk s t =
-        fun (m:module_t t) ->
-          a (f m)
-      in
-      e a'
+  = on
+      (atk s r)
+      (fun (a:atk s r) ->
+        let a':atk s t =
+          fun (m:module_t t) ->
+            a (f m)
+        in
+        e a')
+
+let eps_z_sum_lemma2 #r #s #t (f:functor_t t r) (e:eps s t) : Lemma
+  (ensures
+    //(e1 == eps_z ==> sum e1 e2 == e2) /\
+    (sum eps_z (eps_trans #r #s #t f e) == (eps_trans #r #s #t f e)) /\
+    (sum (eps_trans #r #s #t f e) eps_z == (eps_trans #r #s #t f e))
+    )
+    [SMTPat (sum #s #t eps_z (eps_trans #r #s #t f e)); SMTPat (sum #s #t (eps_trans #r #s #t f e) eps_z)]
+  = ()
+
 
 /// Formulate an assumption as follows:
 /// assume val eq ...
@@ -584,6 +600,7 @@ let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)
 // eq r eps x y
 //    x and y are related by `r`, up to eps
 // Maybe index by the set of hypotheses
+#set-options "--z3rlimit 350  --query_stats --__temp_no_proj Setoids"
 noeq
 type eq (#s:sig) (#t:sig) (r:per (functor_t s t)) : eps s t -> functor_t s t -> functor_t s t -> Type =
   | Sym:

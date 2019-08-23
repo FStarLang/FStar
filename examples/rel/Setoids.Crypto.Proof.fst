@@ -265,7 +265,7 @@ let ae_step_eps n os aes = (eps_trans (step2_left_side n os aes) (ae_eps n aes))
 let odh_step_eps n aes = (eps_trans (step1_left_side n aes) (odh_eps n))
 let eps_sum n os aes = sum (ae_step_eps n os aes) (odh_step_eps n aes)
 
-#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 550 --max_fuel 0 --max_ifuel 0 --query_stats --print_implicits --print_full_names"
 let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
   : eq (pkae_rel n aes)
        (eps_sum n os aes)
@@ -288,11 +288,13 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
         (odh_game0 n os))
       ()
   in
+  // Redefining this seems necessary for F* to be able to assert equivalence of the epsilons.
+  let odh_step_eps : eps sig_unit (pkae_sig n aes) = odh_step_eps n aes in
   // Now apply the ODH assumption via the Ctx rule.
   let step1b_eq
   : eq
     (pkae_rel n aes)
-    (odh_step_eps n aes)
+    odh_step_eps
     (pkae0_composition n aes os)
     (comp
       (step1_left_side n aes)
@@ -309,7 +311,7 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
   let step1_final_eq
   : eq
     (pkae_rel n aes)
-    (odh_step_eps n aes)
+    (odh_step_eps)
     (pkae0_composition n aes os)
     (pkae_intermediate_composition n aes os)
   =
@@ -325,7 +327,7 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
   let step2a_eq
   : eq
     (pkae_rel n aes)
-    (odh_step_eps n aes)
+    (odh_step_eps)
     (pkae0_composition n aes os)
     (comp
       (step2_left_side n os aes)
@@ -344,7 +346,7 @@ let pkae_proof (n:u32) (aes:ae_scheme n) (os:odh_scheme n)
   let step2b_eq
   : eq
     (pkae_rel n aes)
-    (eps_sum n os aes)
+    (sum #sig_unit #(pkae_sig n aes) (ae_step_eps n os aes) (odh_step_eps))
     (pkae0_composition n aes os)
     (comp
       (step2_left_side n os aes)
