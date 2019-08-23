@@ -120,26 +120,24 @@ let eq_checker_state_rel = lo unit
 
 let combined_state_rel = int_container_state_rel ** eq_checker_state_rel
 
-/// This function compares the input of the function with
-/// the value in the composed int_container by either
-/// 1. using the "get" function exposed by the int_container
-/// or
-/// 2. accessing the state of the int_container directly.
-/// The whole module only casts to a functor if 2. is the case.
+/// In order for two modules to be composed, every function needs to get an
+/// instance of a module with the desired signature as input. However, we don't
+/// want this additional input to appear in the signature. The solution here is
+/// to have two types, where in the signature, only the truncated type (without
+/// the additional input) is used. The consequence is, that the module can then
+/// only be instantiated with the composed module as input (which seems sensible
+/// to me), which implicitly makes it a functor (which I also think is not a bad
+/// thing).
 let is_eq_t = ((sig_rel int_container_sig) ** lo int) ^--> eff_rel combined_state_rel (lo bool)
 let is_eq_t_trunc = (lo int) ^--> eff_rel combined_state_rel (lo bool)
+
 let is_eq  : is_eq_t =
   fun (ih,x) ->
     let get_int : get_int_t = get_oracle ih GET in
-    // 1:
     st <--
       lift_left
       (get_int ());
     return (st = x)
-    // 2:
-    //st <-- get;
-    //let st1,st2 = st in
-    //return (st1 = x)
 
 type eq_checker_labels =
   | IS_EQ
@@ -161,16 +159,11 @@ let eq_checker_sig = {
     rels = eq_checker_field_rels
   }
 
-#set-options "--z3rlimit 1350 --max_fuel 0 --max_ifuel 1"
+#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
 #set-options "--query_stats"
-let eq_checker_module_t = (sig_rel int_container_sig) ^--> (sig_rel (eq_checker_sig))
-let eq_checker_module : eq_checker_module_t =
-  fun ih ->
-  let is_eq' : is_eq_t_trunc = fun x -> is_eq (ih,x) in
-  DM.create #_ #(eq_checker_sig).ops
-    (function IS_EQ -> is_eq')
-
 let eq_checker_functor
   : functor_t (int_container_sig) (eq_checker_sig)
-  = fun (ih:module_t (int_container_sig)) ->
-      eq_checker_module ih
+  = fun ih ->
+      let is_eq' : is_eq_t_trunc = fun x -> is_eq (ih,x) in
+      let m : module_t (eq_checker_sig) = DM.create #_ #(eq_checker_sig).ops (function IS_EQ -> is_eq') in
+      admit()
