@@ -5,7 +5,17 @@ open Steel.RST
 
 open RST.Effect
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* \
+  -FStar.Seq \
+  -FStar.ST \
+  -FStar.HyperStack \
+  -FStar.Monotonic.HyperStack
+  -FStar.Heap
+  -FStar.Monotonic.Heap \
+  -FStar.Tactics \
+  -FStar.Reflection \
+  -LowStar \
+  -FStar.ModifiesGen'"
 
 let test1 ()
 : RST nat emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r == 2)
@@ -54,6 +64,6 @@ let test3 ()
 let test4 ()
 : RST nat r1 (fun _ -> r3)
   (fun rm -> rm r1 == 2)
-  (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 2)
+  (fun rm_in x rm_out -> x == 2 /\ rm_out r3 > 0)
 = f1 0; f2 0; f3 3;
   rst_frame r3 (fun _ -> r3) r3 test1
