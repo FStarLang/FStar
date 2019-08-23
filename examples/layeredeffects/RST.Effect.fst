@@ -86,8 +86,8 @@ assume Pure_wp_monotonicity:
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
 
-let lift_pure_rstate (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-: repr a emp (fun _ -> emp) (fun p h -> wp (fun x -> p x h))
+let lift_pure_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
+: repr a r (fun _ -> r) (fun p h -> wp (fun x -> p x h))
 = fun _ -> f ()
 
 sub_effect PURE ~> RSTATE = lift_pure_rstate
