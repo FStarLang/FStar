@@ -100,6 +100,22 @@ val check_sigelt_quals: env -> sigelt -> unit
 val must_erase_for_extraction: env -> term -> bool
 
 //layered effect utilities
-val fresh_layered_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> universe -> term -> term * guard_t
+
+(*
+ * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
+ *   where ?u1 ... ?un are unification variables, one for each index of the layered effect
+ *
+ * The unification variables are resolved in the input env
+ *)
+val fresh_layered_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> u:universe -> a:term -> term * guard_t
+
+(*
+ * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
+ *)
 val fresh_layered_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
-val layered_effect_indices_as_binders: signature:tscheme -> universe -> a_tm:term -> binders
+
+(*
+ * Return binders for the layered effect indices with signature
+ * In the binder types, a is substituted with a_tm (u is universe of a)
+ *)
+val layered_effect_indices_as_binders:env ->  Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders

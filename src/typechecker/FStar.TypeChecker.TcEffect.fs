@@ -113,7 +113,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
    * We now typecheck various combinators
    * In all the cases we take the following approach:
    *   - Typecheck the combinator (with no expected type)
-   *   - Construct an expected type (k) using various uvars
+   *   - Construct an expected type (k) using uvars
    *   - Unify the type of the combinator (as typechecked) with k
    *   - Record k in the effect declaration (along with the combinator)
    *)
@@ -135,7 +135,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let env = Env.push_univ_vars env0 us in
 
     let a, u = fresh_a_and_u_a "a" in
-    let rest_bs = TcUtil.layered_effect_indices_as_binders (sig_us, sig_t) u (a |> fst |> S.bv_to_name) in
+    let rest_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname (sig_us, sig_t) u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
     let g_eq = Rel.teq env t k in
@@ -160,7 +160,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let a, u = fresh_a_and_u_a "a" in
     let rest_bs =
       let signature_ts = let us, t, _ = signature in (us, t) in
-      TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
+      TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
@@ -301,7 +301,8 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
         [ret_t |> S.as_arg]
         None r in
     let pure_wp_uvar, _, guard_wp =
-      TcUtil.new_implicit_var "" r (Env.push_binders env bs) pure_wp_t in
+      let reason = BU.format1 "implicit for pure_wp in checking stronger for %s" ed.mname.str in
+      TcUtil.new_implicit_var reason r (Env.push_binders env bs) pure_wp_t in
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
       effect_name = PC.effect_PURE_lid;
@@ -337,6 +338,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
    * TODO: this code has a lot in common with actions for non-layered effects, we should reuse
    *)
   let tc_action env (act:action) : action =
+    let env0 = env in
     let r = act.action_defn.pos in
     if List.length act.action_params <> 0
     then raise_error (Errors.Fatal_MalformedActionDeclaration,
@@ -384,7 +386,9 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
         let bs = SS.open_binders bs in
         let env = Env.push_binders env bs in
         let t, u = U.type_u () in
-        let a_tm, _, g_tm = TcUtil.new_implicit_var "" r env t in
+        let reason = BU.format2 "implicit for return type of action %s:%s"
+          ed.mname.str act.action_name.str in
+        let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t in
         let repr, g = fresh_repr r env u a_tm in
         U.arrow bs (S.mk_Total' repr (Env.new_u_univ () |> Some)), Env.conj_guard g g_tm
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
@@ -430,17 +434,23 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
       BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
     
     let act =
+      let us, act_defn = TcUtil.generalize_universes env act_defn in
       if act.action_univs = []
       then
-        let us, act_defn = TcUtil.generalize_universes env act_defn in
         { act with
           action_univs = us;
           action_defn = act_defn;
           action_typ = SS.close_univ_vars us act_typ }
       else
-        { act with
-          action_defn = SS.close_univ_vars act.action_univs act_defn;
-          action_typ = SS.close_univ_vars act.action_univs act_typ } in
+        if List.length us = List.length act.action_univs &&
+           List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us act.action_univs
+        then { act with
+          action_defn = act_defn;
+          action_typ = SS.close_univ_vars act.action_univs act_typ }
+        else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+               (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+                 ed.mname.str act.action_name.str (Print.univ_names_to_string us) (Print.univ_names_to_string act.action_univs)))
+             r in
 
     act in
 
