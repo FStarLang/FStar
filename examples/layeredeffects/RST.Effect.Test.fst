@@ -68,7 +68,6 @@ let test4 ()
 = f1 0; f2 0; f3 3;
   rst_frame r3 (fun _ -> r3) r3 test1
 
-[@expect_failure]
 let test5 ()
 : RST unit r1 (fun _ -> r2)
   (fun rm -> rm r1 == 2)
