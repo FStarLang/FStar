@@ -48,14 +48,24 @@ let bind (a:Type) (b:Type)
   let x = f () in
   g x ()
 
+// let stronger (a:Type)
+//   (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
+//   (r_in_g:resource) (r_out_g:a -> resource) (wp_g:rst_wp a r_in_g r_out_g)
+//   (f:repr a r_in_f r_out_f wp_f)
+// : Pure (repr a r_in_g r_out_g wp_g)
+//   (requires
+//     r_in_f == r_in_g /\ r_out_f == r_out_g /\
+//     (forall p h. wp_g p h ==> wp_f p h))
+//   (ensures fun _ -> True)
+// = f
+
 let stronger (a:Type)
-  (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
-  (r_in_g:resource) (r_out_g:a -> resource) (wp_g:rst_wp a r_in_g r_out_g)
-  (f:repr a r_in_f r_out_f wp_f)
-: Pure (repr a r_in_g r_out_g wp_g)
-  (requires
-    r_in_f == r_in_g /\ r_out_f == r_out_g /\
-    (forall p h. wp_g p h ==> wp_f p h))
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out)
+  (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f)
+: Pure (repr a r_in r_out wp_g)
+  (requires (forall p h. wp_g p h ==> wp_f p h))
   (ensures fun _ -> True)
 = f
 
