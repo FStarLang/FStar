@@ -49,56 +49,87 @@ let dmff_cps_and_elaborate env ed =
   // the rest of the job to [tc_decl].
   DMFF.cps_and_elaborate env ed
 
+(*
+ * Typechecking of layered effects
+ *)
 let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
+  //we don't support effect binders in layered effects yet
   if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
     raise_error
       (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ ed.mname.str ^")")
       (range_of_lid ed.mname);
 
-  let check_and_gen' (comb:string) (n:int) env_opt (us, t) : (univ_names * term * typ) =
-    let env = if is_some env_opt then env_opt |> must else env0 in
+  (*
+   * Helper function used to typecheck and generalize various effect combinators
+   *
+   * comb is the name of the combinator (used for error messages)
+   * n is the number of universes that the combinator should be polymorphic in
+   * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
+   *)
+  let check_and_gen (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
     let us, t = SS.open_univ_vars us t in
     let t, ty =
-      let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
-      Rel.force_trivial_guard env g;
+      let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env0 us) t in
+      Rel.force_trivial_guard env0 g;
       t, lc.res_typ in
-    let g_us, t = TcUtil.generalize_universes env t in
+    let g_us, t = TcUtil.generalize_universes env0 t in
     let ty = SS.close_univ_vars g_us ty in
     //check that n = List.length g_us and that if us is set, it is same as g_us
-    begin
+    let univs_ok =
       if List.length g_us <> n then
-        let error = BU.format4
-          "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
-          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int) in
-        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos
-    end;
-    match us with
-    | [] -> g_us, t, ty
-    | _ ->
-     if List.length us = List.length g_us &&
-        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
-     then g_us, t, ty
-     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-            (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
-               ed.mname.str comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
-            t.pos
-  in
+        let error = BU.format5
+          "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
+          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int)
+          (Print.tscheme_to_string (g_us, t)) in
+        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
+      match us with
+      | [] -> ()
+      | _ ->
+       if List.length us = List.length g_us &&
+          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+       then ()
+       else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+              (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+                 ed.mname.str comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
+            t.pos in
+    g_us, t, ty in
 
   let log_combinator s (us, t, ty) =
     if Env.debug env0 <| Options.Other "LayeredEffects" then
       BU.print4 "Typechecked %s:%s = %s:%s\n"
         ed.mname.str s
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
-  
-  let fresh_a_and_u_a (a:string) = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
-  let fresh_x_a (x:string) (a:binder) = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
 
+  //helper function to get (a:Type ?u), returns the binder and ?u
+  let fresh_a_and_u_a (a:string) : binder * universe = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
+  //helper function to get (x:a)
+  let fresh_x_a (x:string) (a:binder) : binder = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
+
+
+  (*
+   * We now typecheck various combinators
+   * In all the cases we take the following approach:
+   *   - Typecheck the combinator (with no expected type)
+   *   - Construct an expected type (k) using various uvars
+   *   - Unify the type of the combinator (as typechecked) with k
+   *   - Record k in the effect declaration (along with the combinator)
+   *)
+
+
+  (*
+   * Effect signature
+   *
+   * The signature term must have the form:
+   *   a:Type -> <some binders> -> Effect  //polymorphic in one universe (that of a)
+   *
+   * The binders become the effect indices
+   *)
   let signature =
     let r = (snd ed.signature).pos in
-    let sig_us, sig_t, sig_ty = check_and_gen' "signature" 1 None ed.signature in
+    let sig_us, sig_t, sig_ty = check_and_gen "signature" 1 ed.signature in
 
     let us, t = SS.open_univ_vars sig_us sig_t in
     let env = Env.push_univ_vars env0 us in
@@ -106,17 +137,22 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let a, u = fresh_a_and_u_a "a" in
     let rest_bs = TcUtil.layered_effect_indices_as_binders (sig_us, sig_t) u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
-    let k = U.arrow bs (S.mk_Total S.teff) in
+    let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
     let g_eq = Rel.teq env t k in
     Rel.force_trivial_guard env g_eq;
-    sig_us, SS.close_univ_vars us (N.normalize [Env.Beta] env k), sig_ty in
+    sig_us, SS.close_univ_vars us (k |> N.remove_uvar_solutions env), sig_ty in
 
   log_combinator "signature" signature;
 
-  //AR: TODO: FIXME: check that repr has the type a:Type -> ...is... -> Type
+  (*
+   * Effect repr
+   *
+   * The repr must have the type:
+   *   a:Type -> <binders for effect indices> -> Type  //polymorphic in one universe (that of a)
+   *)
   let repr =
     let r = (snd ed.repr).pos in
-    let repr_us, repr_t, repr_ty = check_and_gen' "repr" 1 None ed.repr in
+    let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 ed.repr in
     
     let us, ty = SS.open_univ_vars repr_us repr_ty in
     let env = Env.push_univ_vars env0 us in
@@ -126,21 +162,37 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
       let signature_ts = let us, t, _ = signature in (us, t) in
       TcUtil.layered_effect_indices_as_binders signature_ts u (a |> fst |> S.bv_to_name) in
     let bs = a::rest_bs in
-    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some u))) in
+    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
     Rel.force_trivial_guard env g;
-    repr_us, repr_t, SS.close_univ_vars us (N.normalize [Env.Beta] env k) in
+    repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env) in
 
   log_combinator "repr" repr;
 
+  //helper function that creates an application node (repr<u> a_tm ?u1 ... ?un)
+  //returns the application term and the guard for the introduced uvars (see TcUtil.fresh_layered_effect_repr)
   let fresh_repr r env u a_tm =
     let signature_ts = let us, t, _ = signature in (us, t) in
     let repr_ts = let us, t, _ = repr in (us, t) in
     TcUtil.fresh_layered_effect_repr env r ed.mname signature_ts repr_ts u a_tm in
 
+  let not_an_arrow_error comb n t r =
+    raise_error (Errors.Fatal_UnexpectedEffect,
+      BU.format4 "Type of %s:%s is not an arrow with >= %s binders (%s)" ed.mname.str comb (string_of_int n) (Print.term_to_string t)
+    ) r in
+
+  (*
+   * return_repr
+   *
+   * return_repr must have type:
+   *   a:Type -> <some binders> -> x:a -> repr a i_1 ... i_n  //polymorphic in one universe (that of a)
+   *   where i_1 ... i_n are terms of effect indices types (as in the signature)
+   *
+   * The binders have arbitrary sorts
+   *)
   let return_repr =
     let r = (snd ed.return_repr).pos in
-    let ret_us, ret_t, ret_ty = check_and_gen' "return_repr" 1 None ed.return_repr in
+    let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 ed.return_repr in
 
     let us, ty = SS.open_univ_vars ret_us ret_ty in
     let env = Env.push_univ_vars env0 us in
@@ -149,25 +201,32 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        (match SS.open_binders bs with
-         | (a', _)::bs ->
-           let bs, _ = List.splitAt (List.length bs - 1) bs in
-           let substs = [NT (a', bv_to_name (fst a))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+        let ((a', _)::bs) = SS.open_binders bs in
+        bs |> List.splitAt (List.length bs - 1) |> fst
+           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+      | _ -> not_an_arrow_error "return" 2 ty r in
     let bs = a::(rest_bs@[fresh_x_a "x" a]) in
     let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
-    ret_us, ret_t, SS.close_univ_vars us (N.normalize [Env.Beta] env k) in
+    ret_us, ret_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env) in
 
   log_combinator "return_repr" return_repr;
 
+  (*
+   * bind_repr
+   *
+   * bind_repr must have type:
+   *   a:Type -> b:Type -> <some binders> -> f:repr a i_1 ... i_n -> (g:a -> repr a j_1 ... j_n)
+   *   : repr a k_1 ... k_n  //polymorphic in two universes (that of a and b)
+   *   where i, j, k are terms of effect indices types (as in the signature)
+   *
+   * The binders have arbitrary sorts
+   *)
   let bind_repr =
     let r = (snd ed.bind_repr).pos in
-    let bind_us, bind_t, bind_ty = check_and_gen' "bind_repr" 2 None ed.bind_repr in
+    let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 ed.bind_repr in
 
     let us, ty = SS.open_univ_vars bind_us bind_ty in
     let env = Env.push_univ_vars env0 us in
@@ -177,34 +236,40 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 4 ->
-        (match SS.open_binders bs with
-         | (a', _)::(b', _)::bs ->
-           let bs, _ = List.splitAt (List.length bs - 2) bs in
-           let substs = [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+        let ((a', _)::(b', _)::bs) = SS.open_binders bs in
+        bs |> List.splitAt (List.length bs - 2) |> fst
+           |> SS.subst_binders [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] 
+      | _ -> not_an_arrow_error "bind" 4 ty r in
     let bs = a::b::rest_bs in
-    let f, g_f =
+    let f, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
-    let g, g_g =
+    let g, guard_g =
       let x_a = fresh_x_a "x" a in
       let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (fst b |> S.bv_to_name) in
-      S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some u_b))) |> S.mk_binder, g in
-    let repr, g_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b |> S.bv_to_name) in
+      S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
+    let repr, guard_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b |> S.bv_to_name) in
     let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
-    let g_eq = Rel.teq env ty k in
-    List.iter (Rel.force_trivial_guard env) [g_f; g_g; g_repr; g_eq];
-    bind_us, bind_t, SS.close_univ_vars bind_us (N.normalize [Env.Beta] env k) in
+    let guard_eq = Rel.teq env ty k in
+    List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
+    bind_us, bind_t, SS.close_univ_vars bind_us (k |> N.remove_uvar_solutions env) in
 
   log_combinator "bind_repr" bind_repr;
 
+  (*
+   * stronger_repr
+   *
+   * stronger_repr must have type:
+   *   a:Type -> <some binders> -> f:repr a i_1 ... i_n -> PURE (repr a j_1 ... j_n) wp //polymorphic in one universe (that of a)
+   *   where i, j are terms of effect indices types (as in the signature)
+   *
+   * The binders have arbitrary sorts
+   *)
   let stronger_repr =
     let stronger_repr = ed.stronger_repr |> must in
     let r = (snd stronger_repr).pos in
 
-    let stronger_us, stronger_t, stronger_ty = check_and_gen' "stronger_repr" 1 None stronger_repr in
+    let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
 
     if Env.debug env0 <| Options.Other "LayeredEffects" then
       BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
@@ -218,18 +283,15 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        (match SS.open_binders bs with
-         | (a', _)::bs ->
-           let bs, _ = List.splitAt (List.length bs - 1) bs in
-           let substs = [NT (a', bv_to_name (fst a))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
+        let ((a', _)::bs) = SS.open_binders bs in
+        bs |> List.splitAt (List.length bs - 1) |> fst
+           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+      | _ -> not_an_arrow_error "stronger" 2 ty r in
     let bs = a::rest_bs in
-    let f, g_f =
+    let f, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
-    let ret_t, g_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
+    let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
 
     let pure_wp_t =
       let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
@@ -238,10 +300,10 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
         pure_wp_t
         [ret_t |> S.as_arg]
         None r in
-    let pure_wp_uvar, _, g_pure_wp_uvar =
+    let pure_wp_uvar, _, guard_wp =
       TcUtil.new_implicit_var "" r (Env.push_binders env bs) pure_wp_t in
     let c = S.mk_Comp ({
-      comp_univs = [ Env.new_u_univ () ];  //AR: TODO: FIXME: not sure if this is getting resolved properly
+      comp_univs = [ Env.new_u_univ () ];
       effect_name = PC.effect_PURE_lid;
       result_typ = ret_t;
       effect_args = [ pure_wp_uvar |> S.as_arg ];
@@ -253,19 +315,33 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
       BU.print1 "Expected type before unification: %s\n"
         (Print.term_to_string k);
 
-    let g = Rel.teq env ty k in
-    List.iter (Rel.force_trivial_guard env) [g_f; g_ret_t; g_pure_wp_uvar];
-    let k = N.remove_uvar_solutions env k in  //AR: TODO: FIXME: do this for other combinators too
+    let guard_eq = Rel.teq env ty k in
+    List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
+    let k = N.remove_uvar_solutions env k in
     stronger_us, stronger_t, k |> N.normalize [Env.Beta; Env.Eager_unfolding] env |> SS.close_univ_vars stronger_us in
 
   log_combinator "stronger_repr" stronger_repr;
 
   //AR: TODO: FIXME: rest of the combinators
 
+
+  (*
+   * Actions
+   *
+   * Actions must have type:
+   *   <some binders> -> repr a i_1 ... i_n
+   *   so that we can inject them into the effect
+   *
+   * Other than this, no polymorphism etc. restrictions
+   *
+   * TODO: this code has a lot in common with actions for non-layered effects, we should reuse
+   *)
   let tc_action env (act:action) : action =
     let r = act.action_defn.pos in
     if List.length act.action_params <> 0
-    then failwith "tc_layered_eff_decl: expected action_params to be empty";
+    then raise_error (Errors.Fatal_MalformedActionDeclaration,
+      BU.format3 "Action %s:%s has non-empty action params (%s)"
+        ed.mname.str act.action_name.str (Print.binders_to_string "; " act.action_params)) r;
 
     let env, act =
       let usubst, us = SS.univ_var_opening act.action_univs in
@@ -283,12 +359,11 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
         then
           let repr_ts = let us, t, _ = repr in (us, t) in
           let repr = Env.inst_tscheme_with repr_ts ct.comp_univs |> snd in
-          let c =
-            (S.mk_Tm_app
-              repr
-              (S.as_arg ct.result_typ::ct.effect_args)
-              None r)
-            |> S.mk_Total in
+          let repr = S.mk_Tm_app
+            repr
+            (S.as_arg ct.result_typ::ct.effect_args)
+            None r in
+          let c = S.mk_Total' repr (Some (new_u_univ ())) in
           U.arrow bs c
         else act.action_typ
       | _ -> act.action_typ in
@@ -305,14 +380,16 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let k, g_k =
       let act_typ = N.normalize [Beta] env act_typ in
       match (SS.compress act_typ).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow (bs, _) ->
         let bs = SS.open_binders bs in
         let env = Env.push_binders env bs in
         let t, u = U.type_u () in
         let a_tm, _, g_tm = TcUtil.new_implicit_var "" r env t in
         let repr, g = fresh_repr r env u a_tm in
         U.arrow bs (S.mk_Total' repr (Env.new_u_univ () |> Some)), Env.conj_guard g g_tm
-      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, "") r in  //AR: TODO: FIXME: ""
+      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
+        BU.format3 "Unexpected non-function type for action %s:%s (%s)"
+          ed.mname.str act.action_name.str (Print.term_to_string act_typ)) r in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
@@ -324,13 +401,16 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
       BU.print1 "Expected action type after unification: %s\n" (Print.term_to_string k);
     
     let act_typ =
+      let err_msg t = BU.format3
+        "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
+        ed.mname.str act.action_name.str (Print.term_to_string t) in
       let repr_args t : universes * term * args =
         match (SS.compress t).n with
         | Tm_app (head, a::is) ->
           (match (SS.compress head).n with
            | Tm_uinst (_, us) -> us, fst a, is
-           | _ -> failwith "Impossible!")
-        | _ -> failwith "Impossible!" in
+           | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg t) r)
+        | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg t) r in
 
       let k = N.normalize [Beta] env k in
       match (SS.compress k).n with
@@ -344,7 +424,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
           effect_args = is;
           flags = [] } in
         U.arrow bs (S.mk_Comp ct)
-      | _ -> failwith "Impossible!" in
+      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg k) r in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
