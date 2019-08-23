@@ -11,10 +11,9 @@ module DM = FStar.DependentMap
 ////////////////////////////////////////////////////////////////////////////////
 
 #set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
-let handle = h:(bytes&bytes){int_of_bytes (fst h) <= int_of_bytes (snd h)}
 
 let key (n:u32) = lbytes32 n
-abstract let key_state (n:u32) = Map.t handle (option bool) & Map.t handle (option (key n))
+let key_state (n:u32) = Map.t handle (option bool) & Map.t handle (option (key n))
 
 private let key_state_rel (n:u32) = lo (key_state n)
 
