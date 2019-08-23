@@ -75,6 +75,8 @@
     <Compile Include="FStar.TypeChecker.TcTerm.fs" />
     <Compile Include="FStar.TypeChecker.DMFF.fsi" />
     <Compile Include="FStar.TypeChecker.DMFF.fs" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fsi" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fs" />
     <Compile Include="FStar.TypeChecker.TcInductive.fsi" />
     <Compile Include="FStar.TypeChecker.TcInductive.fs" />
     <Compile Include="FStar.TypeChecker.Tc.fsi" />
