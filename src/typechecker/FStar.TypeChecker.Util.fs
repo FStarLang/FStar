@@ -696,11 +696,44 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
-            let mk_layered_bind c1 b c2 =  //AR: TODO: FIXME: failwith to errors
+            let mk_layered_bind c1 b c2 =
               if Env.debug env <| Options.Other "LayeredEffects" then
                 BU.print2 "Binding c1:%s and c2:%s {\n"
                   (Print.comp_to_string c1) (Print.comp_to_string c2);
 
+              (*
+               * Bind for layered effects:
+               * 
+               * Let c1 = M c1_a (t1 ... tn)
+               *     c2 = M c2_a (s1 ... sn) - where b is free in (s1 ... sn)
+               *
+               *     M.bind_wp = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
+               *                              f:repr a i_1 ... i_n ->
+               *                              g:(x:a -> repr b j_1 ... j_n) ->
+               *                              repr b k_1 ... k_n)
+               *
+               * First we instantiate M.bind_wp with [u_c1_a, u_c2_a]
+               *
+               * Then we substitute [a/c1_a; b/c2_a] in <some binders>
+               *
+               * Next we create ?u1 ... ?un for each of the binders in <some binders>
+               *   while subtituting [bi/?ui] in subsequent binders (so that their sorts are well-typed)
+               *
+               * Let substs = [a/c1_a; b/c2_a; bi/?ui]
+               *
+               * let i_i = i_i[substs]  //i_i are the indices of f in the bind_wp
+               * let j_i = j_i[x/b; substs]  //j_i are the indices of g in the bind_wp and x/x is replacing x with the binder b
+               * let k_i = k_i[substs]  //k_i are the indices of the return type in bind
+               *
+               * We now unify i_i with t_i (where t_i are the indices of c1)
+               *        unify j_i with s_i (where s_i are the indices of c2,
+                                            these are done in an env with b, and the returned guard is closed over b)
+               * and return k_i as the output indices
+               *)
+           
+              (*
+               * First lift if required
+               *)
               let ct1 = Env.unfold_effect_abbrev env c1 in
               let ct2 = Env.unfold_effect_abbrev env c2 in
               let ct1, ct2, ed, g_lift =
@@ -709,7 +742,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 match Env.monad_leq env c1_ed.mname c2_ed.mname with
                 | None ->
                   (match Env.monad_leq env c2_ed.mname c1_ed.mname with
-                   | None -> failwith ("Cannot bind " ^ c1_ed.mname.str ^ " and " ^ c2_ed.mname.str)
+                   | None ->
+                     raise_error (Errors.Fatal_EffectsCannotBeComposed,
+                       BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
                    | Some _ ->
                      let ct2, g_lift =
                        Env.lift_to_layered_effect
@@ -734,78 +769,81 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
 
               let _, bind_t = Env.inst_tscheme_with ed.bind_wp [u1; u2] in
-              let bind_bs, bind_ct =
+
+              let bind_t_shape_error (s:string) =
+                (Errors.Fatal_UnexpectedEffect, BU.format2
+                   "bind %s does not have proper shape (reason:%s)"
+                   (Print.term_to_string bind_t) s) in
+
+              let a_b, b_b, rest_bs, f_b, g_b, bind_ct =
                 match (SS.compress bind_t).n with
-                | Tm_arrow (bs, c) -> SS.open_comp bs c |> (fun (bs, c) -> bs, c |> U.comp_to_comp_typ)
-                | _ -> failwith ("bind_t: " ^ (Print.term_to_string bind_t) ^ " is not an arrow") in
-              
-              let a_b, b_b, rest_bs, f_b, g_b =
-                match bind_bs with
-                | a_b::b_b::bs when List.length bs >= 2 ->
-                  let rest_bs, f_b, g_b = List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
-                  a_b, b_b, rest_bs, f_b, g_b
-                | _ -> failwith ("bind_t: " ^ (Print.term_to_string bind_t) ^ " does not have enough binders") in
+                | Tm_arrow (bs, c) when List.length bs >= 4 ->
+                  let ((a_b::b_b::bs), c) = SS.open_comp bs c in
+                  let rest_bs, f_b, g_b =
+                    List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
+                  a_b, b_b, rest_bs, f_b, g_b, U.comp_to_comp_typ c
+                | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
-              let rest_bs = SS.subst_binders [NT (a_b |> fst, t1); NT (b_b |> fst, t2)] rest_bs in
-
-              let u_m, is =
-                match (SS.compress bind_ct.result_typ).n with
-                | Tm_app (_, _::is) -> bind_ct.comp_univs, List.map fst is
-                | _ -> failwith ("bind_t: " ^ (Print.term_to_string bind_t) ^ " does not have repr return type") in
-            
+              //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
               let rest_bs_uvars, g_uvars = 
                 let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
                   let sort = SS.subst substs (fst b).sort in
-                  let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
+                  let reason = BU.format3
+                    "implicit var for binder %s of %s:bind at %s"
+                    (Print.binder_to_string b) ed.mname.str (Range.string_of_range r1) in
+                  let t, _, g_t = new_implicit_var_aux reason r1 env sort Strict None in
                   if Env.debug env <| Options.Other "LayeredEffects" then
                     BU.print2 "mk_layered_bind: introducing uvar : %s for binder %s of bind\n"
                       (Print.term_to_string t) (Print.binder_to_string b);
                   substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
-                  ) ([], [], trivial_guard) rest_bs in
+                  ) ([NT (a_b |> fst, t1); NT (b_b |> fst, t2)], [], trivial_guard) rest_bs in
                 rest_bs_uvars, g in
 
               let subst = List.map2
                 (fun b t -> NT (b |> fst, t))
                 (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
-            
-              let is = List.map (SS.subst subst) is in
 
-              let f_sort_is =
-                match (SS.compress (f_b |> fst).sort).n with
-                | Tm_app (_, _::is) ->
-                  is |> List.map fst |> List.map (SS.subst subst)
-                | _ -> failwith ("Type of f in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a repr type") in
+              let f_guard =
+                let f_sort_is =
+                  match (SS.compress (f_b |> fst).sort).n with
+                  | Tm_app (_, _::is) ->
+                    is |> List.map fst |> List.map (SS.subst subst)
+                  | _ -> raise_error (bind_t_shape_error "f's type is not a repr type") r1 in
+                List.fold_left2
+                  (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
+                  Env.trivial_guard is1 f_sort_is in 
 
-              let x_a =
-                match b with
-                | None -> S.null_binder t1
-                | Some x -> S.mk_binder x in
+              let g_guard =
+                let x_a =
+                  match b with
+                  | None -> S.null_binder t1
+                  | Some x -> S.mk_binder x in
 
-              let g_sort_is =
-                match (SS.compress (g_b |> fst).sort).n with
-                | Tm_arrow (bs, c) ->
-                  let bs, c = SS.open_comp bs c in
-                  let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
-                  let c = SS.subst_comp [bs_subst] c in
-                  (match (SS.compress (U.comp_result c)).n with
-                   | Tm_app (_, _::is) ->
-                     is |> List.map fst |> List.map (SS.subst subst)
-                   | _ -> failwith ("Type of g in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a repr type"))
-                | _ -> failwith ("Type of g in bind_t:" ^ (Print.term_to_string bind_t) ^ " is not a arrow type") in
+                let g_sort_is : list<term> =
+                  match (SS.compress (g_b |> fst).sort).n with
+                  | Tm_arrow (bs, c) ->
+                    let bs, c = SS.open_comp bs c in
+                    let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
+                    let c = SS.subst_comp [bs_subst] c in
+                    (match (SS.compress (U.comp_result c)).n with
+                     | Tm_app (_, _::is) ->
+                       is |> List.map fst |> List.map (SS.subst subst)
+                     | _ -> raise_error (bind_t_shape_error "g's type is not a repr type") r1)
+                  | _ -> raise_error (bind_t_shape_error "g's type is not an arrow") r1 in
 
-              let g = List.fold_left2 (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
-                (Env.conj_guard g_uvars g_lift) is1 f_sort_is in 
-            
-              let g =
                 let env_g = Env.push_binders env [x_a] in
-                let g_guard = List.fold_left2 (fun g i1 g_i1 ->
-                  Env.conj_guard g (Rel.teq env_g i1 g_i1)
-                ) Env.trivial_guard is2 g_sort_is in
-                let g_guard = Env.close_guard env [x_a] g_guard in
-                Env.conj_guard g g_guard in
+                List.fold_left2
+                  (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+                  Env.trivial_guard is2 g_sort_is
+                |> Env.close_guard env [x_a] in
+
+              let is =  //indices of the resultant computation
+                match (SS.compress bind_ct.result_typ).n with
+                | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst subst)
+                | _ -> raise_error (bind_t_shape_error "return type is not a repr type") r1 in
             
               let c = mk_Comp ({
-                comp_univs = u_m;
+                comp_univs = ct2.comp_univs;
                 effect_name = ed.mname;
                 result_typ = t2;
                 effect_args = List.map S.as_arg is;
@@ -815,7 +853,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               if Env.debug env <| Options.Other "LayeredEffects" then
                 BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-              c, (Env.conj_guard g (Env.conj_guard g_c1 g_c2))
+              c, Env.conj_guards [ g_c1; g_c2; g_lift; g_uvars; f_guard; g_guard ]
             in
             let mk_bind c1 b c2 =                      (* AR: end code for inlining pure and ghost terms *)
                 let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
@@ -2057,13 +2095,22 @@ let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
   
   let _, signature = Env.inst_tscheme signature_ts in
 
+  (*
+   * We go through the binders in the signature a -> bs
+   * For each binder in bs, create a fresh uvar
+   * But keep substituting [a/a_tm, b_i/?ui] in the sorts of the subsequent binders
+   *)
   match (SS.compress signature).n with
   | Tm_arrow (bs, _) ->
     let bs = SS.open_binders bs in
     (match bs with
      | a::bs ->
-       let is, g, _ = List.fold_left (fun (is, g, substs) (b, _) ->
-         let t, _, g_t = new_implicit_var "" r env (SS.subst substs b.sort) in  //AR: TODO: FIXME: set the empty string properly
+       //is is all the uvars, and g is their collective guard
+       let is, g, _ = List.fold_left (fun (is, g, substs) (b, _t) ->
+         let reason = BU.format3
+           "uvar for binder %s when creating a fresh repr for %s at %s"
+           (Print.binder_to_string (b, _t)) eff_name.str (Range.string_of_range r) in
+         let t, _, g_t = new_implicit_var reason r env (SS.subst substs b.sort) in
          is @ [t], Env.conj_guard g g_t, substs @ [NT (b, t)]
          ) ([], Env.trivial_guard, [NT (fst a, a_tm)]) bs in
          
@@ -2076,16 +2123,18 @@ let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
   | _ -> fail signature
 
 let fresh_layered_effect_repr_en env r eff_name u a_tm =
-  let ed = Env.get_effect_decl env eff_name in
-  fresh_layered_effect_repr env r eff_name ed.signature ed.repr u a_tm
+  eff_name |> Env.get_effect_decl env
+           |> (fun ed -> fresh_layered_effect_repr env r eff_name ed.signature ed.repr u a_tm)
 
-//AR: TODO: FIXME: impossibles to errors?
-let layered_effect_indices_as_binders sig_ts u a_tm =
+let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in
+
+  let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
+
   match (SS.compress sig_tm).n with
   | Tm_arrow (bs, _) ->
     let bs = SS.open_binders bs in
     (match bs with
      | (a', _)::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
-     | _ -> failwith "Impossible!")
-  | _ -> failwith "Impossible"
+     | _ -> fail sig_tm)
+  | _ -> fail sig_tm
