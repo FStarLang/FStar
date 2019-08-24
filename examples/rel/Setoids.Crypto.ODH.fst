@@ -20,7 +20,7 @@ type odh_scheme (n:u32) =
   generate_exponent: (eff (lo unit) (lo (exponent n))) ->
   odh_scheme n
 
-abstract let odh_state n = Map.t (share n) (option (exponent n))
+let odh_state n = secret_key_log n
 
 let gen_dh_t n =
   (lo unit)

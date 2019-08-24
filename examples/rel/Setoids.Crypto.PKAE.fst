@@ -21,20 +21,15 @@ noeq type pkae_scheme (n:u32) =
   dec: (c:bytes -> pk:pkey n -> sk:skey n -> nonce:bytes -> option (p:bytes{len p `lte` max_plaintext_length})) ->
   pkae_scheme n
 
-let handle = bytes * bytes
-
-let pkae_log_key = handle*bytes
-let pkae_log_value n (pkaes:pkae_scheme n) = fun (h,nonce) -> option (bytes*p:bytes{len p `lte` pkaes.max_plaintext_length})
-
 /// Map from nonces to a maps from ciphertext to plaintexts
 /// Should the state be dependent on the AE scheme?
-abstract let pkae_log n (pkaes:pkae_scheme n) =
-  DM.t (handle*bytes) (pkae_log_value n pkaes)
+let pkae_log n (pkaes:pkae_scheme n) =
+  plaintext_log pkaes.max_plaintext_length
 
 let pkae_log_rel (n:u32) (pkaes:pkae_scheme n) = lo (pkae_log n pkaes)
 
-abstract let skey_log n =
-  DM.t (pkey n) (fun pk -> option (skey n))
+let skey_log n =
+  secret_key_log n
 
 let skey_log_rel n = lo (skey_log n)
 
@@ -55,7 +50,7 @@ let pkae_gen n pkaes : pkae_gen_t n pkaes
     s <-- get;
     let sk_log:skey_log n = snd s in
     let pkae_log = fst s in
-    let sk_log':skey_log n = DM.upd sk_log pk (Some sk) in
+    let sk_log':skey_log n = Map.upd sk_log pk (Some sk) in
     put (pkae_log,sk_log') ;;
     return pk
 
@@ -75,7 +70,7 @@ let pkae0_enc n pkaes : pkae_enc_t n pkaes =
     s <-- get;
     let sk_log:skey_log n = snd s in
     let pkae_log = fst s in
-    match DM.sel sk_log sender_pk with
+    match Map.sel sk_log sender_pk with
     | None ->
       raise
     | Some sk ->
@@ -85,12 +80,12 @@ let pkae0_enc n pkaes : pkae_enc_t n pkaes =
         else
           (receiver_pk,sender_pk)
       in
-      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      match DM.sel #(plaintext_log_key) #(plaintext_log_value pkaes.max_plaintext_length) pkae_log (h,nonce) with
       | Some _ ->
         raise
       | None ->
         c <-- lift_tape (pkaes.enc p receiver_pk sk nonce);
-        let pkae_log' = DM.upd #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) (Some (c,p)) in
+        let pkae_log' = DM.upd #(plaintext_log_key) #(plaintext_log_value pkaes.max_plaintext_length) pkae_log (h,nonce) (Some (c,p)) in
         put (pkae_log',sk_log);;
         return c
 
@@ -99,7 +94,7 @@ let pkae1_enc n pkaes : pkae_enc_t n pkaes =
     s <-- get;
     let sk_log:skey_log n = snd s in
     let pkae_log = fst s in
-    match DM.sel sk_log sender_pk with
+    match Map.sel sk_log sender_pk with
     | None ->
       raise
     | Some sk ->
@@ -109,12 +104,12 @@ let pkae1_enc n pkaes : pkae_enc_t n pkaes =
         else
           (receiver_pk,sender_pk)
       in
-      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      match DM.sel #(plaintext_log_key) #(plaintext_log_value pkaes.max_plaintext_length) pkae_log (h,nonce) with
       | Some _ ->
         raise
       | None ->
         c <-- sample_multiple (pkaes.ciphertext_length (len p));
-        let pkae_log' = DM.upd #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) (Some (c,p)) in
+        let pkae_log' = DM.upd #(plaintext_log_key) #(plaintext_log_value pkaes.max_plaintext_length) pkae_log (h,nonce) (Some (c,p)) in
         put (pkae_log',sk_log);;
         return #_ #bytes c
 
@@ -134,7 +129,7 @@ let pkae0_dec n pkaes : pkae_dec_t n pkaes =
     s <-- get;
     let sk_log:skey_log n = snd s in
     let pkae_log = fst s in
-    match DM.sel sk_log receiver_pk with
+    match Map.sel sk_log receiver_pk with
     | None ->
       raise
     | Some sk ->
@@ -146,7 +141,7 @@ let pkae1_dec n pkaes : pkae_dec_t n pkaes =
     s <-- get;
     let sk_log:skey_log n = snd s in
     let pkae_log = fst s in
-    match DM.sel sk_log receiver_pk with
+    match Map.sel sk_log receiver_pk with
     | None ->
       raise
     | Some sk ->
@@ -156,7 +151,7 @@ let pkae1_dec n pkaes : pkae_dec_t n pkaes =
         else
           (receiver_pk,sender_pk)
       in
-      match DM.sel #(pkae_log_key) #(pkae_log_value n pkaes) pkae_log (h,nonce) with
+      match DM.sel #(plaintext_log_key) #(plaintext_log_value pkaes.max_plaintext_length) pkae_log (h,nonce) with
       | Some (c',p) ->
         if c = c' then
           return (Some p)

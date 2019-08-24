@@ -182,3 +182,18 @@ let get_oracle #sig (m:module_t sig) (o:sig.labels) : sig.ops o = DM.sel m o
 ///   - a question on the implementation of sig_prod. What if the signatures are
 ///     the same? Then does the call always go to the first one?
 /// state separation
+
+/// State -  a collection of state types used in the implementation of modules.
+
+// handle should probably be generic to the log. Hardcoding it for now. (TODO)
+let handle = h:(bytes&bytes){int_of_bytes (fst h) <= int_of_bytes (snd h)}
+
+let plaintext_log_key = handle*bytes
+let plaintext_log_value (max_plaintext_length:u32) = fun (h,nonce) -> option (bytes*p:bytes{len p `lte` max_plaintext_length})
+
+/// Map from nonces to a maps from ciphertext to plaintexts
+/// Should the state be dependent on the AE scheme?
+let plaintext_log (max_plaintext_length:u32) =
+  DM.t plaintext_log_key (plaintext_log_value max_plaintext_length)
+
+let secret_key_log n = Map.t (lbytes32 n) (option (lbytes32 n))

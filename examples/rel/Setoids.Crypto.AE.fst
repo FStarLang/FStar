@@ -21,13 +21,9 @@ noeq type ae_scheme (n:u32) =
   dec: (c:bytes -> k:key n -> nonce:bytes -> option (p:bytes{len p `lte` max_plaintext_length})) ->
   ae_scheme n
 
-let ae_log_key = handle*bytes
-let ae_log_value #n (aes:ae_scheme n) = fun (h,nonce) -> option (bytes*p:bytes{len p `lte` aes.max_plaintext_length})
-
 /// Map from nonces to a maps from ciphertext to plaintexts
 /// Should the state be dependent on the AE scheme?
-abstract let ae_log #n (aes:ae_scheme n) =
-  DM.t (handle*bytes) (ae_log_value aes)
+let ae_log #n (aes:ae_scheme n) = plaintext_log aes.max_plaintext_length
 
 let ae_log_rel (#n:u32) (aes:ae_scheme n) = lo (ae_log aes)
 
@@ -49,7 +45,7 @@ let enc0 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc
   fun (p,nonce,h) ->
     combined_state <-- get ;
     let ae_st,k_st = combined_state in
-    match DM.sel #ae_log_key #(ae_log_value aes) ae_st (h,nonce) with
+    match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
     | Some option_map ->
       raise #(ae_log #n aes*key_state n)
     | None ->
@@ -64,7 +60,7 @@ let enc1 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc
   fun (p,nonce,h) ->
     combined_state <-- get ;
     let ae_st,k_st : combined_state_t n aes = combined_state in
-    match DM.sel #ae_log_key #(ae_log_value aes) ae_st (h,nonce) with
+    match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
     | Some option_map -> // Nonce is not unique
       raise
     | None ->
