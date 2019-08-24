@@ -128,16 +128,18 @@ let per_t = (t:Type & per t)
 /// `( ** )`: product relation
 ///  Building a relation on pairs from
 ///  relations on its components
-let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop =
-  let (x0, y0) = p0 in
-  let (x1, y1) = p1 in
-  x0 `arel` x1 /\
-  y0 `brel` y1
+let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) =
+  fst p0 `arel` fst p1 /\
+  snd p0 `brel` snd p1
+
+#set-options "--query_stats --log_queries"
+#restart-solver
 
 /// ` arrow_rel' `:
 ///  A relation on arrows, from relations on domain and co-domain
-let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
-    forall x0 x1. x0 `arel` x1 ==>
+let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) =
+    forall x0 x1.{:pattern (x0 `arel` x1)}
+             x0 `arel` x1 ==>
              f x0 `brel` g x1
 
 /// `arrow_rel` is a PER when its arguments are PERs
@@ -161,11 +163,11 @@ let id (arel:rel 'a) : (arel ^--> arel) = fun x -> x
 
 /// `lo`: The "low security relation", i.e., adversary visible values
 /// must be equal on both sides
-let lo a : erel a = fun x y -> (x == y <: prop)
+let lo a : erel a = fun x y -> x == y
 
 /// `hi`: The "high security relation", i.e., any two secret values
 /// are related
-let hi a : erel a = fun x y -> (True <: prop)
+let hi a : erel a = fun x y -> True
 
 /// Some simple functions with relational types
 
@@ -315,7 +317,6 @@ let module_t (s:sig) =
 /// `sig_rel`: an equivalence relation on module signatures
 /// lifting pointwise an equivalence relation on its elements
 let sig_rel' (s:sig) (m1 m2: module_t s)
-  : prop
   = forall (k:s.labels). DM.sel m1 k `s.rels k` DM.sel m2 k
 
 let sig_rel (s:sig)
@@ -328,7 +329,7 @@ let sig_rel (s:sig)
 let sig_unit = {
   labels=unit;
   ops=(fun _ -> unit);
-  rels=(fun l -> (fun _ _ -> (True <: prop)) <: erel unit)
+  rels=(fun l -> (fun _ _ -> True) <: erel unit)
 }
 
 /// The implementation of the unit signature provides its single operation
