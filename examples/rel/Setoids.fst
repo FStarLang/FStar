@@ -132,13 +132,10 @@ let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) =
   fst p0 `arel` fst p1 /\
   snd p0 `brel` snd p1
 
-#set-options "--query_stats --log_queries"
-#restart-solver
-
 /// ` arrow_rel' `:
 ///  A relation on arrows, from relations on domain and co-domain
 let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) =
-    forall x0 x1.{:pattern (x0 `arel` x1)}
+    forall x0 x1.{:pattern (f x0 `brel` g x1) \/ (x0 `arel` x1)}
              x0 `arel` x1 ==>
              f x0 `brel` g x1
 

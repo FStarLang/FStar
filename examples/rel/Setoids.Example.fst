@@ -1,10 +1,9 @@
 module Setoids.Example
+#set-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 
 open Setoids
-module C = FStar.Classical
 module DM = FStar.DependentMap
 
-#set-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 /// Some basic functions and the same effect as for the crypto example, but without random tape.
 
 let option_rel (#a:Type) (arel:erel a) : erel (option a) =
@@ -136,18 +135,12 @@ let is_eq_t_trunc = (lo int) ^--> eff_rel combined_state_rel (lo bool)
 let ( ^^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
   f:(a -> b)
 let is_eq_t_base = ((sig_rel int_container_sig) ** lo int) ^^--> eff_rel combined_state_rel (lo bool)
-let is_eq_t_rel = e_arrow_rel ((sig_rel int_container_sig) ** lo int) (eff_rel combined_state_rel (lo bool))
-
-let cmp : (lo int ^--> (e_arrow_rel (lo int) (lo bool))) = fun x y -> x = y
 
 let is_eq'  : is_eq_t_base =
   fun (ih, x) ->
     ((let get_int : get_int_t = get_oracle GET ih in
      ((st <-- lift_left (get_int ());
        return (x = st)) <: eff combined_state_rel (lo bool))))
-
-module T = FStar.Tactics
-open FStar.Tactics
 
 let _goes_through_easily (a0 a1:type_of (sig_rel int_container_sig))
                          (s0 s1:type_of int_container_state_rel)
