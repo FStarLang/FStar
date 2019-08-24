@@ -1,0 +1,11 @@
+include ../Makefile.include
+
+include .depend
+
+setoids: $(ALL_CHECKED_FILES)
+
+%.checked:
+	$(FSTAR) $< --cache_checked_modules
+
+.depend:
+	$(FSTAR) --dep full $(wildcard Setoids*fst) > .depend

@@ -61,5 +61,7 @@ benton2004:\
 %.fst-in:
 	@echo $(OTHERFLAGS)
 
+setoids: $(subst .fst,.uver, $(wildcard Setoid*fst))
+
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
