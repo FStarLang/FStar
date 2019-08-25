@@ -12557,8 +12557,19 @@ let (resolve_implicits' :
   
 let (resolve_implicits :
   FStar_TypeChecker_Env.env ->
+<<<<<<< HEAD
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
   = fun env  -> fun g  -> resolve_implicits' env true false g 
+=======
+    FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
+  =
+  fun env  ->
+    fun g  ->
+      resolve_implicits' env
+        ((Prims.op_Negation env.FStar_TypeChecker_Env.phase1) &&
+           (Prims.op_Negation env.FStar_TypeChecker_Env.lax)) false g
+  
+>>>>>>> snap
 let (resolve_implicits_tac :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
@@ -12568,6 +12579,7 @@ let (force_trivial_guard :
   fun env  ->
     fun g  ->
       let g1 =
+<<<<<<< HEAD
         let uu____31409 = solve_deferred_constraints env g  in
         FStar_All.pipe_right uu____31409 (resolve_implicits env)  in
       match g1.FStar_TypeChecker_Common.implicits with
@@ -12579,15 +12591,32 @@ let (force_trivial_guard :
           let uu____30454 =
             let uu____30460 =
               let uu____30462 =
+=======
+        let uu____29734 = solve_deferred_constraints env g  in
+        FStar_All.pipe_right uu____29734 (resolve_implicits env)  in
+      match g1.FStar_TypeChecker_Env.implicits with
+      | [] ->
+          let uu____29735 = discharge_guard env g1  in
+          FStar_All.pipe_left (fun a2  -> ()) uu____29735
+      | imp::uu____29737 ->
+          let uu____29740 =
+            let uu____29746 =
+              let uu____29748 =
+>>>>>>> snap
                 FStar_Syntax_Print.uvar_to_string
                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
                  in
+<<<<<<< HEAD
               let uu____30464 =
+=======
+              let uu____29750 =
+>>>>>>> snap
                 FStar_TypeChecker_Normalize.term_to_string env
                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
                  in
               FStar_Util.format3
                 "Failed to resolve implicit argument %s of type %s introduced for %s"
+<<<<<<< HEAD
                 uu____30462 uu____30464
                 imp.FStar_TypeChecker_Common.imp_reason
                in
@@ -12656,6 +12685,14 @@ let (force_trivial_guard :
                FStar_Errors.raise_error uu____31449
                  imp.FStar_TypeChecker_Common.imp_range)
 >>>>>>> snap
+=======
+                uu____29748 uu____29750 imp.FStar_TypeChecker_Env.imp_reason
+               in
+            (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu____29746)
+             in
+          FStar_Errors.raise_error uu____29740
+            imp.FStar_TypeChecker_Env.imp_range
+>>>>>>> snap
   
 let (teq_nosmt_force :
   FStar_TypeChecker_Env.env ->
@@ -12665,11 +12702,16 @@ let (teq_nosmt_force :
     fun t1  ->
       fun t2  ->
 <<<<<<< HEAD
+<<<<<<< HEAD
         let uu____30486 = teq_nosmt env t1 t2  in
         match uu____30486 with
 =======
         let uu____31481 = teq_nosmt env t1 t2  in
         match uu____31481 with
+>>>>>>> snap
+=======
+        let uu____29772 = teq_nosmt env t1 t2  in
+        match uu____29772 with
 >>>>>>> snap
         | FStar_Pervasives_Native.None  -> false
         | FStar_Pervasives_Native.Some g -> (force_trivial_guard env g; true)
@@ -12680,6 +12722,7 @@ let (universe_inequality :
   =
   fun u1  ->
     fun u2  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
       let uu___4165_30505 = FStar_TypeChecker_Common.trivial_guard  in
       {
@@ -12701,6 +12744,17 @@ let (universe_inequality :
         FStar_TypeChecker_Common.implicits =
           (uu___4266_31500.FStar_TypeChecker_Common.implicits)
 >>>>>>> snap
+=======
+      let uu___4074_29791 = FStar_TypeChecker_Env.trivial_guard  in
+      {
+        FStar_TypeChecker_Env.guard_f =
+          (uu___4074_29791.FStar_TypeChecker_Env.guard_f);
+        FStar_TypeChecker_Env.deferred =
+          (uu___4074_29791.FStar_TypeChecker_Env.deferred);
+        FStar_TypeChecker_Env.univ_ineqs = ([], [(u1, u2)]);
+        FStar_TypeChecker_Env.implicits =
+          (uu___4074_29791.FStar_TypeChecker_Env.implicits)
+>>>>>>> snap
       }
   
 let (check_subtyping :
@@ -12713,6 +12767,7 @@ let (check_subtyping :
   fun env  ->
     fun t1  ->
       fun t2  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
         (let uu____30541 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -12768,10 +12823,39 @@ let (check_subtyping :
                FStar_All.pipe_left (with_guard env prob) uu____31567  in
              ((let uu____31595 =
 >>>>>>> snap
+=======
+        (let uu____29827 =
+           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+             (FStar_Options.Other "Rel")
+            in
+         if uu____29827
+         then
+           let uu____29832 =
+             FStar_TypeChecker_Normalize.term_to_string env t1  in
+           let uu____29834 =
+             FStar_TypeChecker_Normalize.term_to_string env t2  in
+           FStar_Util.print2 "check_subtyping of %s and %s\n" uu____29832
+             uu____29834
+         else ());
+        (let uu____29839 =
+           new_t_prob (empty_worklist env) env t1
+             FStar_TypeChecker_Common.SUB t2
+            in
+         match uu____29839 with
+         | (prob,x,wl) ->
+             let g =
+               let uu____29858 =
+                 solve_and_commit env (singleton wl prob true)
+                   (fun uu____29869  -> FStar_Pervasives_Native.None)
+                  in
+               FStar_All.pipe_left (with_guard env prob) uu____29858  in
+             ((let uu____29890 =
+>>>>>>> snap
                  (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                     (FStar_Options.Other "Rel"))
                    && (FStar_Util.is_some g)
                   in
+<<<<<<< HEAD
 <<<<<<< HEAD
                if uu____30600
                then
@@ -12799,6 +12883,20 @@ let (check_subtyping :
                    "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
                    uu____31600 uu____31602 uu____31604
 >>>>>>> snap
+=======
+               if uu____29890
+               then
+                 let uu____29895 =
+                   FStar_TypeChecker_Normalize.term_to_string env t1  in
+                 let uu____29897 =
+                   FStar_TypeChecker_Normalize.term_to_string env t2  in
+                 let uu____29899 =
+                   let uu____29901 = FStar_Util.must g  in
+                   guard_to_string env uu____29901  in
+                 FStar_Util.print3
+                   "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                   uu____29895 uu____29897 uu____29899
+>>>>>>> snap
                else ());
               (match g with
                | FStar_Pervasives_Native.None  ->
@@ -12815,6 +12913,7 @@ let (get_subtyping_predicate :
   fun env  ->
     fun t1  ->
       fun t2  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
         let uu____30648 = check_subtyping env t1 t2  in
         match uu____30648 with
@@ -12834,6 +12933,16 @@ let (get_subtyping_predicate :
               FStar_TypeChecker_Env.abstract_guard uu____31663 g  in
             FStar_Pervasives_Native.Some uu____31662
 >>>>>>> snap
+=======
+        let uu____29938 = check_subtyping env t1 t2  in
+        match uu____29938 with
+        | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+        | FStar_Pervasives_Native.Some (x,g) ->
+            let uu____29957 =
+              let uu____29958 = FStar_Syntax_Syntax.mk_binder x  in
+              FStar_TypeChecker_Env.abstract_guard uu____29958 g  in
+            FStar_Pervasives_Native.Some uu____29957
+>>>>>>> snap
   
 let (get_subtyping_prop :
   FStar_TypeChecker_Env.env ->
@@ -12844,6 +12953,7 @@ let (get_subtyping_prop :
   fun env  ->
     fun t1  ->
       fun t2  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
         let uu____30687 = check_subtyping env t1 t2  in
         match uu____30687 with
@@ -12867,6 +12977,18 @@ let (get_subtyping_prop :
               FStar_TypeChecker_Env.close_guard env uu____31702 g  in
             FStar_Pervasives_Native.Some uu____31701
 >>>>>>> snap
+=======
+        let uu____29977 = check_subtyping env t1 t2  in
+        match uu____29977 with
+        | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+        | FStar_Pervasives_Native.Some (x,g) ->
+            let uu____29996 =
+              let uu____29997 =
+                let uu____29998 = FStar_Syntax_Syntax.mk_binder x  in
+                [uu____29998]  in
+              FStar_TypeChecker_Env.close_guard env uu____29997 g  in
+            FStar_Pervasives_Native.Some uu____29996
+>>>>>>> snap
   
 let (subtype_nosmt :
   FStar_TypeChecker_Env.env ->
@@ -12877,6 +12999,7 @@ let (subtype_nosmt :
   fun env  ->
     fun t1  ->
       fun t2  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
         (let uu____30746 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -12930,10 +13053,38 @@ let (subtype_nosmt :
                   in
                FStar_All.pipe_left (with_guard env prob) uu____31768  in
 >>>>>>> snap
+=======
+        (let uu____30036 =
+           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+             (FStar_Options.Other "Rel")
+            in
+         if uu____30036
+         then
+           let uu____30041 =
+             FStar_TypeChecker_Normalize.term_to_string env t1  in
+           let uu____30043 =
+             FStar_TypeChecker_Normalize.term_to_string env t2  in
+           FStar_Util.print2 "try_subtype_no_smt of %s and %s\n" uu____30041
+             uu____30043
+         else ());
+        (let uu____30048 =
+           new_t_prob (empty_worklist env) env t1
+             FStar_TypeChecker_Common.SUB t2
+            in
+         match uu____30048 with
+         | (prob,x,wl) ->
+             let g =
+               let uu____30063 =
+                 solve_and_commit env (singleton wl prob false)
+                   (fun uu____30074  -> FStar_Pervasives_Native.None)
+                  in
+               FStar_All.pipe_left (with_guard env prob) uu____30063  in
+>>>>>>> snap
              (match g with
               | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
               | FStar_Pervasives_Native.Some g1 ->
                   let g2 =
+<<<<<<< HEAD
 <<<<<<< HEAD
                     let uu____30804 =
                       let uu____30805 = FStar_Syntax_Syntax.mk_binder x  in
@@ -12945,6 +13096,12 @@ let (subtype_nosmt :
                       [uu____31800]  in
                     FStar_TypeChecker_Env.close_guard env uu____31799 g1  in
 >>>>>>> snap
+=======
+                    let uu____30098 =
+                      let uu____30099 = FStar_Syntax_Syntax.mk_binder x  in
+                      [uu____30099]  in
+                    FStar_TypeChecker_Env.close_guard env uu____30098 g1  in
+>>>>>>> snap
                   discharge_guard' FStar_Pervasives_Native.None env g2 false))
   
 let (subtype_nosmt_force :
@@ -12955,11 +13112,16 @@ let (subtype_nosmt_force :
     fun t1  ->
       fun t2  ->
 <<<<<<< HEAD
+<<<<<<< HEAD
         let uu____30846 = subtype_nosmt env t1 t2  in
         match uu____30846 with
 =======
         let uu____31841 = subtype_nosmt env t1 t2  in
         match uu____31841 with
+>>>>>>> snap
+=======
+        let uu____30140 = subtype_nosmt env t1 t2  in
+        match uu____30140 with
 >>>>>>> snap
         | FStar_Pervasives_Native.None  -> false
         | FStar_Pervasives_Native.Some g -> (force_trivial_guard env g; true)
