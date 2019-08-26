@@ -1964,7 +1964,6 @@ let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
 
-
 (* Utilities for working with Lemma's decorated with SMTPat *)
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) ->

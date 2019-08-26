@@ -1272,24 +1272,83 @@ let check_trivial_precondition env c =
 
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
-let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+let coerce_with (env:Env.env) (e : term) (lc : lcomp) (f : lident) (ty : typ) : term * lcomp =
+    match Env.try_lookup_lid env f with
+    | Some _ ->
+        let coertion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
+        let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total ty) in
+        let e = mk_Tm_app coertion [S.as_arg e] None e.pos in
+        e, lc
+    | None ->
+        Errors.log_issue e.pos (Errors.Warning_CoercionNotFound,
+                                (BU.format1 "Coercion %s was not found in the environment, not coercing."
+                                            (string_of_lid f)));
+        e, lc
+
+let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+    let should_coerce =
+         not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
+      || env.phase1 // otherwise only on phase1
+      || env.lax
+      || Options.lax ()
+    in
+    if not should_coerce
+    then (e, lc)
+    else
+    let is_t_term t =
+        let t = N.unfold_whnf env t in
+        match (SS.compress t).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv C.term_lid
+        | _ -> false
+    in
+    let is_t_term_view t =
+        let t = N.unfold_whnf env t in
+        match (SS.compress t).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv C.term_view_lid
+        | _ -> false
+    in
     let is_type t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with
         | Tm_type _ -> true
         | _ -> false
     in
-    match (U.unrefine lc.res_typ).n with
-    | Tm_fvar fv
-        when S.fv_eq_lid fv C.bool_lid
-          && is_type t ->
-      let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
-      let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_constant_at_level 1) None in
-      let lc = bind e.pos env (Some e) lc (None, TcComm.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
-      let e = mk_Tm_app b2t [S.as_arg e] None e.pos in
-      e, lc
+    let res_typ = U.unrefine lc.res_typ in
+    if Env.debug env (Options.Other "Coercions") then
+            BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
+                    (Range.string_of_range e.pos)
+                    (Print.term_to_string e)
+                    (Print.term_to_string res_typ)
+                    (Print.term_to_string t);
+    match (SS.compress res_typ).n with
+    | Tm_fvar fv when S.fv_eq_lid fv C.bool_lid && is_type t ->
+        coerce_with env e lc C.b2t_lid U.ktype0
+
+    | Tm_fvar fv when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
+        coerce_with env e lc C.inspect S.t_term_view
+
+    | Tm_fvar fv when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
+        coerce_with env e lc C.pack S.t_term
+
     | _ ->
       e, lc
+
+let maybe_coerce env (e:term) (t1:typ) (t2:typ) : term * typ =
+    let lc = TcComm.lcomp_of_comp (S.mk_Total t1) in
+    let e, lc = maybe_coerce_lc env e lc t2 in
+    e, lc.res_typ
+
+(* Coerces regardless of expected type if a view exists, useful for matches *)
+(* Returns `None` if no coercion was applied. *)
+let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
+    let rt = lc.res_typ in
+    let rt = U.unrefine rt in
+    let hd, args = U.head_and_args rt in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
+        Some <| coerce_with env e lc C.inspect S.t_term_view
+    | _ ->
+        None
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   if Env.debug env Options.High then
@@ -1860,6 +1919,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
     | _ -> e
   in
   let env = {env with use_eq=env.use_eq} in
+  let e, t1 = maybe_coerce env e t1 t2 in
   match check env t1 t2 with
     | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
     | Some g ->
