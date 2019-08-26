@@ -231,9 +231,8 @@ effect RST
 
 /// Similar to `FStar.Hyperstack.ST.get`, this helper gives you a rmem based on the current state of
 /// the heap
-val get (r: resource) : RST
-  (rmem r)
-  (r)
+val get (r: resource) : RST (rmem r)
+  r
   (fun _ -> r)
   (fun _ -> True)
   (fun h0 h h1 -> h == h0 /\ h0 == h1)
