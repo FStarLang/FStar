@@ -3452,9 +3452,6 @@ let resolve_implicits' env must_total forcelax g =
                                                (N.term_to_string env ctx_u.ctx_uvar_typ), r];
                     raise e
                in
-               let g = if env.is_pattern
-                       then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
-                       else g in
                let g' =
                  match discharge_guard' (Some (fun () ->
                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
