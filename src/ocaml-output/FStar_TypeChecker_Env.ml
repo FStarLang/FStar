@@ -6134,7 +6134,7 @@ let (lift_to_layered_effect :
                             uu____26441.FStar_Syntax_Syntax.n  in
                           match uu____26440 with
                           | FStar_Syntax_Syntax.Tm_arrow (bs,c1) when
-                              (FStar_List.length bs) >= Prims.int_one ->
+                              (FStar_List.length bs) >= (Prims.of_int (3)) ->
                               let uu____26501 =
                                 FStar_Syntax_Subst.open_comp bs c1  in
                               (match uu____26501 with
