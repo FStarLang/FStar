@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 %.uver: %.fst
-	$(BENCHMARK_PRE) $(FSTAR) --use_extracted_interfaces false $^
+	$(BENCHMARK_PRE) $(FSTAR) $^
 
 all: uall
 

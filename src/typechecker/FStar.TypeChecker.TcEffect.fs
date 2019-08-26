@@ -908,6 +908,11 @@ let monad_signature env m s =
     end
   | _ -> fail ()
 
+(*
+ * Typecheck lift to a layered effect
+ *
+ * Only lifts from wp-effects to layered effects are supported so far
+ *)
 let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
@@ -915,11 +920,19 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   let us, lift = sub.lift |> must in
   let r = lift.pos in
 
-  if List.length us <> 0  //TODO: FIXME: this breaks use_extracted_flags, see ulib/Makefile.verify
-  then failwith ("Unexpected number of universes in typechecking %s" ^ (Print.sub_eff_to_string sub));
+  let env, us, lift =
+    if List.length us = 0 then env0, us, lift
+    else
+      let us, lift = SS.open_univ_vars us lift in
+      Env.push_univ_vars env0 us, us, lift in
 
-  let lift, lc, g = tc_tot_or_gtot_term env0 lift in
-  Rel.force_trivial_guard env0 g;
+  (*
+   * We typecheck the lift term (without any expected type)
+   *   and then unify its type with the expected lift type
+   *)
+
+  let lift, lc, g = tc_tot_or_gtot_term env lift in
+  Rel.force_trivial_guard env g;
 
   let lift_ty = lc.res_typ |> N.normalize [Beta] env0 in
 
@@ -927,30 +940,43 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
       (Print.term_to_string lift) (Print.term_to_string lift_ty);
 
+  let lift_t_shape_error s = BU.format4
+    "Unexpected shape of lift %s~>%s, reason:%s (t:%s)"
+    (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
+    s (Print.term_to_string lift_ty) in
+
+  (*
+   * Construct the expected lift type k as:
+   *   a:Type -> wp:source_wp a -> <some binder> -> repr a i_1 ... i_n
+   *)
   let k, g_k =
     let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
-    
-    let a', wp_sort_a' = monad_signature env0 sub.source (Env.lookup_effect_lid env0 sub.source) in
+
+    //a:Type u
+    let a', wp_sort_a' = monad_signature env sub.source
+      (Env.lookup_effect_lid env sub.source) in
     let src_wp_sort_a = SS.subst [NT (a', a |> fst |> S.bv_to_name)] wp_sort_a' in
 
+    //wp:sub.source.wp a
     let wp = S.gen_bv "wp" None src_wp_sort_a |> S.mk_binder in
 
+    //other binders
     let rest_bs =
       match (SS.compress lift_ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 3 ->
-        (match SS.open_binders bs with
-         | (a', _)::(wp', _)::bs ->
-           let bs, _ = List.splitAt (List.length bs - 1) bs in
-           let substs = [NT (a', bv_to_name (fst a)); NT (wp', bv_to_name (fst wp))] in
-           SS.subst_binders substs bs
-         | _ -> failwith "Impossible!")
-      | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "") r in  //AR: TODO: FIXME
-        
+        let ((a', _)::(wp', _)::bs) = SS.open_binders bs in
+        bs |> List.splitAt (List.length bs - 1) |> fst
+           |> SS.subst_binders [NT (a', bv_to_name (fst a)); NT (wp', bv_to_name (fst wp))]
+      | _ ->
+        raise_error (Errors.Fatal_UnexpectedExpressionType,
+          lift_t_shape_error "either not an arrow, or not enough binders") r in
+
+    //f:unit -> sub.source a wp
     let f =
       let f_sort = U.arrow
         [S.null_binder S.t_unit]
         (S.mk_Comp ({
-          comp_univs = [u_a];  //AR: TODO: FIXME: this is wrong, this should be the universe of sub.source not that of a
+          comp_univs = [u_a];
           effect_name = sub.source;
           result_typ = a |> fst |> S.bv_to_name;
           effect_args = [wp |> fst |> S.bv_to_name |> S.as_arg];
@@ -960,26 +986,43 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
      
     let bs = a::wp::(rest_bs@[f]) in
 
+    //repr<?u> ?u_i ... ?u_n
     let repr, g_repr = TcUtil.fresh_layered_effect_repr_en
-      (Env.push_binders env0 bs)
+      (Env.push_binders env bs)
       r sub.target u_a (a |> fst |> S.bv_to_name) in
     
     U.arrow bs (mk_Total' repr (new_u_univ () |> Some)), g_repr in
 
-   if Env.debug env0 <| Options.Other "LayeredEffects" then
-    BU.print1 "Before unification k: %s\n" (Print.term_to_string k);
+   if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
 
-  let g = Rel.teq env0 lift_ty k in
-  Rel.force_trivial_guard env0 g_k; Rel.force_trivial_guard env0 g;
+  let g = Rel.teq env lift_ty k in
+  Rel.force_trivial_guard env g_k; Rel.force_trivial_guard env g;
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
-  
-  let us, lift = TcUtil.generalize_universes env0 lift in
-  let lift_wp = k |> N.remove_uvar_solutions (Env.push_univ_vars env0 us) |> SS.close_univ_vars us in
-  //AR: TODO: FIXME: do this remove uvar solutions other places too?
-  //AR: TODO: FIXME: check that List.length us = 1
 
+  //generalize
+  let us, lift, lift_wp =
+    let inst_us, lift = TcUtil.generalize_universes env0 lift in
+    if List.length inst_us <> 1
+    then raise_error (Errors.Fatal_MismatchUniversePolymorphic, BU.format4
+      "Expected lift %s~>%s to be polymorphic in one universe, found:%s (t:%s)"
+      (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
+      (inst_us |> List.length |> string_of_int) (Print.term_to_string lift)) r;
+
+    if List.length us = 0 ||
+       (List.length us = List.length inst_us &&
+        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us inst_us)
+    then inst_us, lift,
+         k |> N.remove_uvar_solutions env |> SS.close_univ_vars inst_us
+    else 
+       raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, BU.format5
+         "Annotated and generalized universes on %s~%s are not same, annotated:%s, generalized:%s (t:%s)"
+         (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
+         (us |> List.length |> string_of_int) (inst_us |> List.length |> string_of_int)
+         (Print.term_to_string lift)) r in
+       
   let sub = { sub with
     lift = Some (us, lift);
     lift_wp = Some (us, lift_wp) } in
