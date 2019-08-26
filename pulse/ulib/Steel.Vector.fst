@@ -123,11 +123,16 @@ let create #a init max =
     (fun _ -> A.alloc init max)
   in
   let contents = Vector 0ul max arr in
+  admit()
+  (*
   let v = rst_frame
     (A.array_resource arr)
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
     ( fun _ -> P.ptr_alloc contents)
   in
+  admit()
+*)
+(*
   let v_view = vector_view v in
   let h = HST.get () in
   assert(fp_reads_fp v_view.fp v_view.inv); (* TODO: figure out why this is needed *)
@@ -140,6 +145,7 @@ let create #a init max =
   let h1 = HST.get () in
   assume(modifies empty_resource (vector_resource v) h0 h1); (*TODO: find out why we need this *)
   v
+ *)
 
 
 #set-options "--z3rlimit 30"
