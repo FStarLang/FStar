@@ -1073,7 +1073,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
 (* Type-checking computation types                                                                          *)
 (************************************************************************************************************)
 and tc_comp env c : comp                                      (* checked version of c                       *)
-                  * universe                                  (* universe of c.result_typ                   *)
+                  * universe                                  (* universe of c                              *)
                   * guard_t =                                 (* logical guard for the well-formedness of c *)
   let c0 = c in
   match c.n with
