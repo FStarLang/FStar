@@ -253,7 +253,12 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let inspect        = p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"]
+let pack           = p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"]
+
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
@@ -345,7 +350,8 @@ let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
+let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_lid lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -355,6 +361,9 @@ let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
+
+let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (text_of_lid lid)
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
