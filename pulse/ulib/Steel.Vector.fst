@@ -84,7 +84,7 @@ let reveal_vector #a v =
   P.ptr_read v
 
 val pack_vector (#a: Type) (contents: contents_t a) (v:P.pointer (contents_t a)) : RST unit
-  (A.array_resource contents.arr <*> P.ptr_resource v)
+  (P.ptr_resource v <*> A.array_resource contents.arr)
   (fun _ -> vector_resource v)
   (fun h0 ->
     P.get_val v h0 == contents /\
@@ -112,12 +112,8 @@ let pack_vector #a contents v =
   reveal_modifies ();
   reveal_star ()
 
+[@expect_failure]
 let create #a init max =
-  P.reveal_ptr ();
-  A.reveal_array ();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  let h0 = HST.get () in
   let arr = rst_frame
     empty_resource
     (fun arr -> A.array_resource arr)
@@ -141,15 +137,14 @@ let create #a init max =
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
     f
   in
-admit()
- (*
+  let h0 = get (A.array_resource contents.arr <*> P.ptr_resource v) in
   rst_frame
-    (P.ptr_resource v <*> A.array_resource contents.arr)
+    (A.array_resource contents.arr <*> P.ptr_resource v)
     (fun _ -> vector_resource v)
     (fun _ -> pack_vector contents v);
-  let h1 = HST.get () in
+  (*TODO: debug assertion failures *)
   v
-*)
+
 #set-options "--z3rlimit 30"
 
 let push #a v x =
