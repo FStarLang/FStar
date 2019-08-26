@@ -2919,7 +2919,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
       let c1, g_lift =
         if lid_equals c1.effect_name c2.effect_name
         then c1, Env.trivial_guard
-        else Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+        else Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name (Env.get_range env)
+             |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
       if Env.debug env <| Options.Other "LayeredEffects" then
         BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"

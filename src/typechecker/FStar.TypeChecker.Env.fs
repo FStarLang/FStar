@@ -937,6 +937,16 @@ let norm_eff_name =
               end in
        Ident.set_lid_range res (range_of_lid l)
 
+let num_effect_indices env name r =
+  let sig_t = name |> lookup_effect_lid env |> SS.compress in
+  match sig_t.n with
+  | Tm_arrow (_a::bs, _) -> List.length bs
+  | _ ->
+    raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
+      BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
+      (Print.term_to_string sig_t)) r
+    
+
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
     match lookup_qname env l with
@@ -1273,30 +1283,32 @@ let rec unfold_effect_abbrev env comp =
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
+let effect_repr_aux only_reifiable env c u_res =
+  let check_partial_application eff_name (args:args) =
+    let r = get_range env in
+    let given, expected = List.length args, num_effect_indices env eff_name r in
+    if given = expected  then ()
+    else
+      let message = BU.format3 "Not enough arguments for effect %s, \
+        This usually happens when you use a partially applied DM4F effect, \
+        like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
+        (Ident.string_of_lid eff_name) (string_of_int given) (string_of_int expected) in
+      raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) r in
+      
+  let effect_name = norm_eff_name env (U.comp_effect_name c) in
+  match effect_decl_opt env effect_name with
+  | None -> None
+  | Some (ed, _) ->
+    match (snd ed.repr).n with
+    | Tm_unknown -> None
+    | _ ->
+      let c = unfold_effect_abbrev env c in
+      let res_typ = c.result_typ in
+      let repr = inst_effect_fun_with [u_res] env ed ed.repr in
+      check_partial_application effect_name c.effect_args;
+      Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) None (get_range env))
 
-let effect_repr_aux only_reifiable env c u_c =
-    let effect_name = norm_eff_name env (U.comp_effect_name c) in
-    match effect_decl_opt env effect_name with
-    | None -> None
-    | Some (ed, qualifiers) ->
-        match (snd ed.repr).n with
-        | Tm_unknown -> None
-        | _ ->
-          let c = unfold_effect_abbrev env c in
-          let res_typ = c.result_typ in
-          let wp =
-            match c.effect_args with
-            | hd :: _ -> hd
-            | [] ->
-              let name = Ident.string_of_lid effect_name in
-              let message = BU.format1 "Not enough arguments for effect %s. " name ^
-                "This usually happens when you use a partially applied DM4F effect, " ^
-                "like [TAC int] instead of [Tac int]." in
-              raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
-          let repr = inst_effect_fun_with [u_c] env ed ed.repr in
-          Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
-
-let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
+let effect_repr env c u_res : option<term> = effect_repr_aux false env c u_res
 
 (* [is_reifiable_* env x] returns true if the effect name/computational *)
 (* effect (of a body or codomain of an arrow) [x] is reifiable. *)
@@ -1708,8 +1720,31 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 (***************************************************)
 
-//AR: TODO: FIXME: convert failwiths to errors
-let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
+let uvars_for_binders env bs substs reason r =
+  bs |> List.fold_left (fun (substs, uvars, g) b ->
+    let sort = SS.subst substs (fst b).sort in
+    let t, _, g_t = new_implicit_var_aux (reason b) r env sort Strict None in
+    substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
+  ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
+
+
+(*
+ * Lifting a comp c to the layered effect eff_name
+ *
+ * let c = M<u_c> a_c wp_c
+ *
+ * let lift_M_eff_name = (u, lift_t) where
+ *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> repr<u> a i_1 ... i_n)
+ *
+ * We first instantiate lift_t with u_c
+ *
+ * Then we create uvars (?u_i:t_i), while subtituting [a/a_c; wp/wp_c; x_j/?u_j] (forall j < i)
+ *
+ * let substs = [a/a_c; wp/wp_c; x_i/?u_i]
+ *
+ * We return M'<u_c> a_c i_i[substs]
+ *)
+let lift_to_layered_effect env c eff_name r =
   if debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Lifting comp %s to layered effect %s {\n"
       (Print.comp_to_string c) (Print.lid_to_string eff_name);
@@ -1720,55 +1755,60 @@ let lift_to_layered_effect env (c:comp) (eff_name:lident) : comp * guard_t =
   else
     let src_ed = get_effect_decl env ct.effect_name in
     let dst_ed = get_effect_decl env eff_name in
+
     if src_ed.is_layered || not dst_ed.is_layered then
-      failwith "lift_to_layered_effect called with layered src or non-layered dst";
+      raise_error (Errors.Fatal_UnexpectedEffect, BU.format2
+        "lift_to_layered_effect expects %s to be a layered effect (src:%s)"
+        (Ident.string_of_lid eff_name) (Ident.string_of_lid src_ed.mname)) r;
 
     let lift_t =
       match monad_leq env src_ed.mname dst_ed.mname with
-      | None -> failwith ("Could not find an edge from " ^ src_ed.mname.str ^ " to " ^ dst_ed.mname.str)
+      | None ->
+        raise_error (Errors.Fatal_EffectsCannotBeComposed, BU.format2
+          "Could not find a lift from %s to %s"
+          (Ident.string_of_lid src_ed.mname) (Ident.string_of_lid dst_ed.mname)) r
       | Some lift -> lift.mlift.mlift_t |> must in
 
     let u, a, wp = U.destruct_comp ct in
 
-    //lift_t is now the arrow type: <u>a:Type -> wp -> ..bs.. -> f -> repr a is
+    //lift_t has the arrow type: <u>a:Type -> wp -> ..bs.. -> f -> repr a is
+
     let _, lift_t = inst_tscheme_with lift_t [u] in
-    let lift_bs, lift_ct =
+
+    let lift_t_shape_error s =
+      BU.format4 "Lift from %s to %s has unexpected shape, reason: %s (lift:%s)"
+        (Ident.string_of_lid src_ed.mname) (Ident.string_of_lid dst_ed.mname)
+        s (Print.term_to_string lift_t) in
+
+    let a_b, wp_b, rest_bs, lift_ct =
       match (SS.compress lift_t).n with
-      | Tm_arrow (bs, c) -> SS.open_comp bs c |> (fun (bs, c) -> bs, U.comp_to_comp_typ c)
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " is not an arrow type") in
+      | Tm_arrow (bs, c) when List.length bs >= 1 ->
+        let ((a_b::wp_b::bs), c) = SS.open_comp bs c in
+        a_b, wp_b, bs |> List.splitAt (List.length bs - 1) |> fst, U.comp_to_comp_typ c
+      | _ ->
+        raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
+          "either not an arrow or not enough binders") r in
 
-    let a_b, wp_b, rest_bs =
-      match lift_bs with
-      | a_b::wp_b::bs when List.length bs >= 1 ->
-        a_b, wp_b, List.splitAt (List.length bs - 1) bs |> fst
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have enough binders") in
+    let rest_bs_uvars, g = uvars_for_binders env rest_bs
+      [NT (a_b |> fst, a); NT (wp_b |> fst, wp)]
+      (fun b -> BU.format4
+        "implicit var for binder %s of %s~>%s at %s"
+        (Print.binder_to_string b) (Ident.string_of_lid src_ed.mname)
+        (Ident.string_of_lid dst_ed.mname) (Range.string_of_range r)) r in
 
-    let rest_bs = SS.subst_binders [NT (a_b |> fst, a); NT (wp_b |> fst, wp)] rest_bs in
-
-    let u_m, is =
-      match (SS.compress lift_ct.result_typ).n with
-      | Tm_app (_, _::is) -> lift_ct.comp_univs, List.map fst is 
-      | _ -> failwith ("lift_t: " ^ (Print.term_to_string lift_t) ^ " does not have a repr return type") in
-
-    let rest_bs_uvars, g =
-      let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
-        let sort = SS.subst substs (fst b).sort in
-        let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
-        if debug env <| Options.Other "LayeredEffects" then
-          BU.print2 "lift_to_layered_effect: introduced uvar %s for binder %s\n"
-            (Print.term_to_string t) (Print.binder_to_string b);
-        substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
-      ) ([], [], trivial_guard) rest_bs in
-      rest_bs_uvars, g in
-
-    let subst_for_is = List.map2
+    let substs = List.map2
       (fun b t -> NT (b |> fst, t))
       (a_b::wp_b::rest_bs) (a::wp::rest_bs_uvars) in
 
-    let is = List.map (SS.subst subst_for_is) is in
+    let is =
+      match (SS.compress lift_ct.result_typ).n with
+      | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst substs)
+      | _ ->
+        raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
+          "return type is not a repr type") r in
 
     let c = mk_Comp ({
-      comp_univs = u_m;
+      comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
       effect_name = eff_name;
       result_typ = a;
       effect_args = List.map S.as_arg is;
