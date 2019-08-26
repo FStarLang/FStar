@@ -59,6 +59,7 @@ let vector_view (#a : Type0) (v : vector a) : Tot (view (vector_view_t a)) =
   in
   { fp = fp_r ; inv = inv_r; sel = sel_r }
 
+
 val reveal_vector (#a: Type) (v: vector a) : RST (contents_t a)
   (vector_resource v)
   (fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
@@ -83,29 +84,28 @@ let reveal_vector #a v =
   reveal_star ();
   P.ptr_read v
 
-val pack_vector (#a: Type) (contents: contents_t a) (v:P.pointer (contents_t a)) : RST unit
-  (P.ptr_resource v <*> A.array_resource contents.arr)
+val pack_vector (#a: Type) (contents: contents_t a) (arr: A.array a) (v:P.pointer (contents_t a)) : RST unit
+  (P.ptr_resource v <*> A.array_resource arr)
   (fun _ -> vector_resource v)
   (fun h0 ->
+    contents.arr == arr /\
     P.get_val v h0 == contents /\
-    A.length contents.arr = contents.max /\
+    A.length arr = contents.max /\
     U32.v contents.len <= U32.v contents.max /\
     U32.v contents.len >= 0 /\
-    A.freeable contents.arr /\
-    A.get_rperm
-      contents.arr
-      #(A.array_resource contents.arr) (focus_rmem h0 (A.array_resource contents.arr)) =
-      P.get_perm v #(P.ptr_resource v) (focus_rmem h0 (P.ptr_resource v))
+    A.freeable arr /\
+    A.get_rperm arr (focus_rmem h0 (A.array_resource arr)) =
+      P.get_perm v (focus_rmem h0 (P.ptr_resource v))
   )
   (fun h0 _ h1 ->
     P.get_val v h0 == contents /\
     U32.v contents.len <= U32.v contents.max /\
     U32.v contents.len >= 0 /\
-    A.length contents.arr = contents.max /\
+    A.length arr = contents.max /\
    (h1 (vector_resource v)).v_capacity == contents.max /\
-     as_rseq v h1 == S.slice (A.as_rseq contents.arr h0) 0 (U32.v contents.len)
+     as_rseq v h1 == S.slice (A.as_rseq arr h0) 0 (U32.v contents.len)
   )
-let pack_vector #a contents v =
+let pack_vector #a contents arr v =
   P.reveal_ptr ();
   A.reveal_array ();
   reveal_rst_inv ();
@@ -120,28 +120,25 @@ let create #a init max =
     (fun _ -> A.alloc init max)
   in
   let contents = Vector 0ul max arr in
-  let f : unit -> RST (P.pointer (contents_t a))
-    (empty_resource)
-    (fun ptr -> P.ptr_resource ptr)
-    (fun _ -> True)
-    (fun _ ptr h1 ->
-      A.freeable ptr /\
-      P.get_val ptr h1 == contents /\
-      P.get_perm ptr h1 = FStar.Real.one
-    )
-  =
-    fun _ -> P.ptr_alloc contents (* TODO: figure out why we need this let binding *)
-  in
   let v = rst_frame
     (A.array_resource arr)
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
-    f
+    ( fun _ -> P.ptr_alloc contents)
   in
-  let h0 = get (A.array_resource contents.arr <*> P.ptr_resource v) in
+  let v_view = vector_view v in
+  let h = HST.get () in
+  assert(fp_reads_fp v_view.fp v_view.inv);
+  assert(sel_reads_fp v_view.fp v_view.inv v_view.sel); (* TODO: figure out why this is needed *)
+  assert(inv_reads_fp v_view.fp v_view.inv);
+  let h0 = get (A.array_resource arr <*> P.ptr_resource v) in
+  assert(A.get_rperm
+        arr
+        (focus_rmem h0 (A.array_resource arr)) =
+        P.get_perm v (focus_rmem h0 (P.ptr_resource v)));
   rst_frame
-    (A.array_resource contents.arr <*> P.ptr_resource v)
+    (A.array_resource arr <*> P.ptr_resource v)
     (fun _ -> vector_resource v)
-    (fun _ -> pack_vector contents v);
+    (fun _ -> pack_vector contents arr v);
   (*TODO: debug assertion failures *)
   v
 
