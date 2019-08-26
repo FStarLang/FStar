@@ -1,3 +1,19 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module RST.Effect
 
 open FStar.HyperStack.ST
@@ -7,8 +23,14 @@ open Steel.RST
 
 module HS = FStar.HyperStack
 
+/// Encoding of the RST effect from Steel as a layered effect
+
 type rst_pre (r:resource) = rprop r  //rprop is rmem r -> Type0
 type rst_post (a:Type) (r:a -> resource) = x:a -> rprop (r x)
+
+/// We define the effect in the wp-style (and later RST will just be the hoare version of the wp-based RSTATE)
+
+/// Encoding monotonicity of RSTATE wps
 
 type rst_wp' (a:Type) (r_in:resource) (r_out:a -> resource) = rst_post a r_out -> rst_pre r_in
 
@@ -19,6 +41,8 @@ let rst_wp_monotonic (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp' 
 
 type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) =
   wp:rst_wp' a r_in r_out{rst_wp_monotonic a r_in r_out wp}
+
+/// Representation of RSTATE in terms of STATE
 
 type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out) =
   unit -> 
@@ -32,11 +56,19 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out
                modifies r_in (r_out x) h0 h1) ==> p x h1)
       (mk_rmem r_in h0))
 
+
 unfold let emp = empty_resource
+
+/// Note that return can be parametric in the resources
+///
+/// But as it turns out the typechecker does not use this
+///   PURE computations are lifted rather than returned
 
 let return (a:Type) (x:a)
 : repr a emp (fun _ -> emp) (fun p -> p x)
 = fun _ -> x
+
+/// `bind` can enforces definitional equality of f's output resource and g's input resource
 
 let bind (a:Type) (b:Type)
   (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
@@ -59,6 +91,14 @@ let bind (a:Type) (b:Type)
 //   (ensures fun _ -> True)
 // = f
 
+
+/// `stronger` that enforces definitional equality of resources of the two computations
+///
+/// An alternative version (commented above) uses propositional equality
+///   (and results in smt queries for the same)
+///
+/// A third version could be proving their equality in the monoid (using a tactic)
+
 let stronger (a:Type)
   (r_in:resource) (r_out:a -> resource)
   (wp_f:rst_wp a r_in r_out)
@@ -80,11 +120,17 @@ layered_effect {
        conjunction = conjunction
 }
 
+/// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck
+
 assume Pure_wp_monotonicity:
   forall (a:Type) (wp:pure_wp a).
     (forall (p q:pure_post a).
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
+
+/// The lift is parametric in the resource
+///   which is nice since if we used empty resource,
+///   we would need to use framing for pure subcomputations
 
 let lift_pure_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
 : repr a r (fun _ -> r) (fun p h -> wp (fun x -> p x h))
@@ -92,12 +138,16 @@ let lift_pure_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
 
 sub_effect PURE ~> RSTATE = lift_pure_rstate
 
+/// Hoare style encoding
 
 effect RST (a:Type)
   (r_in:resource) (r_out:a -> resource)
   (pre:rprop r_in) (post:rmem r_in -> (x:a) -> rprop (r_out x))
 = RSTATE a r_in r_out
   (fun (p:rst_post a r_out) (h0:rmem r_in) -> pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1))
+
+
+/// `rst_frame`
 
 assume val rst_frame (#a:Type)
   (r_in_outer:resource)
