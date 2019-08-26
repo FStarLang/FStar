@@ -2917,54 +2917,86 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (c2 |> S.mk_Comp |> Print.comp_to_string);
 
       let c1, g_lift =
-        if lid_equals c1.effect_name c2.effect_name
-        then c1, Env.trivial_guard
-        else Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name (Env.get_range env)
-             |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+        Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name (Env.get_range env)
+        |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
       if Env.debug env <| Options.Other "LayeredEffects" then
         BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
           (c1 |> S.mk_Comp |> Print.comp_to_string)
           (c2 |> S.mk_Comp |> Print.comp_to_string);
 
+      (*
+       * M t1 i_1 ... i_n <: M t2 j_1 ... j_n (equality is simple, just unify the indices, as before)
+       * We solve it using following sub-problems and guards:
+       *
+       * --> sub_probs_is: first, if any of the indices i_1 ... i_n are uvars,
+       *                   we simply unify them with corresponding indices on the R.H.S
+       *
+       * Then we solve t1 <: t2 as a sub-problem
+       *
+       * Next, we lookup M.stronger_wp
+       * let M.stronger_wp =
+       *   (u, a:Type u -> (x_i:t_i) -> f:repr<u> a f_i_1 ... f_i_n -> PURE (repr<u> a g_i_1 ... g_i_n) wp)
+       *
+       * We first instantiate it with c2.comp_univs
+       *
+       * Next, we create uvars ?u_i for each binder x_i
+       *   with subtitutions [a/c2.result_typ]@[x_j/?u_j] (forall j < i)
+       *
+       * let substs = [a/c2.result_typ]@[x_i/?u_i]
+       *
+       * --> f_sub_probs: unify f_i_i[substs] with indices of c1
+       * --> g_sub_probs: unify g_i_i[substs] with indices of c2
+       *
+       * --> Add (wp[substs] (fun _ -> True)) to the guard
+       *)
+
       if problem.relation = EQ
       then solve_eq c1 c2 g_lift.implicits  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
       else
+        let r = Env.get_range env in
         let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
-        let is_sub_probs, wl =
-          List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
-            match (SS.compress a1).n with
-            | Tm_uvar _
-            | Tm_uinst ({ n = Tm_uvar _ }, _)
-            | Tm_app ({ n = Tm_uvar _ }, _) ->
-              let p, wl = sub_prob wl a1 EQ a2 "effect index" in
-              p::is_sub_probs, wl
-            | _ -> is_sub_probs, wl) c1.effect_args c2.effect_args ([], wl) in
 
+        //sub problems for uvar indices in c1
+        let is_sub_probs, wl =
+          let is_uvar t =
+            match (SS.compress t).n with
+            | Tm_uvar _ 
+            | Tm_uinst ({ n = Tm_uvar _ }, _)
+            | Tm_app ({ n = Tm_uvar _ }, _) -> true
+            | _ -> false in
+          List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
+            if is_uvar a1
+            then let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
+                 p::is_sub_probs, wl
+            else is_sub_probs, wl
+          ) c1.effect_args c2.effect_args ([], wl) in
+
+        //return type sub problem
         let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
-        let _, stronger_t = c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger [U_zero]) in  //AR: TODO: FIXME: this should not be u#0, but rather u of the repr type, need a function in Env to return universe of the repr type for a layered effect
-        let stronger_bs, stronger_c =
+        let _, stronger_t =
+          c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger c2.comp_univs) in
+
+        let stronger_t_shape_error s = BU.format3
+          "Unexpected shape of stronger for %s, reason: %s (t:%s)"
+          (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
+
+        let a_b, rest_bs, f_b, stronger_c =
           match (SS.compress stronger_t).n with
-          | Tm_arrow (bs, c) -> SS.open_comp bs c
-          | _ -> failwith ("stronger_t: "^ (Print.term_to_string stronger_t) ^ " is not an arrow") in
+          | Tm_arrow (bs, c) when List.length bs >= 2 ->
+            let ((a::bs), c) = SS.open_comp bs c in
+            let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
+              |> (fun (l1, l2) -> l1, List.hd l2) in
+            a, rest_bs, f_b, c
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedExpressionType,
+              stronger_t_shape_error "not an arrow or not enough binders") r in
 
-        let a_b, rest_bs, f_b = 
-          match stronger_bs with
-          | a::bs when List.length bs >= 1 ->
-            let rest_bs, f_bs = List.splitAt (List.length bs - 1) bs |> (fun (l1, l2) -> l1, List.hd l2) in
-            a, rest_bs, f_bs
-          | _ -> failwith ("stronger_t: "^ (Print.term_to_string stronger_t) ^ " does not have enough binders") in
-
-        let rest_bs = SS.subst_binders [NT (a_b |> fst, c2.result_typ)] rest_bs in
-
-        let rest_bs_uvars, g_uvars =
-          let _, rest_bs_uvars, g = List.fold_left (fun (substs, uvars, g) b ->
-            let sort = SS.subst substs (fst b).sort in
-            let t, _, g_t = new_implicit_var_aux "" Range.dummyRange env sort Strict None in  //AR: TODO: FIXME: set the range and empty string properly
-            substs@[NT (b |> fst, t)], uvars@[t], Env.conj_guard g g_t
-          ) ([], [], Env.trivial_guard) rest_bs in
-          rest_bs_uvars, g in
+        let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
+          [NT (a_b |> fst, c2.result_typ)]
+          (fun b -> BU.format3 "implicit for binder %s in stronger of %s at %s"
+            (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
 
         let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 
@@ -2972,28 +3004,33 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (fun b t -> NT (b |> fst, t))
           (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
 
-        let f_sort_is =
-          match (SS.compress (f_b |> fst).sort).n with
-          | Tm_app (_, _::is) ->
-            is |> List.map fst |> List.map (SS.subst substs)
-          | _ -> failwith ("Type of f in stronger_t: " ^ (Print.term_to_string stronger_t) ^ " is not a repr type") in
+        let f_sub_probs, wl =
+          let f_sort_is =
+            match (SS.compress (f_b |> fst).sort).n with
+            | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst substs)
+            | _ ->
+              raise_error (Errors.Fatal_UnexpectedExpressionType,
+                stronger_t_shape_error "type of f is not a repr type") r in
+
+          List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+            let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
+            ps@[p], wl
+          ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
 
         let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
 
-        let g_sort_is =
-          match (SS.compress stronger_ct.result_typ).n with
-          | Tm_app (_, _::is) -> is |> List.map fst
-          | _ -> failwith ("Return type of stronger_t: " ^ (Print.term_to_string stronger_t) ^ " is not a repr type") in
-
-        let f_sub_probs, wl =
-          List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
-            let p, wl = sub_prob wl f_sort_i EQ c1_i "index of c1" in
-            ps@[p], wl) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
-
         let g_sub_probs, wl =
+          let g_sort_is =
+            match (SS.compress stronger_ct.result_typ).n with
+            | Tm_app (_, _::is) -> is |> List.map fst
+            | _ ->
+              raise_error (Errors.Fatal_UnexpectedExpressionType,
+                stronger_t_shape_error "return type is not a repr type") r in
+
           List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
-            let p, wl = sub_prob wl g_sort_i EQ c2_i "index of c2" in
-            ps@[p], wl) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
+            let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
+            ps@[p], wl
+          ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
 
         let fml =
           let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
@@ -3004,11 +3041,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               t
               [stronger_ct.result_typ |> S.as_arg]
               None Range.dummyRange in
-          let fml = S.mk_Tm_app
+          S.mk_Tm_app
             wp
             [trivial_post |> S.as_arg]
             None Range.dummyRange in
-          SS.subst substs fml in
 
         let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs) in
         let guard = U.mk_conj_l (List.map p_guard sub_probs) in

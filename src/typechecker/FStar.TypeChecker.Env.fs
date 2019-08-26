@@ -1784,7 +1784,7 @@ let lift_to_layered_effect env c eff_name r =
 
     let a_b, wp_b, rest_bs, lift_ct =
       match (SS.compress lift_t).n with
-      | Tm_arrow (bs, c) when List.length bs >= 1 ->
+      | Tm_arrow (bs, c) when List.length bs >= 3 ->
         let ((a_b::wp_b::bs), c) = SS.open_comp bs c in
         a_b, wp_b, bs |> List.splitAt (List.length bs - 1) |> fst, U.comp_to_comp_typ c
       | _ ->
