@@ -749,14 +749,14 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                      let ct2, g_lift =
                        Env.lift_to_layered_effect
                          env
-                         (S.mk_Comp ct2) c1_ed.mname
+                         (S.mk_Comp ct2) c1_ed.mname r1
                        |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
                      ct1, ct2, c1_ed, g_lift)
                 | Some _ ->
                   let ct1, g_lift =
                     Env.lift_to_layered_effect
                       env
-                      (S.mk_Comp ct1) c2_ed.mname
+                      (S.mk_Comp ct1) c2_ed.mname r1
                     |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
                   ct1, ct2, c2_ed, g_lift in
 
@@ -785,25 +785,17 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
               //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
-              let rest_bs_uvars, g_uvars = 
-                let _, rest_bs_uvars, g = List.fold_left (fun (substs, is_uvars, g) b ->
-                  let sort = SS.subst substs (fst b).sort in
-                  let reason = BU.format3
-                    "implicit var for binder %s of %s:bind at %s"
-                    (Print.binder_to_string b) ed.mname.str (Range.string_of_range r1) in
-                  let t, _, g_t = new_implicit_var_aux reason r1 env sort Strict None in
-                  if Env.debug env <| Options.Other "LayeredEffects" then
-                    BU.print2 "mk_layered_bind: introducing uvar : %s for binder %s of bind\n"
-                      (Print.term_to_string t) (Print.binder_to_string b);
-                  substs@[NT (b |> fst, t)], is_uvars@[t], conj_guard g g_t
-                  ) ([NT (a_b |> fst, t1); NT (b_b |> fst, t2)], [], trivial_guard) rest_bs in
-                rest_bs_uvars, g in
+              let rest_bs_uvars, g_uvars = Env.uvars_for_binders
+                env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
+                (fun b -> BU.format3
+                  "implicit var for binder %s of %s:bind at %s"
+                  (Print.binder_to_string b) ed.mname.str (Range.string_of_range r1)) r1 in
 
               let subst = List.map2
                 (fun b t -> NT (b |> fst, t))
                 (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
 
-              let f_guard =
+              let f_guard =  //unify c1's indices with f's indices in the bind_wp
                 let f_sort_is =
                   match (SS.compress (f_b |> fst).sort).n with
                   | Tm_app (_, _::is) ->
@@ -813,7 +805,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
                   Env.trivial_guard is1 f_sort_is in 
 
-              let g_guard =
+              let g_guard =  //unify c2's indices with g's indices in the bind_wp
                 let x_a =
                   match b with
                   | None -> S.null_binder t1

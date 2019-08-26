@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 
 module BU = FStar.Util
+module S = FStar.Syntax.Syntax
 module TcComm = FStar.TypeChecker.Common
 
 type step =
@@ -244,6 +245,7 @@ val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
 val norm_eff_name          : (env -> lident -> lident)
+val num_effect_indices     : env -> lident -> Range.range -> int
 val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
 val lookup_attr            : env -> string -> list<sigelt>
@@ -365,6 +367,22 @@ val close_forall              : env -> binders -> term -> term
 
 val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 
-val lift_to_layered_effect : env -> comp -> lident -> (comp * guard_t)
 
 val print_gamma : gamma -> string
+
+(* layered effect utils *)
+
+(*
+ * This gadget is used when the typechecker applies the layered effect combinators
+ *
+ * Given (opened) bs = x_i:t_i, this function creates uvars ?u_i:t_i
+ *
+ * When creating a ?u_i, it performs the substitution substs@[x_j/?u_j] in t_i, forall j < i
+ *   so that the t_i is well-typed in env
+ *
+ * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
+ *)
+
+val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val lift_to_layered_effect : env -> comp -> lident -> Range.range -> (comp * guard_t)
