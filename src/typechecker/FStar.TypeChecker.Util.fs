@@ -1014,6 +1014,8 @@ let check_trivial_precondition env c =
 let coerce_with (env:Env.env) (e : term) (lc : lcomp) (f : lident) (ty : typ) : term * lcomp =
     match Env.try_lookup_lid env f with
     | Some _ ->
+        if Env.debug env (Options.Other "Coercions") then
+            BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
         let coertion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
         let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total ty) in
         let e = mk_Tm_app coertion [S.as_arg e] None e.pos in
@@ -1053,21 +1055,40 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | _ -> false
     in
     let res_typ = U.unrefine lc.res_typ in
+    let head, args = U.head_and_args res_typ in
     if Env.debug env (Options.Other "Coercions") then
             BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
                     (Range.string_of_range e.pos)
                     (Print.term_to_string e)
                     (Print.term_to_string res_typ)
                     (Print.term_to_string t);
-    match (SS.compress res_typ).n with
-    | Tm_fvar fv when S.fv_eq_lid fv C.bool_lid && is_type t ->
+
+    // checks if `t2 == erased t1`
+    let is_erased env t1 t2 =
+        let head, args = U.head_and_args t2 in
+        match (U.un_uinst head).n, args with
+        | Tm_fvar fv, [(x, None)] ->
+            S.fv_eq_lid fv C.erased_lid && U.term_eq x t1
+
+        | _ -> false
+    in
+
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type t ->
         coerce_with env e lc C.b2t_lid U.ktype0
 
-    | Tm_fvar fv when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
         coerce_with env e lc C.inspect S.t_term_view
 
-    | Tm_fvar fv when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
         coerce_with env e lc C.pack S.t_term
+
+    | _ when is_erased env t res_typ ->
+        coerce_with env e lc C.reveal t
+
+    | _ when is_erased env res_typ t ->
+        coerce_with env e lc C.hide t
 
     | _ ->
       e, lc
