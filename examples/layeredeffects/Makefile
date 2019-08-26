@@ -6,4 +6,4 @@ include ../Makefile.include
 
 all: uall
 
-uall: HoareST.uver HoareST2.uver Test.uver RST.Effect.uver RST.Effect.Test.uver
+uall: HoareST.uver Test.uver RST.Effect.uver RST.Effect.Test.uver
