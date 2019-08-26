@@ -1722,7 +1722,7 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 (***************************************************)
 
-let uvars_for_binders env bs substs reason r =
+let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
     let t, _, g_t = new_implicit_var_aux (reason b) r env sort Strict None in
