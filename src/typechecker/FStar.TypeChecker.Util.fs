@@ -1012,7 +1012,6 @@ let check_trivial_precondition env c =
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
-    if env.is_pattern then e, lc else
     let is_type t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with
@@ -1594,7 +1593,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
     | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
     | _ -> e
   in
-  let env = {env with use_eq=env.use_eq || (env.is_pattern && is_var e)} in
+  let env = {env with use_eq=env.use_eq} in
   match check env t1 t2 with
     | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
     | Some g ->

@@ -144,7 +144,6 @@ type env = {
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
-  is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
@@ -263,7 +262,6 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     expected_typ=None;
     sigtab=new_sigtab();
     attrtab=new_sigtab();
-    is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
     generalize=true;
