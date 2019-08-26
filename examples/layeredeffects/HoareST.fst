@@ -1,12 +1,34 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module HoareST
 
 open FStar.Heap
 open FStar.ST
 
+/// ST effect implemented as a layered effect over STATE
+
 #set-options "--max_fuel 0 --max_ifuel 0"
 
 type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0
+
+/// It has two indices: one for the precondition and one for the postcondition
+///
+/// Its encoding in STATE is as expected
 
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
   unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
@@ -14,6 +36,8 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
 let return (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
+
+/// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
@@ -25,6 +49,7 @@ let bind (a:Type) (b:Type)
   let x = f () in
   g x ()
 
+/// sub comp rule
 
 let stronger (a:Type)
   (pre_f:pre_t) (post_f:post_t a)
@@ -59,12 +84,19 @@ let conjunction (a:Type)
 // : Tot _
 // = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
 
+/// Actions
+
 let read (a:Type0) (r:ref a)
 : repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
 = fun _ -> read r 
 
 let write (a:Type0) (r:ref a) (x:a)
-: repr unit (fun _ -> True) (fun h0 _ h1 -> sel h1 r == x)
+: repr unit
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    modifies (Set.singleton (addr_of r)) h0 h1 /\
+    equal_dom h0 h1 /\
+    sel h1 r == x)
 = fun _ -> write r x
 
 layered_effect {
@@ -89,17 +121,13 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-assume val wp_monotonic_st (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:st_wp a).
-       (forall (p q:st_post a).
-          (forall (x:a) (h:heap). p x h ==> q x h) ==>
-          (forall (h:heap). wp p h ==> wp q h)))
+/// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (post:post_t a) (f:unit -> PURE a wp)
-: repr a (fun h -> wp (fun x -> post h x h)) post
-= wp_monotonic_st ();
-  wp_monotonic_pure ();
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a
+  (fun _ -> wp (fun _ -> True))
+  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+= wp_monotonic_pure ();
   fun _ ->
   f ()
 
