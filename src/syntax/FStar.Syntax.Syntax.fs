@@ -697,6 +697,7 @@ let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
 let t_term      = tconst PC.term_lid
+let t_term_view = tabbrev PC.term_view_lid
 let t_order     = tconst PC.order_lid
 let t_decls     = tabbrev PC.decls_lid
 let t_binder    = tconst PC.binder_lid
