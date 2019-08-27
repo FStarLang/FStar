@@ -34,7 +34,7 @@ let (uu___is_Branch : mforest -> Prims.bool) =
 let (__proj__Branch__item___0 : mforest -> mforest FStar_Util.smap) =
   fun projectee  -> match projectee with | Branch _0 -> _0 
 let (htree : mforest FStar_Util.smap) =
-  FStar_Util.smap_create (Prims.parse_int "50") 
+  FStar_Util.smap_create (Prims.of_int (50)) 
 let string_of_optiont :
   'Auu____181 'Auu____182 .
     ('Auu____181 -> 'Auu____182) ->

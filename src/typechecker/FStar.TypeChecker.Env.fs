@@ -177,6 +177,7 @@ type env = {
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
+  strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -293,7 +294,8 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStar.Syntax.DsEnv.empty_env deps;
-    nbe = nbe
+    nbe = nbe;
+    strict_args_tab = BU.smap_create 20;
   }
 
 let dsenv env = env.dsenv
@@ -330,7 +332,8 @@ let push_stack env =
               identifier_info=BU.mk_ref !env.identifier_info;
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
               normalized_eff_names=BU.smap_copy env.normalized_eff_names;
-              fv_delta_depths=BU.smap_copy env.fv_delta_depths}
+              fv_delta_depths=BU.smap_copy env.fv_delta_depths;
+              strict_args_tab=BU.smap_copy env.strict_args_tab}
 
 let pop_stack () =
     match !stack with
@@ -449,16 +452,22 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
+let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
+  if List.length ed.univs <> 0 || List.length ed.binders <> 0
+  then 
+    let msg = BU.format2
+      "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
+      (Print.lid_to_string ed.mname)
+      (Print.binders_to_string ", " ed.binders) in
+    raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
+
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
-    match ed.binders with
-        | [] ->
-          let univs = ed.univs@us in
-          if List.length insts <> List.length univs
-          then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
-                            (string_of_int <| List.length univs) (string_of_int <| List.length insts)
-                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
-          snd (inst_tscheme_with (ed.univs@us, t) insts)
-        | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
+  check_effect_is_not_a_template ed env.range;
+  if List.length insts <> List.length us
+  then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
+                   (string_of_int <| List.length us) (string_of_int <| List.length insts)
+                   (Print.lid_to_string ed.mname) (Print.term_to_string t));
+  snd (inst_tscheme_with (us, t) insts)
 
 type tri =
     | Yes
@@ -581,20 +590,30 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature us_opt se =
-    let inst_tscheme ts =
-       match us_opt with
-       | None -> inst_tscheme ts
-       | Some us -> inst_tscheme_with ts us
-    in
-    match se.sigel with
-    | Sig_new_effect(ne) ->
-        Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
+let effect_signature (us_opt:option<universes>) (se:sigelt) rng : option<((universes * typ) * Range.range)> =
+  let inst_ts us_opt ts =
+    match us_opt with
+    | None -> inst_tscheme ts
+    | Some us -> inst_tscheme_with ts us
+  in
+  match se.sigel with
+  | Sig_new_effect ne ->
+    check_effect_is_not_a_template ne rng;
+    (match us_opt with
+     | None -> ()
+     | Some us ->
+       if List.length us <> List.length (fst ne.signature)
+       then failwith ("effect_signature: incorrect number of universes for the signature of " ^
+         ne.mname.str ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
+         ", got " ^ (string_of_int (List.length us)))
+       else ());
 
-    | Sig_effect_abbrev (lid, us, binders, _, _) ->
-        Some (inst_tscheme (us, U.arrow binders (mk_Total teff)), se.sigrng)
+    Some (inst_ts us_opt ne.signature, se.sigrng)
 
-    | _ -> None
+  | Sig_effect_abbrev (lid, us, binders, _, _) ->
+    Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
+
+  | _ -> None
 
 let try_lookup_lid_aux us_opt env lid =
   let inst_tscheme ts =
@@ -635,7 +654,7 @@ let try_lookup_lid_aux us_opt env lid =
           lookup_type_of_let us_opt (fst se) lid
 
         | _ ->
-          effect_signature us_opt (fst se)
+          effect_signature us_opt (fst se) env.range
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
@@ -844,10 +863,29 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
+let fv_has_strict_args env fv =
+    let s = (S.lid_of_fv fv).str in
+    match BU.smap_try_find env.strict_args_tab s with
+    | None ->
+      let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
+      begin
+      match attrs with
+      | None -> None
+      | Some attrs ->
+          let res =
+            BU.find_map attrs (fun x ->
+              fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                     false x FStar.Parser.Const.strict_on_arguments_attr))
+          in
+          BU.smap_add env.strict_args_tab s res;
+          res
+      end
+    | Some l -> l
+
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature None se with
+      begin match effect_signature None se env.range with
         | None -> None
         | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
@@ -1039,28 +1077,18 @@ let wp_sig_aux decls m =
   match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
   | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some (md, _q) ->
-    let _, s = inst_tscheme (md.univs, md.signature) in
+    (*
+     * AR: this code used to be inst_tscheme md.univs md.signature
+     *     i.e. implicitly there was an assumption that ed.binders is empty
+     *     now when signature is itself a tscheme, this just translates to the following
+     *)
+    let _, s = inst_tscheme md.signature in
     let s = Subst.compress s in
     match md.binders, s.n with
       | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
-
-let null_wp_for_eff env eff_name (res_u:universe) (res_t:term) =
-    if lid_equals eff_name Const.effect_Tot_lid
-    then S.mk_Total' res_t (Some res_u)
-    else if lid_equals eff_name Const.effect_GTot_lid
-    then S.mk_GTotal' res_t (Some res_u)
-    else let eff_name = norm_eff_name env eff_name in
-         let ed = get_effect_decl env eff_name in
-         let null_wp = inst_effect_fun_with [res_u] env ed ed.null_wp in
-         let null_wp_res = Syntax.mk (Tm_app(null_wp, [S.as_arg res_t])) None (get_range env) in
-         Syntax.mk_Comp ({comp_univs=[res_u];
-                          effect_name=eff_name;
-                          result_typ=res_t;
-                          effect_args=[S.as_arg null_wp_res];
-                          flags=[]})
 
 let build_lattice env se = match se.sigel with
   | Sig_new_effect(ne) ->
@@ -1236,7 +1264,7 @@ let effect_repr_aux only_reifiable env c u_c =
     match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
-        match ed.repr.n with
+        match (snd ed.repr).n with
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
@@ -1250,7 +1278,7 @@ let effect_repr_aux only_reifiable env c u_c =
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
               raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
-          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+          let repr = inst_effect_fun_with [u_c] env ed ed.repr in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c

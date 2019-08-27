@@ -1,34 +1,15 @@
 include Makefile.config
 
-INCLUDE_PATHS = \
-	../ulib \
-	boot \
-	basic \
-	extraction \
-	fsdoc \
-	fstar \
-	parser \
-	prettyprint \
-	reflection \
-	smtencoding \
-	syntax \
-	tactics \
-	tosyntax \
-	typechecker \
-	tests
+FSTAR_HOME ?= ..
 
-CACHE_DIR?=./.cache.boot
+include Makefile.boot.common  #provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS, and CACHE_DIR, shared with interactive mode targets
 
 FSTAR_BOOT ?= $(FSTAR)
 
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
-	--use_extracted_interfaces false                                \
-	--lax --MLish --no_location_info				\
-	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
-	--warn_error -272-241-319 --cache_dir $(CACHE_DIR)
+FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -36,7 +17,7 @@ FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
 EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker
+		   FStar.TypeChecker FStar.Profiling
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
@@ -44,7 +25,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
-		FStar.JsonHelper FStar.Interactive.Lsp		\
+		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
+		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main

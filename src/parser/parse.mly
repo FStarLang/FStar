@@ -985,7 +985,7 @@ projectionLHS:
       {
         let l = mkConsList (rhs2 parseState 1 3) es in
         let pos = (rhs2 parseState 1 3) in
-        mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos Expr) [l] pos
+        mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
       }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }

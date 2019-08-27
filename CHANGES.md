@@ -18,6 +18,18 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
+    F* now enforces that unannotated, effectful functions have a
+    trivial precondition (this is already the case for pure functions).
+
+    See some testcases in `examples/bug-reports/Bug1055.fst`.
+
+    The check is performed under a new flag `--trivial_pre_for_unannotated_effectful_fns`,
+    which is `true` by-default.
+
+    This is a breaking change, see this commit for how we fixed the F* examples:
+    https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
+
 
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
@@ -184,6 +196,16 @@ Guidelines for the changelog:
      (`--already_cached`, `--extract`, `--using_facts_from`, etc.),
      those lists of namespaces can be given under the form `+A -B +C`
      (space-separated) or `+A,-B,+C` (comma-separated).
+
+   * [PR #1985](https://github.com/FStarLang/FStar/pull/1985): The
+     `--profile` flag changed to take instead a set of modules on
+     which to enable profiling. The output of F* on its finished
+     message changed to not print the time it took to verify a module.
+
+
+## Editors
+
+   * Support for vscode via LSP (https://github.com/FStarLang/FStar/wiki/Using-F*-with-vscode)
 
 # Version 0.9.6.0
 

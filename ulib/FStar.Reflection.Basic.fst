@@ -29,6 +29,9 @@ open FStar.Reflection.Data
 assume val inspect_ln     : (t:term) -> tv:term_view{smaller tv t}
 assume val pack_ln        : term_view -> term
 
+assume val pack_inspect_inv : (t:term) -> Lemma (pack_ln (inspect_ln t) == t)
+assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
+
 assume val inspect_comp   : (c:comp) -> cv:comp_view{smaller_comp cv c}
 assume val pack_comp      : comp_view -> comp
 

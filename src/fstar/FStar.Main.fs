@@ -39,13 +39,10 @@ let cleanup () = Util.kill_all ()
 let finished_message fmods errs =
   let print_to = if errs > 0 then Util.print_error else Util.print_string in
   if not (Options.silent()) then begin
-    fmods |> List.iter (fun ((iface, name), time) ->
+    fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
                 if Options.should_print_message name.str
-                then if time >= 0
-                then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n"
-                                                        tag (Ident.text_of_lid name) (Util.string_of_int time))
-                else print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
+                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
     if errs > 0
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
@@ -90,7 +87,9 @@ let load_native_tactics () =
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
-    Tactics.Load.load_tactics cmxs_files
+    Tactics.Load.load_tactics cmxs_files;
+    iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
+    ()
 
 
 (* Need to keep names of input files for a second pass when prettyprinting *)
@@ -172,14 +171,13 @@ let go _ =
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
           let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
           ignore (cleanup env);
-          let module_names_and_times =
+          let module_names =
             tcrs
             |> List.map (fun tcr ->
-               Universal.module_or_interface_name tcr.checked_module,
-               tcr.tc_time)
+               Universal.module_or_interface_name tcr.checked_module)
           in
-          report_errors module_names_and_times;
-          finished_message module_names_and_times 0
+          report_errors module_names;
+          finished_message module_names 0
         end //end batch mode
 
         else

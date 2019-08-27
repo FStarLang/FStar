@@ -90,6 +90,10 @@ let delay t s =
 
         Also returns `true`, if it actually resolved the uvar at the head
                      `false` otherwise
+
+      Warning: if force_uvar changes to operate on inputs other
+      than Tm_uvar then the fastpath out match in compress will
+      need to be updated.
 *)
 let rec force_uvar' t =
   match t.n with
@@ -103,9 +107,9 @@ let rec force_uvar' t =
 //from the uvar to anything it may have been resolved to
 let force_uvar t =
   let t', forced = force_uvar' t in
-  if not forced
-  then t, forced
-  else delay t' ([], SomeUseRange t.pos), forced
+  if forced
+  then delay t' ([], SomeUseRange t.pos)
+  else t
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
@@ -119,6 +123,10 @@ let rec try_read_memo_aux t =
         if shorten then m := Some t';
         t', true)
   | _ -> t, false
+
+//  Warning: if try_read_memo changes to operate on inputs other
+//    than Tm_delayed then the fastpath out match in compress will
+//    need to be updated.
 let try_read_memo t = fst (try_read_memo_aux t)
 
 let rec compress_univ u = match u with
@@ -472,14 +480,30 @@ let rec push_subst s t =
       delayed substitution (i.e., step 1 above), but not
       memoize the result of uvar solutions (since those
       could be reverted).
+
+      The function is broken into a fast-path where the
+      result can be easily determined and a recursive slow
+      path.
+
+      Warning: if try_read_memo or force_uvar change to
+      operate on inputs other than Tm_delayed or Tm_uvar
+      then the fastpath out match in compress will need to
+      be updated.
 *)
-let rec compress (t:term) =
+let rec compress_slow (t:term) =
     let t = try_read_memo t in
-    let t, _ = force_uvar t in
+    let t = force_uvar t in
     match t.n with
     | Tm_delayed((t', s), memo) ->
         memo := Some (push_subst s t');
-        compress t
+        compress_slow t
+    | _ ->
+        t
+
+let compress (t:term) =
+  match t.n with
+    | Tm_delayed(_, _) | Tm_uvar(_, _) ->
+        compress_slow t
     | _ ->
         t
 
@@ -561,13 +585,6 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs
-
-let close_lcomp (bs:binders) lc =
-    let s = closing_subst bs in
-    Syntax.mk_lcomp lc.eff_name
-                    lc.res_typ
-                    lc.cflags
-                    (fun () -> subst_comp s (lcomp_comp lc))
 
 let close_pat p =
     let rec aux sub p = match p.v with

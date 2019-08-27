@@ -80,7 +80,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed and intend to extract and compile OCaml code
-   against the F* library, please rebuild it with:
+   against the F* library, please build it with:
 
         $ make -C ulib install-fstarlib
 
@@ -162,7 +162,7 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 ## Building F\* from sources ##
 
-Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone.
+Short version: Simply run `make -j 6` from the `master` branch of the clone.
 
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
@@ -185,12 +185,27 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work.
+The steps require a working OCaml setup. OCaml version from 4.04.X to 4.08.1 should work.
 
 #### Instructions for Windows ####
 
 1. Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/)
    to install both OCaml and OPAM.
+
+2. If needed switch to a supported OCaml version by running the following commands:
+  ```sh
+  $ opam switch list-available
+  $ opam switch create ocaml-variants.4.07.1+mingw64c
+  ```
+
+3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
+  to be able to install some binary dependencies below more easily.
+  ```sh
+  $ opam install depext depext-cygwinports
+  ```
+  [More documentation on depext-cygwin here](https://fdopen.github.io/opam-repository-mingw/depext-cygwin/).
+  
+  Then follow step 4 in "Instructions for all OSes" below.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -204,8 +219,6 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
      (e.g., https://dev.realworldocaml.org/install.html
      or http://opam.ocaml.org/doc/Install.html).
 
-#### Instructions for all OSes ####
-
 2. Initialize and configure OPAM
 
    - You need to initialize it by running `opam init` and update the `PATH`
@@ -213,23 +226,47 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-   - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
-     for instructions on how to configure your environment for use with OPAM
-
-3. Ensure that OPAM is using a recent enough version of OCaml
+3. Ensure that OPAM is using a supported version of OCaml
 
    - Type `opam switch list`. The current OCaml version used by opam
      is identified by the letter C. If it is not within the version
-     range required by F\* (see above), type `opam switch ` and then
-     the version number you wish to switch opam to.
+     range required by F\* (see above), type `opam switch list-available`
+     to see what versions are available and then `opam switch <version-number>`.
+
+   - Afterwards you can also install the `depext` package,
+     to be able to install some binary dependencies below more easily.
+     ```sh
+     $ opam install depext
+     ```
+
+  Then follow step 4 below.
+
+#### Instructions for all OSes ####
 
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
   ```
-
-  **Note:** this list of packages is longer than the list in the
+  
+  **Note:** Some of these opam packages depend on binary packages that you need to install locally
+  (eg, using your Linux package manager). So if the command above gives you errors like this:
+  ```sh
+  [ERROR] The compilation of conf-gmp failed at "./test-win.sh".
+  ```
+  You can use `depext` to install the missing binary packages, for instance:
+  ```sh
+  $ opam depext -i conf-gmp
+  ```
+  On Windows, for dynamic libraries like gmp, you should add `/usr/x86_64-w64-mingw32/sys-root/mingw/bin:/usr/i686-w64-mingw32/sys-root/mingw/bin` to your cygwin `$PATH`.
+  If you additionally want to call `bin/fstar.exe` from Windows or VSCode (not just from a cygwin shell),
+  you also need to add the corresponding Windows paths (like `C:\OCaml32\usr\i686-w64-mingw32\sys-root\mingw\bin`) to your
+  Windows `$PATH`. Otherwise you will get popups like this when trying to call fstar.exe outside cygwin:
+  ```sh
+  The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
+  ```
+  
+  **Note:** This list of opam packages is longer than the list in the
   [Testing a binary package](#testing-a-binary-package) section above,
   because the additional packages here are necessary to compile F\*.
 
@@ -258,7 +295,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
-        $ make ocaml -C src
+        $ make ocaml -C src -j6
 
 ## Runtime dependency: Z3 SMT solver ##
 

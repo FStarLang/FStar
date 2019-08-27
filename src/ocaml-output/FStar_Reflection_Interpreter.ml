@@ -192,7 +192,7 @@ let (mk :
           {
             FStar_TypeChecker_Cfg.name = l;
             FStar_TypeChecker_Cfg.arity = arity;
-            FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
+            FStar_TypeChecker_Cfg.univ_arity = Prims.int_zero;
             FStar_TypeChecker_Cfg.auto_reflect = FStar_Pervasives_Native.None;
             FStar_TypeChecker_Cfg.strong_reduction_ok = true;
             FStar_TypeChecker_Cfg.requires_binder_substitution = false;
@@ -219,8 +219,7 @@ let mk1 :
             fun ena  ->
               fun enr  ->
                 let l = mklid nm  in
-                mk l (Prims.parse_int "1") (int1 l f ea er)
-                  (nbe_int1 l nf ena enr)
+                mk l Prims.int_one (int1 l f ea er) (nbe_int1 l nf ena enr)
   
 let mk2 :
   'a 'b 'na 'nb 'nr 'r .
@@ -245,7 +244,7 @@ let mk2 :
                 fun enb  ->
                   fun enr  ->
                     let l = mklid nm  in
-                    mk l (Prims.parse_int "2") (int2 l f ea eb er)
+                    mk l (Prims.of_int (2)) (int2 l f ea eb er)
                       (nbe_int2 l nf ena enb enr)
   
 let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
@@ -578,3 +577,7 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu____891 :: uu____899  in
     uu____886 :: uu____888  in
   uu____881 :: uu____883 
+let (uu___113 : unit) =
+  FStar_List.iter FStar_TypeChecker_Cfg.register_extra_step
+    reflection_primops
+  

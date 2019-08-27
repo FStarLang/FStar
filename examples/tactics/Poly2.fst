@@ -16,20 +16,15 @@
 module Poly2
 
 open FStar.Tactics.CanonCommSemiring
-open FStar.Tactics
 open FStar.Mul
 
-// These assumptions are proven in https://github.com/project-everest/vale/blob/fstar/src/lib/math/Math.Lemmas.Int_i.fsti
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
-
-#reset-options "--z3rlimit 1 --using_facts_from '* -FStar.Tactics -CanonCommSemiring'"
+#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --using_facts_from '* -FStar.Tactics'"
 
 // To print timing
-#set-options "--hint_info"
-#set-options "--tactics_info"
-#set-options "--log_queries"
+#set-options "--query_stats --tactics_info"
 
 [@tcdecltime]
 let lemma_poly_multiply (p:pos) (n r h r0 r1 h0 _h1 _h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
@@ -43,5 +38,5 @@ let lemma_poly_multiply (p:pos) (n r h r0 r1 h0 _h1 _h2 s1 d0 d1 d2 h1 h2 hh : i
   let hh_expand = (h2 * r0) * (n * n) + (h0 * (r1_4 * 4) + h1 * r0 + h2 * (5 * r1_4)) * n
     + (h0 * r0 + h1 * (5 * r1_4)) in
   let b = ((h2 * n + h1) * r1_4) in
-  modulo_addition_lemma hh_expand p b;
-  assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5))) by (canon_semiring int_cr)
+  assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5))) by (int_semiring ());
+  modulo_addition_lemma hh_expand p b

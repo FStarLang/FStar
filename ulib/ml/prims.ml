@@ -1,10 +1,13 @@
 type int = Z.t[@printer Z.pp_print][@@deriving show]
+let of_int = Z.of_int
+let int_zero = Z.zero
+let int_one = Z.one
 let parse_int = Z.of_string
 let to_string = Z.to_string
 
 type tmp = string [@@deriving yojson]
 let int_to_yojson x = tmp_to_yojson (to_string x)
-let int_of_yojson x = 
+let int_of_yojson x =
   match tmp_of_yojson x with
   | Ok x -> Ok (parse_int x)
   | Error x -> Error x
@@ -103,6 +106,7 @@ type ('Aa,'Aq,'Awp,'Ap) pure_assert_p = unit
 type ('Aa,'Aq,'Awp,'Ap) pure_assume_p = unit
 type ('Aa,'Ap) pure_null_wp = unit
 type ('Aa,'Awp) pure_trivial = 'Awp
+type ('Ap, 'Apost) pure_assert_wp = unit
 type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
 let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
 let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z

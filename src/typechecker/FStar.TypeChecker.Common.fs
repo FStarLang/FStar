@@ -184,7 +184,7 @@ let id_info_insert_fv table fv ty =
     else table
 
 let id_info_toggle table enabled =
-    { table with id_info_enabled = enabled && FStar.Options.ide () }
+    { table with id_info_enabled = enabled }
 
 let id_info_promote table ty_map =
     { table with

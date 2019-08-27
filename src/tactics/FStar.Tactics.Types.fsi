@@ -60,7 +60,7 @@ type proofstate = {
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
-val tracepoint : proofstate -> unit
+val tracepoint : Cfg.psc -> proofstate -> unit
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val subst_proof_state: subst_t -> proofstate -> proofstate

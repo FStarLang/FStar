@@ -19,9 +19,10 @@ clean:
 0:
 	$(MAKE) -C src/
 
-# Build the OCaml snapshot. NOTE: This will not build the standard library, and native tactics will not run
+# Build the OCaml snapshot. NOTE: This will not build the standard library,
+# nor tests, and native tactics will not run
 1:
-	$(MAKE) -C src/ocaml-output
+	$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
 # Bootstrap just the compiler, not the library and tests;
 # fastest way to incrementally build a patch to the compiler

@@ -203,7 +203,7 @@ let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
         close_log
   
 let (query_logging : query_log) =
-  let query_number = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let query_number = FStar_Util.mk_ref Prims.int_zero  in
   let log_file_opt = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let used_file_names = FStar_Util.mk_ref []  in
   let current_module_name = FStar_Util.mk_ref FStar_Pervasives_Native.None
@@ -231,16 +231,15 @@ let (query_logging : query_log) =
       | FStar_Pervasives_Native.None  ->
           ((let uu____1047 =
               let uu____1056 = FStar_ST.op_Bang used_file_names  in
-              (n1, (Prims.parse_int "0")) :: uu____1056  in
+              (n1, Prims.int_zero) :: uu____1056  in
             FStar_ST.op_Colon_Equals used_file_names uu____1047);
            n1)
       | FStar_Pervasives_Native.Some (uu____1144,k) ->
           ((let uu____1157 =
               let uu____1166 = FStar_ST.op_Bang used_file_names  in
-              (n1, (k + (Prims.parse_int "1"))) :: uu____1166  in
+              (n1, (k + Prims.int_one)) :: uu____1166  in
             FStar_ST.op_Colon_Equals used_file_names uu____1157);
-           (let uu____1254 =
-              FStar_Util.string_of_int (k + (Prims.parse_int "1"))  in
+           (let uu____1254 = FStar_Util.string_of_int (k + Prims.int_one)  in
             FStar_Util.format2 "%s-%s" n1 uu____1254))
        in
     FStar_Util.format1 "queries-%s.smt2" file_name  in
@@ -311,7 +310,7 @@ let (new_z3proc :
   
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStar_Util.proc) =
-  let ctr = FStar_Util.mk_ref (~- (Prims.parse_int "1"))  in
+  let ctr = FStar_Util.mk_ref (~- Prims.int_one)  in
   fun cmd_and_args  ->
     let uu____1735 =
       let uu____1737 =
@@ -351,7 +350,7 @@ let (bg_z3_proc : bgproc FStar_ST.ref) =
   let the_z3proc = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let the_z3proc_params =
     FStar_Util.mk_ref (FStar_Pervasives_Native.Some ("", [""]))  in
-  let the_z3proc_ask_count = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let the_z3proc_ask_count = FStar_Util.mk_ref Prims.int_zero  in
   let make_new_z3_proc cmd_and_args =
     (let uu____2003 =
        let uu____2006 = new_z3proc_with_id cmd_and_args  in
@@ -359,7 +358,7 @@ let (bg_z3_proc : bgproc FStar_ST.ref) =
      FStar_ST.op_Colon_Equals the_z3proc uu____2003);
     FStar_ST.op_Colon_Equals the_z3proc_params
       (FStar_Pervasives_Native.Some cmd_and_args);
-    FStar_ST.op_Colon_Equals the_z3proc_ask_count (Prims.parse_int "0")  in
+    FStar_ST.op_Colon_Equals the_z3proc_ask_count Prims.int_zero  in
   let z3proc uu____2105 =
     (let uu____2107 =
        let uu____2109 = FStar_ST.op_Bang the_z3proc  in
@@ -384,7 +383,7 @@ let (bg_z3_proc : bgproc FStar_ST.ref) =
     (let uu____2277 =
        ((FStar_Options.log_queries ()) ||
           (let uu____2280 = FStar_ST.op_Bang the_z3proc_ask_count  in
-           uu____2280 > (Prims.parse_int "0")))
+           uu____2280 > Prims.int_zero))
          || (Prims.op_Negation (old_params = next_params))
         in
      if uu____2277
@@ -579,8 +578,8 @@ let (doZ3Exe :
                     let s1 =
                       FStar_Util.trim_string (FStar_String.concat " " s)  in
                     let s2 =
-                      FStar_Util.substring s1 (Prims.parse_int "1")
-                        ((FStar_String.length s1) - (Prims.parse_int "2"))
+                      FStar_Util.substring s1 Prims.int_one
+                        ((FStar_String.length s1) - (Prims.of_int (2)))
                        in
                     if FStar_Util.starts_with s2 "error"
                     then FStar_Pervasives_Native.None
@@ -626,8 +625,7 @@ let (doZ3Exe :
                                 [(lbl, msg, r1)]))
                  in
               let statistics =
-                let statistics = FStar_Util.smap_create (Prims.parse_int "0")
-                   in
+                let statistics = FStar_Util.smap_create Prims.int_zero  in
                 match smt_output.smt_statistics with
                 | FStar_Pervasives_Native.None  -> statistics
                 | FStar_Pervasives_Native.Some lines1 ->
@@ -641,15 +639,13 @@ let (doZ3Exe :
                           let key = FStar_List.hd tokens  in
                           let ltok =
                             FStar_List.nth tokens
-                              ((FStar_List.length tokens) -
-                                 (Prims.parse_int "1"))
+                              ((FStar_List.length tokens) - Prims.int_one)
                              in
                           let value =
                             if FStar_Util.ends_with ltok ")"
                             then
-                              FStar_Util.substring ltok (Prims.parse_int "0")
-                                ((FStar_String.length ltok) -
-                                   (Prims.parse_int "1"))
+                              FStar_Util.substring ltok Prims.int_zero
+                                ((FStar_String.length ltok) - Prims.int_one)
                             else ltok  in
                           FStar_Util.smap_add statistics key value
                       | ""::entry::[] ->
@@ -657,15 +653,13 @@ let (doZ3Exe :
                           let key = FStar_List.hd tokens  in
                           let ltok =
                             FStar_List.nth tokens
-                              ((FStar_List.length tokens) -
-                                 (Prims.parse_int "1"))
+                              ((FStar_List.length tokens) - Prims.int_one)
                              in
                           let value =
                             if FStar_Util.ends_with ltok ")"
                             then
-                              FStar_Util.substring ltok (Prims.parse_int "0")
-                                ((FStar_String.length ltok) -
-                                   (Prims.parse_int "1"))
+                              FStar_Util.substring ltok Prims.int_zero
+                                ((FStar_String.length ltok) - Prims.int_one)
                             else ltok  in
                           FStar_Util.smap_add statistics key value
                       | uu____3578 -> ()  in
@@ -682,9 +676,8 @@ let (doZ3Exe :
                            (FStar_String.length "(:reason-unknown \"")
                           in
                        let res =
-                         FStar_String.substring reason (Prims.parse_int "0")
-                           ((FStar_String.length reason) -
-                              (Prims.parse_int "2"))
+                         FStar_String.substring reason Prims.int_zero
+                           ((FStar_String.length reason) - (Prims.of_int (2)))
                           in
                        res
                      else ru)
@@ -900,8 +893,7 @@ let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
                          in
                       let n1 = FStar_List.length decls1  in
                       (((name, n1) :: out), (n1 + _total))
-                  | uu____4667 -> (out, _total))) ([], (Prims.parse_int "0"))
-        theory
+                  | uu____4667 -> (out, _total))) ([], Prims.int_zero) theory
        in
     match uu____4544 with
     | (modules,total_decls) ->
@@ -923,7 +915,7 @@ let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
            (fun uu____4811  ->
               match uu____4811 with
               | (m,n1) ->
-                  if n1 <> (Prims.parse_int "0")
+                  if n1 <> Prims.int_zero
                   then
                     let uu____4827 = FStar_Util.string_of_int n1  in
                     FStar_Util.print2
@@ -1023,12 +1015,12 @@ let (cache_hit :
           then
             match qhash with
             | FStar_Pervasives_Native.Some x when qhash = cache ->
-                let stats = FStar_Util.smap_create (Prims.parse_int "0")  in
+                let stats = FStar_Util.smap_create Prims.int_zero  in
                 (FStar_Util.smap_add stats "fstar_cache_hit" "1";
                  (let result =
                     {
                       z3result_status = (UNSAT FStar_Pervasives_Native.None);
-                      z3result_time = (Prims.parse_int "0");
+                      z3result_time = Prims.int_zero;
                       z3result_statistics = stats;
                       z3result_query_hash = qhash;
                       z3result_log_file = log_file
@@ -1052,31 +1044,34 @@ let (z3_job :
           fun input  ->
             fun qhash  ->
               fun uu____5255  ->
-                let start = FStar_Util.now ()  in
-                let uu____5265 =
-                  try
-                    (fun uu___500_5275  ->
-                       match () with
-                       | () -> doZ3Exe log_file r fresh input label_messages)
-                      ()
-                  with
-                  | uu___499_5282 ->
-                      (refresh (); FStar_Exn.raise uu___499_5282)
+                let uu____5264 =
+                  let uu____5274 =
+                    let uu____5278 = query_logging.get_module_name ()  in
+                    FStar_Pervasives_Native.Some uu____5278  in
+                  FStar_Profiling.profile
+                    (fun uu____5291  ->
+                       try
+                         (fun uu___500_5302  ->
+                            match () with
+                            | () ->
+                                FStar_Util.record_time
+                                  (fun uu____5317  ->
+                                     doZ3Exe log_file r fresh input
+                                       label_messages)) ()
+                       with
+                       | uu___499_5320 ->
+                           (refresh (); FStar_Exn.raise uu___499_5320))
+                    uu____5274 "FStar.SMTEncoding.Z3"
                    in
-                match uu____5265 with
-                | (status,statistics) ->
-                    let uu____5294 =
-                      let uu____5300 = FStar_Util.now ()  in
-                      FStar_Util.time_diff start uu____5300  in
-                    (match uu____5294 with
-                     | (uu____5301,elapsed_time) ->
-                         {
-                           z3result_status = status;
-                           z3result_time = elapsed_time;
-                           z3result_statistics = statistics;
-                           z3result_query_hash = qhash;
-                           z3result_log_file = log_file
-                         })
+                match uu____5264 with
+                | ((status,statistics),elapsed_time) ->
+                    {
+                      z3result_status = status;
+                      z3result_time = elapsed_time;
+                      z3result_statistics = statistics;
+                      z3result_query_hash = qhash;
+                      z3result_log_file = log_file
+                    }
   
 let (ask :
   FStar_Range.range ->
@@ -1109,19 +1104,19 @@ let (ask :
                       (FStar_List.append [FStar_SMTEncoding_Term.Push]
                          (FStar_List.append qry [FStar_SMTEncoding_Term.Pop]))
                      in
-                  let uu____5448 = filter_theory theory1  in
-                  match uu____5448 with
+                  let uu____5493 = filter_theory theory1  in
+                  match uu____5493 with
                   | (theory2,_used_unsat_core) ->
-                      let uu____5464 = mk_input fresh theory2  in
-                      (match uu____5464 with
+                      let uu____5509 = mk_input fresh theory2  in
+                      (match uu____5509 with
                        | (input,qhash,log_file_name) ->
-                           let uu____5495 =
-                             let uu____5497 =
+                           let uu____5540 =
+                             let uu____5542 =
                                fresh &&
                                  (cache_hit log_file_name cache qhash cb)
                                 in
-                             Prims.op_Negation uu____5497  in
-                           if uu____5495
+                             Prims.op_Negation uu____5542  in
+                           if uu____5540
                            then
                              run_job
                                {

@@ -1,5 +1,5 @@
 [
-  "¨M\u0000ËÇ\u001e\u0019ÁQ\u0014Lîa\u001d\u0002p",
+  "U\u0019–q¶T7Ìÿ©Nœ\u0011j¼\u001c",
   [
     [
       "Bug1536.bind_ex",
@@ -14,7 +14,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
       ],
       0,
-      "93345292bad1ac88c877df43e980c748"
+      "8257fa3eb726ec9b8bd9a8faacdd3f16"
     ],
     [
       "Bug1536._dm4f_EXN_bind_wp",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "9914b4b0d97dadcd303a98cfc9c351c5"
+      "bee476a79fd68a8f5b749299c67e0e42"
     ],
     [
       "Bug1536._dm4f_EXN___proj__EXN__item__raise_elab",
@@ -37,7 +37,7 @@
       1,
       [ "@query" ],
       0,
-      "4172c93066c1a9f9c69280af5cbb5111"
+      "bf8385ac5e93553946032b8ccbedd317"
     ],
     [
       "Bug1536.EXN",
@@ -46,7 +46,7 @@
       1,
       [ "@query" ],
       0,
-      "b767fcdc0412f2014546e83bee1243cd"
+      "f4db8b12626585dcd2f710efa6119694"
     ],
     [
       "Bug1536.ret",
@@ -55,7 +55,25 @@
       1,
       [ "@query" ],
       0,
-      "ef338374d835784f08c44d20d03ecc84"
+      "b86700d22a30edb3436ef532eea1d36d"
+    ],
+    [
+      "Bug1536.t1",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp" ],
+      0,
+      "503e3df8e2047dd6994e78243e6b1f23"
+    ],
+    [
+      "Bug1536.t2",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp" ],
+      0,
+      "be13fd6b90abcfc184693a62feff42ec"
     ]
   ]
 ]

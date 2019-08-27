@@ -188,7 +188,7 @@ val extend
     (t:t r a b inv)
     (x:a)
     (y:b x)
-  : ST unit
+  : Stack unit
        (requires (fun h ->
          ~(defined t x h) /\
          inv (repr (upd (HS.sel h t) x y))))

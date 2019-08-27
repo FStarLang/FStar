@@ -3138,10 +3138,12 @@ let with_guard_no_simp env prob dopt = match dopt with
       Some ({guard_f=(p_guard prob |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
-     if debug env <| Options.Other "Rel"
-     then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     if debug env <| Options.Other "Rel" then
+       BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
      let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
      let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
+     if debug env <| Options.Other "Rel" then
+       BU.print1 "} res = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
      g
 
 let teq env t1 t2 : guard_t =
@@ -3461,7 +3463,7 @@ let resolve_implicits' env must_total forcelax g =
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
-let resolve_implicits env g = resolve_implicits' env true  false g
+let resolve_implicits env g = resolve_implicits' env (not env.phase1 && not env.lax)  false g
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 
 let force_trivial_guard env g =

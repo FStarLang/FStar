@@ -25,7 +25,9 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
-open FStar.JsonHelper
+open FStar.Interactive.JsonHelper
+open FStar.Interactive.QueryHelper
+open FStar.Interactive.PushHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -38,47 +40,7 @@ module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
-
-type repl_depth_t = TcEnv.tcenv_depth_t * int
-
-(** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot_env env msg : repl_depth_t * env_t =
-  let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
-  let opt_depth, () = Options.snapshot () in
-  (ctx_depth, opt_depth), env
-
-(** Revert to a previous checkpoint.
-
-Usage note: A proper push/pop pair looks like this:
-
-  let noop =
-    let env', depth = snapshot_env env in
-    // [Do stuff with env']
-    let env'' = rollback_env env'.solver depth in
-    env''
-
-In most cases, the invariant should hold that ``env'' === env`` (look for
-assertions of the form ``physical_equality _ _`` in the sources).
-
-You may be wondering why we need ``snapshot`` and ``rollback``.  Aren't ``push``
-and ``pop`` sufficient?  They are not.  The issue is that the typechecker's code
-can encounter (fatal) errors at essentially any point, and was not written to
-clean up after itself in these cases.  Fatal errors are handled by raising an
-exception, skipping all code that would ``pop`` previously pushed state.
-
-That's why we need ``rollback``: all that rollback does is call ``pop``
-sufficiently many times to get back into the state we were before the
-corresponding ``pop``. **)
-let rollback_env solver msg (ctx_depth, opt_depth) =
-  let env = TypeChecker.Tc.rollback_context solver msg (Some ctx_depth) in
-  Options.rollback (Some opt_depth);
-  env
-
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
-
-let set_check_kind env check_kind =
-  { env with lax = (check_kind = LaxCheck);
-             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
+module QH = FStar.Interactive.QueryHelper
 
 let with_captured_errors' env sigint_handler f =
   try
@@ -116,15 +78,7 @@ let with_captured_errors env sigint_handler f =
 (* REPL tasks and states *)
 (*************************)
 
-type timed_fname =
-  { tf_fname: string;
-    tf_modtime: time }
-
 let t0 = Util.now ()
-
-let tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
@@ -141,52 +95,11 @@ type push_query =
     push_line: int; push_column: int;
     push_peek_only: bool }
 
-type optmod_t = option<Syntax.Syntax.modul>
-
-(** Tasks describing each snapshot of the REPL state.
-
-Every snapshot pushed in the repl stack is annotated with one of these.  The
-``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
-dependencies, as they carry enough information to determine whether a dependency
-is stale. **)
-type repl_task =
-  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
-  | LDSingle of timed_fname (* interface or implementation *)
-  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of input_frag (* code fragment *)
-  | Noop (* Used by compute *)
+(** Tasks describing each snapshot of the REPL state. **)
 
 type env_t = TcEnv.env
 
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_deps_stack: repl_stack_t;
-                    repl_curmod: optmod_t;
-                    repl_env: env_t;
-                    repl_stdin: stream_reader;
-                    repl_names: CTable.table }
-and repl_stack_t = list<repl_stack_entry_t>
-and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
-
 let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
-let repl_stack: ref<repl_stack_t> = Util.mk_ref []
-
-let pop_repl msg st =
-  match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack_tl ->
-    let env = rollback_env st.repl_env.solver msg depth in
-    repl_stack := stack_tl;
-    // Because of the way ``snapshot`` is implemented, the `st'` and `env`
-    // that we rollback to should be consistent:
-    FStar.Common.runtime_assert
-      (Util.physical_equality env st'.repl_env)
-      "Inconsistent stack state";
-    st'
-
-let push_repl msg push_kind task st =
-  let depth, env = snapshot_env st.repl_env msg in
-  repl_stack := (depth, (task, st)) :: !repl_stack;
-  { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -194,90 +107,6 @@ let nothing_left_to_pop st =
      dependency-loading entries, which the user may not pop (since they didn't
      push them). *)
   List.length !repl_stack = List.length st.repl_deps_stack
-
-(*****************)
-(* Name tracking *)
-(*****************)
-
-type name_tracking_event =
-| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
-| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
-| NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
-
-let query_of_ids (ids: list<ident>) : CTable.query =
-  List.map text_of_id ids
-
-let query_of_lid (lid: lident) : CTable.query =
-  query_of_ids (lid.ns @ [lid.ident])
-
-let update_names_from_event cur_mod_str table evt =
-  let is_cur_mod lid = lid.str = cur_mod_str in
-  match evt with
-  | NTAlias (host, id, included) ->
-    if is_cur_mod host then
-      CTable.register_alias
-        table (text_of_id id) [] (query_of_lid included)
-    else
-      table
-  | NTOpen (host, (included, kind)) ->
-    if is_cur_mod host then
-      CTable.register_open
-        table (kind = DsEnv.Open_module) [] (query_of_lid included)
-    else
-      table
-  | NTInclude (host, included) ->
-    CTable.register_include
-      table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
-  | NTBinding binding ->
-    let lids =
-      match binding with
-      | Inl (SS.Binding_lid (lid, _)) -> [lid]
-      | Inr (lids, _) -> lids
-      | _ -> [] in
-    List.fold_left
-      (fun tbl lid ->
-         let ns_query = if lid.nsstr = cur_mod_str then []
-                        else query_of_ids lid.ns in
-         CTable.insert
-           tbl ns_query (text_of_id lid.ident) lid)
-      table lids
-
-let commit_name_tracking' cur_mod names name_events =
-  let cur_mod_str = match cur_mod with
-                    | None -> "" | Some md -> (SS.mod_name md).str in
-  let updater = update_names_from_event cur_mod_str in
-  List.fold_left updater names name_events
-
-let commit_name_tracking st name_events =
-  let names = commit_name_tracking' st.repl_curmod st.repl_names name_events in
-  { st with repl_names = names }
-
-let fresh_name_tracking_hooks () =
-  let events = Util.mk_ref [] in
-  let push_event evt = events := evt :: !events in
-  events,
-  { DsEnv.ds_push_module_abbrev_hook =
-      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
-    DsEnv.ds_push_include_hook =
-      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
-    DsEnv.ds_push_open_hook =
-      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
-  { TcEnv.tc_push_in_gamma_hook =
-      (fun _ s -> push_event (NTBinding s)) }
-
-let track_name_changes (env: env_t)
-    : env_t * (env_t -> env_t * list<name_tracking_event>) =
-  let set_hooks dshooks tchooks env =
-    let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
-    TcEnv.set_tc_hooks tcenv' tchooks in
-
-  let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
-  let events, new_dshooks, new_tchooks = fresh_name_tracking_hooks () in
-
-  set_hooks new_dshooks new_tchooks env,
-  (fun env -> set_hooks old_dshooks old_tchooks env,
-           List.rev !events)
 
 (*********************)
 (* Dependency checks *)
@@ -293,88 +122,6 @@ let string_of_repl_task = function
   | PushFragment frag ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
   | Noop -> "Noop {}"
-
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one (env:env_t) intf_opt modf =
-  let _, env = tc_one_file_for_ide env intf_opt modf (modf |> FStar.Parser.Dep.parsing_data_of (FStar.TypeChecker.Env.dep_graph env)) in
-  env
-
-(** Load the file or files described by `task`.
-
-``task`` should not be a push fragment. **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t * env_t =
-  match task with
-  | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
-  | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname
-  | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment frag ->
-    tc_one_fragment curmod env frag
-  | Noop ->
-    curmod, env
-
-(** Build a list of dependency loading tasks from a list of dependencies **)
-let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
-  let wrap = dummy_tf_of_fname in
-  let rec aux deps final_tasks =
-    match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
-    | intf_or_impl :: deps' ->
-      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
-    | [] -> final_tasks in
-  aux deps final_tasks
-
-(** Compute dependencies of `filename` and steps needed to load them.
-
-The dependencies are a list of file name.  The steps are a list of
-``repl_task`` elements, to be executed by ``run_repl_task``. **)
-let deps_and_repl_ld_tasks_of_our_file filename
-    : list<string>
-    * list<repl_task>
-    * FStar.Parser.Dep.deps =
-  let get_mod_name fname =
-    Parser.Dep.lowercase_module_name fname in
-  let our_mod_name =
-    get_mod_name filename in
-  let has_our_mod_name f =
-    (get_mod_name f = our_mod_name) in
-
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] FStar.CheckedFiles.load_parsing_data_from_cache in
-  let same_name, real_deps =
-    List.partition has_our_mod_name deps in
-
-  let intf_tasks =
-    match same_name with
-    | [intf; impl] ->
-      if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
-      if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
-      [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
-    | [impl] ->
-      []
-    | _ ->
-      let mods_str = String.concat " " same_name in
-      let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format message [our_mod_name; mods_str]));
-      [] in
-
-  let tasks =
-    repl_ld_tasks_of_deps real_deps intf_tasks in
-  real_deps, tasks, dep_graph
-
-(** Update timestamps in argument task to last modification times. **)
-let update_task_timestamps = function
-  | LDInterleaved (intf, impl) ->
-    LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
-  | LDSingle intf_or_impl ->
-    LDSingle (tf_of_fname intf_or_impl.tf_fname)
-  | LDInterfaceOfCurrentFile intf ->
-    LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
-  | other -> other
 
 (** Push, run `task`, and pop if it fails.
 
@@ -668,12 +415,6 @@ let json_of_issue issue =
                               [json_of_def_range r]
                             | _ -> [])))]
 
-type symbol_lookup_result = { slr_name: string;
-                              slr_def_range: option<Range.range>;
-                              slr_typ: option<string>;
-                              slr_doc: option<string>;
-                              slr_def: option<string> }
-
 let alist_of_symbol_lookup_result lr =
   [("name", JsonStr lr.slr_name);
    ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
@@ -853,16 +594,6 @@ let json_of_repl_state st =
      ("options",
       JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
-let with_printed_effect_args k =
-  Options.with_saved_options
-    (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
-
-let term_to_string tcenv t =
-  with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
-
-let sigelt_to_string se =
-  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
-
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
@@ -884,7 +615,10 @@ let collect_errors () =
   errors
 
 let run_segment (st: repl_state) (code: string) =
-  let frag = { frag_text = code; frag_line = 1; frag_col = 0 } in
+  // Unfortunately, frag_fname is a special case in the interactive mode,
+  // while in LSP, it is the only mode. To cope with this difference,
+  // pass a frag_fname that is expected by the Interactive mode.
+  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment frag with
@@ -955,7 +689,7 @@ let run_push_without_deps st query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  let frag = { frag_text = text; frag_line = line; frag_col = column } in
+  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
   TcEnv.toggle_id_info st.repl_env true;
   let st = set_nosynth_flag st peek_only in
@@ -966,32 +700,6 @@ let run_push_without_deps st query =
   let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
-
-let capitalize str =
-  if str = "" then str
-  else let first = String.substring str 0 1 in
-       String.uppercase first ^ String.substring str 1 (String.length str - 1)
-
-let add_module_completions this_fname deps table =
-  let mods =
-    FStar.Parser.Dep.build_inclusion_candidates_list () in
-  let loaded_mods_set =
-    List.fold_left
-      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
-      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
-  let loaded modname =
-    psmap_find_default loaded_mods_set modname false in
-  let this_mod_key =
-    Parser.Dep.lowercase_module_name this_fname in
-  List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
-      let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
-        table // Exclude current module from completion
-      else
-        let ns_query = Util.split (capitalize modname) "." in
-        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
-    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 let run_push_with_deps st query =
   if Options.debug_any () then
@@ -1014,59 +722,9 @@ let run_push st query =
     run_push_without_deps st query
 
 let run_symbol_lookup st symbol pos_opt requested_info =
-  let tcenv = st.repl_env in
-
-  let info_of_lid_str lid_str =
-    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
-    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
-    try_lookup_lid tcenv lid |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
-
-  let docs_of_lid lid =
-    DsEnv.try_lookup_doc tcenv.dsenv lid |> Util.map_option fst in
-
-  let def_of_lid lid =
-    Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
-      | (Inr (se, _), _) -> Some (sigelt_to_string se)
-      | _ -> None) in
-
-  let info_at_pos_opt =
-    Util.bind_opt pos_opt (fun (file, row, col) ->
-      TcErr.info_at_pos tcenv file row col) in
-
-  let info_opt =
-    match info_at_pos_opt with
-    | Some _ -> info_at_pos_opt
-    | None -> if symbol = "" then None else info_of_lid_str symbol in
-
-  let response = match info_opt with
-    | None -> None
-    | Some (name_or_lid, typ, rng) ->
-      let name =
-        match name_or_lid with
-        | Inl name -> name
-        | Inr lid -> Ident.string_of_lid lid in
-      let typ_str =
-        if List.mem "type" requested_info then
-          Some (term_to_string tcenv typ)
-        else None in
-      let doc_str =
-        match name_or_lid with
-        | Inr lid when List.mem "documentation" requested_info -> docs_of_lid lid
-        | _ -> None in
-      let def_str =
-        match name_or_lid with
-        | Inr lid when List.mem "definition" requested_info -> def_of_lid lid
-        | _ -> None in
-      let def_range =
-        if List.mem "defined-at" requested_info then Some rng else None in
-
-      let result = { slr_name = name; slr_def_range = def_range;
-                     slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str } in
-      Some ("symbol", alist_of_symbol_lookup_result result) in
-
-  match response with
+  match QH.symlookup st.repl_env symbol pos_opt requested_info with
   | None -> Inl "Symbol not found"
-  | Some info -> Inr info
+  | Some result -> Inr ("symbol", alist_of_symbol_lookup_result result)
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
@@ -1105,18 +763,10 @@ let run_lookup st symbol context pos_opt requested_info =
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
-let code_autocomplete_mod_filter = function
-  | _, CTable.Namespace _
-  | _, CTable.Module { CTable.mod_loaded = true } -> None
-  | pth, CTable.Module md ->
-    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
-
 let run_code_autocomplete st search_term =
-  let needle = Util.split search_term "." in
-  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
-  let lids = CTable.autocomplete_lid st.repl_names needle in
-  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
-  ((QueryOK, JsonList json), Inl st)
+  let result = QH.ck_completion st search_term in
+  let js = List.map CTable.json_of_completion_result result in
+  ((QueryOK, JsonList js), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in
@@ -1176,7 +826,7 @@ let run_and_rewind st sigint_default task =
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
-    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+    { frag_fname = "<input>"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
   let find_let_body ses =
     match ses with

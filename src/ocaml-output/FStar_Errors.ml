@@ -2743,11 +2743,11 @@ let (compare_issues : issue -> issue -> Prims.int) =
     fun i2  ->
       match ((i1.issue_range), (i2.issue_range)) with
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) ->
-          (Prims.parse_int "0")
+          Prims.int_zero
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-         uu____5507) -> ~- (Prims.parse_int "1")
+         uu____5507) -> ~- Prims.int_one
       | (FStar_Pervasives_Native.Some uu____5513,FStar_Pervasives_Native.None
-         ) -> (Prims.parse_int "1")
+         ) -> Prims.int_one
       | (FStar_Pervasives_Native.Some r1,FStar_Pervasives_Native.Some r2) ->
           FStar_Range.compare_use_range r1 r2
   
@@ -2811,11 +2811,11 @@ let (wrapped_eh_add_one : error_handler -> issue -> unit) =
       then
         ((let uu____5786 =
             let uu____5788 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5788 - (Prims.parse_int "1")  in
+            uu____5788 - Prims.int_one  in
           FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5786);
          (let uu____5833 =
             let uu____5835 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5835 = (Prims.parse_int "0")  in
+            uu____5835 = Prims.int_zero  in
           if uu____5833 then failwith "Aborting due to --abort_on" else ()))
       else ()
   
@@ -3039,8 +3039,7 @@ let (handleable : Prims.exn -> Prims.bool) =
 let (stop_if_err : unit -> unit) =
   fun uu____6588  ->
     let uu____6589 =
-      let uu____6591 = get_err_count ()  in
-      uu____6591 > (Prims.parse_int "0")  in
+      let uu____6591 = get_err_count ()  in uu____6591 > Prims.int_zero  in
     if uu____6589 then FStar_Exn.raise Stop else ()
   
 let raise_error :
@@ -3065,9 +3064,8 @@ let (update_flags :
       match (uu____6713, uu____6714) with
       | ((uu____6756,(a,uu____6758)),(uu____6759,(b,uu____6761))) ->
           if a > b
-          then (Prims.parse_int "1")
-          else
-            if a < b then ~- (Prims.parse_int "1") else (Prims.parse_int "0")
+          then Prims.int_one
+          else if a < b then ~- Prims.int_one else Prims.int_zero
        in
     let set_one_flag f d =
       match (f, d) with
@@ -3104,7 +3102,7 @@ let (update_flags :
             let uu____6994 =
               let uu____6997 = set_flag i sorted1  in [uu____6997]  in
             FStar_List.append f uu____6994  in
-          aux uu____6991 (i + (Prims.parse_int "1")) tl1 sorted1
+          aux uu____6991 (i + Prims.int_one) tl1 sorted1
        in
     let rec compute_range result l1 =
       match l1 with
@@ -3127,7 +3125,7 @@ let (update_flags :
           (match uu____7099 with
            | (l2,h) ->
                (if
-                  (l2 < (Prims.parse_int "0")) ||
+                  (l2 < Prims.int_zero) ||
                     (h >= (FStar_List.length default_flags))
                 then
                   (let uu____7170 =
@@ -3144,7 +3142,7 @@ let (update_flags :
        in
     let range = compute_range [] l  in
     let sorted1 = FStar_List.sortWith compare1 range  in
-    aux [] (Prims.parse_int "0") init_warn_error_flags sorted1
+    aux [] Prims.int_zero init_warn_error_flags sorted1
   
 let catch_errors :
   'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)

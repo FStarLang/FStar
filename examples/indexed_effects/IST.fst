@@ -65,25 +65,6 @@ let st_close_wp (a:Type) (b:Type)
   = (forall (x:b). wp x s post s0)
 
 unfold 
-let st_assert_p (a:Type) (p:Type)
-                (wp:st_wp a)
-                (s:Type0)
-                (q:st_post s a) (s0:s) 
-  = p /\ wp s q s0
-
-unfold 
-let st_assume_p (a:Type) (p:Type)
-                (wp:st_wp a)
-                (s:Type0)
-                (q:st_post s a) (s0:s) 
-  = p ==> wp s q s0
-
-unfold 
-let st_null_wp (a:Type) (s:Type0) 
-               (p:st_post s a) (s0:s) 
-  = forall (x:a) (s0:s). p x s0
-
-unfold 
 let st_trivial (a:Type) (wp:st_wp a) 
   = forall s s0. wp s (fun r s1 -> True) s0
 
@@ -97,9 +78,6 @@ new_effect {
      ; ite_wp       = st_ite_wp
      ; stronger     = st_stronger
      ; close_wp     = st_close_wp
-     ; assert_p     = st_assert_p
-     ; assume_p     = st_assume_p
-     ; null_wp      = st_null_wp
      ; trivial      = st_trivial
 }
 

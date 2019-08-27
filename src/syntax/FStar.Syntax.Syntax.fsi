@@ -357,24 +357,22 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflag>;      // default cflags
+    cattributes :list<cflag>;      //default cflags
     mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
-    binders     :binders;          //heap:Type
-    signature   :term;             //: result:Type ... -> Effect
+    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
+    binders     :binders;          //heap:Type u#heap
+                                   //univs and binders are in scope for rest of the fields
+    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
     ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
     stronger    :tscheme;
     close_wp    :tscheme;
-    assert_p    :tscheme;
-    assume_p    :tscheme;
-    null_wp     :tscheme;
     trivial     :tscheme;
     //NEW FIELDS
     //representation of the effect as pure type
-    repr        :term;
+    repr        :tscheme;
     //operations on the representation
     return_repr :tscheme;
     bind_repr   :tscheme;

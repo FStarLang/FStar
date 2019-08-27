@@ -1214,9 +1214,53 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_app(head, args) ->
-            let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
-            log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
-            norm cfg env stack head
+            let strict_args =
+              match (U.un_uinst head).n with
+              | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
+              | _ -> None
+            in
+            begin
+            match strict_args with
+            | None ->
+              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              norm cfg env stack head
+
+            | Some strict_args ->
+              // BU.print2 "%s has strict args [%s]\n"
+              //   (Print.term_to_string head)
+              //   (List.map string_of_int strict_args |> String.concat "; ");
+              let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let norm_args_len = List.length norm_args in
+              if strict_args
+                |> List.for_all (fun i ->
+                  if i >= norm_args_len then false
+                  else
+                    let arg_i, _ = List.nth norm_args i in
+                    let head, _ = U.head_and_args arg_i in
+                    match (un_uinst head).n with
+                    | Tm_constant _ -> true
+                    | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
+                    | _ -> false)
+              then //all strict args have constant head symbols
+                   let stack =
+                     stack |>
+                     List.fold_right (fun (a, aq) stack ->
+                       Arg (Clos(env, a, BU.mk_ref (Some ([], a)), false),aq,t.pos)::stack)
+                     norm_args
+                   in
+                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+                   norm cfg env stack head
+              else let head = closure_as_term cfg env head in
+                   let term = S.mk_Tm_app head norm_args None t.pos in
+                   // let _ =
+                   //   BU.print3 "Rebuilding %s as %s\n%s\n"
+                   //     (Print.term_to_string t)
+                   //     (Print.term_to_string term)
+                   //     (BU.stack_dump())
+                   // in
+                   rebuild cfg env stack term
+            end
 
           | Tm_refine(x, _) when cfg.steps.for_extraction ->
             norm cfg env stack x.sort
@@ -2484,7 +2528,11 @@ let normalize_with_primitive_steps ps s e t =
       r
     end
 
-let normalize s e t = normalize_with_primitive_steps [] s e t
+let normalize s e t =
+    Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
+                      (Some (Ident.string_of_lid (Env.current_module e)))
+                      "FStar.TypeChecker.Normalize"
+
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
@@ -2808,7 +2856,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
 
     | Sig_new_effect ed ->
-      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      //AR: S.t_unit is just a dummy comp type, we only care about the binders
+      let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in
         univs_opening, SS.univ_var_closing univs
@@ -2827,8 +2876,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
             b_opening |> SS.shift_subst n_us,
             b_closing |> SS.shift_subst n_us in
         let univs_opening, univs_closing =
-            univs_opening |> SS.shift_subst n_us,
-            univs_closing |> SS.shift_subst n_us in
+            univs_opening |> SS.shift_subst (n_us + n_binders),
+            univs_closing |> SS.shift_subst (n_us + n_binders) in
         let t = SS.subst univs_opening (SS.subst b_opening t) in
         let _, _, t = elim_uvars_aux_t env [] [] t in
         let t = SS.subst univs_closing (SS.subst b_closing (SS.close_univ_vars us t)) in
@@ -2870,18 +2919,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let ed = { ed with
                univs        = univs;
                binders      = binders;
-               signature    = signature;
+               signature    = elim_tscheme ed.signature;
                ret_wp       = elim_tscheme ed.ret_wp;
                bind_wp      = elim_tscheme ed.bind_wp;
                if_then_else = elim_tscheme ed.if_then_else;
                ite_wp       = elim_tscheme ed.ite_wp;
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
-               assert_p     = elim_tscheme ed.assert_p;
-               assume_p     = elim_tscheme ed.assume_p;
-               null_wp      = elim_tscheme ed.null_wp;
                trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
+               repr         = elim_tscheme ed.repr;
                return_repr  = elim_tscheme ed.return_repr;
                bind_repr    = elim_tscheme ed.bind_repr;
                actions      = List.map elim_action ed.actions } in
