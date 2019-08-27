@@ -70,9 +70,8 @@ val unpack_vector (#a: Type) (v: vector a) : RST (contents_t a)
     U32.v contents.len >= 0 /\
     A.get_rperm
       contents.arr
-      (focus_rmem h1 (A.array_resource contents.arr)) =
-      P.get_perm v (focus_rmem h1 (P.ptr_resource v)) /\
-    P.get_perm v (focus_rmem h1 (P.ptr_resource v)) = get_perm v h0 /\
+      (focus_rmem h1 (A.array_resource contents.arr)) = get_perm v h0 /\
+    P.get_perm v (focus_rmem h1 (P.ptr_resource v)) = get_perm v h0  /\
     A.freeable contents.arr /\
     (h0 (vector_resource v)).v_capacity == contents.max /\
     as_rseq v h0 == S.slice (A.as_rseq contents.arr h1) 0 (U32.v contents.len)
@@ -130,11 +129,10 @@ let create #a init max =
     (fun arr -> A.array_resource arr)
     (fun _ -> A.alloc init max)
   in
-  let contents = Vector 0ul max arr in
   let v = rst_frame
     (A.array_resource arr)
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
-    ( fun _ -> P.ptr_alloc contents)
+    ( fun _ -> P.ptr_alloc (Vector 0ul max arr))
   in
   let v_view = vector_view v in
   assert(fp_reads_fp v_view.fp v_view.inv); (* TODO: figure out why this ? *)
@@ -148,44 +146,46 @@ let create #a init max =
 #set-options "--z3rlimit 30"
 
 let push #a v x =
-  P.reveal_ptr ();
-  A.reveal_array ();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  reveal_star ();
-  admit()
-
-(*
   let h0 = HST.get () in
-  let v_record = rst_frame
-    (P.ptr_resource v)
-    (fun v_record -> A.array_resource v_record.arr <*> P.ptr_resource v)
-    (fun _ -> reveal_vector v)
+  let h0_r = get (vector_resource v) in
+  let contents = rst_frame
+    (vector_resource v)
+    (fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
+    #(fun contents -> A.array_resource contents.arr <*> P.ptr_resource v) (* TODO: solve this unification problem *)
+    (fun _ -> unpack_vector v)
   in
-  let max = v_record.max in
-  let len = v_record.len in
-  let arr = v_record.arr in
-   if U32.(len <^ max) then begin
-   rst_frame
+  let max = contents.max in
+  let len = contents.len in
+  let arr = contents.arr in
+  if U32.(len <^ max) then begin
+    rst_frame
       (A.array_resource arr <*> P.ptr_resource v)
       (fun _ ->  A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> A.upd arr len x);
-    let new_v_record = Vector U32.(len +^ 1ul) max arr in
-    let h = HST.get () in
-    assume(A.get_perm h v 0 = 1.0R);
+    let new_len =  U32.(len +^ 1ul) in
+    let new_v_record = Vector new_len max arr in
+    let h = get (A.array_resource arr <*> P.ptr_resource v) in
+    assume(P.get_perm v h = 1.0R);
     rst_frame
-      (P.ptr_resource v <*> A.array_resource arr)
-      (fun _ -> P.ptr_resource v <*> A.array_resource arr)
+      (A.array_resource arr <*> P.ptr_resource v)
+      (fun _ -> A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> P.ptr_write v new_v_record);
-    (**) let h1 = HST.get () in
-    (**) assume(
-    (**)   S.slice (A.as_seq h1 arr) 0 (U32.v len + 1) `S.equal`
-    (**)     S.snoc (S.slice (A.as_seq h0 arr) 0 (U32.v len)) x
-    (**) )
+    let h = get (P.ptr_resource v <*> A.array_resource arr) in
+    assume(A.get_rperm arr (focus_rmem h (A.array_resource arr)) =
+        P.get_perm v (focus_rmem h (P.ptr_resource v)));
+    rst_frame
+      (A.array_resource arr <*> P.ptr_resource v)
+      (fun _ -> vector_resource v)
+      (fun _ -> pack_vector new_len max arr v);
+    let h1 = HST.get () in
+    assume(modifies (vector_resource v) (vector_resource v) h0 h1);
+    let h1_r = get (vector_resource v) in
+    let v0 = h0_r (vector_resource v)  in
+    let v1 = h1_r (vector_resource v) in
+    assume(v1 == {v0 with v_arr = S.snoc v0.v_arr x})
   end else begin
     admit()
   end
-*)
 
 
 (*
