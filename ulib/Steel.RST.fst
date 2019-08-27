@@ -114,16 +114,13 @@ let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` 
 let focus_rmem #r s r0 =
   focus_rmem' #r s r0
 
-let focus_rmem_equality outer inner h =
+let focus_rmem_equality outer inner arg h =
   let focused = focus_rmem h inner in
-  let aux (arg:resource{arg `is_subresource_of` inner}) : Lemma (focused arg == h arg) =
-    extensionality_g
-      (r0:resource{r0 `is_subresource_of` inner})
-      (fun r0 -> r0.t)
-      focused
-      h
-  in
-  Classical.forall_intro aux
+  extensionality_g
+    (r0:resource{r0 `is_subresource_of` inner})
+    (fun r0 -> r0.t)
+    focused
+    h
 
 let focus_mk_rmem_equality outer inner h =
   let souter = mk_rmem outer h in
