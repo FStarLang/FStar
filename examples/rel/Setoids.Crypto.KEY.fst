@@ -15,7 +15,7 @@ module DM = FStar.DependentMap
 let key (n:u32) = lbytes32 n
 let key_state (n:u32) = Map.t handle (option bool) & Map.t handle (option (key n))
 
-private let key_state_rel (n:u32) = lo (key_state n)
+let key_state_rel (n:u32) = lo (key_state n)
 
 let key_set_t (n:u32) = ((lo handle) ** (lo (key n))) ^--> eff_rel (key_state_rel n) (lo handle)
 let key0_set n : key_set_t n =
@@ -145,8 +145,8 @@ let key_read_sig (n:u32) = {
 
 let key_read_module (n:u32) (km:module_t (key_sig n)) : module_t (key_read_sig n) =
   DM.create #_ #(key_read_sig n).ops
-    (function ID_GET -> get_oracle km GET
-            | ID_HON -> get_oracle km HON)
+    (function ID_GET -> get_oracle GET km
+            | ID_HON -> get_oracle HON km)
 
 let key_read_functor n
   : functor_t (key_sig n) (key_read_sig n)
@@ -172,8 +172,8 @@ let key_write_sig (n:u32) = {
 
 let key_write_module (n:u32) (km:module_t (key_sig n)) : module_t (key_write_sig n) =
   DM.create #_ #(key_write_sig n).ops
-    (function ID_SET -> get_oracle km SET
-            | ID_CSET -> get_oracle km CSET)
+    (function ID_SET -> get_oracle SET km
+            | ID_CSET -> get_oracle CSET km)
 
 let key_write_functor n
   : functor_t (key_sig n) (key_write_sig n)

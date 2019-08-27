@@ -146,7 +146,7 @@ let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
 #reset-options
 #set-options "--z3rlimit 350 --query_stats --max_fuel 4 --max_ifuel 5"
 let lift_left (#s1:Type) (#s1rel:erel s1{lo s1 == s1rel}) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s1rel arel)
-  : ((default_tape_rel ** (s1rel ** s2rel)) ^--> (triple_rel (option_rel arel) (s1rel ** s2rel) (lo index)))
+  : eff (s1rel ** s2rel) arel
   = fun (t, (s1, s2)) ->
       match f (t ,s1) with
       | None, s1', n ->
@@ -170,7 +170,7 @@ let lift_tape #s (#srel:erel s) #a (#arel:erel a) (f:eff (lo unit) arel)
       | None, _, n -> None, s, n
       | Some x, _, n -> Some x, s, n
 
-let get_oracle #sig (m:module_t sig) (o:sig.labels) : sig.ops o = DM.sel m o
+let get_oracle #sig (o:sig.labels) (m:module_t sig) : sig.ops o = DM.sel m o
 
 /// Problems until now:
 /// - can't prove lift_left and lift_right without requiring one of the state
