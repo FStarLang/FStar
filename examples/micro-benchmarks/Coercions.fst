@@ -15,4 +15,13 @@ let test4 (x:erased int) : GTot (erased int) = x
 
 let test5 (x:int) : GTot (erased int) = x
 
-let test6 (x:erased int) : GTot int = x
+assume val p : int -> prop
+assume val foo (x:int) : Lemma (ensures (p x))
+
+let bar (x:erased int) : Tot unit =
+  foo (reveal x);
+  assert (p (reveal x))
+
+let test_bar (x:erased int) : Tot unit =
+  foo x;
+  assert (p x)
