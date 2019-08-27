@@ -1737,7 +1737,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         tc_args head_info ([], [], [], Env.trivial_guard, []) bs args
                 | _ when not norm ->
                       let rec norm_tres (tres:term) :term =
-                        let tres = N.unfold_whnf env tres in
+                        let tres = tres |> N.unfold_whnf env |> U.unascribe in
                         match (SS.compress tres).n with
                         | Tm_refine ( { sort = tres }, _) -> norm_tres tres
                         | _                               -> tres
