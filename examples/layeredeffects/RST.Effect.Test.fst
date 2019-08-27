@@ -86,3 +86,22 @@ let test4 ()
   (fun rm -> rm r1 == 2)
   (fun rm_in x rm_out -> True)
 = f1 0; ()  //this works because the lift is parametric in the resource, else () would need to be wrapped in rst_frame
+
+open FStar.Tactics
+
+module T = FStar.Tactics
+
+[@resolve_implicits]
+let resolve_all_implicits () : Tac unit =
+  T.dump "Remaining problems:"
+
+assume val f_imp
+: unit -> RST unit r1 (fun _ -> r1) (fun _ -> True) (fun _ _ _ -> True)
+assume val g_imp
+: unit -> RST unit r2 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True)
+
+// let test_imp ()
+// : RST unit (r1 <*> r2) (fun _ -> r1 <*> r2)
+//   (fun _ -> True) (fun _ _ _ -> True)
+// = rst_frame _ #r1 #(fun _ -> r1) _ _ #(fun _ -> True) #(fun _ _ _ -> True) f_imp;
+//   rst_frame _ #r2 #(fun _ -> r2) _ _ #(fun _ -> True) #(fun _ _ _ -> True) g_imp
