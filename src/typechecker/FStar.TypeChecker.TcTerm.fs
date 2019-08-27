@@ -926,7 +926,7 @@ and tc_value env (e:term) : term
         | None ->  let k, u = U.type_u () in
                    TcUtil.new_implicit_var "type of user-provided implicit term" r env k
         | Some t -> t, [], Env.trivial_guard in
-    let e, _, g1 = TcUtil.new_implicit_var "user-provided implicit term" r env t in
+    let e, _, g1 = TcUtil.new_implicit_var ("user-provided implicit term at " ^ (Range.string_of_range r)) r env t in
     e, S.mk_Total t |> TcComm.lcomp_of_comp, (Env.conj_guard g0 g1)
 
   | Tm_name x ->
