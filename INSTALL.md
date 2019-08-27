@@ -162,7 +162,7 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 ## Building F\* from sources ##
 
-Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone.
+Short version: Simply run `make -j 6` from the `master` branch of the clone.
 
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
@@ -185,16 +185,14 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work. OCaml version 4.08.0 is known **not** to work because you can't yet get packages such as [batteries](https://opam.ocaml.org/packages/batteries/) and [ulex](https://github.com/FStarLang/FStar/issues/1792).
+The steps require a working OCaml setup. OCaml version from 4.04.X to 4.08.1 should work.
 
 #### Instructions for Windows ####
 
 1. Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/)
    to install both OCaml and OPAM.
-   
-2. This installer will currently give you OCaml 4.08.0 by default,
-   which as explained above does not work with F*.
-   So switch to a supported OCaml version by running the following commands:
+
+2. If needed switch to a supported OCaml version by running the following commands:
   ```sh
   $ opam switch list-available
   $ opam switch create ocaml-variants.4.07.1+mingw64c
