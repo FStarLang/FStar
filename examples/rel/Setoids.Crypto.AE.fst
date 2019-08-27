@@ -36,25 +36,77 @@ let enc_inputs n (aes:ae_scheme n) =
     (lo bytes)
     (lo handle)
 
+
+#set-options "--z3rlimit 350 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+val get_related (n:u32)
+                (aes:ae_scheme n)
+                (a0 a1:type_of ((sig_rel (key_read_sig n)) ** enc_inputs n aes))
+                (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
+                (h0 h1:type_of (lo handle))
+  : Lemma
+      (requires
+        a0 `((sig_rel (key_read_sig n)) ** enc_inputs n aes)` a1 /\
+        s0 `(default_tape_rel ** combined_state_rel n aes)` s1 /\
+        h0 `lo handle` h1)
+
+      (ensures (
+        let g0 : key_get_t n = get_oracle ID_GET (fst a0) in
+        let g1 : key_get_t n = get_oracle ID_GET (fst a1) in
+        let g00 : eff (combined_state_rel n aes) (lo (key n)) = lift_right #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g0 h0 <: eff (key_state_rel n) (lo (key n))) in
+        let g11 : eff (combined_state_rel n aes) (lo (key n)) = lift_right #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g1 h1 <: eff (key_state_rel n) (lo (key n))) in
+        g00 s0 == g11 s1))
+let get_related n aes a0 a1 s0 s1 h0 h1 =
+    let g0 : key_get_t n = get_oracle ID_GET (fst a0) in
+    let g1 : key_get_t n = get_oracle ID_GET (fst a1) in
+    assert (g0 h0 (fst s0, (snd (snd s0))) `(triple_rel (option_rel (lo (key n))) (key_state_rel n) default_index_rel)` g1 h1 (fst s0, snd (snd s1)))
+
 /// Ideally, refine length of output bytes to be the relevant function of the input bytes. Maybe a lemma?
+let enc_t_base (n:u32) (aes:ae_scheme n) =
+  ((sig_rel (key_read_sig n)) ** enc_inputs n aes)
+    ^^--> eff_rel (combined_state_rel n aes) (lo bytes)
+
 let enc_t (n:u32) (aes:ae_scheme n) =
-  enc_inputs n aes
+  ((sig_rel (key_read_sig n)) ** enc_inputs n aes)
     ^--> eff_rel (combined_state_rel n aes) (lo bytes)
 
-let enc0 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc_t n aes) =
-  fun (p,nonce,h) ->
+let enc0' (n:u32) (aes:ae_scheme n) : (enc_t_base n aes) =
+  fun (key_module, (p,nonce,h)) ->
     combined_state <-- get ;
     let ae_st,k_st = combined_state in
     match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
     | Some option_map ->
       raise #(ae_log #n aes*key_state n)
     | None ->
-      let k_get : key_get_t n = get_oracle key_module ID_GET in
+      let k_get : key_get_t n = get_oracle ID_GET key_module in
       k <-- lift_right (k_get h);
       c <-- lift_tape (aes.enc p k nonce);
       let ae_st' = DM.upd ae_st (h,nonce) (Some (c,p)) in
       put (ae_st',k_st);;
       return c
+
+#set-options "--z3rlimit 1050 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --query_stats"
+let enc0 (n:u32) (aes:ae_scheme n) : (enc_t n aes) =
+  let aux (a0 a1:type_of ((sig_rel (key_read_sig n)) ** enc_inputs n aes))
+          (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
+          (x0 x1:type_of (lo handle))
+  : Lemma
+      (requires
+        a0 `((sig_rel (key_read_sig n)) ** enc_inputs n aes)` a1 /\
+        s0 `(default_tape_rel ** (combined_state_rel n aes))` s1 /\
+        x0 `(enc_inputs n aes)` x1
+        )
+      (ensures
+        (enc0' n aes a0 s0 `(triple_rel (option_rel (lo (bytes))) (combined_state_rel n aes) default_index_rel)`
+         enc0' n aes a1 s1))
+     [SMTPat (enc0' a0 s0);
+      SMTPat (enc0' a1 s1)]
+  =
+    admit();
+    get_related n aes a0 a1 s0 s1 x0 x1
+ in
+ admit();
+ enc0' n aes
+
 
 let enc1 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc_t n aes) =
   fun (p,nonce,h) ->
