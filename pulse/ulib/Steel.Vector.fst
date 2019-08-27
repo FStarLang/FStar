@@ -60,7 +60,7 @@ let vector_view (#a : Type0) (v : vector a) : Tot (view (vector_view_t a)) =
   { fp = fp_r ; inv = inv_r; sel = sel_r }
 
 
-val reveal_vector (#a: Type) (v: vector a) : RST (contents_t a)
+val unpack_vector (#a: Type) (v: vector a) : RST (contents_t a)
   (vector_resource v)
   (fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
   (fun _ -> True)
@@ -77,7 +77,7 @@ val reveal_vector (#a: Type) (v: vector a) : RST (contents_t a)
     (h0 (vector_resource v)).v_capacity == contents.max /\
     as_rseq v h0 == S.slice (A.as_rseq contents.arr h1) 0 (U32.v contents.len)
   )
-let reveal_vector #a v =
+let unpack_vector #a v =
   P.reveal_ptr ();
   A.reveal_array ();
   reveal_rst_inv ();
@@ -85,67 +85,64 @@ let reveal_vector #a v =
   reveal_star ();
   P.ptr_read v
 
-val pack_vector (#a: Type) (contents: contents_t a) (v:P.pointer (contents_t a)) : RST unit
-  (P.ptr_resource v <*> A.array_resource contents.arr)
-  (fun _ -> vector_resource v)
-  (fun h0 ->
-    contents.arr == contents.arr /\
-    P.get_val v h0 == contents /\
-    A.length contents.arr = contents.max /\
-    U32.v contents.len <= U32.v contents.max /\
-    U32.v contents.len >= 0 /\
-    A.freeable contents.arr  /\
-    A.get_rperm contents.arr (focus_rmem h0 (A.array_resource contents.arr)) =
-      P.get_perm v (focus_rmem h0 (P.ptr_resource v))
-  )
-  (fun h0 _ h1 ->
-    P.get_val v h0 == contents /\
-    U32.v contents.len <= U32.v contents.max /\
-    U32.v contents.len >= 0 /\
-    A.length contents.arr = contents.max /\
-   (h1 (vector_resource v)).v_capacity == contents.max /\
-     as_rseq v h1 == S.slice (A.as_rseq contents.arr h0) 0 (U32.v contents.len) /\
-    get_perm v h1 = P.get_perm v (focus_rmem h0 (P.ptr_resource v)) /\
-    get_perm v h1 =  A.get_rperm contents.arr (focus_rmem h0 (A.array_resource contents.arr))
-  )
-let pack_vector #a contents v =
+val pack_vector
+  (#a: Type)
+  (len: U32.t)
+  (max: U32.t)
+  (arr: A.array a)
+  (v:P.pointer (contents_t a))
+  : RST unit
+    (P.ptr_resource v <*> A.array_resource arr)
+    (fun _ -> vector_resource v)
+    (fun h0 ->
+      let contents = Vector len max arr in
+      P.get_val v h0 == contents /\
+      A.length arr = max /\
+      U32.v len <= U32.v max /\
+      U32.v len >= 0 /\
+      A.freeable arr  /\
+      A.get_rperm arr (focus_rmem h0 (A.array_resource arr)) =
+        P.get_perm v (focus_rmem h0 (P.ptr_resource v))
+    )
+    (fun h0 _ h1 ->
+      let contents = Vector len max arr in
+      P.get_val v h0 == contents /\
+      U32.v len <= U32.v max /\
+      U32.v len >= 0 /\
+      A.length arr = max /\
+     (h1 (vector_resource v)).v_capacity == max /\
+       as_rseq v h1 == S.slice (A.as_rseq arr h0) 0 (U32.v len) /\
+      get_perm v h1 = P.get_perm v (focus_rmem h0 (P.ptr_resource v)) /\
+      get_perm v h1 =  A.get_rperm arr (focus_rmem h0 (A.array_resource arr))
+    )
+let pack_vector #a len max arr  v =
   P.reveal_ptr ();
   A.reveal_array ();
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_star ()
 
+#set-options "--z3rlimit 50"
+
 let create #a init max =
-  let h0 = HST.get () in
   let arr = rst_frame
     empty_resource
     (fun arr -> A.array_resource arr)
     (fun _ -> A.alloc init max)
   in
   let contents = Vector 0ul max arr in
-  admit()
-  (*
   let v = rst_frame
     (A.array_resource arr)
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
     ( fun _ -> P.ptr_alloc contents)
   in
-  admit()
-*)
-(*
   let v_view = vector_view v in
-  let h = HST.get () in
-  assert(fp_reads_fp v_view.fp v_view.inv); (* TODO: figure out why this is needed *)
-  let h = get (A.array_resource arr <*> P.ptr_resource v) in
-  (*rst_frame
-    (A.array_resource arr <*> P.ptr_resource v)
+  assert(fp_reads_fp v_view.fp v_view.inv); (* TODO: figure out why this ? *)
+  rst_frame
+    (P.ptr_resource v <*> A.array_resource arr)
     (fun _ -> vector_resource v)
-    (fun _ -> pack_vector contents v);*)
-  pack_vector contents v; (* TODO: find out why it does not work with rst_frame *)
-  let h1 = HST.get () in
-  assume(modifies empty_resource (vector_resource v) h0 h1); (*TODO: find out why we need this *)
+    (fun _ -> pack_vector 0ul max arr v);
   v
- *)
 
 
 #set-options "--z3rlimit 30"
