@@ -947,51 +947,37 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   (*
    * Construct the expected lift type k as:
-   *   a:Type -> wp:source_wp a -> <some binder> -> repr a i_1 ... i_n
+   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : repr a i_1 ... i_m
    *)
   let k, g_k =
     let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
 
     //a:Type u
-    let a', wp_sort_a' = monad_signature env sub.source
-      (Env.lookup_effect_lid env sub.source) in
-    let src_wp_sort_a = SS.subst [NT (a', a |> fst |> S.bv_to_name)] wp_sort_a' in
-
-    //wp:sub.source.wp a
-    let wp = S.gen_bv "wp" None src_wp_sort_a |> S.mk_binder in
 
     //other binders
     let rest_bs =
       match (SS.compress lift_ty).n with
-      | Tm_arrow (bs, _) when List.length bs >= 3 ->
-        let ((a', _)::(wp', _)::bs) = SS.open_binders bs in
+      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+        let ((a', _)::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name (fst a)); NT (wp', bv_to_name (fst wp))]
+           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
       | _ ->
         raise_error (Errors.Fatal_UnexpectedExpressionType,
           lift_t_shape_error "either not an arrow, or not enough binders") r in
 
-    //f:unit -> sub.source a wp
-    let f =
-      let f_sort = U.arrow
-        [S.null_binder S.t_unit]
-        (S.mk_Comp ({
-          comp_univs = [u_a];
-          effect_name = sub.source;
-          result_typ = a |> fst |> S.bv_to_name;
-          effect_args = [wp |> fst |> S.bv_to_name |> S.as_arg];
-          flags = []
-        })) in
-      S.gen_bv "f" None f_sort |> S.mk_binder in
-     
-    let bs = a::wp::(rest_bs@[f]) in
+    let f_b, g_f_b =
+      let f_sort, g = TcUtil.fresh_effect_repr_en
+        (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
+      S.gen_bv "f" None f_sort |> S.mk_binder, g in
+
+    let bs = a::(rest_bs@[f_b]) in
 
     //repr<?u> ?u_i ... ?u_n
-    let repr, g_repr = TcUtil.fresh_layered_effect_repr_en
+    let repr, g_repr = TcUtil.fresh_effect_repr_en
       (Env.push_binders env bs)
       r sub.target u_a (a |> fst |> S.bv_to_name) in
     
-    U.arrow bs (mk_Total' repr (new_u_univ () |> Some)), g_repr in
+    U.arrow bs (mk_Total' repr (new_u_univ () |> Some)), Env.conj_guard g_f_b g_repr in
 
    if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
