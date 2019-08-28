@@ -112,7 +112,7 @@ val fresh_layered_effect_repr: env -> Range.range -> lident -> signature:tscheme
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
  *)
-val fresh_layered_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
+val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
 
 (*
  * Return binders for the layered effect indices with signature
