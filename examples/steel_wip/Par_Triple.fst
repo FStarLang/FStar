@@ -106,10 +106,10 @@ let m_par (#a #b:Type0) (c0:m a) (c1:m b) : m (a & b) =
 (*** Memory definitions ***)
 
 /// For this example sketch, memory is simply a pair of booleans.
-let mem = bool -> nat
+let mem = (f:(bool -> nat){FunctionalExtensionality.is_restricted bool f})
 
 let upd (b:bool) (n:nat) (h:mem) : mem =
-  fun b' -> if b = b' then n else h b'
+  FunctionalExtensionality.on_dom bool (fun b' -> if b = b' then n else h b')
 
 let loc = option bool
 
@@ -176,9 +176,6 @@ let (<*>) (r0 r1:resource) : resource =
       sel = sel
     }
   }
-
-// Cannot leave this function unnamed inside chi definition to reason about it
-let upd_pre (pre:mem -> Type) (b:bool) (n:nat) = fun h -> pre (upd b n h)
 
 (*** Axiomatisation of the semantics, RST monad definition ***)
 
@@ -259,252 +256,201 @@ let lemma_chi_characterization #a c r pre post h0 pos stream = lemma_chi_charact
 
 (*** Lemmas about chi ***)
 
-(* TODO: Restore this
-
 /// Map preserves chi
-let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) :
+let rec map_chi (#a:Type) (#b:Type) (f:a -> b) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (h_init h_current:mem) :
   Lemma
-  (requires chi c r pre post)
-  (ensures chi (map f c) r pre post)
+  (requires chi c r pre post h_init h_current)
+  (ensures chi (map f c) r pre post h_init h_current)
   (decreases c) =
   match c with
   | Ret x -> ()
   | Get b c' ->
-        let aux (h:mem) : Lemma (chi (map f (c' (h b))) r pre post)
-          = FStar.WellFounded.axiom1 c' (h b); map_chi f (c' (h b)) r pre post
-        in Classical.forall_intro aux
-  | Put b n c -> map_chi f c r (upd_pre pre b n) post
-  | MOr c0 c1 -> map_chi f c0 r pre post; map_chi f c1 r pre post
+        FStar.WellFounded.axiom1 c' (h_current b); map_chi f (c' (h_current b)) r pre post h_init h_current
+  | Put b n c -> map_chi f c r pre post h_init (upd b n h_current)
+  | MOr c0 c1 -> map_chi f c0 r pre post h_init h_current; map_chi f c1 r pre post h_init h_current
 
 /// We can derive a weaker precondition from a stronger one
-let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_weak:mem -> Type)
+let rec chi_weaken_post (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (post_weak:mem -> Type) (h_init h_current:mem)
   : Lemma
-  (requires chi c r pre post /\ (forall h. post h ==> post_weak h))
-  (ensures chi c r pre post_weak)
+  (requires chi c r pre post h_init h_current /\ (forall h. post h ==> post_weak h))
+  (ensures chi c r pre post_weak h_init h_current)
   (decreases c) =
   match c with
   | Ret _ -> ()
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) r pre post_weak)
-      = FStar.WellFounded.axiom1 c' (h b); chi_weaken_post (c' (h b)) r pre post post_weak
-    in Classical.forall_intro aux
-  | Put b n c -> chi_weaken_post c r (upd_pre pre b n) post post_weak
-  | MOr c0 c1 -> chi_weaken_post c0 r pre post post_weak; chi_weaken_post c1 r pre post post_weak
+    FStar.WellFounded.axiom1 c' (h_current b); chi_weaken_post (c' (h_current b)) r pre post post_weak h_init h_current
+  | Put b n c -> chi_weaken_post c r pre post post_weak h_init (upd b n h_current)
+  | MOr c0 c1 -> chi_weaken_post c0 r pre post post_weak h_init h_current; chi_weaken_post c1 r pre post post_weak h_init h_current
 
 /// chi still holds if we strengthen the precondition
-let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (pre_strong:mem -> Type)
+let rec chi_stronger_pre (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (pre_strong:mem -> Type) (h_init h_current:mem)
   : Lemma
-  (requires chi c r pre post /\ (forall h. pre_strong h ==> pre h))
-  (ensures chi c r pre_strong post)
+  (requires chi c r pre post h_init h_current /\ (forall h. pre_strong h ==> pre h))
+  (ensures chi c r pre_strong post h_init h_current)
   (decreases c) =
   match c with
   | Ret _ -> ()
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) r pre_strong post)
-      = FStar.WellFounded.axiom1 c' (h b); chi_stronger_pre (c' (h b)) r pre post pre_strong
-    in Classical.forall_intro aux
-  | Put b n c -> chi_stronger_pre c r (upd_pre pre b n) post (upd_pre pre_strong b n)
-  | MOr c0 c1 -> chi_stronger_pre c0 r pre post pre_strong; chi_stronger_pre c1 r pre post pre_strong
+      FStar.WellFounded.axiom1 c' (h_current b); chi_stronger_pre (c' (h_current b)) r pre post pre_strong h_init h_current
+  | Put b n c -> chi_stronger_pre c r pre post pre_strong h_init (upd b n h_current)
+  | MOr c0 c1 -> chi_stronger_pre c0 r pre post pre_strong h_init h_current; chi_stronger_pre c1 r pre post pre_strong h_init h_current
+
 
 /// If a subset of pre implies a new post for any memory, then chi still holds when the new post is added to the existing postcondition
-let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> Type) (pre_small:mem -> Type) (post:mem -> Type) (post_add:mem -> Type)
+let rec chi_pre_implies_post (#a:Type) (c:m a) (r:resource) (l:loc) (pre:mem -> Type) (pre_small:mem -> Type) (post:mem -> Type) (post_add:mem -> Type) (h_init h_current:mem)
   : Lemma
-  (requires chi c r pre post /\
-            (forall h. pre h ==> pre_small h) /\
-            (forall h. pre_small h ==> post_add h) /\
+  (requires chi c r pre post h_init h_current /\
+            (pre h_init ==> pre_small h_init) /\
+            (pre_small h_init ==> post_add h_current) /\
             is_stable_on l pre_small /\
             is_stable_on l post_add /\
             disjoint l r.view.fp)
-  (ensures chi c r pre (fun h -> post h /\ post_add h))
+  (ensures chi c r pre (fun h -> post h /\ post_add h) h_init h_current)
   (decreases c) =
   match c with
   | Ret _ -> ()
+
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) r pre (fun h -> post h /\ post_add h))
-      = FStar.WellFounded.axiom1 c' (h b); chi_pre_implies_post (c' (h b)) r l pre pre_small post post_add
-    in Classical.forall_intro aux
+    FStar.WellFounded.axiom1 c' (h_current b); chi_pre_implies_post (c' (h_current b)) r l pre pre_small post post_add h_init h_current
+
   | Put b n c ->
-    let aux (h:mem) : Lemma
-      (requires upd_pre pre_small b n h)
-      (ensures pre_small h)
-      = let h' = upd b n h in
-        assert (modifies r.view.fp h' h)
-    in Classical.forall_intro (Classical.move_requires aux);
-    let aux_stable (h0 h1:mem) (l':loc) : Lemma
-      (requires upd_pre pre_small b n h0 /\ modifies l' h0 h1 /\ disjoint l' l)
-      (ensures upd_pre pre_small b n h1)
-      = let h0' = upd b n h0 in
-        let h1' = upd b n h1 in
-        assert (modifies (loc_union r.view.fp l') h0' h1')
-    in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
-    chi_pre_implies_post c r l (upd_pre pre b n) (upd_pre pre_small b n) post post_add
-  | MOr c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add; chi_pre_implies_post c1 r l pre pre_small post post_add
+    assert (modifies r.view.fp h_current (upd b n h_current));
+    chi_pre_implies_post c r l pre pre_small post post_add h_init (upd b n h_current)
+
+  | MOr c0 c1 -> chi_pre_implies_post c0 r l pre pre_small post post_add h_init h_current; chi_pre_implies_post c1 r l pre pre_small post post_add h_init h_current
+
 
 /// We can extend the resource in chi to a starred resource
-let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type) (post:mem -> Type)
+let rec chi_bigger_resource (#a:Type) (c:m a) (r0 r1:resource) (pre:mem -> Type) (post:mem -> Type) (h_init h_current:mem)
   : Lemma
-  (requires chi c r1 pre post /\ disjoint r0.view.fp r1.view.fp)
-  (ensures chi c (r0 <*> r1) pre post /\ chi c (r1 <*> r0) pre post)
+  (requires chi c r1 pre post h_init h_current /\ disjoint r0.view.fp r1.view.fp)
+  (ensures chi c (r0 <*> r1) pre post h_init h_current /\ chi c (r1 <*> r0) pre post h_init h_current)
   (decreases c)
   =  match c with
   | Ret _ -> ()
   | Get b c' ->
-    let aux (h:mem) : Lemma (chi (c' (h b)) (r0 <*> r1) pre post /\ chi (c' (h b)) (r1 <*> r0) pre post)
-      = FStar.WellFounded.axiom1 c' (h b); chi_bigger_resource (c' (h b)) r0 r1 pre post
-    in Classical.forall_intro aux
+      FStar.WellFounded.axiom1 c' (h_current b); chi_bigger_resource (c' (h_current b)) r0 r1 pre post h_init h_current
   | Put b n c ->
-      let aux (h:mem) : Lemma
-      (ensures r0.view.inv h <==> r0.view.inv (upd b n h))
-      =
-      let h' = upd b n h in
-      assert (modifies (r1.view.fp) h h');
-      assert (modifies r1.view.fp h' h)
-    in Classical.forall_intro (Classical.move_requires aux);
-    chi_bigger_resource c r0 r1 (upd_pre pre b n) post
-  | MOr c0 c1 -> chi_bigger_resource c0 r0 r1 pre post; chi_bigger_resource c1 r0 r1 pre post
+    let h' = upd b n h_current in
+    assert (modifies (r1.view.fp) h_current h');
+    assert (modifies r1.view.fp h' h_current);
+    chi_bigger_resource c r0 r1 pre post h_init h'
+  | MOr c0 c1 -> chi_bigger_resource c0 r0 r1 pre post h_init h_current; chi_bigger_resource c1 r0 r1 pre post h_init h_current
+
+/// If c is valid and the current memory is modified in a disjoint location, then chi is still valid
+let rec chi_modifies_disjoint (#a:Type) (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) (h_init h_current:mem)  (b':bool) (n':nat)
+  : Lemma
+  (requires chi c r pre post h_init h_current /\
+    disjoint r.view.fp (Some b') /\
+    is_stable_on r.view.fp post)
+  (ensures chi c r pre post h_init (upd b' n' h_current))
+  (decreases c)
+  =
+  match c with
+
+  | Ret _ -> assert (modifies (Some b') h_current (upd b' n' h_current))
+  | Get b c' ->
+      FStar.WellFounded.axiom1 c' (h_current b); chi_modifies_disjoint (c' (h_current b)) r pre post h_init h_current b' n'
+  | Put b n c ->
+    let h' = upd b n h_current in
+    chi_modifies_disjoint c r pre post h_init h' b' n';
+
+    FunctionalExtensionality.extensionality bool (fun _ -> nat)
+      (upd b n (upd b' n' h_current)) (upd b' n' (upd b n h_current));
+    let h_new = upd b' n' h_current in
+    assert (modifies (Some b') h_new h_current);
+    assert (modifies (Some b') h_current h_new);
+    assert (modifies (Some b') (upd b n h_current) (upd b n h_new));
+    assert (modifies (Some b') (upd b n h_new) (upd b n h_current))
+
+  | MOr c0 c1 ->
+        chi_modifies_disjoint c0 r pre post h_init h_current b' n';
+        chi_modifies_disjoint c1 r pre post h_init h_current b' n'
+
 
 let rec lemma_lpar (#a #b:Type)
     (r0:resource) (r1:resource{disjoint r0.view.fp r1.view.fp})
     (c0:m a) (c1:m b)
-    (pre0 pre1 post0 post1:mem -> Type) : Lemma
-    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
-      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
-    (ensures chi (l_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+    (pre0 pre1 post0 post1:mem -> Type)
+    (h_init h_current:mem) : Lemma
+    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) h_init h_current /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
+      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) h_init h_current /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
+    (ensures chi (l_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)) h_init h_current)
     (decreases %[c0; c1])
     = match c0 with
     | Ret x ->
-      map_chi (pair_x x) c1 r1 (r_pred pre1 r1) (r_pred post1 r1);
-      chi_stronger_pre (l_par c0 c1) r1 (r_pred pre1 r1) (r_pred post1 r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1));
+      map_chi (pair_x x) c1 r1 (r_pred pre1 r1) (r_pred post1 r1) h_init h_current;
+      chi_stronger_pre (l_par c0 c1) r1 (r_pred pre1 r1) (r_pred post1 r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) h_init h_current;
       chi_pre_implies_post (l_par c0 c1) r1 r0.view.fp
         (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
         (r_pred pre0 r0)
-        (r_pred post1 r1) (r_pred post0 r0);
+        (r_pred post1 r1) (r_pred post0 r0)
+        h_init h_current;
       chi_weaken_post (l_par c0 c1) r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
-        (fun h -> r_pred post1 r1 h /\ r_pred post0 r0 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1));
-      chi_bigger_resource (l_par c0 c1) r0 r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (fun h -> r_pred post1 r1 h /\ r_pred post0 r0 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        h_init h_current;
+      chi_bigger_resource (l_par c0 c1) r0 r1 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)) h_init h_current
+
 
     | Get b' c0' ->
-      let aux (h:mem) : Lemma (chi (MOr (l_par (c0' (h b')) c1) (r_par (c0' (h b')) c1)) (r0 <*> r1)
-        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
-      = FStar.WellFounded.axiom1 c0' (h b');
-        lemma_lpar r0 r1 (c0' (h b')) c1 pre0 pre1 post0 post1;
-        lemma_rpar r0 r1 (c0' (h b')) c1 pre0 pre1 post0 post1
-      in
-      Classical.forall_intro aux
+      FStar.WellFounded.axiom1 c0' (h_current b');
+      lemma_lpar r0 r1 (c0' (h_current b')) c1 pre0 pre1 post0 post1 h_init h_current;
+      lemma_rpar r0 r1 (c0' (h_current b')) c1 pre0 pre1 post0 post1 h_init h_current
 
     | Put b' n c0' ->
       let r = r0 <*> r1 in
-      chi_stronger_pre c0' r0 (upd_pre (r_pred pre0 r0) b' n) (r_pred post0 r0) (r_pred (upd_pre pre0 b' n) r0);
 
-      let aux_stable (h0 h1:mem) (l':loc) : Lemma
-        (requires upd_pre pre0 b' n h0 /\ modifies l' h0 h1 /\ disjoint l' r0.view.fp)
-        (ensures upd_pre pre0 b' n h1)
-        = let h0' = upd b' n h0 in
-          let h1' = upd b' n h1 in
-          assert (modifies l' h0' h1')
+      chi_modifies_disjoint c1 r1 (r_pred pre1 r1) (r_pred post1 r1) h_init h_current b' n;
+      lemma_lpar r0 r1 c0' c1 pre0 pre1 post0 post1 h_init (upd b' n h_current);
+      lemma_rpar r0 r1 c0' c1 pre0 pre1 post0 post1 h_init (upd b' n h_current);
 
-      in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
+      assert (modifies r0.view.fp h_current (upd b' n h_current));
+      assert (modifies r0.view.fp (upd b' n h_current) h_current)
 
-      lemma_lpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
-      lemma_rpar r0 r1 c0' c1 (upd_pre pre0 b' n) pre1 post0 post1;
-
-
-      let aux (h:mem) : Lemma
-        (requires upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n h)
-        (ensures r_pred (fun h -> upd_pre pre0 b' n h /\ pre1 h) (r0 <*> r1) h)
-        = let h' = upd b' n h in
-          assert (modifies r0.view.fp h (upd b' n h));
-          assert (modifies r0.view.fp h' h)
-      in
-      Classical.forall_intro (Classical.move_requires aux);
-      chi_stronger_pre (l_par c0' c1) (r0 <*> r1)
-        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
-        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
-        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
-      chi_stronger_pre (r_par c0' c1) (r0 <*> r1)
-        (r_pred (fun h -> (upd_pre pre0 b' n) h /\ pre1 h) (r0 <*> r1))
-        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
-        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
-
-      let aux (h:mem) : Lemma
-        (ensures r.view.inv h <==> r.view.inv (upd b' n h))
-        = assert (modifies r0.view.fp h (upd b' n h)); assert (modifies r0.view.fp (upd b' n h) h)
-      in
-      Classical.forall_intro (Classical.move_requires aux)
-
-
-    | MOr c0' c0'' -> lemma_lpar r0 r1 c0' c1 pre0 pre1 post0 post1; lemma_lpar r0 r1 c0'' c1 pre0 pre1 post0 post1
+    | MOr c0' c0'' -> lemma_lpar r0 r1 c0' c1 pre0 pre1 post0 post1 h_init h_current; lemma_lpar r0 r1 c0'' c1 pre0 pre1 post0 post1 h_init h_current
 
 and lemma_rpar (#a #b:Type)
     (r0:resource) (r1:resource{disjoint r0.view.fp r1.view.fp})
     (c0:m a) (c1:m b)
-    (pre0 pre1 post0 post1:mem -> Type) : Lemma
-    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
-      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
-    (ensures chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
+    (pre0 pre1 post0 post1:mem -> Type)
+    (h_init h_current:mem) : Lemma
+    (requires chi c0 r0 (r_pred pre0 r0) (r_pred post0 r0) h_init h_current /\ is_stable_on r0.view.fp pre0 /\ is_stable_on r0.view.fp post0 /\
+      chi c1 r1 (r_pred pre1 r1) (r_pred post1 r1) h_init h_current /\ is_stable_on r1.view.fp pre1 /\ is_stable_on r1.view.fp post1)
+    (ensures chi (r_par c0 c1) (r0 <*> r1) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)) h_init h_current)
     (decreases %[c0; c1])
     = match c1 with
     | Ret y ->
-      map_chi (pair_y y) c0 r0 (r_pred pre0 r0) (r_pred post0 r0);
-      chi_stronger_pre (r_par c0 c1) r0 (r_pred pre0 r0) (r_pred post0 r0) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1));
+      map_chi (pair_y y) c0 r0 (r_pred pre0 r0) (r_pred post0 r0) h_init h_current;
+      chi_stronger_pre (r_par c0 c1) r0 (r_pred pre0 r0) (r_pred post0 r0) (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) h_init h_current;
       chi_pre_implies_post (r_par c0 c1) r0 r1.view.fp
         (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
         (r_pred pre1 r1)
-        (r_pred post0 r0) (r_pred post1 r1);
+        (r_pred post0 r0) (r_pred post1 r1)
+        h_init h_current;
       chi_weaken_post (r_par c0 c1) r0 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
-        (fun h -> r_pred post0 r0 h /\ r_pred post1 r1 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1));
-      chi_bigger_resource (r_par c0 c1) r1 r0 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+        (fun h -> r_pred post0 r0 h /\ r_pred post1 r1 h) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)) h_init h_current;
+      chi_bigger_resource (r_par c0 c1) r1 r0 (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)) h_init h_current
 
     | Get b' c1' ->
-      let aux (h:mem) : Lemma (chi (MOr (l_par c0 (c1' (h b'))) (r_par c0 (c1' (h b')))) (r0 <*> r1)
-        (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1)))
-      = FStar.WellFounded.axiom1 c1' (h b');
-        lemma_lpar r0 r1 c0 (c1' (h b')) pre0 pre1 post0 post1;
-        lemma_rpar r0 r1 c0 (c1' (h b')) pre0 pre1 post0 post1
-      in
-      Classical.forall_intro aux
+        FStar.WellFounded.axiom1 c1' (h_current b');
+        lemma_lpar r0 r1 c0 (c1' (h_current b')) pre0 pre1 post0 post1 h_init h_current;
+        lemma_rpar r0 r1 c0 (c1' (h_current b')) pre0 pre1 post0 post1 h_init h_current
 
     | Put b' n c1' ->
       let r = r0 <*> r1 in
-      chi_stronger_pre c1' r1 (upd_pre (r_pred pre1 r1) b' n) (r_pred post1 r1) (r_pred (upd_pre pre1 b' n) r1);
 
-      let aux_stable (h0 h1:mem) (l':loc) : Lemma
-          (requires upd_pre pre1 b' n h0 /\ modifies l' h0 h1 /\ disjoint l' r1.view.fp)
-          (ensures upd_pre pre1 b' n h1)
-          = let h0' = upd b' n h0 in
-            let h1' = upd b' n h1 in
-            assert (modifies l' h0' h1')
+      chi_modifies_disjoint c0 r0 (r_pred pre0 r0) (r_pred post0 r0) h_init h_current b' n;
 
-      in Classical.forall_intro_3 (fun h0 h1 l -> Classical.move_requires (aux_stable h0 h1) l);
+      lemma_lpar r0 r1 c0 c1' pre0 pre1 post0 post1 h_init (upd b' n h_current);
+      lemma_rpar r0 r1 c0 c1' pre0 pre1 post0 post1 h_init (upd b' n h_current);
 
-      lemma_lpar r0 r1 c0 c1' pre0 (upd_pre pre1 b' n) post0 post1;
-      lemma_rpar r0 r1 c0 c1' pre0 (upd_pre pre1 b' n) post0 post1;
+      assert (modifies r1.view.fp h_current (upd b' n h_current));
+      assert (modifies r1.view.fp (upd b' n h_current) h_current)
 
-      let aux (h:mem) : Lemma
-        (requires upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n h)
-        (ensures r_pred (fun h -> pre0 h /\ upd_pre pre1 b' n h) (r0 <*> r1) h)
-        = let h' = upd b' n h in
-          assert (modifies r1.view.fp h (upd b' n h));
-          assert (modifies r1.view.fp h' h)
-      in
-      Classical.forall_intro (Classical.move_requires aux);
 
-      chi_stronger_pre (l_par c0 c1') (r0 <*> r1)
-        (r_pred (fun h -> pre0 h /\ (upd_pre pre1 b' n) h) (r0 <*> r1))
-        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
-        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
-      chi_stronger_pre (r_par c0 c1') (r0 <*> r1)
-        (r_pred (fun h -> pre0 h /\ (upd_pre pre1 b' n) h) (r0 <*> r1))
-        (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
-        (upd_pre (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1)) b' n);
-
-      let aux (h:mem) : Lemma
-        (ensures r.view.inv h <==> r.view.inv (upd b' n h))
-        = assert (modifies r1.view.fp h (upd b' n h)); assert (modifies r1.view.fp (upd b' n h) h)
-      in
-    Classical.forall_intro (Classical.move_requires aux)
-
-    | MOr c1' c1'' -> lemma_rpar r0 r1 c0 c1' pre0 pre1 post0 post1; lemma_rpar r0 r1 c0 c1'' pre0 pre1 post0 post1
+    | MOr c1' c1'' ->
+          lemma_rpar r0 r1 c0 c1' pre0 pre1 post0 post1 h_init h_current;
+          lemma_rpar r0 r1 c0 c1'' pre0 pre1 post0 post1 h_init h_current
 
 (*** Parallel composition ***)
 
@@ -521,8 +467,18 @@ val par  (#a #b:Type0)
 
 let par #a #b #r0 #r1 #pre0 #pre1 #post0 #post1 c0 c1 =
   let c = m_par c0 c1 in
-  (**) lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1;
-  (**) lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1;
+  let aux1 (h:mem) : Lemma
+    (chi (l_par c0 c1) (r0 <*> r1)
+      (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+      (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+      h h)
+    = lemma_lpar r0 r1 c0 c1 pre0 pre1 post0 post1 h h in
+  let aux2 (h:mem) : Lemma
+    (chi (r_par c0 c1) (r0 <*> r1)
+      (r_pred (fun h -> pre0 h /\ pre1 h) (r0 <*> r1))
+      (r_pred (fun h -> post0 h /\ post1 h) (r0 <*> r1))
+      h h)
+    = lemma_rpar r0 r1 c0 c1 pre0 pre1 post0 post1 h h in
+  Classical.forall_intro aux1;
+  Classical.forall_intro aux2;
   c
-
-*)
