@@ -909,9 +909,8 @@ let monad_signature env m s =
   | _ -> fail ()
 
 (*
- * Typecheck lift to a layered effect
+ * Typecheck lift to/from a layered effect
  *
- * Only lifts from wp-effects to layered effects are supported so far
  *)
 let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
@@ -947,7 +946,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   (*
    * Construct the expected lift type k as:
-   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : repr a i_1 ... i_m
+   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : target_repr a i_1 ... i_m
    *)
   let k, g_k =
     let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
