@@ -5840,66 +5840,66 @@ let (fresh_layered_effect_repr :
             fun u  ->
               fun a_tm  ->
                 let fail1 t =
-                  let uu____14237 =
+                  let uu____14233 =
                     FStar_TypeChecker_Err.unexpected_signature_for_monad env
                       eff_name t
                      in
-                  FStar_Errors.raise_error uu____14237 r  in
-                let uu____14247 =
+                  FStar_Errors.raise_error uu____14233 r  in
+                let uu____14243 =
                   FStar_TypeChecker_Env.inst_tscheme signature_ts  in
-                match uu____14247 with
-                | (uu____14256,signature) ->
-                    let uu____14258 =
-                      let uu____14259 = FStar_Syntax_Subst.compress signature
+                match uu____14243 with
+                | (uu____14252,signature) ->
+                    let uu____14254 =
+                      let uu____14255 = FStar_Syntax_Subst.compress signature
                          in
-                      uu____14259.FStar_Syntax_Syntax.n  in
-                    (match uu____14258 with
-                     | FStar_Syntax_Syntax.Tm_arrow (bs,uu____14267) ->
+                      uu____14255.FStar_Syntax_Syntax.n  in
+                    (match uu____14254 with
+                     | FStar_Syntax_Syntax.Tm_arrow (bs,uu____14263) ->
                          let bs1 = FStar_Syntax_Subst.open_binders bs  in
                          (match bs1 with
                           | a::bs2 ->
-                              let uu____14315 =
+                              let uu____14311 =
                                 FStar_TypeChecker_Env.uvars_for_binders env
                                   bs2
                                   [FStar_Syntax_Syntax.NT
                                      ((FStar_Pervasives_Native.fst a), a_tm)]
                                   (fun b  ->
-                                     let uu____14330 =
+                                     let uu____14326 =
                                        FStar_Syntax_Print.binder_to_string b
                                         in
-                                     let uu____14332 =
+                                     let uu____14328 =
                                        FStar_Range.string_of_range r  in
                                      FStar_Util.format3
                                        "uvar for binder %s when creating a fresh repr for %s at %s"
-                                       uu____14330 eff_name.FStar_Ident.str
-                                       uu____14332) r
+                                       uu____14326 eff_name.FStar_Ident.str
+                                       uu____14328) r
                                  in
-                              (match uu____14315 with
+                              (match uu____14311 with
                                | (is,g) ->
                                    let repr =
-                                     let uu____14346 =
+                                     let uu____14342 =
                                        FStar_TypeChecker_Env.inst_tscheme_with
                                          repr_ts [u]
                                         in
-                                     FStar_All.pipe_right uu____14346
+                                     FStar_All.pipe_right uu____14342
                                        FStar_Pervasives_Native.snd
                                       in
-                                   let uu____14355 =
-                                     let uu____14356 =
-                                       let uu____14361 =
+                                   let uu____14351 =
+                                     let uu____14352 =
+                                       let uu____14357 =
                                          FStar_List.map
                                            FStar_Syntax_Syntax.as_arg (a_tm
                                            :: is)
                                           in
                                        FStar_Syntax_Syntax.mk_Tm_app repr
-                                         uu____14361
+                                         uu____14357
                                         in
-                                     uu____14356 FStar_Pervasives_Native.None
+                                     uu____14352 FStar_Pervasives_Native.None
                                        r
                                       in
-                                   (uu____14355, g))
-                          | uu____14370 -> fail1 signature)
-                     | uu____14371 -> fail1 signature)
+                                   (uu____14351, g))
+                          | uu____14366 -> fail1 signature)
+                     | uu____14367 -> fail1 signature)
   
 let (fresh_effect_repr_en :
   FStar_TypeChecker_Env.env ->
@@ -5914,11 +5914,11 @@ let (fresh_effect_repr_en :
       fun eff_name  ->
         fun u  ->
           fun a_tm  ->
-            let uu____14402 =
+            let uu____14398 =
               FStar_All.pipe_right eff_name
                 (FStar_TypeChecker_Env.get_effect_decl env)
                in
-            FStar_All.pipe_right uu____14402
+            FStar_All.pipe_right uu____14398
               (fun ed  ->
                  if ed.FStar_Syntax_Syntax.is_layered
                  then
@@ -5941,27 +5941,27 @@ let (layered_effect_indices_as_binders :
         fun sig_ts  ->
           fun u  ->
             fun a_tm  ->
-              let uu____14447 =
+              let uu____14443 =
                 FStar_TypeChecker_Env.inst_tscheme_with sig_ts [u]  in
-              match uu____14447 with
-              | (uu____14452,sig_tm) ->
+              match uu____14443 with
+              | (uu____14448,sig_tm) ->
                   let fail1 t =
-                    let uu____14460 =
+                    let uu____14456 =
                       FStar_TypeChecker_Err.unexpected_signature_for_monad
                         env eff_name t
                        in
-                    FStar_Errors.raise_error uu____14460 r  in
-                  let uu____14466 =
-                    let uu____14467 = FStar_Syntax_Subst.compress sig_tm  in
-                    uu____14467.FStar_Syntax_Syntax.n  in
-                  (match uu____14466 with
-                   | FStar_Syntax_Syntax.Tm_arrow (bs,uu____14471) ->
+                    FStar_Errors.raise_error uu____14456 r  in
+                  let uu____14462 =
+                    let uu____14463 = FStar_Syntax_Subst.compress sig_tm  in
+                    uu____14463.FStar_Syntax_Syntax.n  in
+                  (match uu____14462 with
+                   | FStar_Syntax_Syntax.Tm_arrow (bs,uu____14467) ->
                        let bs1 = FStar_Syntax_Subst.open_binders bs  in
                        (match bs1 with
-                        | (a',uu____14494)::bs2 ->
+                        | (a',uu____14490)::bs2 ->
                             FStar_All.pipe_right bs2
                               (FStar_Syntax_Subst.subst_binders
                                  [FStar_Syntax_Syntax.NT (a', a_tm)])
-                        | uu____14516 -> fail1 sig_tm)
-                   | uu____14517 -> fail1 sig_tm)
+                        | uu____14512 -> fail1 sig_tm)
+                   | uu____14513 -> fail1 sig_tm)
   

@@ -2106,7 +2106,7 @@ let fresh_non_layered_effect_repr env (r:Range.range) eff_name (u:universe) (a_t
   S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) None r,
   g_wp_uvar
 
-let fresh_layered_effect_repr env r eff_name (signature_ts:tscheme) (repr_ts:tscheme) (u:universe) (a_tm:term) : term * guard_t =
+let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
   
   let _, signature = Env.inst_tscheme signature_ts in
