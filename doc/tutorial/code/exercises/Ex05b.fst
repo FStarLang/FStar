@@ -26,5 +26,5 @@ let rec fib a b n =
   | 0 -> a
   | _ -> fib b (a+b) (n-1)
 
-val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
+val fib_is_ok : n:nat -> Lemma (ensures fib 1 1 n = fibonacci n)
 let fib_is_ok n = admit() //replace admit() by a proof
