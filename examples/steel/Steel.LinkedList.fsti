@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.LinkedList
+module Steel.LinkedList
 
-open LowStar.Resource
-open LowStar.RST
+open Steel.Resource
+open Steel.RST
 
 module L = FStar.List.Tot
 

@@ -13,16 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module LowStar.RST.LinkedList
+module Steel.LinkedList
 
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module L = FStar.List.Tot
 module A = LowStar.Array
-module RA = LowStar.RST.Array
+module RA = Steel.Array
 
-open LowStar.Resource
-open LowStar.RST
+open Steel.Resource
+open Steel.RST
 module P = LowStar.Permissions
 
 //open LowStar.BufferOps
@@ -201,7 +201,7 @@ val map (#a:Type) (f:a -> a) (ptr:t a) (l:list (cell a))
 
 
 // LowStar.Array does not yet have a notion of null pointers. In the meantime, we assume this
-// stateful function. It is currently incorrect as it should be y <==> g_is_null b, 
+// stateful function. It is currently incorrect as it should be y <==> g_is_null b,
 // and we will also need to change the definition of an empty node to a null array
 assume
 val is_null (#a:Type0) (b:LowStar.Array.array a)
