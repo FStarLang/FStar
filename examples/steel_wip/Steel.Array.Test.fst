@@ -1,9 +1,8 @@
-module Test.Array
+module Steel.Array.Test
 
 module P = LowStar.Permissions
 open Steel.RST
 module A = Steel.Array
-
 
 #reset-options "--z3rlimit 10 --max_fuel 1 --max_ifuel 1 --z3cliopt smt.qi.eager_threshold=1000"
 #restart-solver
@@ -66,11 +65,18 @@ let read_write_with_sharing () : RST unit
     (fun _ -> A.array_resource b)
     (fun _ -> A.index b 0ul)
   in
-  let _ = rst_frame
+
+  // We need to let-bind this variable for unification to work correctly in rst_frame
+  // According to NS, this is due to the $ quantifier in the type of f for rst_frame
+  // Because of additional constraints if this parameter is inlined, the RST
+  // definition needs to be unfolded to STATE, and then type unification is lost
+  // This should be solved with effect layering
+  let v =   FStar.UInt32.(x1 +%^ 1ul) in
+
+  rst_frame
     (A.array_resource b)
     (fun _ -> A.array_resource b)
-    (fun _ -> A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul))
-  in    admit()
+    (fun _ -> A.upd #FStar.UInt32.t b 0ul v);
 
   let b1 = rst_frame
     (A.array_resource b)
@@ -81,15 +87,15 @@ let read_write_with_sharing () : RST unit
     rst_frame
       (A.array_resource b <*> A.array_resource b1)
       (fun _ -> A.array_resource b <*> A.array_resource b1)
-      (fun _ -> let f = A.index b 0ul in f)
+      (fun _ -> A.index b 0ul)
   in
- // admit()
-
   let b_first, b_second = rst_frame
     (A.array_resource b <*> A.array_resource b1)
     (fun p -> A.array_resource (fst p) <*> A.array_resource (snd p) <*> A.array_resource b1)
-    (let f = fun _ -> A.split #FStar.UInt32.t b 1ul in f) //TODO: remove let binding
+    (fun _ -> A.split #FStar.UInt32.t b 1ul)
   in
+  admit()
+(*
     let h0 =
     get (A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)
   in
@@ -122,3 +128,4 @@ let read_write_with_sharing () : RST unit
   A.gather b b1;
   let h = get (A.array_resource b) in
   A.free b
+*)
