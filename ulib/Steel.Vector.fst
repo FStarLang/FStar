@@ -134,7 +134,7 @@ let create #a init max =
     (fun v -> P.ptr_resource v <*> A.array_resource arr)
     ( fun _ -> P.ptr_alloc (Vector 0ul max arr))
   in
-  let v_view = vector_view v in
+  let v_view : view (vector_view_t a) = vector_view v in
   assert(fp_reads_fp v_view.fp v_view.inv); (* TODO: figure out why this ? *)
   rst_frame
     (P.ptr_resource v <*> A.array_resource arr)
@@ -146,12 +146,13 @@ let create #a init max =
 #set-options "--z3rlimit 30"
 
 let push #a v x =
-  let h0 = HST.get () in
-  let h0_r = get (vector_resource v) in
+  (**) let h0 = HST.get () in
+  (**) let h0_r = get (vector_resource v) in
   let contents = rst_frame
     (vector_resource v)
     (fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
-    #(fun contents -> A.array_resource contents.arr <*> P.ptr_resource v) (* TODO: solve this unification problem *)
+    (* TODO: solve this unification problem *)
+    #(fun contents -> A.array_resource contents.arr <*> P.ptr_resource v)
     (fun _ -> unpack_vector v)
   in
   let max = contents.max in
@@ -164,27 +165,50 @@ let push #a v x =
       (fun _ -> A.upd arr len x);
     let new_len =  U32.(len +^ 1ul) in
     let new_v_record = Vector new_len max arr in
-    let h = get (A.array_resource arr <*> P.ptr_resource v) in
-    assume(P.get_perm v h = 1.0R);
     rst_frame
       (A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> P.ptr_write v new_v_record);
     let h = get (P.ptr_resource v <*> A.array_resource arr) in
-    assume(A.get_rperm arr (focus_rmem h (A.array_resource arr)) =
-        P.get_perm v (focus_rmem h (P.ptr_resource v)));
     rst_frame
       (A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> vector_resource v)
       (fun _ -> pack_vector new_len max arr v);
-    let h1 = HST.get () in
-    assume(modifies (vector_resource v) (vector_resource v) h0 h1);
-    let h1_r = get (vector_resource v) in
-    let v0 = h0_r (vector_resource v)  in
-    let v1 = h1_r (vector_resource v) in
-    assume(v1 == {v0 with v_arr = S.snoc v0.v_arr x})
+    (**) let h1 = HST.get () in
+    (**) (* Should go away with effect layering *)
+    (**) assume(modifies (vector_resource v) (vector_resource v) h0 h1);
+    (**) let h1_r = get (vector_resource v) in
+    (**) let v0 = h0_r (vector_resource v)  in
+    (**) let v1 = h1_r (vector_resource v) in
+    (**) assert(S.slice v1.v_arr 0 (U32.v len) == v0.v_arr);
+    (**) assert(S.index v1.v_arr (U32.v len) == x);
+    (**) assert(v1.v_arr == S.snoc v0.v_arr x)
   end else begin
-    admit()
+    let max_uint32 = UInt32.uint_to_t (UInt.max_int 32) in
+    let new_contents_length =
+      if U32.(max >^ max_uint32 /^ 2ul) then
+        max_uint32
+      else
+        U32.(2ul *^ max)
+    in
+    let new_contents = rst_frame
+      (A.array_resource arr <*> P.ptr_resource v)
+      (fun b -> A.array_resource b <*> A.array_resource arr <*> P.ptr_resource v)
+      (fun _ -> A.alloc x new_contents_length)
+    in
+    (**) assert(U32.v len = U32.v max /\ U32.v len < UInt.max_int 32);
+    (**) let aux () : Lemma (U32.v len < A.vlength new_contents) =
+    (**)   if U32.(max >^ max_uint32 /^ 2ul) then admit() else admit()
+    (**) in aux ();
+    let new_contents_parts = rst_frame
+      (A.array_resource new_contents <*> A.array_resource arr <*> P.ptr_resource v)
+      (fun new_contents_parts ->
+        A.array_resource (fst new_contents_parts) <*> A.array_resource (snd new_contents_parts) <*>
+        A.array_resource arr <*> P.ptr_resource v
+      )
+      (fun _ -> A.split new_contents len)
+    in
+    (**) admit()
   end
 
 
