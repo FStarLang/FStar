@@ -89,12 +89,13 @@ val gather (#a:Type) (b b':A.array a)
     )
 
 
-val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b})
+val split (#a: Type) (b: A.array a) (idx: UInt32.t)
   : RST (A.array a & A.array a)
     (array_resource b)
     (fun p -> array_resource (fst p) <*> array_resource (snd p))
-    (fun _ -> True)
+    (fun _ -> UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b)
     (fun h0 bs h1 ->
+      UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b /\
       A.is_split_into b (fst bs, snd bs) /\
       as_rseq (fst bs) h1 == Seq.slice (as_rseq b h0) 0 (UInt32.v idx) /\
       as_rseq (snd bs) h1 == Seq.slice (as_rseq b h0) (UInt32.v idx) (A.vlength b) /\

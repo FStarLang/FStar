@@ -9,7 +9,7 @@ open Steel.RST
 
 (* View and resource for (heap-allocated, freeable) pointer resources *)
 
-unfold let pointer (t: Type) = ptr:A.array t{A.vlength ptr = 1}
+let pointer (t: Type) = ptr:A.array t{A.vlength ptr = 1}
 
 noeq type vptr (a: Type) = {
   x: a;
