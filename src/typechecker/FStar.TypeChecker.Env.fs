@@ -108,23 +108,6 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = {
-  mlift_t:option<tscheme>;
-  mlift_wp:universe -> typ -> typ -> typ ;
-  mlift_term:option<(universe -> typ -> typ -> term -> term)>
-}
-
-type edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
-}
-type effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-}
-
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = list<string>
 // A choice of which name prefixes are enabled/disabled
@@ -136,7 +119,26 @@ type proof_namespace = list<(name_prefix * bool)>
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
-type env = {
+type mlift_comp_t = env -> comp -> comp * guard_t
+
+and mlift = {
+  mlift_wp:mlift_comp_t;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
+}
+
+and edge = {
+  msource :lident;
+  mtarget :lident;
+  mlift   :mlift;
+}
+
+and effects = {
+  decls :list<(eff_decl * list<qualifier>)>;
+  order :list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
+
+and env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
@@ -1056,8 +1058,7 @@ let is_layered_effect env l =
   l |> get_effect_decl env |> (fun ed -> ed.is_layered)
 
 let identity_mlift : mlift =
-  { mlift_t=None;
-    mlift_wp=(fun _ t wp -> wp) ;
+  { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ t wp e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
@@ -1278,6 +1279,7 @@ let rec unfold_effect_abbrev env comp =
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
+
 let effect_repr_aux only_reifiable env c u_res =
   let check_partial_application eff_name (args:args) =
     let r = get_range env in
@@ -1384,13 +1386,15 @@ let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
   {env with effects=effects}
 
-let update_effect_lattice env sub =
+let update_effect_lattice env src tgt sub_or_lift_t =
   let compose_edges e1 e2 : edge =
     let composed_lift =
-      let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
+      let mlift_wp env c =
+        c |> e1.mlift.mlift_wp env
+	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
-        | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
+        | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t S.tun (l1 u t wp e))
         | _ -> None
       in
       { mlift_wp=mlift_wp ; mlift_term=mlift_term}
@@ -1400,16 +1404,15 @@ let update_effect_lattice env sub =
       mlift=composed_lift }
   in
 
-  let mk_mlift_wp lift_t u r wp1 =
-    let _, lift_t = inst_tscheme_with lift_t [u] in
-    mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
-  in
-
-  let sub_mlift_wp = match sub.lift_wp with
-    | Some sub_lift_wp ->
-      mk_mlift_wp sub_lift_wp
-    | None ->
-      failwith "sub effect should've been elaborated at this stage"
+  let mk_mlift_wp lift_ts env c =
+    let ct = unfold_effect_abbrev env c in
+    let _, lift_t = inst_tscheme_with lift_ts ct.comp_univs in
+    let wp = List.hd ct.effect_args in
+    S.mk_Comp ({ ct with
+      effect_name = tgt;
+      effect_args =
+        [mk (Tm_app(lift_t, [as_arg ct.result_typ; wp])) None (fst wp).pos |> S.as_arg]
+    }), TcComm.trivial_guard
   in
 
   let mk_mlift_term lift_t u r wp1 e =
@@ -1417,31 +1420,42 @@ let update_effect_lattice env sub =
     mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
   in
 
-  let sub_mlift_term = BU.map_opt sub.lift mk_mlift_term in
+  let sub_mlift_wp =
+    match sub_or_lift_t with
+    | Inl sub ->
+      (match sub.lift_wp with
+       | Some sub_lift_wp -> mk_mlift_wp sub_lift_wp
+       | None -> failwith "sub effect should've been elaborated at this stage")
+    | Inr t -> t in
+
+  let sub_mlift_term =
+    match sub_or_lift_t with
+    | Inl sub -> BU.map_opt sub.lift mk_mlift_term
+    | _ -> None in
 
   let edge =
-    { msource=sub.source;
-      mtarget=sub.target;
+    { msource=src;
+      mtarget=tgt;
       mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
   in
 
   let id_edge l = {
-    msource=sub.source;
-    mtarget=sub.target;
+    msource=src;
+    mtarget=tgt;
     mlift=identity_mlift
   } in
 
   (* For debug purpose... *)
-  let print_mlift l =
-    (* A couple of bogus constants, just for printing *)
-    let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
-    let arg = bogus_term "ARG" in
-    let wp = bogus_term "WP" in
-    let e = bogus_term "COMP" in
-    BU.format2 "{ wp : %s ; term : %s }"
-      (Print.term_to_string (l.mlift_wp U_zero arg wp))
-      (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
-  in
+  // let print_mlift l =
+  //   (* A couple of bogus constants, just for printing *)
+  //   let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
+  //   let arg = bogus_term "ARG" in
+  //   let wp = bogus_term "WP" in
+  //   let e = bogus_term "COMP" in
+  //   BU.format2 "{ wp : %s ; term : %s }"
+  //     (Print.term_to_string (l.mlift_wp U_zero arg wp))
+  //     (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
+  // in
 
   let order = edge::env.effects.order in
   let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
@@ -1762,30 +1776,12 @@ let trivial t = match t with
   | Trivial -> ()
   | NonTrivial _ -> failwith "impossible"
 
-let conj_guard_f g1 g2 = match g1, g2 with
-  | Trivial, g
-  | g, Trivial -> g
-  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
+let check_trivial t = TcComm.check_trivial t
 
-let check_trivial t = match (U.unmeta t).n with
-    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
-    | _ -> NonTrivial t
+let conj_guard g1 g2 = TcComm.conj_guard g1 g2
+let conj_guards gs = TcComm.conj_guards gs
+let imp_guard g1 g2 = TcComm.imp_guard g1 g2
 
-let imp_guard_f g1 g2 = match g1, g2 with
-  | Trivial, g -> g
-  | g, Trivial -> Trivial
-  | NonTrivial f1, NonTrivial f2 ->
-    let imp = U.mk_imp f1 f2 in check_trivial imp
-
-let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
-                           deferred=g1.deferred@g2.deferred;
-                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
-                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
-                           implicits=g1.implicits@g2.implicits}
-let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
-let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
-
-let conj_guards gs = List.fold_left conj_guard trivial_guard gs
 
 let close_guard_univs us bs g =
     match g.guard_f with

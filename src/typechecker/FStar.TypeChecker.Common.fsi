@@ -137,6 +137,12 @@ type guard_t = {
 
 val trivial_guard : guard_t
 
+val conj_guard    : guard_t -> guard_t -> guard_t
+val check_trivial : term -> guard_formula
+val imp_guard     : guard_t -> guard_t -> guard_t
+val conj_guards   : list<guard_t> -> guard_t
+
+
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
