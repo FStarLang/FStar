@@ -40,8 +40,9 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-calc \
-layeredeffects
+calc
+
+#layeredeffects
 
 # low-level \  ... NS: removing from CI for this branch
 
