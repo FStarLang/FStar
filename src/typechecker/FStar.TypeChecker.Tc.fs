@@ -184,6 +184,10 @@ let tc_inductive' env ses quals lids =
     //strict positivity check
     if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
     else begin
+       (*
+        * AR: call add_sigelt_to_env here? We should maintain the invariant that push_sigelt is only called from there
+        *     but then this is temporary, just to check positivity, later we actually do go through add_sigelt_to_env
+        *)
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
@@ -845,7 +849,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
     else [se], hidden
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
-(* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
+(* AR: we now call this function when loading checked modules as well to be more consistent *)
 let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Env.debug env Options.Low
   then BU.print2
@@ -863,6 +867,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
   | _ ->
     let env = Env.push_sigelt env se in
+    //match again to perform postprocessing
     match se.sigel with
     | Sig_pragma (PushOptions _)
     | Sig_pragma PopOptions
