@@ -277,9 +277,16 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
 
 (* Introducing identifiers and updating the environment *)
+
+(*
+ * push_sigelt only adds the sigelt to various caches maintained by env
+ * For semantic changes, such as adding an effect or adding an edge to the effect lattice,
+ *   Tc calls separate functions
+ *)
 val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 val update_effect_lattice : env -> sub_eff -> env
+
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
 val pop_bv                : env -> option<(bv * env)>
