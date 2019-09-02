@@ -298,7 +298,7 @@ val set_expected_typ      : env -> typ -> env
 val expected_typ          : env -> option<typ>
 val clear_expected_typ    : env -> env*option<typ>
 val set_current_module    : env -> lident -> env
-val finish_module         : env -> modul -> env
+val finish_module         : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
