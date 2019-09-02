@@ -2152,3 +2152,79 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
      | (a', _)::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
+
+let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (r:Range.range) (c:comp) : comp * guard_t =
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Lifting comp %s to layered effect %s {\n"
+      (Print.comp_to_string c) (Print.lid_to_string tgt);
+
+  let effect_args_from_repr (repr:term) (is_layered:bool) : list<term> =
+    let err () =
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format2 "Could not get effect args from repr %s with is_layered %s"
+          (Print.term_to_string repr) (string_of_bool is_layered)) r in
+    let repr = SS.compress repr in
+    if is_layered
+    then match repr.n with
+         | Tm_app (_, _::is) -> is |> List.map fst
+         | _ -> err ()
+    else match repr.n with 
+         | Tm_arrow (_, c) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+         | _ -> err () in
+    
+
+  let ct = Env.unfold_effect_abbrev env c in
+
+  let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
+
+  //lift_ts has the arrow type: <u>a:Type -> ..bs.. -> f -> repr a is
+
+  let _, lift_t = Env.inst_tscheme_with lift_ts [u] in
+
+  let lift_t_shape_error s =
+    BU.format4 "Lift from %s to %s has unexpected shape, reason: %s (lift:%s)"
+      (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
+      s (Print.term_to_string lift_t) in
+
+  let a_b, (rest_bs, [f_b]), lift_ct =
+    match (SS.compress lift_t).n with
+    | Tm_arrow (bs, c) when List.length bs >= 2 ->
+      let ((a_b::bs), c) = SS.open_comp bs c in
+      a_b, bs |> List.splitAt (List.length bs - 1), U.comp_to_comp_typ c
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
+        "either not an arrow or not enough binders") r in
+
+  let rest_bs_uvars, g = Env.uvars_for_binders env rest_bs
+    [NT (a_b |> fst, a)]
+    (fun b -> BU.format4
+      "implicit var for binder %s of %s~>%s at %s"
+      (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
+      (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
+
+  let substs = List.map2
+    (fun b t -> NT (b |> fst, t))
+    (a_b::rest_bs) (a::rest_bs_uvars) in
+
+  let guard_f =
+    let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
+    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) in
+    List.fold_left2
+      (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
+      Env.trivial_guard c_is f_sort_is in
+
+  let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) in
+
+  let c = mk_Comp ({
+    comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
+    effect_name = tgt;
+    result_typ = a;
+    effect_args = List.map S.as_arg is;
+    flags = []
+  }) in
+
+  if debug env <| Options.Other "LayeredEffects" then
+    BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
+
+  c, Env.conj_guard g guard_f
+
