@@ -281,7 +281,7 @@ let (pat_as_exp :
                                    (uu___137_1110.FStar_Syntax_Syntax.p)
                                }  in
                              let uu____1113 =
-                               FStar_TypeChecker_Env.conj_guard g g'  in
+                               FStar_TypeChecker_Common.conj_guard g g'  in
                              ([], [], [], env1, e, uu____1113, p2))))
           | FStar_Syntax_Syntax.Pat_wild x ->
               let uu____1121 = intro_bv env1 x  in
@@ -318,8 +318,8 @@ let (pat_as_exp :
                                      then FStar_Syntax_Syntax.iarg te
                                      else FStar_Syntax_Syntax.as_arg te  in
                                    let uu____1648 =
-                                     FStar_TypeChecker_Env.conj_guard guard
-                                       guard'
+                                     FStar_TypeChecker_Common.conj_guard
+                                       guard guard'
                                       in
                                    ((b' :: b), (a' :: a), (w' :: w), env3,
                                      (arg :: args), uu____1648, ((pat, imp)
