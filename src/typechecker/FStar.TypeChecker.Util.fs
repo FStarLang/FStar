@@ -257,13 +257,10 @@ let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt 
 
 let destruct_comp c : (universe * typ * typ) = U.destruct_comp c
 
-let lift_comp c m lift =
-  let u, _, wp = destruct_comp c in
-  {comp_univs=[u];
-   effect_name=m;
-   result_typ=c.result_typ;
-   effect_args=[as_arg (lift.mlift_wp u c.result_typ wp)];
-   flags=[]}
+let lift_comp env c lift =
+  //AR: TODO: HANDLE g
+  let c = c |> S.mk_Comp |> lift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c) in
+  { c with flags = [] }
 
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
@@ -279,8 +276,8 @@ let lift_and_destruct env c1 c2 =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
   let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
-  let m1 = lift_comp c1 m lift1 in
-  let m2 = lift_comp c2 m lift2 in
+  let m1 = lift_comp env c1 lift1 in
+  let m2 = lift_comp env c2 lift2 in
   let md = Env.get_effect_decl env m in
   let a, kwp = Env.wp_signature env md.mname in
   (md, a, kwp), destruct_comp m1, destruct_comp m2
@@ -429,7 +426,7 @@ let return_value env u_t_opt t v =
  * wp1 is a (pure_wp unit), md is an effect, wp2 is a (M.wp res_t)
  * The code basically does M.bind_wp (lift_PURE_M wp1) (fun _ -> wp2)
  *)
-let lift_wp_and_bind_with env (wp1:term) (md:eff_decl) (u_res_t:universe) (res_t:typ) (wp2:term) : term =
+let lift_wp_and_bind_with env (wp1:typ) (md:eff_decl) (u_res_t:universe) (res_t:typ) (wp2:term) : term =
   let r = Env.get_range env in
   (* lift wp1 to c.effect_name *)
   let edge =
@@ -437,7 +434,17 @@ let lift_wp_and_bind_with env (wp1:term) (md:eff_decl) (u_res_t:universe) (res_t
     | Some edge -> edge
     | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ md.mname.str)
   in
-  let wp1 = edge.mlift.mlift_wp S.U_zero S.t_unit wp1 in
+
+  
+  let wp1 =
+    let c = S.mk_Comp ({
+      comp_univs = [S.U_zero];
+      effect_name = C.effect_PURE_lid;
+      result_typ = S.t_unit;
+      effect_args = [wp1 |> S.as_arg];
+      flags = []
+    }) in
+    c |> edge.mlift.mlift_wp env |> (fun (c, g) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.hd |> fst)) in
 
   (* now bind it with fun _ -> wp *)
   mk_Tm_app
@@ -745,19 +752,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                    | None ->
                      raise_error (Errors.Fatal_EffectsCannotBeComposed,
                        BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
-                   | Some _ ->
-                     let ct2, g_lift =
-                       Env.lift_to_layered_effect
-                         env
-                         (S.mk_Comp ct2) c1_ed.mname r1
-                       |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                   | Some edge ->
+                     let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
                      ct1, ct2, c1_ed, g_lift)
-                | Some _ ->
-                  let ct1, g_lift =
-                    Env.lift_to_layered_effect
-                      env
-                      (S.mk_Comp ct1) c2_ed.mname r1
-                    |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                | Some edge ->
+                  let ct1, g_lift = ct1 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
                   ct1, ct2, c2_ed, g_lift in
 
               if Env.debug env <| Options.Other "LayeredEffects" then
@@ -874,7 +873,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let c1 = Env.unfold_effect_abbrev env c1 in
                 let c2 = Env.unfold_effect_abbrev env c2 in
                 let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
-                let c2 = S.mk_Comp (lift_comp c2 m lift2) in
+                let c2 = S.mk_Comp (lift_comp env c2 lift2) in
                 let u1, t1, wp1 = destruct_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
                 let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
@@ -2153,10 +2152,12 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
 
-let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (r:Range.range) (c:comp) : comp * guard_t =
+let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Lifting comp %s to layered effect %s {\n"
       (Print.comp_to_string c) (Print.lid_to_string tgt);
+
+  let r = Env.get_range env in
 
   let effect_args_from_repr (repr:term) (is_layered:bool) : list<term> =
     let err () =
@@ -2220,11 +2221,10 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (r:Range.range) (c
     effect_name = tgt;
     result_typ = a;
     effect_args = List.map S.as_arg is;
-    flags = []
+    flags = ct.flags
   }) in
 
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
   c, Env.conj_guard g guard_f
-

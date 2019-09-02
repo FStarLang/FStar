@@ -2916,9 +2916,9 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (c1 |> S.mk_Comp |> Print.comp_to_string)
           (c2 |> S.mk_Comp |> Print.comp_to_string);
 
-      let c1, g_lift =
-        Env.lift_to_layered_effect env (S.mk_Comp c1) c2.effect_name (Env.get_range env)
-        |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+      let c1, g_lift = 
+        c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
+           |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
       if Env.debug env <| Options.Other "LayeredEffects" then
         BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
@@ -3055,20 +3055,13 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let solve_sub c1 edge c2 =
         let r = Env.get_range env in
         let lift_c1 () =
-             let wp = match c1.effect_args with
-                      | [(wp1,_)] -> wp1
-                      | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let univs =
                match c1.comp_univs with
                | [] -> [env.universe_of env c1.result_typ]
                | x -> x in
-             {
-                comp_univs=univs;
-                effect_name=c2.effect_name;
-                result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd univs) c1.result_typ wp)];
-                flags=c1.flags
-             }
+             let c1 = { c1 with comp_univs = univs } in
+             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
+                |> (fun (c, g) -> U.comp_to_comp_typ c)  //AR: TODO: CHECK THAT g IS TRIVIAL
         in
         if Env.is_layered_effect env c2.effect_name
         then solve_layered_sub c1 edge c2
@@ -3106,26 +3099,23 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                       let g =
                          if env.lax then
                             U.t_true
-                         else if is_null_wp_2
-                         then let _ = if debug env <| Options.Other "Rel"
-                                      then BU.print_string "Using trivial wp ... \n" in
-                              let c1_univ = env.universe_of env c1.result_typ in
-                              let trivial =
-                                match c2_decl.trivial with
-                                | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
-                                | Some t -> t in
-                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl trivial,
-                                        [as_arg c1.result_typ;
-                                         as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
-                                 None r
-                         else let c1_univ = env.universe_of env c1.result_typ in
-                              let c2_univ = env.universe_of env c2.result_typ in
-                               mk (Tm_app(inst_effect_fun_with
-                                                [c2_univ] env c2_decl c2_decl.stronger,
-                                          [as_arg c2.result_typ;
-                                           as_arg wpc2;
-                                           as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
-                                   None r in
+                         else let wpc1_2 = lift_c1 () |> (fun ct -> List.hd ct.effect_args) in
+                              if is_null_wp_2
+                              then let _ = if debug env <| Options.Other "Rel"
+                                           then BU.print_string "Using trivial wp ... \n" in
+                                   let c1_univ = env.universe_of env c1.result_typ in
+                                   let trivial =
+                                     match c2_decl.trivial with
+                                     | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
+                                     | Some t -> t in
+                                   mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
+                                               [as_arg c1.result_typ;
+                                                wpc1_2])) None r
+                              else let c2_univ = env.universe_of env c2.result_typ in
+                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl c2_decl.stronger,
+                                              [as_arg c2.result_typ;
+                                               as_arg wpc2;
+                                               wpc1_2])) None r in
                       if debug env <| Options.Other "Rel" then
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in

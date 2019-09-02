@@ -66,34 +66,6 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
-(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
-(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
-(* and if both effects are reifiable, [mlift_term], if provided, maps *)
-(* computations [e] of type [Msource.repr t wp] to a computation of type *)
-(* [Mtarget.repr t (lift_wp t wp)] *)
-type mlift = {
-  mlift_t:option<tscheme>;
-  mlift_wp:universe -> typ -> typ -> typ ;
-  mlift_term:option<(universe -> typ -> typ -> term -> term)>
-  (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
-  (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
-}
-
-(* Edge in the effect lattice *)
-type edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
-}
-
-
-type effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-}
-
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = FStar.Ident.path
 // A choice of which name prefixes are enabled/disabled
@@ -104,7 +76,36 @@ type proof_namespace = list<(name_prefix * bool)>
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
-type env = {
+
+(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
+(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
+(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
+(* and if both effects are reifiable, [mlift_term], if provided, maps *)
+(* computations [e] of type [Msource.repr t wp] to a computation of type *)
+(* [Mtarget.repr t (lift_wp t wp)] *)
+type mlift_comp_t = env -> comp -> comp * guard_t
+
+and mlift = {
+  mlift_wp:mlift_comp_t;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
+  (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
+  (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
+}
+
+(* Edge in the effect lattice *)
+and edge = {
+  msource :lident;
+  mtarget :lident;
+  mlift   :mlift;
+}
+
+and effects = {
+  decls :list<(eff_decl * list<qualifier>)>;
+  order :list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
+
+and env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
@@ -279,7 +280,7 @@ val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
  *)
 val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
-val update_effect_lattice : env -> sub_eff -> env
+val update_effect_lattice : env -> src:lident -> tgt:lident -> BU.either<S.sub_eff, mlift_comp_t> -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
@@ -391,5 +392,3 @@ val print_gamma : gamma -> string
  *)
 
 val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
-
-val lift_to_layered_effect : env -> comp -> lident -> Range.range -> (comp * guard_t)
