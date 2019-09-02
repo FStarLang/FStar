@@ -2152,6 +2152,22 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
 
+(*
+ * Lifting a comp c to the layered effect eff_name
+ *
+ * let c = M<u_c> a_c wp_c
+ *
+ * let lift_M_eff_name = (u, lift_t) where
+ *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> repr<u> a i_1 ... i_n)
+ *
+ * We first instantiate lift_t with u_c
+ *
+ * Then we create uvars (?u_i:t_i), while subtituting [a/a_c; wp/wp_c; x_j/?u_j] (forall j < i)
+ *
+ * let substs = [a/a_c; wp/wp_c; x_i/?u_i]
+ *
+ * We return M'<u_c> a_c i_i[substs]
+ *)
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Lifting comp %s to layered effect %s {\n"
