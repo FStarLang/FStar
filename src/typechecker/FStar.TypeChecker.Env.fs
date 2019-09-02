@@ -547,16 +547,9 @@ let add_se_to_attrtab env se =
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
     | _ ->
-    let lids = lids_of_sigelt se in
-    List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
-    add_se_to_attrtab env se;
-    match se.sigel with
-    | Sig_new_effect(ne) ->
-      ne.actions |> List.iter (fun a ->
-          let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
-          (* TODO: attrtab? *)
-          BU.smap_add (sigtab env) a.action_name.str se_let)
-    | _ -> ()
+      let lids = lids_of_sigelt se in
+      List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
+      add_se_to_attrtab env se
 
 and add_sigelts env ses =
     ses |> List.iter (add_sigelt env)
@@ -1090,148 +1083,6 @@ let wp_sig_aux decls m =
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
 
-let build_lattice env se = match se.sigel with
-  | Sig_new_effect(ne) ->
-    let effects = {env.effects with decls=(ne, se.sigquals)::env.effects.decls} in
-    {env with effects=effects}
-
-  | Sig_sub_effect(sub) ->
-    let compose_edges e1 e2 : edge =
-      let composed_lift =
-        let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
-        let mlift_term =
-          match e1.mlift.mlift_term, e2.mlift.mlift_term with
-          | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
-          | _ -> None
-        in
-        { mlift_wp=mlift_wp ; mlift_term=mlift_term}
-      in
-      { msource=e1.msource;
-        mtarget=e2.mtarget;
-        mlift=composed_lift }
-    in
-
-    let mk_mlift_wp lift_t u r wp1 =
-      let _, lift_t = inst_tscheme_with lift_t [u] in
-      mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
-    in
-
-    let sub_mlift_wp = match sub.lift_wp with
-      | Some sub_lift_wp ->
-          mk_mlift_wp sub_lift_wp
-      | None ->
-          failwith "sub effect should've been elaborated at this stage"
-    in
-
-    let mk_mlift_term lift_t u r wp1 e =
-      let _, lift_t = inst_tscheme_with lift_t [u] in
-      mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
-    in
-
-    let sub_mlift_term = BU.map_opt sub.lift mk_mlift_term in
-
-    let edge =
-      { msource=sub.source;
-        mtarget=sub.target;
-        mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
-    in
-
-    let id_edge l = {
-      msource=sub.source;
-      mtarget=sub.target;
-      mlift=identity_mlift
-    } in
-
-    (* For debug purpose... *)
-    let print_mlift l =
-      (* A couple of bogus constants, just for printing *)
-      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
-      let arg = bogus_term "ARG" in
-      let wp = bogus_term "WP" in
-      let e = bogus_term "COMP" in
-      BU.format2 "{ wp : %s ; term : %s }"
-                 (Print.term_to_string (l.mlift_wp U_zero arg wp))
-                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
-    in
-
-    let order = edge::env.effects.order in
-    let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
-
-    let find_edge order (i, j) =
-      if lid_equals i j
-      then id_edge i |> Some
-      else order |> BU.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
-
-    (* basically, this is Warshall's algorithm for transitive closure,
-       except it's ineffcient because find_edge is doing a linear scan.
-       and it's not incremental.
-       Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
-    let order =
-      let fold_fun order k =
-        order@(ms |> List.collect (fun i ->
-                  if lid_equals i k then []
-                  else ms |> List.collect (fun j ->
-                      if lid_equals j k
-                      then []
-                      else match find_edge order (i, k), find_edge order (k, j) with
-              | Some e1, Some e2 -> [compose_edges e1 e2]
-              | _ -> [])))
-      in ms |> List.fold_left fold_fun order
-    in
-    let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
-                                            && lid_equals e1.mtarget e2.mtarget) order in
-    let _ = order |> List.iter (fun edge ->
-        if Ident.lid_equals edge.msource Const.effect_DIV_lid
-        && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-        then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
-    in
-    let joins =
-      ms |> List.collect (fun i ->
-      ms |> List.collect (fun j ->
-      let join_opt =
-        if Ident.lid_equals i j then Some (i, id_edge i, id_edge i)
-        else
-          ms |> List.fold_left (fun bopt k ->
-          match find_edge order (i, k), find_edge order (j, k) with
-            | Some ik, Some jk ->
-              begin match bopt with
-                (* we don't have a current candidate as the upper bound; so we may as well use k *)
-                | None -> Some (k, ik, jk)
-
-                | Some (ub, _, _) ->
-                  begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
-                    | true, true ->
-                      if Ident.lid_equals k ub
-                      then (Errors. log_issue Range.dummyRange (Errors.Warning_UpperBoundCandidateAlreadyVisited, "Looking multiple times at the same upper bound candidate") ; bopt)
-                      else failwith "Found a cycle in the lattice"
-                    | false, false -> bopt
-                          (* KM : This seems a little fishy since we could obtain as *)
-                          (* a join an effect which might not be comparable with all *)
-                          (* upper bounds (which means that the order of joins does matter) *)
-                          (* raise (Error (BU.format4 "Uncomparable upper bounds for effects %s and %s : %s %s" *)
-                          (*                 (Ident.text_of_lid i) *)
-                          (*                 (Ident.text_of_lid j) *)
-                          (*                 (Ident.text_of_lid k) *)
-                          (*                 (Ident.text_of_lid ub), *)
-                          (*               get_range env)) *)
-                    | true, false -> Some (k, ik, jk) //k is less than ub
-                    | false, true -> bopt
-                  end
-              end
-            | _ -> bopt) None
-      in
-      match join_opt with
-      | None -> []
-      | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)]))
-    in
-
-    let effects = {env.effects with order=order; joins=joins} in
-//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
-//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
-    {env with effects=effects}
-
-  | _ -> env
-
 let comp_to_comp_typ (env:env) c =
     let c = match c.n with
             | Total (t, None) ->
@@ -1356,7 +1207,146 @@ let push_sigelt env s =
   let env = {env with gamma_sig = sb::env.gamma_sig} in
   add_sigelt env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
-  build_lattice env s
+  env
+
+let push_new_effect env (ed, quals) =
+  let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
+  {env with effects=effects}
+
+let update_effect_lattice env sub =
+  let compose_edges e1 e2 : edge =
+    let composed_lift =
+      let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
+      let mlift_term =
+        match e1.mlift.mlift_term, e2.mlift.mlift_term with
+        | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
+        | _ -> None
+      in
+      { mlift_wp=mlift_wp ; mlift_term=mlift_term}
+    in
+    { msource=e1.msource;
+      mtarget=e2.mtarget;
+      mlift=composed_lift }
+  in
+
+  let mk_mlift_wp lift_t u r wp1 =
+    let _, lift_t = inst_tscheme_with lift_t [u] in
+    mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
+  in
+
+  let sub_mlift_wp = match sub.lift_wp with
+    | Some sub_lift_wp ->
+      mk_mlift_wp sub_lift_wp
+    | None ->
+      failwith "sub effect should've been elaborated at this stage"
+  in
+
+  let mk_mlift_term lift_t u r wp1 e =
+    let _, lift_t = inst_tscheme_with lift_t [u] in
+    mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
+  in
+
+  let sub_mlift_term = BU.map_opt sub.lift mk_mlift_term in
+
+  let edge =
+    { msource=sub.source;
+      mtarget=sub.target;
+      mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
+  in
+
+  let id_edge l = {
+    msource=sub.source;
+    mtarget=sub.target;
+    mlift=identity_mlift
+  } in
+
+  (* For debug purpose... *)
+  let print_mlift l =
+    (* A couple of bogus constants, just for printing *)
+    let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
+    let arg = bogus_term "ARG" in
+    let wp = bogus_term "WP" in
+    let e = bogus_term "COMP" in
+    BU.format2 "{ wp : %s ; term : %s }"
+      (Print.term_to_string (l.mlift_wp U_zero arg wp))
+      (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
+  in
+
+  let order = edge::env.effects.order in
+  let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
+
+  let find_edge order (i, j) =
+    if lid_equals i j
+    then id_edge i |> Some
+    else order |> BU.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
+
+    (* basically, this is Warshall's algorithm for transitive closure,
+       except it's ineffcient because find_edge is doing a linear scan.
+       and it's not incremental.
+       Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
+  let order =
+    let fold_fun order k =
+      order@(ms |> List.collect (fun i ->
+                if lid_equals i k then []
+                else ms |> List.collect (fun j ->
+                  if lid_equals j k
+                  then []
+                  else match find_edge order (i, k), find_edge order (k, j) with
+                       | Some e1, Some e2 -> [compose_edges e1 e2]
+                       | _ -> [])))
+    in ms |> List.fold_left fold_fun order
+  in
+  let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
+                                     && lid_equals e1.mtarget e2.mtarget) order in
+  let _ = order |> List.iter (fun edge ->
+    if Ident.lid_equals edge.msource Const.effect_DIV_lid
+    && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
+    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
+  in
+  let joins =
+    ms |> List.collect (fun i ->
+    ms |> List.collect (fun j ->
+    let join_opt =
+      if Ident.lid_equals i j then Some (i, id_edge i, id_edge i)
+      else
+        ms |> List.fold_left (fun bopt k ->
+        match find_edge order (i, k), find_edge order (j, k) with
+        | Some ik, Some jk ->
+          begin match bopt with
+          (* we don't have a current candidate as the upper bound; so we may as well use k *)
+          | None -> Some (k, ik, jk)
+
+          | Some (ub, _, _) ->
+            begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
+                  | true, true ->
+                    if Ident.lid_equals k ub
+                    then (Errors. log_issue Range.dummyRange (Errors.Warning_UpperBoundCandidateAlreadyVisited, "Looking multiple times at the same upper bound candidate") ; bopt)
+                    else failwith "Found a cycle in the lattice"
+                  | false, false -> bopt
+                          (* KM : This seems a little fishy since we could obtain as *)
+                          (* a join an effect which might not be comparable with all *)
+                          (* upper bounds (which means that the order of joins does matter) *)
+                          (* raise (Error (BU.format4 "Uncomparable upper bounds for effects %s and %s : %s %s" *)
+                          (*                 (Ident.text_of_lid i) *)
+                          (*                 (Ident.text_of_lid j) *)
+                          (*                 (Ident.text_of_lid k) *)
+                          (*                 (Ident.text_of_lid ub), *)
+                          (*               get_range env)) *)
+                  | true, false -> Some (k, ik, jk) //k is less than ub
+                  | false, true -> bopt
+                end
+            end
+          | _ -> bopt) None
+    in
+    match join_opt with
+    | None -> []
+    | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)]))
+  in
+
+  let effects = {env.effects with order=order; joins=joins} in
+//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
+//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
+  {env with effects=effects}
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
@@ -1384,13 +1374,6 @@ let binding_of_lb (x:lbname) t = match x with
 
 let push_let_binding env lb ts =
     push_local_binding env (binding_of_lb lb ts)
-let push_module env (m:modul) =
-    add_sigelts env m.exports;
-    {env with
-      modules=m::env.modules;
-      gamma=[];
-      gamma_sig=[];
-      expected_typ=None}
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
     List.fold_left (fun env x -> push_local_binding env (Binding_univ x)) env xs
