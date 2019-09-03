@@ -277,20 +277,28 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
 
 (* Introducing identifiers and updating the environment *)
-val push_sigelt        : env -> sigelt -> env
-val push_bv            : env -> bv -> env
-val push_bvs           : env -> list<bv> -> env
-val pop_bv             : env -> option<(bv * env)>
-val push_let_binding   : env -> lbname -> tscheme -> env
-val push_binders       : env -> binders -> env
-val push_module        : env -> modul -> env
-val push_univ_vars     : env -> univ_names -> env
-val open_universes_in  : env -> univ_names -> list<term> -> env * univ_names * list<term>
-val set_expected_typ   : env -> typ -> env
-val expected_typ       : env -> option<typ>
-val clear_expected_typ : env -> env*option<typ>
-val set_current_module : env -> lident -> env
-val finish_module      : (env -> modul -> env)
+
+(*
+ * push_sigelt only adds the sigelt to various caches maintained by env
+ * For semantic changes, such as adding an effect or adding an edge to the effect lattice,
+ *   Tc calls separate functions
+ *)
+val push_sigelt           : env -> sigelt -> env
+val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
+val update_effect_lattice : env -> sub_eff -> env
+
+val push_bv               : env -> bv -> env
+val push_bvs              : env -> list<bv> -> env
+val pop_bv                : env -> option<(bv * env)>
+val push_let_binding      : env -> lbname -> tscheme -> env
+val push_binders          : env -> binders -> env
+val push_univ_vars        : env -> univ_names -> env
+val open_universes_in     : env -> univ_names -> list<term> -> env * univ_names * list<term>
+val set_expected_typ      : env -> typ -> env
+val expected_typ          : env -> option<typ>
+val clear_expected_typ    : env -> env*option<typ>
+val set_current_module    : env -> lident -> env
+val finish_module         : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>

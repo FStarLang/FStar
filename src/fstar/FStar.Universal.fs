@@ -277,18 +277,22 @@ let tc_one_file
       if Options.codegen() = None
       || not (Options.should_extract tcmod.name.str)
       then None, 0
-      else FStar.Util.record_time (fun () ->
-            let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
-            defs)
+      else
+        FStar.Util.record_time (fun () ->
+            with_env env (fun env ->
+              let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
+              defs)
+          )
   in
   let maybe_extract_ml_iface tcmod env =
-       if Options.codegen() = None
-       then env, 0
-       else let (env, _extracted_iface), iface_extract_time =
-              FStar.Util.record_time (fun () ->
-                  FStar.Extraction.ML.Modul.extract_iface env tcmod)
-            in
-            env, iface_extract_time
+      if Options.codegen() = None
+      then env, 0
+      else
+        FStar.Util.record_time (fun () ->
+            let env, _ = with_env env (fun env ->
+                  FStar.Extraction.ML.Modul.extract_iface env tcmod) in
+            env
+          )
   in
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
@@ -320,8 +324,8 @@ let tc_one_file
           in
 
           let tc_time = 0 in
-          let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
-          let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
+          let extracted_defs, extract_time = maybe_extract_mldefs tcmod env in
+          let env, iface_extraction_time = maybe_extract_ml_iface tcmod env in
           {
             checked_module=tcmod;
             tc_time=tc_time;
@@ -401,13 +405,13 @@ let tc_one_file
             if Options.codegen()<>None
             && Options.should_extract tcmod.name.str
             && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
-            then with_env env (fun env ->
-                   let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
-                   extracted_defs)
+            then
+                 let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
+                 extracted_defs
             else None
         in
 
-        let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+        let env, _time = maybe_extract_ml_iface tcmod env in
 
         tc_result,
         mllib,

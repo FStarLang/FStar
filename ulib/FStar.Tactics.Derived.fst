@@ -119,10 +119,15 @@ let later () : Tac unit =
     | _ -> fail "later: no goals"
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
+[t] in [Gamma]. *)
 let exact (t : term) : Tac unit =
     with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
 
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
@@ -354,7 +359,7 @@ let guards_to_smt () : Tac unit =
     ()
 
 let simpl   () : Tac unit = norm [simplify; primops]
-let whnf    () : Tac unit = norm [weak; hnf; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
