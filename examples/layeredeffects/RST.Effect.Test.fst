@@ -38,7 +38,7 @@ open RST.Effect
 
 let test1 ()
 : RST nat emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r == 2)
-= 2
+= (2 <: Tot nat)
 
 
 assume val r1 : r:resource{r.t == nat}

@@ -195,6 +195,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
          | None -> ()
          | Some _ -> failwith "Impossible! check_expected_effect, gopt should have been None"
        in
+       
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
        if debug env <| Options.Low then
@@ -401,9 +402,12 @@ let wrap_guard_with_tactic_opt topt g =
 (************************************************************************************************************)
 let rec tc_term env e =
     if Env.debug env Options.Medium then
-        BU.print3 "(%s) Starting tc_term of %s (%s) {\n" (Range.string_of_range <| Env.get_range env)
-                                                         (Print.term_to_string e)
-                                                         (Print.tag_of_term (SS.compress e));
+        BU.print4 "(%s) Starting tc_term of %s (%s) with expected type: %s {\n"
+          (Range.string_of_range <| Env.get_range env)
+          (Print.term_to_string e)
+          (Print.tag_of_term (SS.compress e))
+          (match Env.expected_typ env with | None -> "None" | Some t -> Print.term_to_string t);
+
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
     if Env.debug env Options.Medium then begin
@@ -411,10 +415,11 @@ let rec tc_term env e =
                                                         (Print.term_to_string e)
                                                         (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
-        let e, _ , _ = r in
-        BU.print3 "(%s) Result is: %s (%s)\n" (Range.string_of_range <| Env.get_range env)
-                                              (Print.term_to_string e)
-                                              (Print.tag_of_term (SS.compress e))
+        let e, lc , _ = r in
+        BU.print4 "(%s) Result is: (%s:%s) (%s)\n" (Range.string_of_range <| Env.get_range env)
+                                                   (Print.term_to_string e)
+                                                   (TcComm.lcomp_to_string lc)
+                                                   (Print.tag_of_term (SS.compress e))
     end;
     r
 
