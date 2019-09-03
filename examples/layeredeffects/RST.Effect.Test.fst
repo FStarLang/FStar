@@ -35,7 +35,26 @@ open RST.Effect
   -LowStar \
   -FStar.ModifiesGen'"
 
-
+(*
+ * This code doesn't typecheck without the <: Tot nat ascription
+ * What happens is:
+ *   We first typecheck 2 : Tot int
+ *   Then the expected type in the environment is nat (coming from the return type annotation)
+ *   So we check that (2 : int <: nat)
+ *   This succeeds with guard (2 > 0),
+ *   But in the process we end up inserting a return and make 2 : PURE nat (pure_return_wp int 2)
+ *   Note the type int in the pure_return_wp -- this is because we end up using the initial type
+ *   (TcTerm.value_check_expected_type - call to TcUtil.return_value)
+ *
+ *   Now the problem is, when we lift PURE nat (pure_return_wp int 2) to RST,
+ *     the unification happens at type nat,
+ *     and we unify (pure_return_wp int 2) to the (wp:pure_wp nat) argument of lift
+ *     and this fails to typecheck (generates an smt query that forall (x:int). x >= 0)
+ *
+ *   Adding the (Tot nat) ascription ensures that the return is inserted at type nat, and then we are good
+ *
+ *   We need to figure out a way to handle there, not typecheck these binders in layered effect combinators?
+ *)
 let test1 ()
 : RST nat emp (fun _ -> emp) (fun _ -> True) (fun _ r _ -> r == 2)
 = (2 <: Tot nat)
