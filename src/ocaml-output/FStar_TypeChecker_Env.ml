@@ -1183,7 +1183,7 @@ let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
     match projectee with
     | { tc_push_in_gamma_hook;_} -> tc_push_in_gamma_hook
   
-type mlift_comp_t =
+type lift_comp_t =
   env ->
     FStar_Syntax_Syntax.comp ->
       (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
@@ -4266,7 +4266,7 @@ let (update_effect_lattice :
   env ->
     FStar_Ident.lident ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.sub_eff,mlift_comp_t) FStar_Util.either -> env)
+        (FStar_Syntax_Syntax.sub_eff,lift_comp_t) FStar_Util.either -> env)
   =
   fun env  ->
     fun src  ->
