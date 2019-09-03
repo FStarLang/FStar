@@ -1250,7 +1250,6 @@ let build_lattice env se = match se.sigel with
 
   | _ -> env
 
-
 let comp_to_comp_typ (env:env) c =
     let c = match c.n with
             | Total (t, None) ->

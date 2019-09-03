@@ -443,7 +443,7 @@ let lift_wp_and_bind_with env (wp1:typ) (md:eff_decl) (u_res_t:universe) (res_t:
       effect_args = [wp1 |> S.as_arg];
       flags = []
     }) in
-    c |> edge.mlift.mlift_wp env |> (fun (c, g) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.hd |> fst)) in
+    c |> edge.mlift.mlift_wp env |> (fun (c, g) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.hd |> fst)) in  //AR: TODO: FIXME handle g
 
   (* now bind it with fun _ -> wp *)
   mk_Tm_app
