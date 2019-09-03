@@ -2874,7 +2874,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let sub_prob : worklist -> term -> rel -> term -> string -> prob * worklist =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
-    let solve_eq c1_comp c2_comp imps =
+    let solve_eq c1_comp c2_comp g_lift =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print2 "solve_c is using an equality constraint (%s vs %s)\n"
                             (Print.comp_to_string (mk_Comp c1_comp))
@@ -2893,9 +2893,13 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                         c2_comp.effect_args
                         ([], wl)
              in
-             let sub_probs = ret_sub_prob :: arg_sub_probs in
-             let guard = U.mk_conj_l (List.map p_guard sub_probs) in
-             let wl = { wl with wl_implicits = imps@wl.wl_implicits } in
+             let sub_probs = ret_sub_prob :: (arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
+             let guard =
+               let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+               match g_lift.guard_f with
+               | Trivial -> guard
+               | NonTrivial f -> U.mk_conj guard f in
+             let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
              let wl = solve_prob orig (Some guard) [] wl in
              solve env (attempt sub_probs wl)
     in
@@ -2952,10 +2956,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
        *)
 
       if problem.relation = EQ
-      then solve_eq c1 c2 g_lift.implicits  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
+      then solve_eq c1 c2 g_lift
       else
         let r = Env.get_range env in
-        let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: THIS BREAKS IF g_lift IS MORE THAN IMPLICITS
+        let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
 
         //sub problems for uvar indices in c1
         let is_sub_probs, wl =
@@ -3046,9 +3050,12 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             [trivial_post |> S.as_arg]
             None Range.dummyRange in
 
-        let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs) in
-        let guard = U.mk_conj_l (List.map p_guard sub_probs) in
-
+        let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs@(g_lift.deferred |> List.map snd)) in
+        let guard =
+          let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+          match g_lift.guard_f with
+          | Trivial -> guard
+          | NonTrivial f -> U.mk_conj guard f in
         let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
         solve env (attempt sub_probs wl) in
 
@@ -3066,7 +3073,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         if Env.is_layered_effect env c2.effect_name
         then solve_layered_sub c1 edge c2
         else if problem.relation = EQ
-        then solve_eq (lift_c1 ()) c2 []
+        then solve_eq (lift_c1 ()) c2 Env.trivial_guard
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
@@ -3168,7 +3175,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                             then c1_comp, c2_comp
                             else Env.unfold_effect_abbrev env c1,
                                  Env.unfold_effect_abbrev env c2 in
-                      solve_eq c1_comp c2_comp []
+                      solve_eq c1_comp c2_comp Env.trivial_guard
                  else begin
                     let c1 = Env.unfold_effect_abbrev env c1 in
                     let c2 = Env.unfold_effect_abbrev env c2 in
