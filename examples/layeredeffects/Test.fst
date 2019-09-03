@@ -97,7 +97,6 @@ let test5 ()
 /// 
 /// Not implemented yet for layered effects
 
-[@expect_failure]
 let test6 ()
 : HoareST int
   (fun _ -> True)
