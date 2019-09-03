@@ -3067,8 +3067,15 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                | [] -> [env.universe_of env c1.result_typ]
                | x -> x in
              let c1 = { c1 with comp_univs = univs } in
-             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
-                |> (fun (c, g) -> U.comp_to_comp_typ c)  //AR: TODO: CHECK THAT g IS TRIVIAL
+             ({ c1 with comp_univs = univs })
+             |> S.mk_Comp
+             |> edge.mlift.mlift_wp env
+             |> (fun (c, g) ->
+                 if not (Env.is_trivial g)
+                 then raise_error (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
+                     (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
+                 else U.comp_to_comp_typ c)
         in
         if Env.is_layered_effect env c2.effect_name
         then solve_layered_sub c1 edge c2
