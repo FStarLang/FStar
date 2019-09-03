@@ -83,10 +83,10 @@ type goal = term
 (* and if both effects are reifiable, [mlift_term], if provided, maps *)
 (* computations [e] of type [Msource.repr t wp] to a computation of type *)
 (* [Mtarget.repr t (lift_wp t wp)] *)
-type mlift_comp_t = env -> comp -> comp * guard_t
+type lift_comp_t = env -> comp -> comp * guard_t
 
 and mlift = {
-  mlift_wp:mlift_comp_t;
+  mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> typ -> term -> term)>
   (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
   (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
@@ -281,7 +281,7 @@ val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
  *)
 val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
-val update_effect_lattice : env -> src:lident -> tgt:lident -> BU.either<S.sub_eff, mlift_comp_t> -> env
+val update_effect_lattice : env -> src:lident -> tgt:lident -> BU.either<S.sub_eff, lift_comp_t> -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
