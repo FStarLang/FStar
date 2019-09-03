@@ -119,10 +119,10 @@ type proof_namespace = list<(name_prefix * bool)>
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
-type mlift_comp_t = env -> comp -> comp * guard_t
+type lift_comp_t = env -> comp -> comp * guard_t
 
 and mlift = {
-  mlift_wp:mlift_comp_t;
+  mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> typ -> term -> term)>
 }
 

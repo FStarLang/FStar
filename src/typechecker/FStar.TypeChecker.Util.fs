@@ -257,10 +257,9 @@ let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt 
 
 let destruct_comp c : (universe * typ * typ) = U.destruct_comp c
 
-let lift_comp env c lift =
-  //AR: TODO: HANDLE g
-  let c = c |> S.mk_Comp |> lift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c) in
-  { c with flags = [] }
+let lift_comp env (c:comp_typ) lift : comp_typ * guard_t =
+  c |> S.mk_Comp |> lift.mlift_wp env |> (fun (c, g) ->
+    { U.comp_to_comp_typ c with flags = [] }, g)
 
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
@@ -276,11 +275,11 @@ let lift_and_destruct env c1 c2 =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
   let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
-  let m1 = lift_comp env c1 lift1 in
-  let m2 = lift_comp env c2 lift2 in
+  let m1, g1 = lift_comp env c1 lift1 in
+  let m2, g2 = lift_comp env c2 lift2 in
   let md = Env.get_effect_decl env m in
   let a, kwp = Env.wp_signature env md.mname in
-  (md, a, kwp), destruct_comp m1, destruct_comp m2
+  (md, a, kwp), destruct_comp m1, destruct_comp m2, Env.conj_guard g1 g2
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -847,7 +846,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               c, Env.conj_guards [ g_c1; g_c2; g_lift; g_uvars; f_guard; g_guard ]
             in
             let mk_bind c1 b c2 =                      (* AR: end code for inlining pure and ghost terms *)
-                let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
+                let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2), g = lift_and_destruct env c1 c2 in
                 let bs =
                     match b with
                     | None -> [null_binder t1]
@@ -866,14 +865,14 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                     S.as_arg (mk_lam wp2)]
                 in
                 let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
-                mk_comp md u_t2 t2 wp bind_flags, Env.conj_guard g_c1 g_c2
+                mk_comp md u_t2 t2 wp bind_flags, Env.conj_guard (Env.conj_guard g_c1 g_c2) g
             in
             let mk_seq c1 b c2 =
                 //c1 is PURE or GHOST
                 let c1 = Env.unfold_effect_abbrev env c1 in
                 let c2 = Env.unfold_effect_abbrev env c2 in
                 let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
-                let c2 = S.mk_Comp (lift_comp env c2 lift2) in
+                let c2, g2 = lift_comp env c2 lift2 |> (fun (c, g) -> S.mk_Comp c, g) in
                 let u1, t1, wp1 = destruct_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
                 let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
@@ -881,7 +880,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                     None
                                     r1
                 in
-                strengthen_comp env None c2 vc1 bind_flags, Env.conj_guard g_c1 g_c2
+                strengthen_comp env None c2 vc1 bind_flags, Env.conj_guard (Env.conj_guard g_c1 g_c2) g2
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             if (let ct1 = Env.unfold_effect_abbrev env c1 in  //AR: TODO: FIXME: we immediately unfold c's again in mk_layered_bind -- FIX
@@ -1110,9 +1109,9 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             in
             let comp, g_comp = List.fold_right (fun (g, eff_label, _, cthen) (celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env cthen celse in
+                let (md, _, _), (_, _, wp_then), (_, _, wp_else), g_lift = lift_and_destruct env cthen celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else) [],
-                Env.conj_guard g_comp gthen
+                Env.conj_guard (Env.conj_guard g_comp gthen) g_lift
             ) lcases (default_case, Env.trivial_guard) in
             match lcases with
             | []
