@@ -91,11 +91,7 @@ let test5 ()
 = let y = test () in
   y
 
-/// This fails currently
-/// It also relies on inserting return for f_pure
-///   which is done in TcUtil.bind for other effects
-/// 
-/// Not implemented yet for layered effects
+/// It relies on inserting return for f_pure
 
 let test6 ()
 : HoareST int
