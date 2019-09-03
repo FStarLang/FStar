@@ -742,6 +742,12 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                *)
               let ct1 = Env.unfold_effect_abbrev env c1 in
               let ct2 = Env.unfold_effect_abbrev env c2 in
+
+              let x_a =
+                match b with
+                | None -> S.null_binder ct1.result_typ
+                | Some x -> S.mk_binder x in
+
               let ct1, ct2, ed, g_lift =
                 let c1_ed = Env.get_effect_decl env ct1.effect_name in
                 let c2_ed = Env.get_effect_decl env ct2.effect_name in
@@ -752,8 +758,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                      raise_error (Errors.Fatal_EffectsCannotBeComposed,
                        BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
                    | Some edge ->
-                     let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-                     ct1, ct2, c1_ed, g_lift)
+                     let env_l = Env.push_binders env [x_a] in
+                     let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env_l |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+                     ct1, ct2, c1_ed, Env.close_guard env [x_a] g_lift)
                 | Some edge ->
                   let ct1, g_lift = ct1 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
                   ct1, ct2, c2_ed, g_lift in
@@ -804,11 +811,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   Env.trivial_guard is1 f_sort_is in 
 
               let g_guard =  //unify c2's indices with g's indices in the bind_wp
-                let x_a =
-                  match b with
-                  | None -> S.null_binder t1
-                  | Some x -> S.mk_binder x in
-
                 let g_sort_is : list<term> =
                   match (SS.compress (g_b |> fst).sort).n with
                   | Tm_arrow (bs, c) ->
@@ -2235,7 +2237,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
     effect_name = tgt;
     result_typ = a;
-    effect_args = List.map S.as_arg is;
+    effect_args = is |> List.map (SS.subst substs) |> List.map S.as_arg;
     flags = ct.flags
   }) in
 
