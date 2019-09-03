@@ -420,42 +420,213 @@ let return_value env u_t_opt t v =
 
 
 (* private *)
+
+
+(*
+ * Bind for layered effects:
+ * 
+ * Let c1 = M c1_a (t1 ... tn)
+ *     c2 = M c2_a (s1 ... sn) - where b is free in (s1 ... sn)
+ *
+ *     M.bind_wp = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
+ *                              f:repr a i_1 ... i_n ->
+ *                              g:(x:a -> repr b j_1 ... j_n) ->
+ *                              repr b k_1 ... k_n)
+ *
+ * First we instantiate M.bind_wp with [u_c1_a, u_c2_a]
+ *
+ * Then we substitute [a/c1_a; b/c2_a] in <some binders>
+ *
+ * Next we create ?u1 ... ?un for each of the binders in <some binders>
+ *   while subtituting [bi/?ui] in subsequent binders (so that their sorts are well-typed)
+ *
+ * Let substs = [a/c1_a; b/c2_a; bi/?ui]
+ *
+ * let i_i = i_i[substs]  //i_i are the indices of f in the bind_wp
+ * let j_i = j_i[x/b; substs]  //j_i are the indices of g in the bind_wp and x/x is replacing x with the binder b
+ * let k_i = k_i[substs]  //k_i are the indices of the return type in bind
+ *
+ * We now unify i_i with t_i (where t_i are the indices of c1)
+ *        unify j_i with s_i (where s_i are the indices of c2,
+                            these are done in an env with b, and the returned guard is closed over b)
+ * and return k_i as the output indices
+ *)
+let mk_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Binding c1:%s and c2:%s {\n"
+      (Print.comp_to_string c1) (Print.comp_to_string c2);
+
+  (*
+   * First lift if required
+   *)
+  let ct1 = Env.unfold_effect_abbrev env c1 in
+  let ct2 = Env.unfold_effect_abbrev env c2 in
+
+  let x_a =
+    match b with
+    | None -> S.null_binder ct1.result_typ
+    | Some x -> S.mk_binder x in
+
+  (*
+   * AR: This should probably do a Env.join, but right now we don't have a usecase for lift from a layered effect
+   *)
+  let ct1, ct2, ed, g_lift =
+    let c1_ed = Env.get_effect_decl env ct1.effect_name in
+    let c2_ed = Env.get_effect_decl env ct2.effect_name in
+    match Env.monad_leq env c1_ed.mname c2_ed.mname with
+    | None ->
+      (match Env.monad_leq env c2_ed.mname c1_ed.mname with
+       | None ->
+         raise_error (Errors.Fatal_EffectsCannotBeComposed,
+           BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
+       | Some edge ->
+         let env_l = Env.push_binders env [x_a] in
+         let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env_l |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+         ct1, ct2, c1_ed, Env.close_guard env [x_a] g_lift)
+    | Some edge ->
+      let ct1, g_lift = ct1 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+          ct1, ct2, c2_ed, g_lift in
+
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "After lifting, ct1: %s and ct2: %s\n"
+      (ct1 |> S.mk_Comp |> Print.comp_to_string)
+      (ct2 |> S.mk_Comp |> Print.comp_to_string);
+
+  let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
+  let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
+
+  let _, bind_t = Env.inst_tscheme_with ed.bind_wp [u1; u2] in
+
+  let bind_t_shape_error (s:string) =
+    (Errors.Fatal_UnexpectedEffect, BU.format2
+       "bind %s does not have proper shape (reason:%s)"
+       (Print.term_to_string bind_t) s) in
+
+  let a_b, b_b, rest_bs, f_b, g_b, bind_ct =
+    match (SS.compress bind_t).n with
+    | Tm_arrow (bs, c) when List.length bs >= 4 ->
+      let ((a_b::b_b::bs), c) = SS.open_comp bs c in
+      let rest_bs, f_b, g_b =
+        List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
+      a_b, b_b, rest_bs, f_b, g_b, U.comp_to_comp_typ c
+    | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
+
+  //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
+  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
+    env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
+    (fun b -> BU.format3
+      "implicit var for binder %s of %s:bind at %s"
+      (Print.binder_to_string b) ed.mname.str (Range.string_of_range r1)) r1 in
+
+  let subst = List.map2
+    (fun b t -> NT (b |> fst, t))
+    (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
+
+  let f_guard =  //unify c1's indices with f's indices in the bind_wp
+    let f_sort_is =
+      match (SS.compress (f_b |> fst).sort).n with
+      | Tm_app (_, _::is) ->
+        is |> List.map fst |> List.map (SS.subst subst)
+      | _ -> raise_error (bind_t_shape_error "f's type is not a repr type") r1 in
+    List.fold_left2
+      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
+      Env.trivial_guard is1 f_sort_is in 
+
+  let g_guard =  //unify c2's indices with g's indices in the bind_wp
+    let g_sort_is : list<term> =
+      match (SS.compress (g_b |> fst).sort).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
+        let c = SS.subst_comp [bs_subst] c in
+        (match (SS.compress (U.comp_result c)).n with
+         | Tm_app (_, _::is) ->
+           is |> List.map fst |> List.map (SS.subst subst)
+         | _ -> raise_error (bind_t_shape_error "g's type is not a repr type") r1)
+      | _ -> raise_error (bind_t_shape_error "g's type is not an arrow") r1 in
+
+    let env_g = Env.push_binders env [x_a] in
+    List.fold_left2
+      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+      Env.trivial_guard is2 g_sort_is
+    |> Env.close_guard env [x_a] in
+
+  let is =  //indices of the resultant computation
+    match (SS.compress bind_ct.result_typ).n with
+    | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst subst)
+    | _ -> raise_error (bind_t_shape_error "return type is not a repr type") r1 in
+
+  let c = mk_Comp ({
+    comp_univs = ct2.comp_univs;
+    effect_name = ed.mname;
+    result_typ = t2;
+    effect_args = List.map S.as_arg is;
+    flags = flags  //AR: TODO: FIXME: set properly
+  }) in
+
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
+
+  c, Env.conj_guards [ g_lift; g_uvars; f_guard; g_guard ]
+
+
+let mk_non_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+  let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2), g = lift_and_destruct env c1 c2 in
+  let bs =
+    match b with
+    | None -> [null_binder t1]
+    | Some x -> [S.mk_binder x]
+  in
+  let mk_lam wp =
+    //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
+    U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
+  in
+  let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
+  let wp_args = [
+    S.as_arg r1;
+    S.as_arg t1;
+    S.as_arg t2;
+    S.as_arg wp1;
+    S.as_arg (mk_lam wp2)]
+  in
+  let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
+  mk_comp md u_t2 t2 wp flags, g
+
+let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+  let bind_f =
+    if (let ct1 = Env.unfold_effect_abbrev env c1 in  //AR: TODO: FIXME: we immediately unfold c's again in mk_layered_bind -- FIX
+        let ct2 = Env.unfold_effect_abbrev env c2 in
+        Env.is_layered_effect env ct1.effect_name || Env.is_layered_effect env ct2.effect_name)
+    then mk_layered_bind
+    else mk_non_layered_bind in
+  bind_f env c1 b c2 flags r1
+
 (*
  * Helper function used by weaken_comp and strengthen_comp
  * wp1 is a (pure_wp unit), md is an effect, wp2 is a (M.wp res_t)
  * The code basically does M.bind_wp (lift_PURE_M wp1) (fun _ -> wp2)
  *)
-let lift_wp_and_bind_with env (wp1:typ) (md:eff_decl) (u_res_t:universe) (res_t:typ) (wp2:term) : term =
+let lift_wp_and_bind_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
   let r = Env.get_range env in
-  (* lift wp1 to c.effect_name *)
+
+  let ct = Env.unfold_effect_abbrev env c in
+
   let edge =
-    match Env.monad_leq env C.effect_PURE_lid md.mname with
+    match Env.monad_leq env C.effect_PURE_lid ct.effect_name with
     | Some edge -> edge
-    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ md.mname.str)
-  in
+    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ ct.effect_name.str) in
 
-  
-  let wp1 =
-    let c = S.mk_Comp ({
-      comp_univs = [S.U_zero];
-      effect_name = C.effect_PURE_lid;
-      result_typ = S.t_unit;
-      effect_args = [wp1 |> S.as_arg];
-      flags = []
-    }) in
-    c |> edge.mlift.mlift_wp env |> (fun (c, g) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.hd |> fst)) in  //AR: TODO: FIXME handle g
+  let pure_c = S.mk_Comp ({
+    comp_univs = [S.U_zero];
+    effect_name = C.effect_PURE_lid;
+    result_typ = S.t_unit;
+    effect_args = [wp1 |> S.as_arg];
+    flags = []
+  }) in
 
-  (* now bind it with fun _ -> wp *)
-  mk_Tm_app
-    (inst_effect_fun_with [S.U_zero; u_res_t] env md md.bind_wp)
-    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range r)) None r;
-      S.as_arg <| S.t_unit;
-      S.as_arg res_t;
-      S.as_arg wp1;
-      S.as_arg <| U.abs [null_binder S.t_unit] wp2 (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) ]
-    None
-    wp2.pos
-
+  let m_c, g_lift = edge.mlift.mlift_wp env pure_c in
+  let bind_c, g_bind = mk_bind env pure_c None c flags r in
+  bind_c, Env.conj_guard g_lift g_bind
 
 let weaken_flags flags =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
@@ -465,59 +636,52 @@ let weaken_flags flags =
          | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
          | f -> [f])
 
-let weaken_comp env (c:comp) (formula:term) : comp =
-    if U.is_ml_comp c
-    then c
-    else let c = Env.unfold_effect_abbrev env c in
-         let u_res_t, res_t, wp = destruct_comp c in
-         let md = Env.get_effect_decl env c.effect_name in
-         let r = Env.get_range env in
+let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
+  if U.is_ml_comp c
+  then c, Env.trivial_guard
+  else let ct = Env.unfold_effect_abbrev env c in
 
-         (*
-          * The following code does:
-          *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
-          *)
+       (*
+        * The following code does:
+        *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
+        *)
 
-         (*
-          * lookup the pure_assume_wp from prims
-          * its type is p:Type -> pure_wp unit
-          *  and it is not universe polymorphic
-          *)
-         let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
+       (*
+        * lookup the pure_assume_wp from prims
+        * its type is p:Type -> pure_wp unit
+        *  and it is not universe polymorphic
+        *)
+       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
 
-         (* apply it to f, after decorating f with the reason *)
-         let pure_assume_wp = mk_Tm_app
-           pure_assume_wp
-           [ S.as_arg <| formula ]
-           None
-           r
-         in
+       (* apply it to f, after decorating f with the reason *)
+       let pure_assume_wp = mk_Tm_app
+         pure_assume_wp
+         [ S.as_arg <| formula ]
+         None
+         (Env.get_range env)
+       in
          
-         let w_wp = lift_wp_and_bind_with env pure_assume_wp md u_res_t res_t wp in
-         mk_comp md u_res_t res_t w_wp (weaken_flags c.flags)
+       lift_wp_and_bind_with env pure_assume_wp c (weaken_flags ct.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
       let c, g_c = TcComm.lcomp_comp lc in
-      (if env.lax
-       && Options.ml_ish() //NS: Disabling this optimization temporarily
-       then c
-       else match f with
-            | Trivial -> c
-            | NonTrivial f ->
-              weaken_comp env c f), g_c
+      if env.lax
+      && Options.ml_ish() //NS: Disabling this optimization temporarily
+      then c, g_c
+      else match f with
+           | Trivial -> c, g_c
+           | NonTrivial f ->
+             let c, g_w = weaken_comp env c f in
+             c, Env.conj_guard g_c g_w
   in
   TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
 
-let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags =
+let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags : comp * guard_t =
     if env.lax
-    then c
-    else let c = Env.unfold_effect_abbrev env c in
-         let r = Env.get_range env in
-         let u_res_t, res_t, wp = destruct_comp c in
-         let md = Env.get_effect_decl env c.effect_name in
-
+    then c, Env.trivial_guard
+    else let r = Env.get_range env in
          (*
           * The following code does:
           *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
@@ -538,8 +702,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
            r
          in
 
-         let s_wp = lift_wp_and_bind_with env pure_assert_wp md u_res_t res_t wp in
-         mk_comp md u_res_t res_t s_wp flags
+         lift_wp_and_bind_with env pure_assert_wp c flags
 
 let strengthen_precondition
             (reason:option<(unit -> string)>)
@@ -568,17 +731,18 @@ let strengthen_precondition
          in
          let strengthen () =
             let c, g_c = TcComm.lcomp_comp lc in
-            (if env.lax
-             then c
-             else let g0 = Rel.simplify_guard env g0 in
-                  match guard_form g0 with
-                  | Trivial -> c
-                  | NonTrivial f ->
-                    if Env.debug env <| Options.Extreme
-                    then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                                     (N.term_to_string env e_for_debugging_only)
-                                     (N.term_to_string env f);
-                     strengthen_comp env reason c f flags), g_c
+            if env.lax
+            then c, g_c
+            else let g0 = Rel.simplify_guard env g0 in
+                 match guard_form g0 with
+                 | Trivial -> c, g_c
+                 | NonTrivial f ->
+                   if Env.debug env <| Options.Extreme
+                   then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                     (N.term_to_string env e_for_debugging_only)
+                     (N.term_to_string env f);
+                   let c, g_s = strengthen_comp env reason c f flags in
+                   c, Env.conj_guard g_c g_s
          in
        TcComm.mk_lcomp (norm_eff_name env lc.eff_name)
                        lc.res_typ
@@ -702,173 +866,10 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
-            let mk_layered_bind c1 b c2 =
-              if Env.debug env <| Options.Other "LayeredEffects" then
-                BU.print2 "Binding c1:%s and c2:%s {\n"
-                  (Print.comp_to_string c1) (Print.comp_to_string c2);
+            let mk_bind c1 b c2 =  (* AR: end code for inlining pure and ghost terms *)
+              let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
+              c, Env.conj_guard (Env.conj_guard g_c1 g_c2) g_bind in
 
-              (*
-               * Bind for layered effects:
-               * 
-               * Let c1 = M c1_a (t1 ... tn)
-               *     c2 = M c2_a (s1 ... sn) - where b is free in (s1 ... sn)
-               *
-               *     M.bind_wp = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
-               *                              f:repr a i_1 ... i_n ->
-               *                              g:(x:a -> repr b j_1 ... j_n) ->
-               *                              repr b k_1 ... k_n)
-               *
-               * First we instantiate M.bind_wp with [u_c1_a, u_c2_a]
-               *
-               * Then we substitute [a/c1_a; b/c2_a] in <some binders>
-               *
-               * Next we create ?u1 ... ?un for each of the binders in <some binders>
-               *   while subtituting [bi/?ui] in subsequent binders (so that their sorts are well-typed)
-               *
-               * Let substs = [a/c1_a; b/c2_a; bi/?ui]
-               *
-               * let i_i = i_i[substs]  //i_i are the indices of f in the bind_wp
-               * let j_i = j_i[x/b; substs]  //j_i are the indices of g in the bind_wp and x/x is replacing x with the binder b
-               * let k_i = k_i[substs]  //k_i are the indices of the return type in bind
-               *
-               * We now unify i_i with t_i (where t_i are the indices of c1)
-               *        unify j_i with s_i (where s_i are the indices of c2,
-                                            these are done in an env with b, and the returned guard is closed over b)
-               * and return k_i as the output indices
-               *)
-           
-              (*
-               * First lift if required
-               *)
-              let ct1 = Env.unfold_effect_abbrev env c1 in
-              let ct2 = Env.unfold_effect_abbrev env c2 in
-
-              let x_a =
-                match b with
-                | None -> S.null_binder ct1.result_typ
-                | Some x -> S.mk_binder x in
-
-              let ct1, ct2, ed, g_lift =
-                let c1_ed = Env.get_effect_decl env ct1.effect_name in
-                let c2_ed = Env.get_effect_decl env ct2.effect_name in
-                match Env.monad_leq env c1_ed.mname c2_ed.mname with
-                | None ->
-                  (match Env.monad_leq env c2_ed.mname c1_ed.mname with
-                   | None ->
-                     raise_error (Errors.Fatal_EffectsCannotBeComposed,
-                       BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
-                   | Some edge ->
-                     let env_l = Env.push_binders env [x_a] in
-                     let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env_l |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-                     ct1, ct2, c1_ed, Env.close_guard env [x_a] g_lift)
-                | Some edge ->
-                  let ct1, g_lift = ct1 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-                  ct1, ct2, c2_ed, g_lift in
-
-              if Env.debug env <| Options.Other "LayeredEffects" then
-                BU.print2 "After lifting, ct1: %s and ct2: %s\n"
-                  (ct1 |> S.mk_Comp |> Print.comp_to_string)
-                  (ct2 |> S.mk_Comp |> Print.comp_to_string);
-
-              let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
-              let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
-
-              let _, bind_t = Env.inst_tscheme_with ed.bind_wp [u1; u2] in
-
-              let bind_t_shape_error (s:string) =
-                (Errors.Fatal_UnexpectedEffect, BU.format2
-                   "bind %s does not have proper shape (reason:%s)"
-                   (Print.term_to_string bind_t) s) in
-
-              let a_b, b_b, rest_bs, f_b, g_b, bind_ct =
-                match (SS.compress bind_t).n with
-                | Tm_arrow (bs, c) when List.length bs >= 4 ->
-                  let ((a_b::b_b::bs), c) = SS.open_comp bs c in
-                  let rest_bs, f_b, g_b =
-                    List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
-                  a_b, b_b, rest_bs, f_b, g_b, U.comp_to_comp_typ c
-                | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
-
-              //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
-              let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-                env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
-                (fun b -> BU.format3
-                  "implicit var for binder %s of %s:bind at %s"
-                  (Print.binder_to_string b) ed.mname.str (Range.string_of_range r1)) r1 in
-
-              let subst = List.map2
-                (fun b t -> NT (b |> fst, t))
-                (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
-
-              let f_guard =  //unify c1's indices with f's indices in the bind_wp
-                let f_sort_is =
-                  match (SS.compress (f_b |> fst).sort).n with
-                  | Tm_app (_, _::is) ->
-                    is |> List.map fst |> List.map (SS.subst subst)
-                  | _ -> raise_error (bind_t_shape_error "f's type is not a repr type") r1 in
-                List.fold_left2
-                  (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
-                  Env.trivial_guard is1 f_sort_is in 
-
-              let g_guard =  //unify c2's indices with g's indices in the bind_wp
-                let g_sort_is : list<term> =
-                  match (SS.compress (g_b |> fst).sort).n with
-                  | Tm_arrow (bs, c) ->
-                    let bs, c = SS.open_comp bs c in
-                    let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
-                    let c = SS.subst_comp [bs_subst] c in
-                    (match (SS.compress (U.comp_result c)).n with
-                     | Tm_app (_, _::is) ->
-                       is |> List.map fst |> List.map (SS.subst subst)
-                     | _ -> raise_error (bind_t_shape_error "g's type is not a repr type") r1)
-                  | _ -> raise_error (bind_t_shape_error "g's type is not an arrow") r1 in
-
-                let env_g = Env.push_binders env [x_a] in
-                List.fold_left2
-                  (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
-                  Env.trivial_guard is2 g_sort_is
-                |> Env.close_guard env [x_a] in
-
-              let is =  //indices of the resultant computation
-                match (SS.compress bind_ct.result_typ).n with
-                | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst subst)
-                | _ -> raise_error (bind_t_shape_error "return type is not a repr type") r1 in
-            
-              let c = mk_Comp ({
-                comp_univs = ct2.comp_univs;
-                effect_name = ed.mname;
-                result_typ = t2;
-                effect_args = List.map S.as_arg is;
-                flags = []  //AR: TODO: FIXME: set properly
-              }) in
-
-              if Env.debug env <| Options.Other "LayeredEffects" then
-                BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
-
-              c, Env.conj_guards [ g_c1; g_c2; g_lift; g_uvars; f_guard; g_guard ]
-            in
-            let mk_bind c1 b c2 =                      (* AR: end code for inlining pure and ghost terms *)
-                let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2), g = lift_and_destruct env c1 c2 in
-                let bs =
-                    match b with
-                    | None -> [null_binder t1]
-                    | Some x -> [S.mk_binder x]
-                in
-                let mk_lam wp =
-                    //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
-                    U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
-                in
-                let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
-                let wp_args = [
-                    S.as_arg r1;
-                    S.as_arg t1;
-                    S.as_arg t2;
-                    S.as_arg wp1;
-                    S.as_arg (mk_lam wp2)]
-                in
-                let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
-                mk_comp md u_t2 t2 wp bind_flags, Env.conj_guard (Env.conj_guard g_c1 g_c2) g
-            in
             let mk_seq c1 b c2 =
                 //c1 is PURE or GHOST
                 let c1 = Env.unfold_effect_abbrev env c1 in
@@ -882,118 +883,115 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                     None
                                     r1
                 in
-                strengthen_comp env None c2 vc1 bind_flags, Env.conj_guard (Env.conj_guard g_c1 g_c2) g2
+                let c, g_s = strengthen_comp env None c2 vc1 bind_flags in
+                c, Env.conj_guards [g_c1; g_c2; g2; g_s]
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
-            if (let ct1 = Env.unfold_effect_abbrev env c1 in  //AR: TODO: FIXME: we immediately unfold c's again in mk_layered_bind -- FIX
-                let ct2 = Env.unfold_effect_abbrev env c2 in
-                Env.is_layered_effect env ct1.effect_name || Env.is_layered_effect env ct2.effect_name)
-            then mk_layered_bind c1 b c2
-            else
-              let c1_typ = Env.unfold_effect_abbrev env c1 in
-              let u_res_t1, res_t1, _ = destruct_comp c1_typ in
-              //c1 and c2 are bound to the input comps
-              if Option.isSome b
-              && should_return env e1opt lc1
-              then let e1 = Option.get e1opt in
-                   let x = Option.get b in
-                   //we will inline e1 in the WP of c2
-                   //Aiming to build a VC of the form
-                   //
-                   //     M.bind (lift_(Pure/Ghost)_M wp1)
-                   //            (x == e1 ==> lift_M2_M (wp2[e1/x]))
-                   //
-                   //
-                   //The additional equality hypothesis may seem
-                   //redundant, but c1's post-condition or type may carry
-                   //some meaningful information Then, it's important to
-                   //weaken wp2 to with the equality, So that whatever
-                   //property is proven about the result of wp1 (i.e., x)
-                   //is still available in the proof of wp2 However, we
-                   //apply two optimizations:
+            let c1_typ = Env.unfold_effect_abbrev env c1 in
+            let u_res_t1, res_t1 = List.hd c1_typ.comp_univs, c1_typ.result_typ in
+            //c1 and c2 are bound to the input comps
+            if Option.isSome b
+            && should_return env e1opt lc1
+            then let e1 = Option.get e1opt in
+                 let x = Option.get b in
+                 //we will inline e1 in the WP of c2
+                 //Aiming to build a VC of the form
+                 //
+                 //     M.bind (lift_(Pure/Ghost)_M wp1)
+                 //            (x == e1 ==> lift_M2_M (wp2[e1/x]))
+                 //
+                 //
+                 //The additional equality hypothesis may seem
+                 //redundant, but c1's post-condition or type may carry
+                 //some meaningful information Then, it's important to
+                 //weaken wp2 to with the equality, So that whatever
+                 //property is proven about the result of wp1 (i.e., x)
+                 //is still available in the proof of wp2 However, we
+                 //apply two optimizations:
 
-                   //   a. if c1 is already a return or a partial return,
-                   //      then it already provides this equality, so no
-                   //      need to add it again and instead generate
-                   //
-                   //         M.bind (lift_(Pure/Ghost)_M wp1)
-                   //                (lift_M2_M (wp2[e1/x]))
+                 //   a. if c1 is already a return or a partial return,
+                 //      then it already provides this equality, so no
+                 //      need to add it again and instead generate
+                 //
+                 //         M.bind (lift_(Pure/Ghost)_M wp1)
+                 //                (lift_M2_M (wp2[e1/x]))
 
-                   //   b. if c1 is marked with TRIVIAL_POSTCONDITION,
-                   //      then the post-condition does not carry any
-                   //      useful information. We have two sub-cases:
-   
-                   //      (i) In case the user option
-                   //          `vcgen.optimize_bind_as_seq = without_type`
-                   //          rather than generating
-                   //          M.bind wp1 (\x. wp2), we generate:
-                   //
-                   //           M.assert_wp (wp1 (\x. True))
-                   //                       (lift_M2_M  (wp2[e1/x]))
-                   //
-                   //      Note, although the post-condition of c1 does
-                   //      not carry useful information, its result type
-                   //      might. When applying the optimization above,
-                   //      the SMT solver is faced with reconstructing
-                   //      the type of e1. Usually, it can do this, but
-                   //      in some cases (e.g., if the result type has a
-                   //      complex refinement), then this optimization
-                   //      can actually cause a VC to fail. So, we add an
-                   //      option to recover from this, at the cost of
-                   //      some VC bloat:
-                   //
-                   //      (ii). In case the user option
-                   //            `vcgen.optimize_bind_as_seq = with_type`,
-                   //            we build
-                   //
-                   //             M.assert_wp (wp1 (\x. True))
-                   //                        (lift_M2_M (wp2[with_type e1 t1/x]))
-                   //
-                   //      Where `with_type e1 t1`, decorates `e1` with
-                   //      its type before substituting. This allows the
-                   //      SMT solver to recover the type of `e1` (using
-                   //      a primitive axiom about with_type), without
-                   //      polluting the VC with an additional equality.
-                   //      Note, specific occurrences of `with_type e t`
-                   //      can be normalized away to `e` if requested
-                   //      explicitly by a user tactic.
-                   //
-                   //   c. If neither of the optimizations above apply,
-                   //   then we generate the WP mentioned at the top,
-                   //   i.e.
-                   //
-                   //      M.bind (lift_(Pure/Ghost)_M wp1)
-                   //             (x == e1 ==> lift_M2_M (wp2[e1/x]))
+                 //   b. if c1 is marked with TRIVIAL_POSTCONDITION,
+                 //      then the post-condition does not carry any
+                 //      useful information. We have two sub-cases:
 
-                   if U.is_partial_return c1
-                   then // case (a)
-                        let _ = debug (fun () ->
-                          BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
-                        let c2 = SS.subst_comp [NT(x,e1)] c2 in
-                        mk_bind c1 b c2
-                   else if Options.vcgen_optimize_bind_as_seq()
-                        && lcomp_has_trivial_postcondition lc1
-                        && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
-                   then // case (b)
-                        let e1' =
-                          if Options.vcgen_decorate_with_type()
-                          then U.mk_with_type u_res_t1 res_t1 e1 // case (b) (ii)
-                          else e1                                // case (b) (i)
-                        in
-                        let _ = debug (fun () ->
-                          BU.print2 "(3) bind (case b): Substituting %s for %s" (N.term_to_string env e1') (Print.bv_to_string x)) in
-                        let c2 = SS.subst_comp [NT(x, e1')] c2 in
-                        mk_seq c1 b c2
-                   else // case (c)
-                        let _ = debug (fun () ->
-                          BU.print2 "(3) bind (case c): Adding equality %s = %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
-                        let c2 = SS.subst_comp [NT(x,e1)] c2 in
-                        let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
-                        let c2 = weaken_comp env c2 x_eq_e in
-                        mk_bind c1 b c2
-                  //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
-                  //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
-              else mk_bind c1 b c2
+                 //      (i) In case the user option
+                 //          `vcgen.optimize_bind_as_seq = without_type`
+                 //          rather than generating
+                 //          M.bind wp1 (\x. wp2), we generate:
+                 //
+                 //           M.assert_wp (wp1 (\x. True))
+                 //                       (lift_M2_M  (wp2[e1/x]))
+                 //
+                 //      Note, although the post-condition of c1 does
+                 //      not carry useful information, its result type
+                 //      might. When applying the optimization above,
+                 //      the SMT solver is faced with reconstructing
+                 //      the type of e1. Usually, it can do this, but
+                 //      in some cases (e.g., if the result type has a
+                 //      complex refinement), then this optimization
+                 //      can actually cause a VC to fail. So, we add an
+                 //      option to recover from this, at the cost of
+                 //      some VC bloat:
+                 //
+                 //      (ii). In case the user option
+                 //            `vcgen.optimize_bind_as_seq = with_type`,
+                 //            we build
+                 //
+                 //             M.assert_wp (wp1 (\x. True))
+                 //                        (lift_M2_M (wp2[with_type e1 t1/x]))
+                 //
+                 //      Where `with_type e1 t1`, decorates `e1` with
+                 //      its type before substituting. This allows the
+                 //      SMT solver to recover the type of `e1` (using
+                 //      a primitive axiom about with_type), without
+                 //      polluting the VC with an additional equality.
+                 //      Note, specific occurrences of `with_type e t`
+                 //      can be normalized away to `e` if requested
+                 //      explicitly by a user tactic.
+                 //
+                 //   c. If neither of the optimizations above apply,
+                 //   then we generate the WP mentioned at the top,
+                 //   i.e.
+                 //
+                 //      M.bind (lift_(Pure/Ghost)_M wp1)
+                 //             (x == e1 ==> lift_M2_M (wp2[e1/x]))
+
+                 if U.is_partial_return c1
+                 then // case (a)
+                      let _ = debug (fun () ->
+                        BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
+                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      mk_bind c1 b c2
+                 else if Options.vcgen_optimize_bind_as_seq()
+                      && lcomp_has_trivial_postcondition lc1
+                      && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
+                 then // case (b)
+                      let e1' =
+                        if Options.vcgen_decorate_with_type()
+                        then U.mk_with_type u_res_t1 res_t1 e1 // case (b) (ii)
+                        else e1                                // case (b) (i)
+                      in
+                      let _ = debug (fun () ->
+                        BU.print2 "(3) bind (case b): Substituting %s for %s" (N.term_to_string env e1') (Print.bv_to_string x)) in
+                      let c2 = SS.subst_comp [NT(x, e1')] c2 in
+                      mk_seq c1 b c2
+                 else // case (c)
+                      let _ = debug (fun () ->
+                        BU.print2 "(3) bind (case c): Adding equality %s = %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
+                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
+                      let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
+                      let c, g_bind = mk_bind c1 b c2 in
+                      c, Env.conj_guard g_w g_bind
+                //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
+                //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
+            else mk_bind c1 b c2
       end
   in TcComm.mk_lcomp joined_eff
                      lc2.res_typ
