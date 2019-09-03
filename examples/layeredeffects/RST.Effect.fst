@@ -132,11 +132,11 @@ assume Pure_wp_monotonicity:
 ///   which is nice since if we used empty resource,
 ///   we would need to use framing for pure subcomputations
 
-let lift_pure_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
+let lift_div_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> DIV a wp)
 : repr a r (fun _ -> r) (fun p h -> wp (fun x -> p x h))
 = fun _ -> f ()
 
-sub_effect PURE ~> RSTATE = lift_pure_rstate
+sub_effect DIV ~> RSTATE = lift_div_rstate
 
 /// Hoare style encoding
 
