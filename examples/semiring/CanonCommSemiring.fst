@@ -70,6 +70,7 @@ let mult_zero_l_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
 unopteq
 type cr (a:Type) =
   | CR :
+    eq: (x:a -> y:a -> b:bool{b <==> x == y}) ->
     cm_add: cm a ->
     cm_mult: cm a ->
     distribute: distribute_left_lemma a cm_add cm_mult ->
@@ -159,12 +160,12 @@ and vm_aux v1 t1 l2 =
  * mutually recursive functions.
  *)
 [@canon_attr]
-val canonical_sum_merge : #a:eqtype -> cr a
+val canonical_sum_merge: #a:Type0 -> cr a
   -> s1:canonical_sum a -> s2:canonical_sum a
   -> Tot (canonical_sum a) (decreases %[s1; s2; 0])
 
 [@canon_attr]
-val csm_aux: #a:eqtype -> r:cr a -> c1:a -> l1:varlist -> t1:canonical_sum a
+val csm_aux: #a:Type0 -> r:cr a -> c1:a -> l1:varlist -> t1:canonical_sum a
   -> s2:canonical_sum a -> Tot (canonical_sum a) (decreases %[t1; s2; 1])
 
 [@canon_attr]
@@ -177,6 +178,7 @@ let rec canonical_sum_merge #a r s1 s2 =
   | Nil_monom -> s2
 
 and csm_aux #a r c1 l1 t1 s2 =
+  let aeq   = r.eq in
   let aplus = r.cm_add.mult in
   let aone  = r.cm_mult.unit in
   match s2 with
@@ -195,16 +197,17 @@ and csm_aux #a r c1 l1 t1 s2 =
       then Cons_monom c1 l1 (canonical_sum_merge r t1 s2)
       else Cons_varlist l2 (csm_aux r c1 l1 t1 t2)
   | Nil_monom ->
-    if c1 = aone
+    if c1 `aeq` aone
     then Cons_varlist l1 t1
     else Cons_monom c1 l1 t1
 
 (* Inserts a monomial into the apropriate position in a canonical sum *)
-val monom_insert: #a:eqtype -> r:cr a
+val monom_insert: #a:Type0 -> r:cr a
   -> c1:a -> l1:varlist -> s2:canonical_sum a -> canonical_sum a
 
 [@canon_attr]
 let rec monom_insert #a r c1 l1 s2 =
+  let aeq   = r.eq in
   let aplus = r.cm_add.mult in
   let aone  = r.cm_mult.unit in
   match s2 with
@@ -223,12 +226,12 @@ let rec monom_insert #a r c1 l1 s2 =
       then Cons_monom c1 l1 s2
       else Cons_varlist l2 (monom_insert r c1 l1 t2)
   | Nil_monom ->
-    if c1 = aone
+    if c1 `aeq` aone
     then Cons_varlist l1 Nil_monom
     else Cons_monom c1 l1 Nil_monom
 
 (* Inserts a monomial without scalar into a canonical sum *)
-val varlist_insert: #a:eqtype -> cr a -> varlist -> canonical_sum a -> canonical_sum a
+val varlist_insert: #a:Type0 -> cr a -> varlist -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
 let rec varlist_insert #a r l1 s2 =
@@ -247,7 +250,7 @@ let rec canonical_sum_scalar #a r c0 s =
   | Nil_monom -> Nil_monom
 
 (* Multiplies a sum by a monomial without scalar *)
-val canonical_sum_scalar2: #a:eqtype -> cr a -> varlist
+val canonical_sum_scalar2: #a:Type0 -> cr a -> varlist
   -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
@@ -261,7 +264,7 @@ let rec canonical_sum_scalar2 #a r l0 s =
 
 
 (* Multiplies a sum by a monomial with scalar *)
-val canonical_sum_scalar3: #a:eqtype -> cr a -> a -> varlist
+val canonical_sum_scalar3: #a:Type0 -> cr a -> a -> varlist
   -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
@@ -277,7 +280,7 @@ let rec canonical_sum_scalar3 #a r c0 l0 s =
   | Nil_monom -> s
 
 (* Multiplies two canonical sums *)
-val canonical_sum_prod: #a:eqtype -> cr a
+val canonical_sum_prod: #a:Type0 -> cr a
   -> canonical_sum a -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
@@ -303,7 +306,7 @@ type spolynomial a =
   | SPmult  : spolynomial a -> spolynomial a -> spolynomial a
 
 (** Canonize a reflected expression *)
-val spolynomial_normalize: #a:eqtype -> cr a -> spolynomial a -> canonical_sum a
+val spolynomial_normalize: #a:Type0 -> cr a -> spolynomial a -> canonical_sum a
 
 [@canon_attr]
 let rec spolynomial_normalize #a r p =
@@ -319,18 +322,19 @@ let rec spolynomial_normalize #a r p =
  * Simplify a canonical sum.
  * Removes 0 * x1 * ... * xk and turns 1 * x1 * ... * xk into x1 * ... * xk
 **)
-val canonical_sum_simplify: #a:eqtype -> cr a -> canonical_sum a -> canonical_sum a
+val canonical_sum_simplify: #a:Type0 -> cr a -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
 let rec canonical_sum_simplify #a r s =
+  let aeq   = r.eq in
   let azero = r.cm_add.unit in
   let aone  = r.cm_mult.unit in
   let aplus = r.cm_add.mult in
   match s with
   | Cons_monom c l t ->
-    if norm_fully (c = azero) then canonical_sum_simplify r t
+    if norm_fully (c `aeq` azero) then canonical_sum_simplify r t
     else
-      if norm_fully (c = aone)
+      if norm_fully (c `aeq` aone)
       then Cons_varlist l (canonical_sum_simplify r t)
       else Cons_monom c l (canonical_sum_simplify r t)
   | Cons_varlist l t -> Cons_varlist l (canonical_sum_simplify r t)
@@ -340,7 +344,7 @@ let rec canonical_sum_simplify #a r s =
  * The main canonization algorithm: turn an expression into a sum and
  * simplify it.
 **)
-val spolynomial_simplify: #a:eqtype -> cr a -> spolynomial a -> canonical_sum a
+val spolynomial_simplify: #a:Type0 -> cr a -> spolynomial a -> canonical_sum a
 
 [@canon_attr]
 let spolynomial_simplify #a r p =
@@ -494,14 +498,14 @@ val ivl_aux_ok (#a:Type) (r:cr a) (vm:vmap a) (v:varlist) (i:index) : Lemma
   (ivl_aux r vm i v == r.cm_mult.mult (interp_var vm i) (interp_vl r vm v))
 let ivl_aux_ok #a r vm v i = ()
 
-val vm_aux_ok (#a:eqtype) (r:cr a) (vm:vmap a) (v:index) (t l:varlist) :
+val vm_aux_ok (#a:Type0) (r:cr a) (vm:vmap a) (v:index) (t l:varlist) :
   Lemma
   (ensures
     interp_vl r vm (vm_aux v t l) ==
     r.cm_mult.mult (interp_vl r vm (Cons_var v t)) (interp_vl r vm l))
   (decreases %[t; l; 1])
 
-val varlist_merge_ok (#a:eqtype) (r:cr a) (vm:vmap a) (x y:varlist) :
+val varlist_merge_ok (#a:Type0) (r:cr a) (vm:vmap a) (x y:varlist) :
   Lemma
   (ensures
     interp_vl r vm (varlist_merge x y) ==
@@ -564,7 +568,7 @@ and vm_aux_ok #a r vm v1 t1 l2 =
       end
   | _ -> ()
 
-val ics_aux_ok: #a:eqtype -> r:cr a -> vm:vmap a -> x:a -> s:canonical_sum a ->
+val ics_aux_ok: #a:Type0 -> r:cr a -> vm:vmap a -> x:a -> s:canonical_sum a ->
   Lemma (ensures ics_aux r vm x s == r.cm_add.mult x (interp_cs r vm s))
   (decreases s)
 let rec ics_aux_ok #a r vm x s =
@@ -575,7 +579,7 @@ let rec ics_aux_ok #a r vm x s =
   | Cons_monom c l t ->
     ics_aux_ok r vm (interp_m r vm c l) t
 
-val interp_m_ok: #a:eqtype -> r:cr a -> vm:vmap a -> x:a -> l:varlist ->
+val interp_m_ok: #a:Type0 -> r:cr a -> vm:vmap a -> x:a -> l:varlist ->
   Lemma (interp_m r vm x l == r.cm_mult.mult x (interp_vl r vm l))
 let interp_m_ok #a r vm x l = ()
 
@@ -602,7 +606,7 @@ let aplus_assoc_4 #a r w x y z =
     aplus (aplus w y) (aplus x z);
   }
 
-val canonical_sum_merge_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val canonical_sum_merge_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> s1:canonical_sum a -> s2:canonical_sum a ->
   Lemma
   (ensures
@@ -610,7 +614,7 @@ val canonical_sum_merge_ok: #a:eqtype -> r:cr a -> vm:vmap a
     r.cm_add.mult (interp_cs r vm s1) (interp_cs r vm s2))
   (decreases %[s1; s2; 0])
 
-val csm_aux_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val csm_aux_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> c1:a -> l1:varlist -> t1:canonical_sum a -> s2:canonical_sum a ->
   Lemma
   (ensures
@@ -855,7 +859,7 @@ and csm_aux_ok #a r vm c1 l1 t1 s2 =
     }
     end
 
-val monom_insert_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val monom_insert_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> c1:a -> l1:varlist -> s2:canonical_sum a ->
   Lemma
   (interp_cs r vm (monom_insert r c1 l1 s2) ==
@@ -990,7 +994,7 @@ let rec monom_insert_ok #a r vm c1 l1 s2 =
        }
   | Nil_monom -> ()
 
-val varlist_insert_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val varlist_insert_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> l1:varlist -> s2:canonical_sum a ->
   Lemma (interp_cs r vm (varlist_insert r l1 s2) ==
          r.cm_add.mult (interp_vl r vm l1) (interp_cs r vm s2))
@@ -998,7 +1002,7 @@ let varlist_insert_ok #a r vm l1 s2 =
   let aone = r.cm_mult.unit in
   monom_insert_ok r vm aone l1 s2
 
-val canonical_sum_scalar_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val canonical_sum_scalar_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> c0:a -> s:canonical_sum a ->
   Lemma (
     interp_cs r vm (canonical_sum_scalar r c0 s) ==
@@ -1051,7 +1055,7 @@ let rec canonical_sum_scalar_ok #a r vm c0 s =
     }
   | Nil_monom -> ()
 
-val canonical_sum_scalar2_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val canonical_sum_scalar2_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> l0:varlist -> s:canonical_sum a ->
   Lemma (
     interp_cs r vm (canonical_sum_scalar2 r l0 s) ==
@@ -1128,7 +1132,7 @@ let rec canonical_sum_scalar2_ok #a r vm l0 s =
     }
   | Nil_monom -> ()
 
-val canonical_sum_scalar3_ok: #a:eqtype -> r:cr a -> vm:vmap a
+val canonical_sum_scalar3_ok: #a:Type0 -> r:cr a -> vm:vmap a
   -> c0:a -> l0:varlist -> s:canonical_sum a ->
   Lemma (
     interp_cs r vm (canonical_sum_scalar3 r c0 l0 s) ==
@@ -1219,7 +1223,7 @@ let rec canonical_sum_scalar3_ok #a r vm c0 l0 s =
     }
   | Nil_monom -> ()
 
-val canonical_sum_prod_ok: #a:eqtype -> r:cr a -> vm:vmap a ->
+val canonical_sum_prod_ok: #a:Type0 -> r:cr a -> vm:vmap a ->
   s1:canonical_sum a -> s2:canonical_sum a ->
   Lemma (interp_cs r vm (canonical_sum_prod r s1 s2) ==
          r.cm_mult.mult (interp_cs r vm s1) (interp_cs r vm s2))
@@ -1276,7 +1280,7 @@ let rec canonical_sum_prod_ok #a r vm s1 s2 =
     }
   | Nil_monom -> ()
 
-val spolynomial_normalize_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:spolynomial a ->
+val spolynomial_normalize_ok: #a:Type0 -> r:cr a -> vm:vmap a -> p:spolynomial a ->
   Lemma (interp_cs r vm (spolynomial_normalize r p) == interp_sp r vm p)
 let rec spolynomial_normalize_ok #a r vm p =
   match p with
@@ -1293,7 +1297,7 @@ let rec spolynomial_normalize_ok #a r vm p =
     spolynomial_normalize_ok r vm l;
     spolynomial_normalize_ok r vm q
 
-val canonical_sum_simplify_ok: #a:eqtype -> r:cr a -> vm:vmap a -> s:canonical_sum a ->
+val canonical_sum_simplify_ok: #a:Type0 -> r:cr a -> vm:vmap a -> s:canonical_sum a ->
   Lemma (interp_cs r vm (canonical_sum_simplify r s) == interp_cs r vm s)
 let rec canonical_sum_simplify_ok #a r vm s =
   let azero = r.cm_add.unit in
@@ -1303,7 +1307,7 @@ let rec canonical_sum_simplify_ok #a r vm s =
   | Cons_varlist _ t -> canonical_sum_simplify_ok r vm t
   | Nil_monom -> ()
 
-val spolynomial_simplify_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:spolynomial a ->
+val spolynomial_simplify_ok: #a:Type0 -> r:cr a -> vm:vmap a -> p:spolynomial a ->
   Lemma (interp_cs r vm (spolynomial_simplify r p) == interp_sp r vm p)
 let spolynomial_simplify_ok #a r vm p =
   canonical_sum_simplify_ok r vm (spolynomial_normalize r p);
@@ -1374,6 +1378,7 @@ let steps =
       `%FStar.Algebra.CommMonoid.int_multiply_cm; // For integer ring
       `%FStar.Algebra.CommMonoid.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.__proj__CM__item__unit;
+      `%__proj__CR__item__eq;
       `%__proj__CR__item__cm_add;
       `%__proj__CR__item__cm_mult;
       `%FStar.List.Tot.Base.assoc;
@@ -1415,7 +1420,7 @@ let rec quote_spolynomial (#a:Type) (quotea: a -> Tac term) (e:spolynomial a) : 
     mk_e_app (`SPmult) [quote_spolynomial quotea e1; quote_spolynomial quotea e2]
 
 (* Constructs the 3 main goals of the tactic *)
-let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
+let semiring_reflect (#a:Type0) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
     (_ : squash (
       interp_cs r vm (spolynomial_simplify #a r e1) ==
       interp_cs r vm (spolynomial_simplify #a r e2)))
@@ -1480,7 +1485,7 @@ let canon_semiring_aux
     end
   | _ -> fail "Goal should be an equality")
 
-let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
+let canon_semiring (#a:Type0) (r:cr a) : Tac unit =
   canon_semiring_aux a
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
     (norm_term steps (quote r.cm_add.mult))
@@ -1491,11 +1496,11 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 
 [@canon_attr]
 let int_cr : cr int =
-  CR int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x -> ())
+  CR (fun x y -> x = y) int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x -> ())
 
 let int_semiring () : Tac unit = canon_semiring int_cr
 
-#set-options "--tactic_trace_d 0 --no_smt"
+#push-options "--tactic_trace_d 0 --no_smt"
 
 let test (a:int) =
   let open FStar.Mul in

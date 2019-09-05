@@ -29,12 +29,12 @@ let horner (r a0 a1 a2 a3 a4 a5 a6 a7:int) =
   assert (
     (((((((((((((a0 + a1) * r) + a2) * r) + a3) * r) + a4) * r) + a5) * r) + a6) * r) + a7) * r
     ==
-    a7 * r + 
-      a6 * r * r + 
-        a5 * r * r * r + 
+    a7 * r +
+      a6 * r * r +
+        a5 * r * r * r +
           a4 * r * r * r * r +
             a3 * r * r * r * r * r +
-              a2 * r * r * r * r * r * r + 
+              a2 * r * r * r * r * r * r +
                 a1 * r * r * r * r * r * r * r +
                   a0 * r * r * r * r * r * r * r )
    by (int_semiring ())
@@ -159,7 +159,7 @@ val mul_zero_l: mult_zero_l_lemma ring ring_add_cm ring_mul_cm
 let mul_zero_l a = assert_norm (0 % prime == 0)
 
 [@canon_attr]
-let ring_cr : cr ring = CR ring_add_cm ring_mul_cm mul_add_distr mul_zero_l
+let ring_cr : cr ring = CR (fun x y -> x = y) ring_add_cm ring_mul_cm mul_add_distr mul_zero_l
 
 let poly_semiring () : Tac unit = canon_semiring ring_cr
 
