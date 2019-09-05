@@ -55,7 +55,8 @@ val alloc (#a:Type) (init:a) (len:UInt32.t)
     (fun _ b h1 ->
       A.freeable b /\
       as_rseq b h1 == Seq.create (UInt32.v len) init /\
-      get_rperm b h1 = FStar.Real.one
+      get_rperm b h1 = FStar.Real.one /\
+      A.vlength b = UInt32.v len
     )
 
 val free (#a:Type) (b:A.array a)
@@ -99,6 +100,8 @@ val split (#a: Type) (b: A.array a) (idx: UInt32.t)
       A.is_split_into b (fst bs, snd bs) /\
       as_rseq (fst bs) h1 == Seq.slice (as_rseq b h0) 0 (UInt32.v idx) /\
       as_rseq (snd bs) h1 == Seq.slice (as_rseq b h0) (UInt32.v idx) (A.vlength b) /\
+      A.vlength (fst bs) = UInt32.v idx /\
+      A.vlength (snd bs) = A.vlength b - UInt32.v idx /\
       get_rperm (fst bs) h1 == get_rperm b h0 /\
       get_rperm (snd bs) h1 == get_rperm b h0
     )
