@@ -143,7 +143,7 @@ let create #a init max =
   v
 
 
-#set-options "--z3rlimit 30"
+#set-options "--max_fuel 1 --max_ifuel 1 --z3rlimit 100"
 
 let push #a v x =
   (**) let h0 = HST.get () in
@@ -191,16 +191,13 @@ let push #a v x =
       else
         U32.(2ul *^ max)
     in
+    assume(UInt32.v new_contents_length > UInt32.v len);
     let new_contents = rst_frame
       (A.array_resource arr <*> P.ptr_resource v)
       (fun b -> A.array_resource b <*> A.array_resource arr <*> P.ptr_resource v)
       (fun _ -> A.alloc x new_contents_length)
     in
-    (**) assert(U32.v len = U32.v max /\ U32.v len < UInt.max_int 32);
-    (**) let aux () : Lemma (U32.v len < A.vlength new_contents) =
-    (**)   if U32.(max >^ max_uint32 /^ 2ul) then admit() else admit()
-    (**) in aux ();
-    let new_contents_parts = rst_frame
+    let new_contents_parts1, new_contents_parts2 = rst_frame
       (A.array_resource new_contents <*> A.array_resource arr <*> P.ptr_resource v)
       (fun new_contents_parts ->
         A.array_resource (fst new_contents_parts) <*> A.array_resource (snd new_contents_parts) <*>
@@ -208,6 +205,40 @@ let push #a v x =
       )
       (fun _ -> A.split new_contents len)
     in
+    let current_res =
+      A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
+      A.array_resource arr <*> P.ptr_resource v
+    in
+    let h = get current_res in
+    assume(A.array_resource new_contents_parts2 `is_subresource_of` current_res);
+    assume(A.get_rperm new_contents_parts2 h = 1.0R);
+    rst_frame
+      (
+        A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
+        A.array_resource arr <*> P.ptr_resource v
+      )
+      #(A.array_resource new_contents_parts2)
+      (fun _ ->
+        A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
+        A.array_resource arr <*> P.ptr_resource v
+      )
+      #(fun _ -> A.array_resource new_contents_parts2)
+      (fun _ -> A.upd new_contents_parts2 0ul x);
+    let h = get current_res in
+    assume(A.array_resource new_contents_parts1 `is_subresource_of` current_res);
+    assume(Perm.allows_write (A.get_rperm new_contents_parts1 h));
+    (*rst_frame
+      (
+        A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
+        A.array_resource arr <*> P.ptr_resource v
+      )
+      #(A.array_resource new_contents_parts1 <*> A.array_resource arr)
+      (fun _ ->
+        A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
+        A.array_resource arr <*> P.ptr_resource v
+      )
+      #(fun _ -> A.array_resource new_contents_parts1 <*> A.array_resource arr)
+      (fun _ -> A.copy new_contents_parts1 arr);*)
     (**) admit()
   end
 
