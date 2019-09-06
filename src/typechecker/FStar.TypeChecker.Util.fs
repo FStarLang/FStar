@@ -255,11 +255,10 @@ let comp_univ_opt c =
 
 let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
 
-let destruct_comp c : (universe * typ * typ) = U.destruct_comp c
+let destruct_wp_comp c : (universe * typ * typ) = U.destruct_comp c
 
-let lift_comp env (c:comp_typ) lift : comp_typ * guard_t =
-  c |> S.mk_Comp |> lift.mlift_wp env |> (fun (c, g) ->
-    { U.comp_to_comp_typ c with flags = [] }, g)
+let lift_comp env (c:comp_typ) lift : comp * guard_t =
+  ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
@@ -271,15 +270,33 @@ let join_lcomp env c1 c2 =
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
-let lift_and_destruct env c1 c2 =
+let lift_comps env c1 c2 (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
   let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
-  let m1, g1 = lift_comp env c1 lift1 in
-  let m2, g2 = lift_comp env c2 lift2 in
-  let md = Env.get_effect_decl env m in
-  let a, kwp = Env.wp_signature env md.mname in
-  (md, a, kwp), destruct_comp m1, destruct_comp m2, Env.conj_guard g1 g2
+
+  let c1, g1 = lift_comp env c1 lift1 in
+  let c2, g2 =
+    if not b_maybe_free_in_c2 then lift_comp env c2 lift2
+    else
+      let x_a =
+        match b with
+        | None -> S.null_binder (U.comp_result c1)
+        | Some x -> S.mk_binder x in
+      let env_x = Env.push_binders env [x_a] in
+      let c2, g2 = lift_comp env_x c2 lift2 in
+      c2, Env.close_guard env [x_a] g2 in
+  m, c1, c2, Env.conj_guard g1 g2  
+
+// let lift_and_destruct env c1 c2 =
+//   let c1 = Env.unfold_effect_abbrev env c1 in
+//   let c2 = Env.unfold_effect_abbrev env c2 in
+//   let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
+//   let m1, g1 = lift_comp env c1 lift1 in
+//   let m2, g2 = lift_comp env c2 lift2 in
+//   let md = Env.get_effect_decl env m in
+//   let a, kwp = Env.wp_signature env md.mname in
+//   (md, a, kwp), destruct_comp m1, destruct_comp m2, Env.conj_guard g1 g2
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -322,7 +339,7 @@ let label_guard r reason (g:guard_t) = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
-let close_comp env bvs (c:comp) =
+let close_wp_comp env bvs (c:comp) =
     if U.is_ml_comp c then c
     else if env.lax
     && Options.ml_ish() //NS: disabling this optimization temporarily
@@ -337,23 +354,23 @@ let close_comp env bvs (c:comp) =
                   mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
-            let u_res_t, res_t, wp = destruct_comp c in
+            let u_res_t, res_t, wp = destruct_wp_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
             mk_comp md u_res_t c.result_typ wp c.flags
         end
 
-let close_lcomp env bvs (lc:lcomp) =
+let close_wp_lcomp env bvs (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   lc |>
   TcComm.apply_lcomp
-    (close_comp env bvs)
+    (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env bs)
 
-let close_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
+let close_wp_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
-  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_wp_comp env [x] c
   | _ -> c
 
 let should_not_inline_lc (lc:lcomp) =
@@ -451,46 +468,12 @@ let return_value env u_t_opt t v =
                             these are done in an env with b, and the returned guard is closed over b)
  * and return k_i as the output indices
  *)
-let mk_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+let mk_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Binding c1:%s and c2:%s {\n"
-      (Print.comp_to_string c1) (Print.comp_to_string c2);
+      (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
-  (*
-   * First lift if required
-   *)
-  let ct1 = Env.unfold_effect_abbrev env c1 in
-  let ct2 = Env.unfold_effect_abbrev env c2 in
-
-  let x_a =
-    match b with
-    | None -> S.null_binder ct1.result_typ
-    | Some x -> S.mk_binder x in
-
-  (*
-   * AR: This should probably do a Env.join, but right now we don't have a usecase for lift from a layered effect
-   *)
-  let ct1, ct2, ed, g_lift =
-    let c1_ed = Env.get_effect_decl env ct1.effect_name in
-    let c2_ed = Env.get_effect_decl env ct2.effect_name in
-    match Env.monad_leq env c1_ed.mname c2_ed.mname with
-    | None ->
-      (match Env.monad_leq env c2_ed.mname c1_ed.mname with
-       | None ->
-         raise_error (Errors.Fatal_EffectsCannotBeComposed,
-           BU.format2 ("Effects %s and %s cannot be composed") c1_ed.mname.str c2_ed.mname.str) r1
-       | Some edge ->
-         let env_l = Env.push_binders env [x_a] in
-         let ct2, g_lift = ct2 |> S.mk_Comp |> edge.mlift.mlift_wp env_l |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-         ct1, ct2, c1_ed, Env.close_guard env [x_a] g_lift)
-    | Some edge ->
-      let ct1, g_lift = ct1 |> S.mk_Comp |> edge.mlift.mlift_wp env |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-          ct1, ct2, c2_ed, g_lift in
-
-  if Env.debug env <| Options.Other "LayeredEffects" then
-    BU.print2 "After lifting, ct1: %s and ct2: %s\n"
-      (ct1 |> S.mk_Comp |> Print.comp_to_string)
-      (ct2 |> S.mk_Comp |> Print.comp_to_string);
+  let ed = Env.get_effect_decl env m in
 
   let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
   let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
@@ -533,6 +516,11 @@ let mk_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (
       Env.trivial_guard is1 f_sort_is in 
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
+    let x_a =
+      match b with
+      | None -> S.null_binder ct1.result_typ
+      | Some x -> S.mk_binder x in
+
     let g_sort_is : list<term> =
       match (SS.compress (g_b |> fst).sort).n with
       | Tm_arrow (bs, c) ->
@@ -567,11 +555,16 @@ let mk_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guards [ g_lift; g_uvars; f_guard; g_guard ]
+  c, Env.conj_guards [ g_uvars; f_guard; g_guard ]
 
+let mk_non_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
+  : comp =
 
-let mk_non_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
-  let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2), g = lift_and_destruct env c1 c2 in
+  let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
+    let md = Env.get_effect_decl env m in
+    let a, kwp = Env.wp_signature env m in
+    (md, a, kwp), destruct_wp_comp ct1, destruct_wp_comp ct2 in
+    
   let bs =
     match b with
     | None -> [null_binder t1]
@@ -590,16 +583,17 @@ let mk_non_layered_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag
     S.as_arg (mk_lam wp2)]
   in
   let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
-  mk_comp md u_t2 t2 wp flags, g
+  mk_comp md u_t2 t2 wp flags
 
 let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
-  let bind_f =
-    if (let ct1 = Env.unfold_effect_abbrev env c1 in  //AR: TODO: FIXME: we immediately unfold c's again in mk_layered_bind -- FIX
-        let ct2 = Env.unfold_effect_abbrev env c2 in
-        Env.is_layered_effect env ct1.effect_name || Env.is_layered_effect env ct2.effect_name)
-    then mk_layered_bind
-    else mk_non_layered_bind in
-  bind_f env c1 b c2 flags r1
+  let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
+  let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
+
+  let c, g_bind =
+    if Env.is_layered_effect env m
+    then mk_layered_bind env m ct1 b ct2 flags r1
+    else mk_non_layered_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
+  c, Env.conj_guard g_lift g_bind
 
 (*
  * Helper function used by weaken_comp and strengthen_comp
@@ -842,9 +836,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
                  let close (x:bv) (reason:string) (c:comp) =
-                   let x = { x with sort = U.comp_result c1 } in
-                   Inl (close_comp_if_refinement_t env x.sort x c, reason)
-                 in
+                   if c |> Env.unfold_effect_abbrev env |> (fun ct -> Env.is_layered_effect env ct.effect_name)
+                   then Inl (c, reason)
+                   else
+                     let x = { x with sort = U.comp_result c1 } in
+                     Inl (close_wp_comp_if_refinement_t env x.sort x c, reason) in
                  match e1opt, b with
                  | Some e, Some x ->
                    c2 |> SS.subst_comp [NT (x, e)] |> close x "c1 Tot"
@@ -875,8 +871,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let c1 = Env.unfold_effect_abbrev env c1 in
                 let c2 = Env.unfold_effect_abbrev env c2 in
                 let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
-                let c2, g2 = lift_comp env c2 lift2 |> (fun (c, g) -> S.mk_Comp c, g) in
-                let u1, t1, wp1 = destruct_comp c1 in
+                let c2, g2 = lift_comp env c2 lift2 in
+                let u1, t1, wp1 = destruct_wp_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
                 let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
                                     [S.as_arg t1; S.as_arg wp1]
@@ -1109,7 +1105,12 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             in
             let comp, g_comp = List.fold_right (fun (g, eff_label, _, cthen) (celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let (md, _, _), (_, _, wp_then), (_, _, wp_else), g_lift = lift_and_destruct env cthen celse in
+                let md, wp_then, wp_else, g_lift =
+                  let m, cthen, celse, g_lift = lift_comps env cthen celse None false in
+                  let md = Env.get_effect_decl env m in
+                  let _, _, wp_then = cthen |> U.comp_to_comp_typ |> destruct_wp_comp in
+                  let _, _, wp_else = celse |> U.comp_to_comp_typ |> destruct_wp_comp in
+                  md, wp_then, wp_else, g_lift in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else) [],
                 Env.conj_guard (Env.conj_guard g_comp gthen) g_lift
             ) lcases (default_case, Env.trivial_guard) in
@@ -1119,7 +1120,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             | _ ->
               let comp = Env.comp_to_comp_typ env comp in
               let md = Env.get_effect_decl env comp.effect_name in
-              let _, _, wp = destruct_comp comp in
+              let _, _, wp = destruct_wp_comp comp in
               let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
               let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                  [S.as_arg res_t; S.as_arg wp]
@@ -1162,7 +1163,7 @@ let universe_of_comp env u_res c =
 let check_trivial_precondition env c =
   let ct = c |> Env.unfold_effect_abbrev env in
   let md = Env.get_effect_decl env ct.effect_name in
-  let u_t, t, wp = destruct_comp ct in
+  let u_t, t, wp = destruct_wp_comp ct in
   let vc = mk_Tm_app
     (inst_effect_fun_with [u_t] env md (md.trivial |> must))
     [S.as_arg t; S.as_arg wp]
