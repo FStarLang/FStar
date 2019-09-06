@@ -577,7 +577,7 @@ let mk_non_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_t
 
 let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
   let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
-  let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
+  let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
 
   let c, g_bind =
     if Env.is_layered_effect env m
@@ -873,8 +873,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 c, Env.conj_guards [g_c1; g_c2; g2; g_s]
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
-            let c1_typ = Env.unfold_effect_abbrev env c1 in
-            let u_res_t1, res_t1 = List.hd c1_typ.comp_univs, c1_typ.result_typ in
+            let u_res_t1, res_t1 =
+              let t = U.comp_result c1 in
+              match comp_univ_opt c1 with
+              | None -> env.universe_of env t, t
+              | Some u -> u, t in
             //c1 and c2 are bound to the input comps
             if Option.isSome b
             && should_return env e1opt lc1
@@ -2180,7 +2183,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
          | _ -> err () in
     
 
-  let ct = Env.unfold_effect_abbrev env c in
+  let ct = U.comp_to_comp_typ c in
 
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
 

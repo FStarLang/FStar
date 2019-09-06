@@ -1402,7 +1402,7 @@ let update_effect_lattice env src tgt sub_or_lift_t =
   in
 
   let mk_mlift_wp lift_ts env c =
-    let ct = unfold_effect_abbrev env c in
+    let ct = U.comp_to_comp_typ c in
     let _, lift_t = inst_tscheme_with lift_ts ct.comp_univs in
     let wp = List.hd ct.effect_args in
     S.mk_Comp ({ ct with
