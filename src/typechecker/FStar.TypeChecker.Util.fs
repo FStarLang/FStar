@@ -288,16 +288,6 @@ let lift_comps env c1 c2 (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * com
       c2, Env.close_guard env [x_a] g2 in
   m, c1, c2, Env.conj_guard g1 g2  
 
-// let lift_and_destruct env c1 c2 =
-//   let c1 = Env.unfold_effect_abbrev env c1 in
-//   let c2 = Env.unfold_effect_abbrev env c2 in
-//   let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
-//   let m1, g1 = lift_comp env c1 lift1 in
-//   let m2, g2 = lift_comp env c2 lift2 in
-//   let md = Env.get_effect_decl env m in
-//   let a, kwp = Env.wp_signature env md.mname in
-//   (md, a, kwp), destruct_comp m1, destruct_comp m2, Env.conj_guard g1 g2
-
 let is_pure_effect env l =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
@@ -603,12 +593,12 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
 let lift_wp_and_bind_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
   let r = Env.get_range env in
 
-  let ct = Env.unfold_effect_abbrev env c in
+  let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name env in
 
   let edge =
-    match Env.monad_leq env C.effect_PURE_lid ct.effect_name with
+    match Env.monad_leq env C.effect_PURE_lid c_eff_name with
     | Some edge -> edge
-    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ ct.effect_name.str) in
+    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ c_eff_name.str) in
 
   let pure_c = S.mk_Comp ({
     comp_univs = [S.U_zero];
@@ -836,7 +826,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
                  let close (x:bv) (reason:string) (c:comp) =
-                   if c |> Env.unfold_effect_abbrev env |> (fun ct -> Env.is_layered_effect env ct.effect_name)
+                   if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
                    then Inl (c, reason)
                    else
                      let x = { x with sort = U.comp_result c1 } in
