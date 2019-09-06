@@ -4312,7 +4312,7 @@ let (update_effect_lattice :
               mlift = composed_lift
             }  in
           let mk_mlift_wp lift_ts env1 c =
-            let ct = unfold_effect_abbrev env1 c  in
+            let ct = FStar_Syntax_Util.comp_to_comp_typ c  in
             let uu____22921 =
               inst_tscheme_with lift_ts ct.FStar_Syntax_Syntax.comp_univs  in
             match uu____22921 with
