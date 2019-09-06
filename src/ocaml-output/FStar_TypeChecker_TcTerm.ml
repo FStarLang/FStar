@@ -10623,7 +10623,7 @@ and (tc_eqn :
                                                           env branch_exp1
                                                           c_weak
                                                       else c_weak  in
-                                                    FStar_TypeChecker_Util.close_lcomp
+                                                    FStar_TypeChecker_Util.close_wp_lcomp
                                                       env pat_bvs1 c_weak1
                                                      in
 <<<<<<< HEAD
@@ -15007,7 +15007,7 @@ and (check_inner_let_rec :
 >>>>>>> snap
                                            in
                                         let cres4 =
-                                          FStar_TypeChecker_Util.close_lcomp
+                                          FStar_TypeChecker_Util.close_wp_lcomp
                                             env2 bvs cres3
                                            in
                                         let tres =
