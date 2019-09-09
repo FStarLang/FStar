@@ -7761,8 +7761,13 @@ let (ghost_to_pure :
           FStar_TypeChecker_Env.ForExtraction] env
          in
       let non_info t =
+<<<<<<< HEAD
         let uu____26185 = norm cfg [] [] t  in
         FStar_Syntax_Util.non_informative uu____26185  in
+=======
+        let uu____26183 = norm cfg [] [] t  in
+        FStar_TypeChecker_Env.non_informative env uu____26183  in
+>>>>>>> snap
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Total uu____26192 -> c
       | FStar_Syntax_Syntax.GTotal (t,uopt) when non_info t ->
@@ -7860,12 +7865,20 @@ let (ghost_to_pure_lcomp :
           FStar_TypeChecker_Env.ForExtraction] env
          in
       let non_info t =
+<<<<<<< HEAD
         let uu____26262 = norm cfg [] [] t  in
         FStar_Syntax_Util.non_informative uu____26262  in
       let uu____26269 =
         (FStar_Syntax_Util.is_ghost_effect
            lc.FStar_TypeChecker_Common.eff_name)
           && (non_info lc.FStar_TypeChecker_Common.res_typ)
+=======
+        let uu____26260 = norm cfg [] [] t  in
+        FStar_TypeChecker_Env.non_informative env uu____26260  in
+      let uu____26267 =
+        (FStar_Syntax_Util.is_ghost_effect lc.FStar_Syntax_Syntax.eff_name)
+          && (non_info lc.FStar_Syntax_Syntax.res_typ)
+>>>>>>> snap
          in
       if uu____26269
       then
@@ -8186,7 +8199,13 @@ let (eta_expand :
                                    FStar_TypeChecker_Env.nbe =
                                      (uu___3294_26736.FStar_TypeChecker_Env.nbe);
                                    FStar_TypeChecker_Env.strict_args_tab =
+<<<<<<< HEAD
                                      (uu___3294_26736.FStar_TypeChecker_Env.strict_args_tab)
+=======
+                                     (uu___3292_26735.FStar_TypeChecker_Env.strict_args_tab);
+                                   FStar_TypeChecker_Env.erasable_types_tab =
+                                     (uu___3292_26735.FStar_TypeChecker_Env.erasable_types_tab)
+>>>>>>> snap
                                  }) t
                                in
                             match uu____26728 with
@@ -8288,7 +8307,13 @@ let (eta_expand :
                            FStar_TypeChecker_Env.nbe =
                              (uu___3301_26751.FStar_TypeChecker_Env.nbe);
                            FStar_TypeChecker_Env.strict_args_tab =
+<<<<<<< HEAD
                              (uu___3301_26751.FStar_TypeChecker_Env.strict_args_tab)
+=======
+                             (uu___3299_26750.FStar_TypeChecker_Env.strict_args_tab);
+                           FStar_TypeChecker_Env.erasable_types_tab =
+                             (uu___3299_26750.FStar_TypeChecker_Env.erasable_types_tab)
+>>>>>>> snap
                          }) t
                        in
                     (match uu____26743 with

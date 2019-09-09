@@ -4783,7 +4783,13 @@ let (check_and_ascribe :
               FStar_TypeChecker_Env.nbe =
                 (uu___1499_12153.FStar_TypeChecker_Env.nbe);
               FStar_TypeChecker_Env.strict_args_tab =
+<<<<<<< HEAD
                 (uu___1499_12153.FStar_TypeChecker_Env.strict_args_tab)
+=======
+                (uu___1300_10046.FStar_TypeChecker_Env.strict_args_tab);
+              FStar_TypeChecker_Env.erasable_types_tab =
+                (uu___1300_10046.FStar_TypeChecker_Env.erasable_types_tab)
+>>>>>>> snap
             }  in
           let uu____12156 = check1 env2 t1 t2  in
           match uu____12156 with
@@ -5479,6 +5485,7 @@ let (must_erase_for_extraction :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g  ->
     fun t  ->
+<<<<<<< HEAD
       let has_erased_for_extraction_attr fv =
         let uu____13790 =
           let uu____13795 =
@@ -5542,6 +5549,27 @@ let (must_erase_for_extraction :
                    || (has_erased_for_extraction_attr fv)
              | uu____14027 -> false)
         | uu____14029 -> false
+=======
+      let rec aux_whnf env t1 =
+        (FStar_TypeChecker_Env.non_informative env t1) ||
+          (let uu____11696 =
+             let uu____11697 = FStar_Syntax_Subst.compress t1  in
+             uu____11697.FStar_Syntax_Syntax.n  in
+           match uu____11696 with
+           | FStar_Syntax_Syntax.Tm_arrow uu____11701 ->
+               let uu____11716 = FStar_Syntax_Util.arrow_formals_comp t1  in
+               (match uu____11716 with
+                | (bs,c) ->
+                    let env1 = FStar_TypeChecker_Env.push_binders env bs  in
+                    (FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                      (aux env1 (FStar_Syntax_Util.comp_result c)))
+           | FStar_Syntax_Syntax.Tm_refine
+               ({ FStar_Syntax_Syntax.ppname = uu____11749;
+                  FStar_Syntax_Syntax.index = uu____11750;
+                  FStar_Syntax_Syntax.sort = t2;_},uu____11752)
+               -> aux env t2
+           | uu____11760 -> false)
+>>>>>>> snap
       
       and aux env t1 =
         let t2 =
@@ -5554,9 +5582,11 @@ let (must_erase_for_extraction :
             FStar_TypeChecker_Env.Beta;
             FStar_TypeChecker_Env.AllowUnboundUniverses;
             FStar_TypeChecker_Env.Zeta;
-            FStar_TypeChecker_Env.Iota] env t1
+            FStar_TypeChecker_Env.Iota;
+            FStar_TypeChecker_Env.Unascribe] env t1
            in
         let res = aux_whnf env t2  in
+<<<<<<< HEAD
         (let uu____14039 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
              (FStar_Options.Other "Extraction")
@@ -5566,6 +5596,17 @@ let (must_erase_for_extraction :
            let uu____14044 = FStar_Syntax_Print.term_to_string t2  in
            FStar_Util.print2 "must_erase=%s: %s\n"
              (if res then "true" else "false") uu____14044
+=======
+        (let uu____11770 =
+           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+             (FStar_Options.Other "Extraction")
+            in
+         if uu____11770
+         then
+           let uu____11775 = FStar_Syntax_Print.term_to_string t2  in
+           FStar_Util.print2 "must_erase=%s: %s\n"
+             (if res then "true" else "false") uu____11775
+>>>>>>> snap
          else ());
         res
        in aux g t
