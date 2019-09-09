@@ -386,11 +386,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
+    //propagate attributes from the bundle to its elements
+    let ses = ses |> List.map (fun e -> {e with sigattrs = e.sigattrs@se.sigattrs}) in
     let ses =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
-        let ses = tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
+        let ses =
+          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids
+          |> fst
+          |> N.elim_uvars env
+          |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases"
+        then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
         ses
       end
       else ses
