@@ -178,6 +178,7 @@ type env = {
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
+  erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -296,6 +297,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     dsenv = FStar.Syntax.DsEnv.empty_env deps;
     nbe = nbe;
     strict_args_tab = BU.smap_create 20;
+    erasable_types_tab = BU.smap_create 20;
   }
 
 let dsenv env = env.dsenv
@@ -333,7 +335,8 @@ let push_stack env =
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
               normalized_eff_names=BU.smap_copy env.normalized_eff_names;
               fv_delta_depths=BU.smap_copy env.fv_delta_depths;
-              strict_args_tab=BU.smap_copy env.strict_args_tab}
+              strict_args_tab=BU.smap_copy env.strict_args_tab;
+              erasable_types_tab=BU.smap_copy env.erasable_types_tab }
 
 let pop_stack () =
     match !stack with
@@ -842,38 +845,73 @@ let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
 let lookup_attrs_of_lid env lid : option<list<attribute>> =
   attrs_of_qninfo <| lookup_qname env lid
 
-let fv_with_lid_has_attr env fv_lid attr_lid : bool =
+let fv_exists_and_has_attr env fv_lid attr_lid : bool * bool =
     match lookup_attrs_of_lid env fv_lid with
-    | None
-    | Some [] ->
-      false
+    | None -> 
+      false, false
     | Some attrs ->
+      true,
       attrs |> BU.for_some (fun tm ->
          match (U.un_uinst tm).n with
          | Tm_fvar fv -> S.fv_eq_lid fv attr_lid
          | _ -> false)
 
+let fv_with_lid_has_attr env fv_lid attr_lid : bool =
+  snd (fv_exists_and_has_attr env fv_lid attr_lid)
+
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
+let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
+  let s = (S.lid_of_fv fv).str in
+  match BU.smap_try_find tab s with
+  | None ->
+    let should_cache, res = f () in
+    if should_cache then BU.smap_add tab s res;
+    res
+
+  | Some r ->
+    r
+
+let type_is_erasable env fv =
+  let f () =
+     let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
+     let ex', must_erase_for_extraction_attr =
+       fv_exists_and_has_attr env fv.fv_name.v Const.must_erase_for_extraction_attr in
+     ex || ex',
+     erasable || must_erase_for_extraction_attr
+  in
+  cache_in_fv_tab env.erasable_types_tab fv f
+
+let rec non_informative env t =
+    match (U.unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+      || type_is_erasable env fv
+    | Tm_app(head, _) -> non_informative env head
+    | Tm_uinst (t, _) -> non_informative env t
+    | Tm_arrow(_, c) ->
+      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
+      || is_ghost_effect (comp_effect_name c)
+    | _ -> false
+
 let fv_has_strict_args env fv =
-    let s = (S.lid_of_fv fv).str in
-    match BU.smap_try_find env.strict_args_tab s with
-    | None ->
-      let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
-      begin
-      match attrs with
-      | None -> None
-      | Some attrs ->
-          let res =
-            BU.find_map attrs (fun x ->
-              fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
-                     false x FStar.Parser.Const.strict_on_arguments_attr))
-          in
-          BU.smap_add env.strict_args_tab s res;
-          res
-      end
-    | Some l -> l
+  let f () =
+    let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
+    match attrs with
+    | None -> false, None
+    | Some attrs ->
+      let res =
+          BU.find_map attrs (fun x ->
+            fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                false x FStar.Parser.Const.strict_on_arguments_attr))
+      in
+      true, res
+  in
+  cache_in_fv_tab env.strict_args_tab fv f
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with

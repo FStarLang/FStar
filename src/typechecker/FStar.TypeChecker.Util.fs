@@ -1875,32 +1875,16 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | _ -> ()
 
 let must_erase_for_extraction (g:env) (t:typ) =
-    let has_erased_for_extraction_attr (fv:fv) :bool =
-      fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
-            match (SS.compress t).n with
-            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
-            | _ -> false))
-    in
     let rec aux_whnf env t = //t is expected to b in WHNF
-        match (SS.compress t).n with
-        | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid || has_erased_for_extraction_attr fv
-        | Tm_arrow _ ->
-          let bs, c = U.arrow_formals_comp t in
-          let env = FStar.TypeChecker.Env.push_binders env bs in
-          if U.is_pure_comp c
-          then (//printfn "t is %s; %s is pure!" (Print.term_to_string t) (Print.comp_to_string c);
-                aux env (U.comp_result c))
-          else U.is_pure_or_ghost_comp c //erase it if it is ghost
-        | Tm_refine({sort=t}, _)
-        | Tm_ascribed(t, _, _) ->
-          aux env t
-        | Tm_app(head, [_]) ->
-          (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?
-           | _ -> false)
-        | _ ->
-          false
+      Env.non_informative env t
+      || (match (SS.compress t).n with
+         | Tm_arrow _ ->
+           let bs, c = U.arrow_formals_comp t in
+           let env = FStar.TypeChecker.Env.push_binders env bs in
+           (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
+         | Tm_refine({sort=t}, _) ->
+           aux env t
+         | _ -> false)
     and aux env t =
         let t = N.normalize [Env.Primops;
                              Env.Weak;
@@ -1909,7 +1893,8 @@ let must_erase_for_extraction (g:env) (t:typ) =
                              Env.Beta;
                              Env.AllowUnboundUniverses;
                              Env.Zeta;
-                             Env.Iota] env t in
+                             Env.Iota;
+                             Env.Unascribe] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
         if Env.debug env <| Options.Other "Extraction"

@@ -2545,7 +2545,7 @@ let ghost_to_pure env c =
                       ForExtraction //and refinement types
                      ]
               env in
-    let non_info t = non_informative (norm cfg [] [] t) in
+    let non_info t = non_informative env (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
     | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
@@ -2575,7 +2575,7 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
                 ForExtraction //and refinement types
                 ]
         env in
-    let non_info t = non_informative (norm cfg [] [] t) in
+    let non_info t = non_informative env (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
