@@ -3958,7 +3958,9 @@ let (check_and_ascribe :
               FStar_TypeChecker_Env.nbe =
                 (uu___1300_10046.FStar_TypeChecker_Env.nbe);
               FStar_TypeChecker_Env.strict_args_tab =
-                (uu___1300_10046.FStar_TypeChecker_Env.strict_args_tab)
+                (uu___1300_10046.FStar_TypeChecker_Env.strict_args_tab);
+              FStar_TypeChecker_Env.erasable_types_tab =
+                (uu___1300_10046.FStar_TypeChecker_Env.erasable_types_tab)
             }  in
           let uu____10049 = check1 env2 t1 t2  in
           match uu____10049 with
@@ -4642,69 +4644,25 @@ let (must_erase_for_extraction :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g  ->
     fun t  ->
-      let has_erased_for_extraction_attr fv =
-        let uu____11670 =
-          let uu____11675 =
-            FStar_All.pipe_right fv FStar_Syntax_Syntax.lid_of_fv  in
-          FStar_All.pipe_right uu____11675
-            (FStar_TypeChecker_Env.lookup_attrs_of_lid g)
-           in
-        FStar_All.pipe_right uu____11670
-          (fun l_opt  ->
-             (FStar_Util.is_some l_opt) &&
-               (let uu____11694 = FStar_All.pipe_right l_opt FStar_Util.must
-                   in
-                FStar_All.pipe_right uu____11694
-                  (FStar_List.existsb
-                     (fun t1  ->
-                        let uu____11712 =
-                          let uu____11713 = FStar_Syntax_Subst.compress t1
-                             in
-                          uu____11713.FStar_Syntax_Syntax.n  in
-                        match uu____11712 with
-                        | FStar_Syntax_Syntax.Tm_fvar fv1 when
-                            FStar_Ident.lid_equals
-                              (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                              FStar_Parser_Const.must_erase_for_extraction_attr
-                            -> true
-                        | uu____11719 -> false))))
-         in
       let rec aux_whnf env t1 =
-        let uu____11745 =
-          let uu____11746 = FStar_Syntax_Subst.compress t1  in
-          uu____11746.FStar_Syntax_Syntax.n  in
-        match uu____11745 with
-        | FStar_Syntax_Syntax.Tm_type uu____11750 -> true
-        | FStar_Syntax_Syntax.Tm_fvar fv ->
-            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
-              (has_erased_for_extraction_attr fv)
-        | FStar_Syntax_Syntax.Tm_arrow uu____11753 ->
-            let uu____11768 = FStar_Syntax_Util.arrow_formals_comp t1  in
-            (match uu____11768 with
-             | (bs,c) ->
-                 let env1 = FStar_TypeChecker_Env.push_binders env bs  in
-                 let uu____11801 = FStar_Syntax_Util.is_pure_comp c  in
-                 if uu____11801
-                 then aux env1 (FStar_Syntax_Util.comp_result c)
-                 else FStar_Syntax_Util.is_pure_or_ghost_comp c)
-        | FStar_Syntax_Syntax.Tm_refine
-            ({ FStar_Syntax_Syntax.ppname = uu____11807;
-               FStar_Syntax_Syntax.index = uu____11808;
-               FStar_Syntax_Syntax.sort = t2;_},uu____11810)
-            -> aux env t2
-        | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____11819,uu____11820) ->
-            aux env t2
-        | FStar_Syntax_Syntax.Tm_app (head1,uu____11862::[]) ->
-            let uu____11901 =
-              let uu____11902 = FStar_Syntax_Util.un_uinst head1  in
-              uu____11902.FStar_Syntax_Syntax.n  in
-            (match uu____11901 with
-             | FStar_Syntax_Syntax.Tm_fvar fv ->
-                 (FStar_Syntax_Syntax.fv_eq_lid fv
-                    FStar_Parser_Const.erased_lid)
-                   || (has_erased_for_extraction_attr fv)
-             | uu____11907 -> false)
-        | uu____11909 -> false
+        (FStar_TypeChecker_Env.non_informative env t1) ||
+          (let uu____11696 =
+             let uu____11697 = FStar_Syntax_Subst.compress t1  in
+             uu____11697.FStar_Syntax_Syntax.n  in
+           match uu____11696 with
+           | FStar_Syntax_Syntax.Tm_arrow uu____11701 ->
+               let uu____11716 = FStar_Syntax_Util.arrow_formals_comp t1  in
+               (match uu____11716 with
+                | (bs,c) ->
+                    let env1 = FStar_TypeChecker_Env.push_binders env bs  in
+                    (FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                      (aux env1 (FStar_Syntax_Util.comp_result c)))
+           | FStar_Syntax_Syntax.Tm_refine
+               ({ FStar_Syntax_Syntax.ppname = uu____11749;
+                  FStar_Syntax_Syntax.index = uu____11750;
+                  FStar_Syntax_Syntax.sort = t2;_},uu____11752)
+               -> aux env t2
+           | uu____11760 -> false)
       
       and aux env t1 =
         let t2 =
@@ -4717,18 +4675,19 @@ let (must_erase_for_extraction :
             FStar_TypeChecker_Env.Beta;
             FStar_TypeChecker_Env.AllowUnboundUniverses;
             FStar_TypeChecker_Env.Zeta;
-            FStar_TypeChecker_Env.Iota] env t1
+            FStar_TypeChecker_Env.Iota;
+            FStar_TypeChecker_Env.Unascribe] env t1
            in
         let res = aux_whnf env t2  in
-        (let uu____11919 =
+        (let uu____11770 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
              (FStar_Options.Other "Extraction")
             in
-         if uu____11919
+         if uu____11770
          then
-           let uu____11924 = FStar_Syntax_Print.term_to_string t2  in
+           let uu____11775 = FStar_Syntax_Print.term_to_string t2  in
            FStar_Util.print2 "must_erase=%s: %s\n"
-             (if res then "true" else "false") uu____11924
+             (if res then "true" else "false") uu____11775
          else ());
         res
        in aux g t
