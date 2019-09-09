@@ -15,101 +15,229 @@
 *)
 module FStar.Classical
 
+/// This module contains the standard primitives to manipulate proof goals containing classical logic.
+/// The proof goals manipulated are values of type `Type` or `Type0`. One can go from a goal of type
+/// `Type` to `Type0` by "squashing" it into an F* value of type unit having a refinmnent corresponding
+/// to the original goal.
+///
+/// To produce a value of type `squash a`, the general method is to let-bind a unit value and annotate
+/// it with the type `squash a`, for instance:
+///
+/// ```fstar
+/// let pf : squash (1 <> 0) = () in ...
+/// ```
+///
+/// The F* typechecker will then proceed to proved the squashed property by typechecking the squashed
+/// value. To apply most of the lemmas here, you will have to let-bind or create auxiliary lemmas
+/// matching what the function expects to make F*'s unification mechanism work
+///
+
+(**** Witnesses *)
+
+/// Shows the existence of a type by exhibiting a value of that type. For instance:
+///
+/// ```fstar
+/// let x : n:nat{n <> 0} = 1 in
+/// give_witness x
+/// ```
 val give_witness (#a:Type) (_:a) :Lemma (ensures a)
 
+/// Same as before, but squashed version. For instance:
+///  ```fstar
+/// let pf : squash(1+1 = 2) = () in
+/// give_witness pf
+/// ```
 val give_witness_from_squash (#a:Type) (_:squash a) :Lemma (ensures a)
 
-val get_equality (#t:Type) (a b:t) :Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
+/// Returns the equality as a `Type` if it is provable from the context.
+val get_equality
+  (#t:Type)
+  (a b: t)
+  : Pure (a == b)
+    (requires (a == b))
+    (ensures (fun _ -> True))
 
-val get_forall (#a:Type) (p:a -> GTot Type0) :Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
+/// Returns the forall property as a `Type` if is is provable from the context.
+val get_forall
+  (#a:Type)
+  (p: a -> GTot Type0)
+  : Pure (forall (x: a). p x)
+    (requires (forall (x: a). p x))
+    (ensures (fun _ -> True))
 
+/// Applies an implication to the squashed left-hand side to get the squashed right-hand side.
 val impl_to_arrow (#a:Type0) (#b:Type0) (_:(a ==> b)) (_:squash a) :GTot (squash b)
 
+/// Returns the implication as a `Type` given a lemma-like function proving `b` from `a`.
 val arrow_to_impl (#a:Type0) (#b:Type0) (_:(squash a -> GTot (squash b))) :GTot (a ==> b)
 
-val forall_intro_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (p x))) :Tot (squash (forall (x:a). p x))
+(**** Universal quantification *)
 
-val lemma_forall_intro_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (p x))) :Lemma (forall (x:a). p x)
-
+/// Instantiate a proposition `p` with a certain value `x` in the context.
 val gtot_to_lemma (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (p x))) (x:a) :Lemma (p x)
 
+/// Same as before, but expects a lemma and provides a `GTot`.
 val lemma_to_squash_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> Lemma (p x))) (x:a) :GTot (squash (p x))
 
+
+/// The following values are all variations on a same theme: proving a proposition `p` true for all `x` of type `a`.
+
+/// Returns a proof (squashed) that property `p` holds for all `x` of type `a`.
+val forall_intro_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (p x))) :Tot (squash (forall (x:a). p x))
+
+/// Same as above, but expressed as a lemma.
+val lemma_forall_intro_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (p x))) :Lemma (forall (x:a). p x)
+
+/// Same as before, but expects a `Gtot` and returns a squashed `Tot`.
 val forall_intro_squash_gtot (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (squash (p x))))
   :Tot (squash (forall (x:a). p x))
 
-//This one seems more generally useful than the one above
+/// Same as before, but expects a `Gtot` and returns a `Tot`.
 val forall_intro_squash_gtot_join (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> GTot (squash (p x))))
   :Tot (forall (x:a). p x)
 
-val forall_intro (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> Lemma (p x))) :Lemma (forall (x:a). p x)
+/// This is the most used form of forall introduction. You can use it in the following way :
+///
+/// ```fstar
+/// let aux (x: a) : Lemma (p x) = ... in
+/// forall_intro aux;
+/// assert(forall (x:a). p x)
+/// ```
+val forall_intro (#a:Type) (#p:(a -> GTot Type)) ($_:(x:a -> Lemma (p x))) : Lemma (forall (x:a). p x)
 
+/// Same as above, but with a pattern guarding the trigger of the forall
 val forall_intro_with_pat (#a:Type) (#c: (x:a -> Type)) (#p:(x:a -> GTot Type0))
   ($pat: (x:a -> Tot (c x)))
   ($_: (x:a -> Lemma (p x)))
   :Lemma (forall (x:a).{:pattern (pat x)} p x)
 
-val forall_intro_sub (#a:Type) (#p:(a -> GTot Type)) (_:(x:a -> Lemma (p x))) :Lemma (forall (x:a). p x)
+/// Same as forall_intro, but without the `$` constraining the unification to be exact.
+val forall_intro_sub (#a:Type) (#p:(a -> GTot Type)) (_:(x:a -> Lemma (p x))) : Lemma (forall (x:a). p x)
 
-val forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0)) ($_: (x:a -> y:b x -> Lemma (p x y)))
-  :Lemma (forall (x:a) (y:b x). p x y)
+/// Same as `forall_intro` but with two arguments.
+val forall_intro_2
+  (#a:Type)
+  (#b:(a -> Type))
+  (#p:(x:a -> b x -> GTot Type0))
+  ($_: (x:a -> y:b x -> Lemma (p x y)))
+  : Lemma (forall (x:a) (y:b x). p x y)
 
-val forall_intro_2_with_pat (#a:Type) (#b:(a -> Type)) (#c: (x:a -> y:b x -> Type)) (#p:(x:a -> b x -> GTot Type0))
+/// Same as `forall_intro_with_pat` but with two arguments.
+val forall_intro_2_with_pat
+  (#a:Type)
+  (#b:(a -> Type))
+  (#c: (x:a -> y:b x -> Type))
+  (#p:(x:a -> b x -> GTot Type0))
   ($pat: (x:a -> y:b x -> Tot (c x y)))
   ($_: (x:a -> y:b x -> Lemma (p x y)))
-  :Lemma (forall (x:a) (y:b x).{:pattern (pat x y)} p x y)
+  : Lemma (forall (x:a) (y:b x).{:pattern (pat x y)} p x y)
 
-val forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x:a -> y:b x -> z:c x y -> Type0))
+val forall_intro_3
+  (#a:Type)
+  (#b:(a -> Type))
+  (#c:(x:a -> y:b x -> Type))
+  (#p:(x:a -> y:b x -> z:c x y -> Type0))
   ($_: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
   : Lemma (forall (x:a) (y:b x) (z:c x y). p x y z)
 
-val forall_intro_3_with_pat (#a:Type) (#b:(a -> Type)) (#c: (x:a -> y:b x -> Type)) (#d: (x:a -> y:b x -> z:c x y -> Type))
+val forall_intro_3_with_pat
+  (#a:Type)
+  (#b:(a -> Type))
+  (#c: (x:a -> y:b x -> Type))
+  (#d: (x:a -> y:b x -> z:c x y -> Type))
   (#p:(x:a -> y:b x -> z:c x y -> GTot Type0))
   ($pat: (x:a -> y:b x -> z:c x y -> Tot (d x y z)))
   ($_: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
-  :Lemma (forall (x:a) (y:b x) (z:c x y).{:pattern (pat x y z)} p x y z)
+  : Lemma (forall (x:a) (y:b x) (z:c x y).{:pattern (pat x y z)} p x y z)
 
 val forall_intro_4
-  (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#d:(x:a -> y:b x -> z:c x y -> Type))
+  (#a:Type)
+  (#b:(a -> Type))
+  (#c:(x:a -> y:b x -> Type))
+  (#d:(x:a -> y:b x -> z:c x y -> Type))
   (#p:(x:a -> y:b x -> z:c x y -> w:d x y z -> Type0))
   ($_: (x:a -> y:b x -> z:c x y -> w:d x y z -> Lemma (p x y z w)))
   : Lemma (forall (x:a) (y:b x) (z:c x y) (w:d x y z). p x y z w)
 
+(**** Existential quantification *)
+
+/// This one should be inferred by the SMT in most cases. This is how it should be used:
+///
+/// ```fstar
+/// exists_intro (fun (x: nat) -> x <> 0) 1
+/// ```
 val exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
-  :Lemma (requires (p witness)) (ensures (exists (x:a). p x))
+  : Lemma (requires (p witness)) (ensures (exists (x:a). p x))
 
+/// If, forall `x` of type `a`, we have `p x ==> r`, then if there exists such an `x`, `r` holds.
 val forall_to_exists (#a:Type) (#p:(a -> Type)) (#r:Type) ($_:(x:a -> Lemma (p x ==> r)))
-  :Lemma ((exists (x:a). p x) ==> r)
+  : Lemma ((exists (x:a). p x) ==> r)
 
+/// Same as before but with two arguments.
 val forall_to_exists_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r:Type)
   ($f:(x:a -> y:b -> Lemma ((p x /\ q y) ==> r)))
-  :Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
+  : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
+
+/// Main point for introducing the witness of an existential predicate. Should be used like this:
+///
+/// ```fstar
+/// let pf : squash (exists (x:a). p x) = () in
+/// exists_elim goal pf (fun x ->
+///   ...
+/// )
+/// ```
+val exists_elim (goal:Type) (#a:Type) (#p:(a -> Type)) (_:squash (exists (x:a). p x))
+  (_:(x:a{p x} -> GTot (squash goal))) : Lemma goal
+
+(**** Implications  *)
+
+/// The two next functions introduce implications in the context. Since they expect `Type0`, you have to provide them squashed values. For instance:
+///
+/// ```fstar
+/// let aux (_ : squash p) : Lemma q = ... in
+/// impl_intro aux
+/// ```
 
 val impl_intro_gtot (#p:Type0) (#q:Type0) ($_:p -> GTot q) :GTot (p ==> q)
+val impl_intro (#p:Type0) (#q:Type0) ($_: p -> Lemma q) : Lemma (p ==> q)
 
-val impl_intro (#p:Type0) (#q:Type0) ($_: p -> Lemma q) :Lemma (p ==> q)
-
-val exists_elim (goal:Type) (#a:Type) (#p:(a -> Type)) (_:squash (exists (x:a). p x))
-  (_:(x:a{p x} -> GTot (squash goal))) :Lemma goal
-
+/// `move_requires` is very useful when you want to convert a requires/ensures lemma into an
+/// implication. However, it will only work if your lemma takes only one argument and that both its
+/// pre and post conditions are functions applied to this argument. Any more complicated patterns won't
+/// unify, and you will have to use `impl_intro` more painfully instead.
 val move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
   ($_:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
-  :Lemma (p x ==> q x)
+  : Lemma (p x ==> q x)
 
+/// Generative version of `impl_intro`.
+val impl_intro_gen (#p:Type0) (#q:squash p -> Tot Type0) (_:squash p -> Lemma (q ()))
+  : Lemma (p ==> q ())
+
+/// Mixes `forall_intro` and `impl_intro` in a single lemma.
 val forall_impl_intro (#a:Type) (#p:(a -> GTot Type)) (#q:(a -> GTot Type))
   ($_:(x:a -> (squash(p x)) -> Lemma (q x)))
-  :Lemma (forall x. p x ==> q x)
+  : Lemma (forall x. p x ==> q x)
 
-val impl_intro_gen (#p:Type0) (#q:squash p -> Tot Type0) (_:squash p -> Lemma (q ()))
-  :Lemma (p ==> q ())
 
+/// Gost lemma version of `forall_impl_intro`.
 val ghost_lemma (#a:Type) (#p:(a -> GTot Type0)) (#q:(a -> unit -> GTot Type0))
   ($_:(x:a -> Ghost unit (p x) (q x)))
-  :Lemma (forall (x:a). p x ==> q x ())
+  : Lemma (forall (x:a). p x ==> q x ())
 
+(**** Disjunctions *)
+
+/// Eliminates a disjunction. The unificiation is fairly tricky for making this one work so here is how one can use it:
+///
+/// ```fstar
+/// let goal (_ : squash (l \/ r)) = ... in
+/// or_elim #l #r #goal
+///   (fun _ -> ...)
+///   (fun _ -> ...)
+/// ```
 val or_elim (#l #r:Type0) (#goal:(squash (l \/ r) -> Tot Type0))
   (hl:squash l -> Lemma (goal ()))
   (hr:squash r -> Lemma (goal ()))
   : Lemma ((l \/ r) ==> goal ())
 
-val excluded_middle (p:Type) :Lemma (requires (True)) (ensures (p \/ ~p))
+/// Introduces a disjunction thanks to the excluded middle of classical logic.
+val excluded_middle (p:Type) : Lemma (requires (True)) (ensures (p \/ ~p))
