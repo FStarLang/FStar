@@ -25,18 +25,19 @@ module U64 = FStar.UInt64
 
 type jun21_2017_t = { low: U64.t; high: U64.t }
 
-assume val jun21_2017_v: jun21_2017_t -> n:nat{n < pow2 128}
+// with --use_two_phase_tc false, we need to manually add the coercion
+assume val jun21_2017_v: jun21_2017_t -> n:nat{b2t (n < pow2 128)}
 
 [@ (expect_failure [66;19])]
 let jun21_2017_logand_fail (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
-  (ensures (fun r -> jun21_2017_v r = UInt.logand (jun21_2017_v a) (jun21_2017_v b))) = a
+  (ensures (fun r -> jun21_2017_v r == UInt.logand (jun21_2017_v a) (jun21_2017_v b))) = a
 
 assume val jun21_2017_vv: jun21_2017_t -> UInt.uint_t 128
 [@ (expect_failure [19])]
 let jun21_2017_logand (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
-  (ensures (fun r -> jun21_2017_vv r = UInt.logand (jun21_2017_vv a) (jun21_2017_vv b))) = a
+  (ensures (fun r -> jun21_2017_vv r == UInt.logand (jun21_2017_vv a) (jun21_2017_vv b))) = a
 
 ////////////////////////////////////////////////////////////////////////////////
 // June 29, 2017
@@ -94,10 +95,10 @@ let rec apr19_2017_mem #a x xs =
 
 [@ (expect_failure [19;19;19;19])]
 let apr19_2017_mem_sanity_fail #a x xs =
-        assert (apr19_2017_mem x xs <==> apr19_2017_mem x xs) by idtac ()
+        assert (apr19_2017_mem x xs == apr19_2017_mem x xs) by idtac ()
 
 let apr19_2017_mem_sanity (#a:eqtype) (x:a) xs =
-        assert (apr19_2017_mem x xs <==> apr19_2017_mem x xs) by idtac ()
+        assert (apr19_2017_mem x xs == apr19_2017_mem x xs) by idtac ()
 
 ////////////////////////////////////////////////////////////////////////////////
 //April 21, 2017
