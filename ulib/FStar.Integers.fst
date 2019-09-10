@@ -642,7 +642,7 @@ let ok #sw
 
 [@mark_for_norm]
 unfold
-let nat = i:int{ 0 <= i }
+let nat = i:int{ i >= 0 }
 
 [@mark_for_norm]
 unfold
