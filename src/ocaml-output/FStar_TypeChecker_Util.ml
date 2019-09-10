@@ -4654,8 +4654,11 @@ let (must_erase_for_extraction :
             (match uu____11706 with
              | (bs,c) ->
                  let env1 = FStar_TypeChecker_Env.push_binders env bs  in
-                 (FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-                   (aux env1 (FStar_Syntax_Util.comp_result c)))
+                 (FStar_Syntax_Util.is_ghost_effect
+                    (FStar_Syntax_Util.comp_effect_name c))
+                   ||
+                   ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                      (aux env1 (FStar_Syntax_Util.comp_result c))))
         | FStar_Syntax_Syntax.Tm_refine
             ({ FStar_Syntax_Syntax.ppname = uu____11739;
                FStar_Syntax_Syntax.index = uu____11740;
