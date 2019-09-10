@@ -1177,7 +1177,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     //propagate attributes from the bundle to its elements
     let ses = ses |> List.map (fun e -> {e with sigattrs = e.sigattrs@se.sigattrs}) in
     let ses =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if Options.use_two_phase_tc () then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses =
           tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids
@@ -1213,7 +1213,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_new_effect(ne) ->
     let ne =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if Options.use_two_phase_tc () then begin
         let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
@@ -1343,7 +1343,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let tps, env, us = tc_tparams env tps in
 
     let c =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if Options.use_two_phase_tc () then begin
         let c, _, _ = tc_comp ({ env with phase1 = true; lax = true }) c in
         c
       end else c
@@ -1401,7 +1401,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                                    (Ident.text_of_lid lid))) r;
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if Options.use_two_phase_tc () then begin
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -1416,7 +1416,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if Options.use_two_phase_tc () then begin
         let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -1550,7 +1550,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env' then begin
+      if Options.use_two_phase_tc () then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
