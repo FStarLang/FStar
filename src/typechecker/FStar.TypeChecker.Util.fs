@@ -1084,6 +1084,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let maybe_coerce env (e:term) (t1:typ) (t2:typ) : term * typ =
+    if not env.phase1 then (e, t1) else
     let lc = U.lcomp_of_comp (S.mk_Total t1) in
     let e, lc = maybe_coerce_lc env e lc t2 in
     e, lc.res_typ
