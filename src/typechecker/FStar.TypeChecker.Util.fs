@@ -1163,7 +1163,7 @@ let check_trivial_precondition env c =
     None
     (Env.get_range env)
   in
-  
+
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
@@ -2031,16 +2031,22 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | _ -> ()
 
 let must_erase_for_extraction (g:env) (t:typ) =
-    let rec aux_whnf env t = //t is expected to b in WHNF
-      Env.non_informative env t
-      || (match (SS.compress t).n with
-         | Tm_arrow _ ->
+    let rec descend env t = //t is expected to b in WHNF
+      match (SS.compress t).n with
+      | Tm_arrow _ ->
            let bs, c = U.arrow_formals_comp t in
            let env = FStar.TypeChecker.Env.push_binders env bs in
            (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
-         | Tm_refine({sort=t}, _) ->
+      | Tm_refine({sort=t}, _) ->
            aux env t
-         | _ -> false)
+      | Tm_app (head, _)
+      | Tm_uinst (head, _) ->
+           descend env head
+      | Tm_fvar fv ->
+           //special treatment for must_erase_for_extraction here
+           //See Env.type_is_erasable for more explanations
+           Env.fv_has_attr env fv C.must_erase_for_extraction_attr
+      | _ -> false
     and aux env t =
         let t = N.normalize [Env.Primops;
                              Env.Weak;
@@ -2052,7 +2058,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
                              Env.Iota;
                              Env.Unascribe] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
-        let res = aux_whnf env t in
+        let res = Env.non_informative env t || descend env t in
         if Env.debug env <| Options.Other "Extraction"
         then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
         res
