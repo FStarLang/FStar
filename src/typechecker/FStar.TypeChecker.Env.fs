@@ -457,7 +457,7 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
 
 let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
   if List.length ed.univs <> 0 || List.length ed.binders <> 0
-  then 
+  then
     let msg = BU.format2
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
       (Print.lid_to_string ed.mname)
@@ -847,7 +847,7 @@ let lookup_attrs_of_lid env lid : option<list<attribute>> =
 
 let fv_exists_and_has_attr env fv_lid attr_lid : bool * bool =
     match lookup_attrs_of_lid env fv_lid with
-    | None -> 
+    | None ->
       false, false
     | Some attrs ->
       true,
@@ -876,10 +876,13 @@ let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
 let type_is_erasable env fv =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
-     let ex', must_erase_for_extraction_attr =
-       fv_exists_and_has_attr env fv.fv_name.v Const.must_erase_for_extraction_attr in
-     ex || ex',
-     erasable || must_erase_for_extraction_attr
+     ex,erasable
+     //unfortunately, treating the Const.must_erase_for_extraction_attr
+     //in the same way here as erasable_attr leads to regressions in fragile proofs,
+     //notably in FStar.ModifiesGen, since this expands the class of computation types
+     //that can be promoted from ghost to tot. That in turn results in slightly different
+     //smt encodings, leading to breakages. So, sadly, I'm not including must_erase_for_extraction
+     //here. In any case, must_erase_for_extraction is transitionary and should be removed
   in
   cache_in_fv_tab env.erasable_types_tab fv f
 
