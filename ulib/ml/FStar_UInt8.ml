@@ -13,16 +13,16 @@ let one = 1
 let ones = 255
                                               
 let add (a:uint8) (b:uint8) : uint8 = a + b
-let add_underspec a b = add a b
-let add_mod a b = (add a b) land 255
+let add_underspec a b = (add a b) land 255
+let add_mod = add_underspec
 
 let sub (a:uint8) (b:uint8) : uint8 = a - b
-let sub_underspec a b = sub a b
-let sub_mod a b = (sub a b) land 255
+let sub_underspec a b = (sub a b) land 255
+let sub_mod = sub_underspec
 
 let mul (a:uint8) (b:uint8) : uint8 = a * b
-let mul_underspec a b = mul a b
-let mul_mod a b = (mul a b) land 255
+let mul_underspec a b = (mul a b) land 255
+let mul_mod = mul_underspec
 
 let div (a:uint8) (b:uint8) : uint8 = a / b
 
