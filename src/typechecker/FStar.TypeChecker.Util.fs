@@ -1272,14 +1272,21 @@ let check_trivial_precondition env c =
 
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
-let coerce_with (env:Env.env) (e : term) (lc : lcomp) (f : lident) (ty : typ) : term * lcomp =
+let coerce_with (env:Env.env)
+                (e : term) (lc : lcomp) // original term and its computation type
+                (ty : typ) // new result typ
+                (f : lident) // coercion
+                (us : universes) (eargs : args) // extra arguments to coertion
+                : term * lcomp =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if Env.debug env (Options.Other "Coercions") then
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
-        let coertion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
+        let coercion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
+        let coercion = S.mk_Tm_uinst coercion us in
+        let coercion = U.mk_app coercion eargs in
         let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total ty) in
-        let e = mk_Tm_app coertion [S.as_arg e] None e.pos in
+        let e = mk_Tm_app coercion [S.as_arg e] None e.pos in
         e, lc
     | None ->
         Errors.log_issue e.pos (Errors.Warning_CoercionNotFound,
@@ -1336,20 +1343,20 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
 
     match (U.un_uinst head).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type t ->
-        coerce_with env e lc C.b2t_lid U.ktype0
+        coerce_with env e lc U.ktype0 C.b2t_lid [] []
 
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
-        coerce_with env e lc C.inspect S.t_term_view
+        coerce_with env e lc S.t_term_view C.inspect [] []
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
-        coerce_with env e lc C.pack S.t_term
+        coerce_with env e lc S.t_term C.pack [] []
 
     | _ when is_erased env t res_typ ->
-        coerce_with env e lc C.reveal t
+        coerce_with env e lc t C.reveal [env.universe_of env t] [S.iarg t]
 
     | _ when is_erased env res_typ t ->
-        coerce_with env e lc C.hide t
+        coerce_with env e lc t C.hide [env.universe_of env res_typ] [S.iarg res_typ]
 
     | _ ->
       e, lc
@@ -1367,7 +1374,7 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
     let hd, args = U.head_and_args rt in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc C.inspect S.t_term_view
+        Some <| coerce_with env e lc S.t_term_view C.inspect [] []
     | _ ->
         None
 
