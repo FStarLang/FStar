@@ -2222,3 +2222,13 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
   c, Env.conj_guard g guard_f
+
+let get_field_projector_name env datacon index =
+  let _, t = Env.lookup_datacon env datacon in
+  match (SS.compress t).n with
+  | Tm_arrow (bs, _) when List.length bs > index ->
+    let b = List.nth bs index in
+    U.mk_field_projector_name datacon (fst b) index |> fst
+  | _ ->
+    raise_error (Errors.Fatal_DataContructorNotFound,
+      BU.format1 "Data constructor %s not found" (Ident.string_of_lid datacon)) (Env.get_range env)
