@@ -1324,6 +1324,13 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
     let tps, c = SS.open_comp tps c in
     let tps, env, us = tc_tparams env tps in
+
+    let c =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let c, _, _ = tc_comp ({ env with phase1 = true; lax = true }) c in
+        c
+      end else c
+    in
     let c, u, g = tc_comp env c in
     Rel.force_trivial_guard env g;
     let _ =
