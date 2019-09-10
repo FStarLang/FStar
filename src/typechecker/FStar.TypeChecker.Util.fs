@@ -1880,7 +1880,8 @@ let must_erase_for_extraction (g:env) (t:typ) =
       | Tm_arrow _ ->
            let bs, c = U.arrow_formals_comp t in
            let env = FStar.TypeChecker.Env.push_binders env bs in
-           (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
+           (U.is_ghost_effect (U.comp_effect_name c))
+           || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
       | Tm_refine({sort=t}, _) ->
            aux env t
       | Tm_app (head, _)
