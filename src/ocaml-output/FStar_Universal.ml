@@ -38,8 +38,6 @@ let with_dsenv_of_tcenv :
                  (uu___8_51.FStar_TypeChecker_Env.sigtab);
                FStar_TypeChecker_Env.attrtab =
                  (uu___8_51.FStar_TypeChecker_Env.attrtab);
-               FStar_TypeChecker_Env.is_pattern =
-                 (uu___8_51.FStar_TypeChecker_Env.is_pattern);
                FStar_TypeChecker_Env.instantiate_imp =
                  (uu___8_51.FStar_TypeChecker_Env.instantiate_imp);
                FStar_TypeChecker_Env.effects =
@@ -302,8 +300,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___72_410.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___72_410.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___72_410.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___72_410.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -392,8 +388,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___75_412.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___75_412.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___75_412.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___75_412.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -481,8 +475,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___78_414.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___78_414.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___78_414.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___78_414.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -571,8 +563,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___81_416.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___81_416.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___81_416.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___81_416.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =

@@ -412,13 +412,13 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
         (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
         FStar_Pervasives_Native.None
        in
-    let inspect =
+    let inspect1 =
       let uu____1670 = FStar_Syntax_Syntax.fv_to_tm inspect_fv  in
       { lid = inspect_lid; fv = inspect_fv; t = uu____1670 }  in
-    let pack =
+    let pack1 =
       let uu____1672 = FStar_Syntax_Syntax.fv_to_tm pack_fv  in
       { lid = pack_lid; fv = pack_fv; t = uu____1672 }  in
-    (inspect, pack)
+    (inspect1, pack1)
   
 let (uu___71 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln" 
 let (fstar_refl_inspect_ln : refl_constant) =
