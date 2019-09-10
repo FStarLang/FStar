@@ -5983,3 +5983,38 @@ let (lift_tf_layered_effect :
                                    in
                                 (c1, uu____15479)))))))
   
+let (get_field_projector_name :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident -> Prims.int -> FStar_Ident.lident)
+  =
+  fun env  ->
+    fun datacon  ->
+      fun index1  ->
+        let uu____15498 = FStar_TypeChecker_Env.lookup_datacon env datacon
+           in
+        match uu____15498 with
+        | (uu____15503,t) ->
+            let uu____15505 =
+              let uu____15506 = FStar_Syntax_Subst.compress t  in
+              uu____15506.FStar_Syntax_Syntax.n  in
+            (match uu____15505 with
+             | FStar_Syntax_Syntax.Tm_arrow (bs,uu____15510) when
+                 (FStar_List.length bs) > index1 ->
+                 let b = FStar_List.nth bs index1  in
+                 let uu____15550 =
+                   FStar_Syntax_Util.mk_field_projector_name datacon
+                     (FStar_Pervasives_Native.fst b) index1
+                    in
+                 FStar_All.pipe_right uu____15550 FStar_Pervasives_Native.fst
+             | uu____15561 ->
+                 let uu____15562 =
+                   let uu____15568 =
+                     let uu____15570 = FStar_Ident.string_of_lid datacon  in
+                     FStar_Util.format1 "Data constructor %s not found"
+                       uu____15570
+                      in
+                   (FStar_Errors.Fatal_DataContructorNotFound, uu____15568)
+                    in
+                 let uu____15574 = FStar_TypeChecker_Env.get_range env  in
+                 FStar_Errors.raise_error uu____15562 uu____15574)
+  

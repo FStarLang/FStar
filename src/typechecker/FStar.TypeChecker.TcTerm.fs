@@ -1862,6 +1862,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
 and tc_pat env (pat_t:typ) (p0:pat) :
         pat                          (* the type-checked, fully decorated pattern                                   *)
       * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
+      * list<term>
       * Env.env                      (* the environment extended with all the binders                               *)
       * term                         (* terms corresponding to the pattern                                          *)
       * term                         (* the same term in normal form                                                *)
@@ -1998,11 +1999,25 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     in
     let rec check_nested_pattern env (p:pat) (t:typ)
         : list<bv>
+        * list<term>
         * term
         * pat
         * guard_t =
         if Env.debug env <| Options.Other "Patterns"
         then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
+
+        let id = S.fvar Const.id_lid (S.Delta_constant_at_level 1) None in
+
+        let mk_disc_t (disc:term) (inner_t:term) : term =
+          let x_b = S.gen_bv "x" None t |> S.mk_binder in
+          let tm = S.mk_Tm_app
+            disc
+            [x_b |> fst |> S.bv_to_name |> S.as_arg] None Range.dummyRange in
+          let tm = S.mk_Tm_app
+            inner_t
+            [tm |> S.as_arg] None Range.dummyRange in
+          U.abs [x_b] tm None in
+        
         match p.v with
         | Pat_dot_term _ ->
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
@@ -2010,6 +2025,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | Pat_wild x ->
           let x = {x with sort=t} in
           [x],
+          [id],
           S.bv_to_name x,
           {p with v=Pat_wild x},
           Env.trivial_guard
@@ -2017,6 +2033,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | Pat_var x ->
           let x = {x with sort=t} in
           [x],
+          [id],
           S.bv_to_name x,
           {p with v=Pat_var x},
           Env.trivial_guard
@@ -2030,6 +2047,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           then fail (BU.format2 "Type of pattern (%s) does not match type of scrutinee (%s)"
                                 (Print.term_to_string lc.res_typ)
                                 (Print.term_to_string expected_t));
+          [],
           [],
           e_c,
           p,
@@ -2075,14 +2093,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                               |> String.concat " ");
               simple_pat_e, simple_bvs, guard
           in
-          let _env, bvs, checked_sub_pats, subst, g =
+          let _env, bvs, tms, checked_sub_pats, subst, g, _ =
             List.fold_left2
-              (fun (env, bvs, pats, subst, g) (p, b) x ->
+              (fun (env, bvs, tms, pats, subst, g, i) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
-                let bvs_p, e_p, p, g' = check_nested_pattern env p expected_t in
+                let bvs_p, tms_p, e_p, p, g' = check_nested_pattern env p expected_t in
                 let env = Env.push_bvs env bvs_p in
-                env, bvs@bvs_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g')
-              (env, [], [], [], Env.conj_guard g0 g1)
+                let tms_p =
+                  let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
+                  tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
+                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', i+1)
+              (env, [], [], [], [], Env.conj_guard g0 g1, 0)
               sub_pats
               simple_bvs
           in
@@ -2116,13 +2137,14 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               | _ -> failwith "Impossible"
           in
           bvs,
+          tms,
           pat_e,
           reconstruct_nested_pat simple_pat_elab,
           g
     in
     if Env.debug env <| Options.Other "Patterns"
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
-    let bvs, pat_e, pat, g =
+    let bvs, tms, pat_e, pat, g =
         check_nested_pattern
             ({(Env.clear_expected_typ env |> fst) with use_eq=true})
             (PatternUtils.elaborate_pat env p0)
@@ -2132,7 +2154,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     then BU.print2 "Done checking pattern %s as expression %s\n"
                     (Print.pat_to_string pat)
                     (Print.term_to_string pat_e);
-    pat, bvs, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g
+    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g
 
 
 (********************************************************************************************************************)
@@ -2158,9 +2180,14 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp, guard_pat =
+  let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat =
     tc_pat env pat_t pattern
   in
+
+  if Env.debug env <| Options.Extreme then
+    BU.format3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
+      (Print.pat_to_string pattern) (Print.bvs_to_string ";" pat_bvs)
+      (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms);
 
   (* 2. Check the when clause *)
   let when_clause, g_when = match when_clause with

@@ -121,3 +121,5 @@ val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> te
 val layered_effect_indices_as_binders:env ->  Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
 
 val lift_tf_layered_effect : target:lident -> lift_ts:tscheme -> Env.lift_comp_t
+
+val get_field_projector_name : env -> datacon:lident -> index:int -> lident
