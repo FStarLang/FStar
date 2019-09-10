@@ -1061,11 +1061,11 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
                     (Print.term_to_string t);
 
     // checks if `t2 == erased t1`
-    let is_erased env t1 t2 =
+    let is_erased t1 t2 =
         let head, args = U.head_and_args t2 in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [(x, None)] ->
-            S.fv_eq_lid fv C.erased_lid && Rel.teq_nosmt_force env x t1
+            S.fv_eq_lid fv C.erased_lid && U.term_eq x t1
         | _ -> false
     in
 
@@ -1081,10 +1081,10 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         coerce_with env e lc S.t_term C.pack [] []
 
 
-    | _ when is_erased env t res_typ ->
+    | _ when is_erased t res_typ ->
         coerce_with env e lc t C.reveal [env.universe_of env t] [S.iarg t]
 
-    | _ when is_erased env res_typ t ->
+    | _ when is_erased res_typ t ->
         coerce_with env e lc t C.hide [env.universe_of env res_typ] [S.iarg res_typ]
 
     | _ ->

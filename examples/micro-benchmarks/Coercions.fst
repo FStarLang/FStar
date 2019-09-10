@@ -15,29 +15,6 @@ let test4 (x:erased int) : GTot (erased int) = x
 
 let test5 (x:int) : GTot (erased int) = x
 
-[@(expect_failure [34])]
-let test0' (x: erased 'a) : Tot 'a = x
-
-let test1' (x: erased 'a) : GTot _ = x
-
-let test2' (x:'a) : erased _ = x
-
-let test3' (x:erased 'a) : erased _ = x
-
-let test4' (x:erased 'a) : GTot (erased _) = x
-
-let test5' (x:'a) : GTot (erased _) = x
-
-let test1'' (x: erased 'a) : GTot 'a = x
-
-let test2'' (x:'a) : erased 'a = x
-
-let test3'' (x:erased 'a) : erased 'a = x
-
-let test4'' (x:erased 'a) : GTot (erased 'a) = x
-
-let test5'' (x:'a) : GTot (erased 'a) = x
-
 assume val p : int -> prop
 assume val foo (x:int) : Lemma (ensures (p x))
 
