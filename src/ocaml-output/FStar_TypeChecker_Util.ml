@@ -5486,6 +5486,7 @@ let (must_erase_for_extraction :
   fun g  ->
     fun t  ->
 <<<<<<< HEAD
+<<<<<<< HEAD
       let has_erased_for_extraction_attr fv =
         let uu____13790 =
           let uu____13795 =
@@ -5570,6 +5571,32 @@ let (must_erase_for_extraction :
                -> aux env t2
            | uu____11760 -> false)
 >>>>>>> snap
+=======
+      let rec descend env t1 =
+        let uu____11686 =
+          let uu____11687 = FStar_Syntax_Subst.compress t1  in
+          uu____11687.FStar_Syntax_Syntax.n  in
+        match uu____11686 with
+        | FStar_Syntax_Syntax.Tm_arrow uu____11691 ->
+            let uu____11706 = FStar_Syntax_Util.arrow_formals_comp t1  in
+            (match uu____11706 with
+             | (bs,c) ->
+                 let env1 = FStar_TypeChecker_Env.push_binders env bs  in
+                 (FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                   (aux env1 (FStar_Syntax_Util.comp_result c)))
+        | FStar_Syntax_Syntax.Tm_refine
+            ({ FStar_Syntax_Syntax.ppname = uu____11739;
+               FStar_Syntax_Syntax.index = uu____11740;
+               FStar_Syntax_Syntax.sort = t2;_},uu____11742)
+            -> aux env t2
+        | FStar_Syntax_Syntax.Tm_app (head1,uu____11751) -> descend env head1
+        | FStar_Syntax_Syntax.Tm_uinst (head1,uu____11777) ->
+            descend env head1
+        | FStar_Syntax_Syntax.Tm_fvar fv ->
+            FStar_TypeChecker_Env.fv_has_attr env fv
+              FStar_Parser_Const.must_erase_for_extraction_attr
+        | uu____11783 -> false
+>>>>>>> snap
       
       and aux env t1 =
         let t2 =
@@ -5585,6 +5612,7 @@ let (must_erase_for_extraction :
             FStar_TypeChecker_Env.Iota;
             FStar_TypeChecker_Env.Unascribe] env t1
            in
+<<<<<<< HEAD
         let res = aux_whnf env t2  in
 <<<<<<< HEAD
         (let uu____14039 =
@@ -5598,14 +5626,24 @@ let (must_erase_for_extraction :
              (if res then "true" else "false") uu____14044
 =======
         (let uu____11770 =
+=======
+        let res =
+          (FStar_TypeChecker_Env.non_informative env t2) || (descend env t2)
+           in
+        (let uu____11793 =
+>>>>>>> snap
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
              (FStar_Options.Other "Extraction")
             in
-         if uu____11770
+         if uu____11793
          then
-           let uu____11775 = FStar_Syntax_Print.term_to_string t2  in
+           let uu____11798 = FStar_Syntax_Print.term_to_string t2  in
            FStar_Util.print2 "must_erase=%s: %s\n"
+<<<<<<< HEAD
              (if res then "true" else "false") uu____11775
+>>>>>>> snap
+=======
+             (if res then "true" else "false") uu____11798
 >>>>>>> snap
          else ());
         res
