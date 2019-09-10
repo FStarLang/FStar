@@ -1033,6 +1033,7 @@ let coerce_with (env:Env.env)
         e, lc
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+    if not env.phase1 && not (Options.ml_ish ()) then (e, lc) else
     let is_t_term t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with
@@ -1090,7 +1091,6 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let maybe_coerce env (e:term) (t1:typ) (t2:typ) : term * typ =
-    if not env.phase1 then (e, t1) else
     let lc = U.lcomp_of_comp (S.mk_Total t1) in
     let e, lc = maybe_coerce_lc env e lc t2 in
     e, lc.res_typ
