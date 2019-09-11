@@ -65,10 +65,11 @@ let stronger (a:Type)
 let conjunction (a:Type)
   (pre_f:pre_t) (post_f:post_t a)
   (pre_g:pre_t) (post_g:post_t a)
+  (p:Type0)
   : Type
 = repr a
-  (fun h -> pre_f h /\ pre_g h)
-  (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1)
+  (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
+  (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
 // let conjunction_is_stronger_f (a:Type)
 //   (pre_f:pre_t) (post_f:post_t a)
