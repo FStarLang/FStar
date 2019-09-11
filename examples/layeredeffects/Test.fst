@@ -32,9 +32,8 @@ assume val test (x:int)
 #restart-solver
 #set-options "--log_queries"
 let test1 (l:list int)
-: HoareST int (fun _ -> True) (fun _ _ _ -> True)
+: HoareST int (fun _ -> Cons? l /\ Cons?.hd l > 0) (fun _ _ _ -> True)
 = match l with
-  | []   -> test 1
   | hd::_ -> test hd
 
 
