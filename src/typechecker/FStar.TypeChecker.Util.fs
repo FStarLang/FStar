@@ -1070,6 +1070,49 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
+let mk_layered_conjunction _env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp =
+  let _, conjunction = Env.inst_tscheme_with (ed.match_wps |> right).conjunction [u_a] in
+  let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
+  let a_b, f_bs, g_bs, p_b, body =
+    match (SS.compress conjunction).n with
+    | Tm_abs (bs, body, _) ->
+      let bs, body = SS.open_term bs body in
+      let a_b, bs = List.hd bs, List.tl bs in
+      let f_bs, bs = List.splitAt (List.length is1) bs in
+      let g_bs, bs = List.splitAt (List.length is1) bs in
+      a_b, f_bs, g_bs, List.hd bs, U.unascribe body
+    | _ -> failwith "Impossible" in  //AR: TODO: FIXME: raise error 
+
+  let substs =
+    [NT (a_b |> fst, a)]@
+    (List.map2 (fun f_b i -> NT (f_b |> fst, i)) f_bs is1)@
+    (List.map2 (fun g_b i -> NT (g_b |> fst, i)) g_bs is2)@
+    [NT (p_b |> fst, p)] in
+
+  let body = SS.subst substs body in
+
+  let is =
+    match (SS.compress body).n with
+    | Tm_app (_, a::args) -> List.map fst args
+    | _ -> failwith "Impossible" in
+
+  mk_Comp ({
+    comp_univs = [u_a];
+    effect_name = ed.mname;
+    result_typ = a;
+    effect_args = is |> List.map S.as_arg;
+    flags = []
+  })
+
+let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp =
+  let if_then_else, _, _ = U.get_match_with_close_wps ed.match_wps in
+  let _, _, wp_t = destruct_wp_comp ct1 in
+  let _, _, wp_e = destruct_wp_comp ct2 in
+  let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
+    [S.as_arg a; S.as_arg p; S.as_arg wp_t; S.as_arg wp_e]
+    None (Range.union_ranges wp_t.pos wp_e.pos) in
+  mk_comp ed u_a a wp []
+
 let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
@@ -1088,9 +1131,6 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
         then
              lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
         else begin
-            let ifthenelse md res_t g wp_t wp_e =
-                let if_then_else, _, _ = U.get_match_with_close_wps md.match_wps in
-                mk_Tm_app (inst_effect_fun_with [u_res_t] env md if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
             let default_case =
                 let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
                 let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
@@ -1106,30 +1146,34 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
                then cthen true //inline each the branch, if eligible
                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
-            let comp, g_comp = List.fold_right (fun (g, eff_label, _, cthen) (celse, g_comp) ->
+            let md, comp, g_comp = List.fold_right (fun (g, eff_label, _, cthen) (_, celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let md, wp_then, wp_else, g_lift =
+                let md, ct_then, ct_else, g_lift =
                   let m, cthen, celse, g_lift = lift_comps env cthen celse None false in
                   let md = Env.get_effect_decl env m in
-                  let _, _, wp_then = cthen |> U.comp_to_comp_typ |> destruct_wp_comp in
-                  let _, _, wp_else = celse |> U.comp_to_comp_typ |> destruct_wp_comp in
-                  md, wp_then, wp_else, g_lift in
-                mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else) [],
+                  md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift in
+                let fn =
+                  if md.is_layered then mk_layered_conjunction
+                  else mk_non_layered_conjunction in
+                Some md,
+                fn env md u_res_t res_t g ct_then ct_else,
                 Env.conj_guard (Env.conj_guard g_comp gthen) g_lift
-            ) lcases (default_case, Env.trivial_guard) in
+            ) lcases (None, default_case, Env.trivial_guard) in
             match lcases with
             | []
             | [_] -> comp, g_comp
             | _ ->
-              let comp = Env.comp_to_comp_typ env comp in
-              let md = Env.get_effect_decl env comp.effect_name in
-              let _, _, wp = destruct_wp_comp comp in
-              let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
-              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
-                                 [S.as_arg res_t; S.as_arg wp]
-                                 None
-                                 wp.pos in
-              mk_comp md u_res_t res_t wp bind_cases_flags, g_comp
+              if (md |> must).is_layered then comp, g_comp
+              else
+                let comp = Env.comp_to_comp_typ env comp in
+                let md = Env.get_effect_decl env comp.effect_name in
+                let _, _, wp = destruct_wp_comp comp in
+                let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
+                let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
+                                   [S.as_arg res_t; S.as_arg wp]
+                                   None
+                                   wp.pos in
+                mk_comp md u_res_t res_t wp bind_cases_flags, g_comp
         end
     in
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases

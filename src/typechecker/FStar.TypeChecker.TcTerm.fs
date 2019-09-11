@@ -839,7 +839,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
     in
     if debug env Options.Extreme
-    then BU.print2 "(%s) comp type = %s\n"
+    then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
                       (Range.string_of_range top.pos) (TcComm.lcomp_to_string cres);
     e, cres, Env.conj_guard g1 g_branches
 
@@ -2280,6 +2280,7 @@ and tc_eqn scrutinee env branch
 
     (* (b) *)
     let c_weak, g_when_weak =
+     let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      match eqs, when_condition with
       | _ when not (Env.should_verify env) ->
         c, g_when
