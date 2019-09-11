@@ -2278,7 +2278,8 @@ and tc_eqn scrutinee env branch
           let pat_bv_tms =
             List.fold_left2 (fun acc pat_bv_tm bv ->
               let expected_t = U.arrow [S.null_binder pat_t] (S.mk_Total' bv.sort (Env.new_u_univ () |> Some)) in
-              let pat_bv_tm = tc_trivial_guard (Env.set_expected_typ env expected_t) pat_bv_tm |> fst in
+              let env = { (Env.set_expected_typ env expected_t) with lax = true } in
+              let pat_bv_tm = tc_trivial_guard env pat_bv_tm |> fst in
               acc@[pat_bv_tm]
             ) [] pat_bv_tms pat_bvs in
 
