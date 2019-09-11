@@ -36,80 +36,179 @@ let enc_inputs n (aes:ae_scheme n) =
     (lo bytes)
     (lo handle)
 
+/// Here, I start to define various subfunctions of Enc to make the proof more
+/// modular and hopefully easier to tackle for F*.
 
+/// Set up a function that asserts that the nonce was not used before (i.e. is
+/// not in the log). It should raise() if it was and return() if it wasn't.
+let assert_nonce_uniqueness_t_base n aes
+  = ((enc_inputs n aes)
+    ^^--> eff_rel (ae_log_rel #n aes) (lo unit))
+
+let assert_nonce_uniqueness' n aes
+  : assert_nonce_uniqueness_t_base n aes
+  = fun (p,nonce,h) ->
+    ae_st <-- get ;
+    match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
+    | Some option_map ->
+      raise #(ae_log #n aes)
+    | None ->
+      return ()
+
+let assert_nonce_uniqueness_t n aes
+  = ((enc_inputs n aes)
+    ^--> eff_rel (ae_log_rel #n aes) (lo unit))
+
+val assert_nonce_uniqueness_related (n:u32)
+                                    (aes:ae_scheme n)
+                                    (a0 a1:type_of ((sig_rel (key_read_sig n)) ** enc_inputs n aes))
+                                    (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
+  : Lemma
+      (requires
+        a0 `(sig_rel (key_read_sig n) ** enc_inputs n aes)` a1 /\
+        s0 `(default_tape_rel ** combined_state_rel n aes)` s1)
+
+      (ensures (
+        let (km0,(p0,nonce0,h0)) = a0 in
+        let (km1,(p1,nonce1,h1)) = a1 in
+        let g0 : assert_nonce_uniqueness_t n aes = assert_nonce_uniqueness' n aes in
+        let g1 : assert_nonce_uniqueness_t n aes = assert_nonce_uniqueness' n aes in
+        let g00 : eff (combined_state_rel n aes) (lo unit) = lift_left #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g0 (snd a0) <: eff (ae_log_rel #n aes) (lo unit)) in
+        let g11 : eff (combined_state_rel n aes) (lo unit) = lift_left #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g1 (snd a1) <: eff (ae_log_rel #n aes) (lo unit)) in
+        g00 s0 `(triple_rel (option_rel (lo unit)) (combined_state_rel n aes) default_index_rel)` g11 s1 /\
+        g00 s0 == g11 s1
+        ))
+let assert_nonce_uniqueness_related n aes a0 a1 s0 s1 =
+    let g0 : assert_nonce_uniqueness_t n aes = assert_nonce_uniqueness' n aes in
+    let g1 : assert_nonce_uniqueness_t n aes = assert_nonce_uniqueness' n aes in
+    assert (g0 (snd a0) (fst s0, (fst (snd s0))) `(triple_rel (option_rel (lo unit)) (ae_log_rel #n aes) default_index_rel)` g1 (snd a1) (fst s0, fst (snd s1)))
+
+/// This goes trough just fine...
+let assert_nonce_uniqueness n aes
+  : assert_nonce_uniqueness_t n aes
+  = assert_nonce_uniqueness' n aes
+
+/// I didn't do the whole song and dance for the GET function of the KEY
+/// package, but I think this lemma should be enough and it does go through.
 #set-options "--z3rlimit 350 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 val get_related (n:u32)
                 (aes:ae_scheme n)
                 (a0 a1:type_of ((sig_rel (key_read_sig n)) ** enc_inputs n aes))
                 (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
-                (h0 h1:type_of (lo handle))
+                //(h0 h1:type_of (lo handle))
   : Lemma
       (requires
         a0 `((sig_rel (key_read_sig n)) ** enc_inputs n aes)` a1 /\
-        s0 `(default_tape_rel ** combined_state_rel n aes)` s1 /\
-        h0 `lo handle` h1)
-
+        s0 `(default_tape_rel ** combined_state_rel n aes)` s1
+        //h0 `lo handle` h1
+        )
       (ensures (
-        let g0 : key_get_t n = get_oracle ID_GET (fst a0) in
-        let g1 : key_get_t n = get_oracle ID_GET (fst a1) in
+        let (km0,(p0,nonce0,h0)) = a0 in
+        let (km1,(p1,nonce1,h1)) = a1 in
+        //let s0' = assert_nonce_uniqueness n aes a0 in
+        //let s1' = assert_nonce_uniqueness n aes a1 in
+        let g0 : key_get_t n = get_oracle ID_GET km0 in
+        let g1 : key_get_t n = get_oracle ID_GET km1 in
         let g00 : eff (combined_state_rel n aes) (lo (key n)) = lift_right #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g0 h0 <: eff (key_state_rel n) (lo (key n))) in
         let g11 : eff (combined_state_rel n aes) (lo (key n)) = lift_right #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g1 h1 <: eff (key_state_rel n) (lo (key n))) in
+        g00 s0 `(triple_rel (option_rel (lo (key n))) (combined_state_rel n aes) default_index_rel)` g11 s1 /\
         g00 s0 == g11 s1))
-let get_related n aes a0 a1 s0 s1 h0 h1 =
-    let g0 : key_get_t n = get_oracle ID_GET (fst a0) in
-    let g1 : key_get_t n = get_oracle ID_GET (fst a1) in
+let get_related n aes a0 a1 s0 s1 =
+    let (km0,(p0,nonce0,h0)) = a0 in
+    let (km1,(p1,nonce1,h1)) = a1 in
+    let g0 : key_get_t n = get_oracle ID_GET km0 in
+    let g1 : key_get_t n = get_oracle ID_GET km1 in
     assert (g0 h0 (fst s0, (snd (snd s0))) `(triple_rel (option_rel (lo (key n))) (key_state_rel n) default_index_rel)` g1 h1 (fst s0, snd (snd s1)))
+
+let add_to_log_t n aes
+  = ((enc_inputs n aes ** (lo bytes))
+    ^--> eff_rel (ae_log_rel #n aes) (lo unit))
+
+let add_to_log' n aes
+  : add_to_log_t n aes
+  =
+    fun ((p,nonce,h),c) ->
+      ae_st <-- get ;
+      let ae_st' = DM.upd ae_st (h,nonce) (Some (c,p)) in
+      put #_ #(ae_log_rel #n aes) (ae_st');;
+      return ()
+
+val add_to_log_related (n:u32)
+                       (aes:ae_scheme n)
+                       (a0 a1:type_of (enc_inputs n aes ** lo bytes))
+                       (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
+  : Lemma
+      (requires
+        a0 `(enc_inputs n aes ** lo bytes)` a1 /\
+        s0 `(default_tape_rel ** combined_state_rel n aes)` s1)
+
+      (ensures (
+        let g0 : add_to_log_t n aes = add_to_log' n aes in
+        let g1 : add_to_log_t n aes = add_to_log' n aes in
+        let g00 : eff (combined_state_rel n aes) (lo unit) = lift_left #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g0 a0 <: eff (ae_log_rel #n aes) (lo unit)) in
+        let g11 : eff (combined_state_rel n aes) (lo unit) = lift_left #(ae_log #n aes) #(ae_log_rel #n aes) #(key_state n) #(key_state_rel n) (g1 a1 <: eff (ae_log_rel #n aes) (lo unit)) in
+        g00 s0 == g11 s1
+        //g0 a0 (fst s0, (fst (snd s0))) == g1 a1 (fst s1, (fst (snd s1)))
+        ))
+let add_to_log_related n aes a0 a1 s0 s1 =
+    let g0 : add_to_log_t n aes = add_to_log' n aes in
+    let g1 : add_to_log_t n aes = add_to_log' n aes in
+    assert (g0 a0 (fst s0, (fst (snd s0))) `(triple_rel (option_rel (lo unit)) (ae_log_rel #n aes) default_index_rel)` g1 a1 (fst s0, fst (snd s1)))
+
+let add_to_log n aes
+  : ((enc_inputs n aes ** (lo bytes))
+    ^--> eff_rel (ae_log_rel #n aes) (lo unit))
+  = add_to_log' n aes
 
 /// Ideally, refine length of output bytes to be the relevant function of the input bytes. Maybe a lemma?
 let enc_t_base (n:u32) (aes:ae_scheme n) =
   ((sig_rel (key_read_sig n)) ** enc_inputs n aes)
-    ^^--> eff_rel (combined_state_rel n aes) (lo bytes)
+    ^^--> eff_rel (combined_state_rel n aes) (lo (key n))
 
 let enc_t (n:u32) (aes:ae_scheme n) =
   ((sig_rel (key_read_sig n)) ** enc_inputs n aes)
-    ^--> eff_rel (combined_state_rel n aes) (lo bytes)
+    ^--> eff_rel (combined_state_rel n aes) (lo (key n))
 
 let enc0' (n:u32) (aes:ae_scheme n) : (enc_t_base n aes) =
   fun (key_module, (p,nonce,h)) ->
-    combined_state <-- get ;
-    let ae_st,k_st = combined_state in
-    match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
-    | Some option_map ->
-      raise #(ae_log #n aes*key_state n)
-    | None ->
-      let k_get : key_get_t n = get_oracle ID_GET key_module in
-      k <-- lift_right (k_get h);
-      c <-- lift_tape (aes.enc p k nonce);
-      let ae_st' = DM.upd ae_st (h,nonce) (Some (c,p)) in
-      put (ae_st',k_st);;
-      return c
+    lift_left (assert_nonce_uniqueness n aes (p,nonce,h));;
+    let k_get : key_get_t n = get_oracle ID_GET key_module in
+    k <-- lift_right (k_get h);
+    //c <-- lift_tape (aes.enc p k nonce);
+    //lift_left (add_to_log n aes ((p,nonce,h),c)) ;;
+    return k
 
-#set-options "--z3rlimit 1050 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --query_stats"
+#set-options "--z3rlimit 450 --max_fuel 1 --initial_ifuel 1 --max_ifuel 2 --query_stats"
 let enc0 (n:u32) (aes:ae_scheme n) : (enc_t n aes) =
   let aux (a0 a1:type_of ((sig_rel (key_read_sig n)) ** enc_inputs n aes))
           (s0 s1:type_of (default_tape_rel ** combined_state_rel n aes))
-          (x0 x1:type_of (lo handle))
   : Lemma
       (requires
         a0 `((sig_rel (key_read_sig n)) ** enc_inputs n aes)` a1 /\
-        s0 `(default_tape_rel ** (combined_state_rel n aes))` s1 /\
-        x0 `(enc_inputs n aes)` x1
+        s0 `(default_tape_rel ** (combined_state_rel n aes))` s1
         )
       (ensures
-        (enc0' n aes a0 s0 `(triple_rel (option_rel (lo (bytes))) (combined_state_rel n aes) default_index_rel)`
+        (enc0' n aes a0 s0 `(triple_rel (option_rel (lo (key n))) (combined_state_rel n aes) default_index_rel)`
          enc0' n aes a1 s1))
      [SMTPat (enc0' a0 s0);
       SMTPat (enc0' a1 s1)]
   =
+    assert_nonce_uniqueness_related n aes a0 a1 s0 s1;
+    get_related n aes a0 a1 s0 s1
+    // This does not go through
+  in
+  //assert((enc0' n aes `arrow ((sig_rel (key_read_sig n)) ** enc_inputs n aes)
+  //  (eff_rel (combined_state_rel n aes) (lo bytes))`
+  //       enc0' n aes));
     admit();
-    get_related n aes a0 a1 s0 s1 x0 x1
- in
- admit();
- enc0' n aes
+  enc0' n aes
+
+/// Ignore everything below here for now. Haven't converted it to the new style
+/// introduced in Nik's example.
 
 
-let enc1 (n:u32) (aes:ae_scheme n) (key_module:module_t (key_read_sig n)) : (enc_t n aes) =
-  fun (p,nonce,h) ->
+let enc1 (n:u32) (aes:ae_scheme n) : (enc_t n aes) =
+  fun (key_module,(p,nonce,h)) ->
     combined_state <-- get ;
     let ae_st,k_st : combined_state_t n aes = combined_state in
     match DM.sel #plaintext_log_key #(plaintext_log_value aes.max_plaintext_length) ae_st (h,nonce) with
