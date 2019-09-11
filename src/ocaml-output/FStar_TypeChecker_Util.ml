@@ -6122,27 +6122,46 @@ let (get_field_projector_name :
            in
         match uu____15498 with
         | (uu____15503,t) ->
-            let uu____15505 =
-              let uu____15506 = FStar_Syntax_Subst.compress t  in
-              uu____15506.FStar_Syntax_Syntax.n  in
-            (match uu____15505 with
-             | FStar_Syntax_Syntax.Tm_arrow (bs,uu____15510) when
-                 (FStar_List.length bs) > index1 ->
-                 let b = FStar_List.nth bs index1  in
-                 let uu____15550 =
-                   FStar_Syntax_Util.mk_field_projector_name datacon
-                     (FStar_Pervasives_Native.fst b) index1
+            let err n1 =
+              let uu____15513 =
+                let uu____15519 =
+                  let uu____15521 = FStar_Ident.string_of_lid datacon  in
+                  let uu____15523 = FStar_Util.string_of_int n1  in
+                  let uu____15525 = FStar_Util.string_of_int index1  in
+                  FStar_Util.format3
+                    "Data constructor %s does not have enough binders (has %s, tried %s)"
+                    uu____15521 uu____15523 uu____15525
+                   in
+                (FStar_Errors.Fatal_UnexpectedDataConstructor, uu____15519)
+                 in
+              let uu____15529 = FStar_TypeChecker_Env.get_range env  in
+              FStar_Errors.raise_error uu____15513 uu____15529  in
+            let uu____15530 =
+              let uu____15531 = FStar_Syntax_Subst.compress t  in
+              uu____15531.FStar_Syntax_Syntax.n  in
+            (match uu____15530 with
+             | FStar_Syntax_Syntax.Tm_arrow (bs,uu____15535) ->
+                 let bs1 =
+                   FStar_All.pipe_right bs
+                     (FStar_List.filter
+                        (fun uu____15590  ->
+                           match uu____15590 with
+                           | (uu____15598,q) ->
+                               (match q with
+                                | FStar_Pervasives_Native.Some
+                                    (FStar_Syntax_Syntax.Implicit (true )) ->
+                                    false
+                                | uu____15607 -> true)))
                     in
-                 FStar_All.pipe_right uu____15550 FStar_Pervasives_Native.fst
-             | uu____15561 ->
-                 let uu____15562 =
-                   let uu____15568 =
-                     let uu____15570 = FStar_Ident.string_of_lid datacon  in
-                     FStar_Util.format1 "Data constructor %s not found"
-                       uu____15570
-                      in
-                   (FStar_Errors.Fatal_DataContructorNotFound, uu____15568)
-                    in
-                 let uu____15574 = FStar_TypeChecker_Env.get_range env  in
-                 FStar_Errors.raise_error uu____15562 uu____15574)
+                 if (FStar_List.length bs1) <= index1
+                 then err (FStar_List.length bs1)
+                 else
+                   (let b = FStar_List.nth bs1 index1  in
+                    let uu____15639 =
+                      FStar_Syntax_Util.mk_field_projector_name datacon
+                        (FStar_Pervasives_Native.fst b) index1
+                       in
+                    FStar_All.pipe_right uu____15639
+                      FStar_Pervasives_Native.fst)
+             | uu____15650 -> err Prims.int_zero)
   
