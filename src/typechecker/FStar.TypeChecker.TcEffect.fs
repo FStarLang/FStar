@@ -323,6 +323,29 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
 
   log_combinator "stronger_repr" stronger_repr;
 
+  let conjunction =
+    let conjunction_ts = (ed.match_wps |> BU.right).conjunction in
+    let r = (snd conjunction_ts).pos in
+    let conjunction_us, conjunction_t, conjunction_ty = check_and_gen "conjunction" 1 conjunction_ts in
+
+    let us, t = SS.open_univ_vars conjunction_us conjunction_t in
+    let env = Env.push_univ_vars env0 us in
+
+    let a, u_a = fresh_a_and_u_a "a" in
+    let signature_ts = let (us, t, _) = signature in (us, t) in
+    let f_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a |> fst |> S.bv_to_name) in
+    let g_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a |> fst |> S.bv_to_name) in
+    let p_b = S.gen_bv "p" (Some r) U.ktype0 |> S.mk_binder in
+    let bs = a::(f_bs@g_bs@[p_b]) in
+    let t_body, guard_body = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
+    let k = U.abs bs t_body None in
+    let guard_eq = Rel.teq env t k in
+    Rel.force_trivial_guard env guard_body; Rel.force_trivial_guard env guard_eq;
+
+    conjunction_us, SS.close_univ_vars conjunction_us (k |> N.remove_uvar_solutions env), conjunction_ty in
+
+  log_combinator "conjunction" conjunction;
+
   //AR: TODO: FIXME: rest of the combinators
 
 
@@ -463,6 +486,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     ret_wp        = (fst return_repr, thd return_repr);
     bind_wp       = (fst bind_repr, thd bind_repr);
     stronger      = (fst stronger_repr, thd stronger_repr);
+    match_wps     = Inr ({ conjunction = (fst conjunction, snd conjunction) });
     repr          = (fst repr, snd repr);
     return_repr   = (fst return_repr, snd return_repr);
     bind_repr     = (fst bind_repr, snd bind_repr);

@@ -119,7 +119,7 @@ val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> te
  * Return binders for the layered effect indices with signature
  * In the binder types, a is substituted with a_tm (u is universe of a)
  *)
-val layered_effect_indices_as_binders:env ->  Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
+val layered_effect_indices_as_binders:env -> Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
 
 val lift_tf_layered_effect : target:lident -> lift_ts:tscheme -> Env.lift_comp_t
 
