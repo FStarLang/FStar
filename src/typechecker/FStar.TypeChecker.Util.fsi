@@ -65,6 +65,7 @@ val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_wp_lcomp: env -> list<bv> -> lcomp -> lcomp
+val close_layered_lcomp: env -> list<bv> -> list<term> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 val universe_of_comp: env -> universe -> comp -> universe
