@@ -117,6 +117,10 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
 let get #s (#srel:erel s) : eff srel srel =
   fun (t, s0) -> Some s0, s0, 0ul
 
+/// reading the tape
+let get_tape #s (#srel:erel s) : eff srel default_tape_rel =
+  fun (t, s0) -> Some t, s0, 0ul
+
 /// writing the entire state
 let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
   fun s (t,_) -> Some (), s, 0ul
