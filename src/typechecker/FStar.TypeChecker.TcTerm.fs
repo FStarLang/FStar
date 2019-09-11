@@ -2184,6 +2184,12 @@ and tc_eqn scrutinee env branch
     tc_pat env pat_t pattern
   in
 
+  // let pat_bv_tms =
+  //   List.fold_left2 (fun acc pat_bv_tm bv ->
+  //     let pat_bv_tm = tc_trivial_guard (Env.set_expected_typ env bv.sort) pat_bv_tm |> fst in
+  //     acc@[pat_bv_tm]
+  //   ) [] pat_bv_tms pat_bvs in
+
   if Env.debug env <| Options.Extreme then
     BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
       (Print.pat_to_string pattern) (Print.bvs_to_string ";" pat_bvs)

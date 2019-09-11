@@ -34,8 +34,6 @@ let ambient (#a:Type) (x:a) = True
 abstract
 let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
 
-let id (#a:Type) (x:a) = x
-
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
