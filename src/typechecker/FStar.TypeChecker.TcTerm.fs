@@ -2185,7 +2185,7 @@ and tc_eqn scrutinee env branch
   in
 
   if Env.debug env <| Options.Extreme then
-    BU.format3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
+    BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
       (Print.pat_to_string pattern) (Print.bvs_to_string ";" pat_bvs)
       (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms);
 

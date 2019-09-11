@@ -2240,10 +2240,15 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
+  let err n =
+    raise_error (Errors.Fatal_UnexpectedDataConstructor,
+      BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
+        (Ident.string_of_lid datacon) (string_of_int n) (string_of_int index)) (Env.get_range env) in
   match (SS.compress t).n with
-  | Tm_arrow (bs, _) when List.length bs > index ->
-    let b = List.nth bs index in
-    U.mk_field_projector_name datacon (fst b) index |> fst
-  | _ ->
-    raise_error (Errors.Fatal_DataContructorNotFound,
-      BU.format1 "Data constructor %s not found" (Ident.string_of_lid datacon)) (Env.get_range env)
+  | Tm_arrow (bs, _) ->
+    let bs = bs |> List.filter (fun (_, q) -> match q with | Some (Implicit true) -> false | _ -> true) in
+    if List.length bs <= index then err (List.length bs)
+    else
+      let b = List.nth bs index in
+      U.mk_field_projector_name datacon (fst b) index |> fst
+  | _ -> err 0
