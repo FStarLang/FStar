@@ -2230,12 +2230,6 @@ and tc_eqn scrutinee env branch
     tc_pat env pat_t pattern
   in
 
-  // let pat_bv_tms =
-  //   List.fold_left2 (fun acc pat_bv_tm bv ->
-  //     let pat_bv_tm = tc_trivial_guard (Env.set_expected_typ env bv.sort) pat_bv_tm |> fst in
-  //     acc@[pat_bv_tm]
-  //   ) [] pat_bv_tms pat_bvs in
-
   if Env.debug env <| Options.Extreme then
     BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
       (Print.pat_to_string pattern) (Print.bvs_to_string ";" pat_bvs)
@@ -2320,8 +2314,38 @@ and tc_eqn scrutinee env branch
           then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
           else c_weak
         in
-        TcUtil.close_wp_lcomp env pat_bvs c_weak
+        if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) &&
+           c_weak.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+        then
+          let _ = if Env.debug env <| Options.Other "LayeredEffects" then
+            BU.print_string "Typechecking pat_bv_tms ...\n" in
+
+          let pat_bv_tms =
+            List.fold_left2 (fun acc pat_bv_tm bv ->
+              let expected_t = U.arrow [S.null_binder pat_t] (S.mk_Total' bv.sort (Env.new_u_univ () |> Some)) in
+              let pat_bv_tm = tc_trivial_guard (Env.set_expected_typ env expected_t) pat_bv_tm |> fst in
+              acc@[pat_bv_tm]
+            ) [] pat_bv_tms pat_bvs in
+
+          let pat_bv_tms = pat_bv_tms |> List.map (fun pat_bv_tm ->
+            mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] None Range.dummyRange
+          ) |> List.map (N.normalize [Env.Beta] env) in
+
+          let _ = 
+            if Env.debug env <| Options.Other "LayeredEffects" then
+              BU.print1 "tc_eqn: typechecked pat_bv_tms %s"
+                (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
+            else () in
+
+          TcUtil.close_layered_lcomp env pat_bvs pat_bv_tms c_weak
+        else TcUtil.close_wp_lcomp env pat_bvs c_weak
     in
+
+    if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) &&
+       Env.debug env <| Options.Other "LayeredEffects" then
+      BU.print1 "tc_eqn: c_weak applied to false: %s\n"
+        (TcComm.lcomp_to_string (maybe_return_c_weak false));
+
     c_weak.eff_name,
     c_weak.cflags,
     maybe_return_c_weak,

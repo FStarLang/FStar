@@ -357,6 +357,16 @@ let close_wp_lcomp env bvs (lc:lcomp) =
     (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env bs)
 
+let close_layered_lcomp env bvs tms (lc:lcomp) =
+  let bs = bvs |> List.map S.mk_binder in
+  let substs = List.map2 (fun bv tm ->
+    NT (bv, tm)
+  ) bvs tms in
+  lc |>
+  TcComm.apply_lcomp
+    (SS.subst_comp substs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env bs)
+
 let close_wp_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
