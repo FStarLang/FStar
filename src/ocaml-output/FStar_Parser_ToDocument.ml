@@ -296,7 +296,7 @@ let separate_map_or_flow_last :
 let (separate_or_flow :
   FStar_Pprint.document ->
     FStar_Pprint.document Prims.list -> FStar_Pprint.document)
-  = fun sep  -> fun l  -> separate_map_or_flow sep FStar_Pervasives.id l 
+  = fun sep  -> fun l  -> separate_map_or_flow sep Prims.id l 
 let (surround_maybe_empty :
   Prims.int ->
     Prims.int ->
@@ -1577,8 +1577,7 @@ and (p_typeDecl :
       match uu___6_5685 with
       | FStar_Parser_AST.TyconAbstract (lid,bs,typ_opt) ->
           let uu____5714 = p_typeDeclPrefix pre false lid bs typ_opt  in
-          (FStar_Pprint.empty, uu____5714, FStar_Pprint.empty,
-            FStar_Pervasives.id)
+          (FStar_Pprint.empty, uu____5714, FStar_Pprint.empty, Prims.id)
       | FStar_Parser_AST.TyconAbbrev (lid,bs,typ_opt,t) ->
           let uu____5731 = p_typ_sep false false t  in
           (match uu____5731 with

@@ -95,7 +95,7 @@ let (assert_norm_lid : FStar_Ident.lident) =
 let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"] 
 let (list_tot_append_lid : FStar_Ident.lident) =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"] 
-let (id_lid : FStar_Ident.lident) = psconst "id" 
+let (id_lid : FStar_Ident.lident) = pconst "id" 
 let (s2l : Prims.string -> FStar_Ident.lident) =
   fun n1  -> p2l ["FStar"; "String"; n1] 
 let (string_list_of_string_lid : FStar_Ident.lident) = s2l "list_of_string" 
