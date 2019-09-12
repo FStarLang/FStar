@@ -106,12 +106,16 @@ let test3 (b1 b2 b3: A.array U32.t) : RST unit
   in
   ()
 
-//TODO: fix, unable to infer `is_subresource_of` (should be done via tactic and not SMTPats)
-[@expect_failure]
+//TODO: How to infer subresource_intro_by_tactic automatically ?
 let test4 (b1 b2 b3: A.array U32.t) : RST unit
   (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
   (fun _ -> A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
-  (fun h -> P.allows_write (A.get_rperm b1 (focus_rmem h (A.array_resource b1))))
+  (fun h ->
+    subresource_intro_by_tactic
+      (A.array_resource b1)
+      (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3) ();
+    P.allows_write (A.get_rperm b1 (focus_rmem h (A.array_resource b1)))
+  )
   (fun _ _ _ -> True)
   =
   let x = rst_frame
