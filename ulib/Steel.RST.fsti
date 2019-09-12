@@ -116,6 +116,23 @@ val is_subresource_of_trans (r1 r2 r3: resource)
 val is_subresource_of_refl (r: resource) : Lemma(r `is_subresource_of` r)
   [SMTPat (r `is_subresource_of` r)]
 
+open Steel.Tactics
+
+#push-options "--no_tactics"
+
+let subresource_intro_by_tactic
+  (r0 r: resource)
+  (#[resolve_subresource ()] delta: resource{squash (
+    FStar.Tactics.with_tactic check_subresource (squash (r `can_be_split_into` (r0, delta)))
+  )})
+  (_ : unit)
+  : Lemma (r0 `is_subresource_of` r)
+  =
+  FStar.Tactics.by_tactic_seman check_subresource (squash (r `can_be_split_into` (r0, delta)));
+  is_subresource_of_intro1 r0 r delta
+
+#pop-options
+
 (**** Selectors *)
 
 /// The spirit of `LowStar.Resource` is to limit our reasonning to a fragment of the heap. For the
@@ -146,7 +163,7 @@ val focus_rmem (#r: resource) (h: rmem r) (r0: resource{r0 `is_subresource_of` r
 
 val focus_rmem_equality (outer inner arg: resource) (h: rmem outer) : Lemma
   (requires (inner `is_subresource_of` outer /\ arg `is_subresource_of` inner))
-  (ensures (focus_rmem h inner) arg == h arg)
+  (ensures (is_subresource_of_trans arg inner outer; (focus_rmem h inner) arg == h arg))
   [SMTPatOr [
     [SMTPat ((focus_rmem #outer h inner) arg)];
     [SMTPat (h arg); SMTPat (focus_rmem #outer h inner)]
@@ -241,9 +258,7 @@ val get (r: resource) : RST (rmem r)
 
 (**** The frame rule *)
 
-open Steel.Tactics
-
-#reset-options "--no_tactics"
+#push-options "--no_tactics"
 
 /// Finally, the workhorse separation logic rule that will be pervasive in Steel programs: the frame
 /// rule. All calls to RST functions should be encapsulated inside `rst_frame`. The rule takes 3
@@ -287,6 +302,7 @@ inline_for_extraction noextract val rst_frame
           (focus_rmem h0 inner0)
           x
           (focus_rmem h1 (inner1 x)) /\
-        (assert(delta `is_subresource_of` outer0); assert(delta `is_subresource_of` outer1 x);
-        focus_rmem h0 delta == focus_rmem h1 delta)
+        (focus_rmem h0 delta == focus_rmem h1 delta)
     )
+
+#pop-options

@@ -90,10 +90,15 @@ let is_subresource_of_trans r1 r2 r3 =
     )
   )
 
+#push-options "--no_tactics"
+
 let is_subresource_of_refl r =
   assert(r `can_be_split_into` (r, empty_resource))
 
+
 open FStar.FunctionalExtensionality
+
+#pop-options
 
 let mk_rmem r h =
    Fext.on_dom_g
@@ -101,12 +106,14 @@ let mk_rmem r h =
      (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
 let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` r})
-  : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}). s' r0' == s r0'}) =
+  : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}).
+    (is_subresource_of_trans r0' r0 r; s' r0' == s r0')
+  }) =
   let r' =
     Fext.on_dom_g
       (r0':resource{r0' `is_subresource_of` r0})
       (fun (r0':resource{r0' `is_subresource_of` r0}) ->
-        s r0'
+        is_subresource_of_trans r0' r0 r; s r0'
       )
   in r'
 
@@ -120,7 +127,7 @@ let focus_rmem_equality outer inner arg h =
     (r0:resource{r0 `is_subresource_of` inner})
     (fun r0 -> r0.t)
     focused
-    h
+    (fun r0 -> is_subresource_of_trans r0 inner outer; h r0)
 
 let focus_mk_rmem_equality outer inner h =
   let souter = mk_rmem outer h in
@@ -130,7 +137,13 @@ let focus_mk_rmem_equality outer inner h =
     (r0:resource{r0 `is_subresource_of` inner})
     (fun r0 -> r0.t)
     focused
-    original
+    original;
+  let aux  (r0:resource{r0 `is_subresource_of` inner}) : Lemma (focused r0 == original r0) =
+    focus_rmem_equality outer inner r0 souter;
+    is_subresource_of_trans r0 inner outer
+  in
+  Classical.forall_intro aux
+
 
 let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
   : Tot (rprop r) =
@@ -187,13 +200,11 @@ open Steel.Tactics
 
 (* Generic framing operation for RST (through resource inclusion) *)
 
-#set-options "--no_tactics"
+#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
 
 let get r =
   let h = HST.get () in
   mk_rmem r h
-
-#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
 
 inline_for_extraction noextract let rst_frame
   outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
@@ -218,3 +229,5 @@ inline_for_extraction noextract let rst_frame
   (**)  old_delta
   (**)  cur_delta;
   x
+
+#pop-options
