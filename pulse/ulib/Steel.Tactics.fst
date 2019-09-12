@@ -74,3 +74,17 @@ inline_for_extraction noextract let resolve_delta () : Tac unit =
   ignore (forall_intro ());
   apply_lemma (quote can_be_split_into_star);
   canon_monoid req rm
+
+inline_for_extraction noextract let resolve_subresource () : Tac unit =
+  refine_intro ();
+  flip ();
+  squash_intro ();
+  apply_lemma (quote unfold_with_tactic);
+  squash_intro ();
+  apply_lemma (quote can_be_split_into_star);
+  flip ();
+  canon_monoid req rm
+
+inline_for_extraction noextract let check_subresource () : Tac unit =
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm
