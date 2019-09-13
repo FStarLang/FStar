@@ -7762,7 +7762,7 @@ let (ghost_to_pure :
          in
       let non_info t =
         let uu____26185 = norm cfg [] [] t  in
-        FStar_Syntax_Util.non_informative uu____26185  in
+        FStar_TypeChecker_Env.non_informative env uu____26185  in
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Total uu____26192 -> c
       | FStar_Syntax_Syntax.GTotal (t,uopt) when non_info t ->
@@ -7861,7 +7861,7 @@ let (ghost_to_pure_lcomp :
          in
       let non_info t =
         let uu____26262 = norm cfg [] [] t  in
-        FStar_Syntax_Util.non_informative uu____26262  in
+        FStar_TypeChecker_Env.non_informative env uu____26262  in
       let uu____26269 =
         (FStar_Syntax_Util.is_ghost_effect
            lc.FStar_TypeChecker_Common.eff_name)
@@ -8182,7 +8182,9 @@ let (eta_expand :
                                    FStar_TypeChecker_Env.nbe =
                                      (uu___3294_26736.FStar_TypeChecker_Env.nbe);
                                    FStar_TypeChecker_Env.strict_args_tab =
-                                     (uu___3294_26736.FStar_TypeChecker_Env.strict_args_tab)
+                                     (uu___3294_26736.FStar_TypeChecker_Env.strict_args_tab);
+                                   FStar_TypeChecker_Env.erasable_types_tab =
+                                     (uu___3294_26736.FStar_TypeChecker_Env.erasable_types_tab)
                                  }) t
                                in
                             match uu____26728 with
@@ -8280,7 +8282,9 @@ let (eta_expand :
                            FStar_TypeChecker_Env.nbe =
                              (uu___3301_26751.FStar_TypeChecker_Env.nbe);
                            FStar_TypeChecker_Env.strict_args_tab =
-                             (uu___3301_26751.FStar_TypeChecker_Env.strict_args_tab)
+                             (uu___3301_26751.FStar_TypeChecker_Env.strict_args_tab);
+                           FStar_TypeChecker_Env.erasable_types_tab =
+                             (uu___3301_26751.FStar_TypeChecker_Env.erasable_types_tab)
                          }) t
                        in
                     (match uu____26743 with

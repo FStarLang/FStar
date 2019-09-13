@@ -1201,7 +1201,9 @@ let (tc_layered_eff_decl :
                                FStar_TypeChecker_Env.nbe =
                                  (uu___324_2905.FStar_TypeChecker_Env.nbe);
                                FStar_TypeChecker_Env.strict_args_tab =
-                                 (uu___324_2905.FStar_TypeChecker_Env.strict_args_tab)
+                                 (uu___324_2905.FStar_TypeChecker_Env.strict_args_tab);
+                               FStar_TypeChecker_Env.erasable_types_tab =
+                                 (uu___324_2905.FStar_TypeChecker_Env.erasable_types_tab)
                              }  in
                            FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                              uu____2904 act1.FStar_Syntax_Syntax.action_defn
@@ -3068,7 +3070,10 @@ let (tc_non_layered_eff_decl :
                                                              (uu___675_6113.FStar_TypeChecker_Env.nbe);
                                                            FStar_TypeChecker_Env.strict_args_tab
                                                              =
-                                                             (uu___675_6113.FStar_TypeChecker_Env.strict_args_tab)
+                                                             (uu___675_6113.FStar_TypeChecker_Env.strict_args_tab);
+                                                           FStar_TypeChecker_Env.erasable_types_tab
+                                                             =
+                                                             (uu___675_6113.FStar_TypeChecker_Env.erasable_types_tab)
                                                          })
                                                         (fun _6115  ->
                                                            FStar_Pervasives_Native.Some
@@ -3333,7 +3338,10 @@ let (tc_non_layered_eff_decl :
                                                          (uu___705_6257.FStar_TypeChecker_Env.nbe);
                                                        FStar_TypeChecker_Env.strict_args_tab
                                                          =
-                                                         (uu___705_6257.FStar_TypeChecker_Env.strict_args_tab)
+                                                         (uu___705_6257.FStar_TypeChecker_Env.strict_args_tab);
+                                                       FStar_TypeChecker_Env.erasable_types_tab
+                                                         =
+                                                         (uu___705_6257.FStar_TypeChecker_Env.erasable_types_tab)
                                                      }  in
                                                    ((let uu____6260 =
                                                        FStar_TypeChecker_Env.debug
@@ -4532,7 +4540,9 @@ let (tc_lift :
                              FStar_TypeChecker_Env.nbe =
                                (uu___953_8579.FStar_TypeChecker_Env.nbe);
                              FStar_TypeChecker_Env.strict_args_tab =
-                               (uu___953_8579.FStar_TypeChecker_Env.strict_args_tab)
+                               (uu___953_8579.FStar_TypeChecker_Env.strict_args_tab);
+                             FStar_TypeChecker_Env.erasable_types_tab =
+                               (uu___953_8579.FStar_TypeChecker_Env.erasable_types_tab)
                            }  in
                          let lift1 =
                            match lift with

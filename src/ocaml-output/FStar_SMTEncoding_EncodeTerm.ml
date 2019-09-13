@@ -1642,7 +1642,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.nbe =
                                 (uu___725_5340.FStar_TypeChecker_Env.nbe);
                               FStar_TypeChecker_Env.strict_args_tab =
-                                (uu___725_5340.FStar_TypeChecker_Env.strict_args_tab)
+                                (uu___725_5340.FStar_TypeChecker_Env.strict_args_tab);
+                              FStar_TypeChecker_Env.erasable_types_tab =
+                                (uu___725_5340.FStar_TypeChecker_Env.erasable_types_tab)
                             }) res
                           in
                        (match uu____5331 with

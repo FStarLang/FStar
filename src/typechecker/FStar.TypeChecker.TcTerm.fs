@@ -791,24 +791,35 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
-    let c_branches, g_branches =
-      let cases, g =
+    let c_branches, g_branches, erasable =
+      let cases, g, erasable =
           List.fold_right
-                (fun (branch, f, eff_label, cflags, c, g) (caccum, gaccum) ->
+                (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
                      (f, eff_label, cflags, c)::caccum,
-                     Env.conj_guard g gaccum)
+                     Env.conj_guard g gaccum,
+                     erasable || erasable_branch)
                 t_eqns
-                ([], Env.trivial_guard) in
+                ([], Env.trivial_guard, false) in
       (* bind_cases adds an exhaustiveness check *)
-      TcUtil.bind_cases env res_t cases, g
+      TcUtil.bind_cases env res_t cases,
+      g,
+      erasable
     in
 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
+    let cres =
+      if erasable
+      then (* promote cres to ghost *)
+           let e = U.exp_true_bool in
+           let c = mk_GTotal' U.t_bool (Some U_zero) in
+           TcUtil.bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
+      else cres
+    in
     let e =
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
-        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _) ->
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
               (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name res_t))
         in
         let e = mk (Tm_match(scrutinee, branches)) None top.pos in
@@ -1867,6 +1878,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
       * term                         (* terms corresponding to the pattern                                          *)
       * term                         (* the same term in normal form                                                *)
       * guard_t                      (* unresolved implicits *)
+      * bool                         (* true if the pattern matches an erasable type *)
       =
     let fail : string -> 'a = fun msg ->
         raise_error (Errors.Fatal_MismatchedPatternType, msg) p0.p
@@ -1956,12 +1968,16 @@ and tc_pat env (pat_t:typ) (p0:pat) :
            let g = Rel.discharge_guard_no_smt env g in
            g
     in
-    let type_of_simple_pat env (e:term) : term * typ * list<bv> * guard_t =
+    let type_of_simple_pat env (e:term) : term * typ * list<bv> * guard_t * bool =
         let head, args = U.head_and_args e in
         match head.n with
         | Tm_fvar f ->
           let us, t_f = Env.lookup_datacon env f.fv_name.v in
           let formals, t = U.arrow_formals t_f in
+          //Data constructors are marked with the "erasable" attribute
+          //if their types are; matching on this constructor incurs
+          //a ghost effect
+          let erasable = Env.non_informative env t in
           if List.length formals <> List.length args
           then fail "Pattern is not a fully-applied data constructor";
           let rec aux (subst, args_out, bvs, guard) formals args =
@@ -1969,7 +1985,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             | [], [] ->
               let head = S.mk_Tm_uinst head us in
               let pat_e = S.mk_Tm_app head args_out None e.pos in
-              pat_e, SS.subst subst t, bvs, guard
+              pat_e, SS.subst subst t, bvs, guard, erasable
             | (f, _)::formals, (a, imp_a)::args ->
               let t_f = SS.subst subst f.sort in
               let a, subst, bvs, g =
@@ -2002,7 +2018,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         * list<term>
         * term
         * pat
-        * guard_t =
+        * guard_t
+        * bool =
         if Env.debug env <| Options.Other "Patterns"
         then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
 
@@ -2028,7 +2045,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           [id],
           S.bv_to_name x,
           {p with v=Pat_wild x},
-          Env.trivial_guard
+          Env.trivial_guard,
+          false
 
         | Pat_var x ->
           let x = {x with sort=t} in
@@ -2036,7 +2054,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           [id],
           S.bv_to_name x,
           {p with v=Pat_var x},
-          Env.trivial_guard
+          Env.trivial_guard,
+          false
 
         | Pat_constant _ ->
           let _, e_c, _, _ = PatternUtils.pat_as_exp false env p in
@@ -2051,7 +2070,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           [],
           e_c,
           p,
-          Env.trivial_guard
+          Env.trivial_guard,
+          false
 
         | Pat_cons(fv, sub_pats) ->
           let simple_pat =
@@ -2079,8 +2099,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                                           (Print.pat_to_string simple_pat)
                                           (BU.string_of_int (List.length sub_pats))
                                           (BU.string_of_int (List.length simple_bvs)));
-          let simple_pat_e, simple_bvs, g1 =
-              let simple_pat_e, simple_pat_t, simple_bvs, guard =
+          let simple_pat_e, simple_bvs, g1, erasable =
+              let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
@@ -2091,19 +2111,19 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             (Print.term_to_string simple_pat_t)
                             (List.map (fun x -> "(" ^ Print.bv_to_string x ^ " : " ^ Print.term_to_string x.sort ^ ")") simple_bvs
                               |> String.concat " ");
-              simple_pat_e, simple_bvs, guard
+              simple_pat_e, simple_bvs, guard, erasable
           in
-          let _env, bvs, tms, checked_sub_pats, subst, g, _ =
+          let _env, bvs, tms, checked_sub_pats, subst, g, erasable, _ =
             List.fold_left2
-              (fun (env, bvs, tms, pats, subst, g, i) (p, b) x ->
+              (fun (env, bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
-                let bvs_p, tms_p, e_p, p, g' = check_nested_pattern env p expected_t in
+                let bvs_p, tms_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
                 let env = Env.push_bvs env bvs_p in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
                   tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
-                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', i+1)
-              (env, [], [], [], [], Env.conj_guard g0 g1, 0)
+                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
+              (env, [], [], [], [], Env.conj_guard g0 g1, erasable, 0)
               sub_pats
               simple_bvs
           in
@@ -2140,11 +2160,12 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           tms,
           pat_e,
           reconstruct_nested_pat simple_pat_elab,
-          g
+          g,
+          erasable
     in
     if Env.debug env <| Options.Other "Patterns"
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
-    let bvs, tms, pat_e, pat, g =
+    let bvs, tms, pat_e, pat, g, erasable =
         check_nested_pattern
             ({(Env.clear_expected_typ env |> fst) with use_eq=true})
             (PatternUtils.elaborate_pat env p0)
@@ -2154,7 +2175,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     then BU.print2 "Done checking pattern %s as expression %s\n"
                     (Print.pat_to_string pat)
                     (Print.term_to_string pat_e);
-    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g
+    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g, erasable
 
 
 (********************************************************************************************************************)
@@ -2170,8 +2191,10 @@ and tc_eqn scrutinee env branch
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
         * lident                                                                 (* effect label of the lcomp below *)
         * list<cflag>                                                                       (* flags for each lcomp *)
-        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
-        * guard_t =                                                                    (* well-formedness condition *)
+        * (bool -> lcomp)                     (* computation type of the branch, with or without a "return" equation *)
+        * guard_t                                                                      (* well-formedness condition *)
+        * bool                                                      (* true if the pattern matches an erasable type *)
+        =
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
 
@@ -2180,7 +2203,7 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat =
+  let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat, erasable =
     tc_pat env pat_t pattern
   in
 
@@ -2453,7 +2476,8 @@ and tc_eqn scrutinee env branch
   effect_label,
   cflags,
   maybe_return_c, //closed already---does not contain free pattern-bound variables
-  TcUtil.close_guard_implicits env (List.map S.mk_binder pat_bvs) guard
+  TcUtil.close_guard_implicits env (List.map S.mk_binder pat_bvs) guard,
+  erasable
 
 (******************************************************************************)
 (* Checking a top-level, non-recursive let-binding:                           *)

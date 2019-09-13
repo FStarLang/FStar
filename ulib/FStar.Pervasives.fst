@@ -421,6 +421,20 @@ let strict_on_arguments (x:list int) : unit = ()
 irreducible
 let resolve_implicits : unit = ()
 
+(*
+ * This attribute can be added to an inductive type definition, 
+ * indicating that it should be erased on extraction to `unit`.
+ * 
+ * However, any pattern matching on the inductive type results 
+ * in a `Ghost` effect, ensuring that computationally relevant
+ * code cannot rely on the values of the erasable type.
+ *
+ * See examples/micro-benchmarks/Erasable.fst, for examples.
+ * Also see https://github.com/FStarLang/FStar/issues/1844
+ *)
+irreducible
+let erasable : unit = ()
+
 (*********************************************************************************)
 (* Marking terms for normalization *)
 (*********************************************************************************)

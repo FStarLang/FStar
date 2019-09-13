@@ -142,7 +142,9 @@ let (push_with_kind :
               FStar_TypeChecker_Env.nbe =
                 (uu___30_299.FStar_TypeChecker_Env.nbe);
               FStar_TypeChecker_Env.strict_args_tab =
-                (uu___30_299.FStar_TypeChecker_Env.strict_args_tab)
+                (uu___30_299.FStar_TypeChecker_Env.strict_args_tab);
+              FStar_TypeChecker_Env.erasable_types_tab =
+                (uu___30_299.FStar_TypeChecker_Env.erasable_types_tab)
             }  in
           let res = FStar_TypeChecker_Tc.push_context env1 msg  in
           FStar_Options.push ();
