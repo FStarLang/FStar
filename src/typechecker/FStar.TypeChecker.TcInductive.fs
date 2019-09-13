@@ -8,7 +8,7 @@
    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
-o
+
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -369,8 +369,8 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
   if not b then begin
-    if Env.fv_has_attr 
-              env 
+    if Env.fv_has_attr
+              env
               (S.lid_as_fv ilid delta_constant None)
               FStar.Parser.Const.assume_strictly_positive_attr_lid
     then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
@@ -763,7 +763,7 @@ let unoptimized_haseq_data (usubst:list<subst_elt>) (bs:binders) (haseq_ind:term
     in
 
             //fold right with dbs, close and add a forall b
-	        //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+                //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
             let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) dbs cond in
 
             //new accumulator is old one /\ cond
@@ -1029,6 +1029,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                             (inductive_tps:binders)  (* Type parameters of the type constructor *)
                                             (indices:binders)        (* Implicit type parameters                *)
                                             (fields:binders)         (* Fields of the constructor               *)
+                                            (erasable:bool)          (* Generate ghost discriminators and projectors *)
                                             : list<sigelt> =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q p in
@@ -1085,7 +1086,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             (* Type of the discriminator *)
             let binders = imp_binders@[unrefined_arg_binder] in
             let t =
-                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid delta_constant None))) in
+                let bool_typ =
+                  if erasable
+                  then S.mk_GTotal U.t_bool
+                  else S.mk_Total U.t_bool
+                in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
             let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
@@ -1159,7 +1164,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
       fields |> List.mapi (fun i (x, _) ->
           let p = S.range_of_bv x in
           let field_name, _ = U.mk_field_projector_name lid x i in
-          let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
+          let t =
+            let result_comp =
+              let t = Subst.subst subst x.sort in
+              if erasable
+              then S.mk_GTotal t
+              else S.mk_Total t
+            in
+            SS.close_univ_vars uvs <| U.arrow binders result_comp
+          in
           let only_decl =
             early_prims_inductive ||
             Options.dont_gen_projectors (Env.current_module env).str
@@ -1286,6 +1299,10 @@ let mk_data_operations iquals env tcs se =
         let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
         SS.subst_binders rename fields
     in
-    mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
+    let erasable = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
+    mk_discriminator_and_indexed_projectors
+      iquals fv_qual refine_domain
+      env typ_lid constr_lid uvs
+      inductive_tps indices fields erasable
 
   | _ -> []
