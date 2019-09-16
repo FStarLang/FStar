@@ -152,8 +152,8 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   //now open rest of the ed with us and bs
   let ed_univs_subst, ed_univs = SS.univ_var_opening us in
   let ed_bs, ed_bs_subst = SS.open_binders' (SS.subst_binders ed_univs_subst bs) in
-  
-  
+
+
   let ed =
     let op (us, t) =
       let t = SS.subst (SS.shift_subst (List.length ed_bs + List.length us) ed_univs_subst) t in
@@ -224,7 +224,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
 
   (*
-   * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a) 
+   * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a)
    *)
   let fresh_a_and_wp () =
     let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (snd ed.signature).pos in
@@ -349,7 +349,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
         let k, _, _ = tc_tot_or_gtot_term env k in
         let env = Some (Env.set_range env (snd (ed.return_repr)).pos) in
         check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in
-    
+
       log_combinator "return_repr" return_repr;
 
       let bind_repr =
@@ -372,7 +372,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
           if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
           then [S.null_binder S.t_range; S.null_binder S.t_range]
           else [] in
-       
+
         let k = U.arrow ([S.mk_binder a; S.mk_binder b] @
                          maybe_range_arg @
                          [S.mk_binder wp_f;
@@ -497,7 +497,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     let ts = SS.close_tscheme ed_bs ts in
     let ed_univs_closing = SS.univ_var_closing ed_univs in
     SS.subst_tscheme (SS.shift_subst (List.length ed_bs) ed_univs_closing) ts in
-  
+
   //univs and binders have already been set
   let ed = { ed with
     signature    =cl signature;
@@ -1164,11 +1164,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
+    //propagate attributes from the bundle to its elements
+    let ses = ses |> List.map (fun e -> {e with sigattrs = e.sigattrs@se.sigattrs}) in
     let ses =
       if Options.use_two_phase_tc () then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
-        let ses = tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
+        let ses =
+          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids
+          |> fst
+          |> N.elim_uvars env
+          |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases"
+        then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
         ses
       end
       else ses
