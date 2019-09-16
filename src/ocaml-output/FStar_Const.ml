@@ -1,7 +1,7 @@
 open Prims
 type signedness =
   | Unsigned 
-  | Signed [@@deriving yojson,show]
+  | Signed [@@deriving yojson,show,yojson,show]
 let (uu___is_Unsigned : signedness -> Prims.bool) =
   fun projectee  ->
     match projectee with | Unsigned  -> true | uu____8 -> false
@@ -14,7 +14,7 @@ type width =
   | Int8 
   | Int16 
   | Int32 
-  | Int64 [@@deriving yojson,show]
+  | Int64 [@@deriving yojson,show,yojson,show]
 let (uu___is_Int8 : width -> Prims.bool) =
   fun projectee  -> match projectee with | Int8  -> true | uu____30 -> false 
 let (uu___is_Int16 : width -> Prims.bool) =
@@ -39,7 +39,7 @@ type sconst =
   | Const_set_range_of 
   | Const_range of FStar_Range.range 
   | Const_reify 
-  | Const_reflect of FStar_Ident.lid [@@deriving yojson,show]
+  | Const_reflect of FStar_Ident.lid [@@deriving yojson,show,yojson,show]
 let (uu___is_Const_effect : sconst -> Prims.bool) =
   fun projectee  ->
     match projectee with | Const_effect  -> true | uu____144 -> false
