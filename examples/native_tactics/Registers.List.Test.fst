@@ -16,6 +16,10 @@
 module Registers.List.Test
 open Registers.List
 
+(* This file goes into an infinite (or extremely long) loop with two
+ * phase typechecking *)
+#set-options "--use_two_phase_tc false"
+
 let regs = regmap int
 
 assume val assert_eq: i:int -> j:int -> Lemma (requires (normalize_term i == j)) (ensures True)
