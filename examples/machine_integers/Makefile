@@ -11,7 +11,7 @@ all: Test01.run Test02.run Test03.run
 %.exe: %.fst | out
 	$(eval B := $(patsubst %.exe,%,$@))
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract '${B}' '${B}.fst'
-	echo '\n\nlet _ = main ()\n' >> out/${B}.ml
+	/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
 	$(OCAMLOPT) out/${B}.ml -o $@
 
 %.run: %.exe
