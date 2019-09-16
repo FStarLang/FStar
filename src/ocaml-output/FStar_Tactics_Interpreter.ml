@@ -1848,7 +1848,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.nbe =
                              (uu___199_2399.FStar_TypeChecker_Env.nbe);
                            FStar_TypeChecker_Env.strict_args_tab =
-                             (uu___199_2399.FStar_TypeChecker_Env.strict_args_tab)
+                             (uu___199_2399.FStar_TypeChecker_Env.strict_args_tab);
+                           FStar_TypeChecker_Env.erasable_types_tab =
+                             (uu___199_2399.FStar_TypeChecker_Env.erasable_types_tab)
                          }  in
                        let env3 =
                          let uu___202_2402 = env2  in
@@ -1937,7 +1939,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.nbe =
                              (uu___202_2402.FStar_TypeChecker_Env.nbe);
                            FStar_TypeChecker_Env.strict_args_tab =
-                             (uu___202_2402.FStar_TypeChecker_Env.strict_args_tab)
+                             (uu___202_2402.FStar_TypeChecker_Env.strict_args_tab);
+                           FStar_TypeChecker_Env.erasable_types_tab =
+                             (uu___202_2402.FStar_TypeChecker_Env.erasable_types_tab)
                          }  in
                        let env4 =
                          let uu___205_2405 = env3  in
@@ -2026,7 +2030,9 @@ let (run_tactic_on_typ :
                            FStar_TypeChecker_Env.nbe =
                              (uu___205_2405.FStar_TypeChecker_Env.nbe);
                            FStar_TypeChecker_Env.strict_args_tab =
-                             (uu___205_2405.FStar_TypeChecker_Env.strict_args_tab)
+                             (uu___205_2405.FStar_TypeChecker_Env.strict_args_tab);
+                           FStar_TypeChecker_Env.erasable_types_tab =
+                             (uu___205_2405.FStar_TypeChecker_Env.erasable_types_tab)
                          }  in
                        let rng =
                          let uu____2408 = FStar_Range.use_range rng_goal  in
