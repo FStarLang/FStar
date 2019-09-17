@@ -71,7 +71,7 @@ let test_1514 () =
 
 
 (*
- * erasable inductives should not have haseq
+ * erasable inductives should not have hasEq
  * F* should also give an error if an erasable inductive is annotated with unopteq
  *)
 [@erasable]
@@ -86,5 +86,3 @@ let test (x:erasable_t{C_erasable_t? x}) (y:erasable_t{D_erasable_t? y}) : Tot (
 [@erasable expect_failure]
 unopteq type erasable_t2 =
   | C_erasable_2 : erasable_t2
-
-
