@@ -2058,7 +2058,10 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
               || inferred x
               || visibility x
               || has_eq x))
-        then err' ()
+        then err' ();
+        if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
+           U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr
+        then err "unopteq is not allowed on an erasable inductives since they don't have decidable equality"
       | Sig_declare_typ _ ->
         if quals |> BU.for_some has_eq
         then err' ()
