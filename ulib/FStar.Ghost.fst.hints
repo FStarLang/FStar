@@ -1,0 +1,148 @@
+[
+  "\u00128fï+íhÚ×¾àÍÝ8Õ{",
+  [
+    [
+      "FStar.Ghost.erased",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "df996a349693a1be607f7632f683bab3"
+    ],
+    [
+      "FStar.Ghost.hide_reveal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased"
+      ],
+      0,
+      "393e413f8a29bac71555e4fbaa1e65c1"
+    ],
+    [
+      "FStar.Ghost.reveal_hide",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0"
+      ],
+      0,
+      "c7503eacf8189a546ba0b66f423aa55d"
+    ],
+    [
+      "FStar.Ghost.elift1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_ghost_arrow_0283b8a2a36bbec52abac4e3d837674a",
+        "equation_FStar.Ghost.bind", "equation_FStar.Ghost.return",
+        "equation_FStar.Ghost.reveal",
+        "interpretation_Tm_abs_2803a9c1af1d9dc145d83da24dc06dff",
+        "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "bf0b123506ddfe1767f64ba05b36d36d"
+    ],
+    [
+      "FStar.Ghost.elift2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "equation_FStar.Ghost.bind", "equation_FStar.Ghost.return",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased",
+        "interpretation_Tm_abs_1ff49a62e4ae845aa978cdcf16058b23",
+        "interpretation_Tm_abs_643b500d9ac7fa57b10f357e1de909c5",
+        "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "c78b46851905f60ef7cc4796eca4456a"
+    ],
+    [
+      "FStar.Ghost.elift3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_c3cf725ad58bf27e304b88d311d2ef4d",
+        "equation_FStar.Ghost.bind", "equation_FStar.Ghost.return",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased",
+        "interpretation_Tm_abs_2874654179ed0421cb9fea732ed8a98d",
+        "interpretation_Tm_abs_34d5bc670140e73226e463ea38520b5d",
+        "interpretation_Tm_abs_a603c06988898ace82f560734e827be9",
+        "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "daa5fa1d07a0d9eb613c7a459dc59ab5"
+    ],
+    [
+      "FStar.Ghost.elift1_p",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_8f538917cb02d75c44bfd86ed6834262",
+        "equation_FStar.Ghost.return", "lemma_FStar.Ghost.reveal_hide",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "85ba6c574500599bdbdc4ae9d437cdd7"
+    ],
+    [
+      "FStar.Ghost.elift2_p",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
+      ],
+      0,
+      "77d6a06bf0ddb47551e006719c7ffb1c"
+    ],
+    [
+      "FStar.Ghost.elift1_pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "448d68fbb85bbd3b0cd472677835b893"
+    ],
+    [
+      "FStar.Ghost.elift2_pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
+      ],
+      0,
+      "a8f6724612d255f1d9aa1097f2b6674c"
+    ]
+  ]
+]

@@ -32,7 +32,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.uver TestHasEq.uver \
 	 PatAnnot.uver TupleSyntax.uver Test.FunctionalExtensionality.uver ArgsAndQuals.uver Test.Printf.uver \
 	 MustEraseForExtraction.uver UnifyReify.uver NestedLemma.uver NormTypesForSMT.uver \
-	 StrictUnfolding.uver
+	 StrictUnfolding.uver GhostImplicits.uver Erasable.ml
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
@@ -45,3 +45,7 @@ inverse:
 
 testghost:
 	$(FSTAR) testghost.fst
+
+Erasable.ml: Erasable.fst
+	$(FSTAR) --codegen OCaml --extract Erasable $^
+	cmp $@ $@.expected

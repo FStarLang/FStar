@@ -29,7 +29,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "86479f31513d73fddc688884b0668ce2"
+      "f4668be4b47e204b86166eabddaec1ff"
     ],
     [
       "Protocol.network_message",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6c30905202248ab434bc07dc721c96f7"
+      "db33650639bb2930d9614ff7122dd6d9"
     ],
     [
       "Protocol.zeroes",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "51a738b27bb6a7f1af3750efdb62d7a0"
+      "56f01a85b38498b093016583685c658a"
     ],
     [
       "Protocol.zeroes",
@@ -69,7 +69,7 @@
         "lemma_FStar.Seq.Base.lemma_create_len", "typing_Protocol.zero_b"
       ],
       0,
-      "256c675b0eb3091085b6e69f1842f0c2"
+      "9351d3b5692e5751256f20486af617b3"
     ],
     [
       "Protocol.pad",
@@ -88,7 +88,7 @@
         "typing_FStar.Seq.Base.length", "typing_Protocol.fragment_size"
       ],
       0,
-      "19353cb12cb665156a7729fd2084bfa9"
+      "92810f3d4264e9eca1688eb9de71d9d5"
     ],
     [
       "Protocol.unpad",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "583ff22be97c0bc7f8e5d882b819c6af"
+      "3b4455142555309dd32166807e2c4054"
     ],
     [
       "Protocol.__proj__E__item__cipher",
@@ -115,7 +115,7 @@
         "projection_inverse_Protocol.E_msg"
       ],
       0,
-      "8de67127b3ec7db9e4784744dde72ebc"
+      "dee400c566502c655490f04d4912a551"
     ],
     [
       "Protocol.__proj__E__item__tag",
@@ -128,7 +128,7 @@
         "projection_inverse_Protocol.E_i"
       ],
       0,
-      "391e089aca8e896b0113c0f20d183d61"
+      "1ecc2e44c2158ee9bf47cd267f0e0e70"
     ],
     [
       "Protocol.entries",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "423ab381ce28d1f3cd651da3867e592a"
+      "208b74442e69586de6fd3eade632e809"
     ],
     [
       "Protocol.is_prefix_of",
@@ -151,7 +151,7 @@
       1,
       [ "@query" ],
       0,
-      "5b58339f7006571ab81c8ebb4988f9ff"
+      "4a94e177ab500e60e94c037fdd6fa843"
     ],
     [
       "Protocol.entries_pre",
@@ -166,7 +166,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "168b065e0aadc7b0734c1c124000e3df"
+      "1e421fc2831736ac389b9cb47cbcd45c"
     ],
     [
       "Protocol.counter_pred",
@@ -181,7 +181,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "81dc18989fde457cbe2dec2e0533fcfb"
+      "d06f1c6a013055f631fb169c0e37a139"
     ],
     [
       "Protocol.counter_pred",
@@ -208,7 +208,7 @@
         "typing_Protocol.entries", "typing_Protocol.entries_rel"
       ],
       0,
-      "466da8f7695bcb9a5d6610b6faddf2f2"
+      "2daf9d7988b37245aef9b63adce3e626"
     ],
     [
       "Protocol.counter_t",
@@ -223,7 +223,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "10cd6eb0c58b4aa993f3d6d396ab502c"
+      "c88d2ceccb93b60ca8f0aba1f4384ec3"
     ],
     [
       "Protocol.counter_rel",
@@ -238,7 +238,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "121b817e2e01cd2ef183be8289a0b2e9"
+      "6df8c2dfa8fa8fb11548c1599c5074c9"
     ],
     [
       "Protocol.counter_pre",
@@ -253,7 +253,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "931a10a8241cf302dbe880fb1ff68912"
+      "35a985438c1a566b82853ebc0d6e7fda"
     ],
     [
       "Protocol.counter_pre",
@@ -270,7 +270,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "35fa8c7798d7ac16d46462d7ed1f7d3b"
+      "c57fbc4fa5c0c0e002790d232ccfbdbc"
     ],
     [
       "Protocol.connection",
@@ -285,7 +285,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "36166705bcafad8a4b2aeca2c5f900e4"
+      "f898061e54f2fa771a88686602224394"
     ],
     [
       "Protocol.connection",
@@ -300,7 +300,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "1427f36e49e0124602c6abe4d7955648"
+      "c9f737b7133e1a3d554bf9e1e08b5c3b"
     ],
     [
       "Protocol.__proj__S__item__rand",
@@ -313,7 +313,7 @@
         "refinement_interpretation_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "2bdb5b53fe6457f2f45a2744024aafcd"
+      "66a370752649b7a658d35afd1bb0dc6f"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -329,7 +329,7 @@
         "proj_equation_Protocol.S_rand"
       ],
       0,
-      "a791ce05eeb3a8c99e6f7e13486e22e5"
+      "bd202a4b2e718164b5cb1c56a1854fb7"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -351,7 +351,7 @@
         "refinement_interpretation_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "b3186af57a8b7b99ec90284ede2ddb4d"
+      "f678abecaa01e66124e4eed633ea009d"
     ],
     [
       "Protocol.__proj__R__item__rand",
@@ -364,7 +364,7 @@
         "refinement_interpretation_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "fa4515fb86da5a0d74ab76d42a8bcaac"
+      "508be1819cb0597bd2c7c2bae6b3d7d3"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -380,7 +380,7 @@
         "proj_equation_Protocol.R_rand"
       ],
       0,
-      "f3b5ede74382505c7b2a7e4e559b5a8c"
+      "4d696199800ba88d15ff3e993d13e8d7"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -402,7 +402,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "fba403cbb3bf6bb286250a09f27543b2"
+      "da002c341abe56ceef25ee5e3305fd8f"
     ],
     [
       "Protocol.__proj__R__item__ctr",
@@ -422,7 +422,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "a65876c2470e833573bcee306854da28"
+      "0bb54c590cb69f334959e2ffb73ef730"
     ],
     [
       "Protocol.rand_of",
@@ -435,7 +435,7 @@
         "fuel_guarded_inversion_Protocol.connection"
       ],
       0,
-      "4b49c817bc909ea3a87f6a6f651b7469"
+      "e5f61f366bf098bfeef0d2c3e4f5bb6f"
     ],
     [
       "Protocol.entries_of",
@@ -460,7 +460,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "391fad262c38746dbb51553a2fd50d77"
+      "a498082f99fd3525a777553dcd615ecd"
     ],
     [
       "Protocol.live_connection",
@@ -477,7 +477,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "150840aeeb9e7814b4d81d0d4eeaa9a5"
+      "8264c8d7fa764930944b8fb156b3d776"
     ],
     [
       "Protocol.recall_connection_liveness",
@@ -501,7 +501,7 @@
         "projection_inverse_Protocol.S_rand", "unit_typing"
       ],
       0,
-      "0cb0eb0e634c518a5618a92869ac1843"
+      "f3f0fddbac9972ccc47729fe520c3504"
     ],
     [
       "Protocol.lemma_sel_entries_equals_sel_tot_entries",
@@ -522,7 +522,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "78899aa4394f3d4657c5919eaff367ac"
+      "4606807b9aac52e2a8b32987190804da"
     ],
     [
       "Protocol.lemma_sel_ctr_ref_equals_sel_tot_ctr_ref",
@@ -542,7 +542,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f5546090c9ffb8cd61358bf844b7b1eb"
+      "8cccbba65183b950f10358022f3b537c"
     ],
     [
       "Protocol.log",
@@ -563,7 +563,7 @@
         "refinement_interpretation_Tm_refine_12e73119c459be812384fdc8e6c9733a"
       ],
       0,
-      "461bfab36c30498678c0f68f410a1008"
+      "e677188a85bee6d12fb629301d11be8b"
     ],
     [
       "Protocol.lemma_prefix_entries_implies_prefix_log",
@@ -583,7 +583,7 @@
         "refinement_interpretation_Tm_refine_3d0c21849d5cf8d118afc092733f14a4"
       ],
       0,
-      "c8c794f21c22e370a328b227dc045881"
+      "06b7f540f299c23eee3d2970a52542fe"
     ],
     [
       "Protocol.ctr",
@@ -606,7 +606,7 @@
         "refinement_interpretation_Tm_refine_12e73119c459be812384fdc8e6c9733a"
       ],
       0,
-      "c50a328b65f5582f470e575d2cae6704"
+      "f014b30c61e5e6b7ae23c505a2f14ff2"
     ],
     [
       "Protocol.recall_counter",
@@ -659,7 +659,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e", "unit_typing"
       ],
       0,
-      "4fdad831294bf743efb6219700dfabcc"
+      "dd1159cfad32456f5cb83f1ecde2e0ef"
     ],
     [
       "Protocol.snapshot",
@@ -706,7 +706,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "850474be39ed55a8c903dc301a8140cf"
+      "4bc592cd8a00f1f562ccc6d6d6a760fe"
     ],
     [
       "Protocol.snap",
@@ -725,7 +725,7 @@
         "unit_typing"
       ],
       0,
-      "b6439c610d7065dbc432adbe893fe21a"
+      "a911ebc5d70ee708f5eb3051c1df09a4"
     ],
     [
       "Protocol.connection_footprint",
@@ -746,7 +746,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "40fe8d48cb744bd3140fffa07d307b57"
+      "31ff2d2080d0d3ce2a9b94668c64c83c"
     ],
     [
       "Protocol.lemma_snoc_log",
@@ -768,7 +768,7 @@
         "refinement_interpretation_Tm_refine_3d0c21849d5cf8d118afc092733f14a4"
       ],
       0,
-      "95dac6678b7d5127467cff4b5a13a0b3"
+      "5f02daa68842717da4f97d7422af8229"
     ],
     [
       "Protocol.network_send",
@@ -789,7 +789,7 @@
         "typing_Protocol.sender"
       ],
       0,
-      "a4774dd13b2f4eedaa8c67de71aa31e1"
+      "cc2556c3a3ab1b7f5f368821320213cd"
     ],
     [
       "Protocol.send",
@@ -869,7 +869,7 @@
         "typing_Protocol.zero_b"
       ],
       0,
-      "99c1846bf521ed160653e6da8b90ec18"
+      "06d5313185202249fdc46a05f355f2a4"
     ],
     [
       "Protocol.ciphers",
@@ -885,7 +885,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "4605dfd7ed9a9e0baed4cf7c0cfcb349"
+      "b94a9c017bec287b8cee6eccdef2bb3e"
     ],
     [
       "Protocol.modifies_r",
@@ -899,7 +899,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c4c9078fff220e2d4df1e2b7df26a0a6"
+      "5b1976ed9b622f96d79f4a07f8eb68e9"
     ],
     [
       "Protocol.verify",
@@ -918,7 +918,7 @@
         "typing_Protocol.receiver"
       ],
       0,
-      "4176c7cd1fed36d40b7ed9f9a7a5d0c6"
+      "c54f9779329107148fc36f28c82cffcc"
     ],
     [
       "Protocol.receive",
@@ -1046,7 +1046,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "65992cc7c9ff2ce4c3a8f2130c209a47"
+      "8de148d66106e2df0d587999d9e4d8f1"
     ],
     [
       "Protocol.lemma_is_prefix_of_slice",
@@ -1067,7 +1067,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "e58f6ac5979673a1073345c342cc6baf"
+      "fcb764da3a161ed13243bfbad908c7da"
     ],
     [
       "Protocol.sent_bytes'",
@@ -1085,7 +1085,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d9f5c7bf83a65fc84965c1bccba0e99d"
+      "fa20ee86ca713c9a89880f3967d98502"
     ],
     [
       "Protocol.sent_bytes",
@@ -1137,7 +1137,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "afa850f2fd0998e604391657e84bab1f"
+      "4d2ab2e3179e955731b19b1c2cc4a70d"
     ],
     [
       "Protocol.iarray_as_seq",
@@ -1163,7 +1163,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "1e7999f080a88e390a068d2055cb66d7"
+      "48a3f33c5c422f6631a56c991307a6f7"
     ],
     [
       "Protocol.fully_initialized_in",
@@ -1176,7 +1176,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "d40873f31b4fc006ae3101b312cbd383"
+      "27a51a878d67072f85f02089a7a2bae5"
     ],
     [
       "Protocol.subseq_suffix",
@@ -1230,7 +1230,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "6c7c79b7e4d06a7c7ab4d436545a4432"
+      "4f2563c641347086044efa7b7cc3fa70"
     ],
     [
       "Protocol.slice_snoc",
@@ -1261,7 +1261,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "e9f588f2afdce39062423e050830f433"
+      "0da50060917f4ac14d176eb255697721"
     ],
     [
       "Protocol.slice_snoc2",
@@ -1297,7 +1297,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "f65e2279c4e49b97af013d667a03191c"
+      "50ea2d01b90c3223c7b25816cf7a877d"
     ],
     [
       "Protocol.append_subseq",
@@ -1346,7 +1346,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "51560af318e2ca256a8297b37f0cf193"
+      "c82e4f6049e7f682d0e52fa18ce17951"
     ],
     [
       "Protocol.lemma_sender_connection_ctr_equals_length_log",
@@ -1384,7 +1384,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "2adaa58a7e69509a66f505fd2f3a63a0"
+      "eaf755facb3023fa9994c63621f7a27d"
     ],
     [
       "Protocol.send_aux",
@@ -1413,7 +1413,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "f6d66e5adf96d9bc601b68b736218384"
+      "1c6cdbed53919984973183ccf30b76e1"
     ],
     [
       "Protocol.send_aux",
@@ -1427,7 +1427,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fca3348779f657514ec37420fe748850"
+      "ecc54865d199fc4df7be049ee99d1e67"
     ],
     [
       "Protocol.send_aux",
@@ -1510,7 +1510,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "c4b90b1dc5eb7fe7e3e4476145b5c8b1"
+      "0ff0e8da9be41f227aecf0b583f78750"
     ],
     [
       "Protocol.send_file",
@@ -1524,7 +1524,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a77249ab199740c39c4811fcfeb40ba5"
+      "60c310fbcf471c0dc79c82599c5895bd"
     ],
     [
       "Protocol.send_file",
@@ -1593,7 +1593,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "1136480cbd2c282cf8f9906acc6b9ff0"
+      "6af2365649f7032c4b8e7705994fbdd2"
     ],
     [
       "Protocol.received",
@@ -1610,7 +1610,7 @@
         "function_token_typing_Protocol.zero_b"
       ],
       0,
-      "67f6cb1523017b93c10d214d2188ce77"
+      "b716057f7e4e63272f1e8c77e6802c2c"
     ],
     [
       "Protocol.append_filled",
@@ -1675,7 +1675,7 @@
         "typing_MonotonicArray.suffix"
       ],
       0,
-      "da24fe67d8ce006f0c8324cbe3160161"
+      "dc919baf6103486a0d3703e895bc5ae3"
     ],
     [
       "Protocol.extend_initialization",
@@ -1715,7 +1715,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "f41a25a6558af95632b03184fa4c5e9d"
+      "d3c3ccf34c7886f7f4c8d7cc991a0828"
     ],
     [
       "Protocol.receive_aux_post",
@@ -1729,7 +1729,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b25060087f7b8fc126bf6d7c8d91f30d"
+      "8e368e9f8455a7a8cbee6841c73ae45c"
     ],
     [
       "Protocol.receive_aux_post",
@@ -1757,7 +1757,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "4126fb21ba503b31cc6212af068a7a17"
+      "29f51f00b6e9974947a90d42013e2fba"
     ],
     [
       "Protocol.receive_aux",
@@ -1786,7 +1786,7 @@
         "typing_Protocol.fragment_size"
       ],
       0,
-      "4d55125210cfbb659ec46b62728bf0af"
+      "86e9292c4e108eb2a0369339dc9e4f39"
     ],
     [
       "Protocol.receive_aux",
@@ -1800,7 +1800,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "acc4d75cc4170824ad993cb181fe5335"
+      "979e1d818705d39bf357626e4af794a5"
     ],
     [
       "Protocol.receive_aux",
@@ -1877,7 +1877,7 @@
         "typing_Protocol.receiver"
       ],
       0,
-      "eae71308f8c1fdf252a24827d3e748f3"
+      "a659d3ee49bb81afa509fad779c38835"
     ],
     [
       "Protocol.receive_file",
@@ -1906,7 +1906,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "5c53be4b2cbeb66cb6162258449a9c82"
+      "e8681b910d2be1649ce245dfe8f3cc8f"
     ],
     [
       "Protocol.receive_file",
@@ -1920,7 +1920,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "300c2e41aad2543de6024143c195f11b"
+      "dce88057811009453022ce378c20883b"
     ],
     [
       "Protocol.receive_file",
@@ -2020,7 +2020,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "e92fb38a738215ca599bc52dde67deba"
+      "509faeeab441e6f87d68b5412a018d44"
     ],
     [
       "Protocol.tags",
@@ -2036,7 +2036,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "b74ceacab12da256c216568162921dc8"
+      "4b661f9c3333763bbd293763a66a320e"
     ],
     [
       "Protocol.lemma_partial_length_hiding",
@@ -2045,7 +2045,7 @@
       1,
       [ "@query" ],
       0,
-      "970c71d31f87efb2405bd9a9e7ea0aee"
+      "21544b45f74d282c000ef23f8c9a0ede"
     ],
     [
       "Protocol.lemma_partial_length_hiding",
@@ -2114,7 +2114,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "61bcaeb10d814364cd9577495511fe8a"
+      "cc942f3e315fc27caa0a931f47fc3309"
     ],
     [
       "Protocol.lemma_seq_append_unstable",
@@ -2132,7 +2132,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "959cd55747bf5d517088d247078fe138"
+      "293058bb675edfb1e0a17df98e64c21b"
     ],
     [
       "Protocol.network_message",
@@ -2146,7 +2146,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "254e875b9afaf259ddb6d597b790fb51"
+      "94995f49d16e71d291094bbc92940d04"
     ],
     [
       "Protocol.zeroes",
@@ -2158,7 +2158,7 @@
         "lemma_FStar.Seq.Base.lemma_create_len", "typing_Protocol.zero_b"
       ],
       0,
-      "0528d529304a35fddf10c79dbc74153a"
+      "83a76580310b484d463d5e9961de4e75"
     ],
     [
       "Protocol.zeroes",
@@ -2172,7 +2172,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d83f8363a150b55e36f2e68ee6dcb981"
+      "70e3474b318c295825eda57b538a119f"
     ],
     [
       "Protocol.pad",
@@ -2191,7 +2191,7 @@
         "typing_FStar.Seq.Base.length", "typing_Protocol.fragment_size"
       ],
       0,
-      "f62410b3c8f851f439c14803fc862895"
+      "9175866245f24812049b76292975f21a"
     ],
     [
       "Protocol.unpad",
@@ -2205,7 +2205,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b1b686f7db9195389eaf3b86ff4270b1"
+      "e32ff522d1e8d623fe37c87dea5a87bf"
     ],
     [
       "Protocol.__proj__E__item__cipher",
@@ -2218,7 +2218,7 @@
         "projection_inverse_Protocol.E_msg"
       ],
       0,
-      "fc49e2f80aefc9ee0665ea28ede110ae"
+      "ae6e4669076410664a3e340e1cfd8d7f"
     ],
     [
       "Protocol.__proj__E__item__tag",
@@ -2231,7 +2231,7 @@
         "projection_inverse_Protocol.E_i"
       ],
       0,
-      "4ae5e1661040dfdd919a191533445cdb"
+      "8a1c3091ffdca16ed0b58586bf19214e"
     ],
     [
       "Protocol.entries",
@@ -2245,7 +2245,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "49e8359fb67102c0f57b93216eac0d8f"
+      "4218634c2bcbd0f48cab12ca1fa1b42c"
     ],
     [
       "Protocol.is_prefix_of",
@@ -2254,7 +2254,7 @@
       1,
       [ "@query" ],
       0,
-      "37915281b029467cdcdd65d9196d0ea9"
+      "d86e82444d427e5096022810d54cff52"
     ],
     [
       "Protocol.entries_pre",
@@ -2269,7 +2269,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "ab0c0a966c099406468caa9eba093046"
+      "095e8fec2ff1a6df743469a5ee8aa102"
     ],
     [
       "Protocol.counter_pred",
@@ -2284,7 +2284,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "f4e3a0778603aedca82a4bfa3c28ae61"
+      "5659a835be251c3f2be591638243334b"
     ],
     [
       "Protocol.counter_pred",
@@ -2311,7 +2311,7 @@
         "typing_Protocol.entries", "typing_Protocol.entries_rel"
       ],
       0,
-      "26356c31d98fd977ee1c46babc3507eb"
+      "1222d2ecccec99d058c5adc097a4e8f7"
     ],
     [
       "Protocol.counter_pred",
@@ -2326,7 +2326,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "97499eb2cb65f17c9f73e1827872c8ed"
+      "f4586f48cd45e72fdb897b6899bbbe12"
     ],
     [
       "Protocol.counter_t",
@@ -2341,7 +2341,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "6f26b48335ec4f21d2a4dd302dc25c17"
+      "ff598627c5db2ea8e94dcc69c8ef65e2"
     ],
     [
       "Protocol.counter_t",
@@ -2356,7 +2356,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "6d9c0df1118721ac02ec000e08c10bd6"
+      "78e41f9d8434ca683d8b80d285c29c36"
     ],
     [
       "Protocol.counter_rel",
@@ -2371,7 +2371,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "735ca299db5bd3b5abd5e1a3a9cc7de2"
+      "40b3cf299521f1032b6dc37bfa0f89be"
     ],
     [
       "Protocol.counter_rel",
@@ -2386,7 +2386,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "2ed93346ad1a42d95a69977bff327d80"
+      "dd229c1d21814945a9ae59b3226a03e5"
     ],
     [
       "Protocol.counter_pre",
@@ -2401,7 +2401,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "6a0508141d577f184573f64f97620b5c"
+      "54d77a15331094666052bccacf85552f"
     ],
     [
       "Protocol.counter_pre",
@@ -2418,7 +2418,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2f518e5a759a713d760fe70b0d10b31e"
+      "285485d857ea8f3131d403791dd7364d"
     ],
     [
       "Protocol.counter_pre",
@@ -2433,7 +2433,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "b7d48f1f7c29cd547d9326938aa3ebf7"
+      "016a958a68987a5ad84803e1a47d1532"
     ],
     [
       "Protocol.connection",
@@ -2448,7 +2448,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "d68fd83be806d307b8a3cc25908f7992"
+      "ce430a37aa96a3ffa0ae6fb74abb8514"
     ],
     [
       "Protocol.connection",
@@ -2463,7 +2463,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "00e854bdcc6d0a1eb1eb149eb5bb38af"
+      "d31789328a30ae2fe764177bb653f078"
     ],
     [
       "Protocol.__proj__S__item__rand",
@@ -2476,7 +2476,7 @@
         "refinement_interpretation_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "86c97abeda9b78bf3c8aa6e8f1626869"
+      "08814bb0d6f2d0f660b41ca87289cfe1"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -2492,7 +2492,7 @@
         "proj_equation_Protocol.S_rand"
       ],
       0,
-      "9c72d8bf90896bfd8fc161c7dc694372"
+      "3aad286162823bd3222ed06fa40a3b95"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -2514,7 +2514,7 @@
         "refinement_interpretation_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "b88c48be173f4a006a256ef8cedbd109"
+      "6cb05f8917a5fadc44a418e9f211b861"
     ],
     [
       "Protocol.__proj__R__item__rand",
@@ -2527,7 +2527,7 @@
         "refinement_interpretation_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "e34846f01012c4049c21ffcda0ec5ccf"
+      "129564c1cf30766cbb1c85f52c192040"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -2543,7 +2543,7 @@
         "proj_equation_Protocol.R_rand"
       ],
       0,
-      "d1f8572e4cc344e869315885aeaa0f64"
+      "2f2890baacb88fe942760731cfa8f09b"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -2565,7 +2565,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "561f6f2af0ea2c76f5c6e7c9a7afcfc7"
+      "6a8ec2b47624d58552836fdfbf6ce2c1"
     ],
     [
       "Protocol.__proj__R__item__ctr",
@@ -2585,7 +2585,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "ba6010ff6b108649ece5051a0cb2d6e5"
+      "cb83d1288d967ab213321be4fcd38305"
     ],
     [
       "Protocol.rand_of",
@@ -2598,7 +2598,7 @@
         "fuel_guarded_inversion_Protocol.connection"
       ],
       0,
-      "067ff96cda1204aa34ccc9de703e7962"
+      "185e986b40adca1ff4d2799e46a704c2"
     ],
     [
       "Protocol.entries_of",
@@ -2623,7 +2623,7 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "d54bac756f6e173f25876b0f57825957"
+      "fa9e5025709ebfdfb00fcfd359b9a7c1"
     ],
     [
       "Protocol.entries_of",
@@ -2639,7 +2639,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "e0715c9089cadb766c19c1131bacdebf"
+      "6776d564564ff496ec08a4cbca5d2241"
     ],
     [
       "Protocol.live_connection",
@@ -2656,7 +2656,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "d0779d168ddf63273cf74acd30e48b89"
+      "b05eda0fb624eafbd39e3ca0fda97987"
     ],
     [
       "Protocol.lemma_sel_entries_equals_sel_tot_entries",
@@ -2677,7 +2677,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6c64ffad6236df3cc3ad54922aac8b17"
+      "c4105d5d9be7431a0a3331bc7ee38433"
     ],
     [
       "Protocol.lemma_sel_ctr_ref_equals_sel_tot_ctr_ref",
@@ -2697,7 +2697,7 @@
         "typing_Protocol.uu___is_R"
       ],
       0,
-      "956d37ebd54fc97e86323f01b8608be1"
+      "100c7bef41810ee2ca991fb8d77d8246"
     ],
     [
       "Protocol.log",
@@ -2718,7 +2718,7 @@
         "refinement_interpretation_Tm_refine_12e73119c459be812384fdc8e6c9733a"
       ],
       0,
-      "345c64f67f5a7544527f8ad09be02602"
+      "ad557b9d27fbb89e47909bd48f177ab5"
     ],
     [
       "Protocol.lemma_prefix_entries_implies_prefix_log",
@@ -2736,7 +2736,7 @@
         "refinement_interpretation_Tm_refine_3d0c21849d5cf8d118afc092733f14a4"
       ],
       0,
-      "93f04f2d6160a6ca35be881c01b8696d"
+      "cd23a58d45c17d6c7122e7de43d15a99"
     ],
     [
       "Protocol.ctr",
@@ -2759,7 +2759,7 @@
         "refinement_interpretation_Tm_refine_12e73119c459be812384fdc8e6c9733a"
       ],
       0,
-      "5a0c286aadc64e57d9f4b36dc38ef297"
+      "a5f897d83e4c671e22a010084e02dfbe"
     ],
     [
       "Protocol.recall_counter",
@@ -2768,7 +2768,7 @@
       1,
       [ "@query" ],
       0,
-      "60752be6a4f46ec65175b12e28690164"
+      "1a6ffcf8f3349ac7bcc93439346a5df2"
     ],
     [
       "Protocol.snapshot",
@@ -2815,7 +2815,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "e11a8f55d3f9d3604c43fd66fe40e2c0"
+      "4eed3a25113e5d41488872437c961cf1"
     ],
     [
       "Protocol.snap",
@@ -2824,7 +2824,7 @@
       1,
       [ "@query" ],
       0,
-      "439c7090e8b4454c297ea23db6f65279"
+      "5c1a20a443632241137527722aa05ffa"
     ],
     [
       "Protocol.connection_footprint",
@@ -2845,7 +2845,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2e6378a57310f34381b97758c4cf84f8"
+      "155f1ced6122a34d12e431e4c77a29c4"
     ],
     [
       "Protocol.connection_footprint",
@@ -2859,7 +2859,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "324d332a0ef92822f2ac55555aff4bc5"
+      "651b98013ae86e2058a46748d23592c6"
     ],
     [
       "Protocol.lemma_snoc_log",
@@ -2877,7 +2877,7 @@
         "refinement_interpretation_Tm_refine_3d0c21849d5cf8d118afc092733f14a4"
       ],
       0,
-      "fcf9503c36b0b8c0d4ca60a66ab120d6"
+      "5cd49bdbfdd1f2e1bf332e3a7a507935"
     ],
     [
       "Protocol.network_send",
@@ -2898,7 +2898,7 @@
         "typing_Protocol.sender"
       ],
       0,
-      "c4039b910b761971dc2f2b94db64a94f"
+      "840a2eb9a836543c631816e323c9a1e4"
     ],
     [
       "Protocol.send",
@@ -2933,7 +2933,7 @@
         "typing_Protocol.sender"
       ],
       0,
-      "df1ee200a0869362862545b52239d51a"
+      "96b1be488a23a90db8e1600831a06f73"
     ],
     [
       "Protocol.ciphers",
@@ -2949,7 +2949,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "ce6afdf2032d54843130834788692398"
+      "e7aaf119949112043a69c0f700170baf"
     ],
     [
       "Protocol.modifies_r",
@@ -2963,7 +2963,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "259cf0e092a2a8d19894233478254ed4"
+      "83b143d7267e7bfabbbfd99a7d8e8e34"
     ],
     [
       "Protocol.verify",
@@ -2982,7 +2982,7 @@
         "typing_Protocol.receiver"
       ],
       0,
-      "3fcba8f3760b411025211477e905f24f"
+      "7519f51ed3c3b0a725229b0013b21468"
     ],
     [
       "Protocol.receive",
@@ -3011,7 +3011,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "fa17f271214ad4c8f78b7261a8b1e275"
+      "64b22c418ef6149057c8d88944e519e3"
     ],
     [
       "Protocol.lemma_is_prefix_of_slice",
@@ -3029,7 +3029,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "7bf89ce25f8da5d0cbf42e8886cfb1aa"
+      "a40a8cd16026c6c114fc5445ea878afa"
     ],
     [
       "Protocol.sent_bytes'",
@@ -3044,7 +3044,7 @@
         "refinement_interpretation_Tm_refine_571d9f74016be5357787170b42ecf913"
       ],
       0,
-      "fb5d0fff5981cd7b36c15bac51b47681"
+      "d0a46771c50934ebd88c10756cdd2253"
     ],
     [
       "Protocol.sent_bytes",
@@ -3096,7 +3096,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "dceb0919d11404ac9daa092aad92829f"
+      "718175bf7eb929a98eeda925d39cf7d4"
     ],
     [
       "Protocol.iarray_as_seq",
@@ -3115,7 +3115,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "0e0f5e3732a7ad35b02dbbae227747a7"
+      "8d325988cdd52af1c28b93ea5787b7bb"
     ],
     [
       "Protocol.fully_initialized_in",
@@ -3128,7 +3128,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "37e4428d90ccdab035be77f3658f65e1"
+      "9cb2eb221bdbeaa3805aaefcafb0d2bb"
     ],
     [
       "Protocol.subseq_suffix",
@@ -3159,7 +3159,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "c3cf8a6de91dcbfad46cbaaba5e9c2b9"
+      "88b004538da81a25503cc6c9b42f9ddd"
     ],
     [
       "Protocol.slice_snoc",
@@ -3180,7 +3180,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "c2ce2c0b7a57dfbc122bfe92c1de1a8b"
+      "aed8d90133ae15d5672f45b14880edb9"
     ],
     [
       "Protocol.slice_snoc2",
@@ -3201,7 +3201,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "05fc8821f2ce85c9be34b9bdf4935932"
+      "9c375d5ba9ba00287e1eec9f7f9757aa"
     ],
     [
       "Protocol.append_subseq",
@@ -3232,7 +3232,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "cb414b796cb760c71cd43102047790aa"
+      "29aebdfda221e29f4b67bfcbadaacf32"
     ],
     [
       "Protocol.send_aux",
@@ -3261,7 +3261,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "2b196c3f80ba4403f467576ab2cb27ef"
+      "8f0b0a729b86ed0091d59d7a3bdbb5fe"
     ],
     [
       "Protocol.send_file",
@@ -3284,7 +3284,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "9f49418ea0c99cb1f0168914d3b893f6"
+      "fdaa4fb758958d4b88285b420d92c3e7"
     ],
     [
       "Protocol.received",
@@ -3298,7 +3298,7 @@
         "equation_Protocol.fully_initialized_in"
       ],
       0,
-      "76cf76c3f2cde4d409244d02611365e5"
+      "92602f941cd382cd2f5f2012e45e8e20"
     ],
     [
       "Protocol.append_filled",
@@ -3345,7 +3345,7 @@
         "typing_FStar.Seq.Base.index", "typing_MonotonicArray.as_seq"
       ],
       0,
-      "3a68a5e0f4f19676f1327420179b8d51"
+      "8b011f359207c1e56f6b48da770c99d4"
     ],
     [
       "Protocol.extend_initialization",
@@ -3364,7 +3364,7 @@
         "refinement_interpretation_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "eb2978384005fde13591a3384f3daac3"
+      "de3a11c50f5b9351da335455fd23e3a1"
     ],
     [
       "Protocol.receive_aux_post",
@@ -3378,7 +3378,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c686d92cb897b04ad5b5bcc93daa4aa3"
+      "a881b2196e263207e358db378a33672e"
     ],
     [
       "Protocol.receive_aux_post",
@@ -3406,7 +3406,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "8eb3b4c1b58a38f3a16c4df66ea2bd73"
+      "910470b4ad7c24790a2a4cedc3164abf"
     ],
     [
       "Protocol.receive_aux_post",
@@ -3420,7 +3420,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c1a7acc895414aa42a747af29d3c2d87"
+      "7e4018eb1772713144982d3d887cd4ca"
     ],
     [
       "Protocol.receive_aux",
@@ -3449,7 +3449,7 @@
         "typing_Protocol.fragment_size"
       ],
       0,
-      "01b72310dc12a119dd34af71c69f37e0"
+      "fbc5f8f4516b82911bde37cab1c6f555"
     ],
     [
       "Protocol.receive_file",
@@ -3478,7 +3478,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "2a6b287636d8bae504db133ca40cc9d2"
+      "752ac8abb97f7b6e3560b3395730ad8e"
     ],
     [
       "Protocol.tags",
@@ -3494,7 +3494,7 @@
         "interpretation_Tm_abs_41efd131336ec34ef1b819bed745d3d1"
       ],
       0,
-      "6c4ea41e345757d3b8ee3896bbd67236"
+      "a86ba792a56246c1c4ca2bcbfa9b19d1"
     ],
     [
       "Protocol.lemma_partial_length_hiding",
@@ -3560,7 +3560,7 @@
         "typing_Tm_abs_1f17782d7f15dca3aa2da1fe8e018a7e"
       ],
       0,
-      "a859e81066103bd79aeb5cd40615c02a"
+      "4943862ca05cdb3558313b5ad9802591"
     ]
   ]
 ]

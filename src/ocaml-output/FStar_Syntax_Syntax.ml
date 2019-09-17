@@ -1,20 +1,20 @@
 open Prims
 type 'a withinfo_t = {
   v: 'a ;
-  p: FStar_Range.range }
+  p: FStar_Range.range }[@@deriving yojson,show,yojson,show]
 let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
   fun projectee  -> match projectee with | { v = v1; p;_} -> v1 
 let __proj__Mkwithinfo_t__item__p : 'a . 'a withinfo_t -> FStar_Range.range =
   fun projectee  -> match projectee with | { v = v1; p;_} -> p 
-type var = FStar_Ident.lident withinfo_t
-type sconst = FStar_Const.sconst
+type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
+type sconst = FStar_Const.sconst[@@deriving yojson,show]
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
-  | LightOff 
+  | LightOff [@@deriving yojson,show,yojson,show]
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee  ->
     match projectee with | SetOptions _0 -> true | uu____175 -> false
@@ -47,7 +47,13 @@ let (uu___is_LightOff : pragma -> Prims.bool) =
   fun projectee  ->
     match projectee with | LightOff  -> true | uu____280 -> false
   
-type 'a memo = 'a FStar_Pervasives_Native.option FStar_ST.ref
+type 'a memo =
+  (('a FStar_Pervasives_Native.option FStar_ST.ref)[@printer
+                                                     fun fmt  ->
+                                                       fun _  ->
+                                                         Format.pp_print_string
+                                                           fmt "None"])
+[@@deriving yojson,show]
 type emb_typ =
   | ET_abstract 
   | ET_fun of (emb_typ * emb_typ) 
@@ -71,7 +77,7 @@ let (__proj__ET_app__item___0 :
   fun projectee  -> match projectee with | ET_app _0 -> _0 
 type version = {
   major: Prims.int ;
-  minor: Prims.int }
+  minor: Prims.int }[@@deriving yojson,show,yojson,show]
 let (__proj__Mkversion__item__major : version -> Prims.int) =
   fun projectee  -> match projectee with | { major; minor;_} -> major 
 let (__proj__Mkversion__item__minor : version -> Prims.int) =
@@ -84,7 +90,7 @@ type universe =
   | U_name of FStar_Ident.ident 
   | U_unif of (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar
   * version) 
-  | U_unknown 
+  | U_unknown [@@deriving yojson,show,yojson,show]
 let (uu___is_U_zero : universe -> Prims.bool) =
   fun projectee  ->
     match projectee with | U_zero  -> true | uu____485 -> false
@@ -126,15 +132,16 @@ let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee  ->
     match projectee with | U_unknown  -> true | uu____635 -> false
   
-type univ_name = FStar_Ident.ident
+type univ_name = FStar_Ident.ident[@@deriving yojson,show]
 type universe_uvar =
   (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar * version)
-type univ_names = univ_name Prims.list
-type universes = universe Prims.list
-type monad_name = FStar_Ident.lident
+[@@deriving yojson,show]
+type univ_names = univ_name Prims.list[@@deriving yojson,show]
+type universes = universe Prims.list[@@deriving yojson,show]
+type monad_name = FStar_Ident.lident[@@deriving yojson,show]
 type quote_kind =
   | Quote_static 
-  | Quote_dynamic 
+  | Quote_dynamic [@@deriving yojson,show,yojson,show]
 let (uu___is_Quote_static : quote_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Quote_static  -> true | uu____658 -> false
@@ -145,7 +152,7 @@ let (uu___is_Quote_dynamic : quote_kind -> Prims.bool) =
   
 type maybe_set_use_range =
   | NoUseRange 
-  | SomeUseRange of FStar_Range.range 
+  | SomeUseRange of FStar_Range.range [@@deriving yojson,show,yojson,show]
 let (uu___is_NoUseRange : maybe_set_use_range -> Prims.bool) =
   fun projectee  ->
     match projectee with | NoUseRange  -> true | uu____685 -> false
@@ -160,7 +167,7 @@ let (__proj__SomeUseRange__item___0 :
 type delta_depth =
   | Delta_constant_at_level of Prims.int 
   | Delta_equational_at_level of Prims.int 
-  | Delta_abstract of delta_depth 
+  | Delta_abstract of delta_depth [@@deriving yojson,show,yojson,show]
 let (uu___is_Delta_constant_at_level : delta_depth -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -187,7 +194,7 @@ let (__proj__Delta_abstract__item___0 : delta_depth -> delta_depth) =
 type should_check_uvar =
   | Allow_unresolved 
   | Allow_untyped 
-  | Strict 
+  | Strict [@@deriving yojson,show,yojson,show]
 let (uu___is_Allow_unresolved : should_check_uvar -> Prims.bool) =
   fun projectee  ->
     match projectee with | Allow_unresolved  -> true | uu____797 -> false

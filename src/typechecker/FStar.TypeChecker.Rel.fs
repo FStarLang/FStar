@@ -3482,7 +3482,7 @@ let resolve_implicits' env must_total forcelax g =
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
-let resolve_implicits env g = resolve_implicits' env true  false g
+let resolve_implicits env g = resolve_implicits' env (not env.phase1 && not env.lax)  false g
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 
 let force_trivial_guard env g =

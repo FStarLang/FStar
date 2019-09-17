@@ -152,8 +152,8 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
   //now open rest of the ed with us and bs
   let ed_univs_subst, ed_univs = SS.univ_var_opening us in
   let ed_bs, ed_bs_subst = SS.open_binders' (SS.subst_binders ed_univs_subst bs) in
-  
-  
+
+
   let ed =
     let op (us, t) =
       let t = SS.subst (SS.shift_subst (List.length ed_bs + List.length us) ed_univs_subst) t in
@@ -224,7 +224,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
 
   (*
-   * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a) 
+   * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a)
    *)
   let fresh_a_and_wp () =
     let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (snd ed.signature).pos in
@@ -349,7 +349,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
         let k, _, _ = tc_tot_or_gtot_term env k in
         let env = Some (Env.set_range env (snd (ed.return_repr)).pos) in
         check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in
-    
+
       log_combinator "return_repr" return_repr;
 
       let bind_repr =
@@ -372,7 +372,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
           if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
           then [S.null_binder S.t_range; S.null_binder S.t_range]
           else [] in
-       
+
         let k = U.arrow ([S.mk_binder a; S.mk_binder b] @
                          maybe_range_arg @
                          [S.mk_binder wp_f;
@@ -497,7 +497,7 @@ let tc_eff_decl env0 (ed:S.eff_decl) : eff_decl =
     let ts = SS.close_tscheme ed_bs ts in
     let ed_univs_closing = SS.univ_var_closing ed_univs in
     SS.subst_tscheme (SS.shift_subst (List.length ed_bs) ed_univs_closing) ts in
-  
+
   //univs and binders have already been set
   let ed = { ed with
     signature    =cl signature;
@@ -962,7 +962,11 @@ let tc_inductive' env ses quals lids =
     //strict positivity check
     if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
     else begin
-       let env = push_sigelt env sig_bndle in
+       (*
+        * AR: call add_sigelt_to_env here? We should maintain the invariant that push_sigelt is only called from there
+        *     but then this is temporary, just to check positivity, later we actually do go through add_sigelt_to_env
+        *)
+       let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
          let b = TcInductive.check_positivity ty env in
@@ -1160,11 +1164,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
+    //propagate attributes from the bundle to its elements
+    let ses = ses |> List.map (fun e -> {e with sigattrs = e.sigattrs@se.sigattrs}) in
     let ses =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
-        let ses = tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
+        let ses =
+          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids
+          |> fst
+          |> N.elim_uvars env
+          |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases"
+        then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
         ses
       end
       else ses
@@ -1769,34 +1780,49 @@ let for_export env hidden se : list<sigelt> * list<lident> =
     else [se], hidden
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
-(* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
-let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
+(* AR: we now call this function when loading checked modules as well to be more consistent *)
+let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Env.debug env Options.Low
-  then BU.print1 ">>>>>>>>>>>>>>Adding top-level decl to environment: %s\n" (Print.sigelt_to_string se);
+  then BU.print2
+    ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
+    (Print.sigelt_to_string se) (string_of_bool from_cache);
+
   match se.sigel with
-  | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
+  | Sig_inductive_typ _
+  | Sig_datacon _ ->
+    raise_error (Errors.Fatal_UnexpectedInductivetype, BU.format1
+      "add_sigelt_to_env: unexpected bare type/data constructor: %s" (Print.sigelt_to_string se)) se.sigrng
 
-  | Sig_pragma (PushOptions _)
-  | Sig_pragma PopOptions
-  | Sig_pragma (SetOptions _)
-  | Sig_pragma (ResetOptions _) ->
-    (* we keep --using_facts_from reflected in the environment, so update it here *)
-    let env = { env with proof_ns = Options.using_facts_from () } in
-    env
-
-  | Sig_pragma RestartSolver ->
-    env.solver.refresh ();
-    env
-
-  | Sig_pragma _
-  | Sig_new_effect_for_free _ -> env
-  | Sig_new_effect ne ->
-    let env = Env.push_sigelt env se in
-    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
-  | _ -> Env.push_sigelt env se
+
+  | _ ->
+    let env = Env.push_sigelt env se in
+    //match again to perform postprocessing
+    match se.sigel with
+    | Sig_pragma (PushOptions _)
+    | Sig_pragma PopOptions
+    | Sig_pragma (SetOptions _)
+    | Sig_pragma (ResetOptions _) ->
+      if from_cache then env
+      else
+        (* we keep --using_facts_from reflected in the environment, so update it here *)
+        ({ env with proof_ns = Options.using_facts_from () })
+
+    | Sig_pragma RestartSolver ->
+      if from_cache then env
+      else begin
+        env.solver.refresh ();
+        env
+      end
+
+    | Sig_new_effect ne ->
+      let env = Env.push_new_effect env (ne, se.sigquals) in
+      ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
+
+    | Sig_sub_effect sub -> Env.update_effect_lattice env sub
+
+    | _ -> env
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
@@ -1821,7 +1847,7 @@ let tc_decls env ses =
                 Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars
-    let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
+    let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
     FStar.Syntax.Unionfind.reset();
 
     if Options.log_types() || Env.debug env <| Options.Other "LogTypes"
@@ -2177,15 +2203,15 @@ let load_checked_module (en:env) (m:modul) :env =
   //push context, finish_partial_modul will do the pop
   let env = push_context env ("Internals for " ^ Ident.string_of_lid m.name) in
   let env = List.fold_left (fun env se ->
-             //push every sigelt in the environment
-             let env = Env.push_sigelt env se in
+             //add every sigelt in the environment
+             let env = add_sigelt_to_env env se true in
              //and then query it back immediately to populate the environment's internal cache
              //this is important for extraction to work correctly,
              //in particular, when extracting a module we want the module's internal symbols
              //that may be marked "abstract" externally to be visible internally
              //populating the cache enables this behavior, rather indirectly, sadly : (
              let lids = Util.lids_of_sigelt se in
-             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
+             lids |> List.iter (fun lid -> ignore (Env.lookup_sigelt env lid));
              env)
              env
              m.declarations in

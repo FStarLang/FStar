@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3f64bb85f549ee1970715ec3dd291bad"
+      "a45d4f94664773b2ddf866961fc7311f"
     ],
     [
       "Tests.uu___13",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "cd079c777577907c3ba29cb390dcaa90"
+      "c8e803d92cfe54e32faf74550248064b"
     ],
     [
       "Tests.uu___14",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "35648e100d4290d395087f6a02988003"
+      "bf9345e3577fe52ffe352a7885032bde"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "0c85d0184abdfb04d31f357a8c59fa92"
+      "d36ef35ee84b03dac6318cdde8141f0c"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "c64694e9f6acf742a7667f44f16f5bbd"
+      "c3074a1f84e254621adaff5fc1fa171e"
     ],
     [
       "Tests.sum",
@@ -109,7 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b51d7b5ca36b2a001e8f74561cca184"
+      "3ce3784b90dd0853ef10fa51b313834b"
     ],
     [
       "Tests.uu___13",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "b8927e511d9e4e02ec9c22fb82b85f63"
+      "9abe85706df021b84b97a9f5fa0a96a9"
     ],
     [
       "Tests.uu___14",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "d0c772e6907fe84aed1cc68713f9de73"
+      "add78f0a0dc4e37ecc7683e99ad3745c"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "d9e47e349913025e1458c341456f32f9"
+      "2d594d37f3c649acc813308241ce10d4"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "f9120873461f97a644e0bc99fd0339b9"
+      "96d7c57f8376ce1eed18257116cc9a29"
     ]
   ]
 ]
