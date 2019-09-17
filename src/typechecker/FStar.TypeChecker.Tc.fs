@@ -218,22 +218,32 @@ let tc_inductive' env ses quals lids =
     end;
 
     //generate hasEq predicate for this inductive
-    //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
-    let skip_prims_type (_:unit) :bool =
+
+    let skip_haseq =
+      //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
+      let skip_prims_type (_:unit) :bool =
         let lid =
-            let ty = List.hd tcs in
-            match ty.sigel with
-                | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
-                | _                                         -> failwith "Impossible"
+          let ty = List.hd tcs in
+          match ty.sigel with
+          | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+          | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives
-    in
+        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives in
 
-    let is_noeq = List.existsb (fun q -> q = Noeq) quals in
+      let is_noeq = List.existsb (fun q -> q = Noeq) quals in
+
+      //caller ensures tcs length is > 0
+      //assuming that we have already propagated attrs from the bundle to its elements
+      let is_erasable () = U.has_attribute (List.hd tcs).sigattrs FStar.Parser.Const.erasable_attr in
+
+      List.length tcs = 0 ||
+      (lid_equals env.curmodule PC.prims_lid && skip_prims_type ()) ||
+      is_noeq ||
+      is_erasable () in
 
     let res =
-        if ((List.length tcs = 0) || ((lid_equals env.curmodule PC.prims_lid) && skip_prims_type ()) || is_noeq)
+        if skip_haseq
         then sig_bndle, data_ops_ses
         else
             let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
