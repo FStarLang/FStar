@@ -25,9 +25,7 @@ val existsb_assoc_some: #a:eqtype -> #b:Type -> x:a -> l:list (a & b) -> Lemma
   (ensures (~(None? (List.Tot.assoc x l))))
 
 #push-options "--max_fuel 1 --max_ifuel 1"
-let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool
-  (decreases (List.Tot.length l))
-=
+let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
   match l with
   | [] -> true
   | [ _ ] -> true
@@ -39,11 +37,14 @@ let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool
 /// Key definitions
 /// ===============
 
+// TODO: find a way to define ``let case_list = list (key & Type u#a) ...``
+// while preserving the universe variable.
+
 /// This module offers a particular flavor of union, which is already indexed by
 /// a user-provided type of keys. It's up to the user to give meaning to these
 /// keys, for instance by tying a key to a particular property of interest.
 val union: #key:eqtype ->
-  cases:list (key & Type u#a) { b2t (normalize_term (pairwise_first_disjoint cases)) } ->
+  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
   case:one_of cases ->
   Type u#a
 
@@ -51,8 +52,16 @@ val union: #key:eqtype ->
 /// ``cases``.
 #push-options "--max_fuel 1"
 val mk: #key:eqtype ->
-  cases:list (key & Type) ->
+  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
   case:one_of cases ->
   (v: normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))) ->
   union cases case
+#pop-options
+
+#push-options "--max_fuel 1"
+val proj: #key:eqtype ->
+  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
+  case:one_of cases ->
+  u:union cases case ->
+  Tot (normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)))
 #pop-options

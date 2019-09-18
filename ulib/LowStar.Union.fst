@@ -27,8 +27,13 @@ let union #key cases case =
 
 let mk #key cases case v =
   v
+
+let proj #key cases case u =
+  u
 #pop-options
 
+/// An example
+/// ==========
 
 /// An example with a fictional type of messages, where some other information
 /// in the context allows deducing the message and, hence, the particular case
@@ -36,7 +41,6 @@ let mk #key cases case v =
 /// top-level, and other occurrences of ``union`` are an extraction error.
 type msg = | Msg1 | Msg2 | Msg3 | Msg4
 
-// JP: shouldn't we enforce pairwise disjoint here?
 let msg_payload: list (msg & Type) = [ Msg1, int; Msg2, int & int ]
 
 // Note that with sufficient fuel and ifuel we can write msg instead of one_of
@@ -51,3 +55,13 @@ let mk_msg (x: nat): any_msg (if x = 0 then Msg1 else Msg2) =
     mk msg_payload Msg1 (-1)
   else
     mk msg_payload Msg2 (0, 0)
+
+open FStar.Mul
+
+let test (x: nat): int =
+  let my_msg = mk_msg x in
+  if x * x = 0 then
+    proj msg_payload Msg1 my_msg
+  else
+    let my_msg: int & int = proj msg_payload Msg2 my_msg in
+    fst my_msg
