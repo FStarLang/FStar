@@ -105,6 +105,7 @@ val reveal_view (_ : unit)
   )
 
 /// The resource type is polymorhpic, offering a unified way to talk about any heap object.
+[@erasable]
 noeq type resource : Type u#1 = {
   t: Type u#0;
   view: view t
@@ -116,9 +117,9 @@ let as_resource (#a:Type) (view:view a) : resource = {
 }
 
 /// Helper functions to get the components of a resource
-let view_of (res:resource) : view res.t =
+let view_of (res:resource) : GTot (view res.t) =
   res.view
-let fp (res:resource) : fp_t =
+let fp (res:resource) : GTot fp_t =
   res.view.fp
 let inv (res:resource) (h:HS.mem) : prop =
   res.view.inv h

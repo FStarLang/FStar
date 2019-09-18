@@ -16,9 +16,9 @@ let test_create_lock (b:A.array UInt32.t) : RST (lock (A.array_resource b))
          A.as_rseq b old == Seq.create 1 1ul
          )
   (fun _ l _ ->
-    (forall s. get_lock_pred l s <==> (Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) ) )
+    (forall s. get_lock_pred l s <==> (Seq.index s.A.s 0 == 1ul /\ P.allows_write s.A.p) ) )
   =
-  let l = new_lock (A.array_resource b) (fun s -> s.A.s `Seq.equal` Seq.create 1 1ul /\ P.allows_write (Ghost.reveal s.A.p)) in
+  let l = new_lock (A.array_resource b) (fun s -> s.A.s `Seq.equal` Seq.create 1 1ul /\ P.allows_write s.A.p) in
   acquire l;
   let x = A.index b 0ul in
   assert (UInt32.v x == 1);
@@ -33,11 +33,11 @@ let test_create_lock2 (b:A.array UInt32.t) : RST (lock (A.array_resource b))
          P.allows_write (A.get_rperm b old)
          )
   (fun _ l _ ->
-    (forall s. get_lock_pred l s <==> Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) )
+    (forall s. get_lock_pred l s <==> Seq.index s.A.s 0 == 1ul /\ P.allows_write s.A.p) )
   =
   A.upd b 0ul 1ul;
   A.upd b 1ul 1ul;
-  let l = new_lock (A.array_resource b) (fun s -> Seq.index s.A.s 0 == 1ul /\ P.allows_write (Ghost.reveal s.A.p)) in
+  let l = new_lock (A.array_resource b) (fun s -> Seq.index s.A.s 0 == 1ul /\ P.allows_write s.A.p) in
   acquire l;
   let x = A.index b 0ul in
   let y = A.index b 1ul in
@@ -55,7 +55,7 @@ let basic_locked_update (b:A.array UInt32.t) (l:lock (A.array_resource b)) : RST
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
   // In this case, the lock is almost trivial, but needs to specify the write permission
-  (fun old -> A.vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write (Ghost.reveal s.A.p)))
+  (fun old -> A.vlength b = 1 /\ (forall s. get_lock_pred l s <==> P.allows_write s.A.p))
   (fun _ _ _ -> True)
   =
   acquire l;
@@ -70,7 +70,7 @@ let test_shared_lock () : RST unit
   (fun _ _ _ -> True)
   =
   let b = A.alloc 1ul 1ul in
-  let l = new_lock (A.array_resource b) (fun s -> P.allows_write (Ghost.reveal s.A.p)) in
+  let l = new_lock (A.array_resource b) (fun s -> P.allows_write s.A.p) in
   // Frame is here needed to unify empty_resource with empty <*> empty
   // Unclear why inlining the framed function does not work and points to prims (112- 150)
   let f = fun () -> par (fun () -> basic_locked_update b l) (fun () -> basic_locked_update b l) in
@@ -86,7 +86,7 @@ let locked_update2 (b:A.array UInt32.t) (l:lock (A.array_resource b)) (v:UInt32.
   (fun _ -> empty_resource)
   // When we pass a lock, we need to express something about the predicate associated to satisfy the precondition of release
   (fun old -> A.vlength b = 2 /\ (forall s. (
-    P.allows_write (Ghost.reveal s.A.p) /\
+    P.allows_write s.A.p /\
     UInt32.v (Seq.index s.A.s 0) >= UInt32.v (Seq.index s.A.s 1)) <==> get_lock_pred l s))
   (fun _ _ _ -> True)
   =
@@ -104,7 +104,7 @@ let test_shared_lock2 () : RST unit
   (fun _ _ _ -> True)
   =
   let b = A.alloc 1ul 2ul in
-  let l = new_lock (A.array_resource b) (fun s -> UInt32.v (Seq.index s.A.s 0) >= UInt32.v (Seq.index s.A.s 1) /\ P.allows_write (Ghost.reveal s.A.p)) in
+  let l = new_lock (A.array_resource b) (fun s -> UInt32.v (Seq.index s.A.s 0) >= UInt32.v (Seq.index s.A.s 1) /\ P.allows_write s.A.p) in
   // Frame is here needed to unify empty_resource with empty <*> empty
   // Unclear why inlining the framed function does not work and points to prims (112- 150)
   let f = fun () -> par (fun () -> locked_update2 b l 5ul) (fun () -> locked_update2 b l 10ul) in
