@@ -24,6 +24,7 @@ module FStar.Real
   in Z3's theory of real arithmetic.
 *)
 
+[@erasable]
 val real : eqtype
 
 val of_int : int -> Tot real

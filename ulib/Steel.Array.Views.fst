@@ -28,7 +28,7 @@ include LowStar.Array
 
 noeq type varray (#a: Type) (b: array a) = {
   s: Seq.lseq a (vlength b);
-  p: Ghost.erased P.permission
+  p: P.permission
 }
 
 /// Array resource cells have uniform permissions
@@ -93,7 +93,7 @@ let array_view (#a:Type) (b:array a) : Tot (view (varray b)) =
   let inv (h: HS.mem) : prop =
     live h b /\ constant_perm_seq h b
   in
-  let sel (h: HS.mem) : GTot (varray b) = { s = as_seq h b; p = Ghost.hide (get_perm h b 0) } in
+  let sel (h: HS.mem) : GTot (varray b) = { s = as_seq h b; p = get_perm h b 0 } in
   {
     fp = fp;
     inv = inv;
@@ -115,7 +115,7 @@ let get_rperm
   (b: array a)
   (#r: resource{array_resource #a b `is_subresource_of` r})
   (h: rmem r) : GTot P.permission  =
-  Ghost.reveal (h (array_resource b)).p
+  (h (array_resource b)).p
 
 let reveal_array ()
   : Lemma (
@@ -125,7 +125,7 @@ let reveal_array ()
         inv (array_resource b) h <==> live h b /\ constant_perm_seq h b
       ) /\
       (forall a (b:array a) h .{:pattern sel (array_view b) h}
-        sel (array_view b) h == { s = as_seq h b; p = Ghost.hide (get_perm h b 0) }
+        sel (array_view b) h == { s = as_seq h b; p = get_perm h b 0 }
       )
     ) =
   ()
