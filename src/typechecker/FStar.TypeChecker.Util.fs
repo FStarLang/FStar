@@ -1070,31 +1070,54 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
-let mk_layered_conjunction _env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp =
+let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp * guard_t =
   let _, conjunction = Env.inst_tscheme_with (ed.match_wps |> right).conjunction [u_a] in
   let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
-  let a_b, f_bs, g_bs, p_b, body =
+  let a_b, rest_bs, f_b, g_b, p_b, body =
     match (SS.compress conjunction).n with
-    | Tm_abs (bs, body, _) ->
-      let bs, body = SS.open_term bs body in
-      let a_b, bs = List.hd bs, List.tl bs in
-      let f_bs, bs = List.splitAt (List.length is1) bs in
-      let g_bs, bs = List.splitAt (List.length is1) bs in
-      a_b, f_bs, g_bs, List.hd bs, U.unascribe body
+    | Tm_abs (bs, body, _) when List.length bs >= 4 ->
+      let (a_b::bs), body = SS.open_term bs body in
+      let rest_bs, (f_b::g_b::p_b::[]) = List.splitAt (List.length bs - 3) bs in
+      a_b, rest_bs, f_b, g_b, p_b, body |> U.unascribe
     | _ -> failwith "Impossible" in  //AR: TODO: FIXME: raise error 
 
-  let substs =
-    [NT (a_b |> fst, a)]@
-    (List.map2 (fun f_b i -> NT (f_b |> fst, i)) f_bs is1)@
-    (List.map2 (fun g_b i -> NT (g_b |> fst, i)) g_bs is2)@
-    [NT (p_b |> fst, p)] in
+  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
+    env rest_bs [NT (a_b |> fst, a)]
+    (fun b -> BU.format3
+      "implicit var for binder %s of %s:conjunction at %s"
+      (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
+      (env |> Env.get_range |> Range.string_of_range)) (env |> Env.get_range) in  //TODO: FIXME: better range?
+
+  let substs = List.map2
+    (fun b t -> NT (b |> fst, t))
+    (a_b::(rest_bs@[p_b])) (a::(rest_bs_uvars@[p])) in
+
+  let f_guard =
+    let f_sort_is =
+      match (SS.compress (f_b |> fst).sort).n with
+      | Tm_app (_, _::is) ->
+        is |> List.map fst |> List.map (SS.subst substs)
+      | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: raise error
+    List.fold_left2
+      (fun g i1 f_i -> Env.conj_guard g (Rel.teq env i1 f_i))
+      Env.trivial_guard is1 f_sort_is in
+
+  let g_guard =
+    let g_sort_is =
+      match (SS.compress (g_b |> fst).sort).n with
+      | Tm_app (_, _::is) ->
+        is |> List.map fst |> List.map (SS.subst substs)
+      | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: raise error
+    List.fold_left2
+      (fun g i2 g_i -> Env.conj_guard g (Rel.teq env i2 g_i))
+      Env.trivial_guard is2 g_sort_is in
 
   let body = SS.subst substs body in
 
   let is =
     match (SS.compress body).n with
     | Tm_app (_, a::args) -> List.map fst args
-    | _ -> failwith "Impossible" in
+    | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: raise error
 
   mk_Comp ({
     comp_univs = [u_a];
@@ -1102,16 +1125,16 @@ let mk_layered_conjunction _env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) 
     result_typ = a;
     effect_args = is |> List.map S.as_arg;
     flags = []
-  })
+  }), Env.conj_guard f_guard g_guard
 
-let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp =
+let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp * guard_t =
   let if_then_else, _, _ = U.get_match_with_close_wps ed.match_wps in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
   let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
     [S.as_arg a; S.as_arg p; S.as_arg wp_t; S.as_arg wp_e]
     None (Range.union_ranges wp_t.pos wp_e.pos) in
-  mk_comp ed u_a a wp []
+  mk_comp ed u_a a wp [], Env.trivial_guard
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
@@ -1155,9 +1178,10 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
                 let fn =
                   if md.is_layered then mk_layered_conjunction
                   else mk_non_layered_conjunction in
+                let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else in
                 Some md,
-                fn env md u_res_t res_t g ct_then ct_else,
-                Env.conj_guard (Env.conj_guard g_comp gthen) g_lift
+                c,
+                Env.conj_guard (Env.conj_guard (Env.conj_guard g_comp gthen) g_lift) g_conjunction
             ) lcases (None, default_case, Env.trivial_guard) in
             match lcases with
             | []
