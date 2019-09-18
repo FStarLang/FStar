@@ -1589,6 +1589,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         { lb with lbdef = lbdef }
     in
     let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
+    let (e2, _, _) = r in
+    if Env.debug env <| Options.Other "TwoPhases" then
+      BU.print1 "Let binding after phase 2: %s\n"
+        (Print.term_to_string e2);
     if Env.debug env <| Options.Other "TCDeclTime" then
       BU.print1 "Let binding typechecked in phase 2 in %s milliseconds\n"
         (string_of_int ms);
