@@ -187,7 +187,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.nbe =
                (uu___46_235.FStar_TypeChecker_Env.nbe);
              FStar_TypeChecker_Env.strict_args_tab =
-               (uu___46_235.FStar_TypeChecker_Env.strict_args_tab)
+               (uu___46_235.FStar_TypeChecker_Env.strict_args_tab);
+             FStar_TypeChecker_Env.erasable_types_tab =
+               (uu___46_235.FStar_TypeChecker_Env.erasable_types_tab)
            }  in
          let uu____236 =
            FStar_TypeChecker_Tc.check_module env1 prims_mod false  in
@@ -284,7 +286,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.nbe =
                     (uu___52_245.FStar_TypeChecker_Env.nbe);
                   FStar_TypeChecker_Env.strict_args_tab =
-                    (uu___52_245.FStar_TypeChecker_Env.strict_args_tab)
+                    (uu___52_245.FStar_TypeChecker_Env.strict_args_tab);
+                  FStar_TypeChecker_Env.erasable_types_tab =
+                    (uu___52_245.FStar_TypeChecker_Env.erasable_types_tab)
                 }  in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid  in
@@ -439,7 +443,9 @@ let (tc' :
           (uu___83_378.FStar_TypeChecker_Env.dsenv);
         FStar_TypeChecker_Env.nbe = (uu___83_378.FStar_TypeChecker_Env.nbe);
         FStar_TypeChecker_Env.strict_args_tab =
-          (uu___83_378.FStar_TypeChecker_Env.strict_args_tab)
+          (uu___83_378.FStar_TypeChecker_Env.strict_args_tab);
+        FStar_TypeChecker_Env.erasable_types_tab =
+          (uu___83_378.FStar_TypeChecker_Env.erasable_types_tab)
       }  in
     let uu____380 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm
        in
@@ -548,7 +554,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___103_441.FStar_TypeChecker_Env.dsenv);
         FStar_TypeChecker_Env.nbe = (uu___103_441.FStar_TypeChecker_Env.nbe);
         FStar_TypeChecker_Env.strict_args_tab =
-          (uu___103_441.FStar_TypeChecker_Env.strict_args_tab)
+          (uu___103_441.FStar_TypeChecker_Env.strict_args_tab);
+        FStar_TypeChecker_Env.erasable_types_tab =
+          (uu___103_441.FStar_TypeChecker_Env.erasable_types_tab)
       }  in
     let uu____443 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm
        in

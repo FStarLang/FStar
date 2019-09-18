@@ -390,7 +390,7 @@ let unifier_hint_injective : unit = ()
  * This attribute is used to control the evaluation order
  * and unfolding strategy for certain definitions.
  *
- * In particular, given 
+ * In particular, given
  *    [@(strict_on_arguments [1;2])]
  *    let f x0 (x1:list x0) (x1:option x0) = e
  *
@@ -398,13 +398,13 @@ let unifier_hint_injective : unit = ()
  *   1. evaluating e0 ~>* v0, e1 ~>* v1, e2 ~>* v2
  *
  *   2 a.
- *      If, according to the positional arguments [1;2], 
- *      if v1 and v2 have constant head symbols 
+ *      If, according to the positional arguments [1;2],
+ *      if v1 and v2 have constant head symbols
  *             (e.g., v1 = Cons _ _ _, and v2 = None _)
  *      then `f` is unfolded to `e` and reduced as
  *        e[v0/x0][v1/x1][v2/x2]
- *       
- *   2 b. 
+ *
+ *   2 b.
  *
  *     Otherwise, `f` is not unfolded and the term is `f e0 e1 e2`
  *     reduces to `f v0 v1 v2`.
@@ -414,11 +414,25 @@ irreducible
 let strict_on_arguments (x:list int) : unit = ()
 
 (**
- * An attribute to tag a tactic designated to solve any 
+ * An attribute to tag a tactic designated to solve any
  * unsolved implicit arguments remaining at the end of type inference.
  **)
 irreducible
 let resolve_implicits : unit = ()
+
+(*
+ * This attribute can be added to an inductive type definition,
+ * indicating that it should be erased on extraction to `unit`.
+ *
+ * However, any pattern matching on the inductive type results
+ * in a `Ghost` effect, ensuring that computationally relevant
+ * code cannot rely on the values of the erasable type.
+ *
+ * See examples/micro-benchmarks/Erasable.fst, for examples.
+ * Also see https://github.com/FStarLang/FStar/issues/1844
+ *)
+irreducible
+let erasable : unit = ()
 
 (*********************************************************************************)
 (* Marking terms for normalization *)

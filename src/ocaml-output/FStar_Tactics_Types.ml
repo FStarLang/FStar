@@ -123,7 +123,9 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.dsenv = (uu___17_119.FStar_TypeChecker_Env.dsenv);
       FStar_TypeChecker_Env.nbe = (uu___17_119.FStar_TypeChecker_Env.nbe);
       FStar_TypeChecker_Env.strict_args_tab =
-        (uu___17_119.FStar_TypeChecker_Env.strict_args_tab)
+        (uu___17_119.FStar_TypeChecker_Env.strict_args_tab);
+      FStar_TypeChecker_Env.erasable_types_tab =
+        (uu___17_119.FStar_TypeChecker_Env.erasable_types_tab)
     }
   
 let (goal_witness : goal -> FStar_Syntax_Syntax.term) =

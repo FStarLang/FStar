@@ -3471,25 +3471,11 @@ let force_trivial_guard env g =
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
     | imp::_ ->
-      match Env.lookup_attr env Const.resolve_implicits_attr_string with
-      | {sigel=Sig_let (_, [lid])}::_ ->
-        let qn = Env.lookup_qname env lid in
-        let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
-        let dd =
-          match Env.delta_depth_of_qninfo fv qn with
-          | Some dd -> dd
-          | None -> failwith "Expected a dd"
-        in
-        let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
-        env.try_solve_implicits_hook env term g.implicits;
-        ignore <| discharge_guard env g
-
-      | _ ->
-           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                        BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                    (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                    (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
-                                    imp.imp_reason) imp.imp_range
+        raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                     BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
+                                (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                                (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                imp.imp_reason) imp.imp_range
 
 
 
