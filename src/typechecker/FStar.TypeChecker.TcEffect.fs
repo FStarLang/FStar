@@ -332,15 +332,25 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
-    let signature_ts = let (us, t, _) = signature in (us, t) in
-    let f_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a |> fst |> S.bv_to_name) in
-    let g_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a |> fst |> S.bv_to_name) in
-    let p_b = S.gen_bv "p" (Some r) U.ktype0 |> S.mk_binder in
-    let bs = a::(f_bs@g_bs@[p_b]) in
-    let t_body, guard_body = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
-    let k = U.abs bs t_body None in
+    let rest_bs =
+      match (SS.compress t).n with
+      | Tm_abs (bs, _) when List.length bs >= 5 ->
+        let ((a', _)::bs) = SS.open_binders bs in
+        bs |> List.splitAt (List.length bs - 3) |> fst
+           |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name)]
+      | _ -> not_an_arrow_error "conjunction" 5 t r in
+    let bs = a::rest_bs in
+    let f_bs, guard_f =
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
+      S.gen_bv "f" None repr |> S.mk_binder, g in
+    let g_bs, guard_g =
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
+      S.gen_bv "g" None repr |> S.mk_binder, g in
+    let p_b = S.gen_bv "p" None U.ktype0 |> S.mk_binder in
+    let t_body, guard_body = fresh_repr r (Env.push_binders env bs@[p_b]) u_a (a |> fst |> S.bv_to_name) in
+    let k = U.abs (bs@[f_bs; g_bs; p_b) t_body None in
     let guard_eq = Rel.teq env t k in
-    Rel.force_trivial_guard env guard_body; Rel.force_trivial_guard env guard_eq;
+    [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
 
     conjunction_us, SS.close_univ_vars conjunction_us (k |> N.remove_uvar_solutions env), conjunction_ty in
 
