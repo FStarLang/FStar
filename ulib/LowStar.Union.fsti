@@ -13,16 +13,21 @@ module LowStar.Union
 let find_fst (#a: eqtype) (x: a) (x', _) =
   x = x'
 
-/// The normalize_term here is essential so that membership in cases can be
-/// computed via normalization.
-let one_of (#key: eqtype) (cases: list (key & Type)): Type =
-  case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
-
 /// The desired behavior for this one is to not have a pattern, so as not to
 /// pollute the client's context.
 val existsb_assoc_some: #a:eqtype -> #b:Type -> x:a -> l:list (a & b) -> Lemma
   (requires (List.Tot.existsb (find_fst x) l))
   (ensures (~(None? (List.Tot.assoc x l))))
+
+/// The normalize_term here is essential so that membership in cases can be
+/// computed via normalization.
+let one_of (#key: eqtype) (cases: list (key & Type)): Type =
+  case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
+
+#push-options "--max_fuel 1"
+let type_of (#key: eqtype) (cases: list (key & Type)) (case: one_of cases) =
+  normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))
+#pop-options
 
 #push-options "--max_fuel 1 --max_ifuel 1"
 let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
@@ -50,18 +55,14 @@ val union: #key:eqtype ->
 
 /// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
 /// ``cases``.
-#push-options "--max_fuel 1"
 val mk: #key:eqtype ->
   cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
   case:one_of cases ->
-  (v: normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))) ->
+  v:type_of cases case ->
   union cases case
-#pop-options
 
-#push-options "--max_fuel 1"
 val proj: #key:eqtype ->
   cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
   case:one_of cases ->
   u:union cases case ->
-  Tot (normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)))
-#pop-options
+  Tot (type_of cases case)

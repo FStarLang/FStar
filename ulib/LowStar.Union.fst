@@ -41,10 +41,13 @@ let proj #key cases case u =
 /// top-level, and other occurrences of ``union`` are an extraction error.
 type msg = | Msg1 | Msg2 | Msg3 | Msg4
 
+/// Probably needed for extraction to syntactically match on the argument to
+/// union.
+inline_for_extraction
 let msg_payload: list (msg & Type) = [ Msg1, int; Msg2, int & int ]
 
-// Note that with sufficient fuel and ifuel we can write msg instead of one_of
-// msg_payload. There is an exhaustivity argument; do we want to enforce it?
+/// The name (any_msg) and placement (right here) of the union typedef in C will
+/// be determined via this top-level declaration.
 let any_msg: one_of msg_payload -> Type =
   union msg_payload
 
@@ -63,5 +66,4 @@ let test (x: nat): int =
   if x * x = 0 then
     proj msg_payload Msg1 my_msg
   else
-    let my_msg: int & int = proj msg_payload Msg2 my_msg in
-    fst my_msg
+    fst (proj msg_payload Msg2 my_msg)
