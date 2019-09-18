@@ -110,11 +110,13 @@ let stronger (a:Type)
 = f
 
 let conjunction (a:Type)
-  (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
-  (r_in_g:resource) (r_out_g:a -> resource) (wp_g:rst_wp a r_in_f r_out_f)
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out) (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f) (g:repr a r_in r_out wp_g)
   (p:Type0)
 : Type
-= repr a r_in_f r_out_f wp_f
+= repr a r_in r_out
+  (fun post h -> (p ==> wp_f post h) /\ ((~ p) ==> wp_g post h))
 
 layered_effect {
   RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
