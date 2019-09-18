@@ -801,7 +801,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                 t_eqns
                 ([], Env.trivial_guard, false) in
       (* bind_cases adds an exhaustiveness check *)
-      TcUtil.bind_cases env res_t cases,
+      TcUtil.bind_cases (Env.push_binders env [guard_x |> S.mk_binder]) res_t cases,
       g,
       erasable
     in
