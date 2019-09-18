@@ -2,15 +2,6 @@
   "\u00128fï+íhÚ×¾àÍÝ8Õ{",
   [
     [
-      "FStar.Ghost.erased",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "df996a349693a1be607f7632f683bab3"
-    ],
-    [
       "FStar.Ghost.hide_reveal",
       1,
       2,
@@ -21,7 +12,7 @@
         "fuel_guarded_inversion_FStar.Ghost.erased"
       ],
       0,
-      "393e413f8a29bac71555e4fbaa1e65c1"
+      "06e7af3a0fe8f1929af915adc5921f15"
     ],
     [
       "FStar.Ghost.reveal_hide",
@@ -33,7 +24,7 @@
         "projection_inverse_FStar.Ghost.E__0"
       ],
       0,
-      "c7503eacf8189a546ba0b66f423aa55d"
+      "4e31f76deb4b31346df178ac78089474"
     ],
     [
       "FStar.Ghost.elift1",
@@ -49,7 +40,7 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "bf0b123506ddfe1767f64ba05b36d36d"
+      "b693d662d3ef7149a5313f4caf02832c"
     ],
     [
       "FStar.Ghost.elift2",
@@ -67,7 +58,7 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "c78b46851905f60ef7cc4796eca4456a"
+      "f394df928e2c423efc46ad9f290aaaf7"
     ],
     [
       "FStar.Ghost.elift3",
@@ -86,7 +77,7 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "daa5fa1d07a0d9eb613c7a459dc59ab5"
+      "47a8f1d01da3e3a25c794cc2ce98e35d"
     ],
     [
       "FStar.Ghost.elift1_p",
@@ -100,7 +91,7 @@
         "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0,
-      "85ba6c574500599bdbdc4ae9d437cdd7"
+      "026e0ffdbed013a0db275f51b5533a34"
     ],
     [
       "FStar.Ghost.elift2_p",
@@ -114,7 +105,7 @@
         "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0,
-      "77d6a06bf0ddb47551e006719c7ffb1c"
+      "5f01960d0ac08b60e9339b60f61089ae"
     ],
     [
       "FStar.Ghost.elift1_pq",
@@ -128,7 +119,7 @@
         "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0,
-      "448d68fbb85bbd3b0cd472677835b893"
+      "5972bd1ff3924d7a8740dc5534867eff"
     ],
     [
       "FStar.Ghost.elift2_pq",
@@ -142,7 +133,7 @@
         "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0,
-      "a8f6724612d255f1d9aa1097f2b6674c"
+      "dd29a8bacdc1916a59454d5762e00cad"
     ]
   ]
 ]
