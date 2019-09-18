@@ -178,7 +178,8 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
 
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format4 "Type of %s:%s is not an arrow with >= %s binders (%s)" ed.mname.str comb (string_of_int n) (Print.term_to_string t)
+      BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" ed.mname.str comb
+        (string_of_int n) (Print.tag_of_term t) (Print.term_to_string t)
     ) r in
 
   (*
@@ -329,16 +330,17 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
     let conjunction_us, conjunction_t, conjunction_ty = check_and_gen "conjunction" 1 conjunction_ts in
 
     let us, t = SS.open_univ_vars conjunction_us conjunction_t in
+    let _, ty = SS.open_univ_vars conjunction_us conjunction_ty in
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
     let rest_bs =
-      match (SS.compress t).n with
-      | Tm_abs (bs, _) when List.length bs >= 5 ->
+      match (SS.compress ty).n with
+      | Tm_arrow (bs, _) when List.length bs >= 4 ->
         let ((a', _)::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 3) |> fst
            |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name)]
-      | _ -> not_an_arrow_error "conjunction" 5 t r in
+      | _ -> not_an_arrow_error "conjunction" 4 ty r in
     let bs = a::rest_bs in
     let f_bs, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
@@ -347,8 +349,8 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
       S.gen_bv "g" None repr |> S.mk_binder, g in
     let p_b = S.gen_bv "p" None U.ktype0 |> S.mk_binder in
-    let t_body, guard_body = fresh_repr r (Env.push_binders env bs@[p_b]) u_a (a |> fst |> S.bv_to_name) in
-    let k = U.abs (bs@[f_bs; g_bs; p_b) t_body None in
+    let t_body, guard_body = fresh_repr r (Env.push_binders env (bs@[p_b])) u_a (a |> fst |> S.bv_to_name) in
+    let k = U.abs (bs@[f_bs; g_bs; p_b]) t_body None in
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
 
