@@ -30,7 +30,7 @@ open FStar.Preorder
 private unfold let contains_region (m:mem) (r:rid) = get_hmap m `Map.contains` r
 
 (* The preorder is the conjunction of above predicates *)
-private val mem_rel :preorder mem
+val mem_rel :preorder mem
 
 type mem_predicate = mem -> Type0
 
