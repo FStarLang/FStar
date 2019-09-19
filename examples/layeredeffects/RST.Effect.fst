@@ -172,11 +172,11 @@ assume val rst_frame (#a:Type)
   (fun rm_in x rm_out ->
     r_in_outer `can_be_split_into` (r_in_inner, delta) /\
     (r_out_outer x) `can_be_split_into` (r_out_inner x, delta) /\
-    (forall (r:resource).
-       (r `is_subresource_of` delta /\
-        r `is_subresource_of` r_in_outer /\
-        r `is_subresource_of` (r_out_outer x)) ==> rm_in r == rm_out r) /\
-    //focus_rmem rm_in delta == focus_rmem rm_out delta /\  -- this doesn't work (see test4 in RST.Effect.Test.fst)
+    // (forall (r:resource).
+    //    (r `is_subresource_of` delta /\
+    //     r `is_subresource_of` r_in_outer /\
+    //     r `is_subresource_of` (r_out_outer x)) ==> rm_in r == rm_out r) /\
+    focus_rmem rm_in delta == focus_rmem rm_out delta /\  //-- this doesn't work (see test4 in RST.Effect.Test.fst)
     post (focus_rmem rm_in r_in_inner) x (focus_rmem rm_out (r_out_inner x)))
 
 
