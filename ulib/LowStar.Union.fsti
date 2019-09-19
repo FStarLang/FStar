@@ -42,27 +42,27 @@ let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
 /// Key definitions
 /// ===============
 
-// TODO: find a way to define ``let case_list = list (key & Type u#a) ...``
-// while preserving the universe variable.
+let case_list (key: eqtype) =
+  cases:list (key & Type) { normalize (pairwise_first_disjoint cases) }
 
 /// This module offers a particular flavor of union, which is already indexed by
 /// a user-provided type of keys. It's up to the user to give meaning to these
 /// keys, for instance by tying a key to a particular property of interest.
 val union: #key:eqtype ->
-  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
+  cases:((case_list key) <: (Type u#(a + 1))) ->
   case:one_of cases ->
   Type u#a
 
 /// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
 /// ``cases``.
 val mk: #key:eqtype ->
-  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
+  cases:case_list key ->
   case:one_of cases ->
   v:type_of cases case ->
   union cases case
 
 val proj: #key:eqtype ->
-  cases:list (key & Type u#a) { normalize (pairwise_first_disjoint cases) } ->
+  cases:case_list key ->
   case:one_of cases ->
   u:union cases case ->
   Tot (type_of cases case)
