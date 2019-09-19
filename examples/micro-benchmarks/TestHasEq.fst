@@ -75,6 +75,7 @@ let test_1514 () =
  * F* should also give an error if an erasable inductive is annotated with unopteq
  *)
 [@erasable]
+noeq
 type erasable_t =
   | C_erasable_t : erasable_t
   | D_erasable_t : erasable_t
