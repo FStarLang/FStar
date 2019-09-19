@@ -33,8 +33,11 @@ let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
 /// Base types
 /// ==========
 
+let field_name =
+  string
+
 let case_list (key: eqtype) =
-  cases:list (key & Type) { normalize (pairwise_first_disjoint cases) }
+  cases:list (key & (field_name & Type)) { normalize (pairwise_first_disjoint cases) }
 
 /// The normalize_term here is essential so that membership in cases can be
 /// computed via normalization.
@@ -43,7 +46,7 @@ let one_of (#key: eqtype) (cases: case_list key): Type =
 
 #push-options "--max_fuel 1"
 let type_of (#key: eqtype) (cases: case_list key) (case: one_of cases) =
-  normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))
+  normalize_term (snd (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)))
 #pop-options
 
 

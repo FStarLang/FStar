@@ -23,7 +23,7 @@ let existsb_assoc_some = existsb_assoc_some'
 #push-options "--max_fuel 1 --max_ifuel 1"
 let union #key cases case =
   match List.Tot.assoc case cases with
-  | Some t -> t
+  | Some t -> snd t
 
 let mk #key cases case v =
   v
@@ -41,10 +41,13 @@ let proj #key cases case u =
 /// top-level, and other occurrences of ``union`` are an extraction error.
 type msg = | Msg1 | Msg2 | Msg3 | Msg4
 
-/// Probably needed for extraction to syntactically match on the argument to
-/// union.
-inline_for_extraction
-let msg_payload: list (msg & Type) = [ Msg1, int; Msg2, int & int ]
+/// Keyword probably needed for extraction to syntactically match on the
+/// argument to union.
+inline_for_extraction noextract
+let msg_payload = [
+  Msg1, ("fst_msg", int);
+  Msg2, ("snd_msg", int & int)
+]
 
 /// The name (any_msg) and placement (right here) of the union typedef in C will
 /// be determined via this top-level declaration.
