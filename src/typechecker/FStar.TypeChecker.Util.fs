@@ -595,20 +595,8 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
     else mk_non_layered_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
   c, Env.conj_guard g_lift g_bind
 
-(*
- * Helper function used by weaken_comp and strengthen_comp
- * wp1 is a (pure_wp unit), md is an effect, wp2 is a (M.wp res_t)
- * The code basically does M.bind_wp (lift_PURE_M wp1) (fun _ -> wp2)
- *)
-let lift_wp_and_bind_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
+let bind_pure_wp_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
   let r = Env.get_range env in
-
-  let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name env in
-
-  let edge =
-    match Env.monad_leq env C.effect_PURE_lid c_eff_name with
-    | Some edge -> edge
-    | None -> failwith ("Impossible! lift_wp_and_bind_with: did not find a lift from PURE to " ^ c_eff_name.str) in
 
   let pure_c = S.mk_Comp ({
     comp_univs = [S.U_zero];
@@ -618,9 +606,7 @@ let lift_wp_and_bind_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * gu
     flags = []
   }) in
 
-  let m_c, g_lift = edge.mlift.mlift_wp env pure_c in
-  let bind_c, g_bind = mk_bind env pure_c None c flags r in
-  bind_c, Env.conj_guard g_lift g_bind
+  mk_bind env pure_c None c flags r
 
 let weaken_flags flags =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
@@ -655,7 +641,7 @@ let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
          (Env.get_range env)
        in
          
-       lift_wp_and_bind_with env pure_assume_wp c (weaken_flags ct.flags)
+       bind_pure_wp_with env pure_assume_wp c (weaken_flags ct.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
@@ -696,7 +682,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
            r
          in
 
-         lift_wp_and_bind_with env pure_assert_wp c flags
+         bind_pure_wp_with env pure_assert_wp c flags
 
 let strengthen_precondition
             (reason:option<(unit -> string)>)
