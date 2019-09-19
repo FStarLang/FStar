@@ -19,7 +19,7 @@ val existsb_assoc_some: #a:eqtype -> #b:Type -> x:a -> l:list (a & b) -> Lemma
   (requires (List.Tot.existsb (find_fst x) l))
   (ensures (~(None? (List.Tot.assoc x l))))
 
-#push-options "--max_fuel 1 --max_ifuel 1"
+#push-options "--max_ifuel 1"
 let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
   match l with
   | [] -> true
@@ -36,8 +36,8 @@ let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
 let field_name =
   string
 
-let case_list (key: eqtype) =
-  cases:list (key & (field_name & Type)) { normalize (pairwise_first_disjoint cases) }
+let case_list (key: eqtype): Type u#(a + 1) =
+  cases:list (key & (field_name & Type u#a)) { normalize (pairwise_first_disjoint cases) }
 
 /// The normalize_term here is essential so that membership in cases can be
 /// computed via normalization.
@@ -45,7 +45,7 @@ let one_of (#key: eqtype) (cases: case_list key): Type =
   case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
 
 #push-options "--max_fuel 1"
-let type_of (#key: eqtype) (cases: case_list key) (case: one_of cases) =
+let type_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): Type u#a =
   normalize_term (snd (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)))
 #pop-options
 
@@ -57,7 +57,7 @@ let type_of (#key: eqtype) (cases: case_list key) (case: one_of cases) =
 /// a user-provided type of keys. It's up to the user to give meaning to these
 /// keys, for instance by tying a key to a particular property of interest.
 val union: #key:eqtype ->
-  cases:((case_list key) <: (Type u#(a + 1))) ->
+  cases:case_list u#a key ->
   case:one_of cases ->
   Type u#a
 
