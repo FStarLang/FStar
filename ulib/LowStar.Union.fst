@@ -28,7 +28,7 @@ let union #key cases case =
 let mk #key cases case v =
   v
 
-let proj #key cases case u =
+let proj #key cases case #label u =
   u
 #pop-options
 

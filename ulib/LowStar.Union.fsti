@@ -45,9 +45,19 @@ let one_of (#key: eqtype) (cases: case_list key): Type =
   case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
 
 #push-options "--max_fuel 1"
-let type_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): Type u#a =
-  normalize_term (snd (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)))
+let lookup_case (#key: eqtype)
+  (cases: case_list u#a key)
+  (case: one_of cases):
+  field_name & Type u#a
+=
+  Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases)
 #pop-options
+
+let type_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): Type u#a =
+  normalize_term (snd (lookup_case cases case))
+
+let label_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): string =
+  normalize_term (fst (lookup_case cases case))
 
 
 /// Constructors and projectors
@@ -56,21 +66,36 @@ let type_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): Type
 /// This module offers a particular flavor of union, which is already indexed by
 /// a user-provided type of keys. It's up to the user to give meaning to these
 /// keys, for instance by tying a key to a particular property of interest.
-val union: #key:eqtype ->
-  cases:case_list u#a key ->
-  case:one_of cases ->
+val union (#key: eqtype)
+  (cases: case_list u#a key)
+  (case: one_of cases):
   Type u#a
 
 /// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
 /// ``cases``.
-val mk: #key:eqtype ->
-  cases:case_list key ->
-  case:one_of cases ->
-  v:type_of cases case ->
+val mk (#key: eqtype)
+  (cases: case_list key)
+  (case: one_of cases)
+  (v: type_of cases case):
   union cases case
 
-val proj: #key:eqtype ->
-  cases:case_list key ->
-  case:one_of cases ->
-  u:union cases case ->
+module T = FStar.Tactics
+
+/// Small call to tactics to automatically fill in the label so that at least
+/// the user doesn't have to type it in (note: I couldn't figure out a way to
+/// make cases implicit based on u).
+let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.Tac unit =
+  // Note: inlining the definition of s causes a tactic error.
+  let s: string = label_of cases case in
+  T.exact (quote s)
+
+/// Note that ``u`` must be a constant, so that the reduction in ``type_of`` can
+/// proceed properly. This could potentially be enforced with an implicit unit
+/// argument where the tactic intentionally fails if the argument doesn't have
+/// the right shape.
+val proj (#key:eqtype)
+  (cases: case_list key)
+  (case: one_of cases)
+  (#[resolve_label cases case] label: string)
+  (u: union cases case):
   Tot (type_of cases case)

@@ -53,6 +53,7 @@ and decl =
   | DTypeVariant of lident * list<flag> * int * branches_t
   | DTypeAbstractStruct of lident
   | DExternal of option<cc> * list<flag> * lident * typ * list<ident>
+  | DUntaggedUnion of lident * list<flag> * int * list<ident * typ>
 
 and cc =
   | StdCall
