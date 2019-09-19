@@ -23,7 +23,7 @@ open RST.Effect
 
 /// Tests for RST as a layered effect
 
-#set-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* \
+#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2 --using_facts_from '* \
   -FStar.Seq \
   -FStar.ST \
   -FStar.HyperStack \
@@ -42,9 +42,13 @@ assume val test5 (x:int)
   (fun _ -> x > 0)
   (fun _ _ _ -> True)
 
-#set-options "--debug RST.Effect.Test --debug_level Rel --debug_level Extreme --print_full_names --print_universes --ugly --debug_level TwoPhases --debug_level LayeredEffects --print_implicits --print_effect_args"
+#set-options "--debug RST.Effect.Test --debug_level Rel --debug_level Extreme --print_full_names --print_universes --ugly --debug_level TwoPhases --debug_level LayeredEffects --print_implicits --print_bound_var_types --debug_level SMTEncoding --debug_level SMTQuery" //--print_effect_args"
 
 //[@expect_failure]
+
+#restart-solver
+#set-options "--log_queries"
+
 let test6 (l:list int)
 : RST unit r1 (fun _ -> r1)
   (fun _ -> Cons? l /\ Cons?.hd l > 0)
