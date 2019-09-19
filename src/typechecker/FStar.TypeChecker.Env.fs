@@ -1730,7 +1730,7 @@ let new_implicit_var_aux reason r env k should_check meta =
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
-    let t, _, g_t = new_implicit_var_aux (reason b) r env sort Strict None in
+    let t, _, g_t = new_implicit_var_aux (reason b) r env sort Allow_untyped None in
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
