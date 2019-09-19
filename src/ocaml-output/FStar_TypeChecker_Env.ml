@@ -5870,7 +5870,7 @@ let (uvars_for_binders :
                             let uu____26715 =
                               let uu____26728 = reason b  in
                               new_implicit_var_aux uu____26728 r env sort
-                                FStar_Syntax_Syntax.Strict
+                                FStar_Syntax_Syntax.Allow_untyped
                                 FStar_Pervasives_Native.None
                                in
                             (match uu____26715 with
