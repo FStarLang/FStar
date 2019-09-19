@@ -1125,7 +1125,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     result_typ = a;
     effect_args = is |> List.map S.as_arg;
     flags = []
-  }), Env.conj_guard f_guard g_guard
+  }), Env.conj_guard (Env.conj_guard g_uvars f_guard) g_guard
 
 let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) : comp * guard_t =
   let if_then_else, _, _ = U.get_match_with_close_wps ed.match_wps in
@@ -2284,6 +2284,10 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       "implicit var for binder %s of %s~>%s at %s"
       (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
       (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
+
+  if debug env <| Options.Other "LayeredEffects" then
+    BU.print1 "Introduced uvars: %s\n"
+      (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
 
   let substs = List.map2
     (fun b t -> NT (b |> fst, t))
