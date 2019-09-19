@@ -2396,13 +2396,7 @@ and tc_eqn scrutinee env branch
     let c_weak, g_when_weak =
      let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      if branch_has_layered_effect
-     then
-       let c_weak =
-       TcUtil.weaken_precondition env c (NonTrivial branch_guard)
-       |> TcComm.apply_lcomp
-          (fun c -> N.normalize_comp [Eager_unfolding; Beta] env c)
-          (fun g -> g) in
-       c_weak, Env.trivial_guard
+     then TcUtil.weaken_precondition env c (NonTrivial branch_guard), Env.trivial_guard
      else
        match eqs, when_condition with
         | _ when not (Env.should_verify env) ->
