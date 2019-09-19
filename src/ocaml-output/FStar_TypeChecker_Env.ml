@@ -17454,6 +17454,7 @@ let (uvars_for_binders :
                                 (FStar_Pervasives_Native.fst b).FStar_Syntax_Syntax.sort
                                in
 <<<<<<< HEAD
+<<<<<<< HEAD
                             let uu____26153 =
                               let uu____26166 = reason b  in
                               new_implicit_var_aux uu____26166 r env sort
@@ -18108,6 +18109,12 @@ let (dummy_solver : solver_t) =
                               let uu____26074 = reason b  in
                               new_implicit_var_aux uu____26074 r env sort
                                 FStar_Syntax_Syntax.Strict
+=======
+                            let uu____26715 =
+                              let uu____26728 = reason b  in
+                              new_implicit_var_aux uu____26728 r env sort
+                                FStar_Syntax_Syntax.Allow_untyped
+>>>>>>> snap
                                 FStar_Pervasives_Native.None
                                in
                             (match uu____26061 with
