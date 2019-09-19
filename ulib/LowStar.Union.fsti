@@ -19,16 +19,6 @@ val existsb_assoc_some: #a:eqtype -> #b:Type -> x:a -> l:list (a & b) -> Lemma
   (requires (List.Tot.existsb (find_fst x) l))
   (ensures (~(None? (List.Tot.assoc x l))))
 
-/// The normalize_term here is essential so that membership in cases can be
-/// computed via normalization.
-let one_of (#key: eqtype) (cases: list (key & Type)): Type =
-  case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
-
-#push-options "--max_fuel 1"
-let type_of (#key: eqtype) (cases: list (key & Type)) (case: one_of cases) =
-  normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))
-#pop-options
-
 #push-options "--max_fuel 1 --max_ifuel 1"
 let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
   match l with
@@ -39,11 +29,26 @@ let rec pairwise_first_disjoint (#a: eqtype) #b (l: list (a & b)): Tot bool =
       pairwise_first_disjoint xs
 #pop-options
 
-/// Key definitions
-/// ===============
+
+/// Base types
+/// ==========
 
 let case_list (key: eqtype) =
   cases:list (key & Type) { normalize (pairwise_first_disjoint cases) }
+
+/// The normalize_term here is essential so that membership in cases can be
+/// computed via normalization.
+let one_of (#key: eqtype) (cases: case_list key): Type =
+  case: key { b2t (normalize_term (List.Tot.existsb (find_fst case) cases ))}
+
+#push-options "--max_fuel 1"
+let type_of (#key: eqtype) (cases: case_list key) (case: one_of cases) =
+  normalize_term (Some?.v (existsb_assoc_some case cases; List.Tot.assoc case cases))
+#pop-options
+
+
+/// Constructors and projectors
+/// ===========================
 
 /// This module offers a particular flavor of union, which is already indexed by
 /// a user-provided type of keys. It's up to the user to give meaning to these
