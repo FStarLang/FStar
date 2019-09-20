@@ -34,7 +34,7 @@ val ptr_alloc
     (fun _ ptr h1 ->
       A.freeable ptr /\
       get_val ptr h1 == init /\
-      get_perm ptr h1 = FStar.Real.one
+      get_perm ptr h1 == P.full_permission
     )
 
 val ptr_free

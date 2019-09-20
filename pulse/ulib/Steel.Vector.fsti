@@ -37,7 +37,7 @@ val create: #a:Type0 -> init:a -> max:UInt32.t{U32.v max > 0} -> RST (vector a)
   (fun h0 v h1 -> let view = h1 (vector_resource v) in
    as_rseq v h1 `S.equal` S.empty /\
    get_capacity v h1 = max /\
-   get_perm v h1 == FStar.Real.one
+   get_perm v h1 == Perm.full_permission
   )
 
 val push: #a:Type0 -> v:vector a -> x:a -> RST unit

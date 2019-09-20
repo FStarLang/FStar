@@ -40,7 +40,7 @@ let alloc (#a:Type) (init:a) (len:UInt32.t) =
   (**) reveal_modifies();
   let b = A.alloc init len in
   (**) let h1 = HST.get () in
-  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i = FStar.Real.one);
+  (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i == P.full_permission);
   // Find out how to trigger that
   (**) A.live_array_used_in b h1;
   b
@@ -82,13 +82,13 @@ let split #a b idx =
   (**) let h1 = HST.get () in
   (**) reveal_star_inv (array_resource b1) (array_resource b2) h1;
   (**) let aux1 (i:nat{i < A.vlength b1}) (j:nat{j < A.vlength b1}) : Lemma (A.get_perm h1 b1 i == A.get_perm h1 b1 j) =
-  (**)   assert(A.get_perm h1 b1 i = A.get_perm h0 b i);
-  (**)   assert(A.get_perm h1 b1 j = A.get_perm h0 b j)
+  (**)   assert(A.get_perm h1 b1 i == A.get_perm h0 b i);
+  (**)   assert(A.get_perm h1 b1 j == A.get_perm h0 b j)
   (**) in
   (**) Classical.forall_intro_2 aux1;
   (**) let aux2 (i:nat{i < A.vlength b2}) (j:nat{j < A.vlength b2}) : Lemma (A.get_perm h1 b2 i == A.get_perm h1 b2 j) =
-  (**)   assert(A.get_perm h1 b2 i = A.get_perm h0 b (i + A.vlength b1));
-  (**)   assert(A.get_perm h1 b2 j = A.get_perm h0 b (j + A.vlength b1))
+  (**)   assert(A.get_perm h1 b2 i == A.get_perm h0 b (i + A.vlength b1));
+  (**)   assert(A.get_perm h1 b2 j == A.get_perm h0 b (j + A.vlength b1))
   (**) in
   (**) Classical.forall_intro_2 aux2;
   (**) assert(forall(i:nat{i < A.vlength b2}). (A.get_perm h1 b2 i == A.get_perm h0 b (i + A.vlength b1)));
@@ -109,14 +109,14 @@ let glue #a b b1 b2 =
   (**) let h1 = HST.get () in
   (**) let aux (i:nat{i < A.vlength b}) (j:nat{j < A.vlength b}) : Lemma (A.get_perm h1 b i == A.get_perm h1 b j) =
   (**)   begin if i < A.vlength b1 then
-  (**)     assert(A.get_perm h1 b i = A.get_perm h0 b1 i)
+  (**)     assert(A.get_perm h1 b i == A.get_perm h0 b1 i)
   (**)   else
-  (**)     assert(A.get_perm h1 b i = A.get_perm h0 b2 (i - A.vlength b1))
+  (**)     assert(A.get_perm h1 b i == A.get_perm h0 b2 (i - A.vlength b1))
   (**)   end;
   (**)   if j < A.vlength b1 then
-  (**)     assert(A.get_perm h1 b j = A.get_perm h0 b1 j)
+  (**)     assert(A.get_perm h1 b j == A.get_perm h0 b1 j)
   (**)   else
-  (**)     assert(A.get_perm h1 b j = A.get_perm h0 b2 (j - A.vlength b1))
+  (**)     assert(A.get_perm h1 b j == A.get_perm h0 b2 (j - A.vlength b1))
   (**) in
   (**) Classical.forall_intro_2 aux;
   (**) assert(A.modifies A.loc_none h0 h1);
