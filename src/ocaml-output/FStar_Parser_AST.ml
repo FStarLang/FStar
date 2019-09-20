@@ -1229,7 +1229,7 @@ let (mkRefSet : FStar_Range.range -> term Prims.list -> term) =
           FStar_Parser_Const.set_union, FStar_Parser_Const.heap_addr_of_lid)
          in
       match uu____5824 with
-      | (empty_lid,singleton_lid,union_lid,addr_of_lid) ->
+      | (empty_lid,singleton_lid,union_lid1,addr_of_lid) ->
           let empty1 =
             let uu____5838 =
               let uu____5839 = FStar_Ident.set_lid_range empty_lid r  in
@@ -1247,7 +1247,7 @@ let (mkRefSet : FStar_Range.range -> term Prims.list -> term) =
             mk_term uu____5844 r Expr  in
           let union1 =
             let uu____5847 =
-              let uu____5848 = FStar_Ident.set_lid_range union_lid r  in
+              let uu____5848 = FStar_Ident.set_lid_range union_lid1 r  in
               Var uu____5848  in
             mk_term uu____5847 r Expr  in
           FStar_List.fold_right

@@ -71,14 +71,6 @@ val union (#key: eqtype)
   (case: one_of cases):
   Type u#a
 
-/// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
-/// ``cases``.
-val mk (#key: eqtype)
-  (cases: case_list key)
-  (case: one_of cases)
-  (v: type_of cases case):
-  union cases case
-
 module T = FStar.Tactics
 
 /// Small call to tactics to automatically fill in the label so that at least
@@ -89,12 +81,27 @@ let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.
   let s: string = label_of cases case in
   T.exact (quote s)
 
+/// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
+/// ``cases``. We don't really need ``name``, except that we want to enforce
+/// nominal typing for the sake of proper C extraction. To limit overhead for
+/// clients, we resolve ``cases`` automatically (since ``name`` has the proper
+/// type). It also makes sense to tie projectors and constructors to the type
+/// declaration rather than to the list of cases.
+val mk (#key: eqtype)
+  (#cases: case_list key)
+  (name: one_of cases -> Type)
+  (case: one_of cases)
+  (#[resolve_label cases case] label: string)
+  (v: type_of cases case):
+  union cases case
+
 /// Note that ``u`` must be a constant, so that the reduction in ``type_of`` can
 /// proceed properly. This could potentially be enforced with an implicit unit
 /// argument where the tactic intentionally fails if the argument doesn't have
 /// the right shape.
 val proj (#key:eqtype)
-  (cases: case_list key)
+  (#cases: case_list key)
+  (name: one_of cases -> Type)
   (case: one_of cases)
   (#[resolve_label cases case] label: string)
   (u: union cases case):
