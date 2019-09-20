@@ -76,6 +76,7 @@ module T = FStar.Tactics
 /// Small call to tactics to automatically fill in the label so that at least
 /// the user doesn't have to type it in (note: I couldn't figure out a way to
 /// make cases implicit based on u).
+noextract
 let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.Tac unit =
   // Note: inlining the definition of s causes a tactic error.
   let s: string = label_of cases case in
