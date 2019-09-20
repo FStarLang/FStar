@@ -377,7 +377,7 @@ val gather_cell:
   (ensures (fun h0 _ h1 ->
     live h1 b /\ HS.contains h1 b1.content /\
     as_seq h0 b == as_seq h1 b /\
-    (sel h1 b (U32.v i)).wp_perm = sum_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm /\
+    (sel h1 b (U32.v i)).wp_perm == sum_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm /\
     (sel h1 b (U32.v i)).wp_v == (sel h0 b (U32.v i)).wp_v /\
     (forall (j:nat{j <> U32.v i /\ j < vlength b}). sel h0 b j == sel h1 b j /\ sel h0 b1 j == sel h1 b1 j) /\
     modifies (loc_cell b (U32.v i) `loc_union` loc_cell b1 (U32.v i)) h0 h1
@@ -495,7 +495,7 @@ val gather_cells:
     modifies (compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i)) h0 h1 /\
     as_seq h0 b == as_seq h1 b /\
     live h1 b /\ (forall (j:nat{j >= U32.v i /\ j < vlength b}).
-      (sel h1 b j).wp_perm = sum_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm /\
+      (sel h1 b j).wp_perm == sum_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm /\
       (sel h1 b j).wp_v == (sel h0 b j).wp_v
     ) /\ (forall (j:nat{j < U32.v i /\ j < vlength b}).
       sel h1 b j ==  sel h0 b j
@@ -532,7 +532,7 @@ let rec gather_cells #a b b1 i =
 let gather #a b b1 =
   gather_cells #a b b1 0ul;
   (**) let h1 = HST.get () in
-  (**) assert(forall (i:nat{i < vlength b}). (sel h1 b i).wp_perm = get_perm h1 b i)
+  (**) assert(forall (i:nat{i < vlength b}). (sel h1 b i).wp_perm == get_perm h1 b i)
 
 
 
@@ -557,7 +557,7 @@ val move_cell
       j <> U32.v i ==> Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) ==
         Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)
     ) /\ // Permission is moved
-    get_perm h1 b (U32.v i) == FStar.Real.of_int 0 /\
+    get_perm h1 b (U32.v i) == Permissions.zero_permission /\
     get_perm_pid h1 b (U32.v i) (Ghost.reveal pid) == get_perm h0 b (U32.v i)
   ))
 
@@ -638,7 +638,7 @@ val move_cells
     ) /\
     (forall (j:nat{j < vlength b}). j >= U32.v i ==> // Cells atr still live but permissiosn are halved
       live_cell_pid h1 b j (Ghost.reveal pid) /\
-      get_perm h1 b j == FStar.Real.of_int 0 /\
+      get_perm h1 b j == zero_permission /\
       get_perm_pid h1 b j (Ghost.reveal pid) == get_perm h0 b j
     )
   ))

@@ -45,7 +45,7 @@ let used_cell (#a: Type) (h: HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 
   Ghost.reveal b.pid <= get_current_max (Ghost.reveal perm_map)
 
 let live_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 =
-  get_perm #a h b i >. 0.0R /\ HS.contains h b.content
+  Permission?.r (get_perm #a h b i) >. 0.0R /\ HS.contains h b.content
 
 let live_cell_is_used (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Lemma
   (requires (live_cell #a h b i))
@@ -69,7 +69,7 @@ let cell_perm_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) (pid:p
 
 let live_cell_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) (pid:perm_id)
   : Type0 =
-  cell_perm_pid #a h b i pid >. 0.0R /\ HS.contains h b.content
+  Permission?.r (cell_perm_pid #a h b i pid) >. 0.0R /\ HS.contains h b.content
 
 let live #a h b =
   HS.contains h b.content /\
@@ -124,8 +124,8 @@ let gsub #a b i len =
 let live_gsub #a h b i len =
   let b' = gsub b i len in
   let f1 (_ : squash (live h b))  : Lemma (live h b') =
-    assert(forall (j:nat{j < vlength b'}). get_perm #a h b (U32.v i + j) >. 0.0R);
-    assert(forall (j:nat{j < vlength b'}). get_perm #a h b' j >. 0.0R)
+    assert(forall (j:nat{j < vlength b'}). Permission?.r (get_perm #a h b (U32.v i + j)) >. 0.0R);
+    assert(forall (j:nat{j < vlength b'}). Permission?.r (get_perm #a h b' j) >. 0.0R)
   in
   FStar.Classical.impl_intro f1
 

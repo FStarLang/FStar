@@ -150,7 +150,7 @@ val gather:
   (ensures (fun h0 _ h1 ->
     live h1 b /\ (forall (i:nat{i < vlength b}). {:pattern (get_perm h1 b i)}
     // Permissions are summed into the first array
-      get_perm h1 b i =  P.sum_permissions (get_perm h0 b i) (get_perm h0 b1 i)
+      get_perm h1 b i ==  P.sum_permissions (get_perm h0 b i) (get_perm h0 b1 i)
     ) /\
     as_seq h1 b == as_seq h0 b /\ // The value of the array are not modifies
     modifies (loc_array b `loc_union` loc_array b1) h0 h1

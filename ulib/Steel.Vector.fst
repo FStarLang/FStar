@@ -44,7 +44,7 @@ let vector_view (#a : Type0) (v : vector a) : Tot (view (vector_view_t a)) =
     A.get_rperm
       (as_contents h v).arr
       #(A.array_resource (as_contents h v).arr)
-      (mk_rmem (A.array_resource (as_contents h v).arr) h) =
+      (mk_rmem (A.array_resource (as_contents h v).arr) h) ==
       P.get_perm v #(P.ptr_resource v) (mk_rmem (P.ptr_resource v) h) /\
     A.freeable (as_contents h v).arr
   in
@@ -70,8 +70,8 @@ val unpack_vector (#a: Type) (v: vector a) : RST (contents_t a)
     U32.v contents.len >= 0 /\
     A.get_rperm
       contents.arr
-      (focus_rmem h1 (A.array_resource contents.arr)) = get_perm v h0 /\
-    P.get_perm v (focus_rmem h1 (P.ptr_resource v)) = get_perm v h0  /\
+      (focus_rmem h1 (A.array_resource contents.arr)) == get_perm v h0 /\
+    P.get_perm v (focus_rmem h1 (P.ptr_resource v)) == get_perm v h0  /\
     A.freeable contents.arr /\
     (h0 (vector_resource v)).v_capacity == contents.max /\
     as_rseq v h0 == S.slice (A.as_rseq contents.arr h1) 0 (U32.v contents.len)
@@ -100,7 +100,7 @@ val pack_vector
       U32.v len <= U32.v max /\
       U32.v len >= 0 /\
       A.freeable arr  /\
-      A.get_rperm arr (focus_rmem h0 (A.array_resource arr)) =
+      A.get_rperm arr (focus_rmem h0 (A.array_resource arr)) ==
         P.get_perm v (focus_rmem h0 (P.ptr_resource v))
     )
     (fun h0 _ h1 ->
@@ -111,8 +111,8 @@ val pack_vector
       A.length arr = max /\
      (h1 (vector_resource v)).v_capacity == max /\
        as_rseq v h1 == S.slice (A.as_rseq arr h0) 0 (U32.v len) /\
-      get_perm v h1 = P.get_perm v (focus_rmem h0 (P.ptr_resource v)) /\
-      get_perm v h1 =  A.get_rperm arr (focus_rmem h0 (A.array_resource arr))
+      get_perm v h1 == P.get_perm v (focus_rmem h0 (P.ptr_resource v)) /\
+      get_perm v h1 ==  A.get_rperm arr (focus_rmem h0 (A.array_resource arr))
     )
 let pack_vector #a len max arr  v =
   P.reveal_ptr ();
@@ -211,7 +211,7 @@ let push #a v x =
     in
     let h = get current_res in
     assume(A.array_resource new_contents_parts2 `is_subresource_of` current_res);
-    assume(A.get_rperm new_contents_parts2 h = 1.0R);
+    assume(A.get_rperm new_contents_parts2 h == Perm.full_permission);
     rst_frame
       (
         A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
