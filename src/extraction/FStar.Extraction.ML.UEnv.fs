@@ -130,10 +130,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
 let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> =
     match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
-    (* Note: not treating the case MLTD_Union here (which is morally an
-       MLTD_Abbrev in disguise) on the basis that the only raison d'être of this
-       function is to unroll type abbreviations, and the LowStar.Union.union
-       type is abstract so would not unroll anyway. *)
+    | Some (MLTD_Union (_, t)) -> Some (vars, t)
     | _ -> None
 
 //TODO: this two-level search is pretty inefficient: we should optimize it

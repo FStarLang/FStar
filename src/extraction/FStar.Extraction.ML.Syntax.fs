@@ -203,7 +203,10 @@ and mlletbinding = mlletflavor * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
-| MLTD_Union of list<(mlsymbol * mlty)>
+| MLTD_Union of list<(mlsymbol * mlty)> * mlty
+    (* The second mlty is used only so that we can implement tyscheme_of_td and
+     * preserve a consistent behavior when extracting uses of this type
+     * abbreviation. *)
 | MLTD_Record of list<(mlsymbol * mlty)>
 | MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?

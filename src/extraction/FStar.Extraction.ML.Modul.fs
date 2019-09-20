@@ -292,43 +292,55 @@ let gamma_to_string env =
       - The list<mlmodule1> returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
-let is_lowstar_union range env1 body =
+let is_lowstar_union range tcenv env1 body =
   let is_kremlin = Options.codegen () = Some Options.Kremlin in
-  match U.head_and_args body with
+  let fix x = SS.compress (U.un_uinst (U.unmeta x)) in
+  let head_and_args e =
+    let head, args = U.head_and_args' e in
+    fix head, List.map (fun (x, y) -> fix x, y) args
+  in
+  match head_and_args body with
   | { n = Tm_fvar fv }, _ :: (cases, _) :: _
-    when is_kremlin && S.fv_eq_lid fv PC.failwith_lid ->
+    when is_kremlin && S.fv_eq_lid fv PC.union_lid ->
+      let cases = FStar.TypeChecker.Normalize.normalize Term.extraction_norm_steps tcenv cases in
       begin match U.list_elements cases with
       | None ->
          Errors.raise_error
            (Errors.Fatal_ExtractionUnsupported,
+             BU.format1
              "LowStar.Union type definitions must be exactly of the form:\n\
               inline_for_extraction noextract\n\
               let cases = [ \"case1\", t1; ... ]\n\
-              let t = LowStar.Union.union cases")
+              let t = LowStar.Union.union cases\n\n\
+              Here the cases argument is: %s" (Print.term_to_string cases))
            range
       | Some cases ->
           let cases = List.map (fun case ->
-            match U.head_and_args case with
-            | h, [ _; (pair, _) ] ->
-                if not (U.is_tuple_constructor h) then failwith "impossible: not outer pair";
-                begin match U.head_and_args pair with
-                | h, [ (label, _); (t, _) ] ->
-                    if not (U.is_tuple_constructor h) then failwith "impossible: not inner pair";
+            match head_and_args case with
+            | h, [ _; _; _; (pair, _) ] ->
+                begin match head_and_args pair with
+                | h, [ _; _; (label, _); (t, _) ] ->
                     let t = Util.eraseTypeDeep (Util.udelta_unfold env1)
                       (Term.term_as_mlty env1 t)
                     in
-                    begin match (SS.compress label).n with
+                    begin match (fix label).n with
                     | Tm_constant (Const_string (s, _)) ->
                         s, t
                     | _ ->
                          Errors.raise_error
                            (Errors.Fatal_ExtractionUnsupported,
-                             "The label is this union type is not a string constant")
+                             BU.format1
+                             "The label is this union type is %s which is not a string constant"
+                             (Print.term_to_string label))
                            range
                     end
                 | _ -> failwith "impossible: not an inner application"
                 end
-            | _ -> failwith "impossible: not an outer application"
+            | h, args ->
+                failwith (BU.format3 "%s is not an outer application (head=%s) (length args=%s)"
+                  (Print.term_to_string case)
+                  (Print.term_to_string h)
+                  (string_of_int (List.length args)))
           ) cases in
           Some cases
       end
@@ -364,9 +376,13 @@ let extract_typ_abbrev env quals attrs lb
     let env1, ml_bs = binders_as_mlty_binders env bs in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let td =
-      match is_lowstar_union (Ident.range_of_lid lid) env1 body with
+      match is_lowstar_union (Ident.range_of_lid lid) tcenv env1 body with
       | Some td_union ->
-          assumed, lident_as_mlsymbol lid, None, ml_bs, metadata, Some (MLTD_Union td_union)
+          let original_t =
+            Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+          in
+          assumed, lident_as_mlsymbol lid, None, ml_bs, metadata,
+            Some (MLTD_Union (td_union, original_t))
       | None ->
           let body =
             Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
