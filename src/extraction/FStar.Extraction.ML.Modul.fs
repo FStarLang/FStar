@@ -292,6 +292,49 @@ let gamma_to_string env =
       - The list<mlmodule1> returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
+let is_lowstar_union range env1 body =
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
+  match U.head_and_args body with
+  | { n = Tm_fvar fv }, _ :: (cases, _) :: _
+    when is_kremlin && S.fv_eq_lid fv PC.failwith_lid ->
+      begin match U.list_elements cases with
+      | None ->
+         Errors.raise_error
+           (Errors.Fatal_ExtractionUnsupported,
+             "LowStar.Union type definitions must be exactly of the form:\n\
+              inline_for_extraction noextract\n\
+              let cases = [ \"case1\", t1; ... ]\n\
+              let t = LowStar.Union.union cases")
+           range
+      | Some cases ->
+          let cases = List.map (fun case ->
+            match U.head_and_args case with
+            | h, [ _; (pair, _) ] ->
+                if not (U.is_tuple_constructor h) then failwith "impossible: not outer pair";
+                begin match U.head_and_args pair with
+                | h, [ (label, _); (t, _) ] ->
+                    if not (U.is_tuple_constructor h) then failwith "impossible: not inner pair";
+                    let t = Util.eraseTypeDeep (Util.udelta_unfold env1)
+                      (Term.term_as_mlty env1 t)
+                    in
+                    begin match (SS.compress label).n with
+                    | Tm_constant (Const_string (s, _)) ->
+                        s, t
+                    | _ ->
+                         Errors.raise_error
+                           (Errors.Fatal_ExtractionUnsupported,
+                             "The label is this union type is not a string constant")
+                           range
+                    end
+                | _ -> failwith "impossible: not an inner application"
+                end
+            | _ -> failwith "impossible: not an outer application"
+          ) cases in
+          Some cases
+      end
+  | _ ->
+      None
+
 let extract_typ_abbrev env quals attrs lb
     : env_t
     * iface
@@ -319,16 +362,22 @@ let extract_typ_abbrev env quals attrs lb
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env1, ml_bs = binders_as_mlty_binders env bs in
-    let body =
-      Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
-    in
-    let mangled_projector =
-         if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-         then let mname = mangle_projector_lid lid in
-              Some mname.ident.idText
-         else None in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
-    let td = assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body) in
+    let td =
+      match is_lowstar_union (Ident.range_of_lid lid) env1 body with
+      | Some td_union ->
+          assumed, lident_as_mlsymbol lid, None, ml_bs, metadata, Some (MLTD_Union td_union)
+      | None ->
+          let body =
+            Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+          in
+          let mangled_projector =
+               if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+               then let mname = mangle_projector_lid lid in
+                    Some mname.ident.idText
+               else None in
+          assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body)
+    in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
     let env, iface =
         if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
