@@ -78,9 +78,11 @@ type action #s (c:comm_monoid s) (a:Type) = {
  *  pre- and post-conditions so that we can do proofs
  *  intrinsically.
  *
+ *  Universe-polymorphic in both the state and result type
+ *
  *)
 noeq
-type m (s:Type u#1) (c:comm_monoid s) : (a:Type u#a) -> c.r -> post a c -> Type =
+type m (s:Type u#s) (c:comm_monoid s) : (a:Type u#a) -> c.r -> post a c -> Type =
   | Ret : #a:_ -> #post:(a -> c.r) -> x:a -> m s c a (post x) post
   | Act : #a:_ -> #post:(a -> c.r) -> #b:_ -> f:action c b -> k:(x:b -> Dv (m s c a (f.post x) post)) -> m s c a f.pre post
   | Par : pre0:_ -> #a0:_ -> post0:_ -> m0: m s c a0 pre0 post0 ->
