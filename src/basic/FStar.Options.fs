@@ -184,6 +184,7 @@ let defaults =
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
+      ("hint_dir"                     , Unset);
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
@@ -335,6 +336,7 @@ let get_extract_namespace       ()      = lookup_opt "extract_namespace"        
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
+let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
@@ -436,7 +438,11 @@ let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
 let universe_include_path_base_dirs =
-  ["/ulib"; "/ulib/legacy"; "/ulib/experimental"; "/lib/fstar"]
+  let sub_dirs = ["legacy"; "experimental"; ".cache"] in
+  ["/ulib"; "/lib/fstar"]
+  |> List.collect (fun d -> d :: (sub_dirs |> List.map (fun s -> d ^ "/" ^ s)))
+
+
 
 // See comment in the interface file
 let _version = FStar.Util.mk_ref ""
@@ -726,9 +732,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Don't print unification variable numbers");
 
        ( noshort,
+         "hint_dir",
+         PathStr "path",
+        "Read/write hints to <dir>/module_name.hints (instead of placing hint-file alongside source file)");
+
+       ( noshort,
          "hint_file",
          PathStr "path",
-        "Read/write hints to <path> (instead of module-specific hints files)");
+        "Read/write hints to <path> (instead of module-specific hints files; overrides hint_dir)");
 
        ( noshort,
         "hint_info",
@@ -1203,6 +1214,7 @@ let settable = function
     | "detail_hint_replay"
     | "eager_subtyping"
     | "hide_uvar_nums"
+    | "hint_dir"
     | "hint_file"
     | "hint_info"
     | "initial_fuel"
@@ -1486,7 +1498,19 @@ let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
+let hint_dir                     () = get_hint_dir                    ()
 let hint_file                    () = get_hint_file                   ()
+let hint_file_for_src src_filename =
+      match hint_file() with
+      | Some fn -> fn
+      | None ->
+        let file_name =
+          match hint_dir () with
+          | Some dir ->
+            Util.concat_dir_filename dir (Util.basename src_filename)
+          | _ -> src_filename
+        in
+        Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
