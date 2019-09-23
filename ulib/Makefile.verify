@@ -23,16 +23,19 @@ OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
-
-FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
-LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
-
 # Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
 	@echo --use_hints --hint_info
 
-LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
+# bumping the rlimit for these files
+.cache/FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
+.cache/LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
+
+# disabling USE_EXTRACTED_INTERFACES for these files
+# Something's wrong with how the normalization attributes are propagated when this
+# this option is turned on
+.cache/LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 
 verify-core: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(filter-out $(EXTRA) ,$(FSTAR_FILES)))))
 
