@@ -43,88 +43,101 @@ noeq
 type m (s:Type0) (c:comm_monoid s) : (a:Type0) -> c.r -> (post a c) -> Type =
   | Ret : #a:_ -> #post:(a -> c.r) -> x:a -> m s c a (post x) post
   | Act : #a:_ -> #post:(a -> c.r) -> #b:_ -> f:action c b -> k:(x:b -> Dv (m s c a (f.post x) post)) -> m s c a f.pre post
-  | Par : pre0:_ -> post0:_ -> m0: m s c unit pre0 (fun _ -> post0) ->
-          pre1:_ -> post1:_ -> m1: m s c unit pre1 (fun _ -> post1) ->
-          m s c unit (c.star pre0 pre1) (fun _ -> c.star post0 post1)
+  | Par : pre0:_ -> #a0:_ -> post0:_ -> m0: m s c a0 pre0 post0 ->
+          pre1:_ -> #a1:_ -> post1:_ -> m1: m s c a1 pre1 post1 ->
+          #a:_ -> #post:_ -> k:(x0:a0 -> x1:a1 -> Dv (m s c a (c.star (post0 x0) (post1 x1)) post)) ->
+          m s c a (c.star pre0 pre1) post
+
+
+assume
+val bools : nat -> bool
 
 noeq
-type thread s (c:comm_monoid s) =
-  | Thread : p:c.r -> q:c.r -> m s c unit p (fun _ -> q) -> thread s c
+type step_result s (c:comm_monoid s) a (q:post a c) (frame:c.r) =
+  | Step: p:_ -> m s c a p q -> state:s {c.interp (p `c.star` frame) state} -> nat -> step_result s c a q frame
 
-let threads s c = list (thread s c)
-
-let rec threads_pre #s #c (l:threads s c) : c.r =
-  match l with
-  | [] -> c.emp
-  | hd::tl -> Thread?.p hd `c.star` threads_pre tl
-
-let rec threads_post #s #c (l:threads s c) : c.r =
-  match l with
-  | [] -> c.emp
-  | hd::tl -> Thread?.q hd `c.star` threads_post tl
-
-assume
-val pick_thread (#s:_) (#c:_) (i:nat) (l:threads s c{Cons? l})
-  : thread s c & threads s c
-  //pick the ith thread mod (length l)
-
-assume
-val pick_thread_pre (#s:_) (#c:_) (i:nat) (l:threads s c{Cons? l}) (state:s) (frame:c.r)
-  : Lemma
-    (requires (c.interp (threads_pre l `c.star` frame) state))
-    (ensures (
-      let t, rest = pick_thread i l in
-      c.interp ((Thread?.p t `c.star` threads_pre rest) `c.star` frame) state))
-
-assume
-val pick_thread_post (#s:_) (#c:_) (i:nat) (l:threads s c{Cons? l}) (state:s) (frame:c.r)
-  : Lemma
-    (requires (
-      let t, rest = pick_thread i l in
-      c.interp ((Thread?.q t `c.star` threads_post rest) `c.star` frame) state))
-    (ensures (
-      c.interp (threads_post l `c.star` frame) state))
-
-let elim_eq #a #b (f g : (a -> b)) (x:a)
-  : Lemma (f == g ==> f x == g x)
-  = ()
-
-let rec run_threads #s #c (i:nat) (ts:threads s c) (state:s) (frame:c.r)
-  : Div s
+let rec step #s #c (i:nat) #pre #a #post (f:m s c a pre post) (frame:c.r) (state:s)
+  : Div (step_result s c a post frame)
         (requires
-          c.interp (threads_pre ts `c.star` frame) state)
-        (ensures fun state' ->
-          c.interp (threads_post ts `c.star` frame) state')
-  = match ts with
-    | [] -> state
-    | _ ->
-      let Thread p q m, rest = pick_thread i ts in
-      pick_thread_pre i ts state frame;
-      match m with
-      | Ret x ->
-        assert (c.interp ((p `c.star` (threads_pre rest)) `c.star` frame) state);
-        let state' = run_threads (i + 1) rest state (p `c.star` frame) in
-        assert (c.interp (threads_post rest `c.star` (p `c.star` frame)) state');
-        pick_thread_post i ts state' frame;
-        state'
+          c.interp (pre `c.star` frame) state)
+        (ensures fun _ -> True)
+  = match f with
+    | Ret x ->
+        Step (post x) (Ret x) state i
 
-      | Act act1 k ->
+    | Act act1 k ->
         let b, state' = act1.sem state in
-        assert (c.interp (p `c.star` (threads_pre rest) `c.star` frame) state);
-        act1.action_ok state (threads_pre rest `c.star` frame);
-        let kthread = Thread (act1.post b) q (k b) in
-        let threads = kthread :: rest in
-        let state'' = run_threads (i + 1) threads state' frame in
-        pick_thread_post i ts state'' frame;
-        state''
+        assert (c.interp (pre `c.star` frame) state);
+        act1.action_ok state frame;
+        Step (act1.post b) (k b) state' i
 
-      | Par p0 q0 m0 p1 q1 m1 ->
-        assert (p == p0 `c.star` p1);
-        elim_eq (fun () -> q) (fun () -> (q0 `c.star` q1)) ();
-        assert (q == (q0 `c.star` q1));
-        let t0 = Thread p0 q0 m0 in
-        let t1 = Thread p1 q1 m1 in
-        let threads = t0::t1::rest in
-        let state'' = run_threads (i + 1) threads state frame in
-        pick_thread_post i ts state'' frame;
-        state''
+    | Par pre0 post0 (Ret x0)
+          pre1 post1 (Ret x1)
+          k ->
+        Step (post0 x0 `c.star` post1 x1) (k x0 x1) state i
+
+    | Par pre0 post0 m0
+          pre1 post1 m1
+          k ->
+        if bools i
+        then let Step pre0' m0' state' j = step (i + 1) m0 (pre1 `c.star` frame) state in
+             Step (pre0' `c.star` pre1) (Par pre0' post0 m0' pre1 post1 m1 k) state' j
+        else let Step pre1' m1' state' j = step (i + 1) m1 (pre0 `c.star` frame) state in
+             Step (pre0 `c.star` pre1') (Par pre0 post0 m0 pre1' post1 m1' k) state' j
+
+let rec run #s #c (i:nat) #pre #a #post (f:m s c a pre post) (state:s)
+  : Div (a & s)
+    (requires
+      c.interp pre state)
+    (ensures fun (x, state') ->
+      c.interp (post x) state')
+  = match f with
+    | Ret x -> x, state
+    | _ ->
+      let Step pre' f' state' j = step i f c.emp state in
+      run j f' state'
+
+let eff #s (#c:comm_monoid s) a (pre:c.r) (post: a -> c.r) =
+  m s c a pre post
+
+let return #s (#c:comm_monoid s) #a (x:a) (post:a -> c.r)
+  : eff a (post x) post
+  = Ret x
+
+let rec bind #s (#c:comm_monoid s) #a #b (#p:c.r) (#q:a -> c.r) (#r:b -> c.r)
+             (f:eff a p q)
+             (g: (x:a -> eff b (q x) r))
+  : Dv (eff b p r)
+  = match f with
+    | Ret x -> g x
+    | Act act k ->
+      Act act (fun x -> bind (k x) g)
+    | Par pre0 post0 l
+          pre1 post1 r
+          k ->
+      Par pre0 post0 l pre1 post1 r (fun x0 x1 -> bind (k x0 x1) g)
+
+let par #s (#c:comm_monoid s)
+        #a0 #p0 #q0 (m0:eff a0 p0 q0)
+        #a1 #p1 #q1 (m1:eff a1 p1 q1)
+ : eff (a0 & a1) (p0 `c.star` p1) (fun (x0, x1) -> q0 x0 `c.star` q1 x1)
+ = Par p0 q0 m0
+       p1 q1 m1
+       #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
+
+(* Some dummy action instantiations, just for demonstration purposes.
+   The specs are bogus, since the state and monoid etc. are fully generic here *)
+let action_get s (c:comm_monoid s)
+  : action c s
+  = let sem s0 = s0, s0 in
+    let pre = c.emp in
+    let post _ = c.emp in
+    {
+      sem = sem;
+      pre = pre;
+      post = post;
+      action_ok = fun _ _ -> ()
+    }
+let get #s (#c:comm_monoid s)
+  : eff s c.emp (fun _ -> c.emp)
+  = Act (action_get s c) Ret
