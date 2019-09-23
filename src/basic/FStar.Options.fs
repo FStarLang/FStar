@@ -436,7 +436,7 @@ let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
 let universe_include_path_base_dirs =
-  ["/ulib"; "/lib/fstar"]
+  ["/ulib"; "/ulib/legacy"; "/ulib/experimental"; "/lib/fstar"]
 
 // See comment in the interface file
 let _version = FStar.Util.mk_ref ""
