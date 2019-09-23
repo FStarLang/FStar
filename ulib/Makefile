@@ -6,14 +6,17 @@ FSTAR_HOME=..
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
 
-all:
+all: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
 
-benchmark:
+benchmark: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-benchmark
 
-extra:
+extra: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-extra
+
+.cache:
+	mkdir -p .cache
 
 include ml/Makefile.include
 

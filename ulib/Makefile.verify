@@ -4,17 +4,19 @@
 EXTRA=FStar.Pointer.Base.fst
 
 # List the files that should NOT be verified at all
-FLAKY=FStar.Relational.State.fst LowStar.STExn
+FLAKY=legacy/FStar.Relational.State.fst
 
 # List the files that should be verified by verify-core and verify-all
 # Those files are the roots from where all dependencies are computed
-FSTAR_FILES := \
-	$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti)) \
+FSTAR_FILES := $(filter-out $(FLAKY), \
+	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti)
+	$(wildcard experimental/*fst experimental/*fsti))
 
 USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
+
+CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
 
@@ -33,9 +35,12 @@ LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 LowStar.STExn.fst.checked: USE_EXTRACTED_INTERFACES=
 
-verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
+verify-core: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(filter-out $(EXTRA) ,$(FSTAR_FILES)))))
 
-verify-extra: $(addsuffix .checked, $(EXTRA))
+verify-extra: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(EXTRA))))
+
+.cache/%.checked:
+	$(MY_FSTAR) $<
 
 # Benchmarking rules
 #
@@ -54,14 +59,14 @@ phony-benchmark:
 
 # a.fst.bench will move the a.fst.checked binary and then move it back
 %.fst.bench: %.fst phony-benchmark
-	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
+	-mv -f .cache/$*.fst.checked .cache/$*.fst.checked.bench_bkp
 	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
-	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
+	-mv -f .cache/$*.fst.checked.bench_bkp .cache/$*.fst.checked
 
 # a.fsti.bench will move the a.fsti.checked binary and then move it back
 %.fsti.bench: %.fsti phony-benchmark
-	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
+	-mv -f .cache/$*.fsti.checked .cache/$*.fsti.checked.bench_bkp
 	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
-	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
+	-mv -f .cache/$*.fsti.checked.bench_bkp .cache/$*.fsti.checked
 
 verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
