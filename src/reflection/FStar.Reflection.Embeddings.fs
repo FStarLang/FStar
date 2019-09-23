@@ -692,17 +692,17 @@ let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 (* embeds as a string list *)
-let e_lid : embedding<Ident.lid> =
+let e_lid : embedding<I.lid> =
     let embed rng lid : term =
-        embed e_string_list rng (Ident.path_of_lid lid)
+        embed e_string_list rng (I.path_of_lid lid)
     in
-    let unembed w t : option<Ident.lid> =
-        BU.map_opt (unembed' w e_string_list t) (fun p -> Ident.lid_of_path p t.pos)
+    let unembed w t : option<I.lid> =
+        BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
                (fun x w _ -> unembed w x)
                (t_list_of t_string)
-               Ident.string_of_lid
+               I.string_of_lid
                ET_abstract
 
 let e_qualifier =
