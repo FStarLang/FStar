@@ -2,23 +2,18 @@ module Quals
 
 open FStar.Tactics
 
-let attr = 42
+let tau () : Tac unit =
+  let se : sigelt = pack_sigelt (Sg_Let false (pack_fv ["Quals"; "sp1"]) [] (`int) (`42)) in
+  let se = set_sigelt_quals [Unfold_for_unification_and_vcgen; Inline_for_extraction] se in
+  exact (quote [se])
 
-[@attr]
-unfold
-let x = 2
+%splice[sp1] (tau ())
 
-let test () =
-  assert True by (
-                match lookup_attr (`attr) (cur_env ()) with
-                | [x] ->
-                  begin match lookup_typ (cur_env ()) (inspect_fv x) with
-                  | Some se ->
-                    let qs = sigelt_quals se in
-                    print (term_to_string (quote qs));
-                    let se' = set_sigelt_quals (qs @ [Irreducible]) se in
-                    let qs' = sigelt_quals se' in
-                    print (term_to_string (quote qs'))
-                  | None -> fail "2"
-                  end
-                | _ -> fail "1")
+let test_sp1 () =
+  assert True by (match lookup_typ (cur_env ()) ["Quals"; "sp1"] with
+               | Some se ->
+                 begin match sigelt_quals se with
+                 | [Unfold_for_unification_and_vcgen; Inline_for_extraction] -> ()
+                 | _ -> fail "1"
+                 end
+               | None -> fail "2")
