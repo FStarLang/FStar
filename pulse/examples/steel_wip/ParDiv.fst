@@ -20,7 +20,14 @@ module ParDiv
  * divergence, state and parallel composition of atomic actions.
  *
  * It also builds a generic separation-logic-style program logic
- * for this effect.
+ * for this effect, in a partial correctness setting.
+
+ * It should also be possible to give a variant of this semantics for
+ * total correctness. That would be a fun exercise and not too hard, I
+ * think.  However, we specifically focus on partial correctness here
+ * so that this semantics can be instantiated with lock operations,
+ * which may deadlock.
+ *
  *)
 
 /// We start by defining some basic notions for a commutative monoid.
@@ -125,7 +132,6 @@ type step_result s (c:comm_monoid s) a (q:post a c) (frame:c.r) =
  * the assertion [frame]
  *
  *)
-
 let rec step #s #c (i:nat) #pre #a #post (f:m s c a pre post) (frame:c.r) (state:s)
   : Div (step_result s c a post frame)
         (requires
