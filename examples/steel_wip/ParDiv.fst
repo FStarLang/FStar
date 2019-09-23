@@ -28,15 +28,9 @@ let post #s a (c:comm_monoid s) = a -> c.r
 
 noeq
 type action #s (c:comm_monoid s) (a:Type) = {
-   sem: s -> (a * s);
    pre: c.r;
    post: a -> c.r;
-   action_ok: (s0:s ->
-              frame:c.r ->
-              Lemma
-                (c.interp (c.star pre frame) s0 ==>
-                (let x, s1 = sem s0 in
-                 c.interp (c.star (post x) frame) s1)))
+   sem: (frame:c.r -> s0:s{c.interp (c.star pre frame) s0} -> (x:a & s1:s{c.interp (post x `c.star` frame) s1}));
 }
 
 noeq
@@ -66,9 +60,7 @@ let rec step #s #c (i:nat) #pre #a #post (f:m s c a pre post) (frame:c.r) (state
         Step (post x) (Ret x) state i
 
     | Act act1 k ->
-        let b, state' = act1.sem state in
-        assert (c.interp (pre `c.star` frame) state);
-        act1.action_ok state frame;
+        let (| b, state' |) = act1.sem frame state in
         Step (act1.post b) (k b) state' i
 
     | Par pre0 post0 (Ret x0)
@@ -125,19 +117,52 @@ let par #s (#c:comm_monoid s)
        p1 q1 m1
        #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
 
-(* Some dummy action instantiations, just for demonstration purposes.
-   The specs are bogus, since the state and monoid etc. are fully generic here *)
-let action_get s (c:comm_monoid s)
-  : action c s
-  = let sem s0 = s0, s0 in
-    let pre = c.emp in
-    let post _ = c.emp in
+(* Some dummy instantiations, just for demonstration purposes. *)
+assume val heap : Type u#0
+assume val hm : comm_monoid heap
+assume val hm_affine (r0 r1:hm.r) (h:heap)
+  : Lemma (hm.interp (r0 `hm.star` r1) h ==>
+           hm.interp r0 h)
+assume val ref : Type u#0 -> Type u#0
+assume val ptr_live (r:ref 'a) : hm.r
+assume val pts_to (r:ref 'a) (x:'a) : hm.r
+assume val sel (x:ref 'a) (h:heap{hm.interp (ptr_live x) h})
+  : Tot 'a
+assume val sel_ok (x:ref 'a) (h:heap) (frame:hm.r)
+  : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
+           (hm_affine (ptr_live x) frame h;
+            let v = sel x h in
+            hm.interp (pts_to x v `hm.star` frame) h))
+assume val upd (x:ref 'a) (v:'a) (h:heap{hm.interp (ptr_live x) h})
+  : Tot heap
+assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
+  : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
+           (hm_affine (ptr_live x) frame h;
+            let h' = upd x v h in
+            hm.interp (pts_to x v `hm.star` frame) h'))
+
+let (!) (x:ref 'a)
+  : eff 'a (ptr_live x) (fun v -> pts_to x v)
+  = let act : action hm 'a =
     {
-      sem = sem;
-      pre = pre;
-      post = post;
-      action_ok = fun _ _ -> ()
-    }
-let get #s (#c:comm_monoid s)
-  : eff s c.emp (fun _ -> c.emp)
-  = Act (action_get s c) Ret
+      pre = ptr_live x;
+      post = pts_to x;
+      sem = (fun frame h0 ->
+        hm_affine (ptr_live x) frame h0;
+        sel_ok x h0 frame;
+        (| sel x h0, h0 |))
+    } in
+    Act act Ret
+
+let (:=) (x:ref 'a) (v:'a)
+  : eff unit (ptr_live x) (fun _ -> pts_to x v)
+  = let act : action hm unit =
+    {
+      pre = ptr_live x;
+      post = (fun _ -> pts_to x v);
+      sem = (fun frame h0 ->
+        hm_affine (ptr_live x) frame h0;
+        upd_ok x v h0 frame;
+        (| (), upd x v h0 |))
+    } in
+    Act act Ret
