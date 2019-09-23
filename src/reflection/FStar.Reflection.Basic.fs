@@ -357,6 +357,12 @@ let sigelt_attrs (se : sigelt) : list<attribute> =
 let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
+let sigelt_quals (se : sigelt) : list<qualifier> =
+    se.sigquals
+
+let set_sigelt_quals (quals : list<qualifier>) (se : sigelt) : sigelt =
+    { se with sigquals = quals }
+
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, [lb]), _) ->
