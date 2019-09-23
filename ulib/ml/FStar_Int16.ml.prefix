@@ -1,3 +1,4 @@
+(* This file is meant to be concatenated to FStar_Ints.ml.body *)
 module M = Stdint.Int16
 type int16 = M.t
 type t = M.t

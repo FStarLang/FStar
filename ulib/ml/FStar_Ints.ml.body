@@ -1,3 +1,8 @@
+(* This .ml.body file is concatenated to every .ml.prefix file in this
+ * directory (ulib/ml/) to generate the OCaml realizations for machine
+ * integers, as they all pretty much share their definitions and are
+ * based on Stdint. *)
+
 let v (x:t) : Prims.int = Prims.parse_int (M.to_string x)
 
 let zero = M.zero
