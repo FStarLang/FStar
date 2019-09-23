@@ -648,12 +648,12 @@ let e_attributes = e_list e_attribute
 
 
 (* embeds as a string list *)
-let e_lid : embedding<Ident.lid> =
+let e_lid : embedding<I.lid> =
     let embed rng lid : t =
-        embed e_string_list rng (Ident.path_of_lid lid)
+        embed e_string_list rng (I.path_of_lid lid)
     in
-    let unembed cb (t : t) : option<Ident.lid> =
-        BU.map_opt (unembed e_string_list cb t) (fun p -> Ident.lid_of_path p Range.dummyRange)
+    let unembed cb (t : t) : option<I.lid> =
+        BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
     in
     mk_emb embed unembed
         (mkConstruct fstar_refl_aqualv_fv [] [])
