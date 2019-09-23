@@ -479,7 +479,8 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
+The lemmas need to prove *propositional* equalities, that is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
