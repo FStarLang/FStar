@@ -19,9 +19,17 @@ include ml/Makefile.include
 
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 
-FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti)) $(wildcard LowStar.*.fst LowStar.*.fsti)
+FSTAR_LIB_EXCLUSIONS=$(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%
+FSTAR_LIB_ALL_MODULES=\
+	$(wildcard FStar.*.fst FStar.*.fsti) \
+	$(wildcard LowStar.*.fst LowStar.*.fsti) \
+	$(wildcard legacy/*fst legacy/*fsti) \
+	$(wildcard experimental/*fst experimental/*fsti)
+FSTARLIB_MODULES=$(filter-out $(FSTAR_LIB_EXCLUSIONS), $(FSTAR_LIB_ALL_MODULES))
 
-FSTAR_TAC_LIB_MODULES=$(filter-out $(REALIZED),$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti))
+FSTAR_TAC_LIB_EXCLUSIONS=$(REALIZED)
+FSTAR_TAC_LIB_ALL_MODULES=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti)
+FSTAR_TAC_LIB_MODULES=$(filter-out $(FSTAR_TAC_LIB_EXCLUSIONS), $(FSTAR_TAC_LIB_ALL_MODULES))
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
