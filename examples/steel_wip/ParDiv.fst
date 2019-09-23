@@ -34,7 +34,7 @@ type action #s (c:comm_monoid s) (a:Type) = {
 }
 
 noeq
-type m (s:Type0) (c:comm_monoid s) : (a:Type0) -> c.r -> (post a c) -> Type =
+type m (s:Type u#1) (c:comm_monoid s) : (a:Type u#a) -> c.r -> (post a c) -> Type =
   | Ret : #a:_ -> #post:(a -> c.r) -> x:a -> m s c a (post x) post
   | Act : #a:_ -> #post:(a -> c.r) -> #b:_ -> f:action c b -> k:(x:b -> Dv (m s c a (f.post x) post)) -> m s c a f.pre post
   | Par : pre0:_ -> #a0:_ -> post0:_ -> m0: m s c a0 pre0 post0 ->
@@ -118,7 +118,7 @@ let par #s (#c:comm_monoid s)
        #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
 
 (* Some dummy instantiations, just for demonstration purposes. *)
-assume val heap : Type u#0
+assume val heap : Type u#1
 assume val hm : comm_monoid heap
 assume val hm_affine (r0 r1:hm.r) (h:heap)
   : Lemma (hm.interp (r0 `hm.star` r1) h ==>
