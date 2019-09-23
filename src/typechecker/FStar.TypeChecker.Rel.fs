@@ -780,6 +780,10 @@ let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
     let _, src', wl = new_uvar ("restrict:"^src.ctx_uvar_reason) wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check src.ctx_uvar_meta in
+    if Options.debug_any () then
+    BU.print4 "Restricting context of %s to %s with new uvar as %s (tgt : %s)\n\n"
+      (Print.ctx_uvar_to_string src) (Print.binders_to_string ";;" pfx) (Print.term_to_string src')
+      (Print.ctx_uvar_to_string tgt);
     Unionfind.change src.ctx_uvar_head src';
     wl
 
@@ -2038,6 +2042,14 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
+
+             if Env.debug env <| Options.Extreme then
+             BU.print5 "About to restrict context uvars, here is the info:\nL.H.S.: %s\n\
+               R.H.S.: %s\nuvars from occurs_check: %s\nfvs1: %s\nfvs2: %s\n"
+               (flex_t_to_string lhs) (Print.term_to_string rhs)
+               (List.fold_left (fun s uv -> s ^ ";;;;" ^ (Print.ctx_uvar_to_string uv)) "" uvars)
+               (names_to_string fvs1) (names_to_string fvs2);
+
              let wl = restrict_all_uvars ctx_uv uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
