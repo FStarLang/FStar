@@ -25,9 +25,9 @@ let union #key cases case =
   match List.Tot.assoc case cases with
   | Some t -> snd t
 
-let mk #key #cases name case #label v =
+let mk #key #cases name #_ case #label v =
   v
 
-let proj #key #cases name case #label u =
+let proj #key #cases name #_ case #label u =
   u
 #pop-options

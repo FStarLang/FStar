@@ -82,6 +82,52 @@ let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.
   let s: string = label_of cases case in
   T.exact (quote s)
 
+#push-options "--max_ifuel 1"
+noextract
+let rec assert_union (#key: eqtype) (#cases: case_list key) (name: one_of cases -> Type):
+  T.Tac unit
+=
+  let head, _ = T.collect_app (quote name) in
+  match T.inspect_ln head with
+  | T.Tv_FVar fv ->
+      // Found an application, very well. Let's check that the application
+      // itself is created via LowStar.Union.union... this may be a little too
+      // restrictive and prevents type-aliases.
+      let def = T.lookup_typ (T.cur_env ()) (T.inspect_fv fv) in
+      let def =
+        match def with
+        | None -> T.fail "head of argument `name` is not found"
+        | Some def -> def
+      in
+      let def =
+        match T.inspect_sigelt def with
+        | T.Sg_Let _ _ _ _ def ->
+            def
+        | _ ->
+            T.fail "head of effective argument `name` of union projector or destructor \
+              is not defined as (3):\n\
+              let foobar = LowStar.Union.union [ ... cases ... ]"
+      in
+      begin match T.inspect_ln (fst (T.collect_app def)) with
+      | T.Tv_FVar fv ->
+          let fv = T.inspect_fv fv in
+          if fv <> [ "LowStar"; "Union"; "union" ] then
+            T.fail ("head of effective argument `name` of union projector or destructor \
+              is not defined as (1):\n\
+              let foobar = LowStar.Union.union [ ... cases ... ]\n
+              head is: " ^ String.concat "." fv ^ "\n")
+          else
+            T.exact (`(()))
+      | _ ->
+          T.fail "head of effective argument `name` of union projector or destructor \
+            is not defined as (2):\n\
+            let foobar = LowStar.Union.union [ ... cases ... ]"
+      end
+  | _ ->
+      T.fail "argument `name` of union projector is not a type application"
+#pop-options
+
+
 /// The injection of a value ``v: t``, where the pair ``(case, t)`` is found in
 /// ``cases``. We don't really need ``name``, except that we want to enforce
 /// nominal typing for the sake of proper C extraction. To limit overhead for
@@ -91,6 +137,7 @@ let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.
 val mk (#key: eqtype)
   (#cases: case_list key)
   (name: one_of cases -> Type)
+  (#[assert_union name] _: unit)
   (case: one_of cases)
   (#[resolve_label cases case] label: string)
   (v: type_of cases case):
@@ -103,6 +150,7 @@ val mk (#key: eqtype)
 val proj (#key:eqtype)
   (#cases: case_list key)
   (name: one_of cases -> Type)
+  (#[assert_union name] _: unit)
   (case: one_of cases)
   (#[resolve_label cases case] label: string)
   (u: union cases case):
