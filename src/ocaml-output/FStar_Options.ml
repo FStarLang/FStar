@@ -1954,37 +1954,34 @@ let (z3_rlimit_factor : unit -> Prims.int) =
   fun uu____9680  -> get_z3rlimit_factor () 
 let (z3_seed : unit -> Prims.int) = fun uu____9687  -> get_z3seed () 
 let (use_two_phase_tc : unit -> Prims.bool) =
-  fun uu____9694  ->
-    (get_use_two_phase_tc ()) &&
-      (let uu____9696 = lax ()  in Prims.op_Negation uu____9696)
-  
+  fun uu____9694  -> get_use_two_phase_tc () 
 let (no_positivity : unit -> Prims.bool) =
-  fun uu____9704  -> get_no_positivity () 
+  fun uu____9701  -> get_no_positivity () 
 let (ml_no_eta_expand_coertions : unit -> Prims.bool) =
-  fun uu____9711  -> get_ml_no_eta_expand_coertions () 
+  fun uu____9708  -> get_ml_no_eta_expand_coertions () 
 let (warn_error : unit -> Prims.string) =
-  fun uu____9718  ->
-    let uu____9719 = get_warn_error ()  in FStar_String.concat "" uu____9719
+  fun uu____9715  ->
+    let uu____9716 = get_warn_error ()  in FStar_String.concat "" uu____9716
   
 let (use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____9730  -> get_use_extracted_interfaces () 
-let (use_nbe : unit -> Prims.bool) = fun uu____9737  -> get_use_nbe () 
+  fun uu____9727  -> get_use_extracted_interfaces () 
+let (use_nbe : unit -> Prims.bool) = fun uu____9734  -> get_use_nbe () 
 let (trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
-  fun uu____9744  -> get_trivial_pre_for_unannotated_effectful_fns () 
+  fun uu____9741  -> get_trivial_pre_for_unannotated_effectful_fns () 
 let with_saved_options : 'a . (unit -> 'a) -> 'a =
   fun f  ->
-    let uu____9761 =
-      let uu____9763 = trace_error ()  in Prims.op_Negation uu____9763  in
-    if uu____9761
+    let uu____9758 =
+      let uu____9760 = trace_error ()  in Prims.op_Negation uu____9760  in
+    if uu____9758
     then
       (push ();
        (let r =
           try
-            (fun uu___718_9778  ->
+            (fun uu___718_9775  ->
                match () with
-               | () -> let uu____9783 = f ()  in FStar_Util.Inr uu____9783)
+               | () -> let uu____9780 = f ()  in FStar_Util.Inr uu____9780)
               ()
-          with | uu___717_9785 -> FStar_Util.Inl uu___717_9785  in
+          with | uu___717_9782 -> FStar_Util.Inl uu___717_9782  in
         pop ();
         (match r with
          | FStar_Util.Inr v1 -> v1
@@ -2000,28 +1997,28 @@ let (module_matches_namespace_filter :
       let m_components = path_of_text m1  in
       let rec matches_path m_components1 path =
         match (m_components1, path) with
-        | (uu____9866,[]) -> true
+        | (uu____9863,[]) -> true
         | (m2::ms,p::ps) ->
             (m2 = (FStar_String.lowercase p)) && (matches_path ms ps)
-        | uu____9899 -> false  in
-      let uu____9911 =
+        | uu____9896 -> false  in
+      let uu____9908 =
         FStar_All.pipe_right setting
           (FStar_Util.try_find
-             (fun uu____9953  ->
-                match uu____9953 with
-                | (path,uu____9964) -> matches_path m_components path))
+             (fun uu____9950  ->
+                match uu____9950 with
+                | (path,uu____9961) -> matches_path m_components path))
          in
-      match uu____9911 with
+      match uu____9908 with
       | FStar_Pervasives_Native.None  -> false
-      | FStar_Pervasives_Native.Some (uu____9983,flag) -> flag
+      | FStar_Pervasives_Native.Some (uu____9980,flag) -> flag
   
 let (matches_namespace_filter_opt :
   Prims.string ->
     Prims.string Prims.list FStar_Pervasives_Native.option -> Prims.bool)
   =
   fun m  ->
-    fun uu___10_10018  ->
-      match uu___10_10018 with
+    fun uu___10_10015  ->
+      match uu___10_10015 with
       | FStar_Pervasives_Native.None  -> false
       | FStar_Pervasives_Native.Some filter1 ->
           module_matches_namespace_filter m filter1
@@ -2029,24 +2026,24 @@ let (matches_namespace_filter_opt :
 let (should_extract : Prims.string -> Prims.bool) =
   fun m  ->
     let m1 = FStar_String.lowercase m  in
-    let uu____10048 = get_extract ()  in
-    match uu____10048 with
+    let uu____10045 = get_extract ()  in
+    match uu____10045 with
     | FStar_Pervasives_Native.Some extract_setting ->
-        ((let uu____10063 =
-            let uu____10079 = get_no_extract ()  in
-            let uu____10083 = get_extract_namespace ()  in
-            let uu____10087 = get_extract_module ()  in
-            (uu____10079, uu____10083, uu____10087)  in
-          match uu____10063 with
+        ((let uu____10060 =
+            let uu____10076 = get_no_extract ()  in
+            let uu____10080 = get_extract_namespace ()  in
+            let uu____10084 = get_extract_module ()  in
+            (uu____10076, uu____10080, uu____10084)  in
+          match uu____10060 with
           | ([],[],[]) -> ()
-          | uu____10112 ->
+          | uu____10109 ->
               failwith
                 "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
          module_matches_namespace_filter m1 extract_setting)
     | FStar_Pervasives_Native.None  ->
         let should_extract_namespace m2 =
-          let uu____10141 = get_extract_namespace ()  in
-          match uu____10141 with
+          let uu____10138 = get_extract_namespace ()  in
+          match uu____10138 with
           | [] -> false
           | ns ->
               FStar_All.pipe_right ns
@@ -2055,39 +2052,39 @@ let (should_extract : Prims.string -> Prims.bool) =
                       FStar_Util.starts_with m2 (FStar_String.lowercase n1)))
            in
         let should_extract_module m2 =
-          let uu____10169 = get_extract_module ()  in
-          match uu____10169 with
+          let uu____10166 = get_extract_module ()  in
+          match uu____10166 with
           | [] -> false
           | l ->
               FStar_All.pipe_right l
                 (FStar_Util.for_some
                    (fun n1  -> (FStar_String.lowercase n1) = m2))
            in
-        (let uu____10191 = no_extract m1  in Prims.op_Negation uu____10191)
+        (let uu____10188 = no_extract m1  in Prims.op_Negation uu____10188)
           &&
-          (let uu____10194 =
-             let uu____10205 = get_extract_namespace ()  in
-             let uu____10209 = get_extract_module ()  in
-             (uu____10205, uu____10209)  in
-           (match uu____10194 with
+          (let uu____10191 =
+             let uu____10202 = get_extract_namespace ()  in
+             let uu____10206 = get_extract_module ()  in
+             (uu____10202, uu____10206)  in
+           (match uu____10191 with
             | ([],[]) -> true
-            | uu____10229 ->
+            | uu____10226 ->
                 (should_extract_namespace m1) || (should_extract_module m1)))
   
 let (should_be_already_cached : Prims.string -> Prims.bool) =
   fun m  ->
-    let uu____10249 = get_already_cached ()  in
-    match uu____10249 with
+    let uu____10246 = get_already_cached ()  in
+    match uu____10246 with
     | FStar_Pervasives_Native.None  -> false
     | FStar_Pervasives_Native.Some already_cached_setting ->
         module_matches_namespace_filter m already_cached_setting
   
 let (error_flags : unit -> error_flag Prims.list) =
   let cache = FStar_Util.smap_create (Prims.of_int (10))  in
-  fun uu____10282  ->
+  fun uu____10279  ->
     let we = warn_error ()  in
-    let uu____10285 = FStar_Util.smap_try_find cache we  in
-    match uu____10285 with
+    let uu____10282 = FStar_Util.smap_try_find cache we  in
+    match uu____10282 with
     | FStar_Pervasives_Native.None  ->
         let r = parse_warn_error we  in (FStar_Util.smap_add cache we r; r)
     | FStar_Pervasives_Native.Some r -> r
@@ -2099,11 +2096,11 @@ let (profile_enabled :
     fun phase  ->
       match modul_opt with
       | FStar_Pervasives_Native.None  ->
-          let uu____10329 = get_profile_component ()  in
-          matches_namespace_filter_opt phase uu____10329
+          let uu____10326 = get_profile_component ()  in
+          matches_namespace_filter_opt phase uu____10326
       | FStar_Pervasives_Native.Some modul ->
-          (let uu____10340 = get_profile ()  in
-           matches_namespace_filter_opt modul uu____10340) &&
-            (let uu____10347 = get_profile_component ()  in
-             matches_namespace_filter_opt phase uu____10347)
+          (let uu____10337 = get_profile ()  in
+           matches_namespace_filter_opt modul uu____10337) &&
+            (let uu____10344 = get_profile_component ()  in
+             matches_namespace_filter_opt phase uu____10344)
   

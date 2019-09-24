@@ -20,8 +20,6 @@ let (instantiate_both :
       FStar_TypeChecker_Env.sigtab = (uu___8_5.FStar_TypeChecker_Env.sigtab);
       FStar_TypeChecker_Env.attrtab =
         (uu___8_5.FStar_TypeChecker_Env.attrtab);
-      FStar_TypeChecker_Env.is_pattern =
-        (uu___8_5.FStar_TypeChecker_Env.is_pattern);
       FStar_TypeChecker_Env.instantiate_imp = true;
       FStar_TypeChecker_Env.effects =
         (uu___8_5.FStar_TypeChecker_Env.effects);
@@ -106,8 +104,6 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (uu___11_13.FStar_TypeChecker_Env.sigtab);
       FStar_TypeChecker_Env.attrtab =
         (uu___11_13.FStar_TypeChecker_Env.attrtab);
-      FStar_TypeChecker_Env.is_pattern =
-        (uu___11_13.FStar_TypeChecker_Env.is_pattern);
       FStar_TypeChecker_Env.instantiate_imp = false;
       FStar_TypeChecker_Env.effects =
         (uu___11_13.FStar_TypeChecker_Env.effects);
@@ -951,8 +947,6 @@ let (guard_letrecs :
                   (uu___359_2276.FStar_TypeChecker_Env.sigtab);
                 FStar_TypeChecker_Env.attrtab =
                   (uu___359_2276.FStar_TypeChecker_Env.attrtab);
-                FStar_TypeChecker_Env.is_pattern =
-                  (uu___359_2276.FStar_TypeChecker_Env.is_pattern);
                 FStar_TypeChecker_Env.instantiate_imp =
                   (uu___359_2276.FStar_TypeChecker_Env.instantiate_imp);
                 FStar_TypeChecker_Env.effects =
@@ -1259,8 +1253,6 @@ let rec (tc_term :
                      (uu___445_3558.FStar_TypeChecker_Env.sigtab);
                    FStar_TypeChecker_Env.attrtab =
                      (uu___445_3558.FStar_TypeChecker_Env.attrtab);
-                   FStar_TypeChecker_Env.is_pattern =
-                     (uu___445_3558.FStar_TypeChecker_Env.is_pattern);
                    FStar_TypeChecker_Env.instantiate_imp =
                      (uu___445_3558.FStar_TypeChecker_Env.instantiate_imp);
                    FStar_TypeChecker_Env.effects =
@@ -1580,8 +1572,6 @@ and (tc_maybe_toplevel_term :
                               (uu___555_4257.FStar_TypeChecker_Env.sigtab);
                             FStar_TypeChecker_Env.attrtab =
                               (uu___555_4257.FStar_TypeChecker_Env.attrtab);
-                            FStar_TypeChecker_Env.is_pattern =
-                              (uu___555_4257.FStar_TypeChecker_Env.is_pattern);
                             FStar_TypeChecker_Env.instantiate_imp =
                               (uu___555_4257.FStar_TypeChecker_Env.instantiate_imp);
                             FStar_TypeChecker_Env.effects =
@@ -3090,8 +3080,6 @@ and (tc_tactic :
             (uu___1223_9442.FStar_TypeChecker_Env.sigtab);
           FStar_TypeChecker_Env.attrtab =
             (uu___1223_9442.FStar_TypeChecker_Env.attrtab);
-          FStar_TypeChecker_Env.is_pattern =
-            (uu___1223_9442.FStar_TypeChecker_Env.is_pattern);
           FStar_TypeChecker_Env.instantiate_imp =
             (uu___1223_9442.FStar_TypeChecker_Env.instantiate_imp);
           FStar_TypeChecker_Env.effects =
@@ -4281,8 +4269,6 @@ and (tc_abs :
                                    (uu___1772_12907.FStar_TypeChecker_Env.sigtab);
                                  FStar_TypeChecker_Env.attrtab =
                                    (uu___1772_12907.FStar_TypeChecker_Env.attrtab);
-                                 FStar_TypeChecker_Env.is_pattern =
-                                   (uu___1772_12907.FStar_TypeChecker_Env.is_pattern);
                                  FStar_TypeChecker_Env.instantiate_imp =
                                    (uu___1772_12907.FStar_TypeChecker_Env.instantiate_imp);
                                  FStar_TypeChecker_Env.effects =
@@ -4577,8 +4563,6 @@ and (tc_abs :
                                  (uu___1863_13623.FStar_TypeChecker_Env.sigtab);
                                FStar_TypeChecker_Env.attrtab =
                                  (uu___1863_13623.FStar_TypeChecker_Env.attrtab);
-                               FStar_TypeChecker_Env.is_pattern =
-                                 (uu___1863_13623.FStar_TypeChecker_Env.is_pattern);
                                FStar_TypeChecker_Env.instantiate_imp =
                                  (uu___1863_13623.FStar_TypeChecker_Env.instantiate_imp);
                                FStar_TypeChecker_Env.effects =
@@ -4683,8 +4667,6 @@ and (tc_abs :
                                        (uu___1871_13665.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
                                        (uu___1871_13665.FStar_TypeChecker_Env.attrtab);
-                                     FStar_TypeChecker_Env.is_pattern =
-                                       (uu___1871_13665.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
                                        (uu___1871_13665.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
@@ -5706,8 +5688,6 @@ and (check_application_args :
                                        (uu___2154_16087.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
                                        (uu___2154_16087.FStar_TypeChecker_Env.attrtab);
-                                     FStar_TypeChecker_Env.is_pattern =
-                                       (uu___2154_16087.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
                                        (uu___2154_16087.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
@@ -7112,8 +7092,6 @@ and (tc_pat :
                  (uu___2629_20739.FStar_TypeChecker_Env.sigtab);
                FStar_TypeChecker_Env.attrtab =
                  (uu___2629_20739.FStar_TypeChecker_Env.attrtab);
-               FStar_TypeChecker_Env.is_pattern =
-                 (uu___2629_20739.FStar_TypeChecker_Env.is_pattern);
                FStar_TypeChecker_Env.instantiate_imp =
                  (uu___2629_20739.FStar_TypeChecker_Env.instantiate_imp);
                FStar_TypeChecker_Env.effects =
@@ -8389,8 +8367,6 @@ and (check_inner_let :
                 (uu___2954_23182.FStar_TypeChecker_Env.sigtab);
               FStar_TypeChecker_Env.attrtab =
                 (uu___2954_23182.FStar_TypeChecker_Env.attrtab);
-              FStar_TypeChecker_Env.is_pattern =
-                (uu___2954_23182.FStar_TypeChecker_Env.is_pattern);
               FStar_TypeChecker_Env.instantiate_imp =
                 (uu___2954_23182.FStar_TypeChecker_Env.instantiate_imp);
               FStar_TypeChecker_Env.effects =
@@ -9182,8 +9158,6 @@ and (build_let_rec_env :
                                         (uu___3163_24428.FStar_TypeChecker_Env.sigtab);
                                       FStar_TypeChecker_Env.attrtab =
                                         (uu___3163_24428.FStar_TypeChecker_Env.attrtab);
-                                      FStar_TypeChecker_Env.is_pattern =
-                                        (uu___3163_24428.FStar_TypeChecker_Env.is_pattern);
                                       FStar_TypeChecker_Env.instantiate_imp =
                                         (uu___3163_24428.FStar_TypeChecker_Env.instantiate_imp);
                                       FStar_TypeChecker_Env.effects =
@@ -9308,8 +9282,6 @@ and (build_let_rec_env :
                                        (uu___3173_24465.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
                                        (uu___3173_24465.FStar_TypeChecker_Env.attrtab);
-                                     FStar_TypeChecker_Env.is_pattern =
-                                       (uu___3173_24465.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
                                        (uu___3173_24465.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
@@ -9550,8 +9522,6 @@ and (check_let_bound_def :
                             (uu___3224_24743.FStar_TypeChecker_Env.sigtab);
                           FStar_TypeChecker_Env.attrtab =
                             (uu___3224_24743.FStar_TypeChecker_Env.attrtab);
-                          FStar_TypeChecker_Env.is_pattern =
-                            (uu___3224_24743.FStar_TypeChecker_Env.is_pattern);
                           FStar_TypeChecker_Env.instantiate_imp =
                             (uu___3224_24743.FStar_TypeChecker_Env.instantiate_imp);
                           FStar_TypeChecker_Env.effects =
@@ -10024,8 +9994,6 @@ let (type_of_tot_term :
              (uu___3368_25895.FStar_TypeChecker_Env.sigtab);
            FStar_TypeChecker_Env.attrtab =
              (uu___3368_25895.FStar_TypeChecker_Env.attrtab);
-           FStar_TypeChecker_Env.is_pattern =
-             (uu___3368_25895.FStar_TypeChecker_Env.is_pattern);
            FStar_TypeChecker_Env.instantiate_imp =
              (uu___3368_25895.FStar_TypeChecker_Env.instantiate_imp);
            FStar_TypeChecker_Env.effects =
@@ -10190,8 +10158,6 @@ let (level_of_type :
                            (uu___3404_26081.FStar_TypeChecker_Env.sigtab);
                          FStar_TypeChecker_Env.attrtab =
                            (uu___3404_26081.FStar_TypeChecker_Env.attrtab);
-                         FStar_TypeChecker_Env.is_pattern =
-                           (uu___3404_26081.FStar_TypeChecker_Env.is_pattern);
                          FStar_TypeChecker_Env.instantiate_imp =
                            (uu___3404_26081.FStar_TypeChecker_Env.instantiate_imp);
                          FStar_TypeChecker_Env.effects =
@@ -10460,8 +10426,6 @@ let rec (universe_of_aux :
                            (uu___3565_27057.FStar_TypeChecker_Env.sigtab);
                          FStar_TypeChecker_Env.attrtab =
                            (uu___3565_27057.FStar_TypeChecker_Env.attrtab);
-                         FStar_TypeChecker_Env.is_pattern =
-                           (uu___3565_27057.FStar_TypeChecker_Env.is_pattern);
                          FStar_TypeChecker_Env.instantiate_imp =
                            (uu___3565_27057.FStar_TypeChecker_Env.instantiate_imp);
                          FStar_TypeChecker_Env.effects =
@@ -10950,8 +10914,6 @@ let (check_type_of_well_typed_term' :
                 (uu___3844_29073.FStar_TypeChecker_Env.sigtab);
               FStar_TypeChecker_Env.attrtab =
                 (uu___3844_29073.FStar_TypeChecker_Env.attrtab);
-              FStar_TypeChecker_Env.is_pattern =
-                (uu___3844_29073.FStar_TypeChecker_Env.is_pattern);
               FStar_TypeChecker_Env.instantiate_imp =
                 (uu___3844_29073.FStar_TypeChecker_Env.instantiate_imp);
               FStar_TypeChecker_Env.effects =
@@ -11105,8 +11067,6 @@ let (check_type_of_well_typed_term :
                 (uu___3875_29177.FStar_TypeChecker_Env.sigtab);
               FStar_TypeChecker_Env.attrtab =
                 (uu___3875_29177.FStar_TypeChecker_Env.attrtab);
-              FStar_TypeChecker_Env.is_pattern =
-                (uu___3875_29177.FStar_TypeChecker_Env.is_pattern);
               FStar_TypeChecker_Env.instantiate_imp =
                 (uu___3875_29177.FStar_TypeChecker_Env.instantiate_imp);
               FStar_TypeChecker_Env.effects =
