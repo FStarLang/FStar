@@ -57,10 +57,10 @@ let report env errs =
 let new_implicit_var reason r env k =
     new_implicit_var_aux reason r env k Strict None
 
-let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
-    if not <| Options.eager_subtyping() then g else
+let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
+  if Options.eager_subtyping () || solve_deferred then
     let solve_now, defer =
-        g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
+      g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
     in
     if Env.debug env <| Options.Other "Rel"
     then begin
@@ -73,6 +73,7 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
     g
+  else g
 
 let check_uvars r t =
   let uvs = Free.uvars t in
@@ -355,7 +356,7 @@ let close_wp_lcomp env bvs (lc:lcomp) =
   lc |>
   TcComm.apply_lcomp
     (close_wp_comp env bvs)
-    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env bs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
 let close_layered_lcomp env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
@@ -365,7 +366,7 @@ let close_layered_lcomp env bvs tms (lc:lcomp) =
   lc |>
   TcComm.apply_lcomp
     (SS.subst_comp substs)
-    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env bs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
 let close_wp_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
   let t = N.normalize_refinement N.whnf_steps env t in
