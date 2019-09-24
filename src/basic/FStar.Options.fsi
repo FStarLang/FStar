@@ -127,6 +127,7 @@ val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>
+val dep_ninja                   : unit    -> string
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit

@@ -1396,6 +1396,15 @@ let print_raw (deps:deps) =
       |> String.concat ";;\n"
       |> BU.print_endline
 
+(* Do I need to print dependencies for .ml, .cmx, etc.? *)
+
+let dep_opt_le (lesser: string) (greater: string) : bool =
+    greater = "all" ||
+    lesser = "checked" ||
+    greater = lesser ||
+    (lesser = "ml" && greater = "cmx")
+
+
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
 
@@ -1404,7 +1413,7 @@ let print_raw (deps:deps) =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (deps:deps) : unit =
+let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
@@ -1456,17 +1465,38 @@ let print_full (deps:deps) : unit =
     in
     let sb = FStar.StringBuffer.create (FStar.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStar.StringBuffer.add str sb in
-    let print_entry target first_dep all_deps =
-        pr target;
-        pr ": ";
-        pr first_dep;
-        pr "\\\n\t";
-        pr all_deps;
+    let norm_ninja_build s = replace_chars s ':' "$:" in
+    let print_entry kind modul source target first_dep all_deps =
+        if ninja then
+        begin if dep_opt_le kind dep_opt then begin
+          pr "build ";
+          pr (norm_ninja_build target);
+          pr ": ";
+          pr kind;
+          pr " ";
+          pr (norm_ninja_build first_dep);
+          pr " | ";
+          pr (norm_ninja_build all_deps);
+	  pr "\n";
+	  pr " module = ";
+	  pr modul;
+	  pr "\n source = ";
+	  pr source
+        end end else begin
+          pr target;
+          pr ": ";
+          pr first_dep;
+          pr "\\\n\t";
+          pr all_deps
+        end;
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let get_module_from_file_name fst_file =
+        Option.get (check_and_strip_suffix (BU.basename fst_file))
+    in
     let output_file ext fst_file =
-        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let ml_base_name = replace_chars (get_module_from_file_name fst_file) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars s '\\' "/" in
@@ -1479,6 +1509,7 @@ let print_full (deps:deps) : unit =
         keys |>
         List.fold_left
         (fun all_checked_files file_name ->
+	  let modul = get_module_from_file_name file_name in
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
             let iface_deps =
@@ -1513,14 +1544,16 @@ let print_full (deps:deps) : unit =
             in
             let files = List.map norm_path files in
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-            let files = String.concat "\\\n\t" files in
+            let files =
+                  if ninja then String.concat " " files else String.concat "\\\n\t" files
+            in
             let cache_file_name = cache_file file_name in
 
             let all_checked_files =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then //this one prints:
                      //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-                     (print_entry cache_file_name norm_f files;
+                     (print_entry "checked" modul norm_f cache_file_name norm_f files;
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
@@ -1556,6 +1589,9 @@ let print_full (deps:deps) : unit =
           in
           let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in
           let all_checked_fst_dep_files_string =
+            if ninja then
+                 String.concat " " all_checked_fst_dep_files
+            else
                  String.concat " \\\n\t" all_checked_fst_dep_files
           in
           let _ =
@@ -1565,22 +1601,34 @@ let print_full (deps:deps) : unit =
               && widened
               then begin
                      print_entry
+                        "ml"
+			modul
+			norm_f
                         (output_ml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string;
 
                      print_entry
+                        "krml"
+			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
               end
               else begin
                      print_entry
+                        "ml"
+			modul
+			norm_f
                         (output_ml_file file_name)
                         cache_file_name
                         "";
 
                      print_entry
+                        "krml"
+			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         ""
@@ -1597,8 +1645,16 @@ let print_full (deps:deps) : unit =
               in
               if Options.should_extract (lowercase_module_name file_name)
               then
-                let cmx_files = String.concat "\\\n\t" cmx_files in
+                let cmx_files =
+                  if ninja then
+                    String.concat " " cmx_files
+                  else
+                    String.concat "\\\n\t" cmx_files
+                in
                 print_entry
+                    "cmx"
+		    modul
+		    norm_f
                     (output_cmx_file file_name)
                     (output_ml_file file_name)
                     cmx_files
@@ -1612,11 +1668,17 @@ let print_full (deps:deps) : unit =
                 && (widened || true)
                 then
                     print_entry
+                        "krml"
+			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
                 else
                    print_entry
+                    "krml"
+		    modul
+		    norm_f
                     (output_krml_file file_name)
                     (cache_file_name)
                     ""
@@ -1654,8 +1716,12 @@ let print_full (deps:deps) : unit =
     in
     let print_all tag files =
         pr tag;
-        pr "=\\\n\t";
-        List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
+        if ninja then pr " = " else pr "=\\\n\t";
+        if ninja then
+          List.iter (fun f -> pr (norm_path f); pr " ") files
+        else
+          List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files
+        ;
         pr "\n"
     in
     print_all "ALL_FST_FILES" all_fst_files;
@@ -1672,7 +1738,10 @@ let print deps =
   | Some "make" ->
       print_make deps
   | Some "full" ->
-      profile (fun () -> print_full deps) "FStar.Parser.Deps.print_full_deps"
+      profile (fun () -> print_full deps false "all") "FStar.Parser.Deps.print_full_deps"
+  | Some "ninja" ->
+      let dep_opt = Options.dep_ninja () in
+      profile (fun () -> print_full deps true dep_opt) "FStar.Parser.Deps.print_full_deps"
   | Some "graph" ->
       print_graph deps.dep_graph
   | Some "raw" ->
