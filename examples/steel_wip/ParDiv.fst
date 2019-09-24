@@ -33,7 +33,7 @@ module ParDiv
 /// We start by defining some basic notions for a commutative monoid.
 ///
 /// We could reuse FStar.Algebra.CommMonoid, but this style with
-/// quanitifers was more convenient for the done here.
+/// quanitifers was more convenient for the proof done here.
 
 let associative #a (f: a -> a -> a) =
   forall x y z. f x (f y z) == f (f x y) z
@@ -67,6 +67,9 @@ let post #s a (c:comm_monoid s) = a -> c.r
  *  However, we augment them with two features:
  *   1. they have pre-condition [pre] and post-condition [post]
  *   2. their type guarantees that they are frameable
+ *  Thanks to Matt Parkinson for suggesting to set up atomic actions
+ *  this way.
+ *  Also see: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/views.pdf
  *)
 noeq
 type action #s (c:comm_monoid s) (a:Type) = {
@@ -300,7 +303,7 @@ let (!) (x:ref 'a)
     } in
     Act act Ret
 
-/// And a sample action fro assignment
+/// And a sample action for assignment
 let (:=) (x:ref 'a) (v:'a)
   : eff unit (ptr_live x) (fun _ -> pts_to x v)
   = let act : action hm unit =
