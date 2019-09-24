@@ -180,7 +180,8 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
-        else if Options.trivial_pre_for_unannotated_effectful_fns ()
+        else if Options.trivial_pre_for_unannotated_effectful_fns () &&
+                not (U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env)
         then None, c, (
                let _, _, g = TcUtil.check_trivial_precondition env c in
                Some g)
@@ -666,44 +667,66 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
     if Option.isSome aqual then
-        Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+      Errors.log_issue e.pos
+        (Errors.Warning_IrrelevantQualifierOnArgumentToReflect,
+         "Qualifier on argument to reflect is irrelevant and will be ignored");
+
     if not (is_user_reifiable_effect env l) then
-        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos;
+      raise_error (Errors.Fatal_EffectCannotBeReified,
+        BU.format1 "Effect %s cannot be reified" l.str) e.pos;
+        
     let reflect_op, _ = U.head_and_args top in
+
     begin match Env.effect_decl_opt env l with
-    | None -> failwith "internal error: user reifiable effect has no decl?"
+    | None ->
+      raise_error (Errors.Fatal_EffectNotFound,
+        BU.format1 "Effect %s not found (for reflect)" (Ident.string_of_lid l)) e.pos
+
     | Some (ed, qualifiers) ->
-        let env_no_ex, topt = Env.clear_expected_typ env in
-        let expected_repr_typ, res_typ, wp, g0 =
+      let env_no_ex, _ = Env.clear_expected_typ env in
+
+      let e, c_e, g_e =
+        let e, c, g = tc_tot_or_gtot_term env_no_ex e in
+        if not <| TcComm.is_total_lcomp c then
+          Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
+        e, c, g in
+
+      let (expected_repr_typ, g_repr), u_a, a, g_a =
+        if ed.is_layered then
+          let a, u_a = U.type_u () in
+          let a_uvar, _, g_a = TcUtil.new_implicit_var "" e.pos env_no_ex a in
+          TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a
+        else
           let u = Env.new_u_univ () in
           let repr = Env.inst_effect_fun_with [u] env ed ed.repr in
-          let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
-          let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
+          let t = mk (Tm_app (repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
+          let t, _, g = tc_tot_or_gtot_term env_no_ex t in
           match (SS.compress t).n with
-          | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
-          | _ -> failwith "Impossible"
-        in
-        let e, g =
-          let e, c, g = tc_tot_or_gtot_term env_no_ex e in
-          if not <| TcComm.is_total_lcomp c
-          then Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
-          match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
-          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.tscheme_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
-                    e, Env.conj_guard g g0
-          | Some g' -> e, Env.conj_guard g' (Env.conj_guard g g0)
-        in
-        let c = S.mk_Comp ({
-              comp_univs=[env.universe_of env res_typ];
-              effect_name = ed.mname;
-              result_typ=res_typ;
-              effect_args=[as_arg wp];
-              flags=[]
-            }) |> TcComm.lcomp_of_comp
-        in
-        let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
-        let e, c, g' = comp_check_expected_typ env e c in
-        let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
-        e, c, Env.conj_guard g' g
+          | Tm_app(_, [(res, _); _]) -> (t, g), u, res, Env.trivial_guard
+          | _ -> failwith "Impossible" in
+
+      let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
+
+      let eff_args =
+        match (SS.compress expected_repr_typ).n with
+        | Tm_app (_, _::args) -> args
+        | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+
+      let c = S.mk_Comp ({
+        comp_univs=[u_a];
+        effect_name = ed.mname;
+        result_typ=a;
+        effect_args=eff_args;
+        flags=[]
+      }) |> TcComm.lcomp_of_comp in
+      
+      let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
+
+      let e, c, g' = comp_check_expected_typ env e c in
+      
+      let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
+      
+      e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
   // If we're on the first phase, we don't synth, and just wait for the next phase
