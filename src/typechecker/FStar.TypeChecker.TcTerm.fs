@@ -1012,7 +1012,7 @@ and tc_value env (e:term) : term
     (* create a universe of level u *)
     let t = mk (Tm_type u) None top.pos in
     let g = Env.conj_guard g (Env.close_guard_univs us bs f) in
-    let g = TcUtil.close_guard_implicits env bs g in
+    let g = TcUtil.close_guard_implicits env false bs g in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_type u ->
@@ -1034,7 +1034,7 @@ and tc_value env (e:term) : term
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
     let g = Env.conj_guard f1 (Env.close_guard_univs [u] [x] f2) in
-    let g = TcUtil.close_guard_implicits env [x] g in
+    let g = TcUtil.close_guard_implicits env false [x] g in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs(bs, body, _) ->
@@ -1417,7 +1417,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
-    let guard = TcUtil.close_guard_implicits env bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
+    let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
     (*
@@ -2504,7 +2504,7 @@ and tc_eqn scrutinee env branch
   effect_label,
   cflags,
   maybe_return_c, //closed already---does not contain free pattern-bound variables
-  TcUtil.close_guard_implicits env (List.map S.mk_binder pat_bvs) guard,
+  TcUtil.close_guard_implicits env false (List.map S.mk_binder pat_bvs) guard,
   erasable
 
 (******************************************************************************)
@@ -2695,7 +2695,9 @@ and check_inner_let env e =
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Env.close_guard env xb
                       (Env.imp_guard (Env.guard_of_guard_formula x_eq_e1) g2) in
-       let g2 = TcUtil.close_guard_implicits env xb g2 in
+       let g2 = TcUtil.close_guard_implicits env
+         (cres.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env)
+         xb g2 in
        let guard = Env.conj_guard g1 g2 in
 
        if Option.isSome (Env.expected_typ env)
@@ -2810,7 +2812,7 @@ and check_inner_let_rec env top =
 
           let guard =
             let bs = lbs |> List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) in
-            TcUtil.close_guard_implicits env bs guard
+            TcUtil.close_guard_implicits env false bs guard
           in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in

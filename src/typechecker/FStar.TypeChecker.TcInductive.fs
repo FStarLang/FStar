@@ -85,7 +85,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
                                                 (Ident.string_of_lid tc))) s.sigrng;
 
 (*close*)let usubst = SS.univ_var_closing uvs in
-         let guard = TcUtil.close_guard_implicits env tps guard in
+         let guard = TcUtil.close_guard_implicits env false tps guard in
          let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
                              (indices |> SS.subst_binders (SS.shift_subst (List.length tps) usubst)))
                             (S.mk_Total (t |> SS.subst (SS.shift_subst (List.length tps + List.length indices) usubst))) in
