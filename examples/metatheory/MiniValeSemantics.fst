@@ -302,71 +302,18 @@ let vc_sound' (cs:list code) (qcs:with_wps cs)
 
 (*** Instances of with_wp ***)
 
+let theta (m:state -> state) (k:state -> Type0) (s0:state) : Type0 = k (m s0)
 
-////////////////////////////////////////////////////////////////////////////////
-//Instance for Mov
-////////////////////////////////////////////////////////////////////////////////
-let lemma_Move (s0:state) (dst:operand) (src:operand)
-  : Ghost (state * fuel)
-  (requires OReg? dst)
-  (ensures fun (sM, fM) ->
-    eval_code (Ins (Mov64 dst src)) fM s0 == Some sM /\
-    eval_operand dst sM == eval_operand src s0 /\
-    sM == update_state (OReg?.r dst) sM s0
-  )
-  =
-  let Some sM = eval_code (Ins (Mov64 dst src)) 0 s0 in
-  (sM, 0)
+let wp_ins (i:ins) : t_wp = theta (eval_ins i)
+
+let hasWp_ins (i:ins) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
+  (requires (wp_ins i k s0))
+  (ensures fun (sM, f0) -> eval_code (Ins i) f0 s0 == Some sM /\ k sM)
+  = let Some sM = eval_code (Ins i) 0 s0 in (sM, 0)
 
 [@qattr]
-let wp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
-  OReg? dst /\
-  (forall (x:nat64).
-    let sM = update_reg s0 (OReg?.r dst) x in
-    eval_operand dst sM == eval_operand src s0 ==> k sM
-  )
-
-let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
-  (requires wp_Move dst src k s0)
-  (ensures fun (sM, f0) -> eval_code (Ins (Mov64 dst src)) f0 s0 == Some sM /\ k sM)
-  =
-  lemma_Move s0 dst src
-
-[@qattr]
-let inst_Move (dst:operand) (src:operand) : with_wp (Ins (Mov64 dst src)) =
-  QProc (Ins (Mov64 dst src)) (wp_Move dst src) (hasWp_Move dst src)
-
-////////////////////////////////////////////////////////////////////////////////
-//Instance for Add
-////////////////////////////////////////////////////////////////////////////////
-let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state * fuel)
-  (requires OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64)
-  (ensures fun (sM, fM) ->
-    eval_code (Ins (Add64 dst src)) fM s0 == Some sM /\
-    eval_operand dst sM == eval_operand dst s0 + eval_operand src s0 /\
-    sM == update_state (OReg?.r dst) sM s0
-  )
-  =
-  let Some sM = eval_code (Ins (Add64 dst src)) 0 s0 in
-  (sM, 0)
-
-[@qattr]
-let wp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
-  OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64 /\
-  (forall (x:nat64).
-    let sM = update_reg s0 (OReg?.r dst) x in
-    eval_operand dst sM == eval_operand dst s0 + eval_operand src s0 ==> k sM
-  )
-
-let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
-  (requires wp_Add dst src k s0)
-  (ensures fun (sM, f0) -> eval_code (Ins (Add64 dst src)) f0 s0 == Some sM /\ k sM)
-  =
-  lemma_Add s0 dst src
-
-[@qattr]
-let inst_Add (dst:operand) (src:operand) : with_wp (Ins (Add64 dst src)) =
-  QProc (Ins (Add64 dst src)) (wp_Add dst src) (hasWp_Add dst src)
+let inst_ins (i:ins) : with_wp (Ins i) =
+  QProc (Ins i) (wp_ins i) (hasWp_ins i)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Running the VC generator using the F* normalizer
@@ -407,9 +354,9 @@ let codes_Triple : list code =
 
 [@qattr]
 let inst_Triple : with_wps codes_Triple = //A typeclass instance for our program
-  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
-  QSeq (inst_Add (OReg Rax) (OReg Rbx)) (
-  QSeq (inst_Add (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_ins (Mov64 (OReg Rbx) (OReg Rax))) (
+  QSeq (inst_ins (Add64 (OReg Rax) (OReg Rbx))) (
+  QSeq (inst_ins (Add64 (OReg Rbx) (OReg Rax))) (
   QEmpty)))
 
 open FStar.FunctionalExtensionality
@@ -438,24 +385,24 @@ let state_eq (s0 s1:state) : Ghost Type0
   s0 Rdx == s1 Rdx
 
 #reset-options
-let lemma_Triple (s0:state)
-  : Ghost (state & fuel)
-    (requires
-      s0 Rax < 100)
-    (ensures fun (sM, f0) ->
-      eval_code (Block codes_Triple) f0 s0 == Some sM /\
-      sM Rbx == 3 * s0 Rax /\
-      sM `feq` update_state Rax sM (update_state Rbx sM s0)) =
-// Naive proof:
-  let b1 = codes_Triple in
-  let (s2, fc2) = lemma_Move s0 (OReg Rbx) (OReg Rax) in let b2 = Cons?.tl b1 in
-  let (s3, fc3) = lemma_Add s2 (OReg Rax) (OReg Rbx) in  let b3 = Cons?.tl b2 in
-  let (s4, fc4) = lemma_Add s3 (OReg Rbx) (OReg Rax) in  let b4 = Cons?.tl b3 in
-  let (sM, f4) = (s4, 0) in
-  let f3 = lemma_merge (Cons?.hd b3) b4 s3 fc4 s4 f4 sM in
-  let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in
-  let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in
-  (sM, fM)
+(* let lemma_Triple (s0:state) *)
+(*   : Ghost (state & fuel) *)
+(*     (requires *)
+(*       s0 Rax < 100) *)
+(*     (ensures fun (sM, f0) -> *)
+(*       eval_code (Block codes_Triple) f0 s0 == Some sM /\ *)
+(*       sM Rbx == 3 * s0 Rax /\ *)
+(*       sM `feq` update_state Rax sM (update_state Rbx sM s0)) = *)
+(* // Naive proof: *)
+(*   let b1 = codes_Triple in *)
+(*   let (s2, fc2) = lemma_Move s0 (OReg Rbx) (OReg Rax) in let b2 = Cons?.tl b1 in *)
+(*   let (s3, fc3) = lemma_Add s2 (OReg Rax) (OReg Rbx) in  let b3 = Cons?.tl b2 in *)
+(*   let (s4, fc4) = lemma_Add s3 (OReg Rbx) (OReg Rax) in  let b4 = Cons?.tl b3 in *)
+(*   let (sM, f4) = (s4, 0) in *)
+(*   let f3 = lemma_merge (Cons?.hd b3) b4 s3 fc4 s4 f4 sM in *)
+(*   let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in *)
+(*   let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in *)
+(*   (sM, fM) *)
 
 
 let lemma_Triple_opt (s0:state)
