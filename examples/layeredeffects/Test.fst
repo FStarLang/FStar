@@ -113,6 +113,3 @@ let test8 (l:list int)
 : HoareST int (fun _ -> Cons? l /\ Cons?.hd l > 0) (fun _ _ _ -> True)
 = match l with
   | hd::_ -> test7 hd
-
-
-
