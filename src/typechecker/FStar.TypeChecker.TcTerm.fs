@@ -181,7 +181,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
         else if Options.trivial_pre_for_unannotated_effectful_fns () &&
-                not (U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env)
+                not (U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env)  //AR: TODO: FIXME: this is bad, we should give an error if layered effect comps don't have annotations!!
         then None, c, (
                let _, _, g = TcUtil.check_trivial_precondition env c in
                Some g)
