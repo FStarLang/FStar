@@ -358,6 +358,9 @@ let close_wp_lcomp env bvs (lc:lcomp) =
     (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
+(*
+ * Closing of layered computations happens via substitution
+ *)
 let close_layered_lcomp env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
@@ -466,7 +469,7 @@ let return_value env u_t_opt t v =
  *
  * We now unify i_i with t_i (where t_i are the indices of c1)
  *        unify j_i with s_i (where s_i are the indices of c2,
-                            these are done in an env with b, and the returned guard is closed over b)
+ *                            these are done in an env with b, and the returned guard is closed over b)
  * and return k_i as the output indices
  *)
 let mk_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =

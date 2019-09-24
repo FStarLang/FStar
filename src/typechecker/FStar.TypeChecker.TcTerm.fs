@@ -1873,7 +1873,14 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
 and tc_pat env (pat_t:typ) (p0:pat) :
         pat                          (* the type-checked, fully decorated pattern                                   *)
       * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
-      * list<term>
+      * list<term>                   (* for each bv in the returned bv list, this list contains a Tm_abs,
+                                        that when applied to the scrutinee, returns an expression for bv in terms of
+                                        projectors. for example, say scrutinee is of type list (option int), and the
+                                        pattern is (Some hd)::_, then hd will be returned in the bv list, and the
+                                        list<term> would contain syntax for:
+                                          fun (x:list (option int)) -> Some?.v (Cons?.hd x)
+                                        in the case of layered effects, we close over the pattern variables in the
+                                        branch VC by substituting them with these expressions                       *)
       * Env.env                      (* the environment extended with all the binders                               *)
       * term                         (* terms corresponding to the pattern                                          *)
       * term                         (* the same term in normal form                                                *)
@@ -2013,6 +2020,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | _ ->
           fail "Not a simple pattern"
     in
+    (*
+     * This function checks the nested pattern and
+     *   builds the list<bv> and corresponding list<term> (see the comment at the signature of tc_pat)
+     *   by checking the pattern "inside out"
+     *
+     * For example, taking the scrutinee of type list (option int), and the pattern as Cons (Some hd) _,
+     *   the recursive call first typechecks hd, and returns the term as t1 = Prims.id
+     * Then we come to Some hd, and the term becomes t2 = (fun (x:option int). t1 (Some?.v x))
+     * Then we come to Cons (Some hd), and the term becomes t3 = (fun (x:list (option int)). t2 (Cons?.hd x))
+     * After a bit of normalization, this is same as (fun (x:list (option int)). Some?.v (Cons?.hd x))
+     *)
     let rec check_nested_pattern env (p:pat) (t:typ)
         : list<bv>
         * list<term>
@@ -2025,6 +2043,13 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 
         let id = S.fvar Const.id_lid (S.Delta_constant_at_level 1) None in
 
+        (*
+         * Taking the example of scrutinee of type list (option int), and pattern as Cons (Some hd), _,
+         * this function will be called twice:
+         * (a) disc as Some?.v and inner_t as Prims.id (say it returns t1)
+         * (b) disc as Cons?.hd and inner_t as t1
+         * It builds the term as mentioned above in the comment at check_nested_pattern
+         *)
         let mk_disc_t (disc:term) (inner_t:term) : term =
           let x_b = S.gen_bv "x" None t |> S.mk_binder in
           let tm = S.mk_Tm_app
@@ -2113,28 +2138,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                               |> String.concat " ");
               simple_pat_e, simple_bvs, guard, erasable
           in
-<<<<<<< HEAD
-          let _env, bvs, checked_sub_pats, subst, g, erasable =
+          let _env, bvs, tms, checked_sub_pats, subst, g, erasable =
             List.fold_left2
-              (fun (env, bvs, pats, subst, g, erasable) (p, b) x ->
+              (fun (env, bvs, tms, pats, subst, g, i, erasable) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
-                let bvs_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
-                let env = Env.push_bvs env bvs_p in
-                env, bvs@bvs_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p)
-              (env, [], [], [], Env.conj_guard g0 g1, erasable)
-=======
-          let _env, bvs, tms, checked_sub_pats, subst, g, _ =
-            List.fold_left2
-              (fun (env, bvs, tms, pats, subst, g, i) (p, b) x ->
-                let expected_t = SS.subst subst x.sort in
-                let bvs_p, tms_p, e_p, p, g' = check_nested_pattern env p expected_t in
+                let bvs_p, tms_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
                 let env = Env.push_bvs env bvs_p in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
                   tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
-                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', i+1)
-              (env, [], [], [], [], Env.conj_guard g0 g1, 0)
->>>>>>> wip on typechecking match for layered effects
+                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', i+1, erasable || erasable_p)
+              (env, [], [], [], [], Env.conj_guard g0 g1, 0, erasable)
               sub_pats
               simple_bvs
           in
@@ -2176,11 +2190,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     in
     if Env.debug env <| Options.Other "Patterns"
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
-<<<<<<< HEAD
-    let bvs, pat_e, pat, g, erasable =
-=======
-    let bvs, tms, pat_e, pat, g =
->>>>>>> wip on typechecking match for layered effects
+    let bvs, tms, pat_e, pat, g, erasable =
         check_nested_pattern
             ({(Env.clear_expected_typ env |> fst) with use_eq=true})
             (PatternUtils.elaborate_pat env p0)
@@ -2190,11 +2200,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     then BU.print2 "Done checking pattern %s as expression %s\n"
                     (Print.pat_to_string pat)
                     (Print.term_to_string pat_e);
-<<<<<<< HEAD
-    pat, bvs, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g, erasable
-=======
-    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g
->>>>>>> wip on typechecking match for layered effects
+    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g, erasable
 
 
 (********************************************************************************************************************)
@@ -2222,11 +2228,9 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-<<<<<<< HEAD
-  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp, guard_pat, erasable =
-=======
-  let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat =
->>>>>>> wip on typechecking match for layered effects
+  (*    pat_bvs are the pattern variables, and pat_bv_tms are syntax for a single argument functions that *)
+  (*    when applied to the scrutinee return an expression for the bv in terms of projectors *)
+  let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat, erasable =
     tc_pat env pat_t pattern
   in
 
@@ -2258,23 +2262,32 @@ and tc_eqn scrutinee env branch
         | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
 
-  (* 6. Building the guard for this branch;                                                             *)
+  (*      logically the same as step 5(a),                                                              *)
+
+
+  (* 5. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)
   (*                                                                                                    *)
   (* (a) Compute the branch guard for each arm of a disjunctive pattern.                                *)
-  (*      logically the same as step 5(a),                                                              *)
-  (*      but expressed in terms for discriminators and projectors on sub-terms of scrutinee            *)
+  (*      expressed in terms for discriminators and projectors on sub-terms of scrutinee                *)
   (*      for the benefit of the caller, who works in an environment without the pattern-bound vars     *)
   (*                                                                                                    *)
-  (* (b) Type-check the condition computed in 6 (a)                                                     *)
+  (* (b) Type-check the condition computed in 5 (a)                                                     *)
   (*                                                                                                    *)
-  (* (c) Make a disjunctive formula out of 6(b) for each arm of the pattern                             *)
+  (* (c) Make a disjunctive formula out of 5 (b) for each arm of the pattern                             *)
   (*                                                                                                    *)
-  (* (d) Strengthen 6 (c) with the when condition, if there is one                                      *)
+  (* (d) Strengthen 5 (c) with the when condition, if there is one                                      *)
+
+  (* This used to be step 6 earlier (after weakening the branch VC with scrutinee equality with pattern etc.) *)
+  (*   but we do it before that now, since for layered effects, we use this branch guard to weaken      *)
+
+  (* TODO: this seems very similar to constructing the terms for pattern variables in terms of scrutinee *)
+  (*       and projectors. Can this be done in tc_pat too? That should save us repeated iterations on the pattern *)
+
   let branch_guard =
       if not (Env.should_verify env)
       then U.t_true
-      else (* 6 (a) *)
+      else (* 5 (a) *)
           let rec build_branch_guard (scrutinee_tm:option<term>) (pattern:pat) pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
                 let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
@@ -2369,7 +2382,7 @@ and tc_eqn scrutinee env branch
                                         (Print.term_to_string pat_exp))
           in
 
-          (* 6 (b) *)
+          (* 5 (b) *)
           let build_and_check_branch_guard scrutinee_tm pattern pat =
              if not (Env.should_verify env)
              then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
@@ -2380,10 +2393,10 @@ and tc_eqn scrutinee env branch
                   //    and may contain unresolved unification variables, e.g. FIXME!
                   t in
 
-          (* 6 (c) *)
+          (* 5 (c) *)
          let branch_guard = build_and_check_branch_guard (Some scrutinee_tm) pattern norm_pat_exp in
 
-          (* 6 (d) *)
+          (* 5 (d) *)
          let branch_guard =
             match when_condition with
             | None -> branch_guard
@@ -2392,9 +2405,14 @@ and tc_eqn scrutinee env branch
           branch_guard
   in
 
-  (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
-  (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
-  (*   (c). Close the VCs so that they no longer have the pattern-bound variables occurring free in them      *)
+  (* 6 (a). Build equality conditions between the pattern and the scrutinee                                    *)
+  (*   (b). Weaken the VCs of the branch and when clause with the equalities from 6 (a) and the when condition *)
+  (*        For layered effects, we weaken with the branch guard instead                                       *)
+  (*   (c). Close the VCs so that they no longer have the pattern-bound variables occurring free in them       *)
+  (*        For wp-based effects, closing means applying the close_wp combinator                               *)
+  (*        For layered effects, we substitute the pattern variables with their projector expressions applied  *)
+  (*          to the scrutinee                                                                                 *)
+  
   let effect_label, cflags, maybe_return_c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
@@ -2419,7 +2437,7 @@ and tc_eqn scrutinee env branch
     let c_weak, g_when_weak =
      let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      if branch_has_layered_effect
-     then TcUtil.weaken_precondition env c (NonTrivial branch_guard), Env.trivial_guard
+     then TcUtil.weaken_precondition env c (NonTrivial branch_guard), Env.trivial_guard  //use branch guard for weakening
      else
        match eqs, when_condition with
         | _ when not (Env.should_verify env) ->
@@ -2455,14 +2473,17 @@ and tc_eqn scrutinee env branch
           then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
           else c_weak
         in
-        if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) && branch_has_layered_effect
+        if branch_has_layered_effect
         then
           let _ = if Env.debug env <| Options.Other "LayeredEffects" then
             BU.print_string "Typechecking pat_bv_tms ...\n" in
 
+          //typecheck the pat_bv_tms, to resolve implicits etc.
           let pat_bv_tms =
             List.fold_left2 (fun acc pat_bv_tm bv ->
               let expected_t = U.arrow [S.null_binder pat_t] (S.mk_Total' bv.sort (Env.new_u_univ () |> Some)) in
+              //note, we are explicitly setting lax = true, since these terms apply projectors
+              //which we know are sound as per the branch guard, but hard to convince the typechecker
               let env = { (Env.set_expected_typ env expected_t) with lax = true } in
               let pat_bv_tm = tc_trivial_guard env pat_bv_tm |> fst in
               acc@[pat_bv_tm]
@@ -2470,7 +2491,7 @@ and tc_eqn scrutinee env branch
 
           let pat_bv_tms = pat_bv_tms |> List.map (fun pat_bv_tm ->
             mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] None Range.dummyRange
-          ) |> List.map (N.normalize [Env.Beta] env) in
+          ) |> List.map (N.normalize [Env.Beta] env) in  //a bit of beta to simplify the term
 
           let _ = 
             if Env.debug env <| Options.Other "LayeredEffects" then
@@ -2695,6 +2716,9 @@ and check_inner_let env e =
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Env.close_guard env xb
                       (Env.imp_guard (Env.guard_of_guard_formula x_eq_e1) g2) in
+
+       //AR: for layered effects, solve any deferred constraints first
+       //    we can do it at other calls to close_guard_implicits too, but let's see
        let g2 = TcUtil.close_guard_implicits env
          (cres.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env)
          xb g2 in
