@@ -553,7 +553,7 @@ let mk_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) 
     effect_name = ed.mname;
     result_typ = t2;
     effect_args = List.map S.as_arg is;
-    flags = flags  //AR: TODO: FIXME: set properly
+    flags = flags
   }) in
 
   if Env.debug env <| Options.Other "LayeredEffects" then
