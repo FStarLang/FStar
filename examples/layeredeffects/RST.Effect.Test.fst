@@ -195,7 +195,7 @@ assume val as_rseq_focus_rmem_inv2 (#a:Type0)
 
 /// `copy_state`
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
 let copy_state
   (st:state)
   (ost:state)
