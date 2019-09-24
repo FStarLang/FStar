@@ -22,11 +22,11 @@ module ParDiv
  * It also builds a generic separation-logic-style program logic
  * for this effect, in a partial correctness setting.
 
- * It should also be possible to give a variant of this semantics for
- * total correctness. That would be a fun exercise and not too hard, I
- * think.  However, we specifically focus on partial correctness here
- * so that this semantics can be instantiated with lock operations,
- * which may deadlock.
+ * It is also be possible to give a variant of this semantics for
+ * total correctness. However, we specifically focus on partial correctness
+ * here so that this semantics can be instantiated with lock operations,
+ * which may deadlock. See ParTot.fst for a total-correctness variant of
+ * these semantics.
  *
  *)
 
