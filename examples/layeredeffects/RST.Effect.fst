@@ -118,6 +118,7 @@ let conjunction (a:Type)
 = repr a r_in r_out
   (fun post h -> (p ==> wp_f post h) /\ ((~ p) ==> wp_g post h))
 
+reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
   with repr        = repr;
@@ -178,8 +179,6 @@ assume val rst_frame (#a:Type)
     //     r `is_subresource_of` (r_out_outer x)) ==> rm_in r == rm_out r) /\
     focus_rmem rm_in delta == focus_rmem rm_out delta /\  //-- this doesn't work (see test4 in RST.Effect.Test.fst)
     post (focus_rmem rm_in r_in_inner) x (focus_rmem rm_out (r_out_inner x)))
-
-
 
 
 
