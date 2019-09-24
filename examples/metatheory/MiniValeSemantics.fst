@@ -324,6 +324,9 @@ let normal_steps : list string =
     `%OReg?;
     `%OReg?.r;
     `%QProc?.wp;
+    `%theta;
+    `%eval_ins;
+    `%wp_ins;
   ]
 
 unfold
@@ -403,7 +406,6 @@ let state_eq (s0 s1:state) : Ghost Type0
 (*   let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in *)
 (*   let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in *)
 (*   (sM, fM) *)
-
 
 let lemma_Triple_opt (s0:state)
   : Ghost (state & fuel)
