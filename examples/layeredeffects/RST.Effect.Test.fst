@@ -126,7 +126,15 @@ let test6 (l:list int)
 = match l with
   | hd::_ -> test5 hd
 
- 
+let test7 (l:list (option int))
+: RST unit r1 (fun _ -> r1)
+  (fun _ -> Cons? l /\ Some? (Cons?.hd l))
+  (fun _ _ _ -> True)
+= match l with
+  | (Some hd)::_ ->
+    if hd > 0 then test5 (Some?.v (Cons?.hd l)) else ()
+
+
 (*** chacha20 ***)
 
 /// The effect definitions and `rst_frame` are as defined in `examples/layered_effect/RST.Effect.fst`
