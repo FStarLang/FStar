@@ -1727,6 +1727,34 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 (***************************************************)
 
+(*
+ * The Allow_untyped is a bit unfortunate here. But here is an explanation and plan to remove it:
+ *
+ * This gadget is used to create uvars when applying layered effect combinators
+ * These uvars are typically for layered effect indices (or their subterms),
+ *   which are analogous to wps in the wp-based effects
+ *
+ * Suppose we use Strict instead of Allow_untyped, that has two problems:
+ *
+ * (a) Performance: These uvars (indices) are repetedly resolved by the unifier and
+ *     then typechecked (as done for normal implicits). If these terms are big, this
+ *     can cause significant slowdowns.
+ *
+ *     If some day we have memoization in the typechecker, then this slowdown can go away.
+ *
+ * (b) Convincing the typechecker of their well-typedness: The layered effect indices (and wps)
+ *     are many times constructed by the typechecker, and so far, there is no guarantee that they
+ *     can be typechecked again by the typechecker. For example, in the case of wp-based effects,
+ *     the typechecker constructs wps by applying combinators, but these terms are often not typechecked
+ *     again (even in 2-phase TC, there inference of wp is anyway out of scope). Analogous reasoning
+ *     for layered effect indices. While it would be awesome if we could maintain this hygiene,
+ *     it's not there right now. And it may not always be possible too (e.g. using projectors in the
+ *     branch VCs).
+ *
+ * As a result for now we use Allow_untyped here, and TRUST the unifier to do the right thing.
+ * When we have memoization, we can move to Strict and then it would be finding ill-typed instances
+ *   one-by-one and fixing them.
+ *)
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
