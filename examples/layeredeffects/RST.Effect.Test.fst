@@ -405,12 +405,67 @@ let test_frame_inference0 (b1: array U32.t) (b2: array U32.t)
   (frame #(array_resource b2) #(array_resource b1) #(array_resource b1) (f b1))
   (frame #(array_resource b1) #(array_resource b2) #(array_resource b2) (f b2))
 
-module T = FStar.Tactics
-module SteelT = Steel.Tactics
+open FStar.Tactics
+module T = Steel.Tactics
+
+#set-options "--z3rlimit 5 --max_fuel 1 --max_ifuel 1"
+
+let rec examine_and_solve_goals (goals:list goal) : Tac unit =
+  match goals with
+  | [] -> ()
+  | goal::rest -> begin
+    match inspect_ln (goal_type goal) with
+    | Tv_Refine delta refinement -> begin
+      print (term_to_string ((inspect_bv delta).bv_sort));
+      match (inspect_ln (inspect_bv delta).bv_sort, inspect_ln (`resource)) with
+      | (Tv_FVar delta_type_name, Tv_FVar resource_name) ->
+        if FStar.Order.eq (compare_fv delta_type_name resource_name) then begin
+	  // We are examining a refinement on a resource
+	  print (term_to_string (refinement));
+	  match (inspect_ln refinement, inspect_ln (`l_and)) with
+	  | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) -> begin
+	    match inspect_ln op_and_arg1 with
+	    | Tv_App op arg1 -> begin
+	      match inspect_ln op with
+	      | Tv_FVar op_name -> begin
+	        if FStar.Order.eq (compare_fv op_name and_name) then begin
+                  fail "COUCOU"
+                end else begin
+                  fail "STOP7";
+                  examine_and_solve_goals rest
+                end
+              end
+	      | _ ->
+	        fail "STOP6";
+                examine_and_solve_goals rest
+	    end
+	    | _ ->
+	      fail "STOP5";
+              examine_and_solve_goals rest
+	  end
+	  | _ ->
+	   fail "STOP4";
+           examine_and_solve_goals rest
+	end else begin
+	  fail "STOP3";
+	  examine_and_solve_goals rest
+	end
+      | _ ->
+        fail "STOP2";
+        examine_and_solve_goals rest
+    end
+    | _ ->
+      fail "STOP1";
+      examine_and_solve_goals rest
+  end
 
 [@resolve_implicits]
-let resolve_tac () : T.Tac unit =
-  T.fail "Failure !"
+let resolve_tac () : Tac unit =
+  let cur_goals = goals () in
+  examine_and_solve_goals cur_goals;
+  match goals () with
+  | [] -> ()
+  | _ -> fail "Some implicits have not been set!"
 
 // TODO: Should not expected failure
 let test_frame_inference2
@@ -432,4 +487,5 @@ let test_frame_inference2
      array_resource b5)
   =
   frame (f b1) >>
-  frame (f b2)
+  frame (f b2) >>
+  frame (f b3)
