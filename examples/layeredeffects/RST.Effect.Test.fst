@@ -429,7 +429,45 @@ let rec examine_and_solve_goals (goals:list goal) : Tac unit =
 	      match inspect_ln op with
 	      | Tv_FVar op_name -> begin
 	        if FStar.Order.eq (compare_fv op_name and_name) then begin
-                  fail "COUCOU"
+		  let arg1, _ = arg1 in
+		  let arg2, _ = arg2 in
+		  match (inspect_ln arg1, inspect_ln arg2) with
+		  | (Tv_App arg1_op_and_sub_arg1 arg1_sub_arg2,
+		     Tv_App arg2_op_and_sub_arg1 arg2_sub_arg2) -> begin
+                    match (inspect_ln arg1_op_and_sub_arg1, inspect_ln arg2_op_and_sub_arg1) with
+		      | (Tv_App arg1_op arg1_sub_arg1,
+	                 Tv_App arg2_op arg2_sub_arg1) -> begin
+		        match (
+			  inspect_ln arg1_op,
+			  inspect_ln arg2_op,
+			  inspect_ln (`can_be_split_into)
+			) with
+			| (Tv_FVar arg1_op_name, Tv_FVar arg2_op_name, Tv_FVar split_name) -> begin
+			  if
+			    FStar.Order.eq (compare_fv arg1_op_name split_name) &&
+			    FStar.Order.eq (compare_fv arg2_op_name split_name)
+			  then begin
+			    let arg1_sub_arg1, _ = arg1_sub_arg1 in
+			    let arg1_sub_arg2, _ = arg1_sub_arg2 in
+			    let arg2_sub_arg1, _ = arg2_sub_arg1 in
+			    let arg2_sub_arg2, _ = arg2_sub_arg2 in
+                            fail "COUCOU"
+                          end else begin
+                            fail "STOP11";
+                            examine_and_solve_goals rest
+                          end
+                        end
+			| _ ->
+		          fail "STOP10";
+                          examine_and_solve_goals rest
+		      end
+		      | _ ->
+		        fail "STOP9";
+                        examine_and_solve_goals rest
+                  end
+		  | _ ->
+		    fail "STOP8";
+                    examine_and_solve_goals rest
                 end else begin
                   fail "STOP7";
                   examine_and_solve_goals rest
