@@ -142,7 +142,7 @@ let test7 (l:list (option int))
 module U32 = FStar.UInt32
 
 assume val array (a:Type0) : Type0
-assume val length (#a:Type0) (b:array a) : nat
+assume val length (#a:Type0) (b:array a) : pos
 assume val array_resource (#a:Type0) (b:array a) : resource
 assume val as_rseq (#a:Type0) (b:array a) (#r:resource{array_resource b `is_subresource_of` r}) (h:rmem r)
 : GTot (s:Seq.seq a{Seq.length s == length b})
@@ -332,3 +332,104 @@ let copy_state
 
   //assert False;
   Seq.lemma_eq_intro (as_rseq st h1) (as_rseq ost h0)
+
+module T = FStar.Tactics
+module Tac = Steel.Tactics
+
+[@resolve_implicits]
+let resolve_frames () : T.Tac unit =
+  T.admit_all ()
+
+assume val rst_frame_auto (#a:Type)
+  (#r_in_outer:resource)
+  (#r_in_inner:resource)
+  (#r_out_inner:a -> resource)
+  (#r_out_outer:a -> resource)
+  (#delta:resource)
+  (#pre:rprop r_in_inner)
+  (#post:rmem r_in_inner -> (x:a) -> rprop (r_out_inner x))
+  ($f:unit -> RST a r_in_inner r_out_inner pre post)
+: RST a r_in_outer r_out_outer
+  (fun rm_in ->
+    r_in_outer `can_be_split_into` (r_in_inner, delta) /\
+    pre (focus_rmem rm_in r_in_inner))
+  (fun rm_in x rm_out ->
+    r_in_outer `can_be_split_into` (r_in_inner, delta) /\
+    (r_out_outer x) `can_be_split_into` (r_out_inner x, delta) /\
+    // (forall (r:resource).
+    //    (r `is_subresource_of` delta /\
+    //     r `is_subresource_of` r_in_outer /\
+    //     r `is_subresource_of` (r_out_outer x)) ==> rm_in r == rm_out r) /\
+    focus_rmem rm_in delta == focus_rmem rm_out delta /\  //-- this doesn't work (see test4 in RST.Effect.Test.fst)
+    post (focus_rmem rm_in r_in_inner) x (focus_rmem rm_out (r_out_inner x)))
+
+let cmd (r1:resource) (r2:resource) = unit -> RST unit r1 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True)
+
+let compose (#p #q #r : resource)
+  (f: cmd p q)
+  (g: cmd q r)
+  : cmd p r
+  = fun _ -> g (f ())
+
+let ( >> ) (#p #q #r : resource)
+  (f: cmd p q)
+  (g: cmd q r)
+  : cmd p r
+  = compose f g
+
+let frame
+  (#outer0 #outer1 #inner0 #inner1: resource)
+  (#delta: resource{outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)})
+  ($f:cmd inner0 inner1)
+  : cmd outer0 outer1
+  = fun _ ->
+   rst_frame
+     outer0
+     #inner0
+     #(fun _ -> inner1)
+     (fun _ -> outer1)
+     delta
+     #(fun _ -> True)
+     #(fun _ _ _ -> True)
+     (fun _ -> f ())
+
+
+let f (b: array U32.t) : cmd (array_resource b) (array_resource b) =
+  (fun _ -> ignore (index b 0ul ()))
+
+[@expect_failure]
+let test_frame_inference0 (b1: array U32.t) (b2: array U32.t)
+  : cmd (array_resource b1 <*> array_resource b2) (array_resource b1 <*> array_resource b2)
+ =
+  compose #(array_resource b1 <*> array_resource b2) #(array_resource b1 <*> array_resource b2)
+  (frame #(array_resource b2) #(array_resource b1) #(array_resource b1) (f b1))
+  (frame #(array_resource b1) #(array_resource b2) #(array_resource b2) (f b2))
+
+module T = FStar.Tactics
+module SteelT = Steel.Tactics
+
+[@resolve_implicits]
+let resolve_tac () : T.Tac unit =
+  T.fail "Failure !"
+
+// TODO: Should not expected failure
+let test_frame_inference2
+  (b1: array U32.t)
+  (b2: array U32.t)
+  (b3: array U32.t)
+  (b4: array U32.t)
+  (b5: array U32.t)
+  : cmd
+    (array_resource b1 <*>
+     array_resource b2 <*>
+     array_resource b3 <*>
+     array_resource b4 <*>
+     array_resource b5)
+    (array_resource b1 <*>
+     array_resource b2 <*>
+     array_resource b3 <*>
+     array_resource b4 <*>
+     array_resource b5)
+  =
+  frame (f b1) >>
+  frame (f b2)
