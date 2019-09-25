@@ -64,3 +64,7 @@ assume val env_open_modules      : env -> list name
 (* Attributes are terms, not to be confused with Prims.attribute *)
 assume val sigelt_attrs     : sigelt -> list term
 assume val set_sigelt_attrs : list term -> sigelt -> sigelt
+
+(* Setting and reading qualifiers from sigelts *)
+assume val sigelt_quals     : sigelt -> list qualifier
+assume val set_sigelt_quals : list qualifier -> sigelt -> sigelt

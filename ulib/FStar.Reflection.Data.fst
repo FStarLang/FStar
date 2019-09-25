@@ -109,6 +109,34 @@ type sigelt_view =
 
   | Unk
 
+(* Qualifiers for sigelts, see FStar.Syntax.Syntax for an explanation. *)
+noeq
+type qualifier =
+  | Assumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Abstract
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable       of name
+  | Discriminator     of name
+  | Projector         of name * ident
+  | RecordType        of list ident * list ident
+  | RecordConstructor of list ident * list ident
+  | Action            of name
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
+
 let var : eqtype = nat
 
 type exp : Type =
