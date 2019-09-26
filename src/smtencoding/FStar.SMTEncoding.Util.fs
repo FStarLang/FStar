@@ -14,8 +14,10 @@ open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.Const
 module S = FStar.Syntax.Syntax
+module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
+module TcEnv = FStar.TypeChecker.Env
 
 let mkAssume (tm, cap, nm) =
     Assume ({
@@ -80,3 +82,21 @@ let mk_String_const = norng mk_String_const
 let mk_Precedes = norng4 mk_Precedes
 let mk_LexCons = norng3 mk_LexCons
 
+let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
+  TcEnv.is_reifiable_effect en l &&
+  not (l |> TcEnv.norm_eff_name en
+         |> TcEnv.get_effect_decl en
+         |> (fun ed -> ed.is_layered))
+
+let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
+  match c.n with
+  | Comp ct -> is_smt_reifiable_effect en ct.effect_name
+  | _ -> false
+
+let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
+  is_smt_reifiable_effect en rc.residual_effect
+
+let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
+  match (SS.compress t).n with
+  | Tm_arrow (_, c) -> is_smt_reifiable_comp en c
+  | _ -> false
