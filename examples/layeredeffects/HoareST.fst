@@ -95,7 +95,7 @@ let read (a:Type0) (r:ref a)
 : repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
 = fun _ -> read r 
 
-reifiable reflectable
+reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr        = repr;
@@ -120,24 +120,24 @@ let write (a:Type0) (r:ref a) (x:a)
 let mread = HoareST?.read
 let mwrite (a:Type0) (r:ref a) (x:a) = HoareST?.reflect (write a r x)
 
-// assume val wp_monotonic_pure (_:unit)
-//   : Lemma
-//     (forall (a:Type) (wp:pure_wp a).
-//        (forall (p q:pure_post a).
-//           (forall (x:a). p x ==> q x) ==>
-//           (wp p ==> wp q)))
+assume val wp_monotonic_pure (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a).
+       (forall (p q:pure_post a).
+          (forall (x:a). p x ==> q x) ==>
+          (wp p ==> wp q)))
 
-// /// lift from PURE
+/// lift from PURE
 
-// let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-// : repr a
-//   (fun _ -> wp (fun _ -> True))
-//   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
-// = wp_monotonic_pure ();
-//   fun _ ->
-//   f ()
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a
+  (fun _ -> wp (fun _ -> True))
+  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+= wp_monotonic_pure ();
+  fun _ ->
+  f ()
 
-// sub_effect PURE ~> HoareST = lift_pure_hoarest
+sub_effect PURE ~> HoareST = lift_pure_hoarest
 
 // type repr (a:Type) (n:nat) (wp:pure_wp a) = unit -> PURE a wp
 

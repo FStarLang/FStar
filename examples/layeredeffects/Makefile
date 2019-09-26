@@ -1,20 +1,21 @@
 FSTAR_HOME=../..
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel'
+include ../Makefile.include
+ROOTS=Test.fst RST.Effect.Test.fst
 
 all: verify-all
 
-include .depend
-include ../Makefile.include
-
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES) $(ALL_FSTI_FILES))
-
 .depend:
-	$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
+	$(FSTAR) --dep full $(ROOTS) > .depend
+
+depend: .depend
+
+include .depend
+
+verify-all: $(ALL_CHECKED_FILES)
 
 %.checked:
 	$(FSTAR) --cache_checked_modules $<
-	touch -c $@
 
 clean:
 	rm -f .depend *.checked
-
-depend: .depend
