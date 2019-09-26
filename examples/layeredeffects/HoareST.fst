@@ -95,7 +95,7 @@ let read (a:Type0) (r:ref a)
 : repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
 = fun _ -> read r 
 
-reflectable
+reifiable reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr        = repr;

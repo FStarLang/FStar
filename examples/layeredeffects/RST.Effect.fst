@@ -118,7 +118,7 @@ let conjunction (a:Type)
 = repr a r_in r_out
   (fun post h -> (p ==> wp_f post h) /\ ((~ p) ==> wp_g post h))
 
-reflectable
+reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
   with repr        = repr;
