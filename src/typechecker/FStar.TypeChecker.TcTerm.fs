@@ -671,9 +671,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         (Errors.Warning_IrrelevantQualifierOnArgumentToReflect,
          "Qualifier on argument to reflect is irrelevant and will be ignored");
 
-    if not (is_user_reifiable_effect env l) then
+    if not (is_user_reflectable_effect env l) then
       raise_error (Errors.Fatal_EffectCannotBeReified,
-        BU.format1 "Effect %s cannot be reified" l.str) e.pos;
+        BU.format1 "Effect %s cannot be reflected" l.str) e.pos;
         
     let reflect_op, _ = U.head_and_args top in
 
