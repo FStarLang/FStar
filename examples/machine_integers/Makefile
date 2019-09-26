@@ -6,7 +6,7 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-all: Test01.run Test02.run Test03.run
+all: $(patsubst %.fst,%.run, $(wildcard Test*.fst))
 
 %.exe: %.fst | out
 	$(eval B := $(patsubst %.exe,%,$@))
