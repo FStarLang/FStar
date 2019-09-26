@@ -4672,13 +4672,13 @@ and (tc_maybe_toplevel_term :
 =======
             (let uu____6735 =
                let uu____6737 =
-                 FStar_TypeChecker_Env.is_user_reifiable_effect env1 l  in
+                 FStar_TypeChecker_Env.is_user_reflectable_effect env1 l  in
                Prims.op_Negation uu____6737  in
              if uu____6735
              then
                let uu____6740 =
                  let uu____6746 =
-                   FStar_Util.format1 "Effect %s cannot be reified"
+                   FStar_Util.format1 "Effect %s cannot be reflected"
                      l.FStar_Ident.str
                     in
                  (FStar_Errors.Fatal_EffectCannotBeReified, uu____6746)  in
