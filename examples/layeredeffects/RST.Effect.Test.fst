@@ -414,31 +414,31 @@ let rec examine_and_solve_goals (goals:list goal) : Tac unit =
   match goals with
   | [] -> ()
   | goal::rest -> begin
-    match inspect_ln (goal_type goal) with
+    match inspect (goal_type goal) with
     | Tv_Refine delta refinement -> begin
-      match (inspect_ln (inspect_bv delta).bv_sort, inspect_ln (`resource)) with
+      match (inspect (inspect_bv delta).bv_sort, inspect (`resource)) with
       | (Tv_FVar delta_type_name, Tv_FVar resource_name) ->
         if FStar.Order.eq (compare_fv delta_type_name resource_name) then begin
 	  // We are examining a refinement on a resource
-	  match (inspect_ln refinement, inspect_ln (`l_and)) with
+	  match (inspect refinement, inspect (`l_and)) with
 	  | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) -> begin
-	    match inspect_ln op_and_arg1 with
+	    match inspect op_and_arg1 with
 	    | Tv_App op arg1 -> begin
-	      match inspect_ln op with
+	      match inspect op with
 	      | Tv_FVar op_name -> begin
 	        if FStar.Order.eq (compare_fv op_name and_name) then begin
 		  let arg1, _ = arg1 in
 		  let arg2, _ = arg2 in
-		  match (inspect_ln arg1, inspect_ln arg2) with
+		  match (inspect arg1, inspect arg2) with
 		  | (Tv_App arg1_op_and_sub_arg1 arg1_sub_arg2,
 		     Tv_App arg2_op_and_sub_arg1 arg2_sub_arg2) -> begin
-                    match (inspect_ln arg1_op_and_sub_arg1, inspect_ln arg2_op_and_sub_arg1) with
+                    match (inspect arg1_op_and_sub_arg1, inspect arg2_op_and_sub_arg1) with
 		      | (Tv_App arg1_op arg1_sub_arg1,
 	                 Tv_App arg2_op arg2_sub_arg1) -> begin
 		        match (
-			  inspect_ln arg1_op,
-			  inspect_ln arg2_op,
-			  inspect_ln (`can_be_split_into)
+			  inspect arg1_op,
+			  inspect arg2_op,
+			  inspect (`can_be_split_into)
 			) with
 			| (Tv_FVar arg1_op_name, Tv_FVar arg2_op_name, Tv_FVar split_name) -> begin
 			  if
@@ -448,26 +448,55 @@ let rec examine_and_solve_goals (goals:list goal) : Tac unit =
 			    let outer0, _ = arg1_sub_arg1 in
 			    let inner0_delta, _ = arg1_sub_arg2 in
 			    let outer1, _ = arg2_sub_arg1 in
-			    let outer1_delta, _ = arg2_sub_arg2 in
+			    let inner1_delta, _ = arg2_sub_arg2 in
 			    match
-			      inspect_ln outer0,
-			      inspect_ln outer1
+			      inspect inner0_delta,
+			      inspect inner1_delta
 			    with
-			    | Tv_Uvar _ _, Tv_Uvar _ _ ->
-			      (* Both outers are unknown, we are in the middle of the function *)
-			      print "MIDDLE";
-			      examine_and_solve_goals rest
-			    | Tv_Uvar _ _, _ ->
-			      (* The last outer is known by unification *)
-			      print "END";
-			      examine_and_solve_goals rest
-			    | _, Tv_Uvar _ _ ->
-			      (* The first outer is known by unification *)
-			      print "BEGIN";
-			      examine_and_solve_goals rest
+			    | Tv_App inner0 delta0,
+			      Tv_App inner1 delta1  -> begin
+			      let delta0, _ = delta0 in
+			      let delta1, _ = delta1 in
+			      match inspect delta0, inspect delta1 with
+			      | Tv_Var delta0, Tv_Var delta1 -> begin
+			        print (bv_to_string delta0);
+			        print (bv_to_string delta1);
+			        print (bv_to_string delta);
+			        if
+				  FStar.Order.eq (compare_bv delta0 delta) &&
+				  FStar.Order.eq (compare_bv delta1 delta)
+				then begin
+			          match
+			            inspect outer0,
+			            inspect outer1
+			          with
+			          | Tv_Uvar _ _, Tv_Uvar _ _ ->
+			            (* Both outers are unknown, we are in the middle of the function *)
+			            print "MIDDLE";
+			            examine_and_solve_goals rest
+			          | Tv_Uvar _ _, _ ->
+			            (* The last outer is known by unification *)
+			            print "END";
+			            examine_and_solve_goals rest
+			          | _, Tv_Uvar _ _ ->
+			            (* The first outer is known by unification *)
+			            print "BEGIN";
+			            examine_and_solve_goals rest
+			          | _ ->
+			            (* Both *)
+			            print "SINGLE";
+			            examine_and_solve_goals rest
+				end else begin
+				  fail "STOP3";
+			          examine_and_solve_goals rest
+				end
+			      end
+			      | _ ->
+                                fail "STOP2";
+			        examine_and_solve_goals rest
+		            end
 			    | _ ->
-			      (* Both *)
-                              print "SINGLE";
+			      fail "STOP1";
 			      examine_and_solve_goals rest
                           end else begin
                             examine_and_solve_goals rest
