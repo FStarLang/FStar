@@ -4,6 +4,13 @@ FSTAR_HOME=..
 include gmake/z3.mk
 include gmake/fstar.mk
 
+
+FSTAR_FILES=\
+	$(wildcard FStar.*.fst FStar.*.fsti) \
+	$(wildcard LowStar.*.fst LowStar.*.fsti) \
+	$(wildcard legacy/*fst legacy/*fsti) \
+	$(wildcard experimental/*fst experimental/*fsti)
+
 CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --use_extracted_interfaces false --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
