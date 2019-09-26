@@ -11,8 +11,7 @@ intfiles:			\
 	FStar_Int64.ml		\
 	FStar_UInt16.ml		\
 	FStar_UInt32.ml		\
-	FStar_UInt64.ml		\
-	FStar_Int_Cast.ml
+	FStar_UInt64.ml
 
 %.ml: %.ml.prefix FStar_Ints.ml.body
 	@>$@
@@ -21,9 +20,6 @@ intfiles:			\
 	@echo '(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)' >> $@
 	@echo '' >> $@
 	@cat $< FStar_Ints.ml.body >> $@
-
-FStar_Int_Cast.ml: mkcasts.sh
-	./mkcasts.sh >$@
 
 clean:
 	$(MAKE) -C .. clean
