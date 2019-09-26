@@ -416,12 +416,10 @@ let rec examine_and_solve_goals (goals:list goal) : Tac unit =
   | goal::rest -> begin
     match inspect_ln (goal_type goal) with
     | Tv_Refine delta refinement -> begin
-      print (term_to_string ((inspect_bv delta).bv_sort));
       match (inspect_ln (inspect_bv delta).bv_sort, inspect_ln (`resource)) with
       | (Tv_FVar delta_type_name, Tv_FVar resource_name) ->
         if FStar.Order.eq (compare_fv delta_type_name resource_name) then begin
 	  // We are examining a refinement on a resource
-	  print (term_to_string (refinement));
 	  match (inspect_ln refinement, inspect_ln (`l_and)) with
 	  | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) -> begin
 	    match inspect_ln op_and_arg1 with
@@ -447,53 +445,61 @@ let rec examine_and_solve_goals (goals:list goal) : Tac unit =
 			    FStar.Order.eq (compare_fv arg1_op_name split_name) &&
 			    FStar.Order.eq (compare_fv arg2_op_name split_name)
 			  then begin
-			    let arg1_sub_arg1, _ = arg1_sub_arg1 in
-			    let arg1_sub_arg2, _ = arg1_sub_arg2 in
-			    let arg2_sub_arg1, _ = arg2_sub_arg1 in
-			    let arg2_sub_arg2, _ = arg2_sub_arg2 in
-                            fail "COUCOU"
+			    let outer0, _ = arg1_sub_arg1 in
+			    let inner0_delta, _ = arg1_sub_arg2 in
+			    let outer1, _ = arg2_sub_arg1 in
+			    let outer1_delta, _ = arg2_sub_arg2 in
+			    match
+			      inspect_ln outer0,
+			      inspect_ln outer1
+			    with
+			    | Tv_Uvar _ _, Tv_Uvar _ _ ->
+			      (* Both outers are unknown, we are in the middle of the function *)
+			      print "MIDDLE";
+			      examine_and_solve_goals rest
+			    | Tv_Uvar _ _, _ ->
+			      (* The last outer is known by unification *)
+			      print "END";
+			      examine_and_solve_goals rest
+			    | _, Tv_Uvar _ _ ->
+			      (* The first outer is known by unification *)
+			      print "BEGIN";
+			      examine_and_solve_goals rest
+			    | _ ->
+			      (* Both *)
+                              print "SINGLE";
+			      examine_and_solve_goals rest
                           end else begin
-                            fail "STOP11";
                             examine_and_solve_goals rest
                           end
                         end
 			| _ ->
-		          fail "STOP10";
                           examine_and_solve_goals rest
 		      end
 		      | _ ->
-		        fail "STOP9";
                         examine_and_solve_goals rest
                   end
 		  | _ ->
-		    fail "STOP8";
                     examine_and_solve_goals rest
                 end else begin
-                  fail "STOP7";
                   examine_and_solve_goals rest
                 end
               end
 	      | _ ->
-	        fail "STOP6";
                 examine_and_solve_goals rest
 	    end
 	    | _ ->
-	      fail "STOP5";
               examine_and_solve_goals rest
 	  end
 	  | _ ->
-	   fail "STOP4";
            examine_and_solve_goals rest
 	end else begin
-	  fail "STOP3";
 	  examine_and_solve_goals rest
 	end
       | _ ->
-        fail "STOP2";
         examine_and_solve_goals rest
     end
     | _ ->
-      fail "STOP1";
       examine_and_solve_goals rest
   end
 
@@ -526,4 +532,6 @@ let test_frame_inference2
   =
   frame (f b1) >>
   frame (f b2) >>
-  frame (f b3)
+  frame (f b3) >>
+  frame (f b4) >>
+  frame (f b5)
