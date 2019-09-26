@@ -140,3 +140,9 @@ let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
                                           rewrite beq;
                                           exact_guard (binder_to_term b2);
                                dump "73"))
+
+
+(* Making sure destruct unfolds too *)
+let ee x = either x x
+let test3 (x : ee False) =
+  assert False by (seq (fun () -> destruct (quote x)) (fun () -> ignore (intros ())))
