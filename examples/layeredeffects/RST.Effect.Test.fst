@@ -512,36 +512,73 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
     (* The first outer is known by unification, we can solve this! *)
     Some ({ inner0; outer0; inner1 })
   | _ ->
-    (* Both *)
-    print "SINGLE";
+    (* Both outer and inner are here, we just have to compute delta *)
+    (* TODO: compute delta *)
     None
   with
   //| TacticFailure _ -> None
   | _ -> fail "Unknown error"
 
-
-let rec inspect_goals (goals:list goal) : Tac (option doable_unification_goal) =
+let rec inspect_goals (goals:list goal) : Tac (option (doable_unification_goal & goal)) =
   match goals with
   | [] -> None
   | goal::rest -> begin
     match inspect_goal goal with
-    | Some dug -> Some dug
+    | Some dug -> Some (dug, goal)
     | _ -> inspect_goals rest
   end
 
+let rec remove_goal_from_list (g: goal) (goals: list goal) : list goal =
+  match goals with
+  | [] -> []
+  | g'::rest ->
+    if FStar.Order.eq (compare_term (goal_type g') (goal_type g)) then rest else
+      g'::(remove_goal_from_list g rest)
 
-//
+let focus_and_solve_goal (goal: goal) (t: unit -> Tac 'a) : Tac 'a =
+  let rest_of_goals = remove_goal_from_list goal (goals ()) in
+  set_goals [goal];
+  let result = t () in
+  match goals () with
+  | [] -> set_goals rest_of_goals; result
+  | _ -> fail "Focused goal not solved !"
+
+let aux_lemma
+  (outer0 inner0 outer1 inner1 delta: resource)
+  (_ : squash ((inner0 <*> delta) `equal` outer0))
+  (_ : squash ((inner1 <*> delta) `equal` outer1))
+  : Lemma (
+    outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)
+  )
+  =
+  can_be_split_into_star outer0 inner0 delta;
+  can_be_split_into_star outer1 inner1 delta
+
+let solve_doable_unification_goal (goal_data : doable_unification_goal) : Tac unit =
+  refine_intro ();
+  flip ();
+  apply_lemma (`aux_lemma);
+  let open Steel.Tactics in
+  let open FStar.Algebra.CommMonoid.Equiv in
+  let open FStar.Tactics.CanonCommMonoidSimple.Equiv in
+  canon_monoid req rm;
+  canon_monoid req rm
 
 [@resolve_implicits]
 let resolve_tac () : Tac unit =
   let cur_goals = goals () in
-  let _ = match inspect_goals cur_goals with
-  | Some _ -> print "One goal found!"
-  | _ -> print "No goals found!"
-  in
-  match goals () with
+  match cur_goals with
   | [] -> ()
-  | _ -> fail "Some implicits have not been set!"
+  | _ -> begin
+    let goal_data, goal = match inspect_goals cur_goals with
+    | Some (goal_data, goal) -> goal_data, goal
+    | _ -> fail "No solvable goals found!"
+    in
+    focus_and_solve_goal goal (fun _ ->
+      solve_doable_unification_goal goal_data
+    );
+    fail "Some implicits have not been set!"
+  end
 
 // TODO: Should not expected failure
 let test_frame_inference2
