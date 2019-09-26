@@ -8,11 +8,11 @@ OTHERFLAGS+=--smt $(Z3)
 endif
 
 ifdef FSTAR_HOME
-FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
+FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED) $(CACHE_DIR)
 FSTAR=$(FSTAR_ALWAYS)
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
-FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
+FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED) $(CACHE_DIR)
 endif
 
 # Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:

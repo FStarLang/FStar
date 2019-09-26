@@ -1,6 +1,7 @@
-FSTAR_HOME=../../../
-include ../../Makefile.include
-ROOTS=Lens.fst FibState.fst
+FSTAR_HOME=../..
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar'
+include ../Makefile.include
+ROOTS=HighComp.fst LowComp.fst sum_and_swap.fst
 
 all: verify-all
 
@@ -11,7 +12,7 @@ depend: .depend
 
 include .depend
 
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+verify-all: $(ALL_CHECKED_FILES)
 
 %.checked:
 	$(FSTAR) --cache_checked_modules $<

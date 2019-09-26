@@ -6,29 +6,23 @@ FSTAR_HOME=..
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
 
-all:
+all: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
 
-benchmark:
+benchmark: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-benchmark
 
-extra:
+extra: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-extra
 
+.cache:
+	mkdir -p .cache
+
 include ml/Makefile.include
-
-REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
-
-FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti)) \
-	$(wildcard LowStar.*.fst LowStar.*.fsti) \
-	$(wildcard Steel.*.fst Steel.*.fsti)
-
-FSTAR_TAC_LIB_MODULES=$(filter-out $(REALIZED),$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti))
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
-	FSTAR_FILES='$(FSTARLIB_MODULES)' \
 	OUTPUT_DIRECTORY=ml/extracted \
 	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -LowStar.Permissions -LowStar.Array.Modifies -Steel.Tactics $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
@@ -42,7 +36,6 @@ FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract
-	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
 	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
