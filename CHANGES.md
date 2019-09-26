@@ -54,6 +54,11 @@ Guidelines for the changelog:
 
      See issue #1542 for more discussion.
 
+   * The ulib directory has been restructured with old modules in
+     legacy (consider them deprecated), an experimental directory as a
+     staging ground, and a .cache directory in which .checked and
+     .hints files are maintained.
+
 ## Syntax
 
    * We now overload `&` to construct both dependent and non-dependent
