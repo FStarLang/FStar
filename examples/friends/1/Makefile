@@ -1,11 +1,12 @@
 FSTAR_HOME=../../..
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar'
 
 all: verify-all
 
 include .depend
 include ../../Makefile.include
 
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES) $(ALL_FSTI_FILES))
+verify-all: $(ALL_CHECKED_FILES)
 
 .depend:
 	$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
