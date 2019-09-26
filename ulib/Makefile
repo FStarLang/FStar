@@ -20,24 +20,9 @@ extra: .cache
 
 include ml/Makefile.include
 
-REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
-
-FSTAR_LIB_EXCLUSIONS=$(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%
-FSTAR_LIB_ALL_MODULES=\
-	$(wildcard FStar.*.fst FStar.*.fsti) \
-	$(wildcard LowStar.*.fst LowStar.*.fsti) \
-	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti)
-FSTARLIB_MODULES=$(filter-out $(FSTAR_LIB_EXCLUSIONS), $(FSTAR_LIB_ALL_MODULES))
-
-FSTAR_TAC_LIB_EXCLUSIONS=$(REALIZED)
-FSTAR_TAC_LIB_ALL_MODULES=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti)
-FSTAR_TAC_LIB_MODULES=$(filter-out $(FSTAR_TAC_LIB_EXCLUSIONS), $(FSTAR_TAC_LIB_ALL_MODULES))
-
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
-	FSTAR_FILES='$(FSTARLIB_MODULES)' \
 	OUTPUT_DIRECTORY=ml/extracted \
 	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar -FStar.Tactics -FStar.Reflection $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
@@ -51,7 +36,6 @@ FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract
-	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
 	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
