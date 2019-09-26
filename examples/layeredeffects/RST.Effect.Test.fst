@@ -410,132 +410,135 @@ module T = Steel.Tactics
 
 #set-options "--z3rlimit 5 --max_fuel 1 --max_ifuel 1"
 
-let rec examine_and_solve_goals (goals:list goal) : Tac unit =
+noeq type doable_unification_goal = {
+  outer0: term;
+  inner0: term;
+  inner1: term;
+}
+
+let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
+  try
+  let delta, refinement = match inspect (goal_type goal) with
+    | Tv_Refine delta refinement -> delta, refinement
+    | _ -> fail "Not a valid goal"
+  in
+  let delta_type_name, resource_name =
+    match (inspect (inspect_bv delta).bv_sort, inspect (`resource)) with
+    | (Tv_FVar delta_type_name, Tv_FVar resource_name) ->
+      delta_type_name, resource_name
+    | _ -> fail "Not a valid goal"
+  in
+  let _ = if FStar.Order.eq (compare_fv delta_type_name resource_name) then () else
+    fail "Not a valid goal"
+  in
+  let op_and_arg1, arg2, and_name =
+    match (inspect refinement, inspect (`l_and)) with
+    | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) ->
+      op_and_arg1, arg2, and_name
+    | _ -> fail "Not a valid goal"
+  in
+  let op, arg1 =
+    match inspect op_and_arg1 with
+    | Tv_App op arg1 -> op, arg1
+    | _ -> fail "Not a valid goal"
+  in
+  let op_name =
+     match inspect op with
+     | Tv_FVar op_name -> op_name
+     | _ -> fail "Not a valid goal"
+  in
+  let _ = if FStar.Order.eq (compare_fv op_name and_name) then () else
+    fail "Not a valid goal"
+  in
+  let arg1, _ = arg1 in
+  let arg2, _ = arg2 in
+  let arg1_op_and_sub_arg1, arg1_sub_arg2, arg2_op_and_sub_arg1, arg2_sub_arg2 =
+    match (inspect arg1, inspect arg2) with
+    | (Tv_App arg1_op_and_sub_arg1 arg1_sub_arg2,
+       Tv_App arg2_op_and_sub_arg1 arg2_sub_arg2) ->
+      arg1_op_and_sub_arg1, arg1_sub_arg2, arg2_op_and_sub_arg1, arg2_sub_arg2
+    | _ -> fail "Not a valid goal"
+  in
+  let arg1_op, arg1_sub_arg1, arg2_op, arg2_sub_arg1 =
+    match (inspect arg1_op_and_sub_arg1, inspect arg2_op_and_sub_arg1) with
+    | (Tv_App arg1_op arg1_sub_arg1,
+       Tv_App arg2_op arg2_sub_arg1) ->
+      arg1_op, arg1_sub_arg1, arg2_op, arg2_sub_arg1
+    | _ -> fail "Not a valid goal"
+  in
+  let arg1_op_name, arg2_op_name, split_name =
+    match inspect arg1_op, inspect arg2_op, inspect (`can_be_split_into) with
+    | Tv_FVar arg1_op_name, Tv_FVar arg2_op_name, Tv_FVar split_name ->
+      arg1_op_name, arg2_op_name, split_name
+    | _ -> fail "Not a valid goal"
+  in
+  let _ =
+    if
+      FStar.Order.eq (compare_fv arg1_op_name split_name) &&
+      FStar.Order.eq (compare_fv arg2_op_name split_name)
+    then () else fail "Not a valid goal"
+  in
+  let outer0, _ = arg1_sub_arg1 in
+  let inner0_delta, _ = arg1_sub_arg2 in
+  let outer1, _ = arg2_sub_arg1 in
+  let inner1_delta, _ = arg2_sub_arg2 in
+  let inner0, delta0, inner1, delta1 =
+    match inspect inner0_delta, inspect inner1_delta with
+    | Tv_App inner0 delta0, Tv_App inner1 delta1  ->
+      inner0, delta0, inner1, delta1
+    | _ -> fail "Not a valid goal"
+  in
+  let delta0, _ = delta0 in
+  let delta1, _ = delta1 in
+  let delta0, delta1 =
+    match inspect delta0, inspect delta1 with
+    | Tv_Var delta0, Tv_Var delta1 -> delta0, delta1
+    | _ -> fail "Not a valid goal"
+  in
+  let _ =
+    if
+      FStar.Order.eq (compare_bv delta0 delta) &&
+      FStar.Order.eq (compare_bv delta1 delta)
+    then () else  fail "Not a valid goal"
+  in
+  match inspect outer0, inspect outer1 with
+  | Tv_Uvar _ _, Tv_Uvar _ _ ->
+    (* Both outers are unknown, we are in the middle of the function *)
+    None
+  | Tv_Uvar _ _, _ ->
+    (* The last outer is known by unification *)
+    None
+  | _, Tv_Uvar _ _ ->
+    (* The first outer is known by unification, we can solve this! *)
+    Some ({ inner0; outer0; inner1 })
+  | _ ->
+    (* Both *)
+    print "SINGLE";
+    None
+  with
+  //| TacticFailure _ -> None
+  | _ -> fail "Unknown error"
+
+
+let rec inspect_goals (goals:list goal) : Tac (option doable_unification_goal) =
   match goals with
-  | [] -> ()
+  | [] -> None
   | goal::rest -> begin
-    match inspect (goal_type goal) with
-    | Tv_Refine delta refinement -> begin
-      match (inspect (inspect_bv delta).bv_sort, inspect (`resource)) with
-      | (Tv_FVar delta_type_name, Tv_FVar resource_name) ->
-        if FStar.Order.eq (compare_fv delta_type_name resource_name) then begin
-	  // We are examining a refinement on a resource
-	  match (inspect refinement, inspect (`l_and)) with
-	  | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) -> begin
-	    match inspect op_and_arg1 with
-	    | Tv_App op arg1 -> begin
-	      match inspect op with
-	      | Tv_FVar op_name -> begin
-	        if FStar.Order.eq (compare_fv op_name and_name) then begin
-		  let arg1, _ = arg1 in
-		  let arg2, _ = arg2 in
-		  match (inspect arg1, inspect arg2) with
-		  | (Tv_App arg1_op_and_sub_arg1 arg1_sub_arg2,
-		     Tv_App arg2_op_and_sub_arg1 arg2_sub_arg2) -> begin
-                    match (inspect arg1_op_and_sub_arg1, inspect arg2_op_and_sub_arg1) with
-		      | (Tv_App arg1_op arg1_sub_arg1,
-	                 Tv_App arg2_op arg2_sub_arg1) -> begin
-		        match (
-			  inspect arg1_op,
-			  inspect arg2_op,
-			  inspect (`can_be_split_into)
-			) with
-			| (Tv_FVar arg1_op_name, Tv_FVar arg2_op_name, Tv_FVar split_name) -> begin
-			  if
-			    FStar.Order.eq (compare_fv arg1_op_name split_name) &&
-			    FStar.Order.eq (compare_fv arg2_op_name split_name)
-			  then begin
-			    let outer0, _ = arg1_sub_arg1 in
-			    let inner0_delta, _ = arg1_sub_arg2 in
-			    let outer1, _ = arg2_sub_arg1 in
-			    let inner1_delta, _ = arg2_sub_arg2 in
-			    match
-			      inspect inner0_delta,
-			      inspect inner1_delta
-			    with
-			    | Tv_App inner0 delta0,
-			      Tv_App inner1 delta1  -> begin
-			      let delta0, _ = delta0 in
-			      let delta1, _ = delta1 in
-			      match inspect delta0, inspect delta1 with
-			      | Tv_Var delta0, Tv_Var delta1 -> begin
-			        print (bv_to_string delta0);
-			        print (bv_to_string delta1);
-			        print (bv_to_string delta);
-			        if
-				  FStar.Order.eq (compare_bv delta0 delta) &&
-				  FStar.Order.eq (compare_bv delta1 delta)
-				then begin
-			          match
-			            inspect outer0,
-			            inspect outer1
-			          with
-			          | Tv_Uvar _ _, Tv_Uvar _ _ ->
-			            (* Both outers are unknown, we are in the middle of the function *)
-			            print "MIDDLE";
-			            examine_and_solve_goals rest
-			          | Tv_Uvar _ _, _ ->
-			            (* The last outer is known by unification *)
-			            print "END";
-			            examine_and_solve_goals rest
-			          | _, Tv_Uvar _ _ ->
-			            (* The first outer is known by unification *)
-			            print "BEGIN";
-			            examine_and_solve_goals rest
-			          | _ ->
-			            (* Both *)
-			            print "SINGLE";
-			            examine_and_solve_goals rest
-				end else begin
-				  fail "STOP3";
-			          examine_and_solve_goals rest
-				end
-			      end
-			      | _ ->
-                                fail "STOP2";
-			        examine_and_solve_goals rest
-		            end
-			    | _ ->
-			      fail "STOP1";
-			      examine_and_solve_goals rest
-                          end else begin
-                            examine_and_solve_goals rest
-                          end
-                        end
-			| _ ->
-                          examine_and_solve_goals rest
-		      end
-		      | _ ->
-                        examine_and_solve_goals rest
-                  end
-		  | _ ->
-                    examine_and_solve_goals rest
-                end else begin
-                  examine_and_solve_goals rest
-                end
-              end
-	      | _ ->
-                examine_and_solve_goals rest
-	    end
-	    | _ ->
-              examine_and_solve_goals rest
-	  end
-	  | _ ->
-           examine_and_solve_goals rest
-	end else begin
-	  examine_and_solve_goals rest
-	end
-      | _ ->
-        examine_and_solve_goals rest
-    end
-    | _ ->
-      examine_and_solve_goals rest
+    match inspect_goal goal with
+    | Some dug -> Some dug
+    | _ -> inspect_goals rest
   end
+
+
+//
 
 [@resolve_implicits]
 let resolve_tac () : Tac unit =
   let cur_goals = goals () in
-  examine_and_solve_goals cur_goals;
+  let _ = match inspect_goals cur_goals with
+  | Some _ -> print "One goal found!"
+  | _ -> print "No goals found!"
+  in
   match goals () with
   | [] -> ()
   | _ -> fail "Some implicits have not been set!"
