@@ -1203,6 +1203,11 @@ let is_user_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
+let is_user_reflectable_effect (env:env) (effect_lid:lident) : bool =
+    let effect_lid = norm_eff_name env effect_lid in
+    let quals = lookup_effect_quals env effect_lid in
+    quals |> List.existsb (function Reflectable _ -> true | _ -> false)
+
 let is_total_effect (env:env) (effect_lid:lident) : bool =
     let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in

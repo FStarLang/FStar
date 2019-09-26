@@ -331,6 +331,7 @@ val is_reifiable_function    : env -> term -> bool
 (* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
+val is_user_reflectable_effect : env -> lident -> bool
 
 (* Is this effect marked `total`? *)
 val is_total_effect : env -> lident -> bool
