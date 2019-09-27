@@ -590,6 +590,9 @@ let solve_forward_inference_goal () : Tac unit =
   norm [delta];
   canon_monoid req rm
 
+let solve_resource_witness_goal () : Tac unit =
+  exact (cur_witness ())
+
 let one_inference_step () : Tac unit =
   let cur_goals = goals () in
   match inspect_goals cur_goals with
@@ -599,7 +602,9 @@ let one_inference_step () : Tac unit =
        solve_forward_inference_goal ()
       )
     else
-      fail "Resource typing time!"
+     focus_and_solve_goal goal (fun _ ->
+       solve_resource_witness_goal ()
+     )
   end
   | _ -> fail "No solvable goals found!"
 
@@ -617,7 +622,6 @@ let rec resolve_tac () : Tac unit =
    else
      fail "The tactic is not making progress!"
 
-// TODO: Should not expected failure
 let test_frame_inference2
   (b1: array U32.t)
   (b2: array U32.t)
@@ -636,6 +640,7 @@ let test_frame_inference2
      array_resource b4 <*>
      array_resource b5)
   =
+  admit();
   frame (f b1) >>
   frame (f b2) >>
   frame (f b3) >>
