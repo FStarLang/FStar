@@ -1772,6 +1772,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) s_tm) (fun (s_tm, s_ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
+    let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+                           (goal_env g) s_ty in
     let h, args = U.head_and_args' s_ty in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
