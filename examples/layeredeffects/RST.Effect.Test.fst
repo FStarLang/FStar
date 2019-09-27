@@ -204,6 +204,7 @@ assume val as_rseq_focus_rmem_inv2 (#a:Type0)
 /// `copy_state`
 
 #set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+
 let copy_state
   (st:state)
   (ost:state)
@@ -408,13 +409,27 @@ let test_frame_inference0 (b1: array U32.t) (b2: array U32.t)
 open FStar.Tactics
 module T = Steel.Tactics
 
-#set-options "--z3rlimit 5 --max_fuel 1 --max_ifuel 1"
+#reset-options
 
-noeq type doable_unification_goal = {
-  outer0: term;
-  inner0: term;
-  inner1: term;
-}
+type doable_unification_goal =
+  | ForwardInference
+  | FinalCheck
+  | ResourceTyping
+
+let inspect_resource_typing_goal (goal: goal) : Tac (option doable_unification_goal) =
+  try
+  let type_name, resource_name  =
+    match inspect (goal_type goal), inspect (`resource) with
+    | Tv_FVar type_name, Tv_FVar resource_name ->
+      type_name, resource_name
+    | _ -> fail "Not a valid goal"
+  in
+  if FStar.Order.eq (compare_fv type_name resource_name) then begin
+    Some (ResourceTyping)
+  end else begin
+    None
+  end with
+  | _ -> None
 
 let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
   try
@@ -510,21 +525,30 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
     None
   | _, Tv_Uvar _ _ ->
     (* The first outer is known by unification, we can solve this! *)
-    Some ({ inner0; outer0; inner1 })
+    Some ForwardInference
   | _ ->
     (* Both outer and inner are here, we just have to compute delta *)
     (* TODO: compute delta *)
-    None
+    Some FinalCheck
   with
-  //| TacticFailure _ -> None
-  | _ -> fail "Unknown error"
+  | _ ->
+    inspect_resource_typing_goal goal
 
 let rec inspect_goals (goals:list goal) : Tac (option (doable_unification_goal & goal)) =
   match goals with
   | [] -> None
   | goal::rest -> begin
     match inspect_goal goal with
-    | Some dug -> Some (dug, goal)
+    | Some ForwardInference -> Some (ForwardInference, goal)
+    | Some FinalCheck -> begin match inspect_goals rest with
+      | Some (ForwardInference, goal') -> Some (ForwardInference, goal')
+      | _ -> Some (FinalCheck, goal)
+    end
+    | Some ResourceTyping -> begin match inspect_goals rest with
+      | Some (ForwardInference, goal') -> Some (ForwardInference, goal')
+      | Some (FinalCheck, goal') -> Some (FinalCheck, goal')
+      | _ -> Some (ResourceTyping, goal)
+    end
     | _ -> inspect_goals rest
   end
 
@@ -543,7 +567,7 @@ let focus_and_solve_goal (goal: goal) (t: unit -> Tac 'a) : Tac 'a =
   | [] -> set_goals rest_of_goals; result
   | _ -> fail "Focused goal not solved !"
 
-let aux_lemma
+let split_to_canon_monoid_problem
   (outer0 inner0 outer1 inner1 delta: resource)
   (_ : squash ((inner0 <*> delta) `equal` outer0))
   (_ : squash ((inner1 <*> delta) `equal` outer1))
@@ -554,31 +578,44 @@ let aux_lemma
   can_be_split_into_star outer0 inner0 delta;
   can_be_split_into_star outer1 inner1 delta
 
-let solve_doable_unification_goal (goal_data : doable_unification_goal) : Tac unit =
+let solve_forward_inference_goal () : Tac unit =
   refine_intro ();
   flip ();
-  apply_lemma (`aux_lemma);
+  apply_lemma (`split_to_canon_monoid_problem);
   let open Steel.Tactics in
   let open FStar.Algebra.CommMonoid.Equiv in
   let open FStar.Tactics.CanonCommMonoidSimple.Equiv in
+  norm [delta];
   canon_monoid req rm;
+  norm [delta];
   canon_monoid req rm
 
-[@resolve_implicits]
-let resolve_tac () : Tac unit =
+let one_inference_step () : Tac unit =
   let cur_goals = goals () in
+  match inspect_goals cur_goals with
+  | Some (goal_typ, goal) -> begin
+    if (goal_typ = ForwardInference || goal_typ = FinalCheck) then
+      focus_and_solve_goal goal (fun _ ->
+       solve_forward_inference_goal ()
+      )
+    else
+      fail "Resource typing time!"
+  end
+  | _ -> fail "No solvable goals found!"
+
+[@resolve_implicits]
+let rec resolve_tac () : Tac unit =
+  let cur_goals = goals () in
+  let n = ngoals () in
   match cur_goals with
   | [] -> ()
-  | _ -> begin
-    let goal_data, goal = match inspect_goals cur_goals with
-    | Some (goal_data, goal) -> goal_data, goal
-    | _ -> fail "No solvable goals found!"
-    in
-    focus_and_solve_goal goal (fun _ ->
-      solve_doable_unification_goal goal_data
-    );
-    fail "Some implicits have not been set!"
-  end
+  | _ ->
+   one_inference_step ();
+   let n' = ngoals () in
+   if n' < n then
+     resolve_tac ()
+   else
+     fail "The tactic is not making progress!"
 
 // TODO: Should not expected failure
 let test_frame_inference2
