@@ -700,7 +700,7 @@ let encode_top_level_let :
       let binders, body, comp =
           if is_smt_reifiable_comp tcenv comp
           then let comp = reify_comp tcenv comp U_unknown in
-               let body = TcUtil.reify_body tcenv body in
+               let body = TcUtil.reify_body tcenv [] body in
                let more_binders, body, comp = aux comp body in
                binders@more_binders, body, comp
           else binders, body, comp
