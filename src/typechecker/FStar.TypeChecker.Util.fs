@@ -2388,12 +2388,29 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   c, Env.conj_guard g guard_f
 
+let lift_tf_layered_effect_term (lift:tscheme) (lift_t:tscheme)
+  (u:universe) (a:typ) (e:term) : term =
+  
+  let _, lift = inst_tscheme_with lift [u] in
+
+  let rest_bs =
+    match (lift_t |> snd |> SS.compress).n with
+    | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+      bs |> List.splitAt (List.length bs - 1) |> fst
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
+          (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
+
+  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.tun))@[S.as_arg e]) in
+  mk (Tm_app (lift, args)) None e.pos
+
 let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
     ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must);
-       mlift_term = None })
+       mlift_term = Some (lift_tf_layered_effect_term (sub.lift |> must) (sub.lift_wp |> must)) })
 
   else
     let mk_mlift_wp ts env c =
