@@ -907,11 +907,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
 
     | Sig_sub_effect sub ->
-      let sub_or_lift_t =
-        if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
-        then Inr (TcUtil.lift_tf_layered_effect sub.target (sub.lift_wp |> must))
-        else Inl sub in
-      Env.update_effect_lattice env sub.source sub.target sub_or_lift_t
+      Env.update_effect_lattice env sub.source sub.target (TcUtil.get_mlift_for_subeff env sub)
 
     | _ -> env
 

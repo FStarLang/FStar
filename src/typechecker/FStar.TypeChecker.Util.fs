@@ -2388,6 +2388,33 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   c, Env.conj_guard g guard_f
 
+let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
+  if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
+
+  then
+    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must);
+       mlift_term = None })
+
+  else
+    let mk_mlift_wp ts env c =
+      let ct = U.comp_to_comp_typ c in
+      let _, lift_t = inst_tscheme_with ts ct.comp_univs in
+      let wp = List.hd ct.effect_args in
+      S.mk_Comp ({ ct with
+        effect_name = sub.target;
+        effect_args =
+          [mk (Tm_app (lift_t, [as_arg ct.result_typ; wp])) None (fst wp).pos |> S.as_arg]
+      }), TcComm.trivial_guard
+    in
+
+    let mk_mlift_term ts u r e =
+      let _, lift_t = inst_tscheme_with ts [u] in
+      mk (Tm_app (lift_t, [as_arg r; as_arg S.tun; as_arg e])) None e.pos
+    in
+
+    ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;
+       mlift_term = BU.map_opt sub.lift mk_mlift_term })
+
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
   let err n =
