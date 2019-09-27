@@ -1643,16 +1643,25 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                       as_arg (embed_simple EMB.e_range body.pos body.pos)]
                 else []
               in
-              let reified = S.mk (Tm_app(bind_inst, [
-                  (* a, b *)
-                  as_arg lb.lbtyp; as_arg t] @
-                  maybe_range_arg @ [
-                  (* wp_head, head--the term shouldn't depend on wp_head *)
-                  as_arg S.tun; as_arg head;
-                  (* wp_body, body--the term shouldn't depend on wp_body *)
-                  as_arg S.tun; as_arg body]))
-                None rng
-              in
+              let reified =
+                let args =
+                  if ed.is_layered then
+                    let rest_bs =
+                      match (ed.bind_wp |> snd |> SS.compress).n with
+                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                        bs |> List.splitAt (List.length bs - 2) |> fst
+                      | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+                    (S.as_arg lb.lbtyp)::(S.as_arg t)::
+                    ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg head; S.as_arg body])
+                  else
+                    [ (* a, b *)
+                      as_arg lb.lbtyp; as_arg t] @
+                      maybe_range_arg @ [
+                      (* wp_head, head--the term shouldn't depend on wp_head *)
+                      as_arg S.tun; as_arg head;
+                      (* wp_body, body--the term shouldn't depend on wp_body *)
+                      as_arg S.tun; as_arg body] in
+                S.mk (Tm_app(bind_inst, args)) None rng in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1765,7 +1774,17 @@ and reify_lift cfg e msrc mtgt t : term =
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    let args =
+      if ed.is_layered then
+        let rest_bs =
+          match (ed.ret_wp |> snd |> SS.compress).n with
+          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+            bs |> List.splitAt (List.length bs - 1) |> fst
+          | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+        (S.as_arg t)::
+        ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e])
+      else [as_arg t ; as_arg e] in
+    S.mk (Tm_app(return_inst, args)) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
