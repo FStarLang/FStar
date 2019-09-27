@@ -123,7 +123,7 @@ type lift_comp_t = env -> comp -> comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
-  mlift_term:option<(universe -> typ -> typ -> term -> term)>
+  mlift_term:option<(universe -> typ -> term -> term)>
 }
 
 and edge = {
@@ -1100,7 +1100,7 @@ let is_layered_effect env l =
 
 let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
-    mlift_term=Some (fun _ t wp e -> return_all e) }
+    mlift_term=Some (fun _ _ e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
@@ -1431,7 +1431,7 @@ let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
   {env with effects=effects}
 
-let update_effect_lattice env src tgt sub_or_lift_t =
+let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
     let composed_lift =
       let mlift_wp env c =
@@ -1439,7 +1439,7 @@ let update_effect_lattice env src tgt sub_or_lift_t =
 	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
-        | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t S.tun (l1 u t wp e))
+        | Some l1, Some l2 -> Some (fun u t e -> l2 u t (l1 u t e))
         | _ -> None
       in
       { mlift_wp=mlift_wp ; mlift_term=mlift_term}
@@ -1449,40 +1449,11 @@ let update_effect_lattice env src tgt sub_or_lift_t =
       mlift=composed_lift }
   in
 
-  let mk_mlift_wp lift_ts env c =
-    let ct = U.comp_to_comp_typ c in
-    let _, lift_t = inst_tscheme_with lift_ts ct.comp_univs in
-    let wp = List.hd ct.effect_args in
-    S.mk_Comp ({ ct with
-      effect_name = tgt;
-      effect_args =
-        [mk (Tm_app(lift_t, [as_arg ct.result_typ; wp])) None (fst wp).pos |> S.as_arg]
-    }), TcComm.trivial_guard
-  in
-
-  let mk_mlift_term lift_t u r wp1 e =
-    let _, lift_t = inst_tscheme_with lift_t [u] in
-    mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
-  in
-
-  let sub_mlift_wp =
-    match sub_or_lift_t with
-    | Inl sub ->
-      (match sub.lift_wp with
-       | Some sub_lift_wp -> mk_mlift_wp sub_lift_wp
-       | None -> failwith "sub effect should've been elaborated at this stage")
-    | Inr t -> t in
-
-  let sub_mlift_term =
-    match sub_or_lift_t with
-    | Inl sub -> BU.map_opt sub.lift mk_mlift_term
-    | _ -> None in
-
-  let edge =
-    { msource=src;
-      mtarget=tgt;
-      mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
-  in
+  let edge = {
+    msource=src;
+    mtarget=tgt;
+    mlift=st_mlift
+  } in
 
   let id_edge l = {
     msource=src;
@@ -1905,7 +1876,7 @@ let new_implicit_var_aux reason r env k should_check meta =
  *
  * (b) Convincing the typechecker of their well-typedness: The layered effect indices (and wps)
  *     are many times constructed by the typechecker, and so far, there is no guarantee that they
- *     can be typechecked again by the typechecker. For example, in the case of wp-based effects,
+ *     can be typechecked by the typechecker. For example, in the case of wp-based effects,
  *     the typechecker constructs wps by applying combinators, but these terms are often not typechecked
  *     again (even in 2-phase TC, there inference of wp is anyway out of scope). Analogous reasoning
  *     for layered effect indices. While it would be awesome if we could maintain this hygiene,

@@ -1780,7 +1780,7 @@ and reify_lift cfg e msrc mtgt t : term =
       (* We don't have any reasonable wp to provide so we just pass unknow *)
       (* Usually the wp is only necessary to typecheck, so this should not *)
       (* create a big issue. *)
-      lift (env.universe_of env t) t S.tun (U.mk_reify e)
+      lift (env.universe_of env t) t (U.mk_reify e)
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)

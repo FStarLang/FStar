@@ -829,7 +829,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
       let lift_lam =
         let x = S.new_bv None S.tun in
         U.abs [(x, None)]
-              (lift U_unknown ty S.tun (S.bv_to_name x))
+              (lift U_unknown ty (S.bv_to_name x))
               None
       in
       let cfg' = {cfg with reifying=false} in
