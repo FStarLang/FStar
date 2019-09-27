@@ -64,12 +64,14 @@ unfold let emp = empty_resource
 /// But as it turns out the typechecker does not use this
 ///   PURE computations are lifted rather than returned
 
+inline_for_extraction
 let return (a:Type) (x:a)
 : repr a emp (fun _ -> emp) (fun p -> p x)
 = fun _ -> x
 
 /// `bind` can enforces definitional equality of f's output resource and g's input resource
 
+inline_for_extraction
 let bind (a:Type) (b:Type)
   (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
   (r_out_g:b -> resource) (wp_g:(x:a -> rst_wp b (r_out_f x) r_out_g))
