@@ -378,12 +378,51 @@ let ( >> ) (#p #q #r : resource)
   : cmd p r
   = compose f g
 
+open FStar.Tactics
+module T = Steel.Tactics
+
+let split_to_canon_monoid_problem
+  (outer0 inner0 outer1 inner1 delta: resource)
+  (_ : squash ((inner0 <*> delta) `equal` outer0))
+  (_ : squash ((inner1 <*> delta) `equal` outer1))
+  : Lemma (
+    outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)
+  )
+  =
+  can_be_split_into_star outer0 inner0 delta;
+  can_be_split_into_star outer1 inner1 delta
+
+
+let typecheck_delta () : Tac unit =
+  apply_lemma (normalize_term (`split_to_canon_monoid_problem));
+  let open Steel.Tactics in
+  let open FStar.Algebra.CommMonoid.Equiv in
+  let open FStar.Tactics.CanonCommMonoidSimple.Equiv in
+  norm [delta];
+  canon_monoid req rm;
+  norm [delta];
+  canon_monoid req rm
+
+
+#push-options "--no_tactics"
+
 let frame
   (#outer0 #outer1 #inner0 #inner1: resource)
-  (#delta: resource{outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)})
+  (#delta: resource{
+    with_tactic
+      typecheck_delta
+      (squash (outer0 `can_be_split_into` (inner0, delta) /\
+               outer1 `can_be_split_into` (inner1, delta))
+      )
+  })
   ($f:cmd inner0 inner1)
   : cmd outer0 outer1
   = fun _ ->
+   by_tactic_seman
+     typecheck_delta
+     (squash (outer0 `can_be_split_into` (inner0, delta) /\
+              outer1 `can_be_split_into` (inner1, delta))
+     );
    rst_frame
      outer0
      #inner0
@@ -394,6 +433,7 @@ let frame
      #(fun _ _ _ -> True)
      (fun _ -> f ())
 
+#pop-options
 
 let f (b: array U32.t) : cmd (array_resource b) (array_resource b) =
   (fun _ -> ignore (index b 0ul ()))
@@ -405,9 +445,6 @@ let test_frame_inference0 (b1: array U32.t) (b2: array U32.t)
   compose #(array_resource b1 <*> array_resource b2) #(array_resource b1 <*> array_resource b2)
   (frame #(array_resource b2) #(array_resource b1) #(array_resource b1) (f b1))
   (frame #(array_resource b1) #(array_resource b2) #(array_resource b2) (f b2))
-
-open FStar.Tactics
-module T = Steel.Tactics
 
 #reset-options
 
@@ -446,8 +483,58 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
   let _ = if FStar.Order.eq (compare_fv delta_type_name resource_name) then () else
     fail "Not a valid goal"
   in
+  let with_tactic_and_typecheck, with_tactic_arg =
+    match inspect refinement with
+    | Tv_App with_tactic_and_typecheck with_tactic_arg ->
+      with_tactic_and_typecheck, with_tactic_arg
+    | _ -> fail "Not a valid goal"
+  in
+  let with_tactic_arg, _ = with_tactic_arg in
+  let with_tactic_op, typecheck_op =
+    match inspect with_tactic_and_typecheck with
+    | Tv_App with_tactic_op typecheck_op ->
+      with_tactic_op, typecheck_op
+    | _ -> fail "Not a valid goal"
+  in
+  let typecheck_op, _ = typecheck_op in
+  let with_tactic_op_name, with_tactic_name, typecheck_op_name, typecheck_name =
+    match
+      inspect with_tactic_op,
+      inspect (`with_tactic),
+      inspect typecheck_op,
+      inspect (`typecheck_delta)
+    with
+    | Tv_FVar with_tactic_op_name,
+      Tv_FVar with_tactic_name,
+      Tv_FVar typecheck_op_name,
+      Tv_FVar typecheck_name ->
+      with_tactic_op_name, with_tactic_name, typecheck_op_name, typecheck_name
+    | _ -> fail "Not a valid goal"
+  in
+  let _ =
+    if
+      FStar.Order.eq (compare_fv with_tactic_op_name with_tactic_name) &&
+      FStar.Order.eq (compare_fv typecheck_op_name typecheck_name)
+    then () else fail "Not a valid goal"
+  in
+  let squash_op, squash_arg =
+    match inspect with_tactic_arg with
+    | Tv_App squash_op squash_arg -> squash_op, squash_arg
+    | _ -> fail "Not a valid goal"
+  in
+  let squash_arg, _ = squash_arg in
+  let squash_op_name, squash_name =
+    match inspect squash_op, inspect (`squash) with
+    | Tv_FVar squash_op_name, Tv_FVar squash_name ->
+      squash_op_name, squash_name
+    | _ -> fail "Not a valid goal"
+  in
+  let _ =
+    if FStar.Order.eq (compare_fv squash_op_name squash_name)
+    then () else fail "Not a valid goal"
+  in
   let op_and_arg1, arg2, and_name =
-    match (inspect refinement, inspect (`l_and)) with
+    match (inspect squash_arg, inspect (`l_and)) with
     | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) ->
       op_and_arg1, arg2, and_name
     | _ -> fail "Not a valid goal"
@@ -567,20 +654,11 @@ let focus_and_solve_goal (goal: goal) (t: unit -> Tac 'a) : Tac 'a =
   | [] -> set_goals rest_of_goals; result
   | _ -> fail "Focused goal not solved !"
 
-let split_to_canon_monoid_problem
-  (outer0 inner0 outer1 inner1 delta: resource)
-  (_ : squash ((inner0 <*> delta) `equal` outer0))
-  (_ : squash ((inner1 <*> delta) `equal` outer1))
-  : Lemma (
-    outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)
-  )
-  =
-  can_be_split_into_star outer0 inner0 delta;
-  can_be_split_into_star outer1 inner1 delta
-
 let solve_forward_inference_goal () : Tac unit =
   refine_intro ();
   flip ();
+  apply_lemma (`unfold_with_tactic);
+  apply_lemma (`FStar.Classical.give_witness);
   apply_lemma (`split_to_canon_monoid_problem);
   let open Steel.Tactics in
   let open FStar.Algebra.CommMonoid.Equiv in
@@ -640,7 +718,6 @@ let test_frame_inference2
      array_resource b4 <*>
      array_resource b5)
   =
-  admit();
   frame (f b1) >>
   frame (f b2) >>
   frame (f b3) >>
