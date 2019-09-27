@@ -3052,7 +3052,7 @@ let (encode_top_level_let :
                           FStar_Syntax_Syntax.U_unknown
                          in
                       let body1 =
-                        FStar_TypeChecker_Util.reify_body tcenv body  in
+                        FStar_TypeChecker_Util.reify_body tcenv [] body  in
                       let uu____10110 = aux comp1 body1  in
                       match uu____10110 with
                       | (more_binders,body2,comp2) ->
