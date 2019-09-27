@@ -2372,7 +2372,7 @@ and (encode_term :
                           let e0 =
                             let uu____6967 = FStar_List.hd args_e1  in
                             FStar_TypeChecker_Util.reify_body_with_arg
-                              env.FStar_SMTEncoding_Env.tcenv head2
+                              env.FStar_SMTEncoding_Env.tcenv [] head2
                               uu____6967
                              in
                           ((let uu____6977 =
@@ -3072,7 +3072,7 @@ and (encode_term :
                               if uu____8521
                               then
                                 FStar_TypeChecker_Util.reify_body
-                                  env.FStar_SMTEncoding_Env.tcenv body1
+                                  env.FStar_SMTEncoding_Env.tcenv [] body1
                               else body1  in
                             let uu____8526 = encode_term body2 envbody  in
                             (match uu____8526 with
