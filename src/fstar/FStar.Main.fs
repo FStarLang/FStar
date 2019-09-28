@@ -87,7 +87,8 @@ let load_native_tactics () =
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
-    Tactics.Load.load_lib ();
+    if not (Options.no_load_fstartaclib ()) then
+        Tactics.Load.load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
     ()
