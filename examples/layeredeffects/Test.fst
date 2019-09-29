@@ -113,3 +113,11 @@ let test8 (l:list int)
 : HoareST int (fun _ -> Cons? l /\ Cons?.hd l > 0) (fun _ _ _ -> True)
 = match l with
   | hd::_ -> test7 hd
+
+/// Testing reification
+
+#reset-options "--using_facts_from '*'"
+
+let test9 ()
+: FStar.ST.STATE int (fun p _ -> forall h1. p 3 h1)
+= reify (test6 ()) ()
