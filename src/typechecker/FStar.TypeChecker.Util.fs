@@ -2224,31 +2224,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
     in
     aux g t
 
-let fresh_non_layered_effect_repr env (r:Range.range) eff_name (u:universe) (a_tm:term) : term * guard_t =
-  let wp_sort =
-    let signature = Env.lookup_effect_lid env eff_name in
-    match (SS.compress signature).n with
-    | Tm_arrow (bs, _) when List.length bs = 2 ->
-      let [(a, _); (wp, _)] = SS.open_binders bs in
-      wp.sort |> SS.subst [NT (a, a_tm)]
-    | _ -> raise_error (Err.unexpected_signature_for_monad env eff_name signature) r in
-
-  let wp_uvar, _, g_wp_uvar = new_implicit_var
-    (BU.format2 "implicit for wp of %s at %s" eff_name.str (Range.string_of_range r)) r
-    env wp_sort in
-
-  let eff_c =
-    mk_Comp ({
-      comp_univs = [u];
-      effect_name = eff_name;
-      result_typ = a_tm;
-      effect_args = [wp_uvar |> S.as_arg];
-      flags = [] }) in
-
-  S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) None r,
-  g_wp_uvar
-
-let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
+let fresh_effect_repr env r eff_name signature_ts repr_ts u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
   
   let _, signature = Env.inst_tscheme signature_ts in
@@ -2268,19 +2244,28 @@ let fresh_layered_effect_repr env r eff_name signature_ts repr_ts u a_tm =
          (fun b -> BU.format3
            "uvar for binder %s when creating a fresh repr for %s at %s"
            (Print.binder_to_string b) eff_name.str (Range.string_of_range r)) r in
-       let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
-       S.mk_Tm_app
-         repr
-         (List.map S.as_arg (a_tm::is))
-         None r, g
+       (match repr_ts with
+        | _, { n = Tm_unknown } ->
+          let eff_c = mk_Comp ({
+            comp_univs = [u];
+            effect_name = eff_name;
+            result_typ = a_tm;
+            effect_args = List.map S.as_arg is;
+            flags = [] }) in
+          S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) None r
+        | _ ->
+          let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
+          S.mk_Tm_app
+            repr
+            (List.map S.as_arg (a_tm::is))
+            None r), g
      | _ -> fail signature)
   | _ -> fail signature
 
 let fresh_effect_repr_en env r eff_name u a_tm =
-  eff_name |> Env.get_effect_decl env
-           |> (fun ed ->
-              if ed.is_layered then fresh_layered_effect_repr env r eff_name ed.signature ed.repr u a_tm
-              else fresh_non_layered_effect_repr env r eff_name u a_tm)
+  eff_name
+  |> Env.get_effect_decl env
+  |> (fun ed -> fresh_effect_repr env r eff_name ed.signature ed.repr u a_tm)
 
 let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in

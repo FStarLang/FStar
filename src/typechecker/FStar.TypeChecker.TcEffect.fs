@@ -174,7 +174,7 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
   let fresh_repr r env u a_tm =
     let signature_ts = let us, t, _ = signature in (us, t) in
     let repr_ts = let us, t, _ = repr in (us, t) in
-    TcUtil.fresh_layered_effect_repr env r ed.mname signature_ts repr_ts u a_tm in
+    TcUtil.fresh_effect_repr env r ed.mname signature_ts repr_ts u a_tm in
 
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,

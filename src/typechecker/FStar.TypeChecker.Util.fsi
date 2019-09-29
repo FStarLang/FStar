@@ -110,7 +110,7 @@ val must_erase_for_extraction: env -> term -> bool
  *
  * The unification variables are resolved in the input env
  *)
-val fresh_layered_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> u:universe -> a:term -> term * guard_t
+val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> u:universe -> a:term -> term * guard_t
 
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
