@@ -297,7 +297,7 @@ let (tc_layered_eff_decl :
            let repr_ts =
              let uu____743 = repr  in
              match uu____743 with | (us,t,uu____758) -> (us, t)  in
-           FStar_TypeChecker_Util.fresh_layered_effect_repr env r
+           FStar_TypeChecker_Util.fresh_effect_repr env r
              ed.FStar_Syntax_Syntax.mname signature_ts repr_ts u a_tm
             in
          let not_an_arrow_error comb n1 t r =
