@@ -652,7 +652,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let repr = Env.reify_comp env c u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c =
-        if is_total_effect env ef
+        if is_total_effect env ef || ef |> Env.norm_eff_name env |> Env.is_layered_effect env
         then S.mk_Total repr |> TcComm.lcomp_of_comp
         else let ct = { comp_univs = [u_c]
                       ; effect_name = Const.effect_Dv_lid
