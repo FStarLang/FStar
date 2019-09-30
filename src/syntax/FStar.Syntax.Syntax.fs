@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module O = FStar.Options
 module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
@@ -446,7 +447,8 @@ and sigelt = {
     sigrng:   Range.range;
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
-    sigattrs: list<attribute>
+    sigattrs: list<attribute>;
+    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -571,7 +573,7 @@ let mk_lb (x, univs, eff, t, e, attrs, pos) = {
   }
 
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
