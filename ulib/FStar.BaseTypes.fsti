@@ -15,6 +15,10 @@
 *)
 module FStar.BaseTypes
 
+/// This module provides abbreviations for a variety of base types
+/// defined in various other modules. It is mainly used when bootstrap
+/// the compiler.
+
 type char   = FStar.Char.char
 type float  = FStar.Float.float
 type double = FStar.Float.double
