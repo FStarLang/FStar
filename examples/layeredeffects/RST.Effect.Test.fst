@@ -364,20 +364,6 @@ assume val rst_frame_auto (#a:Type)
     focus_rmem rm_in delta == focus_rmem rm_out delta /\  //-- this doesn't work (see test4 in RST.Effect.Test.fst)
     post (focus_rmem rm_in r_in_inner) x (focus_rmem rm_out (r_out_inner x)))
 
-let cmd (r1:resource) (r2:resource) = unit -> RST unit r1 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True)
-
-let compose (#p #q #r : resource)
-  (f: cmd p q)
-  (g: cmd q r)
-  : cmd p r
-  = fun _ -> g (f ())
-
-let ( >> ) (#p #q #r : resource)
-  (f: cmd p q)
-  (g: cmd q r)
-  : cmd p r
-  = compose f g
-
 open FStar.Tactics
 module T = Steel.Tactics
 
@@ -415,9 +401,9 @@ let frame
                outer1 `can_be_split_into` (inner1, delta))
       )
   })
-  ($f:cmd inner0 inner1)
-  : cmd outer0 outer1
-  = fun _ ->
+  ($f: unit -> RST unit inner0 (fun _ -> inner1) (fun _ -> True) (fun _ _ _ -> True))
+  : RST unit outer0 (fun _ -> outer1) (fun _ -> True) (fun _ _ _ -> True)
+  =
    by_tactic_seman
      typecheck_delta
      (squash (outer0 `can_be_split_into` (inner0, delta) /\
@@ -435,16 +421,15 @@ let frame
 
 #pop-options
 
-let f (b: array U32.t) : cmd (array_resource b) (array_resource b) =
-  (fun _ -> ignore (index b 0ul ()))
+let f (b: array U32.t) : RST unit (array_resource b) (fun _ -> array_resource b) (fun _ -> True) (fun _ _ _ -> True) =
+  (ignore (index b 0ul ()))
 
 [@expect_failure]
 let test_frame_inference0 (b1: array U32.t) (b2: array U32.t)
-  : cmd (array_resource b1 <*> array_resource b2) (array_resource b1 <*> array_resource b2)
+  : RST unit (array_resource b1 <*> array_resource b2) (fun _ -> array_resource b1 <*> array_resource b2) (fun _ -> True) (fun _ _ _ -> True)
  =
-  compose #(array_resource b1 <*> array_resource b2) #(array_resource b1 <*> array_resource b2)
-  (frame #(array_resource b2) #(array_resource b1) #(array_resource b1) (f b1))
-  (frame #(array_resource b1) #(array_resource b2) #(array_resource b2) (f b2))
+  frame #(array_resource b2) #(array_resource b1) #(array_resource b1) (fun _ -> f b1);
+  frame #(array_resource b1) #(array_resource b2) #(array_resource b2) (fun _ -> f b2)
 
 #reset-options
 
@@ -706,20 +691,22 @@ let test_frame_inference2
   (b3: array U32.t)
   (b4: array U32.t)
   (b5: array U32.t)
-  : cmd
+  : RST unit
     (array_resource b1 <*>
      array_resource b2 <*>
      array_resource b3 <*>
      array_resource b4 <*>
      array_resource b5)
-    (array_resource b1 <*>
+    (fun _ -> array_resource b1 <*>
      array_resource b2 <*>
      array_resource b3 <*>
      array_resource b4 <*>
      array_resource b5)
+    (fun _ -> True)
+    (fun _ _ _ -> True)
   =
-  frame (f b1) >>
-  frame (f b2) >>
-  frame (f b3) >>
-  frame (f b4) >>
-  frame (f b5)
+  frame (fun _ -> f b1);
+  frame (fun _ -> f b2);
+  frame (fun _ -> f b3);
+  frame (fun _ -> f b4);
+  frame (fun _ -> f b5)
