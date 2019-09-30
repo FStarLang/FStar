@@ -40,6 +40,10 @@ let impl_to_arrow #a #b impl sx =
 
 let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (return_squash x)))
 
+let gtot_to_lemma #a #p f x = give_proof #(p x) (return_squash (f x))
+
+let lemma_to_squash_gtot #a #p f x = f x; get_proof (p x)
+
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 let forall_intro_gtot #a #p f =
   let id (#a:Type) (x:a) = x in
@@ -47,10 +51,6 @@ let forall_intro_gtot #a #p f =
   return_squash #(forall (x:a). id (p x)) ()
 
 let lemma_forall_intro_gtot #a #p f = give_witness (forall_intro_gtot #a #p f)
-
-let gtot_to_lemma #a #p f x = give_proof #(p x) (return_squash (f x))
-
-let lemma_to_squash_gtot #a #p f x = f x; get_proof (p x)
 
 let forall_intro_squash_gtot #a #p f =
   bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
@@ -96,13 +96,13 @@ let forall_to_exists #a #p #r f = forall_intro f
 
 let forall_to_exists_2 #a #p #b #q #r f = forall_intro_2 f
 
+let exists_elim goal #a #p have f =
+  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
+
 let impl_intro_gtot #p #q f = return_squash f
 
 let impl_intro #p #q f =
   give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
-
-let exists_elim goal #a #p have f =
-  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
 let move_requires #a #p #q f x =
       give_proof
@@ -114,10 +114,6 @@ let move_requires #a #p #q f x =
             | Right hnp -> give_witness hnp
           )))
 
-let forall_impl_intro #a #p #q f =
-  let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
-  forall_intro (move_requires f')
-
 // Thanks KM, CH and SZ
 let impl_intro_gen #p #q f =
   let g () : Lemma
@@ -127,6 +123,10 @@ let impl_intro_gen #p #q f =
    give_proof #(q ()) (f (get_proof p))
   in
   move_requires g ()
+
+let forall_impl_intro #a #p #q f =
+  let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
+  forall_intro (move_requires f')
 
 let ghost_lemma #a #p #q f =
  let lem : x:a -> Lemma (p x ==> q x ()) =
