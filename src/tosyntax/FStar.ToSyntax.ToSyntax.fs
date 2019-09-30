@@ -2813,11 +2813,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
            *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
            *)
+          let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = [] } in
+                    sigattrs = attrs } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
