@@ -15,24 +15,54 @@
 *)
 module FStar.Classical
 
-/// This module contains the standard primitives to manipulate proof goals containing classical logic.
-/// The proof goals manipulated are values of type `Type` or `Type0`. One can go from a goal of type
-/// `Type` to `Type0` by "squashing" it into an F* value of type unit having a refinmnent corresponding
-/// to the original goal.
+/// In addition to its core constructive logic, F* also provides a a
+/// proof-irrelevant classical logic. Both refinement types `x:t{phi}`
+/// and the WP- or Hoare-style indexes associated with computation
+/// types (e.g., `Pure a pre post`) make use of this classical
+/// logic. As refinement and computation types being central features
+/// of the language, this classical logic is ubiquitous in F* code.
 ///
-/// To produce a value of type `squash a`, the general method is to let-bind a unit value and annotate
-/// it with the type `squash a`, for instance:
+/// The constructive and classical logic are related via `squash`, a
+/// type-former promotes a proof-relevant type to the proof-irrelevant
+/// logic (see FStar.Squash), i.e., `squash p` is the proof-irrelevant
+/// counterpart of `p` expressed as a unit-refinement `_:unit{p}`.
+///
+/// The main connectives of the classical logic (listed below) are
+/// defined as the squashed version of their constructive counterparts
+///
+///   * `True`
+///   * `False`
+///   * `p /\ q`
+///   * `p \/ q`
+///   * `~ p`
+///   * `p ==> q`
+///   * `forall (x:t). p`
+///   * `exists (x:t). p
+///
+/// This module, FStar.Classical, provides various utilities to
+/// manipulate these connectives, often using constructive proofs.
+
+/// The proof goals manipulated are values of type `Type` or
+/// `Type0`. One can go from a goal of type `Type` to `Type0` by
+/// "squashing" it into an F* value of type unit having a refinemnent
+/// corresponding to the original goal.
+///
+/// To produce a value of type `squash a`, the general method is to
+/// let-bind a unit value and annotate it with the type `squash a`,
+/// for instance:
 ///
 /// ```fstar
 /// let pf : squash (1 <> 0) = () in ...
 /// ```
 ///
-/// The F* typechecker will then proceed to proved the squashed property by typechecking the squashed
-/// value. To apply most of the lemmas here, you will have to let-bind or create auxiliary lemmas
-/// matching what the function expects to make F*'s unification mechanism work
-///
+/// The F* typechecker will then proceed to proved the squashed
+/// property by typechecking the squashed value. To apply most of the
+/// lemmas here, you will have to let-bind or create auxiliary lemmas
+/// matching what the function expects to make F*'s unification
+/// mechanism work
 
-(**** Witnesses *)
+
+(** Witnesses *)
 
 (** Demonstrate the existence of a type from a value of that type.
 
@@ -131,7 +161,8 @@ val forall_intro_squash_gtot_join
   ($_:(x:a -> GTot (squash (p x))))
   : Tot (forall (x:a). p x)
 
-(** Introduce a [forall] property into context from a lemma. See relevant useful [move_requires] to make this even more useful.
+(** Introduce a [forall] property into context from a lemma. See relevant
+    useful [move_requires] to make this even more useful.
 
     Example:
     {[
@@ -157,7 +188,8 @@ val forall_intro_with_pat (#a:Type) (#c: (x:a -> Type)) (#p:(x:a -> GTot Type0))
   ($_: (x:a -> Lemma (p x)))
   : Lemma (forall (x:a).{:pattern (pat x)} p x)
 
-(** Introduce a [forall] property. Equivalent to [forall_intro] except for lack of exact unification requirement [$]. *)
+(** Introduce a [forall] property. Equivalent to [forall_intro] except for
+    lack of exact unification requirement [$]. *)
 val forall_intro_sub (#a:Type) (#p:(a -> GTot Type)) (_:(x:a -> Lemma (p x))) : Lemma (forall (x:a). p x)
 
 (** Introduce a [forall] property over 2 variables. Similar to [forall_intro].
@@ -196,7 +228,7 @@ val forall_intro_2_with_pat
             // proof of [q x y z] under assumption of [p x y z]
         in
         let aux x y = move_requires (aux x y) in
-	// notice only 2 arguments (last argument is pointfree)
+        // notice only 2 arguments (last argument is pointfree)
         forall_intro aux // and now we have [forall x. p x y z ==> q x y z]
     ]}
 *)
@@ -258,7 +290,9 @@ val exists_elim (goal:Type) (#a:Type) (#p:(a -> Type)) (_:squash (exists (x:a). 
 
 (**** Implications  *)
 
-/// The two next functions introduce implications in the context. Since they expect `Type0`, you have to provide them squashed values. For instance:
+/// The two next functions introduce implications in the
+/// context. Since they expect `Type0`, you have to provide them
+/// squashed values. For instance:
 ///
 /// ```fstar
 /// let aux (_ : squash p) : Lemma q = ... in
@@ -309,7 +343,8 @@ val forall_impl_intro
   : Lemma (forall x. p x ==> q x)
 
 
-(** Given a [Ghost unit] function with pre/post conditions, convert it into a lemma with [forall] and implication. *)
+(** Given a [Ghost unit] function with pre/post conditions, convert it
+   into a lemma with [forall] and implication. *)
 val ghost_lemma (#a:Type) (#p:(a -> GTot Type0)) (#q:(a -> unit -> GTot Type0))
   ($_:(x:a -> Ghost unit (p x) (q x)))
   : Lemma (forall (x:a). p x ==> q x ())
