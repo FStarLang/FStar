@@ -1159,6 +1159,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
   let r = se.sigrng in
+  let se = { se with sigopts = Some (Options.peek ()) } in
   match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
