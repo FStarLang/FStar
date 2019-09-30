@@ -109,7 +109,8 @@ let tc_lex_t env ses quals lids =
                    sigquals = [];
                    sigrng = r;
                    sigmeta = default_sigmeta;
-                   sigattrs = [] } in
+                   sigattrs = [];
+                   sigopts = None; } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) None r1 in
@@ -118,7 +119,8 @@ let tc_lex_t env ses quals lids =
                           sigquals = [];
                           sigrng = r1;
                           sigmeta = default_sigmeta;
-                          sigattrs = []  } in
+                          sigattrs = [];
+                          sigopts = None; } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -133,12 +135,14 @@ let tc_lex_t env ses quals lids =
                            sigquals = [];
                            sigrng = r2;
                            sigmeta = default_sigmeta;
-                           sigattrs = []  } in
+                           sigattrs = [];
+                           sigopts = None; } in
         { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
           sigquals = [];
           sigrng = Env.get_range env;
           sigmeta = default_sigmeta;
-          sigattrs = []  }
+          sigattrs = [];
+          sigopts = None; }
       | _ ->
         let err_msg =
           BU.format1 "Invalid (re)definition of lex_t: %s\n"
@@ -859,7 +863,8 @@ let for_export env hidden se : list<sigelt> * list<lident> =
                      sigquals =[Assumption];
                      sigrng = Ident.range_of_lid lid;
                      sigmeta = default_sigmeta;
-                     sigattrs = [] } in
+                     sigattrs = [];
+                     sigopts = None; } in
           [dec], lid::hidden
 
   | Sig_let(lbs, l) ->

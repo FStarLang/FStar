@@ -1508,7 +1508,8 @@ let action_as_lb eff_lid a pos =
     sigrng = a.action_defn.pos;
     sigquals = [Visible_default ; Action eff_lid];
     sigmeta = default_sigmeta;
-    sigattrs = [] }
+    sigattrs = [];
+    sigopts = None; }
 
 (* Some reification utilities *)
 let mk_reify t =
