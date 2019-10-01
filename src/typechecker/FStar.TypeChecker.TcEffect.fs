@@ -154,6 +154,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let r = (snd ed.repr).pos in
     let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 ed.repr in
 
+    //check that the underlying effect is total if this effect is marked total
     begin
       if quals |> List.contains TotalEffect
       then
