@@ -432,13 +432,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_new_effect ne ->
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne = TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
+        let ne =
+          TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals
+          |> (fun ne -> { se with sigel = Sig_new_effect ne })
+          |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        if Env.debug env <| Options.Other "TwoPhases"
+        then BU.print1 "Effect decl after phase 1: %s\n"
+               (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
       end
       else ne
     in
-    let ne = TcEff.tc_eff_decl env ne in
+    let ne = TcEff.tc_eff_decl env ne se.sigquals in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], [], env0
 

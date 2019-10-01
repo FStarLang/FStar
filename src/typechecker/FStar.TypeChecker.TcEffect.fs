@@ -52,7 +52,7 @@ let dmff_cps_and_elaborate env ed =
 (*
  * Typechecking of layered effects
  *)
-let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
+let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -153,6 +153,33 @@ let tc_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
   let repr =
     let r = (snd ed.repr).pos in
     let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 ed.repr in
+
+    begin
+      if quals |> List.contains TotalEffect
+      then
+        let repr_t =
+          N.normalize
+            [Env.UnfoldUntil (S.Delta_constant_at_level 0); Env.AllowUnboundUniverses]
+            env0 repr_t in
+        (match (SS.compress repr_t).n with
+         | Tm_abs (_, t, _) ->
+           (match (SS.compress t).n with
+            | Tm_arrow (_, c) ->
+              if not (c |> U.comp_effect_name |> Env.is_total_effect env0)
+              then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
+                     BU.format1 "Effect %s is marked total but its underlying effect is not"
+                      (ed.mname |> Ident.string_of_lid)) r
+              else ()
+            | _ -> 
+              raise_error (Errors.Fatal_UnexpectedEffect,
+              BU.format2 "repr body for %s is not an arrow (%s)"
+                (ed.mname |> Ident.string_of_lid) (Print.term_to_string t)) r)
+         | _ ->
+           raise_error (Errors.Fatal_UnexpectedEffect,
+             BU.format2 "repr for %s is not an abstraction (%s)"
+               (ed.mname |> Ident.string_of_lid) (Print.term_to_string repr_t)) r)
+      else ()
+    end;
     
     let us, ty = SS.open_univ_vars repr_us repr_ty in
     let env = Env.push_univ_vars env0 us in
@@ -514,7 +541,7 @@ let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
-let tc_non_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
+let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -930,7 +957,8 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) : S.eff_decl =
 
   ed
 
-let tc_eff_decl env ed = (if ed.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed
+let tc_eff_decl env ed quals =
+  (if ed.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
