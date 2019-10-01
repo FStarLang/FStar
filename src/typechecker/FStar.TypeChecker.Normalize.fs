@@ -1792,7 +1792,7 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
-        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements"
+        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with
