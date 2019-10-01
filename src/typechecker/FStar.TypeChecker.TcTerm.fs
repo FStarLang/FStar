@@ -180,8 +180,11 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
-        else if Options.trivial_pre_for_unannotated_effectful_fns () &&
-                not (U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env)  //AR: TODO: FIXME: this is bad, we should give an error if layered effect comps don't have annotations!!
+        else if U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env
+        then raise_error (Errors.Fatal_IllTyped,  //hard error if layered effects are used without annotations
+               BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
+                 (c |> U.comp_effect_name |> Ident.string_of_lid) (Range.string_of_range e.pos)) e.pos
+        else if Options.trivial_pre_for_unannotated_effectful_fns ()
         then None, c, (
                let _, _, g = TcUtil.check_trivial_precondition env c in
                Some g)
