@@ -1111,6 +1111,7 @@ and tc_comp env c : comp                                      (* checked version
       let c = mk_Comp ({c with
           comp_univs=comp_univs;
           result_typ=fst res;
+          flags = flags;
           effect_args=args}) in
       let u_c = c |> TcUtil.universe_of_comp env u in
       c, u_c, List.fold_left Env.conj_guard f guards
