@@ -5509,8 +5509,13 @@ and (norm_comp :
              let uu____16824 = FStar_Syntax_Print.comp_to_string comp  in
              let uu____16826 =
                FStar_Util.string_of_int (FStar_List.length env)  in
+<<<<<<< HEAD
              FStar_Util.print2 ">>> %s\nNormComp with with %s env elements"
                uu____16824 uu____16826);
+=======
+             FStar_Util.print2 ">>> %s\nNormComp with with %s env elements\n"
+               uu____16114 uu____16116);
+>>>>>>> snap
         (match comp.FStar_Syntax_Syntax.n with
          | FStar_Syntax_Syntax.Total (t,uopt) ->
              let t1 = norm cfg env [] t  in

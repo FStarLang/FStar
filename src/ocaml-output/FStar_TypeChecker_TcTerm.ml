@@ -11938,6 +11938,7 @@ and (tc_comp :
                                                       in
                                                    (match uu____10920 with
                                                     | (e1,uu____10932,g) ->
+<<<<<<< HEAD
 >>>>>>> snap
 =======
                                                    (match uu____10992 with
@@ -12204,6 +12205,8 @@ and (tc_comp :
                                                    (match uu____11031 with
                                                     | (e1,uu____11043,g) ->
 >>>>>>> raise proper error if effect args cannot be computed in reflect tc
+=======
+>>>>>>> snap
                                                         ((FStar_Syntax_Syntax.DECREASES
                                                             e1), g)))
                                           | f1 ->
@@ -12219,15 +12222,19 @@ and (tc_comp :
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                                 FStar_All.pipe_right uu____10935
                                   FStar_List.unzip
                                  in
                               (match uu____10926 with
 =======
+=======
+>>>>>>> snap
                                 FStar_All.pipe_right uu____10867
                                   FStar_List.unzip
                                  in
                               (match uu____10858 with
+<<<<<<< HEAD
 >>>>>>> snap
 =======
                                 FStar_All.pipe_right uu____10939
@@ -12277,6 +12284,8 @@ and (tc_comp :
                                  in
                               (match uu____10969 with
 >>>>>>> raise proper error if effect args cannot be computed in reflect tc
+=======
+>>>>>>> snap
                                | (flags,guards) ->
                                    let u =
                                      env.FStar_TypeChecker_Env.universe_of
@@ -12284,6 +12293,7 @@ and (tc_comp :
                                       in
                                    let c2 =
                                      FStar_Syntax_Syntax.mk_Comp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12321,10 +12331,14 @@ and (tc_comp :
 =======
                                        (let uu___1574_11084 = c1  in
 >>>>>>> raise proper error if effect args cannot be computed in reflect tc
+=======
+                                       (let uu___1548_10973 = c1  in
+>>>>>>> snap
                                         {
                                           FStar_Syntax_Syntax.comp_univs =
                                             comp_univs;
                                           FStar_Syntax_Syntax.effect_name =
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12362,10 +12376,14 @@ and (tc_comp :
 =======
                                             (uu___1574_11084.FStar_Syntax_Syntax.effect_name);
 >>>>>>> raise proper error if effect args cannot be computed in reflect tc
+=======
+                                            (uu___1548_10973.FStar_Syntax_Syntax.effect_name);
+>>>>>>> snap
                                           FStar_Syntax_Syntax.result_typ =
                                             (FStar_Pervasives_Native.fst res);
                                           FStar_Syntax_Syntax.effect_args =
                                             args2;
+<<<<<<< HEAD
                                           FStar_Syntax_Syntax.flags =
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12404,6 +12422,9 @@ and (tc_comp :
 =======
                                             (uu___1574_11084.FStar_Syntax_Syntax.flags)
 >>>>>>> raise proper error if effect args cannot be computed in reflect tc
+=======
+                                          FStar_Syntax_Syntax.flags = flags
+>>>>>>> snap
                                         })
                                       in
                                    let u_c =
