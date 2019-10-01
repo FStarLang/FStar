@@ -82,6 +82,18 @@ let mk_String_const = norng mk_String_const
 let mk_Precedes = norng4 mk_Precedes
 let mk_LexCons = norng3 mk_LexCons
 
+
+(*
+ * AR: When encoding abstractions that have a reifiable computation type
+ *     for their bodies, we currently encode their reification
+ *     Earlier this was fine, since the only reifiable effects came from DM4F
+ *     But now layered effects are also reifiable, but I don't think we want
+ *     to encode their reification to smt
+ *     So adding these utils, that are then used in Encode.fs and EncodeTerm.fs
+ *
+ *     Could revisit
+ *)
+
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
   TcEnv.is_reifiable_effect en l &&
   not (l |> TcEnv.norm_eff_name en
