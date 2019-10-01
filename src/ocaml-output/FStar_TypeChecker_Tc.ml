@@ -6675,12 +6675,17 @@ let (tc_decl' :
                               (uu___1052_8483.FStar_TypeChecker_Env.strict_args_tab);
                             FStar_TypeChecker_Env.erasable_types_tab =
 <<<<<<< HEAD
+<<<<<<< HEAD
                               (uu___1049_8472.FStar_TypeChecker_Env.erasable_types_tab)
 >>>>>>> snap
 =======
                               (uu___1052_8483.FStar_TypeChecker_Env.erasable_types_tab)
 >>>>>>> snap
                           }) ne
+>>>>>>> snap
+=======
+                              (uu___373_2336.FStar_TypeChecker_Env.erasable_types_tab)
+                          }) ne se.FStar_Syntax_Syntax.sigquals
 >>>>>>> snap
                         in
 <<<<<<< HEAD
@@ -6801,7 +6806,10 @@ let (tc_decl' :
                  else ());
                 ne1)
              else ne  in
-           let ne2 = FStar_TypeChecker_TcEffect.tc_eff_decl env ne1  in
+           let ne2 =
+             FStar_TypeChecker_TcEffect.tc_eff_decl env ne1
+               se.FStar_Syntax_Syntax.sigquals
+              in
            let se1 =
 <<<<<<< HEAD
 <<<<<<< HEAD
