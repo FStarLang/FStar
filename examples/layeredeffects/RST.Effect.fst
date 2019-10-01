@@ -130,6 +130,7 @@ layered_effect {
        conjunction = conjunction
 }
 
+
 /// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck
 
 assume Pure_wp_monotonicity:

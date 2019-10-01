@@ -149,3 +149,41 @@ let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
 
   let v1: nat = read n1 in
   assert (v1 == 0)
+
+let emp_locals = {
+  next = 0;
+  m = Map.restrict Set.empty (Map.const (| unit, () |))
+}
+
+let run_with_locals (#a:Type)
+  (#pre:locals_t -> Type0) (#post:locals_t -> a -> locals_t -> Type0)
+  ($f:unit -> LV a pre post)
+: Pure a
+  (requires pre emp_locals)
+  (ensures fun r -> exists m. post emp_locals r m)
+= fst (reify (f ()) emp_locals)
+
+
+/// Testing some termination
+
+let rec sum (n:nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
+= if n = 0 then 0
+  else
+    let s = sum (n - 1) in  //let binding is important, can't write 1 + sum (n - 1), see #881
+    1 + s
+
+module L = FStar.List.Tot
+
+let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length l)
+= match l with
+  | [] -> 0
+  | _::tl ->
+   let n = test1 tl in  //let binding is important, can't write 1 + test1 tl, see #881
+   n + 1
+
+
+/// Termination check failure
+
+[@expect_failure]
+let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
+= test2 l
