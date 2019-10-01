@@ -704,7 +704,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let eff_args =
         match (SS.compress expected_repr_typ).n with
         | Tm_app (_, _::args) -> args
-        | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+        | _ ->
+          raise_error (Errors.Fatal_UnexpectedEffect,
+            BU.format3 "Expected repr type for %s is not an application node (%s:%s)"
+              (Ident.string_of_lid l) (Print.tag_of_term expected_repr_typ)
+              (Print.term_to_string expected_repr_typ)) top.pos in
 
       let c = S.mk_Comp ({
         comp_univs=[u_a];
