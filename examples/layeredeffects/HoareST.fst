@@ -118,7 +118,14 @@ let write (a:Type0) (r:ref a) (x:a)
 = fun _ -> write r x
 
 let mread = HoareST?.read
-let mwrite (a:Type0) (r:ref a) (x:a) = HoareST?.reflect (write a r x)
+let mwrite (a:Type0) (r:ref a) (x:a)
+: HoareST unit
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    modifies (Set.singleton (addr_of r)) h0 h1 /\
+    equal_dom h0 h1 /\
+    sel h1 r == x)
+= HoareST?.reflect (write a r x)
 
 assume val wp_monotonic_pure (_:unit)
   : Lemma

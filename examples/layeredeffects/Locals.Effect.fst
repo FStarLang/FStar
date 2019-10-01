@@ -134,11 +134,36 @@ let get0 ()
 = fun m -> m.m, m
 
 
+let create (a:Type0) (x:a)
+: LVARS nat
+  (fun p m0 ->
+    forall r m1.
+      (not (m0.m `M.contains` r) /\
+       m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
+= LVARS?.reflect (create0 a x)
 
-let create (a:Type0) (x:a) = LVARS?.reflect (create0 a x)
-let read (#a:Type0) (n:nat) = LVARS?.reflect (read0 #a n)
-let write (#a:Type0) (n:nat) (x:a) = LVARS?.reflect (write0 #a n x)
-let get () = LVARS?.reflect (get0 ())
+let read (#a:Type0) (n:nat)
+: LVARS a
+  (fun p m0 ->
+   m0.m `M.contains` n /\
+   dfst (m0.m `M.sel` n) == a /\
+   (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
+= LVARS?.reflect (read0 #a n)
+
+let write (#a:Type0) (n:nat) (x:a)
+: LVARS unit
+  (fun p m0 ->
+   m0.m `M.contains` n /\
+   dfst (m0.m `M.sel` n) == a /\
+   (forall m1.
+     (m1.next == m0.next /\
+      m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
+= LVARS?.reflect (write0 #a n x)
+
+let get ()
+: LVARS (Map.t nat (a:Type0 & a))
+  (fun p m0 -> p m0.m m0)
+= LVARS?.reflect (get0 ())
 
 
 let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
