@@ -77,12 +77,19 @@ type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universe
 type goal = term
 
 
-(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
-(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
-(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
-(* and if both effects are reifiable, [mlift_term], if provided, maps *)
-(* computations [e] of type [Msource.repr t wp] to a computation of type *)
-(* [Mtarget.repr t (lift_wp t wp)] *)
+(*
+ * AR: The mlift record that maintains functions to lift 'source' computation types
+ *     and terms to 'target' computation types and terms (terms in the case of reifiable effects)
+ *
+ *     The signature to lift computation types is quite nice: comp to comp
+ *     For the terms, we don't require the indices (wps etc.) anymore since
+ *     they are computationally irrelevant, in the previous code where we needed them
+ *     all the clients were passing Tm_unknown, so what's the point
+ *     Read the signature as: u_a:universe -> a:typ -> e:term -> term
+ *
+ *     Note that these types compose quite nicely along the effect lattice
+ *)
+
 type lift_comp_t = env -> comp -> comp * guard_t
 
 and mlift = {
@@ -280,6 +287,8 @@ val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
  *)
 val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
+
+//client constructs the mlift and gives it to us
 val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
 
 val push_bv               : env -> bv -> env
