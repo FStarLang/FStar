@@ -10750,7 +10750,7 @@ let (lift_tf_layered_effect_term :
                         (FStar_List.map
                            (fun uu____16908  ->
                               FStar_Syntax_Syntax.as_arg
-                                FStar_Syntax_Syntax.tun))
+                                FStar_Syntax_Syntax.unit_const))
                        in
                     let uu____16915 =
                       let uu____16926 = FStar_Syntax_Syntax.as_arg e  in
