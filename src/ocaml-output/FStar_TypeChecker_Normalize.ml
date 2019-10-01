@@ -5356,7 +5356,7 @@ and (norm_comp :
              let uu____16114 = FStar_Syntax_Print.comp_to_string comp  in
              let uu____16116 =
                FStar_Util.string_of_int (FStar_List.length env)  in
-             FStar_Util.print2 ">>> %s\nNormComp with with %s env elements"
+             FStar_Util.print2 ">>> %s\nNormComp with with %s env elements\n"
                uu____16114 uu____16116);
         (match comp.FStar_Syntax_Syntax.n with
          | FStar_Syntax_Syntax.Total (t,uopt) ->
