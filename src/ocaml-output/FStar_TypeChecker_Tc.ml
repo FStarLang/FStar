@@ -1240,7 +1240,7 @@ let (tc_decl' :
                               (uu___373_2336.FStar_TypeChecker_Env.strict_args_tab);
                             FStar_TypeChecker_Env.erasable_types_tab =
                               (uu___373_2336.FStar_TypeChecker_Env.erasable_types_tab)
-                          }) ne
+                          }) ne se.FStar_Syntax_Syntax.sigquals
                         in
                      FStar_All.pipe_right uu____2333
                        (fun ne1  ->
@@ -1291,7 +1291,10 @@ let (tc_decl' :
                  else ());
                 ne1)
              else ne  in
-           let ne2 = FStar_TypeChecker_TcEffect.tc_eff_decl env ne1  in
+           let ne2 =
+             FStar_TypeChecker_TcEffect.tc_eff_decl env ne1
+               se.FStar_Syntax_Syntax.sigquals
+              in
            let se1 =
              let uu___385_2361 = se  in
              {
