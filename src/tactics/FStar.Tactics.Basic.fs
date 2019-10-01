@@ -1771,6 +1771,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) s_tm) (fun (s_tm, s_ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
+    let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+                           (goal_env g) s_ty in
     let h, args = U.head_and_args' s_ty in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
@@ -1791,10 +1793,13 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
        * user do that (with the returned arity). `.ps` represents inaccesible patterns
        * for the type's parameters.
        *)
+      let erasable = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
+      failwhen (erasable && not (is_irrelevant g)) "cannot destruct erasable type to solve proof-relevant goal" (fun () ->
 
       (* Instantiate formal universes to the actuals,
        * and substitute accordingly in binders and types *)
       failwhen (List.length a_us <> List.length t_us) "t_us don't match?" (fun () ->
+
 
       (* Not needed currently? *)
       (* let s = Env.mk_univ_subst t_us a_us in *)
@@ -1854,7 +1859,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, pat_t, _, _guard_pat = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
+                        let _ , _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
@@ -1873,7 +1878,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
       let w = mk (Tm_match (s_tm, brs)) None s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
-      ret infos))))
+      ret infos)))))
 
     | _ -> fail "not an inductive type"))))
 

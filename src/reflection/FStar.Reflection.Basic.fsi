@@ -32,6 +32,9 @@ val env_open_modules      : Env.env -> list<name>
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
 
+val sigelt_quals     : sigelt -> list<qualifier>
+val set_sigelt_quals : list<qualifier> -> sigelt -> sigelt
+
 (* Views *)
 val inspect_fv    : fv -> list<string>
 val pack_fv       : list<string> -> fv

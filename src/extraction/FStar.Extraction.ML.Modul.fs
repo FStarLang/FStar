@@ -410,12 +410,16 @@ let extract_bundle_iface env se
         env, iface_of_bindings [ctor]
 
     | Sig_bundle(ses, _), quals ->
-        let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
-        let env, td = BU.fold_map extract_one_family env ifams in
-        env,
-        iface_union
+        if U.has_attribute se.sigattrs PC.erasable_attr
+        then env, empty_iface
+        else begin
+          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, td = BU.fold_map extract_one_family env ifams in
+          env,
+          iface_union
             (iface_of_type_names (List.map (fun x -> x.ifv) ifams))
             (iface_of_bindings (List.flatten td))
+        end
 
     | _ -> failwith "Unexpected signature element"
 
@@ -699,9 +703,13 @@ let extract_bundle env se =
         env, [MLM_Exn ctor]
 
     | Sig_bundle(ses, _), quals ->
-        let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
-        let env, td = BU.fold_map extract_one_family env ifams in
-        env, [MLM_Ty td]
+        if U.has_attribute se.sigattrs PC.erasable_attr
+        then env, []
+        else begin
+          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, td = BU.fold_map extract_one_family env ifams in
+          env, [MLM_Ty td]
+        end
 
     | _ -> failwith "Unexpected signature element"
 

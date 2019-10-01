@@ -129,6 +129,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk2 "set_sigelt_attrs"      set_sigelt_attrs      E.e_attributes      E.e_sigelt         E.e_sigelt
                                 set_sigelt_attrs      NRE.e_attributes    NRE.e_sigelt       NRE.e_sigelt;
 
+    mk1 "sigelt_quals"          sigelt_quals          E.e_sigelt          E.e_qualifiers
+                                sigelt_quals          NRE.e_sigelt        NRE.e_qualifiers;
+
+    mk2 "set_sigelt_quals"      set_sigelt_quals      E.e_qualifiers      E.e_sigelt         E.e_sigelt
+                                set_sigelt_quals      NRE.e_qualifiers    NRE.e_sigelt       NRE.e_sigelt;
+
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;
 

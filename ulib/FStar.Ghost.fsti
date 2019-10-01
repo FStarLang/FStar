@@ -14,14 +14,15 @@
    limitations under the License.
 *)
 
+
 (*
    This module provides an erased type
    to abstract computationally irrelevant values.
 
    It relies on the GHOST effect defined in Prims.
 
-   [erased a] is an abstract type that receives
-   special treatment in the compiler.
+   [erased a] is decorated with the erasable attribute
+   As such,
 
    1. The type is considered non-informative.
       So, [Ghost (erased a)] can be subsumed to [Pure (erased a)]
@@ -39,6 +40,7 @@
 
 *)
 module FStar.Ghost
+[@erasable]
 val erased : Type u#a -> Type u#a
 val reveal : #a:Type u#a -> erased a -> GTot a
 val hide   : #a:Type u#a -> a -> Tot (erased a)

@@ -1,0 +1,79 @@
+[
+  "$û·,®„°ûÓ¾\u000evæ„ÕQ",
+  [
+    [
+      "FStar.WellFounded.acc_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "148682b3a654af9af238c6c8486282e3"
+    ],
+    [
+      "FStar.WellFounded.apply",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "30796a965c98a898977e6370bc343818"
+    ],
+    [
+      "FStar.WellFounded.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.WellFounded.acc_inv",
+        "fuel_guarded_inversion_FStar.WellFounded.acc",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "86213fbd1628261da173e53bdb2c4c11"
+    ],
+    [
+      "FStar.WellFounded.acc_inv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "b8b5c11162197eba2bf688e9984bb9e4"
+    ],
+    [
+      "FStar.WellFounded.apply",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3eb131bb26f33e1f5e02f7a1b4a5315a"
+    ],
+    [
+      "FStar.WellFounded.fix_F",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.WellFounded.acc_inv",
+        "fuel_guarded_inversion_FStar.WellFounded.acc",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "c8fdfd6ef86d972e7e5f722491cdc9d9"
+    ]
+  ]
+]

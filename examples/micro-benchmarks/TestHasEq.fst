@@ -68,3 +68,22 @@ let test_1514 () =
   assert (hasEq int); assert (hasEq bool); assert (hasEq string); assert (hasEq unit);
   assert (hasEq (x:int{x > 2}))
 #pop-options
+
+
+(*
+ * erasable inductives should not have hasEq
+ * F* should also give an error if an erasable inductive is annotated with unopteq
+ *)
+[@erasable]
+noeq
+type erasable_t =
+  | C_erasable_t : erasable_t
+  | D_erasable_t : erasable_t
+
+[@expect_failure]
+let test (x:erasable_t{C_erasable_t? x}) (y:erasable_t{D_erasable_t? y}) : Tot (n:int{n == 1}) =
+  if x = y then 0 else 1  //this would extract to if () = () then 0 else 1 if we allowed equality on erasable_t
+
+[@erasable expect_failure]
+unopteq type erasable_t2 =
+  | C_erasable_2 : erasable_t2

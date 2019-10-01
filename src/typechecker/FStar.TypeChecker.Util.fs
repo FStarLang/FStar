@@ -485,7 +485,7 @@ let weaken_comp env (c:comp) (formula:term) : comp =
            None
            r
          in
-         
+
          let w_wp = lift_wp_and_bind_with env pure_assume_wp md u_res_t res_t wp in
          mk_comp md u_res_t res_t w_wp (weaken_flags c.flags)
 
@@ -1008,7 +1008,7 @@ let check_trivial_precondition env c =
     None
     (Env.get_range env)
   in
-  
+
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
@@ -1819,6 +1819,50 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | _ -> //inferred
           true
     in
+    let check_erasable quals se r =
+        let lids = U.lids_of_sigelt se in
+        let val_exists =
+          lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
+        in
+        let val_has_erasable_attr =
+          lids |> BU.for_some (fun l ->
+            let attrs_opt = Env.lookup_attrs_of_lid env l in
+            Option.isSome attrs_opt
+            && U.has_attribute (Option.get attrs_opt) FStar.Parser.Const.erasable_attr)
+        in
+        let se_has_erasable_attr = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
+        if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
+        then raise_error
+             (Errors.Fatal_QulifierListNotPermitted,
+              "Mismatch of attributes between declaration and definition: \
+               Declaration is marked `erasable` but the definition is not")
+              r;
+        if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
+        then raise_error
+             (Errors.Fatal_QulifierListNotPermitted,
+              "Mismatch of attributed between declaration and definition: \
+               Definition is marked `erasable` but the declaration is not")
+              r;
+        if se_has_erasable_attr
+        then begin
+          match se.sigel with
+          | Sig_bundle _ ->
+            if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
+            then raise_error
+                   (Errors.Fatal_QulifierListNotPermitted,
+                    "Incompatible attributes and qualifiers: \
+                     erasable types do not support decidable equality and must be marked `noeq`")
+                    r
+          | Sig_declare_typ _ ->
+            ()
+          | _ ->
+            raise_error
+              (Errors.Fatal_QulifierListNotPermitted,
+               "Illegal attribute: \
+                the `erasable` attribute is only permitted on inductive type definitions")
+               r
+        end
+    in
     let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then
@@ -1834,6 +1878,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       then err "duplicate qualifiers";
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
+      check_erasable quals se r;
       match se.sigel with
       | Sig_let((is_rec, _), _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
@@ -1848,7 +1893,10 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
               || inferred x
               || visibility x
               || has_eq x))
-        then err' ()
+        then err' ();
+        if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
+           U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr
+        then err "unopteq is not allowed on an erasable inductives since they don't have decidable equality"
       | Sig_declare_typ _ ->
         if quals |> BU.for_some has_eq
         then err' ()
@@ -1875,32 +1923,23 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | _ -> ()
 
 let must_erase_for_extraction (g:env) (t:typ) =
-    let has_erased_for_extraction_attr (fv:fv) :bool =
-      fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
-            match (SS.compress t).n with
-            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
-            | _ -> false))
-    in
-    let rec aux_whnf env t = //t is expected to b in WHNF
-        match (SS.compress t).n with
-        | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid || has_erased_for_extraction_attr fv
-        | Tm_arrow _ ->
-          let bs, c = U.arrow_formals_comp t in
-          let env = FStar.TypeChecker.Env.push_binders env bs in
-          if U.is_pure_comp c
-          then (//printfn "t is %s; %s is pure!" (Print.term_to_string t) (Print.comp_to_string c);
-                aux env (U.comp_result c))
-          else U.is_pure_or_ghost_comp c //erase it if it is ghost
-        | Tm_refine({sort=t}, _)
-        | Tm_ascribed(t, _, _) ->
-          aux env t
-        | Tm_app(head, [_]) ->
-          (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?
-           | _ -> false)
-        | _ ->
-          false
+    let rec descend env t = //t is expected to b in WHNF
+      match (SS.compress t).n with
+      | Tm_arrow _ ->
+           let bs, c = U.arrow_formals_comp t in
+           let env = FStar.TypeChecker.Env.push_binders env bs in
+           (U.is_ghost_effect (U.comp_effect_name c))
+           || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
+      | Tm_refine({sort=t}, _) ->
+           aux env t
+      | Tm_app (head, _)
+      | Tm_uinst (head, _) ->
+           descend env head
+      | Tm_fvar fv ->
+           //special treatment for must_erase_for_extraction here
+           //See Env.type_is_erasable for more explanations
+           Env.fv_has_attr env fv C.must_erase_for_extraction_attr
+      | _ -> false
     and aux env t =
         let t = N.normalize [Env.Primops;
                              Env.Weak;
@@ -1909,9 +1948,10 @@ let must_erase_for_extraction (g:env) (t:typ) =
                              Env.Beta;
                              Env.AllowUnboundUniverses;
                              Env.Zeta;
-                             Env.Iota] env t in
+                             Env.Iota;
+                             Env.Unascribe] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
-        let res = aux_whnf env t in
+        let res = Env.non_informative env t || descend env t in
         if Env.debug env <| Options.Other "Extraction"
         then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
         res

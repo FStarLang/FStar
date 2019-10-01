@@ -47,7 +47,6 @@ let z3_result_as_replay_result = function
     | Inr (r, _) -> Inr r
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
-let format_hints_file_name src_filename = BU.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
@@ -56,21 +55,17 @@ let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
-         let val_filename = match Options.hint_file() with
-                            | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename) in
+         let val_filename = Options.hint_file_for_src norm_src_filename in
          begin match BU.read_hints val_filename with
             | Some hints ->
                 let expected_digest = BU.digest_of_file norm_src_filename in
                 if Options.hint_info()
                 then begin
-                    BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
+                    BU.print3 "(%s) digest is %s from %s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
-                        (match Options.hint_file() with
-                         | Some fn -> " from '" ^ val_filename ^ "'"
-                         | _ -> "")
+                         val_filename
                 end;
                 replaying_hints := Some hints.hints
             | None ->
@@ -86,9 +81,7 @@ let finalize_hints_db src_filename :unit =
                 hints = hints
               }  in
           let norm_src_filename = BU.normalize_file_path src_filename in
-          let val_filename = match Options.hint_file() with
-                            | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename) in
+          let val_filename = Options.hint_file_for_src norm_src_filename in
           BU.write_hints val_filename hints_db
     end;
     recorded_hints := None;
