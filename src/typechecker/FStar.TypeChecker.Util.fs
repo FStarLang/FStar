@@ -2377,6 +2377,11 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   c, Env.conj_guard g guard_f
 
+(*
+ * Creating the Env.mlift.mlift_term function for layered effects
+ * Quite simple, just apply the lift term, passing units for the
+ * binders that are meant to compute indices
+ *)
 let lift_tf_layered_effect_term (lift:tscheme) (lift_t:tscheme)
   (u:universe) (a:typ) (e:term) : term =
   
@@ -2391,10 +2396,10 @@ let lift_tf_layered_effect_term (lift:tscheme) (lift_t:tscheme)
         BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
-  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.tun))@[S.as_arg e]) in
+  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
   mk (Tm_app (lift, args)) None e.pos
 
-let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
+let get_mlift_for_subeff env sub =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
