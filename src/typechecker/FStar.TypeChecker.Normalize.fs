@@ -1644,13 +1644,22 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                 else []
               in
               let reified =
+                (*
+                 * Arguments to bind_repr for layered effects are:
+                 *   a b ..units for binders that compute indices.. head body
+                 *
+                 * For non-layered effects, as before
+                 *)
                 let args =
                   if ed.is_layered then
                     let rest_bs =
                       match (ed.bind_wp |> snd |> SS.compress).n with
                       | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
                         bs |> List.splitAt (List.length bs - 2) |> fst
-                      | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+                      | _ ->
+                        raise_error (Errors.Fatal_UnexpectedEffect,
+                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                            (Ident.string_of_lid ed.mname) (ed.bind_wp |> snd |> Print.term_to_string)) rng in
                     (S.as_arg lb.lbtyp)::(S.as_arg t)::
                     ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg head; S.as_arg body])
                   else
@@ -1775,12 +1784,19 @@ and reify_lift cfg e msrc mtgt t : term =
         | _ -> failwith "NIY : Reification of indexed effects"
     in
     let args =
+      (*
+       * Arguments for layered effects are:
+       *   a ..units for binders that compute indices.. x
+       *)
       if ed.is_layered then
         let rest_bs =
           match (ed.ret_wp |> snd |> SS.compress).n with
           | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
             bs |> List.splitAt (List.length bs - 1) |> fst
-          | _ -> failwith "Impossible!" in  //AR: TODO: FIXME: proper error
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedEffect,
+              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
+                (Ident.string_of_lid ed.mname) (ed.ret_wp |> snd |> Print.term_to_string)) e.pos in
         (S.as_arg t)::
         ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e])
       else [as_arg t ; as_arg e] in
@@ -1796,9 +1812,6 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      (* We don't have any reasonable wp to provide so we just pass unknow *)
-      (* Usually the wp is only necessary to typecheck, so this should not *)
-      (* create a big issue. *)
       lift (env.universe_of env t) t (U.mk_reify e)
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
