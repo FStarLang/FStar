@@ -4805,8 +4805,41 @@ let (pure_or_ghost_pre_and_post :
   
 let (reify_body :
   FStar_TypeChecker_Env.env ->
+<<<<<<< HEAD
     FStar_TypeChecker_Env.steps ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+=======
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun env  ->
+    fun t  ->
+      let tm = FStar_Syntax_Util.mk_reify t  in
+      let tm' =
+        FStar_TypeChecker_Normalize.normalize
+          [FStar_TypeChecker_Env.Beta;
+          FStar_TypeChecker_Env.Reify;
+          FStar_TypeChecker_Env.Eager_unfolding;
+          FStar_TypeChecker_Env.EraseUniverses;
+          FStar_TypeChecker_Env.AllowUnboundUniverses;
+          FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env tm
+         in
+      (let uu____6178 =
+         FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+           (FStar_Options.Other "SMTEncodingReify")
+          in
+       if uu____6178
+       then
+         let uu____6183 = FStar_Syntax_Print.term_to_string tm  in
+         let uu____6185 = FStar_Syntax_Print.term_to_string tm'  in
+         FStar_Util.print2 "Reified body %s \nto %s\n" uu____6183 uu____6185
+       else ());
+      tm'
+  
+let (reify_body_with_arg :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.arg -> FStar_Syntax_Syntax.term)
+>>>>>>> snap
   =
   fun env  ->
     fun steps  ->
@@ -4814,12 +4847,21 @@ let (reify_body :
         let tm = FStar_Syntax_Util.mk_reify t  in
         let tm' =
           FStar_TypeChecker_Normalize.normalize
+<<<<<<< HEAD
             (FStar_List.append
                [FStar_TypeChecker_Env.Beta;
                FStar_TypeChecker_Env.Reify;
                FStar_TypeChecker_Env.Eager_unfolding;
                FStar_TypeChecker_Env.EraseUniverses;
                FStar_TypeChecker_Env.AllowUnboundUniverses] steps) env tm
+=======
+            [FStar_TypeChecker_Env.Beta;
+            FStar_TypeChecker_Env.Reify;
+            FStar_TypeChecker_Env.Eager_unfolding;
+            FStar_TypeChecker_Env.EraseUniverses;
+            FStar_TypeChecker_Env.AllowUnboundUniverses;
+            FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env tm
+>>>>>>> snap
            in
         (let uu____9521 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
