@@ -621,23 +621,22 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
-    (* GM: Why keep `t`? *)
-    let t0 = SS.compress t in
+    let t = SS.compress t in
+    let t0 = t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-    then BU.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
-    match t0.n with
+    then BU.print2 "(%s)   %s\n" (Print.tag_of_term t) (Print.term_to_string t);
+    match t.n with
       | Tm_delayed  _
       | Tm_unknown    ->
-        failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n"
+        failwith (BU.format3 "(%s) Impossible: %s\n%s\n"
                              (Range.string_of_range <| t.pos)
-                             (Print.tag_of_term t0)
-                             (Print.term_to_string t0)
+                             (Print.tag_of_term t)
                              (Print.term_to_string t))
 
       | Tm_lazy i ->
         let e = U.unfold_lazy i in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
-            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t0)
+            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t)
                                                    (Print.term_to_string e);
         encode_term e env
 
