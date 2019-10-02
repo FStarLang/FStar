@@ -764,12 +764,6 @@ let nbe_eval (cfg:cfg) (s:steps) (tm:term) : term =
     log_nbe cfg (fun () -> BU.print1 "Result of NBE is  %s\n" (Print.term_to_string tm_norm));
     tm_norm
 
-let is_reify_head = function
-    | App(_, {n=Tm_constant FC.Const_reify}, _, _)::_ ->
-      true
-    | _ ->
-      false
-
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack =
     let rec drop_irrel = function
@@ -1827,7 +1821,7 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
-        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements"
+        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with

@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel'
 include ../Makefile.include
-ROOTS=Test.fst RST.Effect.Test.fst Locals.Effect.fst
+ROOTS=Test.fst RST.Effect.Test.fst Locals.Effect.fst STExn.fst
 
 all: verify-all
 

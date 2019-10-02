@@ -2883,7 +2883,12 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         then giveup env (BU.format2 "incompatible effects: %s <> %s"
                                         (Print.lid_to_string c1_comp.effect_name)
                                         (Print.lid_to_string c2_comp.effect_name)) orig
-        else let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
+        else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
+        then giveup env (BU.format2 "incompatible effect arguments: %s <> %s"
+                          (Print.args_to_string c1_comp.effect_args)
+                          (Print.args_to_string c2_comp.effect_args)) orig
+        else
+             let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
              let arg_sub_probs, wl =
                  List.fold_right2
                         (fun (a1, _) (a2, _) (arg_sub_probs, wl) ->

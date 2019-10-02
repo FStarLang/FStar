@@ -3950,8 +3950,7 @@ and (tc_comp :
                                             (FStar_Pervasives_Native.fst res);
                                           FStar_Syntax_Syntax.effect_args =
                                             args2;
-                                          FStar_Syntax_Syntax.flags =
-                                            (uu___1574_11084.FStar_Syntax_Syntax.flags)
+                                          FStar_Syntax_Syntax.flags = flags
                                         })
                                       in
                                    let u_c =

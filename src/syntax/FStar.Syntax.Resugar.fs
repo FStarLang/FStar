@@ -160,16 +160,23 @@ let string_to_op s =
   | "op_Lens_Access" -> Some (".(||)", None)
   | _ ->
     if BU.starts_with s "op_" then
-      let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
+    begin
+      let s = BU.split (BU.substring_from s (String.length "op_")) "_" in
       match s with
       | [op] -> name_of_op op
       | _ ->
-        let op = List.fold_left(fun acc x -> match x with
-                                  | Some (op, _) -> acc ^ op
-                                  | None -> failwith "wrong composed operator format")
-                                  "" (List.map name_of_op s)  in
-        Some (op, None)
-    else
+        let maybeop =
+          List.fold_left (fun acc x -> match acc with
+                                       | None -> None
+                                       | Some acc ->
+                                           match x with
+                                           | Some (op, _) -> Some (acc ^ op)
+                                           | None -> None)
+                         (Some "")
+                         (List.map name_of_op s)
+        in
+        BU.map_opt maybeop (fun o -> (o, None))
+    end else
       None
 
 type expected_arity = option<int>
