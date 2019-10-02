@@ -207,7 +207,7 @@
         "subterm_ordering_CanonCommSemiring.Cons_var"
       ],
       0,
-      "6b5c6c26a36f8df20ef0482ee9d0e7bf"
+      "68c78d67890ddede9340f5aabded71f1"
     ],
     [
       "CanonCommSemiring.varlist_merge",
@@ -228,7 +228,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c18601e275b77a945903cb8499183da7"
+      "ae82a7e3c631e5f01be94e12978f605c"
     ],
     [
       "CanonCommSemiring.canonical_sum_merge",
@@ -248,7 +248,7 @@
         "subterm_ordering_CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "29ede0885b6623651e9fca526bd5b4f9"
+      "1a1f78e514c1f2c5e243baad2cd3c6bc"
     ],
     [
       "CanonCommSemiring.canonical_sum_merge",
@@ -276,7 +276,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f3f764e7000415aca906edb844818e70"
+      "031a90f164b2f7071f9114348d1c6436"
     ],
     [
       "CanonCommSemiring.monom_insert",
@@ -764,7 +764,7 @@
         "unit_typing"
       ],
       0,
-      "24eb11320e0bc4a3f480a3a6f5534f84"
+      "d191391173a01a0e47a90dcc06943fb1"
     ],
     [
       "CanonCommSemiring.varlist_merge_ok",
@@ -818,7 +818,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "bdf9811bc73b707c36a27f4b842a6a21"
+      "a1468d541d26ee1db5d965f401dc8d29"
     ],
     [
       "CanonCommSemiring.ics_aux_ok",
@@ -944,7 +944,7 @@
         "typing_FStar.Algebra.CommMonoid.__proj__CM__item__unit"
       ],
       0,
-      "8e6f84445bf8fd5863ad0d00c7dbeca3"
+      "4b1145ee1d9e082699d9f425ab39007b"
     ],
     [
       "CanonCommSemiring.canonical_sum_merge_ok",
@@ -1025,7 +1025,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "feedac6a01cf81b279869f88c0af4d78"
+      "53584e20a296f26ca1f25d8fa9eea772"
     ],
     [
       "CanonCommSemiring.monom_insert_ok",
@@ -1188,7 +1188,7 @@
         "typing_CanonCommSemiring.interp_vl"
       ],
       0,
-      "eecc7cf306ceeb0d4edc0c9c18a385bf"
+      "143fe952e11602eefe433935d6a33aae"
     ],
     [
       "CanonCommSemiring.canonical_sum_scalar2_ok",
@@ -1643,7 +1643,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "9b8a6485a14f265e00fd1b509505e6b2"
+      "d26e6c864e3dc8c5c97dfc24d1d9b974"
     ]
   ]
 ]
