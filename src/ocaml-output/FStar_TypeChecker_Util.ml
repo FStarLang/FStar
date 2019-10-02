@@ -2801,7 +2801,8 @@ let (reify_body :
           FStar_TypeChecker_Env.Reify;
           FStar_TypeChecker_Env.Eager_unfolding;
           FStar_TypeChecker_Env.EraseUniverses;
-          FStar_TypeChecker_Env.AllowUnboundUniverses] env tm
+          FStar_TypeChecker_Env.AllowUnboundUniverses;
+          FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env tm
          in
       (let uu____6178 =
          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -2833,7 +2834,8 @@ let (reify_body_with_arg :
             FStar_TypeChecker_Env.Reify;
             FStar_TypeChecker_Env.Eager_unfolding;
             FStar_TypeChecker_Env.EraseUniverses;
-            FStar_TypeChecker_Env.AllowUnboundUniverses] env tm
+            FStar_TypeChecker_Env.AllowUnboundUniverses;
+            FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env tm
            in
         (let uu____6239 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
