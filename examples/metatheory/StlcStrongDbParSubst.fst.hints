@@ -215,7 +215,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bda004b2c264621bc0bdac72ff187a75"
+      "0abee7c5dbb54931017e818192ff3082"
     ],
     [
       "StlcStrongDbParSubst.subst",
@@ -955,7 +955,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "f83d9a6b352456fb070fcb1a92c5af7d"
+      "2db4431c542624db228521df884cf72b"
     ],
     [
       "StlcStrongDbParSubst.preservation",
@@ -1201,7 +1201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "867cfba819bb416e679dd606705e36bd"
+      "fd6de11f96c4f134b34621954ce89c8f"
     ],
     [
       "StlcStrongDbParSubst.subst",
@@ -1883,7 +1883,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "b2e91f41f6bf5ec77ee58d5f5a83994e"
+      "8eb876813a380d04ec6b2b78b76815d6"
     ],
     [
       "StlcStrongDbParSubst.preservation",
