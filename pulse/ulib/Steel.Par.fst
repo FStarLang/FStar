@@ -34,16 +34,16 @@ val par (#in1 #in2:resource)
         : RST (a & b)
               (in1 <*> in2)
               (fun p -> out1 (fst p) <*> out2 (snd p))
-              (fun h -> pre1 (focus_rmem h #in2 in1) /\ pre2 ((focus_rmem h #in1 in2)))
+              (fun h -> pre1 (focus_rmem h in1) /\ pre2 ((focus_rmem h in2)))
               (fun h0 x h1 ->
                 post1
-                  (focus_rmem h0 #in2 in1)
+                  (focus_rmem h0 in1)
                   (fst x)
-                  (focus_rmem h1 #(out2 (snd x)) (out1 (fst x))) /\
+                  (focus_rmem h1 (out1 (fst x))) /\
                 post2
-                  (focus_rmem h0 #in1 in2)
+                  (focus_rmem h0 in2)
                   (snd x)
-                  (focus_rmem h1 #(out1 (fst x)) (out2 (snd x)))
+                  (focus_rmem h1 (out2 (snd x)))
               )
 
 (* We now model locks to permit the sharing of read/write resources. We h1rently model locks as values, which are therefore in scope of both threads when calling par.

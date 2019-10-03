@@ -50,11 +50,17 @@ let modifies_refl res h = ()
 let modifies_trans res0 res1 res2 h0 h1 h2 =
   modifies_loc_disjoint (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1 h2
 
+
+let is_subresource_of r0 r = exists (r1: resource). r `can_be_split_into` (r0, r1)
+
+
 let is_subresource_of_elim r0 r goal lemma =
   let pf: squash (exists (r1: resource). r `can_be_split_into` (r0, r1)) = () in
   Classical.exists_elim goal #resource #(fun r1 -> r `can_be_split_into` (r0 , r1)) pf (fun r1 ->
     lemma r1
   )
+
+let can_be_split_into_intro_star r0 r1 = ()
 
 let is_subresource_of_intro1 r0 r r1 = ()
 
@@ -63,7 +69,24 @@ let is_subresource_of_intro2 r0 r r1 = reveal_can_be_split_into ()
 let is_subresource_of_trans r1 r2 r3 =
   is_subresource_of_elim r1 r2 (r1 `is_subresource_of` r3) (fun delta12 ->
     is_subresource_of_elim r2 r3 (r1 `is_subresource_of` r3) (fun delta23 ->
-      can_be_split_into_trans r3 r2 r1 delta23 delta12
+      assert(r3 `can_be_split_into` (r2, delta23));
+      assert(r2 `can_be_split_into` (r1, delta12));
+      reveal_can_be_split_into ();
+      reveal_star ();
+      let delta13 = delta12 <*> delta23 in
+      let outer = r3 in
+      let inner = r1 in
+      let delta = delta13 in
+      let goal h =
+        (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
+        (inv outer h <==>
+          inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+      in
+      let aux (h: HS.mem) : Lemma (goal h) =
+        loc_union_assoc (as_loc (fp delta23) h) (as_loc (fp delta12) h) (as_loc (fp r1) h)
+      in
+      Classical.forall_intro aux;
+      assert(r3 `can_be_split_into` (r1, delta13))
     )
   )
 
@@ -95,19 +118,36 @@ let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` 
   in r'
 
 
-let focus_rmem #r s #delta r0 =
+let focus_rmem #r s r0 =
   focus_rmem' #r s r0
 
-let focus_rmem_equality outer inner arg #delta1  h =
-  let focused = focus_rmem h #delta1 inner in
+let focus_rmem_equality outer inner arg h =
+  let focused = focus_rmem h inner in
   extensionality_g
     (r0:resource{r0 `is_subresource_of` inner})
     (fun r0 -> r0.t)
     focused
     (fun r0 -> is_subresource_of_trans r0 inner outer; h r0)
 
-let extend_rprop #r0 p #delta r =
-    fun s -> p (focus_rmem #r s #delta r0)
+let focus_mk_rmem_equality outer inner h =
+  let souter = mk_rmem outer h in
+  let focused = focus_rmem souter inner in
+  let original = mk_rmem inner h in
+  extensionality_g
+    (r0:resource{r0 `is_subresource_of` inner})
+    (fun r0 -> r0.t)
+    focused
+    original;
+  let aux  (r0:resource{r0 `is_subresource_of` inner}) : Lemma (focused r0 == original r0) =
+    focus_rmem_equality outer inner r0 souter;
+    is_subresource_of_trans r0 inner outer
+  in
+  Classical.forall_intro aux
+
+
+let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
+  : Tot (rprop r) =
+  fun s -> p (focus_rmem #r s r0)
 
 #push-options "--z3rlimit 30"
 
@@ -160,34 +200,11 @@ open Steel.Tactics
 
 (* Generic framing operation for RST (through resource inclusion) *)
 
+#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
+
 let get r =
   let h = HST.get () in
   mk_rmem r h
-
-val focus_mk_rmem_equality (outer inner: resource) (#delta: resource) (h: HS.mem)
-  : Lemma
-    (requires (inv outer h /\ outer `can_be_split_into` (inner,delta)))
-    (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
-      focus_rmem (mk_rmem outer h) #delta inner == mk_rmem inner h))
-
-let focus_mk_rmem_equality outer inner #delta h =
-  let souter = mk_rmem outer h in
-  let focused = focus_rmem souter #delta inner in
-  let original = mk_rmem inner h in
-  extensionality_g
-    (r0:resource{r0 `is_subresource_of` inner})
-    (fun r0 -> r0.t)
-    focused
-    original;
-  let aux
-    (delta2: resource)
-    (r0:resource{inner `can_be_split_into` (r0, delta2)}) : Lemma (focused r0 == original r0) =
-    focus_rmem_equality outer inner r0 #delta souter;
-    is_subresource_of_trans r0 inner outer
-  in
-    Classical.forall_intro_2 aux
-
-#push-options "--no_tactics --z3rlimit 200 --max_fuel 0 --max_ifuel 0"
 
 inline_for_extraction noextract let rst_frame
   outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
@@ -198,21 +215,19 @@ inline_for_extraction noextract let rst_frame
   (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
   (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
   (**) let h0 = HST.get () in
-  (**) let rh0 = mk_rmem outer0 h0 in
-  (**) focus_mk_rmem_equality outer0 inner0 #delta h0;
-  (**) focus_mk_rmem_equality outer0 delta #inner0 h0;
+  (**) focus_mk_rmem_equality outer0 inner0 h0;
+  (**) focus_mk_rmem_equality outer0 delta h0;
   let x = f () in
-  (**) let h1 = HST.get () in
-  (**) let rh1 = mk_rmem (outer1 x) h1 in
-  (**) focus_mk_rmem_equality (outer1 x) (inner1 x) #delta h1;
-  (**) focus_mk_rmem_equality (outer1 x) delta #(inner1 x) h1;
-  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) #inner0 delta in
-  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) #(inner1 x) delta in
+  (**) let h1 = HST.get ()in
+  (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
+  (**) focus_mk_rmem_equality (outer1 x) delta h1;
+  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
+  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) delta in
   (**) extensionality_g
-  (**)   (r0:resource{r0 `is_subresource_of` delta})
-  (**)   (fun r0 -> r0.t)
-  (**)   old_delta
-  (**)   cur_delta;
+  (**)  (r0:resource{r0 `is_subresource_of` delta})
+  (**)  (fun r0 -> r0.t)
+  (**)  old_delta
+  (**)  cur_delta;
   x
 
 #pop-options

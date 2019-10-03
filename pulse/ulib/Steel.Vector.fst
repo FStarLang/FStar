@@ -68,8 +68,10 @@ val unpack_vector (#a: Type) (v: vector a) : RST (contents_t a)
     A.length contents.arr = contents.max /\
     U32.v contents.len <= U32.v contents.max /\
     U32.v contents.len >= 0 /\
-    A.get_rperm contents.arr h1 == get_perm v h0 /\
-    P.get_perm v h1 == get_perm v h0  /\
+    A.get_rperm
+      contents.arr
+      (focus_rmem h1 (A.array_resource contents.arr)) == get_perm v h0 /\
+    P.get_perm v (focus_rmem h1 (P.ptr_resource v)) == get_perm v h0  /\
     A.freeable contents.arr /\
     (h0 (vector_resource v)).v_capacity == contents.max /\
     as_rseq v h0 == S.slice (A.as_rseq contents.arr h1) 0 (U32.v contents.len)
@@ -98,7 +100,8 @@ val pack_vector
       U32.v len <= U32.v max /\
       U32.v len >= 0 /\
       A.freeable arr  /\
-      A.get_rperm arr h0 == P.get_perm v h0
+      A.get_rperm arr (focus_rmem h0 (A.array_resource arr)) ==
+        P.get_perm v (focus_rmem h0 (P.ptr_resource v))
     )
     (fun h0 _ h1 ->
       let contents = Vector len max arr in
@@ -108,8 +111,8 @@ val pack_vector
       A.length arr = max /\
      (h1 (vector_resource v)).v_capacity == max /\
        as_rseq v h1 == S.slice (A.as_rseq arr h0) 0 (U32.v len) /\
-      get_perm v h1 == P.get_perm v h0 /\
-      get_perm v h1 ==  A.get_rperm arr h0
+      get_perm v h1 == P.get_perm v (focus_rmem h0 (P.ptr_resource v)) /\
+      get_perm v h1 ==  A.get_rperm arr (focus_rmem h0 (A.array_resource arr))
     )
 let pack_vector #a len max arr  v =
   P.reveal_ptr ();
@@ -140,7 +143,7 @@ let create #a init max =
   v
 
 
-#set-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 100"
+#set-options "--max_fuel 1 --max_ifuel 1 --z3rlimit 100"
 
 let push #a v x =
   (**) let h0 = HST.get () in
@@ -156,7 +159,6 @@ let push #a v x =
   let len = contents.len in
   let arr = contents.arr in
   if U32.(len <^ max) then begin
-   (*
     rst_frame
       (A.array_resource arr <*> P.ptr_resource v)
       (fun _ ->  A.array_resource arr <*> P.ptr_resource v)
@@ -180,10 +182,8 @@ let push #a v x =
     (**) let v1 = h1_r (vector_resource v) in
     (**) assert(S.slice v1.v_arr 0 (U32.v len) == v0.v_arr);
     (**) assert(S.index v1.v_arr (U32.v len) == x);
-    (**) assert(v1.v_arr == S.snoc v0.v_arr x)*)
-    admit()
+    (**) assert(v1.v_arr == S.snoc v0.v_arr x)
   end else begin
-  (*
     let max_uint32 = UInt32.uint_to_t (UInt.max_int 32) in
     let new_contents_length =
       if U32.(max >^ max_uint32 /^ 2ul) then
@@ -227,7 +227,7 @@ let push #a v x =
     let h = get current_res in
     assume(A.array_resource new_contents_parts1 `is_subresource_of` current_res);
     assume(Perm.allows_write (A.get_rperm new_contents_parts1 h));
-    rst_frame
+    (*rst_frame
       (
         A.array_resource new_contents_parts1 <*> A.array_resource new_contents_parts2 <*>
         A.array_resource arr <*> P.ptr_resource v
