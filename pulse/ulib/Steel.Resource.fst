@@ -109,9 +109,31 @@ let can_be_split_into_empty_right res = ()
 
 let can_be_split_into_empty_reverse_right res1 res2 = ()
 
+let can_be_split_into_trans r3 r2 r1 delta23 delta12 =
+  assert(r3 `can_be_split_into` (r2, delta23));
+  assert(r2 `can_be_split_into` (r1, delta12));
+  reveal_can_be_split_into ();
+  reveal_star ();
+  let delta13 = delta12 <*> delta23 in
+  let outer = r3 in
+  let inner = r1 in
+  let delta = delta13 in
+  let goal h =
+    (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
+    (inv outer h <==>
+      inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+  in
+  let aux (h: HS.mem) : Lemma (goal h) =
+    loc_union_assoc (as_loc (fp delta23) h) (as_loc (fp delta12) h) (as_loc (fp r1) h)
+  in
+  Classical.forall_intro aux;
+  assert(r3 `can_be_split_into` (r1, delta13))
+
 let reveal_can_be_split_into_inner_inv outer inner delta h = ()
 
 let reveal_can_be_split_into_delta_inv outer inner delta h = ()
+
+let can_be_split_into_intro_star r0 r1 = ()
 
 let equal (res1 res2:resource) =
     res1 `can_be_split_into` (res2,empty_resource)

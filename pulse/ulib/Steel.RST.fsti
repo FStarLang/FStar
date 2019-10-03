@@ -78,7 +78,8 @@ val modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
 
 /// `LowStar.Resource` defines `can_be_split_into`, but we need here an existential predicate to not
 /// carry around all the splitting deltas.
-val is_subresource_of (r0 r: resource) : Type0
+let is_subresource_of (r0 r: resource) : Type0 =
+  exists (r1: resource). r `can_be_split_into` (r0, r1)
 
 val is_subresource_of_elim
   (r0 r: resource)
@@ -87,12 +88,6 @@ val is_subresource_of_elim
   : Lemma
     (requires (r0 `is_subresource_of` r))
     (ensures goal)
-
-val can_be_split_into_intro_star (r0 r1: resource)
-  : Lemma
-    (requires (True))
-    (ensures ((r0 <*> r1) `can_be_split_into` (r0, r1)))
-  [SMTPat (r0 <*> r1)]
 
 val is_subresource_of_intro1 (r0 r r1: resource)
   : Lemma
@@ -131,6 +126,18 @@ let subresource_intro_by_tactic
   FStar.Tactics.by_tactic_seman check_subresource (squash (r `can_be_split_into` (r0, delta)));
   is_subresource_of_intro1 r0 r delta
 
+let can_be_split_into_intro_by_tactic
+  (r0 r: resource)
+  (delta: resource{squash (
+    FStar.Tactics.with_tactic check_subresource (squash (r `can_be_split_into` (r0, delta)))
+  )})
+  (_ : unit)
+  : Lemma (r `can_be_split_into` (r0, delta))
+  =
+  FStar.Tactics.by_tactic_seman check_subresource (squash (r `can_be_split_into` (r0, delta)))
+
+
+
 #pop-options
 
 (**** Selectors *)
@@ -158,29 +165,36 @@ val mk_rmem
   Tot (rh:rmem r{forall (r0:resource{r0 `is_subresource_of` r}). rh r0 == sel r0.view h})
 
 /// The only other transformation allowed on selectors is focusing on a subresource.
-val focus_rmem (#r: resource) (h: rmem r) (r0: resource{r0 `is_subresource_of` r})
+val focus_rmem
+  (#r: resource)
+  (h: rmem r)
+  (#delta: resource)
+  (r0: resource{r `can_be_split_into` (r0, delta)})
   : Tot (rmem r0)
 
-val focus_rmem_equality (outer inner arg: resource) (h: rmem outer) : Lemma
-  (requires (inner `is_subresource_of` outer /\ arg `is_subresource_of` inner))
-  (ensures (is_subresource_of_trans arg inner outer; (focus_rmem h inner) arg == h arg))
+val focus_rmem_equality
+  (outer inner arg: resource)
+  (#delta: resource)
+  (h: rmem outer) : Lemma
+  (requires (outer `can_be_split_into` (inner, delta) /\ arg `is_subresource_of` inner))
+  (ensures (is_subresource_of_trans arg inner outer;
+    (focus_rmem h #delta inner) arg == h arg
+  ))
   [SMTPatOr [
-    [SMTPat ((focus_rmem #outer h inner) arg)];
-    [SMTPat (h arg); SMTPat (focus_rmem #outer h inner)]
+    [SMTPat ((focus_rmem #outer h #delta inner) arg)];
+    [SMTPat (h arg); SMTPat (focus_rmem #outer h #delta inner)]
   ]]
-
-val focus_mk_rmem_equality (outer inner: resource) (h: HS.mem)
-  : Lemma
-    (requires (inv outer h /\ inner `is_subresource_of` outer))
-    (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
-      focus_rmem (mk_rmem outer h) inner == mk_rmem inner h))
 
 /// In the ST state, pre and postconditions depended on the entire heap. Here, theses conditions
 /// depend only on a `rmem` for the resource at hand (derived from a heap state).
 let rprop r = rmem r -> Type0
 
 /// `extend_rprop` is the dual of `focus_rmem`.
-val extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
+val extend_rprop
+  (#r0: resource)
+  (p: rprop r0)
+  (#delta: resource)
+  (r: resource{r `can_be_split_into` (r0, delta)})
   : Tot (rprop r)
 
 /// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
@@ -294,15 +308,16 @@ inline_for_extraction noextract val rst_frame
     (FStar.Tactics.by_tactic_seman resolve_frame_delta
       (frame_delta outer0 inner0 outer1 inner1 delta);
       fun h ->
-        pre (focus_rmem h inner0)
+        pre (focus_rmem h #delta inner0)
     )
     (reveal_can_be_split_into ();
       fun h0 x h1 ->
         post
-          (focus_rmem h0 inner0)
+          (focus_rmem h0 #delta inner0)
           x
-          (focus_rmem h1 (inner1 x)) /\
-        (focus_rmem h0 delta == focus_rmem h1 delta)
+          (focus_rmem h1 #delta (inner1 x)) /\
+
+        (focus_rmem h0 #inner0 delta == focus_rmem h1 #(inner1 x) delta)
     )
 
 #pop-options

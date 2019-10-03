@@ -224,6 +224,10 @@ val can_be_split_into_empty_reverse_right (res1 res2:resource)
   : Lemma ((res1 <*> res2) `can_be_split_into` (res2 <*> res1, empty_resource))
   [SMTPat ((res1 <*> res2) `can_be_split_into` (res2 <*> res1, empty_resource))]
 
+val can_be_split_into_trans (outer inner arg delta1 delta2: resource) : Lemma
+  (requires (outer `can_be_split_into` (inner, delta1) /\ inner `can_be_split_into` (arg, delta2)))
+  (ensures (outer `can_be_split_into` (arg, delta1 <*> delta2)))
+
 val reveal_can_be_split_into_inner_inv (outer inner delta:resource) (h:HS.mem)
   : Lemma
     (requires (outer `can_be_split_into` (inner,delta) /\ inv outer h))
@@ -234,7 +238,13 @@ val reveal_can_be_split_into_delta_inv (outer inner delta:resource) (h:HS.mem)
   : Lemma
     (requires (outer `can_be_split_into` (inner,delta) /\ inv outer h))
     (ensures  (inv delta h))
-  [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv delta h)]
+    [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv delta h)]
+
+val can_be_split_into_intro_star (r0 r1: resource)
+  : Lemma
+    (requires (True))
+    (ensures ((r0 <*> r1) `can_be_split_into` (r0, r1)))
+  [SMTPat (r0 <*> r1)]
 
 (**** Equivalence relation (extensional equality) on resources *)
 

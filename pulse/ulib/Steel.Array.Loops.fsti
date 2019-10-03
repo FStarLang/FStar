@@ -41,7 +41,7 @@ val iteri
   : RST unit
     (A.array_resource b <*> context)
     (fun _ -> A.array_resource b <*> context)
-    (fun h0 -> loop_inv (focus_rmem h0 context) 0)
-    (fun h0 _ h1 -> loop_inv (focus_rmem h1 context) (A.vlength b) /\
-      focus_rmem h0 (A.array_resource b) == focus_rmem h1 (A.array_resource b)
+    (fun h0 -> loop_inv (focus_rmem h0 #(A.array_resource b) context) 0)
+    (fun h0 _ h1 -> loop_inv (focus_rmem h1 #(A.array_resource b) context) (A.vlength b) /\
+      h0 (A.array_resource b) ==  h1 (A.array_resource b)
     )
