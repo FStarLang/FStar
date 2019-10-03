@@ -34,7 +34,7 @@ val index (#a:Type) (b:A.array a) (i:UInt32.t)
     (fun h0 x h1 ->
       UInt32.v i < A.vlength b /\
       Seq.index (as_rseq b h0) (UInt32.v i) == x /\
-      h0 (array_resource b) == h1 (array_resource b)
+      h0 == h1
     )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
@@ -125,7 +125,7 @@ val copy (#a: Type) (o: array a) (i: array a) : RST unit
   )
   (fun h0 _ h1 ->
     A.vlength o = A.vlength i /\
-    h0 (array_resource i) == h1 (array_resource i) /\
+    focus_rmem h0 (array_resource i) == focus_rmem h1 (array_resource i) /\
     as_rseq o h1 == as_rseq i h0 /\
     get_rperm o h1 == get_rperm o h0
   )
