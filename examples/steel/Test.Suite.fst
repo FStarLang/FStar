@@ -107,15 +107,15 @@ let test3 (b1 b2 b3: A.array U32.t) : RST unit
   in
   ()
 
-//TODO: How to infer subresource_intro_by_tactic automatically ?
+//TODO: How to infer can_be_split_into_intro_by_tactic automatically ?
 let test4 (b1 b2 b3: A.array U32.t) : RST unit
   (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
   (fun _ -> A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
   (fun h ->
-    subresource_intro_by_tactic
-      (A.array_resource b1)
-      (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3) ();
-    P.allows_write (A.get_rperm b1 (focus_rmem h (A.array_resource b1)))
+    can_be_split_into_intro_by_tactic (A.array_resource b1)
+      (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
+      (A.array_resource b2 <*> A.array_resource b3) ();
+    P.allows_write (A.get_rperm b1 (focus_rmem h #(A.array_resource b2 <*> A.array_resource b3) (A.array_resource b1)))
   )
   (fun _ _ _ -> True)
   =
