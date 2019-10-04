@@ -1782,6 +1782,16 @@ let is_synth_by_tactic t =
 let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
      FStar.Util.for_some (is_fvar attr) attrs
 
+(* Checks whether the list of attrs contains an application of `attr`, and
+ * returns the arguments if so. If there's more than one, the first one
+ * takes precedence. *)
+let get_attribute (attr : lident) (attrs:list<Syntax.attribute>) : option<args> =
+    List.tryPick (fun t ->
+        let head, args = head_and_args t in
+        match (Subst.compress head).n with
+        | Tm_fvar fv when fv_eq_lid fv attr -> Some args
+        | _ -> None) attrs
+
 ///////////////////////////////////////////
 // Setting pragmas
 ///////////////////////////////////////////
