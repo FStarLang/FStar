@@ -70,7 +70,7 @@ assume val sigelt_quals     : sigelt -> list qualifier
 assume val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
 (* Reading the optionstate under which a particular sigelt was typechecked *)
-assume val sigelt_opts : sigelt -> optionstate
+assume val sigelt_opts : sigelt -> option optionstate
 
 (* Marker to check a sigelt with a particular optionstate *)
 irreducible
