@@ -135,6 +135,36 @@ let (e_binder :
   mk_emb' embed_binder unembed_binder
     FStar_Reflection_Data.fstar_refl_binder_fv
   
+let (e_optionstate :
+  FStar_Options.optionstate FStar_TypeChecker_NBETerm.embedding) =
+  let embed_optionstate cb b =
+    mk_lazy cb b FStar_Reflection_Data.fstar_refl_optionstate
+      FStar_Syntax_Syntax.Lazy_optionstate
+     in
+  let unembed_optionstate cb t =
+    match t with
+    | FStar_TypeChecker_NBETerm.Lazy
+        (FStar_Util.Inl
+         { FStar_Syntax_Syntax.blob = b;
+           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_optionstate ;
+           FStar_Syntax_Syntax.ltyp = uu____371;
+           FStar_Syntax_Syntax.rng = uu____372;_},uu____373)
+        ->
+        let uu____392 = FStar_Dyn.undyn b  in
+        FStar_Pervasives_Native.Some uu____392
+    | uu____393 ->
+        ((let uu____395 =
+            let uu____401 =
+              let uu____403 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded optionstate: %s" uu____403
+               in
+            (FStar_Errors.Warning_NotEmbedded, uu____401)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____395);
+         FStar_Pervasives_Native.None)
+     in
+  mk_emb' embed_optionstate unembed_optionstate
+    FStar_Reflection_Data.fstar_refl_optionstate_fv
+  
 let rec mapM_opt :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->
@@ -145,11 +175,11 @@ let rec mapM_opt :
       match l with
       | [] -> FStar_Pervasives_Native.Some []
       | x::xs ->
-          let uu____387 = f x  in
-          FStar_Util.bind_opt uu____387
+          let uu____453 = f x  in
+          FStar_Util.bind_opt uu____453
             (fun x1  ->
-               let uu____395 = mapM_opt f xs  in
-               FStar_Util.bind_opt uu____395
+               let uu____461 = mapM_opt f xs  in
+               FStar_Util.bind_opt uu____461
                  (fun xs1  -> FStar_Pervasives_Native.Some (x1 :: xs1)))
   
 let (e_term_aq :
@@ -169,15 +199,15 @@ let (e_term_aq :
       match t with
       | FStar_TypeChecker_NBETerm.Quote (tm,qi) ->
           FStar_Pervasives_Native.Some tm
-      | uu____465 -> FStar_Pervasives_Native.None  in
-    let uu____466 = mkFV FStar_Reflection_Data.fstar_refl_term_fv [] []  in
-    let uu____471 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_term_fv
+      | uu____531 -> FStar_Pervasives_Native.None  in
+    let uu____532 = mkFV FStar_Reflection_Data.fstar_refl_term_fv [] []  in
+    let uu____537 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_term_fv
        in
     {
       FStar_TypeChecker_NBETerm.em = embed_term;
       FStar_TypeChecker_NBETerm.un = unembed_term;
-      FStar_TypeChecker_NBETerm.typ = uu____466;
-      FStar_TypeChecker_NBETerm.emb_typ = uu____471
+      FStar_TypeChecker_NBETerm.typ = uu____532;
+      FStar_TypeChecker_NBETerm.emb_typ = uu____537
     }
   
 let (e_term : FStar_Syntax_Syntax.term FStar_TypeChecker_NBETerm.embedding) =
@@ -193,13 +223,13 @@ let (e_aqualv :
         mkConstruct
           FStar_Reflection_Data.ref_Q_Implicit.FStar_Reflection_Data.fv [] []
     | FStar_Reflection_Data.Q_Meta t ->
-        let uu____504 =
-          let uu____511 =
-            let uu____516 = FStar_TypeChecker_NBETerm.embed e_term cb t  in
-            FStar_TypeChecker_NBETerm.as_arg uu____516  in
-          [uu____511]  in
+        let uu____570 =
+          let uu____577 =
+            let uu____582 = FStar_TypeChecker_NBETerm.embed e_term cb t  in
+            FStar_TypeChecker_NBETerm.as_arg uu____582  in
+          [uu____577]  in
         mkConstruct FStar_Reflection_Data.ref_Q_Meta.FStar_Reflection_Data.fv
-          [] uu____504
+          [] uu____570
      in
   let unembed_aqualv cb t =
     match t with
@@ -211,29 +241,29 @@ let (e_aqualv :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Q_Implicit.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Q_Implicit
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(t1,uu____568)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(t1,uu____634)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Q_Meta.FStar_Reflection_Data.lid
         ->
-        let uu____585 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-        FStar_Util.bind_opt uu____585
+        let uu____651 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
+        FStar_Util.bind_opt uu____651
           (fun t2  ->
              FStar_Pervasives_Native.Some (FStar_Reflection_Data.Q_Meta t2))
-    | uu____590 ->
-        ((let uu____592 =
-            let uu____598 =
-              let uu____600 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded aqualv: %s" uu____600  in
-            (FStar_Errors.Warning_NotEmbedded, uu____598)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____592);
+    | uu____656 ->
+        ((let uu____658 =
+            let uu____664 =
+              let uu____666 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded aqualv: %s" uu____666  in
+            (FStar_Errors.Warning_NotEmbedded, uu____664)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____658);
          FStar_Pervasives_Native.None)
      in
-  let uu____604 =
+  let uu____670 =
     mkConstruct FStar_Reflection_Data.fstar_refl_aqualv_fv [] []  in
-  let uu____609 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_aqualv_fv
+  let uu____675 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_aqualv_fv
      in
-  FStar_TypeChecker_NBETerm.mk_emb embed_aqualv unembed_aqualv uu____604
-    uu____609
+  FStar_TypeChecker_NBETerm.mk_emb embed_aqualv unembed_aqualv uu____670
+    uu____675
   
 let (e_binders :
   FStar_Syntax_Syntax.binders FStar_TypeChecker_NBETerm.embedding) =
@@ -249,18 +279,18 @@ let (e_fv : FStar_Syntax_Syntax.fv FStar_TypeChecker_NBETerm.embedding) =
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_fvar ;
-           FStar_Syntax_Syntax.ltyp = uu____643;
-           FStar_Syntax_Syntax.rng = uu____644;_},uu____645)
+           FStar_Syntax_Syntax.ltyp = uu____709;
+           FStar_Syntax_Syntax.rng = uu____710;_},uu____711)
         ->
-        let uu____664 = FStar_Dyn.undyn b  in
-        FStar_Pervasives_Native.Some uu____664
-    | uu____665 ->
-        ((let uu____667 =
-            let uu____673 =
-              let uu____675 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded fvar: %s" uu____675  in
-            (FStar_Errors.Warning_NotEmbedded, uu____673)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____667);
+        let uu____730 = FStar_Dyn.undyn b  in
+        FStar_Pervasives_Native.Some uu____730
+    | uu____731 ->
+        ((let uu____733 =
+            let uu____739 =
+              let uu____741 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded fvar: %s" uu____741  in
+            (FStar_Errors.Warning_NotEmbedded, uu____739)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____733);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_fv unembed_fv FStar_Reflection_Data.fstar_refl_fv_fv 
@@ -275,18 +305,18 @@ let (e_comp : FStar_Syntax_Syntax.comp FStar_TypeChecker_NBETerm.embedding) =
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_comp ;
-           FStar_Syntax_Syntax.ltyp = uu____709;
-           FStar_Syntax_Syntax.rng = uu____710;_},uu____711)
+           FStar_Syntax_Syntax.ltyp = uu____775;
+           FStar_Syntax_Syntax.rng = uu____776;_},uu____777)
         ->
-        let uu____730 = FStar_Dyn.undyn b  in
-        FStar_Pervasives_Native.Some uu____730
-    | uu____731 ->
-        ((let uu____733 =
-            let uu____739 =
-              let uu____741 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded comp: %s" uu____741  in
-            (FStar_Errors.Warning_NotEmbedded, uu____739)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____733);
+        let uu____796 = FStar_Dyn.undyn b  in
+        FStar_Pervasives_Native.Some uu____796
+    | uu____797 ->
+        ((let uu____799 =
+            let uu____805 =
+              let uu____807 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded comp: %s" uu____807  in
+            (FStar_Errors.Warning_NotEmbedded, uu____805)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____799);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_comp unembed_comp FStar_Reflection_Data.fstar_refl_comp_fv 
@@ -301,18 +331,18 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_env ;
-           FStar_Syntax_Syntax.ltyp = uu____775;
-           FStar_Syntax_Syntax.rng = uu____776;_},uu____777)
+           FStar_Syntax_Syntax.ltyp = uu____841;
+           FStar_Syntax_Syntax.rng = uu____842;_},uu____843)
         ->
-        let uu____796 = FStar_Dyn.undyn b  in
-        FStar_Pervasives_Native.Some uu____796
-    | uu____797 ->
-        ((let uu____799 =
-            let uu____805 =
-              let uu____807 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded env: %s" uu____807  in
-            (FStar_Errors.Warning_NotEmbedded, uu____805)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____799);
+        let uu____862 = FStar_Dyn.undyn b  in
+        FStar_Pervasives_Native.Some uu____862
+    | uu____863 ->
+        ((let uu____865 =
+            let uu____871 =
+              let uu____873 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded env: %s" uu____873  in
+            (FStar_Errors.Warning_NotEmbedded, uu____871)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____865);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_env unembed_env FStar_Reflection_Data.fstar_refl_env_fv 
@@ -330,54 +360,54 @@ let (e_const :
         mkConstruct
           FStar_Reflection_Data.ref_C_False.FStar_Reflection_Data.fv [] []
     | FStar_Reflection_Data.C_Int i ->
-        let uu____838 =
-          let uu____845 =
+        let uu____904 =
+          let uu____911 =
             FStar_TypeChecker_NBETerm.as_arg
               (FStar_TypeChecker_NBETerm.Constant
                  (FStar_TypeChecker_NBETerm.Int i))
              in
-          [uu____845]  in
+          [uu____911]  in
         mkConstruct FStar_Reflection_Data.ref_C_Int.FStar_Reflection_Data.fv
-          [] uu____838
+          [] uu____904
     | FStar_Reflection_Data.C_String s ->
-        let uu____860 =
-          let uu____867 =
-            let uu____872 =
+        let uu____926 =
+          let uu____933 =
+            let uu____938 =
               FStar_TypeChecker_NBETerm.embed
                 FStar_TypeChecker_NBETerm.e_string cb s
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____872  in
-          [uu____867]  in
+            FStar_TypeChecker_NBETerm.as_arg uu____938  in
+          [uu____933]  in
         mkConstruct
           FStar_Reflection_Data.ref_C_String.FStar_Reflection_Data.fv []
-          uu____860
+          uu____926
     | FStar_Reflection_Data.C_Range r ->
-        let uu____883 =
-          let uu____890 =
-            let uu____895 =
+        let uu____949 =
+          let uu____956 =
+            let uu____961 =
               FStar_TypeChecker_NBETerm.embed
                 FStar_TypeChecker_NBETerm.e_range cb r
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____895  in
-          [uu____890]  in
+            FStar_TypeChecker_NBETerm.as_arg uu____961  in
+          [uu____956]  in
         mkConstruct
           FStar_Reflection_Data.ref_C_Range.FStar_Reflection_Data.fv []
-          uu____883
+          uu____949
     | FStar_Reflection_Data.C_Reify  ->
         mkConstruct
           FStar_Reflection_Data.ref_C_Reify.FStar_Reflection_Data.fv [] []
     | FStar_Reflection_Data.C_Reflect ns ->
-        let uu____909 =
-          let uu____916 =
-            let uu____921 =
+        let uu____975 =
+          let uu____982 =
+            let uu____987 =
               FStar_TypeChecker_NBETerm.embed
                 FStar_TypeChecker_NBETerm.e_string_list cb ns
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____921  in
-          [uu____916]  in
+            FStar_TypeChecker_NBETerm.as_arg uu____987  in
+          [uu____982]  in
         mkConstruct
           FStar_Reflection_Data.ref_C_Reflect.FStar_Reflection_Data.fv []
-          uu____909
+          uu____975
      in
   let unembed_const cb t =
     match t with
@@ -393,69 +423,69 @@ let (e_const :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_False.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Reflection_Data.C_False
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(i,uu____989)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(i,uu____1055)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Int.FStar_Reflection_Data.lid
         ->
-        let uu____1006 =
+        let uu____1072 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_int
             cb i
            in
-        FStar_Util.bind_opt uu____1006
+        FStar_Util.bind_opt uu____1072
           (fun i1  ->
              FStar_All.pipe_left
-               (fun _1013  -> FStar_Pervasives_Native.Some _1013)
+               (fun _1079  -> FStar_Pervasives_Native.Some _1079)
                (FStar_Reflection_Data.C_Int i1))
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(s,uu____1016)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(s,uu____1082)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_String.FStar_Reflection_Data.lid
         ->
-        let uu____1033 =
+        let uu____1099 =
           FStar_TypeChecker_NBETerm.unembed
             FStar_TypeChecker_NBETerm.e_string cb s
            in
-        FStar_Util.bind_opt uu____1033
+        FStar_Util.bind_opt uu____1099
           (fun s1  ->
              FStar_All.pipe_left
-               (fun _1044  -> FStar_Pervasives_Native.Some _1044)
+               (fun _1110  -> FStar_Pervasives_Native.Some _1110)
                (FStar_Reflection_Data.C_String s1))
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(r,uu____1047)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(r,uu____1113)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Range.FStar_Reflection_Data.lid
         ->
-        let uu____1064 =
+        let uu____1130 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_range
             cb r
            in
-        FStar_Util.bind_opt uu____1064
+        FStar_Util.bind_opt uu____1130
           (fun r1  ->
              FStar_All.pipe_left
-               (fun _1071  -> FStar_Pervasives_Native.Some _1071)
+               (fun _1137  -> FStar_Pervasives_Native.Some _1137)
                (FStar_Reflection_Data.C_Range r1))
     | FStar_TypeChecker_NBETerm.Construct (fv,[],[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Reify.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Reflection_Data.C_Reify
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(ns,uu____1087)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(ns,uu____1153)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Reflect.FStar_Reflection_Data.lid
         ->
-        let uu____1104 =
+        let uu____1170 =
           FStar_TypeChecker_NBETerm.unembed
             FStar_TypeChecker_NBETerm.e_string_list cb ns
            in
-        FStar_Util.bind_opt uu____1104
+        FStar_Util.bind_opt uu____1170
           (fun ns1  ->
              FStar_All.pipe_left
-               (fun _1123  -> FStar_Pervasives_Native.Some _1123)
+               (fun _1189  -> FStar_Pervasives_Native.Some _1189)
                (FStar_Reflection_Data.C_Reflect ns1))
-    | uu____1124 ->
-        ((let uu____1126 =
-            let uu____1132 =
-              let uu____1134 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded vconst: %s" uu____1134  in
-            (FStar_Errors.Warning_NotEmbedded, uu____1132)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____1126);
+    | uu____1190 ->
+        ((let uu____1192 =
+            let uu____1198 =
+              let uu____1200 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded vconst: %s" uu____1200  in
+            (FStar_Errors.Warning_NotEmbedded, uu____1198)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____1192);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_const unembed_const
@@ -464,144 +494,144 @@ let (e_const :
 let rec (e_pattern' :
   unit -> FStar_Reflection_Data.pattern FStar_TypeChecker_NBETerm.embedding)
   =
-  fun uu____1145  ->
+  fun uu____1211  ->
     let embed_pattern cb p =
       match p with
       | FStar_Reflection_Data.Pat_Constant c ->
-          let uu____1158 =
-            let uu____1165 =
-              let uu____1170 = FStar_TypeChecker_NBETerm.embed e_const cb c
+          let uu____1224 =
+            let uu____1231 =
+              let uu____1236 = FStar_TypeChecker_NBETerm.embed e_const cb c
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1170  in
-            [uu____1165]  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1236  in
+            [uu____1231]  in
           mkConstruct
             FStar_Reflection_Data.ref_Pat_Constant.FStar_Reflection_Data.fv
-            [] uu____1158
+            [] uu____1224
       | FStar_Reflection_Data.Pat_Cons (fv,ps) ->
-          let uu____1185 =
-            let uu____1192 =
-              let uu____1197 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1197  in
-            let uu____1198 =
-              let uu____1205 =
-                let uu____1210 =
-                  let uu____1211 =
-                    let uu____1216 = e_pattern' ()  in
-                    FStar_TypeChecker_NBETerm.e_list uu____1216  in
-                  FStar_TypeChecker_NBETerm.embed uu____1211 cb ps  in
-                FStar_TypeChecker_NBETerm.as_arg uu____1210  in
-              [uu____1205]  in
-            uu____1192 :: uu____1198  in
+          let uu____1251 =
+            let uu____1258 =
+              let uu____1263 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1263  in
+            let uu____1264 =
+              let uu____1271 =
+                let uu____1276 =
+                  let uu____1277 =
+                    let uu____1282 = e_pattern' ()  in
+                    FStar_TypeChecker_NBETerm.e_list uu____1282  in
+                  FStar_TypeChecker_NBETerm.embed uu____1277 cb ps  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1276  in
+              [uu____1271]  in
+            uu____1258 :: uu____1264  in
           mkConstruct
             FStar_Reflection_Data.ref_Pat_Cons.FStar_Reflection_Data.fv []
-            uu____1185
+            uu____1251
       | FStar_Reflection_Data.Pat_Var bv ->
-          let uu____1234 =
-            let uu____1241 =
-              let uu____1246 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1246  in
-            [uu____1241]  in
+          let uu____1300 =
+            let uu____1307 =
+              let uu____1312 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1312  in
+            [uu____1307]  in
           mkConstruct
             FStar_Reflection_Data.ref_Pat_Var.FStar_Reflection_Data.fv []
-            uu____1234
+            uu____1300
       | FStar_Reflection_Data.Pat_Wild bv ->
-          let uu____1256 =
-            let uu____1263 =
-              let uu____1268 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1268  in
-            [uu____1263]  in
+          let uu____1322 =
+            let uu____1329 =
+              let uu____1334 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1334  in
+            [uu____1329]  in
           mkConstruct
             FStar_Reflection_Data.ref_Pat_Wild.FStar_Reflection_Data.fv []
-            uu____1256
+            uu____1322
       | FStar_Reflection_Data.Pat_Dot_Term (bv,t) ->
-          let uu____1279 =
-            let uu____1286 =
-              let uu____1291 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1291  in
-            let uu____1292 =
-              let uu____1299 =
-                let uu____1304 = FStar_TypeChecker_NBETerm.embed e_term cb t
+          let uu____1345 =
+            let uu____1352 =
+              let uu____1357 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1357  in
+            let uu____1358 =
+              let uu____1365 =
+                let uu____1370 = FStar_TypeChecker_NBETerm.embed e_term cb t
                    in
-                FStar_TypeChecker_NBETerm.as_arg uu____1304  in
-              [uu____1299]  in
-            uu____1286 :: uu____1292  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1370  in
+              [uu____1365]  in
+            uu____1352 :: uu____1358  in
           mkConstruct
             FStar_Reflection_Data.ref_Pat_Dot_Term.FStar_Reflection_Data.fv
-            [] uu____1279
+            [] uu____1345
        in
     let unembed_pattern cb t =
       match t with
-      | FStar_TypeChecker_NBETerm.Construct (fv,[],(c,uu____1334)::[]) when
+      | FStar_TypeChecker_NBETerm.Construct (fv,[],(c,uu____1400)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Pat_Constant.FStar_Reflection_Data.lid
           ->
-          let uu____1351 = FStar_TypeChecker_NBETerm.unembed e_const cb c  in
-          FStar_Util.bind_opt uu____1351
+          let uu____1417 = FStar_TypeChecker_NBETerm.unembed e_const cb c  in
+          FStar_Util.bind_opt uu____1417
             (fun c1  ->
                FStar_All.pipe_left
-                 (fun _1358  -> FStar_Pervasives_Native.Some _1358)
+                 (fun _1424  -> FStar_Pervasives_Native.Some _1424)
                  (FStar_Reflection_Data.Pat_Constant c1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,[],(ps,uu____1361)::(f,uu____1363)::[]) when
+          (fv,[],(ps,uu____1427)::(f,uu____1429)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Pat_Cons.FStar_Reflection_Data.lid
           ->
-          let uu____1384 = FStar_TypeChecker_NBETerm.unembed e_fv cb f  in
-          FStar_Util.bind_opt uu____1384
+          let uu____1450 = FStar_TypeChecker_NBETerm.unembed e_fv cb f  in
+          FStar_Util.bind_opt uu____1450
             (fun f1  ->
-               let uu____1390 =
-                 let uu____1395 =
-                   let uu____1400 = e_pattern' ()  in
-                   FStar_TypeChecker_NBETerm.e_list uu____1400  in
-                 FStar_TypeChecker_NBETerm.unembed uu____1395 cb ps  in
-               FStar_Util.bind_opt uu____1390
+               let uu____1456 =
+                 let uu____1461 =
+                   let uu____1466 = e_pattern' ()  in
+                   FStar_TypeChecker_NBETerm.e_list uu____1466  in
+                 FStar_TypeChecker_NBETerm.unembed uu____1461 cb ps  in
+               FStar_Util.bind_opt uu____1456
                  (fun ps1  ->
                     FStar_All.pipe_left
-                      (fun _1413  -> FStar_Pervasives_Native.Some _1413)
+                      (fun _1479  -> FStar_Pervasives_Native.Some _1479)
                       (FStar_Reflection_Data.Pat_Cons (f1, ps1))))
-      | FStar_TypeChecker_NBETerm.Construct (fv,[],(bv,uu____1418)::[]) when
+      | FStar_TypeChecker_NBETerm.Construct (fv,[],(bv,uu____1484)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Pat_Var.FStar_Reflection_Data.lid
           ->
-          let uu____1435 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
-          FStar_Util.bind_opt uu____1435
+          let uu____1501 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
+          FStar_Util.bind_opt uu____1501
             (fun bv1  ->
                FStar_All.pipe_left
-                 (fun _1442  -> FStar_Pervasives_Native.Some _1442)
+                 (fun _1508  -> FStar_Pervasives_Native.Some _1508)
                  (FStar_Reflection_Data.Pat_Var bv1))
-      | FStar_TypeChecker_NBETerm.Construct (fv,[],(bv,uu____1445)::[]) when
+      | FStar_TypeChecker_NBETerm.Construct (fv,[],(bv,uu____1511)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Pat_Wild.FStar_Reflection_Data.lid
           ->
-          let uu____1462 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
-          FStar_Util.bind_opt uu____1462
+          let uu____1528 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
+          FStar_Util.bind_opt uu____1528
             (fun bv1  ->
                FStar_All.pipe_left
-                 (fun _1469  -> FStar_Pervasives_Native.Some _1469)
+                 (fun _1535  -> FStar_Pervasives_Native.Some _1535)
                  (FStar_Reflection_Data.Pat_Wild bv1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,[],(t1,uu____1472)::(bv,uu____1474)::[]) when
+          (fv,[],(t1,uu____1538)::(bv,uu____1540)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Pat_Dot_Term.FStar_Reflection_Data.lid
           ->
-          let uu____1495 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
-          FStar_Util.bind_opt uu____1495
+          let uu____1561 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv  in
+          FStar_Util.bind_opt uu____1561
             (fun bv1  ->
-               let uu____1501 =
+               let uu____1567 =
                  FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-               FStar_Util.bind_opt uu____1501
+               FStar_Util.bind_opt uu____1567
                  (fun t2  ->
                     FStar_All.pipe_left
-                      (fun _1508  -> FStar_Pervasives_Native.Some _1508)
+                      (fun _1574  -> FStar_Pervasives_Native.Some _1574)
                       (FStar_Reflection_Data.Pat_Dot_Term (bv1, t2))))
-      | uu____1509 ->
-          ((let uu____1511 =
-              let uu____1517 =
-                let uu____1519 = FStar_TypeChecker_NBETerm.t_to_string t  in
-                FStar_Util.format1 "Not an embedded pattern: %s" uu____1519
+      | uu____1575 ->
+          ((let uu____1577 =
+              let uu____1583 =
+                let uu____1585 = FStar_TypeChecker_NBETerm.t_to_string t  in
+                FStar_Util.format1 "Not an embedded pattern: %s" uu____1585
                  in
-              (FStar_Errors.Warning_NotEmbedded, uu____1517)  in
-            FStar_Errors.log_issue FStar_Range.dummyRange uu____1511);
+              (FStar_Errors.Warning_NotEmbedded, uu____1583)  in
+            FStar_Errors.log_issue FStar_Range.dummyRange uu____1577);
            FStar_Pervasives_Native.None)
        in
     mk_emb' embed_pattern unembed_pattern
@@ -622,8 +652,8 @@ let (e_branch_aq :
       FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->
-    let uu____1560 = e_term_aq aq  in
-    FStar_TypeChecker_NBETerm.e_tuple2 e_pattern uu____1560
+    let uu____1626 = e_term_aq aq  in
+    FStar_TypeChecker_NBETerm.e_tuple2 e_pattern uu____1626
   
 let (e_argv_aq :
   (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
@@ -632,13 +662,13 @@ let (e_argv_aq :
       FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->
-    let uu____1591 = e_term_aq aq  in
-    FStar_TypeChecker_NBETerm.e_tuple2 uu____1591 e_aqualv
+    let uu____1657 = e_term_aq aq  in
+    FStar_TypeChecker_NBETerm.e_tuple2 uu____1657 e_aqualv
   
 let rec unlazy_as_t :
-  'Auu____1601 .
+  'Auu____1667 .
     FStar_Syntax_Syntax.lazy_kind ->
-      FStar_TypeChecker_NBETerm.t -> 'Auu____1601
+      FStar_TypeChecker_NBETerm.t -> 'Auu____1667
   =
   fun k  ->
     fun t  ->
@@ -646,10 +676,10 @@ let rec unlazy_as_t :
       | FStar_TypeChecker_NBETerm.Lazy
           (FStar_Util.Inl
            { FStar_Syntax_Syntax.blob = v1; FStar_Syntax_Syntax.lkind = k';
-             FStar_Syntax_Syntax.ltyp = uu____1614;
-             FStar_Syntax_Syntax.rng = uu____1615;_},uu____1616)
+             FStar_Syntax_Syntax.ltyp = uu____1680;
+             FStar_Syntax_Syntax.rng = uu____1681;_},uu____1682)
           when FStar_Syntax_Util.eq_lazy_kind k k' -> FStar_Dyn.undyn v1
-      | uu____1635 -> failwith "Not a Lazy of the expected kind (NBE)"
+      | uu____1701 -> failwith "Not a Lazy of the expected kind (NBE)"
   
 let (e_term_view_aq :
   (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
@@ -660,246 +690,246 @@ let (e_term_view_aq :
     let embed_term_view cb tv =
       match tv with
       | FStar_Reflection_Data.Tv_FVar fv ->
-          let uu____1673 =
-            let uu____1680 =
-              let uu____1685 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1685  in
-            [uu____1680]  in
+          let uu____1739 =
+            let uu____1746 =
+              let uu____1751 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1751  in
+            [uu____1746]  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_FVar.FStar_Reflection_Data.fv []
-            uu____1673
+            uu____1739
       | FStar_Reflection_Data.Tv_BVar bv ->
-          let uu____1695 =
-            let uu____1702 =
-              let uu____1707 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1707  in
-            [uu____1702]  in
+          let uu____1761 =
+            let uu____1768 =
+              let uu____1773 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1773  in
+            [uu____1768]  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_BVar.FStar_Reflection_Data.fv []
-            uu____1695
+            uu____1761
       | FStar_Reflection_Data.Tv_Var bv ->
-          let uu____1717 =
-            let uu____1724 =
-              let uu____1729 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1729  in
-            [uu____1724]  in
+          let uu____1783 =
+            let uu____1790 =
+              let uu____1795 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1795  in
+            [uu____1790]  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Var.FStar_Reflection_Data.fv []
-            uu____1717
+            uu____1783
       | FStar_Reflection_Data.Tv_App (hd1,a) ->
-          let uu____1740 =
-            let uu____1747 =
-              let uu____1752 =
-                let uu____1753 = e_term_aq aq  in
-                FStar_TypeChecker_NBETerm.embed uu____1753 cb hd1  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1752  in
-            let uu____1756 =
-              let uu____1763 =
-                let uu____1768 =
-                  let uu____1769 = e_argv_aq aq  in
-                  FStar_TypeChecker_NBETerm.embed uu____1769 cb a  in
-                FStar_TypeChecker_NBETerm.as_arg uu____1768  in
-              [uu____1763]  in
-            uu____1747 :: uu____1756  in
+          let uu____1806 =
+            let uu____1813 =
+              let uu____1818 =
+                let uu____1819 = e_term_aq aq  in
+                FStar_TypeChecker_NBETerm.embed uu____1819 cb hd1  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1818  in
+            let uu____1822 =
+              let uu____1829 =
+                let uu____1834 =
+                  let uu____1835 = e_argv_aq aq  in
+                  FStar_TypeChecker_NBETerm.embed uu____1835 cb a  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1834  in
+              [uu____1829]  in
+            uu____1813 :: uu____1822  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_App.FStar_Reflection_Data.fv []
-            uu____1740
+            uu____1806
       | FStar_Reflection_Data.Tv_Abs (b,t) ->
-          let uu____1794 =
-            let uu____1801 =
-              let uu____1806 = FStar_TypeChecker_NBETerm.embed e_binder cb b
+          let uu____1860 =
+            let uu____1867 =
+              let uu____1872 = FStar_TypeChecker_NBETerm.embed e_binder cb b
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1806  in
-            let uu____1807 =
-              let uu____1814 =
-                let uu____1819 =
-                  let uu____1820 = e_term_aq aq  in
-                  FStar_TypeChecker_NBETerm.embed uu____1820 cb t  in
-                FStar_TypeChecker_NBETerm.as_arg uu____1819  in
-              [uu____1814]  in
-            uu____1801 :: uu____1807  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1872  in
+            let uu____1873 =
+              let uu____1880 =
+                let uu____1885 =
+                  let uu____1886 = e_term_aq aq  in
+                  FStar_TypeChecker_NBETerm.embed uu____1886 cb t  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1885  in
+              [uu____1880]  in
+            uu____1867 :: uu____1873  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Abs.FStar_Reflection_Data.fv []
-            uu____1794
+            uu____1860
       | FStar_Reflection_Data.Tv_Arrow (b,c) ->
-          let uu____1837 =
-            let uu____1844 =
-              let uu____1849 = FStar_TypeChecker_NBETerm.embed e_binder cb b
+          let uu____1903 =
+            let uu____1910 =
+              let uu____1915 = FStar_TypeChecker_NBETerm.embed e_binder cb b
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1849  in
-            let uu____1850 =
-              let uu____1857 =
-                let uu____1862 = FStar_TypeChecker_NBETerm.embed e_comp cb c
+              FStar_TypeChecker_NBETerm.as_arg uu____1915  in
+            let uu____1916 =
+              let uu____1923 =
+                let uu____1928 = FStar_TypeChecker_NBETerm.embed e_comp cb c
                    in
-                FStar_TypeChecker_NBETerm.as_arg uu____1862  in
-              [uu____1857]  in
-            uu____1844 :: uu____1850  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1928  in
+              [uu____1923]  in
+            uu____1910 :: uu____1916  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Arrow.FStar_Reflection_Data.fv []
-            uu____1837
+            uu____1903
       | FStar_Reflection_Data.Tv_Type u ->
-          let uu____1876 =
-            let uu____1883 =
-              let uu____1888 =
+          let uu____1942 =
+            let uu____1949 =
+              let uu____1954 =
                 FStar_TypeChecker_NBETerm.embed
                   FStar_TypeChecker_NBETerm.e_unit cb ()
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1888  in
-            [uu____1883]  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1954  in
+            [uu____1949]  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Type.FStar_Reflection_Data.fv []
-            uu____1876
+            uu____1942
       | FStar_Reflection_Data.Tv_Refine (bv,t) ->
-          let uu____1899 =
-            let uu____1906 =
-              let uu____1911 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1911  in
-            let uu____1912 =
-              let uu____1919 =
-                let uu____1924 =
-                  let uu____1925 = e_term_aq aq  in
-                  FStar_TypeChecker_NBETerm.embed uu____1925 cb t  in
-                FStar_TypeChecker_NBETerm.as_arg uu____1924  in
-              [uu____1919]  in
-            uu____1906 :: uu____1912  in
+          let uu____1965 =
+            let uu____1972 =
+              let uu____1977 = FStar_TypeChecker_NBETerm.embed e_bv cb bv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____1977  in
+            let uu____1978 =
+              let uu____1985 =
+                let uu____1990 =
+                  let uu____1991 = e_term_aq aq  in
+                  FStar_TypeChecker_NBETerm.embed uu____1991 cb t  in
+                FStar_TypeChecker_NBETerm.as_arg uu____1990  in
+              [uu____1985]  in
+            uu____1972 :: uu____1978  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Refine.FStar_Reflection_Data.fv []
-            uu____1899
+            uu____1965
       | FStar_Reflection_Data.Tv_Const c ->
-          let uu____1941 =
-            let uu____1948 =
-              let uu____1953 = FStar_TypeChecker_NBETerm.embed e_const cb c
+          let uu____2007 =
+            let uu____2014 =
+              let uu____2019 = FStar_TypeChecker_NBETerm.embed e_const cb c
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1953  in
-            [uu____1948]  in
+              FStar_TypeChecker_NBETerm.as_arg uu____2019  in
+            [uu____2014]  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Const.FStar_Reflection_Data.fv []
-            uu____1941
+            uu____2007
       | FStar_Reflection_Data.Tv_Uvar (u,d) ->
-          let uu____1964 =
-            let uu____1971 =
-              let uu____1976 =
+          let uu____2030 =
+            let uu____2037 =
+              let uu____2042 =
                 FStar_TypeChecker_NBETerm.embed
                   FStar_TypeChecker_NBETerm.e_int cb u
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____1976  in
-            let uu____1977 =
-              let uu____1984 =
-                let uu____1989 =
+              FStar_TypeChecker_NBETerm.as_arg uu____2042  in
+            let uu____2043 =
+              let uu____2050 =
+                let uu____2055 =
                   mk_lazy cb (u, d) FStar_Syntax_Util.t_ctx_uvar_and_sust
                     FStar_Syntax_Syntax.Lazy_uvar
                    in
-                FStar_TypeChecker_NBETerm.as_arg uu____1989  in
-              [uu____1984]  in
-            uu____1971 :: uu____1977  in
+                FStar_TypeChecker_NBETerm.as_arg uu____2055  in
+              [uu____2050]  in
+            uu____2037 :: uu____2043  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Uvar.FStar_Reflection_Data.fv []
-            uu____1964
+            uu____2030
       | FStar_Reflection_Data.Tv_Let (r,b,t1,t2) ->
-          let uu____2012 =
-            let uu____2019 =
-              let uu____2024 =
+          let uu____2078 =
+            let uu____2085 =
+              let uu____2090 =
                 FStar_TypeChecker_NBETerm.embed
                   FStar_TypeChecker_NBETerm.e_bool cb r
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____2024  in
-            let uu____2026 =
-              let uu____2033 =
-                let uu____2038 = FStar_TypeChecker_NBETerm.embed e_bv cb b
+              FStar_TypeChecker_NBETerm.as_arg uu____2090  in
+            let uu____2092 =
+              let uu____2099 =
+                let uu____2104 = FStar_TypeChecker_NBETerm.embed e_bv cb b
                    in
-                FStar_TypeChecker_NBETerm.as_arg uu____2038  in
-              let uu____2039 =
-                let uu____2046 =
-                  let uu____2051 =
-                    let uu____2052 = e_term_aq aq  in
-                    FStar_TypeChecker_NBETerm.embed uu____2052 cb t1  in
-                  FStar_TypeChecker_NBETerm.as_arg uu____2051  in
-                let uu____2055 =
-                  let uu____2062 =
-                    let uu____2067 =
-                      let uu____2068 = e_term_aq aq  in
-                      FStar_TypeChecker_NBETerm.embed uu____2068 cb t2  in
-                    FStar_TypeChecker_NBETerm.as_arg uu____2067  in
-                  [uu____2062]  in
-                uu____2046 :: uu____2055  in
-              uu____2033 :: uu____2039  in
-            uu____2019 :: uu____2026  in
+                FStar_TypeChecker_NBETerm.as_arg uu____2104  in
+              let uu____2105 =
+                let uu____2112 =
+                  let uu____2117 =
+                    let uu____2118 = e_term_aq aq  in
+                    FStar_TypeChecker_NBETerm.embed uu____2118 cb t1  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____2117  in
+                let uu____2121 =
+                  let uu____2128 =
+                    let uu____2133 =
+                      let uu____2134 = e_term_aq aq  in
+                      FStar_TypeChecker_NBETerm.embed uu____2134 cb t2  in
+                    FStar_TypeChecker_NBETerm.as_arg uu____2133  in
+                  [uu____2128]  in
+                uu____2112 :: uu____2121  in
+              uu____2099 :: uu____2105  in
+            uu____2085 :: uu____2092  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Let.FStar_Reflection_Data.fv []
-            uu____2012
+            uu____2078
       | FStar_Reflection_Data.Tv_Match (t,brs) ->
-          let uu____2097 =
-            let uu____2104 =
-              let uu____2109 =
-                let uu____2110 = e_term_aq aq  in
-                FStar_TypeChecker_NBETerm.embed uu____2110 cb t  in
-              FStar_TypeChecker_NBETerm.as_arg uu____2109  in
-            let uu____2113 =
-              let uu____2120 =
-                let uu____2125 =
-                  let uu____2126 =
-                    let uu____2135 = e_branch_aq aq  in
-                    FStar_TypeChecker_NBETerm.e_list uu____2135  in
-                  FStar_TypeChecker_NBETerm.embed uu____2126 cb brs  in
-                FStar_TypeChecker_NBETerm.as_arg uu____2125  in
-              [uu____2120]  in
-            uu____2104 :: uu____2113  in
+          let uu____2163 =
+            let uu____2170 =
+              let uu____2175 =
+                let uu____2176 = e_term_aq aq  in
+                FStar_TypeChecker_NBETerm.embed uu____2176 cb t  in
+              FStar_TypeChecker_NBETerm.as_arg uu____2175  in
+            let uu____2179 =
+              let uu____2186 =
+                let uu____2191 =
+                  let uu____2192 =
+                    let uu____2201 = e_branch_aq aq  in
+                    FStar_TypeChecker_NBETerm.e_list uu____2201  in
+                  FStar_TypeChecker_NBETerm.embed uu____2192 cb brs  in
+                FStar_TypeChecker_NBETerm.as_arg uu____2191  in
+              [uu____2186]  in
+            uu____2170 :: uu____2179  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.fv []
-            uu____2097
+            uu____2163
       | FStar_Reflection_Data.Tv_AscribedT (e,t,tacopt) ->
-          let uu____2171 =
-            let uu____2178 =
-              let uu____2183 =
-                let uu____2184 = e_term_aq aq  in
-                FStar_TypeChecker_NBETerm.embed uu____2184 cb e  in
-              FStar_TypeChecker_NBETerm.as_arg uu____2183  in
-            let uu____2187 =
-              let uu____2194 =
-                let uu____2199 =
-                  let uu____2200 = e_term_aq aq  in
-                  FStar_TypeChecker_NBETerm.embed uu____2200 cb t  in
-                FStar_TypeChecker_NBETerm.as_arg uu____2199  in
-              let uu____2203 =
-                let uu____2210 =
-                  let uu____2215 =
-                    let uu____2216 =
-                      let uu____2221 = e_term_aq aq  in
-                      FStar_TypeChecker_NBETerm.e_option uu____2221  in
-                    FStar_TypeChecker_NBETerm.embed uu____2216 cb tacopt  in
-                  FStar_TypeChecker_NBETerm.as_arg uu____2215  in
-                [uu____2210]  in
-              uu____2194 :: uu____2203  in
-            uu____2178 :: uu____2187  in
+          let uu____2237 =
+            let uu____2244 =
+              let uu____2249 =
+                let uu____2250 = e_term_aq aq  in
+                FStar_TypeChecker_NBETerm.embed uu____2250 cb e  in
+              FStar_TypeChecker_NBETerm.as_arg uu____2249  in
+            let uu____2253 =
+              let uu____2260 =
+                let uu____2265 =
+                  let uu____2266 = e_term_aq aq  in
+                  FStar_TypeChecker_NBETerm.embed uu____2266 cb t  in
+                FStar_TypeChecker_NBETerm.as_arg uu____2265  in
+              let uu____2269 =
+                let uu____2276 =
+                  let uu____2281 =
+                    let uu____2282 =
+                      let uu____2287 = e_term_aq aq  in
+                      FStar_TypeChecker_NBETerm.e_option uu____2287  in
+                    FStar_TypeChecker_NBETerm.embed uu____2282 cb tacopt  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____2281  in
+                [uu____2276]  in
+              uu____2260 :: uu____2269  in
+            uu____2244 :: uu____2253  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.fv []
-            uu____2171
+            uu____2237
       | FStar_Reflection_Data.Tv_AscribedC (e,c,tacopt) ->
-          let uu____2249 =
-            let uu____2256 =
-              let uu____2261 =
-                let uu____2262 = e_term_aq aq  in
-                FStar_TypeChecker_NBETerm.embed uu____2262 cb e  in
-              FStar_TypeChecker_NBETerm.as_arg uu____2261  in
-            let uu____2265 =
-              let uu____2272 =
-                let uu____2277 = FStar_TypeChecker_NBETerm.embed e_comp cb c
+          let uu____2315 =
+            let uu____2322 =
+              let uu____2327 =
+                let uu____2328 = e_term_aq aq  in
+                FStar_TypeChecker_NBETerm.embed uu____2328 cb e  in
+              FStar_TypeChecker_NBETerm.as_arg uu____2327  in
+            let uu____2331 =
+              let uu____2338 =
+                let uu____2343 = FStar_TypeChecker_NBETerm.embed e_comp cb c
                    in
-                FStar_TypeChecker_NBETerm.as_arg uu____2277  in
-              let uu____2278 =
-                let uu____2285 =
-                  let uu____2290 =
-                    let uu____2291 =
-                      let uu____2296 = e_term_aq aq  in
-                      FStar_TypeChecker_NBETerm.e_option uu____2296  in
-                    FStar_TypeChecker_NBETerm.embed uu____2291 cb tacopt  in
-                  FStar_TypeChecker_NBETerm.as_arg uu____2290  in
-                [uu____2285]  in
-              uu____2272 :: uu____2278  in
-            uu____2256 :: uu____2265  in
+                FStar_TypeChecker_NBETerm.as_arg uu____2343  in
+              let uu____2344 =
+                let uu____2351 =
+                  let uu____2356 =
+                    let uu____2357 =
+                      let uu____2362 = e_term_aq aq  in
+                      FStar_TypeChecker_NBETerm.e_option uu____2362  in
+                    FStar_TypeChecker_NBETerm.embed uu____2357 cb tacopt  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____2356  in
+                [uu____2351]  in
+              uu____2338 :: uu____2344  in
+            uu____2322 :: uu____2331  in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.fv []
-            uu____2249
+            uu____2315
       | FStar_Reflection_Data.Tv_Unknown  ->
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Unknown.FStar_Reflection_Data.fv []
@@ -908,250 +938,250 @@ let (e_term_view_aq :
     let unembed_term_view cb t =
       match t with
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2337,(b,uu____2339)::[]) when
+          (fv,uu____2403,(b,uu____2405)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Var.FStar_Reflection_Data.lid
           ->
-          let uu____2358 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
-          FStar_Util.bind_opt uu____2358
+          let uu____2424 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
+          FStar_Util.bind_opt uu____2424
             (fun b1  ->
                FStar_All.pipe_left
-                 (fun _2365  -> FStar_Pervasives_Native.Some _2365)
+                 (fun _2431  -> FStar_Pervasives_Native.Some _2431)
                  (FStar_Reflection_Data.Tv_Var b1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2367,(b,uu____2369)::[]) when
+          (fv,uu____2433,(b,uu____2435)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_BVar.FStar_Reflection_Data.lid
           ->
-          let uu____2388 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
-          FStar_Util.bind_opt uu____2388
+          let uu____2454 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
+          FStar_Util.bind_opt uu____2454
             (fun b1  ->
                FStar_All.pipe_left
-                 (fun _2395  -> FStar_Pervasives_Native.Some _2395)
+                 (fun _2461  -> FStar_Pervasives_Native.Some _2461)
                  (FStar_Reflection_Data.Tv_BVar b1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2397,(f,uu____2399)::[]) when
+          (fv,uu____2463,(f,uu____2465)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_FVar.FStar_Reflection_Data.lid
           ->
-          let uu____2418 = FStar_TypeChecker_NBETerm.unembed e_fv cb f  in
-          FStar_Util.bind_opt uu____2418
+          let uu____2484 = FStar_TypeChecker_NBETerm.unembed e_fv cb f  in
+          FStar_Util.bind_opt uu____2484
             (fun f1  ->
                FStar_All.pipe_left
-                 (fun _2425  -> FStar_Pervasives_Native.Some _2425)
+                 (fun _2491  -> FStar_Pervasives_Native.Some _2491)
                  (FStar_Reflection_Data.Tv_FVar f1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2427,(r,uu____2429)::(l,uu____2431)::[]) when
+          (fv,uu____2493,(r,uu____2495)::(l,uu____2497)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_App.FStar_Reflection_Data.lid
           ->
-          let uu____2454 = FStar_TypeChecker_NBETerm.unembed e_term cb l  in
-          FStar_Util.bind_opt uu____2454
+          let uu____2520 = FStar_TypeChecker_NBETerm.unembed e_term cb l  in
+          FStar_Util.bind_opt uu____2520
             (fun l1  ->
-               let uu____2460 = FStar_TypeChecker_NBETerm.unembed e_argv cb r
+               let uu____2526 = FStar_TypeChecker_NBETerm.unembed e_argv cb r
                   in
-               FStar_Util.bind_opt uu____2460
+               FStar_Util.bind_opt uu____2526
                  (fun r1  ->
                     FStar_All.pipe_left
-                      (fun _2467  -> FStar_Pervasives_Native.Some _2467)
+                      (fun _2533  -> FStar_Pervasives_Native.Some _2533)
                       (FStar_Reflection_Data.Tv_App (l1, r1))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2469,(t1,uu____2471)::(b,uu____2473)::[]) when
+          (fv,uu____2535,(t1,uu____2537)::(b,uu____2539)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Abs.FStar_Reflection_Data.lid
           ->
-          let uu____2496 = FStar_TypeChecker_NBETerm.unembed e_binder cb b
+          let uu____2562 = FStar_TypeChecker_NBETerm.unembed e_binder cb b
              in
-          FStar_Util.bind_opt uu____2496
+          FStar_Util.bind_opt uu____2562
             (fun b1  ->
-               let uu____2502 =
+               let uu____2568 =
                  FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-               FStar_Util.bind_opt uu____2502
+               FStar_Util.bind_opt uu____2568
                  (fun t2  ->
                     FStar_All.pipe_left
-                      (fun _2509  -> FStar_Pervasives_Native.Some _2509)
+                      (fun _2575  -> FStar_Pervasives_Native.Some _2575)
                       (FStar_Reflection_Data.Tv_Abs (b1, t2))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2511,(t1,uu____2513)::(b,uu____2515)::[]) when
+          (fv,uu____2577,(t1,uu____2579)::(b,uu____2581)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Arrow.FStar_Reflection_Data.lid
           ->
-          let uu____2538 = FStar_TypeChecker_NBETerm.unembed e_binder cb b
+          let uu____2604 = FStar_TypeChecker_NBETerm.unembed e_binder cb b
              in
-          FStar_Util.bind_opt uu____2538
+          FStar_Util.bind_opt uu____2604
             (fun b1  ->
-               let uu____2544 =
+               let uu____2610 =
                  FStar_TypeChecker_NBETerm.unembed e_comp cb t1  in
-               FStar_Util.bind_opt uu____2544
+               FStar_Util.bind_opt uu____2610
                  (fun c  ->
                     FStar_All.pipe_left
-                      (fun _2551  -> FStar_Pervasives_Native.Some _2551)
+                      (fun _2617  -> FStar_Pervasives_Native.Some _2617)
                       (FStar_Reflection_Data.Tv_Arrow (b1, c))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2553,(u,uu____2555)::[]) when
+          (fv,uu____2619,(u,uu____2621)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Type.FStar_Reflection_Data.lid
           ->
-          let uu____2574 =
+          let uu____2640 =
             FStar_TypeChecker_NBETerm.unembed
               FStar_TypeChecker_NBETerm.e_unit cb u
              in
-          FStar_Util.bind_opt uu____2574
+          FStar_Util.bind_opt uu____2640
             (fun u1  ->
                FStar_All.pipe_left
-                 (fun _2581  -> FStar_Pervasives_Native.Some _2581)
+                 (fun _2647  -> FStar_Pervasives_Native.Some _2647)
                  (FStar_Reflection_Data.Tv_Type ()))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2583,(t1,uu____2585)::(b,uu____2587)::[]) when
+          (fv,uu____2649,(t1,uu____2651)::(b,uu____2653)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Refine.FStar_Reflection_Data.lid
           ->
-          let uu____2610 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
-          FStar_Util.bind_opt uu____2610
+          let uu____2676 = FStar_TypeChecker_NBETerm.unembed e_bv cb b  in
+          FStar_Util.bind_opt uu____2676
             (fun b1  ->
-               let uu____2616 =
+               let uu____2682 =
                  FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-               FStar_Util.bind_opt uu____2616
+               FStar_Util.bind_opt uu____2682
                  (fun t2  ->
                     FStar_All.pipe_left
-                      (fun _2623  -> FStar_Pervasives_Native.Some _2623)
+                      (fun _2689  -> FStar_Pervasives_Native.Some _2689)
                       (FStar_Reflection_Data.Tv_Refine (b1, t2))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2625,(c,uu____2627)::[]) when
+          (fv,uu____2691,(c,uu____2693)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Const.FStar_Reflection_Data.lid
           ->
-          let uu____2646 = FStar_TypeChecker_NBETerm.unembed e_const cb c  in
-          FStar_Util.bind_opt uu____2646
+          let uu____2712 = FStar_TypeChecker_NBETerm.unembed e_const cb c  in
+          FStar_Util.bind_opt uu____2712
             (fun c1  ->
                FStar_All.pipe_left
-                 (fun _2653  -> FStar_Pervasives_Native.Some _2653)
+                 (fun _2719  -> FStar_Pervasives_Native.Some _2719)
                  (FStar_Reflection_Data.Tv_Const c1))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2655,(l,uu____2657)::(u,uu____2659)::[]) when
+          (fv,uu____2721,(l,uu____2723)::(u,uu____2725)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Uvar.FStar_Reflection_Data.lid
           ->
-          let uu____2682 =
+          let uu____2748 =
             FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_int
               cb u
              in
-          FStar_Util.bind_opt uu____2682
+          FStar_Util.bind_opt uu____2748
             (fun u1  ->
                let ctx_u_s = unlazy_as_t FStar_Syntax_Syntax.Lazy_uvar l  in
                FStar_All.pipe_left
-                 (fun _2691  -> FStar_Pervasives_Native.Some _2691)
+                 (fun _2757  -> FStar_Pervasives_Native.Some _2757)
                  (FStar_Reflection_Data.Tv_Uvar (u1, ctx_u_s)))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2693,(t2,uu____2695)::(t1,uu____2697)::(b,uu____2699)::
-           (r,uu____2701)::[])
+          (fv,uu____2759,(t2,uu____2761)::(t1,uu____2763)::(b,uu____2765)::
+           (r,uu____2767)::[])
           when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Let.FStar_Reflection_Data.lid
           ->
-          let uu____2732 =
+          let uu____2798 =
             FStar_TypeChecker_NBETerm.unembed
               FStar_TypeChecker_NBETerm.e_bool cb r
              in
-          FStar_Util.bind_opt uu____2732
+          FStar_Util.bind_opt uu____2798
             (fun r1  ->
-               let uu____2742 = FStar_TypeChecker_NBETerm.unembed e_bv cb b
+               let uu____2808 = FStar_TypeChecker_NBETerm.unembed e_bv cb b
                   in
-               FStar_Util.bind_opt uu____2742
+               FStar_Util.bind_opt uu____2808
                  (fun b1  ->
-                    let uu____2748 =
+                    let uu____2814 =
                       FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-                    FStar_Util.bind_opt uu____2748
+                    FStar_Util.bind_opt uu____2814
                       (fun t11  ->
-                         let uu____2754 =
+                         let uu____2820 =
                            FStar_TypeChecker_NBETerm.unembed e_term cb t2  in
-                         FStar_Util.bind_opt uu____2754
+                         FStar_Util.bind_opt uu____2820
                            (fun t21  ->
                               FStar_All.pipe_left
-                                (fun _2761  ->
-                                   FStar_Pervasives_Native.Some _2761)
+                                (fun _2827  ->
+                                   FStar_Pervasives_Native.Some _2827)
                                 (FStar_Reflection_Data.Tv_Let
                                    (r1, b1, t11, t21))))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2764,(brs,uu____2766)::(t1,uu____2768)::[]) when
+          (fv,uu____2830,(brs,uu____2832)::(t1,uu____2834)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.lid
           ->
-          let uu____2791 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-          FStar_Util.bind_opt uu____2791
+          let uu____2857 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
+          FStar_Util.bind_opt uu____2857
             (fun t2  ->
-               let uu____2797 =
-                 let uu____2802 = FStar_TypeChecker_NBETerm.e_list e_branch
+               let uu____2863 =
+                 let uu____2868 = FStar_TypeChecker_NBETerm.e_list e_branch
                     in
-                 FStar_TypeChecker_NBETerm.unembed uu____2802 cb brs  in
-               FStar_Util.bind_opt uu____2797
+                 FStar_TypeChecker_NBETerm.unembed uu____2868 cb brs  in
+               FStar_Util.bind_opt uu____2863
                  (fun brs1  ->
                     FStar_All.pipe_left
-                      (fun _2817  -> FStar_Pervasives_Native.Some _2817)
+                      (fun _2883  -> FStar_Pervasives_Native.Some _2883)
                       (FStar_Reflection_Data.Tv_Match (t2, brs1))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2821,(tacopt,uu____2823)::(t1,uu____2825)::(e,uu____2827)::[])
+          (fv,uu____2887,(tacopt,uu____2889)::(t1,uu____2891)::(e,uu____2893)::[])
           when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.lid
           ->
-          let uu____2854 = FStar_TypeChecker_NBETerm.unembed e_term cb e  in
-          FStar_Util.bind_opt uu____2854
+          let uu____2920 = FStar_TypeChecker_NBETerm.unembed e_term cb e  in
+          FStar_Util.bind_opt uu____2920
             (fun e1  ->
-               let uu____2860 =
+               let uu____2926 =
                  FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-               FStar_Util.bind_opt uu____2860
+               FStar_Util.bind_opt uu____2926
                  (fun t2  ->
-                    let uu____2866 =
-                      let uu____2871 =
+                    let uu____2932 =
+                      let uu____2937 =
                         FStar_TypeChecker_NBETerm.e_option e_term  in
-                      FStar_TypeChecker_NBETerm.unembed uu____2871 cb tacopt
+                      FStar_TypeChecker_NBETerm.unembed uu____2937 cb tacopt
                        in
-                    FStar_Util.bind_opt uu____2866
+                    FStar_Util.bind_opt uu____2932
                       (fun tacopt1  ->
                          FStar_All.pipe_left
-                           (fun _2886  -> FStar_Pervasives_Native.Some _2886)
+                           (fun _2952  -> FStar_Pervasives_Native.Some _2952)
                            (FStar_Reflection_Data.Tv_AscribedT
                               (e1, t2, tacopt1)))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2890,(tacopt,uu____2892)::(c,uu____2894)::(e,uu____2896)::[])
+          (fv,uu____2956,(tacopt,uu____2958)::(c,uu____2960)::(e,uu____2962)::[])
           when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_AscC.FStar_Reflection_Data.lid
           ->
-          let uu____2923 = FStar_TypeChecker_NBETerm.unembed e_term cb e  in
-          FStar_Util.bind_opt uu____2923
+          let uu____2989 = FStar_TypeChecker_NBETerm.unembed e_term cb e  in
+          FStar_Util.bind_opt uu____2989
             (fun e1  ->
-               let uu____2929 = FStar_TypeChecker_NBETerm.unembed e_comp cb c
+               let uu____2995 = FStar_TypeChecker_NBETerm.unembed e_comp cb c
                   in
-               FStar_Util.bind_opt uu____2929
+               FStar_Util.bind_opt uu____2995
                  (fun c1  ->
-                    let uu____2935 =
-                      let uu____2940 =
+                    let uu____3001 =
+                      let uu____3006 =
                         FStar_TypeChecker_NBETerm.e_option e_term  in
-                      FStar_TypeChecker_NBETerm.unembed uu____2940 cb tacopt
+                      FStar_TypeChecker_NBETerm.unembed uu____3006 cb tacopt
                        in
-                    FStar_Util.bind_opt uu____2935
+                    FStar_Util.bind_opt uu____3001
                       (fun tacopt1  ->
                          FStar_All.pipe_left
-                           (fun _2955  -> FStar_Pervasives_Native.Some _2955)
+                           (fun _3021  -> FStar_Pervasives_Native.Some _3021)
                            (FStar_Reflection_Data.Tv_AscribedC
                               (e1, c1, tacopt1)))))
-      | FStar_TypeChecker_NBETerm.Construct (fv,uu____2959,[]) when
+      | FStar_TypeChecker_NBETerm.Construct (fv,uu____3025,[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Unknown.FStar_Reflection_Data.lid
           ->
           FStar_All.pipe_left
-            (fun _2976  -> FStar_Pervasives_Native.Some _2976)
+            (fun _3042  -> FStar_Pervasives_Native.Some _3042)
             FStar_Reflection_Data.Tv_Unknown
-      | uu____2977 ->
-          ((let uu____2979 =
-              let uu____2985 =
-                let uu____2987 = FStar_TypeChecker_NBETerm.t_to_string t  in
-                FStar_Util.format1 "Not an embedded term_view: %s" uu____2987
+      | uu____3043 ->
+          ((let uu____3045 =
+              let uu____3051 =
+                let uu____3053 = FStar_TypeChecker_NBETerm.t_to_string t  in
+                FStar_Util.format1 "Not an embedded term_view: %s" uu____3053
                  in
-              (FStar_Errors.Warning_NotEmbedded, uu____2985)  in
-            FStar_Errors.log_issue FStar_Range.dummyRange uu____2979);
+              (FStar_Errors.Warning_NotEmbedded, uu____3051)  in
+            FStar_Errors.log_issue FStar_Range.dummyRange uu____3045);
            FStar_Pervasives_Native.None)
        in
     mk_emb' embed_term_view unembed_term_view
@@ -1163,71 +1193,71 @@ let (e_term_view :
 let (e_bv_view :
   FStar_Reflection_Data.bv_view FStar_TypeChecker_NBETerm.embedding) =
   let embed_bv_view cb bvv =
-    let uu____3014 =
-      let uu____3021 =
-        let uu____3026 =
+    let uu____3080 =
+      let uu____3087 =
+        let uu____3092 =
           FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_string
             cb bvv.FStar_Reflection_Data.bv_ppname
            in
-        FStar_TypeChecker_NBETerm.as_arg uu____3026  in
-      let uu____3028 =
-        let uu____3035 =
-          let uu____3040 =
+        FStar_TypeChecker_NBETerm.as_arg uu____3092  in
+      let uu____3094 =
+        let uu____3101 =
+          let uu____3106 =
             FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
               cb bvv.FStar_Reflection_Data.bv_index
              in
-          FStar_TypeChecker_NBETerm.as_arg uu____3040  in
-        let uu____3041 =
-          let uu____3048 =
-            let uu____3053 =
+          FStar_TypeChecker_NBETerm.as_arg uu____3106  in
+        let uu____3107 =
+          let uu____3114 =
+            let uu____3119 =
               FStar_TypeChecker_NBETerm.embed e_term cb
                 bvv.FStar_Reflection_Data.bv_sort
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____3053  in
-          [uu____3048]  in
-        uu____3035 :: uu____3041  in
-      uu____3021 :: uu____3028  in
+            FStar_TypeChecker_NBETerm.as_arg uu____3119  in
+          [uu____3114]  in
+        uu____3101 :: uu____3107  in
+      uu____3087 :: uu____3094  in
     mkConstruct FStar_Reflection_Data.ref_Mk_bv.FStar_Reflection_Data.fv []
-      uu____3014
+      uu____3080
      in
   let unembed_bv_view cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____3086,(s,uu____3088)::(idx,uu____3090)::(nm,uu____3092)::[])
+        (fv,uu____3152,(s,uu____3154)::(idx,uu____3156)::(nm,uu____3158)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Mk_bv.FStar_Reflection_Data.lid
         ->
-        let uu____3119 =
+        let uu____3185 =
           FStar_TypeChecker_NBETerm.unembed
             FStar_TypeChecker_NBETerm.e_string cb nm
            in
-        FStar_Util.bind_opt uu____3119
+        FStar_Util.bind_opt uu____3185
           (fun nm1  ->
-             let uu____3129 =
+             let uu____3195 =
                FStar_TypeChecker_NBETerm.unembed
                  FStar_TypeChecker_NBETerm.e_int cb idx
                 in
-             FStar_Util.bind_opt uu____3129
+             FStar_Util.bind_opt uu____3195
                (fun idx1  ->
-                  let uu____3135 =
+                  let uu____3201 =
                     FStar_TypeChecker_NBETerm.unembed e_term cb s  in
-                  FStar_Util.bind_opt uu____3135
+                  FStar_Util.bind_opt uu____3201
                     (fun s1  ->
                        FStar_All.pipe_left
-                         (fun _3142  -> FStar_Pervasives_Native.Some _3142)
+                         (fun _3208  -> FStar_Pervasives_Native.Some _3208)
                          {
                            FStar_Reflection_Data.bv_ppname = nm1;
                            FStar_Reflection_Data.bv_index = idx1;
                            FStar_Reflection_Data.bv_sort = s1
                          })))
-    | uu____3143 ->
-        ((let uu____3145 =
-            let uu____3151 =
-              let uu____3153 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded bv_view: %s" uu____3153  in
-            (FStar_Errors.Warning_NotEmbedded, uu____3151)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____3145);
+    | uu____3209 ->
+        ((let uu____3211 =
+            let uu____3217 =
+              let uu____3219 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded bv_view: %s" uu____3219  in
+            (FStar_Errors.Warning_NotEmbedded, uu____3217)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____3211);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_bv_view unembed_bv_view
@@ -1238,39 +1268,39 @@ let (e_comp_view :
   let embed_comp_view cb cv =
     match cv with
     | FStar_Reflection_Data.C_Total (t,md) ->
-        let uu____3177 =
-          let uu____3184 =
-            let uu____3189 = FStar_TypeChecker_NBETerm.embed e_term cb t  in
-            FStar_TypeChecker_NBETerm.as_arg uu____3189  in
-          let uu____3190 =
-            let uu____3197 =
-              let uu____3202 =
-                let uu____3203 = FStar_TypeChecker_NBETerm.e_option e_term
+        let uu____3243 =
+          let uu____3250 =
+            let uu____3255 = FStar_TypeChecker_NBETerm.embed e_term cb t  in
+            FStar_TypeChecker_NBETerm.as_arg uu____3255  in
+          let uu____3256 =
+            let uu____3263 =
+              let uu____3268 =
+                let uu____3269 = FStar_TypeChecker_NBETerm.e_option e_term
                    in
-                FStar_TypeChecker_NBETerm.embed uu____3203 cb md  in
-              FStar_TypeChecker_NBETerm.as_arg uu____3202  in
-            [uu____3197]  in
-          uu____3184 :: uu____3190  in
+                FStar_TypeChecker_NBETerm.embed uu____3269 cb md  in
+              FStar_TypeChecker_NBETerm.as_arg uu____3268  in
+            [uu____3263]  in
+          uu____3250 :: uu____3256  in
         mkConstruct
           FStar_Reflection_Data.ref_C_Total.FStar_Reflection_Data.fv []
-          uu____3177
+          uu____3243
     | FStar_Reflection_Data.C_Lemma (pre,post) ->
         let post1 = FStar_Syntax_Util.unthunk_lemma_post post  in
-        let uu____3227 =
-          let uu____3234 =
-            let uu____3239 = FStar_TypeChecker_NBETerm.embed e_term cb pre
+        let uu____3293 =
+          let uu____3300 =
+            let uu____3305 = FStar_TypeChecker_NBETerm.embed e_term cb pre
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____3239  in
-          let uu____3240 =
-            let uu____3247 =
-              let uu____3252 =
+            FStar_TypeChecker_NBETerm.as_arg uu____3305  in
+          let uu____3306 =
+            let uu____3313 =
+              let uu____3318 =
                 FStar_TypeChecker_NBETerm.embed e_term cb post1  in
-              FStar_TypeChecker_NBETerm.as_arg uu____3252  in
-            [uu____3247]  in
-          uu____3234 :: uu____3240  in
+              FStar_TypeChecker_NBETerm.as_arg uu____3318  in
+            [uu____3313]  in
+          uu____3300 :: uu____3306  in
         mkConstruct
           FStar_Reflection_Data.ref_C_Lemma.FStar_Reflection_Data.fv []
-          uu____3227
+          uu____3293
     | FStar_Reflection_Data.C_Unknown  ->
         mkConstruct
           FStar_Reflection_Data.ref_C_Unknown.FStar_Reflection_Data.fv [] []
@@ -1278,51 +1308,51 @@ let (e_comp_view :
   let unembed_comp_view cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____3285,(md,uu____3287)::(t1,uu____3289)::[]) when
+        (fv,uu____3351,(md,uu____3353)::(t1,uu____3355)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Total.FStar_Reflection_Data.lid
         ->
-        let uu____3312 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-        FStar_Util.bind_opt uu____3312
+        let uu____3378 = FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
+        FStar_Util.bind_opt uu____3378
           (fun t2  ->
-             let uu____3318 =
-               let uu____3323 = FStar_TypeChecker_NBETerm.e_option e_term  in
-               FStar_TypeChecker_NBETerm.unembed uu____3323 cb md  in
-             FStar_Util.bind_opt uu____3318
+             let uu____3384 =
+               let uu____3389 = FStar_TypeChecker_NBETerm.e_option e_term  in
+               FStar_TypeChecker_NBETerm.unembed uu____3389 cb md  in
+             FStar_Util.bind_opt uu____3384
                (fun md1  ->
                   FStar_All.pipe_left
-                    (fun _3338  -> FStar_Pervasives_Native.Some _3338)
+                    (fun _3404  -> FStar_Pervasives_Native.Some _3404)
                     (FStar_Reflection_Data.C_Total (t2, md1))))
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____3342,(post,uu____3344)::(pre,uu____3346)::[]) when
+        (fv,uu____3408,(post,uu____3410)::(pre,uu____3412)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Lemma.FStar_Reflection_Data.lid
         ->
-        let uu____3369 = FStar_TypeChecker_NBETerm.unembed e_term cb pre  in
-        FStar_Util.bind_opt uu____3369
+        let uu____3435 = FStar_TypeChecker_NBETerm.unembed e_term cb pre  in
+        FStar_Util.bind_opt uu____3435
           (fun pre1  ->
-             let uu____3375 =
+             let uu____3441 =
                FStar_TypeChecker_NBETerm.unembed e_term cb post  in
-             FStar_Util.bind_opt uu____3375
+             FStar_Util.bind_opt uu____3441
                (fun post1  ->
                   FStar_All.pipe_left
-                    (fun _3382  -> FStar_Pervasives_Native.Some _3382)
+                    (fun _3448  -> FStar_Pervasives_Native.Some _3448)
                     (FStar_Reflection_Data.C_Lemma (pre1, post1))))
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3384,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3450,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_C_Unknown.FStar_Reflection_Data.lid
         ->
         FStar_All.pipe_left
-          (fun _3401  -> FStar_Pervasives_Native.Some _3401)
+          (fun _3467  -> FStar_Pervasives_Native.Some _3467)
           FStar_Reflection_Data.C_Unknown
-    | uu____3402 ->
-        ((let uu____3404 =
-            let uu____3410 =
-              let uu____3412 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded comp_view: %s" uu____3412
+    | uu____3468 ->
+        ((let uu____3470 =
+            let uu____3476 =
+              let uu____3478 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded comp_view: %s" uu____3478
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____3410)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____3404);
+            (FStar_Errors.Warning_NotEmbedded, uu____3476)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____3470);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_comp_view unembed_comp_view
@@ -1337,29 +1367,29 @@ let (e_order : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
      in
   let unembed_order cb t =
     match t with
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3458,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3524,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Reflection_Data.ord_Lt_lid ->
         FStar_Pervasives_Native.Some FStar_Order.Lt
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3474,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3540,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Reflection_Data.ord_Eq_lid ->
         FStar_Pervasives_Native.Some FStar_Order.Eq
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3490,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____3556,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Reflection_Data.ord_Gt_lid ->
         FStar_Pervasives_Native.Some FStar_Order.Gt
-    | uu____3505 ->
-        ((let uu____3507 =
-            let uu____3513 =
-              let uu____3515 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded order: %s" uu____3515  in
-            (FStar_Errors.Warning_NotEmbedded, uu____3513)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____3507);
+    | uu____3571 ->
+        ((let uu____3573 =
+            let uu____3579 =
+              let uu____3581 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded order: %s" uu____3581  in
+            (FStar_Errors.Warning_NotEmbedded, uu____3579)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____3573);
          FStar_Pervasives_Native.None)
      in
-  let uu____3519 =
+  let uu____3585 =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.order_lid
       FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
      in
-  mk_emb' embed_order unembed_order uu____3519 
+  mk_emb' embed_order unembed_order uu____3585 
 let (e_sigelt :
   FStar_Syntax_Syntax.sigelt FStar_TypeChecker_NBETerm.embedding) =
   let embed_sigelt cb se =
@@ -1372,18 +1402,18 @@ let (e_sigelt :
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_sigelt ;
-           FStar_Syntax_Syntax.ltyp = uu____3550;
-           FStar_Syntax_Syntax.rng = uu____3551;_},uu____3552)
+           FStar_Syntax_Syntax.ltyp = uu____3616;
+           FStar_Syntax_Syntax.rng = uu____3617;_},uu____3618)
         ->
-        let uu____3571 = FStar_Dyn.undyn b  in
-        FStar_Pervasives_Native.Some uu____3571
-    | uu____3572 ->
-        ((let uu____3574 =
-            let uu____3580 =
-              let uu____3582 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded sigelt: %s" uu____3582  in
-            (FStar_Errors.Warning_NotEmbedded, uu____3580)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____3574);
+        let uu____3637 = FStar_Dyn.undyn b  in
+        FStar_Pervasives_Native.Some uu____3637
+    | uu____3638 ->
+        ((let uu____3640 =
+            let uu____3646 =
+              let uu____3648 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded sigelt: %s" uu____3648  in
+            (FStar_Errors.Warning_NotEmbedded, uu____3646)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____3640);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_sigelt unembed_sigelt
@@ -1395,17 +1425,17 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
       FStar_TypeChecker_NBETerm.e_string
      in
   let embed_ident cb i =
-    let uu____3611 =
-      let uu____3617 = FStar_Ident.range_of_id i  in
-      let uu____3618 = FStar_Ident.text_of_id i  in (uu____3617, uu____3618)
+    let uu____3677 =
+      let uu____3683 = FStar_Ident.range_of_id i  in
+      let uu____3684 = FStar_Ident.text_of_id i  in (uu____3683, uu____3684)
        in
-    FStar_TypeChecker_NBETerm.embed repr cb uu____3611  in
+    FStar_TypeChecker_NBETerm.embed repr cb uu____3677  in
   let unembed_ident cb t =
-    let uu____3641 = FStar_TypeChecker_NBETerm.unembed repr cb t  in
-    match uu____3641 with
+    let uu____3707 = FStar_TypeChecker_NBETerm.unembed repr cb t  in
+    match uu____3707 with
     | FStar_Pervasives_Native.Some (rng,s) ->
-        let uu____3665 = FStar_Ident.mk_ident (s, rng)  in
-        FStar_Pervasives_Native.Some uu____3665
+        let uu____3731 = FStar_Ident.mk_ident (s, rng)  in
+        FStar_Pervasives_Native.Some uu____3731
     | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None  in
   let range_fv =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.range_lid
@@ -1416,35 +1446,35 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
       FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
      in
   let et =
-    let uu____3675 =
-      let uu____3683 =
+    let uu____3741 =
+      let uu____3749 =
         FStar_Ident.string_of_lid FStar_Parser_Const.lid_tuple2  in
-      let uu____3685 =
-        let uu____3688 = fv_as_emb_typ range_fv  in
-        let uu____3689 =
-          let uu____3692 = fv_as_emb_typ string_fv  in [uu____3692]  in
-        uu____3688 :: uu____3689  in
-      (uu____3683, uu____3685)  in
-    FStar_Syntax_Syntax.ET_app uu____3675  in
-  let uu____3696 =
-    let uu____3697 =
+      let uu____3751 =
+        let uu____3754 = fv_as_emb_typ range_fv  in
+        let uu____3755 =
+          let uu____3758 = fv_as_emb_typ string_fv  in [uu____3758]  in
+        uu____3754 :: uu____3755  in
+      (uu____3749, uu____3751)  in
+    FStar_Syntax_Syntax.ET_app uu____3741  in
+  let uu____3762 =
+    let uu____3763 =
       FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.lid_tuple2
         FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
        in
-    let uu____3698 =
-      let uu____3705 =
-        let uu____3710 = mkFV range_fv [] []  in
-        FStar_TypeChecker_NBETerm.as_arg uu____3710  in
-      let uu____3715 =
-        let uu____3722 =
-          let uu____3727 = mkFV string_fv [] []  in
-          FStar_TypeChecker_NBETerm.as_arg uu____3727  in
-        [uu____3722]  in
-      uu____3705 :: uu____3715  in
-    mkFV uu____3697 [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
-      uu____3698
+    let uu____3764 =
+      let uu____3771 =
+        let uu____3776 = mkFV range_fv [] []  in
+        FStar_TypeChecker_NBETerm.as_arg uu____3776  in
+      let uu____3781 =
+        let uu____3788 =
+          let uu____3793 = mkFV string_fv [] []  in
+          FStar_TypeChecker_NBETerm.as_arg uu____3793  in
+        [uu____3788]  in
+      uu____3771 :: uu____3781  in
+    mkFV uu____3763 [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
+      uu____3764
      in
-  FStar_TypeChecker_NBETerm.mk_emb embed_ident unembed_ident uu____3696 et 
+  FStar_TypeChecker_NBETerm.mk_emb embed_ident unembed_ident uu____3762 et 
 let (e_univ_name :
   FStar_Syntax_Syntax.univ_name FStar_TypeChecker_NBETerm.embedding) =
   e_ident 
@@ -1460,91 +1490,91 @@ let (e_sigelt_view :
   let embed_sigelt_view cb sev =
     match sev with
     | FStar_Reflection_Data.Sg_Let (r,fv,univs1,ty,t) ->
-        let uu____3784 =
-          let uu____3791 =
-            let uu____3796 =
+        let uu____3850 =
+          let uu____3857 =
+            let uu____3862 =
               FStar_TypeChecker_NBETerm.embed
                 FStar_TypeChecker_NBETerm.e_bool cb r
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____3796  in
-          let uu____3798 =
-            let uu____3805 =
-              let uu____3810 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
-              FStar_TypeChecker_NBETerm.as_arg uu____3810  in
-            let uu____3811 =
-              let uu____3818 =
-                let uu____3823 =
+            FStar_TypeChecker_NBETerm.as_arg uu____3862  in
+          let uu____3864 =
+            let uu____3871 =
+              let uu____3876 = FStar_TypeChecker_NBETerm.embed e_fv cb fv  in
+              FStar_TypeChecker_NBETerm.as_arg uu____3876  in
+            let uu____3877 =
+              let uu____3884 =
+                let uu____3889 =
                   FStar_TypeChecker_NBETerm.embed e_univ_names cb univs1  in
-                FStar_TypeChecker_NBETerm.as_arg uu____3823  in
-              let uu____3826 =
-                let uu____3833 =
-                  let uu____3838 =
+                FStar_TypeChecker_NBETerm.as_arg uu____3889  in
+              let uu____3892 =
+                let uu____3899 =
+                  let uu____3904 =
                     FStar_TypeChecker_NBETerm.embed e_term cb ty  in
-                  FStar_TypeChecker_NBETerm.as_arg uu____3838  in
-                let uu____3839 =
-                  let uu____3846 =
-                    let uu____3851 =
+                  FStar_TypeChecker_NBETerm.as_arg uu____3904  in
+                let uu____3905 =
+                  let uu____3912 =
+                    let uu____3917 =
                       FStar_TypeChecker_NBETerm.embed e_term cb t  in
-                    FStar_TypeChecker_NBETerm.as_arg uu____3851  in
-                  [uu____3846]  in
-                uu____3833 :: uu____3839  in
-              uu____3818 :: uu____3826  in
-            uu____3805 :: uu____3811  in
-          uu____3791 :: uu____3798  in
+                    FStar_TypeChecker_NBETerm.as_arg uu____3917  in
+                  [uu____3912]  in
+                uu____3899 :: uu____3905  in
+              uu____3884 :: uu____3892  in
+            uu____3871 :: uu____3877  in
+          uu____3857 :: uu____3864  in
         mkConstruct FStar_Reflection_Data.ref_Sg_Let.FStar_Reflection_Data.fv
-          [] uu____3784
+          [] uu____3850
     | FStar_Reflection_Data.Sg_Constructor (nm,ty) ->
-        let uu____3878 =
-          let uu____3885 =
-            let uu____3890 =
+        let uu____3944 =
+          let uu____3951 =
+            let uu____3956 =
               FStar_TypeChecker_NBETerm.embed e_string_list cb nm  in
-            FStar_TypeChecker_NBETerm.as_arg uu____3890  in
-          let uu____3894 =
-            let uu____3901 =
-              let uu____3906 = FStar_TypeChecker_NBETerm.embed e_term cb ty
+            FStar_TypeChecker_NBETerm.as_arg uu____3956  in
+          let uu____3960 =
+            let uu____3967 =
+              let uu____3972 = FStar_TypeChecker_NBETerm.embed e_term cb ty
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____3906  in
-            [uu____3901]  in
-          uu____3885 :: uu____3894  in
+              FStar_TypeChecker_NBETerm.as_arg uu____3972  in
+            [uu____3967]  in
+          uu____3951 :: uu____3960  in
         mkConstruct
           FStar_Reflection_Data.ref_Sg_Constructor.FStar_Reflection_Data.fv
-          [] uu____3878
+          [] uu____3944
     | FStar_Reflection_Data.Sg_Inductive (nm,univs1,bs,t,dcs) ->
-        let uu____3936 =
-          let uu____3943 =
-            let uu____3948 =
+        let uu____4002 =
+          let uu____4009 =
+            let uu____4014 =
               FStar_TypeChecker_NBETerm.embed e_string_list cb nm  in
-            FStar_TypeChecker_NBETerm.as_arg uu____3948  in
-          let uu____3952 =
-            let uu____3959 =
-              let uu____3964 =
+            FStar_TypeChecker_NBETerm.as_arg uu____4014  in
+          let uu____4018 =
+            let uu____4025 =
+              let uu____4030 =
                 FStar_TypeChecker_NBETerm.embed e_univ_names cb univs1  in
-              FStar_TypeChecker_NBETerm.as_arg uu____3964  in
-            let uu____3967 =
-              let uu____3974 =
-                let uu____3979 =
+              FStar_TypeChecker_NBETerm.as_arg uu____4030  in
+            let uu____4033 =
+              let uu____4040 =
+                let uu____4045 =
                   FStar_TypeChecker_NBETerm.embed e_binders cb bs  in
-                FStar_TypeChecker_NBETerm.as_arg uu____3979  in
-              let uu____3980 =
-                let uu____3987 =
-                  let uu____3992 =
+                FStar_TypeChecker_NBETerm.as_arg uu____4045  in
+              let uu____4046 =
+                let uu____4053 =
+                  let uu____4058 =
                     FStar_TypeChecker_NBETerm.embed e_term cb t  in
-                  FStar_TypeChecker_NBETerm.as_arg uu____3992  in
-                let uu____3993 =
-                  let uu____4000 =
-                    let uu____4005 =
-                      let uu____4006 =
+                  FStar_TypeChecker_NBETerm.as_arg uu____4058  in
+                let uu____4059 =
+                  let uu____4066 =
+                    let uu____4071 =
+                      let uu____4072 =
                         FStar_TypeChecker_NBETerm.e_list e_string_list  in
-                      FStar_TypeChecker_NBETerm.embed uu____4006 cb dcs  in
-                    FStar_TypeChecker_NBETerm.as_arg uu____4005  in
-                  [uu____4000]  in
-                uu____3987 :: uu____3993  in
-              uu____3974 :: uu____3980  in
-            uu____3959 :: uu____3967  in
-          uu____3943 :: uu____3952  in
+                      FStar_TypeChecker_NBETerm.embed uu____4072 cb dcs  in
+                    FStar_TypeChecker_NBETerm.as_arg uu____4071  in
+                  [uu____4066]  in
+                uu____4053 :: uu____4059  in
+              uu____4040 :: uu____4046  in
+            uu____4025 :: uu____4033  in
+          uu____4009 :: uu____4018  in
         mkConstruct
           FStar_Reflection_Data.ref_Sg_Inductive.FStar_Reflection_Data.fv []
-          uu____3936
+          uu____4002
     | FStar_Reflection_Data.Unk  ->
         mkConstruct FStar_Reflection_Data.ref_Unk.FStar_Reflection_Data.fv []
           []
@@ -1552,91 +1582,91 @@ let (e_sigelt_view :
   let unembed_sigelt_view cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____4066,(dcs,uu____4068)::(t1,uu____4070)::(bs,uu____4072)::
-         (us,uu____4074)::(nm,uu____4076)::[])
+        (fv,uu____4132,(dcs,uu____4134)::(t1,uu____4136)::(bs,uu____4138)::
+         (us,uu____4140)::(nm,uu____4142)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Sg_Inductive.FStar_Reflection_Data.lid
         ->
-        let uu____4111 =
+        let uu____4177 =
           FStar_TypeChecker_NBETerm.unembed e_string_list cb nm  in
-        FStar_Util.bind_opt uu____4111
+        FStar_Util.bind_opt uu____4177
           (fun nm1  ->
-             let uu____4129 =
+             let uu____4195 =
                FStar_TypeChecker_NBETerm.unembed e_univ_names cb us  in
-             FStar_Util.bind_opt uu____4129
+             FStar_Util.bind_opt uu____4195
                (fun us1  ->
-                  let uu____4143 =
+                  let uu____4209 =
                     FStar_TypeChecker_NBETerm.unembed e_binders cb bs  in
-                  FStar_Util.bind_opt uu____4143
+                  FStar_Util.bind_opt uu____4209
                     (fun bs1  ->
-                       let uu____4149 =
+                       let uu____4215 =
                          FStar_TypeChecker_NBETerm.unembed e_term cb t1  in
-                       FStar_Util.bind_opt uu____4149
+                       FStar_Util.bind_opt uu____4215
                          (fun t2  ->
-                            let uu____4155 =
-                              let uu____4163 =
+                            let uu____4221 =
+                              let uu____4229 =
                                 FStar_TypeChecker_NBETerm.e_list
                                   e_string_list
                                  in
-                              FStar_TypeChecker_NBETerm.unembed uu____4163 cb
+                              FStar_TypeChecker_NBETerm.unembed uu____4229 cb
                                 dcs
                                in
-                            FStar_Util.bind_opt uu____4155
+                            FStar_Util.bind_opt uu____4221
                               (fun dcs1  ->
                                  FStar_All.pipe_left
-                                   (fun _4193  ->
-                                      FStar_Pervasives_Native.Some _4193)
+                                   (fun _4259  ->
+                                      FStar_Pervasives_Native.Some _4259)
                                    (FStar_Reflection_Data.Sg_Inductive
                                       (nm1, us1, bs1, t2, dcs1)))))))
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____4201,(t1,uu____4203)::(ty,uu____4205)::(univs1,uu____4207)::
-         (fvar1,uu____4209)::(r,uu____4211)::[])
+        (fv,uu____4267,(t1,uu____4269)::(ty,uu____4271)::(univs1,uu____4273)::
+         (fvar1,uu____4275)::(r,uu____4277)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Sg_Let.FStar_Reflection_Data.lid
         ->
-        let uu____4246 =
+        let uu____4312 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_bool
             cb r
            in
-        FStar_Util.bind_opt uu____4246
+        FStar_Util.bind_opt uu____4312
           (fun r1  ->
-             let uu____4256 = FStar_TypeChecker_NBETerm.unembed e_fv cb fvar1
+             let uu____4322 = FStar_TypeChecker_NBETerm.unembed e_fv cb fvar1
                 in
-             FStar_Util.bind_opt uu____4256
+             FStar_Util.bind_opt uu____4322
                (fun fvar2  ->
-                  let uu____4262 =
+                  let uu____4328 =
                     FStar_TypeChecker_NBETerm.unembed e_univ_names cb univs1
                      in
-                  FStar_Util.bind_opt uu____4262
+                  FStar_Util.bind_opt uu____4328
                     (fun univs2  ->
-                       let uu____4276 =
+                       let uu____4342 =
                          FStar_TypeChecker_NBETerm.unembed e_term cb ty  in
-                       FStar_Util.bind_opt uu____4276
+                       FStar_Util.bind_opt uu____4342
                          (fun ty1  ->
-                            let uu____4282 =
+                            let uu____4348 =
                               FStar_TypeChecker_NBETerm.unembed e_term cb t1
                                in
-                            FStar_Util.bind_opt uu____4282
+                            FStar_Util.bind_opt uu____4348
                               (fun t2  ->
                                  FStar_All.pipe_left
-                                   (fun _4289  ->
-                                      FStar_Pervasives_Native.Some _4289)
+                                   (fun _4355  ->
+                                      FStar_Pervasives_Native.Some _4355)
                                    (FStar_Reflection_Data.Sg_Let
                                       (r1, fvar2, univs2, ty1, t2)))))))
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4294,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4360,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Unk.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Unk
-    | uu____4309 ->
-        ((let uu____4311 =
-            let uu____4317 =
-              let uu____4319 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded sigelt_view: %s" uu____4319
+    | uu____4375 ->
+        ((let uu____4377 =
+            let uu____4383 =
+              let uu____4385 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded sigelt_view: %s" uu____4385
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____4317)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____4311);
+            (FStar_Errors.Warning_NotEmbedded, uu____4383)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____4377);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_sigelt_view unembed_sigelt_view
@@ -1649,70 +1679,70 @@ let (e_exp : FStar_Reflection_Data.exp FStar_TypeChecker_NBETerm.embedding) =
         mkConstruct FStar_Reflection_Data.ref_E_Unit.FStar_Reflection_Data.fv
           [] []
     | FStar_Reflection_Data.Var i ->
-        let uu____4342 =
-          let uu____4349 =
+        let uu____4408 =
+          let uu____4415 =
             FStar_TypeChecker_NBETerm.as_arg
               (FStar_TypeChecker_NBETerm.Constant
                  (FStar_TypeChecker_NBETerm.Int i))
              in
-          [uu____4349]  in
+          [uu____4415]  in
         mkConstruct FStar_Reflection_Data.ref_E_Var.FStar_Reflection_Data.fv
-          [] uu____4342
+          [] uu____4408
     | FStar_Reflection_Data.Mult (e1,e2) ->
-        let uu____4364 =
-          let uu____4371 =
-            let uu____4376 = embed_exp cb e1  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4376  in
-          let uu____4377 =
-            let uu____4384 =
-              let uu____4389 = embed_exp cb e2  in
-              FStar_TypeChecker_NBETerm.as_arg uu____4389  in
-            [uu____4384]  in
-          uu____4371 :: uu____4377  in
+        let uu____4430 =
+          let uu____4437 =
+            let uu____4442 = embed_exp cb e1  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4442  in
+          let uu____4443 =
+            let uu____4450 =
+              let uu____4455 = embed_exp cb e2  in
+              FStar_TypeChecker_NBETerm.as_arg uu____4455  in
+            [uu____4450]  in
+          uu____4437 :: uu____4443  in
         mkConstruct FStar_Reflection_Data.ref_E_Mult.FStar_Reflection_Data.fv
-          [] uu____4364
+          [] uu____4430
      in
   let rec unembed_exp cb t =
     match t with
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4418,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4484,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_E_Unit.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Unit
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4434,(i,uu____4436)::[])
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____4500,(i,uu____4502)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_E_Var.FStar_Reflection_Data.lid
         ->
-        let uu____4455 =
+        let uu____4521 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_int
             cb i
            in
-        FStar_Util.bind_opt uu____4455
+        FStar_Util.bind_opt uu____4521
           (fun i1  ->
              FStar_All.pipe_left
-               (fun _4462  -> FStar_Pervasives_Native.Some _4462)
+               (fun _4528  -> FStar_Pervasives_Native.Some _4528)
                (FStar_Reflection_Data.Var i1))
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____4464,(e2,uu____4466)::(e1,uu____4468)::[]) when
+        (fv,uu____4530,(e2,uu____4532)::(e1,uu____4534)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_E_Mult.FStar_Reflection_Data.lid
         ->
-        let uu____4491 = unembed_exp cb e1  in
-        FStar_Util.bind_opt uu____4491
+        let uu____4557 = unembed_exp cb e1  in
+        FStar_Util.bind_opt uu____4557
           (fun e11  ->
-             let uu____4497 = unembed_exp cb e2  in
-             FStar_Util.bind_opt uu____4497
+             let uu____4563 = unembed_exp cb e2  in
+             FStar_Util.bind_opt uu____4563
                (fun e21  ->
                   FStar_All.pipe_left
-                    (fun _4504  -> FStar_Pervasives_Native.Some _4504)
+                    (fun _4570  -> FStar_Pervasives_Native.Some _4570)
                     (FStar_Reflection_Data.Mult (e11, e21))))
-    | uu____4505 ->
-        ((let uu____4507 =
-            let uu____4513 =
-              let uu____4515 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded exp: %s" uu____4515  in
-            (FStar_Errors.Warning_NotEmbedded, uu____4513)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____4507);
+    | uu____4571 ->
+        ((let uu____4573 =
+            let uu____4579 =
+              let uu____4581 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded exp: %s" uu____4581  in
+            (FStar_Errors.Warning_NotEmbedded, uu____4579)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____4573);
          FStar_Pervasives_Native.None)
      in
   mk_emb' embed_exp unembed_exp FStar_Reflection_Data.fstar_refl_exp_fv 
@@ -1727,18 +1757,18 @@ let (e_attributes :
   = FStar_TypeChecker_NBETerm.e_list e_attribute 
 let (e_lid : FStar_Ident.lid FStar_TypeChecker_NBETerm.embedding) =
   let embed1 rng lid =
-    let uu____4544 = FStar_Ident.path_of_lid lid  in
-    FStar_TypeChecker_NBETerm.embed e_string_list rng uu____4544  in
+    let uu____4610 = FStar_Ident.path_of_lid lid  in
+    FStar_TypeChecker_NBETerm.embed e_string_list rng uu____4610  in
   let unembed1 cb t =
-    let uu____4566 = FStar_TypeChecker_NBETerm.unembed e_string_list cb t  in
-    FStar_Util.map_opt uu____4566
+    let uu____4632 = FStar_TypeChecker_NBETerm.unembed e_string_list cb t  in
+    FStar_Util.map_opt uu____4632
       (fun p  -> FStar_Ident.lid_of_path p FStar_Range.dummyRange)
      in
-  let uu____4583 =
+  let uu____4649 =
     mkConstruct FStar_Reflection_Data.fstar_refl_aqualv_fv [] []  in
-  let uu____4588 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_aqualv_fv
+  let uu____4654 = fv_as_emb_typ FStar_Reflection_Data.fstar_refl_aqualv_fv
      in
-  FStar_TypeChecker_NBETerm.mk_emb embed1 unembed1 uu____4583 uu____4588 
+  FStar_TypeChecker_NBETerm.mk_emb embed1 unembed1 uu____4649 uu____4654 
 let (e_qualifier :
   FStar_Syntax_Syntax.qualifier FStar_TypeChecker_NBETerm.embedding) =
   let embed1 cb q =
@@ -1813,83 +1843,83 @@ let (e_qualifier :
           FStar_Reflection_Data.ref_qual_OnlyName.FStar_Reflection_Data.fv []
           []
     | FStar_Syntax_Syntax.Reflectable l ->
-        let uu____4676 =
-          let uu____4683 =
-            let uu____4688 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4688  in
-          [uu____4683]  in
+        let uu____4742 =
+          let uu____4749 =
+            let uu____4754 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4754  in
+          [uu____4749]  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_Reflectable.FStar_Reflection_Data.fv
-          [] uu____4676
+          [] uu____4742
     | FStar_Syntax_Syntax.Discriminator l ->
-        let uu____4698 =
-          let uu____4705 =
-            let uu____4710 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4710  in
-          [uu____4705]  in
+        let uu____4764 =
+          let uu____4771 =
+            let uu____4776 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4776  in
+          [uu____4771]  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_Discriminator.FStar_Reflection_Data.fv
-          [] uu____4698
+          [] uu____4764
     | FStar_Syntax_Syntax.Action l ->
-        let uu____4720 =
-          let uu____4727 =
-            let uu____4732 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4732  in
-          [uu____4727]  in
+        let uu____4786 =
+          let uu____4793 =
+            let uu____4798 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4798  in
+          [uu____4793]  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_Action.FStar_Reflection_Data.fv []
-          uu____4720
+          uu____4786
     | FStar_Syntax_Syntax.Projector (l,i) ->
-        let uu____4743 =
-          let uu____4750 =
-            let uu____4755 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4755  in
-          let uu____4756 =
-            let uu____4763 =
-              let uu____4768 = FStar_TypeChecker_NBETerm.embed e_ident cb i
+        let uu____4809 =
+          let uu____4816 =
+            let uu____4821 = FStar_TypeChecker_NBETerm.embed e_lid cb l  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4821  in
+          let uu____4822 =
+            let uu____4829 =
+              let uu____4834 = FStar_TypeChecker_NBETerm.embed e_ident cb i
                  in
-              FStar_TypeChecker_NBETerm.as_arg uu____4768  in
-            [uu____4763]  in
-          uu____4750 :: uu____4756  in
+              FStar_TypeChecker_NBETerm.as_arg uu____4834  in
+            [uu____4829]  in
+          uu____4816 :: uu____4822  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_Projector.FStar_Reflection_Data.fv
-          [] uu____4743
+          [] uu____4809
     | FStar_Syntax_Syntax.RecordType (ids1,ids2) ->
-        let uu____4791 =
-          let uu____4798 =
-            let uu____4803 =
-              let uu____4804 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-              FStar_TypeChecker_NBETerm.embed uu____4804 cb ids1  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4803  in
-          let uu____4811 =
-            let uu____4818 =
-              let uu____4823 =
-                let uu____4824 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-                FStar_TypeChecker_NBETerm.embed uu____4824 cb ids2  in
-              FStar_TypeChecker_NBETerm.as_arg uu____4823  in
-            [uu____4818]  in
-          uu____4798 :: uu____4811  in
+        let uu____4857 =
+          let uu____4864 =
+            let uu____4869 =
+              let uu____4870 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+              FStar_TypeChecker_NBETerm.embed uu____4870 cb ids1  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4869  in
+          let uu____4877 =
+            let uu____4884 =
+              let uu____4889 =
+                let uu____4890 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+                FStar_TypeChecker_NBETerm.embed uu____4890 cb ids2  in
+              FStar_TypeChecker_NBETerm.as_arg uu____4889  in
+            [uu____4884]  in
+          uu____4864 :: uu____4877  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_RecordType.FStar_Reflection_Data.fv
-          [] uu____4791
+          [] uu____4857
     | FStar_Syntax_Syntax.RecordConstructor (ids1,ids2) ->
-        let uu____4853 =
-          let uu____4860 =
-            let uu____4865 =
-              let uu____4866 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-              FStar_TypeChecker_NBETerm.embed uu____4866 cb ids1  in
-            FStar_TypeChecker_NBETerm.as_arg uu____4865  in
-          let uu____4873 =
-            let uu____4880 =
-              let uu____4885 =
-                let uu____4886 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-                FStar_TypeChecker_NBETerm.embed uu____4886 cb ids2  in
-              FStar_TypeChecker_NBETerm.as_arg uu____4885  in
-            [uu____4880]  in
-          uu____4860 :: uu____4873  in
+        let uu____4919 =
+          let uu____4926 =
+            let uu____4931 =
+              let uu____4932 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+              FStar_TypeChecker_NBETerm.embed uu____4932 cb ids1  in
+            FStar_TypeChecker_NBETerm.as_arg uu____4931  in
+          let uu____4939 =
+            let uu____4946 =
+              let uu____4951 =
+                let uu____4952 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+                FStar_TypeChecker_NBETerm.embed uu____4952 cb ids2  in
+              FStar_TypeChecker_NBETerm.as_arg uu____4951  in
+            [uu____4946]  in
+          uu____4926 :: uu____4939  in
         mkConstruct
           FStar_Reflection_Data.ref_qual_RecordConstructor.FStar_Reflection_Data.fv
-          [] uu____4853
+          [] uu____4919
      in
   let unembed1 cb t =
     match t with
@@ -1970,67 +2000,50 @@ let (e_qualifier :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_qual_OnlyName.FStar_Reflection_Data.lid
         -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.OnlyName
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5156)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5222)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_qual_Reflectable.FStar_Reflection_Data.lid
         ->
-        let uu____5173 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
-        FStar_Util.bind_opt uu____5173
+        let uu____5239 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
+        FStar_Util.bind_opt uu____5239
           (fun l1  ->
              FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Reflectable l1))
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5180)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5246)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_qual_Discriminator.FStar_Reflection_Data.lid
         ->
-        let uu____5197 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
-        FStar_Util.bind_opt uu____5197
+        let uu____5263 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
+        FStar_Util.bind_opt uu____5263
           (fun l1  ->
              FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Discriminator l1))
-    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5204)::[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,[],(l,uu____5270)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_qual_Action.FStar_Reflection_Data.lid
         ->
-        let uu____5221 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
-        FStar_Util.bind_opt uu____5221
+        let uu____5287 = FStar_TypeChecker_NBETerm.unembed e_lid cb l  in
+        FStar_Util.bind_opt uu____5287
           (fun l1  ->
              FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Action l1))
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,[],(i,uu____5228)::(l,uu____5230)::[]) when
+        (fv,[],(i,uu____5294)::(l,uu____5296)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_qual_Projector.FStar_Reflection_Data.lid
         ->
-        let uu____5251 = FStar_TypeChecker_NBETerm.unembed e_ident cb i  in
-        FStar_Util.bind_opt uu____5251
+        let uu____5317 = FStar_TypeChecker_NBETerm.unembed e_ident cb i  in
+        FStar_Util.bind_opt uu____5317
           (fun i1  ->
-             let uu____5257 = FStar_TypeChecker_NBETerm.unembed e_lid cb l
+             let uu____5323 = FStar_TypeChecker_NBETerm.unembed e_lid cb l
                 in
-             FStar_Util.bind_opt uu____5257
+             FStar_Util.bind_opt uu____5323
                (fun l1  ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Projector (l1, i1))))
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,[],(ids2,uu____5264)::(ids1,uu____5266)::[]) when
-        FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_Data.ref_qual_RecordType.FStar_Reflection_Data.lid
-        ->
-        let uu____5287 =
-          let uu____5292 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-          FStar_TypeChecker_NBETerm.unembed uu____5292 cb ids1  in
-        FStar_Util.bind_opt uu____5287
-          (fun ids11  ->
-             let uu____5306 =
-               let uu____5311 = FStar_TypeChecker_NBETerm.e_list e_ident  in
-               FStar_TypeChecker_NBETerm.unembed uu____5311 cb ids2  in
-             FStar_Util.bind_opt uu____5306
-               (fun ids21  ->
-                  FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.RecordType (ids11, ids21))))
-    | FStar_TypeChecker_NBETerm.Construct
         (fv,[],(ids2,uu____5330)::(ids1,uu____5332)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_Data.ref_qual_RecordConstructor.FStar_Reflection_Data.lid
+          FStar_Reflection_Data.ref_qual_RecordType.FStar_Reflection_Data.lid
         ->
         let uu____5353 =
           let uu____5358 = FStar_TypeChecker_NBETerm.e_list e_ident  in
@@ -2043,22 +2056,39 @@ let (e_qualifier :
              FStar_Util.bind_opt uu____5372
                (fun ids21  ->
                   FStar_Pervasives_Native.Some
+                    (FStar_Syntax_Syntax.RecordType (ids11, ids21))))
+    | FStar_TypeChecker_NBETerm.Construct
+        (fv,[],(ids2,uu____5396)::(ids1,uu____5398)::[]) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          FStar_Reflection_Data.ref_qual_RecordConstructor.FStar_Reflection_Data.lid
+        ->
+        let uu____5419 =
+          let uu____5424 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+          FStar_TypeChecker_NBETerm.unembed uu____5424 cb ids1  in
+        FStar_Util.bind_opt uu____5419
+          (fun ids11  ->
+             let uu____5438 =
+               let uu____5443 = FStar_TypeChecker_NBETerm.e_list e_ident  in
+               FStar_TypeChecker_NBETerm.unembed uu____5443 cb ids2  in
+             FStar_Util.bind_opt uu____5438
+               (fun ids21  ->
+                  FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.RecordConstructor (ids11, ids21))))
-    | uu____5394 ->
-        ((let uu____5396 =
-            let uu____5402 =
-              let uu____5404 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded qualifier: %s" uu____5404
+    | uu____5460 ->
+        ((let uu____5462 =
+            let uu____5468 =
+              let uu____5470 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded qualifier: %s" uu____5470
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____5402)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____5396);
+            (FStar_Errors.Warning_NotEmbedded, uu____5468)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____5462);
          FStar_Pervasives_Native.None)
      in
-  let uu____5408 =
+  let uu____5474 =
     mkConstruct FStar_Reflection_Data.fstar_refl_qualifier_fv [] []  in
-  let uu____5413 =
+  let uu____5479 =
     fv_as_emb_typ FStar_Reflection_Data.fstar_refl_qualifier_fv  in
-  FStar_TypeChecker_NBETerm.mk_emb embed1 unembed1 uu____5408 uu____5413 
+  FStar_TypeChecker_NBETerm.mk_emb embed1 unembed1 uu____5474 uu____5479 
 let (e_qualifiers :
   FStar_Syntax_Syntax.qualifier Prims.list
     FStar_TypeChecker_NBETerm.embedding)

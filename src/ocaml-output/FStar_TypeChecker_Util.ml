@@ -6930,7 +6930,9 @@ let (mk_toplevel_definition :
              FStar_Syntax_Syntax.sigmeta =
                (uu___1457_11219.FStar_Syntax_Syntax.sigmeta);
              FStar_Syntax_Syntax.sigattrs =
-               (uu___1457_11219.FStar_Syntax_Syntax.sigattrs)
+               (uu___1457_11219.FStar_Syntax_Syntax.sigattrs);
+             FStar_Syntax_Syntax.sigopts =
+               (uu___1457_11219.FStar_Syntax_Syntax.sigopts)
            }), uu____11217))
 >>>>>>> snap
 =======

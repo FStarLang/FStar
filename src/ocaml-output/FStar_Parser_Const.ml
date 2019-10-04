@@ -258,8 +258,13 @@ let (postprocess_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"] 
 let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
+let (check_with_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Basic"; "check_with"]
+    FStar_Range.dummyRange
+  
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero  in
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   let gen1 uu____901 = FStar_Util.incr x; FStar_Util.read x  in
@@ -287,6 +292,15 @@ let (sli : FStar_Ident.lident -> Prims.string) =
     let uu____945 = FStar_Options.print_real_names ()  in
     if uu____945
 >>>>>>> wip on typechecking match for layered effects
+=======
+  let gen1 uu____915 = FStar_Util.incr x; FStar_Util.read x  in
+  let reset uu____923 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
+let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
+let (sli : FStar_Ident.lident -> Prims.string) =
+  fun l  ->
+    let uu____954 = FStar_Options.print_real_names ()  in
+    if uu____954
+>>>>>>> snap
     then l.FStar_Ident.str
     else (l.FStar_Ident.ident).FStar_Ident.idText
   
@@ -300,6 +314,7 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_float x1 -> FStar_Util.string_of_float x1
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     | FStar_Const.Const_string (s,uu____969) -> FStar_Util.format1 "\"%s\"" s
     | FStar_Const.Const_bytearray uu____973 -> "<bytearray>"
     | FStar_Const.Const_int (x1,uu____982) -> x1
@@ -311,9 +326,15 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_string (s,uu____973) -> FStar_Util.format1 "\"%s\"" s
     | FStar_Const.Const_bytearray uu____977 -> "<bytearray>"
     | FStar_Const.Const_int (x1,uu____986) -> x1
+=======
+    | FStar_Const.Const_string (s,uu____983) -> FStar_Util.format1 "\"%s\"" s
+    | FStar_Const.Const_bytearray uu____987 -> "<bytearray>"
+    | FStar_Const.Const_int (x1,uu____996) -> x1
+>>>>>>> snap
     | FStar_Const.Const_char c ->
-        let uu____1003 =
+        let uu____1013 =
           FStar_String.op_Hat (FStar_Util.string_of_char c) "'"  in
+<<<<<<< HEAD
         FStar_String.op_Hat "'" uu____1003
 >>>>>>> snap
 =======
@@ -325,11 +346,15 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
           FStar_String.op_Hat (FStar_Util.string_of_char c) "'"  in
         FStar_String.op_Hat "'" uu____1004
 >>>>>>> wip on typechecking match for layered effects
+=======
+        FStar_String.op_Hat "'" uu____1013
+>>>>>>> snap
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
     | FStar_Const.Const_range_of  -> "range_of"
     | FStar_Const.Const_set_range_of  -> "set_range_of"
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         let uu____1008 = sli l  in
@@ -342,11 +367,16 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
         let uu____1013 = sli l  in
         FStar_Util.format1 "[[%s.reflect]]" uu____1013
 >>>>>>> wip on typechecking match for layered effects
+=======
+        let uu____1022 = sli l  in
+        FStar_Util.format1 "[[%s.reflect]]" uu____1022
+>>>>>>> snap
   
 let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         let uu____1026 = FStar_Util.string_of_int n1  in
@@ -362,6 +392,11 @@ let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
         FStar_Util.format1 "tuple%s" uu____1031  in
       let uu____1034 = psnconst t  in FStar_Ident.set_lid_range uu____1034 r
 >>>>>>> wip on typechecking match for layered effects
+=======
+        let uu____1040 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "tuple%s" uu____1040  in
+      let uu____1043 = psnconst t  in FStar_Ident.set_lid_range uu____1043 r
+>>>>>>> snap
   
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -369,6 +404,7 @@ let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_lid : FStar_Ident.ident -> Prims.bool) =
   fun lid  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     let uu____1050 = FStar_Ident.text_of_id lid  in
@@ -381,12 +417,17 @@ let (is_tuple_constructor_lid : FStar_Ident.ident -> Prims.bool) =
     let uu____1055 = FStar_Ident.text_of_id lid  in
     is_tuple_constructor_string uu____1055
 >>>>>>> wip on typechecking match for layered effects
+=======
+    let uu____1064 = FStar_Ident.text_of_id lid  in
+    is_tuple_constructor_string uu____1064
+>>>>>>> snap
   
 let (mk_tuple_data_lid :
   Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         let uu____1067 = FStar_Util.string_of_int n1  in
@@ -402,6 +443,11 @@ let (mk_tuple_data_lid :
         FStar_Util.format1 "Mktuple%s" uu____1072  in
       let uu____1075 = psnconst t  in FStar_Ident.set_lid_range uu____1075 r
 >>>>>>> wip on typechecking match for layered effects
+=======
+        let uu____1081 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mktuple%s" uu____1081  in
+      let uu____1084 = psnconst t  in FStar_Ident.set_lid_range uu____1084 r
+>>>>>>> snap
   
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -410,6 +456,7 @@ let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
       let uu____1098 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
@@ -422,6 +469,10 @@ let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
       let uu____1103 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
       FStar_Ident.lid_equals f uu____1103
 >>>>>>> wip on typechecking match for layered effects
+=======
+      let uu____1112 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1112
+>>>>>>> snap
   
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str 
@@ -431,6 +482,7 @@ let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         let uu____1146 = FStar_Util.string_of_int n1  in
@@ -452,6 +504,13 @@ let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
          in
       FStar_Ident.set_lid_range uu____1154 r
 >>>>>>> wip on typechecking match for layered effects
+=======
+        let uu____1160 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "dtuple%s" uu____1160  in
+      let uu____1163 = let uu____1164 = mod_prefix_dtuple n1  in uu____1164 t
+         in
+      FStar_Ident.set_lid_range uu____1163 r
+>>>>>>> snap
   
 let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -465,6 +524,7 @@ let (mk_dtuple_data_lid :
   fun n1  ->
     fun r  ->
       let t =
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         let uu____1191 = FStar_Util.string_of_int n1  in
@@ -486,6 +546,13 @@ let (mk_dtuple_data_lid :
          in
       FStar_Ident.set_lid_range uu____1199 r
 >>>>>>> wip on typechecking match for layered effects
+=======
+        let uu____1205 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mkdtuple%s" uu____1205  in
+      let uu____1208 = let uu____1209 = mod_prefix_dtuple n1  in uu____1209 t
+         in
+      FStar_Ident.set_lid_range uu____1208 r
+>>>>>>> snap
   
 let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -495,6 +562,7 @@ let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
       let uu____1228 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
@@ -522,6 +590,15 @@ let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
     let uu____1241 = FStar_Ident.text_of_lid f  in
     is_dtuple_datacon_string uu____1241
 >>>>>>> wip on typechecking match for layered effects
+=======
+      let uu____1242 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1242
+  
+let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
+  fun f  ->
+    let uu____1250 = FStar_Ident.text_of_lid f  in
+    is_dtuple_datacon_string uu____1250
+>>>>>>> snap
   
 let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
