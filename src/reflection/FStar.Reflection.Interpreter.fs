@@ -123,6 +123,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_bv"               pack_bv               E.e_bv_view         E.e_bv
                                 pack_bv               NRE.e_bv_view       NRE.e_bv;
 
+    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          E.e_optionstate
+                                sigelt_opts           NRE.e_sigelt        NRE.e_optionstate;
+
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
 
