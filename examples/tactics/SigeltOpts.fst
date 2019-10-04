@@ -21,11 +21,13 @@ let tau () : Tac unit =
   match lookup_typ (cur_env ()) ["SigeltOpts"; "sp1"] with
   | None -> fail "1"
   | Some se ->
-    let opts = sigelt_opts se in
-    let se : sigelt = pack_sigelt (Sg_Let false (pack_fv ["SigeltOpts"; "blah"]) [] (`_)
-                                          (`(assert (List.length [2] == 1)))) in
-    let se = add_check_with opts se in
-    exact (quote [se])
+    match sigelt_opts se with
+    | None -> fail "2"
+    | Some opts ->
+        let se : sigelt = pack_sigelt (Sg_Let false (pack_fv ["SigeltOpts"; "blah"]) [] (`_)
+                                              (`(assert (List.length [2] == 1)))) in
+        let se = add_check_with opts se in
+        exact (quote [se])
 
 (* Splice `blah`, using the options for sp1, i.e. --max_fuel 2 *)
 %splice[blah] (tau ())
