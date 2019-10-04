@@ -277,6 +277,7 @@ and lazy_kind =
   | BadLazy
   | Lazy_bv
   | Lazy_binder
+  | Lazy_optionstate
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env

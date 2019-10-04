@@ -439,6 +439,7 @@ let eq_lazy_kind k k' =
      | BadLazy, BadLazy
      | Lazy_bv, Lazy_bv
      | Lazy_binder, Lazy_binder
+     | Lazy_optionstate, Lazy_optionstate
      | Lazy_fvar, Lazy_fvar
      | Lazy_comp, Lazy_comp
      | Lazy_env, Lazy_env
