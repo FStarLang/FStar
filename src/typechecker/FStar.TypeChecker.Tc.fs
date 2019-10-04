@@ -47,6 +47,7 @@ module TcEff = FStar.TypeChecker.TcEffect
 module PC = FStar.Parser.Const
 module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
+module O = FStar.Options
 
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
@@ -376,6 +377,11 @@ let check_must_erase_attribute env se =
     end
 
     | _ -> ()
+
+(* A(nother) hacky knot, set by FStar.Main *)
+let unembed_optionstate_knot : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+let unembed_optionstate (t : term) : option<O.optionstate> =
+    EMB.unembed (BU.must (!unembed_optionstate_knot)) t true EMB.id_norm_cb
 
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in

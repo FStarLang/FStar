@@ -203,7 +203,9 @@ let setup_hooks () =
     Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
+    FStar.TypeChecker.Tc.unembed_optionstate_knot := Some FStar.Reflection.Embeddings.e_optionstate;
+    ()
 
 let handle_error e =
     if FStar.Errors.handleable e then
