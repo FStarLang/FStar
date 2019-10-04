@@ -23,6 +23,7 @@ module EMB = FStar.Syntax.Embeddings
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 module NBETerm = FStar.TypeChecker.NBETerm
 module PC = FStar.Parser.Const
+module O = FStar.Options
 
 open FStar.Dyn
 
@@ -70,6 +71,21 @@ let e_binder =
             None
     in
     mk_emb embed_binder unembed_binder fstar_refl_binder
+
+let e_optionstate =
+    let embed_optionstate (rng:Range.range) (b:O.optionstate) : term =
+        U.mk_lazy b fstar_refl_optionstate Lazy_optionstate (Some rng)
+    in
+    let unembed_optionstate w (t:term) : option<O.optionstate> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=b; lkind=Lazy_optionstate} ->
+            Some (undyn b)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_optionstate unembed_optionstate fstar_refl_optionstate
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -884,6 +900,10 @@ let unfold_lazy_comp (i : lazyinfo) : term =
 
 let unfold_lazy_env (i : lazyinfo) : term =
     (* Not needed, metaprograms never see concrete environments. *)
+    U.exp_unit
+
+let unfold_lazy_optionstate (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete optionstates . *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
