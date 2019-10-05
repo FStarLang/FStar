@@ -292,7 +292,7 @@
         "typing_tok_While.Skip@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "bc72d873367d8f0b104e66cbeeb04652"
+      "c9bef5c95a482ed219846addbd88f9d1"
     ],
     [
       "While.interpret_while",
@@ -634,7 +634,7 @@
       1,
       [ "@query" ],
       0,
-      "c2f307202fd3166a4acc0a89fabfb40b"
+      "da03d3d2a79b454d158b20e0fc539b85"
     ],
     [
       "While.interpret_while",
@@ -670,7 +670,7 @@
         "typing_tok_While.Skip@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "87a96d27a27177696564a76adc216c8a"
+      "69f58bb1a63006a7b0f36b00816015be"
     ],
     [
       "While.interpret_while",
@@ -679,7 +679,7 @@
       1,
       [ "@query" ],
       0,
-      "9d023559a0365a09048e97fc1117bbc0"
+      "4fbedd5a824f97530d61ff179e80c5a3"
     ],
     [
       "While.interpret_while",
@@ -708,7 +708,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6a040c764b71aba0533e6adb89e3a6ea"
+      "54a3afec85933c776ccddecd5c1ff6dc"
     ]
   ]
 ]
