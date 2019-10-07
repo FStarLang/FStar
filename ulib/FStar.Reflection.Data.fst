@@ -33,7 +33,10 @@ type vconst =
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> list pattern -> pattern  // A fully applied constructor
+    | Pat_Cons     : fv -> list (pattern * bool) -> pattern
+                                                    // A fully applied constructor, each boolean marks
+                                                    // whether the argument was an explicitly-provided
+                                                    // implicit argument
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
     | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type

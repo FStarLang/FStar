@@ -22,7 +22,7 @@ type vconst =
 
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list<pattern>
+    | Pat_Cons     of fv * list<(pattern * bool)>
     | Pat_Var      of bv
     | Pat_Wild     of bv
     | Pat_Dot_Term of bv * term
