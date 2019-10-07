@@ -24,7 +24,6 @@ open RST.Effect
 /// Tests for RST as a layered effect
 
 #set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2 --using_facts_from '* \
-  -FStar.Seq \
   -FStar.ST \
   -FStar.HyperStack \
   -FStar.Monotonic.HyperStack
@@ -701,6 +700,26 @@ let test_frame_inference2
 
 #set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
 
+let assert_resource (r: resource) : RST unit r (fun _ -> r) (fun _ -> True) (fun _ _ _ -> True) =
+  ignore (rst_get r)
+
+let rst_get_current (#outer: resource) (_ : unit)
+  : RST (rmem outer) outer (fun _ -> outer) (fun _ -> True) (fun _ _ _ -> True)
+  = rst_get outer
+
+let test_frame_inference3
+  (b1: array U32.t)
+  (b2: array U32.t)
+  (b3: array U32.t)
+  (b4: array U32.t)
+  (b5: array U32.t)
+  : RST unit (array_resource b1 <*>  array_resource b2)
+    (fun _ -> array_resource b1 <*> array_resource b2)
+    (fun _ -> True)
+    (fun _ _ _ -> True)
+  =
+  assert_resource (array_resource b1 <*> array_resource b2)
+
 let copy_state_with_frame_inference
   (st:state)
   (ost:state)
@@ -712,7 +731,6 @@ let copy_state_with_frame_inference
     focus_rmem h0 (array_resource ost) == focus_rmem h1 (array_resource ost) /\
     as_rseq st h1 `Seq.equal` as_rseq ost h0)
   =
-  let h0 = rst_get (array_resource st <*> array_resource ost) in
   let v = frame (index ost 0ul) in
   frame (upd st 0ul v);
   let v = frame (index ost 1ul) in
@@ -744,7 +762,4 @@ let copy_state_with_frame_inference
   let v = frame (index ost 14ul) in
   frame (upd st 14ul v);
   let v = frame (index ost 15ul) in
-  frame (upd st 15ul v);
-  let h1 = rst_get (array_resource st <*> array_resource ost) in
-  //assert False;
-  Seq.lemma_eq_intro (as_rseq st h1) (as_rseq ost h0)
+  frame (upd st 15ul v)
