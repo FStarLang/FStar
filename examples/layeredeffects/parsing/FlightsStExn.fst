@@ -9,7 +9,7 @@ module HS = FStar.HyperStack
 module B = LowStar.Buffer
 
 open Messages
-open Exn
+open MExn
 
 noeq
 type state = {
@@ -21,12 +21,19 @@ type state = {
 
 type pre_t = state -> HS.mem -> Type0
 type post_t (a:Type) = option (a & state) -> HS.mem -> Type0
-type wp_t (a:Type) =
-  wp:(post_t a -> pre_t){
-    forall p q.
-      (forall x h. p x h ==> q x h) ==>
-      (forall st h. wp p st h ==> wp q st h)}
 
+type wp_t0 (a:Type) =
+  wp:(post_t a -> pre_t)
+
+unfold
+let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
+  forall p q.
+    (forall r h. p r h ==> q r h) ==>
+    (forall st h. wp p st h ==> wp q st h)
+
+
+type wp_t (a:Type) =
+  wp:(post_t a -> pre_t){monotonic_wp wp}
 
 type repr (a:Type) (wp:wp_t a) =
   st:state -> EXN (a & state) (fun p h -> wp p st h)
@@ -36,22 +43,56 @@ let return (a:Type) (x:a)
 : repr a (fun p st h -> p (Some (x, st)) h)
 = fun st -> (x, st)
 
-#set-options "--max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
+unfold
+let post_a (a:Type) (b:Type) (wp_g:a -> wp_t b) (p:post_t b) : post_t a =
+  fun r h ->
+  match r with
+  | None -> p None h
+  | Some r -> Prims.auto_squash (wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r) h)
 
-#restart-solver
-#set-options "--log_queries"
+let lemma_monotonic2 (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) (p:post_t b) (q:post_t b) (st:state) (h:HS.mem)
+: Lemma
+  (requires forall (r:option (a & state)) (h:HS.mem). (post_a a b wp_g p) r h ==> (post_a a b wp_g q) r h)
+  (ensures wp_f (post_a a b wp_g p) st h ==> wp_f (post_a a b wp_g q) st h)
+= let aux (p q:post_t a)
+    : Lemma ((forall r h. p r h ==> q r h) ==> (forall st h. wp_f p st h ==> wp_f q st h))
+    = () in
+  aux (post_a a b wp_g p) (post_a a b wp_g q);
+  admit ()
+
+unfold
+let bind_wp0 (a:Type) (b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : post_t b -> pre_t =
+  fun p st h -> wp_f (post_a a b wp_g p) st h
+
+open FStar.Tactics
+
+unfold
+let bind_wp (a:Type) (b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t b
+= assert (monotonic_wp (bind_wp0 a b wp_f wp_g)) by
+    (norm [delta_only [`%monotonic_wp]];
+     let p_binder = forall_intro () in
+     let q_binder = forall_intro () in
+     ignore (implies_intro ());
+     ignore (forall_intro ());
+     norm [delta_only [`%bind_wp0]];
+     ignore (forall_intro ());
+     let wp_f_binder, wp_g_binder =
+       match (cur_binders ()) with
+       | _::_::wp_f::wp_g::_ -> wp_f, wp_g
+       | _ -> fail "" in
+     apply_lemma (`(lemma_monotonic2 (`#(binder_to_term wp_f_binder)) (`#(binder_to_term wp_g_binder)) (`#(binder_to_term p_binder)) (`#(binder_to_term q_binder))));
+     norm [delta_only [`%post_a]];
+     ignore (forall_intro ()));
+  bind_wp0 a b wp_f wp_g
+
+inline_for_extraction
 let bind (a:Type) (b:Type)
   (wp_f:wp_t a) (wp_g:a -> wp_t b)
   (f:repr a wp_f) (g:(x:a -> repr b (wp_g x)))
-: repr b
-  (fun p st0 h0 ->
-    wp_f (fun r h1 ->
-      match r with
-      | None -> p None h1
-      | Some (x, st1) -> (wp_g x) p st1 h1) st0 h0)
+: repr b (bind_wp a b wp_f wp_g)
 = fun st ->
   let (x, st) = f st in
-  (g x) st
+  g x st
 
 
 type repr (a:Type0) = {

@@ -80,7 +80,7 @@ type post_t (a:Type) = option (a & nat) -> Type0
 type wp_t0 (a:Type) = post_t a -> pre_t
 
 unfold
-let monotonic_wp (#a:Type) (wp:wp_t0 a) =
+let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
   forall p q.
     (forall r. p r ==> q r) ==>
     (forall n. wp p n ==> wp q n)
