@@ -37,7 +37,7 @@ let closure_transitive #a r =
      let y = forall_intro () in
      let z = forall_intro () in
      let h = implies_intro () in
-     let _ = destruct_and (binder_to_term h) in
+     let _ = destruct_and h in
      seq (fun _ -> mapply (`Closure)) assumption)
 
 let closure #a r =
@@ -48,7 +48,7 @@ let closure #a r =
 let closure_step #a r x y =
   assert (r x y ==> closure r x y) by
     (let xy = implies_intro () in
-     let xy : r x y = unquote (binder_to_term xy) in
+     let xy : r x y = unquote xy in
      squash_intro ();
      exact (quote (Step #a #r x y xy)))
 
@@ -65,7 +65,7 @@ let rec closure_one #a r x y xy =
 let closure_inversion #a r x y =
   assert (_closure r x y ==> x == y \/ (exists z. r x z /\ closure r z y)) by
     (let xy = implies_intro () in
-     let xy : _closure r x y = unquote (binder_to_term xy) in
+     let xy : _closure r x y = unquote xy in
      exact (quote (closure_one r x y xy)))
 
 val _stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0)
@@ -88,9 +88,9 @@ let stable_on_closure #a r p hr =
   assert (forall x y. p x /\ closure r x y ==> p y) by
     (let x = forall_intro () in
      let y = forall_intro () in
-     let x : a = unquote (binder_to_term x) in
-     let y : a = unquote (binder_to_term y) in
+     let x : a = unquote x in
+     let y : a = unquote y in
      let h = implies_intro () in
-     let (px, xy) = destruct_and (binder_to_term h) in
-     let xy : closure r x y = unquote (binder_to_term xy) in
+     let (px, xy) = destruct_and h in
+     let xy : closure r x y = unquote xy in
      exact (quote (_stable_on_closure r p hr x y xy (Squash.get_proof _))))

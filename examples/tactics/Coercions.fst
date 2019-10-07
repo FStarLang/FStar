@@ -29,6 +29,8 @@ let _ = assert True by
          print ("two = " ^ (match two with | Some x -> term_to_string x | None -> "NONE?"));
          ())
 
+let test_binder_to_term (b : binder) : Tac term = b
+
 //Nested patterns!
 (* let test (tm:term_view) : option term = *)
 (*   match tm with *)
