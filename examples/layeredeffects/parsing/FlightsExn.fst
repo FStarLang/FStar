@@ -9,7 +9,7 @@ module HS = FStar.HyperStack
 module B = LowStar.Buffer
 
 open Messages
-open Exn
+open MExn
 
 type repr (a:Type0) = {
   v       : a;
