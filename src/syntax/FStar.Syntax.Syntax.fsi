@@ -26,6 +26,7 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Dyn
+module O = FStar.Options
 
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
@@ -259,6 +260,7 @@ and lazy_kind =
   | BadLazy
   | Lazy_bv
   | Lazy_binder
+  | Lazy_optionstate
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
@@ -442,7 +444,8 @@ and sigelt = {
     sigrng:   Range.range;
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
-    sigattrs: list<attribute>
+    sigattrs: list<attribute>;
+    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
