@@ -368,56 +368,76 @@ open FStar.Tactics
 module T = Steel.Tactics
 
 let split_to_canon_monoid_problem
-  (outer0 inner0 outer1 inner1 delta: resource)
+  (a: Type)
+  (outer0 inner0 : resource)
+  (outer1 inner1: a -> resource)
+  (delta: resource)
   (_ : squash ((inner0 <*> delta) `equal` outer0))
-  (_ : squash ((inner1 <*> delta) `equal` outer1))
+  (post : squash(forall (x:a). (inner1 x <*> delta) `equal` outer1 x))
   : Lemma (
-    outer0 `can_be_split_into` (inner0, delta) /\ outer1 `can_be_split_into` (inner1, delta)
+    outer0 `can_be_split_into` (inner0, delta) /\
+    (forall (x: a). (outer1 x) `can_be_split_into` (inner1 x, delta))
   )
   =
   can_be_split_into_star outer0 inner0 delta;
-  can_be_split_into_star outer1 inner1 delta
+  let aux (x:a) : Lemma ((outer1 x) `can_be_split_into` (inner1 x, delta)) =
+    can_be_split_into_star (outer1 x) (inner1 x) delta
+  in
+  Classical.forall_intro aux
 
+
+unfold let delta_spec
+  (#a: Type)
+  (inner0 outer0: resource)
+  (inner1 outer1: a -> resource)
+  (delta: resource)
+  : Type =
+  squash (outer0 `can_be_split_into` (inner0, delta) /\
+         (forall (x: a). (outer1 x) `can_be_split_into` (inner1 x, delta))
+  )
 
 let typecheck_delta () : Tac unit =
+  norm [delta_only [`%delta_spec]];
   apply_lemma (normalize_term (`split_to_canon_monoid_problem));
   let open Steel.Tactics in
   let open FStar.Algebra.CommMonoid.Equiv in
   let open FStar.Tactics.CanonCommMonoidSimple.Equiv in
   norm [delta];
   canon_monoid req rm;
+  let _ = forall_intro () in
   norm [delta];
   canon_monoid req rm
 
 
 #push-options "--no_tactics"
 
-let frame
-  (#outer0 #outer1 #inner0 #inner1: resource)
-  (#delta: resource{
-    with_tactic
-      typecheck_delta
-      (squash (outer0 `can_be_split_into` (inner0, delta) /\
-               outer1 `can_be_split_into` (inner1, delta))
-      )
-  })
-  ($f: unit -> RST unit inner0 (fun _ -> inner1) (fun _ -> True) (fun _ _ _ -> True))
-  : RST unit outer0 (fun _ -> outer1) (fun _ -> True) (fun _ _ _ -> True)
+let frame (#a: Type)
+  (#inner1 #outer1 : a -> resource)
+  (#inner0 #outer0: resource)
+  (#delta: resource{with_tactic typecheck_delta (delta_spec inner0 outer0 inner1 outer1 delta)})
+  (#pre:rprop inner0)
+  (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
+  ($f: unit -> RST a inner0 inner1 pre post)
+  : RST a outer0 outer1 (fun h0 ->
+    by_tactic_seman typecheck_delta (delta_spec inner0 outer0 inner1 outer1 delta);
+    pre (focus_rmem h0 inner0)
+  )
+  (fun h0 x h1 ->
+    by_tactic_seman typecheck_delta (delta_spec inner0 outer0 inner1 outer1 delta);
+    focus_rmem h0 delta == focus_rmem h1 delta /\
+    post (focus_rmem h0 inner0) x (focus_rmem h1 (inner1 x))
+  )
   =
-   by_tactic_seman
-     typecheck_delta
-     (squash (outer0 `can_be_split_into` (inner0, delta) /\
-              outer1 `can_be_split_into` (inner1, delta))
-     );
-   rst_frame
-     outer0
-     #inner0
-     #(fun _ -> inner1)
-     (fun _ -> outer1)
-     delta
-     #(fun _ -> True)
-     #(fun _ _ _ -> True)
-     (fun _ -> f ())
+  by_tactic_seman typecheck_delta (delta_spec inner0 outer0 inner1 outer1 delta);
+  rst_frame
+    outer0
+    #inner0
+    #inner1
+    outer1
+    delta
+    #pre
+    #post
+    (fun _ -> f ())
 
 #pop-options
 
@@ -468,13 +488,13 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
   let _ = if FStar.Order.eq (compare_fv delta_type_name resource_name) then () else
     fail "Not a valid goal"
   in
-  let with_tactic_and_typecheck, with_tactic_arg =
+  let with_tactic_and_typecheck, delta_spec_expr =
     match inspect refinement with
-    | Tv_App with_tactic_and_typecheck with_tactic_arg ->
-      with_tactic_and_typecheck, with_tactic_arg
+    | Tv_App with_tactic_and_typecheck delta_spec_expr ->
+      with_tactic_and_typecheck, delta_spec_expr
     | _ -> fail "Not a valid goal"
   in
-  let with_tactic_arg, _ = with_tactic_arg in
+  let delta_spec_expr, _ = delta_spec_expr in
   let with_tactic_op, typecheck_op =
     match inspect with_tactic_and_typecheck with
     | Tv_App with_tactic_op typecheck_op ->
@@ -482,113 +502,80 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
     | _ -> fail "Not a valid goal"
   in
   let typecheck_op, _ = typecheck_op in
-  let with_tactic_op_name, with_tactic_name, typecheck_op_name, typecheck_name =
+  let with_tactic_name, with_tactic_real_name, typecheck_name, typecheck_real_name =
     match
-      inspect with_tactic_op,
-      inspect (`with_tactic),
-      inspect typecheck_op,
-      inspect (`typecheck_delta)
+      inspect with_tactic_op, inspect (`with_tactic),
+      inspect typecheck_op, inspect (`typecheck_delta)
     with
-    | Tv_FVar with_tactic_op_name,
-      Tv_FVar with_tactic_name,
-      Tv_FVar typecheck_op_name,
-      Tv_FVar typecheck_name ->
-      with_tactic_op_name, with_tactic_name, typecheck_op_name, typecheck_name
+    | Tv_FVar with_tactic_name, Tv_FVar with_tactic_real_name,
+      Tv_FVar typecheck_name, Tv_FVar typecheck_real_name ->
+      with_tactic_name, with_tactic_real_name, typecheck_name, typecheck_real_name
     | _ -> fail "Not a valid goal"
   in
-  let _ =
-    if
-      FStar.Order.eq (compare_fv with_tactic_op_name with_tactic_name) &&
-      FStar.Order.eq (compare_fv typecheck_op_name typecheck_name)
-    then () else fail "Not a valid goal"
-  in
-  let squash_op, squash_arg =
-    match inspect with_tactic_arg with
-    | Tv_App squash_op squash_arg -> squash_op, squash_arg
-    | _ -> fail "Not a valid goal"
-  in
-  let squash_arg, _ = squash_arg in
-  let squash_op_name, squash_name =
-    match inspect squash_op, inspect (`squash) with
-    | Tv_FVar squash_op_name, Tv_FVar squash_name ->
-      squash_op_name, squash_name
-    | _ -> fail "Not a valid goal"
-  in
-  let _ =
-    if FStar.Order.eq (compare_fv squash_op_name squash_name)
-    then () else fail "Not a valid goal"
-  in
-  let op_and_arg1, arg2, and_name =
-    match (inspect squash_arg, inspect (`l_and)) with
-    | (Tv_App op_and_arg1 arg2, Tv_FVar and_name) ->
-      op_and_arg1, arg2, and_name
-    | _ -> fail "Not a valid goal"
-  in
-  let op, arg1 =
-    match inspect op_and_arg1 with
-    | Tv_App op arg1 -> op, arg1
-    | _ -> fail "Not a valid goal"
-  in
-  let op_name =
-     match inspect op with
-     | Tv_FVar op_name -> op_name
-     | _ -> fail "Not a valid goal"
-  in
-  let _ = if FStar.Order.eq (compare_fv op_name and_name) then () else
+  let _ = if FStar.Order.eq (compare_fv with_tactic_name with_tactic_real_name) then () else
     fail "Not a valid goal"
   in
-  let arg1, _ = arg1 in
-  let arg2, _ = arg2 in
-  let arg1_op_and_sub_arg1, arg1_sub_arg2, arg2_op_and_sub_arg1, arg2_sub_arg2 =
-    match (inspect arg1, inspect arg2) with
-    | (Tv_App arg1_op_and_sub_arg1 arg1_sub_arg2,
-       Tv_App arg2_op_and_sub_arg1 arg2_sub_arg2) ->
-      arg1_op_and_sub_arg1, arg1_sub_arg2, arg2_op_and_sub_arg1, arg2_sub_arg2
+  let _ = if FStar.Order.eq (compare_fv typecheck_name typecheck_real_name) then () else
+    fail "Not a valid goal"
+  in
+  let refinement_rest, delta_arg  =
+    match inspect delta_spec_expr with
+    | Tv_App refinement_rest delta_arg ->
+      refinement_rest, delta_arg
     | _ -> fail "Not a valid goal"
   in
-  let arg1_op, arg1_sub_arg1, arg2_op, arg2_sub_arg1 =
-    match (inspect arg1_op_and_sub_arg1, inspect arg2_op_and_sub_arg1) with
-    | (Tv_App arg1_op arg1_sub_arg1,
-       Tv_App arg2_op arg2_sub_arg1) ->
-      arg1_op, arg1_sub_arg1, arg2_op, arg2_sub_arg1
+  let delta_arg, _ = delta_arg in
+  let refinement_rest, outer1_arg  =
+    match inspect refinement_rest with
+    | Tv_App refinement_rest outer1_arg ->
+      refinement_rest, outer1_arg
     | _ -> fail "Not a valid goal"
   in
-  let arg1_op_name, arg2_op_name, split_name =
-    match inspect arg1_op, inspect arg2_op, inspect (`can_be_split_into) with
-    | Tv_FVar arg1_op_name, Tv_FVar arg2_op_name, Tv_FVar split_name ->
-      arg1_op_name, arg2_op_name, split_name
+  let outer1_arg, _ = outer1_arg in
+  let refinement_rest, inner1_arg  =
+    match inspect refinement_rest with
+    | Tv_App refinement_rest inner1_arg ->
+      refinement_rest, inner1_arg
     | _ -> fail "Not a valid goal"
   in
-  let _ =
-    if
-      FStar.Order.eq (compare_fv arg1_op_name split_name) &&
-      FStar.Order.eq (compare_fv arg2_op_name split_name)
+  let inner1_arg, _ = inner1_arg in
+  let refinement_rest, outer0_arg  =
+    match inspect refinement_rest with
+    | Tv_App refinement_rest outer0_arg ->
+      refinement_rest, outer0_arg
+    | _ -> fail "Not a valid goal"
+  in
+  let outer0_arg, _ = outer0_arg in
+  let delta_refinement_rest, inner0_arg  =
+    match inspect refinement_rest with
+    | Tv_App delta_refinement inner0_arg ->
+      delta_refinement, inner0_arg
+    | _ -> fail "Not a valid goal"
+  in
+  let inner0_arg, _ = inner0_arg in
+  let delta_refinement_op, return_type =
+    match inspect delta_refinement_rest with
+    | Tv_App delta_refinement_op return_type ->
+      delta_refinement_op, return_type
+    | _ -> fail "Not a valid goal"
+  in
+  let return_type, _ = return_type in
+  let (delta_refinement_name, real_delta_refinement_name) =
+    match inspect delta_refinement_op , inspect (`delta_spec) with
+    | Tv_FVar delta_refinement_name, Tv_FVar real_delta_refinement_name ->
+      delta_refinement_name, real_delta_refinement_name
+    | _ -> fail "Not a valid goal"
+  in
+  let _ = if FStar.Order.eq (compare_fv delta_refinement_name real_delta_refinement_name)
     then () else fail "Not a valid goal"
   in
-  let outer0, _ = arg1_sub_arg1 in
-  let inner0_delta, _ = arg1_sub_arg2 in
-  let outer1, _ = arg2_sub_arg1 in
-  let inner1_delta, _ = arg2_sub_arg2 in
-  let inner0, delta0, inner1, delta1 =
-    match inspect inner0_delta, inspect inner1_delta with
-    | Tv_App inner0 delta0, Tv_App inner1 delta1  ->
-      inner0, delta0, inner1, delta1
+  let inner1_arg, outer1_arg =
+    match inspect inner1_arg, inspect outer1_arg with
+    | Tv_Abs _ inner1_arg, Tv_Abs _ outer1_arg ->
+      inner1_arg, outer1_arg
     | _ -> fail "Not a valid goal"
   in
-  let delta0, _ = delta0 in
-  let delta1, _ = delta1 in
-  let delta0, delta1 =
-    match inspect delta0, inspect delta1 with
-    | Tv_Var delta0, Tv_Var delta1 -> delta0, delta1
-    | _ -> fail "Not a valid goal"
-  in
-  let _ =
-    if
-      FStar.Order.eq (compare_bv delta0 delta) &&
-      FStar.Order.eq (compare_bv delta1 delta)
-    then () else  fail "Not a valid goal"
-  in
-  match inspect outer0, inspect outer1 with
+  begin match inspect outer0_arg, inspect outer1_arg with
   | Tv_Uvar _ _, Tv_Uvar _ _ ->
     (* Both outers are unknown, we are in the middle of the function *)
     None
@@ -600,9 +587,8 @@ let inspect_goal (goal: goal) : Tac (option doable_unification_goal) =
     Some ForwardInference
   | _ ->
     (* Both outer and inner are here, we just have to compute delta *)
-    (* TODO: compute delta *)
     Some FinalCheck
-  with
+  end with
   | _ ->
     inspect_resource_typing_goal goal
 
@@ -644,6 +630,7 @@ let solve_forward_inference_goal () : Tac unit =
   flip ();
   apply_lemma (`unfold_with_tactic);
   apply_lemma (`FStar.Classical.give_witness);
+  norm [delta_only [`%delta_spec]];
   apply_lemma (`split_to_canon_monoid_problem);
   let open Steel.Tactics in
   let open FStar.Algebra.CommMonoid.Equiv in
@@ -651,6 +638,7 @@ let solve_forward_inference_goal () : Tac unit =
   norm [delta];
   canon_monoid req rm;
   norm [delta];
+  let _ = forall_intro () in
   canon_monoid req rm
 
 let solve_resource_witness_goal () : Tac unit =
@@ -710,3 +698,53 @@ let test_frame_inference2
   frame (fun _ -> f b3);
   frame (fun _ -> f b4);
   frame (fun _ -> f b5)
+
+#set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+
+let copy_state_with_frame_inference
+  (st:state)
+  (ost:state)
+: RST unit
+  (array_resource st <*> array_resource ost)
+  (fun _ -> array_resource st <*> array_resource ost)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    focus_rmem h0 (array_resource ost) == focus_rmem h1 (array_resource ost) /\
+    as_rseq st h1 `Seq.equal` as_rseq ost h0)
+  =
+  let h0 = rst_get (array_resource st <*> array_resource ost) in
+  let v = frame (index ost 0ul) in
+  frame (upd st 0ul v);
+  let v = frame (index ost 1ul) in
+  frame (upd st 1ul v);
+  let v = frame  (index ost 2ul) in
+  frame (upd st 2ul v);
+  let v = frame  (index ost 3ul) in
+  frame (upd st 3ul v);
+  let v = frame (index ost 4ul) in
+  frame (upd st 4ul v);
+  let v = frame (index ost 5ul) in
+  frame (upd st 5ul v);
+  let v = frame (index ost 6ul) in
+  frame (upd st 6ul v);
+  let v = frame (index ost 7ul) in
+  frame (upd st 7ul v);
+  let v = frame (index ost 8ul) in
+  frame (upd st 8ul v);
+  let v = frame (index ost 9ul) in
+  frame (upd st 9ul v);
+  let v = frame (index ost 10ul) in
+  frame (upd st 10ul v);
+  let v = frame (index ost 11ul) in
+  frame (upd st 11ul v);
+  let v = frame (index ost 12ul) in
+  frame (upd st 12ul v);
+  let v = frame (index ost 13ul) in
+  frame (upd st 13ul v);
+  let v = frame (index ost 14ul) in
+  frame (upd st 14ul v);
+  let v = frame (index ost 15ul) in
+  frame (upd st 15ul v);
+  let h1 = rst_get (array_resource st <*> array_resource ost) in
+  //assert False;
+  Seq.lemma_eq_intro (as_rseq st h1) (as_rseq ost h0)
