@@ -1091,6 +1091,10 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
         coerce_with env e lc S.t_term C.pack [] []
 
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term t ->
+        coerce_with env e lc S.t_term C.binder_to_term [] []
+
+
     | _ when is_erased env t res_typ ->
         coerce_with env e lc t C.reveal [env.universe_of env t] [S.iarg t]
 
