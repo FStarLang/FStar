@@ -1299,7 +1299,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                   and for the body is
                         f, g
          *)
-        let desugar_one_def env lbname (attrs_opt, (_, args, result_t), def) =
+        let desugar_one_def env lbname (attrs_opt, (_, args, result_t), def)
+            : letbinding * antiquotations
+            =
             let args = args |> List.map replace_unit_pattern in
             let pos = def.range in
             let def =
@@ -1327,7 +1329,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let def = match args with
                  | [] -> def
                  | _ -> mk_term (un_curry_abs args def) top.range top.level in
-            let body = desugar_term env def in
+            let body, aq = desugar_term_aq env def in
             let lbname = match lbname with
                 | Inl x -> Inl x
                 | Inr l -> Inr (S.lid_as_fv l (incr_delta_qualifier body) None) in
@@ -1336,11 +1338,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               | None -> []
               | Some l -> List.map (desugar_term env) l
             in
-            mk_lb (attrs, lbname, tun, body, pos)
+            mk_lb (attrs, lbname, tun, body, pos), aq
         in
-        let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
+        let lbs, aqss =
+            List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs
+            |> List.unzip
+        in
         let body, aq = desugar_term_aq env' body in
-        mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)), aq
+        mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)), aq @ List.flatten aqss
       in
       //end ds_let_rec_or_app
 
@@ -1350,9 +1355,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             | None -> []
             | Some l -> List.map (desugar_term env) l
         in
-        let t1 = desugar_term env t1 in
+        let t1, aq0 = desugar_term_aq env t1 in
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat in
-        let tm, aq =
+        let tm, aq1 =
             match binder with
             | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
               let body, aq = desugar_term_aq env t2 in
@@ -1369,7 +1374,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                   S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
               mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
         in
-        tm, aq
+        tm, aq0 @ aq1
       in
 
       let attrs, (head_pat, defn) = List.hd lbs in
