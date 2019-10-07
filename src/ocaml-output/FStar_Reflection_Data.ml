@@ -510,6 +510,10 @@ let (fstar_refl_univ_name : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "univ_name" 
 let (fstar_refl_univ_name_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_types_lid_as_fv "univ_name" 
+let (fstar_refl_optionstate : FStar_Syntax_Syntax.term) =
+  mk_refl_types_lid_as_term "optionstate" 
+let (fstar_refl_optionstate_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_types_lid_as_fv "optionstate" 
 let (fstar_refl_aqualv : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "aqualv" 
 let (fstar_refl_aqualv_fv : FStar_Syntax_Syntax.fv) =
@@ -553,28 +557,28 @@ let (fstar_refl_qualifier_fv : FStar_Syntax_Syntax.fv) =
 let (ref_Mk_bv : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbv_view"  in
   let attr =
-    let uu____1849 =
-      let uu____1856 = fstar_refl_data_lid "bv_view"  in
-      let uu____1858 =
-        let uu____1861 =
+    let uu____1853 =
+      let uu____1860 = fstar_refl_data_lid "bv_view"  in
+      let uu____1862 =
+        let uu____1865 =
           FStar_Ident.mk_ident ("bv_ppname", FStar_Range.dummyRange)  in
-        let uu____1864 =
-          let uu____1867 =
+        let uu____1868 =
+          let uu____1871 =
             FStar_Ident.mk_ident ("bv_index", FStar_Range.dummyRange)  in
-          let uu____1870 =
-            let uu____1873 =
+          let uu____1874 =
+            let uu____1877 =
               FStar_Ident.mk_ident ("bv_sort", FStar_Range.dummyRange)  in
-            [uu____1873]  in
-          uu____1867 :: uu____1870  in
-        uu____1861 :: uu____1864  in
-      (uu____1856, uu____1858)  in
-    FStar_Syntax_Syntax.Record_ctor uu____1849  in
+            [uu____1877]  in
+          uu____1871 :: uu____1874  in
+        uu____1865 :: uu____1868  in
+      (uu____1860, uu____1862)  in
+    FStar_Syntax_Syntax.Record_ctor uu____1853  in
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
       (FStar_Pervasives_Native.Some attr)
      in
-  let uu____1879 = FStar_Syntax_Syntax.fv_to_tm fv  in
-  { lid; fv; t = uu____1879 } 
+  let uu____1883 = FStar_Syntax_Syntax.fv_to_tm fv  in
+  { lid; fv; t = uu____1883 } 
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit" 
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit" 
 let (ref_Q_Meta : refl_constant) = fstar_refl_data_const "Q_Meta" 
@@ -654,11 +658,11 @@ let (ref_E_Unit : refl_constant) = fstar_refl_data_const "Unit"
 let (ref_E_Var : refl_constant) = fstar_refl_data_const "Var" 
 let (ref_E_Mult : refl_constant) = fstar_refl_data_const "Mult" 
 let (t_exp : FStar_Syntax_Syntax.term) =
-  let uu____2011 =
+  let uu____2015 =
     FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"]
       FStar_Range.dummyRange
      in
-  FStar_Syntax_Syntax.tconst uu____2011 
+  FStar_Syntax_Syntax.tconst uu____2015 
 let (ord_Lt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange 
 let (ord_Eq_lid : FStar_Ident.lident) =
