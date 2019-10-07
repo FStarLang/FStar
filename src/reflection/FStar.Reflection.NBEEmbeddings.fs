@@ -245,7 +245,7 @@ let rec e_pattern' () =
         | Pat_Constant c ->
             mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_const cb c)]
         | Pat_Cons (fv, ps) ->
-            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_pattern' ())) cb ps)]
+            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
         | Pat_Var bv ->
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
@@ -261,7 +261,7 @@ let rec e_pattern' () =
 
         | Construct (fv, [], [(ps, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
-            BU.bind_opt (unembed (e_list (e_pattern' ())) cb ps) (fun ps ->
+            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
 
         | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
