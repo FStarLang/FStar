@@ -1942,7 +1942,8 @@ let mk_data_discriminators quals env datas =
           sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong? // FIXME: Doc?
           sigquals =  quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d];
           sigmeta = default_sigmeta;
-          sigattrs = []
+          sigattrs = [];
+          sigopts = None;
         })
 
 let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
@@ -1974,7 +1975,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                      sigquals = quals;
                      sigrng = range_of_lid field_name;
                      sigmeta = default_sigmeta ;
-                     sigattrs = [] } in // FIXME: Doc?
+                     sigattrs = [];
+                     sigopts = None; } in // FIXME: Doc?
         if only_decl
         then [decl] //only the signature
         else
@@ -1996,7 +1998,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                          sigquals = quals;
                          sigrng = p;
                          sigmeta = default_sigmeta;
-                         sigattrs = [] } in // FIXME: Doc?
+                         sigattrs = [];
+                         sigopts = None; } in // FIXME: Doc?
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 // FIXME: Would be nice to add auto-generated docs to these
@@ -2045,7 +2048,8 @@ let mk_typ_abbrev lid uvs typars kopt t lids quals rng =
       sigquals = quals;
       sigrng = rng;
       sigmeta = default_sigmeta ;
-      sigattrs = [] }
+      sigattrs = [];
+      sigopts = None; }
 
 let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let rng = d.drange in
@@ -2099,8 +2103,9 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let se = { sigel = Sig_inductive_typ(qlid, [], typars, k, mutuals, []);
                  sigquals = quals;
                  sigrng = rng;
-                 sigmeta = default_sigmeta  ;
-                 sigattrs = [] } in
+                 sigmeta = default_sigmeta;
+                 sigattrs = [];
+                 sigopts = None } in
       let _env = Env.push_top_level_rec_binding _env id S.delta_constant in
       let _env2 = Env.push_top_level_rec_binding _env' id S.delta_constant in
       _env, _env2, se, tconstr
@@ -2181,7 +2186,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                    sigquals = quals;
                    sigrng = rng;
                    sigmeta = default_sigmeta  ;
-                   sigattrs = [] }
+                   sigattrs = [];
+                   sigopts = None; }
             else let t = desugar_typ env' t in
                  mk_typ_abbrev qlid [] typars kopt t [qlid] quals rng in
 
@@ -2253,13 +2259,15 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = [] }))))
+                                            sigattrs = [];
+                                            sigopts = None; }))))
           in
           ((tname, d.doc), [], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
-                                 sigattrs = [] })::constrs
+                                 sigattrs = [];
+                                 sigopts = None; })::constrs
         | _ -> failwith "impossible")
       in
       let name_docs = docs_tps_sigelts |> List.map (fun (name_doc, _, _) -> name_doc) in
@@ -2310,7 +2318,8 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
                            sigrng = range;
                            sigquals = quals;
                            sigmeta = default_sigmeta  ;
-                           sigattrs = [] } in
+                           sigattrs = [];
+                           sigopts = None; } in
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
@@ -2469,7 +2478,8 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            sigquals = qualifiers;
            sigrng = d.drange;
            sigmeta = default_sigmeta  ;
-           sigattrs = [] }
+           sigattrs = [];
+           sigopts = None; }
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
         let un_ts = [], Syntax.tun in
@@ -2496,7 +2506,8 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            sigquals = qualifiers;
            sigrng = d.drange;
            sigmeta = default_sigmeta  ;
-           sigattrs = [] }
+           sigattrs = [];
+           sigopts = None; }
     in
     let env = push_sigelt env0 se in
     let env = push_doc env mname d.doc in
@@ -2583,7 +2594,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
-        sigattrs = [] }
+        sigattrs = [];
+        sigopts = None; }
     in
     let monad_env = env in
     let env = push_sigelt env0 se in
@@ -2601,7 +2613,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                                sigquals = quals;
                                sigrng = d.drange;
                                sigmeta = default_sigmeta  ;
-                               sigattrs = [] } in
+                               sigattrs = [];
+                               sigopts = None; } in
              push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
         else env in
     let env = push_doc env mname d.doc in
@@ -2673,7 +2686,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = [];
+               sigopts = None; } in
     env, [se]
 
   | Fsdoc _ -> env, []
@@ -2750,7 +2764,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
               sigquals = [];
               sigrng = d.drange;
               sigmeta = default_sigmeta;
-              sigattrs = [] }]
+              sigattrs = [];
+              sigopts = None; }]
         | _ -> []
     in
     let extra =
@@ -2823,7 +2838,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs } in
+                    sigattrs = attrs;
+                    sigopts = None; } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
@@ -2878,7 +2894,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = [];
+               sigopts = None; } in
     env, [se]
 
   | Assume(id, t) ->
@@ -2889,7 +2906,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             sigquals = [S.Assumption];
             sigrng = d.drange;
             sigmeta = default_sigmeta  ;
-            sigattrs = [] }]
+            sigattrs = [];
+            sigopts = None; }]
 
   | Val(id, t) ->
     let quals = d.quals in
@@ -2905,7 +2923,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = List.map (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = attrs } in
+               sigattrs = attrs;
+               sigopts = None; } in
     let env = push_sigelt env se in
     let env = push_doc env lid d.doc in
     env, [se]
@@ -2924,12 +2943,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = [];
+               sigopts = None; } in
     let se' = { sigel = Sig_bundle([se], [l]);
                 sigquals = qual;
                 sigrng = d.drange;
                 sigmeta = default_sigmeta  ;
-                sigattrs = [] } in
+                sigattrs = [];
+                sigopts = None; } in
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
     let data_ops = mk_data_projector_names [] env se in
@@ -2961,7 +2982,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = [];
+               sigopts = None; } in
     env, [se]
 
   | Splice (ids, t) ->
@@ -2970,7 +2992,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;
-               sigattrs = [] } in
+               sigattrs = [];
+               sigopts = None; } in
     let env = push_sigelt env se in
     env, [se]
 

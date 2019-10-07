@@ -23,6 +23,7 @@ module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
+module O = FStar.Options
 
 open FStar.Dyn
 
@@ -362,6 +363,9 @@ let sigelt_quals (se : sigelt) : list<qualifier> =
 
 let set_sigelt_quals (quals : list<qualifier>) (se : sigelt) : sigelt =
     { se with sigquals = quals }
+
+let sigelt_opts (se : sigelt) : option<O.optionstate> =
+    se.sigopts
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
