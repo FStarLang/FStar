@@ -1843,14 +1843,14 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
-   let rec aux wl scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> * worklist =
+   let rec aux wl scope env subst (xs:binders) (ys:binders) : Env.env * either<(probs * formula), string> * worklist =
         match xs, ys with
         | [], [] ->
           let rhs_prob, wl = rhs wl scope env subst in
           if debug env <| Options.Other "Rel"
           then BU.print1 "rhs_prob = %s\n" (prob_to_string env rhs_prob);
           let formula = p_guard rhs_prob in
-          Inl ([rhs_prob], formula), wl
+          env, Inl ([rhs_prob], formula), wl
 
         | (hd1, imp)::xs, (hd2, imp')::ys when (U.eq_aqual imp imp' = U.Equal) ->
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -1861,22 +1861,22 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
            let env = Env.push_bv env hd1 in
            begin
            match aux wl (scope @ [(hd1, imp)]) env subst xs ys with
-           | Inl (sub_probs, phi), wl ->
+           | env, Inl (sub_probs, phi), wl ->
              let phi =
                  U.mk_conj (p_guard prob)
                            (close_forall env [(hd1,imp)] phi) in
              if debug env <| Options.Other "Rel"
              then BU.print2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
-             Inl (prob::sub_probs, phi), wl
+             env, Inl (prob::sub_probs, phi), wl
 
            | fail -> fail
            end
 
-        | _ -> Inr "arity or argument-qualifier mismatch", wl in
+        | _ -> env, Inr "arity or argument-qualifier mismatch", wl in
 
    match aux wl [] env [] bs1 bs2 with
-   | Inr msg, wl -> giveup env msg orig
-   | Inl (sub_probs, phi), wl ->
+   | env, Inr msg, wl -> giveup env msg orig
+   | env, Inl (sub_probs, phi), wl ->
      let wl = solve_prob orig (Some phi) [] wl in
      solve env (attempt sub_probs wl)
 
