@@ -63,27 +63,31 @@ let base2 =
     let Mktuple3 #_ #_ #_ x y z = (1,2,3) in
     x
 
-val base3 : 'a & 'b -> 'a
-let base3 p =
+val base3 : #a:Type -> #b:Type -> a & b -> a
+let base3 #a #b p =
     let (x, _) = p in
     x
 
-#set-options "--print_implicits --ugly"
+val base4 : 'a & 'b -> 'a
+let base4 p =
+    let (x, _) = p in
+    x
 
 let traverse (name:string) : Tac unit =
   let d = lookup_typ (cur_env ()) (cur_module () @ [ name ]) in
   let d = match d with Some d -> d | None -> fail "0" in
-  let d = match inspect_sigelt d with
-    | Sg_Let _ _ _ _ d -> d
+  let d, us = match inspect_sigelt d with
+    | Sg_Let _ _ us _ d -> d, us
     | _ -> fail "1"
   in
   let name = pack_fv (cur_module () @ [ "test_" ^ name ]) in
   let r = not_do_much d in
-  dump ("r = " ^ term_to_string r);
-  let s = pack_sigelt (Sg_Let false name [] (pack Tv_Unknown) r) in
+  (* dump ("r = " ^ term_to_string r); *)
+  let s = pack_sigelt (Sg_Let false name us (pack Tv_Unknown) r) in
   exact (quote [ s ])
 
 %splice[test_base0](traverse "base0")
 %splice[test_base1](traverse "base1")
 %splice[test_base2](traverse "base2")
-(* %splice[test_base3](traverse "base3") *)
+%splice[test_base3](traverse "base3")
+%splice[test_base4](traverse "base4")
