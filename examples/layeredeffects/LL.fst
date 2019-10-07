@@ -96,8 +96,6 @@ let return (a:Type) (x:a)
 : repr a (fun p n -> p (Some (x, n)))
 = fun n -> (x, n)
 
-//#set-options "--max_fuel 0 --initial_ifuel 4 --max_ifuel 4"
-
 unfold
 let post_a (a:Type) (b:Type) (wp_g:a -> wp_t b) (p:post_t b) : post_t a =
   fun r ->
@@ -109,7 +107,10 @@ let lemma_monotonic2 (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) (p:pos
 : Lemma
   (requires forall (r:option (a & nat)). post_a a b wp_g p r ==> post_a a b wp_g q r)
   (ensures wp_f (post_a a b wp_g p) n ==> wp_f (post_a a b wp_g q) n)
-= admit ()
+= let aux (p q:post_t a)
+    : Lemma ((forall r. p r ==> q r) ==> (forall n. wp_f p n ==> wp_f q n))
+    = () in
+  aux (post_a a b wp_g p) (post_a a b wp_g q)
 
 unfold
 let bind_wp0 (a:Type) (b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : post_t b -> pre_t =
