@@ -258,6 +258,7 @@ let decreases_lid  = pconst "decreases"
 
 let inspect        = p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"]
 let pack           = p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"]
+let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
 
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
 let hide   = p2l ["FStar"; "Ghost"; "hide"]
