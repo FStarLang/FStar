@@ -235,6 +235,8 @@ let (copy_uvar :
                 (uu___77_569.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =
                 (uu___77_569.FStar_TypeChecker_Env.synth_hook);
+              FStar_TypeChecker_Env.try_solve_implicits_hook =
+                (uu___77_569.FStar_TypeChecker_Env.try_solve_implicits_hook);
               FStar_TypeChecker_Env.splice =
                 (uu___77_569.FStar_TypeChecker_Env.splice);
               FStar_TypeChecker_Env.postprocess =
@@ -7182,6 +7184,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                 (uu___2967_21047.FStar_TypeChecker_Env.proof_ns);
                               FStar_TypeChecker_Env.synth_hook =
                                 (uu___2967_21047.FStar_TypeChecker_Env.synth_hook);
+                              FStar_TypeChecker_Env.try_solve_implicits_hook
+                                =
+                                (uu___2967_21047.FStar_TypeChecker_Env.try_solve_implicits_hook);
                               FStar_TypeChecker_Env.splice =
                                 (uu___2967_21047.FStar_TypeChecker_Env.splice);
                               FStar_TypeChecker_Env.postprocess =
@@ -7459,6 +7464,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                 (uu___2967_21386.FStar_TypeChecker_Env.proof_ns);
                               FStar_TypeChecker_Env.synth_hook =
                                 (uu___2967_21386.FStar_TypeChecker_Env.synth_hook);
+                              FStar_TypeChecker_Env.try_solve_implicits_hook
+                                =
+                                (uu___2967_21386.FStar_TypeChecker_Env.try_solve_implicits_hook);
                               FStar_TypeChecker_Env.splice =
                                 (uu___2967_21386.FStar_TypeChecker_Env.splice);
                               FStar_TypeChecker_Env.postprocess =
@@ -11474,8 +11482,8 @@ let (resolve_implicits' :
                                          FStar_TypeChecker_Env.imp_range =
                                            (uu___4022_29600.FStar_TypeChecker_Env.imp_range)
                                        }  in
-                                     until_fixpoint (out, true) (hd2 ::
-                                       (FStar_List.append extra tl1))))
+                                     until_fixpoint (out, true)
+                                       (FStar_List.append extra tl1)))
                              else
                                if
                                  ctx_u.FStar_Syntax_Syntax.ctx_uvar_should_check
@@ -11559,6 +11567,9 @@ let (resolve_implicits' :
                                         (uu___4026_29611.FStar_TypeChecker_Env.proof_ns);
                                       FStar_TypeChecker_Env.synth_hook =
                                         (uu___4026_29611.FStar_TypeChecker_Env.synth_hook);
+                                      FStar_TypeChecker_Env.try_solve_implicits_hook
+                                        =
+                                        (uu___4026_29611.FStar_TypeChecker_Env.try_solve_implicits_hook);
                                       FStar_TypeChecker_Env.splice =
                                         (uu___4026_29611.FStar_TypeChecker_Env.splice);
                                       FStar_TypeChecker_Env.postprocess =
@@ -11665,6 +11676,9 @@ let (resolve_implicits' :
                                           (uu___4031_29615.FStar_TypeChecker_Env.proof_ns);
                                         FStar_TypeChecker_Env.synth_hook =
                                           (uu___4031_29615.FStar_TypeChecker_Env.synth_hook);
+                                        FStar_TypeChecker_Env.try_solve_implicits_hook
+                                          =
+                                          (uu___4031_29615.FStar_TypeChecker_Env.try_solve_implicits_hook);
                                         FStar_TypeChecker_Env.splice =
                                           (uu___4031_29615.FStar_TypeChecker_Env.splice);
                                         FStar_TypeChecker_Env.postprocess =

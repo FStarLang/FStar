@@ -24,7 +24,7 @@ open FStar.Real
 
 /// A permission is a real number between 0 and 1.
 [@erasable]
-type permission =
+noeq type permission =
   | Permission:  (r:real{r >=. zero /\ r <=. one}) -> permission
 
 let zero_permission : permission = Permission 0.0R
