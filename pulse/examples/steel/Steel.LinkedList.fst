@@ -18,17 +18,15 @@ module Steel.LinkedList
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module L = FStar.List.Tot
-module A = LowStar.Array
-module RA = Steel.Array
+module A = Steel.Array
 
-open Steel.Resource
 open Steel.RST
 module P = LowStar.Permissions
 
 //open LowStar.BufferOps
 //open LowStar.RST.LinkedList.Base
 
-#reset-options "--__no_positivity --use_two_phase_tc true"
+#reset-options "--__no_positivity"
 
 
 (* The definition of linked lists comes from kremlin/test/LinkedList4.fst *)
@@ -48,18 +46,17 @@ and cell (a: Type0) = {
 (* Ideally, this would be bootstrapped for clients to use a "t' a".
    The hidden (abstract) type definition would be a (t a) & list (cell a) *)
 
-let empty_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
+let empty_inv (#a:Type) (#ptr:t a) (s:rmem (A.array_resource ptr)) =
   A.vlength ptr == 0
 
-let node_inv (#a:Type) (#ptr:t a) (s:rmem (RA.array_resource ptr)) =
-  P.allows_write (RA.get_rperm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
+let node_inv (#a:Type) (#ptr:t a) (s:rmem (A.array_resource ptr)) =
+  P.allows_write (A.get_rperm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
 
 let empty_list (#a:Type) (ptr:t a) : resource =
-  hsrefine (RA.array_resource ptr) empty_inv
+  hsrefine (A.array_resource ptr) empty_inv
 
 let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
-  hsrefine (RA.array_resource ptr) (fun (s:rmem (RA.array_resource ptr)) -> node_inv s /\ Seq.index (RA.as_rseq ptr s) 0 == v)
-
+  hsrefine (A.array_resource ptr) (fun (s:rmem (A.array_resource ptr)) -> node_inv s /\ Seq.index (A.as_rseq ptr s) 0 == v)
 
 let rec slist' (#a:Type) (ptr:t a) (l:list (cell a)) : Tot resource
   (decreases l)
@@ -72,7 +69,7 @@ let slist #a (ptr:t a) l = slist' ptr l
 
 abstract
 let dummy_cell (#a:Type) (ptr:t a) : resource =
-  hsrefine (RA.array_resource ptr) node_inv
+  hsrefine (A.array_resource ptr) node_inv
 
 let cell_alloc (#a:Type)
               (init:cell a)
@@ -82,7 +79,7 @@ let cell_alloc (#a:Type)
                         (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
-  RA.alloc init 1ul
+  A.alloc init 1ul
 
 
 let cell_free (#a:Type)
@@ -94,8 +91,7 @@ let cell_free (#a:Type)
                       (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
-  reveal_empty_resource ();
-  RA.free ptr
+  A.free ptr
 
 let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
   : RST unit
@@ -105,7 +101,7 @@ let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
     (fun _ _ _ -> True)
   = reveal_rst_inv();
     reveal_modifies();
-    RA.upd ptr 0ul c
+    A.upd ptr 0ul c
 
 let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
   : RST unit
@@ -116,10 +112,10 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
   = reveal_rst_inv();
     reveal_modifies();
     let h0 = HyperStack.ST.get() in
-    let node = RA.index ptr 0ul in
+    let node = A.index ptr 0ul in
     let node' = {node with data = v} in
     let h0' = HyperStack.ST.get() in
-    RA.upd ptr 0ul node';
+    A.upd ptr 0ul node';
     let h1 = HyperStack.ST.get() in
     // Unclear why modifies_trans does not trigger automatically
     assert (modifies (pts_to ptr c) (pts_to ptr c) h0 h0');
@@ -152,10 +148,7 @@ let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   let new_cell = {data = v; next = ptr} in
   let new_head = rst_frame
     (slist ptr l)
-    #_ #_
     (fun ret -> pts_to ret new_cell <*> slist ptr l)
-    #_
-    #(slist ptr l)
     (fun _ -> cell_alloc new_cell)
   in
   new_head
@@ -171,7 +164,7 @@ let uncons (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
         (requires fun _ -> True)
         (ensures fun _ _ _ -> True)
   =
-  RA.reveal_array();
+  A.reveal_array();
   let node = LowStar.Array.index ptr 0ul in
   let next = node.next in
   ptr, next
@@ -183,7 +176,7 @@ let uncons_dealloc (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
         (requires fun _ -> True)
         (ensures fun _ _ _ -> True)
   =
-  RA.reveal_array();
+  A.reveal_array();
   let node = LowStar.Array.index ptr 0ul in
   let next = node.next in
   rst_frame
@@ -209,7 +202,7 @@ val is_null (#a:Type0) (b:LowStar.Array.array a)
                   (ensures  fun h y h' -> h == h' /\ (y <==> A.vlength b == 0))
 
 let rec map #a f ptr l =
-  RA.reveal_array();
+  A.reveal_array();
   let h0 = HyperStack.ST.get() in
   if is_null ptr then ()
   else (
@@ -247,7 +240,7 @@ let llist_cons #a x v =
   (ptr, ({data = v; next = init_ptr} :: init_l))
 
 let llist_head #a x =
-  RA.reveal_array();
+  A.reveal_array();
   let init_ptr = fst x in
   let node = LowStar.Array.index init_ptr 0ul in
   node.data
