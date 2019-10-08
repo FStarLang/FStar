@@ -5543,7 +5543,7 @@ let rec (desugar_tycon :
             | FStar_Parser_AST.TyconVariant
                 (id1,uu____19992,uu____19993,uu____19994) -> id1
              in
-          let binder_to_term b =
+          let binder_to_term1 b =
             match b.FStar_Parser_AST.b with
             | FStar_Parser_AST.Annotated (x,uu____20040) ->
                 let uu____20041 =
@@ -5585,7 +5585,7 @@ let rec (desugar_tycon :
                  fun b  ->
                    let uu____20086 =
                      let uu____20087 =
-                       let uu____20094 = binder_to_term b  in
+                       let uu____20094 = binder_to_term1 b  in
                        (out, uu____20094, (imp_of_aqual b))  in
                      FStar_Parser_AST.App uu____20087  in
                    FStar_Parser_AST.mk_term uu____20086

@@ -1570,8 +1570,6 @@ and (encode_term :
                                 (uu___726_5335.FStar_TypeChecker_Env.sigtab);
                               FStar_TypeChecker_Env.attrtab =
                                 (uu___726_5335.FStar_TypeChecker_Env.attrtab);
-                              FStar_TypeChecker_Env.is_pattern =
-                                (uu___726_5335.FStar_TypeChecker_Env.is_pattern);
                               FStar_TypeChecker_Env.instantiate_imp =
                                 (uu___726_5335.FStar_TypeChecker_Env.instantiate_imp);
                               FStar_TypeChecker_Env.effects =
