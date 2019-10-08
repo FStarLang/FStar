@@ -2,10 +2,11 @@ module SigeltOpts
 
 open FStar.Tactics
 
-#set-options "--max_fuel 2"
-let sp1 = assert (List.length [1] == 1)
-
 #set-options "--max_fuel 0"
+
+#push-options "--max_fuel 2 --record_options"
+let sp1 = assert (List.length [1] == 1)
+#pop-options
 
 (* Fails without fuel *)
 [@expect_failure]

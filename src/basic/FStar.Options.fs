@@ -224,6 +224,7 @@ let defaults =
       ("prn"                          , Bool false);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
+      ("record_options"               , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -374,6 +375,7 @@ let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -912,6 +914,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
+        "record_options",
+        Const (Bool true),
+        "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
+
+       ( noshort,
         "reuse_hint_for",
         SimpleStr "toplevel_name",
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
@@ -1239,6 +1246,7 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
+    | "record_options"
     | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
@@ -1547,6 +1555,7 @@ let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
+let record_options               () = get_record_options              ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
