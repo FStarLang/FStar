@@ -48,6 +48,7 @@ let of_string     = M.of_string
 (* The shifts take a uint32 argument, so we need to convert *)
 let shift_right n i  = M.shift_right n (Stdint.Uint32.to_int i)
 let shift_left  n i  = M.shift_left n (Stdint.Uint32.to_int i)
+let shift_arithmetic_right = shift_right
 
 (* Comparison operators *)
 let eq  (a:t) (b:t) : bool = a = b
