@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+module EMB = FStar.Syntax.Embeddings
 
 
 val check_module: env -> modul -> bool -> modul * env
@@ -34,3 +35,5 @@ val tc_decls: env -> list<sigelt> -> list<sigelt> * list<sigelt> * env
 val tc_partial_modul: env -> modul -> modul * list<sigelt> * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
 val extract_interface: env -> modul -> modul
+
+val unembed_optionstate_knot : ref<option<EMB.embedding<FStar.Options.optionstate>>>

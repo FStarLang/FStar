@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "cffd680867a4e8fc83012efce0b05ea7"
+      "ccf5677870004ecffe57cdb24db4c5c1"
     ],
     [
       "MiniParse.Tac.Base.mk_if_t",
@@ -20,7 +20,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "47722367d3f0b1d0b75f078566cbbf39"
+      "18763f9c6abec3a4facff8b040bcd472"
     ],
     [
       "MiniParse.Tac.Base.string_of_name",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6d21fa330b8524b48f03156079ed77f8"
+      "3ab19e95fab647ee191a20da889ba23a"
     ],
     [
       "MiniParse.Tac.Base.app_head_rev_tail",
@@ -47,7 +47,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "f8c42e8fa1a7ecd49700a22261b4ef8e"
+      "42415739bbb5ccb8330f03e3cccecdb4"
     ],
     [
       "MiniParse.Tac.Base.mk_if_t",
@@ -56,7 +56,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "68c75da782320711e8073d43a81a55dc"
+      "2f884a5528b1eee2debaa7397c7fbb3e"
     ],
     [
       "MiniParse.Tac.Base.string_of_name",
@@ -71,7 +71,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "64c18c19be1d0ff1f7a62a17e0960ffb"
+      "3960fa41b81c6256d862709e190724cb"
     ]
   ]
 ]

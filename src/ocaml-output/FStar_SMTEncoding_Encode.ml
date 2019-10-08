@@ -4874,7 +4874,9 @@ and (encode_sigelt' :
                           FStar_Syntax_Syntax.sigmeta =
                             (uu___1018_13618.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___1018_13618.FStar_Syntax_Syntax.sigattrs)
+                            (uu___1018_13618.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopts =
+                            (uu___1018_13618.FStar_Syntax_Syntax.sigopts)
                         }  in
                       let uu____13619 = encode_sigelt' env1 val_decl  in
                       match uu____13619 with | (decls,env2) -> (env2, decls)
@@ -5001,7 +5003,9 @@ and (encode_sigelt' :
                     FStar_Syntax_Syntax.sigmeta =
                       (uu___1083_13871.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
-                      (uu___1083_13871.FStar_Syntax_Syntax.sigattrs)
+                      (uu___1083_13871.FStar_Syntax_Syntax.sigattrs);
+                    FStar_Syntax_Syntax.sigopts =
+                      (uu___1083_13871.FStar_Syntax_Syntax.sigopts)
                   }  in
                 encode_sigelt env se1)
        | FStar_Syntax_Syntax.Sig_let ((is_rec,bindings),uu____13875) ->

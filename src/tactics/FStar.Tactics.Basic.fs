@@ -1771,6 +1771,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) s_tm) (fun (s_tm, s_ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
+    let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+                           (goal_env g) s_ty in
     let h, args = U.head_and_args' s_ty in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
@@ -1992,7 +1994,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -2058,7 +2060,7 @@ let pack (tv:term_view) : tac<term> =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)

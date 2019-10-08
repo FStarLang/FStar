@@ -23,6 +23,7 @@ module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
+module O = FStar.Options
 
 open FStar.Dyn
 
@@ -189,7 +190,7 @@ let rec inspect_ln (t:term) : term_view =
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -298,7 +299,7 @@ let pack_ln (tv:term_view) : term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
@@ -356,6 +357,15 @@ let sigelt_attrs (se : sigelt) : list<attribute> =
 
 let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
+
+let sigelt_quals (se : sigelt) : list<qualifier> =
+    se.sigquals
+
+let set_sigelt_quals (quals : list<qualifier>) (se : sigelt) : sigelt =
+    { se with sigquals = quals }
+
+let sigelt_opts (se : sigelt) : option<O.optionstate> =
+    se.sigopts
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

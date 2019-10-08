@@ -33,7 +33,10 @@ type vconst =
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> list pattern -> pattern  // A fully applied constructor
+    | Pat_Cons     : fv -> list (pattern * bool) -> pattern
+                                                    // A fully applied constructor, each boolean marks
+                                                    // whether the argument was an explicitly-provided
+                                                    // implicit argument
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
     | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
@@ -108,6 +111,34 @@ type sigelt_view =
       sigelt_view
 
   | Unk
+
+(* Qualifiers for sigelts, see FStar.Syntax.Syntax for an explanation. *)
+noeq
+type qualifier =
+  | Assumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Abstract
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable       of name
+  | Discriminator     of name
+  | Projector         of name * ident
+  | RecordType        of list ident * list ident
+  | RecordConstructor of list ident * list ident
+  | Action            of name
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
 
 let var : eqtype = nat
 

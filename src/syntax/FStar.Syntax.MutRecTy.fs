@@ -65,7 +65,8 @@ let disentangle_abbrevs_from_bundle
        sigrng = rng;
        sigquals = quals;
        sigmeta = default_sigmeta;
-       sigattrs = sigattrs }, []
+       sigattrs = sigattrs;
+       sigopts = None; }, []
    | _ ->
 
     let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.sigel with
@@ -209,7 +210,8 @@ let disentangle_abbrevs_from_bundle
                          sigrng = rng;
                          sigquals = quals;
                          sigmeta = default_sigmeta;
-                         sigattrs = sigattrs }
+                         sigattrs = sigattrs;
+                         sigopts = None; }
       in
 
       (new_bundle, unfolded_type_abbrevs)

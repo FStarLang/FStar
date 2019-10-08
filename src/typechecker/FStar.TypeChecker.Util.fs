@@ -1198,7 +1198,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (t:S.term) : S.term =
     let tm = U.mk_reify t in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1207,7 +1207,7 @@ let reify_body (env:Env.env) (t:S.term) : S.term =
 
 let reify_body_with_arg (env:Env.env) (head:S.term) (arg:S.arg): S.term =
     let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1819,6 +1819,50 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | _ -> //inferred
           true
     in
+    let check_erasable quals se r =
+        let lids = U.lids_of_sigelt se in
+        let val_exists =
+          lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
+        in
+        let val_has_erasable_attr =
+          lids |> BU.for_some (fun l ->
+            let attrs_opt = Env.lookup_attrs_of_lid env l in
+            Option.isSome attrs_opt
+            && U.has_attribute (Option.get attrs_opt) FStar.Parser.Const.erasable_attr)
+        in
+        let se_has_erasable_attr = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
+        if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
+        then raise_error
+             (Errors.Fatal_QulifierListNotPermitted,
+              "Mismatch of attributes between declaration and definition: \
+               Declaration is marked `erasable` but the definition is not")
+              r;
+        if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
+        then raise_error
+             (Errors.Fatal_QulifierListNotPermitted,
+              "Mismatch of attributed between declaration and definition: \
+               Definition is marked `erasable` but the declaration is not")
+              r;
+        if se_has_erasable_attr
+        then begin
+          match se.sigel with
+          | Sig_bundle _ ->
+            if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
+            then raise_error
+                   (Errors.Fatal_QulifierListNotPermitted,
+                    "Incompatible attributes and qualifiers: \
+                     erasable types do not support decidable equality and must be marked `noeq`")
+                    r
+          | Sig_declare_typ _ ->
+            ()
+          | _ ->
+            raise_error
+              (Errors.Fatal_QulifierListNotPermitted,
+               "Illegal attribute: \
+                the `erasable` attribute is only permitted on inductive type definitions")
+               r
+        end
+    in
     let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then
@@ -1834,6 +1878,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       then err "duplicate qualifiers";
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
+      check_erasable quals se r;
       match se.sigel with
       | Sig_let((is_rec, _), _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
