@@ -7,10 +7,12 @@ open FStar.TypeChecker.NBETerm
 open FStar.Order
 open FStar.TypeChecker.Env
 open FStar.Reflection.Data
+module O = FStar.Options
 
 (* Embeddings *)
 val e_bv          : embedding<bv>
 val e_binder      : embedding<binder>
+val e_optionstate : embedding<O.optionstate>
 val e_binder_view : embedding<binder_view>
 val e_binders     : embedding<binders>
 val e_term        : embedding<term>

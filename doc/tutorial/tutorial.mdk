@@ -3630,9 +3630,9 @@ when `read r` is run in the initial heap `h0`.
 Next, here's the signature of `write`:
 
 ```
-let wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
+let wp_write r v = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 
-assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
+assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r v) (wp_write r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when

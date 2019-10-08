@@ -116,7 +116,7 @@ let copy_optionstate m = Util.smap_copy m
 let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
 
 let internal_peek () = List.hd (List.hd !fstar_options)
-let peek () = internal_peek()
+let peek () = copy_optionstate (internal_peek())
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
@@ -146,7 +146,7 @@ let set o =
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
-let set_option k v = Util.smap_add (peek()) k v
+let set_option k v = Util.smap_add (internal_peek()) k v
 let set_option' (k,v) =  set_option k v
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
@@ -290,7 +290,7 @@ let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
 let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
-   let o = peek () in
+   let o = internal_peek () in
    Util.smap_clear o;
    defaults |> List.iter set_option'                          //initialize it with the default values
 
@@ -303,7 +303,7 @@ let clear () =
 let _run = clear()
 
 let get_option s =
-  match Util.smap_try_find (peek()) s with
+  match Util.smap_try_find (internal_peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 

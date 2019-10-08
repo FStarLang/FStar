@@ -22,7 +22,7 @@ type vconst =
 
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list<pattern>
+    | Pat_Cons     of fv * list<(pattern * bool)>
     | Pat_Var      of bv
     | Pat_Wild     of bv
     | Pat_Dot_Term of bv * term
@@ -145,6 +145,8 @@ let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
 let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
 let fstar_refl_univ_name_fv     = mk_refl_types_lid_as_fv   "univ_name"
+let fstar_refl_optionstate      = mk_refl_types_lid_as_term "optionstate"
+let fstar_refl_optionstate_fv   = mk_refl_types_lid_as_fv   "optionstate"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"

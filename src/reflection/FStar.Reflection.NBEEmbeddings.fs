@@ -8,6 +8,7 @@ open FStar.TypeChecker.NBETerm
 open FStar.Order
 open FStar.Errors
 
+module O = FStar.Options
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module I = FStar.Ident
@@ -87,6 +88,20 @@ let e_binder =
             None
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
+
+let e_optionstate =
+    let embed_optionstate cb (b:O.optionstate) : t =
+        mk_lazy cb b fstar_refl_optionstate Lazy_optionstate
+    in
+    let unembed_optionstate cb (t:t) : option<O.optionstate> =
+        match t with
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_optionstate}, _) ->
+            Some (undyn b)
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_optionstate unembed_optionstate fstar_refl_optionstate_fv
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -245,7 +260,7 @@ let rec e_pattern' () =
         | Pat_Constant c ->
             mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_const cb c)]
         | Pat_Cons (fv, ps) ->
-            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_pattern' ())) cb ps)]
+            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
         | Pat_Var bv ->
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
@@ -261,7 +276,7 @@ let rec e_pattern' () =
 
         | Construct (fv, [], [(ps, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
-            BU.bind_opt (unembed (e_list (e_pattern' ())) cb ps) (fun ps ->
+            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
 
         | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->

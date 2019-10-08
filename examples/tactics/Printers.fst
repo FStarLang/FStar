@@ -84,7 +84,7 @@ let mk_printer_fun (dom : term) : Tac term =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, (Pat_Var bv, false))) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in

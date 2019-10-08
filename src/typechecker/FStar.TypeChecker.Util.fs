@@ -1198,7 +1198,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (t:S.term) : S.term =
     let tm = U.mk_reify t in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1207,7 +1207,7 @@ let reify_body (env:Env.env) (t:S.term) : S.term =
 
 let reify_body_with_arg (env:Env.env) (head:S.term) (arg:S.arg): S.term =
     let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
