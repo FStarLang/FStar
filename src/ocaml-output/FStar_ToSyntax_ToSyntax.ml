@@ -7160,7 +7160,7 @@ let rec (desugar_effect :
                               if is_layered
                               then
                                 FStar_List.append rr_members
-                                  ["stronger"; "conjunction"]
+                                  ["subcomp"; "if_then_else"]
                               else
                                 FStar_List.append rr_members
                                   ["return_wp";
@@ -7464,12 +7464,22 @@ let rec (desugar_effect :
                                      else
                                        if is_layered
                                        then
+<<<<<<< HEAD
                                          (let uu____25510 =
                                             let uu____25511 =
                                               let uu____25512 =
                                                 let uu____25517 =
                                                   let uu____25518 =
                                                     lookup1 "conjunction"  in
+=======
+                                         (let uu____25824 =
+                                            let uu____25825 =
+                                              let uu____25826 =
+                                                let uu____25831 =
+                                                  let uu____25832 =
+                                                    lookup1 "if_then_else"
+                                                     in
+>>>>>>> snap
                                                   {
                                                     FStar_Syntax_Syntax.conjunction
                                                       = uu____25518
@@ -7482,9 +7492,15 @@ let rec (desugar_effect :
                                                 lookup1 "return"  in
                                               let uu____25524 =
                                                 lookup1 "bind"  in
+<<<<<<< HEAD
                                               let uu____25526 =
                                                 let uu____25529 =
                                                   lookup1 "stronger"  in
+=======
+                                              let uu____25840 =
+                                                let uu____25843 =
+                                                  lookup1 "subcomp"  in
+>>>>>>> snap
                                                 FStar_Pervasives_Native.Some
                                                   uu____25529
                                                  in
