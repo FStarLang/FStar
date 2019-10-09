@@ -571,6 +571,7 @@ val t_char          : term
 val t_range         : term
 val t_norm_step     : term
 val t_term          : term
+val t_term_view     : term
 val t_order         : term
 val t_decls         : term
 val t_binder        : term

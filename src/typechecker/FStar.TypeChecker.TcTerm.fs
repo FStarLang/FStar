@@ -116,7 +116,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
+     let e, lc = TcUtil.maybe_coerce_lc env e lc t' in //add a b2t coercion if, e.g., e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
@@ -143,7 +143,7 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Env.trivial_guard
    | Some t ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t in //Add a b2t coercion if e:bool and t=Type
+     let e, lc = TcUtil.maybe_coerce_lc env e lc t in
      TcUtil.weaken_result_typ env e lc t
 
 (************************************************************************************************************)
@@ -759,16 +759,41 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                 (Rel.guard_to_string env gres);
     e, c, gres
 
+  | Tm_match _ ->
+    tc_match env top
+
+  | Tm_let ((false, [{lbname=Inr _}]), _) ->
+    check_top_level_let env top
+
+  | Tm_let ((false, _), _) ->
+    check_inner_let env top
+
+  | Tm_let ((true, {lbname=Inr _}::_), _) ->
+    check_top_level_let_rec env top
+
+  | Tm_let ((true, _), _) ->
+    check_inner_let_rec env top
+
+and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
+  match (SS.compress top).n with
   | Tm_match(e1, eqns) ->
     let env1, topt = Env.clear_expected_typ env in
     let env1 = instantiate_both env1 in
     let e1, c1, g1 = tc_term env1 e1 in
+    // GM: for some reason, without this annotation on eqns,
+    //     F* fails to do inference. A uvar at type Type gets
+    //     solved to `list u#0`, which is ill-typed.
+    let e1, c1, (eqns : list<S.branch>) =
+        match TcUtil.coerce_views env e1 c1 with
+        | Some (e1, c1) -> (e1, c1, eqns)
+        | None -> (e1, c1, eqns)
+    in
     let env_branches, res_t, g1 =
       match topt with
       | Some t -> env, t, g1
       | None ->
         let k, _ = U.type_u() in
-        let res_t, _, g = TcUtil.new_implicit_var "match result" e.pos env k in
+        let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
         Env.set_expected_typ env res_t, res_t, Env.conj_guard g1 g in
 
     if Env.debug env Options.Extreme
@@ -828,17 +853,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                       (Range.string_of_range top.pos) (Print.lcomp_to_string cres);
     e, cres, Env.conj_guard g1 g_branches
 
-  | Tm_let ((false, [{lbname=Inr _}]), _) ->
-    check_top_level_let env top
-
-  | Tm_let ((false, _), _) ->
-    check_inner_let env top
-
-  | Tm_let ((true, {lbname=Inr _}::_), _) ->
-    check_top_level_let_rec env top
-
-  | Tm_let ((true, _), _) ->
-    check_inner_let_rec env top
+  | _ ->
+    failwith (BU.format1 "tc_match called on %s\n" (Print.tag_of_term top))
 
 and tc_synth head env args rng =
     let tau, atyp =
