@@ -18,4 +18,4 @@ verify-all: $(ALL_CHECKED_FILES)
 	$(FSTAR) --cache_checked_modules $<
 
 clean:
-	rm -f .depend *.checked
+	rm -f .depend *.checked parsing/*.checked
