@@ -143,7 +143,8 @@ let write2 (#b1 #b2:B.buffer u8) (i:u32) (x:u8)
 = CHACHA?.reflect (write2_ b1 b2 i x)
 
 
-#set-options "--using_facts_from '* -LowStar.Buffer -FStar.HyperStack'"
+#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
+inline_for_extraction
 let copy (b1 b2:B.buffer u8)
 : Chacha unit b1 b2
   (requires fun _ -> B.length b1 == 16 /\ B.length b2 == 16)
@@ -182,7 +183,6 @@ let copy (b1 b2:B.buffer u8)
   write2 15ul x
 
 
-#reset-options
 let copy_st (b1 b2:B.buffer u8)
 : ST unit
   (requires fun h -> B.live h b1 /\ B.live h b2 /\ B.length b1 == 16 /\ B.length b2 == 16 /\ B.disjoint b1 b2)
