@@ -30,6 +30,7 @@ val get_guard_policy : unit -> tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
 val lax_on : unit -> tac<bool>
 
+val curms      : unit -> tac<Z.t>
 val fresh      : unit -> tac<Z.t>
 
 val join    : unit -> tac<unit>
