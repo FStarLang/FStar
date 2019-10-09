@@ -6605,7 +6605,7 @@ let rec (desugar_effect :
                               if is_layered
                               then
                                 FStar_List.append rr_members
-                                  ["stronger"; "conjunction"]
+                                  ["subcomp"; "if_then_else"]
                               else
                                 FStar_List.append rr_members
                                   ["return_wp";
@@ -6916,7 +6916,8 @@ let rec (desugar_effect :
                                               let uu____25826 =
                                                 let uu____25831 =
                                                   let uu____25832 =
-                                                    lookup1 "conjunction"  in
+                                                    lookup1 "if_then_else"
+                                                     in
                                                   {
                                                     FStar_Syntax_Syntax.conjunction
                                                       = uu____25832
@@ -6931,7 +6932,7 @@ let rec (desugar_effect :
                                                 lookup1 "bind"  in
                                               let uu____25840 =
                                                 let uu____25843 =
-                                                  lookup1 "stronger"  in
+                                                  lookup1 "subcomp"  in
                                                 FStar_Pervasives_Native.Some
                                                   uu____25843
                                                  in
