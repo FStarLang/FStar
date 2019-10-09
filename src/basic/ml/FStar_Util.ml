@@ -14,6 +14,7 @@ let return_all x = x
 
 type time = float
 let now () = BatUnix.gettimeofday ()
+let now_ms () = Z.of_int (int_of_float (now () *. 1000.0))
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n,
