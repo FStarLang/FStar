@@ -261,6 +261,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "fresh"         fresh       e_unit e_int
                                fresh       NBET.e_unit NBET.e_int;
 
+      mktac1 0 "curms"         curms       e_unit e_int
+                               curms       NBET.e_unit NBET.e_int;
+
       mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term
                                uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
 
