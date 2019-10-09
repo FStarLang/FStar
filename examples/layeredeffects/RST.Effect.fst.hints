@@ -1,0 +1,184 @@
+[
+  "$³@ëþgá3›¢\bk\u0013_kí",
+  [
+    [
+      "RST.Effect.repr",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6022571fbfffa8d3f9a3b3e5abcb442e"
+    ],
+    [
+      "RST.Effect.return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_RST.Effect.rst_wp_monotonic",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "interpretation_Tm_abs_82b51c2c07fd48b4493bd94d17c85b4c",
+        "interpretation_Tm_abs_b4ef68626f2309cc0dce4a9e81881ed9",
+        "lemma_Steel.RST.modifies_refl",
+        "refinement_interpretation_Tm_refine_e47174787d1cebe803dc535f2cd13ace",
+        "typing_Steel.Resource.empty_resource"
+      ],
+      0,
+      "67abd7f033e4a8ad33d9abd1db44fcb4"
+    ],
+    [
+      "RST.Effect.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "RST.Effect_interpretation_Tm_arrow_1652a751a2c3caaa7b7778f7b46c45fd",
+        "RST.Effect_interpretation_Tm_arrow_464f87a82a978619f173a2546d3df5c0",
+        "RST.Effect_interpretation_Tm_arrow_f739f81b00640fa636d0c9074375049b",
+        "Steel.RST_interpretation_Tm_arrow_c88c2badf18a6c36e139fc21981e5b88",
+        "Steel.Tactics_interpretation_Tm_arrow_82b194b8c8ef68ff0a7ed31c8d129573",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_RST.Effect.rst_post", "equation_RST.Effect.rst_wp",
+        "equation_RST.Effect.rst_wp_monotonic", "equation_Steel.RST.rprop",
+        "equation_Steel.Resource.imem",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "function_token_typing_Steel.Resource.inv",
+        "interpretation_Tm_abs_0251cd854dd5f297a7bee29870a00f81",
+        "interpretation_Tm_abs_08842d91e546ed8a669ce7bfa173d6ca",
+        "interpretation_Tm_abs_28de2d20537e283eb4579d4f5b5e0cec",
+        "interpretation_Tm_abs_5746981f0fd38777ad1b86dfce5b0a5a",
+        "interpretation_Tm_abs_a314b73e3d9c752871bf8845e89f667e",
+        "interpretation_Tm_abs_ca45b0b0c8ddd0d1d6976ec1bafd97aa",
+        "l_quant_interp_21b3dec1bcf49d5c93422c3ed5315a33",
+        "l_quant_interp_8321d5eee9c35eb923f8d7994c479f22",
+        "l_quant_interp_e078d23f121cdd3bef333fe6ec29bd49",
+        "lemma_Steel.RST.modifies_trans",
+        "refinement_interpretation_Tm_refine_1495cf439cd222fe40e4c274af77bad3",
+        "refinement_interpretation_Tm_refine_1dcec5a1245f6b63de73770582916dea",
+        "refinement_interpretation_Tm_refine_4584147a15300e536e0e491f237e6497",
+        "refinement_interpretation_Tm_refine_b8ad6a7839be43f816f92fa775171cc9",
+        "typing_Steel.RST.mk_rmem",
+        "typing_Tm_abs_0251cd854dd5f297a7bee29870a00f81",
+        "typing_Tm_abs_08842d91e546ed8a669ce7bfa173d6ca",
+        "typing_Tm_abs_28de2d20537e283eb4579d4f5b5e0cec",
+        "typing_Tm_abs_5746981f0fd38777ad1b86dfce5b0a5a",
+        "typing_Tm_abs_a314b73e3d9c752871bf8845e89f667e"
+      ],
+      0,
+      "69f9df2df866485e6090d399ca2f0220"
+    ],
+    [
+      "RST.Effect.stronger",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "RST.Effect_interpretation_Tm_arrow_1652a751a2c3caaa7b7778f7b46c45fd",
+        "RST.Effect_interpretation_Tm_arrow_464f87a82a978619f173a2546d3df5c0",
+        "Steel.RST_interpretation_Tm_arrow_c88c2badf18a6c36e139fc21981e5b88",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_RST.Effect.repr", "equation_RST.Effect.rst_post",
+        "equation_Steel.RST.rprop", "equation_Steel.Resource.imem",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "function_token_typing_Steel.Resource.inv",
+        "refinement_interpretation_Tm_refine_1495cf439cd222fe40e4c274af77bad3",
+        "refinement_interpretation_Tm_refine_b8ad6a7839be43f816f92fa775171cc9",
+        "typing_Steel.RST.mk_rmem",
+        "typing_Tm_abs_0251cd854dd5f297a7bee29870a00f81"
+      ],
+      0,
+      "be7881c10638ef4e9caf6eed3bd5dd5f"
+    ],
+    [
+      "RST.Effect.conjunction",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_RST.Effect.rst_wp",
+        "equation_RST.Effect.rst_wp_monotonic",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "interpretation_Tm_abs_0cb0821bfa6acb05916b87f88bb9a204",
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_1dcec5a1245f6b63de73770582916dea"
+      ],
+      0,
+      "ab5dcdf42ce1db1dd37363ce6ca08a65"
+    ],
+    [
+      "RST.Effect.RSTATE",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_RST.Effect.rst_wp",
+        "equation_RST.Effect.rst_wp_monotonic",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "interpretation_Tm_abs_0cb0821bfa6acb05916b87f88bb9a204",
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_1dcec5a1245f6b63de73770582916dea"
+      ],
+      0,
+      "3e5f1805657529395f47c413dcb62d14"
+    ],
+    [
+      "RST.Effect.lift_div_rstate",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "assumption_RST.Effect.Pure_wp_monotonicity",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "equation_RST.Effect.rst_wp_monotonic",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "interpretation_Tm_abs_0d17136319675d5d19a734e8be7d65ea",
+        "interpretation_Tm_abs_911cecd84d3c8f37622f8868f0bdb55c",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "interpretation_Tm_abs_e49f64498a96fe6a44cdc8d76154f7f4",
+        "l_quant_interp_258887ec615c3c3a973ae3c8dc9e8b31",
+        "lemma_Steel.RST.modifies_refl",
+        "refinement_interpretation_Tm_refine_3c65607e572c19be0eff87e03bb1fefb",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_911cecd84d3c8f37622f8868f0bdb55c",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "c3f419447a2cfe87975cb9de83216d15"
+    ],
+    [
+      "RST.Effect.RST",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_RST.Effect.rst_wp_monotonic",
+        "interpretation_Tm_abs_e55c99a29d762c8b76e48ec478c4c4e9",
+        "l_and-interp", "l_quant_interp_959305ae0804380759e12d2dde6f3491"
+      ],
+      0,
+      "2d0a19d1707823e0fad99ed22ea5897e"
+    ],
+    [
+      "RST.Effect.rst_frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Tactics_interpretation_Tm_arrow_82b194b8c8ef68ff0a7ed31c8d129573",
+        "fuel_guarded_inversion_Steel.Resource.resource",
+        "lemma_Steel.RST.is_subresource_of_intro1",
+        "lemma_Steel.RST.is_subresource_of_intro2"
+      ],
+      0,
+      "41ea325fb8aa3b40b47196ba31eb3f5a"
+    ]
+  ]
+]
