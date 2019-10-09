@@ -196,7 +196,7 @@ val forall_intro_2_with_pat
             // proof of [q x y z] under assumption of [p x y z]
         in
         let aux x y = move_requires (aux x y) in
-	// notice only 2 arguments (last argument is pointfree)
+        // notice only 2 arguments (last argument is pointfree)
         forall_intro aux // and now we have [forall x. p x y z ==> q x y z]
     ]}
 *)
@@ -245,6 +245,7 @@ val forall_to_exists_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r
   : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
 
 (** Introduce a (scoped) witness of an existential.
+
     Example:
     {[
         // if [exists x. p x] is in context, and we are proving [goal]
@@ -342,7 +343,7 @@ val ghost_lemma (#a:Type) (#p:(a -> GTot Type0)) (#q:(a -> unit -> GTot Type0))
                 (fun (_:squash (~p)) ->
                      // prove [goal] assuming [~p]
                 )
-       // and now we've proven [goal].
+        // and now we've proven [goal].
     ]}
 *)
 val or_elim (#l #r:Type0) (#goal:(squash (l \/ r) -> Tot Type0))
