@@ -483,12 +483,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         value_check_expected_typ env tm (Inl S.t_term) guard
 
     | Quote_dynamic ->
-        let c = mk_Comp ({ comp_univs = [U_zero];
-                           effect_name = Const.effect_Tac_lid;
-                           result_typ = S.t_term;
-                           effect_args = [];
-                           flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-                        }) in
+        let c = mk_Tac S.t_term in
 
         (* Typechecked the quoted term just to elaborate it *)
         let env', _ = Env.clear_expected_typ env in

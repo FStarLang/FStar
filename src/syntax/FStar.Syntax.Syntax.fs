@@ -573,6 +573,14 @@ let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbpos=pos;
   }
 
+let mk_Tac t =
+    mk_Comp ({ comp_univs = [U_zero];
+               effect_name = PC.effect_Tac_lid;
+               result_typ = t;
+               effect_args = [];
+               flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+            })
+
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
