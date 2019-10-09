@@ -2386,7 +2386,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
-      else if is_layered then rr_members @ [ "stronger"; "conjunction" ]
+      else if is_layered then rr_members @ [ "subcomp"; "if_then_else" ]
         (* the first 3 are optional but must not be counted as actions *)
       else rr_members @ [
         "return_wp";
@@ -2502,12 +2502,12 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
              ret_wp        = dummy_tscheme;
              bind_wp       = dummy_tscheme;
              stronger      = dummy_tscheme;
-             match_wps     = Inr ({ conjunction = lookup "conjunction" });
+             match_wps     = Inr ({ conjunction = lookup "if_then_else" });
              trivial       = None;
              repr          = lookup "repr";
              return_repr   = lookup "return";
              bind_repr     = lookup "bind";
-             stronger_repr = Some (lookup "stronger");
+             stronger_repr = Some (lookup "subcomp");
              actions       = actions;
              eff_attrs     = List.map (desugar_term env) attrs;
            }));
