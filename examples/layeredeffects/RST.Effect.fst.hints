@@ -1,5 +1,5 @@
 [
-  "$≥@Î˛g·3õ¢\bk\u0013_kÌ",
+  "J∆èóá\u0004`\u0000\u00143k¨\u000eÕ}h",
   [
     [
       "RST.Effect.repr",
@@ -71,7 +71,7 @@
       "69f9df2df866485e6090d399ca2f0220"
     ],
     [
-      "RST.Effect.stronger",
+      "RST.Effect.subcomp",
       1,
       2,
       1,
@@ -91,10 +91,10 @@
         "typing_Tm_abs_0251cd854dd5f297a7bee29870a00f81"
       ],
       0,
-      "be7881c10638ef4e9caf6eed3bd5dd5f"
+      "ac4696ae539c1d0a4d71137c4c09de48"
     ],
     [
-      "RST.Effect.conjunction",
+      "RST.Effect.if_then_else",
       1,
       2,
       1,
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_1dcec5a1245f6b63de73770582916dea"
       ],
       0,
-      "ab5dcdf42ce1db1dd37363ce6ca08a65"
+      "ec86ead082a3a7cf6f099280c61d4f82"
     ],
     [
       "RST.Effect.RSTATE",
@@ -123,7 +123,7 @@
         "refinement_interpretation_Tm_refine_1dcec5a1245f6b63de73770582916dea"
       ],
       0,
-      "3e5f1805657529395f47c413dcb62d14"
+      "aecae1ec1a5a6c9fec9ac5503dc6d1fc"
     ],
     [
       "RST.Effect.lift_div_rstate",
@@ -150,7 +150,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "c3f419447a2cfe87975cb9de83216d15"
+      "20e97254fc236c34a54eb4768996404f"
     ],
     [
       "RST.Effect.RST",
@@ -163,7 +163,7 @@
         "l_and-interp", "l_quant_interp_959305ae0804380759e12d2dde6f3491"
       ],
       0,
-      "2d0a19d1707823e0fad99ed22ea5897e"
+      "53f146d49894bd5f2f3ef882d97c9216"
     ],
     [
       "RST.Effect.rst_frame",
@@ -178,7 +178,7 @@
         "lemma_Steel.RST.is_subresource_of_intro2"
       ],
       0,
-      "41ea325fb8aa3b40b47196ba31eb3f5a"
+      "e73cd099cb4d6ead71e9830f76d21b80"
     ]
   ]
 ]

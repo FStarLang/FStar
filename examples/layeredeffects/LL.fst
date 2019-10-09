@@ -33,7 +33,7 @@ let ebind (a:Type) (b:Type)
   | Some x -> g x ()
 
 inline_for_extraction
-let estronger (a:Type)
+let esubcomp (a:Type)
   (wp_f:ewp_t a) (wp_g:ewp_t a)
   (f:erepr a wp_f)
 : Pure (erepr a wp_g)
@@ -42,7 +42,7 @@ let estronger (a:Type)
 = f
 
 inline_for_extraction
-let econjunction (a:Type)
+let eif_then_else (a:Type)
   (wp_f:ewp_t a) (wp_g:ewp_t a)
   (f:erepr a wp_f) (g:erepr a wp_g)
   (p:Type0)
@@ -59,8 +59,8 @@ layered_effect {
   repr = erepr;
   return = ereturn;
   bind = ebind;
-  stronger = estronger;
-  conjunction = econjunction
+  subcomp = esubcomp;
+  if_then_else = eif_then_else
 }
 
 inline_for_extraction
@@ -146,7 +146,7 @@ let bind (a:Type) (b:Type)
   g x n
 
 inline_for_extraction
-let stronger (a:Type)
+let subcomp (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f)
 : Pure (repr a wp_g)
@@ -155,7 +155,7 @@ let stronger (a:Type)
 = f
 
 inline_for_extraction
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
   (p:Type0)
@@ -172,8 +172,8 @@ layered_effect {
   repr = repr;
   return = return;
   bind = bind;
-  stronger = stronger;
-  conjunction = conjunction
+  subcomp = subcomp;
+  if_then_else = if_then_else
 }
 
 inline_for_extraction
