@@ -40,6 +40,7 @@ val lbs_to_string         : list<qualifier> -> letbindings -> string
 val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
+val branch_to_string      : Syntax.branch -> string
 val modul_to_string       : modul -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string

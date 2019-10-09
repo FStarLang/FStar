@@ -7,10 +7,12 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 open FStar.TypeChecker.Env
 open FStar.Reflection.Data
+module O = FStar.Options
 
 (* Embeddings *)
 val e_bv          : embedding<bv>
 val e_binder      : embedding<binder>
+val e_optionstate : embedding<O.optionstate>
 val e_binder_view : embedding<binder_view>
 val e_binders     : embedding<binders>
 val e_term        : embedding<term>
@@ -46,6 +48,7 @@ val e_term_view_aq  : antiquotations -> embedding<term_view>
 val unfold_lazy_bv     : lazyinfo -> term
 val unfold_lazy_fvar   : lazyinfo -> term
 val unfold_lazy_binder : lazyinfo -> term
+val unfold_lazy_optionstate : lazyinfo -> term
 val unfold_lazy_comp   : lazyinfo -> term
 val unfold_lazy_env    : lazyinfo -> term
 val unfold_lazy_sigelt : lazyinfo -> term

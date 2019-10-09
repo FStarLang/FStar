@@ -350,11 +350,7 @@ and term_to_string x =
       | Tm_match(head, branches) ->
         U.format2 "(match %s with\n\t| %s)"
           (term_to_string head)
-          (U.concat_l "\n\t|" (branches |> List.map (fun (p,wopt,e) ->
-                U.format3 "%s %s -> %s"
-                            (p |> pat_to_string)
-                            (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
-                            (e |> term_to_string))))
+          (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
@@ -363,6 +359,11 @@ and term_to_string x =
       | Tm_unknown -> "_"
   end
 
+and branch_to_string (p, wopt, e) : string =
+    U.format3 "%s %s -> %s"
+                (p |> pat_to_string)
+                (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
+                (e |> term_to_string)
 and ctx_uvar_to_string ctx_uvar =
     format4 "(* %s *)\n(%s |- %s : %s)"
             (ctx_uvar.ctx_uvar_reason)

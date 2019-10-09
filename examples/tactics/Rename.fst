@@ -56,6 +56,6 @@ let constr (a b : prop) : Lemma (a ==> b ==> b /\ a) =
       by (let ha = implies_intro () in
           let hb = implies_intro () in
           split ();
-          mapply (binder_to_term hb);
-          mapply (binder_to_term ha);
+          mapply hb;
+          mapply ha;
           qed ())

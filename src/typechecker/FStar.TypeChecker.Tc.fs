@@ -47,6 +47,7 @@ module TcEff = FStar.TypeChecker.TcEffect
 module PC = FStar.Parser.Const
 module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
+module O = FStar.Options
 
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
@@ -109,7 +110,8 @@ let tc_lex_t env ses quals lids =
                    sigquals = [];
                    sigrng = r;
                    sigmeta = default_sigmeta;
-                   sigattrs = [] } in
+                   sigattrs = [];
+                   sigopts = None; } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) None r1 in
@@ -118,7 +120,8 @@ let tc_lex_t env ses quals lids =
                           sigquals = [];
                           sigrng = r1;
                           sigmeta = default_sigmeta;
-                          sigattrs = []  } in
+                          sigattrs = [];
+                          sigopts = None; } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -133,12 +136,14 @@ let tc_lex_t env ses quals lids =
                            sigquals = [];
                            sigrng = r2;
                            sigmeta = default_sigmeta;
-                           sigattrs = []  } in
+                           sigattrs = [];
+                           sigopts = None; } in
         { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
           sigquals = [];
           sigrng = Env.get_range env;
           sigmeta = default_sigmeta;
-          sigattrs = []  }
+          sigattrs = [];
+          sigopts = None; }
       | _ ->
         let err_msg =
           BU.format1 "Invalid (re)definition of lex_t: %s\n"
@@ -373,10 +378,30 @@ let check_must_erase_attribute env se =
 
     | _ -> ()
 
+(* A(nother) hacky knot, set by FStar.Main *)
+let unembed_optionstate_knot : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+let unembed_optionstate (t : term) : option<O.optionstate> =
+    EMB.unembed (BU.must (!unembed_optionstate_knot)) t true EMB.id_norm_cb
+
+let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
+  match U.get_attribute PC.check_with_lid attrs with
+  | None -> kont ()
+  | Some [(a, None)] ->
+    Options.with_saved_options (fun () ->
+      Options.set (unembed_optionstate a |> BU.must);
+      kont ())
+  | _ -> failwith "huh?"
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
+  proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
+  let se =
+     if Options.record_options ()
+     then { se with sigopts = Some (Options.peek ()) }
+     else se
+  in
   match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
@@ -473,7 +498,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let uvs, t = tc_declare_typ ({ env with lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
+        let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
       end
@@ -713,7 +738,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     check_must_erase_attribute env0 se;
 
-    [se], [], env0
+    [se], [], env0)
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
@@ -859,7 +884,8 @@ let for_export env hidden se : list<sigelt> * list<lident> =
                      sigquals =[Assumption];
                      sigrng = Ident.range_of_lid lid;
                      sigmeta = default_sigmeta;
-                     sigattrs = [] } in
+                     sigattrs = [];
+                     sigopts = None; } in
           [dec], lid::hidden
 
   | Sig_let(lbs, l) ->
