@@ -101,7 +101,7 @@ let bind (a:Type) (b:Type)
 ///
 /// A third version could be proving their equality in the monoid (using a tactic)
 
-let stronger (a:Type)
+let subcomp (a:Type)
   (r_in:resource) (r_out:a -> resource)
   (wp_f:rst_wp a r_in r_out)
   (wp_g:rst_wp a r_in r_out)
@@ -111,7 +111,7 @@ let stronger (a:Type)
   (ensures fun _ -> True)
 = f
 
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (r_in:resource) (r_out:a -> resource)
   (wp_f:rst_wp a r_in r_out) (wp_g:rst_wp a r_in r_out)
   (f:repr a r_in r_out wp_f) (g:repr a r_in r_out wp_g)
@@ -123,11 +123,11 @@ let conjunction (a:Type)
 reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
-  with repr        = repr;
-       return      = return;
-       bind        = bind;
-       stronger    = stronger;
-       conjunction = conjunction
+  with repr         = repr;
+       return       = return;
+       bind         = bind;
+       subcomp     = subcomp;
+       if_then_else  = if_then_else
 }
 
 
@@ -232,7 +232,7 @@ assume val rst_frame (#a:Type)
 //   let r = f () in
 //   (g r) ()
 
-// let stronger (a:Type)
+// let subcomp (a:Type)
 //   (r_in_f:resource) (r_out_f:a -> resource)
 //   (pre_f:pre_t r_in_f) (post_f:post_t a r_in_f r_out_f)
 //   (r_in_g:resource) (r_out_g:a -> resource)
@@ -246,5 +246,5 @@ assume val rst_frame (#a:Type)
 //   (ensures fun _ -> True)
 // = f
 
-// let conjunction = unit
+// let if_then_else = unit
 

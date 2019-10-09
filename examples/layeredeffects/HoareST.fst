@@ -51,7 +51,7 @@ let bind (a:Type) (b:Type)
 
 /// sub comp rule
 
-let stronger (a:Type)
+let subcomp (a:Type)
   (pre_f:pre_t) (post_f:post_t a)
   (pre_g:pre_t) (post_g:post_t a)
   (f:repr a pre_f post_f)
@@ -62,7 +62,7 @@ let stronger (a:Type)
   (ensures fun _ -> True)
 = f
 
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (pre_f:pre_t) (post_f:post_t a)
   (pre_g:pre_t) (post_g:post_t a)
   (f:repr a pre_f post_f)
@@ -98,11 +98,11 @@ let read (a:Type0) (r:ref a)
 reifiable reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
-  with repr        = repr;
-       return      = return;
-       bind        = bind;
-       stronger    = stronger;
-       conjunction = conjunction;
+  with repr         = repr;
+       return       = return;
+       bind         = bind;
+       subcomp      = subcomp;
+       if_then_else = if_then_else;
 
        read = read
 }

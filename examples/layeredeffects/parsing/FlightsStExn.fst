@@ -90,7 +90,7 @@ let bind (a:Type) (b:Type)
   g x st
 
 inline_for_extraction noextract
-let stronger (a:Type)
+let subcomp (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:mrepr a wp_f)
 : Pure (mrepr a wp_g)
@@ -99,7 +99,7 @@ let stronger (a:Type)
 = f
 
 inline_for_extraction noextract
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:mrepr a wp_f) (g:mrepr a wp_g)
   (p:Type0)
@@ -117,8 +117,8 @@ layered_effect {
   repr = mrepr;
   return = return;
   bind = bind;
-  stronger = stronger;
-  conjunction = conjunction
+  subcomp = subcomp;
+  if_then_else = if_then_else
 }
 
 inline_for_extraction noextract

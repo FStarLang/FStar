@@ -49,7 +49,7 @@ let bind (a:Type) (b:Type)
   let x = f () in
   (g x) ()
 
-let stronger (a:Type)
+let subcomp (a:Type)
   (b1 b2:B.buffer u8) (wp_f:wp_t #(len b1) #(len b2) a) (wp_g:wp_t #(len b1) #(len b2) a)
   (f:repr a b1 b2 wp_f)
 : Pure (repr a b1 b2 wp_g)
@@ -57,7 +57,7 @@ let stronger (a:Type)
   (ensures fun _ -> True)
 = f
 
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (b1 b2:B.buffer u8) (wp_f:wp_t #(len b1) #(len b2) a) (wp_g:wp_t #(len b1) #(len b2) a)
   (f:repr a b1 b2 wp_f) (g:repr a b1 b2 wp_g)
   (p:Type0)
@@ -75,8 +75,8 @@ layered_effect {
   repr = repr;
   return = return;
   bind = bind;
-  stronger = stronger;
-  conjunction = conjunction
+  subcomp = subcomp;
+  if_then_else = if_then_else
 }
 
 

@@ -1,5 +1,5 @@
 [
-  "÷þ\u0018×¯_\fa\f\u0019ŸÒ›ÒÐ¸",
+  "\u0002-\u0017_\f)3.žçZ¶\u001a\u0001„?",
   [
     [
       "HoareST.return",
@@ -20,13 +20,13 @@
       "07097d115a06209d099f0af6861fb275"
     ],
     [
-      "HoareST.stronger",
+      "HoareST.subcomp",
       1,
       0,
       0,
       [ "@query", "equation_HoareST.repr" ],
       0,
-      "759256d7a6e7197d4909ca4af2032311"
+      "b09a82293db02d8d9b1633437fa3e4ea"
     ],
     [
       "HoareST.read",
@@ -42,7 +42,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "d5e3acf3dfb15fd3195f5e6cb13ec5fd"
+      "659e87deaea21cebf5c40b52d05fd513"
     ],
     [
       "HoareST.write",
@@ -63,7 +63,7 @@
         "true_interp"
       ],
       0,
-      "9f75ca137e824a7537be9bd23903f708"
+      "30973bc989c604422a92eb6148d9d71f"
     ],
     [
       "HoareST.mwrite",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "239fe6ec73880cedf14193fb2623a8e2"
+      "37fdea4109d5c71edf14c5cc5ebe92b9"
     ],
     [
       "HoareST.lift_pure_hoarest",
@@ -102,7 +102,7 @@
         "typing_Tm_abs_efcce3c21fe48dce9105b420b0cd535c"
       ],
       0,
-      "5dd91d622de9ec4c7c80322df2be73ba"
+      "7b6642d4976708c325f663881aedbf2c"
     ]
   ]
 ]

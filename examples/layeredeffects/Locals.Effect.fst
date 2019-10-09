@@ -53,7 +53,7 @@ let bind (a:Type) (b:Type)
   let (x, m) = f m in
   (g x) m
 
-let stronger (a:Type)
+let subcomp (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f)
 : Pure (repr a wp_g)
@@ -61,7 +61,7 @@ let stronger (a:Type)
   (ensures fun _ -> True)
 = f
 
-let conjunction (a:Type)
+let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
   (p:Type0)
@@ -71,11 +71,11 @@ let conjunction (a:Type)
 total reifiable reflectable
 layered_effect {
   LVARS : a:Type -> wp_t a -> Effect
-  with repr        = repr;
-       return      = return;
-       bind        = bind;
-       stronger    = stronger;
-       conjunction = conjunction
+  with repr         = repr;
+       return       = return;
+       bind         = bind;
+       subcomp      = subcomp;
+       if_then_else = if_then_else
 }
 
 assume Pure_wp_monotonicity:
