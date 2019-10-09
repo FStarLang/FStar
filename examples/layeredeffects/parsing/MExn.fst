@@ -4,6 +4,7 @@ open FStar.HyperStack.ST
 
 module HS = FStar.HyperStack
 
+module B = LowStar.Buffer
 
 type pre_t = HS.mem -> Type0
 type post_t (a:Type) = option a -> HS.mem -> Type0
@@ -15,7 +16,8 @@ type wp_t (a:Type) =
 
 
 type repr (a:Type) (wp:wp_t a) =
-  unit -> STATE (option a) wp
+  unit ->
+  STATE (option a) (fun p h0 -> wp (fun x h1 -> (equal_stack_domains h0 h1 /\ B.(modifies loc_none h0 h1)) ==> p x h1) h0)
 
 inline_for_extraction
 let return (a:Type) (x:a)
@@ -79,4 +81,4 @@ sub_effect DIV ~> EXN = lift_div_exn
 
 
 effect Exn (a:Type) (pre:HS.mem -> Type0) (post:HS.mem -> option a -> HS.mem -> Type0) =
-  EXN a (fun p h0 -> pre h0 /\ (forall x h1. (equal_stack_domains h0 h1 /\ post h0 x h1) ==> p x h1))
+  EXN a (fun p h0 -> pre h0 /\ (forall x h1. post h0 x h1 ==> p x h1))

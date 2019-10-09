@@ -11,6 +11,8 @@ module B = LowStar.Buffer
 open Messages
 open MExn
 
+module M = Messages
+
 noeq
 type state = {
   b  : B.buffer uint_8;
@@ -130,37 +132,27 @@ sub_effect DIV ~> STEXN = lift_div_stexn
 
 
 effect StExn (a:Type) (pre:state -> HS.mem -> Type0) (post:state -> HS.mem -> option (a & state) -> HS.mem -> Type) =
-  STEXN a (fun p st h -> pre st h /\ (forall r h1. (equal_stack_domains h h1 /\ post st h r h1) ==> p r h1))
+  STEXN a (fun p st h -> pre st h /\ (forall r h1. post st h r h1 ==> p r h1))
 
-type repr (a:Type0) = {
-  v       : a;
-  m_begin : uint_32;
-  m_end   : uint_32
-}
 
-let valid_repr (#a:Type0) (b:B.buffer uint_8) (h:HS.mem) (r:repr a) : Type0
-= valid_parsing b r.m_begin r.m_end h r.v
+unfold let parse_common_wp (a:Type0) : wp_t (M.repr a)
+= fun p st h0 ->
+  B.live h0 st.b /\
+  (forall r h1.
+     (B.(modifies loc_none h0 h1) ==>
+     (match r with
+      | None -> p None h1
+      | Some (x, st1) -> (st1.b == st.b /\ x.m_begin == st.id /\ x.m_end == st1.id /\ valid_repr #a st1.b h1 x) ==> p r h1)))
 
-unfold let pre_m (st:state) (h:HS.mem) = B.live h st.b
-
-unfold let post_m (#a:Type0) (st:state) (h0:HS.mem) (r:option (repr a & state)) (h1:HS.mem) =
-  B.(modifies loc_none h0 h1) /\
-  (match r with
-   | None -> True
-   | Some (x, st1) ->
-     st1.b == st.b /\
-     x.m_begin == st.id /\
-     x.m_end == st1.id /\
-     valid_repr #a st1.b h1 x)
 
 inline_for_extraction noextract
 let parse_common_ (#a:Type0)
   (parser:parser_t a)
   (_:unit)
   (st:state)
-  (_:unit)
-: ST (option (repr a & state)) (requires pre_m st) (ensures post_m st)
-= let r = parser st.b st.id in
+: MExn.repr (M.repr a & state) (fun p h0 -> parse_common_wp a p st h0)
+= fun _ ->
+  let r = parser st.b st.id in
   match r with
   | None -> None
   | Some (x, m_end) -> Some ({ v = x; m_begin = st.id; m_end = m_end }, { st with id = m_end })
@@ -170,23 +162,21 @@ let parse_common_exn (#a:Type0)
   (parser:parser_t a)
   (_:unit)
   (st:state)
-: Exn (repr a & state) (requires pre_m st) (ensures post_m st)
+: EXN (M.repr a & state) (fun p h0 -> parse_common_wp a p st h0)
 = EXN?.reflect (parse_common_ #a parser () st)
 
 inline_for_extraction noextract
 let parse_common (#a:Type0)
   (parser:parser_t a)
   (_:unit)
-: StExn (repr a) (requires pre_m) (ensures post_m)
+: StExn (M.repr a)
+  (requires fun st h -> B.live h st.b)
+  (ensures fun st h0 r h1 ->
+    B.live h1 st.b /\ B.(modifies loc_none h0 h1) /\
+    (match r with
+     | None -> True
+     | Some (x, st1) -> st1.b == st.b /\ x.m_begin == st.id /\ x.m_end == st1.id /\ valid_repr #a st1.b h1 x))
 = STEXN?.reflect (parse_common_exn #a parser ())
-
-noeq
-type flt = {
-  t1_msg : repr t1;
-  t2_msg : repr t2;
-  t3_msg : repr t3
-}
-
 
 inline_for_extraction noextract
 let parse_t1 = parse_common #t1 t1_parser
@@ -197,27 +187,22 @@ let parse_t2 = parse_common #t2 t2_parser
 inline_for_extraction noextract
 let parse_t3 = parse_common #t3 t3_parser
 
+#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
 inline_for_extraction noextract
 let parse_flt_aux ()
-: StExn flt
-  (fun st h -> B.live h st.b)
+: StExn flt (fun st h -> pre_f st.b st.id h)
   (fun st h0 r h1 ->
-    B.(modifies loc_none h0 h1) /\
-    (match r with
-     | None -> True
-     | Some (flt, _) ->
-       valid_repr st.b h1 flt.t1_msg /\ valid_repr st.b h1 flt.t2_msg /\ valid_repr st.b h1 flt.t3_msg))
+   match r with
+   | None -> post_f st.b h0 None h1
+   | Some (x, _) -> post_f st.b h0 (Some x) h1)
 = let x = parse_t1 () in
   let y = parse_t2 () in
   let z = parse_t3 () in
   { t1_msg = x; t2_msg = y; t3_msg = z }
 
-let parse_flt (b:B.buffer uint_8) (f_begin:uint_32) (f_end:uint_32)
-: ST (option (flt & state))
-  (requires fun h -> B.live h b /\ valid_indices b f_begin f_end)
-  (ensures fun h0 r h1 ->
-    B.(modifies loc_none h0 h1) /\
-    (match r with
-     | None -> True
-     | Some (flt, _) -> valid_repr b h1 flt.t1_msg /\ valid_repr b h1 flt.t2_msg /\ valid_repr b h1 flt.t3_msg))
-= reify (reify (parse_flt_aux ()) ({ b = b; id = f_begin })) ()
+let parse_flt : parse_flt_t
+= fun b f_begin ->
+  let r = reify (reify (parse_flt_aux ()) ({ b = b; id = f_begin })) () in
+  match r with
+  | None -> None
+  | Some (x, _) -> Some x
