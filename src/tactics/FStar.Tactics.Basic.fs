@@ -547,6 +547,9 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
+let curms () : tac<Z.t> =
+    ret (BU.now_ms () |> Z.of_int_fs)
+
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts label : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
