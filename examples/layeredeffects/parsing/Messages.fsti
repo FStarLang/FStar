@@ -73,3 +73,36 @@ type parser_t (a:Type0) =
 val t1_parser : parser_t t1
 val t2_parser : parser_t t2
 val t3_parser : parser_t t3
+
+
+type repr (a:Type0) = {
+  v       : a;
+  m_begin : uint_32;
+  m_end   : uint_32
+}
+
+let valid_repr (#a:Type0) (b:B.buffer uint_8) (h:HS.mem) (r:repr a) : Type0
+= valid_parsing b r.m_begin r.m_end h r.v
+
+
+noeq
+type flt = {
+  t1_msg : repr t1;
+  t2_msg : repr t2;
+  t3_msg : repr t3
+}
+
+unfold let pre_f (b:B.buffer uint_8) (f_begin:uint_32) =
+  fun (h:HS.mem) -> B.live h b /\ f_begin <= B.len b
+
+unfold let post_f (b:B.buffer uint_8) =
+  fun (_:HS.mem) (r:option flt) (h1:HS.mem) ->
+  (match r with
+   | None -> True
+   | Some flt -> valid_repr b h1 flt.t1_msg /\ valid_repr b h1 flt.t2_msg /\ valid_repr b h1 flt.t3_msg)
+
+inline_for_extraction
+type parse_flt_t =
+  b:B.buffer uint_8 -> f_begin:uint_32 ->
+  ST (option flt) (pre_f b f_begin)
+  (fun h0 r h1 -> B.(modifies loc_none h0 h1) /\ post_f b h0 r h1)
