@@ -789,7 +789,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     if env.nosynth
     then ()
-    else
+    else begin
     tacdbg := Env.debug env (Options.Other "Tac");
 
     let gs, w = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
@@ -812,6 +812,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals")
                             (Env.get_range env));
     ()
+    end
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
