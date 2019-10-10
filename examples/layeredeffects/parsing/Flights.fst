@@ -1,6 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+
 module Flights
 
 /// Parsing flights (sequence of messages) using the interface of the Messages module
+
 
 open FStar.Integers
 
@@ -10,6 +28,11 @@ module HS = FStar.HyperStack
 module B = LowStar.Buffer
 
 open Messages
+
+
+/// A common function that takes as input a parser and uses it to parse a message from the input buffer
+///
+/// Returns the corresponding repr with validity postcondition
 
 inline_for_extraction
 let parse_common (#a:Type0)
@@ -27,6 +50,9 @@ let parse_common (#a:Type0)
   match r with
   | None -> None
   | Some (x, m_end) -> Some ({ v = x; m_begin = m_begin; m_end = m_end })
+
+
+/// Partial application of parse_common to different parsers
 
 inline_for_extraction
 let parse_t1 = parse_common t1_parser
