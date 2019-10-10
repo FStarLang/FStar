@@ -3012,51 +3012,53 @@ let (solve_implicits :
         if env.FStar_TypeChecker_Env.nosynth
         then ()
         else
-          (let uu____5514 =
-             FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
-           FStar_ST.op_Colon_Equals tacdbg uu____5514);
-        (let uu____5538 =
-           let uu____5545 = FStar_TypeChecker_Env.get_range env  in
-           run_tactic_on_all_implicits tau.FStar_Syntax_Syntax.pos uu____5545
-             tau env imps
-            in
-         match uu____5538 with
-         | (gs,w) ->
-             FStar_All.pipe_right gs
-               (FStar_List.iter
-                  (fun g  ->
-                     let uu____5562 =
-                       let uu____5565 = FStar_Tactics_Types.goal_env g  in
-                       let uu____5566 = FStar_Tactics_Types.goal_type g  in
-                       getprop uu____5565 uu____5566  in
-                     match uu____5562 with
-                     | FStar_Pervasives_Native.Some vc ->
-                         ((let uu____5569 = FStar_ST.op_Bang tacdbg  in
-                           if uu____5569
-                           then
-                             let uu____5593 =
-                               FStar_Syntax_Print.term_to_string vc  in
-                             FStar_Util.print1 "Synthesis left a goal: %s\n"
-                               uu____5593
-                           else ());
-                          (let guard =
-                             {
-                               FStar_TypeChecker_Common.guard_f =
-                                 (FStar_TypeChecker_Common.NonTrivial vc);
-                               FStar_TypeChecker_Common.deferred = [];
-                               FStar_TypeChecker_Common.univ_ineqs = ([], []);
-                               FStar_TypeChecker_Common.implicits = []
-                             }  in
-                           let uu____5608 = FStar_Tactics_Types.goal_env g
-                              in
-                           FStar_TypeChecker_Rel.force_trivial_guard
-                             uu____5608 guard))
-                     | FStar_Pervasives_Native.None  ->
-                         let uu____5609 = FStar_TypeChecker_Env.get_range env
-                            in
-                         FStar_Errors.raise_error
-                           (FStar_Errors.Fatal_OpenGoalsInSynthesis,
-                             "synthesis left open goals") uu____5609)))
+          ((let uu____5514 =
+              FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
+            FStar_ST.op_Colon_Equals tacdbg uu____5514);
+           (let uu____5538 =
+              let uu____5545 = FStar_TypeChecker_Env.get_range env  in
+              run_tactic_on_all_implicits tau.FStar_Syntax_Syntax.pos
+                uu____5545 tau env imps
+               in
+            match uu____5538 with
+            | (gs,w) ->
+                FStar_All.pipe_right gs
+                  (FStar_List.iter
+                     (fun g  ->
+                        let uu____5562 =
+                          let uu____5565 = FStar_Tactics_Types.goal_env g  in
+                          let uu____5566 = FStar_Tactics_Types.goal_type g
+                             in
+                          getprop uu____5565 uu____5566  in
+                        match uu____5562 with
+                        | FStar_Pervasives_Native.Some vc ->
+                            ((let uu____5569 = FStar_ST.op_Bang tacdbg  in
+                              if uu____5569
+                              then
+                                let uu____5593 =
+                                  FStar_Syntax_Print.term_to_string vc  in
+                                FStar_Util.print1
+                                  "Synthesis left a goal: %s\n" uu____5593
+                              else ());
+                             (let guard =
+                                {
+                                  FStar_TypeChecker_Common.guard_f =
+                                    (FStar_TypeChecker_Common.NonTrivial vc);
+                                  FStar_TypeChecker_Common.deferred = [];
+                                  FStar_TypeChecker_Common.univ_ineqs =
+                                    ([], []);
+                                  FStar_TypeChecker_Common.implicits = []
+                                }  in
+                              let uu____5608 = FStar_Tactics_Types.goal_env g
+                                 in
+                              FStar_TypeChecker_Rel.force_trivial_guard
+                                uu____5608 guard))
+                        | FStar_Pervasives_Native.None  ->
+                            let uu____5609 =
+                              FStar_TypeChecker_Env.get_range env  in
+                            FStar_Errors.raise_error
+                              (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                "synthesis left open goals") uu____5609))))
   
 let (splice :
   FStar_TypeChecker_Env.env ->
