@@ -784,6 +784,9 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 
 
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+    if env.nosynth
+    then ()
+    else
     tacdbg := Env.debug env (Options.Other "Tac");
 
     let gs, w = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
