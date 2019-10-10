@@ -1976,7 +1976,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, fst b, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, fst b, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -1989,7 +1989,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | [lb] ->
                 (match lb.lbname with
                  | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, bv, lb.lbdef, t2))
+                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -2049,12 +2049,12 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Uvar (_u, ctx_u_s) ->
         ret <| S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
-    | Tv_Let (false, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (false, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
 
-    | Tv_Let (true, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (true, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
