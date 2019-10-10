@@ -72,15 +72,7 @@ let points_to (a: A.array U32.t) (x: U32.t) : resource =
     Seq.index (A.as_rseq a h) 0 == x /\ P.allows_write (A.get_rperm a h)
   )
 
-let foo2 (a: A.array U32.t) (x: Ghost.erased U32.t) : RST unit
-  (points_to a (Ghost.reveal x))
-  (fun _ -> points_to a (U32.add_mod (Ghost.reveal x) 1ul))
-  (fun h0 -> True)
-  (fun h0 _ h1 -> True)
-  =
-  admit() // Needs effect layering and resource subtyping to work out of the box
-
-let foo3 (a b: A.array U32.t) : RST unit
+let foo2 (a b: A.array U32.t) : RST unit
   (A.array_resource a <*> A.array_resource b)
   (fun _ -> A.array_resource a <*> A.array_resource b)
   (fun h0 -> P.allows_write (A.get_rperm a h0))
