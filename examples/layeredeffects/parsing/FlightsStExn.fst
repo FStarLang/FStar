@@ -1,4 +1,29 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FlightsStExn
+
+/// Continuing the flights parsing example,
+///   if you see the `parse_flt_aux` function in FlightsExn.fst,
+///   the code is still stitching the indices, passing around the buffer, etc.
+///
+/// But that can also be encapsulated in a state effect
+///
+/// This module layers a state effect over Exn
+
 
 open FStar.Integers
 
@@ -13,17 +38,24 @@ open MExn
 
 module M = Messages
 
+
+/// Type of the state
+
 noeq
-type state = {
+type rcv_state = {
   b  : B.buffer uint_8;
   id : i:uint_32{i <= B.len b}
 }
 
-(*** Layering state on exception ***)
 
-type pre_t = state -> HS.mem -> Type0
-type post_t (a:Type) = option (a & state) -> HS.mem -> Type0
+/// Layering state on top of EXN
+
+
+type pre_t = rcv_state -> HS.mem -> Type0
+type post_t (a:Type) = option (a & rcv_state) -> HS.mem -> Type0
 type wp_t0 (a:Type) = post_t a -> pre_t
+
+/// Require the wp to be monotonic
 
 unfold
 let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
@@ -33,15 +65,24 @@ let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
 
 type wp_t (a:Type) = wp:(post_t a -> pre_t){monotonic_wp wp}
 
+
+/// Underlying representation in terms of EXN
+
+
 inline_for_extraction
 type mrepr (a:Type) (wp:wp_t a) =
-  st:state -> EXN (a & state) (fun p h -> wp p st h)
+  st:rcv_state -> EXN (a & rcv_state) (fun p h -> wp p st h)
 
+
+/// Effect combinators
 
 inline_for_extraction noextract
 let return (a:Type) (x:a)
 : mrepr a (fun p st h -> p (Some (x, st)) h)
 = fun st -> (x, st)
+
+
+/// Some hard work to convince Z3 that the `bind_wp` is monotonic
 
 open FStar.Tactics
 
@@ -49,9 +90,9 @@ let lemma_monotonic
   (#a:Type) (#b:Type)
   (wp_f:wp_t a) (wp_g:a -> wp_t b)
   (post_a:(a:Type -> b:Type -> wp_g:(a -> wp_t b) -> p:post_t b -> post_t a))
-  (p:post_t b) (q:post_t b) (st:state) (h:HS.mem)
+  (p:post_t b) (q:post_t b) (st:rcv_state) (h:HS.mem)
 : Lemma
-  (requires forall (r:option (a & state)) (h:HS.mem). (post_a a b wp_g p) r h ==> (post_a a b wp_g q) r h)
+  (requires forall (r:option (a & rcv_state)) (h:HS.mem). (post_a a b wp_g p) r h ==> (post_a a b wp_g q) r h)
   (ensures wp_f (post_a a b wp_g p) st h ==> wp_f (post_a a b wp_g q) st h)
 = ()
 
@@ -70,7 +111,7 @@ unfold
 let bind_wp (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t b
 = assert (monotonic_wp (bind_wp0 wp_f wp_g)) by
     (norm [delta_only [`%monotonic_wp; `%bind_wp0]];
-     (ignore (repeatn 5 l_intro));
+     ignore (repeatn 5 l_intro);
      let wp_f, wp_g =
        match (cur_binders ()) with
        | _::_::wp_f::wp_g::_ -> wp_f, wp_g
@@ -123,6 +164,9 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+
+/// Lift from DIV (on monotonic wps)
+
 inline_for_extraction noextract
 let lift_div_stexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
 : mrepr a (fun p st h -> wp (fun x -> p (Some (x, st)) h))
@@ -131,8 +175,13 @@ let lift_div_stexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==
 sub_effect DIV ~> STEXN = lift_div_stexn
 
 
-effect StExn (a:Type) (pre:state -> HS.mem -> Type0) (post:state -> HS.mem -> option (a & state) -> HS.mem -> Type) =
+/// Hoare-style abbreviation
+
+effect StExn (a:Type) (pre:rcv_state -> HS.mem -> Type0) (post:rcv_state -> HS.mem -> option (a & rcv_state) -> HS.mem -> Type) =
   STEXN a (fun p st h -> pre st h /\ (forall r h1. post st h r h1 ==> p r h1))
+
+
+/// parse_common function, this time in terms of `StExn`
 
 
 unfold let parse_common_wp (a:Type0) : wp_t (M.repr a)
@@ -149,8 +198,8 @@ inline_for_extraction noextract
 let parse_common_ (#a:Type0)
   (parser:parser_t a)
   (_:unit)
-  (st:state)
-: MExn.repr (M.repr a & state) (fun p h0 -> parse_common_wp a p st h0)
+  (st:rcv_state)
+: MExn.repr (M.repr a & rcv_state) (fun p h0 -> parse_common_wp a p st h0)
 = fun _ ->
   let r = parser st.b st.id in
   match r with
@@ -161,8 +210,8 @@ inline_for_extraction noextract
 let parse_common_exn (#a:Type0)
   (parser:parser_t a)
   (_:unit)
-  (st:state)
-: EXN (M.repr a & state) (fun p h0 -> parse_common_wp a p st h0)
+  (st:rcv_state)
+: EXN (M.repr a & rcv_state) (fun p h0 -> parse_common_wp a p st h0)
 = EXN?.reflect (parse_common_ #a parser () st)
 
 inline_for_extraction noextract
@@ -178,6 +227,9 @@ let parse_common (#a:Type0)
      | Some (x, st1) -> st1.b == st.b /\ x.m_begin == st.id /\ x.m_end == st1.id /\ valid_repr #a st1.b h1 x))
 = STEXN?.reflect (parse_common_exn #a parser ())
 
+
+/// Partially applied functions
+
 inline_for_extraction noextract
 let parse_t1 = parse_common #t1 t1_parser
 
@@ -187,7 +239,11 @@ let parse_t2 = parse_common #t2 t2_parser
 inline_for_extraction noextract
 let parse_t3 = parse_common #t3 t3_parser
 
+
+/// The flight parsing function
+
 #set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
+
 inline_for_extraction noextract
 let parse_flt_aux ()
 : StExn flt (fun st h -> pre_f st.b st.id h)
@@ -199,6 +255,9 @@ let parse_flt_aux ()
   let y = parse_t2 () in
   let z = parse_t3 () in
   { t1_msg = x; t2_msg = y; t3_msg = z }
+
+
+/// The client-facing code can provide the same specs
 
 let parse_flt : parse_flt_t
 = fun b f_begin ->
