@@ -2100,13 +2100,20 @@ let goal_of_goal_ty env typ : goal * guard_t =
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
-let proofstate_of_goal_ty rng env typ =
-    let g, g_u = goal_of_goal_ty env typ in
+let tac_env (env:Env.env) : Env.env =
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
+    let env = { env with failhard = true } in
+    (* TODO: We do not faithfully expose universes to metaprograms *)
+    let env = { env with Env.lax_universes = true } in
+    env
+
+let proofstate_of_goals rng env goals imps =
+    let env = tac_env env in
     let ps = {
         main_context = env;
-        main_goal = g;
-        all_implicits = g_u.implicits;
-        goals = [g];
+        all_implicits = imps;
+        goals = goals;
         smt_goals = [];
         depth = 0;
         __dump = do_dump_proofstate;
@@ -2118,4 +2125,10 @@ let proofstate_of_goal_ty rng env typ =
         local_state = BU.psmap_empty ();
     }
     in
-    (ps, (goal_witness g))
+    ps
+
+let proofstate_of_goal_ty rng env typ =
+    let env = tac_env env in
+    let g, g_u = goal_of_goal_ty env typ in
+    let ps = proofstate_of_goals rng env [g] g_u.implicits in
+    (ps, goal_witness g)

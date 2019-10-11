@@ -540,7 +540,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
 
     // Check the tactic
-    let t, _, g = tc_tactic env t in
+    let t, _, g = tc_tactic t_unit t_unit env t in
     Rel.force_trivial_guard env g;
 
     let ses = env.splice env t in
@@ -643,6 +643,29 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let lbs' = List.rev lbs' in
 
+    (* preprocess_with *)
+    let attrs, pre_tau =
+        match U.extract_attr' PC.preprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `preprocess_with`"));
+            se.sigattrs, None
+    in
+    let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
+
+    let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = Env.preprocess env tau lb.lbdef in
+        { lb with lbdef = lbdef }
+    in
+    // Preprocess the letbindings with the tactic, if any
+    let lbs' = match pre_tau with
+               | Some tau -> List.map (preprocess_lb tau) lbs'
+               | None -> lbs'
+    in
+    (* / preprocess_with *)
+
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
@@ -691,7 +714,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     in
     let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
+        let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
         { lb with lbdef = lbdef }
     in
     let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
