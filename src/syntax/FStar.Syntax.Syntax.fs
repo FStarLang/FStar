@@ -708,7 +708,12 @@ let t_binders   = tconst PC.binders_lid
 let t_bv        = tconst PC.bv_lid
 let t_fv        = tconst PC.fv_lid
 let t_norm_step = tconst PC.norm_step_lid
-let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_of a b =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tac_lid) [U_unknown]) [as_arg a; as_arg b] None Range.dummyRange
+let t_tactic_of t =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_unknown]) [as_arg t] None Range.dummyRange
+
+let t_tactic_unit = t_tactic_of t_unit
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange

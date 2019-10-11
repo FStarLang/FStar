@@ -881,7 +881,7 @@ and tc_synth head env args rng =
     Rel.force_trivial_guard env g1;
 
     // Check the tactic
-    let tau, _, g2 = tc_tactic env tau in
+    let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
     let t = env.synth_hook env typ ({ tau with pos = rng }) in
@@ -893,16 +893,16 @@ and tc_synth head env args rng =
 
     t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
-and tc_tactic env tau =
+and tc_tactic a b env tau =
     let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau t_tactic_unit
+    tc_check_tot_or_gtot_term env tau (t_tac_of a b)
 
 and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
     | None ->
         None, Env.trivial_guard
     | Some tactic ->
-        let tactic, _, g = tc_tactic env tactic
+        let tactic, _, g = tc_tactic t_unit t_unit env tactic
         in Some tactic, g
 
 (************************************************************************************************************)
@@ -1696,7 +1696,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
              * are for concrete types.
              *)
             let tau = SS.subst subst tau in
-            let tau, _, g_tau = tc_tactic env tau in
+            let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
@@ -2912,7 +2912,7 @@ and tc_binder env (x, imp) =
     let imp, g' =
         match imp with
         | Some (Meta tau) ->
-            let tau, _, g = tc_tactic env tau in
+            let tau, _, g = tc_tactic t_unit t_unit env tau in
             Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in

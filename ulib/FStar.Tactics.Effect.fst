@@ -15,6 +15,7 @@
 *)
 module FStar.Tactics.Effect
 
+open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
@@ -139,7 +140,16 @@ let by_tactic_seman tau phi = ()
 val assume_safe : (#a:Type) -> (unit -> TacF a) -> Tac a
 let assume_safe #a tau = admit (); tau ()
 
-private let tactic a = unit -> Tac a
+private let tac a b = a -> Tac b
+private let tactic a = tac unit a
+
+(* A hook to preprocess a definition before it is typechecked and elaborated. This
+ * attribute should be used for top-level lets. The tactic [tau] will be called
+ * on a quoting of the definition of the let (if many, once for each) and the result
+ * of the tactic will replace the definition. There are no goals involved,
+ * nor any proof obligation to be done by the tactic. *)
+irreducible
+let preprocess_with (tau : term -> Tac term) = ()
 
 (* A hook to postprocess a definition, after typechecking, and rewrite it
  * into a (provably equal) shape chosen by the user. This can be used to implement

@@ -104,5 +104,6 @@ val lget : typ -> string -> tac<term>
 val lset : typ -> string -> term -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
+val proofstate_of_goals : Range.range -> env -> list<goal> -> list<implicit> -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term

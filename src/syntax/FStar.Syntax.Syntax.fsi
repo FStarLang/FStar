@@ -576,6 +576,8 @@ val t_order         : term
 val t_decls         : term
 val t_binder        : term
 val t_bv            : term
+val t_tac_of        : term -> term -> term
+val t_tactic_of     : term -> term
 val t_tactic_unit   : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
