@@ -9637,6 +9637,7 @@ and (mk_comment_attr :
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           (let uu____26378 =
              let arg = FStar_Syntax_Util.exp_string str  in
              let uu____26382 =
@@ -9665,11 +9666,19 @@ and (mk_comment_attr :
 =======
           (let uu____26599 =
              let arg = FStar_Syntax_Util.exp_string str  in
+=======
+          (let arg = FStar_Syntax_Util.exp_string str  in
+           let uu____26600 =
+>>>>>>> snap
              let uu____26603 =
                let uu____26614 = FStar_Syntax_Syntax.as_arg arg  in
                [uu____26614]  in
              FStar_Syntax_Util.mk_app fv uu____26603  in
+<<<<<<< HEAD
            [uu____26599])
+>>>>>>> snap
+=======
+           [uu____26600])
 >>>>>>> snap
 
 and (desugar_decl_aux :
