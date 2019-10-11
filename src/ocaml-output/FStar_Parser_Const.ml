@@ -262,6 +262,8 @@ let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective" 
 let (postprocess_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"] 
+let (preprocess_with : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"] 
 let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
 let (check_with_lid : FStar_Ident.lident) =
@@ -270,13 +272,13 @@ let (check_with_lid : FStar_Ident.lident) =
   
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero  in
-  let gen1 uu____971 = FStar_Util.incr x; FStar_Util.read x  in
-  let reset uu____979 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
+  let gen1 uu____981 = FStar_Util.incr x; FStar_Util.read x  in
+  let reset uu____989 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l  ->
-    let uu____1010 = FStar_Options.print_real_names ()  in
-    if uu____1010
+    let uu____1020 = FStar_Options.print_real_names ()  in
+    if uu____1020
     then l.FStar_Ident.str
     else (l.FStar_Ident.ident).FStar_Ident.idText
   
@@ -288,29 +290,29 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_real r -> FStar_String.op_Hat r "R"
     | FStar_Const.Const_float x1 -> FStar_Util.string_of_float x1
-    | FStar_Const.Const_string (s,uu____1039) ->
+    | FStar_Const.Const_string (s,uu____1049) ->
         FStar_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu____1043 -> "<bytearray>"
-    | FStar_Const.Const_int (x1,uu____1052) -> x1
+    | FStar_Const.Const_bytearray uu____1053 -> "<bytearray>"
+    | FStar_Const.Const_int (x1,uu____1062) -> x1
     | FStar_Const.Const_char c ->
-        let uu____1069 =
+        let uu____1079 =
           FStar_String.op_Hat (FStar_Util.string_of_char c) "'"  in
-        FStar_String.op_Hat "'" uu____1069
+        FStar_String.op_Hat "'" uu____1079
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
     | FStar_Const.Const_range_of  -> "range_of"
     | FStar_Const.Const_set_range_of  -> "set_range_of"
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
-        let uu____1078 = sli l  in
-        FStar_Util.format1 "[[%s.reflect]]" uu____1078
+        let uu____1088 = sli l  in
+        FStar_Util.format1 "[[%s.reflect]]" uu____1088
   
 let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1096 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "tuple%s" uu____1096  in
-      let uu____1099 = psnconst t  in FStar_Ident.set_lid_range uu____1099 r
+        let uu____1106 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "tuple%s" uu____1106  in
+      let uu____1109 = psnconst t  in FStar_Ident.set_lid_range uu____1109 r
   
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -318,22 +320,22 @@ let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
   fun id1  ->
-    let uu____1120 = FStar_Ident.text_of_id id1  in
-    is_tuple_constructor_string uu____1120
+    let uu____1130 = FStar_Ident.text_of_id id1  in
+    is_tuple_constructor_string uu____1130
   
 let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
-    let uu____1129 = FStar_Ident.text_of_lid lid  in
-    is_tuple_constructor_string uu____1129
+    let uu____1139 = FStar_Ident.text_of_lid lid  in
+    is_tuple_constructor_string uu____1139
   
 let (mk_tuple_data_lid :
   Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1146 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mktuple%s" uu____1146  in
-      let uu____1149 = psnconst t  in FStar_Ident.set_lid_range uu____1149 r
+        let uu____1156 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mktuple%s" uu____1156  in
+      let uu____1159 = psnconst t  in FStar_Ident.set_lid_range uu____1159 r
   
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -341,19 +343,19 @@ let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.Mktuple" 
 let (is_tuple_datacon_id : FStar_Ident.ident -> Prims.bool) =
   fun id1  ->
-    let uu____1170 = FStar_Ident.text_of_id id1  in
-    is_tuple_datacon_string uu____1170
+    let uu____1180 = FStar_Ident.text_of_id id1  in
+    is_tuple_datacon_string uu____1180
   
 let (is_tuple_datacon_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
-    let uu____1179 = FStar_Ident.text_of_lid lid  in
-    is_tuple_datacon_string uu____1179
+    let uu____1189 = FStar_Ident.text_of_lid lid  in
+    is_tuple_datacon_string uu____1189
   
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1195 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1195
+      let uu____1205 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1205
   
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str 
@@ -363,11 +365,11 @@ let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1243 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "dtuple%s" uu____1243  in
-      let uu____1246 = let uu____1247 = mod_prefix_dtuple n1  in uu____1247 t
+        let uu____1253 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "dtuple%s" uu____1253  in
+      let uu____1256 = let uu____1257 = mod_prefix_dtuple n1  in uu____1257 t
          in
-      FStar_Ident.set_lid_range uu____1246 r
+      FStar_Ident.set_lid_range uu____1256 r
   
 let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -381,11 +383,11 @@ let (mk_dtuple_data_lid :
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1288 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mkdtuple%s" uu____1288  in
-      let uu____1291 = let uu____1292 = mod_prefix_dtuple n1  in uu____1292 t
+        let uu____1298 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mkdtuple%s" uu____1298  in
+      let uu____1301 = let uu____1302 = mod_prefix_dtuple n1  in uu____1302 t
          in
-      FStar_Ident.set_lid_range uu____1291 r
+      FStar_Ident.set_lid_range uu____1301 r
   
 let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -395,13 +397,13 @@ let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1325 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1325
+      let uu____1335 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1335
   
 let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  ->
-    let uu____1333 = FStar_Ident.text_of_lid f  in
-    is_dtuple_datacon_string uu____1333
+    let uu____1343 = FStar_Ident.text_of_lid f  in
+    is_dtuple_datacon_string uu____1343
   
 let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
@@ -418,6 +420,7 @@ let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   
 let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s  -> fstar_tactics_lid' [s] 
+let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"] 
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"] 
 let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"] 
