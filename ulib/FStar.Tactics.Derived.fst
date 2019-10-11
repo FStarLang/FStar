@@ -675,3 +675,48 @@ let bump_nth (n:pos) : Tac unit =
   match extract_nth (n - 1) (goals ()) with
   | None -> fail "bump_nth: not that many goals"
   | Some (h, t) -> set_goals (h :: t)
+
+
+let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
+  let tv = inspect t in
+  let tv' =
+    match tv with
+    | Tv_Var _
+    | Tv_BVar _
+    | Tv_FVar _ -> tv
+    | Tv_FVar fv -> Tv_FVar fv
+    | Tv_Type () -> Tv_Type ()
+    | Tv_Const c -> Tv_Const c
+    | Tv_Uvar i u -> Tv_Uvar i u
+    | Tv_Unknown -> Tv_Unknown
+    | Tv_App l (r, q) ->
+         let l = visit_tm ff l in
+         let r = visit_tm ff r in
+         Tv_App l (r, q)
+    | Tv_Abs b t ->
+        let t = visit_tm ff t in
+        Tv_Abs b t
+    | Tv_Refine b r ->
+        let r = visit_tm ff r in
+        Tv_Refine b r
+    | Tv_Let r attrs b def t ->
+        let def = visit_tm ff def in
+        let t = visit_tm ff t in
+        Tv_Let r attrs b def t
+    | Tv_Match sc brs ->
+        let sc = visit_tm ff sc in
+        let brs = map (visit_br ff) brs in
+        Tv_Match sc brs
+    | Tv_AscribedT e t topt ->
+        let e = visit_tm ff e in
+        let t = visit_tm ff t in
+        Tv_AscribedT e t topt
+    | Tv_AscribedC e c topt ->
+        let e = visit_tm ff e in
+        Tv_AscribedC e c topt
+    | _ -> fail "impos"
+  in
+  ff (pack tv')
+and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
+  (* TODO *)
+  b
