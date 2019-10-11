@@ -1673,7 +1673,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) ->
+  | Some (_, false) when not (Env.should_verify env) || Options.admit_smt_queries () ->
     (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
     [], [], env
 
