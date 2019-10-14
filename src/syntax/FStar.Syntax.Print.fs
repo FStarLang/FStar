@@ -350,11 +350,7 @@ and term_to_string x =
       | Tm_match(head, branches) ->
         U.format2 "(match %s with\n\t| %s)"
           (term_to_string head)
-          (U.concat_l "\n\t|" (branches |> List.map (fun (p,wopt,e) ->
-                U.format3 "%s %s -> %s"
-                            (p |> pat_to_string)
-                            (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
-                            (e |> term_to_string))))
+          (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
@@ -363,6 +359,11 @@ and term_to_string x =
       | Tm_unknown -> "_"
   end
 
+and branch_to_string (p, wopt, e) : string =
+    U.format3 "%s %s -> %s"
+                (p |> pat_to_string)
+                (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
+                (e |> term_to_string)
 and ctx_uvar_to_string ctx_uvar =
     format4 "(* %s *)\n(%s |- %s : %s)"
             (ctx_uvar.ctx_uvar_reason)
@@ -426,12 +427,6 @@ and lbs_to_string quals lbs =
 and attrs_to_string = function
     | [] -> ""
     | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
-
-and lcomp_to_string lc =
-    if Options.print_effect_args () then
-        comp_to_string (lcomp_comp lc)
-    else
-        U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
 
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
@@ -636,38 +631,63 @@ let eff_decl_to_string' for_free r q ed =
         actions |>
         List.map action_to_string |>
         String.concat ",\n\t" in
-    U.format "new_effect%s { \
+    let eff_name = if ed.is_layered then "layered_effect" else "new_effect" in
+    let match_wps_string =
+      match ed.match_wps with
+      | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->
+        U.format3 "{\n\
+          if_then_else = %s;\n\
+          ite_wp = %s\n\
+          close_wp = %s\n\
+        }\n" (tscheme_to_string t1) (tscheme_to_string t2) (tscheme_to_string t3)
+      | Inr ( { conjunction = t } ) ->
+        U.format1 "{\n\
+          conjunction = %s\n\
+        }\n" (tscheme_to_string t)
+    in
+    U.format "%s%s { \
       %s%s %s : %s \n  \
-        return_wp   = %s\n\
-      ; bind_wp     = %s\n\
-      ; if_then_else= %s\n\
-      ; ite_wp      = %s\n\
-      ; stronger    = %s\n\
-      ; close_wp    = %s\n\
-      ; trivial     = %s\n\
-      ; repr        = %s\n\
-      ; bind_repr   = %s\n\
-      ; return_repr = %s\n\
+        return_wp     = %s\n\
+      ; bind_wp       = %s\n\
+      ; stronger      = %s\n\
+      ; match_wps     = %s\n\
+      ; trivial       = %s\n\
+      ; repr          = %s\n\
+      ; return_repr   = %s\n\
+      ; bind_repr     = %s\n\
+      ; stronger_repr = %s\n\
       and effect_actions\n\t%s\n}\n"
-        [(if for_free then "_for_free " else "");
+        [eff_name;
+         (if for_free then "_for_free " else "");
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          tscheme_to_string ed.signature;
          tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
-         tscheme_to_string ed.if_then_else;
-         tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
-         tscheme_to_string ed.close_wp;
-         tscheme_to_string ed.trivial;
+         match_wps_string;
+         (match ed.trivial with
+          | None -> ""
+          | Some t -> tscheme_to_string t);
          tscheme_to_string ed.repr;
-         tscheme_to_string ed.bind_repr;
          tscheme_to_string ed.return_repr;
+         tscheme_to_string ed.bind_repr;
+         (match ed.stronger_repr with
+          | None -> ""
+          | Some t -> tscheme_to_string t);
          actions_to_string ed.actions]
 
 let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
+
+let sub_eff_to_string se =
+  let tsopt_to_string ts_opt =
+    if is_some ts_opt then ts_opt |> must |> tscheme_to_string
+    else "<None>" in
+  U.format4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
+    (lid_to_string se.source) (lid_to_string se.target)
+    (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
@@ -715,20 +735,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
       | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
-      | Sig_sub_effect (se) ->
-        let lift_wp = match se.lift_wp, se.lift with
-          // TODO pretty-print this better
-          | None, None ->
-              failwith "impossible"
-          | Some lift_wp, _ ->
-              lift_wp
-          | _, Some lift ->
-              lift
-        in
-        let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
-        U.format4 "sub_effect %s ~> %s : <%s> %s"
-            (lid_to_string se.source) (lid_to_string se.target)
-            (univ_names_to_string us) (term_to_string t)
+      | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())
         then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
@@ -757,18 +764,18 @@ let rec modul_to_string (m:modul) =
                                                                      (List.map sigelt_to_string m.exports |> String.concat "\n")
 
 
-let abs_ascription_to_string ascription =
-  let strb = U.new_string_builder () in
-  begin match ascription with
-      | None -> U.string_builder_append strb "None"
-      | Some (Inl lc) ->
-          U.string_builder_append strb "Some Inr " ;
-          U.string_builder_append strb (Ident.text_of_lid lc.eff_name)
-      | Some (Inr lid) ->
-          U.string_builder_append strb "Some Inr " ;
-          U.string_builder_append strb (Ident.text_of_lid lid)
-  end ;
-  U.string_of_string_builder strb
+//let abs_ascription_to_string ascription =
+//  let strb = U.new_string_builder () in
+//  begin match ascription with
+//      | None -> U.string_builder_append strb "None"
+//      | Some (Inl lc) ->
+//          U.string_builder_append strb "Some Inr " ;
+//          U.string_builder_append strb (Ident.text_of_lid lc.eff_name)
+//      | Some (Inr lid) ->
+//          U.string_builder_append strb "Some Inr " ;
+//          U.string_builder_append strb (Ident.text_of_lid lid)
+//  end ;
+//  U.string_of_string_builder strb
 
 let list_to_string f elts =
     match elts with

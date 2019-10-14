@@ -1570,8 +1570,6 @@ and (encode_term :
                                 (uu___726_5335.FStar_TypeChecker_Env.sigtab);
                               FStar_TypeChecker_Env.attrtab =
                                 (uu___726_5335.FStar_TypeChecker_Env.attrtab);
-                              FStar_TypeChecker_Env.is_pattern =
-                                (uu___726_5335.FStar_TypeChecker_Env.is_pattern);
                               FStar_TypeChecker_Env.instantiate_imp =
                                 (uu___726_5335.FStar_TypeChecker_Env.instantiate_imp);
                               FStar_TypeChecker_Env.effects =
@@ -2369,7 +2367,7 @@ and (encode_term :
                           let e0 =
                             let uu____6962 = FStar_List.hd args_e1  in
                             FStar_TypeChecker_Util.reify_body_with_arg
-                              env.FStar_SMTEncoding_Env.tcenv head2
+                              env.FStar_SMTEncoding_Env.tcenv [] head2
                               uu____6962
                              in
                           ((let uu____6972 =
@@ -3048,7 +3046,7 @@ and (encode_term :
                      let uu____8465 =
                        (is_impure rc) &&
                          (let uu____8468 =
-                            FStar_TypeChecker_Env.is_reifiable_rc
+                            FStar_SMTEncoding_Util.is_smt_reifiable_rc
                               env.FStar_SMTEncoding_Env.tcenv rc
                              in
                           Prims.op_Negation uu____8468)
@@ -3063,13 +3061,13 @@ and (encode_term :
                         | (vars,guards,envbody,decls,uu____8502) ->
                             let body2 =
                               let uu____8516 =
-                                FStar_TypeChecker_Env.is_reifiable_rc
+                                FStar_SMTEncoding_Util.is_smt_reifiable_rc
                                   env.FStar_SMTEncoding_Env.tcenv rc
                                  in
                               if uu____8516
                               then
                                 FStar_TypeChecker_Util.reify_body
-                                  env.FStar_SMTEncoding_Env.tcenv body1
+                                  env.FStar_SMTEncoding_Env.tcenv [] body1
                               else body1  in
                             let uu____8521 = encode_term body2 envbody  in
                             (match uu____8521 with

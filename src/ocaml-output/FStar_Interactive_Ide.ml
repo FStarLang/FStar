@@ -1689,8 +1689,6 @@ let run_push_without_deps :
                  (uu___573_4546.FStar_TypeChecker_Env.sigtab);
                FStar_TypeChecker_Env.attrtab =
                  (uu___573_4546.FStar_TypeChecker_Env.attrtab);
-               FStar_TypeChecker_Env.is_pattern =
-                 (uu___573_4546.FStar_TypeChecker_Env.is_pattern);
                FStar_TypeChecker_Env.instantiate_imp =
                  (uu___573_4546.FStar_TypeChecker_Env.instantiate_imp);
                FStar_TypeChecker_Env.effects =

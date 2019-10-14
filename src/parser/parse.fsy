@@ -15,7 +15,7 @@ open FStar.Const
 open FStar.Ident
 open FStar.String
 (*
- We are expected to have only 5 shift-reduce conflicts.
+ We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -94,6 +94,7 @@ let logic_qualifier_deprecation_warning =
 %token <string * bool> INT8
 %token IRREDUCIBLE
 %token LARROW
+%token LAYERED_EFFECT
 %token LBRACE
 %token LBRACE_COLON_PATTERN
 %token LBRACK
@@ -853,6 +854,9 @@ in
 | NEW_EFFECT newEffect
     {let (_1, ne) = ((), $2) in
       ( NewEffect ne )}
+| LAYERED_EFFECT effectDefinition
+    {let (_1, ne) = ((), $2) in
+      ( LayeredEffect ne )}
 | SUB_EFFECT subEffect
     {let (_1, se) = ((), $2) in
       ( SubEffect se )}

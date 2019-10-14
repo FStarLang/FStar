@@ -299,28 +299,8 @@ and arg_qualifier =
   | Equality
 and aqual = option<arg_qualifier>
 
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
-
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
-
-let mk_lcomp eff_name res_typ cflags comp_thunk =
-    { eff_name = eff_name;
-      res_typ = res_typ;
-      cflags = cflags;
-      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
-let lcomp_comp lc =
-    match !(lc.comp_thunk) with
-    | Inl thunk ->
-      let c = thunk () in
-      lc.comp_thunk := Inr c;
-      c
-    | Inr c -> c
 
 type freenames_l = list<bv>
 type formula = typ
@@ -374,7 +354,16 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+type match_with_close = {
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+}
+type match_with_subst = {
+  conjunction : tscheme;
+}
 type eff_decl = {
+    is_layered  :bool;
     cattributes :list<cflag>;      //default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
@@ -383,17 +372,18 @@ type eff_decl = {
     signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
     ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
     stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
+    match_wps   :either<match_with_close, match_with_subst>;
+    trivial     :option<tscheme>;
+
     //NEW FIELDS
     //representation of the effect as pure type
     repr        :tscheme;
     //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
+    return_repr   :tscheme;
+    bind_repr     :tscheme;
+    stronger_repr :option<tscheme>;
+
     //actions for the effect
     actions     :list<action>;
     eff_attrs   :list<attribute>;
@@ -700,6 +690,7 @@ let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
 let t_term      = tconst PC.term_lid
+let t_term_view = tabbrev PC.term_view_lid
 let t_order     = tconst PC.order_lid
 let t_decls     = tabbrev PC.decls_lid
 let t_binder    = tconst PC.binder_lid

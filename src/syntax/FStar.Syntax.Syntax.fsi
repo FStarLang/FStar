@@ -281,13 +281,6 @@ and arg_qualifier =
   | Equality
 and aqual = option<arg_qualifier>
 
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
-
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
 val lookup_aq : bv -> antiquotations -> option<term>
 
@@ -358,7 +351,16 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+type match_with_close = {
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+}
+type match_with_subst = {
+  conjunction : tscheme;
+}
 type eff_decl = {
+    is_layered  :bool;
     cattributes :list<cflag>;      //default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
@@ -367,17 +369,18 @@ type eff_decl = {
     signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
     ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
     stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
+    match_wps   :either<match_with_close, match_with_subst>;
+    trivial     :option<tscheme>;
+
     //NEW FIELDS
     //representation of the effect as pure type
     repr        :tscheme;
     //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
+    return_repr   :tscheme;
+    bind_repr     :tscheme;
+    stronger_repr :option<tscheme>;
+
     //actions for the effect
     actions     :list<action>;
     eff_attrs   :list<attribute>;
@@ -484,12 +487,6 @@ val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
-val mk_lcomp:
-    eff_name: lident ->
-    res_typ: typ ->
-    cflags: list<cflag> ->
-    comp_thunk: (unit -> comp) -> lcomp
-val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
@@ -571,6 +568,7 @@ val t_char          : term
 val t_range         : term
 val t_norm_step     : term
 val t_term          : term
+val t_term_view     : term
 val t_order         : term
 val t_decls         : term
 val t_binder        : term

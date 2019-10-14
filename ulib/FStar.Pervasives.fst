@@ -19,6 +19,9 @@ module FStar.Pervasives
 open Prims
 include FStar.Pervasives.Native
 
+unfold
+let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
+
 (* Sometimes it is convenient to explicit introduce nullary symbols
  * into the ambient context, so that SMT can appeal to their definitions
  * even when they are no mentioned explicitly in the program, e.g., when
@@ -30,8 +33,6 @@ abstract
 let ambient (#a:Type) (x:a) = True
 abstract
 let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
-
-let id (#a:Type) (x:a) = x
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id

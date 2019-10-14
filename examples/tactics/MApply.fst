@@ -46,25 +46,25 @@ let _ =
   assert ((p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
-          mapply (binder_to_term i);
-          mapply (binder_to_term h))
+          mapply i;
+          mapply h)
 
 let _ =
   assert (squash (p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
-          mapply (binder_to_term i);
-          mapply (binder_to_term h))
+          mapply i;
+          mapply h)
 
 let _ =
   assert (squash (p ==> q) ==> squash p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
-          mapply (binder_to_term i);
-          mapply (binder_to_term h))
+          mapply i;
+          mapply h)
 let _ =
   assert ((p ==> q) ==> squash p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
-          mapply (binder_to_term i);
-          mapply (binder_to_term h))
+          mapply i;
+          mapply h)

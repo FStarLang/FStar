@@ -1761,7 +1761,7 @@ let (encode_free_var :
               let uu____7231 =
                 ((let uu____7235 =
                     (FStar_Syntax_Util.is_pure_or_ghost_function t_norm) ||
-                      (FStar_TypeChecker_Env.is_reifiable_function
+                      (FStar_SMTEncoding_Util.is_smt_reifiable_function
                          env.FStar_SMTEncoding_Env.tcenv t_norm)
                      in
                   FStar_All.pipe_left Prims.op_Negation uu____7235) ||
@@ -1837,7 +1837,7 @@ let (encode_free_var :
                       | (args,comp) ->
                           let comp1 =
                             let uu____7427 =
-                              FStar_TypeChecker_Env.is_reifiable_comp
+                              FStar_SMTEncoding_Util.is_smt_reifiable_comp
                                 env.FStar_SMTEncoding_Env.tcenv comp
                                in
                             if uu____7427
@@ -1867,8 +1867,6 @@ let (encode_free_var :
                                        (uu___311_7435.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
                                        (uu___311_7435.FStar_TypeChecker_Env.attrtab);
-                                     FStar_TypeChecker_Env.is_pattern =
-                                       (uu___311_7435.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
                                        (uu___311_7435.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
@@ -2882,8 +2880,6 @@ let (encode_top_level_let :
                     (uu___523_9449.FStar_TypeChecker_Env.sigtab);
                   FStar_TypeChecker_Env.attrtab =
                     (uu___523_9449.FStar_TypeChecker_Env.attrtab);
-                  FStar_TypeChecker_Env.is_pattern =
-                    (uu___523_9449.FStar_TypeChecker_Env.is_pattern);
                   FStar_TypeChecker_Env.instantiate_imp =
                     (uu___523_9449.FStar_TypeChecker_Env.instantiate_imp);
                   FStar_TypeChecker_Env.effects =
@@ -3048,7 +3044,8 @@ let (encode_top_level_let :
               | (binders,body,comp) ->
                   let uu____10084 =
                     let uu____10095 =
-                      FStar_TypeChecker_Env.is_reifiable_comp tcenv comp  in
+                      FStar_SMTEncoding_Util.is_smt_reifiable_comp tcenv comp
+                       in
                     if uu____10095
                     then
                       let comp1 =
@@ -3056,7 +3053,7 @@ let (encode_top_level_let :
                           FStar_Syntax_Syntax.U_unknown
                          in
                       let body1 =
-                        FStar_TypeChecker_Util.reify_body tcenv body  in
+                        FStar_TypeChecker_Util.reify_body tcenv [] body  in
                       let uu____10110 = aux comp1 body1  in
                       match uu____10110 with
                       | (more_binders,body2,comp2) ->
@@ -4348,7 +4345,7 @@ let (encode_top_level_let :
                                             (FStar_Syntax_Util.is_pure_or_ghost_function
                                                t)
                                               ||
-                                              (FStar_TypeChecker_Env.is_reifiable_function
+                                              (FStar_SMTEncoding_Util.is_smt_reifiable_function
                                                  env1.FStar_SMTEncoding_Env.tcenv
                                                  t)
                                              in
@@ -4533,7 +4530,7 @@ and (encode_sigelt' :
        | FStar_Syntax_Syntax.Sig_new_effect ed ->
            let uu____12881 =
              let uu____12883 =
-               FStar_TypeChecker_Env.is_reifiable_effect
+               FStar_SMTEncoding_Util.is_smt_reifiable_effect
                  env.FStar_SMTEncoding_Env.tcenv ed.FStar_Syntax_Syntax.mname
                 in
              Prims.op_Negation uu____12883  in

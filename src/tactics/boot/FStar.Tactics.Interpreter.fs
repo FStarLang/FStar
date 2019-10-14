@@ -12,6 +12,7 @@ module Err = FStar.Errors
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
@@ -22,6 +23,7 @@ module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
+module TcComm = FStar.TypeChecker.Common
 module Env = FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -463,7 +465,7 @@ let run_tactic_on_typ'
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                                                     ps.all_implicits);
-        let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
+        let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (1): %s\n"

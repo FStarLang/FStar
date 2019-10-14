@@ -228,20 +228,6 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
-    let comp_typ_set_flags (c:comp) =
-        match c.n with
-        | Total _
-        | GTotal _ -> c
-        | Comp ct ->
-          let ct = {ct with flags=fs} in
-          {c with n=Comp ct}
-    in
-    Syntax.mk_lcomp lc.eff_name
-                    lc.res_typ
-                    fs
-                    (fun () -> comp_typ_set_flags (lcomp_comp lc))
-
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
@@ -254,6 +240,16 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+let destruct_comp c : (universe * typ * typ) =
+  let wp = match c.effect_args with
+    | [(wp, _)] -> wp
+    | _ ->
+      failwith (U.format2
+        "Impossible: Got a computation %s with %s effect args"
+        c.effect_name.str
+        (c.effect_args |> List.length |> string_of_int)) in
+  List.hd c.comp_univs, c.result_typ, wp
+
 let is_named_tot c =
     match c.n with
         | Comp c -> lid_equals c.effect_name PC.effect_Tot_lid
@@ -264,15 +260,7 @@ let is_total_comp c =
     lid_equals (comp_effect_name c) PC.effect_Tot_lid
     || comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
-
-let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
-                             || lid_equals c.eff_name PC.effect_GTot_lid
-                             || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
-
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
-
-let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
@@ -303,14 +291,6 @@ let is_div_effect l =
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
-
-let is_pure_lcomp lc =
-    is_total_lcomp lc
-    || is_pure_effect lc.eff_name
-    || lc.cflags |> U.for_some (function LEMMA -> true | _ -> false)
-
-let is_pure_or_ghost_lcomp lc =
-    is_pure_lcomp lc || is_ghost_effect lc.eff_name
 
 let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
@@ -370,9 +350,6 @@ let set_result_typ c t = match c.n with
   | Total _ -> mk_Total t
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
-
-let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
-  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun _ -> set_result_typ (lcomp_comp lc) t)
 
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -854,6 +831,20 @@ let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   | Sig_new_effect ne -> ne
   | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
 
+let map_match_wps (f:tscheme -> tscheme) (match_wp:either<match_with_close, match_with_subst>)
+  : either<match_with_close, match_with_subst>
+  = match match_wp with
+    | Inl r ->
+      Inl ({ r with if_then_else = f r.if_then_else; ite_wp = f r.ite_wp; close_wp = f r.close_wp })
+    | Inr r ->
+      Inr ({ r with conjunction = f r.conjunction })
+
+let get_match_with_close_wps (match_wp:either<match_with_close, match_with_subst>)
+  : tscheme * tscheme * tscheme
+  = match match_wp with
+    | Inl r -> r.if_then_else, r.ite_wp, r.close_wp
+    | _ -> failwith "Impossible! get_match_with_close_wps called with a match_with_subst wp"
+
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
@@ -1201,14 +1192,6 @@ let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: o
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
-let lcomp_of_comp c0 =
-    let eff_name, flags =
-        match c0.n with
-        | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
-        | Comp c -> c.effect_name, c.flags in
-    Syntax.mk_lcomp eff_name (comp_result c0) flags (fun () -> c0)
-
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
@@ -1224,12 +1207,6 @@ let residual_comp_of_comp (c:comp) = {
     residual_typ=Some (comp_result c);
     residual_flags=comp_flags c;
   }
-let residual_comp_of_lcomp (lc:lcomp) = {
-    residual_effect=lc.eff_name;
-    residual_typ=Some (lc.res_typ);
-    residual_flags=lc.cflags
-  }
-
 
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);
@@ -1750,7 +1727,6 @@ and binder_eq_dbg (dbg : bool) b1 b2 =
     eqprod (fun b1 b2 -> check "binder sort"  (term_eq_dbg dbg b1.sort b2.sort))
            (fun q1 q2 -> check "binder qual"  (eq_aqual q1 q2 = Equal))
            b1 b2
-and lcomp_eq_dbg (c1:lcomp) (c2:lcomp) = fail "lcomp" // TODO
 and residual_eq_dbg (r1:residual_comp) (r2:residual_comp) = fail "residual"
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let c1 = comp_to_comp_typ_nouniv c1 in
@@ -1987,7 +1963,6 @@ let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
-
 
 (* Utilities for working with Lemma's decorated with SMTPat *)
 let is_smt_lemma t = match (compress t).n with

@@ -22,6 +22,7 @@ open FStar.All
 
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 

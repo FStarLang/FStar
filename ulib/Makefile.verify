@@ -11,6 +11,7 @@ FLAKY=legacy/FStar.Relational.State.fst
 FSTAR_FILES := $(filter-out $(FLAKY), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
+	$(wildcard Steel.*.fst Steel.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
 	$(wildcard experimental/*fst experimental/*fsti))
 
