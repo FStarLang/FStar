@@ -373,14 +373,14 @@ type match_with_subst = {
 }
 
 type eff_decl = {
-    is_layered  :bool;
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
+    is_layered  :bool * option<lident>; //option contains the name of the underlying effect, if the bool is true
+    cattributes :list<cflag>;           //default cflags
+    mname       :lident;                //STATE_h
+    univs       :univ_names;            //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
+    binders     :binders;               //heap:Type u#heap
+                                        //univs and binders are in scope for rest of the fields
+    signature   :tscheme;               //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
+    ret_wp      :tscheme;               //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
     stronger    :tscheme;
     match_wps   :either<match_with_close, match_with_subst>;

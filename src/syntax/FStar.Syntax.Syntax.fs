@@ -363,7 +363,7 @@ type match_with_subst = {
   conjunction : tscheme;
 }
 type eff_decl = {
-    is_layered  :bool;
+    is_layered  :bool * option<lident>;
     cattributes :list<cflag>;      //default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
