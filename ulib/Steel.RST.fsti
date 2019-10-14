@@ -205,13 +205,6 @@ val rst_inv_star (res0 res1: resource) (h: HS.mem)
   : Lemma (rst_inv (res0 <*> res1) h <==> rst_inv (res1 <*> res0) h)
   [SMTPat (rst_inv (res0 <*> res1) h)]
 
-let r_pre (res:resource) =  rprop res
-let r_post
-  (res0: resource)
-  (a: Type)
-  (res1: a -> resource) =
-  rmem res0 -> x:a -> rprop (res1 x)
-
 
 /// Finally, the RST effect. Eventually with the layered effects, its definition will be hidden
 /// here. It has five indexes:
@@ -232,22 +225,100 @@ let r_post
 /// memory shape. Then, you can add traditionnal functional specification but, thanks to selectors,
 /// these functional specification can only depend on the views of the resources you're handling.
 
-effect RST
-  (a: Type)
-  (res0: resource)
-  (res1: a -> resource)
-  (pre: rprop res0)
-  (post: rmem res0 -> (x:a) -> rprop (res1 x))
-= ST.ST
-  a
-  (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
-  (fun h0 x h1 ->
-    inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0) /\
-    inv (res1 x) h1 /\
-    rst_inv (res1 x) h1 /\
-    modifies res0 (res1 x) h0 h1 /\
-    post (mk_rmem res0 h0) x (mk_rmem (res1 x) h1)
-  )
+let r_pre (res:resource) = rprop res
+let r_post (a: Type) (res1: a -> resource) = x:a -> rprop (res1 x)
+
+type rst_wp' (a:Type) (r_in:resource) (r_out:a -> resource) = r_post a r_out -> r_pre r_in
+
+let rst_wp_monotonic
+  (a:Type)
+  (r_in:resource)
+  (r_out:a -> resource)
+  (wp:rst_wp' a r_in r_out) =
+  forall (p q:r_post a r_out). (forall x h. p x h ==> q x h) ==> (forall h. wp p h ==> wp q h)
+
+type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) =
+  wp:rst_wp' a r_in r_out{rst_wp_monotonic a r_in r_out wp}
+
+
+type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out) =
+  unit -> ST.STATE a
+    (fun p h0 ->
+      inv r_in h0 /\ rst_inv r_in h0 /\
+      wp (fun (x:a) (h_r_out:rmem (r_out x)) ->
+        forall (h1 : imem (inv (r_out x))). (
+	    mk_rmem (r_out x) h1 == h_r_out /\
+            inv (r_out x) h1 /\
+            rst_inv (r_out x) h1 /\
+            modifies r_in (r_out x) h0 h1
+	  ) ==> p x h1
+	) (mk_rmem r_in h0)
+    )
+
+inline_for_extraction
+val return
+  (a:Type)
+  (x:a)
+  : repr a empty_resource (fun _ -> empty_resource) (fun p -> p x)
+
+inline_for_extraction
+val bind (a:Type) (b:Type)
+  (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
+  (r_out_g:b -> resource) (wp_g:(x:a -> rst_wp b (r_out_f x) r_out_g))
+  (f:repr a r_in_f r_out_f wp_f)
+  (g:(x:a -> repr b (r_out_f x) r_out_g (wp_g x)))
+  : repr b r_in_f r_out_g (fun p -> wp_f (fun x -> (wp_g x) p))
+
+val subcomp (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out)
+  (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f)
+: Pure (repr a r_in r_out wp_g)
+  (requires (forall p h. wp_g p h ==> wp_f p h))
+  (ensures fun _ -> True)
+
+let if_then_else (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out) (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f) (g:repr a r_in r_out wp_g)
+  (p:Type0)
+: Type =
+  repr a r_in r_out
+    (fun post h -> (p ==> wp_f post h) /\ ((~ p) ==> wp_g post h))
+
+reifiable reflectable
+layered_effect {
+  RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
+  with repr         = repr;
+       return       = return;
+       bind         = bind;
+       subcomp     = subcomp;
+       if_then_else  = if_then_else
+}
+
+
+/// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck
+assume Pure_wp_monotonicity:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall (x:a). p x ==> q x) ==>
+       (wp p ==> wp q))
+
+val lift_div_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> DIV a wp)
+: repr a r (fun _ -> r) (fun p h -> wp (fun x -> p x h))
+
+sub_effect DIV ~> RSTATE = lift_div_rstate
+
+
+/// Hoare style encoding
+
+effect RST (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (pre:rprop r_in) (post:rmem r_in -> (x:a) -> rprop (r_out x))
+= RSTATE a r_in r_out
+  (fun (p:r_post a r_out) (h0:rmem r_in) -> pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1))
+
 
 /// Similar to `FStar.Hyperstack.ST.get`, this helper gives you a rmem based on the current state of
 /// the heap

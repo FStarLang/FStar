@@ -205,15 +205,50 @@ let reveal_rst_inv () = ()
 
 let rst_inv_star res0 res1 h = reveal_star ()
 
+inline_for_extraction let return a x = fun _ -> x
+
+inline_for_extraction let bind a b r_in_f r_out_f wp_f r_out_g wp_g f g =
+  fun _ -> let x = f () in g x ()
+
+let subcomp a r_in r_out wp_f wp_g f = f
+
+let lift_div_rstate a wp r f = fun _ -> f ()
+
 open Steel.Tactics
 
-(* Generic framing operation for RST (through resource inclusion) *)
+#set-options "--z3rlimit 20"
 
-#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
+let st_wp_monotonic (a: Type) (wp: st_wp a) =
+  forall (p q: st_post a). (forall x h. p x h ==> q x h) ==> (forall h . wp p h ==> wp q h)
+
+let lift_state_rstate
+  (a:Type)
+  (r_in:resource)
+  (r_out:a -> resource)
+  (wp_st: st_wp a{st_wp_monotonic a wp_st})
+  (f: unit -> STATE a wp_st)
+  : repr a r_in r_out (fun (post: r_post a r_out) -> (
+    fun (h_in: rmem r_in) -> (forall (h0: imem (inv r_in){h_in == mk_rmem r_in h0}).
+      inv r_in h0 /\ rst_inv r_in h0 /\
+      wp_st (fun (x:a) (h1: HS.mem) ->
+        inv (r_out x) h1 /\
+        rst_inv (r_out x) h1 /\
+        modifies r_in (r_out x) h0 h1 /\
+	post x (mk_rmem (r_out x) h1)
+      ) h0
+    ))
+  )
+  =
+  fun _ -> f ()
+
+sub_effect STATE ~> RSTATE = lift_state_rstate
 
 let get r =
   let h = HST.get () in
   mk_rmem r h
+
+
+#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
 
 inline_for_extraction noextract let rst_frame
   outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
