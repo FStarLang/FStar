@@ -148,6 +148,7 @@ and env = {
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
@@ -180,6 +181,7 @@ type guard_t = TcComm.guard_t
 
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
+val preprocess : env -> term -> term -> term
 val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env

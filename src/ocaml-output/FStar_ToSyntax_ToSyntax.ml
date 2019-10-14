@@ -7538,13 +7538,13 @@ and (mk_comment_attr :
         if str = ""
         then []
         else
-          (let uu____26692 =
-             let arg = FStar_Syntax_Util.exp_string str  in
+          (let arg = FStar_Syntax_Util.exp_string str  in
+           let uu____26693 =
              let uu____26696 =
                let uu____26707 = FStar_Syntax_Syntax.as_arg arg  in
                [uu____26707]  in
              FStar_Syntax_Util.mk_app fv uu____26696  in
-           [uu____26692])
+           [uu____26693])
 
 and (desugar_decl_aux :
   FStar_Syntax_DsEnv.env ->

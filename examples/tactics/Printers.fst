@@ -108,7 +108,7 @@ let mk_printer_fun (dom : term) : Tac term =
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
-        let b = pack (Tv_Let true ff f (mk_e_app fftm [xtm])) in
+        let b = pack (Tv_Let true [] ff f (mk_e_app fftm [xtm])) in
         (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument

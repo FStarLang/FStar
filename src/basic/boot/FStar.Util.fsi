@@ -30,6 +30,7 @@ val return_all: 'a -> ML<'a>
 type time
   = System.DateTime // JUST FSHARP
 val now : unit -> time
+val now_ms : unit -> int
 val time_diff: time -> time -> float*int
 val record_time: (unit -> 'a) -> ('a * int)
 val is_before: time -> time -> bool

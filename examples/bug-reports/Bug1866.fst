@@ -26,10 +26,10 @@ let rec not_do_much e: Tac term =
       let branches = zip pats es in
       pack (Tv_Match scrut branches)
 
-  | Tv_Let r bv e1 e2 ->
+  | Tv_Let r attrs bv e1 e2 ->
       let e1 = not_do_much e1 in
       let e2 = not_do_much e2 in
-      let e = pack (Tv_Let r bv e1 e2) in
+      let e = pack (Tv_Let r attrs bv e1 e2) in
       e
 
   | Tv_AscribedT e t tac ->

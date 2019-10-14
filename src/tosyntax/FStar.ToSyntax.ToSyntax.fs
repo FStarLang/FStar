@@ -2684,8 +2684,9 @@ and mk_comment_attr (d: decl) =
   (* Building a fake term *)
   let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in //NS delta: ok
   if str = "" then []
-  else [let arg = U.exp_string str in
-        U.mk_app fv [ S.as_arg arg ]]
+  else
+    let arg = U.exp_string str in
+    [U.mk_app fv [S.as_arg arg]]
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
