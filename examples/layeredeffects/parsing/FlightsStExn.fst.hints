@@ -24,7 +24,11 @@
         "refinement_interpretation_Tm_refine_17c411664bc50c4aaf7f87d63cdbe654"
       ],
       0,
+<<<<<<< HEAD
       "83e4d8d6263fa60bb4c971806dbc93cf"
+=======
+      "17d090cbb47479bbba4ab3b05a1dec7e"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.return",
@@ -57,7 +61,11 @@
         "refinement_interpretation_Tm_refine_17c411664bc50c4aaf7f87d63cdbe654"
       ],
       0,
+<<<<<<< HEAD
       "5a5a82f310f2c8e7d91bcb1e8e7fbfa7"
+=======
+      "76decc7516f169eebb70ef50ed322607"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.post_a",
@@ -99,7 +107,11 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
+<<<<<<< HEAD
       "b81b5191144b34b2d9a4e160e0cf2e94"
+=======
+      "b534568ec506ff523bf0bcce68f88ad6"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.bind",
@@ -123,7 +135,11 @@
         "typing_Tm_abs_a79d6bf2eb74a16dc8f08aecfd40a44b"
       ],
       0,
+<<<<<<< HEAD
       "abcf2ae2ff6a5ff00b2be47e61c7d35f"
+=======
+      "41d05895d2d0f4aa7522edece4e94edf"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.subcomp",
@@ -138,7 +154,11 @@
         "equation_MExn.post_t"
       ],
       0,
+<<<<<<< HEAD
       "568faa897fba89ce44a609fba553facd"
+=======
+      "350d84d86ea891c613d14c50c240eadc"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.if_then_else",
@@ -151,7 +171,11 @@
         "refinement_interpretation_Tm_refine_17c411664bc50c4aaf7f87d63cdbe654"
       ],
       0,
+<<<<<<< HEAD
       "9aa2c8544f8cb3d3c11da906ecd16bb1"
+=======
+      "591efbbe563bb5015d3f3aafed2ebeaf"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.STEXN",
@@ -164,7 +188,11 @@
         "refinement_interpretation_Tm_refine_17c411664bc50c4aaf7f87d63cdbe654"
       ],
       0,
+<<<<<<< HEAD
       "e2a0cfca7ca286e4b540663a370df463"
+=======
+      "af8e17be5f6d19b090941b5576891c45"
+>>>>>>> snap
     ],
     [
       "FlightsStExn.lift_div_stexn",
@@ -186,8 +214,25 @@
         "kinding_FlightsStExn.rcv_state@tok",
         "l_quant_interp_d0d083552ae01b30dd872097e504b11a",
         "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
+<<<<<<< HEAD
         "typing_Tm_abs_97a3d55ec7c874206fc5aef65483cd26",
         "typing_Tm_abs_f7bc669ff70f6a7f9060424dde44f099"
+=======
+        "typing_Tm_abs_6f5108f2385f059b479173d32e1997b5",
+        "typing_Tm_abs_a1bb376e4bf4033c31bef26a86ef049e"
+      ],
+      0,
+      "3161aca6fc69301678bb86b7ba954a30"
+    ],
+    [
+      "FlightsStExn.__proj__Mkrcv_state__item__id",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FlightsStExn.Mkrcv_state_b",
+        "projection_inverse_FlightsStExn.Mkrcv_state_b"
+>>>>>>> snap
       ],
       0,
       "0ff78451c7ab441a091453f78a48fb5f"
