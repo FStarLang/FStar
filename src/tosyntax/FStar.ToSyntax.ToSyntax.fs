@@ -2468,7 +2468,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         }) in
         { sigel =
           (Sig_new_effect_for_free ({
-             is_layered    = false;
+             is_layered    = (false, None);
              mname         = mname;
              cattributes   = [];
              univs         = [];
@@ -2493,7 +2493,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       else if is_layered then
         { sigel =
           (Sig_new_effect({
-             is_layered    = true;
+             is_layered    = (true, None);  //AR: underlying effect name is set in the typechecker
              mname         = mname;
              cattributes   = [];
              univs         = [];
@@ -2527,7 +2527,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
 
         { sigel =
           (Sig_new_effect({
-             is_layered    = false;
+             is_layered    = (false, None);
              mname         = mname;
              cattributes   = [];
              univs         = [];
@@ -3020,7 +3020,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         | Some l -> l in
     let src_ed = lookup l.msource in
     let dst_ed = lookup l.mdest in
-    if not (src_ed.is_layered || dst_ed.is_layered)
+    if not (fst src_ed.is_layered || fst dst_ed.is_layered)
     then let lift_wp, lift = match l.lift_op with
            | NonReifiableLift t -> Some ([],desugar_term env t), None
            | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
@@ -3033,7 +3033,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigattrs = [];
                     sigopts = None} in
          env, [se]
-    else if src_ed.is_layered
+    else if fst src_ed.is_layered
     then raise_error (Errors.Fatal_UnexpectedEffect,
       "Lifts from layered effects (" ^ (Print.lid_to_string src_ed.mname) ^ ") are not yet supported")
       d.drange

@@ -1097,7 +1097,7 @@ let get_effect_decl env l =
     | Some md -> fst md
 
 let is_layered_effect env l =
-  l |> get_effect_decl env |> (fun ed -> ed.is_layered)
+  l |> get_effect_decl env |> (fun ed -> ed.is_layered |> fst)
 
 let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);

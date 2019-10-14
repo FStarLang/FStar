@@ -1645,7 +1645,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                  * For non-layered effects, as before
                  *)
                 let args =
-                  if ed.is_layered then
+                  if fst ed.is_layered then
                     let rest_bs =
                       match (ed.bind_wp |> snd |> SS.compress).n with
                       | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
@@ -1782,7 +1782,7 @@ and reify_lift cfg e msrc mtgt t : term =
        * Arguments for layered effects are:
        *   a ..units for binders that compute indices.. x
        *)
-      if ed.is_layered then
+      if fst ed.is_layered then
         let rest_bs =
           match (ed.ret_wp |> snd |> SS.compress).n with
           | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
