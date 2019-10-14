@@ -351,6 +351,18 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+
+(*
+ * AR: We compute the VCs for `match` construct in one of the two ways:
+ *       In one style, we close over the pattern variables in the branch VCs,
+ *       and name the continuation (to avoid duplicating it), `match_with_close`
+ *       contains the combinators used in this style
+ *       In the second style (used for layered effects currently), we replace the
+ *       pattern varibles in the branch VCs with projectors applied to the scrutinee,
+ *       and don't name the continuation, `match with subst` contains the combinator
+ *       used in this style
+ *)
+
 type match_with_close = {
   if_then_else : tscheme;
   ite_wp       : tscheme;
@@ -359,6 +371,7 @@ type match_with_close = {
 type match_with_subst = {
   conjunction : tscheme;
 }
+
 type eff_decl = {
     is_layered  :bool;
     cattributes :list<cflag>;      //default cflags
