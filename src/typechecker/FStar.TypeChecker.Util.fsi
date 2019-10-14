@@ -116,6 +116,8 @@ val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr
 
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
+ *
+ * If the effect does not have a repr (e.g. primitive effects), then we return a `unit -> M a ?u` term
  *)
 val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
 
