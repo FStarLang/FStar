@@ -280,7 +280,7 @@ inline_for_extraction noextract val rst_frame_
     )
   )
 
-#push-options "--z3rlimit 100 --max_fuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 200 --max_fuel 1 --max_ifuel 1"
 
 
 inline_for_extraction noextract let rst_frame_
@@ -305,11 +305,17 @@ inline_for_extraction noextract let rst_frame_
   (**)  (fun r0 -> r0.t)
   (**)  old_delta
   (**)  cur_delta;
+
+  let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
+    : Lemma (sel r0.view h0 == sel r0.view h1)
+    = ()
+  in
+  Classical.forall_intro same_subdelta;
+  assert (feq_g old_delta cur_delta);
+
   assert (modifies inner0 (inner1 x) h0 h1);
   assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
   assert (modifies outer0 (outer1 x) h0 h1);
-
-  assume(focus_rmem (mk_rmem outer0 h0) delta == focus_rmem (mk_rmem (outer1 x) h1) delta);
 
   x
 
