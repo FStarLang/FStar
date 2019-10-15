@@ -1,6 +1,9 @@
-module Coercions
+module Coercions1Phase
 
-(* This file should be in sync with Coercions1Phase.fst *)
+(* This file should be in sync with Coercions.fst *)
+
+(* Except that we disable two phase tc here *)
+#set-options "--use_two_phase_tc false"
 
 open FStar.Ghost
 
