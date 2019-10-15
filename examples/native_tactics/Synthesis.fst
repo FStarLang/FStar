@@ -51,8 +51,8 @@ let _ = assert (fn8 == 34) // syntactically equal
 [@plugin]
 let mk_let () : Tac unit =
    match (inspect (`( let f x = if x<=1 then 1 else x - 1 in f 5 ))) with
-   | Tv_Let r b t1 t2 ->
-     let t = pack (Tv_Let r b t1 t2) in
+   | Tv_Let r attrs b t1 t2 ->
+     let t = pack (Tv_Let r attrs b t1 t2) in
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 
@@ -62,8 +62,8 @@ let _ = assert (f2 == 4)
 [@plugin]
 let mk_let_rec () : Tac unit =
    match (inspect (`( let rec fr x = if x <= 1 then 1 else fr (x-1) in fr 5 ))) with
-   | Tv_Let r b t1 t2 ->
-     let t = pack (Tv_Let r b t1 t2) in
+   | Tv_Let r attrs b t1 t2 ->
+     let t = pack (Tv_Let r attrs b t1 t2) in
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 

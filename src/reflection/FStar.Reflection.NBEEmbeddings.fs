@@ -347,8 +347,9 @@ let e_term_view_aq aq =
         | Tv_Uvar (u, d) ->
             mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy cb (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
 
-        | Tv_Let (r, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, t1, t2) ->
             mkConstruct ref_Tv_Let.fv [] [as_arg (embed e_bool cb r);
+                                   as_arg (embed (e_list e_term) cb attrs);
                                    as_arg (embed e_bv cb b);
                                    as_arg (embed (e_term_aq aq) cb t1);
                                    as_arg (embed (e_term_aq aq) cb t2)]
@@ -419,12 +420,13 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (attrs, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed e_bool cb r) (fun r ->
+            BU.bind_opt (unembed (e_list e_term) cb attrs) (fun attrs ->
             BU.bind_opt (unembed e_bv cb b) (fun b ->
             BU.bind_opt (unembed e_term cb t1) (fun t1 ->
             BU.bind_opt (unembed e_term cb t2) (fun t2 ->
-            Some <| Tv_Let (r, b, t1, t2)))))
+            Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
         | Construct (fv, _, [(brs, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
