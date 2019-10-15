@@ -280,7 +280,7 @@ inline_for_extraction noextract val rst_frame_
     )
   )
 
-#push-options "--z3rlimit 100 --max_fuel 1 --max_ifuel 1 --admit_smt_queries true"
+#push-options "--z3rlimit 100 --max_fuel 1 --max_ifuel 1"
 
 
 inline_for_extraction noextract let rst_frame_
@@ -294,7 +294,7 @@ inline_for_extraction noextract let rst_frame_
   (**) let h0 = HST.get () in
   (**) focus_mk_rmem_equality outer0 inner0 h0;
   (**) focus_mk_rmem_equality outer0 delta h0;
-  let x = reify (f ()) in
+  let x:a = reify (f ()) () in
   (**) let h1 = HST.get ()in
   (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
   (**) focus_mk_rmem_equality (outer1 x) delta h1;
@@ -305,12 +305,12 @@ inline_for_extraction noextract let rst_frame_
   (**)  (fun r0 -> r0.t)
   (**)  old_delta
   (**)  cur_delta;
-  assume(pre (focus_rmem (mk_rmem outer0 h0) inner0));
-  assume(post
-          (focus_rmem (mk_rmem outer0 h0) inner0)
-          x
-          (focus_rmem (mk_rmem (outer1 x) h1) (inner1 x)));
+  assert (modifies inner0 (inner1 x) h0 h1);
+  assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
+  assert (modifies outer0 (outer1 x) h0 h1);
+
   assume(focus_rmem (mk_rmem outer0 h0) delta == focus_rmem (mk_rmem (outer1 x) h1) delta);
+
   x
 
 #pop-options
