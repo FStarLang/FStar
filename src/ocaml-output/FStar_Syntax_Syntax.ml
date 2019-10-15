@@ -2208,7 +2208,7 @@ let (t_tac_of : term -> term -> term) =
       let uu____9914 =
         let uu____9919 =
           let uu____9920 = tabbrev FStar_Parser_Const.tac_lid  in
-          mk_Tm_uinst uu____9920 [U_unknown]  in
+          mk_Tm_uinst uu____9920 [U_zero; U_zero]  in
         let uu____9921 =
           let uu____9922 = as_arg a  in
           let uu____9931 = let uu____9942 = as_arg b  in [uu____9942]  in
@@ -2221,7 +2221,7 @@ let (t_tactic_of : term -> term) =
     let uu____9981 =
       let uu____9986 =
         let uu____9987 = tabbrev FStar_Parser_Const.tactic_lid  in
-        mk_Tm_uinst uu____9987 [U_unknown]  in
+        mk_Tm_uinst uu____9987 [U_zero]  in
       let uu____9988 = let uu____9989 = as_arg t  in [uu____9989]  in
       mk_Tm_app uu____9986 uu____9988  in
     uu____9981 FStar_Pervasives_Native.None FStar_Range.dummyRange
