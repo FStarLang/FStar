@@ -154,13 +154,10 @@ decl:
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
   | ds=list(decoration) decl=rawDecl
-      { let docs = docs_as_fsdocs (flush_comments ()) in
-        mk_decl decl (rhs parseState 2) (Doc docs::ds) }
+      { mk_decl decl (rhs parseState 2) ds }
 
   | ds=list(decoration) decl=typeclassDecl
-      { let docs = docs_as_fsdocs (flush_comments ()) in
-        let ds = Doc docs :: ds in
-        let (decl, extra_attrs) = decl in
+      { let (decl, extra_attrs) = decl in
         let d = mk_decl decl (rhs parseState 2) ds in
         { d with attrs = extra_attrs @ d.attrs }
       }
