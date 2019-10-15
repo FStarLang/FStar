@@ -1087,10 +1087,10 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
 
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
-        coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Total
+        coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
-        coerce_with env e lc S.t_term C.pack [] [] S.mk_Total
+        coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term t ->
         coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac
