@@ -316,3 +316,6 @@ assume val set_goals     : list goal -> Tac unit
 implicits. TODO: This is a really bad name, there's no special "SMT"
 about these goals. *)
 assume val set_smt_goals : list goal -> Tac unit
+
+(** [curms ()] returns the current (wall) time in millseconds *)
+assume val curms : unit -> Tac int

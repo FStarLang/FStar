@@ -180,7 +180,7 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
-    | Tv_Let r1 bv1 t1 t1', Tv_Let r2 bv2 t2 t2' ->
+    | Tv_Let _r1 _attrs1 bv1 t1 t1', Tv_Let _r2 _attrs2 bv2 t2 t2' ->
         lex (compare_bv bv1 bv2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
              compare_term t1' t2'))
@@ -304,7 +304,7 @@ let mkpair (t1 t2 : term) : term =
 let rec head (t : term) : term =
     match inspect_ln t with
     | Tv_Match t _
-    | Tv_Let _ _ t _
+    | Tv_Let _ _ _ t _
     | Tv_Abs _ t
     | Tv_Refine _ t
     | Tv_App t _

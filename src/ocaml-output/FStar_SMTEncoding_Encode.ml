@@ -1867,8 +1867,6 @@ let (encode_free_var :
                                        (uu___311_7435.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
                                        (uu___311_7435.FStar_TypeChecker_Env.attrtab);
-                                     FStar_TypeChecker_Env.is_pattern =
-                                       (uu___311_7435.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
                                        (uu___311_7435.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
@@ -1922,6 +1920,8 @@ let (encode_free_var :
                                        (uu___311_7435.FStar_TypeChecker_Env.synth_hook);
                                      FStar_TypeChecker_Env.splice =
                                        (uu___311_7435.FStar_TypeChecker_Env.splice);
+                                     FStar_TypeChecker_Env.mpreprocess =
+                                       (uu___311_7435.FStar_TypeChecker_Env.mpreprocess);
                                      FStar_TypeChecker_Env.postprocess =
                                        (uu___311_7435.FStar_TypeChecker_Env.postprocess);
                                      FStar_TypeChecker_Env.is_native_tactic =
@@ -2879,8 +2879,6 @@ let (encode_top_level_let :
                     (uu___523_9449.FStar_TypeChecker_Env.sigtab);
                   FStar_TypeChecker_Env.attrtab =
                     (uu___523_9449.FStar_TypeChecker_Env.attrtab);
-                  FStar_TypeChecker_Env.is_pattern =
-                    (uu___523_9449.FStar_TypeChecker_Env.is_pattern);
                   FStar_TypeChecker_Env.instantiate_imp =
                     (uu___523_9449.FStar_TypeChecker_Env.instantiate_imp);
                   FStar_TypeChecker_Env.effects =
@@ -2932,6 +2930,8 @@ let (encode_top_level_let :
                     (uu___523_9449.FStar_TypeChecker_Env.synth_hook);
                   FStar_TypeChecker_Env.splice =
                     (uu___523_9449.FStar_TypeChecker_Env.splice);
+                  FStar_TypeChecker_Env.mpreprocess =
+                    (uu___523_9449.FStar_TypeChecker_Env.mpreprocess);
                   FStar_TypeChecker_Env.postprocess =
                     (uu___523_9449.FStar_TypeChecker_Env.postprocess);
                   FStar_TypeChecker_Env.is_native_tactic =
@@ -4869,7 +4869,9 @@ and (encode_sigelt' :
                           FStar_Syntax_Syntax.sigmeta =
                             (uu___1018_13618.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___1018_13618.FStar_Syntax_Syntax.sigattrs)
+                            (uu___1018_13618.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopts =
+                            (uu___1018_13618.FStar_Syntax_Syntax.sigopts)
                         }  in
                       let uu____13619 = encode_sigelt' env1 val_decl  in
                       match uu____13619 with | (decls,env2) -> (env2, decls)
@@ -4996,7 +4998,9 @@ and (encode_sigelt' :
                     FStar_Syntax_Syntax.sigmeta =
                       (uu___1083_13871.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
-                      (uu___1083_13871.FStar_Syntax_Syntax.sigattrs)
+                      (uu___1083_13871.FStar_Syntax_Syntax.sigattrs);
+                    FStar_Syntax_Syntax.sigopts =
+                      (uu___1083_13871.FStar_Syntax_Syntax.sigopts)
                   }  in
                 encode_sigelt env se1)
        | FStar_Syntax_Syntax.Sig_let ((is_rec,bindings),uu____13875) ->

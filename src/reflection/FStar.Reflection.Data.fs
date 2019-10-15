@@ -22,7 +22,7 @@ type vconst =
 
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list<pattern>
+    | Pat_Cons     of fv * list<(pattern * bool)>
     | Pat_Var      of bv
     | Pat_Wild     of bv
     | Pat_Dot_Term of bv * term
@@ -47,7 +47,7 @@ type term_view =
     | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * bv * term * term
+    | Tv_Let    of bool * list<term> * bv * term * term
     | Tv_Match  of term * list<branch>
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
@@ -145,6 +145,8 @@ let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
 let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
 let fstar_refl_univ_name_fv     = mk_refl_types_lid_as_fv   "univ_name"
+let fstar_refl_optionstate      = mk_refl_types_lid_as_term "optionstate"
+let fstar_refl_optionstate_fv   = mk_refl_types_lid_as_fv   "optionstate"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"

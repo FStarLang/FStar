@@ -116,7 +116,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
+     let e, lc = TcUtil.maybe_coerce_lc env e lc t' in //add a b2t coercion if, e.g., e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
@@ -143,7 +143,7 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Env.trivial_guard
    | Some t ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t in //Add a b2t coercion if e:bool and t=Type
+     let e, lc = TcUtil.maybe_coerce_lc env e lc t in
      TcUtil.weaken_result_typ env e lc t
 
 (************************************************************************************************************)
@@ -759,16 +759,41 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                 (Rel.guard_to_string env gres);
     e, c, gres
 
+  | Tm_match _ ->
+    tc_match env top
+
+  | Tm_let ((false, [{lbname=Inr _}]), _) ->
+    check_top_level_let env top
+
+  | Tm_let ((false, _), _) ->
+    check_inner_let env top
+
+  | Tm_let ((true, {lbname=Inr _}::_), _) ->
+    check_top_level_let_rec env top
+
+  | Tm_let ((true, _), _) ->
+    check_inner_let_rec env top
+
+and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
+  match (SS.compress top).n with
   | Tm_match(e1, eqns) ->
     let env1, topt = Env.clear_expected_typ env in
     let env1 = instantiate_both env1 in
     let e1, c1, g1 = tc_term env1 e1 in
+    // GM: for some reason, without this annotation on eqns,
+    //     F* fails to do inference. A uvar at type Type gets
+    //     solved to `list u#0`, which is ill-typed.
+    let e1, c1, (eqns : list<S.branch>) =
+        match TcUtil.coerce_views env e1 c1 with
+        | Some (e1, c1) -> (e1, c1, eqns)
+        | None -> (e1, c1, eqns)
+    in
     let env_branches, res_t, g1 =
       match topt with
       | Some t -> env, t, g1
       | None ->
         let k, _ = U.type_u() in
-        let res_t, _, g = TcUtil.new_implicit_var "match result" e.pos env k in
+        let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
         Env.set_expected_typ env res_t, res_t, Env.conj_guard g1 g in
 
     if Env.debug env Options.Extreme
@@ -828,17 +853,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                       (Range.string_of_range top.pos) (Print.lcomp_to_string cres);
     e, cres, Env.conj_guard g1 g_branches
 
-  | Tm_let ((false, [{lbname=Inr _}]), _) ->
-    check_top_level_let env top
-
-  | Tm_let ((false, _), _) ->
-    check_inner_let env top
-
-  | Tm_let ((true, {lbname=Inr _}::_), _) ->
-    check_top_level_let_rec env top
-
-  | Tm_let ((true, _), _) ->
-    check_inner_let_rec env top
+  | _ ->
+    failwith (BU.format1 "tc_match called on %s\n" (Print.tag_of_term top))
 
 and tc_synth head env args rng =
     let tau, atyp =
@@ -865,7 +881,7 @@ and tc_synth head env args rng =
     Rel.force_trivial_guard env g1;
 
     // Check the tactic
-    let tau, _, g2 = tc_tactic env tau in
+    let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
     let t = env.synth_hook env typ ({ tau with pos = rng }) in
@@ -877,16 +893,16 @@ and tc_synth head env args rng =
 
     t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
-and tc_tactic env tau =
+and tc_tactic a b env tau =
     let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau t_tactic_unit
+    tc_check_tot_or_gtot_term env tau (t_tac_of a b)
 
 and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
     | None ->
         None, Env.trivial_guard
     | Some tactic ->
-        let tactic, _, g = tc_tactic env tactic
+        let tactic, _, g = tc_tactic t_unit t_unit env tactic
         in Some tactic, g
 
 (************************************************************************************************************)
@@ -1111,6 +1127,7 @@ and tc_comp env c : comp                                      (* checked version
       let c = mk_Comp ({c with
           comp_univs=comp_univs;
           result_typ=fst res;
+          flags = flags;
           effect_args=args}) in
       let u_c = c |> TcUtil.universe_of_comp env u in
       c, u_c, List.fold_left Env.conj_guard f guards
@@ -1679,7 +1696,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
              * are for concrete types.
              *)
             let tau = SS.subst subst tau in
-            let tau, _, g_tau = tc_tactic env tau in
+            let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
@@ -2895,7 +2912,7 @@ and tc_binder env (x, imp) =
     let imp, g' =
         match imp with
         | Some (Meta tau) ->
-            let tau, _, g = tc_tactic env tau in
+            let tau, _, g = tc_tactic t_unit t_unit env tau in
             Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in

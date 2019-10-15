@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module O = FStar.Options
 module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
@@ -276,6 +277,7 @@ and lazy_kind =
   | BadLazy
   | Lazy_bv
   | Lazy_binder
+  | Lazy_optionstate
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
@@ -446,7 +448,8 @@ and sigelt = {
     sigrng:   Range.range;
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
-    sigattrs: list<attribute>
+    sigattrs: list<attribute>;
+    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -571,7 +574,7 @@ let mk_lb (x, univs, eff, t, e, attrs, pos) = {
   }
 
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
@@ -697,6 +700,7 @@ let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
 let t_term      = tconst PC.term_lid
+let t_term_view = tabbrev PC.term_view_lid
 let t_order     = tconst PC.order_lid
 let t_decls     = tabbrev PC.decls_lid
 let t_binder    = tconst PC.binder_lid
@@ -704,7 +708,14 @@ let t_binders   = tconst PC.binders_lid
 let t_bv        = tconst PC.bv_lid
 let t_fv        = tconst PC.fv_lid
 let t_norm_step = tconst PC.norm_step_lid
-let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_of a b =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tac_lid) [U_zero; U_zero])
+              [as_arg a; as_arg b] None Range.dummyRange
+let t_tactic_of t =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero])
+              [as_arg t] None Range.dummyRange
+
+let t_tactic_unit = t_tactic_of t_unit
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange

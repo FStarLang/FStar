@@ -8,6 +8,7 @@ open FStar.TypeChecker.NBETerm
 open FStar.Order
 open FStar.Errors
 
+module O = FStar.Options
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module I = FStar.Ident
@@ -87,6 +88,20 @@ let e_binder =
             None
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
+
+let e_optionstate =
+    let embed_optionstate cb (b:O.optionstate) : t =
+        mk_lazy cb b fstar_refl_optionstate Lazy_optionstate
+    in
+    let unembed_optionstate cb (t:t) : option<O.optionstate> =
+        match t with
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_optionstate}, _) ->
+            Some (undyn b)
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_optionstate unembed_optionstate fstar_refl_optionstate_fv
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -245,7 +260,7 @@ let rec e_pattern' () =
         | Pat_Constant c ->
             mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_const cb c)]
         | Pat_Cons (fv, ps) ->
-            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_pattern' ())) cb ps)]
+            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
         | Pat_Var bv ->
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
@@ -261,7 +276,7 @@ let rec e_pattern' () =
 
         | Construct (fv, [], [(ps, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
-            BU.bind_opt (unembed (e_list (e_pattern' ())) cb ps) (fun ps ->
+            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
 
         | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
@@ -332,8 +347,9 @@ let e_term_view_aq aq =
         | Tv_Uvar (u, d) ->
             mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy cb (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
 
-        | Tv_Let (r, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, t1, t2) ->
             mkConstruct ref_Tv_Let.fv [] [as_arg (embed e_bool cb r);
+                                   as_arg (embed (e_list e_term) cb attrs);
                                    as_arg (embed e_bv cb b);
                                    as_arg (embed (e_term_aq aq) cb t1);
                                    as_arg (embed (e_term_aq aq) cb t2)]
@@ -404,12 +420,13 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (attrs, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed e_bool cb r) (fun r ->
+            BU.bind_opt (unembed (e_list e_term) cb attrs) (fun attrs ->
             BU.bind_opt (unembed e_bv cb b) (fun b ->
             BU.bind_opt (unembed e_term cb t1) (fun t1 ->
             BU.bind_opt (unembed e_term cb t2) (fun t2 ->
-            Some <| Tv_Let (r, b, t1, t2)))))
+            Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
         | Construct (fv, _, [(brs, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->

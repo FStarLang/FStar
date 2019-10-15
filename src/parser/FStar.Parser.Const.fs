@@ -253,7 +253,16 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let inspect        = p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"]
+let pack           = p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"]
+let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+
+let reveal = p2l ["FStar"; "Ghost"; "reveal"]
+let hide   = p2l ["FStar"; "Ghost"; "hide"]
+
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
@@ -302,7 +311,9 @@ let tcdecltime_attr = psconst "tcdecltime"
 let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
+let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Basic"; "check_with"]) FStar.Range.dummyRange
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -344,7 +355,8 @@ let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
+let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_lid lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -354,6 +366,9 @@ let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
+
+let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (text_of_lid lid)
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
@@ -395,6 +410,7 @@ let is_name (lid:lident) =
 (* tactic constants *)
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
+let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]

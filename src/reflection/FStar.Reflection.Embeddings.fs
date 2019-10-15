@@ -23,6 +23,7 @@ module EMB = FStar.Syntax.Embeddings
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 module NBETerm = FStar.TypeChecker.NBETerm
 module PC = FStar.Parser.Const
+module O = FStar.Options
 
 open FStar.Dyn
 
@@ -70,6 +71,21 @@ let e_binder =
             None
     in
     mk_emb embed_binder unembed_binder fstar_refl_binder
+
+let e_optionstate =
+    let embed_optionstate (rng:Range.range) (b:O.optionstate) : term =
+        U.mk_lazy b fstar_refl_optionstate Lazy_optionstate (Some rng)
+    in
+    let unembed_optionstate w (t:term) : option<O.optionstate> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=b; lkind=Lazy_optionstate} ->
+            Some (undyn b)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_optionstate unembed_optionstate fstar_refl_optionstate
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -250,7 +266,7 @@ let rec e_pattern' () =
         | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_const rng c)] None rng
         | Pat_Cons (fv, ps) ->
-            S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed e_fv rng fv); S.as_arg (embed (e_list (e_pattern' ())) rng ps)] None rng
+            S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed e_fv rng fv); S.as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) rng ps)] None rng
         | Pat_Var bv ->
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv)] None rng
         | Pat_Wild bv ->
@@ -270,7 +286,7 @@ let rec e_pattern' () =
 
         | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed' w e_fv f) (fun f ->
-            BU.bind_opt (unembed' w (e_list (e_pattern' ())) ps) (fun ps ->
+            BU.bind_opt (unembed' w (e_list (e_tuple2 (e_pattern' ()) e_bool)) ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
 
         | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
@@ -346,8 +362,9 @@ let e_term_view_aq aq =
                          S.as_arg (U.mk_lazy (u,d) U.t_ctx_uvar_and_sust Lazy_uvar None)]
                         None rng
 
-        | Tv_Let (r, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, t1, t2) ->
             S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed e_bool rng r);
+                                      S.as_arg (embed (e_list e_term) rng attrs);
                                       S.as_arg (embed e_bv rng b);
                                       S.as_arg (embed (e_term_aq aq) rng t1);
                                       S.as_arg (embed (e_term_aq aq) rng t2)]
@@ -423,12 +440,13 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = U.unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Tm_fvar fv, [(r, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Tm_fvar fv, [(r, _); (attrs, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
+            BU.bind_opt (unembed' w (e_list e_term) attrs) (fun attrs ->
             BU.bind_opt (unembed' w e_bv b) (fun b ->
             BU.bind_opt (unembed' w e_term t1) (fun t1 ->
             BU.bind_opt (unembed' w e_term t2) (fun t2 ->
-            Some <| Tv_Let (r, b, t1, t2)))))
+            Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
         | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
@@ -884,6 +902,10 @@ let unfold_lazy_comp (i : lazyinfo) : term =
 
 let unfold_lazy_env (i : lazyinfo) : term =
     (* Not needed, metaprograms never see concrete environments. *)
+    U.exp_unit
+
+let unfold_lazy_optionstate (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete optionstates . *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
