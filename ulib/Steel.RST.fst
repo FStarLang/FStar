@@ -226,9 +226,7 @@ let lift_div_rstate a wp r f = fun _ -> f ()
 ///
 /// `get_` is the underlying STATE function with a `repr` type
 
-let get_ (r:resource)
-: repr (rmem r) r (fun _ -> r) (fun p h -> p h h)
-= fun _ ->
+let get_ (r:resource) : repr (rmem r) r (fun _ -> r) (fun p h -> p h h) = fun _ ->
   let h = HST.get () in
   mk_rmem r h
 
@@ -236,49 +234,58 @@ let get r = RST?.reflect (get_ r)
 
 open Steel.Tactics
 
-#set-options "--z3rlimit 20"
-
-/// With latest layered effects branch, F* will not allow the lift from STATE to RSTATE
-///
-/// To move between a layered effect and its underlying effect, use `reify` and `reflect`
-
-// let st_wp_monotonic (a: Type) (wp: st_wp a) =
-//   forall (p q: st_post a). (forall x h. p x h ==> q x h) ==> (forall h . wp p h ==> wp q h)
-
-// let lift_state_rstate
-//   (a:Type)
-//   (r_in:resource)
-//   (r_out:a -> resource)
-//   (wp_st: st_wp a{st_wp_monotonic a wp_st})
-//   (f: unit -> STATE a wp_st)
-//   : repr a r_in r_out (fun (post: r_post a r_out) -> (
-//     fun (h_in: rmem r_in) -> (forall (h0: imem (inv r_in){h_in == mk_rmem r_in h0}).
-//       inv r_in h0 /\ rst_inv r_in h0 /\
-//       wp_st (fun (x:a) (h1: HS.mem) ->
-//         inv (r_out x) h1 /\
-//         rst_inv (r_out x) h1 /\
-//         modifies r_in (r_out x) h0 h1 /\
-// 	post x (mk_rmem (r_out x) h1)
-//       ) h0
-//     ))
-//   )
-//   =
-//   fun _ -> f ()
-
-// sub_effect STATE ~> RSTATE = lift_state_rstate
-
-// let get r =
-//   let h = HST.get () in
-//   mk_rmem r h
-
 
 /// Implement `rst_frame` as an action using reflect the same way we did for `get`
 
-#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
+let hoare_to_wp
+  (#a: Type)
+  (r_in: resource)
+  (r_out: a -> resource)
+  (pre: r_pre r_in)
+  (post: rmem r_in -> (x:a) -> rprop (r_out x)) : r_post a r_out -> rmem r_in -> Type
+  = fun (p:r_post a r_out) (h0:rmem r_in) ->
+    pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1)
 
-inline_for_extraction noextract let rst_frame
-  outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
-  =
+#push-options "--no_tactics"
+
+inline_for_extraction noextract val rst_frame_
+  (outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (outer1:a -> resource)
+  (#inner1:a -> resource)
+  (#[resolve_delta ()]
+     delta:resource{
+       FStar.Tactics.with_tactic
+         resolve_frame_delta
+         (frame_delta outer0 inner0 outer1 inner1 delta)
+     }
+   )
+  (#pre:rprop inner0)
+  (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
+   ($f:unit -> RST a inner0 inner1 pre post)
+  : repr a outer0 outer1 (hoare_to_wp outer0 outer1 (
+    FStar.Tactics.by_tactic_seman resolve_frame_delta
+      (frame_delta outer0 inner0 outer1 inner1 delta);
+      fun h ->
+        pre (focus_rmem h inner0)
+    )
+    (reveal_can_be_split_into ();
+      fun h0 x h1 ->
+        post
+          (focus_rmem h0 inner0)
+          x
+          (focus_rmem h1 (inner1 x)) /\
+        (focus_rmem h0 delta == focus_rmem h1 delta)
+    )
+  )
+
+#push-options "--z3rlimit 100 --max_fuel 1 --max_ifuel 1 --admit_smt_queries true"
+
+
+inline_for_extraction noextract let rst_frame_
+  outer0 #inner0 #a outer1 #inner1 #delta #pre #post f
+  = fun _ ->
   (**) reveal_view ();
   (**) reveal_can_be_split_into ();
   (**) reveal_rst_inv ();
@@ -287,7 +294,7 @@ inline_for_extraction noextract let rst_frame
   (**) let h0 = HST.get () in
   (**) focus_mk_rmem_equality outer0 inner0 h0;
   (**) focus_mk_rmem_equality outer0 delta h0;
-  let x = f () in
+  let x = reify (f ()) in
   (**) let h1 = HST.get ()in
   (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
   (**) focus_mk_rmem_equality (outer1 x) delta h1;
@@ -298,6 +305,17 @@ inline_for_extraction noextract let rst_frame
   (**)  (fun r0 -> r0.t)
   (**)  old_delta
   (**)  cur_delta;
+  assume(pre (focus_rmem (mk_rmem outer0 h0) inner0));
+  assume(post
+          (focus_rmem (mk_rmem outer0 h0) inner0)
+          x
+          (focus_rmem (mk_rmem (outer1 x) h1) (inner1 x)));
+  assume(focus_rmem (mk_rmem outer0 h0) delta == focus_rmem (mk_rmem (outer1 x) h1) delta);
   x
+
+#pop-options
+
+inline_for_extraction noextract let rst_frame outer0 #inner0 #a outer1 #inner1 #delta #pre #post f =
+  RST?.reflect (rst_frame_ outer0 #inner0 #a outer1 #inner1 #delta #pre #post f)
 
 #pop-options
