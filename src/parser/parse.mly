@@ -24,6 +24,11 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+(* we could do something more sophisticated here, e.g., retaining only some of the docs, parsing them further etc. *)
+let docs_as_fsdocs docs =
+    let docs = filter_map (fun (x, _) -> if starts_with x "(**" then Some x else None) docs |> String.concat " " in
+    docs, []
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -49,8 +54,6 @@ let logic_qualifier_deprecation_warning =
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
-%token <FStar_Parser_AST.fsdoc> FSDOC
-%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
@@ -141,8 +144,6 @@ attribute:
       { x }
 
 decoration:
-  | x=FSDOC
-      { Doc x }
   | x=attribute
       { DeclAttributes x }
   | x=qualifier
@@ -153,23 +154,24 @@ decl:
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
   | ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rhs parseState 2) ds }
+      { let docs = docs_as_fsdocs (flush_comments ()) in
+        mk_decl decl (rhs parseState 2) (Doc docs::ds) }
 
   | ds=list(decoration) decl=typeclassDecl
-      { let (decl, extra_attrs) = decl in
+      { let docs = docs_as_fsdocs (flush_comments ()) in
+        let ds = Doc docs :: ds in
+        let (decl, extra_attrs) = decl in
         let d = mk_decl decl (rhs parseState 2) ds in
         { d with attrs = extra_attrs @ d.attrs }
       }
 
 typeclassDecl:
-  | CLASS tcdef=pair(option(FSDOC), typeDecl)
+  | CLASS tcdef=typeDecl
       {
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let flip (a,b) = (b,a) in
-        let tcdef = flip tcdef in
-        let d = Tycon (false, true, [tcdef]) in
+        let d = Tycon (false, true, [tcdef, None]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
         (d, [])
@@ -201,8 +203,8 @@ rawDecl:
       { ModuleAbbrev(uid1, uid2) }
   | MODULE uid=quident
       {  TopLevelModule uid }
-  | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+  | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
+      { Tycon (false, false, List.map (fun f -> f, None) tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
       { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
@@ -228,8 +230,6 @@ rawDecl:
       { NewEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
-  | doc=FSDOC_STANDALONE
-      { Fsdoc doc }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -258,12 +258,12 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=typ
-      { (lid, t, doc_opt) }
+  |  lid=lident COLON t=typ
+      { (lid, t, None) }
 
 constructorDecl:
-  | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
-  | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
+  | BAR uid=uident COLON t=typ                { (uid, Some t, None, false) }
+  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, None, true) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
