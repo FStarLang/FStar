@@ -378,7 +378,7 @@ val new_colored_region (r0:rid) (c:int)
 		get_tip m1 == get_tip m0))
 
 let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
+                          (x:mreference a rel) (m1:mem) =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
