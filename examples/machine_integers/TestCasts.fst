@@ -16,10 +16,10 @@ module U32  = FStar.UInt32
 module U64  = FStar.UInt64
 module U128 = FStar.UInt128
 
-let check s (b:bool) =
+let check s (b:bool) : ML unit =
     if not b then failwith s
 
-let main () =
+let main () : ML int =
     check "u128->u64"
         (U64.to_string (uint128_to_uint64 (U128.uint_to_t (pow2 128 - 1))) = "18446744073709551615");
     check "u64->u32"
@@ -50,6 +50,18 @@ let main () =
         (I8.to_string  (uint64_to_int8 (U64.uint_to_t (pow2 64 - 255))) = "1");
     check "u64->i8''"
         (I8.to_string  (uint64_to_int8 (U64.uint_to_t (pow2 64 - 256))) = "0");
+    check "u16->i16"
+        (I16.to_string (uint16_to_int16 (U16.uint_to_t (pow2 16 - 1))) = "-1");
+    check "u16->i16'"
+        (I16.to_string (uint16_to_int16 (U16.uint_to_t (pow2 15 - 1))) = "32767");
+    check "u8->i8"
+        (I8.to_string  (uint8_to_int8   (U8.uint_to_t (pow2 8 - 1))) = "-1");
+    check "u8->i8'"
+        (I8.to_string  (uint8_to_int8   (U8.uint_to_t (pow2 7 - 1))) = "127");
+    check "u16->i32"
+        (I32.to_string (uint16_to_int32 (U16.uint_to_t (pow2 16 - 1))) = "65535");
+    check "u16->i32'"
+        (I32.to_string (uint16_to_int32 (U16.uint_to_t (pow2 15 - 1))) = "32767");
 
     // We don't have this one
     (* check "i128->i64" *)
