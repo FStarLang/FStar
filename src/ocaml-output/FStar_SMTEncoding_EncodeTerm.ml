@@ -2366,13 +2366,8 @@ and (encode_term :
                           let e0 =
                             let uu____6962 = FStar_List.hd args_e1  in
                             FStar_TypeChecker_Util.reify_body_with_arg
-<<<<<<< HEAD
                               env.FStar_SMTEncoding_Env.tcenv [] head2
-                              uu____6967
-=======
-                              env.FStar_SMTEncoding_Env.tcenv head2
                               uu____6962
->>>>>>> snap
                              in
                           ((let uu____6972 =
                               FStar_All.pipe_left
@@ -3052,17 +3047,8 @@ and (encode_term :
                  | FStar_Pervasives_Native.Some rc ->
                      let uu____8493 =
                        (is_impure rc) &&
-<<<<<<< HEAD
-<<<<<<< HEAD
-                         (let uu____8473 =
-                            FStar_SMTEncoding_Util.is_smt_reifiable_rc
-=======
-                         (let uu____8468 =
-=======
                          (let uu____8496 =
->>>>>>> snap
-                            FStar_TypeChecker_Env.is_reifiable_rc
->>>>>>> snap
+                            FStar_SMTEncoding_Util.is_smt_reifiable_rc
                               env.FStar_SMTEncoding_Env.tcenv rc
                              in
                           Prims.op_Negation uu____8496)
@@ -3076,17 +3062,8 @@ and (encode_term :
                         match uu____8505 with
                         | (vars,guards,envbody,decls,uu____8530) ->
                             let body2 =
-<<<<<<< HEAD
-<<<<<<< HEAD
-                              let uu____8521 =
-                                FStar_SMTEncoding_Util.is_smt_reifiable_rc
-=======
-                              let uu____8516 =
-=======
                               let uu____8544 =
->>>>>>> snap
-                                FStar_TypeChecker_Env.is_reifiable_rc
->>>>>>> snap
+                                FStar_SMTEncoding_Util.is_smt_reifiable_rc
                                   env.FStar_SMTEncoding_Env.tcenv rc
                                  in
                               if uu____8544
