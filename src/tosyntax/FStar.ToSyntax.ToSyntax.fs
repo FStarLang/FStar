@@ -2489,7 +2489,8 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
            sigquals = qualifiers;
            sigrng = d.drange;
            sigmeta = default_sigmeta  ;
-           sigattrs = [] }
+           sigattrs = [];
+           sigopts = None}
       else if is_layered then
         { sigel =
           (Sig_new_effect({

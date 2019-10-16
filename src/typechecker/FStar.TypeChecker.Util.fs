@@ -1285,7 +1285,7 @@ let coerce_with (env:Env.env)
         let coercion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
         let coercion = S.mk_Tm_uinst coercion us in
         let coercion = U.mk_app coercion eargs in
-        let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total ty) in
+        let lc = bind e.pos env (Some e) lc (None, TcComm.lcomp_of_comp <| S.mk_Total ty) in
         let e = mk_Tm_app coercion [S.as_arg e] None e.pos in
         e, lc
     | None ->

@@ -21,11 +21,7 @@ val tc_binders: env -> binders -> binders * env * guard_t * universes
 val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t
 val tc_comp: env -> comp -> comp * universe * guard_t
-<<<<<<< HEAD
-val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * Env.env * term * term * guard_t * bool
-=======
-val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * list<term> * Env.env * term * term * guard_t
->>>>>>> wip on typechecking match for layered effects
+val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * list<term> * Env.env * term * term * guard_t * bool
 val type_of_tot_term: env -> term -> term * typ * guard_t
 val universe_of: env -> term -> universe
 
