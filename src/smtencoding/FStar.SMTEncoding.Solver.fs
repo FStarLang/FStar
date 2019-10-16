@@ -259,16 +259,13 @@ let detail_hint_replay settings z3result =
          | UNSAT _ -> ()
          | _failed ->
            let ask_z3 label_assumptions =
-               let res = BU.mk_ref None in
                Z3.ask settings.query_range
                       (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
-                      (fun r -> res := Some r)
-                      false;
-               Option.get (!res)
+                      false
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
 
@@ -351,16 +348,13 @@ let report_errors settings : unit =
             }
          in
          let ask_z3 label_assumptions =
-            let res = BU.mk_ref None in
             Z3.ask  settings.query_range
                     (filter_facts_without_core settings.query_env)
                     settings.query_hash
                     settings.query_all_labels
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
                     None
-                    (fun r -> res := Some r)
-                    false;
-            Option.get (!res)
+                    false
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
 
@@ -554,23 +548,34 @@ let process_result settings result : option<errors> =
     detail_hint_replay settings result;
     errs
 
+// Attempts to solve each query setting (in `qs`) sequentially until
+// one succeeds. If one succeeds, we are done and report no errors. If
+// all of them fail, we call `report` with a log of the errors so they
+// can be displayed to the user.
+// Returns None if successful, Some errs if options were exhausted
+// without a success, where errs is the list of errors each query
+// returned.
 let fold_queries (qs:list<query_settings>)
-                 (ask:query_settings -> (z3result -> unit) -> unit)
+                 (ask:query_settings -> z3result)
                  (f:query_settings -> z3result -> option<errors>)
-                 (report:list<errors> -> unit) : unit =
-    let rec aux acc qs =
+                 : option<list<errors>> =
+    let rec aux (acc : list<errors>) qs : option<list<errors>> =
         match qs with
-        | [] -> report acc
+        | [] -> Some acc
         | q::qs ->
-          ask q (fun res ->
-                  match f q res with
-                  | None -> () //done
-                  | Some errs ->
-                    aux (errs::acc) qs)
+          let res = ask q in
+          begin match f q res with
+          | None -> None //done
+          | Some errs ->
+            aux (errs::acc) qs
+          end
     in
     aux [] qs
 
-let ask_and_report_errors env all_labels prefix query suffix =
+let full_query_id settings =
+    "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
+
+let ask_and_report_errors env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -651,7 +656,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @ max_fuel_max_ifuel
     in
 
-    let check_one_config config (k:z3result -> unit) : unit =
+    let check_one_config config : z3result =
           if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
                   (filter_assertions config.query_env config.query_hint)
@@ -659,13 +664,14 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
                   (Some (Z3.mk_fresh_scope()))
-                  k
                   (used_hint config)
     in
 
-    let check_all_configs configs =
+    let check_all_configs configs : unit =
         let report errs = report_errors ({default_settings with query_errors=errs}) in
-        fold_queries configs check_one_config process_result report
+        match fold_queries configs check_one_config process_result with
+        | None -> ()
+        | Some errs -> report errs
     in
 
     match Options.admit_smt_queries(), Options.admit_except() with
@@ -674,11 +680,11 @@ let ask_and_report_errors env all_labels prefix query suffix =
     | false, Some id ->
       let skip =
         if BU.starts_with id "("
-        then let full_query_id = "(" ^ default_settings.query_name ^ ", " ^ (BU.string_of_int default_settings.query_index) ^ ")" in
-             full_query_id <> id
+        then full_query_id default_settings <> id
         else default_settings.query_name <> id
       in
-      if not skip then check_all_configs all_configs
+      if not skip
+      then check_all_configs all_configs
 
 type solver_cfg = {
   seed             : int;
@@ -707,6 +713,35 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
+let do_solve use_env_msg tcenv q : unit =
+    if should_refresh tcenv then begin
+      save_cfg tcenv;
+      Z3.refresh ()
+    end;
+    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+    try
+      let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+      let tcenv = incr_query_index tcenv in
+      match qry with
+      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
+      | _ when tcenv.admit -> pop()
+      | Assume _ ->
+        ask_and_report_errors tcenv labels prefix qry suffix;
+        pop ()
+
+      | _ -> failwith "Impossible"
+    with
+      | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
+        pop ();  //AR: Important, we push-ed before encode_query was called
+        FStar.TypeChecker.Err.add_errors
+          tcenv
+          [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
+            BU.format1
+              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+              (String.concat "," (List.map fst names)),
+            tcenv.range)]
+
 let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
         FStar.TypeChecker.Err.add_errors
@@ -714,35 +749,8 @@ let solve use_env_msg tcenv q : unit =
                  [(Errors.Error_NoSMTButNeeded,
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
-    else begin
-      if should_refresh tcenv then begin
-        save_cfg tcenv;
-        Z3.refresh ()
-      end;
-      Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-      let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-      try
-        let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-        let tcenv = incr_query_index tcenv in  
-        match qry with
-        | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-        | _ when tcenv.admit -> pop()
-        | Assume _ ->
-          ask_and_report_errors tcenv labels prefix qry suffix;
-          pop ()
-
-        | _ -> failwith "Impossible"
-      with
-        | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
-          pop ();  //AR: Important, we push-ed before encode_query was called
-          FStar.TypeChecker.Err.add_errors
-            tcenv
-            [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
-              BU.format1
-                "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                (String.concat "," (List.map fst names)),
-              tcenv.range)]
-    end
+    else
+    do_solve use_env_msg tcenv q
 
 (**********************************************************************************************)
 (* Top-level interface *)
