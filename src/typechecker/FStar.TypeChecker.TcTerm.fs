@@ -121,17 +121,20 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let e, lc, g = TcUtil.check_and_ascribe env e lc t' in
      if debug env Options.Low
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
-                (Print.lcomp_to_string lc) (Print.term_to_string t')
+                (TcComm.lcomp_to_string lc) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
      let t = lc.res_typ in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
-     let lc =
+     let lc, g =
        if tlc |> is_left && TcUtil.should_return env (Some e) lc
-            && U.is_pure_lcomp lc // this last conjunct is crucial, otherwise
+            && TcComm.is_pure_lcomp lc // this last conjunct is crucial, otherwise
                                   // we could drop the effects of `e` here
-       then TcUtil.return_value env (TcUtil.lcomp_univ_opt lc) t e |> TcComm.lcomp_of_comp
-       else lc
+       then
+         let u_opt, g_lc = TcUtil.lcomp_univ_opt lc in
+         TcUtil.return_value env u_opt t e |> TcComm.lcomp_of_comp,
+         Env.conj_guard g g_lc
+       else lc, g
      in
      let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
@@ -1475,7 +1478,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
                     e, t_annot, guard
                 | _ ->
-                    let lc = S.mk_Total tfun_computed |> U.lcomp_of_comp in
+                    let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
                     let e, _, guard' = TcUtil.check_and_ascribe env e lc t in  //QUESTION: t should also probably be t_annot here
                     e, t_annot, Env.conj_guard guard guard'
            end

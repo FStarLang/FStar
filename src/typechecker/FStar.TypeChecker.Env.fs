@@ -1274,7 +1274,6 @@ let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
   {env with effects=effects}
 
-<<<<<<< HEAD
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
     let composed_lift =
@@ -1284,15 +1283,6 @@ let update_effect_lattice env src tgt st_mlift =
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
         | Some l1, Some l2 -> Some (fun u t e -> l2 u t (l1 u t e))
-=======
-let update_effect_lattice env sub =
-  let compose_edges e1 e2 : edge =
-    let composed_lift =
-      let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
-      let mlift_term =
-        match e1.mlift.mlift_term, e2.mlift.mlift_term with
-        | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
->>>>>>> master
         | _ -> None
       in
       { mlift_wp=mlift_wp ; mlift_term=mlift_term}
@@ -1302,7 +1292,6 @@ let update_effect_lattice env sub =
       mlift=composed_lift }
   in
 
-<<<<<<< HEAD
   let edge = {
     msource=src;
     mtarget=tgt;
@@ -1312,41 +1301,10 @@ let update_effect_lattice env sub =
   let id_edge l = {
     msource=src;
     mtarget=tgt;
-=======
-  let mk_mlift_wp lift_t u r wp1 =
-    let _, lift_t = inst_tscheme_with lift_t [u] in
-    mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
-  in
-
-  let sub_mlift_wp = match sub.lift_wp with
-    | Some sub_lift_wp ->
-      mk_mlift_wp sub_lift_wp
-    | None ->
-      failwith "sub effect should've been elaborated at this stage"
-  in
-
-  let mk_mlift_term lift_t u r wp1 e =
-    let _, lift_t = inst_tscheme_with lift_t [u] in
-    mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
-  in
-
-  let sub_mlift_term = BU.map_opt sub.lift mk_mlift_term in
-
-  let edge =
-    { msource=sub.source;
-      mtarget=sub.target;
-      mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
-  in
-
-  let id_edge l = {
-    msource=sub.source;
-    mtarget=sub.target;
->>>>>>> master
     mlift=identity_mlift
   } in
 
   (* For debug purpose... *)
-<<<<<<< HEAD
   // let print_mlift l =
   //   (* A couple of bogus constants, just for printing *)
   //   let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
@@ -1357,18 +1315,6 @@ let update_effect_lattice env sub =
   //     (Print.term_to_string (l.mlift_wp U_zero arg wp))
   //     (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
   // in
-=======
-  let print_mlift l =
-    (* A couple of bogus constants, just for printing *)
-    let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
-    let arg = bogus_term "ARG" in
-    let wp = bogus_term "WP" in
-    let e = bogus_term "COMP" in
-    BU.format2 "{ wp : %s ; term : %s }"
-      (Print.term_to_string (l.mlift_wp U_zero arg wp))
-      (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
-  in
->>>>>>> master
 
   let order = edge::env.effects.order in
   let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
