@@ -21,7 +21,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "4b9e43c03110e43758bd378f9e0fe0a2"
+      "d12281a251c5619bdb9d935b181b40d4"
     ],
     [
       "SL.Shallow.return",
@@ -300,7 +300,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "26a200f62ee45043a80c80cede6b5ffb"
+      "6654dbc6460f1350f41412961a500db4"
     ],
     [
       "SL.Shallow.return",

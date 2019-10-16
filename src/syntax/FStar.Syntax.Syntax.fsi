@@ -499,6 +499,7 @@ val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
+val mk_Tac :        typ -> comp
 val mk_Comp:        comp_typ -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term

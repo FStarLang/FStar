@@ -2366,7 +2366,7 @@ and (encode_term :
                           let e0 =
                             let uu____6962 = FStar_List.hd args_e1  in
                             FStar_TypeChecker_Util.reify_body_with_arg
-                              env.FStar_SMTEncoding_Env.tcenv [] head2
+                              env.FStar_SMTEncoding_Env.tcenv head2
                               uu____6962
                              in
                           ((let uu____6972 =
@@ -3048,7 +3048,7 @@ and (encode_term :
                      let uu____8493 =
                        (is_impure rc) &&
                          (let uu____8496 =
-                            FStar_SMTEncoding_Util.is_smt_reifiable_rc
+                            FStar_TypeChecker_Env.is_reifiable_rc
                               env.FStar_SMTEncoding_Env.tcenv rc
                              in
                           Prims.op_Negation uu____8496)
@@ -3063,13 +3063,13 @@ and (encode_term :
                         | (vars,guards,envbody,decls,uu____8530) ->
                             let body2 =
                               let uu____8544 =
-                                FStar_SMTEncoding_Util.is_smt_reifiable_rc
+                                FStar_TypeChecker_Env.is_reifiable_rc
                                   env.FStar_SMTEncoding_Env.tcenv rc
                                  in
                               if uu____8544
                               then
                                 FStar_TypeChecker_Util.reify_body
-                                  env.FStar_SMTEncoding_Env.tcenv [] body1
+                                  env.FStar_SMTEncoding_Env.tcenv body1
                               else body1  in
                             let uu____8549 = encode_term body2 envbody  in
                             (match uu____8549 with
