@@ -990,7 +990,8 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     if (fst src_ed.is_layered &&  //source is a layered effect
         lid_equals (src_ed.is_layered |> snd |> must) tgt_ed.mname) ||  //and target is its underlying effect, or
        (fst tgt_ed.is_layered &&  // target is a layered effect
-        lid_equals (tgt_ed.is_layered |> snd |> must) src_ed.mname)  //and source is its underlying effect
+        lid_equals (tgt_ed.is_layered |> snd |> must) src_ed.mname &&  //and source is its underlying effect 
+        not (lid_equals src_ed.mname PC.effect_PURE_lid))  //and source is not PURE
     then
       raise_error (Errors.Fatal_EffectsCannotBeComposed,
                    BU.format2 "Lifts cannot be defined from a layered effect to its repr or vice versa (%s and %s here)"
