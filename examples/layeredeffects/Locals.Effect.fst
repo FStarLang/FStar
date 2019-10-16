@@ -94,126 +94,126 @@ let lift_pure_lvars (a:Type)
 : repr a (fun p m -> wp (fun x -> p x m))
 = fun m -> f (), m
 
-sub_effect PURE ~> LVARS = lift_pure_lvars
+// sub_effect PURE ~> LVARS = lift_pure_lvars
 
-effect LV (a:Type) (pre:locals_t -> Type0) (post:locals_t -> a -> locals_t -> Type0) =
-  LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
-
-
-let create0 (a:Type0) (x:a)
-: repr nat
-  (fun p m0 ->
-    forall r m1.
-      (not (m0.m `M.contains` r) /\
-       m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
-= fun m ->
-  let next = m.next in
-  next, {
-    next = next + 1;
-    m = Map.upd m.m next (| a, x |)
-  }
-
-let read0 (#a:Type0) (n:nat)
-: repr a
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
-= fun m ->
-  dsnd (m.m `M.sel` n), m
-
-let write0 (#a:Type0) (n:nat) (x:a)
-: repr unit
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall m1.
-     (m1.next == m0.next /\
-      m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
-= fun m ->
-  (), { m with m = Map.upd m.m n (| a, x |) }
-
-let get0 ()
-: repr (Map.t nat (a:Type0 & a))
-  (fun p m0 -> p m0.m m0)
-= fun m -> m.m, m
+// effect LV (a:Type) (pre:locals_t -> Type0) (post:locals_t -> a -> locals_t -> Type0) =
+//   LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
 
 
-let create (a:Type0) (x:a)
-: LVARS nat
-  (fun p m0 ->
-    forall r m1.
-      (not (m0.m `M.contains` r) /\
-       m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
-= LVARS?.reflect (create0 a x)
+// let create0 (a:Type0) (x:a)
+// : repr nat
+//   (fun p m0 ->
+//     forall r m1.
+//       (not (m0.m `M.contains` r) /\
+//        m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
+// = fun m ->
+//   let next = m.next in
+//   next, {
+//     next = next + 1;
+//     m = Map.upd m.m next (| a, x |)
+//   }
 
-let read (#a:Type0) (n:nat)
-: LVARS a
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
-= LVARS?.reflect (read0 #a n)
+// let read0 (#a:Type0) (n:nat)
+// : repr a
+//   (fun p m0 ->
+//    m0.m `M.contains` n /\
+//    dfst (m0.m `M.sel` n) == a /\
+//    (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
+// = fun m ->
+//   dsnd (m.m `M.sel` n), m
 
-let write (#a:Type0) (n:nat) (x:a)
-: LVARS unit
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall m1.
-     (m1.next == m0.next /\
-      m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
-= LVARS?.reflect (write0 #a n x)
+// let write0 (#a:Type0) (n:nat) (x:a)
+// : repr unit
+//   (fun p m0 ->
+//    m0.m `M.contains` n /\
+//    dfst (m0.m `M.sel` n) == a /\
+//    (forall m1.
+//      (m1.next == m0.next /\
+//       m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
+// = fun m ->
+//   (), { m with m = Map.upd m.m n (| a, x |) }
 
-let get ()
-: LVARS (Map.t nat (a:Type0 & a))
-  (fun p m0 -> p m0.m m0)
-= LVARS?.reflect (get0 ())
-
-
-let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
-  let n1 = create nat 0 in
-  let n2 = create bool true in
-  let n3 = create unit () in
-
-
-  let v1: nat = read n1 in
-  assert (v1 == 0)
-
-let emp_locals = {
-  next = 0;
-  m = Map.restrict Set.empty (Map.const (| unit, () |))
-}
-
-let run_with_locals (#a:Type)
-  (#pre:locals_t -> Type0) (#post:locals_t -> a -> locals_t -> Type0)
-  ($f:unit -> LV a pre post)
-: Pure a
-  (requires pre emp_locals)
-  (ensures fun r -> exists m. post emp_locals r m)
-= fst (reify (f ()) emp_locals)
+// let get0 ()
+// : repr (Map.t nat (a:Type0 & a))
+//   (fun p m0 -> p m0.m m0)
+// = fun m -> m.m, m
 
 
-/// Testing some termination
+// let create (a:Type0) (x:a)
+// : LVARS nat
+//   (fun p m0 ->
+//     forall r m1.
+//       (not (m0.m `M.contains` r) /\
+//        m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
+// = LVARS?.reflect (create0 a x)
 
-let rec sum (n:nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
-= if n = 0 then 0
-  else
-    let s = sum (n - 1) in  //let binding is important, can't write 1 + sum (n - 1), see #881
-    1 + s
+// let read (#a:Type0) (n:nat)
+// : LVARS a
+//   (fun p m0 ->
+//    m0.m `M.contains` n /\
+//    dfst (m0.m `M.sel` n) == a /\
+//    (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
+// = LVARS?.reflect (read0 #a n)
 
-module L = FStar.List.Tot
+// let write (#a:Type0) (n:nat) (x:a)
+// : LVARS unit
+//   (fun p m0 ->
+//    m0.m `M.contains` n /\
+//    dfst (m0.m `M.sel` n) == a /\
+//    (forall m1.
+//      (m1.next == m0.next /\
+//       m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
+// = LVARS?.reflect (write0 #a n x)
 
-let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length l)
-= match l with
-  | [] -> 0
-  | _::tl ->
-   let n = test1 tl in  //let binding is important, can't write 1 + test1 tl, see #881
-   n + 1
+// let get ()
+// : LVARS (Map.t nat (a:Type0 & a))
+//   (fun p m0 -> p m0.m m0)
+// = LVARS?.reflect (get0 ())
 
 
-/// Termination check failure
+// let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
+//   let n1 = create nat 0 in
+//   let n2 = create bool true in
+//   let n3 = create unit () in
 
-[@expect_failure]
-let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
-= test2 l
+
+//   let v1: nat = read n1 in
+//   assert (v1 == 0)
+
+// let emp_locals = {
+//   next = 0;
+//   m = Map.restrict Set.empty (Map.const (| unit, () |))
+// }
+
+// let run_with_locals (#a:Type)
+//   (#pre:locals_t -> Type0) (#post:locals_t -> a -> locals_t -> Type0)
+//   ($f:unit -> LV a pre post)
+// : Pure a
+//   (requires pre emp_locals)
+//   (ensures fun r -> exists m. post emp_locals r m)
+// = fst (reify (f ()) emp_locals)
+
+
+// /// Testing some termination
+
+// let rec sum (n:nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
+// = if n = 0 then 0
+//   else
+//     let s = sum (n - 1) in  //let binding is important, can't write 1 + sum (n - 1), see #881
+//     1 + s
+
+// module L = FStar.List.Tot
+
+// let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length l)
+// = match l with
+//   | [] -> 0
+//   | _::tl ->
+//    let n = test1 tl in  //let binding is important, can't write 1 + test1 tl, see #881
+//    n + 1
+
+
+// /// Termination check failure
+
+// [@expect_failure]
+// let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
+// = test2 l
