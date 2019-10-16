@@ -858,7 +858,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
       then (* promote cres to ghost *)
            let e = U.exp_true_bool in
            let c = mk_GTotal' U.t_bool (Some U_zero) in
-           TcUtil.bind e.pos env (Some e) (U.lcomp_of_comp c) (None, cres)
+           TcUtil.bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
       else cres
     in
     let e =
@@ -2176,17 +2176,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                               |> String.concat " ");
               simple_pat_e, simple_bvs, guard, erasable
           in
-          let _env, bvs, tms, checked_sub_pats, subst, g, erasable =
+          let _env, bvs, tms, checked_sub_pats, subst, g, erasable, _ =
             List.fold_left2
-              (fun (env, bvs, tms, pats, subst, g, i, erasable) (p, b) x ->
+              (fun (env, bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
                 let bvs_p, tms_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
                 let env = Env.push_bvs env bvs_p in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
                   tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
-                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', i+1, erasable || erasable_p)
-              (env, [], [], [], [], Env.conj_guard g0 g1, 0, erasable)
+                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
+              (env, [], [], [], [], Env.conj_guard g0 g1, erasable, 0)
               sub_pats
               simple_bvs
           in
