@@ -23,9 +23,24 @@ include Steel.Pointer.Views
 
 open Steel.RST
 
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 (**** Unscoped allocation and deallocation of pointer resources *)
 
-let ptr_alloc #a init =
+val ptr_alloc_
+  (#a:Type)
+  (init:a)
+  : rst_repr (pointer a)
+    (empty_resource)
+    (fun ptr -> ptr_resource ptr)
+    (fun _ -> True)
+    (fun _ ptr h1 ->
+      A.freeable ptr /\
+      get_val ptr h1 == init /\
+      get_perm ptr h1 == P.full_permission
+    )
+
+let ptr_alloc_ #a init = fun _ ->
   reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();

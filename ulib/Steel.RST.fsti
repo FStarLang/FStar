@@ -313,12 +313,27 @@ sub_effect DIV ~> RSTATE = lift_div_rstate
 
 /// Hoare style encoding
 
+let hoare_to_wp
+  (a: Type)
+  (r_in: resource)
+  (r_out: a -> resource)
+  (pre: r_pre r_in)
+  (post: rmem r_in -> (x:a) -> rprop (r_out x)) : r_post a r_out -> rmem r_in -> Type
+  = fun (p:r_post a r_out) (h0:rmem r_in) ->
+    pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1)
+
 effect RST (a:Type)
   (r_in:resource) (r_out:a -> resource)
   (pre:rprop r_in) (post:rmem r_in -> (x:a) -> rprop (r_out x))
-= RSTATE a r_in r_out
-  (fun (p:r_post a r_out) (h0:rmem r_in) -> pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1))
+= RSTATE a r_in r_out (hoare_to_wp a r_in r_out pre post)
 
+let rst_repr
+  (a: Type)
+  (r_in:resource)
+  (r_out:a -> resource)
+  (pre:rprop r_in)
+  (post:rmem r_in -> (x:a) -> rprop (r_out x)) =
+  repr a r_in r_out (hoare_to_wp a r_in r_out pre post)
 
 /// Similar to `FStar.Hyperstack.ST.get`, this helper gives you a rmem based on the current state of
 /// the heap

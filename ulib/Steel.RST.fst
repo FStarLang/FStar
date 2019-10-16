@@ -237,15 +237,6 @@ open Steel.Tactics
 
 /// Implement `rst_frame` as an action using reflect the same way we did for `get`
 
-let hoare_to_wp
-  (#a: Type)
-  (r_in: resource)
-  (r_out: a -> resource)
-  (pre: r_pre r_in)
-  (post: rmem r_in -> (x:a) -> rprop (r_out x)) : r_post a r_out -> rmem r_in -> Type
-  = fun (p:r_post a r_out) (h0:rmem r_in) ->
-    pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1)
-
 #push-options "--no_tactics"
 
 inline_for_extraction noextract val rst_frame_
@@ -280,7 +271,7 @@ inline_for_extraction noextract val rst_frame_
     )
   )
 
-#push-options "--z3rlimit 200 --max_fuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 250 --max_fuel 0 --max_ifuel 0"
 
 
 inline_for_extraction noextract let rst_frame_
@@ -305,18 +296,15 @@ inline_for_extraction noextract let rst_frame_
   (**)  (fun r0 -> r0.t)
   (**)  old_delta
   (**)  cur_delta;
-
-  let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
-    : Lemma (sel r0.view h0 == sel r0.view h1)
-    = ()
-  in
-  Classical.forall_intro same_subdelta;
-  assert (feq_g old_delta cur_delta);
-
-  assert (modifies inner0 (inner1 x) h0 h1);
-  assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
-  assert (modifies outer0 (outer1 x) h0 h1);
-
+  (**) let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
+  (**)   : Lemma (sel r0.view h0 == sel r0.view h1)
+  (**)   = ()
+  (**) in
+  (**) Classical.forall_intro same_subdelta;
+  (**) assert (feq_g old_delta cur_delta);
+  (**) assert (modifies inner0 (inner1 x) h0 h1);
+  (**) assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
+  (**) assert (modifies outer0 (outer1 x) h0 h1);
   x
 
 #pop-options

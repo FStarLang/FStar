@@ -17,10 +17,28 @@ module Steel.Array
 
 open Steel.RST
 
+#set-options "--max_fuel 0 --max_ifuel 0"
 
-let index (#a:Type) (b:A.array a) (i:UInt32.t) =
+
+val index_ (#a:Type) (b:A.array a) (i:UInt32.t)
+  : rst_repr a (array_resource b)
+    (fun _ -> array_resource b)
+    (fun _ -> UInt32.v i < A.vlength b)
+    (fun h0 x h1 ->
+      UInt32.v i < A.vlength b /\
+      Seq.index (as_rseq b h0) (UInt32.v i) == x /\
+      h0 == h1
+    )
+
+#push-options "--admit_smt_queries false"
+
+let index_ (#a:Type) (b:A.array a) (i:UInt32.t) = fun _ ->
   (**) reveal_array();
   A.index b i
+
+#pop-options
+
+let index #a b i = RST?.reflect (index_ #a b i)
 
 let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   (**) reveal_array();
