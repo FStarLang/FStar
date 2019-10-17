@@ -176,6 +176,7 @@ and env = {
   synth_hook     :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook: env -> term -> implicits -> unit;
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
+  mpreprocess     :env -> term -> term -> term;       (* hook for postprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
@@ -205,6 +206,7 @@ type implicit = TcComm.implicit
 type implicits = TcComm.implicits
 type guard_t = TcComm.guard_t
 
+let preprocess env tau tm  = env.mpreprocess env tau tm
 let postprocess env tau ty tm = env.postprocess env tau ty tm
 
 let rename_gamma subst gamma =
@@ -286,6 +288,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
     splice = (fun e tau -> failwith "no splicer available");
+    mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
@@ -1096,7 +1099,7 @@ let get_effect_decl env l =
     | Some md -> fst md
 
 let is_layered_effect env l =
-  l |> get_effect_decl env |> (fun ed -> ed.is_layered)
+  l |> get_effect_decl env |> (fun ed -> ed.is_layered |> fst)
 
 let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);

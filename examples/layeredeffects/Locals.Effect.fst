@@ -18,6 +18,11 @@ module Locals.Effect
 
 module M = FStar.Map
 
+/// Layering an effect over PURE to work with local variables
+/// The locals are modeled as a map, that is threaded through in the state passing style
+///
+/// It's a total effect, and tests below include some termination checking
+
 noeq
 type locals_t'= {
   next:nat;

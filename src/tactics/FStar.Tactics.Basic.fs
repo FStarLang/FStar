@@ -548,6 +548,9 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
+let curms () : tac<Z.t> =
+    ret (BU.now_ms () |> Z.of_int_fs)
+
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts label : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
@@ -1974,7 +1977,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, fst b, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, fst b, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -1987,7 +1990,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | [lb] ->
                 (match lb.lbname with
                  | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, bv, lb.lbdef, t2))
+                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -2047,12 +2050,12 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Uvar (_u, ctx_u_s) ->
         ret <| S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
-    | Tv_Let (false, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (false, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
 
-    | Tv_Let (true, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (true, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
@@ -2097,14 +2100,20 @@ let goal_of_goal_ty env typ : goal * guard_t =
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
+let tac_env (env:Env.env) : Env.env =
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
+    let env = { env with failhard = true } in
+    (* TODO: We do not faithfully expose universes to metaprograms *)
+    let env = { env with Env.lax_universes = true } in
+    env
 
-let proofstate_of_goal_ty rng env typ =
-    let g, g_u = goal_of_goal_ty env typ in
+let proofstate_of_goals rng env goals imps =
+    let env = tac_env env in
     let ps = {
         main_context = env;
-        main_goal = g;
-        all_implicits = g_u.implicits;
-        goals = [g];
+        all_implicits = imps;
+        goals = goals;
         smt_goals = [];
         depth = 0;
         __dump = do_dump_proofstate;
@@ -2116,7 +2125,7 @@ let proofstate_of_goal_ty rng env typ =
         local_state = BU.psmap_empty ();
     }
     in
-    (ps, (goal_witness g))
+    ps
 
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal env i.imp_uvar (FStar.Options.peek()) false ""
@@ -2126,7 +2135,6 @@ let proofstate_of_all_implicits rng env imps =
     let w = goal_witness (List.hd goals) in
     let ps = {
         main_context = env;
-        main_goal = List.hd goals;
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
@@ -2141,3 +2149,9 @@ let proofstate_of_all_implicits rng env imps =
     }
     in
     (ps, w)
+
+let proofstate_of_goal_ty rng env typ =
+    let env = tac_env env in
+    let g, g_u = goal_of_goal_ty env typ in
+    let ps = proofstate_of_goals rng env [g] g_u.implicits in
+    (ps, goal_witness g)

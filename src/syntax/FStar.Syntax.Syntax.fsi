@@ -351,6 +351,18 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+
+(*
+ * AR: We compute the VCs for `match` construct in one of the two ways:
+ *       In one style, we close over the pattern variables in the branch VCs,
+ *       and name the continuation (to avoid duplicating it), `match_with_close`
+ *       contains the combinators used in this style
+ *       In the second style (used for layered effects currently), we replace the
+ *       pattern varibles in the branch VCs with projectors applied to the scrutinee,
+ *       and don't name the continuation, `match with subst` contains the combinator
+ *       used in this style
+ *)
+
 type match_with_close = {
   if_then_else : tscheme;
   ite_wp       : tscheme;
@@ -359,15 +371,16 @@ type match_with_close = {
 type match_with_subst = {
   conjunction : tscheme;
 }
+
 type eff_decl = {
-    is_layered  :bool;
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
+    is_layered  :bool * option<lident>; //option contains the name of the underlying effect, if the bool is true
+    cattributes :list<cflag>;           //default cflags
+    mname       :lident;                //STATE_h
+    univs       :univ_names;            //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
+    binders     :binders;               //heap:Type u#heap
+                                        //univs and binders are in scope for rest of the fields
+    signature   :tscheme;               //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
+    ret_wp      :tscheme;               //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
     stronger    :tscheme;
     match_wps   :either<match_with_close, match_with_subst>;
@@ -573,6 +586,8 @@ val t_order         : term
 val t_decls         : term
 val t_binder        : term
 val t_bv            : term
+val t_tac_of        : term -> term -> term
+val t_tactic_of     : term -> term
 val t_tactic_unit   : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term

@@ -150,37 +150,35 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * The repr must have the type:
    *   a:Type -> <binders for effect indices> -> Type  //polymorphic in one universe (that of a)
    *)
-  let repr =
+  let repr, underlying_effect_lid =
     let r = (snd ed.repr).pos in
     let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 ed.repr in
 
-    //check that the underlying effect is total if this effect is marked total
-    begin
-      if quals |> List.contains TotalEffect
-      then
-        let repr_t =
-          N.normalize
-            [Env.UnfoldUntil (S.Delta_constant_at_level 0); Env.AllowUnboundUniverses]
-            env0 repr_t in
-        (match (SS.compress repr_t).n with
-         | Tm_abs (_, t, _) ->
-           (match (SS.compress t).n with
-            | Tm_arrow (_, c) ->
-              if not (c |> U.comp_effect_name |> Env.is_total_effect env0)
-              then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
-                     BU.format1 "Effect %s is marked total but its underlying effect is not"
-                      (ed.mname |> Ident.string_of_lid)) r
-              else ()
-            | _ -> 
-              raise_error (Errors.Fatal_UnexpectedEffect,
-              BU.format2 "repr body for %s is not an arrow (%s)"
-                (ed.mname |> Ident.string_of_lid) (Print.term_to_string t)) r)
-         | _ ->
-           raise_error (Errors.Fatal_UnexpectedEffect,
-             BU.format2 "repr for %s is not an abstraction (%s)"
-               (ed.mname |> Ident.string_of_lid) (Print.term_to_string repr_t)) r)
-      else ()
-    end;
+    let underlying_effect_lid =
+      let repr_t =
+        N.normalize
+          [Env.UnfoldUntil (S.Delta_constant_at_level 0); Env.AllowUnboundUniverses]
+          env0 repr_t in
+        match (SS.compress repr_t).n with
+        | Tm_abs (_, t, _) ->
+          (match (SS.compress t).n with
+           | Tm_arrow (_, c) -> c |> U.comp_effect_name |> Env.norm_eff_name env0
+           | _ -> 
+             raise_error (Errors.Fatal_UnexpectedEffect,
+               BU.format2 "repr body for %s is not an arrow (%s)"
+               (ed.mname |> Ident.string_of_lid) (Print.term_to_string t)) r)
+        | _ ->
+          raise_error (Errors.Fatal_UnexpectedEffect,
+            BU.format2 "repr for %s is not an abstraction (%s)"
+              (ed.mname |> Ident.string_of_lid) (Print.term_to_string repr_t)) r in
+
+    //check that if the effect is marked total, then the underlying effect is also total
+    if quals |> List.contains TotalEffect &&
+       not (Env.is_total_effect env0 underlying_effect_lid)
+    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
+                      BU.format2 "Effect %s is marked total but its underlying effect %s is not total"
+                        (ed.mname |> Ident.string_of_lid) (underlying_effect_lid |> Ident.string_of_lid)) r;
+
     
     let us, ty = SS.open_univ_vars repr_us repr_ty in
     let env = Env.push_univ_vars env0 us in
@@ -193,7 +191,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
     Rel.force_trivial_guard env g;
-    repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env) in
+    (repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env)),
+    underlying_effect_lid in
 
   log_combinator "repr" repr;
 
@@ -522,6 +521,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   let thd (_, _, c) = c in
 
   { ed with
+    is_layered    = (true, Some underlying_effect_lid);
     signature     = (fst signature, snd signature);
     ret_wp        = (fst return_repr, thd return_repr);
     bind_wp       = (fst bind_repr, thd bind_repr);
@@ -959,7 +959,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
   ed
 
 let tc_eff_decl env ed quals =
-  (if ed.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals
+  (if fst ed.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
@@ -983,6 +983,21 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   let us, lift = sub.lift |> must in
   let r = lift.pos in
+
+  begin
+    let src_ed = Env.get_effect_decl env0 sub.source in
+    let tgt_ed = Env.get_effect_decl env0 sub.target in
+    if (fst src_ed.is_layered &&  //source is a layered effect
+        lid_equals (src_ed.is_layered |> snd |> must) tgt_ed.mname) ||  //and target is its underlying effect, or
+       (fst tgt_ed.is_layered &&  // target is a layered effect
+        lid_equals (tgt_ed.is_layered |> snd |> must) src_ed.mname)  //and source is its underlying effect
+    then
+      raise_error (Errors.Fatal_EffectsCannotBeComposed,
+                   BU.format2 "Lifts cannot be defined from a layered effect to its repr or vice versa (%s and %s here)"
+                     (src_ed.mname |> Ident.string_of_lid) (tgt_ed.mname |> Ident.string_of_lid)) r
+  end;
+
+
 
   let env, us, lift =
     if List.length us = 0 then env0, us, lift
@@ -1086,7 +1101,7 @@ let tc_lift env sub r =
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
-  if ed_src.is_layered || ed_tgt.is_layered
+  if fst ed_src.is_layered || fst ed_tgt.is_layered
   then tc_layered_lift env sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in

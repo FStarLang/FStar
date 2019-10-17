@@ -1204,7 +1204,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
                   let md = Env.get_effect_decl env m in
                   md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift in
                 let fn =
-                  if md.is_layered then mk_layered_conjunction
+                  if fst md.is_layered then mk_layered_conjunction
                   else mk_non_layered_conjunction in
                 let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
                 Some md,
@@ -1215,7 +1215,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             | []
             | [_] -> comp, g_comp
             | _ ->
-              if (md |> must).is_layered then comp, g_comp
+              if fst (md |> must).is_layered then comp, g_comp
               else
                 let comp = Env.comp_to_comp_typ env comp in
                 let md = Env.get_effect_decl env comp.effect_name in

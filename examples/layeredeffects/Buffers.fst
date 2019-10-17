@@ -224,7 +224,7 @@ let copy_naive (b1 b2:B.buffer u8)
   let x = B.index b1 15ul in B.upd b2 15ul x
 
 
-//#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
+#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
 
 inline_for_extraction
 let copy (b1 b2:B.buffer u8)

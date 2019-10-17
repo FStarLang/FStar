@@ -261,6 +261,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "fresh"         fresh       e_unit e_int
                                fresh       NBET.e_unit NBET.e_int;
 
+      mktac1 0 "curms"         curms       e_unit e_int
+                               curms       NBET.e_unit NBET.e_int;
+
       mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term
                                uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
 
@@ -410,12 +413,15 @@ let report_implicits rng (is : Env.implicits) : unit =
     Err.add_errors errs;
     Err.stop_if_err ()
 
-let run_tactic_on_typ'
+let run_tactic_on_ps
         (rng_tac : Range.range) (rng_goal : Range.range)
-        (tactic:term) (env:env)
-        (typ:S.typ) (initial_proofstate: Range.range -> Env.env -> proofstate * term)
+        (e_arg : embedding<'a>)
+        (arg : 'a)
+        (e_res : embedding<'b>)
+        (tactic:term)
+        (env:env) (ps:proofstate)
                     : list<goal> // remaining goals
-                    * term // witness
+                    * 'b // return value
                     =
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
@@ -423,35 +429,30 @@ let run_tactic_on_typ'
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
-    let _, _, g = TcTerm.tc_tactic env tactic in
+    let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
     if !tacdbg then
         BU.print_string "}\n";
 
-    TcRel.force_trivial_guard env g;
-    Err.stop_if_err ();
-    let tau = unembed_tactic_1 e_unit e_unit tactic FStar.Syntax.Embeddings.id_norm_cb in
-    let env, _ = Env.clear_expected_typ env in
-    let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
-    let env = { env with failhard = true } in
-    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
-    let ps, w = initial_proofstate rng env in
+
+    TcRel.force_trivial_guard env g;
+    Err.stop_if_err ();
+    let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
     Reflection.Basic.env_hook := Some env;
-    if !tacdbg then
-        BU.print1 "Running tactic with goal = (%s) {\n"
-          (Print.term_to_string typ);
-    let res, ms = BU.record_time (fun () -> run_safe (tau ()) ps) in
+    (* if !tacdbg then *)
+    (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
+    let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
     if !tacdbg then
         BU.print_string "}\n";
     if !tacdbg || Options.tactics_info () then
         BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
 
     match res with
-    | Success (_, ps) ->
-        if !tacdbg then
-            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
+    | Success (ret, ps) ->
+        (* if !tacdbg || Options.tactics_info () then *)
+        (*     BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); *)
         List.iter (fun g -> if is_irrelevant g
                             then if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
                                  then ()
@@ -485,7 +486,7 @@ let run_tactic_on_typ'
 
         if !tacdbg then
             do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
-        (ps.goals@ps.smt_goals, w)
+        (ps.goals@ps.smt_goals, ret)
 
     | Failed (e, ps) ->
         do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
@@ -504,13 +505,14 @@ let run_tactic_on_typ'
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
-        (tactic:term) (env:env)
-        (typ:term)
-    : list<goal> // remaining goals
-    * term // witness
-    =
-    run_tactic_on_typ' rng_tac rng_goal tactic env typ (fun rng env -> proofstate_of_goal_ty rng env typ)
-
+        (tactic:term) (env:env) (typ:term)
+                    : list<goal> // remaining goals
+                    * term // witness
+                    =
+    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
+    let ps, w = proofstate_of_goal_ty rng env typ in
+    let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic env ps in
+    gs, w
 
 let run_tactic_on_all_implicits
         (rng_tac : Range.range) (rng_goal : Range.range)
@@ -518,13 +520,16 @@ let run_tactic_on_all_implicits
     : list<goal> // remaining goals
     * term // witness
     =
-    run_tactic_on_typ'
+    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
+    let ps, w = proofstate_of_all_implicits rng env imps in
+    let gs, _res = run_tactic_on_ps
       rng_tac
       rng_goal
+      e_unit () e_unit
       tactic
       env
-      S.t_unit
-      (fun rng env -> proofstate_of_all_implicits rng env imps)
+      ps in
+    gs, w
 
 // Polarity
 type pol =
@@ -831,6 +836,14 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     match unembed (e_list RE.e_sigelt) w FStar.Syntax.Embeddings.id_norm_cb with
     | Some sigelts -> sigelts
     | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    end
+
+let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+    if env.nosynth then tm else begin
+    tacdbg := Env.debug env (Options.Other "Tac");
+    let ps = proofstate_of_goals tm.pos env [] [] in
+    let gs, tm = run_tactic_on_ps tau.pos tm.pos RE.e_term tm RE.e_term tau env ps in
+    tm
     end
 
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
