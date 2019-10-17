@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "35ef1a07afc512d1aa7d9961bd29b0d6"
+      "dd28673dbfd2d5a7a712e460912ed7f2"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "ea8a0bc74fb3acfbd186f098b827823b"
+      "d2848674f6f6655180945e07b341f8b7"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4eca87c4aba9abbe92b0d7e080d6934a"
+      "c4269bc57e747c63959eed423eea0b8c"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "680869b50c66e10d73c2e5ca2e777ab6"
+      "bca6e4ab8f5c07354ff22353031ce4eb"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "6134b58705c0017ca791c1409938d3ef"
+      "8a5b800d3e54bda7e1358219c783367d"
     ],
     [
       "Trace.uu___100",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "2f05b2c078e10daf2f7b84a163aa53a3"
+      "a3d8538559ed1dbc1eccb09470d313b4"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bc21fe1e0170a2ecdd5659db0e6f7da8"
+      "c7b7e0c59967c5fe11646bd450694a94"
     ],
     [
       "Trace.uu___110",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "53036ff7c98e031b9906eb1916e6f26a"
+      "e99bdd572a3dac8e5a4eba772e109c17"
     ],
     [
       "Trace.uu___114",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "8ef9efd2a84509ba64630087ed6cff4d"
+      "476c9ac83472f95f35003ea8393962a7"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "106cb61994e7a6941679377c7f38b4ee"
+      "4d31a914e86570c6db98fd91de57ee68"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "699838b0b718d2de9fb889ce672d80e9"
+      "20f626db4848d8f7725d53d9bb248bfd"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "73ffe7d9727826cf14153d5347559550"
+      "31e466b29976636445ec958a631bc928"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "d0c0d6e36f5e8177ba0000828288258d"
+      "da15e0412b6d7cbaef279305338d2e5b"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a63cfd3c871eea6fc02d74582eb367b1"
+      "3529a47d9ee47432a76c3ca5fbccf2ac"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "60c1b431a15eb53e5184ad556d7ceada"
+      "d7f73a3bbf0d233de1c485e1c4f6bf44"
     ],
     [
       "Trace.uu___100",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "21a3dd3f98abedcdfb848bf07a4d3a14"
+      "cbe8c5cead9c3c32b6c41896c78edcfb"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6047cbaf9492a712c2dfa0b014d63a09"
+      "b5036d8240ef4dceccbf211f7ae15d8b"
     ],
     [
       "Trace.uu___110",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b07233955ff4d0c1a52271b7769388bc"
+      "f46f15975392069cbcf781e229eb2ccc"
     ],
     [
       "Trace.uu___114",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "6ee0e095e68d139fb9d8db8334a9a97e"
+      "1d2bdd020ce7732805e5df442b33b54d"
     ]
   ]
 ]

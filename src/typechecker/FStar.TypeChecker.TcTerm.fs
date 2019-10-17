@@ -116,20 +116,22 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc = TcUtil.maybe_coerce_lc env e lc t' in //add a b2t coercion if, e.g., e:bool and t'=Type
-     let t = lc.res_typ in
-     let e, g = TcUtil.check_and_ascribe env e t t' in
-     if debug env Options.High
+     let e, lc, g = TcUtil.check_and_ascribe env e lc t' in
+     if debug env Options.Low
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
-                (Print.term_to_string t) (Print.term_to_string t')
+                (Print.lcomp_to_string lc) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
-     let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
+     let t = lc.res_typ in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let lc =
-       if tlc |> is_left && TcUtil.should_return env (Some e) lc then TcUtil.return_value env (TcUtil.lcomp_univ_opt lc) t e |> U.lcomp_of_comp
+       if tlc |> is_left && TcUtil.should_return env (Some e) lc
+            && U.is_pure_lcomp lc // this last conjunct is crucial, otherwise
+                                  // we could drop the effects of `e` here
+       then TcUtil.return_value env (TcUtil.lcomp_univ_opt lc) t e |> U.lcomp_of_comp
        else lc
      in
+     let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
   in
@@ -483,12 +485,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         value_check_expected_typ env tm (Inl S.t_term) guard
 
     | Quote_dynamic ->
-        let c = mk_Comp ({ comp_univs = [U_zero];
-                           effect_name = Const.effect_Tac_lid;
-                           result_typ = S.t_term;
-                           effect_args = [];
-                           flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-                        }) in
+        let c = mk_Tac S.t_term in
 
         (* Typechecked the quoted term just to elaborate it *)
         let env', _ = Env.clear_expected_typ env in
@@ -1440,7 +1437,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
                     e, t_annot, guard
                 | _ ->
-                    let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in  //QUESTION: t should also probably be t_annot here
+                    let lc = S.mk_Total tfun_computed |> U.lcomp_of_comp in
+                    let e, _, guard' = TcUtil.check_and_ascribe env e lc t in  //QUESTION: t should also probably be t_annot here
                     e, t_annot, Env.conj_guard guard guard'
            end
 

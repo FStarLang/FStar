@@ -253,8 +253,8 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
-let inspect        = p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"]
-let pack           = p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"]
+let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
+let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
 let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
 
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]

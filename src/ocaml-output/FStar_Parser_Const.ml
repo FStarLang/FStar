@@ -198,9 +198,9 @@ let (as_requires : FStar_Ident.lident) = pconst "as_requires"
 let (as_ensures : FStar_Ident.lident) = pconst "as_ensures" 
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases" 
 let (inspect : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"] 
+  p2l ["FStar"; "Tactics"; "Builtins"; "inspect"] 
 let (pack : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"] 
+  p2l ["FStar"; "Tactics"; "Builtins"; "pack"] 
 let (binder_to_term : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"] 
 let (reveal : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "reveal"] 

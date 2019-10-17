@@ -1201,7 +1201,7 @@ let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: o
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
-let lcomp_of_comp c0 =
+let lcomp_of_comp (c0:comp) : lcomp =
     let eff_name, flags =
         match c0.n with
         | Total _ -> PC.effect_Tot_lid, [TOTAL]

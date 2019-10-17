@@ -17,7 +17,7 @@ let test_add_1' (x:int) : int =
 let test () =
   assert (test_add_1' 5 == 7)
 
-let is_fv (fv:string) (t:term) : bool =
+let is_fv (fv:string) (t:term) : Tac bool =
   match t with
   | Tv_FVar fv' ->
     String.concat "." (inspect_fv fv') = fv
