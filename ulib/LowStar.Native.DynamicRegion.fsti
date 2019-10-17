@@ -34,7 +34,7 @@ module HST = FStar.HyperStack.ST
 ///    the region, so a client need only maintain the liveness of the
 ///    region as an invariant, rather than the liveness of several
 ///    (potentially unbounded) references.q
-/// 
+///
 ///  - This simplifies their concrete memory reclamation strategy and
 ///    helps eliminate memory leaks
 ///
@@ -67,7 +67,7 @@ let is_heap_region (r:HS.rid) : GTot bool =
   HS.is_eternal_color (HS.color r) //we should rename HS.is_eternal_region to HS.is_heap_region
 
 /// All eternal regions are heap_regions
-let eternal_heap_regions (r:HS.rid) 
+let eternal_heap_regions (r:HS.rid)
   : Lemma (HST.is_eternal_region r ==> is_heap_region r)
   = ()
 
@@ -75,7 +75,7 @@ let eternal_heap_regions (r:HS.rid)
 let h_rid = r:HS.rid { is_heap_region r }
 
 /// A wrapper around a library function to create a new heap region
-let new_heap_region (m:HS.mem) 
+let new_heap_region (m:HS.mem)
                     (parent:h_rid{HS.live_region m parent})
   : Tot (t:(h_rid * HS.mem){HS.fresh_region (fst t) m (snd t)})
   = let rid, m = HS.new_eternal_region m parent None in
@@ -103,7 +103,7 @@ val new_drgn (parent:HST.erid)
       fresh_region r1 m0 m1 /\
       color r1 = color r0 /\
       get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
-      get_tip m1 == get_tip m0 /\ 
+      get_tip m1 == get_tip m0 /\
       live_region m0 r0 /\
       (r1, m1) == new_heap_region m0 r0)
 
@@ -112,9 +112,9 @@ val new_drgn (parent:HST.erid)
 /// Exracted to `free_handle`
 val free_drgn (d:drgn)
   : HST.ST unit
-    (requires fun h -> 
+    (requires fun h ->
       HS.live_region h (rid_of_drgn d))
-    (ensures fun h0 _ h1 -> 
+    (ensures fun h0 _ h1 ->
       B.modifies (B.loc_region_only false (rid_of_drgn d)) h0 h1)
 
 (*** Allocating and Free'ing references ***)
@@ -124,7 +124,7 @@ val free_drgn (d:drgn)
 ///   -- region-lifetime refs are live so long as their enclosing
 ///      region is live. They are reclaimed only when the entire
 ///      region is reclaimed
-/// 
+///
 ///   -- short-lived refs are associated with the region, but they can
 ///      be allocated and freed manually
 
@@ -134,7 +134,7 @@ val free_drgn (d:drgn)
 val region_lifetime_ref (#a:Type) (#rel:preorder a) (d:drgn) (r:HST.mref a rel) : prop
 
 /// Eliminating the abstract predicate via a stateful lemma, i.e., a "recall"
-val recall_liveness_ref (#a:Type) (#rel:preorder a) (d:drgn) (r:HST.mref a rel) 
+val recall_liveness_ref (#a:Type) (#rel:preorder a) (d:drgn) (r:HST.mref a rel)
   : HST.ST unit
     (requires fun h ->
       region_lifetime_ref d r /\
@@ -150,22 +150,22 @@ val ralloc (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
   : HST.ST (HST.mref a rel)
     (requires fun h ->
       HS.live_region h (rid_of_drgn d))
-    (ensures fun h0 r h1 -> 
+    (ensures fun h0 r h1 ->
       HST.ralloc_post (rid_of_drgn d) init h0 r h1 /\
       region_lifetime_ref d r)
-  
+
 /// Allocate a manually-managed reference to `init` within `d`.
 /// Extracted as just a normal `malloc` (not allocated concretely in d)
 ///
 /// Note: this could almost be implemented directly using HST.ralloc_mm
-/// 
+///
 /// However, that function is specialized to work only on HST.is_eternal_region
 /// That restriction should be relaxed
 val ralloc_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
   : HST.ST (HST.mmmref a rel)
     (requires fun h ->
       HS.live_region h (rid_of_drgn d))
-    (ensures fun h0 r h1 -> 
+    (ensures fun h0 r h1 ->
       HST.ralloc_post (rid_of_drgn d) init h0 r h1)
 
 /// Free a manually-managed reference
@@ -173,9 +173,9 @@ val ralloc_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
 inline_for_extraction
 let rfree (#a:Type) (#rel:preorder a) (r:HST.mmmref a rel)
   : HST.ST unit
-    (requires fun h -> 
+    (requires fun h ->
       h `HS.contains` r)
-    (ensures fun h0 _ h1 -> 
+    (ensures fun h0 _ h1 ->
       B.modifies (B.loc_freed_mreference r) h0 h1)
   = HST.rfree r
 
@@ -203,7 +203,24 @@ val ralloc_buf (#a:Type0) (#rrel:B.srel a) (r:drgn) (init:a) (len:U32.t)
       HS.live_region h (rid_of_drgn r))
     (ensures fun h0 b h1 ->
       B.alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+      B.frameOf b == rid_of_drgn r /\
       region_lifetime_buf r b)
+
+/// Allocating a region-lifetime buffer, initializing its contents
+/// with another buffer
+val ralloc_and_blit_buf (#a:Type0) (#rrel:B.srel a) (r:drgn)
+  (#rrel1 #rel1:_) (src:B.mbuffer a rrel1 rel1) (from len:U32.t)
+  : HST.ST (B.lmbuffer a rrel rrel (U32.v len))
+    (requires fun h ->
+      HS.live_region h (rid_of_drgn r) /\
+      U32.v from + U32.v len <= B.length src /\
+      B.live h src)
+    (ensures fun h0 b h1 ->
+      B.alloc_post_mem_common b h0 h1
+        (Seq.slice (B.as_seq h0 src) (U32.v from) (U32.v from + U32.v len)) /\
+      B.frameOf b == rid_of_drgn r /\
+      region_lifetime_buf r b)
+
 
 /// Allocating a buffer that can be freed early
 val ralloc_mm_buf (#a:Type0) (#rrel:B.srel a) (r:drgn) (init:a) (len:U32.t)
@@ -212,5 +229,19 @@ val ralloc_mm_buf (#a:Type0) (#rrel:B.srel a) (r:drgn) (init:a) (len:U32.t)
       U32.v len > 0 /\
       HS.live_region h (rid_of_drgn r))
     (ensures fun h0 b h1 ->
-      B.alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
+      B.alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+      B.frameOf b == rid_of_drgn r)
 
+/// Allocating a region-lifetime buffer, initializing its contents
+/// with another buffer
+val ralloc_and_blit_mm_buf (#a:Type0) (#rrel:B.srel a) (r:drgn)
+  (#rrel1 #rel1:_) (src:B.mbuffer a rrel1 rel1) (from len:U32.t)
+  : HST.ST (B.lmbuffer a rrel rrel (U32.v len))
+    (requires fun h ->
+      HS.live_region h (rid_of_drgn r) /\
+      U32.v from + U32.v len <= B.length src /\
+      B.live h src)
+    (ensures fun h0 b h1 ->
+      B.alloc_post_mem_common b h0 h1
+        (Seq.slice (B.as_seq h0 src) (U32.v from) (U32.v from + U32.v len)) /\
+      B.frameOf b == rid_of_drgn r)
