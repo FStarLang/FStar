@@ -69,7 +69,7 @@ let drop_until : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list =
   
 let (trim : Prims.bool Prims.list -> Prims.bool Prims.list) =
   fun l  ->
-    let uu____362 = drop_until Prims.id (FStar_List.rev l)  in
+    let uu____362 = drop_until FStar_Pervasives.id (FStar_List.rev l)  in
     FStar_List.rev uu____362
   
 let (implies : Prims.bool -> Prims.bool -> Prims.bool) =
