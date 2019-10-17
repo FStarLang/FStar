@@ -313,6 +313,7 @@ sub_effect DIV ~> RSTATE = lift_div_rstate
 
 /// Hoare style encoding
 
+unfold
 let hoare_to_wp
   (a: Type)
   (r_in: resource)
@@ -327,6 +328,7 @@ effect RST (a:Type)
   (pre:rprop r_in) (post:rmem r_in -> (x:a) -> rprop (r_out x))
 = RSTATE a r_in r_out (hoare_to_wp a r_in r_out pre post)
 
+unfold
 let rst_repr
   (a: Type)
   (r_in:resource)

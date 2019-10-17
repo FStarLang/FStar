@@ -32,9 +32,17 @@ val index_ (#a:Type) (b:A.array a) (i:UInt32.t)
 
 #push-options "--admit_smt_queries false"
 
-let index_ (#a:Type) (b:A.array a) (i:UInt32.t) = fun _ ->
-  (**) reveal_array();
-  A.index b i
+module ST = FStar.HyperStack.ST
+
+let index_ (#a:Type) (b:A.array a) (i:UInt32.t) =
+  fun _ ->
+  reveal_array ();
+  let h0 = FStar.HyperStack.ST.get () in  
+  let x = A.index b i in
+  //AR: this assertion is required, else the proof doesn't go through
+  //    I suspect some patterns not set up properly
+  assert (x == Seq.index (as_rseq b (mk_rmem (array_resource b) h0)) (UInt32.v i));
+  x
 
 #pop-options
 
