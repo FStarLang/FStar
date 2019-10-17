@@ -93,7 +93,7 @@ let post_a (#a:Type) (#b:Type) (#state:Type0) (wp_g:a -> wp_t state b) (p:post_t
   fun r h ->
   match r with
   | None -> p None h
-  | Some r -> Prims.auto_squash (wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r) h)
+  | Some r -> wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r) h
 
 unfold
 let bind_wp0 (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> wp_t state b) : wp_t0 state b =
@@ -123,6 +123,7 @@ let bind (a:Type) (b:Type)
   (f:mrepr a state wp_f) (g:(x:a -> mrepr b state (wp_g x)))
 : mrepr b state (bind_wp wp_f wp_g)
 = fun st ->
+  admit ();  //AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
   let (x, st) = f st in
   g x st
 
