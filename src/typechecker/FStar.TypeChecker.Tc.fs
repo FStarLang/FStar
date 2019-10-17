@@ -478,7 +478,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
-    let (lid, uvs, tps, c) = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
+    let lid, uvs, tps, c =
+      if Options.use_two_phase_tc () && Env.should_verify env
+      then
+        TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
+	|> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
+	|> N.elim_uvars env |>
+	(fun se -> match se.sigel with
+	        | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
+		| _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
+      else lid, uvs, tps, c in
+
+    let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
     let se = { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) } in
     [se], [], env0
 
