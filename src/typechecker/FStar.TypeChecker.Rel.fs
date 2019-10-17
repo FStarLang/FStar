@@ -1843,6 +1843,18 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
+   (*
+    * AR: adding env to the return type
+    *
+    *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
+    *       so that subsequent binders are solved in the right env
+    *     when all the binders are solved, it creates the rhs problem and returns it
+    *     the problem was that this rhs problem was getting solved in the original env,
+    *       since `aux` never returned the env with all the binders
+    *     so far it was fine, but with layered effects, we have to be really careful about the env
+    *     so now we return the updated env, and the rhs is solved in that final env
+    *     (see how `aux` is called after its definition below)
+    *)
    let rec aux wl scope env subst (xs:binders) (ys:binders) : Env.env * either<(probs * formula), string> * worklist =
         match xs, ys with
         | [], [] ->
