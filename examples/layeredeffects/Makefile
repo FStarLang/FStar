@@ -21,4 +21,4 @@ clean:
 	rm -f .depend *.checked parsing/*.checked
 
 extract:
-	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst #parsing/FlightsStExn.fst
+	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst #parsing/FlightsStExn.fst -- double reification leaves a lambda around, which is not valid Low*
