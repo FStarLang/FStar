@@ -160,7 +160,11 @@ let rmem (r: resource) : Type =
 val mk_rmem
   (r: resource)
   (h: imem (inv r)) :
-  Tot (rh:rmem r{forall (r0:resource{r0 `is_subresource_of` r}). rh r0 == sel r0.view h})
+  Tot (rh:rmem r{
+    forall (r0:resource{r0 `is_subresource_of` r}). {:pattern (rh r0) \/ (sel r0.view h) }
+    rh r0 == sel r0.view h
+  })
+
 
 /// The only other transformation allowed on selectors is focusing on a subresource.
 

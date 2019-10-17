@@ -105,6 +105,8 @@ let mk_rmem r h =
      (r0:resource{r0 `is_subresource_of` r})
      (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
 
+let mk_rmem_spec r h r0 = ()
+
 let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` r})
   : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}).
     (is_subresource_of_trans r0' r0 r; s' r0' == s r0')
@@ -255,7 +257,7 @@ inline_for_extraction noextract val rst_frame_
   (#pre:rprop inner0)
   (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
    ($f:unit -> RST a inner0 inner1 pre post)
-  : repr a outer0 outer1 (hoare_to_wp outer0 outer1 (
+  : repr a outer0 outer1 (hoare_to_wp a outer0 outer1 (
     FStar.Tactics.by_tactic_seman resolve_frame_delta
       (frame_delta outer0 inner0 outer1 inner1 delta);
       fun h ->
@@ -271,7 +273,7 @@ inline_for_extraction noextract val rst_frame_
     )
   )
 
-#push-options "--z3rlimit 250 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 70 --max_fuel 0 --max_ifuel 0"
 
 
 inline_for_extraction noextract let rst_frame_

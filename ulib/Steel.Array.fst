@@ -30,25 +30,27 @@ val index_ (#a:Type) (b:A.array a) (i:UInt32.t)
       h0 == h1
     )
 
-#push-options "--admit_smt_queries false"
-
-module ST = FStar.HyperStack.ST
-
-let index_ (#a:Type) (b:A.array a) (i:UInt32.t) =
-  fun _ ->
-  reveal_array ();
-  let h0 = FStar.HyperStack.ST.get () in  
+let index_ (#a:Type) (b:A.array a) (i:UInt32.t) = fun _ ->
+  (**) reveal_array ();
+  (**) let h0 = HST.get () in
   let x = A.index b i in
-  //AR: this assertion is required, else the proof doesn't go through
-  //    I suspect some patterns not set up properly
-  assert (x == Seq.index (as_rseq b (mk_rmem (array_resource b) h0)) (UInt32.v i));
+  (**) // TODO: how to trigger that automatically ?
+  (**) assert((mk_rmem (array_resource b) h0) (array_resource b) == sel (array_resource b).view h0);
   x
-
-#pop-options
 
 let index #a b i = RST?.reflect (index_ #a b i)
 
-let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
+val upd_ (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
+  : rst_repr unit (array_resource b)
+    (fun _ -> array_resource b)
+    (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (get_rperm b h0))
+    (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
+      as_rseq b h1 ==
+      Seq.upd (as_rseq b h0) (UInt32.v i) v /\
+      get_rperm b h1 == get_rperm b h0
+    )
+
+let upd_ (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) = fun _ ->
   (**) reveal_array();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
@@ -58,47 +60,135 @@ let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   (**) assert(modifies (array_resource b) (array_resource b) h0 h1);
   (**) assert(A.loc_includes (A.loc_used_in h0) (as_loc (fp (array_resource b)) h0));
   (**) A.live_array_used_in b h1;
-  (**) same_perm_seq_always_constant h0 h1 b
+  (**) same_perm_seq_always_constant h0 h1 b;
+  (**) assert((mk_rmem (array_resource b) h0) (array_resource b) == sel (array_resource b).view h0);
+  (**) assert((mk_rmem (array_resource b) h1) (array_resource b) == sel (array_resource b).view h1)
 
-let alloc (#a:Type) (init:a) (len:UInt32.t) =
+let upd #a b i v = RST?.reflect (upd_ #a b i v)
+
+val alloc_ (#a:Type) (init:a) (len:UInt32.t)
+  : rst_repr (A.array a)
+    (empty_resource)
+    (fun b -> array_resource b)
+    (fun _ -> UInt32.v len > 0)
+    (fun _ b h1 ->
+      A.freeable b /\
+      as_rseq b h1 == Seq.create (UInt32.v len) init /\
+      get_rperm b h1 == P.full_permission /\
+      A.vlength b = UInt32.v len
+    )
+
+let alloc_ (#a:Type) (init:a) (len:UInt32.t) = fun _ ->
   (**) reveal_array();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
   let b = A.alloc init len in
   (**) let h1 = HST.get () in
   (**) assert(forall (i:nat{i < A.vlength #a b}). A.get_perm #a h1 b i == P.full_permission);
-  // Find out how to trigger that
+  // TODO: Find out how to trigger that
   (**) A.live_array_used_in b h1;
+  (**) assert((mk_rmem (array_resource b) h1) (array_resource b) == sel (array_resource b).view h1);
   b
 
-let free (#a:Type) (b:A.array a) =
+let alloc #a init len = RST?.reflect (alloc_ #a init len)
+
+val free_ (#a:Type) (b:A.array a)
+  : rst_repr unit (array_resource b)
+    (fun _ -> empty_resource)
+    (fun h0 -> A.freeable b /\ P.allows_write (get_rperm b h0))
+    (fun _ _ _ -> True)
+
+let free_ (#a:Type) (b:A.array a) = fun _ ->
   (**) reveal_array();
   (**) reveal_empty_resource();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
-  A.free b
+  (**) let h0 = HST.get () in
+  (**) assert((mk_rmem (array_resource b) h0) (array_resource b) == sel (array_resource b).view h0);
+  A.free b;
+  (**) let h1 = HST.get () in
+  (**) assert((mk_rmem empty_resource h1) empty_resource == sel empty_resource.view h1)
 
-let share #a b =
+let free #a b = RST?.reflect (free_ #a b)
+
+val share_ (#a:Type) (b:A.array a)
+  : rst_repr (A.array a)
+        (array_resource b)
+        (fun b' -> array_resource b <*> array_resource b')
+        (fun _ -> A.vlength b > 0)
+        (fun h0 b' h1 ->
+          A.vlength b' = A.vlength b /\
+          as_rseq b h0 == as_rseq b h1 /\
+          as_rseq b' h1 == as_rseq b h1 /\
+          get_rperm b h1 == P.half_permission (get_rperm b h0) /\
+          get_rperm b' h1  == P.half_permission (get_rperm b h0) /\
+          summable_permissions b b' h1
+        )
+
+let share_ #a b = fun _ ->
   (**) reveal_array();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
   (**) reveal_star();
+  (**) let h0 = HST.get () in
   let b' = A.share b in
   (**) let h1 = HST.get () in
   (**) A.live_array_used_in b h1;
+  (**) assert((mk_rmem (array_resource b) h0) (array_resource b) == sel (array_resource b).view h0);
+  (**) assert(
+  (**)   (mk_rmem (array_resource b <*> array_resource b') h1)
+  (**)     (array_resource b <*> array_resource b') ==
+  (**)   sel (array_resource b <*> array_resource b').view h1
+  (**) );
   b'
 
+let share #a b = RST?.reflect (share_ #a b)
 
-let gather #a b b' =
+val gather_ (#a:Type) (b b':A.array a)
+  : rst_repr unit (array_resource b <*> array_resource b')
+    (fun _ -> array_resource b)
+    (fun h0 -> A.gatherable b b' /\ summable_permissions b b' h0)
+    (fun h0 _ h1 ->
+      summable_permissions b b' h0 /\
+      as_rseq b h0 == as_rseq b h1 /\
+      get_rperm b h1 == P.sum_permissions (get_rperm b h0) (get_rperm b' h0)
+    )
+
+let gather_ #a b b' = fun _ ->
   (**) reveal_array();
   (**) reveal_rst_inv();
   (**) reveal_modifies();
   (**) reveal_star();
+  (**) let h0 = HST.get () in
   A.gather #a b b';
   (**) let h1 = HST.get () in
-  (**) A.live_array_used_in b h1
+  (**) A.live_array_used_in b h1;
+  (**) assert((mk_rmem (array_resource b) h1) (array_resource b) == sel (array_resource b).view h1);
+  (**) assert(
+  (**)   (mk_rmem (array_resource b <*> array_resource b') h0)
+  (**)     (array_resource b <*> array_resource b') ==
+  (**)   sel (array_resource b <*> array_resource b').view h0
+  (**) )
 
-let split #a b idx =
+let gather #a b b' = RST?.reflect (gather_ #a b b')
+
+val split_ (#a: Type) (b: A.array a) (idx: UInt32.t)
+  : rst_repr (A.array a & A.array a)
+    (array_resource b)
+    (fun p -> array_resource (fst p) <*> array_resource (snd p))
+    (fun _ -> UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b)
+    (fun h0 bs h1 ->
+      UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b /\
+      A.is_split_into b (fst bs, snd bs) /\
+      as_rseq (fst bs) h1 == Seq.slice (as_rseq b h0) 0 (UInt32.v idx) /\
+      as_rseq (snd bs) h1 == Seq.slice (as_rseq b h0) (UInt32.v idx) (A.vlength b) /\
+      A.vlength (fst bs) = UInt32.v idx /\
+      A.vlength (snd bs) = A.vlength b - UInt32.v idx /\
+      get_rperm (fst bs) h1 == get_rperm b h0 /\
+      get_rperm (snd bs) h1 == get_rperm b h0
+    )
+
+let split_ #a b idx = fun _ ->
   (**) reveal_array ();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
@@ -119,11 +209,29 @@ let split #a b idx =
   (**) Classical.forall_intro_2 aux2;
   (**) assert(forall(i:nat{i < A.vlength b2}). (A.get_perm h1 b2 i == A.get_perm h0 b (i + A.vlength b1)));
   (**) A.loc_union_is_split_into #a b b1 b2;
+  (**) assert((mk_rmem (array_resource b) h0) (array_resource b) == sel (array_resource b).view h0);
+  (**) assert(
+  (**)   (mk_rmem (array_resource b1 <*> array_resource b2) h1)
+  (**)     (array_resource b1 <*> array_resource b2) ==
+  (**)   sel (array_resource b1 <*> array_resource b2).view h1
+  (**) );
   (b1, b2)
 
 #push-options "--z3rlimit 10"
 
-let glue #a b b1 b2 =
+let split #a b idx = RST?.reflect (split_ #a b idx)
+
+val glue_ (#a: Type) (b b1 b2: A.array a)
+  : rst_repr unit
+    (array_resource b1 <*> array_resource b2)
+    (fun _ -> array_resource b)
+    (fun h0 -> A.is_split_into b (b1, b2) /\ get_rperm b1 h0 == get_rperm b2 h0)
+    (fun h0 _ h1 ->
+      as_rseq b h1 == Seq.append (as_rseq b1 h0) (as_rseq b2 h0) /\
+      get_rperm b h1 == get_rperm b1 h0
+    )
+
+let glue_ #a b b1 b2 = fun _ ->
   (**) assert(A.is_split_into b (b1,b2));
   (**) reveal_array ();
   (**) reveal_rst_inv ();
@@ -149,8 +257,16 @@ let glue #a b b1 b2 =
   (**) A.loc_includes_none (A.loc_array b);
   (**) assert(A.modifies (A.loc_array b) h0 h1);
   (**) assert(A.is_split_into b (b1,b2));
-  (**) A.loc_union_is_split_into b b1 b2
+  (**) A.loc_union_is_split_into b b1 b2;
+  (**) assert((mk_rmem (array_resource b) h1) (array_resource b) == sel (array_resource b).view h1);
+  (**) assert(
+  (**)   (mk_rmem (array_resource b1 <*> array_resource b2) h0)
+  (**)     (array_resource b1 <*> array_resource b2) ==
+  (**)   sel (array_resource b1 <*> array_resource b2).view h0
+  (**) )
 
 #pop-options
+
+let glue #a b b1 b2 = RST?.reflect (glue_ #a b b1 b2)
 
 let copy #a o i = admit()
