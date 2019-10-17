@@ -1646,16 +1646,18 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                  *)
                 let args =
                   if fst ed.is_layered then
-                    let rest_bs =
+                    let unit_args =
                       match (ed.bind_wp |> snd |> SS.compress).n with
                       | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
-                        bs |> List.splitAt (List.length bs - 2) |> fst
+                        bs
+                        |> List.splitAt (List.length bs - 2)
+                        |> fst
+                        |> List.map (fun _ -> S.as_arg S.unit_const)
                       | _ ->
                         raise_error (Errors.Fatal_UnexpectedEffect,
                           BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
                             (Ident.string_of_lid ed.mname) (ed.bind_wp |> snd |> Print.term_to_string)) rng in
-                    (S.as_arg lb.lbtyp)::(S.as_arg t)::
-                    ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg head; S.as_arg body])
+                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
                   else
                     [ (* a, b *)
                       as_arg lb.lbtyp; as_arg t] @
@@ -1783,16 +1785,18 @@ and reify_lift cfg e msrc mtgt t : term =
        *   a ..units for binders that compute indices.. x
        *)
       if fst ed.is_layered then
-        let rest_bs =
+        let unit_args =
           match (ed.ret_wp |> snd |> SS.compress).n with
           | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
-            bs |> List.splitAt (List.length bs - 1) |> fst
+            bs
+            |> List.splitAt (List.length bs - 1)
+            |> fst
+            |> List.map (fun _ -> S.as_arg S.unit_const)
           | _ ->
             raise_error (Errors.Fatal_UnexpectedEffect,
               BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
                 (Ident.string_of_lid ed.mname) (ed.ret_wp |> snd |> Print.term_to_string)) e.pos in
-        (S.as_arg t)::
-        ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e])
+        (S.as_arg t)::(unit_args@[S.as_arg e])
       else [as_arg t ; as_arg e] in
     S.mk (Tm_app(return_inst, args)) None e.pos
   else
