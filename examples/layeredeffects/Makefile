@@ -19,3 +19,6 @@ verify-all: $(ALL_CHECKED_FILES)
 
 clean:
 	rm -f .depend *.checked parsing/*.checked
+
+extract:
+	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst #parsing/FlightsStExn.fst
