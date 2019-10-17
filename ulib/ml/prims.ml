@@ -77,7 +77,6 @@ type ('Aa,'Ab,'Auu____484,'Auu____485) precedes = unit
 type ('Aa,'Auu____490,'Auu____491) has_type = unit
 type ('Aa,'Ap) l_Forall = unit
 type prop = unit
-let id x = x
 type ('Aa,'Ab) dtuple2 =
   | Mkdtuple2 of 'Aa * 'Ab
 let uu___is_Mkdtuple2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> bool =
