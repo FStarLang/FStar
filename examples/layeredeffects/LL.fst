@@ -121,7 +121,7 @@ let post_a (a:Type) (b:Type) (wp_g:a -> wp_t b) (p:post_t b) : post_t a =
   fun r ->
   match r with
   | None -> p None
-  | Some r -> Prims.auto_squash (wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r))
+  | Some r -> wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r)
 
 let lemma_monotonic2 (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) (p:post_t b) (q:post_t b) (n:nat)
 : Lemma
@@ -162,6 +162,7 @@ let bind (a:Type) (b:Type)
   (f:repr a wp_f) (g:(x:a -> repr b (wp_g x)))
 : repr b (bind_wp a b wp_f wp_g)
 = fun n ->
+  admit ();  //AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
   let (x, n) = f n in
   g x n
 
