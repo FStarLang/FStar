@@ -32,7 +32,7 @@ val ptr_alloc
     (fun ptr -> ptr_resource ptr)
     (fun _ -> True)
     (fun _ ptr h1 ->
-      A.freeable ptr /\
+      freeable ptr /\
       get_val ptr h1 == init /\
       get_perm ptr h1 == P.full_permission
     )

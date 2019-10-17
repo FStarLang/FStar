@@ -187,9 +187,16 @@ val extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_o
 /// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
 /// of a resource.
 
-val hsrefine (r:resource) (p:rprop r) : Tot (r':resource{
+val refine_inv (r:resource) (p:rprop r) : Tot (r':resource{
     r'.t == r.t /\
     r'.view == {r.view with inv = fun h -> r.view.inv h /\ p (mk_rmem r h)}
+  })
+
+val refine_view (r: resource) (#a: Type) (f: r.t -> a) : Tot (r':resource{
+    r'.t == a /\
+    r'.view.fp == r.view.fp /\
+    r'.view.inv == r.view.inv /\
+    r'.view.sel == (fun h -> f (r.view.sel h))
   })
 
 (**** The RST effect *)

@@ -164,7 +164,7 @@ let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_o
 
 #push-options "--z3rlimit 30"
 
-let hsrefine r p =
+let refine_inv r p =
   let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_rmem r h) in
   let new_view = { r.view with inv = new_inv } in
   reveal_view ();
@@ -199,6 +199,15 @@ let hsrefine r p =
   r'
 
 #pop-options
+
+let refine_view r #a f =
+  let new_sel h = f (r.view.sel h) in
+  let new_view = { r.view with sel = new_sel} in
+  reveal_view ();
+  {
+   t = a;
+   view = new_view
+  }
 
 let rst_inv res h =
   loc_includes (loc_used_in h) (as_loc (fp res) h) /\ True

@@ -16,7 +16,7 @@
 module Steel.Pointer
 
 module P = LowStar.Permissions
-module A = LowStar.Array
+module A = Steel.Array
 module HST = FStar.HyperStack.ST
 
 include Steel.Pointer.Views
@@ -27,24 +27,20 @@ open Steel.RST
 
 (**** Unscoped allocation and deallocation of pointer resources *)
 
-val ptr_alloc_
-  (#a:Type)
-  (init:a)
-  : rst_repr (pointer a)
-    (empty_resource)
-    (fun ptr -> ptr_resource ptr)
-    (fun _ -> True)
-    (fun _ ptr h1 ->
-      A.freeable ptr /\
-      get_val ptr h1 == init /\
-      get_perm ptr h1 == P.full_permission
-    )
+assume val array_to_pointer (#a: Type) (p: pointer a) : RST unit
+  (A.array_resource p)
+  (fun _ -> ptr_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
+    get_perm p h1 == A.get_rperm p h0
+  )
 
-let ptr_alloc_ #a init = fun _ ->
-  reveal_ptr();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  A.alloc init 1ul
+
+let ptr_alloc #a init =
+  let ptr = A.alloc init 1ul in
+  array_to_pointer ptr;
+  ptr
 
 let ptr_free #a ptr =
   reveal_ptr();
