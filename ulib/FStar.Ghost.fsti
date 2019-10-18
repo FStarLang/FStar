@@ -41,19 +41,30 @@
 *)
 module FStar.Ghost
 [@erasable]
-val erased : Type u#a -> Type u#a
-val reveal : #a:Type u#a -> erased a -> GTot a
-val hide   : #a:Type u#a -> a -> Tot (erased a)
+noeq
+type erased (a:Type) =
+  | E of a
 
-val hide_reveal : #a:Type
-                -> x:erased a
-                -> Lemma (ensures (hide (reveal x) == x))
-                        [SMTPat (reveal x)]
+let reveal (#a:Type) (x: erased a)
+  : GTot a
+  = match x with
+    | E x -> x
 
-val reveal_hide : #a:Type
-                -> x:a
-                -> Lemma (ensures (reveal (hide x) == x))
-                        [SMTPat (hide x)]
+let hide (#a:Type) (x:a)
+  : Tot (erased a)
+  = E x
+
+/// Useful to have this inversion lemmas that can fire
+/// even when ifuel is set to 0
+let hide_reveal (#a:Type) (x:erased a)
+  : Lemma (ensures (hide (reveal x) == x))
+          [SMTPat (reveal x)]
+  = ()
+
+let reveal_hide (#a:Type) (x:a)
+  : Lemma (ensures (reveal (hide x) == x))
+          [SMTPat (hide x)]
+  = ()
 
 let tot_to_gtot (f : 'a -> Tot 'b) (x : 'a) : GTot 'b = f x
 

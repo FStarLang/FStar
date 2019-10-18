@@ -893,7 +893,6 @@ let rec non_informative env t =
     | Tm_fvar fv ->
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
       || type_is_erasable env fv
     | Tm_app(head, _) -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t

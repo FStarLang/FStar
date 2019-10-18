@@ -2988,7 +2988,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-         | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
+         | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | GTotal _, Total _ ->
