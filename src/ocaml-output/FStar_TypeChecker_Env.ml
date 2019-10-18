@@ -3341,10 +3341,8 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
       match uu____20193 with
       | FStar_Syntax_Syntax.Tm_type uu____20198 -> true
       | FStar_Syntax_Syntax.Tm_fvar fv ->
-          (((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
-              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
-             ||
-             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
+          ((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
+             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
             || (type_is_erasable env fv)
       | FStar_Syntax_Syntax.Tm_app (head1,uu____20202) ->
           non_informative env head1
