@@ -27,19 +27,42 @@ open Steel.RST
 
 (**** Unscoped allocation and deallocation of pointer resources *)
 
-assume val array_to_pointer (#a: Type) (p: pointer a) : RST unit
+val array_to_pointer_ (#a: Type) (p: pointer a) : rst_repr unit
   (A.array_resource p)
   (fun _ -> ptr_resource p)
   (fun _ -> True)
   (fun h0 _ h1 ->
-    get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
-    get_perm p h1 == A.get_rperm p h0
+   get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
+   get_perm p h1 == A.get_rperm p h0
   )
 
+let array_to_pointer_ #a p =
+fun _ ->
+  let h = HST.get () in
+  A.reveal_array ();
+  assert((mk_rmem (A.array_resource p) h) (A.array_resource p) == sel (A.array_resource p).view h);
+  assert((mk_rmem (ptr_resource p) h) (ptr_resource p) == sel (ptr_resource p).view h);
+  reveal_rst_inv ();
+  reveal_modifies ()
+
+val array_to_pointer (#a: Type) (p: pointer a) : RST unit
+  (A.array_resource p)
+  (fun _ -> ptr_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+   get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
+   get_perm p h1 == A.get_rperm p h0
+  )
+
+let array_to_pointer #a p = RST?.reflect (array_to_pointer_ #a p)
 
 let ptr_alloc #a init =
-  let ptr = A.alloc init 1ul in
+  let ptr : A.array a = A.alloc init 1ul in
+  assume(A.vlength ptr == 1);
+  let ptr : pointer a = ptr in
+  admit();
   array_to_pointer ptr;
+  admit();
   ptr
 
 let ptr_free #a ptr =

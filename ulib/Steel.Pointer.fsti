@@ -22,6 +22,9 @@ include Steel.Pointer.Views
 
 open Steel.RST
 
+
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 (**** Unscoped allocation and deallocation of pointer resources *)
 
 val ptr_alloc

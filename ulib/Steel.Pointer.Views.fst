@@ -9,7 +9,7 @@ open Steel.RST
 
 (* View and resource for (heap-allocated, freeable) pointer resources *)
 
-let pointer (t: Type) = ptr:A.array t{A.vlength ptr = 1}
+let pointer (t: Type) = ptr:A.array t{A.vlength ptr == 1}
 
 noeq type vptr (a: Type) = {
   ptr_x: a;
@@ -17,8 +17,10 @@ noeq type vptr (a: Type) = {
 }
 
 
-let ptr_resource (#a:Type) (ptr:pointer a) =
-  refine_view (A.array_resource ptr) (fun av -> { ptr_x = Seq.index av.A.s 0; ptr_p = av.A.p })
+let ptr_resource (#a:Type) (ptr:pointer a) : resource =
+  refine_view (A.array_resource ptr) (fun (av: A.varray ptr) ->
+    { ptr_x = Seq.index av.A.s 0; ptr_p = av.A.p }
+  )
 
 let get_val
   (#a: Type)

@@ -53,10 +53,10 @@ let node_inv (#a:Type) (#ptr:t a) (s:rmem (A.array_resource ptr)) =
   P.allows_write (A.get_rperm ptr s) /\ A.vlength ptr == 1 /\ A.freeable ptr
 
 let empty_list (#a:Type) (ptr:t a) : resource =
-  hsrefine (A.array_resource ptr) empty_inv
+  refine_inv (A.array_resource ptr) empty_inv
 
 let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
-  hsrefine (A.array_resource ptr) (fun (s:rmem (A.array_resource ptr)) -> node_inv s /\ Seq.index (A.as_rseq ptr s) 0 == v)
+  refine_inv (A.array_resource ptr) (fun (s:rmem (A.array_resource ptr)) -> node_inv s /\ Seq.index (A.as_rseq ptr s) 0 == v)
 
 let rec slist' (#a:Type) (ptr:t a) (l:list (cell a)) : Tot resource
   (decreases l)
@@ -69,7 +69,7 @@ let slist #a (ptr:t a) l = slist' ptr l
 
 abstract
 let dummy_cell (#a:Type) (ptr:t a) : resource =
-  hsrefine (A.array_resource ptr) node_inv
+  refine_inv (A.array_resource ptr) node_inv
 
 let cell_alloc (#a:Type)
               (init:cell a)

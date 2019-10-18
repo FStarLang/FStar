@@ -7,6 +7,8 @@ module U32 = FStar.UInt32
 open Steel.RST
 open Steel.Pointer
 
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 
 let basic_test_increment (p: pointer U32.t) : RST unit
   (ptr_resource p)

@@ -282,7 +282,7 @@ inline_for_extraction noextract val rst_frame_
     )
   )
 
-#push-options "--z3rlimit 70 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0"
 
 
 inline_for_extraction noextract let rst_frame_
@@ -297,7 +297,7 @@ inline_for_extraction noextract let rst_frame_
   (**) focus_mk_rmem_equality outer0 inner0 h0;
   (**) focus_mk_rmem_equality outer0 delta h0;
   let x:a = reify (f ()) () in
-  (**) let h1 = HST.get ()in
+  (**) let h1 = HST.get () in
   (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
   (**) focus_mk_rmem_equality (outer1 x) delta h1;
   (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
