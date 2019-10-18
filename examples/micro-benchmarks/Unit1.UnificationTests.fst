@@ -56,3 +56,26 @@ let h_923 (g: u_923 ()) : Tot p_923 =
 unfold let buf_760 (a:Type0) = l:list a { l == [] }
 val test_760 : a:Type0 -> Tot (buf_760 a)
 let test_760 a = admit #(buf_760 a) ()
+
+
+
+module G = FStar.Ghost
+
+assume type t_coercions1 : int -> Type0
+
+assume val x_t1 : t_coercions1 100
+
+assume val foo1 : #n:G.erased int -> $x:t_coercions1 (G.reveal n) -> unit
+
+#set-options "--print_implicits"
+let test_coercions1 () : unit = foo1 x_t1
+
+
+assume type t_coercions2 : G.erased int -> Type0
+
+assume val n_t2 : G.erased int
+assume val x_t2 : t_coercions2 n_t2
+
+assume val foo2 : #n:int -> $x:t_coercions2 (G.hide n) -> unit
+
+let test_coercions2 () : unit = foo2 x_t2
