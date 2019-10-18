@@ -8227,7 +8227,7 @@ let (add_sigelt_to_env :
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.RestartSolver ) ->
-                  if from_cache
+                  if from_cache || env1.FStar_TypeChecker_Env.nosynth
                   then env1
                   else
                     ((env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
