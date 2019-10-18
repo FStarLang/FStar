@@ -45,6 +45,76 @@ module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module FC = FStar.Const
 
+
+(*
+ * This is a list of inverse fvars
+ * The list elements are:
+ *   The head fvar that this entry applies to
+ *   Number of universes that the fvars need (must be same for both f and f_inverse)
+ *   Number of additional arguments that the fvars take (e.g. type arguments, see example later)
+ *   The inverse fvar
+ *)
+
+let inverse_pairs : list<(fv * int * int * fv)> = [
+
+  (lid_as_fv Const.reveal (Delta_constant_at_level 0) None,
+   1,
+   1,
+   lid_as_fv Const.hide (Delta_constant_at_level 0) None
+  );
+
+  (lid_as_fv Const.hide (Delta_constant_at_level 0) None,
+   1,
+   1,
+   lid_as_fv Const.reveal (Delta_constant_at_level 0) None
+  );
+  
+  // ...
+]
+
+let lookup_inverses (t:term) =
+  
+  let lookup (fv:fv) =
+    let p = inverse_pairs |> List.find (fun (fv_elmt, _, _, _) -> fv_eq fv fv_elmt) in
+    match p with
+    | None -> None
+    | Some (_, num_univs, num_args, inv_fv) ->
+      Some (num_univs, num_args, inv_fv)
+  in
+
+  let is_uvar t =
+    match (SS.compress t).n with
+    | Tm_uvar u
+    | Tm_uinst ({ n = Tm_uvar u }, _)
+    | Tm_app ({ n = Tm_uvar u }, _) -> Some u
+    | _ -> None in
+
+  let is_fv_app =
+    match (SS.compress t).n with
+    | Tm_app ({ n = Tm_fvar fv }, args) -> Some (fv, [], args)
+    | Tm_app ({ n = Tm_uinst ({ n = Tm_fvar fv }, univs) }, args) -> Some (fv, univs, args)
+    | _ -> None in
+   
+
+  if is_fv_app = None then None
+  else
+    let fv, univs, args = is_fv_app |> must in
+                    
+    let in_inverses = lookup fv in
+
+    if in_inverses = None then None
+    else
+      let num_univs, num_additional_args, inv_fv = in_inverses |> must in
+      if List.length univs <> num_univs ||
+         List.length args <> num_additional_args + 1 then None
+      else
+        let additional_args, last_arg =
+          List.splitAt (List.length args - 1) args
+          |> (fun (l1, (x::_)) -> l1, fst x) in
+        if is_uvar last_arg = None then None
+        else Some (univs, additional_args, last_arg, is_uvar last_arg |> must, inv_fv)
+
+
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
 
@@ -2452,9 +2522,47 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               solve env wl
 
             | Inr None ->
-                if (may_relate head1 || may_relate head2) && wl.smt_ok
+                //this is it
+
+                let in_inverses_case = 
+                  match lookup_inverses t1 with
+                  | None ->
+                    (match lookup_inverses t2 with
+                     | None -> None
+                     | Some p -> Some (p, t2, t1))
+                  | Some p -> Some (p, t1, t2) in
+
+                if in_inverses_case |> is_some
+                then
+                  let ((univs, args, t, t_uvar, inv_fv), t1, t2) = in_inverses_case |> must in
+                  let _, new_uv_t, wl =
+                    let k =
+                      let _, lc, _ = env.tc_term ({ env with use_bv_sorts = true; lax = true; expected_typ = None }) t1 in
+                      lc.res_typ in
+                    copy_uvar (t_uvar |> fst) [] k  wl in
+                  
+                  let sub_prob1, wl = mk_t_problem
+                    wl [] orig new_uv_t EQ t2 None
+                    "sub-problem 1 of inverses case" in
+                  
+                  let inv_t2 =
+                    let fv_tm = inv_fv |> fv_to_tm in
+                    let head =
+                      if List.length univs = 0 then fv_tm
+                      else mk_Tm_uinst fv_tm univs in
+                    mk_Tm_app head (args@[S.as_arg t2]) None Range.dummyRange in
+                    
+                  let sub_prob2, wl = mk_t_problem
+                    wl [] orig t EQ inv_t2 None
+                    "sub-problem 2 of inverses case" in
+
+                  let wl = solve_prob orig (Some <| U.mk_conj (p_guard sub_prob1) (p_guard sub_prob2)) [] wl in
+                  solve env (attempt [sub_prob1; sub_prob2] wl)
+                    
+                else if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
+
                 else giveup env (BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (Print.term_to_string head1)
                                                   (BU.dflt ""
