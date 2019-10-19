@@ -17,40 +17,16 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "9d12708bd7fa7abf4ef611661d990e6f"
+      "d1295f15d18d7e3bff63d4ba71185826"
     ],
     [
       "AnnoyingVCs.test2",
       2,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "6e1bff319ba95212b59e7654b40add08"
-    ],
-    [
-      "AnnoyingVCs.test2",
-      3,
       2,
       1,
       [ "@query", "true_interp" ],
       0,
-      "73ecd066f14bbf277b3d2771ceec2271"
-    ],
-    [
-      "AnnoyingVCs.test2",
-      4,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "5a48f4a82f23bfc45a092bf4b2f1b3f6"
+      "fb947ec627ae192c71340f850ebd7fb3"
     ]
   ]
 ]
