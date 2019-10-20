@@ -111,7 +111,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "44d68f76e52ef98b45c17e263151ff46"
+      "3dabe9685108051e028121f4007fcc03"
     ],
     [
       "UserTactics.test_apply",
@@ -123,7 +123,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "34e8b4680b91d12d430f9a9aae09ab1c"
+      "21ec674a82ffe14407dbdaed71f85182"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -244,7 +244,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e192d5ebe2d69aa3518577abe6a10fdf"
+      "96d2c5c72ba57cf5f4be5212e48f12c9"
     ],
     [
       "UserTactics.test_apply",
@@ -256,7 +256,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "95dbb728323653f79d905958be9cdea3"
+      "85e63014c6e47abd744775bc8bdee61b"
     ],
     [
       "UserTactics.test_apply_ascription'",
