@@ -13,8 +13,6 @@ type result (a:Type) =
 /// Type of pre- and postconditions for the new effect we are defining
 
 
-/// Copying some definitions from your example
-
 assume val entry_t : Type0
 
 type trace_ = Seq.seq entry_t
@@ -46,11 +44,9 @@ type st_ewp (a:Type) = wp:(st_epost a -> st_epre){
 
 
 /// Finally the global trace reference
-///
-/// Sincere apologies for the `norm` here, somehow Z3 barfs in the proof of bind below if this is not there
 
 
-assume val trace_ref : (*norm [delta_only [`%i_seq] ]*) (i_seq HS.root entry_t trace_inv0)
+assume val trace_ref : i_seq HS.root entry_t trace_inv0
 
 
 /// Now the underlying representation of the new effect
