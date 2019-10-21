@@ -475,4 +475,4 @@ let labeled (r:range) (msg:string) (b:Type) :Type = b
    Incrementing this forces all .checked files to be invalidated *)
 private
 abstract
-let __cache_version_number__ = 14
+let __cache_version_number__ = 15
