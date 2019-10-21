@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 (**
- *  Okasaki Red-Black tree in F*
+ *  Okasaki Red-Black trees in F*
  * 
  *  https://www.cs.tufts.edu/~nr/cs257/archive/chris-okasaki/redblack99.pdf
  * 
@@ -23,10 +23,13 @@
  *  - https://lists.chalmers.se/pipermail/agda/2012/003697.html
  *  - The "extrinsic" style alternative in examples/data_structures/RBTree.fst
  * 
+ *  Extract to OCaml and run with [make test] to get a REPL for playing with
+ *  the code.
+ *
  *  Author: Dany Fabian
  *  Minor tweaks, comments, and OCaml test driver by Santiago Zanella-Beguelin 
 **)
-module RBTree
+module RBTreeIntrinsic
 
 /// Much of the file verifies with fuel=0, max_ifuel=1
 #set-options "--max_fuel 2 --max_ifuel 2 --z3rlimit 80"
