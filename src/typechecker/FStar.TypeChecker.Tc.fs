@@ -961,7 +961,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         ({ env with proof_ns = Options.using_facts_from () })
 
     | Sig_pragma RestartSolver ->
-      if from_cache then env
+      (* `nosynth` actually marks when fstar-mode is peeking via flycheck,
+       * we shouldn't reset the solver at that point, only when the user
+       * advances over the pragma. *)
+      if from_cache || env.nosynth then env
       else begin
         env.solver.refresh ();
         env

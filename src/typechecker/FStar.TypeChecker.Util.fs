@@ -1937,6 +1937,12 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
             | None -> None
             | Some f -> Some <| apply_guard f e
   in
+  let decorate e t =
+    let e = compress e in
+    match e.n with
+    | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
+    | _ -> e
+  in
   let e, lc = maybe_coerce_lc env e lc t2 in
   match check env lc.res_typ t2 with
   | None ->
@@ -1944,7 +1950,7 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
   | Some g ->
     if debug env <| Options.Other "Rel" then
       BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    e, lc, g
+    decorate e t2, lc, g
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
