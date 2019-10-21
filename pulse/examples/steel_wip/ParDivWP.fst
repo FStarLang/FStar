@@ -72,6 +72,10 @@ let split_star #r #s (split:r -> s -> s & s) (star: r -> r -> r) (inv:r -> s -> 
 let affine #r #s (star:r -> r -> r) (inv: r -> s -> prop) =
   forall r0 r1 s. inv (r0 `star` r1) s ==> inv r0 s
 
+let interp_lift #r #s (lift: r -> (s -> prop) -> r) (interp: r -> s -> prop) =
+  forall r p. (forall s. interp (lift r p) s <==> interp r s /\ p s)
+
+
 (**
  * In addition to being a commutative monoid over the carrier [r]
  * a [comm_monoid s] also gives an interpretation of `r`
@@ -86,6 +90,7 @@ type st = {
   interp: r -> s -> prop;
   split: r -> s -> s & s;
   join: s & s -> s;
+  lift: r -> (s -> prop) -> r;
   laws: squash (
     associative star /\
     commutative star /\
@@ -94,7 +99,8 @@ type st = {
     split_join split join /\
     join_split split join star interp /\
     split_star split star interp /\
-    affine star interp)
+    affine star interp /\
+    interp_lift lift interp)
 }
 
 (** [post a c] is a postcondition on [a]-typed result *)
@@ -208,10 +214,17 @@ let bind_action (#st:st) #a #b
    : wp f.pre a post_g
    = bind_wp (wp_action f) wp_g
 
-assume
-val as_requires (#st:_) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
-  : rs_prop preL
+let triv_post #st (a:Type) (p:post st a) : wp_post a p = 
+  let k (x:a) : rs_prop (p x) = 
+    let p : rs_prop' (p x) = fun s -> True in
+    p
+  in
+  k
 
+let as_requires (#st:_) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
+  : rs_prop preL
+  = wpL (triv_post aL postL)
+  
 assume
 val as_ensures (#st:_) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL) (sL:rs preL)
   : wp_post aL postL
@@ -301,7 +314,6 @@ let rs_prop_emp_any #st (k:rs_prop st.emp) (s0 s1:rs st.emp)
   =  assume (forall s0 s1. fst (st.split st.emp s0) == 
                       fst (st.split st.emp s1));
      assert (st.interp (st.emp `st.star` st.emp) s0)
-
         
 let wp_par (#st:st)
            #aL (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
@@ -394,7 +406,6 @@ val bools : nat -> bool
 ///   2. A top-level driver [run] which repeatedly invokes [step]
 ///      until it returns with a result and final state.
 
-
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.r) (k:wp_post a q) =
   | Step: p:_ -> //precondition of the reduct
@@ -407,12 +418,6 @@ type step_result (#st:st) a (q:post st a) (frame:st.r) (k:wp_post a q) =
           nat -> //position in the stream of booleans (less important)
           step_result a q frame k
 
-let triv_post #st (a:Type) (p:post st a) : wp_post a p = 
-  let k (x:a) : rs_prop (p x) = 
-    let p : rs_prop' (p x) = fun s -> True in
-    p
-  in
-  k
 
 
 /// [step i f frame state]: Reduces a single step of [f], while framing
@@ -523,23 +528,25 @@ let rec step #st (i:nat) #pre #a #post
              assert (st.interp (preL `st.star` (preR `st.star` frame)) state);
              assert (as_requires wpL (fst (st.split preL state)));
              assert (as_requires wpL state);
-             assume (wpL (triv_post aL postL) state);
              step (i + 1) (preR `st.star` frame) mL (triv_post aL postL) state
            in             
            assert (wpL' (triv_post aL postL) state');
-           assume (as_requires wpL' state');
            assert (st.interp (preR `st.star` (preL `st.star` frame)) state);           
            assert (as_requires wpR (fst (st.split preR (snd (st.split preL state)))));
-           assume (as_requires wpR state);
+           assume (as_requires wpR (fst (st.split preR state)));
+           assert (as_requires wpR state);
            assume (wpR (triv_post aR postR) state');
-           assume (as_requires wpR state');
-
+           assert (as_requires wpR state');
+           assert (as_requires wpR (fst (st.split preR state')));           
+           
            let sL0, rest0 = st.split preL state in
            let sR, rest0 = st.split preR rest0 in
 
            let sL, rest = st.split preL' state' in
            let sR, rest = st.split preR rest in
-
+           assert (as_requires wpL' sL);
+           assume (as_requires wpR sR);           
+           
            assert (bind_par wpL wpR wp_kont k state);
            assert (bind_par wpL wpR wp_kont k state ==> 
                    wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest0)
@@ -550,8 +557,7 @@ let rec step #st (i:nat) #pre #a #post
            rs_prop_emp_any (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k)) rest0 rest;
            assert (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest);           
            assert (wp_par_post wpL' wpR (fun (xL, xR) -> wp_kont xL xR k) rest);                      
-           assume (as_requires wpL' sL);
-           assume (as_requires wpR sR);           
+
            assert (bind_par wpL' wpR wp_kont k state')
              by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par]];
                   T.dump "A";
