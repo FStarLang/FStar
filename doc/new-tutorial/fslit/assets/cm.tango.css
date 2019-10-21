@@ -1,0 +1,123 @@
+/* Based on Sublime Text's Monokai theme */
+
+/* This file is in fslit rather than fstar.js because we need it to highlight
+   code in the standalone editor that talks to a remote server */
+
+.cm-s-tango.CodeMirror {
+    background: white; color: black;
+}
+
+.cm-s-tango div.CodeMirror-selected,
+.cm-s-tango .CodeMirror-line::selection,
+.cm-s-tango .CodeMirror-line > span::selection,
+.cm-s-tango .CodeMirror-line > span > span::selection,
+.cm-s-tango .CodeMirror-line::-moz-selection,
+.cm-s-tango .CodeMirror-line > span::-moz-selection,
+.cm-s-tango .CodeMirror-line > span > span::-moz-selection {
+    background: #49483E;
+}
+
+.cm-s-tango .CodeMirror-gutters {
+    background: #eeeeeec;
+    border-right: 1px solid #d3d7cf;
+}
+
+.cm-s-tango .CodeMirror-guttermarker {
+    color: #2e3436;
+}
+
+.cm-s-tango .CodeMirror-guttermarker-subtle {
+    color: #888a85;
+}
+
+.cm-s-tango .CodeMirror-linenumber {
+    color: #888a85;
+}
+
+.cm-s-tango .CodeMirror-cursor {
+    border-left: 2px solid #204a87;
+}
+
+.cm-s-tango .CodeMirror-activeline-background {
+    background: #edd400;
+}
+
+.cm-s-tango .CodeMirror-matchingbracket { /* show-paren-match */
+  background-color: #729fcf !important;
+  color: white !important;
+}
+
+.cm-s-tango .CodeMirror-nonmatchingbracket {
+  background-color: #75507b !important;
+  color: white !important; /* show-paren-mismatch */
+}
+
+
+.cm-s-tango span.cm-comment {
+    color: #5f615c;
+    font-style: italic;
+}
+
+.cm-s-tango span.cm-atom {
+    color: #204a87;
+    font-weight: bold;
+}
+
+.cm-s-tango span.cm-number {
+    color: black;
+}
+
+.cm-s-tango span.cm-property, .cm-s-tango span.cm-attribute {
+    color: #a40000; /* function-name-face */
+}
+
+.cm-s-tango span.cm-keyword {
+    color: #346604;
+}
+
+.cm-s-tango span.cm-builtin {
+    color: #75507b;
+}
+
+.cm-s-tango span.cm-string {
+    color: #5c3566;
+}
+
+.cm-s-tango span.cm-variable {
+    color: black; /* FIXME current mode considers everything as a variable. Should be #b35000 */
+}
+
+.cm-s-tango span.cm-variable-2 {
+    color: #b35000;
+    font-style: italic;
+}
+
+.cm-s-tango span.cm-variable-3, .cm-s-tango span.cm-type {
+    color: #204a87;
+}
+
+.cm-s-tango span.cm-def {
+    /* color: #fd971f; */
+    font-weight: bold;
+}
+
+.cm-s-tango span.cm-bracket {
+    color: black;
+}
+
+.cm-s-tango span.cm-tag {
+    color: #8f5902;
+}
+
+.cm-s-tango span.cm-header {
+    color: #4e9a06;
+}
+
+.cm-s-tango span.cm-link {
+    color: #204a87;
+}
+
+.cm-s-tango span.cm-error {
+    color: #cc0000;
+}
+

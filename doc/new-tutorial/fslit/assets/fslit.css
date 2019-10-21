@@ -1,0 +1,138 @@
+html p {
+    margin-bottom: 1rem;
+}
+
+.exercise {
+    background: #eeeeee;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.exercise > :last-child,
+.solution > :last-child,
+.rst-content .admonition > :last-child {
+    margin-bottom: 0 !important;
+}
+
+.exercise-header, .solution-header {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.exercise-label, .solution-label {
+}
+
+.exercise-title, .solution-title {
+    float: right;
+    font-style: italic;
+}
+
+.exercise-body, .solution-body {
+    clear: both;
+}
+
+.solution-body:not(:hover):not(.fstar-clear-solution) * {
+    color: transparent !important;
+}
+
+.fstar-standalone-editor-link-box {
+    margin-top: -0.5rem;
+    text-align: right;
+}
+
+.fstar-standalone-editor-link {
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+/* FIXME only include when using rtd theme */
+.rst-content .admonition-fixme { /* Copied from RTD theme */
+    background: #e7f2fa;
+    line-height: 24px;
+    margin-bottom: 24px;
+    padding: 12px;
+}
+
+.fstar-remote-editor .editor .CodeMirror {
+    height: 20rem !important;
+    width: 100%;
+}
+
+.fstar-remote-editor .control-panel {
+    margin-top: 0.5rem;
+    text-align: right;
+    width: 100%;
+}
+
+.fstar-remote-editor .run,
+.fstar-remote-editor .stdout,
+.fstar-remote-editor .editor .CodeMirror {
+    font-family: "Fira Code", "Ubuntu Mono", "Consolas", "Monaco", "Inconsolata", "Source Code Pro", monospace;
+}
+
+.fstar-remote-editor .run {
+    font-size: 1rem;
+    min-width: 7.5rem;
+}
+
+.fstar-remote-editor .stdout, .fstar-standalone-editor .stdout {
+    background: black;
+    box-sizing: border-box;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 0;
+    margin-top: 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem;
+    white-space: pre-wrap;
+    width: 100%;
+}
+
+/* Fira code definitions */
+@font-face{
+    font-family: 'Fira Code';
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Light.eot');
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Light.eot') format('embedded-opentype'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff2/FiraCode-Light.woff2') format('woff2'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff/FiraCode-Light.woff') format('woff'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/ttf/FiraCode-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face{
+    font-family: 'Fira Code';
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Regular.eot');
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Regular.eot') format('embedded-opentype'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff2/FiraCode-Regular.woff2') format('woff2'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff/FiraCode-Regular.woff') format('woff'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/ttf/FiraCode-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face{
+    font-family: 'Fira Code';
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Medium.eot');
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Medium.eot') format('embedded-opentype'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff2/FiraCode-Medium.woff2') format('woff2'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff/FiraCode-Medium.woff') format('woff'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/ttf/FiraCode-Medium.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face{
+    font-family: 'Fira Code';
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Bold.eot');
+    src: url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/eot/FiraCode-Bold.eot') format('embedded-opentype'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff2/FiraCode-Bold.woff2') format('woff2'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/woff/FiraCode-Bold.woff') format('woff'),
+         url('https://cdn.rawgit.com/tonsky/FiraCode/1.205/distr/ttf/FiraCode-Bold.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+}
