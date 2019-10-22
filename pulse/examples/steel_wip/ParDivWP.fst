@@ -598,56 +598,30 @@ let rec step (#st:st) (i:nat) #pre #a #post
            state'
            j           
 
-
-//       assert (st.interp frameR state);
-//       assume (st.interp (preL `st.star` frameR) state);
-//       admit()
-      
-//       //Otherwise, sample a boolean and choose to go left or right to pick
-//       //the next command to reduce
-//       //The two sides are symmetric
-//       if bools i
-//       then 
-//            let Step preL' wpL' mL' state' j =
-//              //Notice that, inductively, we instantiate the frame extending
-//              //it to include the precondition of the other side of the par
-//              step (i + 1) 
-//                   frameR
-//                   mL
-//                   (triv_post aL postL)
-//                   state
-//            in             
-
-//            admit()
-//       else admit()
-      
-//            assert (as_requires wpR state);
-//            assume (wpR (triv_post aR postR) state');
-//            assert (as_requires wpR state');
-//            assert (as_requires wpR (fst (st.split preR state')));           
-//            admit()
-//       else admit()
-//         else admit()
-
-// // // // (**
-// // // //  * [run i f state]: Top-level driver that repeatedly invokes [step]
-// // // //  *
-// // // //  * The type of [run] is the main theorem. It states that it is sound
-// // // //  * to interpret the indices of `m` as a Hoare triple in a
-// // // //  * partial-correctness semantics
-// // // //  *
-// // // //  *)
-// // // // let rec run #s #c (i:nat) #pre #a #post (f:m s c a pre post) (state:s)
-// // // //   : Div (a & s)
-// // // //     (requires
-// // // //       c.interp pre state)
-// // // //     (ensures fun (x, state') ->
-// // // //       c.interp (post x) state')
-// // // //   = match f with
-// // // //     | Ret x -> x, state
-// // // //     | _ ->
-// // // //       let Step pre' f' state' j = step i f c.emp state in
-// // // //       run j f' state'
+(**
+//  * [run i f state]: Top-level driver that repeatedly invokes [step]
+//  *
+//  * The type of [run] is the main theorem. It states that it is sound
+//  * to interpret the indices of `m` as a Hoare triple in a
+//  * partial-correctness semantics
+//  *
+//  *)
+let rec run (#st:st) (i:nat) 
+            #pre #a #post (#wp:wp pre a post)
+            (f:m st a pre post wp) (state:st.s)
+            (k:wp_post a post)
+  : Div (a & st.s)
+    (requires
+      st.interp pre state /\
+      wp k state)
+    (ensures fun (x, state') ->
+      st.interp (post x) state' /\
+      k x state')
+  = match f with
+    | Ret x -> x, state
+    | _ ->
+      let Step pre' wp' f' state' j = step i st.emp f k state in
+      run j f' state' k
 
 // // // // ////////////////////////////////////////////////////////////////////////////////
 // // // // //The rest of this module shows how this semantic can be packaged up as an
