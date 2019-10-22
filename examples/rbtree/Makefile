@@ -1,11 +1,14 @@
-FSTAR_HOME = ../..
+FSTAR_HOME ?= ../..
 
 OUT_DIR = .output
 CACHE_DIR = .cache
 
-FSTAR_FILES = $(wildcard *.fst)
+ROOTS = RBTree.fst
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+INCLUDES = \
+  $(FSTAR_HOME)/ulib/.cache
 
 FSTAR_INCLUDES = $(addprefix --include ,$(INCLUDES))
 
@@ -21,14 +24,12 @@ FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS)
 
 all: verify-all
 
-verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
+verify-all: $(CACHE_DIR) $(CACHE_DIR)/RBTree.fst.checked
 
 depend: .depend
 
-EXTRACT = RBTreeIntrinsic
-
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --extract '$(EXTRACT)' > $@
+	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' > $@
 
 include .depend
 
@@ -48,8 +49,8 @@ $(OUT_DIR)/%.ml: | $(OUT_DIR) .depend
 %.cmx:
 	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@
 
-$(OUT_DIR)/RBTreeIntrinsic.cmx:
-	@echo 'let _ = test()' >> $(OUT_DIR)/$(EXTRACT).ml
+$(OUT_DIR)/RBTree.cmx:
+	@echo 'let _ = test()' >> $(OUT_DIR)/RBTree.ml
 	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@
 
 $(OUT_DIR)/test.exe: $(subst .ml,.cmx,$(ALL_ML_FILES)) | $(OUT_DIR)
@@ -60,5 +61,3 @@ test: $(OUT_DIR)/test.exe
 
 clean:
 	rm -rf $(OUT_DIR) $(CACHE_DIR) .depend
-
-.PHONY: depend verify-all test clean
