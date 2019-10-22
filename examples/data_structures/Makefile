@@ -1,4 +1,4 @@
-FSTAR_HOME ?= ../..
+FSTAR_HOME = ../..
 
 OUT_DIR = .output
 CACHE_DIR = .cache
