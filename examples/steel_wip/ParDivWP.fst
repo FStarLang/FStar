@@ -541,6 +541,16 @@ let elim_rs_prop (#st:st) (r:st.r) (p:rs_prop r) (s:st.s)
       p (fst (st.split r s)))
   = ()
 
+// let restore (#st:st)
+//             (#preL:_) (#aL:_) (#postL:_) (wpL:wp preL aL postL)
+//             (#preR:_) (#aR:_) (#postR:_) (wpR:wp preR aR postR)
+//             (#a:_) (k:_) (wp_kont:(xL:aL -> xR:aR -> wp (postL xL `st.star` postR xR) a post))
+//             (state:st.s)
+//    : Lemma            
+//      (requires 
+//        as_requires wpL state /\
+//        as_requires wpR state)
+       
 #push-options "--z3rlimit_factor 8"
 let rec step (#st:st) (i:nat) #pre #a #post 
              (frame:st.r)
@@ -597,35 +607,11 @@ let rec step (#st:st) (i:nat) #pre #a #post
                (triv_post aL postL)
                state
       in     
-      assert (wpL' (triv_post aL postL) state');
-      assert (st.interp (preL' `st.star` frameR) state');
-      assert (st.interp preL' state');
-      elim_lift preR frame (as_requires wpR) state';
-      assert (st.interp preR state');           
-      assert (st.interp frame state');                 
-      assert (as_requires wpR state');
-      elim_rs_prop preR (as_requires wpR) state';
-      assert (as_requires wpR (fst (st.split preR state')));
-
+      assert (as_requires wpL' state');
+      assert (as_requires wpR state');      
       let sL', rest0' = st.split preL' state' in
       let sR', rest' = st.split preR rest0' in
-      assert (as_requires wpL' sL');
-      assert (fst (st.split preR state') == sR');
-      assert (as_requires wpR sR');
-
-      assert (bind_par wpL wpR wp_kont k state);
       assert (bind_par wpL wpR wp_kont k state ==> 
-              wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest0)
-          by (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par]];
-              T.smt());
-
-      assert (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest0);
-      
-      rs_prop_emp_any (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k)) rest0 rest;
-      assert (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest);           
-      assert (wp_par_post wpL' wpR (fun (xL, xR) -> wp_kont xL xR k) rest);                      
-      
-      assert (wp_par_post wpL' wpR (fun (xL, xR) -> wp_kont xL xR k) rest ==>
               bind_par wpL' wpR wp_kont k state')
          by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
               T.dump "A";
