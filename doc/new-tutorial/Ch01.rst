@@ -1,0 +1,122 @@
+Chapter 1
+=========
+
+Defining a policy
+-----------------
+
+The syntax of F* is based closely on the syntax of OCaml and the non-light
+syntax of F#. Our F* program is made up of one module per file, and the body of
+the module contains a number of definitions, and optionally includes a ‘main’
+expression.
+
+Here are the first three definitions from the program:
+
+.. fstinclude:: Ex01a.fst ACLs
+
+The first definition defines a type synonym: we'll use strings to model filenames.
+
+After that, we define two boolean functions: canWrite and canRead: The canWrite
+function inspects its argument f using a pattern matching expression: it returns
+the boolean true when f equals "demo/tempfile" and false otherwise. The function
+canRead is similar—a file is readable if it is writable, or if it is the
+"demo/README" file.
+
+Tying the policy to the file-access primitives
+----------------------------------------------
+
+To enforce the policy, we need to connect the policy to the primitives in our
+programs that actually implement the file reading and writing operations.
+
+F* provides a facility to specify interfaces to external modules that are
+implemented elsewhere. For example, operations that perform file input/output
+are implemented by the operating system and made available to F* programs via
+the underlying framework, e.g., .NET or OCaml. We can describe a simple
+interface provided by the framework as follows:
+
+.. fstinclude:: Ex01a.fst FileIO
+
+This interface provides two functions, read and write, which in a real setup
+would implement the corresponding operations on files. In our simplified example
+they just print things on screen.
+
+- The type of read says that it is a function expecting a filename argument f
+  for which canRead f evaluates to true and returning a string-typed result.
+  Thus the type-checker prevents any calls to read for which the canRead
+  predicate can't be statically proved for the argument.
+- The type of write says that it is a function of two arguments: the first is a
+  filename f, such that canWrite f evaluates to true; the second is a string,
+  the data to be written to the file f. The write function returns unit, roughly
+  analogous to the void type in C. The type unit has only a single value,
+  written ().
+
+The crucial bits of these declarations are, of course, the use of the canRead
+and canWrite functions in the signature, which allow us to connect the types of
+these security-sensitive functions to our policy.
+
+Writing programs and verifying their security
+---------------------------------------------
+
+Trying to check that a piece of code conforms to an access-control policy is a
+tedious and error-prone process. Even if every access is guarded by a security
+check, how can we make sure that each check is adequate? We can use F*'s
+type-checker to automate this kind of code review.
+
+Here's some simple, untrusted client code. It defines some common file names,
+and then a function called staticChecking, which tries to read and write a few
+files.
+
+.. fstinclude:: Ex01a.fst UntrustedClientCode
+.. fstinclude:: Ex01a.fst StaticChecking
+
+The type-checker ensures statically that this untrusted code complies with the
+security policy. The reads to tmp and readme, and the write to tmp are allowed
+by the policy, so the program successfully type-checks. On the other hand, if we
+uncomment the lines that read or write "junk" to the password file, the F*
+type-checker complains that the passwd file does not have the type
+f:filename{canRead f}, respectively f:filename{canWrite f}. For instance, if we
+uncomment the write we get the following error message::
+
+  .\Ex01a.fst(40,10-40,16): Subtyping check failed;
+  expected type (f:Ex01a.filename{(Prims.b2t (Ex01a.canWrite f))});
+  got type Ex01a.filename
+
+You'll understand more about what that message means as you work through this
+tutorial, but, for now, take it to mean that F* expected canWrite passwd to
+evaluate to true, which isn't the case.
+
+The staticChecking function above illustrates how F* can be used to specify a
+security policy, and statically enforce complete and correct mediation of that
+policy via type-checking. We will now illustrate that checking of the policy
+doesn't have to happen all statically, but that the dynamic checks added by the
+programmer are taken into account by the type system. In particular we implement
+a checkedRead function that consults the policy and only performs the read if
+the policy allows it, otherwise it raises an exception.
+
+.. fstinclude:: Ex01a.fst CheckedRead
+
+Note that the type of checkRead imposes no condition on the the input file f.
+When the canRead f check succeeds the type-checker knows that the read f call is
+safe.
+
+.. exercise::
+
+   Write a function called checkedWrite that takes a filename f and a string s
+   as argument, checks the policy to make sure the file f is writable, and only
+   if that is the case writes s to f. If the file is not writable your
+   checkedWrite should raise an exception. As with checkedRead, your
+   checkedWrite should have no preconditions.
+
+   .. fstinclude:: Ex01a.fst CheckedWriteType
+
+   .. solution::
+
+      .. fstinclude:: Ex01a.fst Solution
+
+You can use checkedRead and your checkedWrite to replace read and write in
+staticChecking, so that now even the accesses to passwd are well-typed.
+
+.. fstinclude:: Ex01a.fst DynamicChecking
+
+This is secure because checkedRead and checkedWrite defer to runtime the same
+checks that were previously performed at compile time by F*, and perform the IO
+actions only if those checks succeed.

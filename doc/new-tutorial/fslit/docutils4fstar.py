@@ -492,6 +492,35 @@ class FStarBlockDirective(FStarListingBaseDirective):
     directive = "fst"
     node_class = fst_node
 
+# .. fstinclude
+# ~~~~~~~~~~~~~
+
+class FStarIncludeDirective(FStarListingBaseDirective):
+    """A block of F* code imported from a file, delimited with '// BEGIN: '
+    and '// END: ' markers.
+
+    For example::
+
+       .. fstinclude:: Ex01a.fst ACLs
+    """
+    directive = "fstinclude"
+    option_spec = {}
+    required_arguments = 2
+
+    def run(self):
+        path = os.path.join(SCRIPT_PATH, os.path.pardir, self.arguments[0])
+        with open(path, "r") as f:
+            lines = [line.rstrip("\n") for line in f]
+
+        begin = lines.index("// BEGIN: " + self.arguments[1]) + 1
+        end = lines.index("// END: " + self.arguments[1])
+        contents = lines[begin:end]
+        roles.set_classes(self.options)
+        classes = ["code"] + self.options.get("classes", [])
+        node = self.node_class("<no-highlighting>", "\n".join(contents), classes=classes)
+        set_source_info(self, node)
+        return [node]
+
 # .. exercise-code
 # ~~~~~~~~~~~~~~~~
 
@@ -774,9 +803,9 @@ def add_nodes(translator_class):
 ROLES = [FStarTypeRole]
 NODES = [exercise_node, solution_node, fst_node, exercise_code_node,
          standalone_editor_reference_node]
-DIRECTIVES = [FStarBlockDirective, ExerciseDirective, SolutionDirective,
-              ExerciseCodeDirective, FixmeAuthorsDirective, FixmeDirective,
-              TagAllDirective]
+DIRECTIVES = [FStarBlockDirective, FStarIncludeDirective, ExerciseDirective,
+              SolutionDirective, ExerciseCodeDirective, FixmeAuthorsDirective,
+              FixmeDirective, TagAllDirective]
 DOCUTILS_TRANSFORMS = [CheckExerciseSubNodesTransform, ApplyTagsTransform]
 SPHINX_TRANSFORMS = [BuildFStarArtifactsTransform]
 TRANSFORMS = DOCUTILS_TRANSFORMS + SPHINX_TRANSFORMS

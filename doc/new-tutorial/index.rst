@@ -10,7 +10,7 @@ Welcome to the F* tutorial!
    :maxdepth: 2
    :caption: Contents:
 
-   Ex01a
+   Ch01
 
 
 Indices and tables
