@@ -125,7 +125,45 @@ let split_empty (st:st0) =
 let emp_valid (st:st0) = 
   forall s.{:pattern st.interp st.emp s}
     st.interp st.emp s
-    
+
+let join_assoc (st:st0) =
+  forall (s0 s1 s2:st.s).{:pattern st.join (s0, st.join (s1, s2))}
+    st.join (s0, st.join (s1, s2)) == 
+    st.join (st.join(s0, s1), s2)  
+
+let join_emp (st:st0) =
+  forall (s0 s1:st.s).{:pattern st.join (s0, fst (st.split st.emp s1))}
+    st.join (s0, fst (st.split st.emp s1)) == s0
+
+let join_left_bias (st:st0) =
+  forall (r:st.r) (s0 s1:st.s). {:pattern  st.interp r (st.join (s0, s1))}
+    st.interp r s0 ==>
+    st.interp r (st.join (s0, s1))
+
+let split_assoc (st:st0) = 
+  forall (r0 r1:st.r) (s:st.s). {:pattern st.split (r0 `st.star` r1) s}
+    st.interp (r0 `st.star` r1) s ==>
+    (let s01, rest = st.split (r0 `st.star` r1) s in
+     let s0, s1_emp = st.split r0 s01 in
+     let s1, emp = st.split r1 s1_emp in
+
+     let s0', s1_rest = st.split r0 s in
+     let s1', rest' = st.split r1 s1_rest in
+     s0 == s0' /\
+     s1 == s1' /\
+     rest == rest')
+
+let split_comm (st:st0) =
+  forall (r0 r1:st.r) (s:st.s). {:pattern st.interp (r0 `st.star` r1) s; st.split r0 s; st.split r1 s}
+    st.interp (r0 `st.star` r1) s ==>
+    (let s0, rest = st.split r0 s in
+     let s1, rest = st.split r1 rest in
+
+     let s1', rest = st.split r1 s in
+     let s0', rest = st.split r0 rest in
+     s0 == s0' /\
+     s1 == s1')
+  
 let st_laws (st:st0) =
     associative st.star /\
     commutative st.star /\
@@ -138,7 +176,12 @@ let st_laws (st:st0) =
     affine st /\
     lift_star st /\
     split_empty st /\
-    emp_valid st
+    emp_valid st /\
+    join_assoc st /\
+    join_emp st /\
+    join_left_bias st /\
+    split_assoc st /\
+    split_comm st
 
 let st = s:st0 { st_laws s }
 
@@ -161,7 +204,6 @@ type action (st:st) (a:Type) = {
         let x, s1 = sem s_pre in
         sem s == (x, st.join (s1, s_frame)))))
 }    
-
 
 let wp_post (#st:st) (a:Type) (post:post st a) = x:a -> rs_prop (post x)
 let wp_pre (#st:st) (pre:st.r) = rs_prop pre
@@ -214,10 +256,6 @@ let triv_post #st (a:Type) (p:post st a) : wp_post a p =
 let as_requires (#st:st) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
   : rs_prop preL
   = wpL (triv_post aL postL)
-  
-assume
-val as_ensures (#st:st) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL) (sL:rs preL)
-  : wp_post aL postL
 
 module C = FStar.Classical
 
@@ -259,10 +297,12 @@ let wp_par_post (#st:st)
               [SMTPat ()]
             = let s1' = (st.join (sL', st.join(sR', rest))) in
               let s1 = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              assume (st.interp (postL xL `st.star` postR xR) s1');
+              assert (s1 == st.join (sL', sR'));
+              assert (s1' == st.join (s1, rest));
+              assert (st.interp (postL xL `st.star` postR xR) s1');
               assert (app_k xL xR s1');
               assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
-              assume (fst (st.split (postL xL `st.star` postR xR) s1') ==
+              assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
                       fst (st.split (postL xL `st.star` postR xR) s1));
               assert (app_k xL xR s1)
         in 
@@ -287,10 +327,10 @@ let wp_par_post (#st:st)
               [SMTPat ()]
             = let s1 = (st.join (sL', st.join(sR', rest))) in
               let s1' = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              assume (st.interp (postL xL `st.star` postR xR) s1');
+              assert (st.interp (postL xL `st.star` postR xR) s1');
               assert (app_k xL xR s1');
               assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
-              assume (fst (st.split (postL xL `st.star` postR xR) s1') ==
+              assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
                       fst (st.split (postL xL `st.star` postR xR) s1));
               assert (app_k xL xR s1)
         in 
@@ -333,8 +373,9 @@ let wp_par (#st:st)
            let s', _ = st.split (preL `st.star` preR) s in
            let sL', rest' = st.split preL s' in
            let sR', rest' = st.split preR rest' in
-           assume (sL == sL');
-           assume (sR == sR');
+           assert (st.interp (preL `st.star` preR) s);
+           assert (sL == sL');
+           assert (sR == sR');
            rs_prop_emp_any (wp_par_post wpL wpR k) rest rest';
            rs_prop_emp_any (wp_par_post wpL wpR k) rest' rest
        in
@@ -438,6 +479,7 @@ let step_act (#st:st) (i:nat) #pre #a #post
     assert (st.interp (act1.post b) state');
     assert (wp_g b k state');
     Step (act1.post b) (wp_g b) (g b) state' i
+
 #push-options "--query_stats"
 #push-options "--max_ifuel 4 --initial_ifuel 4"
 let step_par_ret (#st:st) (i:nat) #pre #a #post 
@@ -460,11 +502,11 @@ let step_par_ret (#st:st) (i:nat) #pre #a #post
       assert (wp == bind_par wpL wpR wp_k);
       assert (wp k state);
       let sL, rest = st.split preL state in
-      let sR, rest = st.split preR state in
+      let sR, rest = st.split preR rest in
       let s' = st.join (sL, st.join (sR, rest)) in
       assert (st.interp (postL xL) sL);
       assert (st.interp (postR xR) sR);      
-      assume (s' == state);
+      assert (s' == state);
       assert (st.interp (postL xL `st.star` postR xR) s');
       assert (bind_par wpL wpR wp_k k state);
       assert (bind_par wpL wpR wp_k k state ==> wp_k xL xR k state)
@@ -476,8 +518,6 @@ let step_par_ret (#st:st) (i:nat) #pre #a #post
            state
            i
 
-// let elim_rs_prop (#st:st) (r:st.r) (p:rs_prop r) (s:st.s)
-//   : Lemma (p 
 #push-options "--z3rlimit_factor 2 --z3cliopt 'smt.qi.eager_threshold=100'"
 let elim_lift (#st:st) (r0 r1:st.r) (p:rs_prop r0) (s:st.s)
   : Lemma 
@@ -501,7 +541,7 @@ let elim_rs_prop (#st:st) (r:st.r) (p:rs_prop r) (s:st.s)
       p (fst (st.split r s)))
   = ()
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 let rec step (#st:st) (i:nat) #pre #a #post 
              (frame:st.r)
              (#wp:wp pre a post)
@@ -533,6 +573,7 @@ let rec step (#st:st) (i:nat) #pre #a #post
 
       assert (wp == bind_par wpL wpR wp_kont);
       assert (st.interp (preL `st.star` (preR `st.star` frame)) state);
+      assert (st.interp (preL `st.star` preR) state);      
 
       let sL, rest0 = st.split preL state in
       let sR, rest = st.split preR rest0 in
@@ -541,9 +582,9 @@ let rec step (#st:st) (i:nat) #pre #a #post
 
       assert (as_requires wpL state);
       assert (as_requires wpR rest0);
-      assume (fst (st.split preR rest0) == fst (st.split preR state));
+      assert (fst (st.split preR rest0) == fst (st.split preR state));
       assert (as_requires wpR state);
-      
+
       let frameR = ((st.lift preR (as_requires wpR)) `st.star` frame) in
       assert (st.interp (preR `st.star` frame) state);
 
@@ -569,16 +610,15 @@ let rec step (#st:st) (i:nat) #pre #a #post
       let sL', rest0' = st.split preL' state' in
       let sR', rest' = st.split preR rest0' in
       assert (as_requires wpL' sL');
-      assume (fst (st.split preR state') == sR');
+      assert (fst (st.split preR state') == sR');
       assert (as_requires wpR sR');
-    
+
       assert (bind_par wpL wpR wp_kont k state);
-      
       assert (bind_par wpL wpR wp_kont k state ==> 
               wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest0)
           by (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par]];
               T.smt());
-                   
+
       assert (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k) rest0);
       
       rs_prop_emp_any (wp_par_post wpL wpR (fun (xL, xR) -> wp_kont xL xR k)) rest0 rest;
