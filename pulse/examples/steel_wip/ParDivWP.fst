@@ -595,34 +595,61 @@ let rec step (#st:st) (i:nat) #pre #a #post
       assert (fst (st.split preR rest0) == fst (st.split preR state));
       assert (as_requires wpR state);
 
-      let frameR = ((st.lift preR (as_requires wpR)) `st.star` frame) in
-      assert (st.interp (preR `st.star` frame) state);
 
-      let Step preL' wpL' mL' state' j =
-          //Notice that, inductively, we instantiate the frame extending
-          //it to include the precondition of the other side of the par
-          step (i + 1) 
-               frameR
-               mL
-               (triv_post aL postL)
-               state
-      in     
-      assert (as_requires wpL' state');
-      assert (as_requires wpR state');      
-      let sL', rest0' = st.split preL' state' in
-      let sR', rest' = st.split preR rest0' in
-      assert (bind_par wpL wpR wp_kont k state ==> 
-              bind_par wpL' wpR wp_kont k state')
-         by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
-              T.dump "A";
-              T.smt());
-      Step (preL' `st.star` preR)
-           (bind_par wpL' wpR wp_kont)
-           (Par preL' aL postL wpL' mL'
-                preR  aR postR wpR  mR
-                post wp_kont kont)
-           state'
-           j           
+      if bools i
+      then 
+        let Step preL' wpL' mL' state' j =
+            //Notice that, inductively, we instantiate the frame extending
+            //it to include the precondition of the other side of the par
+            step (i + 1) 
+                 ((st.lift preR (as_requires wpR)) `st.star` frame)
+                 mL
+                 (triv_post aL postL)
+                 state
+        in     
+        assert (as_requires wpL' state');
+        assert (as_requires wpR state');      
+        let sL', rest0' = st.split preL' state' in
+        let sR', rest' = st.split preR rest0' in
+        assert (bind_par wpL wpR wp_kont k state ==> 
+               bind_par wpL' wpR wp_kont k state')
+               by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
+               T.dump "A";
+               T.smt());
+        Step (preL' `st.star` preR)
+             (bind_par wpL' wpR wp_kont)
+             (Par preL' aL postL wpL' mL'
+                  preR  aR postR wpR  mR
+                  post wp_kont kont)
+             state'
+             j       
+      else 
+        let Step preR' wpR' mR' state' j =
+            //Notice that, inductively, we instantiate the frame extending
+            //it to include the precondition of the other side of the par
+            step (i + 1) 
+                 ((st.lift preL (as_requires wpL)) `st.star` frame)
+                 mR
+                 (triv_post aR postR)
+                 state
+        in     
+        assert (as_requires wpL state');
+        assert (as_requires wpR' state');      
+        let sL', rest0' = st.split preL state' in
+        let sR', rest' = st.split preR' rest0' in
+        assert (bind_par wpL wpR wp_kont k state ==> 
+                bind_par wpL wpR' wp_kont k state')
+               by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
+               T.dump "A";
+               T.smt());
+        Step (preL `st.star` preR')
+             (bind_par wpL wpR' wp_kont)
+             (Par preL aL postL wpL mL
+                  preR'  aR postR wpR' mR'
+                  post wp_kont kont)
+             state'
+             j       
+
 
 (**
 //  * [run i f state]: Top-level driver that repeatedly invokes [step]
