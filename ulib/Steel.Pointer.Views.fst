@@ -16,7 +16,6 @@ noeq type vptr (a: Type) = {
   ptr_p: P.permission
 }
 
-
 let ptr_resource (#a:Type) (ptr:pointer a) : resource =
   refine_view (A.array_resource ptr) (fun (av: A.varray ptr) ->
     { ptr_x = Seq.index av.A.s 0; ptr_p = av.A.p }

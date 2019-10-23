@@ -27,24 +27,6 @@ open Steel.RST
 
 (**** Unscoped allocation and deallocation of pointer resources *)
 
-val array_to_pointer_ (#a: Type) (p: pointer a) : rst_repr unit
-  (A.array_resource p)
-  (fun _ -> ptr_resource p)
-  (fun _ -> True)
-  (fun h0 _ h1 ->
-   get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
-   get_perm p h1 == A.get_rperm p h0
-  )
-
-let array_to_pointer_ #a p =
-fun _ ->
-  let h = HST.get () in
-  A.reveal_array ();
-  assert((mk_rmem (A.array_resource p) h) (A.array_resource p) == sel (A.array_resource p).view h);
-  assert((mk_rmem (ptr_resource p) h) (ptr_resource p) == sel (ptr_resource p).view h);
-  reveal_rst_inv ();
-  reveal_modifies ()
-
 val array_to_pointer (#a: Type) (p: pointer a) : RST unit
   (A.array_resource p)
   (fun _ -> ptr_resource p)
@@ -54,7 +36,28 @@ val array_to_pointer (#a: Type) (p: pointer a) : RST unit
    get_perm p h1 == A.get_rperm p h0
   )
 
-let array_to_pointer #a p = RST?.reflect (array_to_pointer_ #a p)
+let array_to_pointer #a p =
+  cast_to_refined_view (A.array_resource p)  (fun (av: A.varray #a p) ->
+    { ptr_x = Seq.index av.A.s 0; ptr_p = av.A.p }
+  )
+
+val pointer_to_array (#a: Type) (p: pointer a) : RST unit
+  (ptr_resource p)
+  (fun _ -> A.array_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+   get_val p h0 == Seq.index (A.as_rseq p h1) 0 /\
+   get_perm p h0 == A.get_rperm p h1
+  )
+
+[@expect_failure]
+let pointer_to_array #a p =
+  let f = fun (av: vptr a) ->
+    let x : A.varray p = { A.s = Seq.init 1 (fun _ -> av.ptr_x); A.p = av.ptr_p } in
+    x
+  in
+  cast_to_refined_view (ptr_resource p) f;
+  assert(A.array_resource p == refine_view (ptr_resource p) f)
 
 let ptr_alloc #a init =
   let ptr : A.array a = A.alloc init 1ul in

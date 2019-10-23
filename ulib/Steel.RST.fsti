@@ -184,20 +184,6 @@ let rprop r = rmem r -> Type0
 val extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
   : Tot (rprop r)
 
-/// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
-/// of a resource.
-
-val refine_inv (r:resource) (p:rprop r) : Tot (r':resource{
-    r'.t == r.t /\
-    r'.view == {r.view with inv = fun h -> r.view.inv h /\ p (mk_rmem r h)}
-  })
-
-val refine_view (r: resource) (#a: Type) (f: r.t -> a) : Tot (r':resource{
-    r'.t == a /\
-    r'.view.fp == r.view.fp /\
-    r'.view.inv == r.view.inv /\
-    r'.view.sel == (fun h -> f (r.view.sel h))
-  })
 
 (**** The RST effect *)
 
@@ -411,3 +397,38 @@ inline_for_extraction noextract val rst_frame
     )
 
 #pop-options
+
+(**** Resource subtyping *)
+
+/// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
+/// of a resource.
+
+val refine_inv (r:resource) (p:rprop r) : Tot (r':resource{
+    r'.t == r.t /\
+    r'.view == {r.view with inv = fun h -> r.view.inv h /\ p (mk_rmem r h)}
+  })
+
+val cast_to_refined_inv (r: resource) (p:rprop r) : RST unit
+  r
+  (fun _ -> refine_inv r p)
+  (fun h -> p h)
+  (fun _ _ _ -> True)
+
+val cast_from_refined_inv (r: resource) (p:rprop r) : RST unit
+  (refine_inv r p)
+  (fun _ -> r)
+  (fun _ -> True)
+  (fun _ _ h1 -> p h1)
+
+val refine_view (r: resource) (#a: Type) (f: r.t -> a) : Tot (r':resource{
+    r'.t == a /\
+    r'.view.fp == r.view.fp /\
+    r'.view.inv == r.view.inv /\
+    r'.view.sel == (fun h -> f (r.view.sel h))
+  })
+
+val cast_to_refined_view (r: resource) (#a: Type)  (f: r.t -> a) : RST unit
+  r
+  (fun _ -> refine_view r f)
+  (fun _ -> True)
+  (fun h0 _ h1 -> h1 (refine_view r f) == f (h0 r))

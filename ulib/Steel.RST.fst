@@ -162,53 +162,6 @@ let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_o
   : Tot (rprop r) =
   fun s -> p (focus_rmem #r s r0)
 
-#push-options "--z3rlimit 30"
-
-let refine_inv r p =
-  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_rmem r h) in
-  let new_view = { r.view with inv = new_inv } in
-  reveal_view ();
-  let open LowStar.Array in
-  assert(sel_reads_fp new_view.fp new_view.inv new_view.sel);
-  let aux (h0 h1: HS.mem) (loc: loc) : Lemma (
-    new_view.inv h0 /\
-    loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1 ==>
-    new_view.inv h1
-  ) =
-    let aux (_ : squash (
-      new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1
-    )) : Lemma (new_view.inv h1) =
-      assert(r.view.inv h1);
-      assert(p (mk_rmem r h0));
-      let sel0 = mk_rmem r h0 in
-      let sel1 = mk_rmem r h1 in
-      let aux (r0: resource{r0 `is_subresource_of` r}) : Lemma (sel0 r0 == sel1 r0) =
-        reveal_can_be_split_into ();
-        assert(r0.view.sel h0 == r0.view.sel h1)
-      in
-      Classical.forall_intro aux;
-      let a = r0:resource{r0 `is_subresource_of` r} in
-      let b = fun r0 -> r0.t in
-      extensionality_g a b sel0 sel1
-    in
-    Classical.impl_intro aux
-  in
-  Classical.forall_intro_3 aux;
-  assert(inv_reads_fp new_view.fp new_view.inv);
-  let r' = { r with view = new_view } in
-  r'
-
-#pop-options
-
-let refine_view r #a f =
-  let new_sel h = f (r.view.sel h) in
-  let new_view = { r.view with sel = new_sel} in
-  reveal_view ();
-  {
-   t = a;
-   view = new_view
-  }
-
 let rst_inv res h =
   loc_includes (loc_used_in h) (as_loc (fp res) h) /\ True
 
@@ -324,3 +277,98 @@ inline_for_extraction noextract let rst_frame outer0 #inner0 #a outer1 #inner1 #
   RST?.reflect (rst_frame_ outer0 #inner0 #a outer1 #inner1 #delta #pre #post f)
 
 #pop-options
+
+#push-options "--z3rlimit 30"
+
+let refine_inv r p =
+  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_rmem r h) in
+  let new_view = { r.view with inv = new_inv } in
+  reveal_view ();
+  let open LowStar.Array in
+  assert(sel_reads_fp new_view.fp new_view.inv new_view.sel);
+  let aux (h0 h1: HS.mem) (loc: loc) : Lemma (
+    new_view.inv h0 /\
+    loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1 ==>
+    new_view.inv h1
+  ) =
+    let aux (_ : squash (
+      new_view.inv h0 /\ loc_disjoint (as_loc new_view.fp h0) loc /\ modifies loc h0 h1
+    )) : Lemma (new_view.inv h1) =
+      assert(r.view.inv h1);
+      assert(p (mk_rmem r h0));
+      let sel0 = mk_rmem r h0 in
+      let sel1 = mk_rmem r h1 in
+      let aux (r0: resource{r0 `is_subresource_of` r}) : Lemma (sel0 r0 == sel1 r0) =
+        reveal_can_be_split_into ();
+        assert(r0.view.sel h0 == r0.view.sel h1)
+      in
+      Classical.forall_intro aux;
+      let a = r0:resource{r0 `is_subresource_of` r} in
+      let b = fun r0 -> r0.t in
+      extensionality_g a b sel0 sel1
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro_3 aux;
+  assert(inv_reads_fp new_view.fp new_view.inv);
+  let r' = { r with view = new_view } in
+  r'
+
+#pop-options
+
+val cast_to_refined_inv_ (r: resource) (p:rprop r) : rst_repr unit
+  r
+  (fun _ -> refine_inv r p)
+  (fun h -> p h)
+  (fun _ _ _ -> True)
+
+let cast_to_refined_inv_ r p = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h = HST.get () in
+  assert((mk_rmem r h) r == sel r.view h);
+  assert((mk_rmem (refine_inv r p) h) (refine_inv r p) == sel (refine_inv r p).view h)
+
+let cast_to_refined_inv r p = RST?.reflect (cast_to_refined_inv_ r p)
+
+val cast_from_refined_inv_ (r: resource) (p:rprop r) : rst_repr unit
+  (refine_inv r p)
+  (fun _ -> r)
+  (fun _ -> True)
+  (fun _ _ h1 -> p h1)
+
+let cast_from_refined_inv_ r p = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h = HST.get () in
+  assert((mk_rmem r h) r == sel r.view h);
+  assert((mk_rmem (refine_inv r p) h) (refine_inv r p) == sel (refine_inv r p).view h)
+
+let cast_from_refined_inv r p = RST?.reflect (cast_from_refined_inv_ r p)
+
+let refine_view r #a f =
+  let new_sel h = f (r.view.sel h) in
+  let new_view = { r.view with sel = new_sel} in
+  reveal_view ();
+  {
+   t = a;
+   view = new_view
+  }
+
+val cast_to_refined_view_ (r: resource) (#a: Type)  (f: r.t -> a) : rst_repr unit
+  r
+  (fun _ -> refine_view r f)
+  (fun _ -> True)
+  (fun h0 _ h1 -> h1 (refine_view r f) == f (h0 r))
+
+let cast_to_refined_view_ r #a f = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h = HST.get () in
+  assert((mk_rmem r h) r == sel r.view h);
+  assert((mk_rmem (refine_view r f) h) (refine_view r f) == sel (refine_view r f).view h)
+
+let cast_to_refined_view r #a f = RST?.reflect (cast_to_refined_view_ r #a f)
