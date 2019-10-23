@@ -216,6 +216,7 @@ inline_for_extraction noextract val rst_frame_
          (frame_delta outer0 inner0 outer1 inner1 delta)
      }
    )
+  (#deltas:list (r:resource{r `is_subresource_of` delta}))
   (#pre:rprop inner0)
   (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
    ($f:unit -> RST a inner0 inner1 pre post)
@@ -231,15 +232,18 @@ inline_for_extraction noextract val rst_frame_
           (focus_rmem h0 inner0)
           x
           (focus_rmem h1 (inner1 x)) /\
-        (focus_rmem h0 delta == focus_rmem h1 delta)
+
+        BigOps.big_and
+          (equal_focuses outer0 (outer1 x) delta h0 h1)
+          deltas
     )
   )
 
-#push-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 50 --max_fuel 0 --max_ifuel 0"
 
 
 inline_for_extraction noextract let rst_frame_
-  outer0 #inner0 #a outer1 #inner1 #delta #pre #post f
+  outer0 #inner0 #a outer1 #inner1 #delta #deltas #pre #post f
   = fun _ ->
   (**) reveal_view ();
   (**) reveal_can_be_split_into ();
@@ -247,34 +251,37 @@ inline_for_extraction noextract let rst_frame_
   (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
   (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
   (**) let h0 = HST.get () in
+  (**) let rh0 = mk_rmem outer0 h0 in
   (**) focus_mk_rmem_equality outer0 inner0 h0;
   (**) focus_mk_rmem_equality outer0 delta h0;
   let x:a = reify (f ()) () in
   (**) let h1 = HST.get () in
+  (**) let rh1 = mk_rmem (outer1 x) h1 in
   (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
   (**) focus_mk_rmem_equality (outer1 x) delta h1;
-  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
-  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) delta in
-  (**) extensionality_g
-  (**)  (r0:resource{r0 `is_subresource_of` delta})
-  (**)  (fun r0 -> r0.t)
-  (**)  old_delta
-  (**)  cur_delta;
-  (**) let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
-  (**)   : Lemma (sel r0.view h0 == sel r0.view h1)
-  (**)   = ()
-  (**) in
-  (**) Classical.forall_intro same_subdelta;
-  (**) assert (feq_g old_delta cur_delta);
+  // (**) let old_delta = focus_rmem rh0 delta in
+  // (**) let cur_delta = focus_rmem rh1 delta in
+  // (**) extensionality_g
+  // (**)  (r0:resource{r0 `is_subresource_of` delta})
+  // (**)  (fun r0 -> r0.t)
+  // (**)  old_delta
+  // (**)  cur_delta;
+  // (**) let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
+  // (**)   : Lemma (sel r0.view h0 == sel r0.view h1)
+  // (**)   = ()
+  // (**) in
+  // (**) Classical.forall_intro same_subdelta;
+  // (**) assert (feq_g old_delta cur_delta);
   (**) assert (modifies inner0 (inner1 x) h0 h1);
   (**) assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
   (**) assert (modifies outer0 (outer1 x) h0 h1);
+  (**) assume (BigOps.big_and (equal_focuses outer0 (outer1 x) delta rh0 rh1) deltas);
   x
 
 #pop-options
 
-inline_for_extraction noextract let rst_frame outer0 #inner0 #a outer1 #inner1 #delta #pre #post f =
-  RST?.reflect (rst_frame_ outer0 #inner0 #a outer1 #inner1 #delta #pre #post f)
+inline_for_extraction noextract let rst_frame outer0 #inner0 #a outer1 #inner1 #delta #deltas #pre #post f =
+  RST?.reflect (rst_frame_ outer0 #inner0 #a outer1 #inner1 #delta #deltas #pre #post f)
 
 #pop-options
 

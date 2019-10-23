@@ -346,6 +346,14 @@ val get (r: resource) : RST (rmem r)
 
 (**** The frame rule *)
 
+let equal_focuses
+  (outer0 outer1:resource)
+  (delta:resource{delta `is_subresource_of` outer0 /\ delta `is_subresource_of` outer1})
+  (h0:rmem outer0) (h1:rmem outer1)
+  (r:resource{r `is_subresource_of` delta})
+  : prop =
+  focus_rmem h0 r == focus_rmem h1 r
+
 #push-options "--no_tactics"
 
 /// Finally, the workhorse separation logic rule that will be pervasive in Steel programs: the frame
@@ -378,6 +386,7 @@ inline_for_extraction noextract val rst_frame
          (frame_delta outer0 inner0 outer1 inner1 delta)
      }
    )
+  (#deltas:list (r:resource{r `is_subresource_of` delta}))
   (#pre:rprop inner0)
   (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
    ($f:unit -> RST a inner0 inner1 pre post)
@@ -393,7 +402,12 @@ inline_for_extraction noextract val rst_frame
           (focus_rmem h0 inner0)
           x
           (focus_rmem h1 (inner1 x)) /\
-        (focus_rmem h0 delta == focus_rmem h1 delta)
+
+        BigOps.big_and
+          (equal_focuses outer0 (outer1 x) delta h0 h1)
+          deltas
+
+        // (focus_rmem h0 delta == focus_rmem h1 delta)
     )
 
 #pop-options
