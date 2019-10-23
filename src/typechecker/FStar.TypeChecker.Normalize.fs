@@ -1770,7 +1770,15 @@ and reify_lift cfg e msrc mtgt t : term =
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
-  if U.is_pure_effect msrc || U.is_div_effect msrc
+
+  (*
+   * AR: Not sure why we should use return, if the programmer has also provided a lift
+   *     This seems like a mismatch, since to verify we use lift (else we give an error)
+   *       but to run, we are relying on return
+   *     Disabling this for layered effects, and using the lift instead
+   *)
+  if (U.is_pure_effect msrc || U.is_div_effect msrc) &&
+     not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
     let _, return_repr = ed.return_repr in
