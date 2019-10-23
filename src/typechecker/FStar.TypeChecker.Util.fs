@@ -2466,12 +2466,13 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
  * Quite simple, just apply the lift term, passing units for the
  * binders that are meant to compute indices
  *)
-let lift_tf_layered_effect_term (lift:tscheme) (lift_t:tscheme)
+let lift_tf_layered_effect_term env (sub:sub_eff)
   (u:universe) (a:typ) (e:term) : term =
-  
-  let _, lift = inst_tscheme_with lift [u] in
+
+  let lift = sub.lift |> must |> (fun ts -> inst_tscheme_with ts [u]) |> snd in
 
   let rest_bs =
+    let lift_t = sub.lift_wp |> must in
     match (lift_t |> snd |> SS.compress).n with
     | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
       bs |> List.splitAt (List.length bs - 1) |> fst
@@ -2480,7 +2481,15 @@ let lift_tf_layered_effect_term (lift:tscheme) (lift_t:tscheme)
         BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
-  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
+  //reify the term
+  //if the source effect does not have a repr (e.g. primitive) then we thunk it
+  //in sync with how lifts are defined from such effects (with their thunked terms as arguments)
+  let e_reified =
+    match sub.source |> Env.get_effect_decl env |> (fun ed -> ed.repr) |> snd |> SS.compress with
+    | { n = Tm_unknown } -> U.abs [S.null_binder S.t_unit] e None
+    | _ -> reify_body env [Env.Inlining] e in
+
+  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e_reified]) in
   mk (Tm_app (lift, args)) None e.pos
 
 let get_mlift_for_subeff env sub =
@@ -2488,7 +2497,7 @@ let get_mlift_for_subeff env sub =
 
   then
     ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must);
-       mlift_term = Some (lift_tf_layered_effect_term (sub.lift |> must) (sub.lift_wp |> must)) })
+       mlift_term = Some (lift_tf_layered_effect_term env sub) })
 
   else
     let mk_mlift_wp ts env c =
@@ -2508,7 +2517,23 @@ let get_mlift_for_subeff env sub =
     in
 
     ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;
-       mlift_term = BU.map_opt sub.lift mk_mlift_term })
+       //AR: this is funky
+       //it is saying, if you don't give us a lift term (a function that lifts terms),
+       //we are assuming that the function is an identity
+       //so for example, primitive effects just specify lift wps, and not terms
+       //for them we assume that the terms are identity functions
+       //why do we need it?
+       //suppose programmer writes a layered effect M and defines a lift from DIV to M
+       //now a PURE computation in the VC gets lifted via: PURE ~> DIV ~> M
+       //when extracting (and reifying the monadic lifts), we go the same route
+       //but if there is no lift term from PURE ~> DIV, we get an error
+       //is this ok to do for DM4F? not sure in general
+       //but currently PURE and DIV are lifted to DM4F effects using M.return
+       //and not using the lift term (I don't think the lift term is even supported for DM4F, is it?)
+       mlift_term =
+         match sub.lift with
+         | None -> Some (fun _ _ e -> return_all e)
+         | Some ts -> Some (mk_mlift_term ts) })
 
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
