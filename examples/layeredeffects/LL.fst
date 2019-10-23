@@ -332,3 +332,11 @@ let get_flt_stexn_reified (n:nat)
     | None -> True
     | Some (flt, _) -> flt.n1 == n)
 = reify (reify (get_flt_stexn ()) n) ()
+
+
+let test () : Exn int True (fun _ -> True)
+= 4
+
+let test_st () : Pure (option int) True (fun _ -> True)
+= reify (test ()) ()
+
