@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module FreeSTMonad
+module DijkstraStateMonad
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
