@@ -32,6 +32,7 @@ val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
 val tc_check_tot_or_gtot_term: env -> term -> typ -> term * lcomp * guard_t
 val tc_tactic : typ -> typ -> env -> term -> term * lcomp * guard_t
 val tc_trivial_guard: env -> term -> term * lcomp
+val tc_check_trivial_guard: env -> term -> term -> term
 
 val value_check_expected_typ: env -> term -> either<typ,lcomp> -> guard_t -> term * lcomp * guard_t
 val check_expected_effect: env -> option<comp> -> (term * comp) -> term * comp * guard_t
