@@ -48,6 +48,8 @@ module B = LowStar.Buffer
 /// The concrete type `const_buffer` is defined later
 
 /// `qual`: mutability qualifier
+[@erasable]
+noeq
 type qual =
   | MUTABLE
   | IMMUTABLE
@@ -86,10 +88,14 @@ let qbuf_mbuf (c:qbuf 'a) : B.mbuffer 'a (qbuf_pre c) (qbuf_pre c) = dsnd c
 ///  An abstract type of a read-only pointer to an array of `a`
 val const_buffer (a:Type u#0) : Type u#0
 
-
 /// `as_qbuf`: For specificational purposes, a const_buffer can be
 /// seen as an existentially quantified qbuf
-val as_qbuf (c:const_buffer 'a) : GTot (qbuf 'a)
+val as_qbuf (c:const_buffer 'a) : Tot (qbuf 'a)
+
+/// `qual_of`:
+let qual_of (#a:_) (c:const_buffer a)
+  : Tot qual
+  = dfst (as_qbuf c)
 
 /// `as_mbuf`: A convenience function to turn a const_buffer into a
 /// regular mbuffer, for spec purposes
@@ -138,6 +144,7 @@ val of_qbuf (#q:_) (#a:_) (b:B.mbuffer a (q_preorder q a) (q_preorder q a))
       qbuf_qual c == q /\
       qbuf_mbuf c == b)
 
+
 (*** OPERATIONS ON CONST POINTERS **)
 
 /// `index c i`: Very similar to the spec for `Buffer.index`
@@ -166,8 +173,8 @@ let const_sub_buffer (i:U32.t) (len:U32.t) (csub c:const_buffer 'a) =
 
 /// `sub`: A sub-buffer of a const buffer points to a given
 /// within-bounds offset of its head
-val sub (c:const_buffer 'a) (i len:U32.t)
-  : Stack (const_buffer 'a)
+val sub (#a:_) (c:const_buffer a) (i len:U32.t)
+  : Stack (const_buffer a)
     (requires fun h ->
       live h c /\
       U32.v i + U32.v len <= length c)

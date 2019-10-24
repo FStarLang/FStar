@@ -60,6 +60,19 @@ let seq_eq (s:Ghost.erased (Seq.seq 'a)) (s':Seq.seq 'a) =
 let value_is #a (b:ibuffer a) (s:Ghost.erased (Seq.seq a)) =
   witnessed b (seq_eq s)
 
+let sub_ptr_value_is (#a:_) (b0 b1:ibuffer a) (h:HS.mem) (i len:U32.t) (v:Seq.seq a)
+  : Lemma
+    (requires
+      U32.v i + U32.v len <= length b1 /\
+      b0 == mgsub (immutable_preorder a) b1 i len /\
+      value_is b1 v /\
+      Seq.length v == length b1)
+    (ensures
+      value_is b0 (Seq.slice v (U32.v i) (U32.v i + U32.v len)))
+ = let sub_v = Seq.slice v (U32.v i) (U32.v i + U32.v len) in
+   witnessed_functorial b1 (seq_eq (Ghost.hide v))
+                        b0 (seq_eq (Ghost.hide sub_v))
+
 unfold let libuffer (a:Type0) (len:nat) (s:Seq.seq a) =
   b:lmbuffer a (immutable_preorder a) (immutable_preorder a) len{witnessed b (cpred s)}
 

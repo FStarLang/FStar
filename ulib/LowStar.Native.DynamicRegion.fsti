@@ -183,13 +183,25 @@ let rfree (#a:Type) (#rel:preorder a) (r:HST.mmmref a rel)
 
 /// This is an abstract predicate recording that the buffer `b`'s lifetime is
 /// bound to the lifetime of `d`
-val region_lifetime_buf (#a:Type) (#rrel #rel:B.srel a) (d:drgn) (b:B.mbuffer a rrel rel) : prop
+val region_lifetime_buf (#a:Type) (#rrel #rel:B.srel a) (d:HS.rid) (b:B.mbuffer a rrel rel) : prop
+
+/// The lifetime of a sub-buffer is bound to the lifetime
+/// of its enclosing buffer
+val region_lifetime_sub (#a:Type) (#rrel #rel #subrel:B.srel a)
+                        (d:HS.rid)
+                        (b0:B.mbuffer a rrel rel)
+                        (b1:B.mbuffer a rrel subrel)
+  : Lemma
+    (ensures
+      region_lifetime_buf d b0 /\
+      (exists i len. U32.v i + U32.v len <= B.length b0 /\ b1 == B.mgsub subrel b0 i len) ==>
+      region_lifetime_buf d b1)
 
 /// Eliminating the abstract predicate via a stateful lemma, i.e., a "recall"
 val recall_liveness_buf (#a:Type) (#rrel #rel:B.srel a) (d:drgn) (b:B.mbuffer a rrel rel)
   : HST.ST unit
     (requires fun h ->
-      region_lifetime_buf d b /\
+      region_lifetime_buf (rid_of_drgn d) b /\
       HS.live_region h (rid_of_drgn d))
     (ensures fun h0 _ h1 ->
       h0 == h1 /\
@@ -204,7 +216,7 @@ val ralloc_buf (#a:Type0) (#rrel:B.srel a) (r:drgn) (init:a) (len:U32.t)
     (ensures fun h0 b h1 ->
       B.alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
       B.frameOf b == rid_of_drgn r /\
-      region_lifetime_buf r b)
+      region_lifetime_buf (rid_of_drgn r) b)
 
 /// Allocating a region-lifetime buffer, initializing its contents
 /// with another buffer
@@ -219,7 +231,7 @@ val ralloc_and_blit_buf (#a:Type0) (#rrel:B.srel a) (r:drgn)
       B.alloc_post_mem_common b h0 h1
         (Seq.slice (B.as_seq h0 src) (U32.v from) (U32.v from + U32.v len)) /\
       B.frameOf b == rid_of_drgn r /\
-      region_lifetime_buf r b)
+      region_lifetime_buf (rid_of_drgn r) b)
 
 
 /// Allocating a buffer that can be freed early
