@@ -45,6 +45,24 @@
       "e16e2f8d01bd4338136aab432c87a54f"
     ],
     [
+      "HoareST.HoareST",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "572feccb2a76a45544ddc759b515b407"
+    ],
+    [
+      "HoareST.HoareST",
+      2,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "d8a7a08e846529668ec5bf27ed1f41df"
+    ],
+    [
       "HoareST.write",
       1,
       0,
@@ -63,7 +81,7 @@
         "true_interp"
       ],
       0,
-      "e379a38a9a8466a8e22f3c6d1446b765"
+      "b9024316897417069195106450c3848a"
     ],
     [
       "HoareST.mwrite",
@@ -77,7 +95,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e1deef229e259cefa066150710b7231c"
+      "93ee1131142e9a5de385a53ffdcd2ab7"
     ],
     [
       "HoareST.lift_pure_hoarest",
@@ -102,7 +120,7 @@
         "typing_Tm_abs_efcce3c21fe48dce9105b420b0cd535c"
       ],
       0,
-      "7297349e0f80b9519f5f67a38765c2fd"
+      "d90c310f95ad2c5d145a46e2698866eb"
     ]
   ]
 ]

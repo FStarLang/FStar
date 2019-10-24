@@ -123,6 +123,54 @@
       "88cea772ffaf10494f22c5e380af178d"
     ],
     [
+      "FlightsStExn.STEXN",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
+        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+      ],
+      0,
+      "00600f7c71d6be10a370797c79a61874"
+    ],
+    [
+      "FlightsStExn.STEXN",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
+        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+      ],
+      0,
+      "7ca124d2c17ecad1983a7125c0a15a42"
+    ],
+    [
+      "FlightsStExn.STEXN",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
+        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+      ],
+      0,
+      "59178e83b53ec98e5a5643e40b8a54d4"
+    ],
+    [
+      "FlightsStExn.STEXN",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
+        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+      ],
+      0,
+      "6372db597252ca270483d6b9cb2e85aa"
+    ],
+    [
       "FlightsStExn.lift_div_stexn",
       1,
       2,
@@ -143,7 +191,7 @@
         "typing_Tm_abs_a1bb376e4bf4033c31bef26a86ef049e"
       ],
       0,
-      "bf722e0cde507aaa955b800e36f22cda"
+      "7a650d28fff3a0f59730c8286947dcd1"
     ],
     [
       "FlightsStExn.__proj__Mkrcv_state__item__id",
@@ -155,7 +203,7 @@
         "projection_inverse_FlightsStExn.Mkrcv_state_b"
       ],
       0,
-      "291818b17bbf9c484f1acdc157bdacfb"
+      "a38c9d0aee451c57adac39fa0e3372d6"
     ],
     [
       "FlightsStExn.StExn",
@@ -164,7 +212,7 @@
       1,
       [ "@query" ],
       0,
-      "c795e7ace5b03de3a289533e53958c88"
+      "4d840596338c7db1b690d5fd49b28cc2"
     ],
     [
       "FlightsStExn.parse_common_wp",
@@ -183,7 +231,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "dd3681cabb294143ee1cc2693495a0d6"
+      "67882afc691063dbb558873ef0201b22"
     ],
     [
       "FlightsStExn.parse_common_",
@@ -222,7 +270,7 @@
         "refinement_interpretation_Tm_refine_6e5ae195c361dc0cce3e999d84550927"
       ],
       0,
-      "5244b981b17f321ded0eb500ffd18ac6"
+      "93d992a88ebfdd5397ecec446571ebe5"
     ],
     [
       "FlightsStExn.parse_common_exn",
@@ -234,7 +282,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "ab701633e2dbb222453792fa4c62e518"
+      "ed840dbc4578675c21bc3b9447518be7"
     ],
     [
       "FlightsStExn.parse_common",
@@ -264,7 +312,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "66dbdf21ce76676a8075046c7f7dd3b1"
+      "233c6556c2b8fe841013c6e9b2cb5cb2"
     ],
     [
       "FlightsStExn.parse_flt_aux",
@@ -326,7 +374,7 @@
         "typing_Messages.__proj__Mkrepr__item__v"
       ],
       0,
-      "dc14985ede615c745dd4c70261a01df8"
+      "f360e4ed9163138055b36a57f5216fed"
     ],
     [
       "FlightsStExn.parse_flt",
@@ -354,7 +402,7 @@
         "refinement_interpretation_Tm_refine_5e6f3dbac5b88377a1b1ab44fada5fb7"
       ],
       0,
-      "272b9a4e5028bef9735fa649d0303887"
+      "bcb2ee7704aa3e6bd040894369cb34c8"
     ]
   ]
 ]
