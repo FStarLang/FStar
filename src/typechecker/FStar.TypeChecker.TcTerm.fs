@@ -3132,6 +3132,12 @@ and tc_trivial_guard env t =
   Rel.force_trivial_guard env g;
   t,c
 
+and tc_check_trivial_guard env t k =
+  let t, _, g = tc_check_tot_or_gtot_term env t k in
+  Rel.force_trivial_guard env g;
+  t
+
+
 (* type_of_tot_term env e : e', t, g
       checks that env |- e' : Tot t' <== g
       i.e., e' is an elaboration of e
