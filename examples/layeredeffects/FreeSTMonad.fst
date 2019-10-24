@@ -15,13 +15,16 @@
 *)
 
 module FreeSTMonad
+open FStar.FunctionalExtensionality
+module F = FStar.FunctionalExtensionality
+module W = FStar.WellFounded
+module T = FStar.Tactics
 
 noeq
 type m (s:Type0) (a:Type) =
   | Ret : a -> m s a
   | Get : (s -> m s a) -> m s a
   | Put : x:s -> m s a -> m s a
-module W = FStar.WellFounded
 
 let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
   match x with
@@ -29,107 +32,22 @@ let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
   | Get k -> Get (fun s -> W.axiom1 k s; bind_m (k s) y)
   | Put s k -> Put s (bind_m k y)
 
-
-(* First a simply typed variant *)
-let repr a s =
-  unit -> m s a
-
-let return (a:Type) (s:Type) (x:a)
-  : repr a s
-  = fun () -> Ret x
-
-let rec bind a b s (f:repr a s) (g : (a -> repr b s))
-  : repr b s
-  = let m_f = f () in
-    let m_g = fun x -> g x () in
-    fun () -> bind_m #s #a #b m_f m_g
-
-//no subsumption rule
-let subcomp (a:Type) (s:Type) (f:repr a s)
-  : Tot (repr a s)
-  = f
-
-let if_then_else (a:Type) (s:Type)
-                 (f:repr a s)
-                 (g:repr a s)
-                 (p:Type0)
-  : Type
-  = repr a s
-
-let if_then_else_true
-     (a:Type) (s:Type)
-     (f:repr a s)
-     (g:repr a s)
-     (p:Type0 { p })
-  : if_then_else a s f g p
-  = subcomp a s f
-
-let if_then_else_false
-     (a:Type) (s:Type)
-     (f:repr a s)
-     (g:repr a s)
-     (p:Type0 { ~p })
-  : if_then_else a s f g p
-  = subcomp a s g
-
-let get s : repr s s =
-    fun () -> Get Ret
-
-let put s (x:s) : repr unit s =
-    fun () -> Put x (Ret ())
-
-reifiable reflectable
-layered_effect {
-  FST : a:Type -> s:Type0 -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else;
-
-       get = get;
-       put = put
-}
-
-let lift_pure_fst
-    (a:Type)
-    (s:Type)
-    (wp:pure_wp a)
-    (f:unit -> PURE a wp)
-  : repr a s
-  = assume(wp (fun x -> True)); //to suppress the WP
-    return a s (f())
-
-sub_effect PURE ~> FST = lift_pure_fst
-
-let incr () : FST unit int =
-  let x = FST?.get int in
-  let y = x + 1 in
-  FST?.put int y
-
 ////////////////////////////////////////////////////////////////////////////////
-// Now for a WP-indexed variant
+// A WP-indexed variant of `m`
 ////////////////////////////////////////////////////////////////////////////////
-open FStar.FunctionalExtensionality
+
 let post_t (s:Type0) (a:Type) = a * s -> Type0
 let pre_t (s:Type) = s -> Type0
-let wp_t (s:Type0) (a:Type) = s -> (post_t s a -> Type0)
-module F = FStar.FunctionalExtensionality
-let wp_put #s #a (f: wp_t s a) : s -> wp_t s a = fun s s0 -> f s
-let wp_return #s #a (x:a) : wp_t s a = F.on_dom _ (fun s0 -> let f : post_t s a -> Type0 = fun post -> post (x, s0) in f)
-// let wp_get #s #a #b (f:m s b)
-//                     (wp_of: (g:m s a{g << f} -> wp_t s a))
-//                     (k: (s -> m s a) {k << f})
-//   : wp_t s a
-//   = fun post s0 ->
-//       W.axiom1 k s0;
-//       wp_of (k s0) post s0
+let wp_t (s:Type0) (a:Type) = s ^-> (post_t s a -> Type0)
+
+let wp_put #s #a (f: wp_t s a) : s -> wp_t s a = fun s -> F.on _ (fun s0 -> f s)
+let wp_return #s #a (x:a) : wp_t s a = F.on _ (fun s0 post -> post (x, s0))
 
 let rec wp_of #a #s (x:m s a)
   : wp_t s a
   = match x with
-    | Ret v -> fun s0 post -> post (v, s0)
-    | Get k -> fun s0 -> W.axiom1 k s0; (wp_of (k s0)) s0
+    | Ret v -> wp_return v
+    | Get k -> F.on _ (fun s0 -> W.axiom1 k s0; (wp_of (k s0)) s0)
     | Put s k -> wp_put (wp_of k) s
 
 // soundness of wp_of
@@ -157,22 +75,34 @@ let ireturn (a:Type) (s:Type) (x:a)
 
 let bind_wp #a #b #s (wp_f:wp_t s a) (wp_g: (a -> wp_t s b))
   : wp_t s b
-  = fun s0 post -> wp_f s0 (fun (x, s1) -> wp_g x s1 post)
+  = F.on _ (fun s0 post -> wp_f s0 (fun (x, s1) -> wp_g x s1 post))
 
-module T = FStar.Tactics
-let ( *. ) (f:'b -> 'c) (g:'a -> 'b) : 'a -> 'c = fun x -> f (g x)
 
-let rec bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
+let ( *. ) #a #b #c (f:b -> c) (g:a -> b) : (a ^-> c) = F.on _ (fun x -> f (g x))
+
+let lem_on_comp #a #b #c (f:b -> c) (g:a -> b)
+  : Lemma (F.on _ (f *. g) == f *. g)
+  = ()
+
+let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = ()
+
+let rec bind_wp_lem' (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
   : Lemma (wp_of (bind_m f g) `F.feq` bind_wp (wp_of f) (wp_of *. g))
   = match f with
     | Ret x ->
       assert (bind_m f g == g x);
-      assert_norm (wp_of #a #s (Ret x) == (fun s0 post -> post (x, s0)));
-      assert_norm (wp_of (bind_m (Ret x) g) == bind_wp (wp_of (Ret x)) (wp_of *. g))
-
+      assert_norm (wp_of #a #s (Ret x) `F.feq` (fun s0 post -> post (x, s0)));
+      assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
+           by (T.dump "A";
+               T.norm [delta];
+               T.dump "B";
+               let x = T.forall_intro () in
+               T.dump "C";
+               T.mapply (`eta);
+               T.dump "D")
     | Put s k ->
-      bind_wp_lem k g;
-      assert_norm (wp_put (bind_wp (wp_of k) (wp_of *. g)) s ==
+      bind_wp_lem' k g;
+      assert_norm (wp_put (bind_wp (wp_of k) (wp_of *. g)) s `F.feq`
                    bind_wp (wp_put (wp_of k) s) (wp_of *. g))
 
     | Get k ->
@@ -182,22 +112,26 @@ let rec bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
                     bind_wp (wp_of (k x)) (wp_of *. g)))
           [SMTPat (k x)]
         = W.axiom1 k x;
-          bind_wp_lem (k x) g
+          bind_wp_lem' (k x) g
       in
       assert_norm (wp_of (bind_m (Get k) g) ==
                    wp_of (Get (fun x -> bind_m (k x) g)));
       assert_norm (wp_of (Get (fun x -> bind_m (k x) g)) ==
-                   (fun s0 -> (wp_of (bind_m (k s0) g)) s0));
+                   F.on _ (fun s0 -> (wp_of (bind_m (k s0) g)) s0));
 
       assert ((fun s0 -> (wp_of (bind_m (k s0) g)) s0) `F.feq`
               (fun s0 -> bind_wp (wp_of (k s0)) (wp_of *. g) s0));
       assert_norm (bind_wp (wp_of (Get k)) (wp_of *. g) ==
-                   bind_wp ((fun s0 -> wp_of (k s0) s0))
+                   bind_wp (F.on _ (fun s0 -> wp_of (k s0) s0))
                             (wp_of *. g));
-      assert_norm (bind_wp ((fun s0 -> wp_of (k s0) s0)) (wp_of *. g) ==
-                  (fun s0 -> bind_wp (wp_of (k s0)) (wp_of *. g) s0))
+      assert_norm (bind_wp (F.on _ (fun s0 -> wp_of (k s0) s0)) (wp_of *. g) ==
+                   F.on _ (fun s0 -> bind_wp (wp_of (k s0)) (wp_of *. g) s0))
 
-let ibind a b s wp_f wp_g
+let bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
+  : Lemma (wp_of (bind_m f g) == bind_wp (wp_of f) (wp_of *. g))
+  = bind_wp_lem' f g
+
+let ibind a b s wp_f (wp_g: a ^-> wp_t s b)
     (f:irepr a s wp_f)
     (g : (x:a -> irepr b s (wp_g x)))
   : irepr b s (bind_wp wp_f wp_g)
@@ -205,8 +139,79 @@ let ibind a b s wp_f wp_g
     let m_g = fun x -> g x () in
     fun () ->
          bind_wp_lem m_f m_g;
-         assert (wp_f `F.feq` wp_of m_f);
-         assert (forall x. (wp_of *. m_g) x `F.feq` wp_g x);
-         assume (wp_f == wp_of m_f);
-         assume (wp_of *. m_g == wp_g);
+         assert (forall x. (wp_of *. m_g) x == wp_g x);
+         assert (wp_f == wp_of m_f);
+         assert ((wp_of *. m_g) `F.feq` wp_g);
+         F.extensionality _ _ ((wp_of *. m_g)) wp_g;
+         assert (F.on _ (wp_of *. m_g) == F.on _ wp_g);
+         assert (F.on _ wp_g == wp_g);
+         lem_on_comp wp_of m_g;
+         assert (F.on _ (wp_of *. m_g) == (wp_of *. m_g));
          bind_m m_f m_g
+
+let iget s : irepr s s (wp_of (Get Ret)) =
+    fun () -> Get Ret
+
+let iput s (x:s) : irepr unit s (wp_of (Put x (Ret ()))) =
+    fun () -> Put x (Ret ())
+
+// This representation doesn't yet allow for subsumption
+// So faking out these rules for now
+
+//a fake subsumption rule for now
+let isubcomp (a:Type) (s:Type) (wp wp':wp_t s a) (f:irepr a s wp)
+  : Pure (irepr a s wp')
+    (requires
+      forall s0 post. wp' s0 post ==> wp s0 post)
+    (ensures fun _ -> True)
+  = admit()
+
+//no meaningful conditional rule for now
+let i_if_then_else (a:Type) (s:Type) (wp:_)
+                   (f:irepr a s wp)
+                   (g:irepr a s wp)
+                   (p:Type0)
+  : Type
+  = irepr a s wp
+
+
+//a fake lift for now
+let lift_pure_ifst
+    (a:Type)
+    (s:Type0)
+    (wp:pure_wp a)
+    (f:unit -> PURE a wp)
+  : irepr a s (F.on _ (fun (s0:s) (k:post_t s a) ->
+                    wp (fun a -> k (a, s0))))
+  = admit();
+    ireturn a s (f())
+
+reifiable reflectable
+layered_effect {
+  IFST : a:Type -> s:Type0 -> wp:wp_t s a -> Effect
+  with repr         = irepr;
+       return       = ireturn;
+       bind         = ibind;
+       subcomp      = isubcomp;
+       if_then_else = i_if_then_else;
+
+       get = iget;
+       put = iput
+}
+
+
+sub_effect PURE ~> IFST = lift_pure_ifst
+
+effect IFst (a:Type) (s:Type) (pre:s -> Type) (post: s -> a -> s -> Type)
+  = IFST a s (F.on _ (fun s0 k -> pre s0 /\ (forall x s1. post s0 x s1 ==> k (x, s1))))
+
+let iincr ()
+  : IFst unit int
+    (requires fun s -> True)
+    (ensures fun s0 x s1 ->
+      s1 == s0 + 1)
+  by (T.norm [delta; zeta; iota]; T.smt())
+  =
+  let x = IFST?.get int in
+  let y = x + 1 in
+  IFST?.put int y
