@@ -2507,7 +2507,7 @@ let (mk_layered_conjunction :
                         FStar_All.pipe_right ed.FStar_Syntax_Syntax.match_wps
                           FStar_Util.right
                          in
-                      uu____6042.FStar_Syntax_Syntax.conjunction  in
+                      uu____6042.FStar_Syntax_Syntax.sif_then_else  in
                     FStar_TypeChecker_Env.inst_tscheme_with uu____6041 [u_a]
                      in
                   match uu____6036 with

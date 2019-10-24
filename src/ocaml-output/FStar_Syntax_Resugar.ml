@@ -2238,10 +2238,10 @@ let (resugar_eff_decl' :
                                resugar_tscheme'' env "close_wp" t3  in
                              [if_then_else1; ite_wp; close_wp]
                          | FStar_Util.Inr
-                             { FStar_Syntax_Syntax.conjunction = t;_} ->
-                             let conjunction =
-                               resugar_tscheme'' env "conjunction" t  in
-                             [conjunction]
+                             { FStar_Syntax_Syntax.sif_then_else = t;_} ->
+                             let sif_then_else =
+                               resugar_tscheme'' env "sif_then_else" t  in
+                             [sif_then_else]
                           in
                        let uu____8648 =
                          let uu____8651 =

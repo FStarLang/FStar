@@ -6920,7 +6920,7 @@ let rec (desugar_effect :
                                                     lookup1 "if_then_else"
                                                      in
                                                   {
-                                                    FStar_Syntax_Syntax.conjunction
+                                                    FStar_Syntax_Syntax.sif_then_else
                                                       = uu____25835
                                                   }  in
                                                 FStar_Util.Inr uu____25834

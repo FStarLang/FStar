@@ -1301,10 +1301,12 @@ let (__proj__Mkmatch_with_close__item__close_wp :
     match projectee with | { if_then_else; ite_wp; close_wp;_} -> close_wp
   
 type match_with_subst = {
-  conjunction: tscheme }
-let (__proj__Mkmatch_with_subst__item__conjunction :
+  sif_then_else: tscheme }
+let (__proj__Mkmatch_with_subst__item__sif_then_else :
   match_with_subst -> tscheme) =
-  fun projectee  -> match projectee with | { conjunction;_} -> conjunction 
+  fun projectee  ->
+    match projectee with | { sif_then_else;_} -> sif_then_else
+  
 type eff_decl =
   {
   is_layered:

@@ -1558,8 +1558,8 @@ let (map_match_wps :
       | FStar_Util.Inr r ->
           let uu____5962 =
             let uu___981_5963 = r  in
-            let uu____5964 = f r.FStar_Syntax_Syntax.conjunction  in
-            { FStar_Syntax_Syntax.conjunction = uu____5964 }  in
+            let uu____5964 = f r.FStar_Syntax_Syntax.sif_then_else  in
+            { FStar_Syntax_Syntax.sif_then_else = uu____5964 }  in
           FStar_Util.Inr uu____5962
   
 let (get_match_with_close_wps :

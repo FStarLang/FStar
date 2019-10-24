@@ -1346,9 +1346,9 @@ let (eff_decl_to_string' :
                    FStar_Util.format3
                      "{\nif_then_else = %s;\nite_wp = %s\nclose_wp = %s\n}\n"
                      uu____3787 uu____3789 uu____3791
-               | FStar_Util.Inr { FStar_Syntax_Syntax.conjunction = t;_} ->
+               | FStar_Util.Inr { FStar_Syntax_Syntax.sif_then_else = t;_} ->
                    let uu____3795 = tscheme_to_string t  in
-                   FStar_Util.format1 "{\nconjunction = %s\n}\n" uu____3795
+                   FStar_Util.format1 "{\nsif_then_else = %s\n}\n" uu____3795
                 in
              let uu____3798 =
                let uu____3802 =
