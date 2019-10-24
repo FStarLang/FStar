@@ -80,11 +80,10 @@ layered_effect {
 let lift_pure_fst
     (a:Type)
     (s:Type)
-    (wp:pure_wp a)
+    (wp:pure_wp a{wp (fun _ -> True)})
     (f:unit -> PURE a wp)
   : repr a s
-  = assume(wp (fun x -> True)); //to suppress the WP
-    return a s (f())
+  = return a s (f())
 
 sub_effect PURE ~> FST = lift_pure_fst
 
