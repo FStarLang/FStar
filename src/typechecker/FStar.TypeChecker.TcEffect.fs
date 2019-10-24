@@ -391,61 +391,103 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   log_combinator "if_then_else" if_then_else;
 
 
-  //soundness of if_then_else
+  (*
+   * Checking the soundness of the if_then_else combinator
+   *
+   * In all combinators, other than if_then_else, the soundess is ensured
+   *   by extracting the application of those combinators to their definitions
+   * For if_then_else, the combinator does not have an extraction equivalent
+   *   It is only used in VC generation
+   *
+   * So we need to make sure that the combinator is sound
+   *
+   * Informally, we want to check that:
+   *
+   *     p ==> (subcomp f <: if_then_else f g)  and
+   * not p ==> (subcomp g <: if_then_else f g)
+   *
+   * Basically when p holds, the computation type of f should be coercible to if_then_else f g
+   *   and similarly for the (not p) case
+   *
+   * The way we program it, we first build the term:
+   *   subcomp <some number of _> f <: if_then_else bs f g
+   *   where bs are some variables for the extra binders of if_then_else, and f and g are also variables
+   *
+   * Then, we typecheck this term which fills in the _ in subcomp application and returns a guard
+   * We refine the guard to add an implication p ==> guard,
+   *   and then discharge it
+   * 
+   * Similarly for the g case
+   *)
   let _if_then_else_is_sound =
     let r = ((ed.match_wps |> BU.right).sif_then_else |> snd).pos in
 
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
-    let env, ite_rest_bs, f_t, g_t, p_t =
+    let env, ite_t_applied, f_t, g_t, p_t =
       match (SS.compress ite_t).n with
       | Tm_abs (bs, _, _) ->
         let bs = SS.open_binders bs in
-        let rest_bs, f, g, p =
+        let f, g, p =
           bs
           |> List.splitAt (List.length bs - 3)
-          |> (fun (l1, l2) -> l2
-                          |> List.map fst
-                          |> List.map S.bv_to_name
-                          |> (fun l -> let (f::g::p::[]) = l in l1, f, g, p)) in
+          |> snd
+          |> List.map fst
+          |> List.map S.bv_to_name
+          |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
-        rest_bs, f, g, p
-      | _ -> failwith "Impossible!" in
+        S.mk_Tm_app ite_t
+          (bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+          None r,
+        f, g, p
+      | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
 
-    let subcomp_f =
+    let subcomp_f, subcomp_g =
       let _, subcomp_t, subcomp_ty = stronger_repr in
       let _, subcomp_t = SS.open_univ_vars us subcomp_t in
-      let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
 
-      let bs_except_f =
+      let bs_except_last =
+        let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
         match (SS.compress subcomp_ty).n with
         | Tm_arrow (bs, _) -> bs |> List.splitAt (List.length bs - 1) |> fst
-        | _ -> failwith "Impossible!" in
+        | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-      mk_Tm_app
+     let aux t = 
+      S.mk_Tm_app
         subcomp_t
-        (((bs_except_f |> List.map (fun _ -> S.tun))@[f_t]) |> List.map S.as_arg)
+        (((bs_except_last |> List.map (fun _ -> S.tun))@[t]) |> List.map S.as_arg)
         None r in
 
-    let ite_f_g = mk_Tm_app
-      ite_t
-      (((ite_rest_bs |> List.map (fun _ -> S.tun))@[f_t; g_t; p_t]) |> List.map S.as_arg)
-      None r in
+     aux f_t, aux g_t in
 
-    let tm_subcomp_ascribed = S.mk
-      (Tm_ascribed (subcomp_f, (Inr (S.mk_Total ite_f_g), None), None))
-      None r in
+    let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
+      let aux t =
+        S.mk
+          (Tm_ascribed (t, (Inr (S.mk_Total ite_t_applied), None), None))
+          None r in
 
-    let env_with_p =
-      let t = S.lid_as_fv PC.squash_lid S.delta_constant None |> S.fv_to_tm in
-      let b = S.null_binder (mk_Tm_app t [S.as_arg p_t] None r) in
-      Env.push_binders env [b] in
+      aux subcomp_f, aux subcomp_g in
 
-    tc_check_trivial_guard env_with_p tm_subcomp_ascribed S.tun
+    if Env.debug env <| Options.Other "LayeredEffects"
+    then BU.print2 "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
+           (Print.term_to_string tm_subcomp_ascribed_f)
+           (Print.term_to_string tm_subcomp_ascribed_g);
 
-    () in
 
+    let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
+    let g_f = Env.imp_guard (Env.guard_of_guard_formula (NonTrivial p_t)) g_f in
+    Rel.force_trivial_guard env g_f;
+
+
+    let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
+    let g_g =
+      let not_p = S.mk_Tm_app
+        (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
+        [p_t |> S.as_arg]
+        None r in
+      Env.imp_guard (Env.guard_of_guard_formula (NonTrivial not_p)) g_g in
+    Rel.force_trivial_guard env g_g in
 
 
   (*
