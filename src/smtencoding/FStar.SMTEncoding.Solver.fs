@@ -667,16 +667,97 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                   (used_hint config)
     in
 
-    let check_all_configs configs : unit =
-        let report errs = report_errors ({default_settings with query_errors=errs}) in
-        match fold_queries configs check_one_config process_result with
-        | None -> ()
-        | Some errs -> report errs
+    let check_all_configs configs : option<list<errors>> =
+        fold_queries configs check_one_config process_result
+    in
+
+    let quake_and_check_all_configs configs =
+        let lo   = Options.quake_lo () in
+        let hi   = Options.quake_hi () in
+        let seed = Options.z3_seed () in
+        let name = full_query_id default_settings in
+        let quaking = hi > 1 in
+        let hi = if hi < 1 then 1 else hi in
+        let lo =
+            if lo < 1 then 1
+            else if lo > hi then hi
+            else lo
+        in
+        let run_one (seed:int) =
+            (* Here's something annoying regarding --quake:
+             *
+             * In normal circumstances, we can just run the query again and get
+             * a slightly different behaviour because of Z3 accumulating some
+             * internal state that doesn't get erased on a (pop). So we simply repeat
+             * the query then.
+             *
+             * But, if we're doing --z3refresh, we will always get the exact
+             * same behaviour by doing that, so we do want to set the seed in this case.
+             *
+             * Why not always set it? Because it requires restarting the solver, which
+             * takes a long time.
+             *
+             * Why not use the (set-option smt.random_seed ..) command? Because
+             * it seems to have no effect just before a (check-sat), so it needs to be
+             * set early, which basically implies restarting.
+             *
+             * So we do this horrendous thing.
+             *)
+            if Options.z3_refresh ()
+            then Options.with_saved_options (fun () ->
+                   Options.set_option "z3seed" (Options.Int seed);
+                   check_all_configs configs)
+            else check_all_configs configs
+        in
+        let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
+            if lo > hi
+            then acc
+            else fold_nat' f (f acc lo) (lo + 1) hi
+        in
+        let nsuccess, rs =
+            fold_nat'
+                (fun (nsucc, rs) n ->
+                     let r = run_one (seed+n) in
+                     let nsucc = if BU.is_none r then nsucc + 1 else nsucc in
+                     if quaking
+                        && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
+                        && n<hi-1 then (* no need to print last *)
+                       BU.print4 "Quake: so far query %s succeeded %s/%s times (%s runs remain)\n"
+                           name
+                           (string_of_int nsucc)
+                           (string_of_int hi)
+                           (string_of_int (hi-1-n));
+                     (nsucc, r::rs))
+                (0, []) 0 (hi-1)
+        in
+        if quaking then
+            BU.print_string
+               (BU.format3 "Quake: query %s succeeded %s/%s times\n"
+                name
+                (string_of_int nsuccess)
+                (string_of_int hi));
+        if nsuccess < lo then begin
+            let report errs = report_errors ({default_settings with query_errors=errs}) in
+            List.iter (function | None -> ()
+                                | Some es -> report es) rs;
+            if quaking then
+                FStar.TypeChecker.Err.add_errors
+                  env
+                  [(Errors.Error_QuakeFailed,
+                    BU.format4
+                      "Query %s failed the quake test, %s out of %s attempts succeded, \
+                       but the threshold was %s"
+                       name
+                      (string_of_int nsuccess)
+                      (string_of_int hi)
+                      (string_of_int lo),
+                    env.range)]
+        end
     in
 
     match Options.admit_smt_queries(), Options.admit_except() with
     | true, _ -> ()
-    | false, None -> check_all_configs all_configs
+    | false, None -> quake_and_check_all_configs all_configs
     | false, Some id ->
       let skip =
         if BU.starts_with id "("
@@ -684,7 +765,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         else default_settings.query_name <> id
       in
       if not skip
-      then check_all_configs all_configs
+      then quake_and_check_all_configs all_configs
 
 type solver_cfg = {
   seed             : int;

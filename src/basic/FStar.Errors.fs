@@ -335,6 +335,7 @@ type raw_error =
   | Fatal_ExtractionUnsupported
   | Warning_SMTErrorReason
   | Warning_CoercionNotFound
+  | Error_QuakeFailed
 
 type flag = error_flag
 
@@ -667,6 +668,7 @@ let default_flags =
   (Fatal_ExtractionUnsupported                       , CFatal);
   (Warning_SMTErrorReason                            , CWarning);
   (Warning_CoercionNotFound                          , CWarning);
+  (Error_QuakeFailed                                 , CError);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
