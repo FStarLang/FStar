@@ -640,9 +640,9 @@ let eff_decl_to_string' for_free r q ed =
           ite_wp = %s\n\
           close_wp = %s\n\
         }\n" (tscheme_to_string t1) (tscheme_to_string t2) (tscheme_to_string t3)
-      | Inr ( { conjunction = t } ) ->
+      | Inr ( { sif_then_else = t } ) ->
         U.format1 "{\n\
-          conjunction = %s\n\
+          sif_then_else = %s\n\
         }\n" (tscheme_to_string t)
     in
     U.format "%s%s { \

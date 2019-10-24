@@ -2503,7 +2503,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
              ret_wp        = dummy_tscheme;
              bind_wp       = dummy_tscheme;
              stronger      = dummy_tscheme;
-             match_wps     = Inr ({ conjunction = lookup "if_then_else" });
+             match_wps     = Inr ({ sif_then_else = lookup "if_then_else" });
              trivial       = None;
              repr          = lookup "repr";
              return_repr   = lookup "return";

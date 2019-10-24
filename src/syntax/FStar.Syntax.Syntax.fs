@@ -360,7 +360,7 @@ type match_with_close = {
   close_wp     : tscheme;
 }
 type match_with_subst = {
-  conjunction : tscheme;
+  sif_then_else : tscheme;
 }
 type eff_decl = {
     is_layered  :bool * option<lident>;

@@ -351,13 +351,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
   log_combinator "stronger_repr" stronger_repr;
 
-  let conjunction =
-    let conjunction_ts = (ed.match_wps |> BU.right).conjunction in
-    let r = (snd conjunction_ts).pos in
-    let conjunction_us, conjunction_t, conjunction_ty = check_and_gen "conjunction" 1 conjunction_ts in
+  let if_then_else =
+    let if_then_else_ts = (ed.match_wps |> BU.right).sif_then_else in
+    let r = (snd if_then_else_ts).pos in
+    let if_then_else_us, if_then_else_t, if_then_else_ty = check_and_gen "if_then_else" 1 if_then_else_ts in
 
-    let us, t = SS.open_univ_vars conjunction_us conjunction_t in
-    let _, ty = SS.open_univ_vars conjunction_us conjunction_ty in
+    let us, t = SS.open_univ_vars if_then_else_us if_then_else_t in
+    let _, ty = SS.open_univ_vars if_then_else_us if_then_else_ty in
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
@@ -367,7 +367,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         let ((a', _)::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 3) |> fst
            |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name)]
-      | _ -> not_an_arrow_error "conjunction" 4 ty r in
+      | _ -> not_an_arrow_error "if_then_else" 4 ty r in
     let bs = a::rest_bs in
     let f_bs, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
@@ -381,11 +381,14 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
 
-    conjunction_us, SS.close_univ_vars conjunction_us (k |> N.remove_uvar_solutions env), conjunction_ty in
+    if_then_else_us, SS.close_univ_vars if_then_else_us (k |> N.remove_uvar_solutions env), if_then_else_ty in
 
-  log_combinator "conjunction" conjunction;
+  log_combinator "if_then_else" if_then_else;
 
-  //AR: TODO: FIXME: rest of the combinators
+
+  //soundness of if_then_else
+  let _if_then_else_is_sound =
+    () in
 
 
   (*
@@ -526,7 +529,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     ret_wp        = (fst return_repr, thd return_repr);
     bind_wp       = (fst bind_repr, thd bind_repr);
     stronger      = (fst stronger_repr, thd stronger_repr);
-    match_wps     = Inr ({ conjunction = (fst conjunction, snd conjunction) });
+    match_wps     = Inr ({ sif_then_else = (fst if_then_else, snd if_then_else) });
     repr          = (fst repr, snd repr);
     return_repr   = (fst return_repr, snd return_repr);
     bind_repr     = (fst bind_repr, snd bind_repr);

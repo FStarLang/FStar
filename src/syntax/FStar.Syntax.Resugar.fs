@@ -1080,9 +1080,9 @@ let resugar_eff_decl' env for_free r q ed =
          let ite_wp = resugar_tscheme'' env "ite_wp" t2 in
          let close_wp = resugar_tscheme'' env "close_wp" t3 in
          [ if_then_else; ite_wp; close_wp ]
-       | Inr ({ conjunction = t }) ->
-         let conjunction = resugar_tscheme'' env "conjunction" t in
-         [ conjunction ]) @
+       | Inr ({ sif_then_else = t }) ->
+         let sif_then_else = resugar_tscheme'' env "sif_then_else" t in
+         [ sif_then_else ]) @
       (match ed.trivial with
        | None -> []
        | Some t -> [ resugar_tscheme'' env "trivial" t ]) @

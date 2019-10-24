@@ -837,7 +837,7 @@ let map_match_wps (f:tscheme -> tscheme) (match_wp:either<match_with_close, matc
     | Inl r ->
       Inl ({ r with if_then_else = f r.if_then_else; ite_wp = f r.ite_wp; close_wp = f r.close_wp })
     | Inr r ->
-      Inr ({ r with conjunction = f r.conjunction })
+      Inr ({ r with sif_then_else = f r.sif_then_else })
 
 let get_match_with_close_wps (match_wp:either<match_with_close, match_with_subst>)
   : tscheme * tscheme * tscheme

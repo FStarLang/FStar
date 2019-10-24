@@ -1088,7 +1088,7 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
 : comp * guard_t =
 
-  let _, conjunction = Env.inst_tscheme_with (ed.match_wps |> right).conjunction [u_a] in
+  let _, conjunction = Env.inst_tscheme_with (ed.match_wps |> right).sif_then_else [u_a] in
   let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
 
   let conjunction_t_error (s:string) =
