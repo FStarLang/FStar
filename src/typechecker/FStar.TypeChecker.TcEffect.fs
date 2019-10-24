@@ -49,6 +49,11 @@ let dmff_cps_and_elaborate env ed =
   // the rest of the job to [tc_decl].
   DMFF.cps_and_elaborate env ed
 
+let tc_check_trivial_guard env t k =
+  let t, c, g = tc_check_tot_or_gtot_term env t k in
+  Rel.force_trivial_guard env g;
+  t
+
 (*
  * Typechecking of layered effects
  *)
@@ -388,7 +393,59 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
   //soundness of if_then_else
   let _if_then_else_is_sound =
+    let r = ((ed.match_wps |> BU.right).sif_then_else |> snd).pos in
+
+    let ite_us, ite_t, _ = if_then_else in
+
+    let us, ite_t = SS.open_univ_vars ite_us ite_t in
+    let env, ite_rest_bs, f_t, g_t, p_t =
+      match (SS.compress ite_t).n with
+      | Tm_abs (bs, _, _) ->
+        let bs = SS.open_binders bs in
+        let rest_bs, f, g, p =
+          bs
+          |> List.splitAt (List.length bs - 3)
+          |> (fun (l1, l2) -> l2
+                          |> List.map fst
+                          |> List.map S.bv_to_name
+                          |> (fun l -> let (f::g::p::[]) = l in l1, f, g, p)) in
+        Env.push_binders (Env.push_univ_vars env0 us) bs,
+        rest_bs, f, g, p
+      | _ -> failwith "Impossible!" in
+
+    let subcomp_f =
+      let _, subcomp_t, subcomp_ty = stronger_repr in
+      let _, subcomp_t = SS.open_univ_vars us subcomp_t in
+      let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
+
+      let bs_except_f =
+        match (SS.compress subcomp_ty).n with
+        | Tm_arrow (bs, _) -> bs |> List.splitAt (List.length bs - 1) |> fst
+        | _ -> failwith "Impossible!" in
+
+      mk_Tm_app
+        subcomp_t
+        (((bs_except_f |> List.map (fun _ -> S.tun))@[f_t]) |> List.map S.as_arg)
+        None r in
+
+    let ite_f_g = mk_Tm_app
+      ite_t
+      (((ite_rest_bs |> List.map (fun _ -> S.tun))@[f_t; g_t; p_t]) |> List.map S.as_arg)
+      None r in
+
+    let tm_subcomp_ascribed = S.mk
+      (Tm_ascribed (subcomp_f, (Inr (S.mk_Total ite_f_g), None), None))
+      None r in
+
+    let env_with_p =
+      let t = S.lid_as_fv PC.squash_lid S.delta_constant None |> S.fv_to_tm in
+      let b = S.null_binder (mk_Tm_app t [S.as_arg p_t] None r) in
+      Env.push_binders env [b] in
+
+    tc_check_trivial_guard env_with_p tm_subcomp_ascribed S.tun
+
     () in
+
 
 
   (*
@@ -535,11 +592,6 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     bind_repr     = (fst bind_repr, snd bind_repr);
     stronger_repr = (fst stronger_repr, snd stronger_repr) |> Some;
     actions       = List.map (tc_action env0) ed.actions }
-
-let tc_check_trivial_guard env t k =
-  let t, c, g = tc_check_tot_or_gtot_term env t k in
-  Rel.force_trivial_guard env g;
-  t
 
 let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);

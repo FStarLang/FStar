@@ -72,6 +72,14 @@ let eif_then_else (a:Type)
     (p ==> wp_f post) /\
     ((~ p) ==> wp_g post))
 
+let eif_then_else_true (a:Type)
+  (wp_f:ewp_t a) (wp_g:ewp_t a)
+  (f:erepr a wp_f) (g:erepr a wp_g)
+  (p:Type0)
+  (_:squash (~ p))
+= esubcomp _ _ _ g <: (Tot (eif_then_else _ _ _ f g p))
+
+
 
 reifiable reflectable
 layered_effect {
