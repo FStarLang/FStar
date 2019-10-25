@@ -363,41 +363,98 @@ type action = {
  *       used in this style
  *)
 
-type match_with_close = {
+(* AR: TODO: FIXME: add comments for each combinator *)
+
+type primitive_effect_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
   if_then_else : tscheme;
   ite_wp       : tscheme;
   close_wp     : tscheme;
-}
-type match_with_subst = {
-  sif_then_else : tscheme;
+  trivial      : tscheme;
 }
 
-type eff_decl = {
-    is_layered  :bool * option<lident>; //option contains the name of the underlying effect, if the bool is true
-    cattributes :list<cflag>;           //default cflags
-    mname       :lident;                //STATE_h
-    univs       :univ_names;            //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in the STATE_h example)
-    binders     :binders;               //heap:Type u#heap
-                                        //univs and binders are in scope for rest of the fields
-    signature   :tscheme;               //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;               //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    stronger    :tscheme;               //the stronger/subcomp combinator
-    match_wps   :either<match_with_close, match_with_subst>;
-    trivial     :option<tscheme>;       //this combinator is only set for wp-effects
+type primitive_effect_decl = {
+  p_name         : lident;
+  p_flags        : list<cflag>;
+  p_attrs        : list<attribute>;
 
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr          :tscheme;             //set to T_unknown for wp/primitive effects (AR: TODO: make it an option)
-    //operations on the representation
-    return_repr   :tscheme;             //also T_unknown for primitive effects
-    bind_repr     :tscheme;             //also T_unknown for primitive effects
-    stronger_repr :option<tscheme>;     //None for primitive/DM4F effects, set only for layered effects
-
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+  p_univs        : univ_names;
+  p_binders      : binders;
+  p_signature    : tscheme;
+  
+  p_combinators  : primitive_effect_combinators;
+  
+  p_actions      : list<action>;
 }
+
+type dm4f_eff_decl = {
+  d_name        : lident;
+  d_flags       : list<cflag>;
+  d_attrs       : list<attribute>;
+  
+  d_univs       : univ_names;
+  d_binders     : binders;
+  d_signature   : tscheme;
+
+  d_repr        : tscheme;
+  d_return      : tscheme;
+  d_bind        : tscheme;
+
+  d_combinators : option<primitive_effect_combinators>;
+
+  d_actions     : list<action>
+}
+
+type layered_effect_decl = {
+  l_name         : lident;
+  l_flags        : list<cflag>;
+  l_attrs        : list<attribute>;
+  
+  l_base_effect  : lident;
+  l_repr         : (univ_names * term * term);
+  l_return       : (univ_names * term * term);
+  l_bind         : (univ_names * term * term);
+  l_subcomp      : (univ_names * term * term);
+  l_if_then_else : (univ_names * term * term);
+
+  l_actions      : list<action>
+}
+
+
+type eff_decl =
+  | Primitive_effect: primitive_effect_decl -> eff_decl
+  | DM4F_effect     : dm4f_eff_decl -> eff_decl
+  | Layered_effect  : layered_effect_decl -> eff_decl
+
+
+// type eff_decl = {
+//     is_layered  :bool * option<lident>; //option contains the name of the underlying effect, if the bool is true
+//     cattributes :list<cflag>;           //default cflags
+//     mname       :lident;                //STATE_h
+//     univs       :univ_names;            //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in the STATE_h example)
+//     binders     :binders;               //heap:Type u#heap
+//                                         //univs and binders are in scope for rest of the fields
+//     signature   :tscheme;               //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
+//     ret_wp      :tscheme;               //the remaining fields ... one for each element of the interface
+//     bind_wp     :tscheme;
+//     stronger    :tscheme;               //the stronger/subcomp combinator
+//     match_wps   :either<match_with_close, match_with_subst>;
+//     trivial     :option<tscheme>;       //this combinator is only set for wp-effects
+
+//     //NEW FIELDS
+//     //representation of the effect as pure type
+//     repr          :tscheme;             //set to T_unknown for wp/primitive effects (AR: TODO: make it an option)
+//     //operations on the representation
+//     return_repr   :tscheme;             //also T_unknown for primitive effects
+//     bind_repr     :tscheme;             //also T_unknown for primitive effects
+//     stronger_repr :option<tscheme>;     //None for primitive/DM4F effects, set only for layered effects
+
+//     //actions for the effect
+//     actions     :list<action>;
+//     eff_attrs   :list<attribute>;
+// }
 
 type sig_metadata = {
     sigmeta_active:bool;
@@ -445,7 +502,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names

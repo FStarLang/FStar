@@ -334,11 +334,13 @@ type qualifier =
                                            //is present only for name resolution and will be elaborated at typechecking
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
+
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
   def:typ
   }
+
 type sub_eff = {
   source:lident;
   target:lident;
@@ -354,40 +356,93 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
-type match_with_close = {
+
+type primitive_effect_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
   if_then_else : tscheme;
   ite_wp       : tscheme;
   close_wp     : tscheme;
+  trivial      : tscheme;
 }
-type match_with_subst = {
-  sif_then_else : tscheme;
+
+type dm4f_effect_combinators = {
+  d_repr        : tscheme;
+  d_return      : tscheme;
+  d_bind        : tscheme;
+
+  d_primitive   : primitive_effect_combinators;  
 }
+
+type layered_effect_combinators = {
+  l_base_effect  : lident;
+  l_repr         : (univ_names * term * term);
+  l_return       : (univ_names * term * term);
+  l_bind         : (univ_names * term * term);
+  l_subcomp      : (univ_names * term * term);
+  l_if_then_else : (univ_names * term * term);
+
+}
+
+type eff_combinators = 
+
 type eff_decl = {
-    is_layered  :bool * option<lident>;
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    stronger    :tscheme;
-    match_wps   :either<match_with_close, match_with_subst>;
-    trivial     :option<tscheme>;
+  mname       : lident;
 
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr        :tscheme;
-    //operations on the representation
-    return_repr   :tscheme;
-    bind_repr     :tscheme;
-    stronger_repr :option<tscheme>;
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;
+  binders     : binders;
 
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+  signature   : tscheme;
+
+  combinators : 
+  
 }
+
+
+type primitive_effect_decl = {
+  p_name         : lident;
+  p_flags        : list<cflag>;
+  p_attrs        : list<attribute>;
+
+  p_univs        : univ_names;
+  p_binders      : binders;
+  p_signature    : tscheme;
+  
+  p_combinators  : primitive_effect_combinators;
+  
+  p_actions      : list<action>;
+}
+
+type dm4f_eff_decl = {
+  d_name        : lident;
+  d_flags       : list<cflag>;
+  d_attrs       : list<attribute>;
+  
+  d_univs       : univ_names;
+  d_binders     : binders;
+  d_signature   : tscheme;
+
+  d_combinators : option<primitive_effect_combinators>;
+
+  d_actions     : list<action>
+}
+
+type layered_effect_decl = {
+  l_name         : lident;
+  l_flags        : list<cflag>;
+  l_attrs        : list<attribute>;
+  
+  l_actions      : list<action>
+}
+
+
+type eff_decl =
+  | Primitive_effect: primitive_effect_decl -> eff_decl
+  | DM4F_effect     : dm4f_eff_decl -> eff_decl
+  | Layered_effect  : layered_effect_decl -> eff_decl
 
 type sig_metadata = {
     sigmeta_active:bool;
