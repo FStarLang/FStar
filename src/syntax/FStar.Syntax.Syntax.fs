@@ -357,7 +357,7 @@ type action = {
     action_typ: typ
 }
 
-type primitive_effect_combinators = {
+type wp_effect_combinators = {
   ret_wp       : tscheme;
   bind_wp      : tscheme;
   stronger     : tscheme;
@@ -365,14 +365,10 @@ type primitive_effect_combinators = {
   ite_wp       : tscheme;
   close_wp     : tscheme;
   trivial      : tscheme;
-}
 
-type dm4f_effect_combinators = {
-  d_repr        : tscheme;
-  d_return      : tscheme;
-  d_bind        : tscheme;
-
-  d_primitive   : primitive_effect_combinators;  
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
 }
 
 type layered_effect_combinators = {
@@ -385,7 +381,10 @@ type layered_effect_combinators = {
 
 }
 
-type eff_combinators = 
+type eff_combinators =
+  | Primitive_eff: wp_effect_combinators -> eff_combinators
+  | DM4F_eff: wp_effect_combinators -> eff_combinators
+  | Layered_eff: layered_effect_combinators -> eff_combinators
 
 type eff_decl = {
   mname       : lident;
@@ -396,53 +395,12 @@ type eff_decl = {
   binders     : binders;
 
   signature   : tscheme;
+  combinators : eff_combinators;
 
-  combinators : 
-  
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
 }
-
-
-type primitive_effect_decl = {
-  p_name         : lident;
-  p_flags        : list<cflag>;
-  p_attrs        : list<attribute>;
-
-  p_univs        : univ_names;
-  p_binders      : binders;
-  p_signature    : tscheme;
-  
-  p_combinators  : primitive_effect_combinators;
-  
-  p_actions      : list<action>;
-}
-
-type dm4f_eff_decl = {
-  d_name        : lident;
-  d_flags       : list<cflag>;
-  d_attrs       : list<attribute>;
-  
-  d_univs       : univ_names;
-  d_binders     : binders;
-  d_signature   : tscheme;
-
-  d_combinators : option<primitive_effect_combinators>;
-
-  d_actions     : list<action>
-}
-
-type layered_effect_decl = {
-  l_name         : lident;
-  l_flags        : list<cflag>;
-  l_attrs        : list<attribute>;
-  
-  l_actions      : list<action>
-}
-
-
-type eff_decl =
-  | Primitive_effect: primitive_effect_decl -> eff_decl
-  | DM4F_effect     : dm4f_eff_decl -> eff_decl
-  | Layered_effect  : layered_effect_decl -> eff_decl
 
 type sig_metadata = {
     sigmeta_active:bool;
@@ -479,7 +437,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names

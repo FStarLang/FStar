@@ -365,7 +365,8 @@ type action = {
 
 (* AR: TODO: FIXME: add comments for each combinator *)
 
-type primitive_effect_combinators = {
+
+type wp_effect_combinators = {
   ret_wp       : tscheme;
   bind_wp      : tscheme;
   stronger     : tscheme;
@@ -373,45 +374,13 @@ type primitive_effect_combinators = {
   ite_wp       : tscheme;
   close_wp     : tscheme;
   trivial      : tscheme;
+
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
 }
 
-type primitive_effect_decl = {
-  p_name         : lident;
-  p_flags        : list<cflag>;
-  p_attrs        : list<attribute>;
-
-  p_univs        : univ_names;
-  p_binders      : binders;
-  p_signature    : tscheme;
-  
-  p_combinators  : primitive_effect_combinators;
-  
-  p_actions      : list<action>;
-}
-
-type dm4f_eff_decl = {
-  d_name        : lident;
-  d_flags       : list<cflag>;
-  d_attrs       : list<attribute>;
-  
-  d_univs       : univ_names;
-  d_binders     : binders;
-  d_signature   : tscheme;
-
-  d_repr        : tscheme;
-  d_return      : tscheme;
-  d_bind        : tscheme;
-
-  d_combinators : option<primitive_effect_combinators>;
-
-  d_actions     : list<action>
-}
-
-type layered_effect_decl = {
-  l_name         : lident;
-  l_flags        : list<cflag>;
-  l_attrs        : list<attribute>;
-  
+type layered_effect_combinators = {
   l_base_effect  : lident;
   l_repr         : (univ_names * term * term);
   l_return       : (univ_names * term * term);
@@ -419,14 +388,29 @@ type layered_effect_decl = {
   l_subcomp      : (univ_names * term * term);
   l_if_then_else : (univ_names * term * term);
 
-  l_actions      : list<action>
 }
 
+type eff_combinators =
+  | Primitive_eff: wp_effect_combinators -> eff_combinators
+  | DM4F_eff: wp_effect_combinators -> eff_combinators
+  | Layered_eff: layered_effect_combinators -> eff_combinators
 
-type eff_decl =
-  | Primitive_effect: primitive_effect_decl -> eff_decl
-  | DM4F_effect     : dm4f_eff_decl -> eff_decl
-  | Layered_effect  : layered_effect_decl -> eff_decl
+type eff_decl = {
+  mname       : lident;
+
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;
+  binders     : binders;
+
+  signature   : tscheme;
+
+  combinators : eff_combinators;
+
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
+}
 
 
 // type eff_decl = {

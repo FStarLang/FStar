@@ -631,7 +631,7 @@ let eff_decl_to_string' for_free r q ed =
         actions |>
         List.map action_to_string |>
         String.concat ",\n\t" in
-    let eff_name = if fst ed.is_layered then "layered_effect" else "new_effect" in
+    let eff_name = if SU.is_layered ed then "layered_effect" else "new_effect" in
     let match_wps_string =
       match ed.match_wps with
       | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->

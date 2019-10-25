@@ -727,7 +727,6 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)
   | Sig_assume (lid, _, _) -> [lid]
-  | Sig_new_effect_for_free(n)
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
@@ -825,25 +824,6 @@ let ses_of_sigbundle (se:sigelt) :list<sigelt> =
   match se.sigel with
   | Sig_bundle (ses, _) -> ses
   | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
-
-let eff_decl_of_new_effect (se:sigelt) :eff_decl =
-  match se.sigel with
-  | Sig_new_effect ne -> ne
-  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
-
-let map_match_wps (f:tscheme -> tscheme) (match_wp:either<match_with_close, match_with_subst>)
-  : either<match_with_close, match_with_subst>
-  = match match_wp with
-    | Inl r ->
-      Inl ({ r with if_then_else = f r.if_then_else; ite_wp = f r.ite_wp; close_wp = f r.close_wp })
-    | Inr r ->
-      Inr ({ r with sif_then_else = f r.sif_then_else })
-
-let get_match_with_close_wps (match_wp:either<match_with_close, match_with_subst>)
-  : tscheme * tscheme * tscheme
-  = match match_wp with
-    | Inl r -> r.if_then_else, r.ite_wp, r.close_wp
-    | _ -> failwith "Impossible! get_match_with_close_wps called with a match_with_subst wp"
 
 let set_uvar uv t =
   match Unionfind.find uv with
@@ -2070,3 +2050,16 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     quant
 
 (* End SMT Lemma utilities *)
+
+
+(* Effect utils *)
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+
+let is_layered (ed:eff_decl) : bool =
+  match ed.combinators with
+  | Layered_eff _ -> true
+  | _ -> false
