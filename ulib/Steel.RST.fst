@@ -233,14 +233,13 @@ inline_for_extraction noextract val rst_frame_
           x
           (focus_rmem h1 (inner1 x)) /\
 
-        BigOps.big_and
+        BigOps.big_and'
           (equal_focuses outer0 (outer1 x) delta h0 h1)
           deltas
     )
   )
 
 #push-options "--z3rlimit 50 --max_fuel 0 --max_ifuel 0"
-
 
 inline_for_extraction noextract let rst_frame_
   outer0 #inner0 #a outer1 #inner1 #delta #deltas #pre #post f
@@ -275,7 +274,8 @@ inline_for_extraction noextract let rst_frame_
   (**) assert (modifies inner0 (inner1 x) h0 h1);
   (**) assert (A.modifies (as_loc (fp outer0) h0) h0 h1);
   (**) assert (modifies outer0 (outer1 x) h0 h1);
-  (**) assume (BigOps.big_and (equal_focuses outer0 (outer1 x) delta rh0 rh1) deltas);
+  (**) assume (forall y. List.Tot.memP y deltas ==> equal_focuses outer0 (outer1 x) delta rh0 rh1 y);
+  (**) BigOps.big_and'_forall (equal_focuses outer0 (outer1 x) delta rh0 rh1) deltas;
   x
 
 #pop-options
