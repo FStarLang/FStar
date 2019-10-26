@@ -379,7 +379,6 @@ type wp_eff_combinators = {
   return_repr  : option<tscheme>;
   bind_repr    : option<tscheme>
 }
-
 type layered_eff_combinators = {
   l_base_effect  : lident;
   l_repr         : (tscheme * tscheme);
@@ -411,34 +410,6 @@ type eff_decl = {
 
   eff_attrs   : list<attribute>
 }
-
-
-// type eff_decl = {
-//     is_layered  :bool * option<lident>; //option contains the name of the underlying effect, if the bool is true
-//     cattributes :list<cflag>;           //default cflags
-//     mname       :lident;                //STATE_h
-//     univs       :univ_names;            //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in the STATE_h example)
-//     binders     :binders;               //heap:Type u#heap
-//                                         //univs and binders are in scope for rest of the fields
-//     signature   :tscheme;               //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-//     ret_wp      :tscheme;               //the remaining fields ... one for each element of the interface
-//     bind_wp     :tscheme;
-//     stronger    :tscheme;               //the stronger/subcomp combinator
-//     match_wps   :either<match_with_close, match_with_subst>;
-//     trivial     :option<tscheme>;       //this combinator is only set for wp-effects
-
-//     //NEW FIELDS
-//     //representation of the effect as pure type
-//     repr          :tscheme;             //set to T_unknown for wp/primitive effects (AR: TODO: make it an option)
-//     //operations on the representation
-//     return_repr   :tscheme;             //also T_unknown for primitive effects
-//     bind_repr     :tscheme;             //also T_unknown for primitive effects
-//     stronger_repr :option<tscheme>;     //None for primitive/DM4F effects, set only for layered effects
-
-//     //actions for the effect
-//     actions     :list<action>;
-//     eff_attrs   :list<attribute>;
-// }
 
 type sig_metadata = {
     sigmeta_active:bool;
