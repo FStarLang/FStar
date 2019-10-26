@@ -2642,24 +2642,24 @@ and check_top_level_let env e =
                 let c1_eff_decl = Env.get_effect_decl env c1_comp_typ.effect_name in
 
                 (* wp2 = M.return_wp unit () *)
-                let wp2 = mk_Tm_app
-                  (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl c1_eff_decl.ret_wp)
-                  [S.as_arg S.t_unit; S.as_arg S.unit_const]
-                  None
-                  e2.pos
-                in
+                let wp2 =
+                  let ret = c1_eff_decl |> U.get_return_vc_combinator in
+                  mk_Tm_app
+                    (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl ret)
+                    [S.as_arg S.t_unit; S.as_arg S.unit_const]
+                    None e2.pos in
 
                 (* wp = M.bind wp_c1 (fun _ -> wp2) *)
-                let wp = mk_Tm_app
-                  (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl c1_eff_decl.bind_wp)
-                  [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
-                    S.as_arg <| c1_comp_typ.result_typ;
-                    S.as_arg S.t_unit;
-                    S.as_arg c1_wp;
-                    S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
-                  None
-                  lb.lbpos
-                in
+                let wp = 
+                  let bind = c1_eff_decl |> U.get_bind_vc_combinator in
+                  mk_Tm_app
+                    (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl bind)
+                    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
+                      S.as_arg <| c1_comp_typ.result_typ;
+                      S.as_arg S.t_unit;
+                      S.as_arg c1_wp;
+                      S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
+                    None lb.lbpos in
                 mk_Comp ({
                   comp_univs=[S.U_zero];
                   effect_name=c1_comp_typ.effect_name;

@@ -2458,9 +2458,9 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
+    let dummy_tscheme = [], S.tun in
     let combinators =
       if for_free then
-        let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
         DM4F_eff ({
           ret_wp = dummy_tscheme;
           bind_wp = dummy_tscheme;
@@ -2475,7 +2475,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           bind_repr = Some (lookup "bind");
         })
       else if is_layered then
-        let to_comb (us, t) = (us, t, S.tun) in
+        let to_comb (us, t) = (us, t), dummy_tscheme in
         Layered_eff ({
           l_base_effect = Ident.lid_of_str "";
           l_repr = lookup "repr" |> to_comb;
@@ -2486,7 +2486,6 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-        let un_ts = [], Syntax.tun in
         Primitive_eff ({
           ret_wp = lookup "return_wp";
           bind_wp = lookup "bind_wp";
@@ -2565,45 +2564,13 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     in
     let sub = sub' 0 in
     let mname=qualify env0 eff_name in
-    let apply_sub_to_primitive_combinators combs =
-      { combs with
-        ret_wp = sub combs.ret_wp;
-        bind_wp = sub combs.bind_wp;
-        stronger = sub combs.stronger;
-        if_then_else = sub combs.if_then_else;
-        ite_wp = sub combs.ite_wp;
-        close_wp = sub combs.close_wp;
-        trivial = sub combs.trivial;
-
-        repr = map_opt combs.repr sub;
-        return_repr = map_opt combs.return_repr;
-        bind_repr = map_opt combs.bind_repr } in
-
-    let apply_sub_to_combinators combs =
-      match combs with
-      | Primitive_eff combs ->
-        Primitive_eff (apply_sub_to_primitive_combinators  combs)
-      | DM4F_eff combs ->
-        DM4F_eff (apply_sub_to_primitive_combinators  combs)
-      | Layered_eff combs ->
-        let sub (us, t1, t2) = 
-          let (us, t1) = sub (us, t1) in
-          let (_, t2) = sub (us, t2) in
-          (us, t1, t2) in
-        Layered_eff ({ combs with
-          l_repr = sub combs.l_repr;
-          l_return = sub combs.l_return;
-          l_bind = sub combs.l_bind;
-          l_subcomp = sub combs.l_subcomp;
-          l_if_then_else = sub combs.l_if_then_else }) in
-
     let ed = {
             mname         = mname;
             cattributes   = cattributes;
             univs         = ed.univs;
             binders       = binders;
             signature     = sub ed.signature;
-            combinators   = apply_sub_to_combinators ed.combinators;
+            combinators   = apply_eff_combinators sub ed.combinators;
             actions       = List.map (fun action ->
                 let nparam = List.length action.action_params in
                 {
@@ -3199,15 +3166,7 @@ let add_modul_to_env (m:Syntax.modul)
               univs         = [];
               binders       = Subst.close_binders binders;
               signature     = erase_tscheme ed.signature;
-              ret_wp        = erase_tscheme ed.ret_wp;
-              bind_wp       = erase_tscheme ed.bind_wp;
-              stronger      = erase_tscheme ed.stronger;
-              match_wps     = U.map_match_wps erase_tscheme ed.match_wps;
-              trivial       = map_opt ed.trivial erase_tscheme;
-              repr          = erase_tscheme ed.repr;
-              return_repr   = erase_tscheme ed.return_repr;
-              bind_repr     = erase_tscheme ed.bind_repr;
-              stronger_repr = map_opt ed.stronger_repr erase_tscheme;
+              combinators   = apply_eff_combinators erase_tscheme ed.combinators;
               actions       = List.map erase_action ed.actions
           }
       in
@@ -3215,10 +3174,6 @@ let add_modul_to_env (m:Syntax.modul)
           match se.sigel with
           | Sig_new_effect ed ->
             let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt env se' in
-            push_reflect_effect env se.sigquals ed.mname se.sigrng
-          | Sig_new_effect_for_free ed ->
-            let se' = {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)} in
             let env = Env.push_sigelt env se' in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
           | _ -> Env.push_sigelt env se

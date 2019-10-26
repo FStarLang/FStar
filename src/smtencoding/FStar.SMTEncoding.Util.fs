@@ -98,7 +98,7 @@ let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
   TcEnv.is_reifiable_effect en l &&
   not (l |> TcEnv.norm_eff_name en
          |> TcEnv.get_effect_decl en
-         |> (fun ed -> ed.is_layered |> fst))
+         |> U.is_layered)
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with

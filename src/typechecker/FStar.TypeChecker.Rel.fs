@@ -2997,7 +2997,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
         let _, stronger_t =
-          c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger c2.comp_univs) in
+          c2.effect_name
+          |> Env.get_effect_decl env
+          |> U.get_stronger_vc_combinator
+          |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs) in
 
         let stronger_t_shape_error s = BU.format3
           "Unexpected shape of stronger for %s, reason: %s (t:%s)"
@@ -3136,14 +3139,15 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                            then BU.print_string "Using trivial wp ... \n" in
                                    let c1_univ = env.universe_of env c1.result_typ in
                                    let trivial =
-                                     match c2_decl.trivial with
+                                     match c2_decl |> U.get_wp_trivial_combinator with
                                      | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
                                      | Some t -> t in
                                    mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
                                                [as_arg c1.result_typ;
                                                 wpc1_2])) None r
                               else let c2_univ = env.universe_of env c2.result_typ in
-                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl c2_decl.stronger,
+                                   let stronger = c2_decl |> U.get_stronger_vc_combinator in
+                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
                                               [as_arg c2.result_typ;
                                                as_arg wpc2;
                                                wpc1_2])) None r in

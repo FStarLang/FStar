@@ -804,7 +804,6 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_main   _
       | Sig_assume _
       | Sig_new_effect _
-      | Sig_new_effect_for_free _
       | Sig_sub_effect _
       | Sig_effect_abbrev _ (* None? *)
       | Sig_pragma  _ -> None
@@ -1097,7 +1096,7 @@ let get_effect_decl env l =
     | Some md -> fst md
 
 let is_layered_effect env l =
-  l |> get_effect_decl env |> (fun ed -> ed.is_layered |> fst)
+  l |> get_effect_decl env |> U.is_layered
 
 let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
@@ -1179,12 +1178,12 @@ let effect_repr_aux only_reifiable env c u_res =
   match effect_decl_opt env effect_name with
   | None -> None
   | Some (ed, _) ->
-    match (snd ed.repr).n with
-    | Tm_unknown -> None
-    | _ ->
+    match ed |> U.get_eff_repr with
+    | None -> None
+    | Some ts ->
       let c = unfold_effect_abbrev env c in
       let res_typ = c.result_typ in
-      let repr = inst_effect_fun_with [u_res] env ed ed.repr in
+      let repr = inst_effect_fun_with [u_res] env ed ts in
       check_partial_application effect_name c.effect_args;
       Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) None (get_range env))
 

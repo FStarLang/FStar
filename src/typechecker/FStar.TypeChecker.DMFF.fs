@@ -464,15 +464,17 @@ let gen_wps_for_free
     d "End Dijkstra monads for free";
 
   let c = close binders in
-  List.rev !sigelts, { ed with
-    match_wps = Inl ({
-      if_then_else = ([], c wp_if_then_else);
-      ite_wp = ([], c ite_wp);
-      close_wp = ([], c wp_close);
-    });
-    stronger     = ([], c stronger);
-    trivial      = Some ([], c wp_trivial);
-  }
+  let ed_combs = match ed.combinators with
+    | DM4F_eff combs ->
+      DM4F_eff ({ combs with
+        stronger     = ([], c stronger);
+        if_then_else = ([], c wp_if_then_else);
+        ite_wp = ([], c ite_wp);
+        close_wp = ([], c wp_close);
+        trivial = ([], c wp_trivial) })
+    | _ -> failwith "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
+    
+  List.rev !sigelts, { ed with combinators = ed_combs }
 
 
 // Some helpers for... --------------------------------------------------------
@@ -1389,7 +1391,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check env [] (snd ed.repr) in
+  let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> must |> snd) in
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
@@ -1424,8 +1426,10 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     dmff_env, item_t, item_wp, item_elab
   in
 
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
+  let dmff_env, _, bind_wp, bind_elab =
+    elaborate_and_star dmff_env [] (ed |> U.get_bind_repr |> must) in
+  let dmff_env, _, return_wp, return_elab =
+    elaborate_and_star dmff_env [] (ed |> U.get_return_repr |> must) in
   let rc_gtot = {
             residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
@@ -1645,15 +1649,22 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   ignore (register "post" post);
   ignore (register "wp" wp_type);
 
+  let ed_combs = match ed.combinators with
+    | DM4F_eff combs ->
+      DM4F_eff ({ combs with
+        ret_wp = [], apply_close return_wp;
+        bind_wp = [], apply_close bind_wp;
+        repr = Some ([], apply_close repr);
+        return_repr = Some ([], apply_close return_elab);
+        bind_repr = Some ([], apply_close bind_elab) })
+    | _ -> failwith "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
+
+
   let ed = { ed with
     signature = ([], close effect_binders effect_signature);
-    repr = ([], apply_close repr);
-    ret_wp = [], apply_close return_wp;
-    bind_wp = [], apply_close bind_wp;
-    return_repr = [], apply_close return_elab;
-    bind_repr = [], apply_close bind_elab;
+    binders = close_binders effect_binders;
+    combinators = ed_combs;
     actions = actions; // already went through apply_close
-    binders = close_binders effect_binders
   } in
 
 

@@ -1042,7 +1042,7 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_primitive_eff_combinators env for_free combs =
+let resugar_wp_eff_combinators env for_free combs =
   let resugar_opt name tsopt =
     match tsopt with
     | Some ts -> [resugar_tscheme'' env name ts]
@@ -1064,7 +1064,7 @@ let resugar_primitive_eff_combinators env for_free combs =
     (repr@return_repr@bind_repr)
 
 let resugar_layered_eff_combinators env combs =
-  let resugar name (us, t, _) = resugar_tscheme'' env name (us, t) in
+  let resugar name (ts, _) = resugar_tscheme'' env name ts in
 
   (resugar "repr" combs.l_repr)::
   (resugar "return" combs.l_return)::
@@ -1074,8 +1074,8 @@ let resugar_layered_eff_combinators env combs =
 
 let resugar_combinators env combs =
   match combs with
-  | Primitive_eff combs -> resugar_primitive_eff_combinators env false combs
-  | DM4F_eff combs -> resugar_primitive_eff_combinators env true combs
+  | Primitive_eff combs -> resugar_wp_eff_combinators env false combs
+  | DM4F_eff combs -> resugar_wp_eff_combinators env true combs
   | Layered_eff combs -> resugar_layered_eff_combinators env combs
 
 let resugar_eff_decl' env for_free r q ed =

@@ -621,6 +621,59 @@ let action_to_string a =
         (term_to_string a.action_typ)
         (term_to_string a.action_defn)
 
+let wp_eff_combinators_to_string combs =
+  let tscheme_opt_to_string = function
+    | Some ts -> tscheme_to_string ts
+    | None -> "None" in
+
+  U.format "{\n\
+    ret_wp       = %s\n\
+  ; bind_wp      = %s\n\
+  ; stronger     = %s\n\
+  ; if_then_else = %s\n\
+  ; ite_wp       = %s\n\
+  ; close_wp     = %s\n\
+  ; trivial      = %s\n\
+  ; repr         = %s\n\
+  ; return_repr  = %s\n\
+  ; bind_repr    = %s\n\
+  }\n"
+    [ tscheme_to_string combs.ret_wp;
+      tscheme_to_string combs.bind_wp;
+      tscheme_to_string combs.stronger;
+      tscheme_to_string combs.if_then_else;
+      tscheme_to_string combs.ite_wp;
+      tscheme_to_string combs.close_wp;
+      tscheme_to_string combs.trivial;
+      tscheme_opt_to_string combs.repr;
+      tscheme_opt_to_string combs.return_repr;
+      tscheme_opt_to_string combs.bind_repr ]
+
+let layered_eff_combinators_to_string combs =
+  let to_str (ts_t, ts_ty) =
+    U.format2 "(%s) : (%s)"
+      (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
+
+  U.format "{\n\
+    l_base_effect = %s\n\
+  ; l_repr = %s\n\
+  ; l_return = %s\n\
+  ; l_bind = %s\n\
+  ; l_subcomp = %s\n\
+  ; l_if_then_else = %s\n
+  }\n"
+    [ Ident.string_of_lid combs.l_base_effect;
+      to_str combs.l_repr;
+      to_str combs.l_return;
+      to_str combs.l_bind;
+      to_str combs.l_subcomp;
+      to_str combs.l_if_then_else ]
+
+let eff_combinators_to_string = function
+  | Primitive_eff combs
+  | DM4F_eff combs -> wp_eff_combinators_to_string combs
+  | Layered_eff combs -> layered_eff_combinators_to_string combs
+
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
     let d = Resugar.resugar_eff_decl for_free r q ed in
@@ -632,30 +685,9 @@ let eff_decl_to_string' for_free r q ed =
         List.map action_to_string |>
         String.concat ",\n\t" in
     let eff_name = if SU.is_layered ed then "layered_effect" else "new_effect" in
-    let match_wps_string =
-      match ed.match_wps with
-      | Inl ({ if_then_else = t1; ite_wp = t2; close_wp = t3 }) ->
-        U.format3 "{\n\
-          if_then_else = %s;\n\
-          ite_wp = %s\n\
-          close_wp = %s\n\
-        }\n" (tscheme_to_string t1) (tscheme_to_string t2) (tscheme_to_string t3)
-      | Inr ( { sif_then_else = t } ) ->
-        U.format1 "{\n\
-          sif_then_else = %s\n\
-        }\n" (tscheme_to_string t)
-    in
     U.format "%s%s { \
       %s%s %s : %s \n  \
-        return_wp     = %s\n\
-      ; bind_wp       = %s\n\
-      ; stronger      = %s\n\
-      ; match_wps     = %s\n\
-      ; trivial       = %s\n\
-      ; repr          = %s\n\
-      ; return_repr   = %s\n\
-      ; bind_repr     = %s\n\
-      ; stronger_repr = %s\n\
+        %s\n\
       and effect_actions\n\t%s\n}\n"
         [eff_name;
          (if for_free then "_for_free " else "");
@@ -663,19 +695,7 @@ let eff_decl_to_string' for_free r q ed =
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          tscheme_to_string ed.signature;
-         tscheme_to_string ed.ret_wp;
-         tscheme_to_string ed.bind_wp;
-         tscheme_to_string ed.stronger;
-         match_wps_string;
-         (match ed.trivial with
-          | None -> ""
-          | Some t -> tscheme_to_string t);
-         tscheme_to_string ed.repr;
-         tscheme_to_string ed.return_repr;
-         tscheme_to_string ed.bind_repr;
-         (match ed.stronger_repr with
-          | None -> ""
-          | Some t -> tscheme_to_string t);
+         eff_combinators_to_string ed.combinators;
          actions_to_string ed.actions]
 
 let eff_decl_to_string for_free ed =
@@ -733,8 +753,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
-      | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
-      | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
+      | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())

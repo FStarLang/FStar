@@ -442,32 +442,38 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     U.process_pragma p r;
     [se], [], env0
 
-  | Sig_new_effect_for_free ne ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
-    let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
-    let effect_and_lift_ses = match lift_from_pure_opt with
-      | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
-      | None -> [ { se with sigel = Sig_new_effect (ne) } ]
-    in
-
-    [], ses @ effect_and_lift_ses, env0
-
   | Sig_new_effect ne ->
-    let ne =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne =
-          TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals
-          |> (fun ne -> { se with sigel = Sig_new_effect ne })
-          |> N.elim_uvars env |> U.eff_decl_of_new_effect in
-        if Env.debug env <| Options.Other "TwoPhases"
-        then BU.print1 "Effect decl after phase 1: %s\n"
-               (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
-        ne
-      end
-      else ne
-    in
-    let ne = TcEff.tc_eff_decl env ne se.sigquals in
-    let se = { se with sigel = Sig_new_effect(ne) } in
-    [se], [], env0
+    let is_unelaborated_dm4f =
+      match ne.combinators with
+      | DM4F_eff combs ->
+        (match combs.ret_wp |> snd |> SS.compress with
+         | { n = Tm_unknown } -> true
+         | _ -> false)
+       | _ -> false in
+
+    if is_unelaborated_dm4f then
+      let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
+      let effect_and_lift_ses = match lift_from_pure_opt with
+        | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
+        | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
+
+      [], ses @ effect_and_lift_ses, env0
+    else       
+      let ne =
+        if Options.use_two_phase_tc () && Env.should_verify env then begin
+          let ne =
+            TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals
+            |> (fun ne -> { se with sigel = Sig_new_effect ne })
+            |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+          if Env.debug env <| Options.Other "TwoPhases"
+          then BU.print1 "Effect decl after phase 1: %s\n"
+                 (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
+          ne
+        end
+        else ne in
+      let ne = TcEff.tc_eff_decl env ne se.sigquals in
+      let se = { se with sigel = Sig_new_effect(ne) } in
+      [se], [], env0
 
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let sub = TcEff.tc_lift env sub r in
@@ -901,7 +907,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
   | Sig_main  _ -> [], hidden
 
   | Sig_new_effect     _
-  | Sig_new_effect_for_free _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _ -> [se], hidden
 
@@ -1108,7 +1113,6 @@ let check_exports env (modul:modul) exports =
         | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
-        | Sig_new_effect_for_free _
         | Sig_sub_effect _
         | Sig_splice _
         | Sig_pragma _ -> ()
@@ -1247,7 +1251,6 @@ let extract_interface (en:env) (m:modul) :modul =
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
-    | Sig_new_effect_for_free _
     | Sig_sub_effect _
     | Sig_effect_abbrev _ -> [s]
     | Sig_pragma _ -> [s]

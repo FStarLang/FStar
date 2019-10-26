@@ -366,7 +366,7 @@ type action = {
 (* AR: TODO: FIXME: add comments for each combinator *)
 
 
-type wp_effect_combinators = {
+type wp_eff_combinators = {
   ret_wp       : tscheme;
   bind_wp      : tscheme;
   stronger     : tscheme;
@@ -380,20 +380,20 @@ type wp_effect_combinators = {
   bind_repr    : option<tscheme>
 }
 
-type layered_effect_combinators = {
+type layered_eff_combinators = {
   l_base_effect  : lident;
-  l_repr         : (univ_names * term * term);
-  l_return       : (univ_names * term * term);
-  l_bind         : (univ_names * term * term);
-  l_subcomp      : (univ_names * term * term);
-  l_if_then_else : (univ_names * term * term);
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
+  l_bind         : (tscheme * tscheme);
+  l_subcomp      : (tscheme * tscheme);
+  l_if_then_else : (tscheme * tscheme);
 
 }
 
 type eff_combinators =
-  | Primitive_eff: wp_effect_combinators -> eff_combinators
-  | DM4F_eff: wp_effect_combinators -> eff_combinators
-  | Layered_eff: layered_effect_combinators -> eff_combinators
+  | Primitive_eff: wp_eff_combinators -> eff_combinators
+  | DM4F_eff: wp_eff_combinators -> eff_combinators
+  | Layered_eff: layered_eff_combinators -> eff_combinators
 
 type eff_decl = {
   mname       : lident;

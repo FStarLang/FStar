@@ -337,7 +337,7 @@ let close_wp_comp env bvs (c:comp) =
     then c
     else begin
             let close_wp u_res md res_t bvs wp0 =
-              let _, _, close = U.get_match_with_close_wps md.match_wps in
+              let close = md |> U.get_wp_close_combinator |> must in
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env x.sort] in
@@ -424,9 +424,10 @@ let return_value env u_t_opt t v =
             then S.tun
             else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
+                 let ret_wp = m |> U.get_return_vc_combinator in
                  N.normalize [Env.Beta; Env.NoFullNorm]
                             env
-                            (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp)
+                            (mk_Tm_app (inst_effect_fun_with [u_t] env m ret_wp)
                                        [S.as_arg t; S.as_arg v]
                                        None
                                        v.pos) in
@@ -482,7 +483,7 @@ let mk_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) 
   let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
   let u2, t2, is2 = List.hd ct2.comp_univs, ct2.result_typ, List.map fst ct2.effect_args in
 
-  let _, bind_t = Env.inst_tscheme_with ed.bind_wp [u1; u2] in
+  let _, bind_t = Env.inst_tscheme_with (ed |> U.get_bind_vc_combinator) [u1; u2] in
 
   let bind_t_shape_error (s:string) =
     (Errors.Fatal_UnexpectedEffect, BU.format2
@@ -586,7 +587,8 @@ let mk_non_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_t
     S.as_arg wp1;
     S.as_arg (mk_lam wp2)]
   in
-  let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
+  let bind_wp = md |> U.get_bind_vc_combinator in
+  let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args None t2.pos in
   mk_comp md u_t2 t2 wp flags
 
 let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
@@ -864,7 +866,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let c2, g2 = lift_comp env c2 lift2 in
                 let u1, t1, wp1 = destruct_wp_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
-                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost (md_pure_or_ghost.trivial |> must))
+                let trivial = md_pure_or_ghost |> U.get_wp_trivial_combinator |> must in
+                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost trivial)
                                     [S.as_arg t1; S.as_arg wp1]
                                     None
                                     r1
@@ -1088,7 +1091,8 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
 : comp * guard_t =
 
-  let _, conjunction = Env.inst_tscheme_with (ed.match_wps |> right).sif_then_else [u_a] in
+  let _, conjunction =
+    Env.inst_tscheme_with (ed |> U.get_layered_if_then_else_combinator |> must) [u_a] in
   let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
 
   let conjunction_t_error (s:string) =
@@ -1156,7 +1160,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
  *)
 let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
 : comp * guard_t =
-  let if_then_else, _, _ = U.get_match_with_close_wps ed.match_wps in
+  let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
   let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
@@ -1204,7 +1208,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
                   let md = Env.get_effect_decl env m in
                   md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift in
                 let fn =
-                  if fst md.is_layered then mk_layered_conjunction
+                  if md |> U.is_layered then mk_layered_conjunction
                   else mk_non_layered_conjunction in
                 let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
                 Some md,
@@ -1215,12 +1219,12 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
             | []
             | [_] -> comp, g_comp
             | _ ->
-              if fst (md |> must).is_layered then comp, g_comp
+              if md |> must |> U.is_layered then comp, g_comp
               else
                 let comp = Env.comp_to_comp_typ env comp in
                 let md = Env.get_effect_decl env comp.effect_name in
                 let _, _, wp = destruct_wp_comp comp in
-                let _, ite_wp, _ = U.get_match_with_close_wps md.match_wps in
+                let ite_wp = md |> U.get_wp_ite_combinator |> must in
                 let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                    [S.as_arg res_t; S.as_arg wp]
                                    None
@@ -1264,7 +1268,7 @@ let check_trivial_precondition env c =
   let md = Env.get_effect_decl env ct.effect_name in
   let u_t, t, wp = destruct_wp_comp ct in
   let vc = mk_Tm_app
-    (inst_effect_fun_with [u_t] env md (md.trivial |> must))
+    (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> must))
     [S.as_arg t; S.as_arg wp]
     None
     (Env.get_range env)
@@ -2260,13 +2264,6 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
               || visibility x
               || reification x))
         then err' ()
-      | Sig_new_effect_for_free _ ->
-        if not (quals |> BU.for_all (fun x ->
-              x=TotalEffect
-              || inferred x
-              || visibility x
-              || reification x))
-        then err' ()
       | Sig_effect_abbrev _ ->
         if not (quals |> BU.for_all (fun x -> inferred x || visibility x))
         then err' ()
@@ -2308,7 +2305,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
     in
     aux g t
 
-let fresh_effect_repr env r eff_name signature_ts repr_ts u a_tm =
+let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
   
   let _, signature = Env.inst_tscheme signature_ts in
@@ -2328,8 +2325,8 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts u a_tm =
          (fun b -> BU.format3
            "uvar for binder %s when creating a fresh repr for %s at %s"
            (Print.binder_to_string b) eff_name.str (Range.string_of_range r)) r in
-       (match repr_ts with
-        | _, { n = Tm_unknown } ->
+       (match repr_ts_opt with
+        | None ->
           let eff_c = mk_Comp ({
             comp_univs = [u];
             effect_name = eff_name;
@@ -2337,7 +2334,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts u a_tm =
             effect_args = List.map S.as_arg is;
             flags = [] }) in
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) None r
-        | _ ->
+        | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
           S.mk_Tm_app
             repr
@@ -2349,7 +2346,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts u a_tm =
 let fresh_effect_repr_en env r eff_name u a_tm =
   eff_name
   |> Env.get_effect_decl env
-  |> (fun ed -> fresh_effect_repr env r eff_name ed.signature ed.repr u a_tm)
+  |> (fun ed -> fresh_effect_repr env r eff_name ed.signature (ed |> U.get_eff_repr)  u a_tm)
 
 let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in
@@ -2485,8 +2482,8 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   //if the source effect does not have a repr (e.g. primitive) then we thunk it
   //in sync with how lifts are defined from such effects (with their thunked terms as arguments)
   let e_reified =
-    match sub.source |> Env.get_effect_decl env |> (fun ed -> ed.repr) |> snd |> SS.compress with
-    | { n = Tm_unknown } -> U.abs [S.null_binder S.t_unit] e None
+    match sub.source |> Env.get_effect_decl env |> U.get_eff_repr with
+    | None -> U.abs [S.null_binder S.t_unit] e None
     | _ -> reify_body env [Env.Inlining] e in
 
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e_reified]) in
