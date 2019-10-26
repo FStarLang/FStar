@@ -236,11 +236,7 @@ let (is_smt_reifiable_effect :
              FStar_All.pipe_right uu____854
                (FStar_TypeChecker_Env.get_effect_decl en)
               in
-           FStar_All.pipe_right uu____853
-             (fun ed  ->
-                FStar_All.pipe_right ed.FStar_Syntax_Syntax.is_layered
-                  FStar_Pervasives_Native.fst)
-            in
+           FStar_All.pipe_right uu____853 FStar_Syntax_Util.is_layered  in
          Prims.op_Negation uu____851)
   
 let (is_smt_reifiable_comp :
@@ -250,7 +246,7 @@ let (is_smt_reifiable_comp :
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
           is_smt_reifiable_effect en ct.FStar_Syntax_Syntax.effect_name
-      | uu____883 -> false
+      | uu____870 -> false
   
 let (is_smt_reifiable_rc :
   FStar_TypeChecker_Env.env ->
@@ -264,11 +260,11 @@ let (is_smt_reifiable_function :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun en  ->
     fun t  ->
-      let uu____911 =
-        let uu____912 = FStar_Syntax_Subst.compress t  in
-        uu____912.FStar_Syntax_Syntax.n  in
-      match uu____911 with
-      | FStar_Syntax_Syntax.Tm_arrow (uu____916,c) ->
+      let uu____898 =
+        let uu____899 = FStar_Syntax_Subst.compress t  in
+        uu____899.FStar_Syntax_Syntax.n  in
+      match uu____898 with
+      | FStar_Syntax_Syntax.Tm_arrow (uu____903,c) ->
           is_smt_reifiable_comp en c
-      | uu____938 -> false
+      | uu____925 -> false
   
