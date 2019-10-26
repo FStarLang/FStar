@@ -1415,7 +1415,7 @@ let (eff_decl_to_string' :
             Prims.op_Negation uu____3912  in
           if uu____3910
           then
-            let d = FStar_Syntax_Resugar.resugar_eff_decl for_free r q ed  in
+            let d = FStar_Syntax_Resugar.resugar_eff_decl r q ed  in
             let d1 = FStar_Parser_ToDocument.decl_to_document d  in
             FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
               (Prims.of_int (100)) d1

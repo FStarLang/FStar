@@ -676,7 +676,7 @@ let eff_combinators_to_string = function
 
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
-    let d = Resugar.resugar_eff_decl for_free r q ed in
+    let d = Resugar.resugar_eff_decl r q ed in
     let d = ToDocument.decl_to_document d in
     Pp.pretty_string (float_of_string "1.0") 100 d
  else
