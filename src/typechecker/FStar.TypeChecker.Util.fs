@@ -752,14 +752,19 @@ let maybe_add_with_type env uopt lc e =
 let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * guard_t =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
-  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid ->
-    if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
-    then
-      let Tm_refine (b, phi) = t.n in
-      let [b], phi = SS.open_term [b, None] phi in
-      let phi = SS.subst [NT (b |> fst, S.unit_const)] phi in
-      weaken_comp env c phi
-    else close_wp_comp env [x] c, Env.trivial_guard
+  | Tm_refine (b, phi) ->
+    let is_unit =
+      match b.sort.n with
+      | Tm_fvar fv -> S.fv_eq_lid fv C.unit_lid
+      | _ -> false in
+    if is_unit then      
+      if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+      then
+        let [b], phi = SS.open_term [b, None] phi in
+        let phi = SS.subst [NT (b |> fst, S.unit_const)] phi in
+        weaken_comp env c phi
+      else close_wp_comp env [x] c, Env.trivial_guard
+    else c, Env.trivial_guard
   | _ -> c, Env.trivial_guard
 
 let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
