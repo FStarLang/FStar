@@ -137,7 +137,6 @@ let test11 () : Tot unit =
 
 assume val test12 : unit -> HoareST unit (requires fun _ -> some_pred) (ensures fun _ _ _ -> True)
 
-[@expect_failure]
 let test13 () : HoareST unit (fun _ -> True) (fun _ _ _ -> True) = 
   let _ : squash some_pred = proof_of_pred () in
   test12 ()
