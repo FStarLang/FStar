@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4defa7dc0a39336597d893b28047a946"
+      "b10f1e82a066ab7271c275b2e0850e3a"
     ],
     [
       "Lens.rgb",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b092396f9c8c34f9ae01404babd8f848"
+      "740cbabbb9a5802a0ba62231240133be"
     ],
     [
       "Lens.colored",
@@ -37,7 +37,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "42015b3da69cf219f50eb6d92db028f0"
+      "7cbaf5ce698ae2ccf6bb56a44351046f"
     ],
     [
       "Lens.stlens",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fc5b8c2b12a731d96db3f9c8cab603ba"
+      "98ee37944869dd546da05fd664d611d7"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b466fe3ca2b6c7b3aedcb524eeeea21f"
+      "c33b1bef05c318cb5c3c79aa332440e8"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -79,7 +79,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ea478c549d1b4e0acb50e3254b2e1a01"
+      "a686c9ca592cda3982b02bf0b74b1141"
     ],
     [
       "Lens.st",
@@ -88,16 +88,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.only",
-        "equation_Lens.op_String_Access", "equation_Prims.nat",
-        "fuel_guarded_inversion_Lens.lens",
-        "refinement_interpretation_FStar.Ref_Tm_refine_6dad3394a7b23d86d607c303ffd1e2f7",
-        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
-        "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only"
+        "equation_Lens.op_String_Access", "fuel_guarded_inversion_Lens.lens"
       ],
       0,
-      "4ee7c5e79d711e8e856fdb5348b8fc1d"
+      "9e941161babe94ef83766eee5e91f044"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -122,7 +117,7 @@
         "token_correspondence_Lens.op_Bar_Colon_Equals"
       ],
       0,
-      "73aadbfbe9429ac8046ed074c45b8d8f"
+      "4911c47f3fe0155505e0976efe580829"
     ]
   ]
 ]
