@@ -7,7 +7,7 @@ let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0
 let one = 1
-let ones = -1                                             
+let ones = -1
 
 let add (a:int16) (b:int16) : int16 = a + b
 let add_underspec a b = add a b
@@ -29,7 +29,7 @@ let logand (a:int16) (b:int16) : int16 = a land b
 let logxor (a:int16) (b:int16) : int16 = a lxor b
 let logor  (a:int16) (b:int16) : int16 = a lor b
 let lognot (a:int16) : int16 = lnot a
-       
+
 let int_to_int16 (x:Prims.int) = int_of_string (Prims.to_string x) land 65535
 
 let shift_right (a:int16) (b:uint32) : int16 = a lsr b
@@ -55,7 +55,7 @@ let op_Star_Question_Hat = mul_underspec
 let op_Star_Percent_Hat = mul_mod
 let op_Slash_Hat = div
 let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
+let op_Hat_Hat = logxor
 let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
@@ -70,5 +70,6 @@ let cmod x =
   if x > 32767 then x - 65536 else x
 
 let to_string s = string_of_int (cmod s)
+let of_string s = int_of_string s
 let int_to_t s = int_to_int16 s
 let __int_to_t = int_to_t
