@@ -371,12 +371,6 @@ let close_layered_lcomp env bvs tms (lc:lcomp) =
     (SS.subst_comp substs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
-let close_wp_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
-  let t = N.normalize_refinement N.whnf_steps env t in
-  match t.n with
-  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_wp_comp env [x] c
-  | _ -> c
-
 let should_not_inline_lc (lc:lcomp) =
     lc.cflags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
 
@@ -755,6 +749,19 @@ let maybe_add_with_type env uopt lc e =
          U.mk_with_type u lc.res_typ e
     else e
 
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * guard_t =
+  let t = N.normalize_refinement N.whnf_steps env t in
+  match t.n with
+  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid ->
+    if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+    then
+      let Tm_refine (b, phi) = t.n in
+      let [b], phi = SS.open_term [b, None] phi in
+      let phi = SS.subst [NT (b |> fst, S.unit_const)] phi in
+      weaken_comp env c phi
+    else close_wp_comp env [x] c, Env.trivial_guard
+  | _ -> c, Env.trivial_guard
+
 let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let debug f =
       if debug env Options.Extreme
@@ -813,11 +820,15 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let try_simplify () =
+          let try_simplify () : either<(comp * guard_t * string), string> =
+            let aux_with_trivial_guard () =
+              match aux () with
+              | Inl (c, reason) -> Inl (c, Env.trivial_guard, reason)
+              | Inr reason -> Inr reason in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-                 then Inl (c2, "Early in prims; we don't have bind yet")
+                 then Inl (c2, Env.trivial_guard, "Early in prims; we don't have bind yet")
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                                    (Env.get_range env)
@@ -828,28 +839,26 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
                  let close (x:bv) (reason:string) (c:comp) =
-                   if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
-                   then Inl (c, reason)
-                   else
-                     let x = { x with sort = U.comp_result c1 } in
-                     Inl (close_wp_comp_if_refinement_t env x.sort x c, reason) in
+                   let x = { x with sort = U.comp_result c1 } in
+                   let c, g_c = maybe_capture_unit_refinement env x.sort x c in
+                   Inl (c, g_c, reason) in
                  match e1opt, b with
                  | Some e, Some x ->
                    c2 |> SS.subst_comp [NT (x, e)] |> close x "c1 Tot"
                  | _, Some x -> c2 |> close x "c1 Tot only close"
-                 | _, _ -> aux ()
+                 | _, _ -> aux_with_trivial_guard ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-            then Inl (S.mk_GTotal (U.comp_result c2), "both GTot")
-            else aux ()
+            then Inl (S.mk_GTotal (U.comp_result c2), Env.trivial_guard, "both GTot")
+            else aux_with_trivial_guard ()
           in
           match try_simplify () with
-          | Inl (c, reason) ->
+          | Inl (c, g_c, reason) ->
             debug (fun () ->
                 BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
                             reason
                             (Print.comp_to_string c));
-            c, Env.conj_guard g_c1 g_c2
+            c, Env.conj_guard g_c (Env.conj_guard g_c1 g_c2)
           | Inr reason ->
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
