@@ -749,6 +749,16 @@ let maybe_add_with_type env uopt lc e =
          U.mk_with_type u lc.res_typ e
     else e
 
+
+(*
+ * This is used in bind, when c1 is a Tot (x:unit{phi})
+ * In such cases, e1 is inlined in c2, but we still want to capture inhabitance of phi
+ *
+ * For wp-effects, we do forall (x:unit{phi}). c2
+ * For layered effects, we do: weaken_comp (phi[x/()]) c2
+ *
+ * We should make wp-effects also same as the layered effects
+ *)
 let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * guard_t =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
@@ -2340,7 +2350,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
            "uvar for binder %s when creating a fresh repr for %s at %s"
            (Print.binder_to_string b) eff_name.str (Range.string_of_range r)) r in
        (match repr_ts_opt with
-        | None ->
+        | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
             comp_univs = [u];
             effect_name = eff_name;

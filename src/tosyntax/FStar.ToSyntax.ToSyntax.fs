@@ -2475,6 +2475,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           bind_repr = Some (lookup "bind");
         })
       else if is_layered then
+        //setting the second component to dummy_ts, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme in
         Layered_eff ({
           l_base_effect = Ident.lid_of_str "";

@@ -353,18 +353,18 @@ type action = {
 }
 
 (*
- * AR: We compute the VCs for `match` construct in one of the two ways:
- *       In one style, we close over the pattern variables in the branch VCs,
- *       and name the continuation (to avoid duplicating it), `match_with_close`
- *       contains the combinators used in this style
- *       In the second style (used for layered effects currently), we replace the
- *       pattern varibles in the branch VCs with projectors applied to the scrutinee,
- *       and don't name the continuation, `match with subst` contains the combinator
- *       used in this style
+ * Effect combinators for wp-based effects
+ *
+ * This includes both primitive effects (such as PURE, DIV)
+ *   as well as user-defined DM4F effects
+ *
+ * repr, return_repr, and bind_repr are optional, and are set only for reifiable effects
+ *
+ * For DM4F effects, ret_wp, bind_wp, and other wp combinators are derived and populated by the typechecker
+ *   These fields are dummy ts ([], Tm_unknown) after desugaring
+ *
+ * We could add another boolean, elaborated somewhere
  *)
-
-(* AR: TODO: FIXME: add comments for each combinator *)
-
 
 type wp_eff_combinators = {
   ret_wp       : tscheme;
@@ -379,6 +379,19 @@ type wp_eff_combinators = {
   return_repr  : option<tscheme>;
   bind_repr    : option<tscheme>
 }
+
+
+(*
+ * Layered effects combinators
+ * 
+ * All of these are pairs of type schemes,
+ *   where the first component is the term ts and the second component is the type ts
+ *
+ * Before typechecking the effect declaration, the second component is a dummy ts
+ *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
+ *
+ * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ *)
 type layered_eff_combinators = {
   l_base_effect  : lident;
   l_repr         : (tscheme * tscheme);
@@ -389,20 +402,22 @@ type layered_eff_combinators = {
 
 }
 
+
 type eff_combinators =
   | Primitive_eff: wp_eff_combinators -> eff_combinators
   | DM4F_eff: wp_eff_combinators -> eff_combinators
   | Layered_eff: layered_eff_combinators -> eff_combinators
 
+
 type eff_decl = {
-  mname       : lident;
+  mname       : lident;      //STATE_h
 
   cattributes : list<cflag>;
   
-  univs       : univ_names;
-  binders     : binders;
+  univs       : univ_names;  //u#heap
+  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 
-  signature   : tscheme;
+  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
 
   combinators : eff_combinators;
 
@@ -411,10 +426,12 @@ type eff_decl = {
   eff_attrs   : list<attribute>
 }
 
+
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
 }
+
 
 // JP/NS:
 //    the n-tuples hinder readability, make it difficult to maintain code (see
@@ -427,6 +444,11 @@ type sig_metadata = {
 //    But, given F*'s poor syntax for record arguments, this would require writing
 //    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
 //    the extra parentheses would not be caught by the F# parser during development.
+
+(*
+ * AR: we no longer have Sig_new_effect_for_free
+ *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
+ *)
 type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un

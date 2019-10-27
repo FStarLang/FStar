@@ -2052,12 +2052,20 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
 (* End SMT Lemma utilities *)
 
 
-(* Effect utils *)
+(* Effect utilities *)
+
+(*
+ * Mainly reading the combinators out of the eff_decl record
+ *
+ * For combinators that are present only in either wp or layered effects,
+ *   their getters return option<tscheme>
+ * Leaving it to the callers to deal with it
+ *)
 
 let eff_decl_of_new_effect (se:sigelt) :eff_decl =
   match se.sigel with
   | Sig_new_effect ne -> ne
-  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+  | _ -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
 
 let is_layered (ed:eff_decl) : bool =
   match ed.combinators with
