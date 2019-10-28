@@ -740,6 +740,10 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             let report errs = report_errors ({default_settings with query_errors=errs}) in
             List.iter (function | None -> ()
                                 | Some es -> report es) rs;
+            let rng = match snd (env.qtbl_name_and_index) with
+                      | Some (l, _) -> Ident.range_of_lid l
+                      | _ -> Range.dummyRange
+            in
             if quaking then
                 FStar.TypeChecker.Err.add_errors
                   env
@@ -751,7 +755,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                       (string_of_int nsuccess)
                       (string_of_int hi)
                       (string_of_int lo),
-                    env.range)]
+                    rng)]
         end
     in
 
