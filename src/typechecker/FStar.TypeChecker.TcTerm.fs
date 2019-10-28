@@ -428,8 +428,9 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
 (************************************************************************************************************)
 let rec tc_term env e =
     if Env.debug env Options.Medium then
-        BU.print4 "(%s) Starting tc_term of %s (%s) with expected type: %s {\n"
+        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s) with expected type: %s {\n"
           (Range.string_of_range <| Env.get_range env)
+          (string_of_bool env.phase1)
           (Print.term_to_string e)
           (Print.tag_of_term (SS.compress e))
           (match Env.expected_typ env with | None -> "None" | Some t -> Print.term_to_string t);
