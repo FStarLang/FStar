@@ -1,5 +1,5 @@
 [
-  "•1\u0000\nòp*Tåøž+\\…Ý\u001d",
+  "\u001c›Š<^Q*ƒ9õ¾¶?ÇM´",
   [
     [
       "Test.test",
@@ -81,6 +81,27 @@
       [ "@query" ],
       0,
       "a7b41793648a2a1b9a2c7fcd9cd729a2"
+    ],
+    [
+      "Test.test11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "7561dd472e925ea239125ffdebcfa4ce"
+    ],
+    [
+      "Test.test13",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d00937d4809a53381a30ec85e2fb5185"
     ]
   ]
 ]
