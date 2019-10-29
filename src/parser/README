@@ -8,7 +8,7 @@ There are two lexers:
 The former bundles everything lexing-related into a single file. The latter has
 a companion file [lexhelp.fs] that contains various routines.
 
-There is one parser, [parse.mly] written for menhir (enhanced version of ocamnlyacc).
+There is one parser, [parse.mly] written for menhir (enhanced version of ocamlyacc).
 [parse.mly] is then used to produce :
 - [ocaml-output/parse.mly] which is the ocamlyacc version of the parser for the ocaml-based F* compiler
 - [parse.fsy] which is the fsyacc version of the parser for the F# based F* compiler
@@ -27,12 +27,11 @@ the same general structure as the parser.
   [lexhelp.fs] so that [lexhelp.fs] has
   something to type-check against; but, it is _not_ used when compiling the
   extracted OCaml code, because the token datatype is directly written out by
-  [ocamlyacc] into [parse.ml]; note: this file is checked in to support the
-  scenario where someone wants to bootstrap and recompile without an F# setup
+  [ocamlyacc] into [parse.ml]; note: this file is copied to src/ocaml-output/FStar_Parser_Parse.ml
 
 If you're adding a new token, you need to edit:
-- [lexhelp.fs] to add it to the parser keyword table (F#)
-- [ml/FStar_Parser_LexFStar.mll] to add it to the parser keyword table (OCaml)
+- [src/parser/FStar.Parser.Lexhelp.fs] to add it to the parser keyword table (F#)
+- [src/parser/ml/FStar_Parser_LexFStar.ml] to add it to the parser keyword table (OCaml)
 - [parse.mly] to expose it to the parser, possibly with an adequate precedence
 
 A common workflow for use with Visual Studio is:

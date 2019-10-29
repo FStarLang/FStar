@@ -92,7 +92,7 @@ let (unify :
                  let uu____249 = tcenv ()  in
                  FStar_TypeChecker_Rel.simplify_guard uu____249  in
                FStar_All.pipe_right uu____235 uu____244  in
-             guard_eq i g.FStar_TypeChecker_Env.guard_f g';
+             guard_eq i g.FStar_TypeChecker_Common.guard_f g';
              check1 ();
              FStar_Options.init ())
   
@@ -115,7 +115,7 @@ let (should_fail :
                    FStar_TypeChecker_Rel.solve_deferred_constraints uu____283
                     in
                  FStar_All.pipe_right uu____276 uu____278  in
-               (match g.FStar_TypeChecker_Env.guard_f with
+               (match g.FStar_TypeChecker_Common.guard_f with
                 | FStar_TypeChecker_Common.Trivial  ->
                     let uu____284 =
                       let uu____286 = FStar_Syntax_Print.term_to_string x1
@@ -150,7 +150,7 @@ let (unify' : Prims.string -> Prims.string -> unit) =
         FStar_All.pipe_right uu____328 uu____330  in
       let uu____336 = FStar_Syntax_Print.term_to_string x2  in
       let uu____338 = FStar_Syntax_Print.term_to_string y2  in
-      let uu____340 = guard_to_string g.FStar_TypeChecker_Env.guard_f  in
+      let uu____340 = guard_to_string g.FStar_TypeChecker_Common.guard_f  in
       FStar_Util.print3 "%s and %s are unifiable with guard %s\n" uu____336
         uu____338 uu____340
   

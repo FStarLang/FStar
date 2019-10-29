@@ -1,0 +1,107 @@
+[
+  "\u001c›Š<^Q*ƒ9õ¾¶?ÇM´",
+  [
+    [
+      "Test.test",
+      1,
+      0,
+      4,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "b4957c8a094789f1ce0f8fbb6dbd2131"
+    ],
+    [
+      "Test.test2",
+      1,
+      0,
+      4,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "bff31cdac66ffeb112f7b1f3a43f86c1"
+    ],
+    [
+      "Test.f_pure",
+      1,
+      0,
+      4,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "9bfc3b8858df96414e1e99d57322d9b2"
+    ],
+    [
+      "Test.test3",
+      1,
+      0,
+      4,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "38614f21301d77bcee5a8129d84f3a32"
+    ],
+    [
+      "Test.test4",
+      1,
+      0,
+      4,
+      [ "@query", "equation_Test.f_pure" ],
+      0,
+      "c66fbc1535426417811acf569570f9a9"
+    ],
+    [
+      "Test.test6",
+      1,
+      0,
+      4,
+      [ "@query", "equation_Test.f_pure" ],
+      0,
+      "79983cb54e64bfd11684c9cfd5b2d113"
+    ],
+    [
+      "Test.test8",
+      1,
+      0,
+      4,
+      [
+        "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "4a75e3d89916f8dc5b1547ccc308a143"
+    ],
+    [
+      "Test.test9",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a7b41793648a2a1b9a2c7fcd9cd729a2"
+    ],
+    [
+      "Test.test11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "40db1437c979a810aa8bae7754d1eca9"
+    ],
+    [
+      "Test.test13",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "40376827e5d361615b484e6101d1f10b"
+    ]
+  ]
+]

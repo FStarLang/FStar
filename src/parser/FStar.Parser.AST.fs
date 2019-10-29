@@ -209,6 +209,7 @@ type decl' =
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
+  | LayeredEffect of effect_decl
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc

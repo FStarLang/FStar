@@ -1728,15 +1728,16 @@ let (report_implicits :
              let uu____2255 =
                let uu____2257 =
                  FStar_Syntax_Print.uvar_to_string
-                   (imp.FStar_TypeChecker_Env.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
                   in
                let uu____2259 =
                  FStar_Syntax_Print.term_to_string
-                   (imp.FStar_TypeChecker_Env.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
+                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
                   in
                FStar_Util.format3
                  "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                 uu____2257 uu____2259 imp.FStar_TypeChecker_Env.imp_reason
+                 uu____2257 uu____2259
+                 imp.FStar_TypeChecker_Common.imp_reason
                 in
              (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
                uu____2255, rng)) is
@@ -1970,7 +1971,7 @@ let run_tactic_on_ps :
                                            FStar_Common.string_of_list
                                              (fun imp  ->
                                                 FStar_Syntax_Print.ctx_uvar_to_string
-                                                  imp.FStar_TypeChecker_Env.imp_uvar)
+                                                  imp.FStar_TypeChecker_Common.imp_uvar)
                                              ps1.FStar_Tactics_Types.all_implicits
                                             in
                                          FStar_Util.print1
@@ -1982,13 +1983,16 @@ let run_tactic_on_ps :
                                            FStar_TypeChecker_Env.trivial_guard
                                             in
                                          {
-                                           FStar_TypeChecker_Env.guard_f =
-                                             (uu___224_2609.FStar_TypeChecker_Env.guard_f);
-                                           FStar_TypeChecker_Env.deferred =
-                                             (uu___224_2609.FStar_TypeChecker_Env.deferred);
-                                           FStar_TypeChecker_Env.univ_ineqs =
-                                             (uu___224_2609.FStar_TypeChecker_Env.univ_ineqs);
-                                           FStar_TypeChecker_Env.implicits =
+                                           FStar_TypeChecker_Common.guard_f =
+                                             (uu___224_2609.FStar_TypeChecker_Common.guard_f);
+                                           FStar_TypeChecker_Common.deferred
+                                             =
+                                             (uu___224_2609.FStar_TypeChecker_Common.deferred);
+                                           FStar_TypeChecker_Common.univ_ineqs
+                                             =
+                                             (uu___224_2609.FStar_TypeChecker_Common.univ_ineqs);
+                                           FStar_TypeChecker_Common.implicits
+                                             =
                                              (ps1.FStar_Tactics_Types.all_implicits)
                                          }  in
                                        let g2 =
@@ -2008,7 +2012,7 @@ let run_tactic_on_ps :
                                             FStar_Common.string_of_list
                                               (fun imp  ->
                                                  FStar_Syntax_Print.ctx_uvar_to_string
-                                                   imp.FStar_TypeChecker_Env.imp_uvar)
+                                                   imp.FStar_TypeChecker_Common.imp_uvar)
                                               ps1.FStar_Tactics_Types.all_implicits
                                              in
                                           FStar_Util.print2
@@ -2032,7 +2036,7 @@ let run_tactic_on_ps :
                                              FStar_Common.string_of_list
                                                (fun imp  ->
                                                   FStar_Syntax_Print.ctx_uvar_to_string
-                                                    imp.FStar_TypeChecker_Env.imp_uvar)
+                                                    imp.FStar_TypeChecker_Common.imp_uvar)
                                                ps1.FStar_Tactics_Types.all_implicits
                                               in
                                            FStar_Util.print2
@@ -2040,7 +2044,7 @@ let run_tactic_on_ps :
                                              uu____2671 uu____2673
                                          else ());
                                         report_implicits rng_goal
-                                          g3.FStar_TypeChecker_Env.implicits;
+                                          g3.FStar_TypeChecker_Common.implicits;
                                         (let uu____2682 =
                                            FStar_ST.op_Bang tacdbg  in
                                          if uu____2682
@@ -2745,11 +2749,12 @@ let (synthesize :
                             else ());
                            (let guard =
                               {
-                                FStar_TypeChecker_Env.guard_f =
+                                FStar_TypeChecker_Common.guard_f =
                                   (FStar_TypeChecker_Common.NonTrivial vc);
-                                FStar_TypeChecker_Env.deferred = [];
-                                FStar_TypeChecker_Env.univ_ineqs = ([], []);
-                                FStar_TypeChecker_Env.implicits = []
+                                FStar_TypeChecker_Common.deferred = [];
+                                FStar_TypeChecker_Common.univ_ineqs =
+                                  ([], []);
+                                FStar_TypeChecker_Common.implicits = []
                               }  in
                             let uu____5399 = FStar_Tactics_Types.goal_env g
                                in
@@ -2916,13 +2921,14 @@ let (postprocess :
                                    else ());
                                   (let guard =
                                      {
-                                       FStar_TypeChecker_Env.guard_f =
+                                       FStar_TypeChecker_Common.guard_f =
                                          (FStar_TypeChecker_Common.NonTrivial
                                             vc);
-                                       FStar_TypeChecker_Env.deferred = [];
-                                       FStar_TypeChecker_Env.univ_ineqs =
+                                       FStar_TypeChecker_Common.deferred = [];
+                                       FStar_TypeChecker_Common.univ_ineqs =
                                          ([], []);
-                                       FStar_TypeChecker_Env.implicits = []
+                                       FStar_TypeChecker_Common.implicits =
+                                         []
                                      }  in
                                    let uu____5747 =
                                      FStar_Tactics_Types.goal_env g  in
@@ -2938,6 +2944,6 @@ let (postprocess :
                              g_imp
                             in
                          report_implicits tm.FStar_Syntax_Syntax.pos
-                           g_imp1.FStar_TypeChecker_Env.implicits;
+                           g_imp1.FStar_TypeChecker_Common.implicits;
                          uvtm)))))
   

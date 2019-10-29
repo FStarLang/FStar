@@ -77,6 +77,7 @@ let () =
   Hashtbl.add keywords "module"        MODULE      ;
   Hashtbl.add keywords "new"           NEW         ;
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
+  Hashtbl.add keywords "layered_effect"               LAYERED_EFFECT  ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;
   Hashtbl.add keywords "of"            OF          ;
   Hashtbl.add keywords "open"          OPEN        ;

@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ecd83ca46ff8930f0a660d06b6f4cfcc"
+      "560de81ef6926674d8001cca7ef68783"
     ],
     [
       "Vector.vector",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c8a9a202c2d12c078b0bcb13e45db7dc"
+      "9eba47a941a23bc5a480f3d3fa71bde4"
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "03f7e652da00cf054e77f2153d7bc1e6"
+      "4acff658cad9ce59d6fb7493d435533f"
     ],
     [
       "Vector.__proj__VCons__item__n",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "a1189f8b793823e4e099bd1e456ea768"
+      "0a35e4d44284d3251046879326ba4bf9"
     ],
     [
       "Vector.__proj__VCons__item__tl",
@@ -65,11 +65,11 @@
         "equation_Prims.nat", "int_inversion",
         "proj_equation_Vector.VCons_n", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Vector.VCons_n",
-        "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "f42755cb4d6bf23466ad37ec8c8a27f0"
+      "833101a3734c9c664756726d8a1aca58"
     ],
     [
       "Vector.head",
@@ -78,20 +78,16 @@
       1,
       [ "@query" ],
       0,
-      "bd1cac652ac85716f9ab409d2585e415"
+      "d90a0831381807c8a1300e7d23372a61"
     ],
     [
       "Vector.head",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
-        "equation_Prims.pos", "fuel_guarded_inversion_Vector.vector",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
+      [ "@query" ],
       0,
-      "f55f365cd1f85ff8188857103578e0b7"
+      "11c3038cc235a5d9a670446561ba9f8c"
     ],
     [
       "Vector.head",
@@ -104,7 +100,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "31f0b8cccb378031bef16488233076de"
+      "2540117f5817a3e7dd17525af717537a"
     ],
     [
       "Vector.nth",
@@ -128,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6567c2eff34ab187a4a377a644717df0"
+      "9859c55cc8ba904942fefa821784452e"
     ],
     [
       "Vector.append",
@@ -141,7 +137,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "375a8574366f70ef09667bae01c6a64b"
+      "935cb233d2b3e215da3a655969de59fa"
     ],
     [
       "Vector.append",
@@ -154,7 +150,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f571eff89ceb905aea42aed865285659"
+      "949263126f26cc900a14f80ac3420058"
     ],
     [
       "Vector.append",
@@ -175,7 +171,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "68be62170679efe2cfc10f6105215bab"
+      "853b526439fb8c57a752be34ed0b88d1"
     ],
     [
       "Vector.reverse",
@@ -195,7 +191,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2126b93ad65b870ebdf982ccd60defa1"
+      "492b44afd7376219cd65bb240221a2ec"
     ],
     [
       "Vector.mapT",
@@ -215,7 +211,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3a6edcc65e404199c4b25af01b6c61df"
+      "77309d8f3a010395e6c4f3a9f6511b50"
     ],
     [
       "Vector.fold_left",
@@ -235,7 +231,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "77edd560a65cdee149933bf8cd026fb3"
+      "4e11815e71525a2d6eaf2271b13f4d8b"
     ],
     [
       "Vector.fold_right",
@@ -254,7 +250,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "84badd8768a802b69e2ff192160c2fc2"
+      "ca58bc8cfff345801e0eebbf9d99fc86"
     ],
     [
       "Vector.find",
@@ -274,7 +270,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "beb387458a19fdc8f517d26db1ab90a1"
+      "8190f968efb5f30675846de68bb41a42"
     ],
     [
       "Vector.zip'",
@@ -295,278 +291,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "342d9413a37b7a8378a52cc5c2228b67"
-    ],
-    [
-      "Vector.vector",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "53e18f435bf59da384936c69a2cc9881"
-    ],
-    [
-      "Vector.vector",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "6470942a0129cb62822ce65e82905449"
-    ],
-    [
-      "Vector.__proj__VCons__item__hd",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
-      ],
-      0,
-      "3398fd2c492a0df4d2872076ceaa910d"
-    ],
-    [
-      "Vector.__proj__VCons__item__n",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
-      ],
-      0,
-      "b39027c2e137c2d9c7ad98b20e2f8175"
-    ],
-    [
-      "Vector.__proj__VCons__item__tl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
-        "equation_Prims.nat", "int_inversion",
-        "proj_equation_Vector.VCons_n", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Vector.VCons_n",
-        "refinement_interpretation_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "a1ba59b1599bc25dcc27a1ea7eaa85cd"
-    ],
-    [
-      "Vector.head",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4aee63ee29f2a565e1be784e25734097"
-    ],
-    [
-      "Vector.head",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
-        "equation_Prims.pos", "fuel_guarded_inversion_Vector.vector",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
-      ],
-      0,
-      "ef8373c148d3c958d1987cb93a3f4fed"
-    ],
-    [
-      "Vector.nth",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_21c13f6456e3f350b125d9f794dd3770_4",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
-        "binder_x_dea256e7a41198c89ed07f42894c7b2b_3",
-        "data_elim_Vector.VCons", "disc_equation_Vector.VCons",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_cd73fa2255f8011c45dec35de340a3ae",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "e20b02474aa6f410fcef204e6732512c"
-    ],
-    [
-      "Vector.append",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "3e439ce601de14cde30d1362ebfe95e1"
-    ],
-    [
-      "Vector.append",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_1fd74c304e163c0d8adcb88881fe80b8_5",
-        "binder_x_2ca789102088f52029182cc0ebc25e49_4",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
-        "data_elim_Vector.VCons", "data_elim_Vector.VNil",
-        "disc_equation_Vector.VCons", "disc_equation_Vector.VNil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "04a23b0ff4a877992689cf770f076e41"
-    ],
-    [
-      "Vector.reverse",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_2ca789102088f52029182cc0ebc25e49_3",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
-        "constructor_distinct_Vector.VNil", "data_elim_Vector.VCons",
-        "disc_equation_Vector.VCons", "disc_equation_Vector.VNil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "5085aec21fc1b6670ad7d5b22bf96529"
-    ],
-    [
-      "Vector.mapT",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_5",
-        "binder_x_f2a82419b48cea016cad98171080844c_6",
-        "constructor_distinct_Vector.VNil", "data_elim_Vector.VCons",
-        "disc_equation_Vector.VCons", "disc_equation_Vector.VNil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "ddbc93e00e7716756b3c0081d3dff41a"
-    ],
-    [
-      "Vector.fold_left",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_048405c135c47e66b2f031213c846802_7",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_6",
-        "data_elim_Vector.VCons", "disc_equation_Vector.VCons",
-        "disc_equation_Vector.VNil", "equality_tok_Prims.LexTop@tok",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "ba8a5b0540ee0aafbb3305b0236746fa"
-    ],
-    [
-      "Vector.fold_right",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_5",
-        "binder_x_f2a82419b48cea016cad98171080844c_6",
-        "data_elim_Vector.VCons", "disc_equation_Vector.VCons",
-        "disc_equation_Vector.VNil", "equation_Prims.nat",
-        "fuel_guarded_inversion_Vector.vector", "int_inversion",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "b67ed16869a30f9263b9cf01dd1e1966"
-    ],
-    [
-      "Vector.find",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_1fd74c304e163c0d8adcb88881fe80b8_4",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
-        "data_elim_Vector.VCons", "disc_equation_Vector.VCons",
-        "disc_equation_Vector.VNil", "equation_Prims.nat",
-        "fuel_guarded_inversion_Vector.vector", "int_inversion",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "59f7614b0957fe92ae09c9875031eb6c"
-    ],
-    [
-      "Vector.zip'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_49f7eb260f7789f18adb7dbb2ba714df_5",
-        "binder_x_b22ffd3ae8bcda01839665f8319f8020_6",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_4",
-        "constructor_distinct_Vector.VNil", "data_elim_Vector.VCons",
-        "disc_equation_Vector.VCons", "disc_equation_Vector.VNil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Vector.vector",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "cda379b6fbf5cae2eaa695aae1559d92"
+      "9bb2985feea4f3ee3332bee04dc2ac53"
     ]
   ]
 ]
