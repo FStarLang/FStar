@@ -111,7 +111,7 @@ let pose_lemma (t : term) : Tac binder =
 let explode () : Tac unit =
     ignore (
     repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
-                               (fun () -> ignore (split ()))]))
+                                (fun () -> ignore (split ()))]))
 
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->
