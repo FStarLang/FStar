@@ -2141,7 +2141,6 @@ let proofstate_of_all_implicits rng env imps =
     let w = goal_witness (List.hd goals) in
     let ps = {
         main_context = env;
-        main_goal = List.hd goals;
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
