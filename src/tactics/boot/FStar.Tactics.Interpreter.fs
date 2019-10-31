@@ -413,12 +413,6 @@ let report_implicits rng (is : Env.implicits) : unit =
     Err.add_errors errs;
     Err.stop_if_err ()
 
-<<<<<<< HEAD
-let run_tactic_on_typ'
-        (rng_tac : Range.range) (rng_goal : Range.range)
-        (tactic:term) (env:env)
-        (typ:S.typ) (initial_proofstate: Range.range -> Env.env -> proofstate * term)
-=======
 let run_tactic_on_ps
         (rng_tac : Range.range) (rng_goal : Range.range)
         (e_arg : embedding<'a>)
@@ -426,7 +420,6 @@ let run_tactic_on_ps
         (e_res : embedding<'b>)
         (tactic:term)
         (env:env) (ps:proofstate)
->>>>>>> master
                     : list<goal> // remaining goals
                     * 'b // return value
                     =
@@ -442,17 +435,6 @@ let run_tactic_on_ps
 
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
-<<<<<<< HEAD
-    let env = { env with failhard = true } in
-    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
-    let ps, w = initial_proofstate rng env in
-
-    Reflection.Basic.env_hook := Some env;
-    if !tacdbg then
-        BU.print1 "Running tactic with goal = (%s) {\n"
-          (Print.term_to_string typ);
-    let res, ms = BU.record_time (fun () -> run_safe (tau ()) ps) in
-=======
 
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
@@ -462,7 +444,6 @@ let run_tactic_on_ps
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
     let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
->>>>>>> master
     if !tacdbg then
         BU.print_string "}\n";
     if !tacdbg || Options.tactics_info () then
@@ -524,29 +505,6 @@ let run_tactic_on_ps
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
-<<<<<<< HEAD
-        (tactic:term) (env:env)
-        (typ:term)
-    : list<goal> // remaining goals
-    * term // witness
-    =
-    run_tactic_on_typ' rng_tac rng_goal tactic env typ (fun rng env -> proofstate_of_goal_ty rng env typ)
-
-
-let run_tactic_on_all_implicits
-        (rng_tac : Range.range) (rng_goal : Range.range)
-        (tactic:term) (env:env) (imps:Env.implicits)
-    : list<goal> // remaining goals
-    * term // witness
-    =
-    run_tactic_on_typ'
-      rng_tac
-      rng_goal
-      tactic
-      env
-      S.t_unit
-      (fun rng env -> proofstate_of_all_implicits rng env imps)
-=======
         (tactic:term) (env:env) (typ:term)
                     : list<goal> // remaining goals
                     * term // witness
@@ -555,7 +513,25 @@ let run_tactic_on_all_implicits
     let ps, w = proofstate_of_goal_ty rng env typ in
     let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic env ps in
     gs, w
->>>>>>> master
+
+let run_tactic_on_all_implicits
+        (rng_tac : Range.range) (rng_goal : Range.range)
+        (tactic:term) (env:env) (imps:Env.implicits)
+    : list<goal> // remaining goals
+    =
+    let ps, _ = proofstate_of_all_implicits rng_goal env imps in
+    let goals, () =
+      run_tactic_on_ps
+        rng_tac
+        rng_goal
+        e_unit
+        ()
+        e_unit
+        tactic
+        env
+        ps
+    in
+    goals
 
 // Polarity
 type pol =
@@ -817,7 +793,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     tacdbg := Env.debug env (Options.Other "Tac");
 
-    let gs, w = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
+    let gs = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.

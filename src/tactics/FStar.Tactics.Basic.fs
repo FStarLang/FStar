@@ -2100,11 +2100,6 @@ let goal_of_goal_ty env typ : goal * guard_t =
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
-<<<<<<< HEAD
-
-let proofstate_of_goal_ty rng env typ =
-    let g, g_u = goal_of_goal_ty env typ in
-=======
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
@@ -2115,7 +2110,6 @@ let tac_env (env:Env.env) : Env.env =
 
 let proofstate_of_goals rng env goals imps =
     let env = tac_env env in
->>>>>>> master
     let ps = {
         main_context = env;
         all_implicits = imps;
@@ -2131,8 +2125,13 @@ let proofstate_of_goals rng env goals imps =
         local_state = BU.psmap_empty ();
     }
     in
-<<<<<<< HEAD
-    (ps, (goal_witness g))
+    ps
+
+let proofstate_of_goal_ty rng env typ =
+    let env = tac_env env in
+    let g, g_u = goal_of_goal_ty env typ in
+    let ps = proofstate_of_goals rng env [g] g_u.implicits in
+    (ps, goal_witness g)
 
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal env i.imp_uvar (FStar.Options.peek()) false ""
@@ -2157,12 +2156,3 @@ let proofstate_of_all_implicits rng env imps =
     }
     in
     (ps, w)
-=======
-    ps
-
-let proofstate_of_goal_ty rng env typ =
-    let env = tac_env env in
-    let g, g_u = goal_of_goal_ty env typ in
-    let ps = proofstate_of_goals rng env [g] g_u.implicits in
-    (ps, goal_witness g)
->>>>>>> master
