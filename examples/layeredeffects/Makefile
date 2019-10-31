@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --record_hints
 include ../Makefile.include
-ROOTS=Test.fst Locals.Effect.fst LL.fst Buffers.fst Flights.fst FlightsExn.fst FlightsStExn.fst
+ROOTS=Test.fst Locals.Effect.fst LL.fst MSeqExn.fst Flights.fst FlightsExn.fst FlightsStExn.fst #Buffers.fst
 
 all: verify-all
 

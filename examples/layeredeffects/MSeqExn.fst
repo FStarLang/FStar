@@ -148,77 +148,56 @@ effect StExn (a:Type) (pre:trace -> Type0) (post:trace -> result a -> trace -> T
 
 /// To work with this new effect
 ///   while the DIV (and PURE) computations be lifted by the typechecker automatically,
-///   STATE computations need to be lifted explicitly
-
-let write_at_end_ (x:entry_t)
-: st_erepr unit
-  (fun p s0 ->
-    let s1 = Seq.snoc s0 x in
-    trace_inv0 s1 /\ p (Success ()) s1)
-= fun _ ->
-  Success (i_write_at_end trace_ref x)
-
-
-/// Now reflect write_at_end_ into a StExn function that we will use now on to write to trace_refx
+///   STATE computations need to be `reflected` explicitly
 
 let write_at_end (x:entry_t)
-: StExn unit
-  (requires fun s -> trace_inv0 (Seq.snoc s x))
-  (ensures fun s0 r s1 -> r == Success () /\ s1 == Seq.snoc s0 x)
-= STEXN?.reflect (write_at_end_ x)
+: STEXN unit
+  (fun p s -> trace_inv0 (Seq.snoc s x) /\ p (Success ()) (Seq.snoc s x))
+// : StExn unit
+//   (requires fun s -> trace_inv0 (Seq.snoc s x))
+//   (ensures fun s0 r s1 -> r == Success () /\ s1 == Seq.snoc s0 x)
+= STEXN?.reflect (fun _ ->
+    i_write_at_end trace_ref x;
+    Success ())
 
 
 /// Similarly we can define a read function
-///
-/// By first defining a helper and then reflecting it
-
-let read_ (i:nat)
-: st_erepr entry_t
-  (fun p s -> i < Seq.length s /\ p (Success (Seq.index s i)) s)
-= fun _ ->
-  let s = i_read trace_ref in
-  Success (Seq.index s i)
-
 
 let read (i:nat)
-: StExn entry_t
-  (requires fun s -> i < Seq.length s)
-  (ensures fun s0 r s1 -> i < Seq.length s0 /\ r == Success (Seq.index s0 i) /\ s1 == s0)
-= STEXN?.reflect (read_ i)
+: STEXN entry_t
+  (fun p s -> i < Seq.length s /\ p (Success (Seq.index s i)) s)
+// : StExn entry_t
+//   (requires fun s -> i < Seq.length s)
+//   (ensures fun s0 r s1 -> i < Seq.length s0 /\ r == Success (Seq.index s0 i) /\ s1 == s0)
+= STEXN?.reflect (fun _ ->
+    let s = i_read trace_ref in
+    Success (Seq.index s i))
 
 
 /// Some functions which we will use for testing
 
 assume val some_pure_function (x:entry_t) : int
 
-let get_ ()
-: st_erepr trace (fun p s -> p (Success s) s)
-= fun _ ->
-  Success (i_read trace_ref)
+
+/// A get () function
 
 let get ()
-: StExn trace
-  (requires fun _ -> True)
-  (ensures fun s0 r s1 -> r == Success s0 /\ s1 == s0)
-= STEXN?.reflect (get_ ())
-
-let read_or_throw_ (i:nat)
-: st_erepr entry_t
-  (fun p s -> if i < Seq.length s then p (Success (Seq.index s i)) s else p (Error "") s)
-= fun _ ->
-  let s = i_read trace_ref in
-  if i < Seq.length s then Success (Seq.index s i) else Error ""
+: STEXN trace
+  (fun p s -> p (Success s) s)
+// : StExn trace
+//   (requires fun _ -> True)
+//   (ensures fun s0 r s1 -> r == Success s0 /\ s1 == s0)
+= STEXN?.reflect (fun _ -> Success (i_read trace_ref))
 
 
 let read_or_throw (i:nat)
-: StExn entry_t
-  (requires fun _ -> True)
-  (ensures fun s0 r s1 ->
-    s0 == s1 /\
-    (match i < Seq.length s0 with
-     | true -> r == Success (Seq.index s0 i)
-     | false -> r == Error ""))
-= STEXN?.reflect (read_or_throw_ i)
+: STEXN entry_t
+  (fun p s ->
+   (forall x. ((i < Seq.length s ==> x == Success (Seq.index s i)) /\
+          (i >= Seq.length s ==> x == Error "")) ==> p x s))
+= STEXN?.reflect (fun _ ->
+    let s = i_read trace_ref in
+    if i < Seq.length s then Success (Seq.index s i) else Error "")
 
 
 /// Now let's see this in action
