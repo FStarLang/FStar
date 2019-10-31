@@ -121,3 +121,22 @@ let test8 (l:list int)
 let test9 ()
 : FStar.ST.STATE int (fun p _ -> forall h1. p 3 h1)
 = reify (test6 ()) ()
+
+
+assume val some_pred : Type0
+
+assume val proof_of_pred : unit -> Tot (squash some_pred)
+assume val test10 : unit -> Pure unit (requires some_pred) (ensures fun _ -> True)
+
+//#restart-solver
+//#set-options "--max_fuel 0 --max_ifuel 0 --log_queries"
+let test11 () : Tot unit =
+  let _ : squash some_pred = proof_of_pred () in
+  test10 ()
+
+
+assume val test12 : unit -> HoareST unit (requires fun _ -> some_pred) (ensures fun _ _ _ -> True)
+
+let test13 () : HoareST unit (fun _ -> True) (fun _ _ _ -> True) = 
+  let _ : squash some_pred = proof_of_pred () in
+  test12 ()

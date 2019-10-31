@@ -88,10 +88,10 @@ let with_dsenv_of_tcenv :
                  (uu___8_51.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth_hook =
                  (uu___8_51.FStar_TypeChecker_Env.synth_hook);
-               FStar_TypeChecker_Env.try_solve_implicits_hook =
-                 (uu___8_51.FStar_TypeChecker_Env.try_solve_implicits_hook);
                FStar_TypeChecker_Env.splice =
                  (uu___8_51.FStar_TypeChecker_Env.splice);
+               FStar_TypeChecker_Env.mpreprocess =
+                 (uu___8_51.FStar_TypeChecker_Env.mpreprocess);
                FStar_TypeChecker_Env.postprocess =
                  (uu___8_51.FStar_TypeChecker_Env.postprocess);
                FStar_TypeChecker_Env.is_native_tactic =
@@ -353,10 +353,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___72_410.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
           FStar_Tactics_Interpreter.synthesize;
-        FStar_TypeChecker_Env.try_solve_implicits_hook =
-          (uu___72_410.FStar_TypeChecker_Env.try_solve_implicits_hook);
         FStar_TypeChecker_Env.splice =
           (uu___72_410.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___72_410.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___72_410.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -445,10 +445,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___75_412.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
           (uu___75_412.FStar_TypeChecker_Env.synth_hook);
-        FStar_TypeChecker_Env.try_solve_implicits_hook =
-          FStar_Tactics_Interpreter.solve_implicits;
-        FStar_TypeChecker_Env.splice =
-          (uu___75_412.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.splice = FStar_Tactics_Interpreter.splice;
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___75_412.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___75_412.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -537,9 +536,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___78_414.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
           (uu___78_414.FStar_TypeChecker_Env.synth_hook);
-        FStar_TypeChecker_Env.try_solve_implicits_hook =
-          (uu___78_414.FStar_TypeChecker_Env.try_solve_implicits_hook);
-        FStar_TypeChecker_Env.splice = FStar_Tactics_Interpreter.splice;
+        FStar_TypeChecker_Env.splice =
+          (uu___78_414.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          FStar_Tactics_Interpreter.mpreprocess;
         FStar_TypeChecker_Env.postprocess =
           (uu___78_414.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -628,10 +628,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___81_416.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
           (uu___81_416.FStar_TypeChecker_Env.synth_hook);
-        FStar_TypeChecker_Env.try_solve_implicits_hook =
-          (uu___81_416.FStar_TypeChecker_Env.try_solve_implicits_hook);
         FStar_TypeChecker_Env.splice =
           (uu___81_416.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___81_416.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           FStar_Tactics_Interpreter.postprocess;
         FStar_TypeChecker_Env.is_native_tactic =
@@ -720,10 +720,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___84_418.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
           (uu___84_418.FStar_TypeChecker_Env.synth_hook);
-        FStar_TypeChecker_Env.try_solve_implicits_hook =
-          (uu___84_418.FStar_TypeChecker_Env.try_solve_implicits_hook);
         FStar_TypeChecker_Env.splice =
           (uu___84_418.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___84_418.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___84_418.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =

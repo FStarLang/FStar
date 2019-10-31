@@ -1,5 +1,5 @@
 [
-  " ”zZI…ô…Áy\u000f8„]∫\u0012",
+  "∑'—êß\u0010ƒßÒÇ~ê‚¶Å√",
   [
     [
       "Bug1866.not_do_much",
@@ -30,7 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "58d045e11c2dba9bea1f8dc94368e48f"
+      "258544f701a52ca0ddbb8e614073b042"
     ],
     [
       "Bug1866.traverse",
@@ -56,7 +56,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "f97224166c502b84641e81ae2c542b80"
+      "82f35d34b4f92e78d7606ce96a412e53"
     ]
   ]
 ]

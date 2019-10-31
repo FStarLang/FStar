@@ -150,6 +150,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * The repr must have the type:
    *   a:Type -> <binders for effect indices> -> Type  //polymorphic in one universe (that of a)
    *)
+<<<<<<< HEAD
   let repr =
     let r = (snd ed.repr).pos in
     let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 ed.repr in
@@ -181,6 +182,38 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
                (ed.mname |> Ident.string_of_lid) (Print.term_to_string repr_t)) r)
       else ()
     end;
+=======
+  let repr, underlying_effect_lid =
+    let repr_ts = ed |> U.get_eff_repr |> must in
+    let r = (snd repr_ts).pos in
+    let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 repr_ts in
+
+    let underlying_effect_lid =
+      let repr_t =
+        N.normalize
+          [Env.UnfoldUntil (S.Delta_constant_at_level 0); Env.AllowUnboundUniverses]
+          env0 repr_t in
+        match (SS.compress repr_t).n with
+        | Tm_abs (_, t, _) ->
+          (match (SS.compress t).n with
+           | Tm_arrow (_, c) -> c |> U.comp_effect_name |> Env.norm_eff_name env0
+           | _ -> 
+             raise_error (Errors.Fatal_UnexpectedEffect,
+               BU.format2 "repr body for %s is not an arrow (%s)"
+               (ed.mname |> Ident.string_of_lid) (Print.term_to_string t)) r)
+        | _ ->
+          raise_error (Errors.Fatal_UnexpectedEffect,
+            BU.format2 "repr for %s is not an abstraction (%s)"
+              (ed.mname |> Ident.string_of_lid) (Print.term_to_string repr_t)) r in
+
+    //check that if the effect is marked total, then the underlying effect is also total
+    if quals |> List.contains TotalEffect &&
+       not (Env.is_total_effect env0 underlying_effect_lid)
+    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
+                      BU.format2 "Effect %s is marked total but its underlying effect %s is not total"
+                        (ed.mname |> Ident.string_of_lid) (underlying_effect_lid |> Ident.string_of_lid)) r;
+
+>>>>>>> master
     
     let us, ty = SS.open_univ_vars repr_us repr_ty in
     let env = Env.push_univ_vars env0 us in
@@ -193,7 +226,12 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
     Rel.force_trivial_guard env g;
+<<<<<<< HEAD
     repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env) in
+=======
+    (repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env)),
+    underlying_effect_lid in
+>>>>>>> master
 
   log_combinator "repr" repr;
 
@@ -202,7 +240,11 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   let fresh_repr r env u a_tm =
     let signature_ts = let us, t, _ = signature in (us, t) in
     let repr_ts = let us, t, _ = repr in (us, t) in
+<<<<<<< HEAD
     TcUtil.fresh_effect_repr env r ed.mname signature_ts repr_ts u a_tm in
+=======
+    TcUtil.fresh_effect_repr env r ed.mname signature_ts (Some repr_ts) u a_tm in
+>>>>>>> master
 
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,
@@ -220,8 +262,14 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * The binders have arbitrary sorts
    *)
   let return_repr =
+<<<<<<< HEAD
     let r = (snd ed.return_repr).pos in
     let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 ed.return_repr in
+=======
+    let return_repr_ts = ed |> U.get_return_repr |> must in
+    let r = (snd return_repr_ts).pos in
+    let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 return_repr_ts in
+>>>>>>> master
 
     let us, ty = SS.open_univ_vars ret_us ret_ty in
     let env = Env.push_univ_vars env0 us in
@@ -254,8 +302,14 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * The binders have arbitrary sorts
    *)
   let bind_repr =
+<<<<<<< HEAD
     let r = (snd ed.bind_repr).pos in
     let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 ed.bind_repr in
+=======
+    let bind_repr_ts = ed |> U.get_bind_repr |> must in
+    let r = (snd bind_repr_ts).pos in
+    let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
+>>>>>>> master
 
     let us, ty = SS.open_univ_vars bind_us bind_ty in
     let env = Env.push_univ_vars env0 us in
@@ -295,7 +349,11 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * The binders have arbitrary sorts
    *)
   let stronger_repr =
+<<<<<<< HEAD
     let stronger_repr = ed.stronger_repr |> must in
+=======
+    let stronger_repr = ed |> U.get_stronger_repr |> must in
+>>>>>>> master
     let r = (snd stronger_repr).pos in
 
     let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
@@ -352,6 +410,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
   log_combinator "stronger_repr" stronger_repr;
 
+<<<<<<< HEAD
   let conjunction =
     let conjunction_ts = (ed.match_wps |> BU.right).conjunction in
     let r = (snd conjunction_ts).pos in
@@ -359,6 +418,15 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let us, t = SS.open_univ_vars conjunction_us conjunction_t in
     let _, ty = SS.open_univ_vars conjunction_us conjunction_ty in
+=======
+  let if_then_else =
+    let if_then_else_ts = ed |> U.get_layered_if_then_else_combinator |> must in
+    let r = (snd if_then_else_ts).pos in
+    let if_then_else_us, if_then_else_t, if_then_else_ty = check_and_gen "if_then_else" 1 if_then_else_ts in
+
+    let us, t = SS.open_univ_vars if_then_else_us if_then_else_t in
+    let _, ty = SS.open_univ_vars if_then_else_us if_then_else_ty in
+>>>>>>> master
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
@@ -368,7 +436,11 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         let ((a', _)::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 3) |> fst
            |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name)]
+<<<<<<< HEAD
       | _ -> not_an_arrow_error "conjunction" 4 ty r in
+=======
+      | _ -> not_an_arrow_error "if_then_else" 4 ty r in
+>>>>>>> master
     let bs = a::rest_bs in
     let f_bs, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
@@ -382,11 +454,116 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
 
+<<<<<<< HEAD
     conjunction_us, SS.close_univ_vars conjunction_us (k |> N.remove_uvar_solutions env), conjunction_ty in
 
   log_combinator "conjunction" conjunction;
 
   //AR: TODO: FIXME: rest of the combinators
+=======
+    if_then_else_us, SS.close_univ_vars if_then_else_us (k |> N.remove_uvar_solutions env), if_then_else_ty in
+
+  log_combinator "if_then_else" if_then_else;
+
+
+  (*
+   * Checking the soundness of the if_then_else combinator
+   *
+   * In all combinators, other than if_then_else, the soundess is ensured
+   *   by extracting the application of those combinators to their definitions
+   * For if_then_else, the combinator does not have an extraction equivalent
+   *   It is only used in VC generation
+   *
+   * So we need to make sure that the combinator is sound
+   *
+   * Informally, we want to check that:
+   *
+   *     p ==> (subcomp f <: if_then_else f g)  and
+   * not p ==> (subcomp g <: if_then_else f g)
+   *
+   * Basically when p holds, the computation type of f should be coercible to if_then_else f g
+   *   and similarly for the (not p) case
+   *
+   * The way we program it, we first build the term:
+   *   subcomp <some number of _> f <: if_then_else bs f g
+   *   where bs are some variables for the extra binders of if_then_else, and f and g are also variables
+   *
+   * Then, we typecheck this term which fills in the _ in subcomp application and returns a guard
+   * We refine the guard to add an implication p ==> guard,
+   *   and then discharge it
+   * 
+   * Similarly for the g case
+   *)
+  let _if_then_else_is_sound =
+    let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
+
+    let ite_us, ite_t, _ = if_then_else in
+
+    let us, ite_t = SS.open_univ_vars ite_us ite_t in
+    let env, ite_t_applied, f_t, g_t, p_t =
+      match (SS.compress ite_t).n with
+      | Tm_abs (bs, _, _) ->
+        let bs = SS.open_binders bs in
+        let f, g, p =
+          bs
+          |> List.splitAt (List.length bs - 3)
+          |> snd
+          |> List.map fst
+          |> List.map S.bv_to_name
+          |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
+        Env.push_binders (Env.push_univ_vars env0 us) bs,
+        S.mk_Tm_app ite_t
+          (bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+          None r,
+        f, g, p
+      | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
+
+    let subcomp_f, subcomp_g =
+      let _, subcomp_t, subcomp_ty = stronger_repr in
+      let _, subcomp_t = SS.open_univ_vars us subcomp_t in
+
+      let bs_except_last =
+        let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
+        match (SS.compress subcomp_ty).n with
+        | Tm_arrow (bs, _) -> bs |> List.splitAt (List.length bs - 1) |> fst
+        | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
+
+     let aux t = 
+      S.mk_Tm_app
+        subcomp_t
+        (((bs_except_last |> List.map (fun _ -> S.tun))@[t]) |> List.map S.as_arg)
+        None r in
+
+     aux f_t, aux g_t in
+
+    let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
+      let aux t =
+        S.mk
+          (Tm_ascribed (t, (Inr (S.mk_Total ite_t_applied), None), None))
+          None r in
+
+      aux subcomp_f, aux subcomp_g in
+
+    if Env.debug env <| Options.Other "LayeredEffects"
+    then BU.print2 "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
+           (Print.term_to_string tm_subcomp_ascribed_f)
+           (Print.term_to_string tm_subcomp_ascribed_g);
+
+
+    let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
+    let g_f = Env.imp_guard (Env.guard_of_guard_formula (NonTrivial p_t)) g_f in
+    Rel.force_trivial_guard env g_f;
+
+
+    let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
+    let g_g =
+      let not_p = S.mk_Tm_app
+        (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
+        [p_t |> S.as_arg]
+        None r in
+      Env.imp_guard (Env.guard_of_guard_formula (NonTrivial not_p)) g_g in
+    Rel.force_trivial_guard env g_g in
+>>>>>>> master
 
 
   (*
@@ -517,6 +694,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     act in
 
+<<<<<<< HEAD
   let fst (a, _, _) = a in
   let snd (_, b, _) = b in
   let thd (_, _, c) = c in
@@ -538,6 +716,24 @@ let tc_check_trivial_guard env t k =
   Rel.force_trivial_guard env g;
   t
 
+=======
+  let tschemes_of (us, t, ty) : tscheme * tscheme = (us, t), (us, ty) in
+
+  let combinators = Layered_eff ({
+    l_base_effect = underlying_effect_lid;
+    l_repr = tschemes_of repr;
+    l_return = tschemes_of return_repr;
+    l_bind = tschemes_of bind_repr;
+    l_subcomp = tschemes_of stronger_repr;
+    l_if_then_else = tschemes_of if_then_else
+  }) in
+
+  { ed with
+    signature     = (let us, t, _ = signature in (us, t));
+    combinators   = combinators;
+    actions       = List.map (tc_action env0) ed.actions }
+
+>>>>>>> master
 let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
@@ -592,6 +788,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
 
     { ed with
       signature     =op ed.signature;
+<<<<<<< HEAD
       ret_wp        =op ed.ret_wp;
       bind_wp       =op ed.bind_wp;
       stronger      =op ed.stronger;
@@ -601,6 +798,9 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       return_repr   =op ed.return_repr;
       bind_repr     =op ed.bind_repr;
       stronger_repr = None;
+=======
+      combinators   = U.apply_eff_combinators op ed.combinators;
+>>>>>>> master
       actions       = List.map (fun a ->
         { a with action_defn = snd (op (a.action_univs, a.action_defn));
                  action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions;
@@ -676,7 +876,11 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
   let ret_wp =
     let a, wp_sort = fresh_a_and_wp () in
     let k = U.arrow [ S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_sort) in
+<<<<<<< HEAD
     check_and_gen' "ret_wp" 1 None ed.ret_wp (Some k) in
+=======
+    check_and_gen' "ret_wp" 1 None (ed |> U.get_return_vc_combinator) (Some k) in
+>>>>>>> master
 
   log_combinator "ret_wp" ret_wp;
 
@@ -692,7 +896,11 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a_b ] (S.mk_Total wp_sort_b) in
 
+<<<<<<< HEAD
     check_and_gen' "bind_wp" 2 None ed.bind_wp (Some k) in
+=======
+    check_and_gen' "bind_wp" 2 None (ed |> U.get_bind_vc_combinator) (Some k) in
+>>>>>>> master
 
   log_combinator "bind_wp" bind_wp;
 
@@ -703,6 +911,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       S.mk_binder a;
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a ] (S.mk_Total t) in
+<<<<<<< HEAD
     check_and_gen' "stronger" 1 None ed.stronger (Some k) in
 
   log_combinator "stronger" stronger;
@@ -741,11 +950,47 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
     log_combinator "close_wp" close_wp;
 
     Inl ({ if_then_else = if_then_else; ite_wp = ite_wp; close_wp = close_wp }) in
+=======
+    check_and_gen' "stronger" 1 None (ed |> U.get_stronger_vc_combinator) (Some k) in
+
+  log_combinator "stronger" stronger;
+
+  let if_then_else =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let k = U.arrow [
+      S.mk_binder a;
+      S.mk_binder p;
+      S.null_binder wp_sort_a;
+      S.null_binder wp_sort_a ] (S.mk_Total wp_sort_a) in
+
+    check_and_gen' "if_then_else" 1 None (ed |> U.get_wp_if_then_else_combinator |> must) (Some k) in
+
+  log_combinator "if_then_else" if_then_else;
+
+  let ite_wp =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_Total wp_sort_a) in
+    check_and_gen' "ite_wp" 1 None (ed |> U.get_wp_ite_combinator |> must) (Some k) in
+
+  log_combinator "ite_wp" ite_wp;
+
+  let close_wp =
+    let a, wp_sort_a = fresh_a_and_wp () in
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let wp_sort_b_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_sort_a) in
+
+    let k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder wp_sort_b_a] (S.mk_Total wp_sort_a) in
+    check_and_gen' "close_wp" 2 None (ed |> U.get_wp_close_combinator |> must) (Some k) in
+
+  log_combinator "close_wp" close_wp;
+>>>>>>> master
 
   let trivial =
     let a, wp_sort_a = fresh_a_and_wp () in
     let t, _ = U.type_u () in
     let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
+<<<<<<< HEAD
     let trivial = check_and_gen' "trivial" 1 None (ed.trivial |> must) (Some k) in
 
     log_combinator "trivial" trivial;
@@ -755,12 +1000,27 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
   let repr, return_repr, bind_repr, actions =
     match (SS.compress (snd ed.repr)).n with
     | Tm_unknown -> ed.repr, ed.return_repr, ed.bind_repr, ed.actions
+=======
+    let trivial = check_and_gen' "trivial" 1 None (ed |> U.get_wp_trivial_combinator |> must) (Some k) in
+
+    log_combinator "trivial" trivial;
+
+    trivial in
+
+  let repr, return_repr, bind_repr, actions =
+    match ed |> U.get_eff_repr with
+    | None -> None, None, None, ed.actions
+>>>>>>> master
     | _ ->
       let repr =
         let a, wp_sort_a = fresh_a_and_wp () in
         let t, _ = U.type_u () in
         let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
+<<<<<<< HEAD
         check_and_gen' "repr" 1 None ed.repr (Some k) in
+=======
+        check_and_gen' "repr" 1 None (ed |> U.get_eff_repr |> must) (Some k) in
+>>>>>>> master
 
       log_combinator "repr" repr;
 
@@ -775,6 +1035,10 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
         | _ -> failwith "Unexpected repr type" in
 
       let return_repr =
+<<<<<<< HEAD
+=======
+        let return_repr_ts = ed |> U.get_return_repr |> must in
+>>>>>>> master
         let a, _ = fresh_a_and_wp () in
         let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
         let res =
@@ -784,12 +1048,21 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
           mk_repr a wp in
         let k = U.arrow [S.mk_binder a; S.mk_binder x_a] (S.mk_Total res) in
         let k, _, _ = tc_tot_or_gtot_term env k in
+<<<<<<< HEAD
         let env = Some (Env.set_range env (snd (ed.return_repr)).pos) in
         check_and_gen' "return_repr" 1 env ed.return_repr (Some k) in
+=======
+        let env = Some (Env.set_range env (snd return_repr_ts).pos) in
+        check_and_gen' "return_repr" 1 env return_repr_ts (Some k) in
+>>>>>>> master
     
       log_combinator "return_repr" return_repr;
 
       let bind_repr =
+<<<<<<< HEAD
+=======
+        let bind_repr_ts = ed |> U.get_bind_repr |> must in
+>>>>>>> master
         let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
         let a, wp_sort_a = fresh_a_and_wp () in
         let b, wp_sort_b = fresh_a_and_wp () in
@@ -818,9 +1091,15 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
                           S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
                         (S.mk_Total res) in
         let k, _, _ = tc_tot_or_gtot_term env k in
+<<<<<<< HEAD
         let env = Env.set_range env (snd (ed.bind_repr)).pos in
         let env = {env with lax=true} |> Some in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
         check_and_gen' "bind_repr" 2 env ed.bind_repr (Some k) in
+=======
+        let env = Env.set_range env (snd bind_repr_ts).pos in
+        let env = {env with lax=true} |> Some in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
+        check_and_gen' "bind_repr" 2 env bind_repr_ts (Some k) in
+>>>>>>> master
 
       log_combinator "bind_repr" bind_repr;
 
@@ -926,7 +1205,11 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
         in
         ed.actions |> List.map check_action in
 
+<<<<<<< HEAD
       repr, return_repr, bind_repr, actions
+=======
+      Some repr, Some return_repr, Some bind_repr, actions
+>>>>>>> master
   in
 
   //close the ed_univs and ed_bs
@@ -934,6 +1217,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
     let ts = SS.close_tscheme ed_bs ts in
     let ed_univs_closing = SS.univ_var_closing ed_univs in
     SS.subst_tscheme (SS.shift_subst (List.length ed_bs) ed_univs_closing) ts in
+<<<<<<< HEAD
   
   //univs and binders have already been set
   let ed = { ed with
@@ -947,6 +1231,34 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
     return_repr   =cl return_repr;
     bind_repr     =cl bind_repr;
     stronger_repr = None;
+=======
+
+  let combinators = {
+    ret_wp = ret_wp;
+    bind_wp = bind_wp;
+    stronger = stronger;
+    if_then_else = if_then_else;
+    ite_wp = ite_wp;
+    close_wp = close_wp;
+    trivial = trivial;
+
+    repr = repr;
+    return_repr = return_repr;
+    bind_repr = bind_repr;
+  } in
+
+  let combinators = U.apply_wp_eff_combinators cl combinators in
+  let combinators =
+    match ed.combinators with
+    | Primitive_eff _ -> Primitive_eff combinators
+    | DM4F_eff _ -> DM4F_eff combinators
+    | _ -> failwith "Impossible! tc_eff_decl on a layered effect is not expected" in
+
+  //univs and binders have already been set
+  let ed = { ed with
+    signature     =cl signature;
+    combinators   = combinators;
+>>>>>>> master
     actions       =
       List.map (fun a ->
         { a with
@@ -959,7 +1271,11 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
   ed
 
 let tc_eff_decl env ed quals =
+<<<<<<< HEAD
   (if ed.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals
+=======
+  (if ed |> U.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals
+>>>>>>> master
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
@@ -984,6 +1300,25 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   let us, lift = sub.lift |> must in
   let r = lift.pos in
 
+<<<<<<< HEAD
+=======
+  begin
+    let src_ed = Env.get_effect_decl env0 sub.source in
+    let tgt_ed = Env.get_effect_decl env0 sub.target in
+    if (src_ed |> U.is_layered &&  //source is a layered effect
+        lid_equals (src_ed |> U.get_layered_effect_base |> must) tgt_ed.mname) ||  //and target is its underlying effect, or
+       (tgt_ed |> U.is_layered &&  // target is a layered effect
+        lid_equals (tgt_ed |> U.get_layered_effect_base |> must) src_ed.mname &&  //and source is its underlying effect 
+        not (lid_equals src_ed.mname PC.effect_PURE_lid))  //and source is not PURE
+    then
+      raise_error (Errors.Fatal_EffectsCannotBeComposed,
+                   BU.format2 "Lifts cannot be defined from a layered effect to its repr or vice versa (%s and %s here)"
+                     (src_ed.mname |> Ident.string_of_lid) (tgt_ed.mname |> Ident.string_of_lid)) r
+  end;
+
+
+
+>>>>>>> master
   let env, us, lift =
     if List.length us = 0 then env0, us, lift
     else
@@ -1086,7 +1421,11 @@ let tc_lift env sub r =
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
+<<<<<<< HEAD
   if ed_src.is_layered || ed_tgt.is_layered
+=======
+  if ed_src |> U.is_layered || ed_tgt |> U.is_layered
+>>>>>>> master
   then tc_layered_lift env sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -1099,7 +1438,11 @@ let tc_lift env sub r =
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
+<<<<<<< HEAD
         let repr = Env.inst_effect_fun_with [U_unknown] env ed ed.repr in
+=======
+        let repr = Env.inst_effect_fun_with [U_unknown] env ed (ed |> U.get_eff_repr |> must) in
+>>>>>>> master
         mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =
@@ -1197,6 +1540,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   let env = Env.set_range env r in
   let tps, c = SS.open_comp tps c in
   let tps, env, us = tc_tparams env tps in
+<<<<<<< HEAD
 
   let c =
     if Options.use_two_phase_tc () && Env.should_verify env then
@@ -1204,6 +1548,8 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
       c
     else c in
 
+=======
+>>>>>>> master
   let c, u, g = tc_comp env c in
   Rel.force_trivial_guard env g;
   let _ =

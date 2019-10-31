@@ -1,5 +1,5 @@
 [
-  "`b\u0012\u000e“¹\u001aln\u001fÊ†’\u000b\u0011n",
+  "\u0018F¤y\u0006ÑÞª;CÌ·&Ó3ç",
   [
     [
       "Buffers.repr",
@@ -15,7 +15,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "ff19331fa832ea1d790502e6e01aed44"
+      "a547591bfc3e3239a61f8371c67ff3b1"
     ],
     [
       "Buffers.return",
@@ -44,7 +44,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "200bc283f040bd61572ec7cbb11ec42d"
+      "4d756a7f247c11a14266ad22c972a68e"
     ],
     [
       "Buffers.bind",
@@ -92,7 +92,7 @@
         "typing_Tm_abs_c5a9203ed3e49b8572beeb285f415bd1"
       ],
       0,
-      "93a087f3a5d87dbfe3ad0c931d45e81c"
+      "d5ccd3dbf583caf0b348d46d9a099f00"
     ],
     [
       "Buffers.subcomp",
@@ -119,7 +119,7 @@
         "typing_Tm_abs_85a649d7b75dc4204d06c6bbcaab9765"
       ],
       0,
-      "b143cbd9763e220ea4c60d7653624830"
+      "d77065f21a27246e09efd91d04238b73"
     ],
     [
       "Buffers.if_then_else",
@@ -137,7 +137,7 @@
         "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
       ],
       0,
-      "9e7d427a969ff8410ce6f93883c63228"
+      "e756211edb0b6f347ae2a309817c6b85"
     ],
     [
       "Buffers.CHACHA",
@@ -155,7 +155,79 @@
         "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
       ],
       0,
-      "b3c5be89d3c5d4321783c84208cac108"
+      "b7901620a4cf9a313cb8cbf9c8defae3"
+    ],
+    [
+      "Buffers.CHACHA",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Buffers_interpretation_Tm_arrow_1a4528d85a2f269c886ae43010229cbf",
+        "Buffers_interpretation_Tm_arrow_adcee7a53d2eef7f2696d8cacd26c100",
+        "Buffers_interpretation_Tm_arrow_bf5f2da5f7b205c3924907267edb249c",
+        "equation_Buffers.len", "equation_Buffers.wp_t",
+        "equation_Prims.logical",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
+      ],
+      0,
+      "28bb4989b7685c90a459e8a35e82c683"
+    ],
+    [
+      "Buffers.CHACHA",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Buffers_interpretation_Tm_arrow_1a4528d85a2f269c886ae43010229cbf",
+        "Buffers_interpretation_Tm_arrow_adcee7a53d2eef7f2696d8cacd26c100",
+        "Buffers_interpretation_Tm_arrow_bf5f2da5f7b205c3924907267edb249c",
+        "equation_Buffers.len", "equation_Buffers.wp_t",
+        "equation_Prims.logical",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
+      ],
+      0,
+      "bccff0668f1206213275bfb7395accb6"
+    ],
+    [
+      "Buffers.CHACHA",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Buffers_interpretation_Tm_arrow_1a4528d85a2f269c886ae43010229cbf",
+        "Buffers_interpretation_Tm_arrow_adcee7a53d2eef7f2696d8cacd26c100",
+        "Buffers_interpretation_Tm_arrow_bf5f2da5f7b205c3924907267edb249c",
+        "equation_Buffers.len", "equation_Buffers.wp_t",
+        "equation_Prims.logical",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
+      ],
+      0,
+      "1cfd6ff4a7d76f86b9f41fe2a459ba92"
+    ],
+    [
+      "Buffers.CHACHA",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Buffers_interpretation_Tm_arrow_1a4528d85a2f269c886ae43010229cbf",
+        "Buffers_interpretation_Tm_arrow_adcee7a53d2eef7f2696d8cacd26c100",
+        "Buffers_interpretation_Tm_arrow_bf5f2da5f7b205c3924907267edb249c",
+        "equation_Buffers.len", "equation_Buffers.wp_t",
+        "equation_Prims.logical",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "refinement_interpretation_Tm_refine_0ac45d6b587961db7f6049838d8b32b8"
+      ],
+      0,
+      "87c2b379a7f7e056a87f654036baca09"
     ],
     [
       "Buffers.lift_div_chacha",
@@ -193,7 +265,7 @@
         "typing_Tm_abs_f1c53632b1501ff4efcb5d692ee522fb"
       ],
       0,
-      "e8b2b606dd83895c17a7a95995529a1b"
+      "061c11038fb524a5f7468b42df23ef42"
     ],
     [
       "Buffers.Chacha",
@@ -202,7 +274,7 @@
       1,
       [ "@query" ],
       0,
-      "2868fac51e63ca60f2401b35c74e7500"
+      "7b9c02bf642815371666bf4bc1b72108"
     ],
     [
       "Buffers.read1_",
@@ -244,7 +316,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "eea14ab32ceab788fe7e752166bfa375"
+      "fd69fd45a5c5adeb0ae5a7f75b1902e3"
     ],
     [
       "Buffers.read2_",
@@ -286,7 +358,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "52852c72abd190df2eed2b099c47628e"
+      "0fbd4ceb41f91104f916b40ec51ae3dc"
     ],
     [
       "Buffers.write1_",
@@ -348,7 +420,7 @@
         "unit_typing"
       ],
       0,
-      "588ecdf0516816fb1161280060612e35"
+      "aa70ff5324d9a82e9baa7e02481732be"
     ],
     [
       "Buffers.write2_",
@@ -409,7 +481,7 @@
         "unit_typing"
       ],
       0,
-      "a545178b6ed26596013715b78a10f316"
+      "07716344839611e7deaa211944628b09"
     ],
     [
       "Buffers.read1",
@@ -447,7 +519,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "e035ecf48b1a5cfd02161075b8b56c19"
+      "63736c22b44c3febf1f2fd529f431064"
     ],
     [
       "Buffers.read2",
@@ -485,7 +557,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "f20f41d6598a1a4b6c20f898f0734974"
+      "88ed160ec9aac17cc5fa2822ae1226cb"
     ],
     [
       "Buffers.write1",
@@ -529,7 +601,7 @@
         "typing_LowStar.Monotonic.Buffer.length", "unit_typing"
       ],
       0,
-      "318968625b79ebfbfce4f121a31fadd4"
+      "686edaf7c7a5007723895a9f7ed724a7"
     ],
     [
       "Buffers.write2",
@@ -573,7 +645,7 @@
         "typing_LowStar.Monotonic.Buffer.length", "unit_typing"
       ],
       0,
-      "bd48d7907aac3ad83723365fa847e4f7"
+      "f17b2005a0f9795a085efa5446cf606a"
     ],
     [
       "Buffers.copy",
@@ -633,7 +705,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "c3d9884a865785ad7851bf1874be26e3"
+      "f548ff82e1399179776b22c6f663bb05"
     ],
     [
       "Buffers.copy_st",
@@ -655,7 +727,7 @@
         "refinement_interpretation_Tm_refine_adefeb49c03d29ad5b6534d2a555cec2"
       ],
       0,
-      "122f013f2ff7525507719eb32ee6cffd"
+      "b6ea8b9ebffe57985ceccf1eacb93c9e"
     ]
   ]
 ]

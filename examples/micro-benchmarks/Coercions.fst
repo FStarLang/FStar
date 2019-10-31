@@ -1,5 +1,7 @@
 module Coercions
 
+(* This file should be in sync with Coercions1Phase.fst *)
+
 open FStar.Ghost
 
 [@(expect_failure [34])]

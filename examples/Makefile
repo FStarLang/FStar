@@ -40,7 +40,10 @@ doublylinkedlist \
 regional \
 generic \
 calc \
+<<<<<<< HEAD
 steel \
+=======
+>>>>>>> master
 layeredeffects
 
 # low-level \  ... NS: removing from CI for this branch

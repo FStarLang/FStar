@@ -30,19 +30,25 @@ include gmake/Makefile.tmpl
 	@echo --use_hints --hint_info
 
 # bumping the rlimit for these files
+# JP: this is ineffective since the entries in .depend are of the form
+# $(FSTAR_HOME)/ulib/.cache/Foo.fst.checked
 .cache/FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
 .cache/LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 
 # disabling USE_EXTRACTED_INTERFACES for these files
 # Something's wrong with how the normalization attributes are propagated when this
 # this option is turned on
+# JP: same here
 .cache/LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 
+<<<<<<< HEAD
 verify-core: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(filter-out $(EXTRA) ,$(FSTAR_FILES)))))
+=======
+verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
+verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
+>>>>>>> master
 
-verify-extra: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(EXTRA))))
-
-.cache/%.checked:
+%.checked:
 	$(MY_FSTAR) $<
 
 # Benchmarking rules

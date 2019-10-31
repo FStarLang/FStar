@@ -727,7 +727,6 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)
   | Sig_assume (lid, _, _) -> [lid]
-  | Sig_new_effect_for_free(n)
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
@@ -825,25 +824,6 @@ let ses_of_sigbundle (se:sigelt) :list<sigelt> =
   match se.sigel with
   | Sig_bundle (ses, _) -> ses
   | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
-
-let eff_decl_of_new_effect (se:sigelt) :eff_decl =
-  match se.sigel with
-  | Sig_new_effect ne -> ne
-  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
-
-let map_match_wps (f:tscheme -> tscheme) (match_wp:either<match_with_close, match_with_subst>)
-  : either<match_with_close, match_with_subst>
-  = match match_wp with
-    | Inl r ->
-      Inl ({ r with if_then_else = f r.if_then_else; ite_wp = f r.ite_wp; close_wp = f r.close_wp })
-    | Inr r ->
-      Inr ({ r with conjunction = f r.conjunction })
-
-let get_match_with_close_wps (match_wp:either<match_with_close, match_with_subst>)
-  : tscheme * tscheme * tscheme
-  = match match_wp with
-    | Inl r -> r.if_then_else, r.ite_wp, r.close_wp
-    | _ -> failwith "Impossible! get_match_with_close_wps called with a match_with_subst wp"
 
 let set_uvar uv t =
   match Unionfind.find uv with
@@ -2070,3 +2050,135 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     quant
 
 (* End SMT Lemma utilities *)
+
+
+(* Effect utilities *)
+
+(*
+ * Mainly reading the combinators out of the eff_decl record
+ *
+ * For combinators that are present only in either wp or layered effects,
+ *   their getters return option<tscheme>
+ * Leaving it to the callers to deal with it
+ *)
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _ -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+
+let is_layered (ed:eff_decl) : bool =
+  match ed.combinators with
+  | Layered_eff _ -> true
+  | _ -> false
+
+let is_dm4f (ed:eff_decl) : bool =
+  match ed.combinators with
+  | DM4F_eff _ -> true
+  | _ -> false
+
+let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
+: wp_eff_combinators
+= { ret_wp = f combs.ret_wp;
+    bind_wp = f combs.bind_wp;
+    stronger = f combs.stronger;
+    if_then_else = f combs.if_then_else;
+    ite_wp = f combs.ite_wp;
+    close_wp = f combs.close_wp;
+    trivial = f combs.trivial;
+    
+    repr = map_option f combs.repr;
+    return_repr = map_option f combs.return_repr;
+    bind_repr = map_option f combs.bind_repr }
+
+let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
+: layered_eff_combinators
+= let map_tuple (ts1, ts2) = (f ts1, f ts2) in
+  { l_base_effect = combs.l_base_effect;
+    l_repr = map_tuple combs.l_repr;
+    l_return = map_tuple combs.l_return;
+    l_bind = map_tuple combs.l_bind;
+    l_subcomp = map_tuple combs.l_subcomp;
+    l_if_then_else = map_tuple combs.l_if_then_else }
+
+let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
+  match combs with
+  | Primitive_eff combs -> Primitive_eff (apply_wp_eff_combinators f combs)
+  | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)
+  | Layered_eff combs -> Layered_eff (apply_layered_eff_combinators f combs)
+
+let get_wp_close_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> Some combs.close_wp
+  | _ -> None
+
+let get_eff_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.repr
+  | Layered_eff combs -> combs.l_repr |> fst |> Some
+  
+let get_bind_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.bind_wp
+  | Layered_eff combs -> combs.l_bind |> snd
+
+let get_return_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.ret_wp
+  | Layered_eff combs -> combs.l_return |> snd
+  
+let get_bind_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.bind_repr
+  | Layered_eff combs -> combs.l_bind |> fst |> Some
+
+let get_return_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.return_repr  
+  | Layered_eff combs -> combs.l_return |> fst |> Some
+
+let get_wp_trivial_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.trivial |> Some
+  | _ -> None
+
+let get_layered_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Layered_eff combs -> combs.l_if_then_else |> fst |> Some
+  | _ -> None
+
+let get_wp_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.if_then_else |> Some
+  | _ -> None
+
+let get_wp_ite_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.ite_wp |> Some
+  | _ -> None
+
+let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.stronger
+  | Layered_eff combs -> combs.l_subcomp |> snd
+
+let get_stronger_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff _
+  | DM4F_eff _ -> None
+  | Layered_eff combs -> combs.l_subcomp |> fst |> Some
+
+let get_layered_effect_base (ed:eff_decl) : option<lident> =
+  match ed.combinators with
+  | Layered_eff combs -> combs.l_base_effect |> Some
+  | _ -> None

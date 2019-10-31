@@ -118,24 +118,25 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc = TcUtil.maybe_coerce_lc env e lc t' in //add a b2t coercion if, e.g., e:bool and t'=Type
-     let t = lc.res_typ in
-     let e, g = TcUtil.check_and_ascribe env e t t' in
-     if debug env Options.High
+     let e, lc, g = TcUtil.check_and_ascribe env e lc t' in
+     if debug env Options.Low
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
-                (Print.term_to_string t) (Print.term_to_string t')
+                (TcComm.lcomp_to_string lc) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
-     let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
+     let t = lc.res_typ in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let lc, g =
        if tlc |> is_left && TcUtil.should_return env (Some e) lc
+            && TcComm.is_pure_lcomp lc // this last conjunct is crucial, otherwise
+                                  // we could drop the effects of `e` here
        then
          let u_opt, g_lc = TcUtil.lcomp_univ_opt lc in
          TcUtil.return_value env u_opt t e |> TcComm.lcomp_of_comp,
          Env.conj_guard g g_lc
        else lc, g
      in
+     let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
   in
@@ -401,6 +402,27 @@ let wrap_guard_with_tactic_opt topt g =
      Env.always_map_guard g (fun g ->
      Common.mk_by_tactic tactic (U.mk_squash U_zero g)) //guards are in U_zero
 
+
+(*
+ * This is pattern matching an `(M.reflect e) <: C`
+ * 
+ * As we special case typechecking of such terms (as a subcase of `Tm_ascribed` in the main `tc_term` loop
+ *
+ * Returns the (e, arg_qualifier) and the lident of M
+ *)
+let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
+  match (SS.compress e).n with
+  | Tm_ascribed (e, (Inr _, _), _) ->
+    (match (SS.compress e).n with
+     | Tm_app (head, args) when List.length args = 1 ->
+       (match (SS.compress head).n with
+        | Tm_constant (Const_reflect l) -> args |> List.hd |> (fun (e, aqual) -> (l, e, aqual)) |> Some
+        | _ -> None)
+     | _ -> None)
+   | _ -> None
+    
+
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -498,12 +520,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         value_check_expected_typ env tm (Inl S.t_term) guard
 
     | Quote_dynamic ->
-        let c = mk_Comp ({ comp_univs = [U_zero];
-                           effect_name = Const.effect_Tac_lid;
-                           result_typ = S.t_term;
-                           effect_args = [];
-                           flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-                        }) in
+        let c = mk_Tac S.t_term in
 
         (* Typechecked the quoted term just to elaborate it *)
         let env', _ = Env.clear_expected_typ env in
@@ -578,6 +595,65 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g = tc_term env e in
     let e = mk (Tm_meta(e, m)) None top.pos in
     e, c, g
+
+  (*
+   * AR: Special case for the typechecking of (M.reflect e) <: M a is
+   *
+   *     As part of it, we typecheck (e <: Tot (repr a is)), this keeps the bidirectional
+   *       typechecking for e, which is most cases is a lambda
+   *
+   *     Also the `Tot` annotation is important since for lambdas, we fold the guard
+   *       into the returned comp (making it something like PURE (arrow_t) wp, see the end of tc_abs)
+   *     If we did not put `Tot` we would have to separately check that the wp has
+   *       a trivial precondition
+   *)
+
+  | Tm_ascribed (_, (Inr expected_c, _tacopt), _)
+    when top |> is_comp_ascribed_reflect |> is_some ->
+    
+    let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
+
+    let env0, _ = Env.clear_expected_typ env in
+    let expected_c, _, g_c = tc_comp env0 expected_c in
+    let expected_ct = Env.unfold_effect_abbrev env0 expected_c in
+
+    if not (lid_equals effect_lid expected_ct.effect_name)
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+           BU.format2 "The effect on reflect %s does not match with the annotation %s\n"
+             (Ident.string_of_lid effect_lid) (Ident.string_of_lid expected_ct.effect_name)) top.pos;
+
+    if not (is_user_reflectable_effect env effect_lid)
+    then raise_error (Errors.Fatal_EffectCannotBeReified,
+           BU.format1 "Effect %s cannot be reflected" (Ident.string_of_lid effect_lid)) top.pos;
+
+    let u_c = expected_ct.comp_univs |> List.hd in
+    let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> must in
+
+    // e <: Tot repr
+    let e = S.mk (Tm_ascribed (e, (Inr (S.mk_Total' repr (Some u_c)), None), None)) None e.pos in
+
+    if Env.debug env0 <| Options.Extreme
+    then BU.print1 "Typechecking ascribed reflect, inner ascribed term: %s\n"
+           (Print.term_to_string e);
+
+    let e, _, g_e = tc_tot_or_gtot_term env0 e in
+    let e = U.unascribe e in
+
+    if Env.debug env0 <| Options.Extreme
+    then BU.print2 "Typechecking ascribed reflect, after typechecking inner ascribed term: %s and guard: %s\n"
+           (Print.term_to_string e) (Rel.guard_to_string env0 g_e);
+
+    //reconstruct (M.reflect e) < M a is
+    let top =
+      let r = top.pos in
+      let tm = mk (Tm_constant (Const_reflect effect_lid)) None r in
+      let tm = mk (Tm_app (tm, [e, aqual])) None r in
+      mk (Tm_ascribed (tm, (Inr expected_c, _tacopt), expected_c |> U.comp_effect_name |> Some)) None r in
+
+    //check the expected type in the env, if present
+    let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
+
+    top, c, Env.conj_guards [g_c; g_e; g_env]
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
@@ -917,7 +993,7 @@ and tc_synth head env args rng =
     Rel.force_trivial_guard env g1;
 
     // Check the tactic
-    let tau, _, g2 = tc_tactic env tau in
+    let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
     let t = env.synth_hook env typ ({ tau with pos = rng }) in
@@ -929,16 +1005,16 @@ and tc_synth head env args rng =
 
     t, TcComm.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
-and tc_tactic env tau =
+and tc_tactic a b env tau =
     let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau t_tactic_unit
+    tc_check_tot_or_gtot_term env tau (t_tac_of a b)
 
 and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
     | None ->
         None, Env.trivial_guard
     | Some tactic ->
-        let tactic, _, g = tc_tactic env tactic
+        let tactic, _, g = tc_tactic t_unit t_unit env tactic
         in Some tactic, g
 
 (************************************************************************************************************)
@@ -1482,7 +1558,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
                     e, t_annot, guard
                 | _ ->
-                    let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in  //QUESTION: t should also probably be t_annot here
+                    let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
+                    let e, _, guard' = TcUtil.check_and_ascribe env e lc t in  //QUESTION: t should also probably be t_annot here
                     e, t_annot, Env.conj_guard guard guard'
            end
 
@@ -1738,7 +1815,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              * are for concrete types.
              *)
             let tau = SS.subst subst tau in
-            let tau, _, g_tau = tc_tactic env tau in
+            let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
@@ -2299,10 +2376,17 @@ and tc_eqn scrutinee env branch
         | None -> None
         | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
+<<<<<<< HEAD
 
   (*      logically the same as step 5(a),                                                              *)
 
 
+=======
+
+  (*      logically the same as step 5(a),                                                              *)
+
+
+>>>>>>> master
   (* 5. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)
   (*                                                                                                    *)
@@ -2645,24 +2729,24 @@ and check_top_level_let env e =
                 let c1_eff_decl = Env.get_effect_decl env c1_comp_typ.effect_name in
 
                 (* wp2 = M.return_wp unit () *)
-                let wp2 = mk_Tm_app
-                  (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl c1_eff_decl.ret_wp)
-                  [S.as_arg S.t_unit; S.as_arg S.unit_const]
-                  None
-                  e2.pos
-                in
+                let wp2 =
+                  let ret = c1_eff_decl |> U.get_return_vc_combinator in
+                  mk_Tm_app
+                    (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl ret)
+                    [S.as_arg S.t_unit; S.as_arg S.unit_const]
+                    None e2.pos in
 
                 (* wp = M.bind wp_c1 (fun _ -> wp2) *)
-                let wp = mk_Tm_app
-                  (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl c1_eff_decl.bind_wp)
-                  [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
-                    S.as_arg <| c1_comp_typ.result_typ;
-                    S.as_arg S.t_unit;
-                    S.as_arg c1_wp;
-                    S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
-                  None
-                  lb.lbpos
-                in
+                let wp = 
+                  let bind = c1_eff_decl |> U.get_bind_vc_combinator in
+                  mk_Tm_app
+                    (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl bind)
+                    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) None lb.lbpos;
+                      S.as_arg <| c1_comp_typ.result_typ;
+                      S.as_arg S.t_unit;
+                      S.as_arg c1_wp;
+                      S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
+                    None lb.lbpos in
                 mk_Comp ({
                   comp_univs=[S.U_zero];
                   effect_name=c1_comp_typ.effect_name;
@@ -3071,7 +3155,7 @@ and tc_binder env (x, imp) =
     let imp, g' =
         match imp with
         | Some (Meta tau) ->
-            let tau, _, g = tc_tactic env tau in
+            let tau, _, g = tc_tactic t_unit t_unit env tau in
             Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
@@ -3134,6 +3218,12 @@ and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
   Rel.force_trivial_guard env g;
   t,c
+
+and tc_check_trivial_guard env t k =
+  let t, _, g = tc_check_tot_or_gtot_term env t k in
+  Rel.force_trivial_guard env g;
+  t
+
 
 (* type_of_tot_term env e : e', t, g
       checks that env |- e' : Tot t' <== g

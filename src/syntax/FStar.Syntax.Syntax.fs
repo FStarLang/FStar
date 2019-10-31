@@ -334,11 +334,13 @@ type qualifier =
                                            //is present only for name resolution and will be elaborated at typechecking
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
+
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
   def:typ
   }
+
 type sub_eff = {
   source:lident;
   target:lident;
@@ -354,39 +356,50 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
-type match_with_close = {
+
+type wp_eff_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
   if_then_else : tscheme;
   ite_wp       : tscheme;
   close_wp     : tscheme;
+  trivial      : tscheme;
+
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
 }
-type match_with_subst = {
-  conjunction : tscheme;
+
+type layered_eff_combinators = {
+  l_base_effect  : lident;
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
+  l_bind         : (tscheme * tscheme);
+  l_subcomp      : (tscheme * tscheme);
+  l_if_then_else : (tscheme * tscheme);
+
 }
+
+type eff_combinators =
+  | Primitive_eff: wp_eff_combinators -> eff_combinators
+  | DM4F_eff: wp_eff_combinators -> eff_combinators
+  | Layered_eff: layered_eff_combinators -> eff_combinators
+
 type eff_decl = {
-    is_layered  :bool;
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    stronger    :tscheme;
-    match_wps   :either<match_with_close, match_with_subst>;
-    trivial     :option<tscheme>;
+  mname       : lident;
 
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr        :tscheme;
-    //operations on the representation
-    return_repr   :tscheme;
-    bind_repr     :tscheme;
-    stronger_repr :option<tscheme>;
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;
+  binders     : binders;
 
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+  signature   : tscheme;
+  combinators : eff_combinators;
+
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
 }
 
 type sig_metadata = {
@@ -424,7 +437,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names
@@ -563,6 +575,14 @@ let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbpos=pos;
   }
 
+let mk_Tac t =
+    mk_Comp ({ comp_univs = [U_zero];
+               effect_name = PC.effect_Tac_lid;
+               result_typ = t;
+               effect_args = [];
+               flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+            })
+
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
@@ -698,7 +718,14 @@ let t_binders   = tconst PC.binders_lid
 let t_bv        = tconst PC.bv_lid
 let t_fv        = tconst PC.fv_lid
 let t_norm_step = tconst PC.norm_step_lid
-let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_of a b =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tac_lid) [U_zero; U_zero])
+              [as_arg a; as_arg b] None Range.dummyRange
+let t_tactic_of t =
+    mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero])
+              [as_arg t] None Range.dummyRange
+
+let t_tactic_unit = t_tactic_of t_unit
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange

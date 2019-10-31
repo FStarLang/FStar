@@ -1579,7 +1579,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*                                                                            *)
       (* ****************************************************************************)
       let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
-      let _, bind_repr = ed.bind_repr in
+      let _, bind_repr = ed |> U.get_bind_repr |> must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
         | Inl x ->
@@ -1645,6 +1645,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                  * For non-layered effects, as before
                  *)
                 let args =
+<<<<<<< HEAD
                   if ed.is_layered then
                     let rest_bs =
                       match (ed.bind_wp |> snd |> SS.compress).n with
@@ -1656,6 +1657,21 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                             (Ident.string_of_lid ed.mname) (ed.bind_wp |> snd |> Print.term_to_string)) rng in
                     (S.as_arg lb.lbtyp)::(S.as_arg t)::
                     ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg head; S.as_arg body])
+=======
+                  if U.is_layered ed then
+                    let unit_args =
+                      match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                        bs
+                        |> List.splitAt (List.length bs - 2)
+                        |> fst
+                        |> List.map (fun _ -> S.as_arg S.unit_const)
+                      | _ ->
+                        raise_error (Errors.Fatal_UnexpectedEffect,
+                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                            (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
+>>>>>>> master
                   else
                     [ (* a, b *)
                       as_arg lb.lbtyp; as_arg t] @
@@ -1768,10 +1784,18 @@ and reify_lift cfg e msrc mtgt t : term =
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
-  if U.is_pure_effect msrc || U.is_div_effect msrc
+
+  (*
+   * AR: Not sure why we should use return, if the programmer has also provided a lift
+   *     This seems like a mismatch, since to verify we use lift (else we give an error)
+   *       but to run, we are relying on return
+   *     Disabling this for layered effects, and using the lift instead
+   *)
+  if (U.is_pure_effect msrc || U.is_div_effect msrc) &&
+     not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
-    let _, return_repr = ed.return_repr in
+    let _, return_repr = ed |> U.get_return_repr |> must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
@@ -1782,6 +1806,7 @@ and reify_lift cfg e msrc mtgt t : term =
        * Arguments for layered effects are:
        *   a ..units for binders that compute indices.. x
        *)
+<<<<<<< HEAD
       if ed.is_layered then
         let rest_bs =
           match (ed.ret_wp |> snd |> SS.compress).n with
@@ -1793,6 +1818,21 @@ and reify_lift cfg e msrc mtgt t : term =
                 (Ident.string_of_lid ed.mname) (ed.ret_wp |> snd |> Print.term_to_string)) e.pos in
         (S.as_arg t)::
         ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e])
+=======
+      if U.is_layered ed then
+        let unit_args =
+          match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
+          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+            bs
+            |> List.splitAt (List.length bs - 1)
+            |> fst
+            |> List.map (fun _ -> S.as_arg S.unit_const)
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedEffect,
+              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
+                (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
+        (S.as_arg t)::(unit_args@[S.as_arg e])
+>>>>>>> master
       else [as_arg t ; as_arg e] in
     S.mk (Tm_app(return_inst, args)) None e.pos
   else
@@ -2882,8 +2922,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us, _, t = elim_uvars_aux_t env us [] t in
       {s with sigel = Sig_assume (l, us, t)}
 
-    | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
-
     | Sig_new_effect ed ->
       //AR: S.t_unit is just a dummy comp type, we only care about the binders
       let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
@@ -2949,15 +2987,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                  univs         = univs;
                  binders       = binders;
                  signature     = elim_tscheme ed.signature;
-                 ret_wp        = elim_tscheme ed.ret_wp;
-                 bind_wp       = elim_tscheme ed.bind_wp;
-                 stronger      = elim_tscheme ed.stronger;
-                 match_wps     = U.map_match_wps elim_tscheme ed.match_wps;
-                 trivial       = map_opt ed.trivial elim_tscheme;
-                 repr          = elim_tscheme ed.repr;
-                 return_repr   = elim_tscheme ed.return_repr;
-                 bind_repr     = elim_tscheme ed.bind_repr;
-                 stronger_repr = map_opt ed.stronger_repr elim_tscheme;
+                 combinators   = apply_eff_combinators elim_tscheme ed.combinators;
                  actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 

@@ -1738,10 +1738,10 @@ let run_push_without_deps :
                  (uu___573_4546.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth_hook =
                  (uu___573_4546.FStar_TypeChecker_Env.synth_hook);
-               FStar_TypeChecker_Env.try_solve_implicits_hook =
-                 (uu___573_4546.FStar_TypeChecker_Env.try_solve_implicits_hook);
                FStar_TypeChecker_Env.splice =
                  (uu___573_4546.FStar_TypeChecker_Env.splice);
+               FStar_TypeChecker_Env.mpreprocess =
+                 (uu___573_4546.FStar_TypeChecker_Env.mpreprocess);
                FStar_TypeChecker_Env.postprocess =
                  (uu___573_4546.FStar_TypeChecker_Env.postprocess);
                FStar_TypeChecker_Env.is_native_tactic =

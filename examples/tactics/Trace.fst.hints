@@ -1,5 +1,5 @@
 [
-  "Áê··F\u0007iò®%ÎÈïàç\u0000",
+  "Ï\bKÔè–&Ì“ù\u0002UŠUêÌ",
   [
     [
       "Trace.mynat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "4d6adf48470cc6f55d88113239fbf677"
+      "ac69556c1fde289ac4d03bd064952ecf"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "587e8f2eb0edc303cdf2e1551f594b9f"
+      "4d3e21630a4545c2ab054767bb5b242b"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e5a34be89f57816b68ccb829bafece3f"
+      "2717ea98a438a807000f1ec2f1b77156"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b61a53dd1bdac3301137249badf142b7"
+      "a96eed9a30a0a11bb0055be483ab9a8c"
     ],
     [
       "Trace.fall",
@@ -63,10 +63,10 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "46781e42041b27e2eaa55bbca3340621"
+      "33c4f3c8f2f1619b51a633bd546cb193"
     ],
     [
-      "Trace.uu___99",
+      "Trace.uu___100",
       1,
       4,
       2,
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "1e52d23910e43029783d48497005f219"
+      "9ec4febcdc8a794b34e4318e84c77d84"
     ],
     [
       "Trace.fact_aux",
@@ -100,10 +100,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "97c03f15c85d4905f1ce54e5073aa1b8"
+      "02300929cd3c9de26129a32cbac662a0"
     ],
     [
-      "Trace.uu___109",
+      "Trace.uu___110",
       1,
       8,
       2,
@@ -125,10 +125,10 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "d72b7dcada28752f379a90570af21ba2"
+      "fba4e63c278f43adf258c9df7fcf9ee4"
     ],
     [
-      "Trace.uu___113",
+      "Trace.uu___114",
       1,
       8,
       2,
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "bcc379f8733349bf0f4c5897c20540ef"
+      "00044ac628e883448c7f60b6414ff97a"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "4188cce285c66d46e50440ef998e85ea"
+      "10c4d18fa685b3e636502f737f4f1c0d"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "f8b0ce9ace9b6999f1c6b6738721f96a"
+      "34e5794d96283d3579b5fee2bc812ad8"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3bf0e3cd93c1027195bc241f1d7f2dd7"
+      "858f60419f37d4ae56d0ed5c5ea3bf3a"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "ca66009b7536d4685d4ff22804264575"
+      "0458d54fee9ac227f1e9d795601f77e3"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4dcde24fa7f862bedf1ebdd68b3c4bae"
+      "4223ee4d2fb9cd998314953c660e3041"
     ],
     [
       "Trace.fall",
@@ -232,10 +232,10 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "20c043dd4c64b0f4085166d408056081"
+      "2a7d7da9833635b0f3fc8370419977cf"
     ],
     [
-      "Trace.uu___99",
+      "Trace.uu___100",
       2,
       4,
       2,
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "bd219c7bbcb767579a988d7f2f841931"
+      "05a64ef568f5ab48b816e3bedbfcae1a"
     ],
     [
       "Trace.fact_aux",
@@ -269,10 +269,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "26dfbdab15c501d7cb4867d34b974e74"
+      "e1e373e4bfdae7301bad65d32110b2cd"
     ],
     [
-      "Trace.uu___109",
+      "Trace.uu___110",
       2,
       8,
       2,
@@ -294,10 +294,10 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "d5175bebb3f8283dae706c3205272b88"
+      "f60a9e132380bb16c5257faef88cde0e"
     ],
     [
-      "Trace.uu___113",
+      "Trace.uu___114",
       2,
       8,
       2,
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "162acaa4bf79095b4c7a353b98559255"
+      "94d8698734ed8c57f32cebc1ba35bf41"
     ]
   ]
 ]

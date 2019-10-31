@@ -77,10 +77,10 @@ val universe_of_comp: env -> universe -> comp -> universe
 val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
-val check_and_ascribe : env -> term -> typ -> typ -> term * guard_t
+val check_and_ascribe : env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
+
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp
-val maybe_coerce    : env -> term -> typ   -> typ -> term * typ
 val coerce_views    : env -> term -> lcomp -> option<(term * lcomp)>
 
 //misc.
@@ -112,10 +112,19 @@ val must_erase_for_extraction: env -> term -> bool
  *
  * The unification variables are resolved in the input env
  *)
+<<<<<<< HEAD
 val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:tscheme -> u:universe -> a:term -> term * guard_t
 
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
+=======
+val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:option<tscheme> -> u:universe -> a:term -> term * guard_t
+
+(*
+ * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
+ *
+ * If the effect does not have a repr (e.g. primitive effects), then we return a `unit -> M a ?u` term
+>>>>>>> master
  *)
 val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
 

@@ -20,6 +20,9 @@ open Prims
 include FStar.Pervasives.Native
 
 unfold
+let id (#a:Type) (x:a) : a = x
+
+unfold
 let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
 
 (* Sometimes it is convenient to explicit introduce nullary symbols

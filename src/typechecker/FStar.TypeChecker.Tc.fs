@@ -445,6 +445,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     U.process_pragma p r;
     [se], [], env0
 
+<<<<<<< HEAD
   | Sig_new_effect_for_free ne ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
     let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
     let effect_and_lift_ses = match lift_from_pure_opt with
@@ -471,6 +472,41 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let ne = TcEff.tc_eff_decl env ne se.sigquals in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], [], env0
+=======
+  | Sig_new_effect ne ->
+    let is_unelaborated_dm4f =
+      match ne.combinators with
+      | DM4F_eff combs ->
+        (match combs.ret_wp |> snd |> SS.compress with
+         | { n = Tm_unknown } -> true
+         | _ -> false)
+       | _ -> false in
+
+    if is_unelaborated_dm4f then
+      let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
+      let effect_and_lift_ses = match lift_from_pure_opt with
+        | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
+        | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
+
+      //only elaborate, the loop in tc_decls would send these back to us for typechecking
+      [], ses @ effect_and_lift_ses, env0
+    else       
+      let ne =
+        if Options.use_two_phase_tc () && Env.should_verify env then begin
+          let ne =
+            TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals
+            |> (fun ne -> { se with sigel = Sig_new_effect ne })
+            |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+          if Env.debug env <| Options.Other "TwoPhases"
+          then BU.print1 "Effect decl after phase 1: %s\n"
+                 (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
+          ne
+        end
+        else ne in
+      let ne = TcEff.tc_eff_decl env ne se.sigquals in
+      let se = { se with sigel = Sig_new_effect(ne) } in
+      [se], [], env0
+>>>>>>> master
 
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let sub = TcEff.tc_lift env sub r in
@@ -478,7 +514,22 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
+<<<<<<< HEAD
     let (lid, uvs, tps, c) = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
+=======
+    let lid, uvs, tps, c =
+      if Options.use_two_phase_tc () && Env.should_verify env
+      then
+        TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
+	|> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
+	|> N.elim_uvars env |>
+	(fun se -> match se.sigel with
+	        | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
+		| _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
+      else lid, uvs, tps, c in
+
+    let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
+>>>>>>> master
     let se = { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) } in
     [se], [], env0
 
@@ -540,7 +591,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
 
     // Check the tactic
-    let t, _, g = tc_tactic env t in
+    let t, _, g = tc_tactic t_unit t_unit env t in
     Rel.force_trivial_guard env g;
 
     let ses = env.splice env t in
@@ -643,6 +694,29 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let lbs' = List.rev lbs' in
 
+    (* preprocess_with *)
+    let attrs, pre_tau =
+        match U.extract_attr' PC.preprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `preprocess_with`"));
+            se.sigattrs, None
+    in
+    let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
+
+    let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = Env.preprocess env tau lb.lbdef in
+        { lb with lbdef = lbdef }
+    in
+    // Preprocess the letbindings with the tactic, if any
+    let lbs' = match pre_tau with
+               | Some tau -> List.map (preprocess_lb tau) lbs'
+               | None -> lbs'
+    in
+    (* / preprocess_with *)
+
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
@@ -691,7 +765,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     in
     let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
+        let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
         { lb with lbdef = lbdef }
     in
     let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
@@ -747,7 +821,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) ->
+  | Some (_, false) when not (Env.should_verify env) || Options.admit_smt_queries () ->
     (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
     [], [], env
 
@@ -870,7 +944,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
   | Sig_main  _ -> [], hidden
 
   | Sig_new_effect     _
-  | Sig_new_effect_for_free _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _ -> [se], hidden
 
@@ -927,7 +1000,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         ({ env with proof_ns = Options.using_facts_from () })
 
     | Sig_pragma RestartSolver ->
-      if from_cache then env
+      (* `nosynth` actually marks when fstar-mode is peeking via flycheck,
+       * we shouldn't reset the solver at that point, only when the user
+       * advances over the pragma. *)
+      if from_cache || env.nosynth then env
       else begin
         env.solver.refresh ();
         env
@@ -1074,7 +1150,6 @@ let check_exports env (modul:modul) exports =
         | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
-        | Sig_new_effect_for_free _
         | Sig_sub_effect _
         | Sig_splice _
         | Sig_pragma _ -> ()
@@ -1213,7 +1288,6 @@ let extract_interface (en:env) (m:modul) :modul =
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
-    | Sig_new_effect_for_free _
     | Sig_sub_effect _
     | Sig_effect_abbrev _ -> [s]
     | Sig_pragma _ -> [s]

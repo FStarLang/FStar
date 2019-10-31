@@ -70,7 +70,7 @@ type term_view =
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
-  | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
@@ -169,8 +169,8 @@ let smaller tv t =
     | Tv_Refine b t' ->
         bv << t /\ t' << t
 
-    | Tv_Let r bv t1 t2 ->
-        bv << t /\ t1 << t /\ t2 << t
+    | Tv_Let r attrs bv t1 t2 ->
+        (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
 
     | Tv_Match t1 brs ->
         t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
