@@ -202,10 +202,13 @@ assume val fn (_:unit) : STATE unit (fun p h -> p () h)
 
 [@expect_failure]
 let chacha_fn ()
-// : CHACHA unit (fun p s -> p () s)  //this verifies
 : Chacha unit
   (requires fun _ -> True)
   (ensures fun s0 _ s1 -> s0 == s1)
+= CHACHA?.reflect fn
+
+let chacha_fn_ok ()
+: CHACHA unit (fun p s -> p () s)
 = CHACHA?.reflect fn
 
 
