@@ -445,34 +445,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     U.process_pragma p r;
     [se], [], env0
 
-<<<<<<< HEAD
-  | Sig_new_effect_for_free ne ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
-    let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
-    let effect_and_lift_ses = match lift_from_pure_opt with
-      | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
-      | None -> [ { se with sigel = Sig_new_effect (ne) } ]
-    in
-
-    [], ses @ effect_and_lift_ses, env0
-
-  | Sig_new_effect ne ->
-    let ne =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne =
-          TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals
-          |> (fun ne -> { se with sigel = Sig_new_effect ne })
-          |> N.elim_uvars env |> U.eff_decl_of_new_effect in
-        if Env.debug env <| Options.Other "TwoPhases"
-        then BU.print1 "Effect decl after phase 1: %s\n"
-               (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
-        ne
-      end
-      else ne
-    in
-    let ne = TcEff.tc_eff_decl env ne se.sigquals in
-    let se = { se with sigel = Sig_new_effect(ne) } in
-    [se], [], env0
-=======
   | Sig_new_effect ne ->
     let is_unelaborated_dm4f =
       match ne.combinators with
@@ -506,7 +478,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       let ne = TcEff.tc_eff_decl env ne se.sigquals in
       let se = { se with sigel = Sig_new_effect(ne) } in
       [se], [], env0
->>>>>>> master
 
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let sub = TcEff.tc_lift env sub r in
@@ -514,9 +485,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
-<<<<<<< HEAD
-    let (lid, uvs, tps, c) = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
-=======
     let lid, uvs, tps, c =
       if Options.use_two_phase_tc () && Env.should_verify env
       then
@@ -529,7 +497,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else lid, uvs, tps, c in
 
     let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
->>>>>>> master
     let se = { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) } in
     [se], [], env0
 

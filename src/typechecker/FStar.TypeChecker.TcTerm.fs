@@ -2376,17 +2376,10 @@ and tc_eqn scrutinee env branch
         | None -> None
         | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
-<<<<<<< HEAD
 
   (*      logically the same as step 5(a),                                                              *)
 
 
-=======
-
-  (*      logically the same as step 5(a),                                                              *)
-
-
->>>>>>> master
   (* 5. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)
   (*                                                                                                    *)

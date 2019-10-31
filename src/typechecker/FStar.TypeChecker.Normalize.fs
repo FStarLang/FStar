@@ -1645,19 +1645,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                  * For non-layered effects, as before
                  *)
                 let args =
-<<<<<<< HEAD
-                  if ed.is_layered then
-                    let rest_bs =
-                      match (ed.bind_wp |> snd |> SS.compress).n with
-                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
-                        bs |> List.splitAt (List.length bs - 2) |> fst
-                      | _ ->
-                        raise_error (Errors.Fatal_UnexpectedEffect,
-                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
-                            (Ident.string_of_lid ed.mname) (ed.bind_wp |> snd |> Print.term_to_string)) rng in
-                    (S.as_arg lb.lbtyp)::(S.as_arg t)::
-                    ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg head; S.as_arg body])
-=======
                   if U.is_layered ed then
                     let unit_args =
                       match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
@@ -1671,7 +1658,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                           BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
                             (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
                     (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
->>>>>>> master
                   else
                     [ (* a, b *)
                       as_arg lb.lbtyp; as_arg t] @
@@ -1806,19 +1792,6 @@ and reify_lift cfg e msrc mtgt t : term =
        * Arguments for layered effects are:
        *   a ..units for binders that compute indices.. x
        *)
-<<<<<<< HEAD
-      if ed.is_layered then
-        let rest_bs =
-          match (ed.ret_wp |> snd |> SS.compress).n with
-          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
-            bs |> List.splitAt (List.length bs - 1) |> fst
-          | _ ->
-            raise_error (Errors.Fatal_UnexpectedEffect,
-              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
-                (Ident.string_of_lid ed.mname) (ed.ret_wp |> snd |> Print.term_to_string)) e.pos in
-        (S.as_arg t)::
-        ((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e])
-=======
       if U.is_layered ed then
         let unit_args =
           match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
@@ -1832,7 +1805,6 @@ and reify_lift cfg e msrc mtgt t : term =
               BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
                 (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
         (S.as_arg t)::(unit_args@[S.as_arg e])
->>>>>>> master
       else [as_arg t ; as_arg e] in
     S.mk (Tm_app(return_inst, args)) None e.pos
   else

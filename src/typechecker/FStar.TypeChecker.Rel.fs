@@ -1843,8 +1843,6 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
-<<<<<<< HEAD
-=======
    (*
     * AR: adding env to the return type
     *
@@ -1857,7 +1855,6 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
     *     so now we return the updated env, and the rhs is solved in that final env
     *     (see how `aux` is called after its definition below)
     *)
->>>>>>> master
    let rec aux wl scope env subst (xs:binders) (ys:binders) : Env.env * either<(probs * formula), string> * worklist =
         match xs, ys with
         | [], [] ->
@@ -3000,14 +2997,6 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
         let _, stronger_t =
-<<<<<<< HEAD
-          c2.effect_name |> Env.get_effect_decl env |> (fun ed -> Env.inst_tscheme_with ed.stronger c2.comp_univs) in
-
-        let stronger_t_shape_error s = BU.format3
-          "Unexpected shape of stronger for %s, reason: %s (t:%s)"
-          (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
-
-=======
           c2.effect_name
           |> Env.get_effect_decl env
           |> U.get_stronger_vc_combinator
@@ -3017,7 +3006,6 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           "Unexpected shape of stronger for %s, reason: %s (t:%s)"
           (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
 
->>>>>>> master
         let a_b, rest_bs, f_b, stronger_c =
           match (SS.compress stronger_t).n with
           | Tm_arrow (bs, c) when List.length bs >= 2 ->
@@ -3039,7 +3027,6 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         let substs = List.map2
           (fun b t -> NT (b |> fst, t))
           (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
-<<<<<<< HEAD
 
         let f_sub_probs, wl =
           let f_sort_is =
@@ -3049,17 +3036,6 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               raise_error (Errors.Fatal_UnexpectedExpressionType,
                 stronger_t_shape_error "type of f is not a repr type") r in
 
-=======
-
-        let f_sub_probs, wl =
-          let f_sort_is =
-            match (SS.compress (f_b |> fst).sort).n with
-            | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst substs)
-            | _ ->
-              raise_error (Errors.Fatal_UnexpectedExpressionType,
-                stronger_t_shape_error "type of f is not a repr type") r in
-
->>>>>>> master
           List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
             let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
             ps@[p], wl
@@ -3163,23 +3139,15 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                            then BU.print_string "Using trivial wp ... \n" in
                                    let c1_univ = env.universe_of env c1.result_typ in
                                    let trivial =
-<<<<<<< HEAD
-                                     match c2_decl.trivial with
-=======
                                      match c2_decl |> U.get_wp_trivial_combinator with
->>>>>>> master
                                      | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
                                      | Some t -> t in
                                    mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
                                                [as_arg c1.result_typ;
                                                 wpc1_2])) None r
                               else let c2_univ = env.universe_of env c2.result_typ in
-<<<<<<< HEAD
-                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl c2_decl.stronger,
-=======
                                    let stronger = c2_decl |> U.get_stronger_vc_combinator in
                                    mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
->>>>>>> master
                                               [as_arg c2.result_typ;
                                                as_arg wpc2;
                                                wpc1_2])) None r in

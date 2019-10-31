@@ -41,12 +41,8 @@ include gmake/Makefile.tmpl
 # JP: same here
 .cache/LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 
-<<<<<<< HEAD
-verify-core: $(addprefix .cache/, $(addsuffix .checked, $(notdir $(filter-out $(EXTRA) ,$(FSTAR_FILES)))))
-=======
 verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
->>>>>>> master
 
 %.checked:
 	$(MY_FSTAR) $<

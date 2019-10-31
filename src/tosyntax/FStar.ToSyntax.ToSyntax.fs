@@ -2468,59 +2468,6 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           if_then_else = dummy_tscheme;
           ite_wp = dummy_tscheme;
           close_wp = dummy_tscheme;
-<<<<<<< HEAD
-        }) in
-        { sigel =
-          (Sig_new_effect_for_free ({
-             is_layered    = false;
-             mname         = mname;
-             cattributes   = [];
-             univs         = [];
-             binders       = binders;
-             signature     = ([], eff_t);
-             ret_wp        = dummy_tscheme;
-             bind_wp       = dummy_tscheme;
-             stronger      = dummy_tscheme;
-             match_wps     = match_wps;
-             trivial       = None;
-             repr          = lookup "repr";
-             return_repr   = lookup "return";
-             bind_repr     = lookup "bind";
-             stronger_repr = None;
-             actions       = actions;
-             eff_attrs     = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = []; sigopts = None }
-      else if is_layered then
-        { sigel =
-          (Sig_new_effect({
-             is_layered    = true;
-             mname         = mname;
-             cattributes   = [];
-             univs         = [];
-             binders       = binders;
-             signature     = ([], eff_t);
-             ret_wp        = dummy_tscheme;
-             bind_wp       = dummy_tscheme;
-             stronger      = dummy_tscheme;
-             match_wps     = Inr ({ conjunction = lookup "if_then_else" });
-             trivial       = None;
-             repr          = lookup "repr";
-             return_repr   = lookup "return";
-             bind_repr     = lookup "bind";
-             stronger_repr = Some (lookup "subcomp");
-             actions       = actions;
-             eff_attrs     = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = [];
-           sigopts = None; }
-=======
           trivial = dummy_tscheme;
           
           repr = Some (lookup "repr");
@@ -2538,7 +2485,6 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           l_subcomp = lookup "subcomp" |> to_comb;
           l_if_then_else = lookup "if_then_else" |> to_comb;
         })
->>>>>>> master
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
         Primitive_eff ({
@@ -3044,11 +2990,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
                     sigattrs = [];
-<<<<<<< HEAD
-                    sigopts = None } in
-=======
                     sigopts = None} in
->>>>>>> master
          env, [se]
     else if U.is_layered src_ed
     then raise_error (Errors.Fatal_UnexpectedEffect,
@@ -3069,11 +3011,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            sigrng = d.drange;
            sigmeta = default_sigmeta;
            sigattrs = [];
-<<<<<<< HEAD
-           sigopts = None }]
-=======
            sigopts = None}]
->>>>>>> master
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
   | Splice (ids, t) ->

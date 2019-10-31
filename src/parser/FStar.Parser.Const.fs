@@ -132,11 +132,7 @@ let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 let list_append_lid       = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
-<<<<<<< HEAD
-let id_lid                = pconst "id"
-=======
 let id_lid                = psconst "id"
->>>>>>> master
 
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
