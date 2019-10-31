@@ -353,9 +353,6 @@ let close_wp_comp env bvs (c:comp) =
 
 let close_wp_lcomp env bvs (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
-  let substs = List.map2 (fun bv tm ->
-    NT (bv, tm)
-  ) bvs tms in
   lc |>
   TcComm.apply_lcomp
     (close_wp_comp env bvs)
