@@ -155,10 +155,7 @@ let tc_lex_t env ses quals lids =
 let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
   let uvs, t = SS.open_univ_vars uvs t in
   let env = Env.push_univ_vars env uvs in
-  let t =
-    let t, _, g = tc_check_tot_or_gtot_term env t expected_typ in
-    Rel.force_trivial_guard env g;
-    t in
+  let t = tc_check_trivial_guard env t expected_typ in
   if uvs = [] then
     let uvs, t = TcUtil.generalize_universes env t in
     //AR: generalize_universes only calls N.reduce_uvar_solutions, so make sure there are no uvars left
