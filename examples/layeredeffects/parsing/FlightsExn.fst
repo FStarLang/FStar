@@ -39,33 +39,16 @@ module M = Messages
 /// Define a parse_common function but this time in the Exn effect
 
 
-unfold let parse_common_wp (a:Type0) (b:B.buffer uint_8) (m_begin:uint_32) : wp_t (M.repr a)
-= fun p h0 ->
-    B.live h0 b /\ m_begin <= B.len b /\
-    (forall r h1.
-       (B.(modifies loc_none h0 h1) ==> 
-       (match r with
-        | None -> p None h1
-        | Some x -> valid_repr b h1 x ==> p r h1)))
+
+/// `B.live h1 b` so that the continuations get the liveness
+/// `B.(modifies loc_none h0 h1)` so that framing of repr validity can kick
+
 
 inline_for_extraction
-let parse_common_ (#a:Type0)
+let parse_common (#a:Type0)
   (parser:parser_t a)
   (b:B.buffer uint_8)
   (m_begin:uint_32)
-: repr (M.repr a) (parse_common_wp a b m_begin)
-= fun _ ->
-  let r = parser b m_begin in
-  match r with
-  | None -> None
-  | Some (x, m_end) -> Some ({ v = x; m_begin = m_begin; m_end = m_end })
-
-
-/// `B.live h1 b` so that the continuations get the liveness
-/// `B.(modifies loc_none h0 h1)` so that framing of repr validity can kick in
-
-inline_for_extraction
-let parse_common (#a:Type0) (parser:parser_t a) (b:B.buffer uint_8) (m_begin:uint_32)
 : Exn (M.repr a)
   (requires fun h -> B.live h b /\ m_begin <= B.len b)
   (ensures fun h0 r h1 ->
@@ -73,7 +56,12 @@ let parse_common (#a:Type0) (parser:parser_t a) (b:B.buffer uint_8) (m_begin:uin
    (match r with
     | None -> True
     | Some x -> valid_repr b h1 x))
-= EXN?.reflect (parse_common_ #a parser b m_begin)
+= EXN?.reflect (fun _ ->
+    let r = parser b m_begin in
+    match r with
+    | None -> None
+    | Some (x, m_end) -> Some ({ v = x; m_begin = m_begin; m_end = m_end }))
+
 
 
 /// Partially applied parse_common

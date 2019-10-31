@@ -202,24 +202,16 @@ unfold let parse_common_wp (a:Type0) : wp_t rcv_state (M.repr a)
 
 
 inline_for_extraction noextract
-let parse_common_ (#a:Type0)
-  (parser:parser_t a)
-  (_:unit)
-  (st:rcv_state)
-: MExn.repr (M.repr a & rcv_state) (fun p h0 -> parse_common_wp a p st h0)
-= fun _ ->
-  let r = parser st.b st.id in
-  match r with
-  | None -> None
-  | Some (x, m_end) -> Some ({ v = x; m_begin = st.id; m_end = m_end }, { st with id = m_end })
-
-inline_for_extraction noextract
 let parse_common_exn (#a:Type0)
   (parser:parser_t a)
   (_:unit)
   (st:rcv_state)
 : EXN (M.repr a & rcv_state) (fun p h0 -> parse_common_wp a p st h0)
-= EXN?.reflect (parse_common_ #a parser () st)
+= EXN?.reflect (fun _ ->
+    let r = parser st.b st.id in
+    match r with
+    | None -> None
+    | Some (x, m_end) -> Some ({ v = x; m_begin = st.id; m_end = m_end }, { st with id = m_end }))
 
 inline_for_extraction noextract
 let parse_common (#a:Type0)

@@ -100,52 +100,19 @@ effect LV (a:Type) (pre:locals_t -> Type0) (post:locals_t -> a -> locals_t -> Ty
   LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
 
 
-let create0 (a:Type0) (x:a)
-: repr nat
-  (fun p m0 ->
-    forall r m1.
-      (not (m0.m `M.contains` r) /\
-       m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
-= fun m ->
-  let next = m.next in
-  next, {
-    next = next + 1;
-    m = Map.upd m.m next (| a, x |)
-  }
-
-let read0 (#a:Type0) (n:nat)
-: repr a
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
-= fun m ->
-  dsnd (m.m `M.sel` n), m
-
-let write0 (#a:Type0) (n:nat) (x:a)
-: repr unit
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall m1.
-     (m1.next == m0.next /\
-      m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
-= fun m ->
-  (), { m with m = Map.upd m.m n (| a, x |) }
-
-let get0 ()
-: repr (Map.t nat (a:Type0 & a))
-  (fun p m0 -> p m0.m m0)
-= fun m -> m.m, m
-
-
 let create (a:Type0) (x:a)
 : LVARS nat
   (fun p m0 ->
     forall r m1.
       (not (m0.m `M.contains` r) /\
        m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
-= LVARS?.reflect (create0 a x)
+= LVARS?.reflect (fun m ->
+    let next = m.next in
+    next, {
+      next = next + 1;
+      m = Map.upd m.m next (| a, x |)
+    })
+
 
 let read (#a:Type0) (n:nat)
 : LVARS a
@@ -153,7 +120,7 @@ let read (#a:Type0) (n:nat)
    m0.m `M.contains` n /\
    dfst (m0.m `M.sel` n) == a /\
    (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
-= LVARS?.reflect (read0 #a n)
+= LVARS?.reflect (fun m -> dsnd (m.m `M.sel` n), m)
 
 let write (#a:Type0) (n:nat) (x:a)
 : LVARS unit
@@ -163,12 +130,12 @@ let write (#a:Type0) (n:nat) (x:a)
    (forall m1.
      (m1.next == m0.next /\
       m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
-= LVARS?.reflect (write0 #a n x)
+= LVARS?.reflect (fun m -> (), { m with m = Map.upd m.m n (| a, x |) })
 
 let get ()
 : LVARS (Map.t nat (a:Type0 & a))
   (fun p m0 -> p m0.m m0)
-= LVARS?.reflect (get0 ())
+= LVARS?.reflect (fun m -> m.m, m)
 
 
 let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
