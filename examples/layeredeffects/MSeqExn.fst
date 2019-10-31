@@ -10,41 +10,22 @@ type result (a:Type) =
   | Error   : string -> result a
 
 
-/// Type of pre- and postconditions for the new effect we are defining
-
-
-assume val entry_t : Type0
-
-type trace_ = Seq.seq entry_t
-
-
-assume val trace_inv0 : trace_ -> Type0
-
-type trace = s:trace_{trace_inv0 s}
-
-/// The pre- and postconditions are over traces that are both valid and trace_inv0
-
-/// Precondition is a predicate on the input trace
-
-type st_epre = trace -> Type0
-
-
-/// Postcondition is a predicate on the result value and the output trace
-
-type st_epost (a:Type) = result a -> trace -> Type0
-
-
-/// WP is standard post -> pre ...
+/// WP is standard post -> pre ... but on the type (result a)
 ///
 /// With an additional monotonicity refinement -- this should hopefully go away when we start treating monotonicity better
 
-type st_ewp (a:Type) = wp:(st_epost a -> st_epre){
+
+type st_ewp (a:Type) = wp:st_wp (result a){
    forall p q. (forall r x. p r x ==> q r x) ==> (forall x. wp p x ==> wp q x)
 }
 
 
-/// Finally the global trace reference
+/// The global trace reference
 
+
+assume val entry_t : Type0
+
+assume val trace_inv0 : Seq.seq entry_t -> Type0
 
 assume val trace_ref : i_seq HS.root entry_t trace_inv0
 
@@ -53,17 +34,15 @@ assume val trace_ref : i_seq HS.root entry_t trace_inv0
 ///
 /// Under the hoods, it's a STATE function that only modifies trace_ref
 
+
 type st_erepr (a:Type) (wp:st_ewp a) =
   unit ->
   STATE (result a) (fun p h0 ->
-    let s0 = i_sel h0 trace_ref in
     wp
-      (fun r s1 ->
-       forall h1. (i_sel h1 trace_ref == s1 /\
-              equal_stack_domains h0 h1 /\
-              HS.modifies_one HS.root h0 h1 /\  //and we modify nothing else in this effect
-              HS.modifies_ref HS.root (Set.singleton (HS.as_addr trace_ref)) h0 h1) ==> p r h1)
-      s0)
+      (fun r h1 ->
+       (equal_stack_domains h0 h1 /\
+        HS.modifies_one HS.root h0 h1 /\
+        HS.modifies_ref HS.root (Set.singleton (HS.as_addr trace_ref)) h0 h1) ==> p r h1) h0)
 
 
 /// Effect combinators
@@ -86,7 +65,14 @@ let st_ebind (a:Type) (b:Type)
     match r with
     | Success x -> (wp_g x) p s1
     | Error s -> p (Error s) s1) s0)
-= fun _ ->
+= let lemma_modifies_one_is_transitive ()  //Sad!
+  : Lemma
+    (forall h0 h1 h2. (HS.modifies_one HS.root h0 h1 /\ HS.modifies_one HS.root h1 h2) ==>
+                  HS.modifies_one HS.root h0 h2)
+  = () in
+
+  lemma_modifies_one_is_transitive ();
+  fun _ ->
   let r = f () in
   match r with
   | Success x -> (g x) ()
@@ -134,28 +120,36 @@ layered_effect {
 
 
 let lift_div_stexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
-: st_erepr a (fun p n -> wp (fun x -> p (Success x) n))
+: st_erepr a (fun p h -> wp (fun x -> p (Success x) h))
 = fun _ -> Success (f ())
 
 sub_effect DIV ~> STEXN = lift_div_stexn
 
 
 /// Hoare-style abbreviation
+///
+/// The pre- and postcondition can only be over the pure traces,
+///   so that in the specs one doesn't have to think about mem, modifies etc.
+///
+/// Also we by-default bake-in the trace_inv too, so that this also doesn't need to carried along
+
+
+type trace = s:Seq.seq entry_t{trace_inv0 s}
+
 
 effect StExn (a:Type) (pre:trace -> Type0) (post:trace -> result a -> trace -> Type0) =
-  STEXN a (fun p n0 -> pre n0 /\ (forall x n1. post n0 x n1 ==> p x n1))
+  STEXN a (fun p h0 -> pre (i_sel h0 trace_ref) /\ (forall x h1. post (i_sel h0 trace_ref) x (i_sel h1 trace_ref) ==> p x h1))
 
 
 /// To work with this new effect
 ///   while the DIV (and PURE) computations be lifted by the typechecker automatically,
 ///   STATE computations need to be `reflected` explicitly
 
+
 let write_at_end (x:entry_t)
-: STEXN unit
-  (fun p s -> trace_inv0 (Seq.snoc s x) /\ p (Success ()) (Seq.snoc s x))
-// : StExn unit
-//   (requires fun s -> trace_inv0 (Seq.snoc s x))
-//   (ensures fun s0 r s1 -> r == Success () /\ s1 == Seq.snoc s0 x)
+: StExn unit
+  (requires fun s -> trace_inv0 (Seq.snoc s x))
+  (ensures fun s0 r s1 -> r == Success () /\ s1 == Seq.snoc s0 x)
 = STEXN?.reflect (fun _ ->
     i_write_at_end trace_ref x;
     Success ())
@@ -164,11 +158,9 @@ let write_at_end (x:entry_t)
 /// Similarly we can define a read function
 
 let read (i:nat)
-: STEXN entry_t
-  (fun p s -> i < Seq.length s /\ p (Success (Seq.index s i)) s)
-// : StExn entry_t
-//   (requires fun s -> i < Seq.length s)
-//   (ensures fun s0 r s1 -> i < Seq.length s0 /\ r == Success (Seq.index s0 i) /\ s1 == s0)
+: StExn entry_t
+  (requires fun s -> i < Seq.length s)
+  (ensures fun s0 r s1 -> i < Seq.length s0 /\ r == Success (Seq.index s0 i) /\ s1 == s0)
 = STEXN?.reflect (fun _ ->
     let s = i_read trace_ref in
     Success (Seq.index s i))
@@ -182,25 +174,28 @@ assume val some_pure_function (x:entry_t) : int
 /// A get () function
 
 let get ()
-: STEXN trace
-  (fun p s -> p (Success s) s)
-// : StExn trace
-//   (requires fun _ -> True)
-//   (ensures fun s0 r s1 -> r == Success s0 /\ s1 == s0)
+: StExn trace
+  (requires fun _ -> True)
+  (ensures fun s0 r s1 -> r == Success s0 /\ s1 == s0)
 = STEXN?.reflect (fun _ -> Success (i_read trace_ref))
 
 
+/// A function that reads the i-th index in the trace or throws error if i is not in bounds
+
 let read_or_throw (i:nat)
-: STEXN entry_t
-  (fun p s ->
-   (forall x. ((i < Seq.length s ==> x == Success (Seq.index s i)) /\
-          (i >= Seq.length s ==> x == Error "")) ==> p x s))
+: StExn entry_t
+  (requires fun _ -> True)
+  (ensures fun s0 r s1 ->
+    s0 == s1 /\
+    (i < Seq.length s0 ==> r == Success (Seq.index s0 i)) /\
+    (i >= Seq.length s0 ==> r == Error ""))
 = STEXN?.reflect (fun _ ->
     let s = i_read trace_ref in
     if i < Seq.length s then Success (Seq.index s i) else Error "")
 
 
-/// Now let's see this in action
+
+/// Now we will write code in this new effect using the "actions" that we defined above
 
 
 /// We don't need state libraries or monotonic sequence anymore!
@@ -216,7 +211,7 @@ let test (i j:nat)
     | true -> r == Success () /\ Seq.length s1 == Seq.length s0 + 1
     | false -> r == Error "" /\ s0 == s1)
 = let x = read i in
-  let y = read_or_throw j in
+  let y = read_or_throw j in  //no need to explicitly pattern match on the exception, it's propagated up automatically
   let b = some_pure_function y in
   let s = get () in
   if b > 0 then begin
@@ -228,10 +223,13 @@ let test (i j:nat)
     write_at_end x
   end
 
-/// But we can still tell clients the stateful spec of test, for example:
+
+
+/// But the clients need not buy into our effect, we can tell the clients a stateful spec of test, for example:
 
 
 /// Restart the solver to get state facts etc. in the context again
+
 
 #restart-solver
 #reset-options
@@ -243,7 +241,7 @@ let test_st (i j:nat)
     HS.modifies_one HS.root h0 h1 /\
     HS.modifies_ref HS.root (Set.singleton (HS.as_addr trace_ref)) h0 h1)  //can add functional specs too
 = reify (test i j) ()
-  
+
 
 
 
