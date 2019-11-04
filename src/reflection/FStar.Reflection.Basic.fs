@@ -25,6 +25,7 @@ module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
 module O = FStar.Options
 module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
 
 open FStar.Dyn
 
@@ -419,8 +420,13 @@ let sigelt_quals (se : sigelt) : list<RD.qualifier> =
 let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
-let sigelt_opts (se : sigelt) : option<O.optionstate> =
-    se.sigopts
+let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+
+let sigelt_opts (se : sigelt) : option<term> =
+    match se.sigopts with
+    | None -> None
+    | Some o -> Some (EMB.embed (!e_optionstate_hook |> BU.must) o
+                        Range.dummyRange None EMB.id_norm_cb)
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

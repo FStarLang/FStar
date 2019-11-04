@@ -88,6 +88,8 @@ let e_optionstate =
     in
     mk_emb embed_optionstate unembed_optionstate fstar_refl_optionstate
 
+let _ = FStar.Reflection.Basic.e_optionstate_hook := Some e_optionstate
+
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
     | [] -> Some []
