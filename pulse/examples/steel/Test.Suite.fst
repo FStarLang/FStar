@@ -76,7 +76,8 @@ let test1 (b1 b2 b3: A.array U32.t) : RST unit
   in
   ()
 
-//TODO: fix, the tactic seems to be expecting inner <*> delta but we're not providing it
+//TODO: cannot infer inv for resource list when order is changed, should be solved with
+//effect layering
 [@expect_failure]
 let test2 (b1 b2 b3: A.array U32.t) : RST unit
   (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)
@@ -91,7 +92,7 @@ let test2 (b1 b2 b3: A.array U32.t) : RST unit
   in
   ()
 
-//TODO: fix, unable to infer invariant equivalence for AC rewriting (should be OK when we have effect layering ?)
+//TODO: fix, unable to infer invariant equivalence for AC rewriting (should be OK when we have effect layering)
 [@expect_failure]
 let test3 (b1 b2 b3: A.array U32.t) : RST unit
   (A.array_resource b1 <*> A.array_resource b2 <*> A.array_resource b3)

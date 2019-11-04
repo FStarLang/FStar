@@ -121,6 +121,11 @@ let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` 
 let focus_rmem #r s r0 =
   focus_rmem' #r s r0
 
+val focus_rmem_equality (outer inner arg: resource) (h: rmem outer) : Lemma
+  (requires (inner `is_subresource_of` outer /\ arg `is_subresource_of` inner))
+  (ensures (is_subresource_of_trans arg inner outer; (focus_rmem h inner) arg == h arg))
+
+
 let focus_rmem_equality outer inner arg h =
   let focused = focus_rmem h inner in
   extensionality_g
@@ -128,6 +133,12 @@ let focus_rmem_equality outer inner arg h =
     (fun r0 -> r0.t)
     focused
     (fun r0 -> is_subresource_of_trans r0 inner outer; h r0)
+
+val focus_mk_rmem_equality (outer inner: resource) (h: HS.mem)
+  : Lemma
+    (requires (inv outer h /\ inner `is_subresource_of` outer))
+    (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
+      focus_rmem (mk_rmem outer h) inner == mk_rmem inner h))
 
 let focus_mk_rmem_equality outer inner h =
   let souter = mk_rmem outer h in
@@ -193,8 +204,6 @@ let rst_inv res h =
 let reveal_rst_inv () = ()
 
 let rst_inv_star res0 res1 h = reveal_star ()
-
-
 
 open Steel.Tactics
 

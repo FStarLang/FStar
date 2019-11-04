@@ -55,7 +55,7 @@ val alloc (#a:Type) (init:a) (len:UInt32.t)
     (fun _ b h1 ->
       A.freeable b /\
       as_rseq b h1 == Seq.create (UInt32.v len) init /\
-      get_rperm b h1 = FStar.Real.one /\
+      get_rperm b h1 == P.full_permission /\
       A.vlength b = UInt32.v len
     )
 
