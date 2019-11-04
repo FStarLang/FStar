@@ -1932,47 +1932,47 @@ let (e_lid : FStar_Ident.lid FStar_Syntax_Embeddings.embedding) =
     FStar_Ident.string_of_lid FStar_Syntax_Syntax.ET_abstract
   
 let (e_qualifier :
-  FStar_Syntax_Syntax.qualifier FStar_Syntax_Embeddings.embedding) =
+  FStar_Reflection_Data.qualifier FStar_Syntax_Embeddings.embedding) =
   let embed1 rng q =
     let r =
       match q with
-      | FStar_Syntax_Syntax.Assumption  ->
+      | FStar_Reflection_Data.Assumption  ->
           FStar_Reflection_Data.ref_qual_Assumption.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.New  ->
+      | FStar_Reflection_Data.New  ->
           FStar_Reflection_Data.ref_qual_New.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Private  ->
+      | FStar_Reflection_Data.Private  ->
           FStar_Reflection_Data.ref_qual_Private.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen  ->
+      | FStar_Reflection_Data.Unfold_for_unification_and_vcgen  ->
           FStar_Reflection_Data.ref_qual_Unfold_for_unification_and_vcgen.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Visible_default  ->
+      | FStar_Reflection_Data.Visible_default  ->
           FStar_Reflection_Data.ref_qual_Visible_default.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Irreducible  ->
+      | FStar_Reflection_Data.Irreducible  ->
           FStar_Reflection_Data.ref_qual_Irreducible.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Abstract  ->
+      | FStar_Reflection_Data.Abstract  ->
           FStar_Reflection_Data.ref_qual_Abstract.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Inline_for_extraction  ->
+      | FStar_Reflection_Data.Inline_for_extraction  ->
           FStar_Reflection_Data.ref_qual_Inline_for_extraction.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.NoExtract  ->
+      | FStar_Reflection_Data.NoExtract  ->
           FStar_Reflection_Data.ref_qual_NoExtract.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Noeq  ->
+      | FStar_Reflection_Data.Noeq  ->
           FStar_Reflection_Data.ref_qual_Noeq.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Unopteq  ->
+      | FStar_Reflection_Data.Unopteq  ->
           FStar_Reflection_Data.ref_qual_Unopteq.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.TotalEffect  ->
+      | FStar_Reflection_Data.TotalEffect  ->
           FStar_Reflection_Data.ref_qual_TotalEffect.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Logic  ->
+      | FStar_Reflection_Data.Logic  ->
           FStar_Reflection_Data.ref_qual_Logic.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Reifiable  ->
+      | FStar_Reflection_Data.Reifiable  ->
           FStar_Reflection_Data.ref_qual_Reifiable.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.ExceptionConstructor  ->
+      | FStar_Reflection_Data.ExceptionConstructor  ->
           FStar_Reflection_Data.ref_qual_ExceptionConstructor.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.HasMaskedEffect  ->
+      | FStar_Reflection_Data.HasMaskedEffect  ->
           FStar_Reflection_Data.ref_qual_HasMaskedEffect.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Effect  ->
+      | FStar_Reflection_Data.Effect  ->
           FStar_Reflection_Data.ref_qual_Effect.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.OnlyName  ->
+      | FStar_Reflection_Data.OnlyName  ->
           FStar_Reflection_Data.ref_qual_OnlyName.FStar_Reflection_Data.t
-      | FStar_Syntax_Syntax.Reflectable l ->
+      | FStar_Reflection_Data.Reflectable l ->
           let uu____6614 =
             let uu____6619 =
               let uu____6620 =
@@ -1984,7 +1984,7 @@ let (e_qualifier :
               uu____6619
              in
           uu____6614 FStar_Pervasives_Native.None FStar_Range.dummyRange
-      | FStar_Syntax_Syntax.Discriminator l ->
+      | FStar_Reflection_Data.Discriminator l ->
           let uu____6647 =
             let uu____6652 =
               let uu____6653 =
@@ -1996,7 +1996,7 @@ let (e_qualifier :
               uu____6652
              in
           uu____6647 FStar_Pervasives_Native.None FStar_Range.dummyRange
-      | FStar_Syntax_Syntax.Action l ->
+      | FStar_Reflection_Data.Action l ->
           let uu____6680 =
             let uu____6685 =
               let uu____6686 =
@@ -2008,7 +2008,7 @@ let (e_qualifier :
               uu____6685
              in
           uu____6680 FStar_Pervasives_Native.None FStar_Range.dummyRange
-      | FStar_Syntax_Syntax.Projector (l,i) ->
+      | FStar_Reflection_Data.Projector (l,i) ->
           let uu____6714 =
             let uu____6719 =
               let uu____6720 =
@@ -2025,7 +2025,7 @@ let (e_qualifier :
               uu____6719
              in
           uu____6714 FStar_Pervasives_Native.None FStar_Range.dummyRange
-      | FStar_Syntax_Syntax.RecordType (ids1,ids2) ->
+      | FStar_Reflection_Data.RecordType (ids1,ids2) ->
           let uu____6785 =
             let uu____6790 =
               let uu____6791 =
@@ -2047,7 +2047,7 @@ let (e_qualifier :
               uu____6790
              in
           uu____6785 FStar_Pervasives_Native.None FStar_Range.dummyRange
-      | FStar_Syntax_Syntax.RecordConstructor (ids1,ids2) ->
+      | FStar_Reflection_Data.RecordConstructor (ids1,ids2) ->
           let uu____6870 =
             let uu____6875 =
               let uu____6876 =
@@ -2090,83 +2090,87 @@ let (e_qualifier :
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Assumption.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Assumption
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Assumption
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_New.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.New
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.New
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Private.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Private
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Private
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Unfold_for_unification_and_vcgen.FStar_Reflection_Data.lid
              ->
              FStar_Pervasives_Native.Some
-               FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen
+               FStar_Reflection_Data.Unfold_for_unification_and_vcgen
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Visible_default.FStar_Reflection_Data.lid
              ->
-             FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Visible_default
+             FStar_Pervasives_Native.Some
+               FStar_Reflection_Data.Visible_default
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Irreducible.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Irreducible
+             ->
+             FStar_Pervasives_Native.Some FStar_Reflection_Data.Irreducible
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Abstract.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Abstract
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Abstract
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Inline_for_extraction.FStar_Reflection_Data.lid
              ->
              FStar_Pervasives_Native.Some
-               FStar_Syntax_Syntax.Inline_for_extraction
+               FStar_Reflection_Data.Inline_for_extraction
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_NoExtract.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.NoExtract
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.NoExtract
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Noeq.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Noeq
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Noeq
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Unopteq.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Unopteq
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Unopteq
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_TotalEffect.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.TotalEffect
+             ->
+             FStar_Pervasives_Native.Some FStar_Reflection_Data.TotalEffect
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Logic.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Logic
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Logic
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Reifiable.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Reifiable
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Reifiable
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_ExceptionConstructor.FStar_Reflection_Data.lid
              ->
              FStar_Pervasives_Native.Some
-               FStar_Syntax_Syntax.ExceptionConstructor
+               FStar_Reflection_Data.ExceptionConstructor
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_HasMaskedEffect.FStar_Reflection_Data.lid
              ->
-             FStar_Pervasives_Native.Some FStar_Syntax_Syntax.HasMaskedEffect
+             FStar_Pervasives_Native.Some
+               FStar_Reflection_Data.HasMaskedEffect
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Effect.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Effect
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.Effect
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_OnlyName.FStar_Reflection_Data.lid
-             -> FStar_Pervasives_Native.Some FStar_Syntax_Syntax.OnlyName
+             -> FStar_Pervasives_Native.Some FStar_Reflection_Data.OnlyName
          | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____7310)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Reflectable.FStar_Reflection_Data.lid
@@ -2176,7 +2180,7 @@ let (e_qualifier :
                (fun l1  ->
                   FStar_All.pipe_left
                     (fun _7342  -> FStar_Pervasives_Native.Some _7342)
-                    (FStar_Syntax_Syntax.Reflectable l1))
+                    (FStar_Reflection_Data.Reflectable l1))
          | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____7345)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Discriminator.FStar_Reflection_Data.lid
@@ -2186,7 +2190,7 @@ let (e_qualifier :
                (fun l1  ->
                   FStar_All.pipe_left
                     (fun _7377  -> FStar_Pervasives_Native.Some _7377)
-                    (FStar_Syntax_Syntax.Discriminator l1))
+                    (FStar_Reflection_Data.Discriminator l1))
          | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____7380)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_qual_Action.FStar_Reflection_Data.lid
@@ -2196,7 +2200,7 @@ let (e_qualifier :
                (fun l1  ->
                   FStar_All.pipe_left
                     (fun _7412  -> FStar_Pervasives_Native.Some _7412)
-                    (FStar_Syntax_Syntax.Action l1))
+                    (FStar_Reflection_Data.Action l1))
          | (FStar_Syntax_Syntax.Tm_fvar
             fv,(l,uu____7415)::(i,uu____7417)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2210,7 +2214,7 @@ let (e_qualifier :
                     (fun i1  ->
                        FStar_All.pipe_left
                          (fun _7465  -> FStar_Pervasives_Native.Some _7465)
-                         (FStar_Syntax_Syntax.Projector (l1, i1))))
+                         (FStar_Reflection_Data.Projector (l1, i1))))
          | (FStar_Syntax_Syntax.Tm_fvar
             fv,(ids1,uu____7468)::(ids2,uu____7470)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2229,7 +2233,7 @@ let (e_qualifier :
                     (fun ids21  ->
                        FStar_All.pipe_left
                          (fun _7544  -> FStar_Pervasives_Native.Some _7544)
-                         (FStar_Syntax_Syntax.RecordType (ids11, ids21))))
+                         (FStar_Reflection_Data.RecordType (ids11, ids21))))
          | (FStar_Syntax_Syntax.Tm_fvar
             fv,(ids1,uu____7551)::(ids2,uu____7553)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2248,7 +2252,7 @@ let (e_qualifier :
                     (fun ids21  ->
                        FStar_All.pipe_left
                          (fun _7627  -> FStar_Pervasives_Native.Some _7627)
-                         (FStar_Syntax_Syntax.RecordConstructor
+                         (FStar_Reflection_Data.RecordConstructor
                             (ids11, ids21))))
          | uu____7632 ->
              (if w
@@ -2267,7 +2271,8 @@ let (e_qualifier :
      in
   mk_emb embed1 unembed1 FStar_Reflection_Data.fstar_refl_qualifier 
 let (e_qualifiers :
-  FStar_Syntax_Syntax.qualifier Prims.list FStar_Syntax_Embeddings.embedding)
+  FStar_Reflection_Data.qualifier Prims.list
+    FStar_Syntax_Embeddings.embedding)
   = FStar_Syntax_Embeddings.e_list e_qualifier 
 let (unfold_lazy_bv :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =

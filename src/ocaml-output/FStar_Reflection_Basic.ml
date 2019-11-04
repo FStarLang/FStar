@@ -531,41 +531,123 @@ let (set_sigelt_attrs :
   =
   fun attrs  ->
     fun se  ->
-      let uu___374_1682 = se  in
+      let uu___376_1682 = se  in
       {
-        FStar_Syntax_Syntax.sigel = (uu___374_1682.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigel = (uu___376_1682.FStar_Syntax_Syntax.sigel);
         FStar_Syntax_Syntax.sigrng =
-          (uu___374_1682.FStar_Syntax_Syntax.sigrng);
+          (uu___376_1682.FStar_Syntax_Syntax.sigrng);
         FStar_Syntax_Syntax.sigquals =
-          (uu___374_1682.FStar_Syntax_Syntax.sigquals);
+          (uu___376_1682.FStar_Syntax_Syntax.sigquals);
         FStar_Syntax_Syntax.sigmeta =
-          (uu___374_1682.FStar_Syntax_Syntax.sigmeta);
+          (uu___376_1682.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = attrs;
         FStar_Syntax_Syntax.sigopts =
-          (uu___374_1682.FStar_Syntax_Syntax.sigopts)
+          (uu___376_1682.FStar_Syntax_Syntax.sigopts)
       }
   
+let (rd_to_syntax_qual :
+  FStar_Reflection_Data.qualifier -> FStar_Syntax_Syntax.qualifier) =
+  fun uu___3_1688  ->
+    match uu___3_1688 with
+    | FStar_Reflection_Data.Assumption  -> FStar_Syntax_Syntax.Assumption
+    | FStar_Reflection_Data.New  -> FStar_Syntax_Syntax.New
+    | FStar_Reflection_Data.Private  -> FStar_Syntax_Syntax.Private
+    | FStar_Reflection_Data.Unfold_for_unification_and_vcgen  ->
+        FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen
+    | FStar_Reflection_Data.Visible_default  ->
+        FStar_Syntax_Syntax.Visible_default
+    | FStar_Reflection_Data.Irreducible  -> FStar_Syntax_Syntax.Irreducible
+    | FStar_Reflection_Data.Abstract  -> FStar_Syntax_Syntax.Abstract
+    | FStar_Reflection_Data.Inline_for_extraction  ->
+        FStar_Syntax_Syntax.Inline_for_extraction
+    | FStar_Reflection_Data.NoExtract  -> FStar_Syntax_Syntax.NoExtract
+    | FStar_Reflection_Data.Noeq  -> FStar_Syntax_Syntax.Noeq
+    | FStar_Reflection_Data.Unopteq  -> FStar_Syntax_Syntax.Unopteq
+    | FStar_Reflection_Data.TotalEffect  -> FStar_Syntax_Syntax.TotalEffect
+    | FStar_Reflection_Data.Logic  -> FStar_Syntax_Syntax.Logic
+    | FStar_Reflection_Data.Reifiable  -> FStar_Syntax_Syntax.Reifiable
+    | FStar_Reflection_Data.Reflectable l ->
+        FStar_Syntax_Syntax.Reflectable l
+    | FStar_Reflection_Data.Discriminator l ->
+        FStar_Syntax_Syntax.Discriminator l
+    | FStar_Reflection_Data.Projector (l,i) ->
+        FStar_Syntax_Syntax.Projector (l, i)
+    | FStar_Reflection_Data.RecordType (l1,l2) ->
+        FStar_Syntax_Syntax.RecordType (l1, l2)
+    | FStar_Reflection_Data.RecordConstructor (l1,l2) ->
+        FStar_Syntax_Syntax.RecordConstructor (l1, l2)
+    | FStar_Reflection_Data.Action l -> FStar_Syntax_Syntax.Action l
+    | FStar_Reflection_Data.ExceptionConstructor  ->
+        FStar_Syntax_Syntax.ExceptionConstructor
+    | FStar_Reflection_Data.HasMaskedEffect  ->
+        FStar_Syntax_Syntax.HasMaskedEffect
+    | FStar_Reflection_Data.Effect  -> FStar_Syntax_Syntax.Effect
+    | FStar_Reflection_Data.OnlyName  -> FStar_Syntax_Syntax.OnlyName
+  
+let (syntax_to_rd_qual :
+  FStar_Syntax_Syntax.qualifier -> FStar_Reflection_Data.qualifier) =
+  fun uu___4_1727  ->
+    match uu___4_1727 with
+    | FStar_Syntax_Syntax.Assumption  -> FStar_Reflection_Data.Assumption
+    | FStar_Syntax_Syntax.New  -> FStar_Reflection_Data.New
+    | FStar_Syntax_Syntax.Private  -> FStar_Reflection_Data.Private
+    | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen  ->
+        FStar_Reflection_Data.Unfold_for_unification_and_vcgen
+    | FStar_Syntax_Syntax.Visible_default  ->
+        FStar_Reflection_Data.Visible_default
+    | FStar_Syntax_Syntax.Irreducible  -> FStar_Reflection_Data.Irreducible
+    | FStar_Syntax_Syntax.Abstract  -> FStar_Reflection_Data.Abstract
+    | FStar_Syntax_Syntax.Inline_for_extraction  ->
+        FStar_Reflection_Data.Inline_for_extraction
+    | FStar_Syntax_Syntax.NoExtract  -> FStar_Reflection_Data.NoExtract
+    | FStar_Syntax_Syntax.Noeq  -> FStar_Reflection_Data.Noeq
+    | FStar_Syntax_Syntax.Unopteq  -> FStar_Reflection_Data.Unopteq
+    | FStar_Syntax_Syntax.TotalEffect  -> FStar_Reflection_Data.TotalEffect
+    | FStar_Syntax_Syntax.Logic  -> FStar_Reflection_Data.Logic
+    | FStar_Syntax_Syntax.Reifiable  -> FStar_Reflection_Data.Reifiable
+    | FStar_Syntax_Syntax.Reflectable l ->
+        FStar_Reflection_Data.Reflectable l
+    | FStar_Syntax_Syntax.Discriminator l ->
+        FStar_Reflection_Data.Discriminator l
+    | FStar_Syntax_Syntax.Projector (l,i) ->
+        FStar_Reflection_Data.Projector (l, i)
+    | FStar_Syntax_Syntax.RecordType (l1,l2) ->
+        FStar_Reflection_Data.RecordType (l1, l2)
+    | FStar_Syntax_Syntax.RecordConstructor (l1,l2) ->
+        FStar_Reflection_Data.RecordConstructor (l1, l2)
+    | FStar_Syntax_Syntax.Action l -> FStar_Reflection_Data.Action l
+    | FStar_Syntax_Syntax.ExceptionConstructor  ->
+        FStar_Reflection_Data.ExceptionConstructor
+    | FStar_Syntax_Syntax.HasMaskedEffect  ->
+        FStar_Reflection_Data.HasMaskedEffect
+    | FStar_Syntax_Syntax.Effect  -> FStar_Reflection_Data.Effect
+    | FStar_Syntax_Syntax.OnlyName  -> FStar_Reflection_Data.OnlyName
+  
 let (sigelt_quals :
-  FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.qualifier Prims.list) =
-  fun se  -> se.FStar_Syntax_Syntax.sigquals 
+  FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.qualifier Prims.list) =
+  fun se  ->
+    FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+      (FStar_List.map syntax_to_rd_qual)
+  
 let (set_sigelt_quals :
-  FStar_Syntax_Syntax.qualifier Prims.list ->
+  FStar_Reflection_Data.qualifier Prims.list ->
     FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
   =
   fun quals  ->
     fun se  ->
-      let uu___379_1708 = se  in
+      let uu___455_1790 = se  in
+      let uu____1791 = FStar_List.map rd_to_syntax_qual quals  in
       {
-        FStar_Syntax_Syntax.sigel = (uu___379_1708.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigel = (uu___455_1790.FStar_Syntax_Syntax.sigel);
         FStar_Syntax_Syntax.sigrng =
-          (uu___379_1708.FStar_Syntax_Syntax.sigrng);
-        FStar_Syntax_Syntax.sigquals = quals;
+          (uu___455_1790.FStar_Syntax_Syntax.sigrng);
+        FStar_Syntax_Syntax.sigquals = uu____1791;
         FStar_Syntax_Syntax.sigmeta =
-          (uu___379_1708.FStar_Syntax_Syntax.sigmeta);
+          (uu___455_1790.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs =
-          (uu___379_1708.FStar_Syntax_Syntax.sigattrs);
+          (uu___455_1790.FStar_Syntax_Syntax.sigattrs);
         FStar_Syntax_Syntax.sigopts =
-          (uu___379_1708.FStar_Syntax_Syntax.sigopts)
+          (uu___455_1790.FStar_Syntax_Syntax.sigopts)
       }
   
 let (sigelt_opts :
@@ -576,17 +658,17 @@ let (inspect_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view) =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_let ((r,lb::[]),uu____1727) ->
+    | FStar_Syntax_Syntax.Sig_let ((r,lb::[]),uu____1812) ->
         let fv =
           match lb.FStar_Syntax_Syntax.lbname with
           | FStar_Util.Inr fv -> fv
-          | FStar_Util.Inl uu____1738 ->
+          | FStar_Util.Inl uu____1823 ->
               failwith "impossible: global Sig_let has bv"
            in
-        let uu____1740 =
+        let uu____1825 =
           FStar_Syntax_Subst.univ_var_opening lb.FStar_Syntax_Syntax.lbunivs
            in
-        (match uu____1740 with
+        (match uu____1825 with
          | (s,us) ->
              let typ =
                FStar_Syntax_Subst.subst s lb.FStar_Syntax_Syntax.lbtyp  in
@@ -596,29 +678,29 @@ let (inspect_sigelt :
                (r, fv, (lb.FStar_Syntax_Syntax.lbunivs),
                  (lb.FStar_Syntax_Syntax.lbtyp),
                  (lb.FStar_Syntax_Syntax.lbdef)))
-    | FStar_Syntax_Syntax.Sig_inductive_typ (lid,us,bs,ty,uu____1768,c_lids)
+    | FStar_Syntax_Syntax.Sig_inductive_typ (lid,us,bs,ty,uu____1853,c_lids)
         ->
         let nm = FStar_Ident.path_of_lid lid  in
-        let uu____1779 = FStar_Syntax_Subst.univ_var_opening us  in
-        (match uu____1779 with
+        let uu____1864 = FStar_Syntax_Subst.univ_var_opening us  in
+        (match uu____1864 with
          | (s,us1) ->
              let bs1 = FStar_Syntax_Subst.subst_binders s bs  in
              let ty1 = FStar_Syntax_Subst.subst s ty  in
-             let uu____1800 =
-               let uu____1817 = FStar_List.map FStar_Ident.path_of_lid c_lids
+             let uu____1885 =
+               let uu____1902 = FStar_List.map FStar_Ident.path_of_lid c_lids
                   in
-               (nm, us1, bs1, ty1, uu____1817)  in
-             FStar_Reflection_Data.Sg_Inductive uu____1800)
-    | FStar_Syntax_Syntax.Sig_datacon (lid,us,ty,uu____1829,n1,uu____1831) ->
-        let uu____1838 = FStar_Syntax_Subst.univ_var_opening us  in
-        (match uu____1838 with
+               (nm, us1, bs1, ty1, uu____1902)  in
+             FStar_Reflection_Data.Sg_Inductive uu____1885)
+    | FStar_Syntax_Syntax.Sig_datacon (lid,us,ty,uu____1914,n1,uu____1916) ->
+        let uu____1923 = FStar_Syntax_Subst.univ_var_opening us  in
+        (match uu____1923 with
          | (s,us1) ->
              let ty1 = FStar_Syntax_Subst.subst s ty  in
-             let uu____1858 =
-               let uu____1863 = FStar_Ident.path_of_lid lid  in
-               (uu____1863, ty1)  in
-             FStar_Reflection_Data.Sg_Constructor uu____1858)
-    | uu____1864 -> FStar_Reflection_Data.Unk
+             let uu____1943 =
+               let uu____1948 = FStar_Ident.path_of_lid lid  in
+               (uu____1948, ty1)  in
+             FStar_Reflection_Data.Sg_Constructor uu____1943)
+    | uu____1949 -> FStar_Reflection_Data.Unk
   
 let (pack_sigelt :
   FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
@@ -633,42 +715,42 @@ let (pack_sigelt :
             FStar_Parser_Const.effect_Tot_lid def1 []
             def1.FStar_Syntax_Syntax.pos
            in
-        let uu____1890 =
-          let uu____1891 =
-            let uu____1898 =
-              let uu____1901 = FStar_Syntax_Syntax.lid_of_fv fv  in
-              [uu____1901]  in
-            ((r, [lb]), uu____1898)  in
-          FStar_Syntax_Syntax.Sig_let uu____1891  in
-        FStar_All.pipe_left FStar_Syntax_Syntax.mk_sigelt uu____1890
-    | FStar_Reflection_Data.Sg_Constructor uu____1907 ->
+        let uu____1975 =
+          let uu____1976 =
+            let uu____1983 =
+              let uu____1986 = FStar_Syntax_Syntax.lid_of_fv fv  in
+              [uu____1986]  in
+            ((r, [lb]), uu____1983)  in
+          FStar_Syntax_Syntax.Sig_let uu____1976  in
+        FStar_All.pipe_left FStar_Syntax_Syntax.mk_sigelt uu____1975
+    | FStar_Reflection_Data.Sg_Constructor uu____1992 ->
         failwith "packing Sg_Constructor, sorry"
-    | FStar_Reflection_Data.Sg_Inductive uu____1913 ->
+    | FStar_Reflection_Data.Sg_Inductive uu____1998 ->
         failwith "packing Sg_Inductive, sorry"
     | FStar_Reflection_Data.Unk  -> failwith "packing Unk, sorry"
   
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv  ->
-    let uu____1938 =
+    let uu____2023 =
       FStar_Ident.string_of_ident bv.FStar_Syntax_Syntax.ppname  in
-    let uu____1940 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index  in
+    let uu____2025 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index  in
     {
-      FStar_Reflection_Data.bv_ppname = uu____1938;
-      FStar_Reflection_Data.bv_index = uu____1940;
+      FStar_Reflection_Data.bv_ppname = uu____2023;
+      FStar_Reflection_Data.bv_index = uu____2025;
       FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
     }
   
 let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   fun bvv  ->
-    let uu____1947 =
+    let uu____2032 =
       FStar_Ident.mk_ident
         ((bvv.FStar_Reflection_Data.bv_ppname), FStar_Range.dummyRange)
        in
-    let uu____1949 =
+    let uu____2034 =
       FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index  in
     {
-      FStar_Syntax_Syntax.ppname = uu____1947;
-      FStar_Syntax_Syntax.index = uu____1949;
+      FStar_Syntax_Syntax.ppname = uu____2032;
+      FStar_Syntax_Syntax.index = uu____2034;
       FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
     }
   
@@ -677,28 +759,28 @@ let (inspect_binder :
     (FStar_Syntax_Syntax.bv * FStar_Reflection_Data.aqualv))
   =
   fun b  ->
-    let uu____1965 = b  in
-    match uu____1965 with
-    | (bv,aq) -> let uu____1976 = inspect_aqual aq  in (bv, uu____1976)
+    let uu____2050 = b  in
+    match uu____2050 with
+    | (bv,aq) -> let uu____2061 = inspect_aqual aq  in (bv, uu____2061)
   
 let (pack_binder :
   FStar_Syntax_Syntax.bv ->
     FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder)
   =
-  fun bv  -> fun aqv  -> let uu____1988 = pack_aqual aqv  in (bv, uu____1988) 
+  fun bv  -> fun aqv  -> let uu____2073 = pack_aqual aqv  in (bv, uu____2073) 
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e  -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule 
 let (env_open_modules :
   FStar_TypeChecker_Env.env -> FStar_Reflection_Data.name Prims.list) =
   fun e  ->
-    let uu____2015 =
+    let uu____2100 =
       FStar_Syntax_DsEnv.open_modules e.FStar_TypeChecker_Env.dsenv  in
     FStar_List.map
-      (fun uu____2033  ->
-         match uu____2033 with
+      (fun uu____2118  ->
+         match uu____2118 with
          | (l,m) ->
-             let uu____2043 = FStar_Ident.ids_of_lid l  in
-             FStar_List.map FStar_Ident.text_of_id uu____2043) uu____2015
+             let uu____2128 = FStar_Ident.ids_of_lid l  in
+             FStar_List.map FStar_Ident.text_of_id uu____2128) uu____2100
   
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
@@ -707,9 +789,9 @@ let (term_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
-      let uu____2065 = FStar_Syntax_Util.un_uinst t1  in
-      let uu____2066 = FStar_Syntax_Util.un_uinst t2  in
-      FStar_Syntax_Util.term_eq uu____2065 uu____2066
+      let uu____2150 = FStar_Syntax_Util.un_uinst t1  in
+      let uu____2151 = FStar_Syntax_Util.un_uinst t2  in
+      FStar_Syntax_Util.term_eq uu____2150 uu____2151
   
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 
