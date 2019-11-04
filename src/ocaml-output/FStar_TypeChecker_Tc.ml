@@ -1985,7 +1985,7 @@ let (tc_decl' :
                  else ());
                 (let uu____3156 =
                    FStar_TypeChecker_TcTerm.tc_tactic
-                     FStar_Syntax_Syntax.t_unit FStar_Syntax_Syntax.t_unit
+                     FStar_Syntax_Syntax.t_unit FStar_Syntax_Syntax.t_decls
                      env t
                     in
                  match uu____3156 with

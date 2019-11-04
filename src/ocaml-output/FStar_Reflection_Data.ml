@@ -689,3 +689,4 @@ let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
   FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
+type decls = FStar_Syntax_Syntax.sigelt Prims.list
