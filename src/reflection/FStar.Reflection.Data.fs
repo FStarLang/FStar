@@ -306,4 +306,4 @@ let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
 let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)
 
 (* Needed so this appears in the ocaml output for fstar-tactics-lib *)
-type decls = list sigelt
+type decls = list<sigelt>
