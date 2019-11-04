@@ -3,7 +3,7 @@
 *.fst linguist-documentation=false
 *.fsti linguist-language=FStar
 *.fsti linguist-documentation=false
-src/ocaml-output/FStar_*.ml linguist-vendored
+/src/ocaml-output/FStar_*.ml linguist-vendored
 
 # Line endings
 *.fs* eol=lf
@@ -19,13 +19,19 @@ kremlin_ref eol=lf
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
 
-# Don't show diffs for generated ocaml-output files
-/src/ocaml-output/FStar_*.ml -diff
-*.hints -diff
+# Do not shows diff nor try to merge for the OCaml snapshot and hint
+# files. This just takes the latest one when there's a conflict, and
+# does not show diffs in the CLI nor GitHub.
+/src/ocaml-output/FStar_*.ml -diff -merge
+/src/ocaml-output/FStar_*.ml linguist-generated=true
+*.hints -diff -merge
+*.hints linguist-generated=true
 
 # Checked modules
 *.checked binary
+*.checked linguist-generated=true
 *.checked.lax binary
+*.checked.lax linguist-generated=true
 
 # Batch files
 *.bat eol=crlf

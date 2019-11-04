@@ -800,7 +800,7 @@ let only_one_live_pid_with_full_permission_specific
   (v_perms: value_perms a v)
   (pid: perm_id)
   (pid':live_pid v_perms)
-  : Lemma (requires (get_permission_from_pid v_perms pid == 1.0R))
+  : Lemma (requires (get_permission_from_pid v_perms pid == full_permission))
     (ensures pid == pid')
   = only_one_live_pid_with_full_permission v_perms pid
 

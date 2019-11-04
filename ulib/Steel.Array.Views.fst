@@ -100,7 +100,7 @@ let array_view (#a:Type) (b:array a) : Tot (view (varray b)) =
     sel = sel
   }
 
-unfold let array_resource (#a:Type) (b:array a) : Tot resource =
+let array_resource (#a:Type) (b:array a) : Tot resource =
   as_resource (array_view b)
 
 let as_rseq

@@ -1,0 +1,33 @@
+[
+  "•s%¼\u000b“\u0004«¼À˜H®\u0013\u0012€",
+  [
+    [
+      "FStar.Universe.downgrade_val_raise_val",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Universe.downgrade_val",
+        "equation_FStar.Universe.raise_val",
+        "projection_inverse_FStar.Universe.Ret__0"
+      ],
+      0,
+      "3a92ef6bcfbb40454708b783333f3f06"
+    ],
+    [
+      "FStar.Universe.raise_val_downgrade_val",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Universe.downgrade_val",
+        "equation_FStar.Universe.raise_t",
+        "equation_FStar.Universe.raise_val",
+        "fuel_guarded_inversion_FStar.Universe.raise0"
+      ],
+      0,
+      "c237b9640b366335a52f3dad75e85650"
+    ]
+  ]
+]

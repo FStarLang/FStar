@@ -1,0 +1,21 @@
+[
+  "Ò\u007fÌ\u0019µßž\u0006Ùü\u001b>lXwx",
+  [
+    [
+      "FStar.Pointer.Derived3.fill_buffer_postcond",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def",
+        "equation_FStar.Pointer.Derived3.fill_buffer_precond",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "4f41b49567789f89c50e76022326e14d"
+    ]
+  ]
+]

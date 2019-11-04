@@ -37,7 +37,7 @@ val live (#a:Type) (h:HS.mem) (b:array a) : Type0
 
 /// Helpers for specifying full permissions on an array.
 let writeable_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 =
-  get_perm #a h b i == 1.0R /\ live #a h b
+  get_perm #a h b i == P.full_permission /\ live #a h b
 let writeable #a h b =
   live #a h b /\
   (forall (i:nat{i < vlength #a b}). {:pattern (get_perm h b i) } writeable_cell h b i)

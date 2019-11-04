@@ -1,0 +1,26 @@
+[
+  "D\u001cy¿À\u001f~}\u001f∑R\u0003[≤ÿÍ",
+  [
+    [
+      "FStar.Pointer.Derived2.copy_buffer_contents_precond",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8d5292fe2b52ace8d425802caafc0c17"
+    ],
+    [
+      "FStar.Pointer.Derived2.copy_buffer_contents_postcond",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "equation_FStar.Pointer.Derived2.copy_buffer_contents_precond"
+      ],
+      0,
+      "6ba408da7386eb371562f538d301c454"
+    ]
+  ]
+]

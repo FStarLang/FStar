@@ -741,8 +741,9 @@ let collect_one
             end
         | Exception (_, t) ->
             iter_opt t collect_term
-        | NewEffect ed ->
-            collect_effect_decl ed
+        | NewEffect ed
+        | LayeredEffect ed ->
+             collect_effect_decl ed
         | Fsdoc _
         | Pragma _ ->
             ()

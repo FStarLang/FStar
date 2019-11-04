@@ -54,11 +54,10 @@ let f2 (x:t2) : int =
     synth_by_tactic (fun () -> destruct (quote x);
                                dump "21"; let b = intro () in
                                           let _eq = intro () in
-                                          exact (binder_to_term b);
+                                          exact b;
                                dump "22"; let b = intro () in
                                           let _eq = intro () in
-                                          let t = binder_to_term b in // TODO: should be let-bound automatically?
-                                          exact (`(snd (`#t)));
+                                          exact (`(snd (`#b)));
                                dump "23"; intros' (); exact (`3))
 
 let _ = assert_norm (f2 (A2 1) == 1)
@@ -127,7 +126,7 @@ type fin : nat -> Type =
 let decr1 (#b:nat) (n : fin (b + 1)) : fin b =
     synth_by_tactic (fun () -> destruct (quote n);
                                dump "61"; let [b1;_] = intros () in apply (`Z);
-                               dump "62"; let [b1;b2;_] = intros () in exact_guard (binder_to_term b2))
+                               dump "62"; let [b1;b2;_] = intros () in exact_guard b2)
 
 (* we can however *cut* by it, rewrite, and leave the trivial proof to SMT *)
 let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
@@ -136,7 +135,13 @@ let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
                                dump "72"; let [b1;b2;_] = intros () in
                                           // TODO: Ugh! We need the squash because z3 cannot
                                           // prove a Prims.equals, but only Prims.eq2
-                                          let beq = tcut (`squash (`@s == `#(binder_to_term b1))) in
+                                          let beq = tcut (`squash (`@s == `#b1)) in
                                           rewrite beq;
-                                          exact_guard (binder_to_term b2);
+                                          exact_guard b2;
                                dump "73"))
+
+
+(* Making sure destruct unfolds too *)
+let ee x = either x x
+let test3 (x : ee False) =
+  assert False by (seq (fun () -> destruct (quote x)) (fun () -> ignore (intros ())))

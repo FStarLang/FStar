@@ -119,8 +119,6 @@ let (init_once : unit -> unit) =
                (uu___46_235.FStar_TypeChecker_Env.sigtab);
              FStar_TypeChecker_Env.attrtab =
                (uu___46_235.FStar_TypeChecker_Env.attrtab);
-             FStar_TypeChecker_Env.is_pattern =
-               (uu___46_235.FStar_TypeChecker_Env.is_pattern);
              FStar_TypeChecker_Env.instantiate_imp =
                (uu___46_235.FStar_TypeChecker_Env.instantiate_imp);
              FStar_TypeChecker_Env.effects =
@@ -175,6 +173,8 @@ let (init_once : unit -> unit) =
                (uu___46_235.FStar_TypeChecker_Env.try_solve_implicits_hook);
              FStar_TypeChecker_Env.splice =
                (uu___46_235.FStar_TypeChecker_Env.splice);
+             FStar_TypeChecker_Env.mpreprocess =
+               (uu___46_235.FStar_TypeChecker_Env.mpreprocess);
              FStar_TypeChecker_Env.postprocess =
                (uu___46_235.FStar_TypeChecker_Env.postprocess);
              FStar_TypeChecker_Env.is_native_tactic =
@@ -218,8 +218,6 @@ let (init_once : unit -> unit) =
                     (uu___52_245.FStar_TypeChecker_Env.sigtab);
                   FStar_TypeChecker_Env.attrtab =
                     (uu___52_245.FStar_TypeChecker_Env.attrtab);
-                  FStar_TypeChecker_Env.is_pattern =
-                    (uu___52_245.FStar_TypeChecker_Env.is_pattern);
                   FStar_TypeChecker_Env.instantiate_imp =
                     (uu___52_245.FStar_TypeChecker_Env.instantiate_imp);
                   FStar_TypeChecker_Env.effects =
@@ -274,6 +272,8 @@ let (init_once : unit -> unit) =
                     (uu___52_245.FStar_TypeChecker_Env.try_solve_implicits_hook);
                   FStar_TypeChecker_Env.splice =
                     (uu___52_245.FStar_TypeChecker_Env.splice);
+                  FStar_TypeChecker_Env.mpreprocess =
+                    (uu___52_245.FStar_TypeChecker_Env.mpreprocess);
                   FStar_TypeChecker_Env.postprocess =
                     (uu___52_245.FStar_TypeChecker_Env.postprocess);
                   FStar_TypeChecker_Env.is_native_tactic =
@@ -348,7 +348,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   
 let (tc' :
   Prims.string ->
-    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t *
+    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *
       FStar_TypeChecker_Env.env))
   =
   fun s  ->
@@ -377,8 +377,6 @@ let (tc' :
           (uu___83_378.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___83_378.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___83_378.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___83_378.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -431,6 +429,8 @@ let (tc' :
           (uu___83_378.FStar_TypeChecker_Env.try_solve_implicits_hook);
         FStar_TypeChecker_Env.splice =
           (uu___83_378.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___83_378.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___83_378.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -488,8 +488,6 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___103_441.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___103_441.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___103_441.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___103_441.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -542,6 +540,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___103_441.FStar_TypeChecker_Env.try_solve_implicits_hook);
         FStar_TypeChecker_Env.splice =
           (uu___103_441.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___103_441.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___103_441.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =

@@ -117,19 +117,22 @@ let c_eq2_lid  = pconst "equals"
 let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
-let cons_lid            = pconst  "Cons"
-let nil_lid             = pconst  "Nil"
-let some_lid            = psnconst  "Some"
-let none_lid            = psnconst  "None"
-let assume_lid          = pconst  "_assume"
-let assert_lid          = pconst  "_assert"
-let pure_assert_wp_lid  = pconst "pure_assert_wp"
-let pure_assume_wp_lid  = pconst "pure_assume_wp"
-let assert_norm_lid     = p2l ["FStar"; "Pervasives"; "assert_norm"]
+let cons_lid              = pconst  "Cons"
+let nil_lid               = pconst  "Nil"
+let some_lid              = psnconst  "Some"
+let none_lid              = psnconst  "None"
+let assume_lid            = pconst  "_assume"
+let assert_lid            = pconst  "_assert"
+let pure_wp_lid           = pconst "pure_wp"
+let trivial_pure_post_lid = psconst "trivial_pure_post"
+let pure_assert_wp_lid    = pconst "pure_assert_wp"
+let pure_assume_wp_lid    = pconst "pure_assume_wp"
+let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
-let list_append_lid     = p2l ["FStar"; "List"; "append"]
+let list_append_lid       = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
-let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
+let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
+let id_lid                = psconst "id"
 
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
@@ -253,7 +256,16 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
+let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
+let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+
+let reveal = p2l ["FStar"; "Ghost"; "reveal"]
+let hide   = p2l ["FStar"; "Ghost"; "hide"]
+
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
@@ -294,6 +306,7 @@ let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
+let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
@@ -302,7 +315,9 @@ let tcdecltime_attr = psconst "tcdecltime"
 let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
+let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Basic"; "check_with"]) FStar.Range.dummyRange
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -344,7 +359,8 @@ let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
+let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_lid lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -354,6 +370,9 @@ let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
+
+let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (text_of_lid lid)
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
@@ -395,6 +414,7 @@ let is_name (lid:lident) =
 (* tactic constants *)
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
+let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]

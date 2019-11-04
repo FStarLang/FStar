@@ -1,0 +1,17 @@
+[
+  "4·$_§ÝÅþ\u0014b ³àË›;",
+  [
+    [
+      "FStar.TwoLevelHeap.lemma_as_ref_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.TwoLevelHeap.as_ref",
+        "equation_FStar.TwoLevelHeap.ref_as_rref"
+      ],
+      0,
+      "5462abb8c0a6438e2648c7d91c6fb456"
+    ]
+  ]
+]

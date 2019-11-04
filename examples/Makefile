@@ -40,7 +40,8 @@ doublylinkedlist \
 regional \
 generic \
 calc \
-steel
+steel \
+layeredeffects
 
 # low-level \  ... NS: removing from CI for this branch
 

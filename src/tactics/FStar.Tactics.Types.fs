@@ -78,7 +78,6 @@ type guard_policy =
 
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
-    main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
     all_implicits: implicits ;   //all the implicits currently open, partially resolved
 
     // NOTE: Goals are user-settable, the "goals" we mean in
@@ -105,8 +104,7 @@ type proofstate = {
 let subst_proof_state subst ps =
     if Options.tactic_raw_binders ()
     then ps
-    else { ps with main_goal = subst_goal subst ps.main_goal;
-                   goals = List.map (subst_goal subst) ps.goals
+    else { ps with goals = List.map (subst_goal subst) ps.goals
     }
 
 let decr_depth (ps:proofstate) : proofstate =

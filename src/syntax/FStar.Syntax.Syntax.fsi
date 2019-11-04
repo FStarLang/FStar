@@ -26,6 +26,7 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Dyn
+module O = FStar.Options
 
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
@@ -259,6 +260,7 @@ and lazy_kind =
   | BadLazy
   | Lazy_bv
   | Lazy_binder
+  | Lazy_optionstate
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
@@ -278,13 +280,6 @@ and arg_qualifier =
   | Meta of term
   | Equality
 and aqual = option<arg_qualifier>
-
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
 val lookup_aq : bv -> antiquotations -> option<term>
@@ -356,35 +351,87 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
-type eff_decl = {
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
-    stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr        :tscheme;
-    //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+
+(*
+ * Effect combinators for wp-based effects
+ *
+ * This includes both primitive effects (such as PURE, DIV)
+ *   as well as user-defined DM4F effects
+ *
+ * repr, return_repr, and bind_repr are optional, and are set only for reifiable effects
+ *
+ * For DM4F effects, ret_wp, bind_wp, and other wp combinators are derived and populated by the typechecker
+ *   These fields are dummy ts ([], Tm_unknown) after desugaring
+ *
+ * We could add another boolean, elaborated somewhere
+ *)
+
+type wp_eff_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+  trivial      : tscheme;
+
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
 }
+
+
+(*
+ * Layered effects combinators
+ * 
+ * All of these are pairs of type schemes,
+ *   where the first component is the term ts and the second component is the type ts
+ *
+ * Before typechecking the effect declaration, the second component is a dummy ts
+ *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
+ *
+ * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ *)
+type layered_eff_combinators = {
+  l_base_effect  : lident;
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
+  l_bind         : (tscheme * tscheme);
+  l_subcomp      : (tscheme * tscheme);
+  l_if_then_else : (tscheme * tscheme);
+
+}
+
+
+type eff_combinators =
+  | Primitive_eff: wp_eff_combinators -> eff_combinators
+  | DM4F_eff: wp_eff_combinators -> eff_combinators
+  | Layered_eff: layered_eff_combinators -> eff_combinators
+
+
+type eff_decl = {
+  mname       : lident;      //STATE_h
+
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;  //u#heap
+  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+
+  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
+
+  combinators : eff_combinators;
+
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
+}
+
 
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
 }
+
 
 // JP/NS:
 //    the n-tuples hinder readability, make it difficult to maintain code (see
@@ -397,6 +444,11 @@ type sig_metadata = {
 //    But, given F*'s poor syntax for record arguments, this would require writing
 //    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
 //    the extra parentheses would not be caught by the F# parser during development.
+
+(*
+ * AR: we no longer have Sig_new_effect_for_free
+ *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
+ *)
 type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
@@ -427,7 +479,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names
@@ -442,7 +493,8 @@ and sigelt = {
     sigrng:   Range.range;
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
-    sigattrs: list<attribute>
+    sigattrs: list<attribute>;
+    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -480,13 +532,8 @@ val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
+val mk_Tac :        typ -> comp
 val mk_Comp:        comp_typ -> comp
-val mk_lcomp:
-    eff_name: lident ->
-    res_typ: typ ->
-    cflags: list<cflag> ->
-    comp_thunk: (unit -> comp) -> lcomp
-val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
@@ -568,10 +615,13 @@ val t_char          : term
 val t_range         : term
 val t_norm_step     : term
 val t_term          : term
+val t_term_view     : term
 val t_order         : term
 val t_decls         : term
 val t_binder        : term
 val t_bv            : term
+val t_tac_of        : term -> term -> term
+val t_tactic_of     : term -> term
 val t_tactic_unit   : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term

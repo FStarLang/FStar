@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "ff50a955cd6c7cd585139e53d08e92e2"
+      "544148eef9a9c134489b36c6cb169fff"
     ],
     [
       "Bug590.coerce",
@@ -29,7 +29,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d566aa95ad9e0f4cd1efb35900d7ded1"
+      "13d2eeb8b8c8c83aa9d954bbafb5154f"
     ],
     [
       "Bug590.blah2",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "c938db4bdd271127f690fa310ef0c6e5"
+      "654167caf80bec95e3b96152eeb26aa8"
     ],
     [
       "Bug590.flatten_lemma",
@@ -66,7 +66,7 @@
         "typing_FStar.List.Tot.Base.flatten"
       ],
       0,
-      "bc12bace63a3fb11effca85c8a344c70"
+      "db27adbdbf2050cc79914ef0f85a63bf"
     ]
   ]
 ]

@@ -85,7 +85,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
                                                 (Ident.string_of_lid tc))) s.sigrng;
 
 (*close*)let usubst = SS.univ_var_closing uvs in
-         let guard = TcUtil.close_guard_implicits env tps guard in
+         let guard = TcUtil.close_guard_implicits env false tps guard in
          let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
                              (indices |> SS.subst_binders (SS.shift_subst (List.length tps) usubst)))
                             (S.mk_Total (t |> SS.subst (SS.shift_subst (List.length tps + List.length indices) usubst))) in
@@ -713,7 +713,8 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
             sigquals = [];
             sigrng = Range.dummyRange;
             sigmeta = default_sigmeta;
-            sigattrs = []  } ]
+            sigattrs = [];
+            sigopts = None; } ]
   ) [] axioms in
 
   env.solver.pop "haseq";
@@ -854,7 +855,8 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
               sigquals = [];
               sigrng = Range.dummyRange;
               sigmeta = default_sigmeta;
-              sigattrs = []  }
+              sigattrs = [];
+              sigopts = None; }
 
   in
   [se]
@@ -975,7 +977,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                     sigquals = quals;
                     sigrng = Env.get_range env0;
                     sigmeta = default_sigmeta;
-                    sigattrs = List.collect (fun s -> s.sigattrs) ses } in
+                    sigattrs = List.collect (fun s -> s.sigattrs) ses;
+                    sigopts = None; } in
 
   (* In any of the tycons had their typed declared using `val`,
      check that the declared and inferred types are compatible *)
@@ -1097,7 +1100,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                          sigquals = quals;
                          sigrng = range_of_lid discriminator_name;
                          sigmeta = default_sigmeta;
-                         sigattrs = [] } in
+                         sigattrs = [];
+                         sigopts = None; } in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1140,7 +1144,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                              sigquals = quals;
                              sigrng = p;
                              sigmeta = default_sigmeta;
-                             sigattrs = []  } in
+                             sigattrs = [];
+                             sigopts = None; } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1199,7 +1204,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
                        sigmeta = default_sigmeta;
-                       sigattrs = attrs } in
+                       sigattrs = attrs;
+                       sigopts = None; } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1236,7 +1242,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;
-                           sigattrs = attrs } in
+                           sigattrs = attrs;
+                           sigopts = None; } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
