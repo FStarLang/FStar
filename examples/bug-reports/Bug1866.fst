@@ -74,7 +74,7 @@ let base4 p =
     x
 
 let traverse (name:string) : Tac decls =
-  let d = lookup_typ (cur_env ()) (cur_module () @ [ name ]) in
+  let d = lookup_typ (top_env ()) (cur_module () @ [ name ]) in
   let d = match d with Some d -> d | None -> fail "0" in
   let d, us = match inspect_sigelt d with
     | Sg_Let _ _ us _ d -> d, us
