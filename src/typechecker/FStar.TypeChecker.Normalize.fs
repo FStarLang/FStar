@@ -30,6 +30,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
@@ -43,6 +44,8 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+
+module TcComm = FStar.TypeChecker.Common
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -1576,7 +1579,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*                                                                            *)
       (* ****************************************************************************)
       let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
-      let _, bind_repr = ed.bind_repr in
+      let _, bind_repr = ed |> U.get_bind_repr |> must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
         | Inl x ->
@@ -1634,16 +1637,36 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                       as_arg (embed_simple EMB.e_range body.pos body.pos)]
                 else []
               in
-              let reified = S.mk (Tm_app(bind_inst, [
-                  (* a, b *)
-                  as_arg lb.lbtyp; as_arg t] @
-                  maybe_range_arg @ [
-                  (* wp_head, head--the term shouldn't depend on wp_head *)
-                  as_arg S.tun; as_arg head;
-                  (* wp_body, body--the term shouldn't depend on wp_body *)
-                  as_arg S.tun; as_arg body]))
-                None rng
-              in
+              let reified =
+                (*
+                 * Arguments to bind_repr for layered effects are:
+                 *   a b ..units for binders that compute indices.. head body
+                 *
+                 * For non-layered effects, as before
+                 *)
+                let args =
+                  if U.is_layered ed then
+                    let unit_args =
+                      match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                        bs
+                        |> List.splitAt (List.length bs - 2)
+                        |> fst
+                        |> List.map (fun _ -> S.as_arg S.unit_const)
+                      | _ ->
+                        raise_error (Errors.Fatal_UnexpectedEffect,
+                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                            (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
+                  else
+                    [ (* a, b *)
+                      as_arg lb.lbtyp; as_arg t] @
+                      maybe_range_arg @ [
+                      (* wp_head, head--the term shouldn't depend on wp_head *)
+                      as_arg S.tun; as_arg head;
+                      (* wp_body, body--the term shouldn't depend on wp_body *)
+                      as_arg S.tun; as_arg body] in
+                S.mk (Tm_app(bind_inst, args)) None rng in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1747,16 +1770,43 @@ and reify_lift cfg e msrc mtgt t : term =
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
-  if U.is_pure_effect msrc || U.is_div_effect msrc
+
+  (*
+   * AR: Not sure why we should use return, if the programmer has also provided a lift
+   *     This seems like a mismatch, since to verify we use lift (else we give an error)
+   *       but to run, we are relying on return
+   *     Disabling this for layered effects, and using the lift instead
+   *)
+  if (U.is_pure_effect msrc || U.is_div_effect msrc) &&
+     not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
-    let _, return_repr = ed.return_repr in
+    let _, return_repr = ed |> U.get_return_repr |> must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    let args =
+      (*
+       * Arguments for layered effects are:
+       *   a ..units for binders that compute indices.. x
+       *)
+      if U.is_layered ed then
+        let unit_args =
+          match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
+          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+            bs
+            |> List.splitAt (List.length bs - 1)
+            |> fst
+            |> List.map (fun _ -> S.as_arg S.unit_const)
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedEffect,
+              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
+                (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
+        (S.as_arg t)::(unit_args@[S.as_arg e])
+      else [as_arg t ; as_arg e] in
+    S.mk (Tm_app(return_inst, args)) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
@@ -1768,10 +1818,7 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      (* We don't have any reasonable wp to provide so we just pass unknow *)
-      (* Usually the wp is only necessary to typecheck, so this should not *)
-      (* create a big issue. *)
-      lift (env.universe_of env t) t S.tun (U.mk_reify e)
+      lift (env.universe_of env t) t (U.mk_reify e)
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -2574,8 +2621,8 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           S.mk_lcomp pure_eff lc.res_typ lc.cflags
-                      (fun () -> ghost_to_pure env (lcomp_comp lc))
+           { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc
+             with eff_name = pure_eff }
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
@@ -2847,8 +2894,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us, _, t = elim_uvars_aux_t env us [] t in
       {s with sigel = Sig_assume (l, us, t)}
 
-    | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
-
     | Sig_new_effect ed ->
       //AR: S.t_unit is just a dummy comp type, we only care about the binders
       let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
@@ -2911,20 +2956,11 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
         a'
       in
       let ed = { ed with
-               univs        = univs;
-               binders      = binders;
-               signature    = elim_tscheme ed.signature;
-               ret_wp       = elim_tscheme ed.ret_wp;
-               bind_wp      = elim_tscheme ed.bind_wp;
-               if_then_else = elim_tscheme ed.if_then_else;
-               ite_wp       = elim_tscheme ed.ite_wp;
-               stronger     = elim_tscheme ed.stronger;
-               close_wp     = elim_tscheme ed.close_wp;
-               trivial      = elim_tscheme ed.trivial;
-               repr         = elim_tscheme ed.repr;
-               return_repr  = elim_tscheme ed.return_repr;
-               bind_repr    = elim_tscheme ed.bind_repr;
-               actions      = List.map elim_action ed.actions } in
+                 univs         = univs;
+                 binders       = binders;
+                 signature     = elim_tscheme ed.signature;
+                 combinators   = apply_eff_combinators elim_tscheme ed.combinators;
+                 actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 
     | Sig_sub_effect sub_eff ->

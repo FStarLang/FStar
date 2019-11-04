@@ -40,7 +40,9 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-calc
+calc \
+layeredeffects
+
 # low-level \  ... NS: removing from CI for this branch
 
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))

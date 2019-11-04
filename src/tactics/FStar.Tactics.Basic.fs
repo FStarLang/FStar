@@ -8,6 +8,7 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
@@ -668,7 +669,7 @@ let tcc (t : term) : tac<comp> = wrap_err "tcc" <|
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
-    ret (S.lcomp_comp lc)
+    ret (TcComm.lcomp_comp lc |> fst)  //dropping the guard from lcomp_comp too!
     ))
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
@@ -1382,7 +1383,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
-    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let rewrite_eq =
@@ -1495,7 +1496,7 @@ let rewrite_rec (ps : proofstate)
     if not should_rewrite
     then ret (t, ctrl)
     else let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in //re-typechecking the goal is expensive
-         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+         if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
            ret (t, globalStop) // Don't do anything for possibly impure terms
          else
            let typ = lcomp.res_typ in
@@ -1862,7 +1863,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
+                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 

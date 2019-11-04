@@ -33,7 +33,9 @@ val report: env -> list<string> -> unit
 //unification variables
 val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 val check_uvars: Range.range -> typ -> unit
-val close_guard_implicits: env -> binders -> guard_t -> guard_t
+
+//caller can set the boolean to true if they want to solve the deferred constraints involving this binder now (best case)
+val close_guard_implicits: env -> bool -> binders -> guard_t -> guard_t
 
 //extracting annotations from a term
 val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
@@ -50,7 +52,7 @@ val generalize_universes: env -> term -> tscheme
 //operations on computation types
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<bv> * lcomp
-val lcomp_univ_opt: lcomp -> option<universe>
+val lcomp_univ_opt: lcomp -> (option<universe> * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
@@ -64,7 +66,8 @@ val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
-val close_lcomp: env -> list<bv> -> lcomp -> lcomp
+val close_wp_lcomp: env -> list<bv> -> lcomp -> lcomp
+val close_layered_lcomp: env -> list<bv> -> list<term> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 val universe_of_comp: env -> universe -> comp -> universe
@@ -88,8 +91,8 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
-val reify_body: env -> term -> term
-val reify_body_with_arg: env -> term -> arg -> term
+val reify_body: env -> steps -> term -> term
+val reify_body_with_arg: env -> steps -> term -> arg -> term
 val remove_reify: term -> term
 
 //decorating terms with monadic operators
@@ -100,3 +103,30 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 val check_sigelt_quals: env -> sigelt -> unit
 
 val must_erase_for_extraction: env -> term -> bool
+
+//layered effect utilities
+
+(*
+ * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
+ *   where ?u1 ... ?un are unification variables, one for each index of the layered effect
+ *
+ * The unification variables are resolved in the input env
+ *)
+val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:option<tscheme> -> u:universe -> a:term -> term * guard_t
+
+(*
+ * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
+ *
+ * If the effect does not have a repr (e.g. primitive effects), then we return a `unit -> M a ?u` term
+ *)
+val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term * guard_t
+
+(*
+ * Return binders for the layered effect indices with signature
+ * In the binder types, a is substituted with a_tm (u is universe of a)
+ *)
+val layered_effect_indices_as_binders:env -> Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
+
+val get_mlift_for_subeff : env -> sub_eff -> Env.mlift
+
+val get_field_projector_name : env -> datacon:lident -> index:int -> lident

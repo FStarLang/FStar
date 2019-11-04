@@ -344,7 +344,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   
 let (tc' :
   Prims.string ->
-    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t *
+    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *
       FStar_TypeChecker_Env.env))
   =
   fun s  ->

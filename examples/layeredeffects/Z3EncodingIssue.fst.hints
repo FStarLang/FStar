@@ -1,0 +1,165 @@
+[
+  "•¸»_~þ¶–c‹Ô\u000b÷û¬ª",
+  [
+    [
+      "Z3EncodingIssue.return",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6500946796bb5a3015d18ab4dc940701"
+    ],
+    [
+      "Z3EncodingIssue.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Integers.uint_8",
+        "equation_LowStar.Buffer.buffer", "equation_Z3EncodingIssue.post_t",
+        "equation_Z3EncodingIssue.repr", "equation_Z3EncodingIssue.u8",
+        "function_token_typing_FStar.Integers.uint_8",
+        "typing_LowStar.Buffer.trivial_preorder",
+        "typing_LowStar.Monotonic.Buffer.as_seq",
+        "typing_Tm_abs_92846d9a5a1b10cf09c1c73a9dc317f5",
+        "typing_Z3EncodingIssue.buf"
+      ],
+      0,
+      "67dbf6c2e42df082bfe76a5e96ace96b"
+    ],
+    [
+      "Z3EncodingIssue.CHACHA",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d7870ac6bd84949ca5626c3a0602639f"
+    ],
+    [
+      "Z3EncodingIssue.CHACHA",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a6b56f4cbfbba8a2a7de2d36f54f4a0a"
+    ],
+    [
+      "Z3EncodingIssue.lift_div_chacha",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Z3EncodingIssue_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "equation_Prims.logical",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "interpretation_Tm_abs_e8e7dd3fad251651880a411e491cc508",
+        "l_quant_interp_b5171de4a304faabedc012f6b839d31f",
+        "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "typing_Tm_abs_e8e7dd3fad251651880a411e491cc508"
+      ],
+      0,
+      "a4b369d1382b6633121f70948cb72263"
+    ],
+    [
+      "Z3EncodingIssue.chacha_fn_ok",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e2bc5879e2eee9e897d828bec5667779"
+    ],
+    [
+      "Z3EncodingIssue.hreturn",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "30ae4504dd5b222c2419f335a1a66a1e"
+    ],
+    [
+      "Z3EncodingIssue.hsubcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Integers.int", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Z3EncodingIssue.hpost_t",
+        "equation_Z3EncodingIssue.hrepr",
+        "function_token_typing_FStar.Integers.int",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel",
+        "typing_Tm_abs_dff9b4530bd8ab75b013bf0e0703182c",
+        "typing_Z3EncodingIssue.state"
+      ],
+      0,
+      "e9b91272bee6467765074cc949ac6509"
+    ],
+    [
+      "Z3EncodingIssue.REF",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "92f01982f028b480f7e46a0018441de5"
+    ],
+    [
+      "Z3EncodingIssue.REF",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "13a5d8d557faf4d0f8580605e4cb315a"
+    ],
+    [
+      "Z3EncodingIssue.lift_div_ref",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Z3EncodingIssue_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "equation_Prims.logical",
+        "interpretation_Tm_abs_a0cb05867128c2eb9c8989bdba119d4c",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "l_quant_interp_484c4546d233ef5202deee8c490f22b1",
+        "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
+        "typing_Tm_abs_a0cb05867128c2eb9c8989bdba119d4c",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "f83cb689a46f0ec91e5287bb12129e29"
+    ],
+    [
+      "Z3EncodingIssue.ref_hfn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Integers.int", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "function_token_typing_FStar.Integers.int",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel", "typing_Z3EncodingIssue.state",
+        "unit_typing"
+      ],
+      0,
+      "f77678acf12c03ad0ab4a3398759f119"
+    ]
+  ]
+]

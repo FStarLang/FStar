@@ -2368,30 +2368,35 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
          rebind res true
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
+let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_t = desugar_term env eff_typ in
 
+    let num_indices = List.length (fst (U.arrow_formals eff_t)) in
+    if is_layered && num_indices <= 1 then
+      raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
+        "Effect " ^ Ident.text_of_id eff_name ^ "is defined as a layered effect but has no indices") d.drange;
+
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+    let for_free = num_indices = 1 in
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
-      else
+      else if is_layered then rr_members @ [ "subcomp"; "if_then_else" ]
         (* the first 3 are optional but must not be counted as actions *)
-        rr_members @ [
-          "return_wp";
-          "bind_wp";
-          "if_then_else";
-          "ite_wp";
-          "stronger";
-          "close_wp";
-          "trivial"
-        ]
+      else rr_members @ [
+        "return_wp";
+        "bind_wp";
+        "if_then_else";
+        "ite_wp";
+        "stronger";
+        "close_wp";
+        "trivial"
+      ]
     in
 
     let name_of_eff_decl decl =
@@ -2425,9 +2430,10 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
               action_defn=Subst.close (binders @ action_params) (desugar_term env def);
               action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
             }, doc
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free || is_layered ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
+            // For layered effects also, user just provides the definition
             let env, action_params = desugar_binders env action_params in
             let action_params = Subst.close_binders action_params in
             {
@@ -2452,63 +2458,69 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
-    let se =
+    let dummy_tscheme = [], S.tun in
+    let combinators =
       if for_free then
-        let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
-        { sigel =
-          (Sig_new_effect_for_free ({
-             mname       = mname;
-             cattributes  = [];
-             univs       = [];
-             binders     = binders;
-             signature   = ([], eff_t);
-             ret_wp      = dummy_tscheme;
-             bind_wp     = dummy_tscheme;
-             if_then_else= dummy_tscheme;
-             ite_wp      = dummy_tscheme;
-             stronger    = dummy_tscheme;
-             close_wp    = dummy_tscheme;
-             trivial     = dummy_tscheme;
-             repr        = lookup "repr";
-             bind_repr   = lookup "bind";
-             return_repr = lookup "return";
-             actions     = actions;
-             eff_attrs   = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = [];
-           sigopts = None; }
+        DM4F_eff ({
+          ret_wp = dummy_tscheme;
+          bind_wp = dummy_tscheme;
+          stronger = dummy_tscheme;
+          if_then_else = dummy_tscheme;
+          ite_wp = dummy_tscheme;
+          close_wp = dummy_tscheme;
+          trivial = dummy_tscheme;
+          
+          repr = Some (lookup "repr");
+          return_repr = Some (lookup "return");
+          bind_repr = Some (lookup "bind");
+        })
+      else if is_layered then
+        //setting the second component to dummy_ts, typechecker fills them in
+        let to_comb (us, t) = (us, t), dummy_tscheme in
+        Layered_eff ({
+          l_base_effect = Ident.lid_of_str "";
+          l_repr = lookup "repr" |> to_comb;
+          l_return = lookup "return" |> to_comb;
+          l_bind = lookup "bind" |> to_comb;
+          l_subcomp = lookup "subcomp" |> to_comb;
+          l_if_then_else = lookup "if_then_else" |> to_comb;
+        })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-        let un_ts = [], Syntax.tun in
-        { sigel =
-          (Sig_new_effect({
-             mname       = mname;
-             cattributes  = [];
-             univs       = [];
-             binders     = binders;
-             signature   = ([], eff_t);
-             ret_wp      = lookup "return_wp";
-             bind_wp     = lookup "bind_wp";
-             if_then_else= lookup "if_then_else";
-             ite_wp      = lookup "ite_wp";
-             stronger    = lookup "stronger";
-             close_wp    = lookup "close_wp";
-             trivial     = lookup "trivial";
-             repr        = (if rr then lookup "repr" else ([], S.tun));
-             bind_repr   = (if rr then lookup "bind" else un_ts);
-             return_repr = (if rr then lookup "return" else un_ts);
-             actions     = actions;
-             eff_attrs   = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = [];
-           sigopts = None; }
-    in
+        Primitive_eff ({
+          ret_wp = lookup "return_wp";
+          bind_wp = lookup "bind_wp";
+          stronger = lookup "stronger";
+          if_then_else = lookup "if_then_else";
+          ite_wp = lookup "ite_wp";
+          close_wp = lookup "close_wp";
+          trivial = lookup "trivial";
+          
+          repr = if rr then Some (lookup "repr") else None;
+          return_repr = if rr then Some (lookup "return") else None;
+          bind_repr = if rr then Some (lookup "bind") else None
+        }) in
+
+    let sigel = Sig_new_effect ({
+      mname = mname;
+      cattributes = [];
+      univs = [];
+      binders = binders;
+      signature = [], eff_t;
+      combinators = combinators;
+      actions = actions;
+      eff_attrs = List.map (desugar_term env) attrs;
+    }) in
+
+    let se = ({
+      sigel = sigel;
+      sigquals = qualifiers;
+      sigrng = d.drange;
+      sigmeta = default_sigmeta  ;
+      sigattrs = [];
+      sigopts = None;
+    }) in
+
     let env = push_sigelt env0 se in
     let env = push_doc env mname d.doc in
     let env = actions_docs |> List.fold_left (fun env (a, doc) ->
@@ -2554,23 +2566,13 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let sub = sub' 0 in
     let mname=qualify env0 eff_name in
     let ed = {
-            mname       =mname;
-            cattributes =cattributes;
-            univs       =ed.univs;
-            binders     =binders;
-            signature   =sub ed.signature;
-            ret_wp      =sub ed.ret_wp;
-            bind_wp     =sub ed.bind_wp;
-            if_then_else=sub ed.if_then_else;
-            ite_wp      =sub ed.ite_wp;
-            stronger    =sub ed.stronger;
-            close_wp    =sub ed.close_wp;
-            trivial     =sub ed.trivial;
-
-            repr        =sub ed.repr;
-            bind_repr   =sub ed.bind_repr;
-            return_repr =sub ed.return_repr;
-            actions     = List.map (fun action ->
+            mname         = mname;
+            cattributes   = cattributes;
+            univs         = ed.univs;
+            binders       = binders;
+            signature     = sub ed.signature;
+            combinators   = apply_eff_combinators sub ed.combinators;
+            actions       = List.map (fun action ->
                 let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
@@ -2588,9 +2590,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             eff_attrs   = ed.eff_attrs;
     } in
     let se =
-      (* An effect for free has a type of the shape "a:Type -> Effect" *)
-      let for_free = List.length (fst (ed.signature |> snd |> U.arrow_formals)) = 1 in
-      { sigel = if for_free then Sig_new_effect_for_free (ed) else Sig_new_effect (ed);
+      { sigel = Sig_new_effect ed;
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
@@ -2966,26 +2966,53 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
     let attrs = d.attrs in
-    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls attrs
+    desugar_effect env d quals false eff_name eff_binders eff_typ eff_decls attrs
+
+  | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
+    let quals = d.quals in
+    let attrs = d.attrs in
+    desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
-    let lookup l = match Env.try_lookup_effect_name env l with
+    let lookup l = match Env.try_lookup_effect_defn env l with
         | None -> raise_error (Errors.Fatal_EffectNotFound, ("Effect name " ^Print.lid_to_string l^ " not found")) d.drange
         | Some l -> l in
-    let src = lookup l.msource in
-    let dst = lookup l.mdest in
-    let lift_wp, lift = match l.lift_op with
-        | NonReifiableLift t -> Some ([],desugar_term env t), None
-        | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
-        | LiftForFree t -> None, Some ([],desugar_term env t)
-    in
-    let se = { sigel = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift});
-               sigquals = [];
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [];
-               sigopts = None; } in
-    env, [se]
+    let src_ed = lookup l.msource in
+    let dst_ed = lookup l.mdest in
+    if not (U.is_layered src_ed || U.is_layered dst_ed)
+    then let lift_wp, lift = match l.lift_op with
+           | NonReifiableLift t -> Some ([],desugar_term env t), None
+           | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
+           | LiftForFree t -> None, Some ([],desugar_term env t)
+         in
+         let se = { sigel = Sig_sub_effect({source=src_ed.mname; target=dst_ed.mname; lift_wp=lift_wp; lift=lift});
+                    sigquals = [];
+                    sigrng = d.drange;
+                    sigmeta = default_sigmeta  ;
+                    sigattrs = [];
+                    sigopts = None} in
+         env, [se]
+    else if U.is_layered src_ed
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+      "Lifts from layered effects (" ^ (Print.lid_to_string src_ed.mname) ^ ") are not yet supported")
+      d.drange
+    else
+      (match l.lift_op with
+       | NonReifiableLift t ->
+         let sub_eff = {
+           source = src_ed.mname;
+           target = dst_ed.mname;
+           lift_wp = None;
+           lift = Some ([], desugar_term env t)
+         } in
+         env, [{
+           sigel = Sig_sub_effect sub_eff;
+           sigquals = [];
+           sigrng = d.drange;
+           sigmeta = default_sigmeta;
+           sigattrs = [];
+           sigopts = None}]
+       | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
   | Splice (ids, t) ->
     let t = desugar_term env t in
@@ -3137,30 +3164,17 @@ let add_modul_to_env (m:Syntax.modul)
                 }
           in
             { ed with
-               univs = [];
-               binders   = Subst.close_binders binders;
-               signature = erase_tscheme ed.signature;
-               ret_wp    = erase_tscheme ed.ret_wp;
-               bind_wp   = erase_tscheme ed.bind_wp;
-               if_then_else= erase_tscheme ed.if_then_else;
-               ite_wp      = erase_tscheme ed.ite_wp;
-               stronger    = erase_tscheme ed.stronger;
-               close_wp    = erase_tscheme ed.close_wp;
-               trivial     = erase_tscheme ed.trivial;
-               repr        = erase_tscheme ed.repr;
-               return_repr = erase_tscheme ed.return_repr;
-               bind_repr   = erase_tscheme ed.bind_repr;
-               actions     = List.map erase_action ed.actions
+              univs         = [];
+              binders       = Subst.close_binders binders;
+              signature     = erase_tscheme ed.signature;
+              combinators   = apply_eff_combinators erase_tscheme ed.combinators;
+              actions       = List.map erase_action ed.actions
           }
       in
       let push_sigelt env se =
           match se.sigel with
           | Sig_new_effect ed ->
             let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt env se' in
-            push_reflect_effect env se.sigquals ed.mname se.sigrng
-          | Sig_new_effect_for_free ed ->
-            let se' = {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)} in
             let env = Env.push_sigelt env se' in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
           | _ -> Env.push_sigelt env se
