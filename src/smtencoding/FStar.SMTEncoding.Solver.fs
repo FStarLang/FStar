@@ -552,20 +552,21 @@ let process_result settings result : option<errors> =
 // one succeeds. If one succeeds, we are done and report no errors. If
 // all of them fail, we call `report` with a log of the errors so they
 // can be displayed to the user.
-// Returns None if successful, Some errs if options were exhausted
+// Returns Inr cfg if successful, with the succeeding config cfg
+// and Inl errs if all options were exhausted
 // without a success, where errs is the list of errors each query
 // returned.
 let fold_queries (qs:list<query_settings>)
                  (ask:query_settings -> z3result)
                  (f:query_settings -> z3result -> option<errors>)
-                 : option<list<errors>> =
-    let rec aux (acc : list<errors>) qs : option<list<errors>> =
+                 : either<list<errors>, query_settings> =
+    let rec aux (acc : list<errors>) qs : either<list<errors>, query_settings> =
         match qs with
-        | [] -> Some acc
+        | [] -> Inl acc
         | q::qs ->
           let res = ask q in
           begin match f q res with
-          | None -> None //done
+          | None -> Inr q //done
           | Some errs ->
             aux (errs::acc) qs
           end
@@ -667,7 +668,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                   (used_hint config)
     in
 
-    let check_all_configs configs : option<list<errors>> =
+    let check_all_configs configs : either<list<errors>, query_settings> =
         fold_queries configs check_one_config process_result
     in
 
@@ -714,32 +715,53 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             then acc
             else fold_nat' f (f acc lo) (lo + 1) hi
         in
+        let best_fuel = BU.mk_ref None in
+        let best_ifuel = BU.mk_ref None in
+        let maybe_improve r n =
+            match !r with
+            | None -> r := Some n
+            | Some m -> if n < m then r := Some n
+        in
         let nsuccess, rs =
             fold_nat'
                 (fun (nsucc, rs) n ->
                      let r = run_one (seed+n) in
-                     let nsucc = if BU.is_none r then nsucc + 1 else nsucc in
+                     let nsucc =
+                        match r with
+                        | Inr cfg ->
+                            (* maybe update best fuels *)
+                            maybe_improve best_fuel cfg.query_fuel;
+                            maybe_improve best_ifuel cfg.query_ifuel;
+                            nsucc + 1
+                        | _ -> nsucc
+                     in
                      if quaking
                         && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
                         && n<hi-1 then (* no need to print last *)
-                       BU.print4 "Quake: so far query %s succeeded %s/%s times (%s runs remain)\n"
+                       BU.print4 "Quake: so far query %s succeeded %s times and failed %s (%s runs remain)\n"
                            name
                            (string_of_int nsucc)
-                           (string_of_int hi)
+                           (string_of_int (n+1-nsucc))
                            (string_of_int (hi-1-n));
                      (nsucc, r::rs))
                 (0, []) 0 (hi-1)
         in
         if quaking then
-            BU.print_string
-               (BU.format3 "Quake: query %s succeeded %s/%s times\n"
-                name
-                (string_of_int nsuccess)
-                (string_of_int hi));
+            let fuel_msg =
+              match !best_fuel, !best_ifuel with
+              | Some f, Some i ->
+                BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
+              | _, _ -> ""
+            in
+            BU.print4 "Quake: query %s succeeded %s/%s times%s\n"
+                      name
+                      (string_of_int nsuccess)
+                      (string_of_int hi)
+                      fuel_msg;
         if nsuccess < lo then begin
             let report errs = report_errors ({default_settings with query_errors=errs}) in
-            List.iter (function | None -> ()
-                                | Some es -> report es) rs;
+            List.iter (function | Inr _ -> ()
+                                | Inl es -> report es) rs;
             let rng = match snd (env.qtbl_name_and_index) with
                       | Some (l, _) -> Ident.range_of_lid l
                       | _ -> Range.dummyRange
