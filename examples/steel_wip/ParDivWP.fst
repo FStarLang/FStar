@@ -37,24 +37,34 @@ module T = FStar.Tactics
 /// We could reuse FStar.Algebra.CommMonoid, but this style with
 /// quanitifers was more convenient for the proof done here.
 
-let associative #a (f: a -> a -> a) =
+let symmetry #a (equals: a -> a -> prop) =
+  forall x y. {:pattern (x `equals` y)}
+    x `equals` y ==> y `equals` x
+
+let transitive #a (equals:a -> a -> prop) =
+  forall x y z. x `equals` y /\ y `equals` z ==> x `equals` z
+
+let associative #a (equals: a -> a -> prop) (f: a -> a -> a)=
   forall x y z.{:pattern f x (f y z) \/ f (f x y) z}
-    f x (f y z) == f (f x y) z
+    f x (f y z) `equals` f (f x y) z
 
-let commutative #a (f: a -> a -> a) =
+let commutative #a (equals: a -> a -> prop) (f: a -> a -> a) =
   forall x y.{:pattern f x y}
-    f x y == f y x
+    f x y `equals` f y x
 
-let is_unit #a (x:a) (f:a -> a -> a) =
+let is_unit #a (x:a) (equals: a -> a -> prop) (f:a -> a -> a) =
   forall y. {:pattern f x y \/ f y x}
-    f x y == y /\
-    f y x == y
+    f x y `equals` y /\
+    f y x `equals` y
 
+let equals_ext #a (equals:a -> a -> prop) (f:a -> a -> a) =
+  forall x1 x2 y. x1 `equals` x2 ==> f x1 y `equals` f x2 y
 
 noeq
 type st0 = {
   s:Type;
   r:Type;
+  equals: r -> r -> prop;
   emp: r;
   star: r -> r -> r;
   interp: r -> s -> prop;
@@ -62,6 +72,9 @@ type st0 = {
   join: s & s -> s;
   lift: x:r -> (s:s{interp x s} -> prop) -> r
 }
+
+let interp_extensionality #r #s (equals:r -> r -> prop) (f:r -> s -> prop) =
+  forall x y h. {:pattern equals x y; f x h} equals x y /\ f x h ==> f y h
 
 let rs (#st:st0) (pre:st.r) = state:st.s{st.interp pre state}
 
@@ -161,10 +174,15 @@ let split_comm (st:st0) =
      s1 == s1')
 
 let st_laws (st:st0) =
+    (* standard laws about the equality relation *)
+    symmetry st.equals /\
+    transitive st.equals /\
+    interp_extensionality st.equals st.interp /\
     (* standard laws for star forming a CM *)
-    associative st.star /\
-    commutative st.star /\
-    is_unit st.emp st.star /\
+    associative st.equals st.star /\
+    commutative st.equals st.star /\
+    is_unit st.emp st.equals st.star /\
+    equals_ext st.equals st.star /\
     (* We're working in an affine interpretation of SL *)
     affine st /\
     emp_valid st /\
@@ -237,7 +255,7 @@ let bind_wp (#st:st)
 let wp_action (#st:st) #b (f:action st b)
   : wp f.pre b f.post
   = fun (k:wp_post b f.post) ->
-     assert (f.pre `st.star` st.emp == f.pre);
+     assert (f.pre `st.star` st.emp `st.equals` f.pre);
      let pre : rs_prop' f.pre =
         fun (s0:rs f.pre) ->
          let s0, s_frame = st.split f.pre s0 in
@@ -332,7 +350,7 @@ let wp_par_post (#st:st)
               [SMTPat ()]
             = let s1 = (st.join (sL', st.join(sR', rest))) in
               let s1' = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              assert (st.interp (postL xL `st.star` postR xR) s1');
+              assume (st.interp (postL xL `st.star` postR xR) s1');
               assert (app_k xL xR s1');
               assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
               assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
@@ -590,7 +608,27 @@ let rec step (#st:st) (i:nat) #pre #a #post
       assert (as_requires wpR state);
 
       if bools i
-      then
+      then begin
+        calc (st.equals) {
+          preL `st.star` (preR `st.star` frame);
+          (st.equals) { }
+          (preL `st.star` preR) `st.star` frame;
+          (st.equals) { }
+          (preR `st.star` preL) `st.star` frame;
+          (st.equals) { }
+          preR `st.star` (preL `st.star` frame);
+        };
+        assert (st.interp ((st.lift preR (as_requires wpR)) `st.star` (preL `st.star` frame)) state);
+        calc (st.equals) {
+          (st.lift preR (as_requires wpR)) `st.star` (preL `st.star` frame);
+          (st.equals) { }
+          (st.lift preR (as_requires wpR) `st.star` preL) `st.star` frame;
+          (st.equals) { }
+          (preL `st.star` st.lift preR (as_requires wpR)) `st.star` frame;
+          (st.equals) { }
+          preL `st.star` ((st.lift preR (as_requires wpR)) `st.star` frame);
+        };
+        assert (st.interp (preL `st.star` ((st.lift preR (as_requires wpR)) `st.star` frame)) state);
         let Step preL' wpL' mL' state' j =
             //Notice that, inductively, we instantiate the frame extending
             //it to include the precondition of the other side of the par
@@ -616,7 +654,18 @@ let rec step (#st:st) (i:nat) #pre #a #post
                   post wp_kont kont)
              state'
              j
-      else
+      end else begin
+        assert (st.interp ((st.lift preL (as_requires wpL)) `st.star` (preR `st.star` frame)) state);
+        calc (st.equals) {
+          (st.lift preL (as_requires wpL)) `st.star` (preR `st.star` frame);
+          (st.equals) { }
+          (st.lift preL (as_requires wpL) `st.star` preR) `st.star` frame;
+          (st.equals) { }
+          (preR `st.star` st.lift preL (as_requires wpL)) `st.star` frame;
+          (st.equals) { }
+          preR `st.star` ((st.lift preL (as_requires wpL)) `st.star` frame);
+        };
+        assert (st.interp (preR `st.star` ((st.lift preL (as_requires wpL)) `st.star` frame)) state);
         let Step preR' wpR' mR' state' j =
             //Notice that, inductively, we instantiate the frame extending
             //it to include the precondition of the other side of the par
@@ -635,13 +684,23 @@ let rec step (#st:st) (i:nat) #pre #a #post
                by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
                T.dump "A";
                T.smt());
-        Step (preL `st.star` preR')
-             (bind_par wpL wpR' wp_kont)
+        let p' = (preL `st.star` preR') in
+        let wp' = bind_par wpL wpR' wp_kont in
+        calc (st.equals) {
+          preR' `st.star` (preL `st.star` frame);
+          (st.equals) { }
+          (preR' `st.star` preL) `st.star` frame;
+          (st.equals) { }
+          (preL `st.star` preR') `st.star` frame;
+        };
+        Step p'
+             wp'
              (Par preL aL postL wpL mL
                   preR'  aR postR wpR' mR'
                   post wp_kont kont)
              state'
              j
+      end
 
 
 (**
