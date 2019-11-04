@@ -533,7 +533,7 @@ let rec apply_squash_or_lem d t =
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
 
-    let ty = tc t in
+    let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->

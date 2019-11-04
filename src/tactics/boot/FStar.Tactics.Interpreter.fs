@@ -201,11 +201,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
 
-      mktac1 0 "tcc"           tcc RE.e_term RE.e_comp
-                               tcc NRE.e_term NRE.e_comp;
+      mktac2 0 "tcc"           tcc RE.e_env RE.e_term RE.e_comp
+                               tcc NRE.e_env NRE.e_term NRE.e_comp;
 
-      mktac1 0 "tc"            tc RE.e_term RE.e_term
-                               tc NRE.e_term NRE.e_term;
+      mktac2 0 "tc"            tc RE.e_env RE.e_term RE.e_term
+                               tc NRE.e_env NRE.e_term NRE.e_term;
 
       mktac1 0 "unshelve"      unshelve RE.e_term e_unit
                                unshelve NRE.e_term NBET.e_unit;
