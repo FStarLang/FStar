@@ -24,6 +24,7 @@ module Err = FStar.Errors
 module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
 module O = FStar.Options
+module RD = FStar.Reflection.Data
 
 open FStar.Dyn
 
@@ -358,11 +359,65 @@ let sigelt_attrs (se : sigelt) : list<attribute> =
 let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
-let sigelt_quals (se : sigelt) : list<qualifier> =
-    se.sigquals
+(* PRIVATE, and hacky :-( *)
+let rd_to_syntax_qual : RD.qualifier -> qualifier = function
+  | RD.Assumption -> Assumption
+  | RD.New -> New
+  | RD.Private -> Private
+  | RD.Unfold_for_unification_and_vcgen -> Unfold_for_unification_and_vcgen
+  | RD.Visible_default -> Visible_default
+  | RD.Irreducible -> Irreducible
+  | RD.Abstract -> Abstract
+  | RD.Inline_for_extraction -> Inline_for_extraction
+  | RD.NoExtract -> NoExtract
+  | RD.Noeq -> Noeq
+  | RD.Unopteq -> Unopteq
+  | RD.TotalEffect -> TotalEffect
+  | RD.Logic -> Logic
+  | RD.Reifiable -> Reifiable
+  | RD.Reflectable l -> Reflectable l
+  | RD.Discriminator l -> Discriminator l
+  | RD.Projector (l, i) -> Projector (l, i)
+  | RD.RecordType (l1, l2) -> RecordType (l1, l2)
+  | RD.RecordConstructor (l1, l2) -> RecordConstructor (l1, l2)
+  | RD.Action l -> Action l
+  | RD.ExceptionConstructor -> ExceptionConstructor
+  | RD.HasMaskedEffect -> HasMaskedEffect
+  | RD.Effect -> S.Effect
+  | RD.OnlyName -> OnlyName
 
-let set_sigelt_quals (quals : list<qualifier>) (se : sigelt) : sigelt =
-    { se with sigquals = quals }
+let syntax_to_rd_qual = function
+  | Assumption -> RD.Assumption
+  | New -> RD.New
+  | Private -> RD.Private
+  | Unfold_for_unification_and_vcgen -> RD.Unfold_for_unification_and_vcgen
+  | Visible_default -> RD.Visible_default
+  | Irreducible -> RD.Irreducible
+  | Abstract -> RD.Abstract
+  | Inline_for_extraction -> RD.Inline_for_extraction
+  | NoExtract -> RD.NoExtract
+  | Noeq -> RD.Noeq
+  | Unopteq -> RD.Unopteq
+  | TotalEffect -> RD.TotalEffect
+  | Logic -> RD.Logic
+  | Reifiable -> RD.Reifiable
+  | Reflectable l -> RD.Reflectable l
+  | Discriminator l -> RD.Discriminator l
+  | Projector (l, i) -> RD.Projector (l, i)
+  | RecordType (l1, l2) -> RD.RecordType (l1, l2)
+  | RecordConstructor (l1, l2) -> RD.RecordConstructor (l1, l2)
+  | Action l -> RD.Action l
+  | ExceptionConstructor -> RD.ExceptionConstructor
+  | HasMaskedEffect -> RD.HasMaskedEffect
+  | S.Effect -> RD.Effect
+  | OnlyName -> RD.OnlyName
+
+
+let sigelt_quals (se : sigelt) : list<RD.qualifier> =
+    se.sigquals |> List.map syntax_to_rd_qual
+
+let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
+    { se with sigquals = List.map rd_to_syntax_qual quals }
 
 let sigelt_opts (se : sigelt) : option<O.optionstate> =
     se.sigopts

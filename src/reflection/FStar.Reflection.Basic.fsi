@@ -9,6 +9,7 @@ module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 open FStar.ST
 module O = FStar.Options
+module RD = FStar.Reflection.Data
 
 (* Tying a knot into the environment which started execution.
  * Needed to inspect sigelts and the like without needing
@@ -34,8 +35,8 @@ val sigelt_opts           : sigelt -> option<O.optionstate>
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
 
-val sigelt_quals     : sigelt -> list<qualifier>
-val set_sigelt_quals : list<qualifier> -> sigelt -> sigelt
+val sigelt_quals     : sigelt -> list<RD.qualifier>
+val set_sigelt_quals : list<RD.qualifier> -> sigelt -> sigelt
 
 (* Views *)
 val inspect_fv    : fv -> list<string>
