@@ -773,8 +773,13 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (Options.Other "Tac");
+
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
-    let gs, w = run_tactic_on_typ tau.pos tau.pos tau env typ in
+    let ps = proofstate_of_goals tau.pos env [] [] in
+    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos
+                                  e_unit ()
+                                  (e_list RE.e_sigelt) tau env ps in
+
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
@@ -783,17 +788,12 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
-    // Fully normalize the witness
-    let w = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant;
-                         Env.Primops; Env.Unascribe; Env.Unmeta] env w in
-
     if !tacdbg then
-      BU.print1 "splice: got witness = %s\n" (Print.term_to_string w);
+      BU.print1 "splice: got decls = %s\n"
+                 (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
     // Unembed the result, this must work if things are well-typed
-    match unembed (e_list RE.e_sigelt) w FStar.Syntax.Embeddings.id_norm_cb with
-    | Some sigelts -> sigelts
-    | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    sigelts
     end
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =

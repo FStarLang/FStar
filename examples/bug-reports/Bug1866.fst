@@ -73,7 +73,7 @@ let base4 p =
     let (x, _) = p in
     x
 
-let traverse (name:string) : Tac unit =
+let traverse (name:string) : Tac decls =
   let d = lookup_typ (cur_env ()) (cur_module () @ [ name ]) in
   let d = match d with Some d -> d | None -> fail "0" in
   let d, us = match inspect_sigelt d with
@@ -84,7 +84,7 @@ let traverse (name:string) : Tac unit =
   let r = not_do_much d in
   (* dump ("r = " ^ term_to_string r); *)
   let s = pack_sigelt (Sg_Let false name us (pack Tv_Unknown) r) in
-  exact (quote [ s ])
+  [s]
 
 %splice[test_base0](traverse "base0")
 %splice[test_base1](traverse "base1")

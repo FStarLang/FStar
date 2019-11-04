@@ -18,8 +18,8 @@ let add_check_with opts se =
   let t = quote (check_with opts) in
   set_sigelt_attrs (t :: attrs) se
 
-let tau () : Tac unit =
-  match lookup_typ (cur_env ()) ["SigeltOpts"; "sp1"] with
+let tau () : Tac decls =
+  match lookup_typ (top_env ()) ["SigeltOpts"; "sp1"] with
   | None -> fail "1"
   | Some se ->
     match sigelt_opts se with
@@ -28,7 +28,7 @@ let tau () : Tac unit =
         let se : sigelt = pack_sigelt (Sg_Let false (pack_fv ["SigeltOpts"; "blah"]) [] (`_)
                                               (`(assert (List.length [2] == 1)))) in
         let se = add_check_with opts se in
-        exact (quote [se])
+        [se]
 
 (* Splice `blah`, using the options for sp1, i.e. --max_fuel 2 *)
 %splice[blah] (tau ())
