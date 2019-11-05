@@ -1,7 +1,6 @@
 FSTAR_HOME?=..
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
-include $(FSTAR_HOME)/src/Makefile.common
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 #################################################################################
@@ -34,12 +33,11 @@ OTHERFLAGS += --use_extracted_interfaces true --use_hints
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
 
-MY_FSTAR=$(Q)$(FSTAR) $(SIL)					\
-		--cache_checked_modules			\
-		--odir $(OUTPUT_DIRECTORY)			\
-		--cache_dir $(CACHE_DIR)			\
-		$(addprefix --include , $(INCLUDE_PATHS))	\
-		$(OTHERFLAGS)
+MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
+		  --odir $(OUTPUT_DIRECTORY)                \
+		  --cache_dir $(CACHE_DIR)                  \
+		  $(addprefix --include , $(INCLUDE_PATHS)) \
+		  $(OTHERFLAGS)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES
@@ -50,7 +48,7 @@ MY_FSTAR=$(Q)$(FSTAR) $(SIL)					\
 # since we rely on the dependences it computes in other rules
 #--------------------------------------------------------------------------------
 .depend: $(FSTAR_FILES)
-	$(Q)$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
 
 depend: .depend
 
@@ -59,15 +57,13 @@ include .depend
 
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
-	@echo "[CHECK $(basename $(notdir $@))]"
-	$(Q)$(MY_FSTAR) $<
-	@touch -c $@
+	$(MY_FSTAR) $<
+	touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
-	@echo "[CHECK $(basename $(notdir $@))]"
-	$(Q)$(MY_FSTAR) $<
-	@touch -c $@
+	$(MY_FSTAR) $<
+	touch -c $@
 
 clean:
 	rm -rf $(CACHE_DIR)

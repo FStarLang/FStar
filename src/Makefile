@@ -120,7 +120,7 @@ clean_boot:
 # And ocaml-output/Makefile, to actually build the compiler in OCaml
 # --------------------------------------------------------------------------------
 ocaml: boot
-	$(Q)+$(MAKE) -f Makefile.boot all-ml
+	+$(MAKE) -f Makefile.boot all-ml
 
 boot-ocaml:
 	+$(MAKE) -C ocaml-output all

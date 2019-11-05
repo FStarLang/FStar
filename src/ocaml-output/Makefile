@@ -6,8 +6,6 @@ else
 HAS_VALID_MENHIR := 0
 endif
 
-include ../Makefile.common
-
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
@@ -64,43 +62,42 @@ endif
 # This is about the F# parser, which we sed-transform from the parse.mly
 # obtained via the rule above.
 ../parser/parse.fsy: parse.mly
-	$(Q)echo "%{" > $@
-	$(Q)echo "#light \"off\"" >> $@
-	$(Q)echo "// (c) Microsoft Corporation. All rights reserved" >> $@
-	$(Q)echo "open Prims" >> $@
-	$(Q)echo "open FStar" >> $@
-	$(Q)echo "open FStar.Errors" >> $@
-	$(Q)echo "open FStar.List" >> $@
-	$(Q)echo "open FStar.Util" >> $@
-	$(Q)echo "open FStar.Range" >> $@
-	$(Q)echo "open FStar.Options" >> $@
-	$(Q)echo "open FStar.Parser.Const" >> $@
-	$(Q)echo "open FStar.Parser.AST" >> $@
-	$(Q)echo "open FStar.Parser.Util" >> $@
-	$(Q)echo "open FStar.Const" >> $@
-	$(Q)echo "open FStar.Ident" >> $@
-	$(Q)echo "open FStar.String" >> $@
+	echo "%{" > $@
+	echo "#light \"off\"" >> $@
+	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
+	echo "open Prims" >> $@
+	echo "open FStar" >> $@
+	echo "open FStar.Errors" >> $@
+	echo "open FStar.List" >> $@
+	echo "open FStar.Util" >> $@
+	echo "open FStar.Range" >> $@
+	echo "open FStar.Options" >> $@
+	echo "open FStar.Parser.Const" >> $@
+	echo "open FStar.Parser.AST" >> $@
+	echo "open FStar.Parser.Util" >> $@
+	echo "open FStar.Const" >> $@
+	echo "open FStar.Ident" >> $@
+	echo "open FStar.String" >> $@
 	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
-	$(Q)cat parse.mly | sed -e '/%{/d' \
+	cat parse.mly | sed -e '/%{/d' \
 	                    -e '/^open /d' \
 	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%token.*->.*/d' \
 	                    -e '/%type.*->.*/d' \
-	                  | cat -s >> $@
+	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
 $(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
-	@echo "[OCAMLBUILD]"
-	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
+	$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 
 ../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
-	$(Q)cp $^ $@
+	cp $^ $@
 
 ../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
-	$(Q)cp $^ $@
+	cp $^ $@
 
 install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	mkdir -p ../../bin/fstar-compiler-lib/
@@ -114,39 +111,38 @@ install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 FStar_Parser_Parse.ml: parse.mly
 	@# We are opening the same module twice but we need these modules
 	@# open for the definition of tokens
-	$(Q)echo "open Prims" > $@
-	$(Q)echo "open FStar_Errors" >> $@
-	$(Q)echo "open FStar_List" >> $@
-	$(Q)echo "open FStar_Util" >> $@
-	$(Q)echo "open FStar_Range" >> $@
-	$(Q)echo "open FStar_Options" >> $@
-	$(Q)echo "open FStar_Syntax_Syntax" >> $@
-	$(Q)echo "open FStar_Parser_Const" >> $@
-	$(Q)echo "open FStar_Syntax_Util" >> $@
-	$(Q)echo "open FStar_Parser_AST" >> $@
-	$(Q)echo "open FStar_Parser_Util" >> $@
-	$(Q)echo "open FStar_Const" >> $@
-	$(Q)echo "open FStar_Ident" >> $@
-	$(Q)echo "open FStar_String" >> $@
+	echo "open Prims" > $@
+	echo "open FStar_Errors" >> $@
+	echo "open FStar_List" >> $@
+	echo "open FStar_Util" >> $@
+	echo "open FStar_Range" >> $@
+	echo "open FStar_Options" >> $@
+	echo "open FStar_Syntax_Syntax" >> $@
+	echo "open FStar_Parser_Const" >> $@
+	echo "open FStar_Syntax_Util" >> $@
+	echo "open FStar_Parser_AST" >> $@
+	echo "open FStar_Parser_Util" >> $@
+	echo "open FStar_Const" >> $@
+	echo "open FStar_Ident" >> $@
+	echo "open FStar_String" >> $@
 	@# TODO: create a proper OCamlbuild rule for this production so that
 	@# OCamlbuild knows how to generate parse.mly first (possibly using
 	@# menhir) and removes the production as needed.
-	@echo "[OCAMLYACC]"
-	$(Q)ocamlyacc parse.mly 2> yac-log
-	$(Q)cat yac-log
+	ocamlyacc parse.mly 2> yac-log
+	cat yac-log
 	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
-	  @echo "shift-reduce conflicts have increased; please fix" && exit 255; \
+	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
 	fi
 	@if grep -q "reduce/reduce" yac-log ; then \
-	  @echo "A reduce-reduce conflict was introduced; please fix" && exit 255; \
+	  echo "A reduce-reduce conflict was introduced; please fix" && exit 255; \
 	fi
-	$(Q)cat parse.ml >> $@
-	$(Q)rm parse.ml parse.mli
+	cat parse.ml >> $@
+	rm parse.ml parse.mli
 
 ../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 ../../bin/tests.exe: ../../bin/fstar.exe
-	$(Q)$(OCAMLBUILD) FStar_Tests_Main.native
-	$(Q)cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
+	$(OCAMLBUILD) FStar_Tests_Main.native
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -167,14 +163,14 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	$(Q)echo 'open FStar_Util' > $@
-	$(Q)echo 'let dummy () = ();;' >> $@
-	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
-	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
-	$(Q)echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	@# We deliberately use commitdate instead of date, so that rebuilds are no-ops
-	$(Q)echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
-	$(Q)echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
+	echo 'open FStar_Util' > $@
+	echo 'let dummy () = ();;' >> $@
+	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
+	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
+	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
+	# We deliberately use commitdate instead of date, so that rebuilds are no-ops
+	echo 'FStar_Options._date := "$(COMMITDATE)";;' >> $@
+	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 
 # ------------------------------------------------------------------------------
