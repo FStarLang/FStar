@@ -746,7 +746,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                      (nsucc, r::rs))
                 (0, []) 0 (hi-1)
         in
-        if quaking then
+        if quaking then begin
             let fuel_msg =
               match !best_fuel, !best_ifuel with
               | Some f, Some i ->
@@ -757,7 +757,8 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                       name
                       (string_of_int nsuccess)
                       (string_of_int hi)
-                      fuel_msg;
+                      fuel_msg
+        end;
         if nsuccess < lo then begin
             let report errs = report_errors ({default_settings with query_errors=errs}) in
             List.iter (function | Inr _ -> ()
