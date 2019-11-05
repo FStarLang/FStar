@@ -345,7 +345,13 @@ let tc_one_file
       else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
-      match Ch.load_module_from_cache env fn with
+      let loaded =
+        // don't use cache if --force
+        if Options.force () && Options.should_verify_file fn
+        then None
+        else Ch.load_module_from_cache env fn
+      in
+      match loaded with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
         then FStar.Errors.raise_err

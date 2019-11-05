@@ -192,6 +192,9 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
+      ("force"                        , Bool false);
+      ("fuel"                         , Unset);
+      ("ifuel"                        , Unset);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -334,6 +337,7 @@ let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
+let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
@@ -777,6 +781,47 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "print_in_place",
         Const (Bool true),
         "Parses and prettyprints in place the files included on the command line");
+
+       ( 'f',
+        "force",
+        Const (Bool true),
+        "Force checking the current file even if a checked file exists for it");
+
+       ( noshort,
+        "fuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --fuel"
+                         in
+                         set_option "initial_fuel" (p min);
+                         set_option "max_fuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_fuel and max_fuel at once");
+
+       ( noshort,
+        "ifuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --fuel"
+                         in
+                         set_option "initial_ifuel" (p min);
+                         set_option "max_ifuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_ifuel and max_ifuel at once");
 
        ( noshort,
         "initial_fuel",
@@ -1224,6 +1269,8 @@ let settable = function
     | "hint_dir"
     | "hint_file"
     | "hint_info"
+    | "fuel"
+    | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
@@ -1501,6 +1548,7 @@ let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
+let force                        () = get_force                       ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
