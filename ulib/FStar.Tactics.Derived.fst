@@ -269,10 +269,6 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
-let norm_term (s : list norm_step) (t : term) : Tac term =
-    let e = cur_env () in
-    norm_term_env e s t
-
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
@@ -315,6 +311,13 @@ let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 
 let repeat' (f : unit -> Tac 'a) : Tac unit =
     let _ = repeat f in ()
+
+let norm_term (s : list norm_step) (t : term) : Tac term =
+    let e =
+        try cur_env ()
+        with | _ -> top_env ()
+    in
+    norm_term_env e s t
 
 (** Join all of the SMT goals into one. This helps when all of them are
 expected to be similar, and therefore easier to prove at once by the SMT
