@@ -39,6 +39,8 @@ open MExn
 module M = Messages
 
 
+#set-options "--admit_smt_queries true"
+
 
 /// Layering state on top of EXN
 
@@ -78,15 +80,15 @@ let return (a:Type) (state:Type0) (x:a)
 
 open FStar.Tactics
 
-let lemma_monotonic
-  (#a:Type) (#b:Type) (#state:Type0)
-  (wp_f:wp_t state a) (wp_g:a -> wp_t state b)
-  (post_a:(#a:Type -> #b:Type -> #state:Type0 -> wp_g:(a -> wp_t state b) -> p:post_t state b -> post_t state a))
-  (p:post_t state b) (q:post_t state b) (st:state) (h:HS.mem)
-: Lemma
-  (requires forall (r:option (a & state)) (h:HS.mem). (post_a wp_g p) r h ==> (post_a wp_g q) r h)
-  (ensures wp_f (post_a wp_g p) st h ==> wp_f (post_a wp_g q) st h)
-= ()
+// let lemma_monotonic
+//   (#a:Type) (#b:Type) (#state:Type0)
+//   (wp_f:wp_t state a) (wp_g:a -> wp_t state b)
+//   (post_a:(#a:Type -> #b:Type -> #state:Type0 -> wp_g:(a -> wp_t state b) -> p:post_t state b -> post_t state a))
+//   (p:post_t state b) (q:post_t state b) (st:state) (h:HS.mem)
+// : Lemma
+//   (requires forall (r:option (a & state)) (h:HS.mem). (post_a wp_g p) r h ==> (post_a wp_g q) r h)
+//   (ensures wp_f (post_a wp_g p) st h ==> wp_f (post_a wp_g q) st h)
+// = ()
 
 unfold
 let post_a (#a:Type) (#b:Type) (#state:Type0) (wp_g:a -> wp_t state b) (p:post_t state b) : post_t state a =
@@ -101,19 +103,19 @@ let bind_wp0 (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> w
 
 unfold
 let bind_wp (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> wp_t state b) : wp_t state b
-= assert (monotonic_wp (bind_wp0 wp_f wp_g)) by
-    (norm [delta_only [`%monotonic_wp; `%bind_wp0]];
-     ignore (repeatn 5 l_intro);
-     let wp_f, wp_g =
-       match (cur_binders ()) with
-       | _::_::_::wp_f::wp_g::_ -> wp_f, wp_g
-       | _ -> fail "" in
-     apply_lemma (`(lemma_monotonic
-       (`#(binder_to_term wp_f))
-       (`#(binder_to_term wp_g))
-       post_a));
+= // assert (monotonic_wp (bind_wp0 wp_f wp_g)) by
+  //   (norm [delta_only [`%monotonic_wp; `%bind_wp0]];
+  //    ignore (repeatn 5 l_intro);
+  //    let wp_f, wp_g =
+  //      match (cur_binders ()) with
+  //      | _::_::_::wp_f::wp_g::_ -> wp_f, wp_g
+  //      | _ -> fail "" in
+  //    apply_lemma (`(lemma_monotonic
+  //      (`#(binder_to_term wp_f))
+  //      (`#(binder_to_term wp_g))
+  //      post_a));
 
-     norm [delta_only [`%post_a]]);
+  //    norm [delta_only [`%post_a]]);
   bind_wp0 wp_f wp_g
 
 inline_for_extraction noextract
@@ -123,7 +125,7 @@ let bind (a:Type) (b:Type)
   (f:mrepr a state wp_f) (g:(x:a -> mrepr b state (wp_g x)))
 : mrepr b state (bind_wp wp_f wp_g)
 = fun st ->
-  admit ();  //AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
+  //admit ();  //AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
   let (x, st) = f st in
   g x st
 
@@ -232,18 +234,19 @@ let parse_common (#a:Type0)
 inline_for_extraction noextract
 let parse_t1 = parse_common #t1 t1_parser
 
-inline_for_extraction noextract
-let parse_t2 = parse_common #t2 t2_parser
+// inline_for_extraction noextract
+// let parse_t2 = parse_common #t2 t2_parser
 
-inline_for_extraction noextract
-let parse_t3 = parse_common #t3 t3_parser
+// inline_for_extraction noextract
+// let parse_t3 = parse_common #t3 t3_parser
 
 
 /// The flight parsing function
 
-#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
+//#set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
 
-inline_for_extraction noextract
+//inline_for_extraction noextract
+#set-options "--debug FlightsStExn --debug_level Extraction --ugly --print_implicits"
 let parse_flt_aux ()
 : StExn flt (fun st h -> pre_f st.b st.id h)
   (fun st h0 r h1 ->
@@ -251,16 +254,16 @@ let parse_flt_aux ()
    | None -> post_f st.b h0 None h1
    | Some (x, _) -> post_f st.b h0 (Some x) h1)
 = let x = parse_t1 () in
-  let y = parse_t2 () in
-  let z = parse_t3 () in
-  { t1_msg = x; t2_msg = y; t3_msg = z }
+  // let y = parse_t2 () in
+  // let z = parse_t3 () in
+  { t1_msg = x} //t2_msg = y; t3_msg = z }
 
 
-/// The client-facing code can provide the same specs
+// /// The client-facing code can provide the same specs
 
-let parse_flt : parse_flt_t
-= fun b f_begin ->
-  let r = reify (reify (parse_flt_aux ()) ({ b = b; id = f_begin })) () in
-  match r with
-  | None -> None
-  | Some (x, _) -> Some x
+// let parse_flt : parse_flt_t
+// = fun b f_begin ->
+//   let r = reify (reify (parse_flt_aux ()) ({ b = b; id = f_begin })) () in
+//   match r with
+//   | None -> None
+//   | Some (x, _) -> Some x

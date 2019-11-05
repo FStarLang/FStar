@@ -111,8 +111,8 @@ let valid_repr (#a:Type0) (b:B.buffer uint_8) (h:HS.mem) (r:repr a) : Type0
 noeq
 type flt = {
   t1_msg : repr t1;
-  t2_msg : repr t2;
-  t3_msg : repr t3
+  // t2_msg : repr t2;
+  // t3_msg : repr t3
 }
 
 
@@ -123,7 +123,7 @@ unfold let post_f (b:B.buffer uint_8) =
   fun (_:HS.mem) (r:option flt) (h1:HS.mem) ->
   (match r with
    | None -> True
-   | Some flt -> valid_repr b h1 flt.t1_msg /\ valid_repr b h1 flt.t2_msg /\ valid_repr b h1 flt.t3_msg)
+   | Some flt -> valid_repr b h1 flt.t1_msg) ///\ valid_repr b h1 flt.t2_msg /\ valid_repr b h1 flt.t3_msg)
 
 inline_for_extraction
 type parse_flt_t =

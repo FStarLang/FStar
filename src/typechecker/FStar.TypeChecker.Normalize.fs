@@ -1818,7 +1818,16 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      lift (env.universe_of env t) t (U.mk_reify e)
+      let e =
+        if Env.is_reifiable_effect env msrc
+        then U.mk_reify e
+        else S.mk
+               (Tm_abs ([S.null_binder S.t_unit], e,
+                        Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))
+               None e.pos in
+      lift (env.universe_of env t) t e
+
+      
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)

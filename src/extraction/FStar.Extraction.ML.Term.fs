@@ -609,6 +609,21 @@ let comp_no_args c =
        let c = { c with n = Comp ct } in
        c
 
+let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
+  let c = comp_no_args c in
+  if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
+  then begin
+    let t = TcEnv.reify_comp env c S.U_unknown in
+    debug g (fun () -> BU.print2 "May be reify comp received c : %s and returning t : %s\n" (Print.comp_to_string c) (Print.term_to_string t));
+    t
+  end
+  else begin
+    let t = U.comp_result c in
+    debug g (fun () -> BU.print2 "May be reify comp received c : %s and returning comp_result t : %s\n" (Print.comp_to_string c) (Print.term_to_string t));
+    t
+  end
+
+
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
         if is_type g a //This is just an optimization; we could in principle always emit erasedContent, at the expense of more magics
@@ -672,19 +687,19 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
           | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
             let mlbs, env = binders_as_ml_binders env bs in
-            let t_ret =
-                let eff = TcEnv.norm_eff_name env.env_tcenv (U.comp_effect_name c) in
-                let c = comp_no_args c in
-                let ed, qualifiers = must (TcEnv.effect_decl_opt env.env_tcenv eff) in
-                if TcEnv.is_reifiable_effect g.env_tcenv ed.mname
-                then let t = FStar.TypeChecker.Env.reify_comp env.env_tcenv c U_unknown in
-                     debug env (fun () -> BU.print2 "Translating comp type %s as %s\n"
-                            (Print.comp_to_string c) (Print.term_to_string t));
-                     let res = translate_term_to_mlty env t in
-                     debug env (fun () -> BU.print3 "Translated comp type %s as %s ... to %s\n"
-                            (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res));
-                     res
-                else translate_term_to_mlty env (U.comp_result c) in
+            let t_ret = translate_term_to_mlty env (maybe_reify_comp env env.env_tcenv c) in
+                // let eff = TcEnv.norm_eff_name env.env_tcenv (U.comp_effect_name c) in
+                // let c = comp_no_args c in
+                // let ed, qualifiers = must (TcEnv.effect_decl_opt env.env_tcenv eff) in
+                // if TcEnv.is_reifiable_effect g.env_tcenv ed.mname
+                // then let t = FStar.TypeChecker.Env.reify_comp env.env_tcenv c U_unknown in
+                //      debug env (fun () -> BU.print2 "Translating comp type %s as %s\n"
+                //             (Print.comp_to_string c) (Print.term_to_string t));
+                //      let res =  t in
+                //      debug env (fun () -> BU.print3 "Translated comp type %s as %s ... to %s\n"
+                //             (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res));
+                //      res
+                // else translate_term_to_mlty env (U.comp_result c) in
             let erase = effect_as_etag env (U.comp_effect_name c) in
             let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
             t
@@ -1246,7 +1261,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc env.env_tcenv rc
-                then TcUtil.reify_body env.env_tcenv [TcEnv.Inlining] body
+                then
+                  let body' = TcUtil.reify_body env.env_tcenv [TcEnv.Inlining] body in
+                  debug env (fun () ->
+                    BU.print2 "Reified body %s to %s\n\n" (Print.term_to_string body) (Print.term_to_string body'));
+                  body'
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1320,6 +1339,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                             then E_IMPURE
                             else E_PURE in
                       let e0, tInferred =
+                          debug g (fun _ -> BU.print_string "Calling check_term_as_mlexpr(1)\n");
                           check_term_as_mlexpr g e0 expected_effect tExpected in
                       extract_app is_data (mlhead, (e0, expected_effect)::mlargs_f) (join_l r [f;f'], t) rest
 
@@ -1468,11 +1488,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_ascribed(e0, (tc, _), f) ->
           let t = match tc with
-            | Inl t -> term_as_mlty g t
-            | Inr c -> term_as_mlty g (U.comp_result c) in
+            | Inl t ->
+              debug g (fun () -> BU.print1 "Tm_ascribed with t : %s\n" (Print.term_to_string t));
+              term_as_mlty g t
+            | Inr c ->
+              let t = maybe_reify_comp g g.env_tcenv c in
+              debug g (fun () -> BU.print2 "Tm_ascribed with c : %s, which was reified to t : %s\n" (Print.comp_to_string c) (Print.term_to_string t));
+              term_as_mlty g t in
           let f = match f with
             | None -> failwith "Ascription node with an empty effect label"
             | Some l -> effect_as_etag g l in
+          debug g (fun _ -> BU.print_string "Calling check_term_as_mlexpr(2)\n");
           let e, t = check_term_as_mlexpr g e0 f t in
           e, f, t
 
@@ -1524,6 +1550,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = snd polytype in
+              debug g (fun _ -> BU.print_string "Calling check_term_as_mlexpr(3)\n");
               let e, ty = check_term_as_mlexpr env e f expected_t in
               let e, f = maybe_promote_effect e f expected_t in
               let meta =
