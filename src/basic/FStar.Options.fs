@@ -814,7 +814,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                            match split s "," with
                            | [f] -> f, f
                            | [f1;f2] -> f1, f2
-                           | _ -> failwith "unexpected value for --fuel"
+                           | _ -> failwith "unexpected value for --ifuel"
                          in
                          set_option "initial_ifuel" (p min);
                          set_option "max_ifuel" (p max);
