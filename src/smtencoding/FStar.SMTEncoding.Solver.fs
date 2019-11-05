@@ -272,9 +272,7 @@ let detail_hint_replay settings z3result =
 let find_localized_errors errs =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let has_localized_errors errs = Option.isSome (find_localized_errors errs)
-
-let report_errors settings : unit =
+let report_errors (settings : query_settings) : unit =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
@@ -327,7 +325,6 @@ let report_errors settings : unit =
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
-            
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
@@ -576,6 +573,18 @@ let fold_queries (qs:list<query_settings>)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
 
+let rec collect (l : list<'a>) : list<('a * int)> =
+    let acc : list<('a * int)> = [] in
+    let rec add_one acc x =
+        match acc with
+        | [] -> [(x, 1)]
+        | (h, n)::t ->
+            if h = x
+            then (h, n+1)::t
+            else (h, n) :: add_one t x
+    in
+    List.fold_left add_one acc l
+
 let ask_and_report_errors env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
@@ -761,8 +770,33 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         end;
         if nsuccess < lo then begin
             let report errs = report_errors ({default_settings with query_errors=errs}) in
-            List.iter (function | Inr _ -> ()
-                                | Inl es -> report es) rs;
+            let all_errs = List.concatMap (function | Inr _ -> []
+                                                    | Inl es -> [es]) rs in
+            (* Unless we are running with --query_stats, summarize errors
+             * so quaking does not show hundreds of them *)
+            let () =
+              if Options.query_stats ()
+              then List.iter report all_errs
+              else
+                let errs = List.flatten all_errs in
+                let errs = collect errs in
+                let tag_er n er =
+                    if n <= 1 then er else
+                    { er with error_messages =
+                              er.error_messages |>
+                              List.map (fun (e, m, r) ->
+                                          let m = m ^ BU.format1 " (%s times)" (string_of_int n) in
+                                          (e, m, r)) }
+                in
+                let tag_with_n n errs =
+                  List.map (tag_er n) errs
+                in
+                let errs = List.map (fun (errs, n) -> tag_er n errs) errs in
+                (* let errs = List.map (fun (err, n) -> err) errs in *)
+                (* Now report them *)
+                report errs
+            in
+
             let rng = match snd (env.qtbl_name_and_index) with
                       | Some (l, _) -> Ident.range_of_lid l
                       | _ -> Range.dummyRange
