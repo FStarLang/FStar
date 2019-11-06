@@ -21,6 +21,7 @@ module Seq = FStar.Seq
 module P = LowStar.Permissions
 module MG = FStar.ModifiesGen
 module U32 = FStar.UInt32
+module Fext = FStar.FunctionalExtensionality
 
 open Steel.RST
 
@@ -84,7 +85,8 @@ let same_perm_seq_always_constant (#a: Type) (h0 h1: HS.mem) (b:array a) : Lemma
   in
   Classical.forall_intro_2 aux
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 50"
+
 
 abstract
 let array_view (#a:Type) (b:array a) : Tot (view (varray b)) =
@@ -94,11 +96,21 @@ let array_view (#a:Type) (b:array a) : Tot (view (varray b)) =
     live h b /\ constant_perm_seq h b
   in
   let sel (h: HS.mem) : GTot (varray b) = { s = as_seq h b; p = get_perm h b 0 } in
-  {
-    fp = fp;
+  let view = {
+    fp = Fext.on_dom_g HS.mem fp;
     inv = inv;
-    sel = sel
-  }
+    sel = Fext.on_dom_g HS.mem sel
+  } in
+  assert(fp_reads_fp view.fp view.inv);
+  (* This doesn't work because of the pattern on the forall... *)
+  assume(sel_reads_fp view.fp view.inv view.sel <==>
+      (forall (h0 h1:imem inv) (loc: loc).
+        loc_disjoint (as_loc view.fp h0) loc /\ modifies loc h0 h1 ==>
+          sel h0 == sel h1
+      ));
+  assert(sel_reads_fp view.fp view.inv view.sel);
+  assert(inv_reads_fp view.fp view.inv);
+  view
 
 let array_resource (#a:Type) (b:array a) : Tot resource =
   as_resource (array_view b)
@@ -119,13 +131,13 @@ let get_rperm
 
 let reveal_array ()
   : Lemma (
-    (forall a (b:array a) h .{:pattern as_loc (fp (array_resource b)) h}
-      as_loc (fp (array_resource b)) h == loc_array b) /\
-      (forall a (b:array a) h .{:pattern inv (array_resource b) h}
-        inv (array_resource b) h <==> live h b /\ constant_perm_seq h b
+    (forall a (b:array a) h .{:pattern as_loc (fp_of (array_resource b)) h}
+      as_loc (fp_of (array_resource b)) h == loc_array b) /\
+      (forall a (b:array a) h .{:pattern inv_of (array_resource b) h}
+        inv_of (array_resource b) h <==> live h b /\ constant_perm_seq h b
       ) /\
-      (forall a (b:array a) h .{:pattern sel (array_view b) h}
-        sel (array_view b) h == { s = as_seq h b; p = get_perm h b 0 }
+      (forall a (b:array a) h .{:pattern sel_of (array_view b) h}
+        sel_of (array_view b) h == { s = as_seq h b; p = get_perm h b 0 }
       )
     ) =
   ()

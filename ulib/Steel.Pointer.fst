@@ -16,23 +16,98 @@
 module Steel.Pointer
 
 module P = LowStar.Permissions
-module A = LowStar.Array
+module A = Steel.Array
 module HST = FStar.HyperStack.ST
+module HS = FStar.HyperStack
+module Fext = FStar.FunctionalExtensionality
 
 include Steel.Pointer.Views
 
 open Steel.RST
 
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 (**** Unscoped allocation and deallocation of pointer resources *)
 
+val array_to_pointer (#a: Type) (p: pointer a) : RST unit
+  (A.array_resource p)
+  (fun _ -> ptr_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+   get_val p h1 == Seq.index (A.as_rseq p h0) 0 /\
+   get_perm p h1 == A.get_rperm p h0
+  )
+
+let array_to_pointer #a p =
+  cast_to_refined_view (A.array_resource p)  (fun (av: A.varray #a p) ->
+    { ptr_x = Seq.index av.A.s 0; ptr_p = av.A.p }
+  )
+
+val pointer_to_array (#a: Type) (p: pointer a) : RST unit
+  (ptr_resource p)
+  (fun _ -> A.array_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+   get_val p h0 == Seq.index (A.as_rseq p h1) 0 /\
+   get_perm p h0 == A.get_rperm p h1
+  )
+
+#set-options "--print_effect_args"
+
+let vptr_to_varray (#a: Type) (p: pointer a) : vptr a -> GTot (A.varray p) = fun av ->
+   { A.s = Seq.init_ghost 1 (fun _ -> av.ptr_x); A.p = av.ptr_p }
+
+let bijective_resource_refinement (#a: Type) (p: pointer a)
+  : Lemma (A.array_resource p == refine_view (ptr_resource p) (vptr_to_varray p))
+  [SMTPat (refine_view (ptr_resource p) (vptr_to_varray p))]
+=
+  let old_res = A.array_resource p in
+  let new_res = refine_view (ptr_resource p) (vptr_to_varray p) in
+  assert(old_res.t == new_res.t);
+  assert(old_res.view.fp == new_res.view.fp);
+  assert(old_res.view.inv == new_res.view.inv);
+  // That will require functional extensionality
+  Fext.extensionality_g HS.mem (fun _ -> A.varray p)
+    old_res.view.sel new_res.view.sel;
+  assert(Fext.on_domain_g HS.mem old_res.view.sel == old_res.view.sel);
+  assert(Fext.on_domain_g HS.mem new_res.view.sel == new_res.view.sel);
+  let aux (h: HS.mem) : Lemma (old_res.view.sel h == new_res.view.sel h) =
+    let old_view : A.varray p = { A.s = A.as_seq h p; A.p = A.get_perm h p 0 } in
+    A.reveal_array ();
+    assert(sel_of old_res.view h == old_view);
+    let ptr_view : vptr a = { ptr_x = Seq.index (A.as_seq h p) 0; ptr_p = A.get_perm h p 0} in
+    assert(sel_of (ptr_resource p).view h == ptr_view);
+    let new_view : A.varray p = {
+      A.s = Seq.init_ghost 1 (fun _ -> Seq.index (A.as_seq h p) 0);
+      A.p = A.get_perm h p 0
+    } in
+    assume(Seq.init_ghost 1 (fun _ -> Seq.index (A.as_seq h p) 0) == A.as_seq h p);
+    assert(sel_of new_res.view h == vptr_to_varray p ptr_view);
+    assert((vptr_to_varray p ptr_view).A.p == new_view.A.p);
+    assume((vptr_to_varray p ptr_view).A.s == Seq.init_ghost 1 (fun _ -> ptr_view.ptr_x));
+    assume((vptr_to_varray p ptr_view).A.s == new_view.A.s);
+    assert(vptr_to_varray p ptr_view == new_view)
+  in
+  Classical.forall_intro aux;
+  assume(Fext.on_domain_g HS.mem old_res.view.sel == Fext.on_domain_g HS.mem new_res.view.sel);
+  assert(old_res.view.sel == new_res.view.sel)
+
+val pointer_to_array_ (#a: Type) (p: pointer a) : RST unit
+  (ptr_resource p)
+  (fun _ -> refine_view (ptr_resource p) (vptr_to_varray p))
+  (fun _ -> True)
+  (fun h0 _ h1 -> True)
+
 let ptr_alloc #a init =
-  reveal_ptr();
-  reveal_rst_inv ();
-  reveal_modifies ();
-  A.alloc init 1ul
+  let ptr : A.array a = A.alloc init 1ul in
+  assume(A.vlength ptr == 1);
+  let ptr : pointer a = ptr in
+  admit();
+  array_to_pointer ptr;
+  admit();
+  ptr
 
 let ptr_free #a ptr =
-  reveal_ptr();
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_empty_resource ();
@@ -42,11 +117,11 @@ let ptr_free #a ptr =
 
 
 let ptr_read #a ptr =
-  reveal_ptr();
+  A.reveal_array();
   A.index ptr 0ul
 
 let ptr_write #a ptr x =
-  (**) reveal_ptr();
+  (**) A.reveal_array();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
   A.upd ptr 0ul x;
@@ -55,7 +130,7 @@ let ptr_write #a ptr x =
 
 
 let ptr_share #a ptr =
-  (**) reveal_ptr();
+  (**) A.reveal_array();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
   (**) reveal_star ();
@@ -65,7 +140,7 @@ let ptr_share #a ptr =
   ptr1
 
 let ptr_merge #a ptr1 ptr2 =
-  (**) reveal_ptr();
+  (**) A.reveal_array();
   (**) reveal_rst_inv ();
   (**) reveal_modifies ();
   (**) reveal_star ();
