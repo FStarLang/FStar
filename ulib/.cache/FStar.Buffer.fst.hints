@@ -3279,7 +3279,7 @@
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.v"
       ],
       0,
-      "65c22986d6004cf7317d7c0a1a714904"
+      "f22fc5e65c41c0233b1fb7bbc886377b"
     ],
     [
       "FStar.Buffer.createL",
@@ -3421,7 +3421,7 @@
         "typing_FStar.UInt.fits", "typing_FStar.UInt.max_int"
       ],
       0,
-      "bbebee8d56669bfcc30f755b8f2ee374"
+      "9b880382fcbd0b17de18f975ed183194"
     ],
     [
       "FStar.Buffer.lemma_upd",
@@ -6017,7 +6017,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "e21a34865f0e1dbbf3d0aa9670d2df13"
+      "49130e7d9fb2cd19248906c6bf979ba0"
     ],
     [
       "FStar.Buffer.modifies_subbuffer_2",

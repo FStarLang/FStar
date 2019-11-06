@@ -338,11 +338,11 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                       let uu____943 =
                         let uu____944 =
                           FStar_Syntax_Embeddings.e_option
-                            FStar_Reflection_Embeddings.e_optionstate
+                            FStar_Reflection_Embeddings.e_term
                            in
                         let uu____949 =
                           FStar_TypeChecker_NBETerm.e_option
-                            FStar_Reflection_NBEEmbeddings.e_optionstate
+                            FStar_Reflection_NBEEmbeddings.e_term
                            in
                         mk1 "sigelt_opts" FStar_Reflection_Basic.sigelt_opts
                           FStar_Reflection_Embeddings.e_sigelt uu____944
