@@ -1944,8 +1944,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
               let uu____7987 =
                 FStar_Util.string_of_int (FStar_String.length res)  in
               FStar_Util.format5
-                "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
-                s res s uu____7985 uu____7987
+                "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)" s
+                res s uu____7985 uu____7987
             else res
         | Caption c ->
             if print_captions

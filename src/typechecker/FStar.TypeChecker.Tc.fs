@@ -555,7 +555,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
 
     // Check the tactic
-    let t, _, g = tc_tactic t_unit t_unit env t in
+    let t, _, g = tc_tactic t_unit S.t_decls env t in
     Rel.force_trivial_guard env g;
 
     let ses = env.splice env t in

@@ -1212,8 +1212,7 @@ let (tc_one_file :
                            if uu____1648
                            then
                              (FStar_SMTEncoding_Encode.encode_modul_from_cache
-                                env1 tcmod1.FStar_Syntax_Syntax.name
-                                smt_decls;
+                                env1 tcmod1 smt_decls;
                               post_smt_encoding ())
                            else ());
                           ((), env1))

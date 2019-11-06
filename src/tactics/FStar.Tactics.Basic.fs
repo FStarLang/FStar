@@ -662,18 +662,17 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
                fail1 "Forcing the guard failed (%s)" reason))))))
 
-let tcc (t : term) : tac<comp> = wrap_err "tcc" <|
-    bind (cur_goal ()) (fun goal ->
-    bind (__tc_lax (goal_env goal) t) (fun (_, lc, _) ->
+let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
+    bind (__tc_lax e t) (fun (_, lc, _) ->
     (* Why lax? What about the guard? It doesn't matter! tc is only
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
     ret (TcComm.lcomp_comp lc |> fst)  //dropping the guard from lcomp_comp too!
-    ))
+    )
 
-let tc (t : term) : tac<typ> = wrap_err "tc" <|
-    bind (tcc t) (fun c -> ret (U.comp_result c))
+let tc (e : env) (t : term) : tac<typ> = wrap_err "tc" <|
+    bind (tcc e t) (fun c -> ret (U.comp_result c))
 
 let add_irrelevant_goal reason env phi opts label : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts label) (fun goal ->
