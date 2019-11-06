@@ -626,8 +626,8 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
   let c = comp_no_args c in
 
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown in
-  else U.comp_result c in
+  then TcEnv.reify_comp env c S.U_unknown
+  else U.comp_result c
 
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
@@ -1255,7 +1255,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc env.env_tcenv rc
-                then TcUtil.reify_body env.env_tcenv [TcEnv.Inlining] body in
+                then TcUtil.reify_body env.env_tcenv [TcEnv.Inlining] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
