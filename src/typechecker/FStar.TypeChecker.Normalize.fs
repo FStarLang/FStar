@@ -1818,6 +1818,14 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
+      (*
+       * AR: we need to apply the lift combinator to `e`
+       *     if source effect (i.e. e's effect) is reifiable, then we first reify e
+       *     else if it is not, then we thunk e
+       *     this is how lifts are written for layered effects
+       *     not sure what's the convention for DM4F, but DM4F lifts don't come to this point anyway
+       *     they are handled as a `return` in the `then` branch above
+       *)
       let e =
         if Env.is_reifiable_effect env msrc
         then U.mk_reify e

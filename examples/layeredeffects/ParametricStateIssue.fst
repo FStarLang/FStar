@@ -58,6 +58,8 @@ module B = LowStar.Buffer
 /// Try with:
 ///
 /// fstar.exe --codegen OCaml --extract '-* ParametricStateIssue' ParametricStateIssue.fst
+///
+/// ALSO: comp_no_args in Extraction.ML.Term.fs should not be done whenever this is fixed
 
 
 inline_for_extraction
