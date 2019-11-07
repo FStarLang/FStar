@@ -763,3 +763,96 @@ let copy_state_with_frame_inference
   frame (upd st 14ul v);
   let v = frame (index ost 15ul) in
   frame (upd st 15ul v)
+
+let pointer (a: Type) = a:array a{length a == 1}
+
+let ptr_resource (#a: Type) (p: pointer a) = array_resource p
+
+let get_val (#a: Type) (p: pointer a) (#r:resource{ptr_resource p `is_subresource_of` r}) (h:rmem r) : GTot a =
+  Seq.index (as_rseq p h) 0
+
+val swap (p1 p2: pointer U32.t) : RST unit
+  (ptr_resource p1 <*> ptr_resource p2)
+  (fun _ -> ptr_resource p1 <*> ptr_resource p2)
+  (fun h0 -> True)
+  (fun h0 _ h1 -> get_val p1 h1 == get_val p2 h0 /\ get_val p1 h0 == get_val p2 h1)
+
+
+val ptr_read (#a:Type0) (p:pointer a)
+: unit ->
+  RST a
+  (ptr_resource p)
+  (fun _ -> ptr_resource p)
+  (fun _ -> True)
+  (fun h0 x h1 ->
+    x == get_val p h0 /\
+    h0 == h1)
+
+let ptr_read #a p = index p 0ul
+
+val ptr_write (#a:Type0) (p:pointer a) (v:a)
+: unit ->
+  RST unit
+  (ptr_resource p)
+  (fun _ -> ptr_resource p)
+  (fun _ -> True)
+  (fun h0 _ h1 -> v == get_val p h1)
+
+let ptr_write #a p v = upd p 0ul v
+
+let swap p1 p2 =
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p2 vx);
+  frame (ptr_write p1 vy)
+
+val swap_multiple (#a:Type) (p1 p2:pointer a) : RST unit
+    (ptr_resource p1 <*> ptr_resource p2)
+    (fun _ -> ptr_resource p1 <*> ptr_resource p2)
+    (fun _ -> True)
+    (fun h0 _ h1 -> get_val p1 h0 == get_val p2 h1 /\ get_val p1 h1 == get_val p2 h0)
+let swap_multiple #a p1 p2 =
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx);
+  let vx = frame (ptr_read p1) in
+  let vy = frame (ptr_read p2) in
+  frame (ptr_write p1 vy);
+  frame (ptr_write p2 vx)
