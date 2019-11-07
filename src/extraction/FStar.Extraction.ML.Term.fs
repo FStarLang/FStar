@@ -1146,18 +1146,27 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         (Print.term_to_string top))));
 
     (*
-     * AR: Following two util functions are to implement the following rule:
+     * AR: Following util functions are to implement the following rule:
      *     (match e with | P_i -> body_i) args ~~>
      *     (match e with | P_i -> body_i args)
      *
      *     This opens up more opportunities for reduction,
      *       especially when using layered effects where reification leads to
      *       some lambdas introduced and applied this way
+     *
+     *     Doing it naively results in code blowup (if args are big terms)
+     *       so controlling it specifically
      *)     
     let is_match t =
       match (t |> SS.compress |> U.unascribe).n with
       | Tm_match _ -> true
       | _ -> false in
+
+    let should_apply_to_match_branches : S.args -> bool =
+      List.for_all (fun (t, _) ->
+        match (t |> SS.compress).n with
+        | Tm_bvar _ | Tm_name _ | Tm_fvar _ | Tm_constant _ -> true
+        | _ -> false) in
 
     //precondition: is_match head = true
     let apply_to_match_branches head args =
@@ -1299,7 +1308,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
-        | Tm_app (head, args) when is_match head ->
+        | Tm_app (head, args)
+          when is_match head &&
+               args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
         | Tm_app (head, args) ->
@@ -1316,9 +1327,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             (*
              * AR: do we need is_total rc here?
              *)
-            | _, Tm_abs(bs, _, rc) (* when is_total rc *) -> //this is a beta_redex --- also reduce it before extraction
-              let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] g.env_tcenv t in
-              term_as_mlexpr g t
+            | _, Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
+              t
+              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] g.env_tcenv
+              |> term_as_mlexpr g
 
             | _, Tm_constant Const_reify ->
               let e = TcUtil.reify_body_with_arg g.env_tcenv [TcEnv.Inlining] head (List.hd args) in
