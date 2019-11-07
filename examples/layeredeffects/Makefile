@@ -23,4 +23,4 @@ clean:
 
 extract:
 	fstar.exe --codegen OCaml --extract '-* LL' --odir out LL.fst
-	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst #parsing/FlightsStExn.fst #-- double reification leaves a lambda around, which is not valid Low*
+	krml -skip-compilation -tmpdir out -I parsing Buffers.fst parsing/Flights.fst parsing/FlightsExn.fst parsing/FlightsStExn.fst
