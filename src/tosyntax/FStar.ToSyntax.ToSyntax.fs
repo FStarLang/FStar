@@ -2975,7 +2975,10 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_defn env l with
-        | None -> raise_error (Errors.Fatal_EffectNotFound, ("Effect name " ^Print.lid_to_string l^ " not found")) d.drange
+        | None ->
+          raise_error
+            (Errors.Fatal_EffectNotFound, "Effect name " ^Print.lid_to_string l^ " not found")
+            d.drange
         | Some l -> l in
     let src_ed = lookup l.msource in
     let dst_ed = lookup l.mdest in
@@ -2992,10 +2995,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigattrs = [];
                     sigopts = None} in
          env, [se]
-    else if U.is_layered src_ed
-    then raise_error (Errors.Fatal_UnexpectedEffect,
-      "Lifts from layered effects (" ^ (Print.lid_to_string src_ed.mname) ^ ") are not yet supported")
-      d.drange
     else
       (match l.lift_op with
        | NonReifiableLift t ->
