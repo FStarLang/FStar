@@ -1165,8 +1165,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     let should_apply_to_match_branches : S.args -> bool =
       List.for_all (fun (t, _) ->
         match (t |> SS.compress).n with
-        | Tm_bvar _ | Tm_name _ | Tm_fvar _ | Tm_constant _ -> true
-        | _ -> false) in
+        | Tm_name _ | Tm_fvar _ | Tm_constant _ -> true | _ -> false) in
 
     //precondition: is_match head = true
     let apply_to_match_branches head args =
