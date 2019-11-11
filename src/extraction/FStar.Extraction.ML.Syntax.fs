@@ -182,6 +182,17 @@ type mlexpr' =
 | MLE_Raise  of mlpath * list<mlexpr>
 | MLE_Try    of mlexpr * list<mlbranch>
 
+(* KreMLin only: anonymous union support, because otherwise by the time we reach
+   FStar.Extraction.Kremlin.fs, arguments of interest have been erased.
+
+   Note that while we could have a tactic that synthesizes an argument that
+   would be kept at run-time (and hence appear in the ML AST), this would be
+   workable only for non-parametric union types and therefore pretty restrictive. *)
+| MLE_UProj  of mlexpr * mlty * mlsymbol
+  (* (e: t).f *)
+| MLE_UCons  of mlexpr * mlsymbol
+  (* (e: t.f) <: t where t is found as the type of this AST node *)
+
 and mlexpr = {
     expr:mlexpr';
     mlty:mlty;
@@ -203,15 +214,18 @@ and mlletbinding = mlletflavor * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
-| MLTD_Union of list<(mlsymbol * mlty)> * mlty
-    (* The second mlty is used only so that we can implement tyscheme_of_td and
-     * preserve a consistent behavior when extracting uses of this type
-     * abbreviation. *)
 | MLTD_Record of list<(mlsymbol * mlty)>
 | MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
+
+(* KreMLin only: anonymous union support, because otherwise by the time we reach
+   FStar.Extraction.Kremlin.fs, arguments of interest have been erased. *)
+| MLTD_Union of list<(mlsymbol * mlty)> * mlty
+    (* The second mlty is used only so that we can implement tyscheme_of_td and
+     * preserve a consistent behavior when extracting uses of this type
+     * abbreviation. *)
 
 // bool: this was assumed (C backend)
 type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * metadata * option<mltybody>

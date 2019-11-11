@@ -472,10 +472,10 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr =
          let vs_ts = List.zip vs ts in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
+let is_kremlin () = Options.codegen () = Some Options.Kremlin
+
 let maybe_eta_expand expect e =
-    if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
-    then e
+    if Options.ml_no_eta_expand_coertions () || is_kremlin () then e
     else eta_expand expect e
 
 (*
@@ -1306,6 +1306,32 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           term_as_mlexpr g t
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
+
+        // KreMLin-only untagged unions: constructors
+        | Tm_app({n=Tm_fvar fv},
+          [ _; _; name, _; _; _; {n=Tm_constant (Const_string (case, _))}, _; v, _ ])
+          when fv_eq_lid fv PC.union_cons_lid && is_kremlin () ->
+
+            let ml_ty = Util.eraseTypeDeep (Util.udelta_unfold g) (term_as_mlty g name) in
+            let v, e_v, _ = term_as_mlexpr g v in
+            if e_v <> E_PURE then
+              failwith "FIXME: argument to LowStar.Union.proj not pure";
+            with_ty ml_ty (MLE_UCons (v, case)), E_PURE, ml_ty
+
+        // KreMLin-only untagged unions: projectors
+        | Tm_app({n=Tm_fvar fv},
+          [ _; _; name, _; _; _; {n=Tm_constant (Const_string (case, _))}, _; u, _; t, _ ])
+          when fv_eq_lid fv PC.union_proj_lid && is_kremlin () ->
+
+            let union_ty = Util.eraseTypeDeep (Util.udelta_unfold g) (term_as_mlty g name) in
+            // Note: resolving the return type through a tactic so that it's
+            // available right here on the spot, since we need to come up with
+            // something for the type of this ML expression.
+            let proj_ty = Util.eraseTypeDeep (Util.udelta_unfold g) (term_as_mlty g t) in
+            let u, e_u, _ = term_as_mlexpr g u in
+            if e_u <> E_PURE then
+              failwith "FIXME: argument to LowStar.Union.proj not pure";
+            with_ty proj_ty (MLE_UProj (u, union_ty, case)), E_PURE, proj_ty
 
         | Tm_app (head, args)
           when is_match head &&

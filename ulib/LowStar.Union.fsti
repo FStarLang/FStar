@@ -63,6 +63,8 @@ let label_of (#key: eqtype) (cases: case_list u#a key) (case: one_of cases): str
 /// Constructors and projectors
 /// ===========================
 
+module T = FStar.Tactics
+
 /// This module offers a particular flavor of union, which is already indexed by
 /// a user-provided type of keys. It's up to the user to give meaning to these
 /// keys, for instance by tying a key to a particular property of interest.
@@ -70,8 +72,6 @@ val union (#key: eqtype)
   (cases: case_list u#a key)
   (case: one_of cases):
   Type u#a
-
-module T = FStar.Tactics
 
 /// Small call to tactics to automatically fill in the label so that at least
 /// the user doesn't have to type it in (note: I couldn't figure out a way to
@@ -82,13 +82,18 @@ let resolve_label (#key: eqtype) (cases: case_list key) (case: one_of cases): T.
   let s: string = label_of cases case in
   T.exact (quote s)
 
+noextract
+let resolve_type (#key: eqtype) (cases: case_list key) (case: one_of cases): T.Tac unit =
+  let t = type_of cases case in
+  T.exact_with_ref (quote t)
+
 #push-options "--max_ifuel 1"
 noextract
 let rec assert_union (#key: eqtype) (#cases: case_list key) (name: one_of cases -> Type):
   T.Tac unit
 =
   let head, _ = T.collect_app (quote name) in
-  match T.inspect_ln head with
+  match T.inspect head with
   | T.Tv_FVar fv ->
       // Found an application, very well. Let's check that the application
       // itself is created via LowStar.Union.union... this may be a little too
@@ -108,7 +113,7 @@ let rec assert_union (#key: eqtype) (#cases: case_list key) (name: one_of cases 
               is not defined as (3):\n\
               let foobar = LowStar.Union.union [ ... cases ... ]"
       in
-      begin match T.inspect_ln (fst (T.collect_app def)) with
+      begin match T.inspect (fst (T.collect_app def)) with
       | T.Tv_FVar fv ->
           let fv = T.inspect_fv fv in
           if fv <> [ "LowStar"; "Union"; "union" ] then
@@ -134,7 +139,7 @@ let rec assert_union (#key: eqtype) (#cases: case_list key) (name: one_of cases 
 /// clients, we resolve ``cases`` automatically (since ``name`` has the proper
 /// type). It also makes sense to tie projectors and constructors to the type
 /// declaration rather than to the list of cases.
-val mk (#key: eqtype)
+val cons (#key: eqtype)
   (#cases: case_list key)
   (name: one_of cases -> Type)
   (#[assert_union name] _: unit)
@@ -153,5 +158,6 @@ val proj (#key:eqtype)
   (#[assert_union name] _: unit)
   (case: one_of cases)
   (#[resolve_label cases case] label: string)
+  (#[resolve_type cases case] return_type: Type)
   (u: union cases case):
   Tot (type_of cases case)

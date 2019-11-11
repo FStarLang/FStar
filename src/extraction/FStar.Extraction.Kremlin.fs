@@ -421,6 +421,7 @@ and translate_let env flavor lb: option<decl> =
       mllb_def = e;
       mllb_meta = meta
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
+      // Case 0: assume val -- important to pass to KreMLin to type-check everything
       let name = env.module_name, name in
       let arg_names = match e.expr with
         | MLE_Fun (args, _) -> List.map fst args
@@ -429,6 +430,8 @@ and translate_let env flavor lb: option<decl> =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
+        // Because we'd have to generate monomorphized instances of the
+        // polymorphic assume val to be implemented in C -- not feasible.
         BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end

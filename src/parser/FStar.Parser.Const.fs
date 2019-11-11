@@ -86,6 +86,9 @@ let char_lid  = p2l ["FStar"; "Char"; "char"]
 
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
+let union_cons_lid = p2l [ "LowStar"; "Union"; "cons" ]
+let union_proj_lid = p2l [ "LowStar"; "Union"; "proj" ]
+
 let logical_lid = pconst "logical"
 
 let smt_theory_symbol_attr_lid = pconst "smt_theory_symbol"
