@@ -554,6 +554,14 @@ and translate_type_decl env ty: option<decl> =
           ) ts
         ) branches))
 
+    | (_, name, _mangled_name, args, flags, Some (MLTD_Union (cases, _))) ->
+        let name = env.module_name, name in
+        let flags = translate_flags flags in
+        let env = List.fold_left extend_t env args in
+        Some (DUntaggedUnion (name, flags, List.length args, List.map (fun (f, t) ->
+          f, translate_type env t
+        ) cases))
+
     | (_, name, _mangled_name, _, _, _) ->
         // JP: TODO: figure out why and how this happens
         Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KreMLin\n" name));
