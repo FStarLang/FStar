@@ -1,7 +1,10 @@
 FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --record_hints
 include ../Makefile.include
-ROOTS=Test.fst Locals.Effect.fst LL.fst MSeqExn.fst DijkstraStateMonad.fst Flights.fst FlightsExn.fst FlightsStExn.fst Z3EncodingIssue.fst ParametricStateIssue.fst #Buffers.fst
+
+NO_VERIFY=Buffers.fst
+
+ROOTS=$(filter-out $(NO_VERIFY),$(wildcard *.fst))
 
 all: verify-all
 
