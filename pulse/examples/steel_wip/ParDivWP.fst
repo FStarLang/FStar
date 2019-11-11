@@ -284,6 +284,18 @@ let as_requires (#st:st) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp p
   : rs_prop preL
   = wpL (triv_post aL postL)
 
+let join_ext (#st:st) (l r : st.r) (sL sR rest: st.s)
+    : Lemma
+      (requires
+        st.interp l sL /\
+        st.interp r sR /\
+        st.interp (l `st.star` r)
+                  (st.join (sL, st.join(sR, rest))))
+      (ensures
+        st.interp (l `st.star` r)
+                  (st.join (sL, sR)))
+   = admit()
+
 let wp_par_post (#st:st)
            #aL (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
            #aR (#preR:st.r) (#postR: post st aR) (wpR: wp preR aR postR)
@@ -350,7 +362,9 @@ let wp_par_post (#st:st)
               [SMTPat ()]
             = let s1 = (st.join (sL', st.join(sR', rest))) in
               let s1' = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              assume (st.interp (postL xL `st.star` postR xR) s1');
+              join_ext (postL xL) (postR xR) sL' sR' rest;
+              assert (st.interp (postL xL `st.star` postR xR) (st.join(sL', sR')));
+              assert (st.interp (postL xL `st.star` postR xR) s1');
               assert (app_k xL xR s1');
               assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
               assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
@@ -728,44 +742,88 @@ let rec run (#st:st) (i:nat)
       let Step pre' wp' f' state' j = step i st.emp f k state in
       run j f' state' k
 
-// // // // ////////////////////////////////////////////////////////////////////////////////
-// // // // //The rest of this module shows how this semantic can be packaged up as an
-// // // // //effect in F*
-// // // // ////////////////////////////////////////////////////////////////////////////////
 
-// // // // (** [eff a pre post] : The representation-type for a layered effect
-// // // //  *
-// // // //  *   - Note, we'll probably have to add a thunk to make it work with
-// // // //  *     the current implementation but that's a detail
-// // // //  *)
-// // // // let eff #s (#c:comm_monoid s) a (pre:c.r) (post: a -> c.r) =
-// // // //   m s c a pre post
+////////////////////////////////////////////////////////////////////////////////
+//The rest of this module shows how these semantics can be packaged up as an
+//effect in F*
+////////////////////////////////////////////////////////////////////////////////
 
-// // // // /// eff is a monad: we give a return and bind for it, though we don't
-// // // // /// prove the monad laws
+(** [eff a pre post] : The representation-type for a layered effect
+//  *
+//  *   - Note, we'll probably have to add a thunk to make it work with
+//  *     the current implementation but that's a detail
+//  *)
+let eff (#st:st) a
+        (expects:st.r)
+        (provides: a -> st.r)
+        (wp:wp expects a provides)
+  = m st a expects provides wp
+
+/// eff is a monad: we give a return and bind for it, though we don't
+/// prove the monad laws
 
 
-// // // // (** [return]: easy, just use Ret *)
-// // // // let return #s (#c:comm_monoid s) #a (x:a) (post:a -> c.r)
-// // // //   : eff a (post x) post
-// // // //   = Ret x
+(** [return]: easy, just use Ret *)
+let return (#st:st) #a (x:a) (post:a -> st.r)
+  : eff a (post x) post (return_wp x post)
+  = Ret x
 
-// // // // (**
-// // // //  * [bind]: sequential composition works by pushing `g` into the continuation
-// // // //  * at each node, finally applying it at the terminal `Ret`
-// // // //  *)
-// // // // let rec bind #s (#c:comm_monoid s) #a #b (#p:c.r) (#q:a -> c.r) (#r:b -> c.r)
-// // // //              (f:eff a p q)
-// // // //              (g: (x:a -> eff b (q x) r))
-// // // //   : Dv (eff b p r)
-// // // //   = match f with
-// // // //     | Ret x -> g x
-// // // //     | Act act k ->
-// // // //       Act act (fun x -> bind (k x) g)
-// // // //     | Par pre0 post0 l
-// // // //           pre1 post1 r
-// // // //           k ->
-// // // //       Par pre0 post0 l pre1 post1 r (fun x0 x1 -> bind (k x0 x1) g)
+let eta2 #a #b #c (f:a -> b -> c) : Lemma ((fun x y -> f x y) == f) = ()
+
+(**
+//  * [bind]: sequential composition works by pushing `g` into the continuation
+//  * at each node, finally applying it at the terminal `Ret`
+//  *)
+let rec bind (#st:st) #a #b (#p:st.r) (#q:a -> st.r) (#r:b -> st.r)
+             (#wp_f: wp p a q) (f:eff a p q wp_f)
+             (#wp_g: (x:a -> wp (q x) b r)) (g: (x:a -> eff b (q x) r (wp_g x)))
+  : Dv (eff b p r (bind_wp wp_f wp_g))
+  = match f with
+    | Ret x ->
+      assert (p == q x);
+      assert (wp_f == return_wp x q);
+      assert (eq2 #(wp_post b r -> rs (q x) -> prop) (bind_wp (return_wp x q) wp_g) (wp_g x))
+        by (T.norm [delta_only [`%bind_wp; `%return_wp]];
+            T.dump "A";
+            T.mapply (`eta2));
+      g x
+
+    | Act #_ #a' f #post_h #wp_h h ->
+      assert (wp_f == bind_action f wp_h);
+      let g' (x:_) : Dv (eff b (f.post x) r (bind_wp (wp_h x) wp_g))
+        = bind #st #a' #b (h x) g
+      in
+      let res : eff b p r (bind_action f (fun x -> bind_wp (wp_h x) wp_g)) = Act f g' in
+      calc (==) {
+        bind_action f (fun x -> bind_wp (wp_h x) wp_g);
+          == {}
+        bind_wp (wp_action f) (fun x -> bind_wp (wp_h x) wp_g);
+          == { admit() (* assoc *) }
+        bind_wp (bind_wp (wp_action f) (fun x -> wp_h x)) wp_g;
+          == { }
+        bind_wp wp_f wp_g;
+      };
+      res
+
+    | Par preL aL postL wpL mL
+          preR aR postR wpR mR
+          post wp_kont kont ->
+      let kont x0 x1 : Dv (eff b (postL x0 `st.star` postR x1) r (bind_wp (wp_kont x0 x1) wp_g)) = bind (kont x0 x1) g in
+      let res : m st b (st.star preL preR) r (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g))) =
+          Par preL aL postL wpL mL
+                    preR aR postR wpR mR
+                    r (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)) kont in
+      calc (==) {
+        (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)));
+        == { _ by (T.dump "A"; T.norm [delta_only [`%bind_par]]; T.dump "B"; T.trefl()) }
+        bind_wp (wp_par wpL wpR) (fun (x0, x1) -> (bind_wp (wp_kont x0 x1) wp_g));
+        == { admit () (* assoc *) }
+        bind_wp (bind_wp (wp_par wpL wpR) (fun (x0, x1) -> wp_kont x0 x1)) wp_g;
+        == {}
+        (bind_wp (bind_par wpL wpR wp_kont) wp_g);
+      };
+      res
+
 
 // // // // (**
 // // // //  * [par]: Parallel composition
