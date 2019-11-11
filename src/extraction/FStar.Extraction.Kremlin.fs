@@ -701,6 +701,12 @@ and translate_expr env e: expr =
   | MLE_Match (expr, branches) ->
       EMatch (translate_expr env expr, translate_branches env branches)
 
+  | MLE_UCons (e, f) ->
+      EFlat (translate_type env e.mlty, [ f, translate_expr env e ])
+
+  | MLE_UProj (e, t, f) ->
+      EField (translate_type env t, translate_expr env e, f)
+
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
