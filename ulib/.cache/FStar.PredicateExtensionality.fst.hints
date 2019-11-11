@@ -1,0 +1,24 @@
+[
+  "\u0005\u0019nåßY1Xç\n@üë5‚\r",
+  [
+    [
+      "FStar.PredicateExtensionality.predicateExtensionality",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "FStar.PredicateExtensionality_interpretation_Tm_arrow_81e65de2755319ee661cc1adc7d951e3",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.PredicateExtensionality.peq",
+        "equation_FStar.PredicateExtensionality.predicate",
+        "interpretation_Tm_abs_2bac9c8a5eacd30e2057426a7a632682",
+        "lemma_FStar.FunctionalExtensionality.extensionality",
+        "typing_Tm_abs_2bac9c8a5eacd30e2057426a7a632682"
+      ],
+      0,
+      "741aca2773502516b704a009af1fec31"
+    ]
+  ]
+]

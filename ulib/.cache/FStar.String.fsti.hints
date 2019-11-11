@@ -1,0 +1,19 @@
+[
+  "\u0014LËaß\u0016v‘cÿ3ÉπM√£",
+  [
+    [
+      "FStar.String.make",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a5a4317663df9d03513e81f3d4986f3a"
+    ]
+  ]
+]

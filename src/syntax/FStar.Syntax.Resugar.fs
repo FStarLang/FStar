@@ -160,16 +160,23 @@ let string_to_op s =
   | "op_Lens_Access" -> Some (".(||)", None)
   | _ ->
     if BU.starts_with s "op_" then
-      let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
+    begin
+      let s = BU.split (BU.substring_from s (String.length "op_")) "_" in
       match s with
       | [op] -> name_of_op op
       | _ ->
-        let op = List.fold_left(fun acc x -> match x with
-                                  | Some (op, _) -> acc ^ op
-                                  | None -> failwith "wrong composed operator format")
-                                  "" (List.map name_of_op s)  in
-        Some (op, None)
-    else
+        let maybeop =
+          List.fold_left (fun acc x -> match acc with
+                                       | None -> None
+                                       | Some acc ->
+                                           match x with
+                                           | Some (op, _) -> Some (acc ^ op)
+                                           | None -> None)
+                         (Some "")
+                         (List.map name_of_op s)
+        in
+        BU.map_opt maybeop (fun o -> (o, None))
+    end else
       None
 
 type expected_arity = option<int>
@@ -1035,7 +1042,43 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_eff_decl' env for_free r q ed =
+let resugar_wp_eff_combinators env for_free combs =
+  let resugar_opt name tsopt =
+    match tsopt with
+    | Some ts -> [resugar_tscheme'' env name ts]
+    | None -> [] in
+
+  let repr = resugar_opt "repr" combs.repr in
+  let return_repr = resugar_opt "return_repr" combs.return_repr in
+  let bind_repr = resugar_opt "bind_repr" combs.bind_repr in
+
+  if for_free then repr@return_repr@bind_repr
+  else
+    (resugar_tscheme'' env "ret_wp" combs.ret_wp)::
+    (resugar_tscheme'' env "bind_wp" combs.bind_wp)::
+    (resugar_tscheme'' env "stronger" combs.stronger)::
+    (resugar_tscheme'' env "if_then_else" combs.if_then_else)::
+    (resugar_tscheme'' env "ite_wp" combs.ite_wp)::
+    (resugar_tscheme'' env "close_wp" combs.close_wp)::
+    (resugar_tscheme'' env "trivial" combs.trivial)::
+    (repr@return_repr@bind_repr)
+
+let resugar_layered_eff_combinators env combs =
+  let resugar name (ts, _) = resugar_tscheme'' env name ts in
+
+  (resugar "repr" combs.l_repr)::
+  (resugar "return" combs.l_return)::
+  (resugar "bind" combs.l_bind)::
+  (resugar "subcomp" combs.l_subcomp)::
+  (resugar "if_then_else" combs.l_if_then_else)::[]
+
+let resugar_combinators env combs =
+  match combs with
+  | Primitive_eff combs -> resugar_wp_eff_combinators env false combs
+  | DM4F_eff combs -> resugar_wp_eff_combinators env true combs
+  | Layered_eff combs -> resugar_layered_eff_combinators env combs
+
+let resugar_eff_decl' env r q ed =
   let resugar_action d for_free =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
@@ -1056,23 +1099,9 @@ let resugar_eff_decl' env for_free r q ed =
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
-  let ret_wp = resugar_tscheme'' env "ret_wp" ed.ret_wp in
-  let bind_wp = resugar_tscheme'' env "bind_wp" ed.bind_wp in
-  let if_then_else = resugar_tscheme'' env "if_then_else" ed.if_then_else in
-  let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
-  let stronger = resugar_tscheme'' env "stronger" ed.stronger in
-  let close_wp = resugar_tscheme'' env "close_wp" ed.close_wp in
-  let trivial = resugar_tscheme'' env "trivial" ed.trivial in
-  let repr = resugar_tscheme'' env "repr" ed.repr in
-  let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
-  let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
-  let mandatory_members_decls =
-    if for_free then
-      [repr; return_repr; bind_repr]
-    else
-      [repr; return_repr; bind_repr; ret_wp; bind_wp;
-       if_then_else; ite_wp; stronger; close_wp;
-       trivial] in
+
+  let mandatory_members_decls = resugar_combinators env ed.combinators in
+
   let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
@@ -1126,10 +1155,7 @@ let resugar_sigelt' env se : option<A.decl> =
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
-    Some (resugar_eff_decl' env false se.sigrng se.sigquals ed)
-
-  | Sig_new_effect_for_free ed ->
-    Some (resugar_eff_decl' env true se.sigrng se.sigquals ed)
+    Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
 
   | Sig_sub_effect e ->
     let src = e.source in
@@ -1207,5 +1233,5 @@ let resugar_binder (b:S.binder) r : option<A.binder> =
 let resugar_tscheme (ts:S.tscheme) =
   noenv resugar_tscheme' ts
 
-let resugar_eff_decl for_free r q ed =
-  noenv resugar_eff_decl' for_free r q ed
+let resugar_eff_decl r q ed =
+  noenv resugar_eff_decl' r q ed

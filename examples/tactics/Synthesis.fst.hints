@@ -1,5 +1,5 @@
 [
-  "÷Á¼x\u0010î\u0002›ƒ™º°p«\f\u0011",
+  "óE€ü\u0003£’Û\u001a„å>¹Ï)\r",
   [
     [
       "Synthesis.uu___1",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "64cae1b56c7336da24c15c1bb786d9d7"
+      "0a090caa7bb3abd606bdb55c65868550"
     ],
     [
       "Synthesis.uu___8",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "054d45c4d1a85aebda96516a435167ea"
+      "46ae6bd27725761009ce046c996c780b"
     ],
     [
       "Synthesis.uu___18",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "1266efe1f24fe976eb6f24cc6a01ff23"
+      "71f6f96f3644a04d1bc380b0c0ef5a76"
     ],
     [
       "Synthesis.uu___26",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "7912b7ff80948826ae3af84ac9171f9d"
+      "1170f9374ed863b888f2606de887b1bf"
     ],
     [
       "Synthesis.uu___27",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "52a2653fe268a0acf0f3333fd467cad7"
+      "e42258ed0a7e35e9471b34268c378809"
     ],
     [
       "Synthesis.uu___28",
@@ -59,22 +59,16 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fa2c69f6ebb185735adcd11452dbd55e"
+      "0e0a389ee1d438f805e37dee7a08efc0"
     ],
     [
-      "Synthesis.uu___41",
+      "Synthesis.uu___42",
       1,
       2,
       1,
-      [
-        "@query", "equation_Synthesis.f2",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "equation_Synthesis.f2" ],
       0,
-      "76980eb52d5361846c67ed47a2c9b8f3"
+      "517f331e9b9aa85689d38733e5757050"
     ],
     [
       "Synthesis.f3",
@@ -92,16 +86,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f676aef3c5802f719ccf70b25386830f"
+      "bcdbb249a1a6ef09fbf5d0d9ff7992d3"
     ],
     [
-      "Synthesis.uu___54",
+      "Synthesis.uu___56",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8de01acc52d560897527b55b4f445ddf"
+      "696626495016466e1078cf1b9079d4c4"
     ],
     [
       "Synthesis.uu___1",
@@ -110,7 +104,7 @@
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "5e21c25dd54cae2116176d2d9d0c2c5d"
+      "77c1a2f6795f134ee41cd553e8a8f390"
     ],
     [
       "Synthesis.uu___8",
@@ -122,7 +116,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d30b557daa12872f7f1fabf99fcf71e3"
+      "2af63b14c1211d69273abb885ff78481"
     ],
     [
       "Synthesis.uu___18",
@@ -131,7 +125,7 @@
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "d2ffa310589fc2fd8001fc13c4c8dc06"
+      "8a2f3afceac37d4033a3a7874c7a58df"
     ],
     [
       "Synthesis.uu___26",
@@ -140,7 +134,7 @@
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "dccfa876f4abd1c865d4da427dabf199"
+      "b6d32a3c539c49847fc0af9494bf67e4"
     ],
     [
       "Synthesis.uu___27",
@@ -149,7 +143,7 @@
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "1082adaa7323a5647838270d5b1ffca2"
+      "9049ed83ca882ad442e5186ad6e8d55d"
     ],
     [
       "Synthesis.uu___28",
@@ -161,22 +155,16 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "24a0e9f375c00083e7019519e32c0357"
+      "2dda0ccb1d310bf3b7e5a4f8bf6fad9a"
     ],
     [
-      "Synthesis.uu___41",
+      "Synthesis.uu___42",
       2,
       2,
       1,
-      [
-        "@query", "equation_Synthesis.f2",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "equation_Synthesis.f2" ],
       0,
-      "86420b3aaec7bdf0cb43495c789882c5"
+      "0b638a5a4ab8bfef8c2f1459133428d1"
     ],
     [
       "Synthesis.f3",
@@ -191,16 +179,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "61a57a14204f97458bd61d7c66d99434"
+      "5968f6e167e5f0e483b5c142dc1058a6"
     ],
     [
-      "Synthesis.uu___54",
+      "Synthesis.uu___56",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "45a210f1d7bb7342ba6be7985a332fbc"
+      "f7923f0b88750dae9c24556cabc5a03e"
     ]
   ]
 ]

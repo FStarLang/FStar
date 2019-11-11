@@ -567,7 +567,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                    Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
-            | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+            | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
             | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
             | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
@@ -605,13 +605,11 @@ let try_lookup_effect_name env l =
 let try_lookup_effect_name_and_attributes env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, l) -> Some (l, ne.cattributes)
-        | Some ({ sigel = Sig_new_effect_for_free(ne) }, l) -> Some (l, ne.cattributes)
         | Some ({ sigel = Sig_effect_abbrev(_,_,_,_,cattributes) }, l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, _) -> Some ne
-        | Some ({ sigel = Sig_new_effect_for_free(ne) }, _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with
@@ -628,7 +626,6 @@ let try_lookup_root_effect_name env l =
 	      | None -> None
 	      | Some (s, _) ->
 	        begin match s.sigel with
-                | Sig_new_effect_for_free (ne)
 		| Sig_new_effect(ne)
 		  -> Some (set_lid_range ne.mname (range_of_lid l))
 		| Sig_effect_abbrev (_, _, _, cmp, _) ->

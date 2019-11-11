@@ -52,6 +52,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="FStar.TypeChecker.Common.fsi" />
     <Compile Include="FStar.TypeChecker.Common.fs" />
     <Compile Include="FStar.TypeChecker.Env.fsi" />
     <Compile Include="FStar.TypeChecker.Env.fs" />
@@ -70,10 +71,12 @@
     <Compile Include="FStar.TypeChecker.Rel.fs" />
     <Compile Include="FStar.TypeChecker.Util.fsi" />
     <Compile Include="FStar.TypeChecker.Util.fs" />
-    <Compile Include="FStar.TypeChecker.DMFF.fsi" />
-    <Compile Include="FStar.TypeChecker.DMFF.fs" />
     <Compile Include="FStar.TypeChecker.TcTerm.fsi" />
     <Compile Include="FStar.TypeChecker.TcTerm.fs" />
+    <Compile Include="FStar.TypeChecker.DMFF.fsi" />
+    <Compile Include="FStar.TypeChecker.DMFF.fs" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fsi" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fs" />
     <Compile Include="FStar.TypeChecker.TcInductive.fsi" />
     <Compile Include="FStar.TypeChecker.TcInductive.fs" />
     <Compile Include="FStar.TypeChecker.Tc.fsi" />

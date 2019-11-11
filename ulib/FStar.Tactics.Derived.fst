@@ -269,10 +269,6 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
-let norm_term (s : list norm_step) (t : term) : Tac term =
-    let e = cur_env () in
-    norm_term_env e s t
-
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
@@ -315,6 +311,13 @@ let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 
 let repeat' (f : unit -> Tac 'a) : Tac unit =
     let _ = repeat f in ()
+
+let norm_term (s : list norm_step) (t : term) : Tac term =
+    let e =
+        try cur_env ()
+        with | _ -> top_env ()
+    in
+    norm_term_env e s t
 
 (** Join all of the SMT goals into one. This helps when all of them are
 expected to be similar, and therefore easier to prove at once by the SMT
@@ -479,7 +482,8 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
+The lemmas need to prove *propositional* equalities, that is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
@@ -532,7 +536,7 @@ let rec apply_squash_or_lem d t =
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
 
-    let ty = tc t in
+    let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->
@@ -674,3 +678,48 @@ let bump_nth (n:pos) : Tac unit =
   match extract_nth (n - 1) (goals ()) with
   | None -> fail "bump_nth: not that many goals"
   | Some (h, t) -> set_goals (h :: t)
+
+
+let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
+  let tv = inspect t in
+  let tv' =
+    match tv with
+    | Tv_Var _
+    | Tv_BVar _
+    | Tv_FVar _ -> tv
+    | Tv_FVar fv -> Tv_FVar fv
+    | Tv_Type () -> Tv_Type ()
+    | Tv_Const c -> Tv_Const c
+    | Tv_Uvar i u -> Tv_Uvar i u
+    | Tv_Unknown -> Tv_Unknown
+    | Tv_App l (r, q) ->
+         let l = visit_tm ff l in
+         let r = visit_tm ff r in
+         Tv_App l (r, q)
+    | Tv_Abs b t ->
+        let t = visit_tm ff t in
+        Tv_Abs b t
+    | Tv_Refine b r ->
+        let r = visit_tm ff r in
+        Tv_Refine b r
+    | Tv_Let r attrs b def t ->
+        let def = visit_tm ff def in
+        let t = visit_tm ff t in
+        Tv_Let r attrs b def t
+    | Tv_Match sc brs ->
+        let sc = visit_tm ff sc in
+        let brs = map (visit_br ff) brs in
+        Tv_Match sc brs
+    | Tv_AscribedT e t topt ->
+        let e = visit_tm ff e in
+        let t = visit_tm ff t in
+        Tv_AscribedT e t topt
+    | Tv_AscribedC e c topt ->
+        let e = visit_tm ff e in
+        Tv_AscribedC e c topt
+    | _ -> fail "impos"
+  in
+  ff (pack tv')
+and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
+  (* TODO *)
+  b

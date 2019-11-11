@@ -30,6 +30,7 @@ val get_guard_policy : unit -> tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
 val lax_on : unit -> tac<bool>
 
+val curms      : unit -> tac<Z.t>
 val fresh      : unit -> tac<Z.t>
 
 val join    : unit -> tac<unit>
@@ -69,8 +70,8 @@ val norm_binder_type : list<EMB.norm_step> -> binder -> tac<unit>
 val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
-val tc : term -> tac<typ>
-val tcc : term -> tac<comp>
+val tc  : env -> term -> tac<typ>
+val tcc : env -> term -> tac<comp>
 
 val is_irrelevant : goal -> bool
 
@@ -103,5 +104,6 @@ val lget : typ -> string -> tac<term>
 val lset : typ -> string -> term -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
+val proofstate_of_goals : Range.range -> env -> list<goal> -> list<implicit> -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term

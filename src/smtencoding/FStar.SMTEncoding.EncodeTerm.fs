@@ -621,23 +621,22 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
-    (* GM: Why keep `t`? *)
-    let t0 = SS.compress t in
+    let t = SS.compress t in
+    let t0 = t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-    then BU.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
-    match t0.n with
+    then BU.print2 "(%s)   %s\n" (Print.tag_of_term t) (Print.term_to_string t);
+    match t.n with
       | Tm_delayed  _
       | Tm_unknown    ->
-        failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n"
+        failwith (BU.format3 "(%s) Impossible: %s\n%s\n"
                              (Range.string_of_range <| t.pos)
-                             (Print.tag_of_term t0)
-                             (Print.term_to_string t0)
+                             (Print.tag_of_term t)
                              (Print.term_to_string t))
 
       | Tm_lazy i ->
         let e = U.unfold_lazy i in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
-            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t0)
+            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t)
                                                    (Print.term_to_string e);
         encode_term e env
 
@@ -974,7 +973,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-            let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
+            let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
@@ -990,7 +989,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
-                | _ -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
+                | _ when 1=1 -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
                 | Some (head_type, formals, c) ->
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
@@ -1061,6 +1060,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                 ("partial_app_typing_" ^
                                                  (BU.digest_of_string (Term.hash_of_term app_tm)))) in
                     app_tm, decls@decls'@decls''@(mk_decls "" tkey_hash [e_typing] (decls@decls'@decls''))
+                | None -> failwith "impossible"
             in
 
             let encode_full_app fv =
@@ -1174,12 +1174,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some rc ->
-              if is_impure rc && not (is_reifiable_rc env.tcenv rc)
+              if is_impure rc && not (is_smt_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable_rc env.tcenv rc
-                           then TcUtil.reify_body env.tcenv body
+                let body = if is_smt_reifiable_rc env.tcenv rc
+                           then TcUtil.reify_body env.tcenv [] body
                            else body
                 in
                 let body, decls' = encode_term body envbody in

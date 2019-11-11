@@ -64,3 +64,14 @@ assume val env_open_modules      : env -> list name
 (* Attributes are terms, not to be confused with Prims.attribute *)
 assume val sigelt_attrs     : sigelt -> list term
 assume val set_sigelt_attrs : list term -> sigelt -> sigelt
+
+(* Setting and reading qualifiers from sigelts *)
+assume val sigelt_quals     : sigelt -> list qualifier
+assume val set_sigelt_quals : list qualifier -> sigelt -> sigelt
+
+(* Reading the optionstate under which a particular sigelt was typechecked *)
+assume val sigelt_opts : sigelt -> option term
+
+(* Marker to check a sigelt with a particular optionstate *)
+irreducible
+let check_with (o : optionstate) : unit = ()

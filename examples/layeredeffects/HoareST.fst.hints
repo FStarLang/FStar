@@ -1,0 +1,112 @@
+[
+  "Ö¦\u0018r\u0004m\u00047;îtŠÕ€’´",
+  [
+    [
+      "HoareST.return",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "1a17e5032edc741b7f07998d820ada11"
+    ],
+    [
+      "HoareST.bind",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "dcef15b427c12633f95ba07e34240176"
+    ],
+    [
+      "HoareST.subcomp",
+      1,
+      0,
+      0,
+      [ "@query", "equation_HoareST.repr" ],
+      0,
+      "1b5131cf8dc39153ff762c196262f61f"
+    ],
+    [
+      "HoareST.read",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
+      ],
+      0,
+      "e16e2f8d01bd4338136aab432c87a54f"
+    ],
+    [
+      "HoareST.HoareST",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "572feccb2a76a45544ddc759b515b407"
+    ],
+    [
+      "HoareST.HoareST",
+      2,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "d8a7a08e846529668ec5bf27ed1f41df"
+    ],
+    [
+      "HoareST.mwrite",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_f990a45a7edd9d6b5e95811bfe6a93ec",
+        "true_interp"
+      ],
+      0,
+      "f92e5242f03ab4e5f7531a17fe84839b"
+    ],
+    [
+      "HoareST.lift_pure_hoarest",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_e5f9da69b4e622fc8b88c80c57775066",
+        "interpretation_Tm_abs_efcce3c21fe48dce9105b420b0cd535c",
+        "l_imp-interp", "l_not-interp", "l_or-interp",
+        "l_quant_interp_a95cc0c08adee07762ef8b718ec9279c",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_e5f9da69b4e622fc8b88c80c57775066",
+        "typing_Tm_abs_efcce3c21fe48dce9105b420b0cd535c"
+      ],
+      0,
+      "1d58ac5ff465daeb2a90c45872932a5e"
+    ]
+  ]
+]

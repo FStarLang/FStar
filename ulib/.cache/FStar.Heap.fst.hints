@@ -1,0 +1,37 @@
+[
+  "ЅыуxJЊdз€яв<’ШZх",
+  [
+    [
+      "FStar.Heap.trivial_preorder",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "true_interp"
+      ],
+      0,
+      "b25fae3e3cfdaff7883452d1d171179f"
+    ],
+    [
+      "FStar.Heap.trivial_preorder",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "true_interp"
+      ],
+      0,
+      "6a4f062a20c78ccc423c9c7ab62826f5"
+    ]
+  ]
+]

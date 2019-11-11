@@ -45,13 +45,13 @@ assume val fresh : unit -> Tac int
 into [w : t] and [phi{w/x}] *)
 assume val refine_intro : unit -> Tac unit
 
-(** [tc] returns the type of a term in the current environment,
+(** [tc] returns the type of a term in [env],
 or fails if it is untypeable. *)
-assume val tc : term -> Tac term
+assume val tc : env -> term -> Tac term
 
 (** [tcc] like [tc], but returns the full computation type
 with the effect label and its arguments (WPs, etc) as well *)
-assume val tcc : term -> Tac comp
+assume val tcc : env -> term -> Tac comp
 
 (** [unshelve] creates a goal from a term for its given type.
 It can be used when the system decided not to present a goal, but
@@ -316,3 +316,6 @@ assume val set_goals     : list goal -> Tac unit
 implicits. TODO: This is a really bad name, there's no special "SMT"
 about these goals. *)
 assume val set_smt_goals : list goal -> Tac unit
+
+(** [curms ()] returns the current (wall) time in millseconds *)
+assume val curms : unit -> Tac int

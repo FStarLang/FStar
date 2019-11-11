@@ -57,7 +57,7 @@ let rec blah (t : term) : Tac term =
              | Tv_Type u -> Tv_Type ()
              | Tv_Const c -> Tv_Const c
              | Tv_Uvar u t -> Tv_Uvar u t
-             | Tv_Let r b t1 t2 -> Tv_Let r b t1 t2
+             | Tv_Let r attrs b t1 t2 -> Tv_Let r attrs b t1 t2
              | Tv_Match t brs -> Tv_Match t brs
              | Tv_AscribedT e t tac -> Tv_AscribedT e t tac
              | Tv_AscribedC e c tac -> Tv_AscribedC e c tac
@@ -137,7 +137,7 @@ let arith_test2 (x : int) =
 let _ = assert True
             by (let t = quote (let x = 2 in x + 6) in
                 match inspect t with
-                | Tv_Let r bv t1 t2 -> (
+                | Tv_Let r attrs bv t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);
@@ -148,7 +148,7 @@ let _ = assert True
 let _ = assert True
             by (let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
-                | Tv_Let r bv t1 t2 -> (
+                | Tv_Let r attrs bv t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);

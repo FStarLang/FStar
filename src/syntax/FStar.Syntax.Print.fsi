@@ -40,8 +40,8 @@ val lbs_to_string         : list<qualifier> -> letbindings -> string
 val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
+val branch_to_string      : Syntax.branch -> string
 val modul_to_string       : modul -> string
-val lcomp_to_string       : lcomp -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
 val attrs_to_string       : list<attribute> -> string
@@ -54,6 +54,7 @@ val binders_to_json       : DsEnv.env -> binders -> json
 val aqual_to_string       : aqual -> string
 val args_to_string        : args -> string
 val eff_decl_to_string    : bool -> eff_decl -> string
+val sub_eff_to_string     : sub_eff -> string
 val subst_to_string       : subst_t -> string
 val const_to_string       : sconst -> string
 val qual_to_string        : qualifier -> string

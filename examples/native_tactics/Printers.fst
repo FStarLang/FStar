@@ -64,7 +64,7 @@ let printer_fun () : Tac unit =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TD.map (fun ti -> let bv = fresh_bv ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TD.map (fun ti -> let bv = fresh_bv ti in (bv, (Pat_Var bv, false))) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TD.map mk_print_binder bvs) in

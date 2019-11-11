@@ -130,6 +130,7 @@ let init_env deps : TcEnv.env =
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStar.Tactics.Interpreter.synthesize } in
   let env = { env with splice           = FStar.Tactics.Interpreter.splice} in
+  let env = { env with mpreprocess      = FStar.Tactics.Interpreter.mpreprocess} in
   let env = { env with postprocess      = FStar.Tactics.Interpreter.postprocess} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
@@ -386,7 +387,7 @@ let tc_one_file
             maybe_restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
-              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod.name smt_decls;
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
               post_smt_encoding ()
             end;
             (), env

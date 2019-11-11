@@ -25,8 +25,11 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
 module S = FStar.Syntax.Syntax
+module Print = FStar.Syntax.Print
+module U = FStar.Syntax.Util
 
 module BU = FStar.Util
+module PC = FStar.Parser.Const
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -110,7 +113,7 @@ type identifier_info = {
     identifier_range:Range.range;
 }
 
-let insert_col_info col info col_infos =
+let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * identifier_info)>) =
     // Tail recursive helper
     let rec __insert aux rest =
         match rest with
@@ -123,7 +126,7 @@ let insert_col_info col info col_infos =
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info col col_infos =
+let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_info)>) =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->
@@ -237,3 +240,128 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
        | _ -> fail()
         end
      | _ -> fail()
+
+// Reason, term and uvar, and (rough) position where it is introduced
+// The term is just a Tm_uvar of the ctx_uvar
+type implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+}
+type implicits = list<implicit>
+
+type guard_t = {
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<universe> * list<univ_ineq>;
+  implicits:  implicits;
+}
+
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let conj_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g
+  | g, Trivial -> g
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
+
+let check_trivial t = match (U.unmeta t).n with
+    | Tm_fvar tc when S.fv_eq_lid tc PC.true_lid -> Trivial
+    | _ -> NonTrivial t
+
+let imp_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g -> g
+  | g, Trivial -> Trivial
+  | NonTrivial f1, NonTrivial f2 ->
+    let imp = U.mk_imp f1 f2 in check_trivial imp
+
+let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
+                           deferred=g1.deferred@g2.deferred;
+                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
+                           implicits=g1.implicits@g2.implicits}
+let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
+let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+let conj_guards gs = List.fold_left conj_guard trivial_guard gs
+
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflag>;
+    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
+}
+
+let mk_lcomp eff_name res_typ cflags comp_thunk =
+    { eff_name = eff_name;
+      res_typ = res_typ;
+      cflags = cflags;
+      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+
+let lcomp_comp lc =
+    match !(lc.comp_thunk) with
+    | Inl thunk ->
+      let c, g = thunk () in
+      lc.comp_thunk := Inr c;
+      c, g
+    | Inr c -> c, trivial_guard
+
+let apply_lcomp fc fg lc =
+  mk_lcomp
+    lc.eff_name lc.res_typ lc.cflags
+    (fun () ->
+     let (c, g) = lcomp_comp lc in
+     fc c, fg g)
+
+let lcomp_to_string lc =
+    if Options.print_effect_args () then
+        Print.comp_to_string (lc |> lcomp_comp |> fst)
+    else
+        BU.format2 "%s %s" (Print.lid_to_string lc.eff_name) (Print.term_to_string lc.res_typ)
+
+let lcomp_set_flags lc fs =
+    let comp_typ_set_flags (c:comp) =
+        match c.n with
+        | Total _
+        | GTotal _ -> c
+        | Comp ct ->
+          let ct = {ct with flags=fs} in
+          {c with n=Comp ct}
+    in
+    mk_lcomp lc.eff_name
+             lc.res_typ
+             fs
+             (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
+
+let is_total_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
+                             || lid_equals c.eff_name PC.effect_GTot_lid
+                             || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let is_lcomp_partial_return c = c.cflags |> BU.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+
+let is_pure_lcomp lc =
+    is_total_lcomp lc
+    || U.is_pure_effect lc.eff_name
+    || lc.cflags |> BU.for_some (function LEMMA -> true | _ -> false)
+
+let is_pure_or_ghost_lcomp lc =
+    is_pure_lcomp lc || U.is_ghost_effect lc.eff_name
+
+let set_result_typ_lc lc t =
+  mk_lcomp lc.eff_name t lc.cflags (fun () -> lc |> lcomp_comp |> (fun (c, g) -> U.set_result_typ c t, g))
+
+let residual_comp_of_lcomp lc = {
+    residual_effect=lc.eff_name;
+    residual_typ=Some (lc.res_typ);
+    residual_flags=lc.cflags
+  }
+
+let lcomp_of_comp c0 =
+    let eff_name, flags =
+        match c0.n with
+        | Total _ -> PC.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.flags in
+    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, trivial_guard)

@@ -90,7 +90,7 @@ let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires r
   h ()
 
 let pose_lemma (t : term) : Tac binder =
-  let c = tcc t in
+  let c = tcc (cur_env ()) t in
   let pre, post =
     match inspect_comp c with
     | C_Lemma pre post -> pre, post

@@ -5,6 +5,7 @@ open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 module Z     = FStar.BigInt
+open FStar.Ident
 
 type name = list<string>
 type typ  = term
@@ -22,7 +23,7 @@ type vconst =
 
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list<pattern>
+    | Pat_Cons     of fv * list<(pattern * bool)>
     | Pat_Var      of bv
     | Pat_Wild     of bv
     | Pat_Dot_Term of bv * term
@@ -47,11 +48,38 @@ type term_view =
     | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * bv * term * term
+    | Tv_Let    of bool * list<term> * bv * term * term
     | Tv_Match  of term * list<branch>
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
+
+(* This is a mirror of FStar.Syntax.Syntax.qualifier *)
+type qualifier =
+  | Assumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Abstract
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable of lid
+  | Discriminator of lid
+  | Projector of lid * ident
+  | RecordType of (list<ident> * list<ident>)
+  | RecordConstructor of (list<ident> * list<ident>)
+  | Action of lid
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
 
 type bv_view = {
     bv_ppname : string;
@@ -145,26 +173,30 @@ let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
 let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
 let fstar_refl_univ_name_fv     = mk_refl_types_lid_as_fv   "univ_name"
+let fstar_refl_optionstate      = mk_refl_types_lid_as_term "optionstate"
+let fstar_refl_optionstate_fv   = mk_refl_types_lid_as_fv   "optionstate"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
-let fstar_refl_aqualv_fv        = mk_refl_data_lid_as_fv "aqualv"
+let fstar_refl_aqualv_fv        = mk_refl_data_lid_as_fv   "aqualv"
 let fstar_refl_comp_view        = mk_refl_data_lid_as_term "comp_view"
-let fstar_refl_comp_view_fv     = mk_refl_data_lid_as_fv "comp_view"
+let fstar_refl_comp_view_fv     = mk_refl_data_lid_as_fv   "comp_view"
 let fstar_refl_term_view        = mk_refl_data_lid_as_term "term_view"
-let fstar_refl_term_view_fv     = mk_refl_data_lid_as_fv "term_view"
+let fstar_refl_term_view_fv     = mk_refl_data_lid_as_fv   "term_view"
 let fstar_refl_pattern          = mk_refl_data_lid_as_term "pattern"
-let fstar_refl_pattern_fv       = mk_refl_data_lid_as_fv "pattern"
+let fstar_refl_pattern_fv       = mk_refl_data_lid_as_fv   "pattern"
 let fstar_refl_branch           = mk_refl_data_lid_as_term "branch"
-let fstar_refl_branch_fv        = mk_refl_data_lid_as_fv "branch"
+let fstar_refl_branch_fv        = mk_refl_data_lid_as_fv   "branch"
 let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
-let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv "bv_view"
+let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv   "bv_view"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
-let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv "vconst"
+let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv   "vconst"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
-let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv "sigelt_view"
+let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
-let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv "exp"
+let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
+let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
+let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
 
 (* bv_view, this is a record constructor *)
 
@@ -230,6 +262,32 @@ let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
 let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
+(* qualifiers *)
+let ref_qual_Assumption                       = fstar_refl_data_const "Assumption"
+let ref_qual_New                              = fstar_refl_data_const "New"
+let ref_qual_Private                          = fstar_refl_data_const "Private"
+let ref_qual_Unfold_for_unification_and_vcgen = fstar_refl_data_const "Unfold_for_unification_and_vcgen"
+let ref_qual_Visible_default                  = fstar_refl_data_const "Visible_default"
+let ref_qual_Irreducible                      = fstar_refl_data_const "Irreducible"
+let ref_qual_Abstract                         = fstar_refl_data_const "Abstract"
+let ref_qual_Inline_for_extraction            = fstar_refl_data_const "Inline_for_extraction"
+let ref_qual_NoExtract                        = fstar_refl_data_const "NoExtract"
+let ref_qual_Noeq                             = fstar_refl_data_const "Noeq"
+let ref_qual_Unopteq                          = fstar_refl_data_const "Unopteq"
+let ref_qual_TotalEffect                      = fstar_refl_data_const "TotalEffect"
+let ref_qual_Logic                            = fstar_refl_data_const "Logic"
+let ref_qual_Reifiable                        = fstar_refl_data_const "Reifiable"
+let ref_qual_Reflectable                      = fstar_refl_data_const "Reflectable"
+let ref_qual_Discriminator                    = fstar_refl_data_const "Discriminator"
+let ref_qual_Projector                        = fstar_refl_data_const "Projector"
+let ref_qual_RecordType                       = fstar_refl_data_const "RecordType"
+let ref_qual_RecordConstructor                = fstar_refl_data_const "RecordConstructor"
+let ref_qual_Action                           = fstar_refl_data_const "Action"
+let ref_qual_ExceptionConstructor             = fstar_refl_data_const "ExceptionConstructor"
+let ref_qual_HasMaskedEffect                  = fstar_refl_data_const "HasMaskedEffect"
+let ref_qual_Effect                           = fstar_refl_data_const "Effect"
+let ref_qual_OnlyName                         = fstar_refl_data_const "OnlyName"
+
 (* exp *)
 let ref_E_Unit = fstar_refl_data_const "Unit"
 let ref_E_Var = fstar_refl_data_const "Var"
@@ -246,3 +304,6 @@ let ord_Gt = tdataconstr ord_Gt_lid
 let ord_Lt_fv = lid_as_fv ord_Lt_lid delta_constant (Some Data_ctor)
 let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
 let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)
+
+(* Needed so this appears in the ocaml output for fstar-tactics-lib *)
+type decls = list<sigelt>

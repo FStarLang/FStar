@@ -26,53 +26,53 @@ let _ = assert True
                 debug ("tm = " ^ term_to_string tm);
                 debug ("tm2 = " ^ term_to_string tm2);
                 debug ("tm3 = " ^ term_to_string tm3);
-                let ty = tc tm in
+                let ty = tc (cur_env ()) tm in
                 debug ("ty = " ^ term_to_string ty);
-                let ty2 = tc tm2 in
+                let ty2 = tc (cur_env ()) tm2 in
                 debug ("ty2 = " ^ term_to_string ty2);
-                let ty3 = tc tm3 in
+                let ty3 = tc (cur_env ()) tm3 in
                 debug ("ty3 = " ^ term_to_string ty3);
                 ())
 
 (* TODO: When --use_extracted_interfaces is given, if we do
- * ignore (tc tm), the tactics get stuck. Investigate. *)
+ * ignore (tc (cur_env ()) tm), the tactics get stuck. Investigate. *)
 
 let _ = assert True
             by (let y = True in
                 let tm = `(False ==> `@y) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 let _ = assert True
             by (let y = bool in
                 let tm = `(int * (`@y)) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 let _ = assert True
             by (let y = 5 in
                 let tm = `((+) (`@y) 25) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 
 let _ = assert True
             by (let y = 5 in
                 let tm = `(fun z -> z + (`@y)) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 let _ = assert True
             by (let y = 5 in
                 let tm = `(if (`@y) = 22 then (`@y) - 1 else 1 - (`@y)) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 let _ = assert True
             by (let y = 5 in
                 let tm = `(match (`@y) with | 4 -> 1 + (`@y) | _ -> 99) in
                 debug ("tm = " ^ term_to_string tm);
-                ignore (tc tm))
+                ignore (tc (cur_env ()) tm))
 
 // This one can extract, basically to mk_e_app (plus, [1; t])
 let f (t : term) = `(1 + (`#t))

@@ -1,6 +1,6 @@
 %{
 (*
- We are expected to have only 5 shift-reduce conflicts.
+ We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -71,7 +71,7 @@ let logic_qualifier_deprecation_warning =
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -226,6 +226,8 @@ rawDecl:
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
       { NewEffect ne }
+  | LAYERED_EFFECT ne=effectDefinition
+      { LayeredEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
   | doc=FSDOC_STANDALONE

@@ -57,7 +57,7 @@ let mk_printer_type (t : term) : Tac term =
 let mk_printer_fun (dom : term) : Tac term =
     admit ();
     set_guard_policy SMT;
-    let e = cur_env () in
+    let e = top_env () in
     (* Recursive binding *)
     let ff = fresh_bv_named "ff_rec" (mk_printer_type dom) in
     let fftm = pack (Tv_Var ff) in
@@ -84,7 +84,7 @@ let mk_printer_fun (dom : term) : Tac term =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, (Pat_Var bv, false))) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
@@ -108,7 +108,7 @@ let mk_printer_fun (dom : term) : Tac term =
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
-        let b = pack (Tv_Let true ff f (mk_e_app fftm [xtm])) in
+        let b = pack (Tv_Let true [] ff f (mk_e_app fftm [xtm])) in
         (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument
@@ -124,7 +124,7 @@ let rec maplast (f : 'a -> 'a) (l : list 'a) : list 'a =
     | [x] -> [f x]
     | x::xs -> x :: (maplast f xs)
 
-let mk_printer dom : Tac unit =
+let mk_printer dom : Tac decls =
     let nm = match inspect dom with
              | Tv_FVar fv -> inspect_fv fv
              | _ -> fail "not an fv?"
@@ -132,7 +132,7 @@ let mk_printer dom : Tac unit =
     let nm = maplast (fun s -> s ^ "_print") nm in
     let sv : sigelt_view = Sg_Let false (pack_fv nm) [] (mk_printer_type dom) (mk_printer_fun dom) in
     let ses : list sigelt = [pack_sigelt sv] in
-    exact (quote ses)
+    ses
 
 noeq
 type t1 =

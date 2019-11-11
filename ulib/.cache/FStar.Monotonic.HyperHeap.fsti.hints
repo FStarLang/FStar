@@ -1,0 +1,111 @@
+[
+  "¥f=C1¢…Ý\u001fB\u0005…3xG¸",
+  [
+    [
+      "FStar.Monotonic.HyperHeap.root_has_color_zero",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "lemma_FStar.Monotonic.HyperHeap.lemma_root_has_color_zero",
+        "refinement_interpretation_Tm_refine_7f37da2c7bc73049d03abda609f5f8b3",
+        "typing_FStar.Monotonic.HyperHeap.root"
+      ],
+      0,
+      "136902ddf57ab007e8210a46a3f7c6aa"
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Monotonic.HyperHeap.lemma_extends_not_root" ],
+      0,
+      "cfecb16756cd4fea67262aa83d2823d9"
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.lemma_modifies_just_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperHeap.modifies_just",
+        "equation_FStar.Set.subset",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConcat",
+        "lemma_FStar.Map.lemma_InDomRestrict",
+        "lemma_FStar.Map.lemma_SelConcat1",
+        "lemma_FStar.Map.lemma_SelConcat2",
+        "lemma_FStar.Map.lemma_SelRestrict",
+        "lemma_FStar.Map.lemma_equal_elim",
+        "lemma_FStar.Map.lemma_equal_intro",
+        "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_subset",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Map.concat",
+        "typing_FStar.Map.contains", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Set.complement", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union"
+      ],
+      0,
+      "f17a0909d9036425693930af794a9e64"
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.lemma_modifies_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperHeap.modifies",
+        "equation_FStar.Set.subset",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConcat",
+        "lemma_FStar.Map.lemma_InDomRestrict",
+        "lemma_FStar.Map.lemma_SelConcat1",
+        "lemma_FStar.Map.lemma_SelConcat2",
+        "lemma_FStar.Map.lemma_SelRestrict",
+        "lemma_FStar.Map.lemma_equal_elim",
+        "lemma_FStar.Map.lemma_equal_intro",
+        "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_subset",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Map.concat",
+        "typing_FStar.Map.contains", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict",
+        "typing_FStar.Monotonic.HyperHeap.mod_set",
+        "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Set.complement", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union"
+      ],
+      0,
+      "932bb4b86f7a160019d2e910131e0d13"
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.extend",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5f13c6c927aacbb97bc3b93bdfe103e9"
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.extend_monochrome",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "292c57a04c5b3214aa85409d61bd82fb"
+    ]
+  ]
+]
