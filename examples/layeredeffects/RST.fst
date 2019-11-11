@@ -1,4 +1,35 @@
+(*
+   Copyright 2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module RST
+
+
+/// A sample implementation of the RST effect used in Steel
+///   illustrating the use of resources as indices, we don't consider
+///   wps here.
+///
+/// The main subtlety here is the dependent resource parametric `return`
+///   combinator of the effect (`returnc`)
+///   which is later turned into an action using reflect (`return`),
+/// 
+///   and finally used to return dependent resources to the context (`test`).
+///
+/// The normal formulation (of using `emp` and `fun _ -> emp` indexed `return`)
+///   gets into variable binding issues when returning dependent resources.
+
 
 open FStar.HyperStack.ST
 
@@ -6,15 +37,14 @@ module HS = FStar.HyperStack
 
 
 assume type resource : Type0
-assume val emp : resource
 
 
 type repr (a:Type) (r_in:resource) (r_out:a -> resource) =
   unit -> STATE a (fun p h -> forall x h1. p x h1)
 
 
-let return (a:Type) (x:a)
-: repr a emp (fun _ -> emp)
+let returnc (a:Type) (r:a -> resource) (x:a)
+: repr a (r x) r
 = fun _ -> x
 
 let bind (a:Type) (b:Type)
@@ -44,27 +74,32 @@ layered_effect {
   RSTATE : a:Type -> resource -> (a -> resource) -> Effect
   with
   repr = repr;
-  return = return;
+  return = returnc;
   bind = bind;
   subcomp = subcomp;
   if_then_else = if_then_else
 }
 
+let return (#a:Type) (#r:a -> resource) (x:a)
+: RSTATE a (r x) r
+= RSTATE?.reflect (returnc a r x)
+
 
 let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
 : repr a r (fun _ -> r)
-= admit (); fun _ -> f ()
+= admit (); fun _ -> f ()  //dropping wp
 
 sub_effect PURE ~> RSTATE = lift_pure_rst
 
+
+assume val emp : resource
 
 assume val array : Type0
 assume val array_resource (a:array) : resource
 
 assume val alloc (_:unit) : RSTATE array emp array_resource
 
-#set-options "--debug RST --debug_level Extreme --debug_level Rel --ugly"
 let test ()
 : RSTATE array emp array_resource
 = let ptr = alloc () in
-  ptr
+  return ptr
