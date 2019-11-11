@@ -20,7 +20,6 @@ open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 
-val extraction_norm_steps: list<FStar.TypeChecker.Env.step>
 val normalize_abs: term -> term
 val is_arity: uenv -> term -> bool
 val ind_discriminator_body : env:uenv -> discName:lident -> constrName:lident -> mlmodule1
