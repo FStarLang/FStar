@@ -253,10 +253,11 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out
     )
 
 inline_for_extraction
-val return
+val returnc
   (a:Type)
+  (r:a -> resource)
   (x:a)
-  : repr a empty_resource (fun _ -> empty_resource) (fun p -> p x)
+  : repr a (r x) r (fun (p:r_post a r) h -> p x h)
 
 inline_for_extraction
 val bind (a:Type) (b:Type)
@@ -288,11 +289,18 @@ reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
   with repr         = repr;
-       return       = return;
+       return       = returnc;
        bind         = bind;
        subcomp     = subcomp;
        if_then_else  = if_then_else
 }
+
+
+let return (#a:Type)
+  (#r:a -> resource)
+  (x:a)
+: RSTATE a (r x) r (fun (p:r_post a r) h -> p x h)
+= RSTATE?.reflect (returnc a r x)
 
 
 /// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck

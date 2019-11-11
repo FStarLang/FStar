@@ -99,13 +99,9 @@ val pointer_to_array_ (#a: Type) (p: pointer a) : RST unit
   (fun h0 _ h1 -> True)
 
 let ptr_alloc #a init =
-  let ptr : A.array a = A.alloc init 1ul in
-  assume(A.vlength ptr == 1);
-  let ptr : pointer a = ptr in
-  admit();
+  let ptr = A.alloc init 1ul in
   array_to_pointer ptr;
-  admit();
-  ptr
+  return ptr
 
 let ptr_free #a ptr =
   reveal_rst_inv ();
