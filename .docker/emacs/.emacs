@@ -8,7 +8,7 @@
 
 
 ;;set fstar includes, these should work for most tutorial examples, except those using hyperheap
-(setq fstar-subp-prover-args '("--include" "/home/FStar/FStar/ucontrib/Platform/fst" "--include" "/home/FStar/FStar/ucontrib/CoreCrypto/fst"))
+(setq fstar-subp-prover-args '("--include" "/home/build/FStar/ucontrib/Platform/fst" "--include" "/home/build/FStar/ucontrib/CoreCrypto/fst"))
 
 
 ;;this is what the above corresponds to on the command line:
