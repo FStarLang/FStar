@@ -272,7 +272,7 @@ let detail_hint_replay settings z3result =
 let find_localized_errors errs =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let report_errors (settings : query_settings) : unit =
+let errors_to_report (settings : query_settings) : list<Errors.error> =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
@@ -280,7 +280,7 @@ let report_errors (settings : query_settings) : unit =
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
-    let _basic_error_report =
+    let basic_errors =
         (*
          * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
          *     depending on whether Options.query_stats is on or off
@@ -328,33 +328,42 @@ let report_errors (settings : query_settings) : unit =
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages smt_error
+          FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
-          FStar.TypeChecker.Err.add_errors_smt_detail
+          FStar.TypeChecker.Err.errors_smt_detail
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
                      settings.query_range)]
                    smt_error
     in
-    if Options.detail_errors()
-    then let initial_fuel = {
-                settings with query_fuel=Options.initial_fuel();
-                              query_ifuel=Options.initial_ifuel();
-                              query_hint=None
-            }
-         in
-         let ask_z3 label_assumptions =
-            Z3.ask  settings.query_range
-                    (filter_facts_without_core settings.query_env)
-                    settings.query_hash
-                    settings.query_all_labels
-                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                    None
-                    false
-            in
-         detail_errors false settings.query_env settings.query_all_labels ask_z3
+    let detailed_errors : unit =
+      if Options.detail_errors()
+      then let initial_fuel = {
+                  settings with query_fuel=Options.initial_fuel();
+                                query_ifuel=Options.initial_ifuel();
+                                query_hint=None
+              }
+           in
+           let ask_z3 label_assumptions =
+              Z3.ask  settings.query_range
+                      (filter_facts_without_core settings.query_env)
+                      settings.query_hash
+                      settings.query_all_labels
+                      (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                      None
+                      false
+              in
+           (* GM: This is a bit of hack, we don't return these detailed errors
+            * (it implies rewriting detail_errors heavily). Returning them
+            * is only relevant for summarizing errors on --quake, where I don't
+            * think we care about these. *)
+           detail_errors false settings.query_env settings.query_all_labels ask_z3
+    in
+    basic_errors
 
+let report_errors qry_settings =
+    FStar.Errors.add_errors (errors_to_report qry_settings)
 
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
@@ -768,51 +777,52 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                       (string_of_int hi)
                       fuel_msg
         end;
+        (* If nsuccess < lo, we have a failure. We report summarized
+         * information if doing --quake (and not --query_stats) *)
         if nsuccess < lo then begin
-            let report errs = report_errors ({default_settings with query_errors=errs}) in
-            let all_errs = List.concatMap (function | Inr _ -> []
-                                                    | Inl es -> [es]) rs in
-            (* Unless we are running with --query_stats, summarize errors
-             * so quaking does not show hundreds of them *)
-            let () =
-              if Options.query_stats ()
-              then List.iter report all_errs
-              else
-                let errs = List.flatten all_errs in
-                let errs = collect errs in
-                let tag_er n er =
-                    if n <= 1 then er else
-                    { er with error_messages =
-                              er.error_messages |>
-                              List.map (fun (e, m, r) ->
-                                          let m = m ^ BU.format1 " (%s times)" (string_of_int n) in
-                                          (e, m, r)) }
-                in
-                let tag_with_n n errs =
-                  List.map (tag_er n) errs
-                in
-                let errs = List.map (fun (errs, n) -> tag_er n errs) errs in
-                (* let errs = List.map (fun (err, n) -> err) errs in *)
-                (* Now report them *)
-                report errs
+          let all_errs = List.concatMap (function | Inr _ -> []
+                                                  | Inl es -> [es]) rs in
+          if quaking && not (Options.query_stats ()) then begin
+            let errors_to_report errs =
+                errors_to_report ({default_settings with query_errors=errs})
             in
 
+            (* Obtain all errors that would have been reported *)
+            let errs = List.map errors_to_report all_errs in
+            (* Summarize them *)
+            let errs = errs |> List.flatten |> collect in
+            (* Show the amount on each error *)
+            let errs = errs |> List.map (fun ((e, m, r), n) ->
+                if n > 1
+                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r)
+                else (e, m, r))
+            in
+            (* Now report them *)
+            FStar.Errors.add_errors errs;
+
+            (* Get the range of lid we're checking for the quake error *)
             let rng = match snd (env.qtbl_name_and_index) with
                       | Some (l, _) -> Ident.range_of_lid l
                       | _ -> Range.dummyRange
             in
-            if quaking then
-                FStar.TypeChecker.Err.add_errors
-                  env
-                  [(Errors.Error_QuakeFailed,
-                    BU.format4
-                      "Query %s failed the quake test, %s out of %s attempts succeded, \
-                       but the threshold was %s"
-                       name
-                      (string_of_int nsuccess)
-                      (string_of_int hi)
-                      (string_of_int lo),
-                    rng)]
+            (* Adding another error for the threshold *)
+            FStar.TypeChecker.Err.add_errors
+              env
+              [(Errors.Error_QuakeFailed,
+                BU.format4
+                  "Query %s failed the quake test, %s out of %s attempts succeded, \
+                   but the threshold was %s"
+                   name
+                  (string_of_int nsuccess)
+                  (string_of_int hi)
+                  (string_of_int lo),
+                rng)]
+          end
+          else begin
+            (* Just report them as usual *)
+            let report errs = report_errors ({default_settings with query_errors=errs}) in
+            List.iter report all_errs
+          end
         end
     in
 

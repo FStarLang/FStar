@@ -673,9 +673,11 @@ let default_flags =
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
+type error = raw_error * string * Range.range
+
 exception Err     of raw_error * string
-exception Error   of raw_error * string * Range.range
-exception Warning of raw_error * string * Range.range
+exception Error   of error
+exception Warning of error
 exception Stop
 
 (* Raised when an empty fragment is parsed *)
