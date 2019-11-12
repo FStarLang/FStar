@@ -55,3 +55,19 @@ val upd (#a:_) (r:ref a) (v:a)
         (frame:hprop)
         (m:hmem (ptr_perm r 1.0R  `star` frame))
   : Tot (m:hmem (pts_to r 1.0R v `star` frame))
+
+val intro_wand (p1 p2:hprop) (m:mem)
+  : Lemma
+    (requires
+      (forall (m0:hmem p1).
+         disjoint m0 m /\
+         interp p2 (join m0 m)))
+    (ensures
+      interp (wand p1 p2) m)
+
+val elim_wand (p1 p2:hprop) (m:mem)
+  : Lemma
+    (requires
+      (interp ((p1 `wand` p2) `star` p1) m))
+    (ensures
+      interp p2 m)
