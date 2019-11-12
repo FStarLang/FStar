@@ -2856,7 +2856,7 @@ and (term_as_mlexpr' :
                                                                = uu____10105;
                                                              FStar_Syntax_Syntax.vars
                                                                = uu____10106;_},uu____10107)::
-            (u,uu____10109)::(t1,uu____10111)::[])
+            (t1,uu____10109)::(u,uu____10111)::[])
            when
            (FStar_Syntax_Syntax.fv_eq_lid fv
               FStar_Parser_Const.union_proj_lid)

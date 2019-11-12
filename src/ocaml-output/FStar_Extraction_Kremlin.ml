@@ -1668,13 +1668,13 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             let uu____7071 = translate_branches env branches  in
             (uu____7070, uu____7071)  in
           EMatch uu____7059
-      | FStar_Extraction_ML_Syntax.MLE_UCons (e1,f) ->
+      | FStar_Extraction_ML_Syntax.MLE_UCons (e0,f) ->
           let uu____7088 =
             let uu____7100 =
-              translate_type env e1.FStar_Extraction_ML_Syntax.mlty  in
+              translate_type env e.FStar_Extraction_ML_Syntax.mlty  in
             let uu____7101 =
               let uu____7109 =
-                let uu____7115 = translate_expr env e1  in (f, uu____7115)
+                let uu____7115 = translate_expr env e0  in (f, uu____7115)
                  in
               [uu____7109]  in
             (uu____7100, uu____7101)  in

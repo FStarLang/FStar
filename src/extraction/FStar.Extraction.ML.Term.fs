@@ -1320,7 +1320,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
         // KreMLin-only untagged unions: projectors
         | Tm_app({n=Tm_fvar fv},
-          [ _; _; name, _; _; _; {n=Tm_constant (Const_string (case, _))}, _; u, _; t, _ ])
+          [ _; _; name, _; _; _; {n=Tm_constant (Const_string (case, _))}, _; t, _; u, _ ])
           when fv_eq_lid fv PC.union_proj_lid && is_kremlin () ->
 
             let union_ty = Util.eraseTypeDeep (Util.udelta_unfold g) (term_as_mlty g name) in
