@@ -2922,16 +2922,6 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     in
 
     let solve_layered_sub c1 (edge:edge) c2 =
-      let _ =
-        let supported =
-          (lid_equals c1.effect_name c2.effect_name && Env.is_layered_effect env c1.effect_name) ||
-          (Env.is_layered_effect env c2.effect_name && not (Env.is_layered_effect env c1.effect_name)) in
-        if not supported
-        then failwith (BU.format2
-          "Unsupported case for solve_layered_sub c1: %s and c2: %s"
-          (c1 |> S.mk_Comp |> Print.comp_to_string)
-          (c2 |> S.mk_Comp |> Print.comp_to_string)); () in
-
       if Env.debug env <| Options.Other "LayeredEffects" then
         BU.print2 "solve_layered_sub c1: %s and c2: %s\n"
           (c1 |> S.mk_Comp |> Print.comp_to_string)

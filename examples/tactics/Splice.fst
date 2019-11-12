@@ -17,12 +17,12 @@ module Splice
 
 open FStar.Tactics
 
-let make_42 (nm:string) : Tac unit =
+let make_42 (nm:string) : Tac decls =
     (* The let binds are needed due to the Tac effect *)
     (* TODO: make the cur_module call unneeded? it doesn't make sense to use another module *)
     let sv : sigelt_view = Sg_Let false (pack_fv (cur_module () @ [nm])) [] (`nat) (`42) in
     let ses : list sigelt = [pack_sigelt sv] in
-    exact (quote ses)
+    ses
 
 %splice[x] (make_42 "x")
 %splice[]  (make_42 "y")

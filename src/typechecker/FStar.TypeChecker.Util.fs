@@ -2502,15 +2502,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
         BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
-  //reify the term
-  //if the source effect does not have a repr (e.g. primitive) then we thunk it
-  //in sync with how lifts are defined from such effects (with their thunked terms as arguments)
-  let e_reified =
-    match sub.source |> Env.get_effect_decl env |> U.get_eff_repr with
-    | None -> U.abs [S.null_binder S.t_unit] e None
-    | _ -> reify_body env [Env.Inlining] e in
-
-  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e_reified]) in
+  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
   mk (Tm_app (lift, args)) None e.pos
 
 let get_mlift_for_subeff env sub =

@@ -192,6 +192,8 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
+      ("fuel"                         , Unset);
+      ("ifuel"                        , Unset);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -784,6 +786,42 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Parses and prettyprints in place the files included on the command line");
 
        ( noshort,
+        "fuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --fuel"
+                         in
+                         set_option "initial_fuel" (p min);
+                         set_option "max_fuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_fuel and max_fuel at once");
+
+       ( noshort,
+        "ifuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --ifuel"
+                         in
+                         set_option "initial_ifuel" (p min);
+                         set_option "max_ifuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_ifuel and max_ifuel at once");
+
+       ( noshort,
         "initial_fuel",
         IntStr "non-negative integer",
         "Number of unrolling of recursive functions to try initially (default 2)");
@@ -1247,6 +1285,8 @@ let settable = function
     | "hint_dir"
     | "hint_file"
     | "hint_info"
+    | "fuel"
+    | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
