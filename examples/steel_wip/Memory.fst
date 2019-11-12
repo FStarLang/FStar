@@ -242,3 +242,6 @@ let upd #a (r:ref a) (v:a)
   = let m0, m1 = split_mem (ptr_perm r 1.0R) frame m in
     let m0' = update_addr m0 r (Ref a 1.0R v) in
     join m0' m1
+
+let intro_wand (p1 p2:hprop) (m:mem) = ()
+let elim_wand (p1 p2:hprop) (m:mem) = ()
