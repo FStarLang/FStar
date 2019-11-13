@@ -335,6 +335,7 @@ type raw_error =
   | Fatal_ExtractionUnsupported
   | Warning_SMTErrorReason
   | Warning_CoercionNotFound
+  | Error_QuakeFailed
 
 type flag = error_flag
 
@@ -667,13 +668,16 @@ let default_flags =
   (Fatal_ExtractionUnsupported                       , CFatal);
   (Warning_SMTErrorReason                            , CWarning);
   (Warning_CoercionNotFound                          , CWarning);
+  (Error_QuakeFailed                                 , CError);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
+type error = raw_error * string * Range.range
+
 exception Err     of raw_error * string
-exception Error   of raw_error * string * Range.range
-exception Warning of raw_error * string * Range.range
+exception Error   of error
+exception Warning of error
 exception Stop
 
 (* Raised when an empty fragment is parsed *)

@@ -224,6 +224,9 @@ let defaults =
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("quake"                        , Int 0);
+      ("quake_lo"                     , Int 1);
+      ("quake_hi"                     , Int 1);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -375,6 +378,8 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
+let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
@@ -942,6 +947,24 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
+        "quake",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "/" with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --quake"
+                         in
+                         set_option "quake_lo" (p min);
+                         set_option "quake_hi" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "N/M repeats each query M times and checks that it succeeds at least N times");
+
+       ( noshort,
         "query_stats",
         Const (Bool true),
         "Print SMT query statistics");
@@ -1285,6 +1308,9 @@ let settable = function
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
+    | "quake_lo"
+    | "quake_hi"
+    | "quake"
     | "query_stats"
     | "record_options"
     | "reuse_hint_for"
@@ -1593,6 +1619,8 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+let quake_lo                     () = get_quake_lo                    ()
+let quake_hi                     () = get_quake_hi                    ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()

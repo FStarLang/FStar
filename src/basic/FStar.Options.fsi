@@ -184,6 +184,8 @@ val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
+val quake_lo                    : unit    -> int
+val quake_hi                    : unit    -> int
 val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
