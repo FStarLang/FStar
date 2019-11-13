@@ -384,3 +384,132 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hmem (h_forall p))
 let intro_emp (m:mem)
   : Lemma (interp emp m)
   = ()
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+let intro_pts_to (#a:_) (x:ref a) (p:perm) (v:a) (m:mem)
+  : Lemma
+    (requires
+       m `contains_addr` x /\
+       (let Ref a' perm' v' = select_addr m x in
+        a == a' /\
+        v == v' /\
+        p <=. perm'))
+     (ensures
+       interp (pts_to x p v) m)
+  = ()
+
+let intro_star (p q:hprop) (mp:hmem p) (mq:hmem q)
+  : Lemma
+    (requires
+      disjoint mp mq)
+    (ensures
+      interp (p `star` q) (join mp mq))
+  = ()
+
+#push-options "--z3rlimit_factor 4 --max_fuel 2 --max_ifuel 2  --initial_fuel 2 --initial_ifuel 2"
+let rec affine_star_aux (p:hprop) (m:mem) (m':mem { disjoint m m' })
+  : Lemma
+    (ensures interp p m ==> interp p (join m m'))
+    [SMTPat (interp p (join m m'))]
+  = match p with
+    | Emp -> ()
+
+    | Pts_to _ _ _ -> ()
+
+    | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
+
+    | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
+
+    | Star p1 p2 ->
+      let aux (m1 m2:mem) (m':mem {disjoint m m'})
+        : Lemma
+          (requires
+            disjoint m1 m2 /\
+            m == join m1 m2 /\
+            interp p1 m1 /\
+            interp p2 m2)
+          (ensures interp (Star p1 p2) (join m m'))
+          [SMTPat (interp (Star p1 p2) (join (join m1 m2) m'))]
+        = affine_star_aux p2 m2 m';
+          // assert (interp p2 (join m2 m'));
+          affine_star_aux p1 m1 (join m2 m');
+          // assert (interp p1 (join m1 (join m2 m')));
+          join_associative m1 m2 m';
+          // assert (disjoint m1 (join m2 m'));
+          intro_star p1 p2 m1 (join m2 m')
+      in
+      ()
+
+    | Wand p q ->
+      let aux (mp:hmem p)
+        : Lemma
+          (requires
+            disjoint mp (join m m') /\
+            interp (wand p q) m)
+          (ensures (interp q (join mp (join m m'))))
+          [SMTPat  ()]
+        = disjoint_join mp m m';
+          assert (disjoint mp m);
+          assert (interp q (join mp m));
+          join_associative mp m m';
+          affine_star_aux q (join mp m) m'
+      in
+      assert (interp (wand p q) m ==> interp (wand p q) (join m m'))
+
+    | Ex #a f ->
+      let aux (x:a)
+        : Lemma (ensures interp (f x) m ==> interp (f x) (join m m'))
+                [SMTPat ()]
+        = W.axiom1 f x;
+          affine_star_aux (f x) m m'
+      in
+      ()
+
+    | All #a f ->
+      let aux (x:a)
+        : Lemma (ensures interp (f x) m ==> interp (f x) (join m m'))
+                [SMTPat ()]
+        = W.axiom1 f x;
+          affine_star_aux (f x) m m'
+      in
+      ()
+#pop-options
+
+let affine_star (p q:hprop) (m:mem)
+  : Lemma
+    (ensures (interp (p `star` q) m ==> interp p m))
+  = ()
+
+////////////////////////////////////////////////////////////////////////////////
+noeq
+type t = {
+  ctr: nat;
+  mem: mem;
+  properties: squash (
+    forall i. i >= ctr ==> mem i == None
+  )
+}
+
+let alloc (#a:_) (v:a) (frame:hprop) (m:t{interp frame m.mem})
+  : (x:ref a &
+     m:t { interp (pts_to x 1.0R v `star` frame) m.mem} )
+  = let x : ref a = m.ctr in
+    let cell = Ref a 1.0R v in
+    let mem : mem = F.on _ (fun i -> if i = x then Some cell else None) in
+    assert (disjoint mem m.mem);
+    assert (mem `contains_addr` x);
+    assert (select_addr mem x == cell);
+    let mem' = join mem m.mem in
+    intro_pts_to x 1.0R v mem;
+    assert (interp (pts_to x 1.0R v) mem);
+    assert (interp frame m.mem);
+    intro_star (pts_to x 1.0R v) frame mem m.mem;
+    assert (interp (pts_to x 1.0R v `star` frame) mem');
+    let t = {
+      ctr = x + 1;
+      mem = mem';
+      properties = ()
+    } in
+    (| x, t |)
