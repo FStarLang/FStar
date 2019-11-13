@@ -376,17 +376,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hmem (h_forall p))
   : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
   = ()
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// emp
-////////////////////////////////////////////////////////////////////////////////
-
-let intro_emp (m:mem)
-  : Lemma (interp emp m)
-  = ()
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 let intro_pts_to (#a:_) (x:ref a) (p:perm) (v:a) (m:mem)
   : Lemma
@@ -483,6 +473,37 @@ let affine_star (p q:hprop) (m:mem)
   = ()
 
 ////////////////////////////////////////////////////////////////////////////////
+// emp
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_emp (m:mem)
+  : Lemma (interp emp m)
+  = ()
+
+let emp_unit (p:hprop)
+  : Lemma
+    ((p `star` emp) `equiv` p)
+  = let emp_unit_1 (p:hprop) (m:mem)
+      : Lemma
+        (requires interp p m)
+        (ensures  interp (p `star` emp) m)
+        [SMTPat (interp (p `star` emp) m)]
+      = let emp_m : mem = F.on _ (fun _ -> None) in
+        assert (disjoint emp_m m);
+        assert (interp (p `star` emp) (join m emp_m));
+        assert (mem_equiv m (join m emp_m));
+        intro_star p emp m emp_m
+    in
+    let emp_unit_2 (p:hprop) (m:mem)
+      : Lemma
+        (requires interp (p `star` emp) m)
+        (ensures interp p m)
+        [SMTPat (interp (p `star` emp) m)]
+      = affine_star p emp m
+    in
+    ()
+
+////////////////////////////////////////////////////////////////////////////////
 noeq
 type t = {
   ctr: nat;
@@ -492,9 +513,9 @@ type t = {
   )
 }
 
-let alloc (#a:_) (v:a) (frame:hprop) (m:t{interp frame m.mem})
-  : (x:ref a &
-     m:t { interp (pts_to x 1.0R v `star` frame) m.mem} )
+let mem_of_t (x:t) : mem = x.mem
+
+let alloc #a v frame m
   = let x : ref a = m.ctr in
     let cell = Ref a 1.0R v in
     let mem : mem = F.on _ (fun i -> if i = x then Some cell else None) in
