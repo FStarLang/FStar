@@ -14,6 +14,9 @@ type cell =
 
 let addr = nat
 
+/// This is just the core of a memory, about which one can write
+/// assertions. At one level above, we'll encapsulate this memory
+/// with a freshness counter, a lock store etc.
 let mem = addr ^-> option cell
 
 let contains_addr (m:mem) (a:addr)
@@ -50,6 +53,10 @@ let disjoint (m0 m1:mem)
   : prop
   = forall a. disjoint_addr m0 m1 a
 
+let disjoint_sym (m0 m1:mem)
+  : Lemma (disjoint m0 m1 <==> disjoint m1 m0)
+  = ()
+
 let join (m0:mem) (m1:mem{disjoint m0 m1})
   : mem
   = F.on _ (fun a ->
@@ -60,12 +67,75 @@ let join (m0:mem) (m1:mem{disjoint m0 m1})
       | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
         Some (Ref a0 (p0 +. p1) v0))
 
+let disjoint_join' (m0 m1 m2:mem)
+  : Lemma (disjoint m1 m2 /\
+           disjoint m0 (join m1 m2) ==>
+           disjoint m0 m1 /\
+           disjoint m0 m2 /\
+           disjoint (join m0 m1) m2 /\
+           disjoint (join m0 m2) m1)
+          [SMTPat (disjoint m0 (join m1 m2))]
+  = ()
+
+let disjoint_join m0 m1 m2 = disjoint_join' m0 m1 m2
+
+let mem_equiv (m0 m1:mem) =
+  forall a. m0 a == m1 a
+
+let mem_equiv_eq (m0 m1:mem)
+  : Lemma
+    (requires
+      m0 `mem_equiv` m1)
+    (ensures
+      m0 == m1)
+    [SMTPat (m0 `mem_equiv` m1)]
+  = F.extensionality _ _ m0 m1
+
+let join_commutative' (m0 m1:mem)
+  : Lemma
+    (requires
+      disjoint m0 m1)
+    (ensures
+      join m0 m1 `mem_equiv` join m1 m0)
+    [SMTPat (join m0 m1)]
+  = ()
+
+let join_commutative m0 m1 = ()
+
+let join_associative' (m0 m1 m2:mem)
+  : Lemma
+    (requires
+      disjoint m1 m2 /\
+      disjoint m0 (join m1 m2))
+    (ensures
+      (disjoint_join m0 m1 m2;
+       join m0 (join m1 m2) `mem_equiv` join (join m0 m1) m2))
+    [SMTPatOr
+      [[SMTPat (join m0 (join m1 m2))];
+       [SMTPat (join (join m0 m1) m2)]]]
+  = ()
+
+let join_associative (m0 m1 m2:mem) = join_associative' m0 m1 m2
+
+let join_associative2 (m0 m1 m2:mem)
+  : Lemma
+    (requires
+      disjoint m0 m1 /\
+      disjoint (join m0 m1) m2)
+    (ensures
+      disjoint m1 m2 /\
+      disjoint m0 (join m1 m2) /\
+      join m0 (join m1 m2) `mem_equiv` join (join m0 m1) m2)
+    [SMTPat (join (join m0 m1) m2)]
+  = ()
+
 ////////////////////////////////////////////////////////////////////////////////
 
 module W = FStar.WellFounded
 
 noeq
 type hprop : Type u#1 =
+  | Emp : hprop
   | Pts_to : #a:Type0 -> r:ref a -> perm:perm -> v:a -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -74,17 +144,10 @@ type hprop : Type u#1 =
   | Ex   : #a:Type0 -> (a -> hprop) -> hprop
   | All  : #a:Type0 -> (a -> hprop) -> hprop
 
-let pts_to = Pts_to
-let h_and = And
-let h_or = Or
-let star = Star
-let wand = Wand
-let h_exists = Ex
-let h_forall = All
-
 let rec interp (p:hprop) (m:mem)
   : Tot prop (decreases p)
   = match p with
+    | Emp -> True
     | Pts_to #a r perm v ->
       m `contains_addr` r /\
       (let Ref a' perm' v' = select_addr m r in
@@ -119,59 +182,19 @@ let rec interp (p:hprop) (m:mem)
     | All f ->
       forall x. (W.axiom1 f x; interp (f x) m)
 
-let mem_equiv (m0 m1:mem) =
-  forall a. m0 a == m1 a
+let emp = Emp
+let pts_to = Pts_to
+let h_and = And
+let h_or = Or
+let star = Star
+let wand = Wand
+let h_exists = Ex
+let h_forall = All
 
-let mem_equiv_eq (m0 m1:mem)
-  : Lemma
-    (requires
-      m0 `mem_equiv` m1)
-    (ensures
-      m0 == m1)
-    [SMTPat (m0 `mem_equiv` m1)]
-  = F.extensionality _ _ m0 m1
-
-let join_commutative (m0 m1:mem)
-  : Lemma
-    (requires
-      disjoint m0 m1)
-    (ensures
-      join m0 m1 `mem_equiv` join m1 m0)
-    [SMTPat (join m0 m1)]
-  = ()
-
-let join_associative (m0 m1 m2:mem)
-  : Lemma
-    (requires
-      disjoint m1 m2 /\
-      disjoint m0 (join m1 m2))
-    (ensures
-      disjoint m0 m1 /\
-      disjoint (join m0 m1) m2  /\
-      join m0 (join m1 m2) `mem_equiv` join (join m0 m1) m2)
-    [SMTPat (join m0 (join m1 m2))]
-  = ()
-
-let join_associative2 (m0 m1 m2:mem)
-  : Lemma
-    (requires
-      disjoint m0 m1 /\
-      disjoint (join m0 m1) m2)
-    (ensures
-      disjoint m1 m2 /\
-      disjoint m0 (join m1 m2) /\
-      join m0 (join m1 m2) `mem_equiv` join (join m0 m1) m2)
-    [SMTPat (join (join m0 m1) m2)]
-  = ()
-
-let star_commutative (p1 p2:hprop)
-  : Lemma ((p1 `Star` p2) `equiv` (p2 `Star` p1))
-  = ()
+let star_commutative (p1 p2:hprop) = ()
 
 #push-options "--query_stats --z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2"
-let star_associative (p1 p2 p3:hprop)
-  : Lemma ((p1 `Star` (p2 `Star` p3)) `equiv` ((p1 `Star` p2) `Star` p3))
-  = ()
+let star_associative (p1 p2 p3:hprop) = ()
 #pop-options
 
 let sel #a (r:ref a) (m:hmem (ptr r))
@@ -182,6 +205,10 @@ let sel #a (r:ref a) (m:hmem (ptr r))
 let sel_lemma #a (r:ref a) (p:perm) (m:hmem (ptr_perm r p))
   = ()
 
+/// The main caveat of this model is that because we're working
+/// with proof-irrelevant propositions (squashed proofs), I end up
+/// using the indefinite_description axiom to extract witnesses
+/// of disjoint memories from squashed proofs of `star`
 let split_mem_ghost (p1 p2:hprop) (m:hmem (p1 `Star` p2))
   : GTot (ms:(hmem p1 & hmem p2){
             let m1, m2 = ms in
@@ -224,8 +251,17 @@ let split_mem_ghost (p1 p2:hprop) (m:hmem (p1 `Star` p2))
     in
     (m1, m2)
 
+/// F*'s indefinite_description is only available in the Ghost effect
+/// That's to prevent us from mistakenly extracting code that uses the
+/// axiom, since, clearly, we can't execute code that invents witnesses
+/// from squashed proofs of existentials.
+///
+/// Here, we're just building a logical model of heaps, so I don't really
+/// care about enforcing the ghostiness of indefinite_description.
+///
+/// So, this axiom explicitly punches a hole in the ghost effect, allowing
+/// me to coerce it to Tot
 assume
-private
 val axiom_ghost_to_tot (#a:Type) (#b:a -> Type) ($f: (x:a -> GTot (b x))) (x:a)
   : Tot (b x)
 
@@ -243,5 +279,108 @@ let upd #a (r:ref a) (v:a)
     let m0' = update_addr m0 r (Ref a 1.0R v) in
     join m0' m1
 
-let intro_wand (p1 p2:hprop) (m:mem) = ()
+////////////////////////////////////////////////////////////////////////////////
+// wand
+////////////////////////////////////////////////////////////////////////////////
+let intro_wand_alt (p1 p2:hprop) (m:mem)
+  : Lemma
+    (requires
+      (forall (m0:hmem p1).
+         disjoint m0 m ==>
+         interp p2 (join m0 m)))
+    (ensures
+      interp (wand p1 p2) m)
+  = ()
+
+let intro_wand (p q r:hprop) (m:hmem q)
+  : Lemma
+    (requires
+      (forall (m:hmem (p `star` q)). interp r m))
+    (ensures
+      interp (p `wand` r) m)
+  = let aux (m0:hmem p)
+      : Lemma
+        (requires
+          disjoint m0 m)
+        (ensures
+          interp r (join m0 m))
+        [SMTPat (disjoint m0 m)]
+      = ()
+    in
+    intro_wand_alt p r m
+
 let elim_wand (p1 p2:hprop) (m:mem) = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// or
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_or_l (p1 p2:hprop) (m:hmem p1)
+  : Lemma (interp (h_or p1 p2) m)
+  = ()
+
+let intro_or_r (p1 p2:hprop) (m:hmem p2)
+  : Lemma (interp (h_or p1 p2) m)
+  = ()
+
+let or_star (p1 p2 p:hprop) (m:hmem ((p1 `star` p) `h_or` (p2 `star` p)))
+  : Lemma (interp ((p1 `h_or` p2) `star` p) m)
+  = ()
+
+let elim_or (p1 p2 q:hprop) (m:hmem (p1 `h_or` p2))
+  : Lemma (((forall (m:hmem p1). interp q m) /\
+            (forall (m:hmem p2). interp q m)) ==> interp q m)
+  = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// and
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_and (p1 p2:hprop) (m:mem)
+  : Lemma (interp p1 m /\
+           interp p2 m ==>
+           interp (p1 `h_and` p2) m)
+  = ()
+
+let elim_and (p1 p2:hprop) (m:hmem (p1 `h_and` p2))
+  : Lemma (interp p1 m /\
+           interp p2 m)
+  = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// h_exists
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_exists (#a:_) (x:a) (p : a -> hprop) (m:hmem (p x))
+  : Lemma (interp (h_exists p) m)
+  = ()
+
+let elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hmem (h_exists p))
+  : Lemma
+    ((forall (x:a). interp (p x) m ==> interp q m) ==>
+     interp q m)
+  = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// h_forall
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_forall (#a:_) (p : a -> hprop) (m:mem)
+  : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
+  = ()
+
+let elim_forall (#a:_) (p : a -> hprop) (m:hmem (h_forall p))
+  : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
+  = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// emp
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_emp (m:mem)
+  : Lemma (interp emp m)
+  = ()
