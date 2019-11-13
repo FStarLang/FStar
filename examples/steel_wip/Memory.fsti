@@ -205,3 +205,18 @@ val elim_forall (#a:_) (p : a -> hprop) (m:hmem (h_forall p))
 ////////////////////////////////////////////////////////////////////////////////
 val intro_emp (m:mem)
   : Lemma (interp emp m)
+
+////////////////////////////////////////////////////////////////////////////////
+// star
+////////////////////////////////////////////////////////////////////////////////
+
+val intro_star (p q:hprop) (mp:hmem p) (mq:hmem q)
+  : Lemma
+    (requires
+      disjoint mp mq)
+    (ensures
+      interp (p `star` q) (join mp mq))
+
+val affine_star (p q:hprop) (m:mem)
+  : Lemma
+    (ensures (interp (p `star` q) m ==> interp p m))
