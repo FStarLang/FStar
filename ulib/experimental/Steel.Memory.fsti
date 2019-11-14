@@ -103,6 +103,9 @@ val star_associative (p1 p2 p3:hprop)
   : Lemma ((p1 `star` (p2 `star` p3))
            `equiv`
            ((p1 `star` p2) `star` p3))
+val star_congruence (p1 p2 p3 p4:hprop)
+  : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
+          (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
