@@ -144,6 +144,9 @@ let join_associative2 (m0 m1 m2:mem)
     [SMTPat (join (join m0 m1) m2)]
   = ()
 
+let mem_prop_is_affine (p:mem -> prop) = forall m0 m1. p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
+let a_m_prop = p:(mem -> prop) { mem_prop_is_affine p }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 module W = FStar.WellFounded
@@ -152,6 +155,7 @@ noeq
 type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to : #a:Type0 -> r:ref a -> perm:perm -> v:a -> hprop
+  | Refine : hprop -> a_m_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
   | Star : hprop -> hprop -> hprop
@@ -169,6 +173,9 @@ let rec interp (p:hprop) (m:mem)
        a == a' /\
        v == v' /\
        perm <=. perm')
+
+    | Refine p q ->
+      interp p m /\ q m
 
     | And p1 p2 ->
       interp p1 m /\
@@ -413,7 +420,7 @@ let intro_star (p q:hprop) (mp:hmem p) (mq:hmem q)
       interp (p `star` q) (join mp mq))
   = ()
 
-#push-options "--z3rlimit_factor 4 --max_fuel 2 --max_ifuel 2  --initial_fuel 2 --initial_ifuel 2"
+#push-options "--z3rlimit_factor 6 --max_fuel 1 --max_ifuel 2  --initial_fuel 2 --initial_ifuel 2"
 let rec affine_star_aux (p:hprop) (m:mem) (m':mem { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
@@ -422,6 +429,8 @@ let rec affine_star_aux (p:hprop) (m:mem) (m':mem { disjoint m m' })
     | Emp -> ()
 
     | Pts_to _ _ _ -> ()
+
+    | Refine p q -> affine_star_aux p m m'
 
     | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
 
