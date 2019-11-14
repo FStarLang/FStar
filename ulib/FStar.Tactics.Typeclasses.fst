@@ -75,10 +75,10 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
-let mk_class (nm:string) : Tac decls =
+let mk_class (nm:string) : Tac unit =
     (* sigh *)
     let ns = String.split ['.'] nm in
-    let r = lookup_typ (top_env ()) ns in
+    let r = lookup_typ (cur_env ()) ns in
     guard (Some? r);
     let Some se = r in
     let sv = inspect_sigelt se in
@@ -90,7 +90,7 @@ let mk_class (nm:string) : Tac decls =
     // Must have a single constructor
     guard (List.length ctors = 1);
     let [ctor] = ctors in
-    let r = lookup_typ (top_env ()) ctor in
+    let r = lookup_typ (cur_env ()) ctor in
     guard (Some? r);
     let res = Some?.v r in
     let r = inspect_sigelt res in
@@ -110,7 +110,7 @@ let mk_class (nm:string) : Tac decls =
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
-    T.map (fun b ->
+    T.iter (fun b ->
                   (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
                   let s = name_of_binder b in
                   (* dump ("b = " ^ s); *)
@@ -132,5 +132,7 @@ let mk_class (nm:string) : Tac decls =
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
                   //let se = set_sigelt_attrs [`tcnorm] se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
-                  se
-    ) bs
+                  add_elem (fun () -> exact (quote se));
+                  ()
+    ) bs;
+    apply (`Nil)
