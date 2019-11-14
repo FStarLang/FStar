@@ -27,6 +27,8 @@ let vector (a: Type0) = P.pointer (contents_t a)
 let as_contents (h: HS.mem) (#a: Type0) (v:vector a) : GTot (contents_t a) =
   (Seq.index (A.as_seq h v) 0)
 
+(*
+
 let vector_view (#a : Type0) (v : vector a) : Tot (view (vector_view_t a)) =
   let v_ptr_r : resource = P.ptr_resource v in
   reveal_view ();
@@ -241,7 +243,7 @@ let push #a v x =
       (fun _ -> A.copy new_contents_parts1 arr);*)
     (**) admit()
   end
-
+*)
 
 (*
   if U32.(len <^ max) then begin

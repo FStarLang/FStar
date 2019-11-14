@@ -10,7 +10,7 @@
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
+   See the License for the specific language governig permissions and
    limitations under the License.
 *)
 module Steel.RST
@@ -62,8 +62,8 @@ val modifies (res0 res1:resource) (h0 h1:HS.mem) : prop
 val reveal_modifies (_ : unit)
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}
     modifies res0 res1 h0 h1 <==>
-      A.modifies (as_loc (fp res0) h0) h0 h1 /\
-      frame_usedness_preservation (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1
+      A.modifies (as_loc (fp_of res0) h0) h0 h1 /\
+      frame_usedness_preservation (as_loc (fp_of res0) h0) (as_loc (fp_of res1) h1) h0 h1
    )
 
 val modifies_refl (res:resource) (h:HS.mem)
@@ -159,8 +159,12 @@ let rmem (r: resource) : Type =
 
 val mk_rmem
   (r: resource)
-  (h: imem (inv r)) :
-  Tot (rh:rmem r{forall (r0:resource{r0 `is_subresource_of` r}). rh r0 == sel r0.view h})
+  (h: imem (inv_of r)) :
+  Tot (rh:rmem r{
+    forall (r0:resource{r0 `is_subresource_of` r}). {:pattern (rh r0) \/ (sel_of r0.view h) }
+    rh r0 == sel_of r0.view h
+  })
+
 
 /// The only other transformation allowed on selectors is focusing on a subresource.
 
@@ -180,13 +184,6 @@ let rprop r = rmem r -> Type0
 val extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_of` r})
   : Tot (rprop r)
 
-/// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
-/// of a resource.
-
-val hsrefine (r:resource) (p:rprop r) : Tot (r':resource{
-    r'.t == r.t /\
-    r'.view == {r.view with inv = fun h -> r.view.inv h /\ p (mk_rmem r h)}
-  })
 
 (**** The RST effect *)
 
@@ -198,19 +195,12 @@ val rst_inv (res:resource) (h:HS.mem) : GTot prop
 val reveal_rst_inv (_ : unit)
   : Lemma (forall res h .
     rst_inv res h <==>
-      A.loc_includes (A.loc_used_in h) (as_loc (fp res) h)
+      A.loc_includes (A.loc_used_in h) (as_loc (fp_of res) h)
   )
 
 val rst_inv_star (res0 res1: resource) (h: HS.mem)
   : Lemma (rst_inv (res0 <*> res1) h <==> rst_inv (res1 <*> res0) h)
   [SMTPat (rst_inv (res0 <*> res1) h)]
-
-let r_pre (res:resource) =  rprop res
-let r_post
-  (res0: resource)
-  (a: Type)
-  (res1: a -> resource) =
-  rmem res0 -> x:a -> rprop (res1 x)
 
 
 /// Finally, the RST effect. Eventually with the layered effects, its definition will be hidden
@@ -232,22 +222,125 @@ let r_post
 /// memory shape. Then, you can add traditionnal functional specification but, thanks to selectors,
 /// these functional specification can only depend on the views of the resources you're handling.
 
-effect RST
+let r_pre (res:resource) = rprop res
+let r_post (a: Type) (res1: a -> resource) = x:a -> rprop (res1 x)
+
+type rst_wp' (a:Type) (r_in:resource) (r_out:a -> resource) = r_post a r_out -> r_pre r_in
+
+let rst_wp_monotonic
+  (a:Type)
+  (r_in:resource)
+  (r_out:a -> resource)
+  (wp:rst_wp' a r_in r_out) =
+  forall (p q:r_post a r_out). (forall x h. p x h ==> q x h) ==> (forall h. wp p h ==> wp q h)
+
+type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) =
+  wp:rst_wp' a r_in r_out{rst_wp_monotonic a r_in r_out wp}
+
+
+type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out) =
+  unit -> ST.STATE a
+    (fun p h0 ->
+      inv_of r_in h0 /\ rst_inv r_in h0 /\
+      wp (fun (x:a) (h_r_out:rmem (r_out x)) ->
+        forall (h1 : imem (inv_of (r_out x))). (
+	    mk_rmem (r_out x) h1 == h_r_out /\
+            inv_of (r_out x) h1 /\
+            rst_inv (r_out x) h1 /\
+            modifies r_in (r_out x) h0 h1
+	  ) ==> p x h1
+	) (mk_rmem r_in h0)
+    )
+
+inline_for_extraction
+val returnc
+  (a:Type)
+  (r:a -> resource)
+  (x:a)
+  : repr a (r x) r (fun (p:r_post a r) h -> p x h)
+
+inline_for_extraction
+val bind (a:Type) (b:Type)
+  (r_in_f:resource) (r_out_f:a -> resource) (wp_f:rst_wp a r_in_f r_out_f)
+  (r_out_g:b -> resource) (wp_g:(x:a -> rst_wp b (r_out_f x) r_out_g))
+  (f:repr a r_in_f r_out_f wp_f)
+  (g:(x:a -> repr b (r_out_f x) r_out_g (wp_g x)))
+  : repr b r_in_f r_out_g (fun p -> wp_f (fun x -> (wp_g x) p))
+
+val subcomp (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out)
+  (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f)
+: Pure (repr a r_in r_out wp_g)
+  (requires (forall p h. wp_g p h ==> wp_f p h))
+  (ensures fun _ -> True)
+
+let if_then_else (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (wp_f:rst_wp a r_in r_out) (wp_g:rst_wp a r_in r_out)
+  (f:repr a r_in r_out wp_f) (g:repr a r_in r_out wp_g)
+  (p:Type0)
+: Type =
+  repr a r_in r_out
+    (fun post h -> (p ==> wp_f post h) /\ ((~ p) ==> wp_g post h))
+
+reifiable reflectable
+layered_effect {
+  RSTATE : a:Type -> r_in:resource -> r_out:(a -> resource) -> wp:rst_wp a r_in r_out -> Effect
+  with repr         = repr;
+       return       = returnc;
+       bind         = bind;
+       subcomp     = subcomp;
+       if_then_else  = if_then_else
+}
+
+
+let return (#a:Type)
+  (#r:a -> resource)
+  (x:a)
+: RSTATE a (r x) r (fun (p:r_post a r) h -> p x h)
+= RSTATE?.reflect (returnc a r x)
+
+
+/// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck
+assume Pure_wp_monotonicity:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall (x:a). p x ==> q x) ==>
+       (wp p ==> wp q))
+
+val lift_div_rstate (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> DIV a wp)
+: repr a r (fun _ -> r) (fun p h -> wp (fun x -> p x h))
+
+sub_effect DIV ~> RSTATE = lift_div_rstate
+
+
+/// Hoare style encoding
+
+unfold
+let hoare_to_wp
   (a: Type)
-  (res0: resource)
-  (res1: a -> resource)
-  (pre: rprop res0)
-  (post: rmem res0 -> (x:a) -> rprop (res1 x))
-= ST.ST
-  a
-  (fun h0 -> inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0))
-  (fun h0 x h1 ->
-    inv res0 h0 /\ rst_inv res0 h0 /\ pre (mk_rmem res0 h0) /\
-    inv (res1 x) h1 /\
-    rst_inv (res1 x) h1 /\
-    modifies res0 (res1 x) h0 h1 /\
-    post (mk_rmem res0 h0) x (mk_rmem (res1 x) h1)
-  )
+  (r_in: resource)
+  (r_out: a -> resource)
+  (pre: r_pre r_in)
+  (post: rmem r_in -> (x:a) -> rprop (r_out x)) : r_post a r_out -> rmem r_in -> Type
+  = fun (p:r_post a r_out) (h0:rmem r_in) ->
+    pre h0 /\ (forall (x:a) (h1:rmem (r_out x)). post h0 x h1 ==> p x h1)
+
+effect RST (a:Type)
+  (r_in:resource) (r_out:a -> resource)
+  (pre:rprop r_in) (post:rmem r_in -> (x:a) -> rprop (r_out x))
+= RSTATE a r_in r_out (hoare_to_wp a r_in r_out pre post)
+
+unfold
+let rst_repr
+  (a: Type)
+  (r_in:resource)
+  (r_out:a -> resource)
+  (pre:rprop r_in)
+  (post:rmem r_in -> (x:a) -> rprop (r_out x)) =
+  repr a r_in r_out (hoare_to_wp a r_in r_out pre post)
 
 /// Similar to `FStar.Hyperstack.ST.get`, this helper gives you a rmem based on the current state of
 /// the heap
@@ -312,3 +405,38 @@ inline_for_extraction noextract val rst_frame
     )
 
 #pop-options
+
+(**** Resource subtyping *)
+
+/// Thanks to selectors, we can define abstract resource refinements that strenghten the invariant
+/// of a resource.
+
+val refine_inv (r:resource) (p:rprop r) : Tot (r':resource{
+    r'.t == r.t /\
+    r'.view == {r.view with inv = fun h -> (inv_of r) h /\ p (mk_rmem r h)}
+  })
+
+val cast_to_refined_inv (r: resource) (p:rprop r) : RST unit
+  r
+  (fun _ -> refine_inv r p)
+  (fun h -> p h)
+  (fun _ _ _ -> True)
+
+val cast_from_refined_inv (r: resource) (p:rprop r) : RST unit
+  (refine_inv r p)
+  (fun _ -> r)
+  (fun _ -> True)
+  (fun _ _ h1 -> p h1)
+
+val refine_view (r: resource) (#a: Type) (f: r.t -> GTot a) : GTot (r':resource{
+    r'.t == a /\
+    r'.view.fp == r.view.fp /\
+    r'.view.inv == r.view.inv /\
+    r'.view.sel == Fext.on_dom_g HS.mem (fun h -> f (r.view.sel h))
+  })
+
+val cast_to_refined_view (r: resource) (#a: Type)  (f: r.t -> GTot a) : RST unit
+  r
+  (fun _ -> refine_view r f)
+  (fun _ -> True)
+  (fun h0 _ h1 -> h1 (refine_view r f) == f (h0 r))

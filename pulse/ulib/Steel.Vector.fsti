@@ -16,6 +16,7 @@ noeq type vector_view_t (a: Type0) = {
   v_perm: Ghost.erased Perm.permission;
 }
 
+(*
 val vector_view (#a:Type0)  (v:vector a) : Tot (view (vector_view_t a))
 
 let vector_resource (#a:Type0) (v:vector a) : Tot resource =
@@ -49,3 +50,4 @@ val push: #a:Type0 -> v:vector a -> x:a -> RST unit
     let v1 = h1 (vector_resource v) in
     v1 == {v0 with v_arr = S.snoc v0.v_arr x}
   )
+ *)

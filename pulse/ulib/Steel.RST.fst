@@ -40,15 +40,15 @@ let frame_usedness_preservation_intro l1 l2 h0 h1 lemma =
 let frame_usedness_preservation_elim l1 l2 h0 h1 frame = ()
 
 let modifies res0 res1 h0 h1 =
-    modifies (as_loc (fp res0) h0) h0 h1 /\
-    frame_usedness_preservation (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1
+    modifies (as_loc (fp_of res0) h0) h0 h1 /\
+    frame_usedness_preservation (as_loc (fp_of res0) h0) (as_loc (fp_of res1) h1) h0 h1
 
 let reveal_modifies () = ()
 
 let modifies_refl res h = ()
 
 let modifies_trans res0 res1 res2 h0 h1 h2 =
-  modifies_loc_disjoint (as_loc (fp res0) h0) (as_loc (fp res1) h1) h0 h1 h2
+  modifies_loc_disjoint (as_loc (fp_of res0) h0) (as_loc (fp_of res1) h1) h0 h1 h2
 
 
 let is_subresource_of r0 r = exists (r1: resource). r `can_be_split_into` (r0, r1)
@@ -78,12 +78,13 @@ let is_subresource_of_trans r1 r2 r3 =
       let inner = r1 in
       let delta = delta13 in
       let goal h =
-        (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
-        (inv outer h <==>
-          inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+        (as_loc (fp_of outer) h == A.loc_union (as_loc (fp_of delta) h) (as_loc (fp_of inner) h)) /\
+        (inv_of outer h <==>
+          inv_of inner h /\ inv_of delta h /\
+	  A.loc_disjoint (as_loc (fp_of delta) h) (as_loc (fp_of inner) h))
       in
       let aux (h: HS.mem) : Lemma (goal h) =
-        loc_union_assoc (as_loc (fp delta23) h) (as_loc (fp delta12) h) (as_loc (fp r1) h)
+        loc_union_assoc (as_loc (fp_of delta23) h) (as_loc (fp_of delta12) h) (as_loc (fp_of r1) h)
       in
       Classical.forall_intro aux;
       assert(r3 `can_be_split_into` (r1, delta13))
@@ -103,7 +104,9 @@ open FStar.FunctionalExtensionality
 let mk_rmem r h =
    Fext.on_dom_g
      (r0:resource{r0 `is_subresource_of` r})
-     (fun (r0:resource{r0 `is_subresource_of` r}) -> sel r0.view h)
+     (fun (r0:resource{r0 `is_subresource_of` r}) -> sel_of r0.view h)
+
+let mk_rmem_spec r h r0 = ()
 
 let focus_rmem' (#r: resource) (s: rmem r) (r0: resource{r0 `is_subresource_of` r})
   : Tot (s':rmem r0{forall (r0':resource{r0' `is_subresource_of` r0}).
@@ -136,8 +139,8 @@ let focus_rmem_equality outer inner arg h =
 
 val focus_mk_rmem_equality (outer inner: resource) (h: HS.mem)
   : Lemma
-    (requires (inv outer h /\ inner `is_subresource_of` outer))
-    (ensures (is_subresource_of_elim inner outer (inv inner h) (fun _ -> ());
+    (requires (inv_of outer h /\ inner `is_subresource_of` outer))
+    (ensures (is_subresource_of_elim inner outer (inv_of inner h) (fun _ -> ());
       focus_rmem (mk_rmem outer h) inner == mk_rmem inner h))
 
 let focus_mk_rmem_equality outer inner h =
@@ -160,10 +163,126 @@ let extend_rprop (#r0: resource) (p: rprop r0) (r: resource{r0 `is_subresource_o
   : Tot (rprop r) =
   fun s -> p (focus_rmem #r s r0)
 
-#push-options "--z3rlimit 30"
+let rst_inv res h =
+  loc_includes (loc_used_in h) (as_loc (fp_of res) h) /\ True
 
-let hsrefine r p =
-  let new_inv (h: HS.mem) : prop = r.view.inv h /\ p (mk_rmem r h) in
+let reveal_rst_inv () = ()
+
+let rst_inv_star res0 res1 h = reveal_star ()
+
+inline_for_extraction let returnc a r x = fun _ -> x
+
+inline_for_extraction let bind a b r_in_f r_out_f wp_f r_out_g wp_g f g =
+  fun _ -> let x = f () in g x ()
+
+let subcomp a r_in r_out wp_f wp_g f = f
+
+let lift_div_rstate a wp r f = fun _ -> f ()
+
+
+/// Implementation of the `get` action
+///
+/// We implement `get` by using reflect
+///
+/// For better F* type inference, we do it in two steps:
+///   -- first define the underlying STATE function, with a `repr` type
+///      annotating an explicit `repr` type helps F* type inference
+///   -- and then reflect it into the desired type
+///
+/// `get_` is the underlying STATE function with a `repr` type
+
+let get_ (r:resource) : repr (rmem r) r (fun _ -> r) (fun p h -> p h h) = fun _ ->
+  let h = HST.get () in
+  mk_rmem r h
+
+let get r = RST?.reflect (get_ r)
+
+open Steel.Tactics
+
+
+/// Implement `rst_frame` as an action using reflect the same way we did for `get`
+
+#push-options "--no_tactics"
+
+inline_for_extraction noextract val rst_frame_
+  (outer0:resource)
+  (#inner0:resource)
+  (#a:Type)
+  (outer1:a -> resource)
+  (#inner1:a -> resource)
+  (#[resolve_delta ()]
+     delta:resource{
+       FStar.Tactics.with_tactic
+         resolve_frame_delta
+         (frame_delta outer0 inner0 outer1 inner1 delta)
+     }
+   )
+  (#pre:rprop inner0)
+  (#post:rmem inner0 -> (x:a) -> rprop (inner1 x))
+   ($f:unit -> RST a inner0 inner1 pre post)
+  : repr a outer0 outer1 (hoare_to_wp a outer0 outer1 (
+    FStar.Tactics.by_tactic_seman resolve_frame_delta
+      (frame_delta outer0 inner0 outer1 inner1 delta);
+      fun h ->
+        pre (focus_rmem h inner0)
+    )
+    (reveal_can_be_split_into ();
+      fun h0 x h1 ->
+        post
+          (focus_rmem h0 inner0)
+          x
+          (focus_rmem h1 (inner1 x)) /\
+        (focus_rmem h0 delta == focus_rmem h1 delta)
+    )
+  )
+
+#push-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0"
+
+
+inline_for_extraction noextract let rst_frame_
+  outer0 #inner0 #a outer1 #inner1 #delta #pre #post f
+  = fun _ ->
+  (**) reveal_view ();
+  (**) reveal_can_be_split_into ();
+  (**) reveal_rst_inv ();
+  (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
+  (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
+  (**) let h0 = HST.get () in
+  (**) focus_mk_rmem_equality outer0 inner0 h0;
+  (**) focus_mk_rmem_equality outer0 delta h0;
+  let x:a = reify (f ()) () in
+  (**) let h1 = HST.get () in
+  (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
+  (**) focus_mk_rmem_equality (outer1 x) delta h1;
+  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
+  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) delta in
+  (**) extensionality_g
+  (**)  (r0:resource{r0 `is_subresource_of` delta})
+  (**)  (fun r0 -> r0.t)
+  (**)  old_delta
+  (**)  cur_delta;
+  (**) let same_subdelta (r0:resource{r0 `is_subresource_of` delta})
+  (**)   : Lemma (sel_of r0.view h0 == sel_of r0.view h1)
+  (**)   = ()
+  (**) in
+  (**) Classical.forall_intro same_subdelta;
+  (**) assert (feq_g old_delta cur_delta);
+  (**) assert (modifies inner0 (inner1 x) h0 h1);
+  (**) assert (A.modifies (as_loc (fp_of outer0) h0) h0 h1);
+  (**) assert (modifies outer0 (outer1 x) h0 h1);
+  x
+
+#pop-options
+
+inline_for_extraction noextract let rst_frame outer0 #inner0 #a outer1 #inner1 #delta #pre #post f =
+  RST?.reflect (rst_frame_ outer0 #inner0 #a outer1 #inner1 #delta #pre #post f)
+
+#pop-options
+
+#push-options "--z3rlimit 20"
+
+let refine_inv r p =
+  let new_inv (h: HS.mem) : prop = (inv_of r) h /\ p (mk_rmem r h) in
   let new_view = { r.view with inv = new_inv } in
   reveal_view ();
   let open LowStar.Array in
@@ -198,45 +317,60 @@ let hsrefine r p =
 
 #pop-options
 
-let rst_inv res h =
-  loc_includes (loc_used_in h) (as_loc (fp res) h) /\ True
+val cast_to_refined_inv_ (r: resource) (p:rprop r) : rst_repr unit
+  r
+  (fun _ -> refine_inv r p)
+  (fun h -> p h)
+  (fun _ _ _ -> True)
 
-let reveal_rst_inv () = ()
-
-let rst_inv_star res0 res1 h = reveal_star ()
-
-open Steel.Tactics
-
-(* Generic framing operation for RST (through resource inclusion) *)
-
-#push-options "--no_tactics --z3rlimit 100 --max_fuel 0 --max_ifuel 0"
-
-let get r =
+let cast_to_refined_inv_ r p = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
   let h = HST.get () in
-  mk_rmem r h
+  assert((mk_rmem r h) r == sel_of r.view h);
+  assert((mk_rmem (refine_inv r p) h) (refine_inv r p) == sel_of (refine_inv r p).view h)
 
-inline_for_extraction noextract let rst_frame
-  outer0 #inner0 #a outer1 #inner1 #delta #pre #pos f
-  =
-  (**) reveal_view ();
-  (**) reveal_can_be_split_into ();
-  (**) reveal_rst_inv ();
-  (**) FStar.Tactics.by_tactic_seman resolve_frame_delta
-  (**)   (frame_delta outer0 inner0 outer1 inner1 delta);
-  (**) let h0 = HST.get () in
-  (**) focus_mk_rmem_equality outer0 inner0 h0;
-  (**) focus_mk_rmem_equality outer0 delta h0;
-  let x = f () in
-  (**) let h1 = HST.get ()in
-  (**) focus_mk_rmem_equality (outer1 x) (inner1 x) h1;
-  (**) focus_mk_rmem_equality (outer1 x) delta h1;
-  (**) let old_delta = focus_rmem (mk_rmem outer0 h0) delta in
-  (**) let cur_delta = focus_rmem (mk_rmem (outer1 x) h1) delta in
-  (**) extensionality_g
-  (**)  (r0:resource{r0 `is_subresource_of` delta})
-  (**)  (fun r0 -> r0.t)
-  (**)  old_delta
-  (**)  cur_delta;
-  x
+let cast_to_refined_inv r p = RST?.reflect (cast_to_refined_inv_ r p)
 
-#pop-options
+val cast_from_refined_inv_ (r: resource) (p:rprop r) : rst_repr unit
+  (refine_inv r p)
+  (fun _ -> r)
+  (fun _ -> True)
+  (fun _ _ h1 -> p h1)
+
+let cast_from_refined_inv_ r p = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h = HST.get () in
+  assert((mk_rmem r h) r == sel_of r.view h);
+  assert((mk_rmem (refine_inv r p) h) (refine_inv r p) == sel_of (refine_inv r p).view h)
+
+let cast_from_refined_inv r p = RST?.reflect (cast_from_refined_inv_ r p)
+
+let refine_view r #a f =
+  let new_sel h = f (r.view.sel h) in
+  let new_view = { r.view with sel = Fext.on_dom_g HS.mem new_sel} in
+  reveal_view ();
+  let r': resource = {
+   t = a;
+   view = new_view
+  } in
+  r'
+
+val cast_to_refined_view_ (r: resource) (#a: Type)  (f: r.t -> GTot a) : rst_repr unit
+  r
+  (fun _ -> refine_view r f)
+  (fun _ -> True)
+  (fun h0 _ h1 -> h1 (refine_view r f) == f (h0 r))
+
+let cast_to_refined_view_ r #a f = fun _ ->
+  reveal_view ();
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let h = HST.get () in
+  assert((mk_rmem r h) r == sel_of r.view h);
+  assert((mk_rmem (refine_view r f) h) (refine_view r f) == sel_of (refine_view r f).view h)
+
+let cast_to_refined_view r #a f = RST?.reflect (cast_to_refined_view_ r #a f)

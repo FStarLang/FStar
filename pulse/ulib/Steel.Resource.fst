@@ -18,6 +18,7 @@ module Steel.Resource
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
+module Fext = FStar.FunctionalExtensionality
 
 open LowStar.Array
 
@@ -47,14 +48,16 @@ let inv_reads_fp fp inv =
 let reveal_view () = ()
 
 let ( <*> ) (res1 res2:resource) : res:resource =
-  let inv (h: HS.mem) : prop = inv res1 h /\ inv res2 h /\ loc_disjoint (as_loc (fp res1) h) (as_loc (fp res2) h) in
-  let fp (h: HS.mem) = loc_union (as_loc (fp res1) h) (as_loc (fp res2) h) in
-  let sel (h: HS.mem) : GTot (res1.t & res2.t) = (sel res1.view h,sel res2.view h) in
+  let inv (h: HS.mem) : prop =
+    inv_of res1 h /\ inv_of res2 h /\ loc_disjoint (as_loc (fp_of res1) h) (as_loc (fp_of res2) h)
+  in
+  let fp (h: HS.mem) = loc_union (as_loc (fp_of res1) h) (as_loc (fp_of res2) h) in
+  let sel (h: HS.mem) : GTot (res1.t & res2.t) = (sel_of res1.view h,sel_of res2.view h) in
   let t = res1.t & res2.t in
   let view = {
-      fp = fp;
+      fp = Fext.on_dom_g HS.mem fp;
       inv = inv;
-      sel = sel
+      sel = Fext.on_dom_g HS.mem sel
     } in
   let out = {
     t = t;
@@ -75,9 +78,9 @@ let empty_resource : resource =
   let sel h = () in
   let t = unit in
   let (view:view t) = {
-      fp = fp;
+      fp = Fext.on_dom_g HS.mem fp;
       inv = inv;
-      sel = sel
+      sel = Fext.on_dom_g HS.mem sel
     }
   in
   {
@@ -88,9 +91,10 @@ let empty_resource : resource =
 let reveal_empty_resource () = ()
 
 let can_be_split_into_h (outer:resource) ((inner,delta):resource & resource) (h: HS.mem) =
-  (as_loc (fp outer) h == loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
-      (inv outer h <==>
-        inv inner h /\ inv delta h /\ loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+  (as_loc (fp_of outer) h == loc_union (as_loc (fp_of delta) h) (as_loc (fp_of inner) h)) /\
+      (inv_of outer h <==>
+        inv_of inner h /\ inv_of delta h /\
+	  loc_disjoint (as_loc (fp_of delta) h) (as_loc (fp_of inner) h))
 
 let can_be_split_into (outer:resource) ((inner,delta):resource & resource) =
     (forall (h: HS.mem). can_be_split_into_h outer (inner, delta) h)
@@ -132,7 +136,7 @@ let equal_comm_monoid_associativity res1 res2 res3 =
   let aux (h: HS.mem) : Lemma (
     can_be_split_into_h ((res1 <*> res2) <*> res3) (res1 <*> (res2 <*> res3), empty_resource) h
   ) =
-    loc_union_assoc (as_loc (fp res1) h) (as_loc (fp res2) h) (as_loc (fp res3) h)
+    loc_union_assoc (as_loc (fp_of res1) h) (as_loc (fp_of res2) h) (as_loc (fp_of res3) h)
   in
   Classical.forall_intro aux
 
