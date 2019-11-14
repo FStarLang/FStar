@@ -212,6 +212,8 @@ let star_commutative (p1 p2:hprop) = ()
 let star_associative (p1 p2 p3:hprop) = ()
 #pop-options
 
+let star_congruence (p1 p2 p3 p4:hprop) = ()
+
 let sel #a (r:ref a) (m:hmem (ptr r))
   : a
   = let Ref _ _ v = select_addr m r in
