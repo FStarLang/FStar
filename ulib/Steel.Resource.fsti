@@ -19,6 +19,7 @@ module ST = FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module A = LowStar.Array
+module Fext =  FStar.FunctionalExtensionality
 
 /// Resources are the fundamental abstraction of Steel, the framework that allows reasonning on Low*
 /// program with separation logic concepts. They rely on the premice that most functions only talk
@@ -39,7 +40,7 @@ let imem (inv: inv_t) = m:HS.mem{inv m}
 
 /// The second concept is the footprint. It is simply a location as defined in
 /// `LowStar.Array.Modifies`.
-let fp_t = (h:HS.mem) -> GTot A.loc
+let fp_t = Fext.restricted_g_t HS.mem (fun _ -> A.loc)
 let as_loc (fp:fp_t) (h: HS.mem) : GTot A.loc = fp h
 
 /// The third concept is the selector. Each memory footprint represents a high-level object, which
@@ -49,7 +50,7 @@ let as_loc (fp:fp_t) (h: HS.mem) : GTot A.loc = fp h
 /// These three concepts form the resource trinity. A resource is a memory footprint satisfying an
 /// invariant valable for any heap, from which you can extract a view.
 unfold
-let sel_t (a: Type) = HS.mem -> GTot a
+let sel_t (a: Type) = Fext.restricted_g_t HS.mem (fun _ -> a)
 
 val fp_reads_fp (fp: fp_t) (inv: inv_t) : prop
 
@@ -121,14 +122,14 @@ let as_resource (#a:Type) (view:view a) : resource = {
 let view_of (res:resource) : GTot (view res.t) =
   res.view
 
-let fp (res:resource) : GTot fp_t =
+let fp_of (res:resource) : GTot fp_t =
   res.view.fp
 
-let inv (res:resource) (h:HS.mem) : GTot prop =
-  res.view.inv h
+let inv_of (res:resource) : GTot inv_t =
+  res.view.inv
 
-let sel (#a:Type) (view:view a) (h: HS.mem) : GTot a =
-  view.sel h
+let sel_of (#a:Type) (view:view a) : GTot (sel_t a) =
+  view.sel
 
 (**** Separating conjunction on views and resources *)
 
@@ -141,28 +142,30 @@ val ( <*> ) (res1 res2:resource) : res:resource
 /// in specs involving <*>.
 val reveal_star_inv (res1 res2:resource) (h:HS.mem)
   : Lemma (
-    (inv (res1 <*> res2) h) <==>
-      (inv res1 h /\ inv res2 h /\ A.loc_disjoint (as_loc (fp res1) h) (as_loc (fp res2) h))
+    (inv_of (res1 <*> res2) h) <==>
+      (inv_of res1 h /\ inv_of res2 h /\
+        A.loc_disjoint (as_loc (fp_of res1) h) (as_loc (fp_of res2) h))
   )
-  [SMTPat (inv (res1 <*> res2) h)]
+  [SMTPat (inv_of (res1 <*> res2) h)]
 
 val reveal_star_sel (res1 res2:resource) (h:HS.mem)
   : Lemma (
-      sel (view_of (res1 <*> res2)) h ===
-        (sel (view_of res1) h, sel (view_of res2) h)
+      sel_of (view_of (res1 <*> res2)) h ===
+        (sel_of (view_of res1) h, sel_of (view_of res2) h)
   )
-  [SMTPat (sel (view_of (res1 <*> res2)) h)]
+  [SMTPat (sel_of (view_of (res1 <*> res2)) h)]
 
 val reveal_star (_: unit)
   : Lemma (
-    (forall res1 res2 h .{:pattern as_loc (fp (res1 <*> res2)) h}
-      as_loc (fp (res1 <*> res2)) h == A.loc_union (as_loc (fp res1) h) (as_loc (fp res2) h )
+    (forall res1 res2 h .{:pattern as_loc (fp_of (res1 <*> res2)) h}
+      as_loc (fp_of (res1 <*> res2)) h ==
+        A.loc_union (as_loc (fp_of res1) h) (as_loc (fp_of res2) h )
     ) /\
     (forall res1 res2 .{:pattern (res1 <*> res2).t}
       (res1 <*> res2).t == res1.t & res2.t
     ) /\
     (forall res1 res2 h .{:pattern (res1 <*> res2).view.sel h}
-       (res1 <*> res2).view.sel h == (sel res1.view h,sel res2.view h)
+       (res1 <*> res2).view.sel h == (sel_of res1.view h,sel_of res2.view h)
     )
   )
 
@@ -172,10 +175,10 @@ val empty_resource: resource
 
 val reveal_empty_resource (_ : unit)
   : Lemma (
-    (forall h. {:pattern fp empty_resource h} fp empty_resource h == A.loc_none) /\
-    (forall h .{:pattern inv empty_resource h} inv empty_resource h <==> True) /\
+    (forall h. {:pattern fp_of empty_resource h} fp_of empty_resource h == A.loc_none) /\
+    (forall h .{:pattern inv_of empty_resource h} inv_of empty_resource h <==> True) /\
     (empty_resource.t == unit) /\
-    (forall h .{:pattern sel empty_resource.view h} sel empty_resource.view h == ())
+    (forall h .{:pattern sel_of empty_resource.view h} sel_of empty_resource.view h == ())
   )
 
 (**** Splitting resources *)
@@ -196,9 +199,10 @@ val reveal_can_be_split_into (_ : unit)
   : Lemma (forall (outer inner delta: resource) .
     outer `can_be_split_into` (inner,delta) <==>
       (forall (h: HS.mem).
-        (as_loc (fp outer) h == A.loc_union (as_loc (fp delta) h) (as_loc (fp inner) h)) /\
-        (inv outer h <==>
-          inv inner h /\ inv delta h /\ A.loc_disjoint (as_loc (fp delta) h) (as_loc (fp inner) h))
+        (as_loc (fp_of outer) h == A.loc_union (as_loc (fp_of delta) h) (as_loc (fp_of inner) h)) /\
+        (inv_of outer h <==>
+          inv_of inner h /\ inv_of delta h /\
+	  A.loc_disjoint (as_loc (fp_of delta) h) (as_loc (fp_of inner) h))
       )
   )
 
@@ -230,15 +234,15 @@ val can_be_split_into_empty_reverse_right (res1 res2:resource)
 
 val reveal_can_be_split_into_inner_inv (outer inner delta:resource) (h:HS.mem)
   : Lemma
-    (requires (outer `can_be_split_into` (inner,delta) /\ inv outer h))
-    (ensures  (inv inner h))
-  [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv inner h)]
+    (requires (outer `can_be_split_into` (inner,delta) /\ inv_of outer h))
+    (ensures  (inv_of inner h))
+  [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv_of inner h)]
 
 val reveal_can_be_split_into_delta_inv (outer inner delta:resource) (h:HS.mem)
   : Lemma
-    (requires (outer `can_be_split_into` (inner,delta) /\ inv outer h))
-    (ensures  (inv delta h))
-  [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv delta h)]
+    (requires (outer `can_be_split_into` (inner,delta) /\ inv_of outer h))
+    (ensures  (inv_of delta h))
+  [SMTPat (outer `can_be_split_into` (inner,delta)); SMTPat (inv_of delta h)]
 
 (**** Equivalence relation (extensional equality) on resources *)
 
