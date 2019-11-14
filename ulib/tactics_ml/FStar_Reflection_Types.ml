@@ -7,7 +7,6 @@ type fv      = FStar_Syntax_Syntax.fv
 type comp    = FStar_Syntax_Syntax.comp
 type bv      = FStar_Syntax_Syntax.bv
 type sigelt  = FStar_Syntax_Syntax.sigelt
-type optionstate = FStar_Options.optionstate
 
 type typ     = term
 type name    = string list

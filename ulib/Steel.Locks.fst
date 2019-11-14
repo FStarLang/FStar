@@ -7,7 +7,7 @@ noeq
 type lock_entry : Type u#1 =
   | LockAvailable:
     r:resource ->
-    h:HS.mem { inv r h } ->
+    h:HS.mem { inv_of r h } ->
     lock_entry
 
   | LockAcquired:
@@ -57,15 +57,15 @@ val join (h0:HS.mem) (h1:HS.mem {h0 `can_be_joined_into` h1})
   : Tot HS.mem
 
 assume
-val split (h:HS.mem) (r:resource{inv r h})
-  : Tot (hr:HS.mem { inv r hr } &
+val split (h:HS.mem) (r:resource{inv_of r h})
+  : Tot (hr:HS.mem { inv_of r hr } &
           hr':HS.mem { hr `can_be_joined_into` hr' })
 
 assume
 val join_split (h:HS.mem) (r:resource)
   : Lemma
     (requires
-      inv r h)
+      inv_of r h)
     (ensures
       (let (| hr, hs |) = split h r in
        join hr hs == h))
@@ -74,21 +74,21 @@ assume
 val split_frames (h:HS.mem) (r0 r1:resource)
   : Lemma
     (requires
-      inv (r0 <*> r1) h)
+      inv_of (r0 <*> r1) h)
     (ensures
       (let (| h0, h1 |) = split h r0 in
-       inv r0 h0 /\
-       inv r1 h1))
+       inv_of r0 h0 /\
+       inv_of r1 h1))
 
 assume
 val join_frames (h0 h1:HS.mem) (r0 r1:resource)
   : Lemma
     (requires
       h0 `can_be_joined_into` h1 /\
-      inv r0 h0 /\
-      inv r1 h1)
+      inv_of r0 h0 /\
+      inv_of r1 h1)
     (ensures
-      inv (r0 <*> r1) (join h0 h1))
+      inv_of (r0 <*> r1) (join h0 h1))
 
 let compatible (h:HS.mem) (m:lock_memory) =
   forall (l:lock_addr).
@@ -192,14 +192,14 @@ effect RST
   a
   (fun (m0:memory) ->
     let h0 = m0.hs_mem in
-    inv res0 h0 /\
+    inv_of res0 h0 /\
     RST.rst_inv res0 h0)
   (fun m0 x m1 ->
     let h0 = m0.hs_mem in
     let h1 = m1.hs_mem in
-    inv res0 h0 /\
+    inv_of res0 h0 /\
     RST.rst_inv res0 h0 /\
-    inv (res1 x) h1 /\
+    inv_of (res1 x) h1 /\
     RST.rst_inv (res1 x) h1 /\
     RST.modifies res0 (res1 x) h0 h1)
 
@@ -220,7 +220,7 @@ let new_lock (r:resource)
     assume (memory.hs_mem `FStar.HyperStack.ST.mem_rel` rest);
     let memory' = {memory with hs_mem = rest; l_mem = l_mem' } in
     put memory';
-    assume (inv empty_resource rest);
+    assume (inv_of empty_resource rest);
     assume (RST.rst_inv empty_resource rest);
     assume (RST.modifies r empty_resource memory.hs_mem rest);
     witness (lock_addr_for_resource lock_addr r);
@@ -239,7 +239,7 @@ let rec lock_acquire (#r:resource) (l:lock r)
     | Some (LockAvailable _ h) ->
       let h' = join h memory.hs_mem in
       join_frames h memory.hs_mem r empty_resource;
-      assert (inv (r <*> empty_resource) h');
+      assert (inv_of (r <*> empty_resource) h');
       let l_mem =
         { memory.l_mem
           with store = Map.upd memory.l_mem.store l (Some (LockAcquired r))
@@ -255,7 +255,7 @@ let rec lock_acquire (#r:resource) (l:lock r)
           l_mem = l_mem
       } in
       put memory';
-      assert (inv r h');
+      assert (inv_of r h');
       assume (RST.rst_inv r h');
       assume (RST.modifies empty_resource r memory.hs_mem h')
 
@@ -278,12 +278,12 @@ let lock_release (#r:resource) (l:lock r)
       assume (memory.hs_mem `FStar.HyperStack.ST.mem_rel` rest);
       let memory' = {memory with hs_mem = rest; l_mem = l_mem' } in
       put memory';
-      assume (inv empty_resource rest);
+      assume (inv_of empty_resource rest);
       assume (RST.rst_inv empty_resource rest);
       assume (RST.modifies r empty_resource memory.hs_mem rest)
 
     | Some (LockAvailable _ h) ->
       //exclude this case by showing a contradiction with compatibility
-      assume (inv empty_resource memory.hs_mem);
+      assume (inv_of empty_resource memory.hs_mem);
       assume (RST.rst_inv empty_resource memory.hs_mem);
       assume (RST.modifies r empty_resource memory.hs_mem memory.hs_mem)
