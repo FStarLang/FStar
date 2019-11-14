@@ -19,13 +19,13 @@ let res1 (a: A.array U32.t) : resource = A.array_resource a
 [@expect_failure]
 let res1_fp (a: A.array U32.t) : GTot (fp:fp_t{forall (h: HS.mem). as_loc fp h == A.loc_array a}) =
   //A.reveal_array ();
-  fp (res1 a)
+  fp_of (res1 a)
 
 let res1_inv (a: A.array U32.t) : GTot (inv:inv_t{
   forall (h: HS.mem). inv h <==> A.live h a /\ A.constant_perm_seq h a
 }) =
   A.reveal_array ();
-  inv (res1 a)
+  inv_of (res1 a)
 
 let res1_view (a: A.array U32.t) : GTot (sel:(sel_t (A.varray a)){
   forall (h: HS.mem). sel h == {
@@ -34,7 +34,7 @@ let res1_view (a: A.array U32.t) : GTot (sel:(sel_t (A.varray a)){
   }
 }) =
   A.reveal_array ();
-  sel (res1 a).view
+  sel_of (res1 a).view
 
 let res2 (a b: A.array U32.t) : resource =
   A.array_resource a <*> A.array_resource b
@@ -49,7 +49,7 @@ let rec list_res (l: list (A.array U32.t)) : resource =
 #pop-options
 
 let res3 (a b: A.array U32.t) : resource =
-  hsrefine (res2 a b) (fun h -> A.vlength a == A.vlength b /\ A.as_rseq a h == A.as_rseq b h)
+  refine_inv (res2 a b) (fun h -> A.vlength a == A.vlength b /\ A.as_rseq a h == A.as_rseq b h)
 
 (**** The RST effect *)
 
@@ -68,7 +68,7 @@ let foo1 (a: A.array U32.t) : RST unit
   A.upd a 0ul new_x
 
 let points_to (a: A.array U32.t) (x: U32.t) : resource =
-  hsrefine (A.array_resource a) (fun h ->
+  refine_inv (A.array_resource a) (fun h ->
     Seq.index (A.as_rseq a h) 0 == x /\ P.allows_write (A.get_rperm a h)
   )
 

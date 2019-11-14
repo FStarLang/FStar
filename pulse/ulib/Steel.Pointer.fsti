@@ -22,6 +22,9 @@ include Steel.Pointer.Views
 
 open Steel.RST
 
+
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 (**** Unscoped allocation and deallocation of pointer resources *)
 
 val ptr_alloc
@@ -56,8 +59,8 @@ val ptr_read
     (fun _ -> ptr_resource ptr)
     (fun _ -> True)
     (fun h0 x h1 ->
-      get_val ptr h0 == x /\
-      h0 == h1
+      get_val ptr h0 == x /\ get_val ptr h1 == x /\
+      get_perm ptr h0 == get_perm ptr h1
     )
 
 val ptr_write
@@ -73,6 +76,7 @@ val ptr_write
       get_val ptr h1 == x
     )
 
+(*
 val ptr_share
   (#a: Type)
   (ptr: pointer a)
@@ -103,3 +107,4 @@ val ptr_merge
       get_val ptr1 h1 == get_val ptr1 h0 /\
       get_perm ptr1 h1 == P.sum_permissions (get_perm ptr1 h0) (get_perm ptr2 h0)
      )
+*)
