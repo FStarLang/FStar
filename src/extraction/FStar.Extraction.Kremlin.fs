@@ -53,6 +53,7 @@ and decl =
   | DTypeVariant of lident * list<flag> * int * branches_t
   | DTypeAbstractStruct of lident
   | DExternal of option<cc> * list<flag> * lident * typ * list<ident>
+  | DUntaggedUnion of lident * list<flag> * int * list<(ident * typ)>
 
 and cc =
   | StdCall
@@ -420,6 +421,7 @@ and translate_let env flavor lb: option<decl> =
       mllb_def = e;
       mllb_meta = meta
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
+      // Case 0: assume val -- important to pass to KreMLin to type-check everything
       let name = env.module_name, name in
       let arg_names = match e.expr with
         | MLE_Fun (args, _) -> List.map fst args
@@ -428,6 +430,8 @@ and translate_let env flavor lb: option<decl> =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
+        // Because we'd have to generate monomorphized instances of the
+        // polymorphic assume val to be implemented in C -- not feasible.
         BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
@@ -549,6 +553,14 @@ and translate_type_decl env ty: option<decl> =
             name, (translate_type env t, false)
           ) ts
         ) branches))
+
+    | (_, name, _mangled_name, args, flags, Some (MLTD_Union (cases, _))) ->
+        let name = env.module_name, name in
+        let flags = translate_flags flags in
+        let env = List.fold_left extend_t env args in
+        Some (DUntaggedUnion (name, flags, List.length args, List.map (fun (f, t) ->
+          f, translate_type env t
+        ) cases))
 
     | (_, name, _mangled_name, _, _, _) ->
         // JP: TODO: figure out why and how this happens
@@ -688,6 +700,12 @@ and translate_expr env e: expr =
 
   | MLE_Match (expr, branches) ->
       EMatch (translate_expr env expr, translate_branches env branches)
+
+  | MLE_UCons (e0, f) ->
+      EFlat (translate_type env e.mlty, [ f, translate_expr env e0 ])
+
+  | MLE_UProj (e, t, f) ->
+      EField (translate_type env t, translate_expr env e, f)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs

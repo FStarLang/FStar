@@ -292,6 +292,61 @@ let gamma_to_string env =
       - The list<mlmodule1> returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
+let is_lowstar_union range tcenv env1 body =
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
+  let fix x = SS.compress (U.un_uinst (U.unmeta x)) in
+  let head_and_args e =
+    let head, args = U.head_and_args' e in
+    fix head, List.map (fun (x, y) -> fix x, y) args
+  in
+  match head_and_args body with
+  | { n = Tm_fvar fv }, _ :: (cases, _) :: _
+    when is_kremlin && S.fv_eq_lid fv PC.union_lid ->
+      let cases = FStar.TypeChecker.Normalize.normalize Term.extraction_norm_steps tcenv cases in
+      begin match U.list_elements cases with
+      | None ->
+         Errors.raise_error
+           (Errors.Fatal_ExtractionUnsupported,
+             BU.format1
+             "LowStar.Union type definitions must be exactly of the form:\n\
+              inline_for_extraction noextract\n\
+              let cases = [ \"case1\", t1; ... ]\n\
+              let t = LowStar.Union.union cases\n\n\
+              Here the cases argument is: %s" (Print.term_to_string cases))
+           range
+      | Some cases ->
+          let cases = List.map (fun case ->
+            match head_and_args case with
+            | h, [ _; _; _; (pair, _) ] ->
+                begin match head_and_args pair with
+                | h, [ _; _; (label, _); (t, _) ] ->
+                    let t = Util.eraseTypeDeep (Util.udelta_unfold env1)
+                      (Term.term_as_mlty env1 t)
+                    in
+                    begin match (fix label).n with
+                    | Tm_constant (Const_string (s, _)) ->
+                        s, t
+                    | _ ->
+                         Errors.raise_error
+                           (Errors.Fatal_ExtractionUnsupported,
+                             BU.format1
+                             "The label is this union type is %s which is not a string constant"
+                             (Print.term_to_string label))
+                           range
+                    end
+                | _ -> failwith "impossible: not an inner application"
+                end
+            | h, args ->
+                failwith (BU.format3 "%s is not an outer application (head=%s) (length args=%s)"
+                  (Print.term_to_string case)
+                  (Print.term_to_string h)
+                  (string_of_int (List.length args)))
+          ) cases in
+          Some cases
+      end
+  | _ ->
+      None
+
 let extract_typ_abbrev env quals attrs lb
     : env_t
     * iface
@@ -319,16 +374,26 @@ let extract_typ_abbrev env quals attrs lb
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env1, ml_bs = binders_as_mlty_binders env bs in
-    let body =
-      Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
-    in
-    let mangled_projector =
-         if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-         then let mname = mangle_projector_lid lid in
-              Some mname.ident.idText
-         else None in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
-    let td = assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body) in
+    let td =
+      match is_lowstar_union (Ident.range_of_lid lid) tcenv env1 body with
+      | Some td_union ->
+          let original_t =
+            Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+          in
+          assumed, lident_as_mlsymbol lid, None, ml_bs, metadata,
+            Some (MLTD_Union (td_union, original_t))
+      | None ->
+          let body =
+            Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+          in
+          let mangled_projector =
+               if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+               then let mname = mangle_projector_lid lid in
+                    Some mname.ident.idText
+               else None in
+          assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body)
+    in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
     let env, iface =
         if quals |> BU.for_some (function Assumption | New -> true | _ -> false)

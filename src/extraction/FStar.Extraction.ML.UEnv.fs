@@ -130,6 +130,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
 let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> =
     match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
+    | Some (MLTD_Union (_, t)) -> Some (vars, t)
     | _ -> None
 
 //TODO: this two-level search is pretty inefficient: we should optimize it

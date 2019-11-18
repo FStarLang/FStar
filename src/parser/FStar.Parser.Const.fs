@@ -60,6 +60,7 @@ let spinoff_lid     = pconst "spinoff"
 let inl_lid         = psconst "Inl"
 let inr_lid         = psconst "Inr"
 
+(* Distinguished lowstar abstractions *)
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
 let int16_lid   = p2l ["FStar"; "Int16"; "t"]
@@ -73,6 +74,8 @@ let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
 let swrite_lid = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 let sread_lid = p2l ["FStar"; "ST"; "op_Bang"]
 
+let union_lid = p2l ["LowStar"; "Union"; "union" ]
+
 let max_lid = p2l ["max"]
 
 let real_lid  = p2l ["FStar"; "Real"; "real"]
@@ -82,6 +85,9 @@ let float_lid  = p2l ["FStar"; "Float"; "float"]
 let char_lid  = p2l ["FStar"; "Char"; "char"]
 
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
+
+let union_cons_lid = p2l [ "LowStar"; "Union"; "cons" ]
+let union_proj_lid = p2l [ "LowStar"; "Union"; "proj" ]
 
 let logical_lid = pconst "logical"
 
