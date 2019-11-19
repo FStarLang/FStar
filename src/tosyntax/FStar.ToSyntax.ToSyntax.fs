@@ -2652,7 +2652,8 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
   // new decl.
-  let env0 = env in
+  let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
+                                         * will shadow a previous val *)
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
@@ -2803,9 +2804,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       match (Subst.compress <| ds_lets).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
-          let val_quals =
-               fvs
-               |> List.collect (fun fv -> fst (Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v))
+          let val_quals, val_attrs =
+            List.fold_right (fun fv (qs, ats) ->
+                let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v in
+                (qs'@qs, ats'@ats))
+                fvs
+                ([], [])
           in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
           //   (List.map Print.fv_to_string fvs |> String.concat ", ")
@@ -2835,11 +2839,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
            *)
           let attrs = List.map (desugar_term env) d.attrs in
+          (* GM: Plus the val attrs, concatenated below *)
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs;
+                    sigattrs = val_attrs @ attrs;
                     sigopts = None; } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
