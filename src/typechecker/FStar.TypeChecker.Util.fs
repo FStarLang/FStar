@@ -1401,7 +1401,7 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
     let hd, args = U.head_and_args rt in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Total
+        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
     | _ ->
         None
 
