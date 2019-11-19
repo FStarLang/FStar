@@ -264,9 +264,9 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
     Tac (list exp * vmap a b) =
-  let tmult: term = norm_term [delta] tmult in
-  let tunit: term = norm_term [delta] tunit in
-  let ts   = Tactics.Util.map (norm_term [delta]) ts in
+  let tmult: term = norm_term [delta;zeta;iota] tmult in
+  let tunit: term = norm_term [delta;zeta;iota] tunit in
+  let ts   = Tactics.Util.map (norm_term [delta;zeta;iota]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
   //     ";  t   = " ^ term_to_string t);
