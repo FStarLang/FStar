@@ -89,10 +89,10 @@ val h_forall (#a:Type0) (f: (a -> hprop)) : hprop
 // pts_to and abbreviations
 //////////////////////////////////////////////////////////////////////////////////////////
 let ptr_perm #a (r:ref a) (p:perm) =
-    h_exists (fun v -> pts_to r p v)
+    h_exists (pts_to r p)
 
 let ptr #a (r:ref a) =
-    h_exists (fun p -> ptr_perm r p)
+    h_exists (ptr_perm r)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
