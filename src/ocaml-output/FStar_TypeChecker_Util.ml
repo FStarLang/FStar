@@ -3525,7 +3525,7 @@ let (coerce_views :
                  let uu____9443 =
                    coerce_with env e lc FStar_Syntax_Syntax.t_term_view
                      FStar_Parser_Const.inspect [] []
-                     FStar_Syntax_Syntax.mk_Total
+                     FStar_Syntax_Syntax.mk_Tac
                     in
                  FStar_All.pipe_left
                    (fun _9470  -> FStar_Pervasives_Native.Some _9470)
