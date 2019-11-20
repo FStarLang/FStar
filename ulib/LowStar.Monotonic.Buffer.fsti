@@ -1971,6 +1971,27 @@ val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ p (as_seq h0 b)))
 
+(*
+ * A functoriality lemma
+ *)
+unfold
+let rrel_rel_always_compatible (#a:Type0) (rrel rel:srel a) =
+  forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_subseq_preorder len rrel i j rel
+
+val witnessed_functorial (#a:Type0)
+  (#rrel #rel1 #rel2:srel a)
+  (b1:mbuffer a rrel rel1) (b2:mbuffer a rrel rel2) (i len:U32.t)
+  (s1 s2:spred a)
+: Lemma
+  (requires
+    rrel_rel_always_compatible rrel rel1 /\  //e.g. trivial_preorder, immutable preorder etc.
+    U32.v i + U32.v len <= length b1 /\
+    b2 == mgsub rel2 b1 i len /\  //the underlying allocation unit for b1 and b2 must be the same
+    witnessed b1 s1 /\
+    (s1 Seq.empty ==> s2 Seq.empty) /\
+    (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
+  (ensures witnessed b2 s2)
+
 (* End: API for general witness and recall *)
 
 

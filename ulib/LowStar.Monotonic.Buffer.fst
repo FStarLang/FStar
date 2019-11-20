@@ -1394,6 +1394,13 @@ let recall_p #_ #_ #_ b p =
   | Null -> ()
   | Buffer _ content _ _ -> HST.recall_p content (spred_as_mempred b p)
 
+let witnessed_functorial #a #rrel #rel1 #rel2 b1 b2 i len s1 s2 =
+  match b1, b2 with
+  | Null, Null -> ()
+  | Buffer _ content _ _, _ ->
+    assert (forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_sub_preorder len rrel i j rel1);
+    HST.token_functoriality content (spred_as_mempred b1 s1) (spred_as_mempred b2 s2)
+
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
