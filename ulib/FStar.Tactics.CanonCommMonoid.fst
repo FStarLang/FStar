@@ -399,7 +399,7 @@ let canon_monoid_aux
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";
                             "FStar.List.Tot.Base.compare_of_bool";
-             ]; primops] // TODO: restrict primops to "less than" only
+             ]; zeta; iota; primops] // TODO: restrict primops to "less than" only
                          // - would need this even if unfold_def did it's job?
           // ; dump "done"
         | _ -> fail "Unexpected"
