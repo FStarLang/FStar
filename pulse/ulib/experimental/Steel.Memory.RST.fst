@@ -1,10 +1,7 @@
 module Steel.Memory.RST
 
 open Steel.Memory
-
-let rst_pre (pre:hprop) = interp pre
-let rst_post (a:Type) (post:a -> hprop) = x:a -> m:mem -> interp (post x) (heap_of_mem m)
-
+open Steel.Memory.Tactics
 
 new_effect GST = STATE_h mem
 
@@ -16,12 +13,9 @@ let gst_wp (a:Type) = st_wp_h mem a
 unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
-
-
 effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1))
-
 
 effect Steel
   (a: Type)
@@ -75,3 +69,41 @@ let ptr_read #a r =
  let v = sel r (heap_of_mem h) in
  sel_lemma r 1.0R (heap_of_mem h);
  v
+
+assume
+val frame
+  (outer0:hprop)
+  (#inner0:hprop)
+  (#a:Type)
+  (#inner1:a -> hprop)
+  (delta:hprop{
+    outer0 `equiv` (inner0 `star` delta)})
+  (#pre:mem -> prop)
+  (#post:mem -> a -> mem -> prop)
+  ($f:unit -> Steel a inner0 inner1 pre post)
+  : Steel a outer0 (fun v -> inner1 v `star` delta) pre post
+
+val test1 (#a:Type) (r1 r2:ref a) : Steel a
+  (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
+  (fun v -> pts_to r1 1.0R v `star` ptr_perm r2 1.0R)
+  (fun _ -> True)
+  (fun _ _ _ -> True)
+
+let test1 #a r1 r2 =
+  frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
+        (ptr_perm r2 1.0R)
+        (fun () -> ptr_read r1)
+
+val test2 (#a:Type) (r1 r2:ref a) : Steel a
+  (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
+  (fun v -> ptr_perm r1 1.0R `star` pts_to r2 1.0R v)
+  (fun _ -> True)
+  (fun _ _ _ -> True)
+
+let test2 #a r1 r2 =
+  star_commutative (ptr_perm r1 1.0R) (ptr_perm r2 1.0R);
+  let v = frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
+        (ptr_perm r1 1.0R)
+        (fun () -> ptr_read r2) in
+  star_commutative (ptr_perm r1 1.0R) (pts_to r2 1.0R v);
+  v
