@@ -126,6 +126,18 @@ val intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
 // Actions:
 // sel, split, update
 ////////////////////////////////////////////////////////////////////////////////
+let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hheap fp -> (x:a & hheap (fp' x))
+
+let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
+  forall frame h0.
+    interp (fp `star` frame) h0 ==>
+    (let (| x, h1 |) = f h0 in
+     interp (fp' x `star` frame) h1)
+
+let action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_action fp a fp'{ is_frame_preserving f }
+
 val sel (#a:_) (r:ref a) (m:hheap (ptr r))
   : a
 
@@ -143,11 +155,8 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
             m == join m1 m2})
 
 /// upd requires a full permission
-/// it respects frames
 val upd (#a:_) (r:ref a) (v:a)
-        (frame:hprop)
-        (m:hheap (ptr_perm r 1.0R  `star` frame))
-  : Tot (m:hheap (pts_to r 1.0R v `star` frame))
+  : action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -274,11 +283,23 @@ val refine_star (p0 p1:hprop) (q:fp_prop p0)
 val interp_depends_only (p:hprop)
   : Lemma (interp p `depends_only_on` p)
 
+val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
+                  (#frame:hprop) (q:fp_prop frame)
+   : Lemma (forall (h0:hheap (fp `star` frame)).
+              (affine_star fp frame h0;
+               q h0 ==>
+               (let (| x, h1 |) = act h0 in
+                q h1)))
+
 ////////////////////////////////////////////////////////////////////////////////
 // Allocation
 ////////////////////////////////////////////////////////////////////////////////
 val mem : Type u#1
 val heap_of_mem (x:mem) : heap
+
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
      tmem:mem { interp (pts_to x 1.0R v `star` frame) (heap_of_mem tmem)} )
+
+val alloc_action (#a:_) (v:a)
+  : action emp (ref a) (fun x -> pts_to x 1.0R v)
