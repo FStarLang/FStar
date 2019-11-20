@@ -45,7 +45,7 @@ type rst_wp (a:Type) (r_in:resource) (r_out:a -> resource) =
 /// Representation of RSTATE in terms of STATE
 
 type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out) =
-  unit -> 
+  unit ->
   STATE a (fun p h0 ->
     inv r_in h0 /\ rst_inv r_in h0 /\
     wp
@@ -224,7 +224,7 @@ assume val rst_frame (#a:Type)
 //   (fun (h:rmem r_in_f) ->
 //     pre_f h /\
 //     (forall (x:a) (h1:rmem (r_out_f x)).
-//        post_f h x h1 ==> pre_g x h1))    
+//        post_f h x h1 ==> pre_g x h1))
 //   (fun (h0:rmem r_in_f) (x:b) (h1:rmem (r_out_g x)) ->
 //     exists (y:a) (h:rmem (r_out_f y)).
 //       post_f h0 y h /\ (post_g y) h x h1)
@@ -247,4 +247,3 @@ assume val rst_frame (#a:Type)
 // = f
 
 // let conjunction = unit
-

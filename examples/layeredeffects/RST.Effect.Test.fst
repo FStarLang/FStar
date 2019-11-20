@@ -624,7 +624,7 @@ let focus_and_solve_goal (goal: goal) (t: unit -> Tac 'a) : Tac 'a =
   | [] -> set_goals rest_of_goals; result
   | _ -> fail "Focused goal not solved !"
 
-let solve_forward_inference_goal () : Tac unit =
+let solve_forward_inference_goal (final_check: bool) : Tac unit =
   refine_intro ();
   flip ();
   apply_lemma (`unfold_with_tactic);
@@ -638,7 +638,10 @@ let solve_forward_inference_goal () : Tac unit =
   canon_monoid req rm;
   norm [delta];
   let _ = forall_intro () in
-  canon_monoid req rm
+  if final_check then
+    canon_monoid req rm
+  else
+    apply_lemma (`equal_refl)
 
 let solve_resource_witness_goal () : Tac unit =
   exact (cur_witness ())
@@ -647,10 +650,14 @@ let one_inference_step () : Tac unit =
   let cur_goals = goals () in
   match inspect_goals cur_goals with
   | Some (goal_typ, goal) -> begin
-    if (goal_typ = ForwardInference || goal_typ = FinalCheck) then
+    if goal_typ = ForwardInference then
       focus_and_solve_goal goal (fun _ ->
-       solve_forward_inference_goal ()
+       solve_forward_inference_goal false
       )
+    else if  goal_typ = FinalCheck then
+     focus_and_solve_goal goal (fun _ ->
+      solve_forward_inference_goal true
+     )
     else
      focus_and_solve_goal goal (fun _ ->
        solve_resource_witness_goal ()
