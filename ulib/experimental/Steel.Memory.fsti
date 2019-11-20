@@ -105,15 +105,6 @@ val pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
-val star_commutative (p1 p2:hprop)
-  : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
-val star_associative (p1 p2 p3:hprop)
-  : Lemma ((p1 `star` (p2 `star` p3))
-           `equiv`
-           ((p1 `star` p2) `star` p3))
-val star_congruence (p1 p2 p3 p4:hprop)
-  : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
-          (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
 val intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
   : Lemma
@@ -121,6 +112,18 @@ val intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
       disjoint mp mq)
     (ensures
       interp (p `star` q) (join mp mq))
+
+val star_commutative (p1 p2:hprop)
+  : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
+
+val star_associative (p1 p2 p3:hprop)
+  : Lemma ((p1 `star` (p2 `star` p3))
+           `equiv`
+           ((p1 `star` p2) `star` p3))
+
+val star_congruence (p1 p2 p3 p4:hprop)
+  : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
+          (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
