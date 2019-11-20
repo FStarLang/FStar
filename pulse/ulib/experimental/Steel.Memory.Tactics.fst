@@ -37,4 +37,14 @@ inline_for_extraction noextract let rm : cm M.hprop req =
      M.star_congruence
 
 inline_for_extraction noextract let canon () : Tac unit =
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
+
+let can_be_split_into (outer inner delta:M.hprop) =
+  outer `M.equiv` (inner `M.star` delta)
+
+inline_for_extraction noextract let resolve_frame () : Tac unit =
+  dump "enter resolve_frame";
+  refine_intro();
+  flip();
+  dump "pre canon";
+  canon()
