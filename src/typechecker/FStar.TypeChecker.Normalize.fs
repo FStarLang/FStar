@@ -1046,7 +1046,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | None -> rebuild cfg env stack t
             end
 
-          | Tm_quoted _ ->
+          | Tm_quoted (qt, qi) ->
+            let qi = S.on_antiquoted (norm cfg env []) qi in
+            let t = mk (Tm_quoted (qt, qi)) t.pos in
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app(hd, args)
