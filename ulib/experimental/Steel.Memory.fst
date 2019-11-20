@@ -330,13 +330,51 @@ let split_mem (p1 p2:hprop) (m:hheap (p1 `Star` p2))
             m == join m1 m2})
   = axiom_ghost_to_tot (split_mem_ghost p1 p2) m
 
-let upd #a (r:ref a) (v:a)
-           (frame:hprop) (m:hheap (ptr_perm r 1.0R  `Star` frame))
-  : Tot (m:hheap (Pts_to r 1.0R v `Star` frame))
-  = let m0, m1 = split_mem (ptr_perm r 1.0R) frame m in
-    let m0' = update_addr m0 r (Ref a 1.0R v) in
-    let m' = join m0' m1 in
-    m'
+let upd' #a (r:ref a) (v:a) (m:hheap (ptr_perm r 1.0R))
+  : Tot (m:hheap (Pts_to r 1.0R v))
+  = update_addr m r (Ref a 1.0R v)
+
+let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
+  : Lemma
+    (requires
+      interp (ptr_perm r 1.0R `star` frame) h)
+    (ensures
+      interp (pts_to r 1.0R v `star` frame) (upd' r v h))
+  = let aux (h0 h1:heap)
+     : Lemma
+       (requires
+         disjoint h0 h1 /\
+         h == join h0 h1 /\
+         interp (ptr_perm r 1.0R) h0 /\
+         interp frame h1)
+       (ensures (
+         let h' = upd' r v h in
+         let h0' = update_addr h0 r (Ref a 1.0R v) in
+         disjoint h0' h1 /\
+         interp (pts_to r 1.0R v) h0' /\
+         interp frame h1 /\
+         h' == join h0' h1))
+       [SMTPat (disjoint h0 h1)]
+     = let h' = upd' r v h in
+       let h0' = update_addr h0 r (Ref a 1.0R v) in
+       mem_equiv_eq h' (join h0' h1)
+   in
+   ()
+
+#push-options "--warn_error -271"
+let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
+  : Lemma (is_frame_preserving (ptr_perm r 1.0R) (pts_to r 1.0R v) (upd' r v))
+  = let aux (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
+      : Lemma
+        (requires
+          interp (ptr_perm r 1.0R `star` frame) h)
+        (ensures
+          interp (pts_to r 1.0R v `star` frame) (upd' r v h))
+        [SMTPat ()]
+      = upd_lemma' r v h frame
+   in
+   ()
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -564,19 +602,74 @@ let refine_star (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (equiv (Refine (p0 `star` p1) q) (Refine p0 q `star` p1))
   = ()
 
+let refine_star_r (p0 p1:hprop) (q:fp_prop p1)
+  : Lemma (equiv (Refine (p0 `star` p1) q) (p0 `star` Refine p1 q))
+  = ()
+
 let interp_depends_only (p:hprop)
   : Lemma (interp p `depends_only_on` p)
   = ()
 
+let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
+  : Lemma (requires
+            interp (Refine p q) h)
+          (ensures
+            interp p h /\ q h)
+  = refine_equiv p q h
+
+#push-options "--z3rlimit_factor 4 --query_stats"
+let frame_fp_prop' (fp fp' frame:hprop)
+                   (q:fp_prop frame)
+                   (a:action fp fp')
+                   (h0:hheap (fp `star` frame))
+   : Lemma (requires q h0)
+           (ensures q (a h0))
+   = assert (interp (Refine (fp `star` frame) q) h0);
+     assert (interp (fp `star` (Refine frame q)) h0);
+     let h1 = a h0 in
+     assert (interp (fp' `star` (Refine frame q)) h1);
+     refine_star_r fp' frame q;
+     assert (interp (Refine (fp' `star` frame) q) h1);
+     assert (q h1)
+
+let frame_fp_prop (#fp fp':hprop) (a:action fp fp')
+                  (#frame:hprop) (q:fp_prop frame)
+   : Lemma (forall (h0:hheap (fp `star` frame)).
+              q h0 ==> q (a h0))
+   = let aux (h0:hheap (fp `star` frame))
+       : Lemma
+         (requires q h0)
+         (ensures q (a h0))
+         [SMTPat (a h0)]
+       = frame_fp_prop' fp fp' frame q a h0
+     in
+     ()
+#pop-options
+
 ////////////////////////////////////////////////////////////////////////////////
-// allocation
+// allocation and locks
 ////////////////////////////////////////////////////////////////////////////////
+noeq
+type lock_state =
+  | Available : hprop -> lock_state
+  | Locked    : hprop -> lock_state
+
+let lock_store = list lock_state
+
+let rec lock_store_invariant (l:lock_store) : hprop =
+  match l with
+  | [] -> emp
+  | Available h :: tl -> h `star` lock_store_invariant tl
+  | _ :: tl -> lock_store_invariant tl
+
 noeq
 type mem = {
   ctr: nat;
   heap: heap;
+  locks: lock_store;
   properties: squash (
-    forall i. i >= ctr ==> heap i == None
+    (forall i. i >= ctr ==> heap i == None) /\
+    interp (lock_store_invariant locks) heap
   )
 }
 
@@ -598,6 +691,32 @@ let alloc #a v frame m
     let t = {
       ctr = x + 1;
       heap = mem';
-      properties = ()
+      locks = m.locks;
+      properties = ();
+    } in
+    (| x, t |)
+
+let alloc' (#a:_) (v:a) (m:mem)
+  : (x:ref a &
+     m:mem { interp (pts_to x 1.0R v) (heap_of_mem m)} )
+  = let x : ref a = m.ctr in
+    let cell = Ref a 1.0R v in
+    let mem : heap = F.on _ (fun i -> if i = x then Some cell else None) in
+    assert (disjoint mem m.heap);
+    assert (mem `contains_addr` x);
+    assert (select_addr mem x == cell);
+    let mem' = join mem m.heap in
+    intro_pts_to x 1.0R v mem;
+    assert (interp (pts_to x 1.0R v) mem);
+    let frame = (lock_store_invariant m.locks) in
+    assert (interp frame m.heap);
+    intro_star (pts_to x 1.0R v) frame mem m.heap;
+    assert (interp (pts_to x 1.0R v `star` frame) mem');
+    assert (interp (lock_store_invariant m.locks) mem');
+    let t = {
+      ctr = x + 1;
+      heap = mem';
+      locks = m.locks;
+      properties = ();
     } in
     (| x, t |)
