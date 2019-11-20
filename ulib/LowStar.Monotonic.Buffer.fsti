@@ -1992,6 +1992,23 @@ val witnessed_functorial (#a:Type0)
     (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
   (ensures witnessed b2 s2)
 
+(*
+ * A stateful version that relaxes the rrel and rel compatibility
+ *   but requires liveness of b1
+ *)
+val witnessed_functorial_st (#a:Type0)
+  (#rrel #rel1 #rel2:srel a)
+  (b1:mbuffer a rrel rel1) (b2:mbuffer a rrel rel2) (i len:U32.t)
+  (s1 s2:spred a)
+: HST.Stack unit
+  (requires fun h ->
+    live h b1 /\
+    U32.v i + U32.v len <= length b1 /\
+    b2 == mgsub rel2 b1 i len /\
+    witnessed b1 s1 /\
+    (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
+  (ensures fun h0 _ h1 -> h0 == h1 /\ witnessed b2 s2)
+
 (* End: API for general witness and recall *)
 
 
