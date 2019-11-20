@@ -564,6 +564,10 @@ let refine_star (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (equiv (Refine (p0 `star` p1) q) (Refine p0 q `star` p1))
   = ()
 
+let interp_depends_only (p:hprop)
+  : Lemma (interp p `depends_only_on` p)
+  = ()
+
 ////////////////////////////////////////////////////////////////////////////////
 // allocation
 ////////////////////////////////////////////////////////////////////////////////

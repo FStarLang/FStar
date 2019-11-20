@@ -271,6 +271,9 @@ val refine_star (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (weaken_depends_only_on q p0 p1;
            equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
 
+val interp_depends_only (p:hprop)
+  : Lemma (interp p `depends_only_on` p)
+
 ////////////////////////////////////////////////////////////////////////////////
 // Allocation
 ////////////////////////////////////////////////////////////////////////////////
