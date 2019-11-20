@@ -30,6 +30,20 @@ module HST = FStar.HyperStack.ST
 (* Shorthand for preorder over sequences *)
 unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 
+(*
+ * A compatibility relation between preorders of a sequence and its subsequence
+ *)
+[@"opaque_to_smt"]
+unfold
+let compatible_subseq_preorder (#a:Type0)
+  (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
+  = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}  //for any two sequences s1 and s2
+                         (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>  //of length len, and related by rel
+		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //their slices [i, j) are related by sub_rel
+    (forall (s s2:Seq.seq a). {:pattern (sub_rel (Seq.slice s i j) s2); (rel s (Seq.replace_subseq s i j s2))}  //for any two sequences s and s2
+                        (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>  //such that s has length len and s2 has length (j - i), and the slice [i, j) of s is related to s2 by sub_rel
+  		        (rel s (Seq.replace_subseq s i j s2)))  //if we replace the slice [i, j) in s by s2, then s and the resulting buffer are related by rel
+
 
 /// Low* buffers
 /// ==============
@@ -256,17 +270,8 @@ val mbuffer_injectivity_in_first_preorder (_:unit)
 unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = (forall (s1 s2:Seq.seq a).{:pattern (rel s1 s2);
-                                   (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
-			                    (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))}  //for any two sequences s1 and s2
-                         (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>  //that have lengths same as b, and are related by the preorder rel
-		         (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
-			          (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //their slices [i, i + len) should be related by the preorder sub_rel,
-    (forall (s s2:Seq.seq a).{:pattern (sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2);
-                                  (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2))} //for any two sequences s and s2
-                        (Seq.length s == length b /\ Seq.length s2 == U32.v len /\  //such that s has length same as b and s2 has length len
-                         sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>  //and the slice [i, i + len) of s is related to s2 by sub_rel,
-  		        (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //if we replace the slice [i, i + len) in s by s2, then s and the resulting buffer should be related by rel
+  = compatible_subseq_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
+
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from

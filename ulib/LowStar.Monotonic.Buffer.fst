@@ -33,12 +33,7 @@ private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lse
  *)
 let compatible_sub_preorder (#a:Type0)
   (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
-  = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}
-                         (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\
-    (forall (s s2:Seq.seq a). {:pattern (sub_rel (Seq.slice s i j) s2); (rel s (Seq.replace_subseq s i j s2))}
-                        (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
-  		        (rel s (Seq.replace_subseq s i j s2)))
+  = compatible_subseq_preorder len rel i j sub_rel
 
 (*
  * Reflexivity of the compatibility relation
