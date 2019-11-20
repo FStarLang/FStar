@@ -300,6 +300,3 @@ val heap_of_mem (x:mem) : heap
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
      tmem:mem { interp (pts_to x 1.0R v `star` frame) (heap_of_mem tmem)} )
-
-val alloc_action (#a:_) (v:a)
-  : action emp (ref a) (fun x -> pts_to x 1.0R v)
