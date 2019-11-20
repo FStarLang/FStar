@@ -330,16 +330,17 @@ let split_mem (p1 p2:hprop) (m:hheap (p1 `Star` p2))
             m == join m1 m2})
   = axiom_ghost_to_tot (split_mem_ghost p1 p2) m
 
-let upd' #a (r:ref a) (v:a) (m:hheap (ptr_perm r 1.0R))
-  : Tot (m:hheap (Pts_to r 1.0R v))
-  = update_addr m r (Ref a 1.0R v)
+let upd' #a (r:ref a) (v:a)
+  : pre_action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
+  = fun h -> (| (), update_addr h r (Ref a 1.0R v) |)
 
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
     (requires
       interp (ptr_perm r 1.0R `star` frame) h)
-    (ensures
-      interp (pts_to r 1.0R v `star` frame) (upd' r v h))
+    (ensures (
+      let (| x, h1 |) = upd' r v h in
+      interp (pts_to r 1.0R v `star` frame) h1))
   = let aux (h0 h1:heap)
      : Lemma
        (requires
@@ -348,14 +349,14 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
          interp (ptr_perm r 1.0R) h0 /\
          interp frame h1)
        (ensures (
-         let h' = upd' r v h in
+         let (| _, h' |) = upd' r v h in
          let h0' = update_addr h0 r (Ref a 1.0R v) in
          disjoint h0' h1 /\
          interp (pts_to r 1.0R v) h0' /\
          interp frame h1 /\
          h' == join h0' h1))
        [SMTPat (disjoint h0 h1)]
-     = let h' = upd' r v h in
+     = let (| _, h'|) = upd' r v h in
        let h0' = update_addr h0 r (Ref a 1.0R v) in
        mem_equiv_eq h' (join h0' h1)
    in
@@ -363,18 +364,24 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
 
 #push-options "--warn_error -271"
 let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
-  : Lemma (is_frame_preserving (ptr_perm r 1.0R) (pts_to r 1.0R v) (upd' r v))
+  : Lemma (is_frame_preserving (upd' r v))
   = let aux (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
       : Lemma
         (requires
           interp (ptr_perm r 1.0R `star` frame) h)
-        (ensures
-          interp (pts_to r 1.0R v `star` frame) (upd' r v h))
+        (ensures (
+          let (| _, h1 |) = (upd' r v h) in
+          interp (pts_to r 1.0R v `star` frame) h1))
         [SMTPat ()]
       = upd_lemma' r v h frame
    in
    ()
 #pop-options
+
+let upd #a (r:ref a) (v:a)
+  : action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
+  = upd'_is_frame_preserving r v;
+    upd' r v
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -618,30 +625,32 @@ let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
   = refine_equiv p q h
 
 #push-options "--z3rlimit_factor 4 --query_stats"
-let frame_fp_prop' (fp fp' frame:hprop)
+let frame_fp_prop' #fp #a #fp' frame
                    (q:fp_prop frame)
-                   (a:action fp fp')
+                   (act:action fp a fp')
                    (h0:hheap (fp `star` frame))
    : Lemma (requires q h0)
-           (ensures q (a h0))
+           (ensures (
+             let (| x, h1 |) = act h0 in
+             q h1))
    = assert (interp (Refine (fp `star` frame) q) h0);
      assert (interp (fp `star` (Refine frame q)) h0);
-     let h1 = a h0 in
-     assert (interp (fp' `star` (Refine frame q)) h1);
-     refine_star_r fp' frame q;
-     assert (interp (Refine (fp' `star` frame) q) h1);
+     let (| x, h1 |) = act h0 in
+     assert (interp (fp' x `star` (Refine frame q)) h1);
+     refine_star_r (fp' x) frame q;
+     assert (interp (Refine (fp' x `star` frame) q) h1);
      assert (q h1)
 
-let frame_fp_prop (#fp fp':hprop) (a:action fp fp')
+let frame_fp_prop #fp #a #fp' (act:action fp a fp')
                   (#frame:hprop) (q:fp_prop frame)
-   : Lemma (forall (h0:hheap (fp `star` frame)).
-              q h0 ==> q (a h0))
    = let aux (h0:hheap (fp `star` frame))
        : Lemma
          (requires q h0)
-         (ensures q (a h0))
-         [SMTPat (a h0)]
-       = frame_fp_prop' fp fp' frame q a h0
+         (ensures
+           (let (|x, h1|) = act h0 in
+            q h1))
+         [SMTPat (act h0)]
+       = frame_fp_prop' frame q act h0
      in
      ()
 #pop-options
@@ -696,12 +705,40 @@ let alloc #a v frame m
     } in
     (| x, t |)
 
-let alloc' (#a:_) (v:a) (m:mem)
-  : (x:ref a &
-     m:mem { interp (pts_to x 1.0R v) (heap_of_mem m)} )
-  = let x : ref a = m.ctr in
+let mem_invariant (m:mem) : hprop = lock_store_invariant m.locks
+
+let hmem (fp:hprop) = m:mem{interp (fp `star` mem_invariant m) (heap_of_mem m)}
+
+let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hmem fp -> (x:a & hmem (fp' x))
+
+let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
+  forall frame (m0:hmem (fp `star` frame)).
+    (affine_star fp frame (heap_of_mem m0);
+     let (| x, m1 |) = f m0 in
+     interp (fp' x `star` frame `star` mem_invariant m1) (heap_of_mem m1))
+
+let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_m_action fp a fp'{ is_m_frame_preserving f }
+
+val alloc_action (#a:_) (v:a)
+  : m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+
+#push-options "--z3rlimit_factor 4 --query_stats"
+let singleton_heap #a (x:ref a) (c:cell) : heap =
+    F.on _ (fun i -> if i = x then Some c else None)
+
+let singleton_pts_to #a (x:ref a) (c:cell)
+  : Lemma (requires (Ref?.a c == a))
+          (ensures (interp (pts_to x (Ref?.perm c) (Ref?.v c)) (singleton_heap x c)))
+  = ()
+
+let alloc_pre_m_action (#a:_) (v:a)
+  : pre_m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  = fun m ->
+    let x : ref a = m.ctr in
     let cell = Ref a 1.0R v in
-    let mem : heap = F.on _ (fun i -> if i = x then Some cell else None) in
+    let mem : heap = singleton_heap x cell in
     assert (disjoint mem m.heap);
     assert (mem `contains_addr` x);
     assert (select_addr mem x == cell);
@@ -712,7 +749,6 @@ let alloc' (#a:_) (v:a) (m:mem)
     assert (interp frame m.heap);
     intro_star (pts_to x 1.0R v) frame mem m.heap;
     assert (interp (pts_to x 1.0R v `star` frame) mem');
-    assert (interp (lock_store_invariant m.locks) mem');
     let t = {
       ctr = x + 1;
       heap = mem';
@@ -720,3 +756,77 @@ let alloc' (#a:_) (v:a) (m:mem)
       properties = ();
     } in
     (| x, t |)
+#pop-options
+
+#push-options "--z3rlimit_factor 4 --query_stats"
+
+let alloc_pre_m_action' (#a:_) (v:a)
+  : pre_m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  = fun m ->
+    let x : ref a = m.ctr in
+    let cell = Ref a 1.0R v in
+    let mem : heap = singleton_heap x cell in
+    let upd_mem = update_addr m.heap x cell in
+    assert (disjoint mem m.heap);
+    assert (mem `contains_addr` x);
+    assert (select_addr mem x == cell);
+    let mem' = join mem m.heap in
+    assert (mem_equiv mem' upd_mem);
+    intro_pts_to x 1.0R v mem;
+    assert (interp (pts_to x 1.0R v) mem);
+    let frame = (lock_store_invariant m.locks) in
+    assert (interp frame m.heap);
+    intro_star (pts_to x 1.0R v) frame mem m.heap;
+    assert (interp (pts_to x 1.0R v `star` frame) mem');
+    let t = {
+      ctr = x + 1;
+      heap = upd_mem;
+      locks = m.locks;
+      properties = ();
+    } in
+    (| x, t |)
+#pop-options
+
+#push-options "--z3rlimit_factor 4 --query_stats"
+let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
+  : Lemma
+    (requires
+      interp (frame `star` mem_invariant m) (heap_of_mem m))
+    (ensures (
+      let (| x, m1 |) = alloc_pre_m_action v m in
+      interp (pts_to x 1.0R v `star` frame `star` mem_invariant m) (heap_of_mem m1)))
+  = let (| x, m1 |) = alloc_pre_m_action v m in
+    assert (x == m.ctr);
+    assert (m1.ctr = m.ctr + 1);
+    assert (m1.locks == m.locks);
+    let h = heap_of_mem m in
+    let h1 = heap_of_mem m1 in
+    let cell = (Ref a 1.0R v) in
+    assert (h1 == join (singleton_heap x cell) h);
+    intro_pts_to x 1.0R v (singleton_heap x cell);
+    singleton_pts_to x cell;
+    assert (interp (pts_to x 1.0R v) (singleton_heap x cell));
+    assert (interp (frame `star` mem_invariant m) h);
+    intro_star (pts_to x 1.0R v) (frame `star` mem_invariant m) (singleton_heap x cell) h;
+    assert (interp (pts_to x 1.0R v `star` (frame `star` mem_invariant m)) h1);
+    star_associative (pts_to x 1.0R v) frame (mem_invariant m);
+    assert (interp (pts_to x 1.0R v `star` frame `star` mem_invariant m) h1)
+
+#push-options "--warn_error -271"
+let alloc_is_frame_preserving (#a:_) (v:a)
+  : Lemma (is_m_frame_preserving (alloc_pre_m_action v))
+  = let aux (frame:hprop) (m:hmem (emp `star` frame))
+      : Lemma
+          (ensures (
+            let (| x, m1 |) = alloc_pre_m_action v m in
+            interp (pts_to x 1.0R v `star` frame `star` mem_invariant m) (heap_of_mem m1)))
+          [SMTPat ()]
+      = alloc_is_frame_preserving' v m frame
+    in
+    ()
+#pop-options
+
+let alloc_m_action (#a:_) (v:a)
+  : m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  = alloc_is_frame_preserving v;
+    alloc_pre_m_action v
