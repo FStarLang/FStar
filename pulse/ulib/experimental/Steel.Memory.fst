@@ -144,8 +144,8 @@ let join_associative2 (m0 m1 m2:heap)
     [SMTPat (join (join m0 m1) m2)]
   = ()
 
-let mem_prop_is_affine (p:mem -> prop) = forall m0 m1. p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
-let a_m_prop = p:(mem -> prop) { mem_prop_is_affine p }
+let heap_prop_is_affine (p:heap -> prop) = forall m0 m1. p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
+let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +155,7 @@ noeq
 type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to : #a:Type0 -> r:ref a -> perm:perm -> v:a -> hprop
-  | Refine : hprop -> a_m_prop -> hprop
+  | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
   | Star : hprop -> hprop -> hprop
@@ -213,14 +213,48 @@ let wand = Wand
 let h_exists = Ex
 let h_forall = All
 
+////////////////////////////////////////////////////////////////////////////////
+//pts_to
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_pts_to (#a:_) (x:ref a) (p:perm) (v:a) (m:heap)
+  : Lemma
+    (requires
+       m `contains_addr` x /\
+       (let Ref a' perm' v' = select_addr m x in
+        a == a' /\
+        v == v' /\
+        p <=. perm'))
+     (ensures
+       interp (pts_to x p v) m)
+  = ()
+
+
+let pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
+  = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// star
+////////////////////////////////////////////////////////////////////////////////
 let star_commutative (p1 p2:hprop) = ()
 
-#push-options "--query_stats --z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2"
+#push-options "--z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2"
 let star_associative (p1 p2 p3:hprop) = ()
 #pop-options
 
 let star_congruence (p1 p2 p3 p4:hprop) = ()
 
+let intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
+  : Lemma
+    (requires
+      disjoint mp mq)
+    (ensures
+      interp (p `star` q) (join mp mq))
+  = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// sel
+////////////////////////////////////////////////////////////////////////////////
 let sel #a (r:ref a) (m:hheap (ptr r))
   : a
   = let Ref _ _ v = select_addr m r in
@@ -301,7 +335,8 @@ let upd #a (r:ref a) (v:a)
   : Tot (m:hheap (Pts_to r 1.0R v `Star` frame))
   = let m0, m1 = split_mem (ptr_perm r 1.0R) frame m in
     let m0' = update_addr m0 r (Ref a 1.0R v) in
-    join m0' m1
+    let m' = join m0' m1 in
+    m'
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -402,28 +437,10 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let intro_pts_to (#a:_) (x:ref a) (p:perm) (v:a) (m:heap)
-  : Lemma
-    (requires
-       m `contains_addr` x /\
-       (let Ref a' perm' v' = select_addr m x in
-        a == a' /\
-        v == v' /\
-        p <=. perm'))
-     (ensures
-       interp (pts_to x p v) m)
-  = ()
-
-let intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
-  : Lemma
-    (requires
-      disjoint mp mq)
-    (ensures
-      interp (p `star` q) (join mp mq))
-  = ()
 
 #push-options "--z3rlimit_factor 6 --max_fuel 1 --max_ifuel 2  --initial_fuel 2 --initial_ifuel 2"
-let rec affine_star_aux (p:hprop) (m:mem) (m':mem { disjoint m m' })
+#push-options "--warn_error -271" //local patterns miss variables; ok
+let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
     [SMTPat (interp p (join m m'))]
@@ -492,6 +509,7 @@ let rec affine_star_aux (p:hprop) (m:mem) (m':mem { disjoint m m' })
       in
       ()
 #pop-options
+#pop-options
 
 let affine_star (p q:hprop) (m:heap)
   : Lemma
@@ -529,6 +547,25 @@ let emp_unit (p:hprop)
     in
     ()
 
+////////////////////////////////////////////////////////////////////////////////
+// Frameable heap predicates
+////////////////////////////////////////////////////////////////////////////////
+let weaken_depends_only_on (q:heap -> prop) (fp fp': hprop)
+  : Lemma (depends_only_on q fp ==> depends_only_on q (fp `star` fp'))
+  = ()
+
+let refine (p:hprop) (q:fp_prop p) : hprop = Refine p q
+
+let refine_equiv (p:hprop) (q:fp_prop p) (h:heap)
+  : Lemma (interp p h /\ q h <==> interp (Refine p q) h)
+  = ()
+
+let refine_star (p0 p1:hprop) (q:fp_prop p0)
+  : Lemma (equiv (Refine (p0 `star` p1) q) (Refine p0 q `star` p1))
+  = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// allocation
 ////////////////////////////////////////////////////////////////////////////////
 noeq
 type mem = {
