@@ -248,7 +248,7 @@ val elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 val affine_star (p q:hprop) (m:heap)
   : Lemma
-    (ensures (interp (p `star` q) m ==> interp p m))
+    (ensures (interp (p `star` q) m ==> interp p m /\ interp q m))
 
 ////////////////////////////////////////////////////////////////////////////////
 // emp
