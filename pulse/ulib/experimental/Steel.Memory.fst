@@ -236,13 +236,6 @@ let pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
-let star_commutative (p1 p2:hprop) = ()
-
-#push-options "--z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --max_ifuel 2 --initial_ifuel 2"
-let star_associative (p1 p2 p3:hprop) = ()
-#pop-options
-
-let star_congruence (p1 p2 p3 p4:hprop) = ()
 
 let intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
   : Lemma
@@ -252,21 +245,12 @@ let intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
       interp (p `star` q) (join mp mq))
   = ()
 
-////////////////////////////////////////////////////////////////////////////////
-// sel
-////////////////////////////////////////////////////////////////////////////////
-let sel #a (r:ref a) (m:hheap (ptr r))
-  : a
-  = let Ref _ _ v = select_addr m r in
-    v
-
-let sel_lemma #a (r:ref a) (p:perm) (m:hheap (ptr_perm r p))
-  = ()
 
 /// The main caveat of this model is that because we're working
 /// with proof-irrelevant propositions (squashed proofs), I end up
 /// using the indefinite_description axiom to extract witnesses
 /// of disjoint memories from squashed proofs of `star`
+
 let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
   : GTot (ms:(hheap p1 & hheap p2){
             let m1, m2 = ms in
@@ -308,6 +292,47 @@ let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
            interp p2 m2)
     in
     (m1, m2)
+
+(* Properties of star *)
+
+let star_commutative (p1 p2:hprop) = ()
+
+let star_associative (p1 p2 p3:hprop)
+= let ltor (m:heap)
+  : Lemma
+    (requires interp (p1 `star` (p2 `star` p3)) m)
+    (ensures interp ((p1 `star` p2) `star` p3) m)
+    [SMTPat (interp (p1 `star` (p2 `star` p3)) m)]
+  = let (m1, m2) = split_mem_ghost p1 (p2 `star` p3) m in
+    let (m2, m3) = split_mem_ghost p2 p3 m2 in
+    intro_star p1 p2 m1 m2;
+    intro_star (p1 `star` p2) p3 (m1 `join` m2) m3 in
+
+  let rtol (p1 p2 p3:hprop) (m:heap)
+  : Lemma
+    (requires interp ((p1 `star` p2) `star` p3) m)
+    (ensures interp (p1 `star` (p2 `star` p3)) m)
+    [SMTPat (interp (p1 `star` (p2 `star` p3)) m)]
+  = let (m1, m3) = split_mem_ghost (p1 `star` p2) p3 m in
+    let (m1, m2) = split_mem_ghost p1 p2 m1 in
+    intro_star p2 p3 m2 m3;
+    intro_star p1 (p2 `star` p3) m1 (m2 `join` m3) in
+  ()
+
+let star_congruence (p1 p2 p3 p4:hprop) = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// sel
+////////////////////////////////////////////////////////////////////////////////
+let sel #a (r:ref a) (m:hheap (ptr r))
+  : a
+  = let Ref _ _ v = select_addr m r in
+    v
+
+let sel_lemma #a (r:ref a) (p:perm) (m:hheap (ptr_perm r p))
+  = ()
+
 
 /// F*'s indefinite_description is only available in the Ghost effect
 /// That's to prevent us from mistakenly extracting code that uses the
@@ -597,3 +622,20 @@ let alloc #a v frame m
       properties = ()
     } in
     (| x, t |)
+
+
+(*
+ * Properties of equiv required by the semantics
+ *)
+
+let equiv_symmetric (p1 p2:hprop)
+: squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+= ()
+
+(* star is already shown to be commutative and associative *)
+
+(* emp is unit is already proven *)
+
+let equiv_extensional_on_star (p1 p2 p3:hprop)
+: squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+= ()
