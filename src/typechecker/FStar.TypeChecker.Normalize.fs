@@ -722,7 +722,12 @@ let tr_norm_step = function
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
-    List.concatMap tr_norm_step s
+    let s = List.concatMap tr_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
@@ -741,15 +746,10 @@ let get_norm_request cfg (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s ->
-        let s = Beta::s in
-        let s = add_exclude s Zeta in
-        let s = add_exclude s Iota in
-        Some (inherited_steps @ s, tm)
+      | Some s -> Some (inherited_steps @ s, tm)
       end
     | _ ->
       None

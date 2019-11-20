@@ -260,9 +260,9 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
 
 let reification (#a:Type) (m:cm a) (ts:list term) (am:amap a) (t:term) :
     Tac (exp * list term * amap a) =
-  let mult = norm_term [delta] (quote (CM?.mult m)) in
-  let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let t    = norm_term [delta] t in
+  let mult = norm_term [delta;zeta;iota] (quote (CM?.mult m)) in
+  let unit = norm_term [delta;zeta;iota] (quote (CM?.unit m)) in
+  let t    = norm_term [delta;zeta;iota] t in
   reification_aux ts am mult unit t
 
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =
