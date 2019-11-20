@@ -1396,7 +1396,7 @@ let recall_p #_ #_ #_ b p =
 
 let witnessed_functorial #a #rrel #rel1 #rel2 b1 b2 i len s1 s2 =
   match b1, b2 with
-  | Null, Null -> ()
+  | Null, Null -> assert (as_seq HS.empty_mem b1 == Seq.empty)
   | Buffer _ content _ _, _ ->
     assert (forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_sub_preorder len rrel i j rel1);
     HST.token_functoriality content (spred_as_mempred b1 s1) (spred_as_mempred b2 s2)

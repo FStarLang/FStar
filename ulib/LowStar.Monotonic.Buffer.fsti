@@ -1988,7 +1988,6 @@ val witnessed_functorial (#a:Type0)
     U32.v i + U32.v len <= length b1 /\
     b2 == mgsub rel2 b1 i len /\  //the underlying allocation unit for b1 and b2 must be the same
     witnessed b1 s1 /\
-    (s1 Seq.empty ==> s2 Seq.empty) /\
     (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
   (ensures witnessed b2 s2)
 

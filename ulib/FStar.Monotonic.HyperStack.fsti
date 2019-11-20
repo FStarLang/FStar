@@ -166,8 +166,8 @@ val lemma_rid_ctr_pred (_:unit)
 (****** Operations on mem ******)
 
 
-let empty_mem (m:hmap) :mem =
-  let empty_map = Map.restrict (Set.empty) m in
+let empty_mem : mem =
+  let empty_map = Map.restrict Set.empty (Map.const Heap.emp) in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
