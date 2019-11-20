@@ -94,6 +94,14 @@ let ptr_perm #a (r:ref a) (p:perm) =
 let ptr #a (r:ref a) =
     h_exists (fun p -> ptr_perm r p)
 
+val pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
+  : Lemma
+    (requires
+      interp (pts_to x p v0) m /\
+      interp (pts_to x p v1) m)
+    (ensures
+      v0 == v1)
+
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +114,13 @@ val star_associative (p1 p2 p3:hprop)
 val star_congruence (p1 p2 p3 p4:hprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
+
+val intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
+  : Lemma
+    (requires
+      disjoint mp mq)
+    (ensures
+      interp (p `star` q) (join mp mq))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
@@ -222,13 +237,6 @@ val elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 // star
 ////////////////////////////////////////////////////////////////////////////////
 
-val intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
-  : Lemma
-    (requires
-      disjoint mp mq)
-    (ensures
-      interp (p `star` q) (join mp mq))
-
 val affine_star (p q:hprop) (m:heap)
   : Lemma
     (ensures (interp (p `star` q) m ==> interp p m))
@@ -241,6 +249,27 @@ val intro_emp (m:heap)
 
 val emp_unit (p:hprop)
   : Lemma ((p `star` emp) `equiv` p)
+
+////////////////////////////////////////////////////////////////////////////////
+// refinement
+////////////////////////////////////////////////////////////////////////////////
+let depends_only_on (q:heap -> prop) (fp: hprop) =
+  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
+  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+
+let fp_prop fp = p:(heap -> prop){p `depends_only_on` fp}
+
+val weaken_depends_only_on (q:heap -> prop) (fp fp': hprop)
+  : Lemma (depends_only_on q fp ==> depends_only_on q (fp `star` fp'))
+
+val refine (p:hprop) (q:fp_prop p) : hprop
+
+val refine_equiv (p:hprop) (q:fp_prop p) (h:heap)
+  : Lemma (interp p h /\ q h <==> interp (refine p q) h)
+
+val refine_star (p0 p1:hprop) (q:fp_prop p0)
+  : Lemma (weaken_depends_only_on q p0 p1;
+           equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Allocation
