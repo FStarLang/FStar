@@ -303,7 +303,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
   | Some v -> (Atom v, ts, am)
   | None ->
     let vfresh = length ts in
-    let t = norm_term [delta] t in
+    let t = norm_term [] t in
     (Atom vfresh, ts @ [t], update vfresh t am)
 
 // This expects that mult, unit, and t have already been normalized
@@ -326,7 +326,7 @@ let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
     Tac (exp * list term * amap term) =
   let mult = norm_term [delta] (`CM?.mult (`#m)) in
   let unit = norm_term [delta] (`CM?.unit (`#m)) in
-  let t    = norm_term [delta] t in
+  let t    = norm_term [] t in
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =

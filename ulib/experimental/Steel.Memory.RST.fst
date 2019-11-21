@@ -104,8 +104,6 @@ val test2 (#a:Type) (r1 r2:ref a) : Steel a
   (fun _ _ _ -> True)
 
 let test2 #a r1 r2 =
-//  star_commutative (ptr_perm r1 1.0R) (ptr_perm r2 1.0R);
   let v = frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-//        (ptr_perm r1 1.0R)
         (fun () -> ptr_read r2) in
   v
