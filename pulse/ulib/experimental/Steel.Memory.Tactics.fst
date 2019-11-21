@@ -40,11 +40,18 @@ inline_for_extraction noextract let canon () : Tac unit =
   canon_monoid (`req) (`rm)
 
 let can_be_split_into (outer inner delta:M.hprop) =
-  outer `M.equiv` (inner `M.star` delta)
+  (inner `M.star` delta) `M.equiv` outer
 
 inline_for_extraction noextract let resolve_frame () : Tac unit =
-  dump "enter resolve_frame";
   refine_intro();
   flip();
-  dump "pre canon";
+  dump "trying to do";
+  apply_lemma (`unfold_with_tactic);
+  norm [delta_only [`%can_be_split_into]];
+  canon()
+
+inline_for_extraction noextract let reprove_frame () : Tac unit =
+  dump "trying to reprove";
+  norm [delta_only [`%can_be_split_into]];
+  apply (`squash);
   canon()
