@@ -42,16 +42,23 @@ inline_for_extraction noextract let canon () : Tac unit =
 let can_be_split_into (outer inner delta:M.hprop) =
   (inner `M.star` delta) `M.equiv` outer
 
+let squash_and p q (x:squash (p /\ q)) : (p /\ q) =
+  let x : squash (p `c_and` q) = FStar.Squash.join_squash x in
+  x
+
+
 inline_for_extraction noextract let resolve_frame () : Tac unit =
   refine_intro();
   flip();
-  dump "trying to do";
   apply_lemma (`unfold_with_tactic);
+  split();
   norm [delta_only [`%can_be_split_into]];
-  canon()
+  canon();
+  trivial()
 
 inline_for_extraction noextract let reprove_frame () : Tac unit =
-  dump "trying to reprove";
+  apply (`squash_and);
   norm [delta_only [`%can_be_split_into]];
-  apply (`squash);
-  canon()
+  split();
+  canon();
+  trivial()
