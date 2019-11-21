@@ -58,6 +58,9 @@ let sum_permissions (p1: permission) (p2: permission{summable_permissions p1 p2}
   : GTot (permission) =
   Permission (Permission?.r p1 +.  Permission?.r p2)
 
+let lesser_equal_permission (p1 p2:permission) : GTot bool =
+  (Permission?.r p1 <=.  Permission?.r p2)
+
 /// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
 /// permission and a flag signalling if you are its owner.
 type permission_kind =

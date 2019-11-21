@@ -15,10 +15,7 @@
 *)
 module Steel.Memory
 open FStar.Real
-let perm =
-  r:FStar.Real.real{
-    FStar.Real.(0.0R <. r && r <=. 1.0R)
-  }
+open LowStar.Permissions
 
 /// Abstract type of memories
 val heap  : Type u#1
@@ -77,7 +74,7 @@ let equiv (p1 p2:hprop) =
 
 /// All the standard connectives of separation logic
 val emp : hprop
-val pts_to (#a:_) (r:ref a) (p:perm) (v:a) : hprop
+val pts_to (#a:_) (r:ref a) (p:permission) (v:a) : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -99,13 +96,13 @@ val equiv_extensional_on_star (p1 p2 p3:hprop)
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to and abbreviations
 //////////////////////////////////////////////////////////////////////////////////////////
-let ptr_perm #a (r:ref a) (p:perm) =
+let ptr_perm #a (r:ref a) (p:permission) =
     h_exists (pts_to r p)
 
 let ptr #a (r:ref a) =
     h_exists (ptr_perm r)
 
-val pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
+val pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
   : Lemma
     (requires
       interp (pts_to x p v0) m /\
@@ -156,7 +153,7 @@ val sel (#a:_) (r:ref a) (m:hheap (ptr r))
   : a
 
 /// sel respect pts_to
-val sel_lemma (#a:_) (r:ref a) (p:perm) (m:hheap (ptr_perm r p))
+val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   : Lemma (interp (ptr r) m /\
            interp (pts_to r p (sel r m)) m)
 
@@ -170,7 +167,7 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
 
 /// upd requires a full permission
 val upd (#a:_) (r:ref a) (v:a)
-  : action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
+  : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -313,4 +310,4 @@ val heap_of_mem (x:mem) : heap
 
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
-     tmem:mem { interp (pts_to x 1.0R v `star` frame) (heap_of_mem tmem)} )
+     tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )

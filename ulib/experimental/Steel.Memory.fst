@@ -17,13 +17,14 @@ module Steel.Memory
 open FStar.Real
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
+open LowStar.Permissions
 
 // In the future, we may have other cases of cells
 // for arrays and structs
 noeq
 type cell =
   | Ref : a:Type u#0 ->
-          perm:perm ->
+          perm:permission{allows_read perm} ->
           v:a ->
           cell
 
@@ -50,7 +51,7 @@ let disjoint_addr (m0 m1:heap) (a:addr)
   : prop
   = match m0 a, m1 a with
     | Some (Ref t0 p0 v0), Some (Ref t1 p1 v1) ->
-      p0 +. p1 <=. 1.0R /\
+      summable_permissions p0 p1 /\
       t0 == t1 /\
       v0 == v1
 
@@ -80,7 +81,7 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
       | None, Some x -> Some x
       | Some x, None -> Some x
       | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
-        Some (Ref a0 (p0 +. p1) v0))
+        Some (Ref a0 (sum_permissions p0 p1) v0))
 
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
@@ -154,7 +155,7 @@ module W = FStar.WellFounded
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
-  | Pts_to : #a:Type0 -> r:ref a -> perm:perm -> v:a -> hprop
+  | Pts_to : #a:Type0 -> r:ref a -> perm:permission -> v:a -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -172,7 +173,7 @@ let rec interp (p:hprop) (m:heap)
       (let Ref a' perm' v' = select_addr m r in
        a == a' /\
        v == v' /\
-       perm <=. perm')
+       perm `lesser_equal_permission` perm')
 
     | Refine p q ->
       interp p m /\ q m
@@ -224,20 +225,20 @@ let equiv_extensional_on_star (p1 p2 p3:hprop) = ()
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
-let intro_pts_to (#a:_) (x:ref a) (p:perm) (v:a) (m:heap)
+let intro_pts_to (#a:_) (x:ref a) (p:permission) (v:a) (m:heap)
   : Lemma
     (requires
        m `contains_addr` x /\
        (let Ref a' perm' v' = select_addr m x in
         a == a' /\
         v == v' /\
-        p <=. perm'))
+        p `lesser_equal_permission` perm'))
      (ensures
        interp (pts_to x p v) m)
   = ()
 
 
-let pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
+let pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
   = ()
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +338,7 @@ let sel #a (r:ref a) (m:hheap (ptr r))
   = let Ref _ _ v = select_addr m r in
     v
 
-let sel_lemma #a (r:ref a) (p:perm) (m:hheap (ptr_perm r p))
+let sel_lemma #a (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   = ()
 
 
@@ -363,33 +364,33 @@ let split_mem (p1 p2:hprop) (m:hheap (p1 `Star` p2))
   = axiom_ghost_to_tot (split_mem_ghost p1 p2) m
 
 let upd' #a (r:ref a) (v:a)
-  : pre_action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
-  = fun h -> (| (), update_addr h r (Ref a 1.0R v) |)
+  : pre_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
+  = fun h -> (| (), update_addr h r (Ref a full_permission v) |)
 
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
     (requires
-      interp (ptr_perm r 1.0R `star` frame) h)
+      interp (ptr_perm r full_permission `star` frame) h)
     (ensures (
       let (| x, h1 |) = upd' r v h in
-      interp (pts_to r 1.0R v `star` frame) h1))
+      interp (pts_to r full_permission v `star` frame) h1))
   = let aux (h0 h1:heap)
      : Lemma
        (requires
          disjoint h0 h1 /\
          h == join h0 h1 /\
-         interp (ptr_perm r 1.0R) h0 /\
+         interp (ptr_perm r full_permission) h0 /\
          interp frame h1)
        (ensures (
          let (| _, h' |) = upd' r v h in
-         let h0' = update_addr h0 r (Ref a 1.0R v) in
+         let h0' = update_addr h0 r (Ref a full_permission v) in
          disjoint h0' h1 /\
-         interp (pts_to r 1.0R v) h0' /\
+         interp (pts_to r full_permission v) h0' /\
          interp frame h1 /\
          h' == join h0' h1))
        [SMTPat (disjoint h0 h1)]
      = let (| _, h'|) = upd' r v h in
-       let h0' = update_addr h0 r (Ref a 1.0R v) in
+       let h0' = update_addr h0 r (Ref a full_permission v) in
        mem_equiv_eq h' (join h0' h1)
    in
    ()
@@ -400,10 +401,10 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
   = let aux (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
       : Lemma
         (requires
-          interp (ptr_perm r 1.0R `star` frame) h)
+          interp (ptr_perm r full_permission `star` frame) h)
         (ensures (
           let (| _, h1 |) = (upd' r v h) in
-          interp (pts_to r 1.0R v `star` frame) h1))
+          interp (pts_to r full_permission v `star` frame) h1))
         [SMTPat ()]
       = upd_lemma' r v h frame
    in
@@ -411,7 +412,7 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
 #pop-options
 
 let upd #a (r:ref a) (v:a)
-  : action (ptr_perm r 1.0R) unit (fun _ -> pts_to r 1.0R v)
+  : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = upd'_is_frame_preserving r v;
     upd' r v
 
@@ -718,17 +719,17 @@ let heap_of_mem (x:mem) : heap = x.heap
 
 let alloc #a v frame m
   = let x : ref a = m.ctr in
-    let cell = Ref a 1.0R v in
+    let cell = Ref a full_permission v in
     let mem : heap = F.on _ (fun i -> if i = x then Some cell else None) in
     assert (disjoint mem m.heap);
     assert (mem `contains_addr` x);
     assert (select_addr mem x == cell);
     let mem' = join mem m.heap in
-    intro_pts_to x 1.0R v mem;
-    assert (interp (pts_to x 1.0R v) mem);
+    intro_pts_to x full_permission v mem;
+    assert (interp (pts_to x full_permission v) mem);
     assert (interp frame m.heap);
-    intro_star (pts_to x 1.0R v) frame mem m.heap;
-    assert (interp (pts_to x 1.0R v `star` frame) mem');
+    intro_star (pts_to x full_permission v) frame mem m.heap;
+    assert (interp (pts_to x full_permission v `star` frame) mem');
     let t = {
       ctr = x + 1;
       heap = mem';
@@ -754,7 +755,7 @@ let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_m_action fp a fp'{ is_m_frame_preserving f }
 
 val alloc_action (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
 
 #push-options "--z3rlimit_factor 4 --query_stats"
 let singleton_heap #a (x:ref a) (c:cell) : heap =
@@ -766,21 +767,21 @@ let singleton_pts_to #a (x:ref a) (c:cell)
   = ()
 
 let alloc_pre_m_action (#a:_) (v:a)
-  : pre_m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  : pre_m_action emp (ref a) (fun x -> pts_to x full_permission v)
   = fun m ->
     let x : ref a = m.ctr in
-    let cell = Ref a 1.0R v in
+    let cell = Ref a full_permission v in
     let mem : heap = singleton_heap x cell in
     assert (disjoint mem m.heap);
     assert (mem `contains_addr` x);
     assert (select_addr mem x == cell);
     let mem' = join mem m.heap in
-    intro_pts_to x 1.0R v mem;
-    assert (interp (pts_to x 1.0R v) mem);
+    intro_pts_to x full_permission v mem;
+    assert (interp (pts_to x full_permission v) mem);
     let frame = (lock_store_invariant m.locks) in
     assert (interp frame m.heap);
-    intro_star (pts_to x 1.0R v) frame mem m.heap;
-    assert (interp (pts_to x 1.0R v `star` frame) mem');
+    intro_star (pts_to x full_permission v) frame mem m.heap;
+    assert (interp (pts_to x full_permission v `star` frame) mem');
     let t = {
       ctr = x + 1;
       heap = mem';
@@ -797,33 +798,33 @@ let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
       interp (frame `star` mem_invariant m) (heap_of_mem m))
     (ensures (
       let (| x, m1 |) = alloc_pre_m_action v m in
-      interp (pts_to x 1.0R v `star` frame `star` mem_invariant m1) (heap_of_mem m1)))
+      interp (pts_to x full_permission v `star` frame `star` mem_invariant m1) (heap_of_mem m1)))
   = let (| x, m1 |) = alloc_pre_m_action v m in
     assert (x == m.ctr);
     assert (m1.ctr = m.ctr + 1);
     assert (m1.locks == m.locks);
     let h = heap_of_mem m in
     let h1 = heap_of_mem m1 in
-    let cell = (Ref a 1.0R v) in
+    let cell = (Ref a full_permission v) in
     assert (h1 == join (singleton_heap x cell) h);
-    intro_pts_to x 1.0R v (singleton_heap x cell);
+    intro_pts_to x full_permission v (singleton_heap x cell);
     singleton_pts_to x cell;
-    assert (interp (pts_to x 1.0R v) (singleton_heap x cell));
+    assert (interp (pts_to x full_permission v) (singleton_heap x cell));
     assert (interp (frame `star` mem_invariant m) h);
-    intro_star (pts_to x 1.0R v) (frame `star` mem_invariant m) (singleton_heap x cell) h;
-    assert (interp (pts_to x 1.0R v `star` (frame `star` mem_invariant m)) h1);
-    star_associative (pts_to x 1.0R v) frame (mem_invariant m);
-    assert (interp (pts_to x 1.0R v `star` frame `star` mem_invariant m) h1)
+    intro_star (pts_to x full_permission v) (frame `star` mem_invariant m) (singleton_heap x cell) h;
+    assert (interp (pts_to x full_permission v `star` (frame `star` mem_invariant m)) h1);
+    star_associative (pts_to x full_permission v) frame (mem_invariant m);
+    assert (interp (pts_to x full_permission v `star` frame `star` mem_invariant m) h1)
 #pop-options
 
-#push-options "--warn_error -271"
+#push-options "--warn_error -271 --z3rlimit_factor 4"
 let alloc_is_frame_preserving (#a:_) (v:a)
   : Lemma (is_m_frame_preserving (alloc_pre_m_action v))
   = let aux (frame:hprop) (m:hmem (emp `star` frame))
       : Lemma
           (ensures (
             let (| x, m1 |) = alloc_pre_m_action v m in
-            interp (pts_to x 1.0R v `star` frame `star` mem_invariant m1) (heap_of_mem m1)))
+            interp (pts_to x full_permission v `star` frame `star` mem_invariant m1) (heap_of_mem m1)))
           [SMTPat ()]
       = alloc_is_frame_preserving' v m frame
     in
@@ -831,7 +832,7 @@ let alloc_is_frame_preserving (#a:_) (v:a)
 #pop-options
 
 let alloc_m_action (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x 1.0R v)
+  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
   = alloc_is_frame_preserving v;
     alloc_pre_m_action v
 

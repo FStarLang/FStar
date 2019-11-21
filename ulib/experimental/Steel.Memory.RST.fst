@@ -2,6 +2,7 @@ module Steel.Memory.RST
 
 open Steel.Memory
 open Steel.Memory.Tactics
+open LowStar.Permissions
 
 new_effect GST = STATE_h mem
 
@@ -40,7 +41,7 @@ assume val get (#r:hprop) (_:unit)
              (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
 
-val perm_to_ptr (#a:Type) (#p:perm) (r:ref a) : Steel unit
+val perm_to_ptr (#a:Type) (#p:permission) (r:ref a) : Steel unit
   (ptr_perm r p)
   (fun _ -> ptr r)
   (fun _ -> True)
@@ -58,16 +59,16 @@ let perm_to_ptr #a #p r =
  elim_exists (pts_to r p) (ptr r) (heap_of_mem h)
 
 val ptr_read (#a:Type) (r:ref a) : Steel a
-  (ptr_perm r 1.0R)
-  (fun v -> pts_to r 1.0R v)
+  (ptr_perm r full_permission)
+  (fun v -> pts_to r full_permission v)
   (fun _ -> True)
   (fun _ _ _ -> True)
 
 let ptr_read #a r =
- perm_to_ptr #a #1.0R r;
+ perm_to_ptr #a #full_permission r;
  let h = get #(ptr r) () in
  let v = sel r (heap_of_mem h) in
- sel_lemma r 1.0R (heap_of_mem h);
+ sel_lemma r full_permission (heap_of_mem h);
  v
 
 assume
@@ -84,26 +85,26 @@ val frame
   : Steel a outer0 (fun v -> inner1 v `star` delta) pre post
 
 val test1 (#a:Type) (r1 r2:ref a) : Steel a
-  (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-  (fun v -> pts_to r1 1.0R v `star` ptr_perm r2 1.0R)
+  (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+  (fun v -> pts_to r1 full_permission v `star` ptr_perm r2 full_permission)
   (fun _ -> True)
   (fun _ _ _ -> True)
 
 let test1 #a r1 r2 =
-  frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-        (ptr_perm r2 1.0R)
+  frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+        (ptr_perm r2 full_permission)
         (fun () -> ptr_read r1)
 
 val test2 (#a:Type) (r1 r2:ref a) : Steel a
-  (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-  (fun v -> ptr_perm r1 1.0R `star` pts_to r2 1.0R v)
+  (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+  (fun v -> ptr_perm r1 full_permission `star` pts_to r2 full_permission v)
   (fun _ -> True)
-  (fun _ _ _ -> True)
+  (fun _ v _ -> True)
 
 let test2 #a r1 r2 =
-  star_commutative (ptr_perm r1 1.0R) (ptr_perm r2 1.0R);
-  let v = frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-        (ptr_perm r1 1.0R)
+  star_commutative (ptr_perm r1 full_permission) (ptr_perm r2 full_permission);
+  let v = frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+        (ptr_perm r1 full_permission)
         (fun () -> ptr_read r2) in
-  star_commutative (ptr_perm r1 1.0R) (pts_to r2 1.0R v);
+  star_commutative (ptr_perm r1 full_permission) (pts_to r2 full_permission v);
   v
