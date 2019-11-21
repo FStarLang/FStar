@@ -15,7 +15,7 @@
 *)
 module Steel.Memory
 open FStar.Real
-open LowStar.Permissions
+open Steel.Permissions
 
 /// Abstract type of memories
 val heap  : Type u#1
