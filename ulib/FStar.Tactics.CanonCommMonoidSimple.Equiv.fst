@@ -326,7 +326,7 @@ let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
     Tac (exp * list term * amap term) =
   let mult = norm_term [delta] (`CM?.mult (`#m)) in
   let unit = norm_term [delta] (`CM?.unit (`#m)) in
-  let t    = norm_term [] t in
+  let t    = norm_term [delta] t in
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =

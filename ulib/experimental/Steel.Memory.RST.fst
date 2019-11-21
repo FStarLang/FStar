@@ -80,7 +80,7 @@ val frame
     delta:hprop{
       FStar.Tactics.with_tactic
       reprove_frame
-      (can_be_split_into outer0 inner0 delta)})
+      (can_be_split_into outer0 inner0 delta /\ True)})
   (#pre:mem -> prop)
   (#post:mem -> a -> mem -> prop)
   ($f:unit -> Steel a inner0 inner1 pre post)
@@ -104,9 +104,8 @@ val test2 (#a:Type) (r1 r2:ref a) : Steel a
   (fun _ _ _ -> True)
 
 let test2 #a r1 r2 =
-  star_commutative (ptr_perm r1 1.0R) (ptr_perm r2 1.0R);
+//  star_commutative (ptr_perm r1 1.0R) (ptr_perm r2 1.0R);
   let v = frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
 //        (ptr_perm r1 1.0R)
         (fun () -> ptr_read r2) in
-  star_commutative (ptr_perm r1 1.0R) (pts_to r2 1.0R v);
   v
