@@ -377,11 +377,9 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let am = convert_am am in
   let r1 = quote_exp r1 in
   let r2 = quote_exp r2 in
-  dump "pre change";
   change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `EQ?.eq (`#eq)`
                mdenote (`#eq) (`#m) (`#am) (`#r2)));
-  dump "after change";
   (* dump ("expected after = " ^ term_to_string (norm_term [delta;primops] *)
   (*    (quote (xsdenote eq m am (canon r1) `EQ?.eq eq` *)
   (*            xsdenote eq m am (canon r2))))); *)

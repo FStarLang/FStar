@@ -77,7 +77,10 @@ val frame
   (#a:Type)
   (#inner1:a -> hprop)
   (#[resolve_frame()]
-    delta:hprop{outer0 `equiv` (inner0 `star` delta)})
+    delta:hprop{
+      FStar.Tactics.with_tactic
+      reprove_frame
+      (can_be_split_into outer0 inner0 delta)})
   (#pre:mem -> prop)
   (#post:mem -> a -> mem -> prop)
   ($f:unit -> Steel a inner0 inner1 pre post)
@@ -91,12 +94,12 @@ val test1 (#a:Type) (r1 r2:ref a) : Steel a
 
 let test1 #a r1 r2 =
   frame (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-//        (ptr_perm r2 1.0R)
+//        #(ptr_perm r2 1.0R)
         (fun () -> ptr_read r1)
 
 val test2 (#a:Type) (r1 r2:ref a) : Steel a
   (ptr_perm r1 1.0R `star` ptr_perm r2 1.0R)
-  (fun v -> ptr_perm r1 1.0R `star` pts_to r2 1.0R v)
+  (fun v -> pts_to r2 1.0R v `star` ptr_perm r1 1.0R)
   (fun _ -> True)
   (fun _ _ _ -> True)
 
