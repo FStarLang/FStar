@@ -194,14 +194,23 @@ let post (st:st) (a:Type) = a -> st.hprop
 
 let fp_heap (#st:st) (fp:st.hprop) = fp_heap_0 st.interp fp
 
+let pre_action (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
+  fp_heap fp -> (x:a & fp_heap (fp' x))
+
+let is_frame_preserving (#st:st) #a #fp #fp' (f:pre_action fp a fp') =
+  forall frame h0.
+    st.interp (fp `st.star` frame) h0 ==>
+    (let (| x, h1 |) = f h0 in
+     st.interp (fp' x `st.star` frame) h1)
+
+let action_sem (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
+  f:pre_action fp a fp'{ is_frame_preserving f }
+
 noeq
 type action (st:st) (a:Type) = {
    pre: st.hprop;
    post: a -> st.hprop;
-   sem: frame:st.hprop ->
-        s0:fp_heap (pre `st.star` frame) ->
-        (x:a &
-         s1:fp_heap (post x `st.star` frame))
+   sem: action_sem pre a post
 }
 
 let wp_post (#st:st) (a:Type) (post:post st a) = x:a -> fp_prop (post x)
@@ -224,30 +233,68 @@ let frame_post (#st:st) (#a:Type) (p:post st a) (frame:st.hprop)
   : post st a
   =  fun x -> p x `st.star` frame
 
-let action_framing (#st:st) #b (f:action st b) (frame:st.hprop)
-  = forall (h0:fp_heap (f.pre `st.star` frame))
-      (h1:st.heap {st.disjoint h0 h1}).
-      (assume (st.interp (f.pre `st.star` frame) (st.join h0 h1));
-       f.sem frame h0 == f.sem frame (st.join h0 h1))
+let action_framing (#st:st) #b (f:action st b)
+  = forall (h0:fp_heap f.pre)
+      (h1:st.heap {st.disjoint h0 h1})
+      (post: (x:b -> fp_prop (f.post x))).
+      (st.interp f.pre (st.join h0 h1) /\ (
+       let (| x0, h |) = f.sem h0 in
+       let (| x1, h' |) = f.sem (st.join h0 h1) in
+       x0 == x1 /\
+       (post x0 h <==> post x1 h')))
 
-let wp_action (#st:st) #b (f:action st b) (frame:st.hprop{action_framing f frame})
-  : wp (f.pre `st.star` frame)
-       b
-       (frame_post f.post frame)
-  = fun (k:wp_post b (frame_post f.post frame)) ->
-     // assert (f.pre `st.star` st.emp `st.equals` f.pre);
+let action_framing_lemma (#st:st) #b (f:action st b { action_framing f })
+                         (h0:fp_heap f.pre)
+                         (h1:st.heap {st.disjoint h0 h1})
+                         (post: (x:b -> fp_prop (f.post x)))
+  : Lemma (st.interp f.pre (st.join h0 h1) /\ (
+           let (| x0, h |) = f.sem h0 in
+           let (| x1, h' |) = f.sem (st.join h0 h1) in
+           x0 == x1 /\
+           (post x0 h <==> post x1 h')))
+  = admit()
+
+let wp_action (#st:st) #b (f:action st b)
+  : wp f.pre b f.post
+  = fun (k:wp_post b f.post) ->
      assume (forall p. st.interp p `depends_only_on` p);
-     let pre : fp_prop (f.pre `st.star` frame) =
+     assume (action_framing f);
+     let pre : st.heap -> prop =
         fun s0 ->
-         st.interp (f.pre `st.star` frame) s0 /\
-         (let (| x, s1 |) = f.sem frame s0 in
+         st.interp f.pre s0  /\
+         (let (| x, s1 |) = f.sem s0 in
           k x s1)
      in
+     let aux (s0 s1:st.heap)
+       : Lemma
+         (requires
+           pre s0 /\
+           st.disjoint s0 s1)
+         (ensures
+           pre (st.join s0 s1))
+         [SMTPat ()]
+       = action_framing_lemma f s0 s1 k;
+         assert (st.interp f.pre (st.join s0 s1));
+         let (| x, s0' |) = f.sem s0 in
+         assert (k x s0');
+         let (| x', s1' |) = f.sem  (st.join s0 s1) in
+         assert (k x s1')
+     in
+     let aux' (s0:fp_heap f.pre)
+              (s1:st.heap{st.disjoint s0 s1})
+       : Lemma (requires
+                 pre (st.join s0 s1))
+               (ensures
+                 pre s0)
+         [SMTPat ()]
+       = assert (st.interp f.pre s0);
+         let (| x, s1' |) = f.sem (st.join s0 s1) in
+         let (| x', s0' |) = f.sem s0 in
+         action_framing_lemma f s0 s1 k;
+         assert (k x' s0')
+     in
+     assert (pre `depends_only_on` f.pre);
      pre
-
-     assume f.sem frame s0 `depends_only_on` p);
-     let q : fp_prop (f.pre `st.star` frame) = pre in
-     q
 
 
 let bind_action (#st:st) #a #b
@@ -258,153 +305,170 @@ let bind_action (#st:st) #a #b
    = bind_wp (wp_action f) wp_g
 
 let triv_post #st (a:Type) (p:post st a) : wp_post a p =
-  let k (x:a) : rs_prop (p x) =
-    let p : rs_prop' (p x) = fun s -> True in
+  let k (x:a) : fp_prop (p x) =
+    let p : fp_prop (p x) = fun s -> True in
     p
   in
   k
 
-let as_requires (#st:st) (#aL:Type) (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
-  : rs_prop preL
+let as_requires (#st:st) (#aL:Type) (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
+  : fp_prop preL
   = wpL (triv_post aL postL)
 
-let join_ext (#st:st) (l r : st.r) (sL sR rest: st.s)
-    : Lemma
-      (requires
-        st.interp l sL /\
-        st.interp r sR /\
-        st.interp (l `st.star` r)
-                  (st.join (sL, st.join(sR, rest))))
-      (ensures
-        st.interp (l `st.star` r)
-                  (st.join (sL, sR)))
-   = admit()
+// let join_ext (#st:st) (l r : st.r) (sL sR rest: st.s)
+//     : Lemma
+//       (requires
+//         st.interp l sL /\
+//         st.interp r sR /\
+//         st.interp (l `st.star` r)
+//                   (st.join (sL, st.join(sR, rest))))
+//       (ensures
+//         st.interp (l `st.star` r)
+//                   (st.join (sL, sR)))
+//    = admit()
 
 let wp_par_post (#st:st)
-           #aL (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
-           #aR (#preR:st.r) (#postR: post st aR) (wpR: wp preR aR postR)
+           #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
+           #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
            (k:wp_post (aL & aR) (fun (xL, xR) -> postL xL `st.star` postR xR))
-  : rs_prop st.emp
-  = let app_k xL xR : rs_prop (postL xL `st.star` postR xR) = k (xL, xR) in
-    let p : rs_prop' st.emp =
-        fun (rest:rs st.emp) ->
-          forall (xL:aL) (sL':rs (postL xL))
-            (xR:aR) (sR':rs (postR xR)).
-              {:pattern (st.interp (postL xL) sL'); (st.interp (postR xR) sR')}
-            let s1 = st.join (sL', st.join (sR', rest)) in
-            st.interp (postL xL) sL' /\
-            st.interp (postR xR) sR' /\
-            st.interp (postL xL `st.star` postR xR) s1 ==>
-            app_k xL xR s1
-    in
-    let aux (rest:st.s)
-      : Lemma
-        (requires
-          p rest)
-        (ensures
-          p (fst (st.split st.emp rest)))
-        [SMTPat ()] //(st.split st.emp rest)]
-      = let aux' xL sL' xR sR'
-            : Lemma
-              (requires
-                st.interp (postL xL) sL' /\
-                st.interp (postR xR) sR' /\
-                st.interp (postL xL `st.star` postR xR)
-                          (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))))
-              (ensures
-                app_k xL xR (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))))
-              [SMTPat ()]
-            = let s1' = (st.join (sL', st.join(sR', rest))) in
-              let s1 = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              assert (s1 == st.join (sL', sR'));
-              assert (s1' == st.join (s1, rest));
-              assert (st.interp (postL xL `st.star` postR xR) s1');
-              assert (app_k xL xR s1');
-              assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
-              assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
-                      fst (st.split (postL xL `st.star` postR xR) s1));
-              assert (app_k xL xR s1)
-        in
-        ()
-    in
-    let aux (rest:st.s)
-      : Lemma
-        (requires
-          p (fst (st.split st.emp rest)))
-        (ensures
-          p rest)
-        [SMTPat ()] //st.split st.emp rest)]
-      = let aux' xL sL' xR sR'
-            : Lemma
-              (requires
-                st.interp (postL xL) sL' /\
-                st.interp (postR xR) sR' /\
-                st.interp (postL xL `st.star` postR xR)
-                          (st.join (sL', st.join(sR', rest))))
-              (ensures
-                app_k xL xR (st.join (sL', st.join(sR', rest))))
-              [SMTPat ()]
-            = let s1 = (st.join (sL', st.join(sR', rest))) in
-              let s1' = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
-              join_ext (postL xL) (postR xR) sL' sR' rest;
-              assert (st.interp (postL xL `st.star` postR xR) (st.join(sL', sR')));
-              assert (st.interp (postL xL `st.star` postR xR) s1');
-              assert (app_k xL xR s1');
-              assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
-              assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
-                      fst (st.split (postL xL `st.star` postR xR) s1));
-              assert (app_k xL xR s1)
-        in
-        ()
-    in
-    assert (forall rest. p rest <==> p (fst (st.split st.emp rest)));
-    p
+  : fp_prop st.emp
+  = admit()
+
+  // let app_k xL xR : rs_prop (postL xL `st.star` postR xR) = k (xL, xR) in
+
+  //   let p : rs_prop' st.emp =
+  //       fun (rest:rs st.emp) ->
+  //         forall (xL:aL) (sL':rs (postL xL))
+  //           (xR:aR) (sR':rs (postR xR)).
+  //             {:pattern (st.interp (postL xL) sL'); (st.interp (postR xR) sR')}
+  //           let s1 = st.join (sL', st.join (sR', rest)) in
+  //           st.interp (postL xL) sL' /\
+  //           st.interp (postR xR) sR' /\
+  //           st.interp (postL xL `st.star` postR xR) s1 ==>
+  //           app_k xL xR s1
+  //   in
+  //   let aux (rest:st.s)
+  //     : Lemma
+  //       (requires
+  //         p rest)
+  //       (ensures
+  //         p (fst (st.split st.emp rest)))
+  //       [SMTPat ()] //(st.split st.emp rest)]
+  //     = let aux' xL sL' xR sR'
+  //           : Lemma
+  //             (requires
+  //               st.interp (postL xL) sL' /\
+  //               st.interp (postR xR) sR' /\
+  //               st.interp (postL xL `st.star` postR xR)
+  //                         (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))))
+  //             (ensures
+  //               app_k xL xR (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))))
+  //             [SMTPat ()]
+  //           = let s1' = (st.join (sL', st.join(sR', rest))) in
+  //             let s1 = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
+  //             assert (s1 == st.join (sL', sR'));
+  //             assert (s1' == st.join (s1, rest));
+  //             assert (st.interp (postL xL `st.star` postR xR) s1');
+  //             assert (app_k xL xR s1');
+  //             assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
+  //             assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
+  //                     fst (st.split (postL xL `st.star` postR xR) s1));
+  //             assert (app_k xL xR s1)
+  //       in
+  //       ()
+  //   in
+  //   let aux (rest:st.s)
+  //     : Lemma
+  //       (requires
+  //         p (fst (st.split st.emp rest)))
+  //       (ensures
+  //         p rest)
+  //       [SMTPat ()] //st.split st.emp rest)]
+  //     = let aux' xL sL' xR sR'
+  //           : Lemma
+  //             (requires
+  //               st.interp (postL xL) sL' /\
+  //               st.interp (postR xR) sR' /\
+  //               st.interp (postL xL `st.star` postR xR)
+  //                         (st.join (sL', st.join(sR', rest))))
+  //             (ensures
+  //               app_k xL xR (st.join (sL', st.join(sR', rest))))
+  //             [SMTPat ()]
+  //           = let s1 = (st.join (sL', st.join(sR', rest))) in
+  //             let s1' = (st.join (sL', st.join(sR', (fst (st.split st.emp rest))))) in
+  //             join_ext (postL xL) (postR xR) sL' sR' rest;
+  //             assert (st.interp (postL xL `st.star` postR xR) (st.join(sL', sR')));
+  //             assert (st.interp (postL xL `st.star` postR xR) s1');
+  //             assert (app_k xL xR s1');
+  //             assert (app_k xL xR (fst (st.split (postL xL `st.star` postR xR) s1')));
+  //             assert (fst (st.split (postL xL `st.star` postR xR) s1') ==
+  //                     fst (st.split (postL xL `st.star` postR xR) s1));
+  //             assert (app_k xL xR s1)
+  //       in
+  //       ()
+  //   in
+  //   assert (forall rest. p rest <==> p (fst (st.split st.emp rest)));
+  //   p
 
 
-let rs_prop_emp_any (#st:st) (k:rs_prop st.emp) (s0 s1:st.s)
-  : Lemma (k s0 ==> k s1)
-  = ()
+// let rs_prop_emp_any (#st:st) (k:rs_prop st.emp) (s0 s1:st.s)
+//   : Lemma (k s0 ==> k s1)
+//   = ()
 
 let wp_par (#st:st)
-           #aL (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
-           #aR (#preR:st.r) (#postR: post st aR) (wpR: wp preR aR postR)
+           #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
+           #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
    : wp (preL `st.star` preR)
         (aL & aR)
         (fun (xL, xR) -> postL xL `st.star` postR xR)
    = fun (k:wp_post (aL & aR) (fun (xL, xR) -> postL xL `st.star` postR xR)) ->
-       let pre : rs_prop' (preL `st.star` preR) =
-         fun (s0:rs (preL `st.star` preR)) ->
-           let sL = fst (st.split preL s0) in
-           let rest = snd (st.split preL s0) in
-           let sR = fst (st.split preR rest) in
-           let rest = snd (st.split preR rest) in
-           assert (st.interp preL sL);
-           assert (st.interp preR sR);
-           as_requires wpL sL /\
-           as_requires wpR sR /\
-           wp_par_post wpL wpR k rest
+       assume (forall p. st.interp p `depends_only_on` p);
+       let pre : st.heap -> prop = //fp_prop (preL `st.star` preR) =
+         fun (s:st.heap) ->
+             st.interp (preL `st.star` preR) s /\
+             as_requires wpL s /\
+             as_requires wpR s /\
+             (forall (f:action st (aL & aR) { action_framing f /\ f.pre == (preL `st.star` preR)}).
+                (let (| (xL, xR), s' |) = f.sem s in
+                 st.interp (postL xL `st.star` postR xR) s' ==>
+                 k (xL, xR) s'))
        in
-       let aux0 (s:rs (preL `st.star` preR))
-         : Lemma
-           (ensures (pre s <==>
-                     pre (fst (st.split (preL `st.star` preR) s))))
-           [SMTPat ()]
-         = let sL, rest = st.split preL s in
-           let sR, rest = st.split preR rest in
-           let s', _ = st.split (preL `st.star` preR) s in
-           let sL', rest' = st.split preL s' in
-           let sR', rest' = st.split preR rest' in
-           assert (st.interp (preL `st.star` preR) s);
-           assert (sL == sL');
-           assert (sR == sR');
-           rs_prop_emp_any (wp_par_post wpL wpR k) rest rest';
-           rs_prop_emp_any (wp_par_post wpL wpR k) rest' rest
-       in
+       admit();
        pre
 
+       // let pre : rs_prop' (preL `st.star` preR) =
+       //   fun (s0:rs (preL `st.star` preR)) ->
+       //     let sL = fst (st.split preL s0) in
+       //     let rest = snd (st.split preL s0) in
+       //     let sR = fst (st.split preR rest) in
+       //     let rest = snd (st.split preR rest) in
+       //     assert (st.interp preL sL);
+       //     assert (st.interp preR sR);
+       //     as_requires wpL sL /\
+       //     as_requires wpR sR /\
+       //     wp_par_post wpL wpR k rest
+       // in
+       // let aux0 (s:rs (preL `st.star` preR))
+       //   : Lemma
+       //     (ensures (pre s <==>
+       //               pre (fst (st.split (preL `st.star` preR) s))))
+       //     [SMTPat ()]
+       //   = let sL, rest = st.split preL s in
+       //     let sR, rest = st.split preR rest in
+       //     let s', _ = st.split (preL `st.star` preR) s in
+       //     let sL', rest' = st.split preL s' in
+       //     let sR', rest' = st.split preR rest' in
+       //     assert (st.interp (preL `st.star` preR) s);
+       //     assert (sL == sL');
+       //     assert (sR == sR');
+       //     rs_prop_emp_any (wp_par_post wpL wpR k) rest rest';
+       //     rs_prop_emp_any (wp_par_post wpL wpR k) rest' rest
+       // in
+       // pre
+
 let bind_par (#st:st)
-           #aL (#preL:st.r) (#postL: post st aL) (wpL: wp preL aL postL)
-           #aR (#preR:st.r) (#postR: post st aR) (wpR: wp preR aR postR)
+           #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
+           #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
            #a  #post (wp_k:(xL:aL -> xR:aR -> wp (postL xL `st.star` postR xR) a post))
   : wp (preL `st.star` preR)
        a
@@ -413,18 +477,18 @@ let bind_par (#st:st)
 
 
 (** [m s c a pre post] :
- *  A free monad for divergence, state and parallel composition
- *  with generic actions. The main idea:
- *
- *  Every continuation may be divergent. As such, [m] is indexed by
- *  pre- and post-conditions so that we can do proofs
- *  intrinsically.
- *
- *  Universe-polymorphic in both the state and result type
- *
- *)
+//  *  A free monad for divergence, state and parallel composition
+//  *  with generic actions. The main idea:
+//  *
+//  *  Every continuation may be divergent. As such, [m] is indexed by
+//  *  pre- and post-conditions so that we can do proofs
+//  *  intrinsically.
+//  *
+//  *  Universe-polymorphic in both the state and result type
+//  *
+//  *)
 noeq
-type m (st:st) : (a:Type u#a) -> pre:st.r -> post:post st a -> wp pre a post -> Type =
+type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> wp pre a post -> Type =
   | Ret : #a:_
         -> #post:post st a
         -> x:a
@@ -459,11 +523,11 @@ val bools : nat -> bool
 ///      until it returns with a result and final state.
 
 noeq
-type step_result (#st:st) a (q:post st a) (frame:st.r) (k:wp_post a q) =
+type step_result (#st:st) a (q:post st a) (frame:st.hprop) (k:wp_post a q) =
   | Step: p:_ -> //precondition of the reduct
           wp:wp p a q ->
           m st a p q wp -> //the reduct
-          state:rs (p `st.star` frame) {
+          state:fp_heap (p `st.star` frame) {
              wp k state
           } ->
           //the next state, satisfying the precondition of the reduct
@@ -478,11 +542,11 @@ type step_result (#st:st) a (q:post st a) (frame:st.r) (k:wp_post a q) =
 // #push-options "--max_fuel 0 --max_ifuel 4 --initial_ifuel 4 --z3rlimit_factor 4 --query_stats"
 
 let step_act (#st:st) (i:nat) #pre #a #post
-             (frame:st.r)
+             (frame:st.hprop)
              (#wp:wp pre a post)
              (f:m st a pre post wp { Act? f })
              (k:wp_post a post)
-             (state:st.s)
+             (state:st.heap)
   : Div (step_result a post frame k)
         (requires
           st.interp (pre `st.star` frame) state /\
@@ -492,7 +556,7 @@ let step_act (#st:st) (i:nat) #pre #a #post
   =
     let Act act1 #post_g #wp_g g = f in
         //Evaluate the action and return the continuation as the reduct
-    let b, state' = act1.sem state in
+    let (| b, state' |) = act1.sem state in
     assert (st.interp (act1.pre `st.star` frame) state);
     assert (st.interp (act1.post b `st.star` frame) state');
     assert (wp == bind_action act1 wp_g);
@@ -504,11 +568,11 @@ let step_act (#st:st) (i:nat) #pre #a #post
 #push-options "--query_stats"
 #push-options "--max_ifuel 4 --initial_ifuel 4"
 let step_par_ret (#st:st) (i:nat) #pre #a #post
-                      (frame:st.r)
+                      (frame:st.hprop)
                       (#wp:wp pre a post)
                       (f:m st a pre post wp { Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f) })
                       (k:wp_post a post)
-                      (state:st.s)
+                      (state:st.heap)
   : Div (step_result a post frame k)
         (requires
           st.interp (pre `st.star` frame) state /\
@@ -522,17 +586,22 @@ let step_par_ret (#st:st) (i:nat) #pre #a #post
       assert (wpR == return_wp xR postR);
       assert (wp == bind_par wpL wpR wp_k);
       assert (wp k state);
-      let sL, rest = st.split preL state in
-      let sR, rest = st.split preR rest in
-      let s' = st.join (sL, st.join (sR, rest)) in
-      assert (st.interp (postL xL) sL);
-      assert (st.interp (postR xR) sR);
-      assert (s' == state);
-      assert (st.interp (postL xL `st.star` postR xR) s');
-      assert (bind_par wpL wpR wp_k k state);
-      assert (bind_par wpL wpR wp_k k state ==> wp_k xL xR k state)
-          by (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]; iota];
-              T.dump "A");
+      assert (forall (f:action st (aL & aR) { action_framing f /\ f.pre == (preL `st.star` preR) }).
+                (let (| (xL, xR), s' |) = f.sem state in
+                 st.interp (postL xL `st.star` postR xR) s' ==>
+                 wp_k xL xR k s'));
+      assume (wp_k xL xR k state);
+      // let sL, rest = st.split preL state in
+      // let sR, rest = st.split preR rest in
+      // let s' = st.join (sL, st.join (sR, rest)) in
+      // assert (st.interp (postL xL) sL);
+      // assert (st.interp (postR xR) sR);
+      // assert (s' == state);
+      // assert (st.interp (postL xL `st.star` postR xR) s');
+      // assert (bind_par wpL wpR wp_k k state);
+      // assert (bind_par wpL wpR wp_k k state ==> wp_k xL xR k state)
+      //     by (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]; iota];
+      //         T.dump "A");
       Step (postL xL `st.star` postR xR)
            (wp_k xL xR)
            (kk xL xR)
@@ -540,26 +609,26 @@ let step_par_ret (#st:st) (i:nat) #pre #a #post
            i
 
 #push-options "--z3rlimit_factor 2 --z3cliopt 'smt.qi.eager_threshold=100'"
-let elim_lift (#st:st) (r0 r1:st.r) (p:rs_prop r0) (s:st.s)
-  : Lemma
-    (requires
-      st.interp (st.lift r0 p `st.star` r1) s)
-    (ensures
-      st.interp (r0 `st.star` r1) s /\
-      st.interp r0 s /\
-      st.interp r1 s /\
-      p s)
-   = ()
+// let elim_lift (#st:st) (r0 r1:st.r) (p:rs_prop r0) (s:st.s)
+//   : Lemma
+//     (requires
+//       st.interp (st.lift r0 p `st.star` r1) s)
+//     (ensures
+//       st.interp (r0 `st.star` r1) s /\
+//       st.interp r0 s /\
+//       st.interp r1 s /\
+//       p s)
+//    = ()
 
-let elim_rs_prop (#st:st) (r:st.r) (p:rs_prop r) (s:st.s)
-  : Lemma
-    (requires
-      st.interp r s /\
-      p s)
-    (ensures
-//      st.interp r (fst (st.split r s)) /\
-      p (fst (st.split r s)))
-  = ()
+// let elim_rs_prop (#st:st) (r:st.r) (p:rs_prop r) (s:st.s)
+//   : Lemma
+//     (requires
+//       st.interp r s /\
+//       p s)
+//     (ensures
+// //      st.interp r (fst (st.split r s)) /\
+//       p (fst (st.split r s)))
+//   = ()
 
 #push-options "--z3rlimit_factor 8"
 let rec step (#st:st) (i:nat) #pre #a #post
@@ -701,195 +770,195 @@ let rec step (#st:st) (i:nat) #pre #a #post
       end
 
 
-(**
-//  * [run i f state]: Top-level driver that repeatedly invokes [step]
-//  *
-//  * The type of [run] is the main theorem. It states that it is sound
-//  * to interpret the indices of `m` as a Hoare triple in a
-//  * partial-correctness semantics
-//  *
-//  *)
-let rec run (#st:st) (i:nat)
-            #pre #a #post (#wp:wp pre a post)
-            (f:m st a pre post wp) (state:st.s)
-            (k:wp_post a post)
-  : Div (a & st.s)
-    (requires
-      st.interp pre state /\
-      wp k state)
-    (ensures fun (x, state') ->
-      st.interp (post x) state' /\
-      k x state')
-  = match f with
-    | Ret x -> x, state
-    | _ ->
-      let Step pre' wp' f' state' j = step i st.emp f k state in
-      run j f' state' k
+// (**
+// //  * [run i f state]: Top-level driver that repeatedly invokes [step]
+// //  *
+// //  * The type of [run] is the main theorem. It states that it is sound
+// //  * to interpret the indices of `m` as a Hoare triple in a
+// //  * partial-correctness semantics
+// //  *
+// //  *)
+// let rec run (#st:st) (i:nat)
+//             #pre #a #post (#wp:wp pre a post)
+//             (f:m st a pre post wp) (state:st.s)
+//             (k:wp_post a post)
+//   : Div (a & st.s)
+//     (requires
+//       st.interp pre state /\
+//       wp k state)
+//     (ensures fun (x, state') ->
+//       st.interp (post x) state' /\
+//       k x state')
+//   = match f with
+//     | Ret x -> x, state
+//     | _ ->
+//       let Step pre' wp' f' state' j = step i st.emp f k state in
+//       run j f' state' k
 
 
-////////////////////////////////////////////////////////////////////////////////
-//The rest of this module shows how these semantics can be packaged up as an
-//effect in F*
-////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////
+// //The rest of this module shows how these semantics can be packaged up as an
+// //effect in F*
+// ////////////////////////////////////////////////////////////////////////////////
 
-(** [eff a pre post] : The representation-type for a layered effect
-//  *
-//  *   - Note, we'll probably have to add a thunk to make it work with
-//  *     the current implementation but that's a detail
-//  *)
-let eff (#st:st) a
-        (expects:st.r)
-        (provides: a -> st.r)
-        (wp:wp expects a provides)
-  = m st a expects provides wp
+// (** [eff a pre post] : The representation-type for a layered effect
+// //  *
+// //  *   - Note, we'll probably have to add a thunk to make it work with
+// //  *     the current implementation but that's a detail
+// //  *)
+// let eff (#st:st) a
+//         (expects:st.r)
+//         (provides: a -> st.r)
+//         (wp:wp expects a provides)
+//   = m st a expects provides wp
 
-/// eff is a monad: we give a return and bind for it, though we don't
-/// prove the monad laws
-
-
-(** [return]: easy, just use Ret *)
-let return (#st:st) #a (x:a) (post:a -> st.r)
-  : eff a (post x) post (return_wp x post)
-  = Ret x
-
-let eta2 #a #b #c (f:a -> b -> c) : Lemma ((fun x y -> f x y) == f) = ()
-
-(**
-//  * [bind]: sequential composition works by pushing `g` into the continuation
-//  * at each node, finally applying it at the terminal `Ret`
-//  *)
-let rec bind (#st:st) #a #b (#p:st.r) (#q:a -> st.r) (#r:b -> st.r)
-             (#wp_f: wp p a q) (f:eff a p q wp_f)
-             (#wp_g: (x:a -> wp (q x) b r)) (g: (x:a -> eff b (q x) r (wp_g x)))
-  : Dv (eff b p r (bind_wp wp_f wp_g))
-  = match f with
-    | Ret x ->
-      assert (p == q x);
-      assert (wp_f == return_wp x q);
-      assert (eq2 #(wp_post b r -> rs (q x) -> prop) (bind_wp (return_wp x q) wp_g) (wp_g x))
-        by (T.norm [delta_only [`%bind_wp; `%return_wp]];
-            T.dump "A";
-            T.mapply (`eta2));
-      g x
-
-    | Act #_ #a' f #post_h #wp_h h ->
-      assert (wp_f == bind_action f wp_h);
-      let g' (x:_) : Dv (eff b (f.post x) r (bind_wp (wp_h x) wp_g))
-        = bind #st #a' #b (h x) g
-      in
-      let res : eff b p r (bind_action f (fun x -> bind_wp (wp_h x) wp_g)) = Act f g' in
-      calc (==) {
-        bind_action f (fun x -> bind_wp (wp_h x) wp_g);
-          == {}
-        bind_wp (wp_action f) (fun x -> bind_wp (wp_h x) wp_g);
-          == { admit() (* assoc *) }
-        bind_wp (bind_wp (wp_action f) (fun x -> wp_h x)) wp_g;
-          == { }
-        bind_wp wp_f wp_g;
-      };
-      res
-
-    | Par preL aL postL wpL mL
-          preR aR postR wpR mR
-          post wp_kont kont ->
-      let kont x0 x1 : Dv (eff b (postL x0 `st.star` postR x1) r (bind_wp (wp_kont x0 x1) wp_g)) = bind (kont x0 x1) g in
-      let res : m st b (st.star preL preR) r (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g))) =
-          Par preL aL postL wpL mL
-                    preR aR postR wpR mR
-                    r (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)) kont in
-      calc (==) {
-        (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)));
-        == { _ by (T.dump "A"; T.norm [delta_only [`%bind_par]]; T.dump "B"; T.trefl()) }
-        bind_wp (wp_par wpL wpR) (fun (x0, x1) -> (bind_wp (wp_kont x0 x1) wp_g));
-        == { admit () (* assoc *) }
-        bind_wp (bind_wp (wp_par wpL wpR) (fun (x0, x1) -> wp_kont x0 x1)) wp_g;
-        == {}
-        (bind_wp (bind_par wpL wpR wp_kont) wp_g);
-      };
-      res
+// /// eff is a monad: we give a return and bind for it, though we don't
+// /// prove the monad laws
 
 
-// // // // (**
-// // // //  * [par]: Parallel composition
-// // // //  * Works by just using the `Par` node and `Ret` as its continuation
-// // // //  **)
-// // // // let par #s (#c:comm_monoid s)
-// // // //         #a0 #p0 #q0 (m0:eff a0 p0 q0)
-// // // //         #a1 #p1 #q1 (m1:eff a1 p1 q1)
-// // // //  : eff (a0 & a1) (p0 `c.star` p1) (fun (x0, x1) -> q0 x0 `c.star` q1 x1)
-// // // //  = Par p0 q0 m0
-// // // //        p1 q1 m1
-// // // //        #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
+// (** [return]: easy, just use Ret *)
+// let return (#st:st) #a (x:a) (post:a -> st.r)
+//   : eff a (post x) post (return_wp x post)
+//   = Ret x
+
+// let eta2 #a #b #c (f:a -> b -> c) : Lemma ((fun x y -> f x y) == f) = ()
+
+// (**
+// //  * [bind]: sequential composition works by pushing `g` into the continuation
+// //  * at each node, finally applying it at the terminal `Ret`
+// //  *)
+// let rec bind (#st:st) #a #b (#p:st.r) (#q:a -> st.r) (#r:b -> st.r)
+//              (#wp_f: wp p a q) (f:eff a p q wp_f)
+//              (#wp_g: (x:a -> wp (q x) b r)) (g: (x:a -> eff b (q x) r (wp_g x)))
+//   : Dv (eff b p r (bind_wp wp_f wp_g))
+//   = match f with
+//     | Ret x ->
+//       assert (p == q x);
+//       assert (wp_f == return_wp x q);
+//       assert (eq2 #(wp_post b r -> rs (q x) -> prop) (bind_wp (return_wp x q) wp_g) (wp_g x))
+//         by (T.norm [delta_only [`%bind_wp; `%return_wp]];
+//             T.dump "A";
+//             T.mapply (`eta2));
+//       g x
+
+//     | Act #_ #a' f #post_h #wp_h h ->
+//       assert (wp_f == bind_action f wp_h);
+//       let g' (x:_) : Dv (eff b (f.post x) r (bind_wp (wp_h x) wp_g))
+//         = bind #st #a' #b (h x) g
+//       in
+//       let res : eff b p r (bind_action f (fun x -> bind_wp (wp_h x) wp_g)) = Act f g' in
+//       calc (==) {
+//         bind_action f (fun x -> bind_wp (wp_h x) wp_g);
+//           == {}
+//         bind_wp (wp_action f) (fun x -> bind_wp (wp_h x) wp_g);
+//           == { admit() (* assoc *) }
+//         bind_wp (bind_wp (wp_action f) (fun x -> wp_h x)) wp_g;
+//           == { }
+//         bind_wp wp_f wp_g;
+//       };
+//       res
+
+//     | Par preL aL postL wpL mL
+//           preR aR postR wpR mR
+//           post wp_kont kont ->
+//       let kont x0 x1 : Dv (eff b (postL x0 `st.star` postR x1) r (bind_wp (wp_kont x0 x1) wp_g)) = bind (kont x0 x1) g in
+//       let res : m st b (st.star preL preR) r (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g))) =
+//           Par preL aL postL wpL mL
+//                     preR aR postR wpR mR
+//                     r (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)) kont in
+//       calc (==) {
+//         (bind_par wpL wpR (fun x0 x1 -> (bind_wp (wp_kont x0 x1) wp_g)));
+//         == { _ by (T.dump "A"; T.norm [delta_only [`%bind_par]]; T.dump "B"; T.trefl()) }
+//         bind_wp (wp_par wpL wpR) (fun (x0, x1) -> (bind_wp (wp_kont x0 x1) wp_g));
+//         == { admit () (* assoc *) }
+//         bind_wp (bind_wp (wp_par wpL wpR) (fun (x0, x1) -> wp_kont x0 x1)) wp_g;
+//         == {}
+//         (bind_wp (bind_par wpL wpR wp_kont) wp_g);
+//       };
+//       res
 
 
-// // // // /// Now for an instantiation of the state with a heap
-// // // // /// just to demonstrate how that would go
-
-// // // // /// Heaps are usually in a universe higher than the values they store
-// // // // /// Pick it in universe 1
-// // // // assume val heap : Type u#1
-
-// // // // /// Assume some monoid of heap assertions
-// // // // assume val hm : comm_monoid heap
-
-// // // // /// For this demo, we'll also assume that this assertions are affine
-// // // // ///  i.e., it's ok to forget some properties of the heap
-// // // // assume val hm_affine (r0 r1:hm.r) (h:heap)
-// // // //   : Lemma (hm.interp (r0 `hm.star` r1) h ==>
-// // // //            hm.interp r0 h)
-
-// // // // /// Here's a ref type
-// // // // assume val ref : Type u#0 -> Type u#0
-
-// // // // /// And two atomic heap assertions
-// // // // assume val ptr_live (r:ref 'a) : hm.r
-// // // // assume val pts_to (r:ref 'a) (x:'a) : hm.r
-
-// // // // /// sel: Selected a reference from a heap, when that ref is live
-// // // // assume val sel (x:ref 'a) (h:heap{hm.interp (ptr_live x) h})
-// // // //   : Tot 'a
-// // // // /// this tells us that sel is frameable
-// // // // assume val sel_ok (x:ref 'a) (h:heap) (frame:hm.r)
-// // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-// // // //            (hm_affine (ptr_live x) frame h;
-// // // //             let v = sel x h in
-// // // //             hm.interp (pts_to x v `hm.star` frame) h))
+// // // // // (**
+// // // // //  * [par]: Parallel composition
+// // // // //  * Works by just using the `Par` node and `Ret` as its continuation
+// // // // //  **)
+// // // // // let par #s (#c:comm_monoid s)
+// // // // //         #a0 #p0 #q0 (m0:eff a0 p0 q0)
+// // // // //         #a1 #p1 #q1 (m1:eff a1 p1 q1)
+// // // // //  : eff (a0 & a1) (p0 `c.star` p1) (fun (x0, x1) -> q0 x0 `c.star` q1 x1)
+// // // // //  = Par p0 q0 m0
+// // // // //        p1 q1 m1
+// // // // //        #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
 
 
-// // // // /// upd: updates a heap at a given reference, when the heap contains it
-// // // // assume val upd (x:ref 'a) (v:'a) (h:heap{hm.interp (ptr_live x) h})
-// // // //   : Tot heap
-// // // // /// and upd is frameable too
-// // // // assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
-// // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-// // // //            (hm_affine (ptr_live x) frame h;
-// // // //             let h' = upd x v h in
-// // // //             hm.interp (pts_to x v `hm.star` frame) h'))
+// // // // // /// Now for an instantiation of the state with a heap
+// // // // // /// just to demonstrate how that would go
 
-// // // // /// Here's a sample action for dereference
-// // // // let (!) (x:ref 'a)
-// // // //   : eff 'a (ptr_live x) (fun v -> pts_to x v)
-// // // //   = let act : action hm 'a =
-// // // //     {
-// // // //       pre = ptr_live x;
-// // // //       post = pts_to x;
-// // // //       sem = (fun frame h0 ->
-// // // //         hm_affine (ptr_live x) frame h0;
-// // // //         sel_ok x h0 frame;
-// // // //         (| sel x h0, h0 |))
-// // // //     } in
-// // // //     Act act Ret
+// // // // // /// Heaps are usually in a universe higher than the values they store
+// // // // // /// Pick it in universe 1
+// // // // // assume val heap : Type u#1
 
-// // // // /// And a sample action for assignment
-// // // // let (:=) (x:ref 'a) (v:'a)
-// // // //   : eff unit (ptr_live x) (fun _ -> pts_to x v)
-// // // //   = let act : action hm unit =
-// // // //     {
-// // // //       pre = ptr_live x;
-// // // //       post = (fun _ -> pts_to x v);
-// // // //       sem = (fun frame h0 ->
-// // // //         hm_affine (ptr_live x) frame h0;
-// // // //         upd_ok x v h0 frame;
-// // // //         (| (), upd x v h0 |))
-// // // //     } in
-// // // //     Act act Ret
+// // // // // /// Assume some monoid of heap assertions
+// // // // // assume val hm : comm_monoid heap
+
+// // // // // /// For this demo, we'll also assume that this assertions are affine
+// // // // // ///  i.e., it's ok to forget some properties of the heap
+// // // // // assume val hm_affine (r0 r1:hm.r) (h:heap)
+// // // // //   : Lemma (hm.interp (r0 `hm.star` r1) h ==>
+// // // // //            hm.interp r0 h)
+
+// // // // // /// Here's a ref type
+// // // // // assume val ref : Type u#0 -> Type u#0
+
+// // // // // /// And two atomic heap assertions
+// // // // // assume val ptr_live (r:ref 'a) : hm.r
+// // // // // assume val pts_to (r:ref 'a) (x:'a) : hm.r
+
+// // // // // /// sel: Selected a reference from a heap, when that ref is live
+// // // // // assume val sel (x:ref 'a) (h:heap{hm.interp (ptr_live x) h})
+// // // // //   : Tot 'a
+// // // // // /// this tells us that sel is frameable
+// // // // // assume val sel_ok (x:ref 'a) (h:heap) (frame:hm.r)
+// // // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
+// // // // //            (hm_affine (ptr_live x) frame h;
+// // // // //             let v = sel x h in
+// // // // //             hm.interp (pts_to x v `hm.star` frame) h))
+
+
+// // // // // /// upd: updates a heap at a given reference, when the heap contains it
+// // // // // assume val upd (x:ref 'a) (v:'a) (h:heap{hm.interp (ptr_live x) h})
+// // // // //   : Tot heap
+// // // // // /// and upd is frameable too
+// // // // // assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
+// // // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
+// // // // //            (hm_affine (ptr_live x) frame h;
+// // // // //             let h' = upd x v h in
+// // // // //             hm.interp (pts_to x v `hm.star` frame) h'))
+
+// // // // // /// Here's a sample action for dereference
+// // // // // let (!) (x:ref 'a)
+// // // // //   : eff 'a (ptr_live x) (fun v -> pts_to x v)
+// // // // //   = let act : action hm 'a =
+// // // // //     {
+// // // // //       pre = ptr_live x;
+// // // // //       post = pts_to x;
+// // // // //       sem = (fun frame h0 ->
+// // // // //         hm_affine (ptr_live x) frame h0;
+// // // // //         sel_ok x h0 frame;
+// // // // //         (| sel x h0, h0 |))
+// // // // //     } in
+// // // // //     Act act Ret
+
+// // // // // /// And a sample action for assignment
+// // // // // let (:=) (x:ref 'a) (v:'a)
+// // // // //   : eff unit (ptr_live x) (fun _ -> pts_to x v)
+// // // // //   = let act : action hm unit =
+// // // // //     {
+// // // // //       pre = ptr_live x;
+// // // // //       post = (fun _ -> pts_to x v);
+// // // // //       sem = (fun frame h0 ->
+// // // // //         hm_affine (ptr_live x) frame h0;
+// // // // //         upd_ok x v h0 frame;
+// // // // //         (| (), upd x v h0 |))
+// // // // //     } in
+// // // // //     Act act Ret
