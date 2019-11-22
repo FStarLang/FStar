@@ -1798,18 +1798,11 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 /// offset ``i`` with length ``len``. KreMLin extracts this operation as
 /// ``b + i`` (or, equivalently, ``&b[i]``.)
 
-val msub_glen (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
-
-
-val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
-  (i:U32.t) (len:U32.t)
-  :HST.Stack (mbuffer a rrel sub_rel)
-             (requires (fun h -> U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ live h b))
-             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i len))
 
 /// ``offset b i`` construct the tail of the buffer ``b`` starting from
 /// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
