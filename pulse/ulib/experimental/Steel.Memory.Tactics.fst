@@ -37,4 +37,28 @@ inline_for_extraction noextract let rm : cm M.hprop req =
      M.star_congruence
 
 inline_for_extraction noextract let canon () : Tac unit =
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
+
+let can_be_split_into (outer inner delta:M.hprop) =
+  (inner `M.star` delta) `M.equiv` outer
+
+let squash_and p q (x:squash (p /\ q)) : (p /\ q) =
+  let x : squash (p `c_and` q) = FStar.Squash.join_squash x in
+  x
+
+
+inline_for_extraction noextract let resolve_frame () : Tac unit =
+  refine_intro();
+  flip();
+  apply_lemma (`unfold_with_tactic);
+  split();
+  norm [delta_only [`%can_be_split_into]];
+  canon();
+  trivial()
+
+inline_for_extraction noextract let reprove_frame () : Tac unit =
+  apply (`squash_and);
+  norm [delta_only [`%can_be_split_into]];
+  split();
+  canon();
+  trivial()

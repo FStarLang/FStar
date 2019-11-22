@@ -77,8 +77,11 @@ val frame
   (#inner0:hprop)
   (#a:Type)
   (#inner1:a -> hprop)
-  (delta:hprop{
-    outer0 `equiv` (inner0 `star` delta)})
+  (#[resolve_frame()]
+    delta:hprop{
+      FStar.Tactics.with_tactic
+      reprove_frame
+      (can_be_split_into outer0 inner0 delta /\ True)})
   (#pre:mem -> prop)
   (#post:mem -> a -> mem -> prop)
   ($f:unit -> Steel a inner0 inner1 pre post)
@@ -92,19 +95,16 @@ val test1 (#a:Type) (r1 r2:ref a) : Steel a
 
 let test1 #a r1 r2 =
   frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-        (ptr_perm r2 full_permission)
+//        #(ptr_perm r2 full_permission)
         (fun () -> ptr_read r1)
 
 val test2 (#a:Type) (r1 r2:ref a) : Steel a
   (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-  (fun v -> ptr_perm r1 full_permission `star` pts_to r2 full_permission v)
+  (fun v -> pts_to r2 full_permission v `star` ptr_perm r1 full_permission)
   (fun _ -> True)
   (fun _ v _ -> True)
 
 let test2 #a r1 r2 =
-  star_commutative (ptr_perm r1 full_permission) (ptr_perm r2 full_permission);
   let v = frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-        (ptr_perm r1 full_permission)
         (fun () -> ptr_read r2) in
-  star_commutative (ptr_perm r1 full_permission) (pts_to r2 full_permission v);
   v

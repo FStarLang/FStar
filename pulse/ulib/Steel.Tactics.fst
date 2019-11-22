@@ -54,11 +54,11 @@ inline_for_extraction noextract let resolve_frame_delta () : Tac unit =
   split ();
   norm [delta_only [`%frame_delta_pre]];
   apply_lemma (quote can_be_split_into_star);
-  canon_monoid req rm;
+  canon_monoid (`req) (`rm);
   norm [delta_only [`%frame_delta_post]];
   ignore (forall_intro ());
   apply_lemma (quote can_be_split_into_star);
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
 
 inline_for_extraction noextract let resolve_delta () : Tac unit =
   refine_intro ();
@@ -69,11 +69,11 @@ inline_for_extraction noextract let resolve_delta () : Tac unit =
   norm [delta_only [`%frame_delta_pre]];
   apply_lemma (quote can_be_split_into_star);
   flip ();
-  canon_monoid req rm;
+  canon_monoid (`req) (`rm);
   norm [delta_only [`%frame_delta_post]];
   ignore (forall_intro ());
   apply_lemma (quote can_be_split_into_star);
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
 
 inline_for_extraction noextract let resolve_subresource () : Tac unit =
   refine_intro ();
@@ -83,8 +83,8 @@ inline_for_extraction noextract let resolve_subresource () : Tac unit =
   squash_intro ();
   apply_lemma (quote can_be_split_into_star);
   flip ();
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
 
 inline_for_extraction noextract let check_subresource () : Tac unit =
   apply_lemma (quote can_be_split_into_star);
-  canon_monoid req rm
+  canon_monoid (`req) (`rm)
