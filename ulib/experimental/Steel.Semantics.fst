@@ -163,12 +163,16 @@ let refine_star (st:st0{weaken_depends_only_on st}) =
       st.equals (st.refine (p0 `st.star` p1) q)
                 (st.refine p0 q `st.star` p1))
 
+let interp_depends_only (st:st0) =
+  forall p. st.interp p `depends_only_on` p
+
 ////////////////////////////////////////////////////////////////////////////////
 let st_laws (st:st0) =
     (* standard laws about the equality relation *)
     symmetry st.equals /\
     transitive st.equals /\
     interp_extensionality st.equals st.interp /\
+    interp_depends_only st /\
     (* standard laws for star forming a CM *)
     associative st.equals st.star /\
     commutative st.equals st.star /\
@@ -192,10 +196,10 @@ let st = s:st0 { st_laws s }
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (st:st) (a:Type) = a -> st.hprop
 
-let fp_heap (#st:st) (fp:st.hprop) = fp_heap_0 st.interp fp
+let hheap (#st:st) (fp:st.hprop) = fp_heap_0 st.interp fp
 
 let pre_action (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  fp_heap fp -> (x:a & fp_heap (fp' x))
+  hheap fp -> (x:a & hheap (fp' x))
 
 let is_frame_preserving (#st:st) #a #fp #fp' (f:pre_action fp a fp') =
   forall frame h0.
@@ -203,15 +207,21 @@ let is_frame_preserving (#st:st) #a #fp #fp' (f:pre_action fp a fp') =
     (let (| x, h1 |) = f h0 in
      st.interp (fp' x `st.star` frame) h1)
 
-let action_sem (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  f:pre_action fp a fp'{ is_frame_preserving f }
+let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:pre_action pre a post)
+  = forall (h0:hheap pre)
+      (h1:st.heap {st.disjoint h0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (st.interp pre (st.join h0 h1) /\ (
+       let (| x0, h |) = f h0 in
+       let (| x1, h' |) = f (st.join h0 h1) in
+       x0 == x1 /\
+       (post x0 h <==> post x1 h')))
 
-noeq
-type action (st:st) (a:Type) = {
-   pre: st.hprop;
-   post: a -> st.hprop;
-   sem: action_sem pre a post
-}
+let action (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
+  f:pre_action fp a fp'{
+    is_frame_preserving f /\
+    action_depends_only_on_fp f
+  }
 
 let wp_post (#st:st) (a:Type) (post:post st a) = x:a -> fp_prop (post x)
 let wp_pre (#st:st) (pre:st.hprop) = fp_prop pre
@@ -233,75 +243,53 @@ let frame_post (#st:st) (#a:Type) (p:post st a) (frame:st.hprop)
   : post st a
   =  fun x -> p x `st.star` frame
 
-let action_framing (#st:st) #b (f:action st b)
-  = forall (h0:fp_heap f.pre)
-      (h1:st.heap {st.disjoint h0 h1})
-      (post: (x:b -> fp_prop (f.post x))).
-      (st.interp f.pre (st.join h0 h1) /\ (
-       let (| x0, h |) = f.sem h0 in
-       let (| x1, h' |) = f.sem (st.join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
+// let action_framing (#st:st) #b (f:action st b)
+//   = forall (h0:fp_heap f.pre)
+//       (h1:st.heap {st.disjoint h0 h1})
+//       (post: (x:b -> fp_prop (f.post x))).
+//       (st.interp f.pre (st.join h0 h1) /\ (
+//        let (| x0, h |) = f.sem h0 in
+//        let (| x1, h' |) = f.sem (st.join h0 h1) in
+//        x0 == x1 /\
+//        (post x0 h <==> post x1 h')))
 
-let action_framing_lemma (#st:st) #b (f:action st b { action_framing f })
-                         (h0:fp_heap f.pre)
+let action_framing_lemma (#st:st) #pre #b #post (f:action pre b post)
+                         (h0:hheap pre)
                          (h1:st.heap {st.disjoint h0 h1})
-                         (post: (x:b -> fp_prop (f.post x)))
-  : Lemma (st.interp f.pre (st.join h0 h1) /\ (
-           let (| x0, h |) = f.sem h0 in
-           let (| x1, h' |) = f.sem (st.join h0 h1) in
+                         (q: (x:b -> fp_prop (post x)))
+  : Lemma (st.interp pre (st.join h0 h1) /\ (
+           let (| x0, h |) = f h0 in
+           let (| x1, h' |) = f (st.join h0 h1) in
            x0 == x1 /\
-           (post x0 h <==> post x1 h')))
-  = admit()
+           (q x0 h <==> q x1 h')))
+  = assert (action_depends_only_on_fp f);
+    assert (st.interp pre (st.join h0 h1));
+    let (| x0, h |) = f h0 in
+    let (| x1, h' |) = f (st.join h0 h1) in
+    //Wow, a very manual instantiation ...
+    assert (action_depends_only_on_fp f ==> x0 == x1 /\ (q x0 h <==> q x1 h'))
+        by (T.norm [delta_only [`%action_depends_only_on_fp]];
+            let lem = T.implies_intro () in
+            let hh = quote h0 in
+            let bp0 = T.instantiate (T.binder_to_term lem) hh in
+            let hh = quote h1 in
+            let bp1 = T.instantiate (T.binder_to_term bp0) hh in
+            let qq = quote q in
+            let bp2 = T.instantiate (T.binder_to_term bp1) qq in
+            T.smt())
 
-let wp_action (#st:st) #b (f:action st b)
-  : wp f.pre b f.post
-  = fun (k:wp_post b f.post) ->
-     assume (forall p. st.interp p `depends_only_on` p);
-     assume (action_framing f);
-     let pre : st.heap -> prop =
-        fun s0 ->
-         st.interp f.pre s0  /\
-         (let (| x, s1 |) = f.sem s0 in
-          k x s1)
-     in
-     let aux (s0 s1:st.heap)
-       : Lemma
-         (requires
-           pre s0 /\
-           st.disjoint s0 s1)
-         (ensures
-           pre (st.join s0 s1))
-         [SMTPat ()]
-       = action_framing_lemma f s0 s1 k;
-         assert (st.interp f.pre (st.join s0 s1));
-         let (| x, s0' |) = f.sem s0 in
-         assert (k x s0');
-         let (| x', s1' |) = f.sem  (st.join s0 s1) in
-         assert (k x s1')
-     in
-     let aux' (s0:fp_heap f.pre)
-              (s1:st.heap{st.disjoint s0 s1})
-       : Lemma (requires
-                 pre (st.join s0 s1))
-               (ensures
-                 pre s0)
-         [SMTPat ()]
-       = assert (st.interp f.pre s0);
-         let (| x, s1' |) = f.sem (st.join s0 s1) in
-         let (| x', s0' |) = f.sem s0 in
-         action_framing_lemma f s0 s1 k;
-         assert (k x' s0')
-     in
-     assert (pre `depends_only_on` f.pre);
-     pre
+let wp_action (#st:st) (#fpre:st.hprop) #b #fpost (f:action fpre b fpost)
+  : wp fpre b fpost
+  = fun (k:wp_post b fpost) s0 ->
+      st.interp fpre s0  /\
+      (let (| x, s1 |) = f s0 in
+       k x s1)
 
-
-let bind_action (#st:st) #a #b
-                (f:action st b)
-                (#post_g:post st a)
-                (wp_g:(x:b -> wp (f.post x) a post_g))
-   : wp f.pre a post_g
+let bind_action (#st:st) #fpre #a #fpost #b
+                (f:action fpre a fpost)
+                (#post_g:post st b)
+                (wp_g:(x:a -> wp (fpost x) b post_g))
+   : wp fpre b post_g
    = bind_wp (wp_action f) wp_g
 
 let triv_post #st (a:Type) (p:post st a) : wp_post a p =
@@ -327,12 +315,12 @@ let as_requires (#st:st) (#aL:Type) (#preL:st.hprop) (#postL: post st aL) (wpL: 
 //                   (st.join (sL, sR)))
 //    = admit()
 
-let wp_par_post (#st:st)
-           #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
-           #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
-           (k:wp_post (aL & aR) (fun (xL, xR) -> postL xL `st.star` postR xR))
-  : fp_prop st.emp
-  = admit()
+// let wp_par_post (#st:st)
+//            #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
+//            #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
+//            (k:wp_post (aL & aR) (fun (xL, xR) -> postL xL `st.star` postR xR))
+//   : fp_prop st.emp
+//   = admit()
 
   // let app_k xL xR : rs_prop (postL xL `st.star` postR xR) = k (xL, xR) in
 
@@ -415,56 +403,25 @@ let wp_par_post (#st:st)
 //   : Lemma (k s0 ==> k s1)
 //   = ()
 
+let post_star (#st:st)
+              #aL (postL: post st aL)
+              #aR (postR: post st aR)
+   : post st (aL & aR)
+   = fun (xL, xR) -> postL xL `st.star` postR xR
+
 let wp_par (#st:st)
            #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
            #aR (#preR:st.hprop) (#postR: post st aR) (wpR: wp preR aR postR)
    : wp (preL `st.star` preR)
         (aL & aR)
-        (fun (xL, xR) -> postL xL `st.star` postR xR)
-   = fun (k:wp_post (aL & aR) (fun (xL, xR) -> postL xL `st.star` postR xR)) ->
-       assume (forall p. st.interp p `depends_only_on` p);
-       let pre : st.heap -> prop = //fp_prop (preL `st.star` preR) =
-         fun (s:st.heap) ->
-             st.interp (preL `st.star` preR) s /\
-             as_requires wpL s /\
-             as_requires wpR s /\
-             (forall (f:action st (aL & aR) { action_framing f /\ f.pre == (preL `st.star` preR)}).
-                (let (| (xL, xR), s' |) = f.sem s in
-                 st.interp (postL xL `st.star` postR xR) s' ==>
-                 k (xL, xR) s'))
-       in
-       admit();
-       pre
-
-       // let pre : rs_prop' (preL `st.star` preR) =
-       //   fun (s0:rs (preL `st.star` preR)) ->
-       //     let sL = fst (st.split preL s0) in
-       //     let rest = snd (st.split preL s0) in
-       //     let sR = fst (st.split preR rest) in
-       //     let rest = snd (st.split preR rest) in
-       //     assert (st.interp preL sL);
-       //     assert (st.interp preR sR);
-       //     as_requires wpL sL /\
-       //     as_requires wpR sR /\
-       //     wp_par_post wpL wpR k rest
-       // in
-       // let aux0 (s:rs (preL `st.star` preR))
-       //   : Lemma
-       //     (ensures (pre s <==>
-       //               pre (fst (st.split (preL `st.star` preR) s))))
-       //     [SMTPat ()]
-       //   = let sL, rest = st.split preL s in
-       //     let sR, rest = st.split preR rest in
-       //     let s', _ = st.split (preL `st.star` preR) s in
-       //     let sL', rest' = st.split preL s' in
-       //     let sR', rest' = st.split preR rest' in
-       //     assert (st.interp (preL `st.star` preR) s);
-       //     assert (sL == sL');
-       //     assert (sR == sR');
-       //     rs_prop_emp_any (wp_par_post wpL wpR k) rest rest';
-       //     rs_prop_emp_any (wp_par_post wpL wpR k) rest' rest
-       // in
-       // pre
+        (post_star postL postR)
+   = fun (k:wp_post (aL & aR) (post_star postL postR)) (s:st.heap) ->
+        st.interp (preL `st.star` preR) s /\
+        as_requires wpL s /\
+        as_requires wpR s /\
+        (forall (f:action (preL `st.star` preR) (aL & aR) (post_star postL postR)).
+           (let (| (xL, xR), s' |) = f s in
+             k (xL, xR) s'))
 
 let bind_par (#st:st)
            #aL (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
@@ -496,11 +453,13 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> wp pre a post
 
   | Act : #a:_
         -> #b:_
-        -> f:action st b
+        -> #fpre: _
+        -> #fpost: _
+        -> f:action fpre b fpost
         -> #post_g:post st a
-        -> #wp_g:(x:b -> wp (f.post x) a post_g)
-        -> g:(x:b -> Dv (m st a (f.post x) post_g (wp_g x)))
-        -> m st a f.pre post_g (bind_action f wp_g)
+        -> #wp_g:(x:b -> wp (fpost x) a post_g)
+        -> g:(x:b -> Dv (m st a (fpost x) post_g (wp_g x)))
+        -> m st a fpre post_g (bind_action f wp_g)
 
   | Par : preL:_ -> aL:_ -> postL:_ -> wpL:wp preL aL postL -> mL: m st aL preL postL wpL ->
           preR:_ -> aR:_ -> postR:_ -> wpR:wp preR aR postR -> mR: m st aR preR postR wpR ->
