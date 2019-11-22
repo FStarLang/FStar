@@ -157,7 +157,7 @@ let rec inspect_ln (t:term) : term_view =
         failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
-        begin match U.arrow_one t with
+        begin match U.arrow_one_ln t with
         | Some (b, c) -> Tv_Arrow (b, c)
         | None -> failwith "impossible"
         end
