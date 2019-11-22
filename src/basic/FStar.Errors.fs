@@ -336,6 +336,7 @@ type raw_error =
   | Warning_SMTErrorReason
   | Warning_CoercionNotFound
   | Error_QuakeFailed
+  | Error_IllSMTPat
 
 type flag = error_flag
 
@@ -669,6 +670,7 @@ let default_flags =
   (Warning_SMTErrorReason                            , CWarning);
   (Warning_CoercionNotFound                          , CWarning);
   (Error_QuakeFailed                                 , CError);
+  (Error_IllSMTPat                                   , CError); //326
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

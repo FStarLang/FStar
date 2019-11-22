@@ -251,7 +251,8 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_tuple_constructor_lid lid =
-  C.is_tuple_data_lid' lid || C.is_dtuple_data_lid' lid
+     C.is_tuple_data_lid' lid
+  || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
   match lid.str with
@@ -315,6 +316,10 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ ->
             failwith "wrong projector format"
         end
+       else if (lid_equals a C.smtpat_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPat", I.range_of_lid a)))
+       else if (lid_equals a C.smtpatOr_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPatOr", I.range_of_lid a)))
        else if (lid_equals a C.assert_lid || lid_equals a C.assume_lid
                 || Char.uppercase (String.get s 0) <> String.get s 0) then
          mk (A.Var (maybe_shorten_fv env fv))
