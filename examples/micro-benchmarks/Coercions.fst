@@ -1,7 +1,5 @@
 module Coercions
 
-(* This file should be in sync with Coercions1Phase.fst *)
-
 open FStar.Ghost
 
 [@(expect_failure [34])]
@@ -22,13 +20,13 @@ let test0' (x: erased 'a) : Tot 'a = x
 
 let test1' (x: erased 'a) : GTot _ = x
 
-(* let test2' (x:'a) : erased _ = x *)
+let test2' (x:'a) : erased _ = x
 
 let test3' (x:erased 'a) : erased _ = x
 
 let test4' (x:erased 'a) : GTot (erased _) = x
 
-(* let test5' (x:'a) : GTot (erased _) = x *)
+let test5' (x:'a) : GTot (erased _) = x
 
 let test1'' (x: erased 'a) : GTot 'a = x
 
@@ -50,3 +48,19 @@ let bar (x:erased int) : Tot unit =
 let test_bar (x:erased int) : Tot unit =
   foo x;
   assert (p x)
+
+let test_nat_int_1 (x : erased nat) : GTot int = reveal x
+let test_nat_int_2 (x : nat) : Tot (erased int) = hide x
+let test_nat_int_1' (x : erased nat) : GTot int = x
+(* let test_nat_int_2' (x : nat) : Tot (erased int) = x *)
+
+type int2 = int
+
+let test_int2_int_1 (x : erased int2) : GTot int = x
+let test_int2_int_2 (x : int2) : Tot (erased int) = x
+let test_int2_int_1' (x : erased int) : GTot int2 = x
+let test_int2_int_2' (x : int) : Tot (erased int2) = x
+
+(* let test_literal () = *)
+(*   let f (n:erased nat) = n in *)
+(*   f 0 *)
