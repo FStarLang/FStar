@@ -22,6 +22,7 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Result
 open FStar.Tactics.Util
+open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 
 (* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
