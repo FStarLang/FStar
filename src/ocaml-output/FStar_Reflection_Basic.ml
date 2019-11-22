@@ -157,7 +157,7 @@ let rec (inspect_ln :
     | FStar_Syntax_Syntax.Tm_arrow ([],k) ->
         failwith "inspect_ln: empty binders on arrow"
     | FStar_Syntax_Syntax.Tm_arrow uu____492 ->
-        let uu____507 = FStar_Syntax_Util.arrow_one t3  in
+        let uu____507 = FStar_Syntax_Util.arrow_one_ln t3  in
         (match uu____507 with
          | FStar_Pervasives_Native.Some (b,c) ->
              FStar_Reflection_Data.Tv_Arrow (b, c)
