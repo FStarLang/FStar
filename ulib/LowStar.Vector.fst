@@ -507,7 +507,7 @@ val shrink:
   Tot (vector a)
 let shrink #a vec new_size =
   Vec new_size (Vec?.cap vec) (Vec?.vs vec)
-  
+
 
 /// Iteration
 
@@ -531,7 +531,7 @@ val fold_left_buffer:
     (decreases (B.length buf))
 let rec fold_left_buffer #a #b len buf f ib =
   if len = 0ul then ib
-  else (fold_left_buffer (len - 1ul) (B.sub buf 1ul (len - 1ul))
+  else (fold_left_buffer (len - 1ul) (B.sub buf 1ul (Ghost.hide (len - 1ul)))
                          f (f ib (B.index buf 0ul)))
 
 val fold_left:
@@ -543,7 +543,7 @@ val fold_left:
       h0 == h1 /\
       v == fold_left_seq (as_seq h0 vec) f ib))
 let fold_left #a #b vec f ib =
-  fold_left_buffer (Vec?.sz vec) (B.sub (Vec?.vs vec) 0ul (Vec?.sz vec)) f ib
+  fold_left_buffer (Vec?.sz vec) (B.sub (Vec?.vs vec) 0ul (Ghost.hide (Vec?.sz vec))) f ib
 
 val forall_seq:
   #a:Type -> seq:S.seq a ->
