@@ -15,10 +15,7 @@
 *)
 module Steel.Memory
 open FStar.Real
-let perm =
-  r:FStar.Real.real{
-    FStar.Real.(0.0R <. r && r <=. 1.0R)
-  }
+open Steel.Permissions
 
 /// Abstract type of memories
 val heap  : Type u#1
@@ -77,7 +74,7 @@ let equiv (p1 p2:hprop) =
 
 /// All the standard connectives of separation logic
 val emp : hprop
-val pts_to (#a:_) (r:ref a) (p:perm) (v:a) : hprop
+val pts_to (#a:_) (r:ref a) (p:permission) (v:a) : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -86,15 +83,26 @@ val h_exists (#a:Type0) (f: (a -> hprop)) : hprop
 val h_forall (#a:Type0) (f: (a -> hprop)) : hprop
 
 ////////////////////////////////////////////////////////////////////////////////
+//properties of equiv
+////////////////////////////////////////////////////////////////////////////////
+
+val equiv_symmetric (p1 p2:hprop)
+  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+
+val equiv_extensional_on_star (p1 p2 p3:hprop)
+  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+
+
+////////////////////////////////////////////////////////////////////////////////
 // pts_to and abbreviations
 //////////////////////////////////////////////////////////////////////////////////////////
-let ptr_perm #a (r:ref a) (p:perm) =
+let ptr_perm #a (r:ref a) (p:permission) =
     h_exists (pts_to r p)
 
 let ptr #a (r:ref a) =
     h_exists (ptr_perm r)
 
-val pts_to_injective (#a:_) (x:ref a) (p:perm) (v0 v1:a) (m:heap)
+val pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
   : Lemma
     (requires
       interp (pts_to x p v0) m /\
@@ -129,11 +137,23 @@ val star_congruence (p1 p2 p3 p4:hprop)
 // Actions:
 // sel, split, update
 ////////////////////////////////////////////////////////////////////////////////
+let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hheap fp -> (x:a & hheap (fp' x))
+
+let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
+  forall frame h0.
+    interp (fp `star` frame) h0 ==>
+    (let (| x, h1 |) = f h0 in
+     interp (fp' x `star` frame) h1)
+
+let action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_action fp a fp'{ is_frame_preserving f }
+
 val sel (#a:_) (r:ref a) (m:hheap (ptr r))
   : a
 
 /// sel respect pts_to
-val sel_lemma (#a:_) (r:ref a) (p:perm) (m:hheap (ptr_perm r p))
+val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   : Lemma (interp (ptr r) m /\
            interp (pts_to r p (sel r m)) m)
 
@@ -146,11 +166,8 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
             m == join m1 m2})
 
 /// upd requires a full permission
-/// it respects frames
 val upd (#a:_) (r:ref a) (v:a)
-        (frame:hprop)
-        (m:hheap (ptr_perm r 1.0R  `star` frame))
-  : Tot (m:hheap (pts_to r 1.0R v `star` frame))
+  : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -242,7 +259,7 @@ val elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 val affine_star (p q:hprop) (m:heap)
   : Lemma
-    (ensures (interp (p `star` q) m ==> interp p m))
+    (ensures (interp (p `star` q) m ==> interp p m /\ interp q m))
 
 ////////////////////////////////////////////////////////////////////////////////
 // emp
@@ -274,11 +291,23 @@ val refine_star (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (weaken_depends_only_on q p0 p1;
            equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
 
+val interp_depends_only (p:hprop)
+  : Lemma (interp p `depends_only_on` p)
+
+val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
+                  (#frame:hprop) (q:fp_prop frame)
+   : Lemma (forall (h0:hheap (fp `star` frame)).
+              (affine_star fp frame h0;
+               q h0 ==>
+               (let (| x, h1 |) = act h0 in
+                q h1)))
+
 ////////////////////////////////////////////////////////////////////////////////
 // Allocation
 ////////////////////////////////////////////////////////////////////////////////
 val mem : Type u#1
 val heap_of_mem (x:mem) : heap
+
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
-     tmem:mem { interp (pts_to x 1.0R v `star` frame) (heap_of_mem tmem)} )
+     tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
