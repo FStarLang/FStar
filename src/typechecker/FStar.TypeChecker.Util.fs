@@ -1323,7 +1323,45 @@ let coerce_with (env:Env.env)
                                             (string_of_lid f)));
         e, lc
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+type isErased =
+    | Yes of term
+    | Maybe
+    | No
+
+let check_erased (env:Env.env) (t:term) : isErased =
+  let norm' = N.normalize [Env.Beta; Env.Eager_unfolding;
+                           Env.UnfoldUntil delta_constant;
+                           Env.Exclude Env.Zeta; Env.Primops;
+                           Env.Weak; Env.HNF]
+  in
+  let t = norm' env t in
+  let t = U.unrefine t in
+  let h, args = U.head_and_args t in
+  let h = U.un_uinst h in
+  let r =
+    match (SS.compress h).n, args with
+    | Tm_fvar fv, [(a, None)] when S.fv_eq_lid fv C.erased_lid ->
+      Yes a
+
+    (* In these two cases, we cannot guarantee that `t` is not
+     * an erased, so we're conservatively returning `false` *)
+    | Tm_uvar _, _
+    | Tm_unknown, _ ->
+      Maybe
+
+    (* Anything else cannot be `erased` *)
+    | _ -> No
+  in
+  (* if Options.debug_any () then *)
+  (*   BU.print2 "check_erased (%s) = %s\n" *)
+  (*     (Print.term_to_string t) *)
+  (*     (match r with *)
+  (*      | Yes a -> "Yes " ^ Print.term_to_string a *)
+  (*      | Maybe -> "Maybe" *)
+  (*      | No -> "No"); *)
+  r
+
+let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp =
     let should_coerce =
          not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
       || env.phase1 // otherwise only on phase1
@@ -1358,37 +1396,37 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
                     (Range.string_of_range e.pos)
                     (Print.term_to_string e)
                     (Print.term_to_string res_typ)
-                    (Print.term_to_string t);
+                    (Print.term_to_string exp_t);
 
-    // checks if `t2 == erased t1`
-    let is_erased env t1 t2 =
-        let head, args = U.head_and_args t2 in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(x, None)] ->
-            S.fv_eq_lid fv C.erased_lid && U.term_eq x t1
-
-        | _ -> false
+    let mk_erased u t =
+      U.mk_app
+        (S.mk_Tm_uinst (fvar_const env C.erased_lid) [u])
+        [S.as_arg t]
     in
     match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type t ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
         coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total
 
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
         coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
         coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term t ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
         coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac
 
+    | _ ->
+    match check_erased env res_typ, check_erased env exp_t with
+    | No, Yes ty ->
+        let u = env.universe_of env res_typ in
+        let new_ty = mk_erased u res_typ in
+        coerce_with env e lc new_ty C.hide [u] [S.iarg res_typ] S.mk_Total
 
-    | _ when is_erased env t res_typ ->
-        coerce_with env e lc t C.reveal [env.universe_of env t] [S.iarg t] S.mk_GTotal
-
-    | _ when is_erased env res_typ t ->
-        coerce_with env e lc t C.hide [env.universe_of env res_typ] [S.iarg res_typ] S.mk_Total
+    | Yes ty, No ->
+        let u = env.universe_of env ty in
+        coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal
 
     | _ ->
       e, lc
