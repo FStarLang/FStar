@@ -824,7 +824,7 @@ val loc_includes_buffer (#a:Type0) (#rrel1:srel a) (#rrel2:srel a) (#rel1:srel a
          (ensures  (loc_includes (loc_buffer b1) (loc_buffer b2)))
 let loc_includes_buffer #t #_ #_ #_ #_ b1 b2 =
   let t1 = ubuffer (frameOf b1) (as_addr b1) in
-  MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2 <: t1)
+  MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
 let loc_includes_gsub_buffer_r l #_ #_ #_ b i len sub_rel =
   let b' = mgsub sub_rel b i len in
