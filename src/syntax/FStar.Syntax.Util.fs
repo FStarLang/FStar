@@ -1291,16 +1291,19 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
+let arrow_one_ln (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
 let arrow_one (t:typ) : option<(binder * comp)> =
-    bind_opt (match (compress t).n with
-              | Tm_arrow ([], c) ->
-                  failwith "fatal: empty binders on arrow?"
-              | Tm_arrow ([b], c) ->
-                  Some (b, c)
-              | Tm_arrow (b::bs, c) ->
-                  Some (b, mk_Total (arrow bs c))
-              | _ ->
-                  None) (fun (b, c) ->
+    bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
             | [b] -> b

@@ -1043,7 +1043,10 @@ and tc_value env (e:term) : term
   let top = SS.compress e in
   match top.n with
   | Tm_bvar x ->
-    failwith (BU.format1 "Impossible: Violation of locally nameless convention: %s" (Print.term_to_string top))
+    (* This can happen if user tactics build an ill-scoped term *)
+    raise_error (Errors.Error_IllScopedTerm,
+                 BU.format1 "Violation of locally nameless convention: %s" (Print.term_to_string top))
+                top.pos
 
   | Tm_uvar (u, s) -> //the type of a uvar is given directly with it; we do not recheck the type
     //FIXME: Check context inclusion?
