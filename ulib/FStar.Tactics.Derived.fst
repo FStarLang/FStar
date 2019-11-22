@@ -723,3 +723,20 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   (* TODO *)
   b
+
+exception NotAListLiteral
+
+let rec destruct_list (t : term) : Tac (list term) =
+    let head, args = collect_app t in
+    match inspect_ln head, args with
+    | Tv_FVar fv, [(a1, Q_Explicit); (a2, Q_Explicit)]
+    | Tv_FVar fv, [(_, Q_Implicit); (a1, Q_Explicit); (a2, Q_Explicit)] ->
+      if inspect_fv fv = cons_qn
+      then a1 :: destruct_list a2
+      else raise NotAListLiteral
+    | Tv_FVar fv, _ ->
+      if inspect_fv fv = nil_qn
+      then []
+      else raise NotAListLiteral
+    | _ ->
+      raise NotAListLiteral
