@@ -20,62 +20,7 @@ module LowStar.Permissions
 module F = FStar.FunctionalExtensionality
 open FStar.Real
 
-(**** Permissions as real numbers *)
-
-/// A permission is a real number between 0 and 1.
-[@erasable]
-noeq type permission =
-  | Permission:  (r:real{r >=. zero /\ r <=. one}) -> permission
-
-let zero_permission : permission = Permission 0.0R
-let full_permission : permission = Permission 1.0R
-
-inline_for_extraction
-noeq type with_perm (a: Type) = {
-  wp_v: a;
-  wp_perm: permission;
-}
-
-/// A permission value of 0 means that the resource is not live. It is live, and can be read, as long as the permission is
-/// strictly positive.
-let allows_read (p: permission) : GTot bool =
-  Permission?.r p >. 0.0R
-
-/// A full permission (of value 1) is required for writing to the resource.
-let allows_write (p: permission) : GTot bool =
-  Permission?.r p = 1.0R
-
-/// The common way to share a permission is to halve its value.
-let half_permission (p: permission) : GTot (permission) =
-  Permission ((Permission?.r p) /. two)
-
-/// When merging resources, you have to sum the permissions.
-let summable_permissions (p1: permission) (p2: permission)
-  : GTot bool =
-   Permission?.r p1 +. Permission?.r p2 <=. 1.0R
-
-let sum_permissions (p1: permission) (p2: permission{summable_permissions p1 p2})
-  : GTot (permission) =
-  Permission (Permission?.r p1 +.  Permission?.r p2)
-
-/// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
-/// permission and a flag signalling if you are its owner.
-type permission_kind =
-  | DEAD (* No access *)
-  | RO (* Read access *)
-  | RW (* Read-write access *)
-  | FULL (* Read-write access and deallocation *)
-
-/// Translates the permission and the ownership flag into a permission kind.
-let permission_to_kind (p: permission) (is_fully_owned: bool) : GTot permission_kind =
-  if Permission?.r p = 0.0R then
-    DEAD
-  else if Permission?.r p <. 1.0R then
-    RO
-  else if not is_fully_owned then
-    RW
-  else
-    FULL
+include Steel.Permissions
 
 (*** Keeping track of permissions *)
 
@@ -115,7 +60,7 @@ val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
 let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
-  permission_to_kind permission fully_owned
+  permission_to_kind permission
 
 /// Finally, the permission map has to be "synchronized" with an external value to ensure the unicity of the
 /// live value of the resource.
