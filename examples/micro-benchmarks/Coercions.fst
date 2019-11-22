@@ -50,3 +50,15 @@ let bar (x:erased int) : Tot unit =
 let test_bar (x:erased int) : Tot unit =
   foo x;
   assert (p x)
+
+let test_nat_int_1 (x : erased nat) : GTot int = reveal x
+let test_nat_int_2 (x : nat) : Tot (erased int) = hide x
+let test_nat_int_1' (x : erased nat) : GTot int = x
+let test_nat_int_2' (x : nat) : Tot (erased int) = x
+
+type int2 = int
+
+let test_int2_int_1 (x : erased int2) : GTot int = x
+let test_int2_int_2 (x : int2) : Tot (erased int) = x
+let test_int2_int_1' (x : erased int) : GTot int2 = x
+let test_int2_int_2' (x : int) : Tot (erased int2) = x
