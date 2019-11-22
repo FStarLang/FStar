@@ -688,6 +688,65 @@ let frame_fp_prop #fp #a #fp' (act:action fp a fp')
      ()
 #pop-options
 
+let affine (q:heap -> prop) = (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1))
+let depends (q:heap -> prop) (fp:hprop) =
+  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+
+
+let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:action pre a post)
+  = forall (h0:hheap pre)
+      (h1:heap {disjoint h0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (interp pre (join h0 h1) /\ (
+       let (| x0, h |) = f h0 in
+       let (| x1, h' |) = f (join h0 h1) in
+       x0 == x1 /\
+       (post x0 h <==> post x1 h')))
+
+let q (pre:_) (a:_) (post:_)
+      (k:(x:a -> fp_prop (post x))) : fp_prop pre =
+  fun (h:heap) ->
+    interp pre h /\
+    (forall (f:action pre a post { action_depends_only_on_fp f } ).
+      let (| x, h' |) = f h in
+      k x h')
+
+let upd_preserves_join #a (r:ref a) (v:a)
+                       (h0:hheap (ptr_perm r 1.0R))
+                       (h1:heap {disjoint h0 h1})
+  : Lemma
+     (let (| x0, h |) = upd r v h0 in
+      let (| x1, h' |) = upd r v (join h0 h1) in
+      x0 == x1 /\
+      disjoint h h1 /\
+      h' == join h h1)
+  = let (| x0, h |) = upd r v h0 in
+    let (| x1, h' |) = upd r v (join h0 h1) in
+    assert (h == update_addr h0 r (Ref a 1.0R v));
+    assert (h' == update_addr (join h0 h1) r (Ref a 1.0R v));
+    assert (disjoint h h1);
+    assert (h' `mem_equiv` join h h1)
+
+let test #a (r:ref a) (v:a) =
+  let pre = ptr_perm r 1.0R in
+  let post = pts_to r 1.0R v in
+  let aux (h0:hheap pre)
+          (h1:heap {disjoint h0 h1})
+          (q:fp_prop post)
+   : Lemma
+     (let (| x0, h |) = upd r v h0 in
+      let (| x1, h' |) = upd r v (join h0 h1) in
+      x0 == x1 /\
+      (q h <==> q h'))
+     [SMTPat ()]
+   = let (| x0, h |) = upd r v h0 in
+     let (| x1, h' |) = upd r v (join h0 h1) in
+     assert (x0 == x1);
+     upd_preserves_join r v h0 h1;
+     assert (h' == join h h1)
+  in
+  assert (action_depends_only_on_fp (upd r v))
+
 ////////////////////////////////////////////////////////////////////////////////
 // allocation and locks
 ////////////////////////////////////////////////////////////////////////////////
@@ -835,6 +894,49 @@ let alloc_m_action (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
   = alloc_is_frame_preserving v;
     alloc_pre_m_action v
+
+let m_disjoint (m:mem) (h:heap) =
+  disjoint (heap_of_mem m) h /\
+  (forall i. i >= m.ctr ==> h i == None)
+
+let m_action_framing #pre #a #post (f:m_action pre a post)
+  = forall (m0:hmem pre)
+      (h1:heap {m_disjoint m0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (let h0 = heap_of_mem m0 in
+       let h = join h0 h1 in
+       let m1 = { m0 with heap = h } in
+       let (| x0, m |) = f m0 in
+       let (| x1, m' |) = f m1 in
+       x0 == x1 /\
+       (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
+#push-options "--query_stats --z3rlimit_factor 4"
+let test2 (#a:_) (v:a) (m0:hmem emp)
+          (h1:heap {m_disjoint m0 h1})
+          (post: (x:ref a -> fp_prop (pts_to x 1.0R v)))
+   = let h0 = heap_of_mem m0 in
+     let h = join h0 h1 in
+     let m1 = { m0 with heap = h } in
+     let (| x0, m |) = alloc_m_action v m0 in
+     let (| x1, m' |) = alloc_m_action v m1 in
+     assert (x0 == x1);
+     // assert (forall (x0:ref a). post x0 `depends_only_on` (pts_to x0 1.0R v));
+     // let post' :fp_prop (pts_to x0 1.0R v) = post x0 in
+     // assert (post' `depends_only_on` (pts_to x0 1.0R v));
+     let h = heap_of_mem m in
+     let h' = heap_of_mem m' in
+     let s = singleton_heap x0 (Ref a 1.0R v) in
+     singleton_pts_to x0 (Ref a 1.0R v);
+     assume (disjoint s h0);
+     assume (disjoint s (join h0 h1));
+     assume (h `mem_equiv` join s h0);
+     assume (h' `mem_equiv` join s (join h0 h1));
+     // assert (h' `mem_equiv` join (singleton_heap x0 (Ref a 1.0R v)) (join h0 h1));
+     let post' : fp_prop (pts_to x0 1.0R v) = post x0 in
+     let s : hheap (pts_to x0 1.0R v) = s in
+     assert (post' h <==> post' s);
+     assert (post' h' <==> post' s);
+     assert (post x0 h <==> post x1 h')
 
 let lock (p:hprop) = nat
 
