@@ -411,10 +411,53 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
    ()
 #pop-options
 
+let upd'_preserves_join #a (r:ref a) (v:a)
+                       (h0:hheap (ptr_perm r full_permission))
+                       (h1:heap {disjoint h0 h1})
+  : Lemma
+     (let (| x0, h |) = upd' r v h0 in
+      let (| x1, h' |) = upd' r v (join h0 h1) in
+      x0 == x1 /\
+      disjoint h h1 /\
+      h' == join h h1)
+  = let (| x0, h |) = upd' r v h0 in
+    let (| x1, h' |) = upd' r v (join h0 h1) in
+    assert (h == update_addr h0 r (Ref a full_permission v));
+    assert (h' == update_addr (join h0 h1) r (Ref a full_permission v));
+    assert (disjoint h h1);
+    assert (h' `mem_equiv` join h h1)
+
+#push-options "--warn_error -271"
+let upd'_depends_only_on_fp #a (r:ref a) (v:a)
+  : Lemma (action_depends_only_on_fp (upd' r v))
+  =
+    let pre = ptr_perm r full_permission in
+    let post = pts_to r full_permission v in
+    let aux (h0:hheap pre)
+            (h1:heap {disjoint h0 h1})
+            (q:fp_prop post)
+    : Lemma
+      (let (| x0, h |) = upd' r v h0 in
+        let (| x1, h' |) = upd' r v (join h0 h1) in
+        x0 == x1 /\
+        (q h <==> q h'))
+      [SMTPat ()]
+    = let (| x0, h |) = upd' r v h0 in
+      let (| x1, h' |) = upd' r v (join h0 h1) in
+      assert (x0 == x1);
+      upd'_preserves_join r v h0 h1;
+      assert (h' == join h h1)
+    in
+    ()
+#pop-options
+
+
 let upd #a (r:ref a) (v:a)
   : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = upd'_is_frame_preserving r v;
+    upd'_depends_only_on_fp r v;
     upd' r v
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -688,64 +731,15 @@ let frame_fp_prop #fp #a #fp' (act:action fp a fp')
      ()
 #pop-options
 
-let affine (q:heap -> prop) = (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1))
-let depends (q:heap -> prop) (fp:hprop) =
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 
-
-let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:action pre a post)
-  = forall (h0:hheap pre)
-      (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (interp pre (join h0 h1) /\ (
-       let (| x0, h |) = f h0 in
-       let (| x1, h' |) = f (join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
-
-let q (pre:_) (a:_) (post:_)
-      (k:(x:a -> fp_prop (post x))) : fp_prop pre =
+let test_q (pre:_) (a:_) (post:_)
+           (k:(x:a -> fp_prop (post x))) : fp_prop pre =
   fun (h:heap) ->
     interp pre h /\
-    (forall (f:action pre a post { action_depends_only_on_fp f } ).
+    (forall (f:action pre a post).
       let (| x, h' |) = f h in
       k x h')
 
-let upd_preserves_join #a (r:ref a) (v:a)
-                       (h0:hheap (ptr_perm r 1.0R))
-                       (h1:heap {disjoint h0 h1})
-  : Lemma
-     (let (| x0, h |) = upd r v h0 in
-      let (| x1, h' |) = upd r v (join h0 h1) in
-      x0 == x1 /\
-      disjoint h h1 /\
-      h' == join h h1)
-  = let (| x0, h |) = upd r v h0 in
-    let (| x1, h' |) = upd r v (join h0 h1) in
-    assert (h == update_addr h0 r (Ref a 1.0R v));
-    assert (h' == update_addr (join h0 h1) r (Ref a 1.0R v));
-    assert (disjoint h h1);
-    assert (h' `mem_equiv` join h h1)
-
-let test #a (r:ref a) (v:a) =
-  let pre = ptr_perm r 1.0R in
-  let post = pts_to r 1.0R v in
-  let aux (h0:hheap pre)
-          (h1:heap {disjoint h0 h1})
-          (q:fp_prop post)
-   : Lemma
-     (let (| x0, h |) = upd r v h0 in
-      let (| x1, h' |) = upd r v (join h0 h1) in
-      x0 == x1 /\
-      (q h <==> q h'))
-     [SMTPat ()]
-   = let (| x0, h |) = upd r v h0 in
-     let (| x1, h' |) = upd r v (join h0 h1) in
-     assert (x0 == x1);
-     upd_preserves_join r v h0 h1;
-     assert (h' == join h h1)
-  in
-  assert (action_depends_only_on_fp (upd r v))
 
 ////////////////////////////////////////////////////////////////////////////////
 // allocation and locks
@@ -911,32 +905,32 @@ let m_action_framing #pre #a #post (f:m_action pre a post)
        x0 == x1 /\
        (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
 #push-options "--query_stats --z3rlimit_factor 4"
-let test2 (#a:_) (v:a) (m0:hmem emp)
-          (h1:heap {m_disjoint m0 h1})
-          (post: (x:ref a -> fp_prop (pts_to x 1.0R v)))
-   = let h0 = heap_of_mem m0 in
-     let h = join h0 h1 in
-     let m1 = { m0 with heap = h } in
-     let (| x0, m |) = alloc_m_action v m0 in
-     let (| x1, m' |) = alloc_m_action v m1 in
-     assert (x0 == x1);
-     // assert (forall (x0:ref a). post x0 `depends_only_on` (pts_to x0 1.0R v));
-     // let post' :fp_prop (pts_to x0 1.0R v) = post x0 in
-     // assert (post' `depends_only_on` (pts_to x0 1.0R v));
-     let h = heap_of_mem m in
-     let h' = heap_of_mem m' in
-     let s = singleton_heap x0 (Ref a 1.0R v) in
-     singleton_pts_to x0 (Ref a 1.0R v);
-     assume (disjoint s h0);
-     assume (disjoint s (join h0 h1));
-     assume (h `mem_equiv` join s h0);
-     assume (h' `mem_equiv` join s (join h0 h1));
-     // assert (h' `mem_equiv` join (singleton_heap x0 (Ref a 1.0R v)) (join h0 h1));
-     let post' : fp_prop (pts_to x0 1.0R v) = post x0 in
-     let s : hheap (pts_to x0 1.0R v) = s in
-     assert (post' h <==> post' s);
-     assert (post' h' <==> post' s);
-     assert (post x0 h <==> post x1 h')
+// let test2 (#a:_) (v:a) (m0:hmem emp)
+//           (h1:heap {m_disjoint m0 h1})
+//           (post: (x:ref a -> fp_prop (pts_to x full_permission v)))
+//    = let h0 = heap_of_mem m0 in
+//      let h = join h0 h1 in
+//      let m1 = { m0 with heap = h } in
+//      let (| x0, m |) = alloc_m_action v m0 in
+//      let (| x1, m' |) = alloc_m_action v m1 in
+//      assert (x0 == x1);
+//      // assert (forall (x0:ref a). post x0 `depends_only_on` (pts_to x0 full_permission v));
+//      // let post' :fp_prop (pts_to x0 full_permission v) = post x0 in
+//      // assert (post' `depends_only_on` (pts_to x0 full_permission v));
+//      let h = heap_of_mem m in
+//      let h' = heap_of_mem m' in
+//      let s = singleton_heap x0 (Ref a full_permission v) in
+//      singleton_pts_to x0 (Ref a full_permission v);
+//      assume (disjoint s h0);
+//      assume (disjoint s (join h0 h1));
+//      assume (h `mem_equiv` join s h0);
+//      assume (h' `mem_equiv` join s (join h0 h1));
+//      // assert (h' `mem_equiv` join (singleton_heap x0 (Ref a full_permission v)) (join h0 h1));
+//      let post' : fp_prop (pts_to x0 full_permission v) = post x0 in
+//      let s : hheap (pts_to x0 full_permission v) = s in
+//      assert (post' h <==> post' s);
+//      assert (post' h' <==> post' s);
+//      assert (post x0 h <==> post x1 h')
 
 let lock (p:hprop) = nat
 
@@ -1136,7 +1130,11 @@ let release #p (l:lock p) (m:hmem p { lock_ok l m } )
          We're releasing a lock that was not previously acquired.
          We could either fail, or just silently proceed.
          I choose to at least signal this case in the result
-         so that we can decide to fail if we like, at a higher layer *)
+         so that we can decide to fail if we like, at a higher layer.
+
+         Another cleaner way to handle this would be to insist
+         that lockable resources are non-duplicable ...
+         in which case this would be unreachable, since we have `p star p` *)
       (| false, hmem_emp p m |)
 
     | Locked _ ->
