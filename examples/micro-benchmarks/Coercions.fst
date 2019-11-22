@@ -62,3 +62,7 @@ let test_int2_int_1 (x : erased int2) : GTot int = x
 let test_int2_int_2 (x : int2) : Tot (erased int) = x
 let test_int2_int_1' (x : erased int) : GTot int2 = x
 let test_int2_int_2' (x : int) : Tot (erased int2) = x
+
+let test_literal () =
+  let f (n:erased nat) = n in
+  f 0
