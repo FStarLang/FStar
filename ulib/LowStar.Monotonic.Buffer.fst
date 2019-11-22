@@ -1509,6 +1509,10 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
      *            we should do some z3 profiling to see what's going on
      *)
     let h = get () in
+    (* AF: 11/22/19: Adding the following assertion seems to significantly speed up verification
+     *               of the then case
+     *)
+    assert (U32.v len == 0);
     Seq.slice_is_empty (as_seq h dst) (U32.v idx_dst);
     Seq.slice_is_empty (as_seq h src) (U32.v idx_src);
     assert (Seq.equal (Seq.slice (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len))
