@@ -803,6 +803,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
     when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub"
+      || string_of_mlpath p = "LowStar.Monotonic.Buffer.msub_glen"
       || string_of_mlpath p = "LowStar.ConstBuffer.sub" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 

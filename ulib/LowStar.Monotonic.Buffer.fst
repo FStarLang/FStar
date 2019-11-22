@@ -1273,11 +1273,13 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
 
 let is_null #_ #_ #_ b = Null? b
 
-let msub #a #rrel #rel sub_rel b i len =
+let msub_glen #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len0 ->
     Buffer max_len content (U32.add i0 i) len
+
+let msub #a #rrel #rel sub_rel b i len = msub_glen #a #rrel #rel sub_rel b i len
 
 let moffset #a #rrel #rel sub_rel b i =
   match b with
