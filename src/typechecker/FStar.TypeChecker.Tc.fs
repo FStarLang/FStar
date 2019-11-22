@@ -670,6 +670,8 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let lbdef = Env.preprocess env tau lb.lbdef in
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "lb preprocessed into: %s\n" (Print.term_to_string lbdef);
         { lb with lbdef = lbdef }
     in
     // Preprocess the letbindings with the tactic, if any
