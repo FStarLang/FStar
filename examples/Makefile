@@ -26,6 +26,7 @@ struct \
 micro-benchmarks \
 friends \
 tactics \
+param \
 typeclasses \
 miniparse \
 kv_parsing \
