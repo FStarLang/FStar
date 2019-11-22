@@ -679,26 +679,47 @@ let bump_nth (n:pos) : Tac unit =
   | None -> fail "bump_nth: not that many goals"
   | Some (h, t) -> set_goals (h :: t)
 
+let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
+  let bvv = inspect_bv xbv in
+  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
+  let bv = pack_bv bvv in
+  bv
+
+let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
+  let (bv, q) = inspect_binder b in
+  let bv = on_sort_bv f bv in
+  let b = pack_binder bv q in
+  b
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
-  let tv = inspect t in
+  let tv = inspect_ln t in
   let tv' =
     match tv with
-    | Tv_Var _
-    | Tv_BVar _
     | Tv_FVar _ -> tv
-    | Tv_FVar fv -> Tv_FVar fv
+    | Tv_Var bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_Var bv
+
+    | Tv_BVar bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_BVar bv
+
     | Tv_Type () -> Tv_Type ()
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
+    | Tv_Arrow b c ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let c = visit_comp ff c in
+        Tv_Arrow b c
+    | Tv_Abs b t ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let t = visit_tm ff t in
+        Tv_Abs b t
     | Tv_App l (r, q) ->
          let l = visit_tm ff l in
          let r = visit_tm ff r in
          Tv_App l (r, q)
-    | Tv_Abs b t ->
-        let t = visit_tm ff t in
-        Tv_Abs b t
     | Tv_Refine b r ->
         let r = visit_tm ff r in
         Tv_Refine b r
@@ -717,12 +738,30 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
     | Tv_AscribedC e c topt ->
         let e = visit_tm ff e in
         Tv_AscribedC e c topt
-    | _ -> fail "impos"
   in
-  ff (pack tv')
+  ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
-  (* TODO *)
-  b
+  let (p, t) = b in
+  (p, visit_tm ff t)
+and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
+  let cv = inspect_comp c in
+  let cv' =
+    match cv with
+    | C_Total ret decr ->
+        let ret = visit_tm ff ret in
+        let decr =
+            match decr with
+            | None -> None
+            | Some d -> Some (visit_tm ff d)
+        in
+        C_Total ret decr
+    | C_Lemma pre post ->
+        let pre = visit_tm ff pre in
+        let post = visit_tm ff post in
+        C_Lemma pre post
+    | C_Unknown -> C_Unknown
+  in
+  pack_comp cv'
 
 exception NotAListLiteral
 
