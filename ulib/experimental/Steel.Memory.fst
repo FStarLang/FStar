@@ -17,7 +17,7 @@ module Steel.Memory
 open FStar.Real
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-open LowStar.Permissions
+open Steel.Permissions
 
 // In the future, we may have other cases of cells
 // for arrays and structs
