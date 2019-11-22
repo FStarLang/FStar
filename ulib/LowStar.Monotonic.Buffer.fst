@@ -1502,7 +1502,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul (Ghost.hide len) in
   b
 
-#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 128"
+#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 128 --z3cliopt smt.qi.EAGER_THRESHOLD=5"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then begin
