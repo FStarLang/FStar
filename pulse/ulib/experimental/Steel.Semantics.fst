@@ -452,9 +452,9 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> wp pre a post
         -> m st a (post x) post (return_wp x post)
 
   | Act : #a:_
-        -> #b:_
-        -> #fpre: _
-        -> #fpost: _
+        -> b:_
+        -> fpre: _
+        -> fpost: _
         -> f:action fpre b fpost
         -> #post_g:post st a
         -> #wp_g:(x:b -> wp (fpost x) a post_g)
@@ -481,15 +481,22 @@ val bools : nat -> bool
 ///   2. A top-level driver [run] which repeatedly invokes [step]
 ///      until it returns with a result and final state.
 
+let action_result (#st:st) #fpre #a #fpost (f:action fpre a fpost) (v:a) (s0 s1:st.heap) (frame:st.hprop) =
+  st.interp (fpre `st.star` frame) s0  /\
+  st.interp (fpost v `st.star` frame) s1 /\
+  f s0 == (| v, s1 |)
+
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) (k:wp_post a q) =
-  | Step: p:_ -> //precondition of the reduct
-          wp:wp p a q ->
-          m st a p q wp -> //the reduct
-          state:fp_heap (p `st.star` frame) {
-             wp k state
-          } ->
-          //the next state, satisfying the precondition of the reduct
+  | Step: fpre:st.hprop -> //the original precondition
+          b:Type ->
+          fpost:(b -> st.hprop) ->
+          act:action fpre b fpost ->
+          initial_state:st.heap ->
+          v:b ->
+          state:st.heap { action_result act v initial_state state frame } ->
+          wp:wp (fpost v) a q { wp k state } ->
+          m st a (fpost v) q wp -> //the reduct
           nat -> //position in the stream of booleans (less important)
           step_result a q frame k
 
@@ -513,19 +520,27 @@ let step_act (#st:st) (i:nat) #pre #a #post
           wp k state)
         (ensures fun _ -> True)
   =
-    let Act act1 #post_g #wp_g g = f in
-        //Evaluate the action and return the continuation as the reduct
-    let (| b, state' |) = act1.sem state in
-    assert (st.interp (act1.pre `st.star` frame) state);
-    assert (st.interp (act1.post b `st.star` frame) state');
-    assert (wp == bind_action act1 wp_g);
-    assert (bind_action act1 wp_g k state);
-    assert (st.interp (act1.post b) state');
-    assert (wp_g b k state');
-    Step (act1.post b) (wp_g b) (g b) state' i
+    let Act b fpre fpost act1 #post_g #wp_g g = f in
+    //Evaluate the action and return the continuation as the reduct
+    let (| vb, state' |) = act1 state in
+    Step fpre b fpost act1 state vb state' (wp_g vb) (g vb) i
 
 #push-options "--query_stats"
 #push-options "--max_ifuel 4 --initial_ifuel 4"
+
+let id_action (#st:st) #aL #aR
+              (xL:aL) (xR:aR)
+              (postL:post st aL) (postR:post st aR)
+   : action (postL xL `st.star` postR xR)
+            (aL & aR)
+            (post_star postL postR)
+   = fun (s:hheap (postL xL `st.star` postR xR)) ->
+       let res : (x:(aL & aR) & hheap ((post_star postL postR) x)) =
+         (| (xL, xR), s |)
+       in
+       res
+let trigger (#a:Type) (x:a) = True
+
 let step_par_ret (#st:st) (i:nat) #pre #a #post
                       (frame:st.hprop)
                       (#wp:wp pre a post)
@@ -545,11 +560,45 @@ let step_par_ret (#st:st) (i:nat) #pre #a #post
       assert (wpR == return_wp xR postR);
       assert (wp == bind_par wpL wpR wp_k);
       assert (wp k state);
-      assert (forall (f:action st (aL & aR) { action_framing f /\ f.pre == (preL `st.star` preR) }).
-                (let (| (xL, xR), s' |) = f.sem state in
-                 st.interp (postL xL `st.star` postR xR) s' ==>
+      assert (preL == postL xL);
+      assert (preR == postR xR);
+      assert (forall (f:action (preL `st.star` preR) (aL & aR) (post_star postL postR)).
+                 {:pattern (trigger f)}
+                (let (| (xL, xR), s' |) = f state in
                  wp_k xL xR k s'));
-      assume (wp_k xL xR k state);
+      assert (trigger (id_action xL xR postL postR));
+      assert (wp_k xL xR k state);
+      Step (postL xL `st.star` postR xR)
+           (aL & aR)
+           (post_star postL postR)
+           (id_action xL xR postL postR)
+           state
+           (xL, xR)
+           state
+           (wp_k xL xR)
+           (kk xL xR)
+           i
+
+      Step (postL xL `st.star` postR xR)
+           (wp_k xL xR)
+           (kk xL xR)
+           state
+           i
+
+
+      admit()
+
+                 ==>
+               wp_k xL xR k state)
+
+      assert ((forall (f:action (preL `st.star` preR) (aL & aR) (post_star postL postR)).
+                (let (| (xL, xR), s' |) = f state in
+                 wp_k xL xR k s')) ==>
+               wp_k xL xR k state)
+          by (T.dump "A";
+              let h = T.implies_intro () in
+              let bp = T.instantiate h
+
       // let sL, rest = st.split preL state in
       // let sR, rest = st.split preR rest in
       // let s' = st.join (sL, st.join (sR, rest)) in
