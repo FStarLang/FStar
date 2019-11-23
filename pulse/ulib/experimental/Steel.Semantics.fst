@@ -749,153 +749,34 @@ let rec step (#st:st) (i:nat) #pre #a #post
 
 
 
-//       admit()
 
-//    | _ -> admit()
-//       assume (bind_par wpL' wpR wp_kont k next_state);
-//       let step =
-//         Step fpre b fpost act initial_state v next_state
-//              (bind_par wpL' wpR wp_kont)
-//              next_m
-//              j in
-//       admit();
-//       step
-// //
-// //      admit()
-
-//       // let sL, rest0 = st.split preL state in
-//       // let sR, rest = st.split preR rest0 in
-//       // assert (as_requires wpL sL);
-//       // assert (as_requires wpR sR);
-
-//       // assert (as_requires wpL state);
-//       // assert (as_requires wpR rest0);
-//       // assert (fst (st.split preR rest0) == fst (st.split preR state));
-//       // assert (as_requires wpR state);
-
-//     | _ -> admit()
-
-
-// //       if bools i
-// //       then begin
-// //         calc (st.equals) {
-// //           preL `st.star` (preR `st.star` frame);
-// //           (st.equals) { }
-// //           (preL `st.star` preR) `st.star` frame;
-// //           (st.equals) { }
-// //           (preR `st.star` preL) `st.star` frame;
-// //           (st.equals) { }
-// //           preR `st.star` (preL `st.star` frame);
-// //         };
-// //         assert (st.interp ((st.lift preR (as_requires wpR)) `st.star` (preL `st.star` frame)) state);
-// //         calc (st.equals) {
-// //           (st.lift preR (as_requires wpR)) `st.star` (preL `st.star` frame);
-// //           (st.equals) { }
-// //           (st.lift preR (as_requires wpR) `st.star` preL) `st.star` frame;
-// //           (st.equals) { }
-// //           (preL `st.star` st.lift preR (as_requires wpR)) `st.star` frame;
-// //           (st.equals) { }
-// //           preL `st.star` ((st.lift preR (as_requires wpR)) `st.star` frame);
-// //         };
-// //         assert (st.interp (preL `st.star` ((st.lift preR (as_requires wpR)) `st.star` frame)) state);
-// //         let Step preL' wpL' mL' state' j =
-// //             //Notice that, inductively, we instantiate the frame extending
-// //             //it to include the precondition of the other side of the par
-// //             step (i + 1)
-// //                  ((st.lift preR (as_requires wpR)) `st.star` frame)
-// //                  mL
-// //                  (triv_post aL postL)
-// //                  state
-// //         in
-// //         assert (as_requires wpL' state');
-// //         assert (as_requires wpR state');
-// //         let sL', rest0' = st.split preL' state' in
-// //         let sR', rest' = st.split preR rest0' in
-// //         assert (bind_par wpL wpR wp_kont k state ==>
-// //                bind_par wpL' wpR wp_kont k state')
-// //                by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
-// //                T.dump "A";
-// //                T.smt());
-// //         Step (preL' `st.star` preR)
-// //              (bind_par wpL' wpR wp_kont)
-// //              (Par preL' aL postL wpL' mL'
-// //                   preR  aR postR wpR  mR
-// //                   post wp_kont kont)
-// //              state'
-// //              j
-// //       end else begin
-// //         assert (st.interp ((st.lift preL (as_requires wpL)) `st.star` (preR `st.star` frame)) state);
-// //         calc (st.equals) {
-// //           (st.lift preL (as_requires wpL)) `st.star` (preR `st.star` frame);
-// //           (st.equals) { }
-// //           (st.lift preL (as_requires wpL) `st.star` preR) `st.star` frame;
-// //           (st.equals) { }
-// //           (preR `st.star` st.lift preL (as_requires wpL)) `st.star` frame;
-// //           (st.equals) { }
-// //           preR `st.star` ((st.lift preL (as_requires wpL)) `st.star` frame);
-// //         };
-// //         assert (st.interp (preR `st.star` ((st.lift preL (as_requires wpL)) `st.star` frame)) state);
-// //         let Step preR' wpR' mR' state' j =
-// //             //Notice that, inductively, we instantiate the frame extending
-// //             //it to include the precondition of the other side of the par
-// //             step (i + 1)
-// //                  ((st.lift preL (as_requires wpL)) `st.star` frame)
-// //                  mR
-// //                  (triv_post aR postR)
-// //                  state
-// //         in
-// //         assert (as_requires wpL state');
-// //         assert (as_requires wpR' state');
-// //         let sL', rest0' = st.split preL state' in
-// //         let sR', rest' = st.split preR' rest0' in
-// //         assert (bind_par wpL wpR wp_kont k state ==>
-// //                 bind_par wpL wpR' wp_kont k state')
-// //                by  (T.norm [delta_only [`%wp_par; `%bind_wp; `%bind_par; `%wp_par_post]];
-// //                T.dump "A";
-// //                T.smt());
-// //         let p' = (preL `st.star` preR') in
-// //         let wp' = bind_par wpL wpR' wp_kont in
-// //         calc (st.equals) {
-// //           preR' `st.star` (preL `st.star` frame);
-// //           (st.equals) { }
-// //           (preR' `st.star` preL) `st.star` frame;
-// //           (st.equals) { }
-// //           (preL `st.star` preR') `st.star` frame;
-// //         };
-// //         Step p'
-// //              wp'
-// //              (Par preL aL postL wpL mL
-// //                   preR'  aR postR wpR' mR'
-// //                   post wp_kont kont)
-// //              state'
-// //              j
-// //       end
-
-
-// // // (**
-// // // //  * [run i f state]: Top-level driver that repeatedly invokes [step]
-// // // //  *
-// // // //  * The type of [run] is the main theorem. It states that it is sound
-// // // //  * to interpret the indices of `m` as a Hoare triple in a
-// // // //  * partial-correctness semantics
-// // // //  *
-// // // //  *)
-// // // let rec run (#st:st) (i:nat)
-// // //             #pre #a #post (#wp:wp pre a post)
-// // //             (f:m st a pre post wp) (state:st.s)
-// // //             (k:wp_post a post)
-// // //   : Div (a & st.s)
-// // //     (requires
-// // //       st.interp pre state /\
-// // //       wp k state)
-// // //     (ensures fun (x, state') ->
-// // //       st.interp (post x) state' /\
-// // //       k x state')
-// // //   = match f with
-// // //     | Ret x -> x, state
-// // //     | _ ->
-// // //       let Step pre' wp' f' state' j = step i st.emp f k state in
-// // //       run j f' state' k
+(**
+// //  * [run i f state]: Top-level driver that repeatedly invokes [step]
+// //  *
+// //  * The type of [run] is the main theorem. It states that it is sound
+// //  * to interpret the indices of `m` as a Hoare triple in a
+// //  * partial-correctness semantics
+// //  *
+// //  *)
+let rec run (#st:st) (i:nat)
+            #pre #a #post (#wp:wp pre a post)
+            (f:m st a pre post wp) (state:st.heap)
+            (k:wp_post a post)
+  : Div (a & st.heap)
+    (requires
+      st.interp pre state /\
+      wp k state)
+    (ensures fun (x, state') ->
+      st.interp (post x) state' /\
+      k x state')
+  = match f with
+    | Ret _ x ->
+      x, state
+    | _ ->
+      let Step fpre b fpost act initial_state v next_state wp mk j =
+        step i st.emp f k state
+      in
+      run j mk next_state k
 
 
 // // // ////////////////////////////////////////////////////////////////////////////////
