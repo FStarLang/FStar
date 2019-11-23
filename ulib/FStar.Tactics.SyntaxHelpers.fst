@@ -41,3 +41,8 @@ val collect_abs : term -> Tac (list binder * term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
+
+let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
+    match bs with
+    | [] -> cod
+    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) None)))

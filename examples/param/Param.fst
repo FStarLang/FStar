@@ -2,11 +2,6 @@ module Param
 
 open FStar.Tactics
 
-let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
-    match bs with
-    | [] -> cod
-    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) None)))
-
 type bvmap = list (bv & (binder & binder & binder))
 
 let update_bvmap (bv:bv) (b0 b1 b2 : binder) (bvm : bvmap) : bvmap =
