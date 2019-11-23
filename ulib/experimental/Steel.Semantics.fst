@@ -645,6 +645,22 @@ let rearrange_action_result
       action_result g v s0 s1 frame)
   = admit()
 
+let compose_actions (#st:st) pre a post b post'
+                    (f:action pre b post')
+                    (v:b)
+                    (s0 s1:st.heap)
+                    (frame:st.hprop {action_result f v s0 s1 frame})
+                    (k: wp_post a post)
+  : Lemma
+    (requires
+        (forall (f:action pre a post).
+           (let (| x, s' |) = f s0 in
+            k x s')))
+    (ensures
+        (forall (f:action (post' v) a post).
+          (let (| x, s' |) = f s1 in
+            k x s')))
+  = admit()
 
 let rec step (#st:st) (i:nat) #pre #a #post
              (frame:st.hprop)
@@ -726,19 +742,23 @@ let rec step (#st:st) (i:nat) #pre #a #post
               preR aR postR wpR mR
               post wp_kont kont
       in
-      assert
-        (forall (f:action (preL `st.star` preR) (aL & aR) (post_star postL postR)).
-           (let (| (xL, xR), s' |) = f state in
-             wp_kont xL xR k s'));
-      assume
-        (forall (f:action (fpost v `st.star` preR) (aL & aR) (post_star postL postR)).
-           (let (| (xL, xR), s' |) = f next_state in
-             wp_kont xL xR k s'));
-      assert (wp_par k next_state);
       assert (action_result act v initial_state next_state (st.refine preR (as_requires wpR) `st.star` frame));
       let act : action (fpre `st.star` preR) b (fun x -> fpost x `st.star` preR) =
         rearrange_action_result act v initial_state next_state preR (as_requires wpR) frame
       in
+      assert
+        (forall (f:action (preL `st.star` preR) (aL & aR) (post_star postL postR)).
+           (let (| (xL, xR), s' |) = f state in
+             wp_kont xL xR k s'));
+      assume (fpre == preL);
+      assume (initial_state == state);
+      compose_actions (preL `st.star` preR) (aL & aR) (post_star postL postR) b (fun x -> fpost x `st.star` preR)
+                      act v initial_state next_state frame (fun (xL, xR) s -> wp_kont xL xR k s);
+      // assume
+      //   (forall (f:action (fpost v `st.star` preR) (aL & aR) (post_star postL postR)).
+      //      (let (| (xL, xR), s' |) = f next_state in
+      //        wp_kont xL xR k s'));
+      assert (wp_par k next_state);
       let step =
         Step (fpre `st.star` preR) b (fun x -> fpost x `st.star` preR) act initial_state v next_state
              wp_par
