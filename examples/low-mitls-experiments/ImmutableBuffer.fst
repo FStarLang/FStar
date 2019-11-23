@@ -161,6 +161,11 @@ let test_pf () : HST.St unit =
 
   ()
 
+let test_witnessed_functoriality () =
+  assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (B.trivial_preorder int) (B.trivial_preorder int));
+  assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (IB.immutable_preorder int) (IB.immutable_preorder int))
+
+
 // (*
 //  * An example of a two elements buffer
 //  * The first element increases monotonically and the second element remains same
