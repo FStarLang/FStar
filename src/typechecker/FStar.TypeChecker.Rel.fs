@@ -3648,6 +3648,9 @@ let force_trivial_guard env g =
                                     (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                     imp.imp_reason) imp.imp_range
 
+let teq_force (env:env) (t1:typ) (t2:typ) : unit =
+    force_trivial_guard env (teq env t1 t2)
+
 let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
     match teq_nosmt env t1 t2 with
     | None -> false
