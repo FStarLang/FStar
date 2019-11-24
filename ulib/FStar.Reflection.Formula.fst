@@ -111,18 +111,6 @@ let term_as_formula' (t:term) : Tac formula =
             App h0 (fst t)
         end
 
-    // This case is shady, our logical connectives are squashed and we
-    // usually don't get arrows. Nevertheless keeping it in case it helps.
-    | Tv_Arrow b c ->
-        let bv, _ = inspect_binder b in
-        begin match inspect_comp c with
-        | C_Total t _ ->
-            if is_free bv t
-            then Forall bv t
-            else Implies (type_of_bv bv) t
-        | _ -> F_Unknown
-        end
-
     | Tv_Const (C_Int i) ->
         IntLit i
 
