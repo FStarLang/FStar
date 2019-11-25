@@ -3559,22 +3559,19 @@ let (maybe_coerce_lc :
                              | FStar_Pervasives_Native.None  ->
                                  (e, lc, FStar_TypeChecker_Env.trivial_guard)
                              | FStar_Pervasives_Native.Some g ->
-                                 let uu____9469 =
-                                   let uu____9474 =
-                                     let uu____9475 =
+                                 let g1 =
+                                   FStar_TypeChecker_Env.apply_guard g e  in
+                                 let uu____9470 =
+                                   let uu____9475 =
+                                     let uu____9476 =
                                        FStar_Syntax_Syntax.iarg ty  in
-                                     [uu____9475]  in
+                                     [uu____9476]  in
                                    coerce_with env e lc exp_t
-                                     FStar_Parser_Const.hide [u] uu____9474
+                                     FStar_Parser_Const.hide [u] uu____9475
                                      FStar_Syntax_Syntax.mk_Total
                                     in
-                                 (match uu____9469 with
-                                  | (e1,lc1) ->
-                                      let g1 =
-                                        FStar_TypeChecker_Env.apply_guard g
-                                          e1
-                                         in
-                                      (e1, lc1, g1)))
+                                 (match uu____9470 with
+                                  | (e1,lc1) -> (e1, lc1, g1)))
                         | (Yes ty,No ) ->
                             let u =
                               env.FStar_TypeChecker_Env.universe_of env ty
