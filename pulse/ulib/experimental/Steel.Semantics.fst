@@ -535,6 +535,28 @@ let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.heap)
         p `st.star` (st.refine q fq `st.star` r);
       }
 
+let commute3_1_2 (#st:st) (p q r:st.hprop)
+  : Lemma
+    ((p `st.star` (q `st.star` r))  `st.equals`
+     (q `st.star` (p `st.star` r)))
+  =  calc (st.equals) {
+        p `st.star` (q `st.star` r);
+          (st.equals) { }
+        (p `st.star` q) `st.star` r;
+          (st.equals) { }
+        (q `st.star` p) `st.star` r;
+          (st.equals) { }
+        q `st.star` (p `st.star` r);
+      }
+
+let refine_middle_left (#st:st) (p q r:st.hprop) (fp:fp_prop p) (state:st.heap)
+  : Lemma
+    ((st.interp (p `st.star` (q `st.star` r)) state /\
+      fp state) <==>
+      st.interp (q `st.star` (st.refine p fp `st.star` r)) state)
+  =   commute3_1_2 p q r;
+      refine_middle q p r fp state
+
 #push-options "--query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 
 let strengthen_post (#st:st) #a (#p:post st a) (post':post st a) (frame:st.hprop) (f:fp_prop frame) (k:wp_post a p)
@@ -544,6 +566,14 @@ let strengthen_post (#st:st) #a (#p:post st a) (post':post st a) (frame:st.hprop
         st.interp (post' x `st.star` frame) s' /\
         f s' ==> k x s'
 
+let wp_triple_equiv (#st:st) (#pre:st.hprop) (#a:_) (#post:post st a)
+                    (wp:wp pre a post)
+                    (k:wp_post a post)
+                    (s:st.heap)
+   : Lemma (wp k s <==> (wp_of_pre_post (as_requires wp) (as_ensures wp) k s))
+   = admit()
+
+#push-options "--z3rlimit_factor 4"
 let rec step (#st:st) (i:nat) #pre #a #post
              (frame:st.hprop)
              (#wp_:wp pre a post)
@@ -575,29 +605,60 @@ let rec step (#st:st) (i:nat) #pre #a #post
       // assert (st.interp (preL `st.star` preR) state);
       // assert (as_requires wpL state);
       // assert (as_requires wpR state);
-      refine_middle preL preR frame (as_requires wpR) state;
-      let Step next_preL next_state wpL' mL' j =
-            //Notice that, inductively, we instantiate the frame extending
-            //it to include the precondition of the other side of the par
-            step (i + 1)
-                 ((st.refine preR (as_requires wpR)) `st.star` frame)
-                 mL
-                 (triv_post aL postL)
-                 state
-      in
-      // assert (as_requires wpL' next_state);
-      // assert (as_requires wpR next_state);
-      // assert (st.interp (next_preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame)) next_state);
-      refine_middle next_preL preR frame (as_requires wpR) next_state;
-      // assert (st.interp ((next_preL `st.star` preR) `st.star` frame) next_state);
-      let next_m
-        : m st (aL & aR) (next_preL `st.star` preR)
-                         (post_star postL postR)
-                         (wp_par wpL' wpR)
-        = Par next_preL aL postL wpL' mL'
-              preR aR postR wpR mR
-      in
-      Step (next_preL `st.star` preR) next_state (wp_par wpL' wpR) next_m j
+      if bools i then
+      begin
+        refine_middle preL preR frame (as_requires wpR) state;
+        let Step next_preL next_state wpL' mL' j =
+                 //Notice that, inductively, we instantiate the frame extending
+                 //it to include the precondition of the other side of the par
+                 step (i + 1)
+                   ((st.refine preR (as_requires wpR)) `st.star` frame)
+                   mL
+                   (triv_post aL postL)
+                   state
+        in
+        // assert (as_requires wpL' next_state);
+        // assert (as_requires wpR next_state);
+        // assert (st.interp (next_preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame)) next_state);
+        refine_middle next_preL preR frame (as_requires wpR) next_state;
+        // assert (st.interp ((next_preL `st.star` preR) `st.star` frame) next_state);
+        let next_m
+          : m st (aL & aR) (next_preL `st.star` preR)
+                           (post_star postL postR)
+                           (wp_par wpL' wpR)
+          = Par next_preL aL postL wpL' mL'
+                preR aR postR wpR mR
+        in
+        Step (next_preL `st.star` preR) next_state (wp_par wpL' wpR) next_m j
+      end
+      else
+      begin
+        commute3_1_2 preL preR frame;
+        refine_middle preR preL frame (as_requires wpL) state;
+        let Step next_preR next_state wpR' mR' j =
+                 //Notice that, inductively, we instantiate the frame extending
+                 //it to include the precondition of the other side of the par
+                 step (i + 1)
+                   ((st.refine preL (as_requires wpL)) `st.star` frame)
+                   mR
+                   (triv_post aR postR)
+                   state
+        in
+        // assert (as_requires wpL' next_state);
+        // assert (as_requires wpR next_state);
+        // assert (st.interp (next_preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame)) next_state);
+        commute3_1_2 next_preR preL frame;
+        refine_middle next_preR preL frame (as_requires wpL) next_state;
+        // assert (st.interp ((next_preL `st.star` preR) `st.star` frame) next_state);
+        let next_m
+          : m st (aL & aR) (preL `st.star` next_preR)
+                           (post_star postL postR)
+                           (wp_par wpL wpR')
+          = Par preL aL postL wpL mL
+                next_preR aR postR wpR' mR'
+        in
+        Step (preL `st.star` next_preR) next_state (wp_par wpL wpR') next_m j
+      end
 
     | Bind pre a post_a wp_a (Ret _ x) b post_b wp_b f ->
       Step (post_a x) state (wp_b x) (f x) i
@@ -629,7 +690,8 @@ let rec step (#st:st) (i:nat) #pre #a #post
       // assert (st.interp (pre `st.star` (st.refine frame' f_frame' `st.star` frame)) state);
       let kk = (strengthen_post post frame' f_frame' k) in
       assert (wp_of_pre_post (as_requires wp') (as_ensures wp') kk state);
-      assume (wp' kk state);
+      wp_triple_equiv wp' kk state;
+      assert (wp' kk state);
       let Step next_pre next_state wp'' m' j =
         step i (st.refine frame' f_frame' `st.star` frame) m kk state
       in
@@ -637,14 +699,15 @@ let rec step (#st:st) (i:nat) #pre #a #post
       //                   next_state);
       refine_middle next_pre frame' frame f_frame' next_state;
       assert (wp'' kk next_state);
-      assume (wp_of_pre_post (as_requires wp'') (as_ensures wp'') kk next_state);
+      wp_triple_equiv wp'' kk next_state;
+      assert (wp_of_pre_post (as_requires wp'') (as_ensures wp'') kk next_state);
       Step (next_pre `st.star` frame')
            next_state
            (wp_of_pre_post (and_fp_prop (as_requires wp'') f_frame')
                            (fun x -> and_fp_prop (as_ensures wp'' x) f_frame'))
            (Frame next_pre a post wp'' m' frame' f_frame')
            j
-
+#pop-options
 
 (**
   * [run i f state]: Top-level driver that repeatedly invokes [step]
@@ -695,12 +758,12 @@ let eff a
 /// eff is a monad: we give a return and bind for it, though we don't
 /// prove the monad laws
 
-(** [return]: easy, just use Ret *)
+(** [return]: just use Ret *)
 let return #a (x:a) (#st:st) (post:a -> st.hprop)
   : eff a (post x) post (return_wp x post)
   = Ret post x
 
-(** [bind]: easy, just use Bind *)
+(** [bind]: just use Bind *)
 let rec bind #a #b (#st:st) (#p:st.hprop) (#q:a -> st.hprop) (#r:b -> st.hprop)
              (#wp_f: wp p a q) (f:eff a p q wp_f)
              (#wp_g: (x:a -> wp (q x) b r)) (g: (x:a -> eff b (q x) r (wp_g x)))
@@ -708,7 +771,7 @@ let rec bind #a #b (#st:st) (#p:st.hprop) (#q:a -> st.hprop) (#r:b -> st.hprop)
   = Bind p a q wp_f f b r wp_g g
 
 (**
- * [par]: easy, just use Par
+ * [par]: just use Par
  **)
 let par (#st:st)
         #a0 #p0 #q0 #wp0 (m0:eff a0 p0 q0 wp0)
@@ -718,83 +781,10 @@ let par (#st:st)
        p1 a1 q1 wp1 m1
 
 (**
- * [frame]: easy, just use Frame
+ * [frame]: just use Frame
  **)
 let frame (#st:st)
           #a #p #q #wp (m0:eff a p q wp)
           frame (f_frame:fp_prop frame)
  : eff a (p `st.star` frame) (fun x -> q x `st.star` frame) (wp_star_frame wp frame f_frame)
  = Frame p a q wp m0 frame f_frame
-
-
-// // // // // // // /// Now for an instantiation of the state with a heap
-// // // // // // // /// just to demonstrate how that would go
-
-// // // // // // // /// Heaps are usually in a universe higher than the values they store
-// // // // // // // /// Pick it in universe 1
-// // // // // // // assume val heap : Type u#1
-
-// // // // // // // /// Assume some monoid of heap assertions
-// // // // // // // assume val hm : comm_monoid heap
-
-// // // // // // // /// For this demo, we'll also assume that this assertions are affine
-// // // // // // // ///  i.e., it's ok to forget some properties of the heap
-// // // // // // // assume val hm_affine (r0 r1:hm.r) (h:heap)
-// // // // // // //   : Lemma (hm.interp (r0 `hm.star` r1) h ==>
-// // // // // // //            hm.interp r0 h)
-
-// // // // // // // /// Here's a ref type
-// // // // // // // assume val ref : Type u#0 -> Type u#0
-
-// // // // // // // /// And two atomic heap assertions
-// // // // // // // assume val ptr_live (r:ref 'a) : hm.r
-// // // // // // // assume val pts_to (r:ref 'a) (x:'a) : hm.r
-
-// // // // // // // /// sel: Selected a reference from a heap, when that ref is live
-// // // // // // // assume val sel (x:ref 'a) (h:heap{hm.interp (ptr_live x) h})
-// // // // // // //   : Tot 'a
-// // // // // // // /// this tells us that sel is frameable
-// // // // // // // assume val sel_ok (x:ref 'a) (h:heap) (frame:hm.r)
-// // // // // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-// // // // // // //            (hm_affine (ptr_live x) frame h;
-// // // // // // //             let v = sel x h in
-// // // // // // //             hm.interp (pts_to x v `hm.star` frame) h))
-
-
-// // // // // // // /// upd: updates a heap at a given reference, when the heap contains it
-// // // // // // // assume val upd (x:ref 'a) (v:'a) (h:heap{hm.interp (ptr_live x) h})
-// // // // // // //   : Tot heap
-// // // // // // // /// and upd is frameable too
-// // // // // // // assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
-// // // // // // //   : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-// // // // // // //            (hm_affine (ptr_live x) frame h;
-// // // // // // //             let h' = upd x v h in
-// // // // // // //             hm.interp (pts_to x v `hm.star` frame) h'))
-
-// // // // // // // /// Here's a sample action for dereference
-// // // // // // // let (!) (x:ref 'a)
-// // // // // // //   : eff 'a (ptr_live x) (fun v -> pts_to x v)
-// // // // // // //   = let act : action hm 'a =
-// // // // // // //     {
-// // // // // // //       pre = ptr_live x;
-// // // // // // //       post = pts_to x;
-// // // // // // //       sem = (fun frame h0 ->
-// // // // // // //         hm_affine (ptr_live x) frame h0;
-// // // // // // //         sel_ok x h0 frame;
-// // // // // // //         (| sel x h0, h0 |))
-// // // // // // //     } in
-// // // // // // //     Act act Ret
-
-// // // // // // // /// And a sample action for assignment
-// // // // // // // let (:=) (x:ref 'a) (v:'a)
-// // // // // // //   : eff unit (ptr_live x) (fun _ -> pts_to x v)
-// // // // // // //   = let act : action hm unit =
-// // // // // // //     {
-// // // // // // //       pre = ptr_live x;
-// // // // // // //       post = (fun _ -> pts_to x v);
-// // // // // // //       sem = (fun frame h0 ->
-// // // // // // //         hm_affine (ptr_live x) frame h0;
-// // // // // // //         upd_ok x v h0 frame;
-// // // // // // //         (| (), upd x v h0 |))
-// // // // // // //     } in
-// // // // // // //     Act act Ret
