@@ -1508,52 +1508,29 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul (Ghost.hide len) in
   b
 
-#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 128 --z3cliopt smt.qi.EAGER_THRESHOLD=5"
+#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
-  if len = 0ul then begin
-    (*
-     * AR: 07/03: the then case, which should actually be trivial, takes a long time to verify
-     *            we should do some z3 profiling to see what's going on
-     *)
-    let h = get () in
-    (* AF: 11/22/19: Adding the following assertion seems to significantly speed up verification
-     *               of the then case
-     *)
-    assert (U32.v len == 0);
-    Seq.slice_is_empty (as_seq h dst) (U32.v idx_dst);
-    Seq.slice_is_empty (as_seq h src) (U32.v idx_src);
-    assert (Seq.equal (Seq.slice (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len))
-                      (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len)));
-    ()
-  end
-  else
-    let h = get () in
-    let Buffer max_length1 content1 idx1 length1 = src in
-    let Buffer max_length2 content2 idx2 length2 = dst in
-    let s_full1 = !content1 in
-    let s_full2 = !content2 in
-    let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v max_length1) in
-    let s2 = Seq.slice s_full2 (U32.v idx2) (U32.v max_length2) in
-    let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
-    let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
-    let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v max_length2) s2' in
-    (* TODO: remove once patterns on loc_buffer_from_to are introduced *)
-    // let _ : squash (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))) =
-    //   (* prove that disjoint src dst implies disjointness on loc_buffer_from_to *)
-    //   let prf () : Lemma
-    //     (requires (disjoint src dst))
-    //     (ensures (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))))
-    //   = loc_includes_loc_buffer_loc_buffer_from_to src idx_src (idx_src `U32.add` len);
-    //     loc_includes_loc_buffer_loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len);
-    //     loc_disjoint_includes (loc_buffer src) (loc_buffer dst) (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))
-    //   in
-    //   Classical.move_requires prf ()
-    // in
-    assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
-    assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
-    assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
-                      (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
+  match src, dst with
+  | Buffer _ _ _ _, Buffer _ _ _ _ ->
+    if len = 0ul then ()
+    else
+      let h = get () in
+      let Buffer max_length1 content1 idx1 length1 = src in
+      let Buffer max_length2 content2 idx2 length2 = dst in
+      let s_full1 = !content1 in
+      let s_full2 = !content2 in
+      let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v max_length1) in
+      let s2 = Seq.slice s_full2 (U32.v idx2) (U32.v max_length2) in
+      let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
+      let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
+      let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v max_length2) s2' in
+
+      assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
+      assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
+      assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
+                        (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
+
     // AF: Needed to trigger the preorder relation. A bit verbose because the second sequence
     // has a ghost computation (U32.v (Ghost.reveal length))
     assert (s_full2' `Seq.equal`
@@ -1569,10 +1546,14 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
                                                    )
                                )
             );
-    content2 := s_full2';
-    assert (s_full2' `Seq.equal` Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) (Seq.slice s2' 0 (U32.v length2)));
-    g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
-#pop-options
+
+      content2 := s_full2';
+
+      let h1 = get () in
+      assert (s_full2' `Seq.equal` Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) (Seq.slice s2' 0 (U32.v length2)));
+      assert (h1 == g_upd_seq dst (Seq.slice s2' 0 (U32.v length2)) h);
+      g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
+  | _, _ -> ()
 
 #push-options "--z3rlimit 64 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
 let fill' (#t:Type) (#rrel #rel: srel t)
