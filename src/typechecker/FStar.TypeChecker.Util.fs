@@ -1430,8 +1430,8 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
         | None ->
           e, lc, Env.trivial_guard
         | Some g ->
-          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
           let g = Env.apply_guard g e in
+          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
           e, lc, g
         end
 
