@@ -747,7 +747,7 @@ type constant = (width * Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list * Prims.string)
 type version = Prims.int
-let (current_version : version) = (Prims.of_int (27)) 
+let (current_version : version) = (Prims.of_int (28)) 
 type file = (Prims.string * program)
 type binary_format = (version * file Prims.list)
 let fst3 :
