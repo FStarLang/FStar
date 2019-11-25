@@ -1275,7 +1275,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                 let env, xx = push_bv env x in
                 env, Inl xx, S.mk_binder xx::rec_bindings
               | Inr l ->
-                push_top_level_rec_binding env l.ident S.delta_equational, Inr l, rec_bindings in
+                let env, _ = push_top_level_rec_binding env l.ident S.delta_equational in
+                env, Inr l, rec_bindings in
             env, (lbname::fnames), rec_bindings) (env, [], []) funs
         in
 
@@ -2110,8 +2111,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  sigmeta = default_sigmeta;
                  sigattrs = [];
                  sigopts = None } in
-      let _env = Env.push_top_level_rec_binding _env id S.delta_constant in
-      let _env2 = Env.push_top_level_rec_binding _env' id S.delta_constant in
+      let _env, _ = Env.push_top_level_rec_binding _env id S.delta_constant in
+      let _env2, _ = Env.push_top_level_rec_binding _env' id S.delta_constant in
       _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparams env bs =

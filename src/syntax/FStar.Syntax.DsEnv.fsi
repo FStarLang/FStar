@@ -32,6 +32,8 @@ module BU = FStar.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+type used_marker = ref<bool>
+
 type open_kind =                                          (* matters only for resolving names with some module qualifier *)
 | Open_module                                             (* only opens the module, not the namespace *)
 | Open_namespace                                          (* opens the whole namespace *)
@@ -112,8 +114,9 @@ val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 val fv_qual_of_se : sigelt -> option<fv_qual>
 val delta_depth_of_declaration: lident -> list<qualifier> -> delta_depth
 
+val push_bv': env -> ident -> env * bv * used_marker
 val push_bv: env -> ident -> env * bv
-val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
+val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env * ref<bool>
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
