@@ -1424,10 +1424,16 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
     | _ ->
     match check_erased env res_typ, check_erased env exp_t with
     | No, Yes ty ->
-        let u = env.universe_of env res_typ in
-        let new_ty = mk_erased u res_typ in
-        let e, lc = coerce_with env e lc new_ty C.hide [u] [S.iarg res_typ] S.mk_Total in
-        e, lc, Env.trivial_guard
+        begin
+        let u = env.universe_of env ty in
+        match Rel.get_subtyping_predicate env res_typ ty with
+        | None ->
+          e, lc, Env.trivial_guard
+        | Some g ->
+          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
+          let g = Env.apply_guard g e in
+          e, lc, g
+        end
 
     | Yes ty, No ->
         let u = env.universe_of env ty in
