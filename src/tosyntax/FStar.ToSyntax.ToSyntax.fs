@@ -1268,16 +1268,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
         //Generate fresh names and populate an env' with recursive bindings
         //below, we use env' instead of env, only if is_rec
-        let env', fnames, rec_bindings =
-          List.fold_left (fun (env, fnames, rec_bindings) (_attr_opt, (f, _, _), _) ->
-            let env, lbname, rec_bindings = match f with
+        let env', fnames, rec_bindings, used_markers =
+          List.fold_left (fun (env, fnames, rec_bindings, used_markers) (_attr_opt, (f, _, _), _) ->
+            let env, lbname, rec_bindings, used_markers = match f with
               | Inl x ->
-                let env, xx = push_bv env x in
-                env, Inl xx, S.mk_binder xx::rec_bindings
+                let env, xx, used_marker = push_bv' env x in
+                let dummy_ref = BU.mk_ref true in
+                env, Inl xx, S.mk_binder xx::rec_bindings, used_marker::used_markers
               | Inr l ->
-                let env, _ = push_top_level_rec_binding env l.ident S.delta_equational in
-                env, Inr l, rec_bindings in
-            env, (lbname::fnames), rec_bindings) (env, [], []) funs
+                let env, used_marker = push_top_level_rec_binding env l.ident S.delta_equational in
+                env, Inr l, rec_bindings, used_marker::used_markers in
+            env, (lbname::fnames), rec_bindings, used_markers) (env, [], [], []) funs
         in
 
         let fnames = List.rev fnames in
@@ -1346,6 +1347,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             |> List.unzip
         in
         let body, aq = desugar_term_aq env' body in
+        if is_rec then begin
+          List.iter2 (fun (_attr_opt, (f, _, _), _) used_marker ->
+            if not !used_marker then
+              let nm, gl, rng =
+                match f with
+                | Inl x -> (string_of_ident x, "Local", range_of_id x)
+                | Inr l -> (string_of_lid l, "Global", range_of_lid l)
+              in
+              Errors.log_issue rng (Errors.Warning_UnusedLetRec,
+                                    BU.format2 "%s binding %s is recursive but not used in its body"
+                                                gl nm)) funs used_markers
+        end;
         mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)), aq @ List.flatten aqss
       in
       //end ds_let_rec_or_app
