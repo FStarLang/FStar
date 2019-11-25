@@ -1361,7 +1361,7 @@ let check_erased (env:Env.env) (t:term) : isErased =
   (*      | No -> "No"); *)
   r
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp =
+let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
     let should_coerce =
          not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
       || env.phase1 // otherwise only on phase1
@@ -1369,7 +1369,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp =
       || Options.lax ()
     in
     if not should_coerce
-    then (e, lc)
+    then (e, lc, Env.trivial_guard)
     else
     let is_t_term t =
         let t = N.unfold_whnf env t in
@@ -1405,31 +1405,37 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp =
     in
     match (U.un_uinst head).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
-        coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total
+        let e, lc = coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total in
+        e, lc, Env.trivial_guard
 
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
-        coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
+        let e, lc = coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
-        coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac
+        let e, lc = coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
-        coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac
+        let e, lc = coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
     | _ ->
     match check_erased env res_typ, check_erased env exp_t with
     | No, Yes ty ->
         let u = env.universe_of env res_typ in
         let new_ty = mk_erased u res_typ in
-        coerce_with env e lc new_ty C.hide [u] [S.iarg res_typ] S.mk_Total
+        let e, lc = coerce_with env e lc new_ty C.hide [u] [S.iarg res_typ] S.mk_Total in
+        e, lc, Env.trivial_guard
 
     | Yes ty, No ->
         let u = env.universe_of env ty in
-        coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal
+        let e, lc = coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal in
+        e, lc, Env.trivial_guard
 
     | _ ->
-      e, lc
+      e, lc, Env.trivial_guard
 
 (* Coerces regardless of expected type if a view exists, useful for matches *)
 (* Returns `None` if no coercion was applied. *)
@@ -2009,14 +2015,14 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
     | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
     | _ -> e
   in
-  let e, lc = maybe_coerce_lc env e lc t2 in
+  let e, lc, g_c = maybe_coerce_lc env e lc t2 in
   match check env lc.res_typ t2 with
   | None ->
     raise_error (Err.expected_expression_of_type env t2 e lc.res_typ) (Env.get_range env)
   | Some g ->
     if debug env <| Options.Other "Rel" then
       BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    decorate e t2, lc, g
+    decorate e t2, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
