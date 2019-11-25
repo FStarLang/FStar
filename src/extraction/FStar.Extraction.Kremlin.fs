@@ -37,6 +37,8 @@ module FC = FStar.Const
 - v25: Added a number of type parameters for globals.
 - v26: Flags for DExternal and all the DType's
 - v27: Added PConstant
+- v28: added many things for which the AST wasn't bumped; bumped it for
+  TConstBuf which will expect will be used soon
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -183,11 +185,12 @@ and typ =
   | TBound of int
   | TApp of lident * list<typ>
   | TTuple of list<typ>
+  | TConstBuf of typ
 
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 27
+let current_version: version = 28
 
 type file = string * program
 type binary_format = version * list<file>
@@ -584,6 +587,7 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
     ->
       TBuf (translate_type env arg)
+
   | MLTY_Named ([arg; _], p) when
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
@@ -598,14 +602,12 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
     ->
       TBuf (translate_type env arg)
+
   | MLTY_Named ([arg; _; _], p) when
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
-  
-  (*
-   * AR: temporarily extracting const_buffer t to t*, until proper support is added downstream
-   *)
+
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TBuf (translate_type env arg)
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
@@ -624,6 +626,7 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref"
     ->
       TBuf (translate_type env arg)
+
   | MLTY_Named ([_;arg], p) when
     Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
@@ -632,16 +635,20 @@ and translate_type env t: typ =
 
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
+
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
+
   | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"; "Native"]) && BU.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
+
   | MLTY_Named (args, lid) ->
       if List.length args > 0 then
         TApp (lid, List.map (translate_type env) args)
       else
         TQualified lid
+
   | MLTY_Tuple ts ->
       TTuple (List.map (translate_type env) ts)
 
@@ -853,10 +860,20 @@ and translate_expr env e: expr =
  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])
    when string_of_mlpath p = "LowStar.ConstBuffer.of_buffer"
      || string_of_mlpath p = "LowStar.ConstBuffer.of_ibuffer"
-     || string_of_mlpath p = "LowStar.ConstBuffer.cast"
-     || string_of_mlpath p = "LowStar.ConstBuffer.to_buffer"
-     || string_of_mlpath p = "LowStar.ConstBuffer.to_ibuffer" ->
-   translate_expr env e1  //just identities
+   ->
+     // The injection from *t to const *t should always be re-checkable by the
+     // Low* checker and should not necessitate the insertion of casts. This is
+     // the C semantics: if the context wants a const pointer, providing a
+     // non-const pointer should always be checkable.
+     translate_expr env e1
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ t ]) }, [ e1 ])
+    when string_of_mlpath p = "LowStar.ConstBuffer.cast" ||
+      string_of_mlpath p = "LowStar.ConstBuffer.to_buffer" ||
+      string_of_mlpath p = "LowStar.ConstBuffer.to_ibuffer"
+    ->
+      // See comments in LowStar.ConstBuffer.fsti
+      ECast (translate_expr env e1, TBuf (translate_type env t))
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)
