@@ -334,7 +334,7 @@ let bind_par (#st:st)
   = bind_wp (wp_par wpL wpR) (fun (xL, xR) -> wp_k xL xR)
 
 let as_ensures (#st:st) (#aL:Type) (#preL:st.hprop) (#postL: post st aL) (wpL: wp preL aL postL)
-  : x:aL -> hheap (postL x) -> prop
+  : x:aL -> fp_prop (postL x)
   = fun x s -> True
 
 let wp_star_frame (#st:st) #a (#pre0:st.hprop) (#post0:post st a)
@@ -349,6 +349,21 @@ let wp_star_frame (#st:st) #a (#pre0:st.hprop) (#post0:post st a)
          as_ensures wp0 x s' /\
          p s' ==>
          k x s')
+
+let and_fp_prop (#st:st) (#fp0 #fp1:st.hprop) (p0:fp_prop fp0) (p1:fp_prop fp1)
+  : fp_prop (fp0 `st.star` fp1)
+  = fun h -> p0 h /\ p1 h
+
+let wp_of_pre_post (#st:st) (#fp0:st.hprop) (#a:Type) (#fp1:a -> st.hprop)
+                   (pre:fp_prop fp0) (post: (x:a -> fp_prop (fp1 x)))
+   : wp fp0 a fp1
+   = fun (k:wp_post a fp1) (s:st.heap) ->
+      st.interp fp0 s /\
+      pre s /\
+      (forall x s'.
+        st.interp (fp1 x) s' /\
+        post x s' ==>
+        k x s')
 
 // let wp_star (#st:st) #a (#pre0 #pre1:st.hprop) (#post0 #post1:post st a)
 //             (wp0:wp pre0 a post0)
@@ -405,9 +420,16 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> wp pre a post ->
          -> (x:a -> m st b (post_a x) post_b (wp_b x))
          -> m st b pre post_b (bind_wp wp_a wp_b)
 
-  | Frame : pre:st.hprop -> a:_ -> post:_ -> wp:wp pre a post -> m st a pre post wp ->
-            frame:st.hprop -> p:fp_prop frame
-            -> m st a (pre `st.star` frame) (fun x -> post x `st.star` frame) (wp_star_frame wp frame p)
+  | Frame : pre:st.hprop ->
+            a:Type0 ->
+            post:post st a ->
+            wp_a:wp pre a post ->
+            m st a pre post wp_a ->
+            frame:st.hprop ->
+            f_frame:fp_prop frame ->
+            m st a (pre `st.star` frame)
+                   (fun x -> post x `st.star` frame)
+                   (wp_of_pre_post (and_fp_prop (as_requires wp_a) f_frame) (fun x -> and_fp_prop (as_ensures wp_a x) f_frame))
 
 /// We assume a stream of booleans for the semantics given below
 /// to resolve the nondeterminism of Par
@@ -435,6 +457,7 @@ type step_result (#st:st) a (q:post st a) (frame:st.hprop) (k:wp_post a q) =
           m st a fpost q wp -> //the reduct
           nat -> //position in the stream of booleans (less important)
           step_result a q frame k
+
 
 /// [step i f frame state]: Reduces a single step of [f], while framing
 /// the assertion [frame]
@@ -479,30 +502,6 @@ let step_ret (#st:st) (i:nat) #fpre #a #fpost (frame:st.hprop)
          f
          i
 
-// #push-options "--query_stats"
-//#push-options "--max_ifuel 4 --initial_ifuel 4"
-
-
-// let id_action (#st:st) #a (x:a) (post:post st a)
-//    : action (post x) a post
-//    = fun (s:hheap (post x)) ->
-//        let res : (x:a & hheap (post x)) = (| x, s |) in
-//        res
-
-// let trigger (#a:Type) (x:a) = True
-
-// let id_action (#st:st) #aL #aR
-//               (xL:aL) (xR:aR)
-//               (postL:post st aL) (postR:post st aR)
-//    : action (postL xL `st.star` postR xR)
-//             (aL & aR)
-//             (post_star postL postR)
-//    = fun (s:hheap (postL xL `st.star` postR xR)) ->
-//        let res : (x:(aL & aR) & hheap ((post_star postL postR) x)) =
-//          (| (xL, xR), s |)
-//        in
-//        res
-// let trigger (#a:Type) (x:a) = True
 
 let step_par_ret (#st:st) (i:nat) #pre #a #post
                       (frame:st.hprop)
@@ -553,7 +552,7 @@ let intro_refine (#st:st) (r0 r1:st.hprop) (p:fp_prop r0) (s:st.heap)
    = assert (st.interp (st.refine (r0 `st.star` r1) p) s)
 
 #push-options "--z3rlimit_factor 4 --query_stats"
-
+#push-options "--z3rlimit_factor 4"
 let rec step (#st:st) (i:nat) #pre #a #post
              (frame:st.hprop)
              (#wp_:wp pre a post)
@@ -567,67 +566,99 @@ let rec step (#st:st) (i:nat) #pre #a #post
           wp_ k state)
         (ensures fun _ -> True)
   = match f with
-    | Ret _ _ ->
-      step_ret i frame f k state
+    // | Ret _ _ ->
+    //   step_ret i frame f k state
 
-    | Act _ _ _ ->
-      step_act i frame f k state
+    // | Act _ _ _ ->
+    //   step_act i frame f k state
 
-    | Par preL aL postL wpL (Ret _ _)
-          preR aR postR wpR (Ret _ _) ->
-      step_par_ret i frame f k state
+    // | Par preL aL postL wpL (Ret _ _)
+    //       preR aR postR wpR (Ret _ _) ->
+    //   step_par_ret i frame f k state
 
-    | Par preL aL postL wpL mL
-          preR aR postR wpR mR ->
+    // | Par preL aL postL wpL mL
+    //       preR aR postR wpR mR ->
 
-      assert (wp_ == wp_par wpL wpR);
-      assert (st.interp (preL `st.star` (preR `st.star` frame)) state);
-      assert (st.interp (preL `st.star` preR) state);
-      assert (as_requires wpL state);
-      assert (as_requires wpR state);
-      calc (st.equals) {
-        preL `st.star` (preR `st.star` frame);
-          (st.equals) { }
-        (preL `st.star` preR) `st.star` frame;
-          (st.equals) { }
-        (preR `st.star` preL) `st.star` frame;
-          (st.equals) { }
-        preR `st.star` (preL `st.star` frame);
-      };
-      intro_refine preR (preL `st.star` frame) (as_requires wpR) state;
-      calc (st.equals) {
-        (st.refine preR (as_requires wpR)) `st.star` (preL `st.star` frame);
-          (st.equals) { }
-        (st.refine preR (as_requires wpR) `st.star` preL) `st.star` frame;
-          (st.equals) { }
-        (preL `st.star` st.refine preR (as_requires wpR)) `st.star` frame;
-          (st.equals) { }
-        preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame);
-      };
-      let Step next_preL next_state wpL' mL' j =
-            //Notice that, inductively, we instantiate the frame extending
-            //it to include the precondition of the other side of the par
-            step (i + 1)
-                 ((st.refine preR (as_requires wpR)) `st.star` frame)
-                 mL
-                 (triv_post aL postL)
-                 state
+    //   assert (wp_ == wp_par wpL wpR);
+    //   assert (st.interp (preL `st.star` (preR `st.star` frame)) state);
+    //   assert (st.interp (preL `st.star` preR) state);
+    //   assert (as_requires wpL state);
+    //   assert (as_requires wpR state);
+    //   calc (st.equals) {
+    //     preL `st.star` (preR `st.star` frame);
+    //       (st.equals) { }
+    //     (preL `st.star` preR) `st.star` frame;
+    //       (st.equals) { }
+    //     (preR `st.star` preL) `st.star` frame;
+    //       (st.equals) { }
+    //     preR `st.star` (preL `st.star` frame);
+    //   };
+    //   intro_refine preR (preL `st.star` frame) (as_requires wpR) state;
+    //   calc (st.equals) {
+    //     (st.refine preR (as_requires wpR)) `st.star` (preL `st.star` frame);
+    //       (st.equals) { }
+    //     (st.refine preR (as_requires wpR) `st.star` preL) `st.star` frame;
+    //       (st.equals) { }
+    //     (preL `st.star` st.refine preR (as_requires wpR)) `st.star` frame;
+    //       (st.equals) { }
+    //     preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame);
+    //   };
+    //   let Step next_preL next_state wpL' mL' j =
+    //         //Notice that, inductively, we instantiate the frame extending
+    //         //it to include the precondition of the other side of the par
+    //         step (i + 1)
+    //              ((st.refine preR (as_requires wpR)) `st.star` frame)
+    //              mL
+    //              (triv_post aL postL)
+    //              state
+    //   in
+    //   assert (as_requires wpL' next_state);
+    //   assert (as_requires wpR next_state);
+    //   assert (st.interp (next_preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame)) next_state);
+    //   assume (st.interp (next_preL `st.star` preR) next_state);
+    //   assume (st.interp ((next_preL `st.star` preR) `st.star` frame) next_state);
+    //   let next_m
+    //     : m st (aL & aR) (next_preL `st.star` preR)
+    //                      (post_star postL postR)
+    //                      (wp_par wpL' wpR)
+    //     = Par next_preL aL postL wpL' mL'
+    //           preR aR postR wpR mR
+    //   in
+    //   Step (next_preL `st.star` preR) next_state (wp_par wpL' wpR) next_m j
+
+    | Frame pre a post wp' m frame' f_frame' ->
+      assert (wp_ ==
+              wp_of_pre_post (and_fp_prop (as_requires wp') f_frame')
+                             (fun x -> and_fp_prop (as_ensures wp' x) f_frame'));
+      assert (st.interp ((pre `st.star` frame') `st.star` frame) state);
+      assume (st.interp (pre `st.star` (st.refine frame' f_frame' `st.star` frame)) state);
+      let kk : wp_post a post =
+        fun x s' ->
+          st.interp (post x `st.star` frame') s' /\
+          as_ensures wp' x s' /\
+          f_frame' s' ==> k x s'
       in
-      assert (as_requires wpL' next_state);
-      assert (as_requires wpR next_state);
-      assert (st.interp (next_preL `st.star` ((st.refine preR (as_requires wpR)) `st.star` frame)) next_state);
-      assume (st.interp (next_preL `st.star` preR) next_state);
-      assume (st.interp ((next_preL `st.star` preR) `st.star` frame) next_state);
-      let next_m
-        : m st (aL & aR) (next_preL `st.star` preR)
-                         (post_star postL postR)
-                         (wp_par wpL' wpR)
-        = Par next_preL aL postL wpL' mL'
-              preR aR postR wpR mR
+      assert (wp_of_pre_post (as_requires wp') (as_ensures wp') kk state);
+      assume (wp' kk state);
+      let Step next_pre next_state wp'' m' j =
+        step i (st.refine frame' f_frame' `st.star` frame) m kk state
       in
-      Step (next_preL `st.star` preR) next_state (wp_par wpL' wpR) next_m j
+      assert (st.interp (next_pre `st.star` (st.refine frame' f_frame' `st.star` frame))
+                        next_state);
+      assume (st.interp (next_pre `st.star` frame') next_state);
+      assume (f_frame' next_state);
+      assert (wp'' kk next_state);
+      assume (wp_of_pre_post (as_requires wp'') (as_ensures wp'') kk state);
+      assume (wp_of_pre_post (and_fp_prop (as_requires wp'') f_frame')
+                             (fun x -> and_fp_prop (as_ensures wp'' x) f_frame') k next_state);
+      Step (next_pre `st.star` frame')
+           next_state
+           (wp_of_pre_post (and_fp_prop (as_requires wp'') f_frame')
+                           (fun x -> and_fp_prop (as_ensures wp'' x) f_frame'))
+           (Frame next_pre a post wp'' m' frame' f_frame')
+           j
 
-    | _ -> admit()
+     | _ -> admit()
 
 
 
