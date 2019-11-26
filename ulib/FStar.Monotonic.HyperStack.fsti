@@ -54,9 +54,10 @@ unfold private let map_invariant_predicate (m:hmap) :Type0 =
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
-            \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
-                          /\ s `is_in` h   //that is also in the memory
-                     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
+            \/ (forall (s:rid). (r `is_above` s  //or, any region beneath it
+                           /\ s `is_in` h)   //that is also in the memory
+                     ==> ((is_stack_region r = is_stack_region s) /\  //must be of the same flavor as itself
+                          ((is_heap_color (color r) /\ rid_freeable r) ==> s == r)))) //and if r is a freeable heap region, s can only be r (no regions strictly below r)
 
 [@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
@@ -369,6 +370,31 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hm
     let h = Map.upd h new_rid Heap.emp in
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
     new_rid, mk_mem (rid_ctr + 1) h tip
+
+let new_freeable_heap_region
+  (m:mem)
+  (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})  
+: t:(rid * mem){fresh_region (fst t) m (snd t) /\ rid_freeable (fst t)}
+= let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
+  lemma_is_wf_ctr_and_tip_elim m;
+  let new_rid = extend_monochrome_freeable parent rid_ctr true in
+  let h = Map.upd h new_rid Heap.emp in
+  lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
+  new_rid, mk_mem (rid_ctr + 1) h tip
+
+let free_heap_region
+  (m0:mem)
+  (r:rid{
+    is_heap_color (color r) /\
+    rid_freeable r /\
+    get_hmap m0 `Map.contains` r})
+: mem
+= let h0, rid_ctr0 = get_hmap m0, get_rid_ctr m0 in
+  lemma_is_wf_ctr_and_tip_elim m0;
+  let dom = remove_elt (Map.domain h0) r in
+  let h1 = Map.restrict dom h0 in
+  lemma_is_wf_ctr_and_tip_intro h1 rid_ctr0 (get_tip m0);
+  mk_mem (get_rid_ctr m0) h1 (get_tip m0)
 
 
 (****** The following two lemmas are only used in FStar.Pointer.Base, and invoked explicitly ******)
