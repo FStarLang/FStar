@@ -403,7 +403,7 @@ let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :
      (is_eternal_region i \/ i `HS.is_above` get_tip m) /\
      (not (is_mm r)       \/ m `HS.contains_ref_in_its_region` r))
 
-val rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
+val rfree (#a:Type) (#rel:preorder a) (r:mreference a rel{HS.is_mm r /\ HS.is_heap_color (HS.color (HS.frameOf r))})
   :ST unit (requires (fun m0     -> r `is_live_for_rw_in` m0))
            (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
 
