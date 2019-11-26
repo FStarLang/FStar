@@ -38,6 +38,12 @@
    Just like Coq's prop, it is okay to use erased types
    freely as long as we produce an erased type.
 
+   [reveal] and [hide] are coercions: the typechecker
+   will automatically insert them when required. That is,
+   if the type of an expression is [erased X], and the
+   expected type is NOT an [erased Y], it will insert [reveal],
+   and viceversa for [hide].
+
 *)
 module FStar.Ghost
 [@erasable]
