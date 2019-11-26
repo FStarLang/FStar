@@ -798,6 +798,22 @@ let hmem (fp:hprop) = m:mem{interp (fp `star` mem_invariant m) (heap_of_mem m)}
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hmem fp -> (x:a & hmem (fp' x))
 
+let m_disjoint (m:mem) (h:heap) =
+  disjoint (heap_of_mem m) h /\
+  (forall i. i >= m.ctr ==> h i == None)
+
+let m_action_depends_only_on #pre #a #post (f:pre_m_action pre a post)
+  = forall (m0:hmem pre)
+      (h1:heap {m_disjoint m0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (let h0 = heap_of_mem m0 in
+       let h = join h0 h1 in
+       let m1 = { m0 with heap = h } in
+       let (| x0, m |) = f m0 in
+       let (| x1, m' |) = f m1 in
+       x0 == x1 /\
+       (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
+
 let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
   forall frame (m0:hmem (fp `star` frame)).
     (affine_star fp frame (heap_of_mem m0);
@@ -805,7 +821,7 @@ let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
      interp (fp' x `star` frame `star` mem_invariant m1) (heap_of_mem m1))
 
 let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_m_action fp a fp'{ is_m_frame_preserving f }
+  f:pre_m_action fp a fp'{ is_m_frame_preserving f /\ m_action_depends_only_on f }
 
 val alloc_action (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
@@ -884,26 +900,88 @@ let alloc_is_frame_preserving (#a:_) (v:a)
     ()
 #pop-options
 
+#push-options "--z3rlimit_factor 2"
+let alloc_preserves_disjoint (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
+  : Lemma (let (| x0, m |) = alloc_pre_m_action v m0 in
+           disjoint (heap_of_mem m) h1)
+  = let (| x0, m |) = alloc_pre_m_action v m0 in
+    let h0 = heap_of_mem m0 in
+    let h' = heap_of_mem m in
+    let aux (ad:addr) : Lemma (disjoint_addr h' h1 ad)
+      = if ad >= m0.ctr then ()
+        else begin
+          let h_alloc = singleton_heap #a m0.ctr (Ref a full_permission v) in
+          assert (h' == join h_alloc h0);
+          assert (h_alloc ad == None);
+         assert (h0 ad == h' ad);
+         assert (disjoint_addr h0 h1 ad)
+        end
+    in Classical.forall_intro aux
+#pop-options
+
+#push-options "--z3rlimit_factor 4"
+let alloc_preserves_join (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
+  : Lemma (
+      let h0 = heap_of_mem m0 in
+      let h = join h0 h1 in
+      let m1:mem = { m0 with heap = h } in
+      let (| x0, m |) = (alloc_pre_m_action v) m0 in
+      let (| x1, m' |) = (alloc_pre_m_action v) m1 in
+      heap_of_mem m' == join (heap_of_mem m) h1)
+   = let h0 = heap_of_mem m0 in
+     let h = join h0 h1 in
+     let m1:mem = { m0 with heap = h } in
+     let (| x0, m |) = (alloc_pre_m_action v) m0 in
+     let (| x1, m' |) = (alloc_pre_m_action v) m1 in
+     let h_alloc = singleton_heap #a m0.ctr (Ref a full_permission v) in
+     // let hm = heap_of_mem m in
+     // let hm' = heap_of_mem m' in
+     // assert (hm == join h_alloc h0);
+     // assert (hm' == join h_alloc h);
+     // assert (hm' == join h_alloc (join h0 h1));
+     join_associative' h_alloc h0 h1
+#pop-options
+
+#push-options "--warn_error -271 --z3rlimit_factor 4"
+let alloc_depends_only_on (#a:_) (v:a)
+  : Lemma (m_action_depends_only_on (alloc_pre_m_action v))
+  = let aux
+        (m0:hmem emp)
+        (h1:heap { m_disjoint m0 h1 })
+        (post:(x:ref a -> fp_prop (pts_to x full_permission v)))
+      : Lemma
+          (ensures (
+            let h0 = heap_of_mem m0 in
+            let h = join h0 h1 in
+            let m1 = { m0 with heap = h } in
+            let (| x0, m |) = (alloc_pre_m_action v) m0 in
+            let (| x1, m' |) = (alloc_pre_m_action v) m1 in
+            x0 == x1 /\
+            (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))))
+          [SMTPat ()]
+      =
+        let h0 = heap_of_mem m0 in
+        let h = join h0 h1 in
+        let m1 = { m0 with heap = h } in
+        let (| x0, m |) = (alloc_pre_m_action v) m0 in
+        let (| x1, m' |) = (alloc_pre_m_action v) m1 in
+        assert (x0 == x1);
+        alloc_preserves_disjoint v m0 h1;
+//        assert (disjoint (heap_of_mem m) h1);
+        affine_star (pts_to x0 full_permission v) (mem_invariant m) (heap_of_mem m);
+        alloc_preserves_join v m0 h1
+//        assert (interp (pts_to x0 full_permission v) (heap_of_mem m));
+//        assert (heap_of_mem m' == join (heap_of_mem m) h1)
+    in
+    ()
+#pop-options
+
 let alloc_m_action (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
   = alloc_is_frame_preserving v;
+    alloc_depends_only_on v;
     alloc_pre_m_action v
 
-let m_disjoint (m:mem) (h:heap) =
-  disjoint (heap_of_mem m) h /\
-  (forall i. i >= m.ctr ==> h i == None)
-
-let m_action_framing #pre #a #post (f:m_action pre a post)
-  = forall (m0:hmem pre)
-      (h1:heap {m_disjoint m0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (let h0 = heap_of_mem m0 in
-       let h = join h0 h1 in
-       let m1 = { m0 with heap = h } in
-       let (| x0, m |) = f m0 in
-       let (| x1, m' |) = f m1 in
-       x0 == x1 /\
-       (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
 #push-options "--query_stats --z3rlimit_factor 4"
 // let test2 (#a:_) (v:a) (m0:hmem emp)
 //           (h1:heap {m_disjoint m0 h1})
