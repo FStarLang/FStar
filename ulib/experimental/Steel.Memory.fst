@@ -27,6 +27,10 @@ type cell =
           perm:permission{allows_read perm} ->
           v:a ->
           cell
+  | Array: a:Type u#0 ->
+           len: nat ->
+           seq:Seq.lseq (a & permission) len  ->
+	   cell
 
 let addr = nat
 
@@ -54,6 +58,13 @@ let disjoint_addr (m0 m1:heap) (a:addr)
       summable_permissions p0 p1 /\
       t0 == t1 /\
       v0 == v1
+    | Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
+      t0 == t1 /\
+      len0 == len1 /\
+      (forall (i:nat{i < len0}).
+        let (x0, p0) = Seq.index seq0 i in
+	let (x1, p1) = Seq.index seq1 i in
+	x0 == x1 /\ summable_permissions p0 p1)
 
     | Some _, None
     | None, Some _
@@ -81,8 +92,17 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
       | None, Some x -> Some x
       | Some x, None -> Some x
       | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
-        Some (Ref a0 (sum_permissions p0 p1) v0))
+        Some (Ref a0 (sum_permissions p0 p1) v0)
+      | Some (Array a0 len0 seq0), Some (Array a1 len1 seq1) ->
+        Some (Array a0 len0 (Seq.init len0 (fun i ->
+	  let (x0, p0) = Seq.index seq0 i in
+          let (_, p1) = Seq.index seq1 i in
+	  (x0, sum_permissions p0 p1)
+      )))
+  )
 
+
+#push-options "--z3rlimit_factor 4 --initial_fuel 2 --initial_ifuel 2"
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
@@ -91,7 +111,26 @@ let disjoint_join' (m0 m1 m2:heap)
            disjoint (join m0 m1) m2 /\
            disjoint (join m0 m2) m1)
           [SMTPat (disjoint m0 (join m1 m2))]
-  = ()
+  =
+  let aux (a: addr) : Lemma (disjoint m1 m2 /\
+           disjoint m0 (join m1 m2) ==>
+           disjoint_addr m0 m1 a /\
+           disjoint_addr m0 m2 a)
+   =
+    ()
+  in
+  Classical.forall_intro aux;
+  let aux' (a: addr) : Lemma (disjoint m1 m2 /\
+           disjoint m0 (join m1 m2) ==>
+	   disjoint m0 m1 /\
+           disjoint m0 m2 /\
+	   disjoint_addr (join m0 m1) m2 a /\
+           disjoint_addr (join m0 m2) m1 a)
+  =
+    ()
+  in
+  Classical.forall_intro aux'
+#pop-options
 
 let disjoint_join m0 m1 m2 = disjoint_join' m0 m1 m2
 
@@ -114,10 +153,17 @@ let join_commutative' (m0 m1:heap)
     (ensures
       join m0 m1 `mem_equiv` join m1 m0)
     [SMTPat (join m0 m1)]
-  = ()
+  =
+  let aux (a: addr) : Lemma ((join m0 m1) a == (join m1 m0) a) =
+    match (join m0 m1) a, (join m1 m0) a with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      assert(seq2 `Seq.equal` seq3)
+    | _ -> ()
+  in Classical.forall_intro aux
 
 let join_commutative m0 m1 = ()
 
+#push-options "--z3rlimit_factor 6 --initial_fuel 2 --initial_ifuel 2"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -129,10 +175,18 @@ let join_associative' (m0 m1 m2:heap)
     [SMTPatOr
       [[SMTPat (join m0 (join m1 m2))];
        [SMTPat (join (join m0 m1) m2)]]]
-  = ()
+  =
+  let aux (a: addr) : Lemma ((join m0 (join m1 m2)) a == (join (join m0 m1) m2) a) =
+    match  (join m0 (join m1 m2)) a, (join (join m0 m1) m2) a with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      assert(seq2 `Seq.equal` seq3)
+    | _ -> ()
+  in Classical.forall_intro aux
+#pop-options
 
 let join_associative (m0 m1 m2:heap) = join_associative' m0 m1 m2
 
+#push-options "--z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2"
 let join_associative2 (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -143,7 +197,28 @@ let join_associative2 (m0 m1 m2:heap)
       disjoint m0 (join m1 m2) /\
       join m0 (join m1 m2) `mem_equiv` join (join m0 m1) m2)
     [SMTPat (join (join m0 m1) m2)]
-  = ()
+  =
+  let aux (a: addr) : Lemma (disjoint_addr m1 m2 a) =
+    match  m1 a, m2 a with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      ()
+    | _ -> ()
+  in Classical.forall_intro aux;
+  assert(disjoint m1 m2);
+  let aux (a: addr) : Lemma (disjoint_addr m0 (join m1 m2) a) =
+    match  m0 a, (join m1 m2) a with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      ()
+    | _ -> ()
+  in Classical.forall_intro aux;
+  assert(disjoint m0 (join m1 m2));
+  let aux (a: addr) : Lemma ((join m0 (join m1 m2)) a == (join (join m0 m1) m2) a) =
+    match  (join m0 (join m1 m2)) a, (join (join m0 m1) m2) a with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      assert(seq2 `Seq.equal` seq3)
+    | _ -> ()
+  in Classical.forall_intro aux
+#pop-options
 
 let heap_prop_is_affine (p:heap -> prop) = forall m0 m1. p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
 let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
