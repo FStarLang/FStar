@@ -1330,7 +1330,7 @@ val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
   [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
 
 val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
-  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_heap_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies loc_none m0 m1
