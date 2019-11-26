@@ -127,9 +127,11 @@ let extend r n c =
     (c, n, freeable)::r
   ) r
 
-let extend_monochrome r n =
+let extend_monochrome_freeable r n freeable =
   elift1 (fun r ->
-    let freeable = rid_freeable (hide r) in
     let c = color (hide r) in
     (c, n, freeable)::r
   ) r
+
+let extend_monochrome r n = extend_monochrome_freeable r n (rid_freeable r)
+

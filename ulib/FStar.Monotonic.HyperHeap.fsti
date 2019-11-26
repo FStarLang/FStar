@@ -175,22 +175,20 @@ val root_is_root (s:rid)
          (ensures  (s == root))
          [SMTPat (includes s root)]
 
+unfold
+let extend_post (r:rid) (n:int) (c:int) (freeable:bool) : pure_post rid =
+  fun s ->
+  s `extends` r /\
+  Cons? (reveal s) /\
+  Cons?.hd (reveal s) == (c, n) /\
+  color s == c /\
+  rid_freeable s == freeable
+  
 val extend (r:rid) (n:int) (c:int)
-: Pure rid
-  (requires True)
-  (ensures fun s ->
-    s `extends` r /\
-    Cons? (reveal s) /\
-    Cons?.hd (reveal s) == (c, n) /\
-    color s == c /\
-    rid_freeable s == rid_freeable r)
+: Pure rid (requires True) (extend_post r n c (rid_freeable r))
+
+val extend_monochrome_freeable (r:rid) (n:int) (freeable:bool)
+: Pure rid (requires True) (extend_post r n (color r) freeable)
 
 val extend_monochrome (r:rid) (n:int)
-: Pure rid
-  (requires True)
-  (ensures fun s ->
-    s `extends` r /\
-    Cons? (reveal s) /\
-    Cons?.hd (reveal s) == ((color r), n) /\
-    color s == color r /\
-    rid_freeable s == rid_freeable r)
+: Pure rid (requires True) (extend_post r n (color r) (rid_freeable r))
