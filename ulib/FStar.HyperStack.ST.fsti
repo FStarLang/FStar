@@ -305,7 +305,7 @@ type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
 let is_eternal_region (r:rid) :Type0
-  = HS.is_eternal_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
+  = HS.is_eternal_region_hs r /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
 (*
  * AR: The change to using ST.rid may not be that bad itself,
@@ -366,7 +366,7 @@ val new_region (r0:rid)
 
 val new_colored_region (r0:rid) (c:int)
   :ST rid
-      (requires (fun m       -> HS.is_eternal_color c /\ is_eternal_region r0))
+      (requires (fun m       -> HS.is_heap_color c /\ is_eternal_region r0))
       (ensures (fun m0 r1 m1 ->
                 r1 `HS.extends` r0                               /\
                 HS.fresh_region r1 m0 m1                         /\
@@ -456,7 +456,7 @@ val recall_region (i:rid{is_eternal_region i})
               (ensures (fun m0 _ m1 -> m0 == m1 /\ i `is_in` get_hmap m1))
 
 val witness_region (i:rid)
-  :Stack unit (requires (fun m0      -> is_eternal_color (color i) ==> i `is_in` get_hmap m0))
+  :Stack unit (requires (fun m0      -> HS.is_eternal_region_hs i ==> i `is_in` get_hmap m0))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
 
 val witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
@@ -502,7 +502,7 @@ val testify_forall_region_contains_pred (#c:Type) (#p:(c -> GTot rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\
-	                          (forall (x:c). (not (HS.is_eternal_color (color (p x)))) \/ h1 `contains_region` (p x))))
+	                          (forall (x:c). HS.is_eternal_region_hs (p x) ==> h1 `contains_region` (p x))))
 
 
 (****** Begin: preferred API for witnessing and recalling predicates ******)

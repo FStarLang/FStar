@@ -24,8 +24,8 @@ open FStar.Preorder
 
 (* Eternal regions remain contained *)
 private let eternal_region_pred (m1 m2:mem) :Type0
-  = forall (r:HS.rid).{:pattern (HS.is_eternal_color (color r)); (m1 `contains_region` r)}
-                 (HS.is_eternal_color (color r) /\ m1 `contains_region` r) ==> m2 `contains_region` r
+  = forall (r:HS.rid).{:pattern (HS.is_heap_color (color r)); (m1 `contains_region` r)}
+                 (HS.is_eternal_region_hs r /\ m1 `contains_region` r) ==> m2 `contains_region` r
 
 (* rid counter increases monotonically *)
 private let rid_ctr_pred (m1 m2:mem) :Type0 = get_rid_ctr m1 <= get_rid_ctr m2
@@ -49,7 +49,7 @@ private let eternal_refs_pred (m1 m2:mem) :Type0
       if is_mm r then True
       else
         if m1 `HS.contains` r then
-	  if HS.is_eternal_color (color (HS.frameOf r)) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  if HS.is_eternal_region_hs (frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else if m2 `contains_region` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
@@ -95,7 +95,7 @@ let mem_rel :preorder mem
 
 (* Predicates that we will witness with regions and refs *)
 let region_contains_pred r =
-  fun m -> (not (HS.is_eternal_color (color r))) \/ m `contains_region` r
+  fun m -> (not (HS.is_eternal_region_hs r)) \/ m `contains_region` r
 
 let ref_contains_pred #_ #_ r =
   fun m ->
