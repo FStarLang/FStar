@@ -722,7 +722,12 @@ let tr_norm_step = function
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
-    List.concatMap tr_norm_step s
+    let s = List.concatMap tr_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
@@ -741,15 +746,10 @@ let get_norm_request cfg (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s ->
-        let s = Beta::s in
-        let s = add_exclude s Zeta in
-        let s = add_exclude s Iota in
-        Some (inherited_steps @ s, tm)
+      | Some s -> Some (inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -1046,7 +1046,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | None -> rebuild cfg env stack t
             end
 
-          | Tm_quoted _ ->
+          | Tm_quoted (qt, qi) ->
+            let qi = S.on_antiquoted (norm cfg env []) qi in
+            let t = mk (Tm_quoted (qt, qi)) t.pos in
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app(hd, args)
@@ -1818,7 +1820,24 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      lift (env.universe_of env t) t (U.mk_reify e)
+      (*
+       * AR: we need to apply the lift combinator to `e`
+       *     if source effect (i.e. e's effect) is reifiable, then we first reify e
+       *     else if it is not, then we thunk e
+       *     this is how lifts are written for layered effects
+       *     not sure what's the convention for DM4F, but DM4F lifts don't come to this point anyway
+       *     they are handled as a `return` in the `then` branch above
+       *)
+      let e =
+        if Env.is_reifiable_effect env msrc
+        then U.mk_reify e
+        else S.mk
+               (Tm_abs ([S.null_binder S.t_unit], e,
+                        Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))
+               None e.pos in
+      lift (env.universe_of env t) t e
+
+      
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)

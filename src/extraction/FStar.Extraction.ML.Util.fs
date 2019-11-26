@@ -462,6 +462,7 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
               (PC.option_lid, 1, "option"), Syntax_term;
               (PC.mk_tuple_lid 2 Range.dummyRange, 2, "tuple2"), Syntax_term;
               (RD.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
+              (RD.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
               (RD.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
               (RD.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
               (RD.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;

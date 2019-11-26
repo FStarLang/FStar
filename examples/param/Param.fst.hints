@@ -1,0 +1,63 @@
+[
+  "ug?B\u0010sK3½\u0005É\u0014¤£¾X",
+  [
+    [
+      "Param.lookup",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Param.bvmap", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "3ce973141dd3e7d7599e7b6fa1c0aad9"
+    ],
+    [
+      "Param.id_is_unique",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5f7c80df7961b63a4161eaf33bab7cb0"
+    ],
+    [
+      "Param.lookup",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Param.bvmap", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "9be292c7e311afe9b92c41432d2a59aa"
+    ],
+    [
+      "Param.param",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Tactics.Result.uu___is_Failed"
+      ],
+      0,
+      "6fd8bb3c01cd6baa00a7291e2b3a8dd3"
+    ]
+  ]
+]

@@ -981,7 +981,7 @@ let lemma_lognot_zero_ext #n a =
   assert (neav_l = neav_r);
   assert (from_vec neav_r = lhs)
 
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 20"
 val lemma_lognot_one_ext: #n:pos -> a:uint_t n ->
   Lemma (lognot #(n+1) (one_extend a) = lognot #n a)
 let lemma_lognot_one_ext #n a =

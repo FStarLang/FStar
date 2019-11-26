@@ -150,8 +150,9 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Env.trivial_guard
    | Some t ->
-     let e, lc = TcUtil.maybe_coerce_lc env e lc t in
-     TcUtil.weaken_result_typ env e lc t
+     let e, lc, g_c = TcUtil.maybe_coerce_lc env e lc t in
+     let e, lc, g = TcUtil.weaken_result_typ env e lc t in
+     e, lc, Env.conj_guard g g_c
 
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
@@ -402,13 +403,35 @@ let wrap_guard_with_tactic_opt topt g =
      Env.always_map_guard g (fun g ->
      Common.mk_by_tactic tactic (U.mk_squash U_zero g)) //guards are in U_zero
 
+
+(*
+ * This is pattern matching an `(M.reflect e) <: C`
+ * 
+ * As we special case typechecking of such terms (as a subcase of `Tm_ascribed` in the main `tc_term` loop
+ *
+ * Returns the (e, arg_qualifier) and the lident of M
+ *)
+let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
+  match (SS.compress e).n with
+  | Tm_ascribed (e, (Inr _, _), _) ->
+    (match (SS.compress e).n with
+     | Tm_app (head, args) when List.length args = 1 ->
+       (match (SS.compress head).n with
+        | Tm_constant (Const_reflect l) -> args |> List.hd |> (fun (e, aqual) -> (l, e, aqual)) |> Some
+        | _ -> None)
+     | _ -> None)
+   | _ -> None
+    
+
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
     if Env.debug env Options.Medium then
-        BU.print4 "(%s) Starting tc_term of %s (%s) with expected type: %s {\n"
+        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s) with expected type: %s {\n"
           (Range.string_of_range <| Env.get_range env)
+          (string_of_bool env.phase1)
           (Print.term_to_string e)
           (Print.tag_of_term (SS.compress e))
           (match Env.expected_typ env with | None -> "None" | Some t -> Print.term_to_string t);
@@ -574,6 +597,65 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g = tc_term env e in
     let e = mk (Tm_meta(e, m)) None top.pos in
     e, c, g
+
+  (*
+   * AR: Special case for the typechecking of (M.reflect e) <: M a is
+   *
+   *     As part of it, we typecheck (e <: Tot (repr a is)), this keeps the bidirectional
+   *       typechecking for e, which is most cases is a lambda
+   *
+   *     Also the `Tot` annotation is important since for lambdas, we fold the guard
+   *       into the returned comp (making it something like PURE (arrow_t) wp, see the end of tc_abs)
+   *     If we did not put `Tot` we would have to separately check that the wp has
+   *       a trivial precondition
+   *)
+
+  | Tm_ascribed (_, (Inr expected_c, _tacopt), _)
+    when top |> is_comp_ascribed_reflect |> is_some ->
+    
+    let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
+
+    let env0, _ = Env.clear_expected_typ env in
+    let expected_c, _, g_c = tc_comp env0 expected_c in
+    let expected_ct = Env.unfold_effect_abbrev env0 expected_c in
+
+    if not (lid_equals effect_lid expected_ct.effect_name)
+    then raise_error (Errors.Fatal_UnexpectedEffect,
+           BU.format2 "The effect on reflect %s does not match with the annotation %s\n"
+             (Ident.string_of_lid effect_lid) (Ident.string_of_lid expected_ct.effect_name)) top.pos;
+
+    if not (is_user_reflectable_effect env effect_lid)
+    then raise_error (Errors.Fatal_EffectCannotBeReified,
+           BU.format1 "Effect %s cannot be reflected" (Ident.string_of_lid effect_lid)) top.pos;
+
+    let u_c = expected_ct.comp_univs |> List.hd in
+    let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> must in
+
+    // e <: Tot repr
+    let e = S.mk (Tm_ascribed (e, (Inr (S.mk_Total' repr (Some u_c)), None), None)) None e.pos in
+
+    if Env.debug env0 <| Options.Extreme
+    then BU.print1 "Typechecking ascribed reflect, inner ascribed term: %s\n"
+           (Print.term_to_string e);
+
+    let e, _, g_e = tc_tot_or_gtot_term env0 e in
+    let e = U.unascribe e in
+
+    if Env.debug env0 <| Options.Extreme
+    then BU.print2 "Typechecking ascribed reflect, after typechecking inner ascribed term: %s and guard: %s\n"
+           (Print.term_to_string e) (Rel.guard_to_string env0 g_e);
+
+    //reconstruct (M.reflect e) < M a is
+    let top =
+      let r = top.pos in
+      let tm = mk (Tm_constant (Const_reflect effect_lid)) None r in
+      let tm = mk (Tm_app (tm, [e, aqual])) None r in
+      mk (Tm_ascribed (tm, (Inr expected_c, _tacopt), expected_c |> U.comp_effect_name |> Some)) None r in
+
+    //check the expected type in the env, if present
+    let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
+
+    top, c, Env.conj_guards [g_c; g_e; g_env]
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
@@ -962,7 +1044,10 @@ and tc_value env (e:term) : term
   let top = SS.compress e in
   match top.n with
   | Tm_bvar x ->
-    failwith (BU.format1 "Impossible: Violation of locally nameless convention: %s" (Print.term_to_string top))
+    (* This can happen if user tactics build an ill-scoped term *)
+    raise_error (Errors.Error_IllScopedTerm,
+                 BU.format1 "Violation of locally nameless convention: %s" (Print.term_to_string top))
+                top.pos
 
   | Tm_uvar (u, s) -> //the type of a uvar is given directly with it; we do not recheck the type
     //FIXME: Check context inclusion?

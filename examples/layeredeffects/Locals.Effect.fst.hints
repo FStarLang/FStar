@@ -1,5 +1,5 @@
 [
-  "Öà\u0002••÷r\u0004hù×!;Uÿ\u000b",
+  "½Ù*É‡q¾E´z\u000b[¿\u001bXÕ",
   [
     [
       "Locals.Effect.locals_t'",
@@ -247,7 +247,7 @@
       "3c88275f919fdc581551eada690a970d"
     ],
     [
-      "Locals.Effect.create0",
+      "Locals.Effect.create",
       1,
       2,
       1,
@@ -282,10 +282,10 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "08c4607f828bf30004462c2a4e879d98"
+      "ce3596cf669be5840ad050d95021442b"
     ],
     [
-      "Locals.Effect.read0",
+      "Locals.Effect.read",
       1,
       2,
       1,
@@ -297,10 +297,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "52a91dd1a097f95c5a917537c8e5a737"
+      "04e80147abf7648a8b55f18c9cdf9014"
     ],
     [
-      "Locals.Effect.write0",
+      "Locals.Effect.write",
       1,
       2,
       1,
@@ -332,70 +332,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "0366fc6dedf88c4a77c08311ceea81c8"
-    ],
-    [
-      "Locals.Effect.get0",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "typing_Locals.Effect.__proj__Mklocals_t___item__m"
-      ],
-      0,
-      "ecf67d8af5a9b596804bf45f3e49a565"
-    ],
-    [
-      "Locals.Effect.create",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "0f63cdd54eec517562cf80d8ad1881cd"
-    ],
-    [
-      "Locals.Effect.read",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.dfst",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "699fb2421d29bf7ecfe4f6b0612ef38a"
-    ],
-    [
-      "Locals.Effect.write",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "unit_typing"
-      ],
-      0,
-      "5c479c5c650eb9424ad967117429fb2d"
+      "d3fb86c4776084aa27a3a00912e997fe"
     ],
     [
       "Locals.Effect.get",
@@ -412,21 +349,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "2fba2fb79c690301d8fd1654fbb72d4e"
-    ],
-    [
-      "Locals.Effect.get",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "4a40c7a677de20f87928fa0b5ae87cee"
+      "ef3a6004f354e58f63f0f4bdbec0a50d"
     ],
     [
       "Locals.Effect.test",
@@ -469,7 +392,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "f5d3b93972fad2a00d08e915b2758844"
+      "8a46a7c506698baf8fcc1003b1997bcd"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -483,7 +406,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3c0ac67e010946c4f8f7252c8ba60d1f"
+      "e765a58027ae872a82022309aff80670"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -519,7 +442,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "b458ee664cd687bf215bf863035fe3e2"
+      "169ef22ee6aa81d76d636131b71746a2"
     ],
     [
       "Locals.Effect.sum",
@@ -541,7 +464,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "419c8165984cc8b2eb9b4290daff11ec"
+      "7f69242dca281948ad4e6fa578535020"
     ],
     [
       "Locals.Effect.test1",
@@ -568,7 +491,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "be3a874c9f0099ec77fe547de7dbfd82"
+      "ce109b2be96ecfc1678f60e4057b41a6"
     ]
   ]
 ]

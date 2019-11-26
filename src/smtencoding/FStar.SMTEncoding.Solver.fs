@@ -259,25 +259,20 @@ let detail_hint_replay settings z3result =
          | UNSAT _ -> ()
          | _failed ->
            let ask_z3 label_assumptions =
-               let res = BU.mk_ref None in
                Z3.ask settings.query_range
                       (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
-                      (fun r -> res := Some r)
-                      false;
-               Option.get (!res)
+                      false
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
 
 let find_localized_errors errs =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let has_localized_errors errs = Option.isSome (find_localized_errors errs)
-
-let report_errors settings : unit =
+let errors_to_report (settings : query_settings) : list<Errors.error> =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
@@ -285,7 +280,7 @@ let report_errors settings : unit =
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
-    let _basic_error_report =
+    let basic_errors =
         (*
          * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
          *     depending on whether Options.query_stats is on or off
@@ -330,40 +325,45 @@ let report_errors settings : unit =
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
-            
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages smt_error
+          FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
-          FStar.TypeChecker.Err.add_errors_smt_detail
+          FStar.TypeChecker.Err.errors_smt_detail
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
                      settings.query_range)]
                    smt_error
     in
-    if Options.detail_errors()
-    then let initial_fuel = {
-                settings with query_fuel=Options.initial_fuel();
-                              query_ifuel=Options.initial_ifuel();
-                              query_hint=None
-            }
-         in
-         let ask_z3 label_assumptions =
-            let res = BU.mk_ref None in
-            Z3.ask  settings.query_range
-                    (filter_facts_without_core settings.query_env)
-                    settings.query_hash
-                    settings.query_all_labels
-                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                    None
-                    (fun r -> res := Some r)
-                    false;
-            Option.get (!res)
-            in
-         detail_errors false settings.query_env settings.query_all_labels ask_z3
+    let detailed_errors : unit =
+      if Options.detail_errors()
+      then let initial_fuel = {
+                  settings with query_fuel=Options.initial_fuel();
+                                query_ifuel=Options.initial_ifuel();
+                                query_hint=None
+              }
+           in
+           let ask_z3 label_assumptions =
+              Z3.ask  settings.query_range
+                      (filter_facts_without_core settings.query_env)
+                      settings.query_hash
+                      settings.query_all_labels
+                      (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                      None
+                      false
+              in
+           (* GM: This is a bit of hack, we don't return these detailed errors
+            * (it implies rewriting detail_errors heavily). Returning them
+            * is only relevant for summarizing errors on --quake, where I don't
+            * think we care about these. *)
+           detail_errors false settings.query_env settings.query_all_labels ask_z3
+    in
+    basic_errors
 
+let report_errors qry_settings =
+    FStar.Errors.add_errors (errors_to_report qry_settings)
 
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
@@ -554,23 +554,47 @@ let process_result settings result : option<errors> =
     detail_hint_replay settings result;
     errs
 
+// Attempts to solve each query setting (in `qs`) sequentially until
+// one succeeds. If one succeeds, we are done and report no errors. If
+// all of them fail, we call `report` with a log of the errors so they
+// can be displayed to the user.
+// Returns Inr cfg if successful, with the succeeding config cfg
+// and Inl errs if all options were exhausted
+// without a success, where errs is the list of errors each query
+// returned.
 let fold_queries (qs:list<query_settings>)
-                 (ask:query_settings -> (z3result -> unit) -> unit)
+                 (ask:query_settings -> z3result)
                  (f:query_settings -> z3result -> option<errors>)
-                 (report:list<errors> -> unit) : unit =
-    let rec aux acc qs =
+                 : either<list<errors>, query_settings> =
+    let rec aux (acc : list<errors>) qs : either<list<errors>, query_settings> =
         match qs with
-        | [] -> report acc
+        | [] -> Inl acc
         | q::qs ->
-          ask q (fun res ->
-                  match f q res with
-                  | None -> () //done
-                  | Some errs ->
-                    aux (errs::acc) qs)
+          let res = ask q in
+          begin match f q res with
+          | None -> Inr q //done
+          | Some errs ->
+            aux (errs::acc) qs
+          end
     in
     aux [] qs
 
-let ask_and_report_errors env all_labels prefix query suffix =
+let full_query_id settings =
+    "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
+
+let rec collect (l : list<'a>) : list<('a * int)> =
+    let acc : list<('a * int)> = [] in
+    let rec add_one acc x =
+        match acc with
+        | [] -> [(x, 1)]
+        | (h, n)::t ->
+            if h = x
+            then (h, n+1)::t
+            else (h, n) :: add_one t x
+    in
+    List.fold_left add_one acc l
+
+let ask_and_report_errors env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -651,7 +675,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @ max_fuel_max_ifuel
     in
 
-    let check_one_config config (k:z3result -> unit) : unit =
+    let check_one_config config : z3result =
           if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
                   (filter_assertions config.query_env config.query_hint)
@@ -659,26 +683,160 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
                   (Some (Z3.mk_fresh_scope()))
-                  k
                   (used_hint config)
     in
 
-    let check_all_configs configs =
-        let report errs = report_errors ({default_settings with query_errors=errs}) in
-        fold_queries configs check_one_config process_result report
+    let check_all_configs configs : either<list<errors>, query_settings> =
+        fold_queries configs check_one_config process_result
+    in
+
+    let quake_and_check_all_configs configs =
+        let lo   = Options.quake_lo () in
+        let hi   = Options.quake_hi () in
+        let seed = Options.z3_seed () in
+        let name = full_query_id default_settings in
+        let quaking = hi > 1 in
+        let hi = if hi < 1 then 1 else hi in
+        let lo =
+            if lo < 1 then 1
+            else if lo > hi then hi
+            else lo
+        in
+        let run_one (seed:int) =
+            (* Here's something annoying regarding --quake:
+             *
+             * In normal circumstances, we can just run the query again and get
+             * a slightly different behaviour because of Z3 accumulating some
+             * internal state that doesn't get erased on a (pop). So we simply repeat
+             * the query then.
+             *
+             * But, if we're doing --z3refresh, we will always get the exact
+             * same behaviour by doing that, so we do want to set the seed in this case.
+             *
+             * Why not always set it? Because it requires restarting the solver, which
+             * takes a long time.
+             *
+             * Why not use the (set-option smt.random_seed ..) command? Because
+             * it seems to have no effect just before a (check-sat), so it needs to be
+             * set early, which basically implies restarting.
+             *
+             * So we do this horrendous thing.
+             *)
+            if Options.z3_refresh ()
+            then Options.with_saved_options (fun () ->
+                   Options.set_option "z3seed" (Options.Int seed);
+                   check_all_configs configs)
+            else check_all_configs configs
+        in
+        let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
+            if lo > hi
+            then acc
+            else fold_nat' f (f acc lo) (lo + 1) hi
+        in
+        let best_fuel = BU.mk_ref None in
+        let best_ifuel = BU.mk_ref None in
+        let maybe_improve r n =
+            match !r with
+            | None -> r := Some n
+            | Some m -> if n < m then r := Some n
+        in
+        let nsuccess, rs =
+            fold_nat'
+                (fun (nsucc, rs) n ->
+                     let r = run_one (seed+n) in
+                     let nsucc =
+                        match r with
+                        | Inr cfg ->
+                            (* maybe update best fuels *)
+                            maybe_improve best_fuel cfg.query_fuel;
+                            maybe_improve best_ifuel cfg.query_ifuel;
+                            nsucc + 1
+                        | _ -> nsucc
+                     in
+                     if quaking
+                        && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
+                        && n<hi-1 then (* no need to print last *)
+                       BU.print4 "Quake: so far query %s succeeded %s times and failed %s (%s runs remain)\n"
+                           name
+                           (string_of_int nsucc)
+                           (string_of_int (n+1-nsucc))
+                           (string_of_int (hi-1-n));
+                     (nsucc, r::rs))
+                (0, []) 0 (hi-1)
+        in
+        if quaking then begin
+            let fuel_msg =
+              match !best_fuel, !best_ifuel with
+              | Some f, Some i ->
+                BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
+              | _, _ -> ""
+            in
+            BU.print4 "Quake: query %s succeeded %s/%s times%s\n"
+                      name
+                      (string_of_int nsuccess)
+                      (string_of_int hi)
+                      fuel_msg
+        end;
+        (* If nsuccess < lo, we have a failure. We report summarized
+         * information if doing --quake (and not --query_stats) *)
+        if nsuccess < lo then begin
+          let all_errs = List.concatMap (function | Inr _ -> []
+                                                  | Inl es -> [es]) rs in
+          if quaking && not (Options.query_stats ()) then begin
+            let errors_to_report errs =
+                errors_to_report ({default_settings with query_errors=errs})
+            in
+
+            (* Obtain all errors that would have been reported *)
+            let errs = List.map errors_to_report all_errs in
+            (* Summarize them *)
+            let errs = errs |> List.flatten |> collect in
+            (* Show the amount on each error *)
+            let errs = errs |> List.map (fun ((e, m, r), n) ->
+                if n > 1
+                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r)
+                else (e, m, r))
+            in
+            (* Now report them *)
+            FStar.Errors.add_errors errs;
+
+            (* Get the range of lid we're checking for the quake error *)
+            let rng = match snd (env.qtbl_name_and_index) with
+                      | Some (l, _) -> Ident.range_of_lid l
+                      | _ -> Range.dummyRange
+            in
+            (* Adding another error for the threshold *)
+            FStar.TypeChecker.Err.add_errors
+              env
+              [(Errors.Error_QuakeFailed,
+                BU.format4
+                  "Query %s failed the quake test, %s out of %s attempts succeded, \
+                   but the threshold was %s"
+                   name
+                  (string_of_int nsuccess)
+                  (string_of_int hi)
+                  (string_of_int lo),
+                rng)]
+          end
+          else begin
+            (* Just report them as usual *)
+            let report errs = report_errors ({default_settings with query_errors=errs}) in
+            List.iter report all_errs
+          end
+        end
     in
 
     match Options.admit_smt_queries(), Options.admit_except() with
     | true, _ -> ()
-    | false, None -> check_all_configs all_configs
+    | false, None -> quake_and_check_all_configs all_configs
     | false, Some id ->
       let skip =
         if BU.starts_with id "("
-        then let full_query_id = "(" ^ default_settings.query_name ^ ", " ^ (BU.string_of_int default_settings.query_index) ^ ")" in
-             full_query_id <> id
+        then full_query_id default_settings <> id
         else default_settings.query_name <> id
       in
-      if not skip then check_all_configs all_configs
+      if not skip
+      then quake_and_check_all_configs all_configs
 
 type solver_cfg = {
   seed             : int;
@@ -707,6 +865,35 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
+let do_solve use_env_msg tcenv q : unit =
+    if should_refresh tcenv then begin
+      save_cfg tcenv;
+      Z3.refresh ()
+    end;
+    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+    try
+      let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+      let tcenv = incr_query_index tcenv in
+      match qry with
+      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
+      | _ when tcenv.admit -> pop()
+      | Assume _ ->
+        ask_and_report_errors tcenv labels prefix qry suffix;
+        pop ()
+
+      | _ -> failwith "Impossible"
+    with
+      | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
+        pop ();  //AR: Important, we push-ed before encode_query was called
+        FStar.TypeChecker.Err.add_errors
+          tcenv
+          [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
+            BU.format1
+              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+              (String.concat "," (List.map fst names)),
+            tcenv.range)]
+
 let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
         FStar.TypeChecker.Err.add_errors
@@ -714,35 +901,8 @@ let solve use_env_msg tcenv q : unit =
                  [(Errors.Error_NoSMTButNeeded,
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
-    else begin
-      if should_refresh tcenv then begin
-        save_cfg tcenv;
-        Z3.refresh ()
-      end;
-      Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-      let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-      try
-        let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-        let tcenv = incr_query_index tcenv in  
-        match qry with
-        | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-        | _ when tcenv.admit -> pop()
-        | Assume _ ->
-          ask_and_report_errors tcenv labels prefix qry suffix;
-          pop ()
-
-        | _ -> failwith "Impossible"
-      with
-        | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
-          pop ();  //AR: Important, we push-ed before encode_query was called
-          FStar.TypeChecker.Err.add_errors
-            tcenv
-            [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
-              BU.format1
-                "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                (String.concat "," (List.map fst names)),
-              tcenv.range)]
-    end
+    else
+    do_solve use_env_msg tcenv q
 
 (**********************************************************************************************)
 (* Top-level interface *)

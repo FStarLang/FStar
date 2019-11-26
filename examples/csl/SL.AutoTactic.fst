@@ -266,7 +266,7 @@ let canon_binder_mem_eq (b:binder) : Tac unit =
 
 let rec proc_intro (b:binder) : Tac binders =
   ddump ("proc_intro of " ^ binder_to_string b);
-  let t = norm_term [weak;hnf;delta] (type_of_binder b) in
+  let t = norm_term [zeta; iota; weak;hnf;delta] (type_of_binder b) in
   ddump ("proc_intro, t = " ^ term_to_string t);
   match peek_in t with
   | Exists ->
@@ -293,7 +293,7 @@ let unfold_first_occurrence (name:string) : Tac unit =
     | _ -> false, 0
   in
   let rewrite () : Tac unit =
-    norm [delta_only [name]];
+    norm [zeta; iota; delta_only [name]];
     trefl()
   in
   topdown_rewrite should_rewrite rewrite
@@ -402,7 +402,7 @@ let rec sl (i:int) : Tac unit =
     trivial `or_else` (fun () ->
     unfold_first_occurrence (fv_to_string fv);
     tlabel ("Unknown (Some " ^ fv_to_string fv ^ "),");
-    norm [];
+    norm [iota];
     sl (i + 1))
 
   | BySMT ->
@@ -412,7 +412,7 @@ let rec sl (i:int) : Tac unit =
   | MemEq ->
     tlabel "mem_eq";
     unfold_first_occurrence (`%mem_eq);
-    norm [delta_only [`%dfst; `%dsnd]];
+    norm [zeta; iota; delta_only [`%dfst; `%dsnd]];
     canon_monoid_sl' ();
     trefl ();
     ()
@@ -502,8 +502,8 @@ let rec sl (i:int) : Tac unit =
     let (frame, heap_eq) = find_frame fp_refs fp tm in
 
     //sort of beta step
-    let fp = norm_term [] fp in  //if we don't do these norms, fast implicits don't kick in because of lambdas
-    let frame = norm_term [] frame in
+    let fp = norm_term [iota] fp in  //if we don't do these norms, fast implicits don't kick in because of lambdas
+    let frame = norm_term [iota] frame in
     apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
     ddump ("after frame lemma - 1");
 
@@ -556,7 +556,7 @@ let __elim_exists (h:binder) :Tac unit
 let prelude' () : Tac unit =
   //take care of some auto_squash stuff
   ddump "start";
-  norm [delta_only [`%st_stronger; "Prims.auto_squash"]];
+  norm [zeta; iota; delta_only [`%st_stronger; "Prims.auto_squash"]];
   mapply (`FStar.Squash.return_squash);
 
   //forall post m. 
@@ -567,7 +567,7 @@ let prelude' () : Tac unit =
   //unfold frame_wp and frame_post in the annotated wp
   unfold_first_occurrence (`%frame_wp);
   unfold_first_occurrence (`%frame_post);
-  norm [];
+  norm [iota];
 
   //unfolding frame_wp introduces two existentials m0 and m1 for frames
   //introduce them in the context

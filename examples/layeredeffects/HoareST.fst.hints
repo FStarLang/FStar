@@ -1,5 +1,5 @@
 [
-  "\u0002-\u0017_\f)3.žçZ¶\u001a\u0001„?",
+  "Ö¦\u0018r\u0004m\u00047;îtŠÕ€’´",
   [
     [
       "HoareST.return",
@@ -63,7 +63,7 @@
       "d8a7a08e846529668ec5bf27ed1f41df"
     ],
     [
-      "HoareST.write",
+      "HoareST.mwrite",
       1,
       0,
       0,
@@ -81,21 +81,7 @@
         "true_interp"
       ],
       0,
-      "b9024316897417069195106450c3848a"
-    ],
-    [
-      "HoareST.mwrite",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "93ee1131142e9a5de385a53ffdcd2ab7"
+      "f92e5242f03ab4e5f7531a17fe84839b"
     ],
     [
       "HoareST.lift_pure_hoarest",
@@ -120,7 +106,7 @@
         "typing_Tm_abs_efcce3c21fe48dce9105b420b0cd535c"
       ],
       0,
-      "d90c310f95ad2c5d145a46e2698866eb"
+      "1d58ac5ff465daeb2a90c45872932a5e"
     ]
   ]
 ]

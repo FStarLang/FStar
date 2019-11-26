@@ -1712,18 +1712,19 @@ let encode_modul tcenv modul =
     decls, env |> get_current_module_fvbs
   end
 
-let encode_modul_from_cache tcenv name (decls, fvbs) =
+let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()
   else
+    let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") tcmod.name.str in
     if Env.debug tcenv Options.Medium
-    then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name.str (List.length decls |> string_of_int);
-    let env = get_env name tcenv |> reset_current_module_fvbs in
+    then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> string_of_int);
+    let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
       fvbs |> List.rev |> List.fold_left (fun env fvb ->
         add_fvar_binding_to_env fvb env
       ) env in
-    give_decls_to_z3_and_set_env env name.str decls;
-    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals from cache for %s\n" name.str
+    give_decls_to_z3_and_set_env env name decls;
+    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals from cache for %s\n" name
 
 open FStar.SMTEncoding.Z3
 let encode_query use_env_msg tcenv q

@@ -865,7 +865,7 @@ let rec declToSmt' print_captions z3options decl =
   | Module (s, decls) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
     if Options.keep_query_captions()
-    then BU.format5 "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
+    then BU.format5 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)"
                     s
                     res
                     s

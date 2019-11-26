@@ -1291,16 +1291,19 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
+let arrow_one_ln (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
 let arrow_one (t:typ) : option<(binder * comp)> =
-    bind_opt (match (compress t).n with
-              | Tm_arrow ([], c) ->
-                  failwith "fatal: empty binders on arrow?"
-              | Tm_arrow ([b], c) ->
-                  Some (b, c)
-              | Tm_arrow (b::bs, c) ->
-                  Some (b, mk_Total (arrow bs c))
-              | _ ->
-                  None) (fun (b, c) ->
+    bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
             | [b] -> b
@@ -2003,7 +2006,13 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
         | Tm_fvar fv, [(_, _); arg]
             when fv_eq_lid fv PC.smtpat_lid ->
           arg
-        | _ -> failwith "Unexpected pattern term"
+        | _ ->
+            Errors.raise_error (Errors.Error_IllSMTPat,
+                                U.format1 "Not an atomic SMT pattern: %s; \
+                                           patterns on lemmas must be a list of simple SMTPat's \
+                                           or a single SMTPatOr containing a list \
+                                           of lists of patterns" (tts p))
+                               p.pos
     in
 
     let lemma_pats p =

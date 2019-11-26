@@ -1,6 +1,18 @@
 [
-  "\u0019\u0004æ≤0Tœ⁄è\fiG«ñ\bÂ",
+  "ßYè≥\\pså'‹%s”2Z}",
   [
+    [
+      "FlightsStExn.__proj__Mkstate__item__id",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FlightsStExn.Mkstate_b",
+        "projection_inverse_FlightsStExn.Mkstate_b"
+      ],
+      0,
+      "5e0d9e6b4fa5584109a120ae8f89fb27"
+    ],
     [
       "FlightsStExn.mrepr",
       1,
@@ -8,10 +20,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "3da17c037a6ba97fd9c203e85953f002"
+      "95d1f1966aba2cd340d839e59971ee2a"
     ],
     [
       "FlightsStExn.return",
@@ -22,10 +35,11 @@
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "kinding_FStar.Pervasives.Native.tuple2@tok"
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FlightsStExn.state@tok"
       ],
       0,
-      "935a1d9b654ac0f76cdf9004a7014310"
+      "30ea55a7d4b686c6c8b7b07d8a60d991"
     ],
     [
       "FlightsStExn.lemma_monotonic",
@@ -34,15 +48,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_interpretation_Tm_arrow_293fc84997773c1ac3f7fcf31c020239",
-        "FlightsStExn_interpretation_Tm_arrow_566b9872b8f4121cc50e1d2f2d394744",
-        "FlightsStExn_interpretation_Tm_arrow_ca17754d11c3f1d3525e2ca08e08d2dd",
+        "FlightsStExn_interpretation_Tm_arrow_55f35f60fe77e30467b9369f4fdae7d1",
+        "FlightsStExn_interpretation_Tm_arrow_a8f22f5e02654da4663276541b384fbd",
+        "FlightsStExn_interpretation_Tm_arrow_d179a813cb5a1fbf75e1c7cc7e7a1f08",
         "equation_FlightsStExn.post_t", "equation_FlightsStExn.wp_t",
         "equation_Prims.logical",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "ece5bae7a7c7cfe1e8f60b58ead4b15a"
+      "c7b4f10fd3898751a561a2396b06b298"
     ],
     [
       "FlightsStExn.post_a",
@@ -54,12 +69,13 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FlightsStExn.state@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "465c9cdf7b6417a535eaaf6187dab525"
+      "a0a4aa8ba113cbd2513ce8ea6e890929"
     ],
     [
       "FlightsStExn.bind_wp",
@@ -68,20 +84,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_interpretation_Tm_arrow_efdbb6dc79c474c5057dba8c42d4579c",
+        "FlightsStExn_interpretation_Tm_arrow_82dda24668ab6a585af1825f661329e9",
+        "FlightsStExn_pretyping_8af5d8b3a1eeabc3c1c0be0a5d8f4ff1",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "equation_FlightsStExn.wp_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FlightsStExn.state@tok",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_301e48d966cd154bf4f62f30e29d7377",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433",
+        "refinement_interpretation_Tm_refine_14d766398e82c71f5b11523b4ff803fe",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "502635b62baa5d8608fcfc558abb3488"
+      "cd5dc48c6068f70f50eeeb6ee090173e"
     ],
     [
       "FlightsStExn.subcomp",
@@ -90,13 +108,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_interpretation_Tm_arrow_566b9872b8f4121cc50e1d2f2d394744",
+        "FlightsStExn_interpretation_Tm_arrow_a8f22f5e02654da4663276541b384fbd",
         "MExn_interpretation_Tm_arrow_012777ed75460d26054898287da01b49",
         "equation_FlightsStExn.mrepr", "equation_FlightsStExn.post_t",
         "equation_MExn.post_t"
       ],
       0,
-      "004bb2f905f7593391224d28bb507fb6"
+      "7172258455fe935f2e413db09b6e4928"
     ],
     [
       "FlightsStExn.if_then_else",
@@ -105,10 +123,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "bb819ce3fe2733a468eaf5b4a5707823"
+      "dc28ea96a11897e796b5e62d97a9f5a6"
     ],
     [
       "FlightsStExn.STEXN",
@@ -117,10 +136,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "88cea772ffaf10494f22c5e380af178d"
+      "c12fed1a048f9807a70ed6cc9a5a0c02"
     ],
     [
       "FlightsStExn.STEXN",
@@ -129,10 +149,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "00600f7c71d6be10a370797c79a61874"
+      "51b86b405cbf87f07a8238d89c2c3484"
     ],
     [
       "FlightsStExn.STEXN",
@@ -141,10 +162,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "7ca124d2c17ecad1983a7125c0a15a42"
+      "5747b9463cec36627480e480076bc44f"
     ],
     [
       "FlightsStExn.STEXN",
@@ -153,10 +175,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "59178e83b53ec98e5a5643e40b8a54d4"
+      "474bd6a723a276dbf5d065afb6f24e28"
     ],
     [
       "FlightsStExn.STEXN",
@@ -165,10 +188,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FlightsStExn.wp_t",
-        "refinement_interpretation_Tm_refine_bf64ff72d33bf67a5a4ea095496f8433"
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "refinement_interpretation_Tm_refine_289da80e241263c38937c0ab63878b46"
       ],
       0,
-      "6372db597252ca270483d6b9cb2e85aa"
+      "545d71f6130bd82f5e552545b0bfccd9"
     ],
     [
       "FlightsStExn.lift_div_stexn",
@@ -177,33 +201,24 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FlightsStExn_pretyping_8af5d8b3a1eeabc3c1c0be0a5d8f4ff1",
         "MExn_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
         "equation_Prims.logical",
-        "interpretation_Tm_abs_6f5108f2385f059b479173d32e1997b5",
-        "interpretation_Tm_abs_a1bb376e4bf4033c31bef26a86ef049e",
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "interpretation_Tm_abs_2ae8f036843137d8cf99cf3caf087780",
+        "interpretation_Tm_abs_65df9f65c03447788a7a6ab8e38b11c2",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "l_quant_interp_fdc3d8dab3753c5786051b0691d7b2a2",
+        "kinding_FlightsStExn.state@tok",
+        "l_quant_interp_5b5803b511fb91b46467482fd153e385",
         "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
-        "typing_Tm_abs_6f5108f2385f059b479173d32e1997b5",
-        "typing_Tm_abs_a1bb376e4bf4033c31bef26a86ef049e"
+        "typing_Tm_abs_2ae8f036843137d8cf99cf3caf087780",
+        "typing_Tm_abs_65df9f65c03447788a7a6ab8e38b11c2"
       ],
       0,
-      "7a650d28fff3a0f59730c8286947dcd1"
-    ],
-    [
-      "FlightsStExn.__proj__Mkrcv_state__item__id",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FlightsStExn.Mkrcv_state_b",
-        "projection_inverse_FlightsStExn.Mkrcv_state_b"
-      ],
-      0,
-      "a38c9d0aee451c57adac39fa0e3372d6"
+      "3a5466571391dabcb6cbfe3839922bc7"
     ],
     [
       "FlightsStExn.StExn",
@@ -212,7 +227,7 @@
       1,
       [ "@query" ],
       0,
-      "4d840596338c7db1b690d5fd49b28cc2"
+      "b6f4c3fde1bb27009e9d81c1c7f97f05"
     ],
     [
       "FlightsStExn.parse_common_wp",
@@ -231,46 +246,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "67882afc691063dbb558873ef0201b22"
-    ],
-    [
-      "FlightsStExn.parse_common_",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_pretyping_bc4548873718f7092e9083fdd23f6653",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
-        "data_elim_FStar.Pervasives.Native.Some",
-        "data_elim_FlightsStExn.Mkrcv_state",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_FStar.UInt32.lte", "equation_Messages.valid_parsing",
-        "equation_Messages.valid_repr",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FlightsStExn.rcv_state",
-        "proj_equation_FlightsStExn.Mkrcv_state_b",
-        "proj_equation_FlightsStExn.Mkrcv_state_id",
-        "proj_equation_Messages.Mkrepr_m_begin",
-        "proj_equation_Messages.Mkrepr_m_end",
-        "proj_equation_Messages.Mkrepr_v",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.None_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_FlightsStExn.Mkrcv_state_b",
-        "projection_inverse_FlightsStExn.Mkrcv_state_id",
-        "projection_inverse_Messages.Mkrepr_m_begin",
-        "projection_inverse_Messages.Mkrepr_m_end",
-        "projection_inverse_Messages.Mkrepr_v",
-        "refinement_interpretation_Tm_refine_3e42d16a8a0e168745143a32b114b43a",
-        "refinement_interpretation_Tm_refine_6e5ae195c361dc0cce3e999d84550927"
-      ],
-      0,
-      "93d992a88ebfdd5397ecec446571ebe5"
+      "0588d4473456339f470ce133030dd9b9"
     ],
     [
       "FlightsStExn.parse_common_exn",
@@ -279,10 +255,40 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option"
+        "FlightsStExn_pretyping_8af5d8b3a1eeabc3c1c0be0a5d8f4ff1",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_FStar.Pervasives.Native.Some",
+        "data_elim_FlightsStExn.Mkstate",
+        "data_typing_intro_FStar.Pervasives.Native.None@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.UInt32.lte", "equation_Messages.valid_parsing",
+        "equation_Messages.valid_repr",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FlightsStExn.state",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FlightsStExn.state@tok", "kinding_Messages.repr@tok",
+        "proj_equation_FlightsStExn.Mkstate_b",
+        "proj_equation_FlightsStExn.Mkstate_id",
+        "proj_equation_Messages.Mkrepr_m_begin",
+        "proj_equation_Messages.Mkrepr_m_end",
+        "proj_equation_Messages.Mkrepr_v",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FlightsStExn.Mkstate_b",
+        "projection_inverse_FlightsStExn.Mkstate_id",
+        "projection_inverse_Messages.Mkrepr_m_begin",
+        "projection_inverse_Messages.Mkrepr_m_end",
+        "projection_inverse_Messages.Mkrepr_v",
+        "refinement_interpretation_Tm_refine_3e42d16a8a0e168745143a32b114b43a",
+        "refinement_interpretation_Tm_refine_705d3ac692aab70f875ffaaddcafb81b"
       ],
       0,
-      "ed840dbc4578675c21bc3b9447518be7"
+      "5d5bc136ac0dd3ac5cbc0c0dfb44cbcb"
     ],
     [
       "FlightsStExn.parse_common",
@@ -299,20 +305,20 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_FStar.Integers.uint_8",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_FlightsStExn.rcv_state@tok", "kinding_Messages.repr@tok",
+        "kinding_FlightsStExn.state@tok", "kinding_Messages.repr@tok",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_none",
         "lemma_LowStar.Monotonic.Buffer.modifies_liveness_insensitive_buffer_weak",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FlightsStExn.__proj__Mkrcv_state__item__b",
+        "typing_FlightsStExn.__proj__Mkstate__item__b",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.address_liveness_insensitive_locs",
         "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "233c6556c2b8fe841013c6e9b2cb5cb2"
+      "4981fb3fc9ecd9ce933a0e4342f5378f"
     ],
     [
       "FlightsStExn.parse_flt_aux",
@@ -321,7 +327,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_pretyping_bc4548873718f7092e9083fdd23f6653",
+        "FlightsStExn_pretyping_8af5d8b3a1eeabc3c1c0be0a5d8f4ff1",
         "bool_inversion", "constructor_distinct_FStar.Integers.Unsigned",
         "constructor_distinct_FStar.Integers.W32",
         "constructor_distinct_FStar.Pervasives.Native.None",
@@ -342,13 +348,13 @@
         "function_token_typing_Messages.t2",
         "function_token_typing_Messages.t3",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_FlightsStExn.rcv_state@tok", "kinding_Messages.flt@tok",
+        "kinding_FlightsStExn.state@tok", "kinding_Messages.flt@tok",
         "kinding_Messages.repr@tok", "lemma_FStar.Pervasives.invertOption",
         "lemma_Messages.frame_valid_",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_FlightsStExn.Mkrcv_state_b",
-        "proj_equation_FlightsStExn.Mkrcv_state_id",
+        "proj_equation_FlightsStExn.Mkstate_b",
+        "proj_equation_FlightsStExn.Mkstate_id",
         "proj_equation_Messages.Mkflt_t1_msg",
         "proj_equation_Messages.Mkflt_t2_msg",
         "proj_equation_Messages.Mkflt_t3_msg",
@@ -364,17 +370,17 @@
         "projection_inverse_Messages.Mkflt_t2_msg",
         "projection_inverse_Messages.Mkflt_t3_msg",
         "refinement_interpretation_Tm_refine_4c7542bbe4756a4c69e509fa54abbfa5",
-        "refinement_interpretation_Tm_refine_d1a7ad8fb8a050d7ef0b94abb686dc81",
+        "refinement_interpretation_Tm_refine_f8e969df79b110183b37cff792faacf1",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FlightsStExn.__proj__Mkrcv_state__item__b",
-        "typing_FlightsStExn.__proj__Mkrcv_state__item__id",
+        "typing_FlightsStExn.__proj__Mkstate__item__b",
+        "typing_FlightsStExn.__proj__Mkstate__item__id",
         "typing_Messages.__proj__Mkrepr__item__m_end",
         "typing_Messages.__proj__Mkrepr__item__v"
       ],
       0,
-      "f360e4ed9163138055b36a57f5216fed"
+      "bd3982dabe6bb6a029f45a230b4557ac"
     ],
     [
       "FlightsStExn.parse_flt",
@@ -383,7 +389,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FlightsStExn_pretyping_bc4548873718f7092e9083fdd23f6653",
+        "FlightsStExn_pretyping_8af5d8b3a1eeabc3c1c0be0a5d8f4ff1",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
@@ -391,18 +397,18 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.UInt32.lte",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "proj_equation_FlightsStExn.Mkrcv_state_b",
-        "proj_equation_FlightsStExn.Mkrcv_state_id",
+        "proj_equation_FlightsStExn.Mkstate_b",
+        "proj_equation_FlightsStExn.Mkstate_id",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_FlightsStExn.Mkrcv_state_b",
-        "projection_inverse_FlightsStExn.Mkrcv_state_id",
+        "projection_inverse_FlightsStExn.Mkstate_b",
+        "projection_inverse_FlightsStExn.Mkstate_id",
         "refinement_interpretation_Tm_refine_5e6f3dbac5b88377a1b1ab44fada5fb7"
       ],
       0,
-      "bcb2ee7704aa3e6bd040894369cb34c8"
+      "5bdab07422e160e4743693367a370aea"
     ]
   ]
 ]

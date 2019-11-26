@@ -57,7 +57,7 @@ let mk_printer_type (t : term) : Tac term =
 let mk_printer_fun (dom : term) : Tac term =
     admit ();
     set_guard_policy SMT;
-    let e = cur_env () in
+    let e = top_env () in
     (* Recursive binding *)
     let ff = fresh_bv_named "ff_rec" (mk_printer_type dom) in
     let fftm = pack (Tv_Var ff) in
@@ -124,7 +124,7 @@ let rec maplast (f : 'a -> 'a) (l : list 'a) : list 'a =
     | [x] -> [f x]
     | x::xs -> x :: (maplast f xs)
 
-let mk_printer dom : Tac unit =
+let mk_printer dom : Tac decls =
     let nm = match inspect dom with
              | Tv_FVar fv -> inspect_fv fv
              | _ -> fail "not an fv?"
@@ -132,7 +132,7 @@ let mk_printer dom : Tac unit =
     let nm = maplast (fun s -> s ^ "_print") nm in
     let sv : sigelt_view = Sg_Let false (pack_fv nm) [] (mk_printer_type dom) (mk_printer_fun dom) in
     let ses : list sigelt = [pack_sigelt sv] in
-    exact (quote ses)
+    ses
 
 noeq
 type t1 =

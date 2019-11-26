@@ -387,7 +387,7 @@ let tc_one_file
             maybe_restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
-              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod.name smt_decls;
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
               post_smt_encoding ()
             end;
             (), env
