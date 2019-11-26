@@ -137,7 +137,7 @@ private val blit:
 	       /\ (forall (i:nat).{:pattern (Seq.index (sel h1 t) i)}
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     (Seq.index (sel h1 t) i == Seq.index (sel h0 t) i)) ))
-let rec blit #a s s_idx t t_idx len =
+let blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
 #set-options "--z3rlimit 120"

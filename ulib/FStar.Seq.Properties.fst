@@ -162,7 +162,7 @@ let upd_slice #a s i j k v =
 val lemma_append_cons: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
   (requires True)
   (ensures (equal (append s1 s2) (cons (head s1) (append (tail s1) s2))))
-let rec lemma_append_cons #a s1 s2 = ()
+let lemma_append_cons #a s1 s2 = ()
 
 val lemma_tl: #a:Type -> hd:a -> tl:seq a -> Lemma
   (ensures (equal (tail (cons hd tl)) tl))
