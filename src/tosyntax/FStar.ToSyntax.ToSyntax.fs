@@ -1283,6 +1283,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
         let fnames = List.rev fnames in
         let rec_bindings = List.rev rec_bindings in
+        let used_markers = List.rev used_markers in
         (* This comment is taken from Syntax.Subst.open_let_rec
            The desugaring of let recs has to be consistent with their opening
 
