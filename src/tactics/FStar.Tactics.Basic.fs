@@ -71,7 +71,7 @@ let run_safe t p =
          | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, p)
          | e -> Failed (e, p)
 
-let rec log ps (f : unit -> unit) : unit =
+let log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg
     then f ()
     else ()
@@ -1250,7 +1250,7 @@ let revert () : tac<unit> =
 let free_in bv t =
     Util.set_mem bv (SF.names t)
 
-let rec clear (b : binder) : tac<unit> =
+let clear (b : binder) : tac<unit> =
     let bv = fst b in
     bind (cur_goal ()) (fun goal ->
     mlog (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
@@ -1583,7 +1583,7 @@ let dup () : tac<unit> =
     ret ())))))
 
 // longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
-let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
+let longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
     let rec aux acc l1 l2 =
         match l1, l2 with
         | x::xs, y::ys ->

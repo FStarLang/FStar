@@ -307,7 +307,7 @@ let e_argv   = e_tuple2 e_term    e_aqualv
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
-let rec unlazy_as_t k t =
+let unlazy_as_t k t =
     match t with
     | Lazy (BU.Inl {lkind=k'; blob=v}, _)
         when U.eq_lazy_kind k k' ->

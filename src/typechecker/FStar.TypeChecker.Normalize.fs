@@ -92,17 +92,18 @@ let set_memo cfg (r:memo<'a>) (t:'a) =
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
-let rec env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
+let closure_to_string = function
+    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
+    | Univ _ -> "Univ"
+    | Dummy -> "dummy"
+
+let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
     List.map (fun (bopt, c) ->
                 BU.format2 "(%s, %s)"
                    (match bopt with None -> "." | Some x -> FStar.Syntax.Print.binder_to_string x)
                    (closure_to_string c))
              env
             |> String.concat "; "
-and closure_to_string = function
-    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
-    | Univ _ -> "Univ"
-    | Dummy -> "dummy"
 
 let stack_elt_to_string = function
     | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
@@ -530,10 +531,6 @@ and close_comp cfg env c =
                 effect_args=args;
                 flags=flags})
 
-and filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    flags |> List.filter (function DECREASES _ -> false | _ -> true)
-
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some rc ->
       let flags =
@@ -542,6 +539,10 @@ and close_lcomp_opt cfg env lopt = match lopt with
       let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (inline_closure_env cfg env [])} in
       Some rc
     | _ -> lopt
+
+let filter_out_lcomp_cflags flags =
+    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 

@@ -260,7 +260,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
   | _ ->
       BU.new_set Syntax.order_bv
 
-and get_pat_vars all pats = get_pat_vars' all false pats
+let get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [Env.Beta] env pats) in
@@ -3217,7 +3217,7 @@ and tc_trivial_guard env t =
   Rel.force_trivial_guard env g;
   t,c
 
-and tc_check_trivial_guard env t k =
+let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k in
   Rel.force_trivial_guard env g;
   t

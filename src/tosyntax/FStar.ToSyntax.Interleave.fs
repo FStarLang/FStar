@@ -219,7 +219,7 @@ let check_initial_interface (iface:list<decl>) =
 //      Here, if you have a `let x = e` in the implementation
 //      Then prefix it with `val x : t`, if any in the interface
 //      Don't enforce any ordering constraints
-let rec ml_mode_prefix_with_iface_decls
+let ml_mode_prefix_with_iface_decls
         (iface:list<decl>)
         (impl:decl)
    : list<decl>    //remaining iface decls
