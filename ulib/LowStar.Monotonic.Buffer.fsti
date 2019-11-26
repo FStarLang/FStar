@@ -1395,7 +1395,7 @@ val modifies_ralloc_post
   (i: HS.rid)
   (init: a)
   (h: HS.mem)
-  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (x: HST.mreference a rel)
   (h' : HS.mem)
 : Lemma
   (requires (HST.ralloc_post i init h x h'))
@@ -1913,6 +1913,8 @@ let upd
 
 val recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
 
+val region_lifetime_buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Type0
+
 val recallable_null (#a:Type0) (#rrel #rel:srel a)
   :Lemma (recallable (mnull #a #rrel #rel)) [SMTPat (recallable (mnull #a #rrel #rel))]
 
@@ -1937,7 +1939,7 @@ val recallable_mgsub (#a:Type0) (#rrel #rel:srel a)
          ]]
 
 val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
-  :HST.Stack unit (requires (fun _ -> recallable b))
+  :HST.Stack unit (requires (fun m -> recallable b \/ (region_lifetime_buf b /\ HS.live_region m (frameOf b))))
                   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 
 (*
@@ -2259,6 +2261,21 @@ let mgcmalloc_of_list_partial (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
           (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.seq_of_list init)))
 
   = mgcmalloc_of_list r init
+
+
+unfold let alloc_drgn_pre (h:HS.mem) (d:HST.drgn) (len:U32.t) = h `HS.live_region` (HST.rid_of_drgn d) /\ U32.v len > 0
+
+val mmalloc_drgn (#a:Type0) (#rrel:srel a)
+  (d:HST.drgn) (init:a) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ region_lifetime_buf b})
+  (requires fun h -> alloc_drgn_pre h d len)
+  (ensures fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
+
+val mmalloc_drgn_mm (#a:Type0) (#rrel:srel a)
+  (d:HST.drgn) (init:a) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ freeable b})
+  (requires fun h -> alloc_drgn_pre h d len)
+  (ensures fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
 
 
 (***** End allocation functions *****)
