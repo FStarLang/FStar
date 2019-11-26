@@ -150,8 +150,9 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Env.trivial_guard
    | Some t ->
-     let e, lc = TcUtil.maybe_coerce_lc env e lc t in
-     TcUtil.weaken_result_typ env e lc t
+     let e, lc, g_c = TcUtil.maybe_coerce_lc env e lc t in
+     let e, lc, g = TcUtil.weaken_result_typ env e lc t in
+     e, lc, Env.conj_guard g g_c
 
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
