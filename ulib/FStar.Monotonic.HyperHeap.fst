@@ -44,6 +44,8 @@ let root = hide []
 
 let lemma_root_has_color_zero _ = ()
 
+let root_is_not_freeable () = ()
+
 let rid_length r = List.Tot.length (reveal r)
 
 let rid_tail r = elift1_p (tot_to_gtot Cons?.tl) r

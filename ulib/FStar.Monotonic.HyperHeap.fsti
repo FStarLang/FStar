@@ -52,6 +52,8 @@ val lemma_root_has_color_zero (r:rid{r == root})
 
 let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 
+val root_is_not_freeable (_:unit) : Lemma (not (rid_freeable root))
+
 private val rid_length (r:rid) :GTot nat
 
 private val rid_tail (r:rid{rid_length r > 0}) :rid
