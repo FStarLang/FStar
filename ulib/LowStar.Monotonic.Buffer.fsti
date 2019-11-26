@@ -1960,17 +1960,6 @@ unfold let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
 (* Clients get this pure token when they witness a predicate *)
 val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) :Type0
 
-let witnessed_functorial (#a0 #a1:_)
-                         (#r0 #r0':_) (b0:mbuffer a0 r0 r0') (s0:spred a0)
-                         (#r1 #r1':_) (b1:mbuffer a1 r1 r1') (s1:spred a1)
-   : Lemma
-     (requires
-       witnessed b0 s0 /\
-       (forall h. s0 (as_seq h b0) ==> s1 (as_seq h b1)))
-     (ensures
-       witnessed b1 s1)
-   = admit() //TODO
-
 (*
  * We can only support witness and recall for gc-malloced buffers (i.e. recallable ones)
  * This is not a fundamental limitation, but needs some tweaks to the underlying state model
