@@ -26,10 +26,12 @@ include FStar.Monotonic.HyperHeap
 unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
-let is_eternal_color c = c <= 0
+let is_heap_color c = c <= 0
 
 [@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
-let is_eternal_region r  = is_eternal_color (color r)
+let is_eternal_region r  = is_heap_color (color r) && not (rid_freeable r)
+
+unfold let is_eternal_region_hs r = is_heap_color (color r) && not (rid_freeable r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
@@ -84,7 +86,12 @@ let is_tip (tip:rid) (h:hmap) =
   tip_top tip h                          //any other sid activation is a above (or equal to) the tip
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid)
-  = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
+  = (not (rid_freeable root)) /\
+    root `is_in` h /\
+    tip `is_tip` h /\
+    map_invariant h /\
+    downward_closed h /\
+    rid_ctr_pred h ctr
 
 private val mem' :Type u#1
 
@@ -134,9 +141,9 @@ val lemma_map_invariant (m:mem) (r s:rid)
 
 val lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` get_hmap m /\ s `is_above` r))
-         (ensures  (is_eternal_color (color r) == is_eternal_color (color s) /\
+         (ensures  (is_heap_color (color r) == is_heap_color (color s) /\
 	            is_stack_region r == is_stack_region s))
-         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_color (color s))];
+         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_heap_color (color s))];
                     [SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
 
@@ -174,8 +181,8 @@ let empty_mem : mem =
   lemma_is_wf_ctr_and_tip_intro h 1 tip;
   mk_mem 1 h tip
 
-let eternal_region_does_not_overlap_with_tip
-  (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
+let heap_region_does_not_overlap_with_tip
+  (m:mem) (r:rid{is_heap_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
   : Lemma (requires True)
           (ensures (~ (r `is_in` get_hmap m)))
   = root_has_color_zero()
@@ -248,13 +255,13 @@ let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
 let mref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && not (is_mm s) }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && not (is_mm s) }
 
 let mmmstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
 
 let mmmref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && is_mm s }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && is_mm s }
 
 //NS: Why do we need this one?
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
@@ -350,8 +357,8 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) new_tip_rid;
     mk_mem (rid_ctr + 1) h new_tip_rid
 
-let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ get_hmap m `Map.contains` parent})
-                       (c:option int{None? c \/ is_eternal_color (Some?.v c)})
+let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})
+                       (c:option int{None? c \/ is_heap_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
   = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
     lemma_is_wf_ctr_and_tip_elim m;
@@ -450,7 +457,7 @@ unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
 //////
 
 val eternal_disjoint_from_tip (h:mem{is_stack_region (get_tip h)})
-                              (r:rid{is_eternal_color (color r) /\
+                              (r:rid{is_heap_color (color r) /\
                                      r =!= root /\
                                      r `is_in` get_hmap h})
   :Lemma (disjoint (get_tip h) r)
