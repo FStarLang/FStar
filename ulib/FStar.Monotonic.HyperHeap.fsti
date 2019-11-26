@@ -37,6 +37,8 @@ val reveal (r:rid) :GTot (list (int * int))
 
 val color (x:rid) :GTot int
 
+val rid_freeable (x:rid) : GTot bool
+
 type hmap = Map.t rid heap
 
 val root :rid
@@ -172,7 +174,21 @@ val root_is_root (s:rid)
          [SMTPat (includes s root)]
 
 val extend (r:rid) (n:int) (c:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
+: Pure rid
+  (requires True)
+  (ensures fun s ->
+    s `extends` r /\
+    Cons? (reveal s) /\
+    Cons?.hd (reveal s) == (c, n) /\
+    color s == c /\
+    rid_freeable s == rid_freeable r)
 
 val extend_monochrome (r:rid) (n:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == ((color r), n) /\ color s == color r))
+: Pure rid
+  (requires True)
+  (ensures fun s ->
+    s `extends` r /\
+    Cons? (reveal s) /\
+    Cons?.hd (reveal s) == ((color r), n) /\
+    color s == color r /\
+    rid_freeable s == rid_freeable r)
