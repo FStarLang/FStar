@@ -1006,7 +1006,7 @@ let rec (desc_of_opt_type :
     | ReverseAccumulated elem_spec -> desc_of_opt_type elem_spec
     | WithSideEffect (uu____5132,elem_spec) -> desc_of_opt_type elem_spec
   
-let rec (arg_spec_of_opt_type :
+let (arg_spec_of_opt_type :
   Prims.string -> opt_type -> option_val FStar_Getopt.opt_variant) =
   fun opt_name  ->
     fun typ  ->
