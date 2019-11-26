@@ -350,35 +350,34 @@ val sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit (requires (fun m0 -> frameOf r = get_tip m0 /\ m0 `contains` r))
                     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
 
+unfold
+let new_region_post_common (r0 r1:rid) (m0 m1:mem) =
+  r1 `HS.extends` r0 /\
+  HS.fresh_region r1 m0 m1 /\
+  get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
+  get_tip m1 == get_tip m0 /\ 
+  HS.live_region m0 r0
+
 val new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0))
       (ensures  (fun m0 r1 m1 ->
-                 r1 `HS.extends` r0                               /\
-                 HS.fresh_region r1 m0 m1                         /\
+                 new_region_post_common r0 r1 m0 m1               /\
 		 HS.color r1 = HS.color r0                        /\
 		 is_eternal_region r1                             /\
-		 get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
-		 get_tip m1 == get_tip m0 /\ 
-                 HS.live_region m0 r0 /\
-                 (r1, m1) == HS.new_eternal_region m0 r0 None
-                 ))
+                 (r1, m1) == HS.new_eternal_region m0 r0 None))
 
 val new_colored_region (r0:rid) (c:int)
   :ST rid
       (requires (fun m       -> HS.is_heap_color c /\ is_eternal_region r0))
       (ensures (fun m0 r1 m1 ->
-                r1 `HS.extends` r0                               /\
-                HS.fresh_region r1 m0 m1                         /\
+                new_region_post_common r0 r1 m0 m1               /\
 	        HS.color r1 = c                                  /\
 		is_eternal_region r1                             /\
-                HS.live_region m0 r0 /\
-                (r1, m1) == HS.new_eternal_region m0 r0 (Some c) /\
-	        get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
-		get_tip m1 == get_tip m0))
+                (r1, m1) == HS.new_eternal_region m0 r0 (Some c)))
 
 let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
+                       (x:mreference a rel) (m1:mem) =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
@@ -444,8 +443,8 @@ val get (_:unit)
 (**
  * We can only recall refs with mm bit unset, not stack refs
  *)
-val recall (#a:Type) (#rel:preorder a) (r:mref a rel)
-  :Stack unit (requires (fun m -> True))
+val recall (#a:Type) (#rel:preorder a) (r:mreference a rel{not (HS.is_mm r)})
+  :Stack unit (requires (fun m -> is_eternal_region (HS.frameOf r) \/ m `contains_region` (HS.frameOf r)))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ m1 `contains` r))
 
 (**
@@ -552,3 +551,45 @@ val lemma_witnessed_forall (#t:Type) (p:(t -> mem_predicate))
 
 val lemma_witnessed_exists (#t:Type) (p:(t -> mem_predicate))
   :Lemma ((exists x. witnessed (p x)) ==> witnessed (fun s -> exists x. p x s))
+
+
+(*** Support for dynamic regions ***)
+
+
+let is_freeable_heap_region (r:rid) : Type0 =
+  HS.is_heap_color (color r) /\ HS.rid_freeable r /\ witnessed (region_contains_pred r)
+
+type d_hrid = r:rid{is_freeable_heap_region r}
+
+val drgn : Type0
+
+val rid_of_drgn (d:drgn) : d_hrid
+
+val new_drgn (r0:rid)
+: ST drgn
+  (requires fun m -> is_eternal_region r0)
+  (ensures fun m0 d m1 ->
+    let r1 = rid_of_drgn d in
+    new_region_post_common r0 r1 m0 m1 /\
+    HS.color r1 == HS.color r0 /\
+    (r1, m1) == HS.new_freeable_heap_region m0 r0)
+
+val free_drgn (d:drgn)
+: ST unit
+  (requires fun m -> contains_region m (rid_of_drgn d))
+  (ensures fun m0 _ m1 -> m1 == HS.free_heap_region m0 (rid_of_drgn d))
+
+val ralloc_drgn (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
+: ST (mreference a rel)
+  (requires fun m -> m `contains_region` (rid_of_drgn d))
+  (ensures fun m0 r m1 ->
+    not (HS.is_mm r) /\
+    ralloc_post (rid_of_drgn d) init m0 r m1)
+
+val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
+: ST (mreference a rel)
+  (requires fun m -> m `contains_region` (rid_of_drgn d))
+  (ensures fun m0 r m1 ->
+    HS.is_mm r /\
+    ralloc_post (rid_of_drgn d) init m0 r m1)
+
