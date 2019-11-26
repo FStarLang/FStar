@@ -81,11 +81,7 @@ let universe_to_string univs =
     List.map (fun x -> x.idText) univs |> String.concat  ", "
   else ""
 
-// resugar_universe' included for consistency (it doesn't use its environment)
-let rec resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
-  resugar_universe u r
-
-and resugar_universe (u:S.universe) r: A.term =
+let rec resugar_universe (u:S.universe) r: A.term =
   let mk (a:A.term') r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
@@ -123,6 +119,11 @@ and resugar_universe (u:S.universe) r: A.term =
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
   end
+
+// resugar_universe' included for consistency (it doesn't use its environment)
+let resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
+  resugar_universe u r
+
 
 let string_to_op s =
   let name_of_op = function

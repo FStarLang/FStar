@@ -244,6 +244,10 @@ let done : lift unit = Lift u#0 u#1 ()
 
 /// `arg_t`: interpreting an argument as a type
 ///   (in universe 1) since it is polymorphic in the preorders of a buffer
+/// GM: Somehow, this needs to be a `let rec` (even if it not really recursive)
+///     or print_frags fails to verify. I don't know why; the generated
+///     VC and its encoding seem identical (modulo hash consing in the
+///     latter).
 [@__reduce__]
 noextract
 let rec arg_t (a:arg) : Type u#1 =

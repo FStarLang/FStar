@@ -1555,7 +1555,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
       g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
   | _, _ -> ()
 
-#push-options "--z3rlimit 64 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
+#push-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)

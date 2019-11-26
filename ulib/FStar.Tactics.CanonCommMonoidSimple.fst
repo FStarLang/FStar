@@ -173,7 +173,7 @@ let permute_via_swaps (p:permute) =
   (#a:Type) -> (am:amap a) -> xs:list atom ->
     Lemma (exists ss. p xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
+let permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
                                (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (p xs)) =
   pvs am xs;
@@ -202,7 +202,7 @@ let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom) :
   // this should just work from the type of ss,
   // but ss gets substituted by its definition in the WP
 
-let rec sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
+let sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (sort xs)) =
   permute_via_swaps_correct sort (fun #a am -> sort_via_swaps am) m am xs
 
