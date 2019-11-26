@@ -578,7 +578,7 @@ let rec desugar_maybe_non_constant_universe t
       in aux t []
   | _ -> raise_error (Errors.Fatal_UnexpectedTermInUniverse, ("Unexpected term " ^ term_to_string t ^ " in universe context")) t.range
 
-let rec desugar_universe t : Syntax.universe =
+let desugar_universe t : Syntax.universe =
     let u = desugar_maybe_non_constant_universe t in
     match u with
         | Inl n -> int_to_universe n
@@ -883,13 +883,6 @@ and desugar_machine_integer env repr (signedness, width) range =
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
-
-and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
-    let desugar_attribute t =
-        match (unparen t).tm with
-            | Var ({str="cps"}) -> CPS
-            | _ -> raise_error (Errors.Fatal_UnknownAttribute, "Unknown attribute " ^ term_to_string t) t.range
-    in List.map desugar_attribute cattributes
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
   let mk e = S.mk e None top.range in
@@ -1268,19 +1261,22 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
         //Generate fresh names and populate an env' with recursive bindings
         //below, we use env' instead of env, only if is_rec
-        let env', fnames, rec_bindings =
-          List.fold_left (fun (env, fnames, rec_bindings) (_attr_opt, (f, _, _), _) ->
-            let env, lbname, rec_bindings = match f with
+        let env', fnames, rec_bindings, used_markers =
+          List.fold_left (fun (env, fnames, rec_bindings, used_markers) (_attr_opt, (f, _, _), _) ->
+            let env, lbname, rec_bindings, used_markers = match f with
               | Inl x ->
-                let env, xx = push_bv env x in
-                env, Inl xx, S.mk_binder xx::rec_bindings
+                let env, xx, used_marker = push_bv' env x in
+                let dummy_ref = BU.mk_ref true in
+                env, Inl xx, S.mk_binder xx::rec_bindings, used_marker::used_markers
               | Inr l ->
-                push_top_level_rec_binding env l.ident S.delta_equational, Inr l, rec_bindings in
-            env, (lbname::fnames), rec_bindings) (env, [], []) funs
+                let env, used_marker = push_top_level_rec_binding env l.ident S.delta_equational in
+                env, Inr l, rec_bindings, used_marker::used_markers in
+            env, (lbname::fnames), rec_bindings, used_markers) (env, [], [], []) funs
         in
 
         let fnames = List.rev fnames in
         let rec_bindings = List.rev rec_bindings in
+        let used_markers = List.rev used_markers in
         (* This comment is taken from Syntax.Subst.open_let_rec
            The desugaring of let recs has to be consistent with their opening
 
@@ -1345,6 +1341,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             |> List.unzip
         in
         let body, aq = desugar_term_aq env' body in
+        if is_rec then begin
+          List.iter2 (fun (_attr_opt, (f, _, _), _) used_marker ->
+            if not !used_marker then
+              let nm, gl, rng =
+                match f with
+                | Inl x -> (string_of_ident x, "Local", range_of_id x)
+                | Inr l -> (string_of_lid l, "Global", range_of_lid l)
+              in
+              Errors.log_issue rng (Errors.Warning_UnusedLetRec,
+                                    BU.format2 "%s binding %s is recursive but not used in its body"
+                                                gl nm)) funs used_markers
+        end;
         mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)), aq @ List.flatten aqss
       in
       //end ds_let_rec_or_app
@@ -1559,11 +1567,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | _ ->
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term: " ^ term_to_string top)) top.range
   end
-
-and not_ascribed t =
-    match t.tm with
-    | Ascribed _ -> false
-    | _ ->  true
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
@@ -1882,17 +1885,6 @@ and desugar_formula env (f:term) : S.term =
 
     | _ -> desugar_term env f
 
-and typars_of_binders env bs =
-    let env, tpars = List.fold_left (fun (env, out) b ->
-        let tk = desugar_binder env ({b with blevel=Formula}) in  (* typars follow the same binding conventions as formulas *)
-        match tk with
-            | Some a, k ->
-                let env, a = push_bv env a in
-                let a = {a with sort=k} in
-                (env, (a, trans_aqual env b.aqual)::out)
-            | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
-    env, List.rev tpars
-
 and desugar_binder env b : option<ident> * S.term = match b.b with
   | TAnnotated(x, t)
   | Annotated(x, t) -> Some x, desugar_typ env t
@@ -1911,6 +1903,25 @@ and trans_aqual env = function
   | Some AST.Equality -> Some S.Equality
   | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
   | None -> None
+
+let typars_of_binders env bs =
+    let env, tpars = List.fold_left (fun (env, out) b ->
+        let tk = desugar_binder env ({b with blevel=Formula}) in  (* typars follow the same binding conventions as formulas *)
+        match tk with
+            | Some a, k ->
+                let env, a = push_bv env a in
+                let a = {a with sort=k} in
+                (env, (a, trans_aqual env b.aqual)::out)
+            | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
+    env, List.rev tpars
+
+
+let desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
+    let desugar_attribute t =
+        match (unparen t).tm with
+            | Var ({str="cps"}) -> CPS
+            | _ -> raise_error (Errors.Fatal_UnknownAttribute, "Unknown attribute " ^ term_to_string t) t.range
+    in List.map desugar_attribute cattributes
 
 let binder_ident (b:binder) : option<ident> =
   match b.b with
@@ -2110,8 +2121,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  sigmeta = default_sigmeta;
                  sigattrs = [];
                  sigopts = None } in
-      let _env = Env.push_top_level_rec_binding _env id S.delta_constant in
-      let _env2 = Env.push_top_level_rec_binding _env' id S.delta_constant in
+      let _env, _ = Env.push_top_level_rec_binding _env id S.delta_constant in
+      let _env2, _ = Env.push_top_level_rec_binding _env' id S.delta_constant in
       _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparams env bs =

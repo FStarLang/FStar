@@ -1368,7 +1368,7 @@ let (doc_of_mod :
          in
       reduce (FStar_List.flatten docs)
   
-let rec (doc_of_mllib_r :
+let (doc_of_mllib_r :
   FStar_Extraction_ML_Syntax.mllib -> (Prims.string * doc) Prims.list) =
   fun uu____4030  ->
     match uu____4030 with

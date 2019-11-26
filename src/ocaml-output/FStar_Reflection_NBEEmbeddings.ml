@@ -673,7 +673,7 @@ let (e_argv_aq :
     let uu____1735 = e_term_aq aq  in
     FStar_TypeChecker_NBETerm.e_tuple2 uu____1735 e_aqualv
   
-let rec unlazy_as_t :
+let unlazy_as_t :
   'Auu____1745 .
     FStar_Syntax_Syntax.lazy_kind ->
       FStar_TypeChecker_NBETerm.t -> 'Auu____1745

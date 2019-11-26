@@ -232,7 +232,7 @@ let iterAllSMT (t : unit -> Tac unit) : Tac unit =
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
-let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
+let seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
     focus (fun () -> f (); iterAll g)
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
@@ -299,7 +299,7 @@ val (<|>) : (unit -> Tac 'a) ->
             (unit -> Tac 'a)
 let (<|>) t1 t2 = fun () -> or_else t1 t2
 
-let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
+let first (ts : list (unit -> Tac 'a)) : Tac 'a =
     L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =

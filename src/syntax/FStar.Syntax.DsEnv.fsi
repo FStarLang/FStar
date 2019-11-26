@@ -32,9 +32,7 @@ module BU = FStar.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
-type local_binding = (ident * bv)                         (* local name binding for name resolution, paired with an env-generated unique name *)
-type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
-type module_abbrev = (ident * lident)                     (* module X = A.B.C *)
+type used_marker = ref<bool>
 
 type open_kind =                                          (* matters only for resolving names with some module qualifier *)
 | Open_module                                             (* only opens the module, not the namespace *)
@@ -51,50 +49,9 @@ type record_or_dc = {
   is_record:bool
 }
 
-type scope_mod =
-| Local_binding            of local_binding
-| Rec_binding              of rec_binding
-| Module_abbrev            of module_abbrev
-| Open_module_or_namespace of open_module_or_namespace
-| Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
-| Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
-
-type string_set = set<string>
-
-type exported_id_kind = (* kinds of identifiers exported by a module *)
-| Exported_id_term_type (* term and type identifiers *)
-| Exported_id_field     (* field identifiers *)
-type exported_id_set = exported_id_kind -> ref<string_set>
-
 type env
 type withenv<'a> = env -> 'a * env
-// = {
-//  curmodule:            option<lident>;                   (* name of the module being desugared *)
-//  curmonad:             option<ident>;                    (* current monad being desugared *)
-//  modules:              list<(lident * modul)>;           (* previously desugared modules *)
-//  scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
-//  exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
-//                                                             reachable in a module, not shadowed by "include"
-//                                                             declarations. Used only to handle such shadowings,
-//                                                             not "private"/"abstract" definitions which it is
-//                                                             enough to just remove from the sigmap. Formally,
-//                                                             iden is in exported_ids[ModulA] if, and only if,
-//                                                             there is no 'include ModulB' (with ModulB.iden
-//                                                             defined or reachable) after iden in ModulA. *)
-//  trans_exported_ids:   BU.smap<exported_id_set>;         (* transitive version of exported_ids along the
-//                                                             "include" relation: an identifier is in this set
-//                                                             for a module if and only if it is defined either
-//                                                             in this module or in one of its included modules. *)
-//  includes:             BU.smap<(ref<(list<lident>)>)>;   (* list of "includes" declarations for each module. *)
-//  sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-//  sigmap:               BU.smap<(sigelt * bool)>;         (* bool indicates that this was declared in an interface file *)
-//  iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
-//  admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
-//  expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-//  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
-//  remaining_iface_decls:BU.smap<(list<Parser.AST.decl>)>
-//  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
-//}
+
 type dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
     ds_push_include_hook : env -> lident -> unit;
@@ -157,8 +114,9 @@ val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 val fv_qual_of_se : sigelt -> option<fv_qual>
 val delta_depth_of_declaration: lident -> list<qualifier> -> delta_depth
 
+val push_bv': env -> ident -> env * bv * used_marker
 val push_bv: env -> ident -> env * bv
-val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
+val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env * ref<bool>
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env

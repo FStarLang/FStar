@@ -402,7 +402,7 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
-let rec unlazy_emb t =
+let unlazy_emb t =
     match (compress t).n with
     | Tm_lazy i ->
         begin match i.lkind with
@@ -425,7 +425,8 @@ let eq_lazy_kind k k' =
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_uvar, Lazy_uvar -> true
      | _ -> false
-let rec unlazy_as_t k t =
+
+let unlazy_as_t k t =
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v})
         when eq_lazy_kind k k' ->
@@ -606,16 +607,6 @@ and eq_antiquotes a1 a2 =
               | _ -> Unknown)
             | Equal -> eq_antiquotes a1 a2
 
-and eq_aqual a1 a2 =
-    match a1, a2 with
-    | None, None -> Equal
-    | None, _
-    | _, None -> NotEqual
-    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
-    | Some Equality, Some Equality -> Equal
-    | _ -> NotEqual
-
 and branch_matches b1 b2 =
     let related_by f o1 o2 =
         match o1, o2 with
@@ -646,6 +637,16 @@ and eq_args (a1:args) (a2:args) : eq_result =
 and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs
     && List.forall2 eq_univs us vs
+
+let eq_aqual a1 a2 =
+    match a1, a2 with
+    | None, None -> Equal
+    | None, _
+    | _, None -> NotEqual
+    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
+    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
+    | _ -> NotEqual
 
 let rec unrefine t =
   let t = compress t in
@@ -906,10 +907,9 @@ let rec arrow_formals_comp k =
           aux s k
         | _ -> [], Syntax.mk_Total k
 
-let rec arrow_formals k =
+let arrow_formals k =
     let bs, c = arrow_formals_comp k in
     bs, comp_result c
-
 
 (* let_rec_arity e f:
     if `f` is a let-rec bound name in e
@@ -1202,7 +1202,7 @@ let mk_forall (u:universe) (x:bv) (body:typ) : typ =
 let close_forall_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ (fst b) f) bs f
 
-let rec is_wild_pat p =
+let is_wild_pat p =
     match p.v with
     | Pat_wild _ -> true
     | _ -> false
@@ -1551,7 +1551,7 @@ let dm4f_lid ed name : lident =
     let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
     lid_of_path p' Range.dummyRange
 
-let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
+let mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args None pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
@@ -1710,7 +1710,6 @@ and binder_eq_dbg (dbg : bool) b1 b2 =
     eqprod (fun b1 b2 -> check "binder sort"  (term_eq_dbg dbg b1.sort b2.sort))
            (fun q1 q2 -> check "binder qual"  (eq_aqual q1 q2 = Equal))
            b1 b2
-and residual_eq_dbg (r1:residual_comp) (r2:residual_comp) = fail "residual"
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let c1 = comp_to_comp_typ_nouniv c1 in
     let c2 = comp_to_comp_typ_nouniv c2 in

@@ -126,7 +126,7 @@ let compare_name (n1 n2 : name) : order =
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
 
-let rec compare_const (c1 c2 : vconst) : order =
+let compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
     | C_Int i, C_Int j -> order_from_int (i - j)

@@ -67,7 +67,7 @@ let run_safe :
                ((FStar_Tactics_Types.TacticFailure msg), p)
          | e -> FStar_Tactics_Result.Failed (e, p))
   
-let rec (log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
+let (log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
   fun ps  ->
     fun f  -> if ps.FStar_Tactics_Types.tac_verb_dbg then f () else ()
   
@@ -4278,7 +4278,7 @@ let (free_in :
       let uu____8838 = FStar_Syntax_Free.names t  in
       FStar_Util.set_mem bv uu____8838
   
-let rec (clear : FStar_Syntax_Syntax.binder -> unit tac) =
+let (clear : FStar_Syntax_Syntax.binder -> unit tac) =
   fun b  ->
     let bv = FStar_Pervasives_Native.fst b  in
     let uu____8854 = cur_goal ()  in
@@ -5414,7 +5414,7 @@ let (dup : unit -> unit tac) =
                             let uu____11482 = add_goals [g']  in
                             bind uu____11482 (fun uu____11486  -> ret ())))))
   
-let rec longest_prefix :
+let longest_prefix :
   'a .
     ('a -> 'a -> Prims.bool) ->
       'a Prims.list ->
