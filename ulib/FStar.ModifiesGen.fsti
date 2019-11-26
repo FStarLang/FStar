@@ -854,7 +854,7 @@ val modifies_ralloc_post
   (i: HS.rid)
   (init: a)
   (h: HS.mem)
-  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (x: HST.mreference a rel)
   (h' : HS.mem)
 : Lemma
   (requires (HST.ralloc_post i init h x h'))
