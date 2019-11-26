@@ -128,6 +128,7 @@ and expr =
   | EAbortS of string
   | EBufFree of expr
   | EBufCreateNoInit of lifetime * expr
+  | EAbortT of string * typ
 
 
 and op =
@@ -704,6 +705,10 @@ and translate_expr env e: expr =
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _)
     when string_of_mlpath p = "Prims.admit" ->
       EAbort
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [ t ])},
+    [{ expr = MLE_Const (MLC_String s) }])
+    when string_of_mlpath p = "LowStar.Failure.failwith" ->
+      EAbortT (s, translate_type env t)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, [arg])
     when string_of_mlpath p = "FStar.HyperStack.All.failwith"
       ||  string_of_mlpath p = "FStar.Error.unexpected"
