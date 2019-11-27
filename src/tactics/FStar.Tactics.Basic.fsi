@@ -70,8 +70,8 @@ val norm_binder_type : list<EMB.norm_step> -> binder -> tac<unit>
 val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
-val tc : term -> tac<typ>
-val tcc : term -> tac<comp>
+val tc  : env -> term -> tac<typ>
+val tcc : env -> term -> tac<comp>
 
 val is_irrelevant : goal -> bool
 

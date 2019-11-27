@@ -973,7 +973,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-            let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
+            let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
@@ -1174,12 +1174,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some rc ->
-              if is_impure rc && not (is_reifiable_rc env.tcenv rc)
+              if is_impure rc && not (is_smt_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable_rc env.tcenv rc
-                           then TcUtil.reify_body env.tcenv body
+                let body = if is_smt_reifiable_rc env.tcenv rc
+                           then TcUtil.reify_body env.tcenv [] body
                            else body
                 in
                 let body, decls' = encode_term body envbody in

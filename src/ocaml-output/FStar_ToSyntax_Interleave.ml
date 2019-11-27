@@ -248,7 +248,7 @@ let (check_initial_interface :
             | FStar_Parser_AST.TopLevelModule uu____903 -> false
             | uu____905 -> true))
   
-let rec (ml_mode_prefix_with_iface_decls :
+let (ml_mode_prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
       (FStar_Parser_AST.decl Prims.list * FStar_Parser_AST.decl Prims.list))

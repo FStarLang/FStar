@@ -271,9 +271,9 @@ and atom_to_string (a: atom) =
   | Var v -> "Var " ^ (P.bv_to_string v)
   | Match (t, _, _) -> "Match " ^ (t_to_string t)
 
-and arg_to_string (a : arg) = a |> fst |> t_to_string
+let arg_to_string (a : arg) = a |> fst |> t_to_string
 
-and args_to_string args = args |> List.map arg_to_string |> String.concat " "
+let args_to_string args = args |> List.map arg_to_string |> String.concat " "
 
 // Embedding and de-embedding
 

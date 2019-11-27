@@ -81,11 +81,7 @@ let universe_to_string univs =
     List.map (fun x -> x.idText) univs |> String.concat  ", "
   else ""
 
-// resugar_universe' included for consistency (it doesn't use its environment)
-let rec resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
-  resugar_universe u r
-
-and resugar_universe (u:S.universe) r: A.term =
+let rec resugar_universe (u:S.universe) r: A.term =
   let mk (a:A.term') r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
@@ -123,6 +119,11 @@ and resugar_universe (u:S.universe) r: A.term =
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
   end
+
+// resugar_universe' included for consistency (it doesn't use its environment)
+let resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
+  resugar_universe u r
+
 
 let string_to_op s =
   let name_of_op = function
@@ -251,7 +252,8 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_tuple_constructor_lid lid =
-  C.is_tuple_data_lid' lid || C.is_dtuple_data_lid' lid
+     C.is_tuple_data_lid' lid
+  || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
   match lid.str with
@@ -315,6 +317,10 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ ->
             failwith "wrong projector format"
         end
+       else if (lid_equals a C.smtpat_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPat", I.range_of_lid a)))
+       else if (lid_equals a C.smtpatOr_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPatOr", I.range_of_lid a)))
        else if (lid_equals a C.assert_lid || lid_equals a C.assume_lid
                 || Char.uppercase (String.get s 0) <> String.get s 0) then
          mk (A.Var (maybe_shorten_fv env fv))
@@ -397,10 +403,16 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             | hd :: tl -> last tl
             | _ -> failwith "last of an empty list"
       in
-      let rec last_two = function
-            | [] | [_] -> failwith "last two elements of a list with less than two elements "
-            | [a1;a2] -> [a1;a2]
-            | _::t -> last_two t
+      let first_two_explicit args =
+        let rec drop_implicits args =
+          match args with
+          | (_, Some (S.Implicit _))::tl -> drop_implicits tl
+          | _ -> args
+        in
+        match drop_implicits args with
+        | []
+        | [_] -> failwith "not_enough explicit_arguments"
+        | a1::a2::_ -> [a1;a2]
       in
       let resugar_as_app e args =
         let args =
@@ -466,41 +478,48 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           end
 
         | Some ("try_with", _) when List.length args > 1 ->
-          (* only the last two args are from original AST terms, others are added by typechecker *)
-          (* TODO: we need a place to store the information in the args added by the typechecker *)
-          let new_args = last_two args in
-          let body, handler = match new_args with
-            | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *)
-            | _ ->
-              failwith("wrong arguments to try_with")
-          in
-          let decomp term = match (SS.compress term).n with
-            | Tm_abs(x, e, _) ->
-              let x, e = SS.open_term x e in
-              e
-            | _ -> failwith("wrong argument format to try_with") in
-          let body = resugar_term' env (decomp body) in
-          let handler = resugar_term' env (decomp handler) in
-          let rec resugar_body t = match (t.tm) with
-            | A.Match(e, [(_,_,b)]) -> b
-            | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
-            | A.Ascribed(t1, t2, t3) ->
-              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
-              mk (A.Ascribed(resugar_body t1, t2, t3))
-            | _ -> failwith("unexpected body format to try_with") in
-          let e = resugar_body body in
-          let rec resugar_branches t = match (t.tm) with
-            | A.Match(e, branches) -> branches
-            | A.Ascribed(t1, t2, t3) ->
-              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
-              (* TODO: where should we keep the information stored in Ascribed? *)
-              resugar_branches t1
-            | _ ->
-              (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
-              []
-          in
-          let branches = resugar_branches handler in
-          mk (A.TryWith(e, branches))
+          (* attempt to resugar as `try .. with | ...`, but otherwise just resugar normally *)
+          begin try
+            (* only the first two explicit args are from original AST terms,
+             * others are added by typechecker *)
+            (* TODO: we need a place to store the information in the args added by the typechecker *)
+            let new_args = first_two_explicit args in
+            let body, handler = match new_args with
+              | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *)
+              | _ ->
+                failwith("wrong arguments to try_with")
+            in
+            let decomp term = match (SS.compress term).n with
+              | Tm_abs(x, e, _) ->
+                let x, e = SS.open_term x e in
+                e
+              | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
+            let body = resugar_term' env (decomp body) in
+            let handler = resugar_term' env (decomp handler) in
+            let rec resugar_body t = match (t.tm) with
+              | A.Match(e, [(_,_,b)]) -> b
+              | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
+              | A.Ascribed(t1, t2, t3) ->
+                (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+                mk (A.Ascribed(resugar_body t1, t2, t3))
+              | _ -> failwith("unexpected body format to try_with") in
+            let e = resugar_body body in
+            let rec resugar_branches t = match (t.tm) with
+              | A.Match(e, branches) -> branches
+              | A.Ascribed(t1, t2, t3) ->
+                (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+                (* TODO: where should we keep the information stored in Ascribed? *)
+                resugar_branches t1
+              | _ ->
+                (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
+                []
+            in
+            let branches = resugar_branches handler in
+            mk (A.TryWith(e, branches))
+          with
+          | _ ->
+            resugar_as_app e args
+          end
 
         | Some ("try_with", _) ->
           resugar_as_app e args
@@ -1042,7 +1061,43 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_eff_decl' env for_free r q ed =
+let resugar_wp_eff_combinators env for_free combs =
+  let resugar_opt name tsopt =
+    match tsopt with
+    | Some ts -> [resugar_tscheme'' env name ts]
+    | None -> [] in
+
+  let repr = resugar_opt "repr" combs.repr in
+  let return_repr = resugar_opt "return_repr" combs.return_repr in
+  let bind_repr = resugar_opt "bind_repr" combs.bind_repr in
+
+  if for_free then repr@return_repr@bind_repr
+  else
+    (resugar_tscheme'' env "ret_wp" combs.ret_wp)::
+    (resugar_tscheme'' env "bind_wp" combs.bind_wp)::
+    (resugar_tscheme'' env "stronger" combs.stronger)::
+    (resugar_tscheme'' env "if_then_else" combs.if_then_else)::
+    (resugar_tscheme'' env "ite_wp" combs.ite_wp)::
+    (resugar_tscheme'' env "close_wp" combs.close_wp)::
+    (resugar_tscheme'' env "trivial" combs.trivial)::
+    (repr@return_repr@bind_repr)
+
+let resugar_layered_eff_combinators env combs =
+  let resugar name (ts, _) = resugar_tscheme'' env name ts in
+
+  (resugar "repr" combs.l_repr)::
+  (resugar "return" combs.l_return)::
+  (resugar "bind" combs.l_bind)::
+  (resugar "subcomp" combs.l_subcomp)::
+  (resugar "if_then_else" combs.l_if_then_else)::[]
+
+let resugar_combinators env combs =
+  match combs with
+  | Primitive_eff combs -> resugar_wp_eff_combinators env false combs
+  | DM4F_eff combs -> resugar_wp_eff_combinators env true combs
+  | Layered_eff combs -> resugar_layered_eff_combinators env combs
+
+let resugar_eff_decl' env r q ed =
   let resugar_action d for_free =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
@@ -1063,23 +1118,9 @@ let resugar_eff_decl' env for_free r q ed =
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
-  let ret_wp = resugar_tscheme'' env "ret_wp" ed.ret_wp in
-  let bind_wp = resugar_tscheme'' env "bind_wp" ed.bind_wp in
-  let if_then_else = resugar_tscheme'' env "if_then_else" ed.if_then_else in
-  let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
-  let stronger = resugar_tscheme'' env "stronger" ed.stronger in
-  let close_wp = resugar_tscheme'' env "close_wp" ed.close_wp in
-  let trivial = resugar_tscheme'' env "trivial" ed.trivial in
-  let repr = resugar_tscheme'' env "repr" ed.repr in
-  let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
-  let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
-  let mandatory_members_decls =
-    if for_free then
-      [repr; return_repr; bind_repr]
-    else
-      [repr; return_repr; bind_repr; ret_wp; bind_wp;
-       if_then_else; ite_wp; stronger; close_wp;
-       trivial] in
+
+  let mandatory_members_decls = resugar_combinators env ed.combinators in
+
   let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
@@ -1133,10 +1174,7 @@ let resugar_sigelt' env se : option<A.decl> =
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
-    Some (resugar_eff_decl' env false se.sigrng se.sigquals ed)
-
-  | Sig_new_effect_for_free ed ->
-    Some (resugar_eff_decl' env true se.sigrng se.sigquals ed)
+    Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
 
   | Sig_sub_effect e ->
     let src = e.source in
@@ -1214,5 +1252,5 @@ let resugar_binder (b:S.binder) r : option<A.binder> =
 let resugar_tscheme (ts:S.tscheme) =
   noenv resugar_tscheme' ts
 
-let resugar_eff_decl for_free r q ed =
-  noenv resugar_eff_decl' for_free r q ed
+let resugar_eff_decl r q ed =
+  noenv resugar_eff_decl' r q ed

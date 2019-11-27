@@ -12,6 +12,7 @@ module Err = FStar.Errors
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
@@ -22,6 +23,7 @@ module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
+module TcComm = FStar.TypeChecker.Common
 module Env = FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -190,7 +192,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac3 0 "t_exact"       t_exact e_bool e_bool RE.e_term e_unit
                                t_exact NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mktac3 1 "t_apply"       t_apply e_bool e_bool RE.e_term e_unit
+      mktac3 0 "t_apply"       t_apply e_bool e_bool RE.e_term e_unit
                                t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
@@ -199,11 +201,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
 
-      mktac1 0 "tcc"           tcc RE.e_term RE.e_comp
-                               tcc NRE.e_term NRE.e_comp;
+      mktac2 0 "tcc"           tcc RE.e_env RE.e_term RE.e_comp
+                               tcc NRE.e_env NRE.e_term NRE.e_comp;
 
-      mktac1 0 "tc"            tc RE.e_term RE.e_term
-                               tc NRE.e_term NRE.e_term;
+      mktac2 0 "tc"            tc RE.e_env RE.e_term RE.e_term
+                               tc NRE.e_env NRE.e_term NRE.e_term;
 
       mktac1 0 "unshelve"      unshelve RE.e_term e_unit
                                unshelve NRE.e_term NBET.e_unit;
@@ -381,16 +383,16 @@ and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
     )
 
-//IN F*: and unembed_tactic_1_alt (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : option (a -> tac r) =
-and unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> = //JUST FSHARP
+//IN F*: let unembed_tactic_1_alt (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : option (a -> tac r) =
+let unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> = //JUST FSHARP
     Some (fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] None rng in
       unembed_tactic_0 er app ncb)
 
-//IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> (proofstate -> __result r)) =
-and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
+//IN F*: let e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> (proofstate -> __result r)) =
+let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
 //IN F*:    let un (t0: term) (w: bool) (n: norm_cb): option (a -> (proofstate -> __result r)) =
     let un (t0: term) (w: bool) (n: norm_cb): option<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
@@ -464,7 +466,7 @@ let run_tactic_on_ps
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                                                     ps.all_implicits);
-        let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
+        let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (1): %s\n"
@@ -771,8 +773,13 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (Options.Other "Tac");
+
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
-    let gs, w = run_tactic_on_typ tau.pos tau.pos tau env typ in
+    let ps = proofstate_of_goals tau.pos env [] [] in
+    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos
+                                  e_unit ()
+                                  (e_list RE.e_sigelt) tau env ps in
+
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
@@ -781,17 +788,12 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
-    // Fully normalize the witness
-    let w = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant;
-                         Env.Primops; Env.Unascribe; Env.Unmeta] env w in
-
     if !tacdbg then
-      BU.print1 "splice: got witness = %s\n" (Print.term_to_string w);
+      BU.print1 "splice: got decls = %s\n"
+                 (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
     // Unembed the result, this must work if things are well-typed
-    match unembed (e_list RE.e_sigelt) w FStar.Syntax.Embeddings.id_norm_cb with
-    | Some sigelts -> sigelts
-    | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    sigelts
     end
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =

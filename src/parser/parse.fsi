@@ -91,6 +91,7 @@ type token =
   | LBRACK
   | LBRACE_COLON_PATTERN
   | LBRACE
+  | LAYERED_EFFECT
   | LARROW
   | IRREDUCIBLE
   | INT8 of (string * bool)
@@ -246,6 +247,7 @@ type tokenId =
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE
+    | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
     | TOKEN_IRREDUCIBLE
     | TOKEN_INT8

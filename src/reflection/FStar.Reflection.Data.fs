@@ -5,6 +5,7 @@ open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 module Z     = FStar.BigInt
+open FStar.Ident
 
 type name = list<string>
 type typ  = term
@@ -52,6 +53,33 @@ type term_view =
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
+
+(* This is a mirror of FStar.Syntax.Syntax.qualifier *)
+type qualifier =
+  | Assumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Abstract
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable of lid
+  | Discriminator of lid
+  | Projector of lid * ident
+  | RecordType of (list<ident> * list<ident>)
+  | RecordConstructor of (list<ident> * list<ident>)
+  | Action of lid
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
 
 type bv_view = {
     bv_ppname : string;
@@ -276,3 +304,6 @@ let ord_Gt = tdataconstr ord_Gt_lid
 let ord_Lt_fv = lid_as_fv ord_Lt_lid delta_constant (Some Data_ctor)
 let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
 let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)
+
+(* Needed so this appears in the ocaml output for fstar-tactics-lib *)
+type decls = list<sigelt>

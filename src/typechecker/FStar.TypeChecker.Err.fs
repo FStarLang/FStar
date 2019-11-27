@@ -48,7 +48,7 @@ let info_at_pos env file row col =
  *     in the first case, we print it starting from a newline,
  *       while in the latter, it is printed on the same line
  *)
-let add_errors_smt_detail env errs smt_detail =
+let errors_smt_detail env errs smt_detail =
     let maybe_add_smt_detail msg =
       match smt_detail with
       | Inr d -> msg ^ "\n\t" ^ d
@@ -75,7 +75,10 @@ let add_errors_smt_detail env errs smt_detail =
             in
             e, maybe_add_smt_detail msg, r)
     in
-    FStar.Errors.add_errors errs
+    errs
+
+let add_errors_smt_detail env errs smt_detail =
+    FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
 
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")
 

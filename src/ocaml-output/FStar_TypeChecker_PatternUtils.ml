@@ -1,7 +1,7 @@
 open Prims
 type lcomp_with_binder =
   (FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option *
-    FStar_Syntax_Syntax.lcomp)
+    FStar_TypeChecker_Common.lcomp)
 let rec (elaborate_pat :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.pat -> FStar_Syntax_Syntax.pat)
@@ -181,7 +181,7 @@ let (pat_as_exp :
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.pat ->
         (FStar_Syntax_Syntax.bv Prims.list * FStar_Syntax_Syntax.term *
-          FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.pat))
+          FStar_TypeChecker_Common.guard_t * FStar_Syntax_Syntax.pat))
   =
   fun introduce_bv_uvars  ->
     fun env  ->
@@ -238,7 +238,8 @@ let (pat_as_exp :
                       (FStar_Syntax_Syntax.Tm_constant c)
                       FStar_Pervasives_Native.None p1.FStar_Syntax_Syntax.p
                  in
-              ([], [], [], env1, e, FStar_TypeChecker_Env.trivial_guard, p1)
+              ([], [], [], env1, e, FStar_TypeChecker_Common.trivial_guard,
+                p1)
           | FStar_Syntax_Syntax.Pat_dot_term (x,uu____965) ->
               let uu____970 = FStar_Syntax_Util.type_u ()  in
               (match uu____970 with
@@ -280,7 +281,7 @@ let (pat_as_exp :
                                    (uu___137_1110.FStar_Syntax_Syntax.p)
                                }  in
                              let uu____1113 =
-                               FStar_TypeChecker_Env.conj_guard g g'  in
+                               FStar_TypeChecker_Common.conj_guard g g'  in
                              ([], [], [], env1, e, uu____1113, p2))))
           | FStar_Syntax_Syntax.Pat_wild x ->
               let uu____1121 = intro_bv env1 x  in
@@ -317,14 +318,14 @@ let (pat_as_exp :
                                      then FStar_Syntax_Syntax.iarg te
                                      else FStar_Syntax_Syntax.as_arg te  in
                                    let uu____1648 =
-                                     FStar_TypeChecker_Env.conj_guard guard
-                                       guard'
+                                     FStar_TypeChecker_Common.conj_guard
+                                       guard guard'
                                       in
                                    ((b' :: b), (a' :: a), (w' :: w), env3,
                                      (arg :: args), uu____1648, ((pat, imp)
                                      :: pats1))))
                      ([], [], [], env1, [],
-                       FStar_TypeChecker_Env.trivial_guard, []))
+                       FStar_TypeChecker_Common.trivial_guard, []))
                  in
               (match uu____1220 with
                | (b,a,w,env2,args,guard,pats1) ->

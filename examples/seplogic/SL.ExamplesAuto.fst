@@ -63,7 +63,7 @@ let footprint_of (t:term) : Tac (list term) =
   // -- generalizing the above to arbitrary "footprint expressions"
   | Tv_FVar fv, xs ->
       let footprint_aux (a : argv) : Tac (option term) =
-      match inspect (fst (collect_app (tc (fst a)))) with
+      match inspect (fst (collect_app (tc (cur_env ()) (fst a)))) with
       | Tv_FVar fv -> if inspect_fv fv = ref_qn then Some (fst a) else None
       | _ -> None
       in FStar.Tactics.Util.filter_map footprint_aux xs

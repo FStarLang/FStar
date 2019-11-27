@@ -97,7 +97,7 @@ let rec lemma_init_aux_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i 
 =
   if k + 1 = n then () else lemma_init_aux_len #a n (k+1) contents
 
-let rec lemma_init_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
+let lemma_init_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
 
 abstract val lemma_len_upd: #a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
   (requires True)
