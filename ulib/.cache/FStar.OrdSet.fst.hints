@@ -1,5 +1,5 @@
 [
-  "bsÔ±òêæm\u0004îº≈\"\u0012Ñø",
+  "àgÍé`ÑÉ\u000bP!.\"\u001eOÅ ",
   [
     [
       "FStar.OrdSet.sorted",
@@ -1041,13 +1041,11 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "binder_x_157b99e815dc43d99415725267e9c452_2",
-        "binder_x_8ef5587a6264fd81b0d3cac747e5a773_1",
-        "binder_x_9cd1733a5204f989dbb2f01d5984df93_0",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "equation_FStar.OrdSet.empty", "equation_FStar.OrdSet.ordset",
-        "equation_FStar.OrdSet.singleton", "equation_FStar.OrdSet.size",
-        "equation_Prims.eqtype", "equation_Prims.nat",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.OrdSet.empty",
+        "equation_FStar.OrdSet.ordset", "equation_FStar.OrdSet.singleton",
+        "equation_FStar.OrdSet.size", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "int_inversion", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
@@ -1061,7 +1059,7 @@
         "typing_FStar.OrdSet.size"
       ],
       0,
-      "b55c6296edf8e2dd168fabc4d9aa7cd7"
+      "df9f49cbb323a61e9db4482f76b82f14"
     ],
     [
       "FStar.OrdSet.subset_size",
@@ -1118,7 +1116,7 @@
       1,
       [ "@query" ],
       0,
-      "3716b9b357c50d8c821c91517db3c82d"
+      "31db03e401eccd1e28aa7064bc561f44"
     ],
     [
       "FStar.OrdSet.map_internal",
@@ -1157,7 +1155,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "dbe68703695ca71a210911a973c782bc"
+      "57d86ee29f2cae0b307dfc4e5fb47c89"
     ],
     [
       "FStar.OrdSet.map",
@@ -1166,7 +1164,7 @@
       1,
       [ "@query" ],
       0,
-      "c99f7b3000b36c5cc17cc0c7ff543506"
+      "6a4ff2e3e05e38769893e784979ea6e4"
     ],
     [
       "FStar.OrdSet.remove_le",
@@ -1203,7 +1201,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "4b93b6135fdb34c65c1bef0473c2db39"
+      "0afc32767c5159b65a54b7fb3738ca8b"
     ],
     [
       "FStar.OrdSet.minus'",
@@ -1242,7 +1240,7 @@
         "typing_FStar.OrdSet.as_list", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "2e98d756f027beef7954ec243c5f6ae5"
+      "c2f711e978e58093cebd7df3555606bc"
     ],
     [
       "FStar.OrdSet.minus",
@@ -1267,7 +1265,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "2295539c6c0f62847915408071b58be6"
+      "3a4c110a2ff491c859c70c16844f9567"
     ],
     [
       "FStar.OrdSet.strict_subset",
@@ -1276,7 +1274,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "a5071d6cadba3a85db5a468d805074db"
+      "e91ae1d6ab7b3ebe12a834fffb164eb6"
     ],
     [
       "FStar.OrdSet.lemma_subset_union",
@@ -1296,7 +1294,7 @@
         "typing_FStar.OrdSet.union"
       ],
       0,
-      "b3ea57c3f6bdffab6e9b378bf7e384c5"
+      "b0db6f91cf604eeb31c20f370586180c"
     ],
     [
       "FStar.OrdSet.as_set",
@@ -1322,7 +1320,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "00516680b57fd8d2cad077a65bb3f759"
+      "0a44f4a12ea600297ede1f050ddedcfb"
     ],
     [
       "FStar.OrdSet.lemma_as_set_mem",
@@ -1364,7 +1362,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "5b3dd2e7bf1aaa3c1770a85da35db835"
+      "9e7645f2d88c5bdca33dfe133d02194e"
     ],
     [
       "FStar.OrdSet.lemma_as_set_disjoint",
@@ -1373,7 +1371,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "1b97c6def411c643dcbb42a17fe21df4"
+      "67ea2ac674e91ff2b477dd578631f89b"
     ],
     [
       "FStar.OrdSet.lemma_as_set_disjoint",
@@ -1431,7 +1429,7 @@
         "typing_FStar.Set.singleton", "unit_inversion", "unit_typing"
       ],
       0,
-      "e241153507b649751cecedfc3a9574e1"
+      "6ec242b4171a3bf0a5ae1c25410fb18a"
     ],
     [
       "FStar.OrdSet.sorted",
