@@ -43,7 +43,7 @@ assume val entry_t : Type0
 
 assume val trace_inv0 : Seq.seq entry_t -> Type0
 
-assume val trace_ref : i_seq HS.root entry_t trace_inv0
+assume val trace_ref : (HS.root_is_not_freeable (); i_seq HS.root entry_t trace_inv0)
 
 
 /// Now the underlying representation of the new effect
