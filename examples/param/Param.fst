@@ -38,6 +38,10 @@ let rec list_rec #t1 #t2 (r : t1 -> t2 -> Type) (l1 : list t1) (l2 : list t2) =
 let param_list = (fun (t1 t2 : Type) rel_f l1 l2 -> squash (list_rec #t1 #t2 rel_f l1 l2))
 let param_int = (fun (x y : int) -> squash (x == y))
 
+let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
+  let (bv, _) = inspect_binder b in
+  pack_binder bv q
+
 let rec param' (bvmap : bvmap) (t:term) : Tac term =
   let r =
   match inspect t with
@@ -53,7 +57,7 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
       let t1 = (inspect_bv bv).bv_sort in
       // bv:t1 -> t2
 
-      let app t1 t2 = `((`#t1) (`#t2)) in
+      let app q t1 t2 = pack (Tv_App t1 (t2, q)) in
       let abs b t : Tac term = pack (Tv_Abs b t) in
       let bf0 = fresh_binder_named "f0" (replace_by bvmap false t) in
       let bf1 = fresh_binder_named "f1" (replace_by bvmap true t) in
@@ -61,7 +65,7 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
       let bx1 = fresh_binder_named "x1" (replace_by bvmap true t1) in
       let brx = fresh_binder_named "xR" (`(`#(param' bvmap t1)) (`#bx0) (`#bx1)) in
       let bvmap' = update_bvmap bv bx0 bx1 brx bvmap in
-      let res = `((`#(param' bvmap' t2)) (`#(app bf0 bx0)) (`#(app bf1 bx1))) in
+      let res = `((`#(param' bvmap' t2)) (`#(app q bf0 bx0)) (`#(app q bf1 bx1))) in
       abs bf0 (abs bf1 (mk_tot_arr [bx0; bx1; brx] res))
     | _ -> fail "we don't support effects"
     end
@@ -124,6 +128,9 @@ let id_is_unique (f : (a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma 
 
 [@(preprocess_with param)]
 let test_int_to_int = int -> int
+
+[@(preprocess_with param)]
+let test_list_0 = list
 
 [@(preprocess_with param)]
 let test_list = list int
