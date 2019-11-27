@@ -1756,13 +1756,13 @@ let encode_query use_env_msg tcenv q
     if debug tcenv Options.Medium
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
-    then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
+    then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
     let phi, qdecls = encode_formula q env in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
         if Options.log_queries ()
-        then [Caption ("Encoding query formula: " ^ (Print.term_to_string q))]
+        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q))]
         else []
     in
     let query_prelude =
@@ -1773,4 +1773,8 @@ let encode_query use_env_msg tcenv q
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
+    if debug tcenv Options.Medium
+    || debug tcenv <| Options.Other "SMTEncoding"
+    || debug tcenv <| Options.Other "SMTQuery"
+    then BU.print_string "} Done encoding\n";
     query_prelude, labels, qry, suffix
