@@ -5367,8 +5367,8 @@ let (check_top_level :
   fun env  ->
     fun g  ->
       fun lc  ->
-        (let uu____14688 = FStar_TypeChecker_Env.debug env FStar_Options.Low
-            in
+        (let uu____14688 =
+           FStar_TypeChecker_Env.debug env FStar_Options.Medium  in
          if uu____14688
          then
            let uu____14691 = FStar_TypeChecker_Common.lcomp_to_string lc  in
