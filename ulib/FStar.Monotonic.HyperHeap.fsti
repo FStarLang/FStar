@@ -37,6 +37,8 @@ val reveal (r:rid) :GTot (list (int * int))
 
 val color (x:rid) :GTot int
 
+val rid_freeable (x:rid) : GTot bool
+
 type hmap = Map.t rid heap
 
 val root :rid
@@ -49,6 +51,8 @@ val lemma_root_has_color_zero (r:rid{r == root})
          [SMTPat (color r)]
 
 let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
+
+val root_is_not_freeable (_:unit) : Lemma (not (rid_freeable root))
 
 private val rid_length (r:rid) :GTot nat
 
@@ -171,8 +175,20 @@ val root_is_root (s:rid)
          (ensures  (s == root))
          [SMTPat (includes s root)]
 
+unfold
+let extend_post (r:rid) (n:int) (c:int) (freeable:bool) : pure_post rid =
+  fun s ->
+  s `extends` r /\
+  Cons? (reveal s) /\
+  Cons?.hd (reveal s) == (c, n) /\
+  color s == c /\
+  rid_freeable s == freeable
+  
 val extend (r:rid) (n:int) (c:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
+: Pure rid (requires True) (extend_post r n c (rid_freeable r))
+
+val extend_monochrome_freeable (r:rid) (n:int) (freeable:bool)
+: Pure rid (requires True) (extend_post r n (color r) freeable)
 
 val extend_monochrome (r:rid) (n:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == ((color r), n) /\ color s == color r))
+: Pure rid (requires True) (extend_post r n (color r) (rid_freeable r))

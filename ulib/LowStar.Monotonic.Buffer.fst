@@ -1342,6 +1342,13 @@ let recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
     buffer_compatible b
   )
 
+let region_lifetime_buf #_ #_ #_ b =
+  (not (g_is_null b)) ==> (
+    HS.is_heap_color (HS.color (frameOf b)) /\
+    not (HS.is_mm (Buffer?.content b)) /\
+    buffer_compatible b
+  )
+
 let recallable_null #_ #_ #_ = ()
 
 let recallable_mgsub #_ #rrel #rel b i len sub_rel =
@@ -1415,7 +1422,7 @@ let witnessed_functorial_st #a #rrel #rel1 #rel2 b1 b2 i len s1 s2 =
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
-  HST.is_eternal_region (frameOf b) /\
+  HS.is_heap_color (HS.color (frameOf b)) /\
   U32.v (Buffer?.max_length b) > 0 /\
   Buffer?.idx b == 0ul /\
   Ghost.reveal (Buffer?.length b) == Buffer?.max_length b
@@ -1507,6 +1514,20 @@ let mgcmalloc_of_list #a #rrel r init =
   in
   let b = Buffer len content 0ul (Ghost.hide len) in
   b
+
+let mmalloc_drgn #a #rrel d init len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content : HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn d (Seq.create (U32.v len) init)
+  in
+  Buffer len content 0ul len
+
+let mmalloc_drgn_mm #a #rrel d init len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content : HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn_mm d (Seq.create (U32.v len) init)
+  in
+  Buffer len content 0ul len
 
 #push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =

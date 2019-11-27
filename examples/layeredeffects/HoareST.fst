@@ -19,6 +19,9 @@ module HoareST
 open FStar.Heap
 open FStar.ST
 
+module P = FStar.Preorder
+module ST = FStar.ST
+
 /// ST effect implemented as a layered effect over STATE
 
 #set-options "--max_fuel 0 --max_ifuel 0"
@@ -73,28 +76,6 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-// let conjunction_is_stronger_f (a:Type)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   (f:repr a pre_f post_f)
-// : Tot _
-// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_f post_f f
-
-// let conjunction_is_stronger_g (a:Type)
-//   (pre_f:pre_t) (post_f:post_t a)
-//   (pre_g:pre_t) (post_g:post_t a)
-//   (f:repr a pre_g post_g)
-// : Tot _
-// = stronger a (fun h -> pre_f h /\ pre_g h) (fun h0 r h1 -> post_f h0 r h1 \/ post_g h0 r h1) pre_g post_g f
-
-/// Actions
-
-/// We define read action with the effect, but write will be defined via reflect later
-
-let read (a:Type0) (r:ref a)
-: repr a (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x == sel h0 r)
-= fun _ -> read r 
-
 reifiable reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
@@ -102,21 +83,51 @@ layered_effect {
        return       = return;
        bind         = bind;
        subcomp      = subcomp;
-       if_then_else = if_then_else;
-
-       read = read
+       if_then_else = if_then_else
 }
 
-let mread = HoareST?.read
 
-let mwrite (a:Type0) (r:ref a) (x:a)
+/// Effect actions from FStar.ST
+
+let recall (#a:Type) (#rel:P.preorder a) (r:mref a rel)
 : HoareST unit
   (fun _ -> True)
   (fun h0 _ h1 ->
-    sel h1 r == x /\
+    h0 == h1 /\
+    h1 `Heap.contains` r)
+= HoareST?.reflect (fun _ -> recall r)
+
+let alloc (#a:Type) (#rel:P.preorder a) (init:a)
+: HoareST (mref a rel)
+  (fun _ -> True)
+  (fun h0 r h1 ->
+    fresh r h0 h1 /\
+    modifies Set.empty h0 h1 /\
+    sel h1 r == init)
+= HoareST?.reflect (fun _ -> alloc init)
+
+let op_Bang (#a:Type) (#rel:P.preorder a) (r:mref a rel)
+: HoareST a
+  (fun _ -> True)
+  (fun h0 x h1 ->
+    h0 == h1 /\
+    x == sel h1 r)
+= HoareST?.reflect (fun _ -> read r)
+
+let op_Colon_Equals (#a:Type) (#rel:P.preorder a) (r:mref a rel) (x:a)
+: HoareST unit
+  (fun h -> rel (sel h r) x)
+  (fun h0 _ h1 ->
     modifies (Set.singleton (addr_of r)) h0 h1 /\
-    equal_dom h0 h1)
+    equal_dom h0 h1 /\
+    sel h1 r == x)
 = HoareST?.reflect (fun _ -> write r x)
+
+let get ()
+: HoareST heap
+  (fun _ -> True)
+  (fun h0 h h1 -> h0 == h1 /\ h == h1)
+= HoareST?.reflect get
 
 assume val wp_monotonic_pure (_:unit)
   : Lemma
@@ -132,7 +143,51 @@ let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
 = wp_monotonic_pure ();
-  fun _ ->
-  f ()
+  fun _ -> f ()
 
 sub_effect PURE ~> HoareST = lift_pure_hoarest
+
+
+/// Implementing the array library using the layered effect
+
+
+module Seq = FStar.Seq
+
+
+type array (a:Type0) = ref (Seq.seq a)
+
+
+#restart-solver
+
+#set-options "--log_queries"
+
+[@expect_failure]
+let index (#a:Type0) (x:array a) (i:nat)
+: HoareST unit
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 v h1 -> h0 == h1)
+= let s = !x in
+  assert (i < Seq.length s)
+
+let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
+: HoareST (array a)
+  (fun _ -> True)
+  (fun h0 r h1 ->
+    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
+    modifies Set.empty h0 h1)
+= let s1 = !s1 in
+  let s2 = !s2 in
+  alloc (Seq.append s1 s2)
+
+[@expect_failure]
+let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
+: HoareST unit
+  (fun h -> j < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    j < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.swap (sel h0 x) i j)
+= let s = !x in
+  let v_i = Seq.index s i in
+  let v_j = Seq.index s j in
+  admit ()  
