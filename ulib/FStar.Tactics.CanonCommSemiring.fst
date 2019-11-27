@@ -231,7 +231,7 @@ let rec monom_insert #a r c1 l1 s2 =
 val varlist_insert: #a:eqtype -> cr a -> varlist -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
-let rec varlist_insert #a r l1 s2 =
+let varlist_insert #a r l1 s2 =
   let aone = r.cm_mult.unit in
   monom_insert r aone l1 s2
 
@@ -415,7 +415,7 @@ let interp_vl (#a:Type) (r:cr a) (vm:vmap a) (l:varlist) =
   | Cons_var x t -> ivl_aux r vm x t
 
 [@canon_attr]
-let rec interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
+let interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
   let amult = r.cm_mult.mult in
   match l with
   | Nil_var -> c

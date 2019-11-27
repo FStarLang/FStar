@@ -585,7 +585,7 @@ let rec desc_of_opt_type typ : option<string> =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
+let arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
   | None -> ZeroArgs (fun () -> parser "")

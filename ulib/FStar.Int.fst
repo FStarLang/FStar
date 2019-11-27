@@ -346,7 +346,7 @@ let nth_lemma #n a b =
 val zero_nth_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True) (ensures nth (zero n) i = false)
         [SMTPat (nth (zero n) i)]
-let rec zero_nth_lemma #n i = ()
+let zero_nth_lemma #n i = ()
 
 val one_nth_lemma: #n:pos{1 < n} -> i:nat{i < n} ->
   Lemma (requires True)
@@ -358,7 +358,7 @@ let one_nth_lemma #n i = ()
 val ones_nth_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True) (ensures (nth (ones n) i) = true)
         [SMTPat (nth (ones n) i)]
-let rec ones_nth_lemma #n i = ()
+let ones_nth_lemma #n i = ()
 
 (* Bitwise operators *)
 val logand: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)

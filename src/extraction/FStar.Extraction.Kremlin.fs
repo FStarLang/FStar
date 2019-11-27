@@ -340,23 +340,8 @@ let list_elements e2 =
   in
   list_elements [] e2
 
-let rec translate (MLLib modules): list<file> =
-  List.filter_map (fun m ->
-    let m_name =
-      let path, _, _ = m in
-      Syntax.string_of_mlpath path
-    in
-    try
-      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
-      Some (translate_module m)
-    with
-    | e ->
-        BU.print2 "Unable to translate module: %s because:\n  %s\n"
-          m_name (BU.print_exn e);
-        None
-  ) modules
-
-and translate_module (module_name, modul, _): file =
+let rec translate_module (m : mlpath * option<(mlsig * mlmodule)> * mllib) : file =
+  let (module_name, modul, _) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
@@ -1081,3 +1066,19 @@ and translate_constant c: expr =
 
 and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
+
+let translate (MLLib modules): list<file> =
+  List.filter_map (fun m ->
+    let m_name =
+      let path, _, _ = m in
+      Syntax.string_of_mlpath path
+    in
+    try
+      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
+      Some (translate_module m)
+    with
+    | e ->
+        BU.print2 "Unable to translate module: %s because:\n  %s\n"
+          m_name (BU.print_exn e);
+        None
+  ) modules

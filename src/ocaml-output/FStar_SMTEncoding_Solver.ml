@@ -1020,7 +1020,7 @@ let (full_query_id : query_settings -> Prims.string) =
       Prims.op_Hat settings.query_name uu____3371  in
     Prims.op_Hat "(" uu____3369
   
-let rec collect : 'a . 'a Prims.list -> ('a * Prims.int) Prims.list =
+let collect : 'a . 'a Prims.list -> ('a * Prims.int) Prims.list =
   fun l  ->
     let acc = []  in
     let rec add_one1 acc1 x =

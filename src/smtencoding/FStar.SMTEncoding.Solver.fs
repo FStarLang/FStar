@@ -582,7 +582,7 @@ let fold_queries (qs:list<query_settings>)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
 
-let rec collect (l : list<'a>) : list<('a * int)> =
+let collect (l : list<'a>) : list<('a * int)> =
     let acc : list<('a * int)> = [] in
     let rec add_one acc x =
         match acc with

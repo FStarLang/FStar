@@ -157,7 +157,7 @@ let matched_prefix_of_path_elem (elem: path_elem) = elem.segment.prefix
 
 let mk_path_el imports segment = { imports = imports; segment = segment }
 
-let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
+let btree_find_prefix (bt: btree<'a>) (prefix: string)
     : list<(prefix_match * 'a)> (* ↑ keys *) =
   let rec aux (bt: btree<'a>) (prefix: string) (acc: list<(prefix_match * 'a)>) : list<(prefix_match * 'a)> =
     match bt with
