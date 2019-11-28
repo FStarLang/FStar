@@ -181,7 +181,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b75bc801f61f31e23190254ee22e0106"
+      "bd2c710c0fe80353f23998629970e5ed"
     ],
     [
       "Interop.wrap",
@@ -281,7 +281,7 @@
         "typing_tok_Interop.R2@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "fb39214dfae1830ae7bd475c2f06d54c"
+      "9d85e48ef716db4ee78ea17f288e2b7f"
     ],
     [
       "Interop.registers",
@@ -463,7 +463,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4550483d18fbd4271314b16d8cb8e3fa"
+      "96fe909a6650dbd7d69cd3b8de2740bb"
     ],
     [
       "Interop.wrap",
@@ -562,7 +562,7 @@
         "typing_Interop.elim_m", "well-founded-ordering-on-nat"
       ],
       0,
-      "a3630b8a89d12baa582de9c5f6b7bfe6"
+      "88afb9a7c3bcf8fbf780bfb9cfab7fbb"
     ]
   ]
 ]
