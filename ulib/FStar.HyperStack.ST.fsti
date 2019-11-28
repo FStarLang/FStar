@@ -304,6 +304,13 @@ type mmstackref (a:Type) = mmmstackref a (Heap.trivial_preorder a)
 type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
+
+let is_heap_region (r:rid) : Type0 =
+  HS.is_heap_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
+
+let is_freeable_heap_region (r:rid) : Type0 =
+  HS.is_heap_color (color r) /\ HS.rid_freeable r /\ witnessed (region_contains_pred r)
+
 let is_eternal_region (r:rid) :Type0
   = HS.is_eternal_region_hs r /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
@@ -376,21 +383,25 @@ val new_colored_region (r0:rid) (c:int)
 		is_eternal_region r1                             /\
                 (r1, m1) == HS.new_eternal_region m0 r0 (Some c)))
 
-let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel) (m1:mem) =
+let ralloc_post
+  (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
+  (m0:mem) (x:mreference a rel) (m1:mem) =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
   i = frameOf x                      /\
-  m1 == upd m0 x init                      
+  m1 == upd m0 x init                /\
+  HS.is_mm x == mm
 
 val ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
-  :ST (mref a rel) (requires (fun m -> is_eternal_region i))
-                   (ensures  (ralloc_post i init))
+: ST (mreference a rel)
+  (requires (fun m -> is_eternal_region i \/ (is_freeable_heap_region i /\ m `contains_region` i)))
+  (ensures ralloc_post i init false)
   
 val ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
-  :ST (mmmref a rel) (requires (fun m -> is_eternal_region i))
-                     (ensures  (ralloc_post i init))
+: ST (mreference a rel)
+  (requires (fun m -> is_eternal_region i \/ (is_freeable_heap_region i /\ m `contains_region` i)))
+  (ensures ralloc_post i init true)
 
 (*
  * AR: 12/26: For a ref to be readable/writable/free-able,
@@ -556,9 +567,6 @@ val lemma_witnessed_exists (#t:Type) (p:(t -> mem_predicate))
 (*** Support for dynamic regions ***)
 
 
-let is_freeable_heap_region (r:rid) : Type0 =
-  HS.is_heap_color (color r) /\ HS.rid_freeable r /\ witnessed (region_contains_pred r)
-
 type d_hrid = r:rid{is_freeable_heap_region r}
 
 val drgn : Type0
@@ -582,14 +590,10 @@ val free_drgn (d:drgn)
 val ralloc_drgn (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
 : ST (mreference a rel)
   (requires fun m -> m `contains_region` (rid_of_drgn d))
-  (ensures fun m0 r m1 ->
-    not (HS.is_mm r) /\
-    ralloc_post (rid_of_drgn d) init m0 r m1)
+  (ensures ralloc_post (rid_of_drgn d) init false)
 
 val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
 : ST (mreference a rel)
   (requires fun m -> m `contains_region` (rid_of_drgn d))
-  (ensures fun m0 r m1 ->
-    HS.is_mm r /\
-    ralloc_post (rid_of_drgn d) init m0 r m1)
-
+  (ensures ralloc_post (rid_of_drgn d) init true)
+    

@@ -190,7 +190,7 @@ let new_colored_region r0 c =
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
       (requires (fun m       -> is_heap_color (color i) /\ m `contains_region` i))
-      (ensures  (fun m0 r m1 -> ralloc_post i init m0 r m1 /\ is_mm r == mm))
+      (ensures ralloc_post i init mm)
   = let m0 = gst_get () in
     let r, m1 = HS.alloc rel i init mm m0 in
     Heap.lemma_next_addr_alloc rel (Map.sel (HS.get_hmap m0) i) init mm;  //AR: to prove that next_addr in tip's heap remains same (to satisfy the predicate in mm rel)
