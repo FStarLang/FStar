@@ -116,13 +116,13 @@
         "typing_FStar.Int63.add", "typing_FStar.Int64.add",
         "typing_FStar.Int8.add", "typing_FStar.Integers.nat_of_width",
         "typing_FStar.Integers.v", "typing_FStar.Integers.width_of_sw",
-        "typing_FStar.UInt128.add", "typing_FStar.UInt16.add",
+        "typing_FStar.UInt128.op_Plus_Hat", "typing_FStar.UInt16.add",
         "typing_FStar.UInt31.add", "typing_FStar.UInt32.add",
         "typing_FStar.UInt63.add", "typing_FStar.UInt64.add",
         "typing_FStar.UInt8.add"
       ],
       0,
-      "3dc0666eded5f45875f10bfb978c7622"
+      "0c8f6ebad99c2f66acc5b6968a0bf3e4"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
@@ -288,13 +288,13 @@
         "typing_FStar.Int63.add", "typing_FStar.Int64.add",
         "typing_FStar.Int8.add", "typing_FStar.Integers.nat_of_width",
         "typing_FStar.Integers.v", "typing_FStar.Integers.width_of_sw",
-        "typing_FStar.UInt128.add", "typing_FStar.UInt16.add",
+        "typing_FStar.UInt128.op_Plus_Hat", "typing_FStar.UInt16.add",
         "typing_FStar.UInt31.add", "typing_FStar.UInt32.add",
         "typing_FStar.UInt63.add", "typing_FStar.UInt64.add",
         "typing_FStar.UInt8.add"
       ],
       0,
-      "3c43e56f991d34e2ae577d7e2ffb9cfd"
+      "508a11cc8083645d7224f34da996f678"
     ],
     [
       "StrictUnfolding.test_int_64",

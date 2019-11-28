@@ -126,7 +126,7 @@
         "unit_typing"
       ],
       0,
-      "75679253905045f5b8d8bb9c726b5d83"
+      "e2bab6b713acdab7d1fae31b0dd6ceec"
     ],
     [
       "LowStar.Buffer.trivial_preorder",
@@ -183,7 +183,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_FStar.UInt32.v"
       ],
       0,
-      "fca9d8be5a788afd3d430de39e439ead"
+      "1f752c74f35f687483b3f4e4f08770eb"
     ],
     [
       "LowStar.Buffer.offset",
@@ -291,8 +291,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e", "b2t_def",
         "bool_inversion", "bool_typing", "constructor_distinct_Prims.Nil",
         "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
@@ -310,7 +309,6 @@
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
-        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_612136ee4143d24977831c80e4f470a1",
         "lemma_FStar.Ghost.reveal_hide",
@@ -326,7 +324,6 @@
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_FStar.Seq.Properties.cons_index_slice",
         "lemma_FStar.Seq.Properties.slice_length",
-        "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FStar.UInt32.vu_inv",
         "lemma_LowStar.Monotonic.Buffer.address_liveness_insensitive_buffer",
         "lemma_LowStar.Monotonic.Buffer.as_seq_gsub",
@@ -352,7 +349,6 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_09d2e9ab3b9c121b24316d151747e281",
         "refinement_interpretation_Tm_refine_16a73f5406ae8e5bfabd433eb2d32722",
-        "refinement_interpretation_Tm_refine_1ba8fd8bb363097813064c67740b2de5",
         "refinement_interpretation_Tm_refine_35a0739c434508f48d0bb1d5cd5df9e8",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
@@ -381,7 +377,7 @@
         "unit_typing"
       ],
       0,
-      "98a76491116c87f03d51537a2b7a4ee4"
+      "3fb38013bd65213de266bc54d5a6a294"
     ]
   ]
 ]

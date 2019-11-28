@@ -1,0 +1,29 @@
+[
+  "ö<Sw÷x³=¾“–þ—½Ùž",
+  [
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "5a2bf9eecc9951800e262f05e2954945"
+    ],
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "88d22c54116acb2bf998002bcb03bf81"
+    ]
+  ]
+]
