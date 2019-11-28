@@ -384,24 +384,23 @@ val new_colored_region (r0:rid) (c:int)
                 (r1, m1) == HS.new_eternal_region m0 r0 (Some c)))
 
 let ralloc_post
-  (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
+  (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   (m0:mem) (x:mreference a rel) (m1:mem) =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
   i = frameOf x                      /\
-  m1 == upd m0 x init                /\
-  HS.is_mm x == mm
+  m1 == upd m0 x init
 
 val ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
 : ST (mreference a rel)
   (requires (fun m -> is_eternal_region i \/ (is_freeable_heap_region i /\ m `contains_region` i)))
-  (ensures ralloc_post i init false)
+  (ensures fun h0 r h1 -> ralloc_post i init h0 r h1 /\ not (HS.is_mm r))
   
 val ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
 : ST (mreference a rel)
   (requires (fun m -> is_eternal_region i \/ (is_freeable_heap_region i /\ m `contains_region` i)))
-  (ensures ralloc_post i init true)
+  (ensures fun h0 r h1 -> ralloc_post i init h0 r h1 /\ HS.is_mm r)
 
 (*
  * AR: 12/26: For a ref to be readable/writable/free-able,
@@ -590,10 +589,10 @@ val free_drgn (d:drgn)
 val ralloc_drgn (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
 : ST (mreference a rel)
   (requires fun m -> m `contains_region` (rid_of_drgn d))
-  (ensures ralloc_post (rid_of_drgn d) init false)
+  (ensures fun h0 r h1 -> ralloc_post (rid_of_drgn d) init h0 r h1 /\ not (HS.is_mm r))
 
 val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
 : ST (mreference a rel)
   (requires fun m -> m `contains_region` (rid_of_drgn d))
-  (ensures ralloc_post (rid_of_drgn d) init true)
+  (ensures fun h0 r h1 -> ralloc_post (rid_of_drgn d) init h0 r h1 /\ HS.is_mm r)
     
