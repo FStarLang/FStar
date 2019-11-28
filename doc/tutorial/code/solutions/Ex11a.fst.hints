@@ -286,7 +286,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "bcf7ee5c0b2f222cb0bbb0503e192337"
+      "a8d4c1696f042942a8219b0a88ee66f2"
     ],
     [
       "Ex11a.new_arm",
@@ -367,7 +367,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "d6f68cfc5fdb147ee2c99938051fbeb4"
+      "86043f0d0607cfa1866a167d935e0e4c"
     ],
     [
       "Ex11a.new_robot",
@@ -556,7 +556,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "cd1026d60f87877f57695fc195eb311a"
+      "56bb96cd0e6bc99bdeeda2d69cf25fa5"
     ],
     [
       "Ex11a.fly",
@@ -669,7 +669,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "43cc30fdbde40d54d3f576ff7db3db1b"
+      "3867e14429f55eef61946c30158d3536"
     ],
     [
       "Ex11a.fly_both",
@@ -1200,7 +1200,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton"
       ],
       0,
-      "a10738eb2d1880ce0447eed713a76dc2"
+      "ae66cbd5bfc972c718548b1b4ce726ac"
     ],
     [
       "Ex11a.point",

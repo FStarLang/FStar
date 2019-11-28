@@ -122,7 +122,7 @@
         "typing_FStar.UInt8.add"
       ],
       0,
-      "eda03a269a941b1651ba81f1ef19db42"
+      "0c8f6ebad99c2f66acc5b6968a0bf3e4"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
@@ -294,7 +294,7 @@
         "typing_FStar.UInt8.add"
       ],
       0,
-      "8abc532654718a7920b1b20032500e41"
+      "508a11cc8083645d7224f34da996f678"
     ],
     [
       "StrictUnfolding.test_int_64",
