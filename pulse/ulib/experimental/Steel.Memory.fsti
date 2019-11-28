@@ -16,12 +16,17 @@
 module Steel.Memory
 open FStar.Real
 open Steel.Permissions
+module U32 = FStar.UInt32
 
 /// Abstract type of memories
 val heap  : Type u#1
 
 /// A memory maps a reference to its associated value
 val ref (a:Type u#0) : Type u#0
+val array_ref (a: Type u#0) : Type u#0
+
+val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
+val length (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
@@ -75,6 +80,12 @@ let equiv (p1 p2:hprop) =
 /// All the standard connectives of separation logic
 val emp : hprop
 val pts_to (#a:_) (r:ref a) (p:permission) (v:a) : hprop
+val pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (p:permission)
+  (contents:Seq.lseq t (U32.v (length a)))
+  : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -95,7 +106,7 @@ val equiv_extensional_on_star (p1 p2 p3:hprop)
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to and abbreviations
-//////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 let ptr_perm #a (r:ref a) (p:permission) =
     h_exists (pts_to r p)
 
@@ -109,6 +120,29 @@ val pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
       interp (pts_to x p v1) m)
     (ensures
       v0 == v1)
+
+////////////////////////////////////////////////////////////////////////////////
+// pts_to_array and abbreviations
+////////////////////////////////////////////////////////////////////////////////
+
+let array_perm (#t: Type) (a: array_ref t) (p:permission) =
+  h_exists (pts_to_array a p)
+
+let array (#t: Type) (a: array_ref t) =
+  h_exists (array_perm a)
+
+val pts_to_array_injective
+  (#t: _)
+  (a: array_ref t)
+  (p:permission)
+  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (m: heap)
+  : Lemma
+    (requires (
+      interp (pts_to_array a p c0) m /\
+      interp (pts_to_array a p c1) m))
+    (ensures (c0 == c1))
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -174,6 +208,12 @@ val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   : Lemma (interp (ptr r) m /\
            interp (pts_to r p (sel r m)) m)
 
+val sel_array (#t:_) (a:array_ref t) (m:hheap (array a)) : Seq.lseq t (U32.v (length a))
+
+/// sel_array respects pts_to_array
+val sel_array_lemma (#t:_) (a: array_ref t) (p:permission) (m: hheap (array_perm a p))
+  : Lemma (interp (array a) m /\ interp (pts_to_array a p (sel_array a m)) m)
+
 /// memories satisfying [p1 `star` p2] can be split
 /// into disjoint fragments satisfying each of them
 val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
@@ -185,6 +225,10 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
 /// upd requires a full permission
 val upd (#a:_) (r:ref a) (v:a)
   : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
+
+
+val upd_array (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+  : action (array_perm a full_permission) unit (fun _ -> pts_to_array a full_permission v)
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
