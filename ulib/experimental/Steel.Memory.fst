@@ -29,7 +29,7 @@ type cell =
           cell
   | Array: a:Type u#0 ->
            len: nat ->
-           seq:Seq.lseq (a & permission) len  ->
+           seq:Seq.lseq (a & perm:permission{allows_read perm}) len  ->
 	   cell
 
 let addr = nat
@@ -76,6 +76,18 @@ let disjoint_addr (m0 m1:heap) (a:addr)
 
 let ref (a:Type) = addr
 
+module U32 = FStar.UInt32
+
+noeq type array_ref (a: Type0) : Type0 = {
+  array_addr: addr;
+  array_length: U32.t;
+  array_offset: U32.t;
+}
+
+let offset (#t: Type) (a: array_ref t) = a.array_offset
+
+let length (#t: Type) (a: array_ref t) = a.array_length
+
 let disjoint (m0 m1:heap)
   : prop
   = forall a. disjoint_addr m0 m1 a
@@ -97,7 +109,7 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
         Some (Array a0 len0 (Seq.init len0 (fun i ->
 	  let (x0, p0) = Seq.index seq0 i in
           let (_, p1) = Seq.index seq1 i in
-	  (x0, sum_permissions p0 p1)
+	  (x0, (sum_permissions p0 p1 <: (perm:permission{allows_read perm})))
       )))
   )
 
@@ -163,7 +175,7 @@ let join_commutative' (m0 m1:heap)
 
 let join_commutative m0 m1 = ()
 
-#push-options "--z3rlimit_factor 6 --initial_fuel 2 --initial_ifuel 2"
+#push-options "--z3rlimit_factor 12 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_fuel 2"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -231,6 +243,8 @@ noeq
 type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to : #a:Type0 -> r:ref a -> perm:permission -> v:a -> hprop
+  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission ->
+		  contents:Seq.lseq t (U32.v (length a)) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -245,11 +259,27 @@ let rec interp (p:hprop) (m:heap)
     | Emp -> True
     | Pts_to #a r perm v ->
       m `contains_addr` r /\
-      (let Ref a' perm' v' = select_addr m r in
-       a == a' /\
-       v == v' /\
-       perm `lesser_equal_permission` perm')
-
+      (match select_addr m r with
+        | Ref a' perm' v' ->
+          a == a' /\
+          v == v' /\
+          perm `lesser_equal_permission` perm'
+       | _ -> False
+     )
+    | Pts_to_array #t a perm contents ->
+      m `contains_addr` a.array_addr /\
+      (match select_addr m a.array_addr with
+        | Array t' len' seq ->
+	  t' == t /\
+	  U32.v a.array_offset + U32.v a.array_length <= len' /\
+          (forall (i:nat{i < U32.v a.array_length}).
+	    let x = Seq.index contents i in
+	    let (x', perm') = Seq.index seq (U32.v a.array_offset + i) in
+	    x == x' /\
+	    perm `lesser_equal_permission` perm'
+          )
+	| _ -> False
+      )
     | Refine p q ->
       interp p m /\ q m
 
@@ -282,6 +312,7 @@ let rec interp (p:hprop) (m:heap)
 
 let emp = Emp
 let pts_to = Pts_to
+let pts_to_array = Pts_to_array
 let h_and = And
 let h_or = Or
 let star = Star
@@ -304,17 +335,56 @@ let intro_pts_to (#a:_) (x:ref a) (p:permission) (v:a) (m:heap)
   : Lemma
     (requires
        m `contains_addr` x /\
-       (let Ref a' perm' v' = select_addr m x in
-        a == a' /\
-        v == v' /\
-        p `lesser_equal_permission` perm'))
+       (match select_addr m x with
+         | Ref a' perm' v' ->
+           a == a' /\
+           v == v' /\
+           p `lesser_equal_permission` perm'
+	  | _ -> False))
      (ensures
        interp (pts_to x p v) m)
   = ()
 
-
 let pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
   = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// pts_to_array
+////////////////////////////////////////////////////////////////////////////////
+
+let intro_pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (perm:permission)
+  (contents:Seq.lseq t (U32.v a.array_length))
+  (m: heap)
+  : Lemma
+    (requires (
+      m `contains_addr` a.array_addr /\
+      (match select_addr m a.array_addr with
+        | Array t' len' seq ->
+	  t' == t /\
+	  U32.v a.array_offset + U32.v a.array_length <= len' /\
+          (forall (i:nat{i < U32.v a.array_length}).
+	    let x = Seq.index contents i in
+	    let (x', perm') = Seq.index seq (U32.v a.array_offset + i) in
+	    x == x' /\
+	    perm `lesser_equal_permission` perm'
+          )
+	| _ -> False)
+    ))
+    (ensures (interp (pts_to_array a perm contents) m))
+  =
+  ()
+
+let pts_to_array_injective
+  (#t: _)
+  (a: array_ref t)
+  (p:permission)
+  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (m: heap)
+  =
+  assert(c0 `Seq.equal` c1)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -378,7 +448,9 @@ let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
 
 (* Properties of star *)
 
+#push-options "--z3rlimit_factor 8 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
 let star_commutative (p1 p2:hprop) = ()
+#pop-options
 
 let star_associative (p1 p2 p3:hprop)
 = let ltor (m:heap)
@@ -416,6 +488,18 @@ let sel #a (r:ref a) (m:hheap (ptr r))
 let sel_lemma #a (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   = ()
 
+////////////////////////////////////////////////////////////////////////////////
+// sel_array
+////////////////////////////////////////////////////////////////////////////////
+
+let sel_array (#t:_) (a:array_ref t) (m:hheap (array a)) :  Seq.lseq t (U32.v (length a))
+  = let Array _ len c = select_addr m a.array_addr in
+  Seq.init (U32.v a.array_length) (fun i ->
+    fst (Seq.index c (i + U32.v a.array_offset))
+  )
+
+let sel_array_lemma (#t:_) (a: array_ref t) (p:permission) (m: hheap (array_perm a p)) =
+  ()
 
 /// F*'s indefinite_description is only available in the Ghost effect
 /// That's to prevent us from mistakenly extracting code that uses the
@@ -442,6 +526,7 @@ let upd' #a (r:ref a) (v:a)
   : pre_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = fun h -> (| (), update_addr h r (Ref a full_permission v) |)
 
+#push-options "--z3rlimit_factor 2 --initial_fuel 4 --initial_ifuel 4 --max_fuel 4 --max_ifuel 4"
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
     (requires
@@ -469,6 +554,7 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
        mem_equiv_eq h' (join h0' h1)
    in
    ()
+#pop-options
 
 #push-options "--warn_error -271"
 let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
@@ -533,6 +619,138 @@ let upd #a (r:ref a) (v:a)
     upd'_depends_only_on_fp r v;
     upd' r v
 
+let upd_array_seq'
+  (#t:_)
+  (a:array_ref t)
+  (v:Seq.lseq t (U32.v (length a)))
+  (h: hheap (array_perm a full_permission)) : heap =
+  let Array _ len v_orig = select_addr h a.array_addr in
+  update_addr h a.array_addr (Array t len
+      (Seq.init len (fun i ->
+        if i < U32.v a.array_offset then
+	  Seq.index v_orig i
+	else if i < U32.v a.array_offset + U32.v a.array_length then
+	  (Seq.index v (i - U32.v a.array_offset), full_permission)
+        else
+	  Seq.index v_orig i
+      )))
+
+let upd_array' (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+  : pre_action (array_perm a full_permission) unit (fun _ -> pts_to_array a full_permission v)
+  = fun h ->
+    (| (), upd_array_seq' a v h |)
+
+#push-options "--z3rlimit 100 --initial_fuel 3 --initial_ifuel 3 --max_fuel 3 --max_ifuel 3"
+let upd_array_lemma'
+  (#t:_)
+  (a:array_ref t)
+  (v:Seq.lseq t (U32.v (length a)))
+  (h:heap)
+  (frame:hprop)
+  : Lemma
+    (requires
+      interp (array_perm a full_permission `star` frame) h)
+    (ensures (
+      let (| _, h1 |) = upd_array' a v h in
+      interp (pts_to_array a full_permission v `star` frame) h1))
+  = let aux (h0 h1:heap)
+     : Lemma
+       (requires
+         disjoint h0 h1 /\
+         h == join h0 h1 /\
+         interp (array_perm a full_permission) h0 /\
+         interp frame h1)
+       (ensures (
+         let (| _, h' |) = upd_array' a v h in
+         let h0' = upd_array_seq' a v h0 in
+         disjoint h0' h1 /\
+         interp (pts_to_array a full_permission v) h0' /\
+         interp frame h1 /\
+         h' == join h0' h1))
+       [SMTPat (disjoint h0 h1)]
+     =
+     let (| _, h'|) = upd_array' a v h in
+     let h0' = upd_array_seq' a v h0 in
+     let aux (addr: addr) : Lemma (h' addr == (join h0' h1) addr) =
+       if addr <> a.array_addr then () else
+       if not (h1 `contains_addr` addr) then ()
+       else admit()
+     in
+     Classical.forall_intro aux;
+     mem_equiv_eq h' (join h0' h1)
+   in
+   ()
+#pop-options
+
+#push-options "--max_fuel 3 --initial_fuel 3 --initial_ifuel 3 --max_ifuel 3 --warn_error -271 --z3rlimit_factor 12"
+let upd_array'_is_frame_preserving (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+  : Lemma (is_frame_preserving (upd_array' a v))
+  = let aux (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a))) (h:heap) (frame:hprop)
+      : Lemma
+        (requires
+          interp (array_perm a full_permission `star` frame) h)
+        (ensures (
+          let (| _, h1 |) = (upd_array' a v h) in
+          interp (pts_to_array a full_permission v `star` frame) h1))
+        [SMTPat ()]
+      = upd_array_lemma' a v h frame
+   in
+   ()
+#pop-options
+
+#push-options "--max_fuel 3 --initial_fuel 3 --initial_ifuel 3 --max_ifuel 3 --z3rlimit 70"
+let upd_array'_preserves_join  (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+                       (h0:hheap (array_perm a full_permission))
+                       (h1:heap {disjoint h0 h1})
+  : Lemma
+     (let (| x0, h |) = upd_array' a v h0 in
+      let (| x1, h' |) = upd_array' a v (join h0 h1) in
+      x0 == x1 /\
+      disjoint h h1 /\
+      h' == join h h1)
+  =
+    let (| x0, h |) = upd_array' a v h0 in
+    let (| x1, h' |) = upd_array' a v (join h0 h1) in
+    assert (disjoint h h1);
+    let aux (addr: addr) : Lemma (h' addr == (join h h1) addr) =
+       if addr <> a.array_addr then () else
+       if not (h1 `contains_addr` addr) then ()
+       else admit()
+     in
+     Classical.forall_intro aux;
+    assert (h' `mem_equiv` join h h1)
+#pop-options
+
+#push-options "--warn_error -271 --max_fuel 3 --initial_fuel 3 --initial_ifuel 3 --max_ifuel 3 --z3rlimit 500"
+let upd_array'_depends_only_on_fp (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+  : Lemma (action_depends_only_on_fp (upd_array' a v))
+  =
+    let pre = array_perm a full_permission in
+    let post = pts_to_array a full_permission v in
+    let aux (h0:hheap pre)
+            (h1:heap {disjoint h0 h1})
+            (q:fp_prop post)
+    : Lemma
+      (let (| x0, h |) = upd_array' a v h0 in
+        let (| x1, h' |) = upd_array' a v (join h0 h1) in
+        x0 == x1 /\
+        (q h <==> q h'))
+      [SMTPat ()]
+    = let (| x0, h |) = upd_array' a v h0 in
+      let (| x1, h' |) = upd_array' a v (join h0 h1) in
+      assert (x0 == x1);
+      upd_array'_preserves_join a v h0 h1;
+      assert (h' == join h h1)
+    in
+    ()
+#pop-options
+
+
+let upd_array (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
+  : action (array_perm a full_permission) unit (fun _ -> pts_to_array a full_permission v)
+  = upd_array'_is_frame_preserving a v;
+    upd_array'_depends_only_on_fp a v;
+    upd_array' a v
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand
@@ -634,7 +852,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#push-options "--z3rlimit_factor 6 --max_fuel 1 --max_ifuel 2  --initial_fuel 2 --initial_ifuel 2"
+#push-options "--z3rlimit 500 --max_fuel 3 --max_ifuel 3  --initial_fuel 3 --initial_ifuel 3"
 #push-options "--warn_error -271" //local patterns miss variables; ok
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
@@ -644,6 +862,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     | Emp -> ()
 
     | Pts_to _ _ _ -> ()
+    | Pts_to_array _ _ _ -> ()
 
     | Refine p q -> affine_star_aux p m m'
 
@@ -775,7 +994,7 @@ let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
             interp p h /\ q h)
   = refine_equiv p q h
 
-#push-options "--z3rlimit_factor 4 --query_stats"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let frame_fp_prop' #fp #a #fp' frame
                    (q:fp_prop frame)
                    (act:action fp a fp')
@@ -901,11 +1120,11 @@ let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
 val alloc_action (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
 
-#push-options "--z3rlimit_factor 4 --query_stats"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let singleton_heap #a (x:ref a) (c:cell) : heap =
     F.on _ (fun i -> if i = x then Some c else None)
 
-let singleton_pts_to #a (x:ref a) (c:cell)
+let singleton_pts_to #a (x:ref a) (c:cell{Ref? c})
   : Lemma (requires (Ref?.a c == a))
           (ensures (interp (pts_to x (Ref?.perm c) (Ref?.v c)) (singleton_heap x c)))
   = ()
@@ -935,7 +1154,7 @@ let alloc_pre_m_action (#a:_) (v:a)
     (| x, t |)
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --query_stats"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
   : Lemma
     (requires
@@ -961,7 +1180,7 @@ let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
     assert (interp (pts_to x full_permission v `star` frame `star` mem_invariant m) h1)
 #pop-options
 
-#push-options "--warn_error -271 --z3rlimit_factor 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let alloc_is_frame_preserving (#a:_) (v:a)
   : Lemma (is_m_frame_preserving (alloc_pre_m_action v))
   = let aux (frame:hprop) (m:hmem (emp `star` frame))
@@ -975,7 +1194,7 @@ let alloc_is_frame_preserving (#a:_) (v:a)
     ()
 #pop-options
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let alloc_preserves_disjoint (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
   : Lemma (let (| x0, m |) = alloc_pre_m_action v m0 in
            disjoint (heap_of_mem m) h1)
@@ -994,7 +1213,7 @@ let alloc_preserves_disjoint (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 
     in Classical.forall_intro aux
 #pop-options
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 let alloc_preserves_join (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
   : Lemma (
       let h0 = heap_of_mem m0 in
@@ -1017,7 +1236,7 @@ let alloc_preserves_join (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
      join_associative' h_alloc h0 h1
 #pop-options
 
-#push-options "--warn_error -271 --z3rlimit_factor 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4 --warn_error -271 --z3rlimit_factor 4"
 let alloc_depends_only_on (#a:_) (v:a)
   : Lemma (m_action_depends_only_on (alloc_pre_m_action v))
   = let aux
@@ -1057,7 +1276,7 @@ let alloc_m_action (#a:_) (v:a)
     alloc_depends_only_on v;
     alloc_pre_m_action v
 
-#push-options "--query_stats --z3rlimit_factor 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
 // let test2 (#a:_) (v:a) (m0:hmem emp)
 //           (h1:heap {m_disjoint m0 h1})
 //           (post: (x:ref a -> fp_prop (pts_to x full_permission v)))
@@ -1267,7 +1486,7 @@ let maybe_acquire #p (l:lock p) (m:mem { lock_ok l m } )
 
 let hmem_emp (p:hprop) (m:hmem p) : hmem emp = m
 
-#push-options "--query_stats --z3rlimit_factor 8"
+#push-options "--z3rlimit 200 --initial_ifuel 4 --initial_fuel 4"
 let release #p (l:lock p) (m:hmem p { lock_ok l m } )
   : (b:bool &
      hmem emp)
