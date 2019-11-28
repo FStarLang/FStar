@@ -176,7 +176,9 @@ function refresh_hints() {
     echo "Current branch_name=$CI_BRANCH"
 
     # Add all the hints, even those not under version control
-    find $hints_dir -iname '*.hints' | xargs git add
+    find $hints_dir/doc -iname '*.hints' | xargs git add
+    find $hints_dir/examples -iname '*.hints' | xargs git add
+    find $hints_dir/ulib -iname '*.hints' | xargs git add
 
     # Without the eval, this was doing weird stuff such as,
     # when $2 = "git ls-files src/ocaml-output/ | xargs git add",
