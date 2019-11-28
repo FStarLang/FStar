@@ -79,7 +79,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "7086ceb44ac2ffcd15ec96c2eb38d8d6"
+      "9c74ddbb2ffc2e44fbde7b1051388da9"
     ],
     [
       "FStar.Monotonic.HyperStack.popped",
@@ -394,7 +394,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "5a166c334ccb298da916d5179445eaa0"
+      "85750e447a403c11d3c330e3ccbd911e"
     ],
     [
       "FStar.Monotonic.HyperStack.new_eternal_region",
@@ -486,7 +486,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "e472d280645073bcfc7be9e07c848a53"
+      "4004b51d9a72e088779848731cf9067a"
     ],
     [
       "FStar.Monotonic.HyperStack.new_freeable_heap_region",
@@ -551,7 +551,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "1c88ee45a052a1609dc82b94d6df7691"
+      "e112f3d4fa67a9c9256384d5cb1b386e"
     ],
     [
       "FStar.Monotonic.HyperStack.free_heap_region",
@@ -594,7 +594,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton"
       ],
       0,
-      "e91e4d07e1b9339eca9451b05530255d"
+      "5475c93cd05308fe23c1845a89b77acf"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_sel_same_addr",
