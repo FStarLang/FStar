@@ -1,5 +1,5 @@
 [
-  "÷¶\u0018r\u0004m\u00047;Ótä’Äí¥",
+  "»H¶⁄\u00119ö∞#è√∆‰ﬁ\u001c‹",
   [
     [
       "HoareST.return",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "1a17e5032edc741b7f07998d820ada11"
+      "1d330a85f4c02a7eb1d9c74f1170ec36"
     ],
     [
       "HoareST.bind",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "dcef15b427c12633f95ba07e34240176"
+      "3758d638733e1a943131fb654f1248db"
     ],
     [
       "HoareST.subcomp",
@@ -26,23 +26,7 @@
       0,
       [ "@query", "equation_HoareST.repr" ],
       0,
-      "1b5131cf8dc39153ff762c196262f61f"
-    ],
-    [
-      "HoareST.read",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref",
-        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.sel"
-      ],
-      0,
-      "e16e2f8d01bd4338136aab432c87a54f"
+      "b0377e1892e47b71431a8e35c1d2209f"
     ],
     [
       "HoareST.HoareST",
@@ -51,7 +35,7 @@
       0,
       [ "@query" ],
       0,
-      "572feccb2a76a45544ddc759b515b407"
+      "60a018811c23cca7b6e215092e02c6de"
     ],
     [
       "HoareST.HoareST",
@@ -60,28 +44,58 @@
       0,
       [ "@query" ],
       0,
-      "d8a7a08e846529668ec5bf27ed1f41df"
+      "47472afaa6a63cbbd95f52e34abad0bf"
     ],
     [
-      "HoareST.mwrite",
+      "HoareST.recall",
+      1,
+      0,
+      0,
+      [ "@query", "unit_typing" ],
+      0,
+      "a5e4c6eaf93d67c8fd3fe4405e8f752c"
+    ],
+    [
+      "HoareST.alloc",
       1,
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_FStar.Heap.trivial_preorder",
-        "function_token_typing_Prims.int",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_f990a45a7edd9d6b5e95811bfe6a93ec",
-        "true_interp"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f92e5242f03ab4e5f7531a17fe84839b"
+      "14ef940eba1f4141e0a525f928b3d22f"
+    ],
+    [
+      "HoareST.op_Bang",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.ST.mref",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Monotonic.Heap.sel"
+      ],
+      0,
+      "2add6bfbd141e09ef975ea2abfd55086"
+    ],
+    [
+      "HoareST.op_Colon_Equals",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_87a53fdd47ca86fd63a6af797c1e42d4"
+      ],
+      0,
+      "89c64619e65ffdbd52de443db658af27"
     ],
     [
       "HoareST.lift_pure_hoarest",
@@ -106,7 +120,21 @@
         "typing_Tm_abs_efcce3c21fe48dce9105b420b0cd535c"
       ],
       0,
-      "1d58ac5ff465daeb2a90c45872932a5e"
+      "6c9fee4408ea9508f1a87baa940333b2"
+    ],
+    [
+      "HoareST.op_At_Bar",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "32e888a30b48af36f3762efa154228b0"
     ]
   ]
 ]

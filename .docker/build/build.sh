@@ -157,10 +157,6 @@ function fetch_mitls() {
 }
 
 function refresh_fstar_hints() {
-    if [ -f ".scripts/git_rm_stale_hints.sh" ]; then
-        ./.scripts/git_rm_stale_hints.sh
-    fi
-
     refresh_hints "git@github.com:FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
 }
 
