@@ -41,14 +41,7 @@ val rid_freeable (x:rid) : GTot bool
 
 type hmap = Map.t rid heap
 
-val root :rid
-
-(*
- * Revisit this pattern
- *)
-val lemma_root_has_color_zero (r:rid{r == root})
-  :Lemma (requires True) (ensures (color r == 0))
-         [SMTPat (color r)]
+val root : r:rid{color r == 0 /\ not (rid_freeable r)}
 
 let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 
