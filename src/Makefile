@@ -183,6 +183,9 @@ ocaml-unit-tests:
 # Getting parallelism from this target
 uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
 
+uregressions-nohints:
+	+$(MAKE) HINTS_ENABLED= uregressions
+
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
 # But, at the moment, it tests the same files as get tested on every push
