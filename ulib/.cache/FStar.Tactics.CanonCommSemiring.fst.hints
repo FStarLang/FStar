@@ -893,7 +893,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_m"
       ],
       0,
-      "ad8cf195feff93275b0c98988436cf11"
+      "2881bf44a2210298c3501c4c6a5867f4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.aplus_assoc_4",
@@ -955,7 +955,7 @@
         "typing_tok_Prims.LexTop@tok"
       ],
       0,
-      "5d2a40eab804aa79683ddfd9ea2a899f"
+      "372dc20e61e069fd8215b188027d7960"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge_ok",
@@ -1038,7 +1038,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "03f468714e1ef82bf757f912386f414a"
+      "ef4feff78d91917ef100bcf6afe0fbad"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.monom_insert_ok",
@@ -1118,7 +1118,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "92f57943e21a722bfb9ecfb6d17c4130"
+      "cf12072b71e0d7d273956fd8cfe06d9d"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_insert_ok",
@@ -1134,7 +1134,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "20e056e44fe32d0e9c4426cb68ae536c"
+      "c19b7c2e719a0635142d07b54759587a"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar_ok",
@@ -1156,6 +1156,7 @@
         "binder_x_fdefedb18760e8752e07f0c4eaa3e0f0_1",
         "constructor_distinct_FStar.Tactics.CanonCommSemiring.Cons_monom",
         "constructor_distinct_FStar.Tactics.CanonCommSemiring.Cons_varlist",
+        "constructor_distinct_FStar.Tactics.CanonCommSemiring.Nil_monom",
         "data_elim_FStar.Algebra.CommMonoid.CM",
         "data_elim_FStar.Tactics.CanonCommSemiring.CR",
         "disc_equation_FStar.Tactics.CanonCommSemiring.Cons_monom",
@@ -1188,10 +1189,10 @@
         "projection_inverse_FStar.Tactics.CanonCommSemiring.Cons_varlist__0",
         "projection_inverse_FStar.Tactics.CanonCommSemiring.Cons_varlist__1",
         "projection_inverse_FStar.Tactics.CanonCommSemiring.Cons_varlist_a",
+        "projection_inverse_FStar.Tactics.CanonCommSemiring.Nil_monom_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_monom",
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist",
-        "token_correspondence_FStar.Tactics.CanonCommSemiring.canonical_sum_scalar.fuel_instrumented",
         "typing_FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_mult",
         "typing_FStar.Tactics.CanonCommSemiring.canonical_sum_scalar",
         "typing_FStar.Tactics.CanonCommSemiring.interp_cs",
@@ -1199,7 +1200,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "b31184615d71f85558c5339005a4c290"
+      "ba0377cefc89d94d7e17ff061d2974f0"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar2_ok",
@@ -1268,7 +1269,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "223eea91dcd72a33af88c4da47499eb9"
+      "62b2f88e5d8adf1b39de8a4ea74a73e8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar3_ok",
@@ -1338,7 +1339,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "4182aab5d42202f8b5727b2483bdc84f"
+      "4b495b0c17f4a756176bf5d3da9f3131"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_prod_ok",
@@ -1404,7 +1405,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "c8f8d5d5c26907d1019a6b0c8084243c"
+      "9b55c0669a5edfac946fb2ba9ac5c55b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_normalize_ok",
@@ -1482,7 +1483,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "9d0ee8d2bd61f05ff5dac2073de010f9"
+      "ba074ee91df4335fd741da8d49052456"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_simplify_ok",
@@ -1550,7 +1551,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "c34335d602331838d5379c593c5a26ba"
+      "16b4f6267a47b1c9812b758a8dff9784"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_simplify_ok",

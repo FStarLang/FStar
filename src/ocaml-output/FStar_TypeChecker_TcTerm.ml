@@ -396,7 +396,8 @@ let (value_check_expected_typ :
                  (match uu____506 with
                   | (e1,lc1,g) ->
                       ((let uu____523 =
-                          FStar_TypeChecker_Env.debug env FStar_Options.Low
+                          FStar_TypeChecker_Env.debug env
+                            FStar_Options.Medium
                            in
                         if uu____523
                         then
@@ -651,7 +652,7 @@ let (check_expected_effect :
                             ((let uu____1017 =
                                 FStar_All.pipe_left
                                   (FStar_TypeChecker_Env.debug env)
-                                  FStar_Options.Low
+                                  FStar_Options.Medium
                                  in
                               if uu____1017
                               then
@@ -682,7 +683,7 @@ let (check_expected_effect :
                                      in
                                   ((let uu____1050 =
                                       FStar_TypeChecker_Env.debug env
-                                        FStar_Options.Low
+                                        FStar_Options.Medium
                                        in
                                     if uu____1050
                                     then
@@ -1222,7 +1223,7 @@ let (guard_letrecs :
                                     in
                                  ((let uu____2926 =
                                      FStar_TypeChecker_Env.debug env1
-                                       FStar_Options.Low
+                                       FStar_Options.Medium
                                       in
                                    if uu____2926
                                    then
@@ -5339,7 +5340,7 @@ and (check_application_args :
                            | (cres2,guard1) ->
                                ((let uu____15146 =
                                    FStar_TypeChecker_Env.debug env
-                                     FStar_Options.Low
+                                     FStar_Options.Medium
                                     in
                                  if uu____15146
                                  then

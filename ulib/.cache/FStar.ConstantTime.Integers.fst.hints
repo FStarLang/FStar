@@ -227,7 +227,7 @@
         "typing_Tm_abs_14540b1677bb0879c263763c122744f7"
       ],
       0,
-      "9222dde5300f5307141bb9676d117fc4"
+      "aa391c0fc75412e6cd0cc68c7b0183d4"
     ],
     [
       "FStar.ConstantTime.Integers.addition_mod",
@@ -366,7 +366,7 @@
         "typing_Tm_abs_3b3b3487729e58b4bfeba69d78394443"
       ],
       0,
-      "62ecc68e3451a09044a378c986c7ed71"
+      "3573e1047ec0039851e6724f631d53c9"
     ],
     [
       "FStar.ConstantTime.Integers.__proj__Secret__item__sl",
@@ -890,7 +890,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "d3561e857f4d83cff94a74f4df7ecc39"
+      "8846f9caebd00d54201445665620a293"
     ],
     [
       "FStar.ConstantTime.Integers.hacl_lattice",
@@ -1023,7 +1023,7 @@
         "refinement_interpretation_Tm_refine_192558601003ec7978a790fb7af08479"
       ],
       0,
-      "b5dad0baf33cc4f9b2be7fc222501ae6"
+      "181c11adcd582c9ab03032ef8d3b0aed"
     ]
   ]
 ]

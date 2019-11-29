@@ -8014,7 +8014,7 @@ let (encode_query :
                     then
                       let uu____19496 = FStar_Syntax_Print.term_to_string q1
                          in
-                      FStar_Util.print1 "Encoding query formula: %s\n"
+                      FStar_Util.print1 "Encoding query formula {: %s\n"
                         uu____19496
                     else ());
                    (let uu____19501 =
@@ -8044,7 +8044,7 @@ let (encode_query :
                                               q1
                                              in
                                           Prims.op_Hat
-                                            "Encoding query formula: "
+                                            "Encoding query formula : "
                                             uu____19588
                                            in
                                         FStar_SMTEncoding_Term.Caption
@@ -8103,5 +8103,24 @@ let (encode_query :
                                             "</labels>";
                                          FStar_SMTEncoding_Term.Echo "Done!"])
                                      in
-                                  (query_prelude, labels, qry, suffix)))))))
+                                  ((let uu____19643 =
+                                      ((FStar_TypeChecker_Env.debug tcenv
+                                          FStar_Options.Medium)
+                                         ||
+                                         (FStar_All.pipe_left
+                                            (FStar_TypeChecker_Env.debug
+                                               tcenv)
+                                            (FStar_Options.Other
+                                               "SMTEncoding")))
+                                        ||
+                                        (FStar_All.pipe_left
+                                           (FStar_TypeChecker_Env.debug tcenv)
+                                           (FStar_Options.Other "SMTQuery"))
+                                       in
+                                    if uu____19643
+                                    then
+                                      FStar_Util.print_string
+                                        "} Done encoding\n"
+                                    else ());
+                                   (query_prelude, labels, qry, suffix))))))))
   
