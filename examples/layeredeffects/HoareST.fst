@@ -47,7 +47,7 @@ let bind (a:Type) (b:Type)
   (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
 : repr b
   (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
-  (fun h0 y h2 -> exists (x:a) (h1:heap). post_f h0 x h1 /\ post_g x h1 y h2)
+  (fun h0 y h2 -> exists (x:a) (h1:heap). pre_f h0 /\ post_f h0 x h1 /\ post_g x h1 y h2)
 = fun _ ->
   let x = f () in
   g x ()
@@ -61,7 +61,7 @@ let subcomp (a:Type)
 : Pure (repr a pre_g post_g)
   (requires
     (forall (h:heap). pre_g h ==> pre_f h) /\
-    (forall (h0 h1:heap) (x:a). post_f h0 x h1 ==> post_g h0 x h1))
+    (forall (h0 h1:heap) (x:a). (pre_g h0 /\ post_f h0 x h1) ==> post_g h0 x h1))
   (ensures fun _ -> True)
 = f
 
@@ -156,19 +156,6 @@ module Seq = FStar.Seq
 
 type array (a:Type0) = ref (Seq.seq a)
 
-
-#restart-solver
-
-#set-options "--log_queries"
-
-[@expect_failure]
-let index (#a:Type0) (x:array a) (i:nat)
-: HoareST unit
-  (fun h -> i < Seq.length (sel h x))
-  (fun h0 v h1 -> h0 == h1)
-= let s = !x in
-  assert (i < Seq.length s)
-
 let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
 : HoareST (array a)
   (fun _ -> True)
@@ -179,7 +166,34 @@ let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
   let s2 = !s2 in
   alloc (Seq.append s1 s2)
 
-[@expect_failure]
+let index (#a:Type0) (x:array a) (i:nat)
+: HoareST a
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 v h1 ->
+    i < Seq.length (sel h0 x) /\
+    h0 == h1 /\
+    v == Seq.index (sel h0 x) i)
+= let s = !x in
+  Seq.index s i
+
+let upd (#a:Type0) (x:array a) (i:nat) (v:a)
+: HoareST unit
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    i < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.upd (sel h0 x) i v)
+= let s = !x in
+  let s = Seq.upd s i v in
+  x := s
+
+let length (#a:Type0) (x:array a)
+: HoareST nat
+  (fun _ -> True)
+  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+= let s = !x in
+  Seq.length s
+
 let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
 : HoareST unit
   (fun h -> j < Seq.length (sel h x))
@@ -187,7 +201,40 @@ let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
     j < Seq.length (sel h0 x) /\
     modifies (Set.singleton (addr_of x)) h0 h1 /\
     sel h1 x == Seq.swap (sel h0 x) i j)
-= let s = !x in
-  let v_i = Seq.index s i in
-  let v_j = Seq.index s j in
-  admit ()  
+= let v_i = index x i in
+  let v_j = index x j in
+  upd x j v_i;
+  upd x i v_j
+
+let rec copy_aux
+  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
+: HoareST unit
+  (fun h ->
+    addr_of s =!= addr_of cpy /\
+    Seq.length (sel h cpy) == Seq.length (sel h s) /\
+    ctr <= Seq.length (sel h cpy) /\
+    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
+  (fun h0 _ h1 ->
+    modifies (only cpy) h0 h1 /\
+    Seq.equal (sel h1 cpy) (sel h1 s))
+= recall s; recall cpy;
+  let len = length cpy in
+  match len - ctr with
+  | 0 -> ()
+  | _ ->
+    upd cpy ctr (index s ctr);
+    copy_aux s cpy (ctr + 1)
+
+
+let copy (#a:Type0) (s:array a)
+: HoareST (array a)
+  (fun h -> Seq.length (sel h s) > 0)
+  (fun h0 r h1 ->
+    modifies Set.empty h0 h1 /\
+    r `unused_in` h0 /\
+    contains h1 r /\
+    sel h1 r == sel h0 s)
+= recall s;
+  let cpy = alloc (Seq.create (length s) (index s 0)) in
+  copy_aux s cpy 0;
+  cpy
