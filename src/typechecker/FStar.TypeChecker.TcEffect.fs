@@ -1077,7 +1077,10 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
-  let us, lift = sub.lift |> must in
+  (*
+   * AR: The lift combinator comes to us in the lift_wp field of the sub_eff record
+   *)
+  let us, lift = sub.lift_wp |> must in
   let r = lift.pos in
 
   begin
@@ -1093,8 +1096,6 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
                    BU.format2 "Lifts cannot be defined from a layered effect to its repr or vice versa (%s and %s here)"
                      (src_ed.mname |> Ident.string_of_lid) (tgt_ed.mname |> Ident.string_of_lid)) r
   end;
-
-
 
   let env, us, lift =
     if List.length us = 0 then env0, us, lift
@@ -1130,7 +1131,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     //a:Type u
 
-    //other binders
+    //other binders, taken from the lift_ty
     let rest_bs =
       match (SS.compress lift_ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
