@@ -201,8 +201,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   //returns the application term and the guard for the introduced uvars (see TcUtil.fresh_layered_effect_repr)
   let fresh_repr r env u a_tm =
     let signature_ts = let us, t, _ = signature in (us, t) in
+    let _, signature = Env.inst_tscheme_with signature_ts [u] in
     let repr_ts = let us, t, _ = repr in (us, t) in
-    TcUtil.fresh_effect_repr env r ed.mname signature_ts (Some repr_ts) u a_tm in
+    TcUtil.fresh_effect_repr env r ed.mname signature (Some repr_ts) u a_tm in
 
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,
@@ -1083,8 +1084,10 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   let us, lift = sub.lift_wp |> must in
   let r = lift.pos in
 
+  //one of the source or the target is a layered effect
+  //we allow the source to be an effect abbreviation
   begin
-    let src_ed = Env.get_effect_decl env0 sub.source in
+    let src_ed = sub.source |> Env.norm_eff_name env0 |> Env.get_effect_decl env0 in
     let tgt_ed = Env.get_effect_decl env0 sub.target in
     if (src_ed |> U.is_layered &&  //source is a layered effect
         lid_equals (src_ed |> U.get_layered_effect_base |> must) tgt_ed.mname) ||  //and target is its underlying effect, or
@@ -1145,6 +1148,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     let f_b, g_f_b =
       let f_sort, g = TcUtil.fresh_effect_repr_en
         (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
+      BU.print1 "In layered lift, f_sort is: %s\n\n" (Print.term_to_string f_sort);
       S.gen_bv "f" None f_sort |> S.mk_binder, g in
 
     let bs = a::(rest_bs@[f_b]) in
@@ -1196,10 +1200,10 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let tc_lift env sub r =
-  let ed_src = Env.get_effect_decl env sub.source in
-  let ed_tgt = Env.get_effect_decl env sub.target in
+  //AR: normalize the effect name, towards supporting lifts from effect abbreviations
+  let is_layered l = l |> Env.norm_eff_name env |> Env.is_layered_effect env in
 
-  if ed_src |> U.is_layered || ed_tgt |> U.is_layered
+  if is_layered sub.source || is_layered sub.target
   then tc_layered_lift env sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
