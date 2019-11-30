@@ -1546,7 +1546,7 @@
         "typing_FStar.Monotonic.HyperStack.is_heap_color", "unit_typing"
       ],
       0,
-      "e6ba1dda15124a93ec89e72676e48f44"
+      "af66b50ee5ae877df4b971374f89fa20"
     ],
     [
       "FStar.HyperStack.ST.witness_region",

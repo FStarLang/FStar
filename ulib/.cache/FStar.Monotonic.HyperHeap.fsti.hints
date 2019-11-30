@@ -12,7 +12,7 @@
         "typing_FStar.Monotonic.HyperHeap.root"
       ],
       0,
-      "ad0575841dd60119901f7dc78d5e041f"
+      "d93447cee16098dfa98a721ecce12f13"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_not_root",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "679d79b721a0b02ef5bd9406493f9b2d"
+      "96a7a4440d0538c795c19c8523388f39"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_extends_only_parent",

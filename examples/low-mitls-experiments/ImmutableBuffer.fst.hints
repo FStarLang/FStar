@@ -88,7 +88,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "cb3e9ecf6ea0d70ae8df3f682ca06b90"
+      "40cc41a592ecba2ae7de0089e724000f"
     ],
     [
       "ImmutableBuffer.test",
@@ -191,7 +191,7 @@
         "unit_typing"
       ],
       0,
-      "dc73293690f79f65702bad6b59bac23b"
+      "6f69fdadda9079b9dca6c70b6d10a809"
     ],
     [
       "ImmutableBuffer.test_ub",
@@ -280,7 +280,7 @@
         "typing_LowStar.UninitializedBuffer.initialization_preorder"
       ],
       0,
-      "a8e102525d8535ea160db62322c9a037"
+      "883b04a5d5a9b3c4f750268c179261c3"
     ],
     [
       "ImmutableBuffer.test_bigops",
@@ -402,7 +402,7 @@
         "typing_LowStar.PrefixFreezableBuffer.prefix_freezable_preorder"
       ],
       0,
-      "251a2b8e4aabfede6ee24ae25fa6c638"
+      "eee7f62e0e0f0b112a249cf215117b3c"
     ],
     [
       "ImmutableBuffer.test_witnessed_functoriality",
