@@ -1200,10 +1200,26 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let tc_lift env sub r =
-  //AR: normalize the effect name, towards supporting lifts from effect abbreviations
-  let is_layered l = l |> Env.norm_eff_name env |> Env.is_layered_effect env in
+  let is_layered =
+    let source_md_opt, target_md_opt =
+      Env.effect_decl_opt env sub.source, Env.effect_decl_opt env sub.target in
+    match source_md_opt, target_md_opt with
+    | Some (src, _), Some (tgt, _) -> U.is_layered src || U.is_layered tgt
+    | None, Some (tgt, _) ->
+      //source is an effect abbreviation, in that tgt must be a layered effect
+      if not (U.is_layered tgt)
+      then raise_error (Errors.Fatal_UnexpectedEffect,
+             BU.format2 "For lift %s~>%s, source seems to be an effect abbreviation, \
+                         in that case, target must be a layered effect" sub.source.str sub.target.str)
+             (Env.get_range env);
+      true
+    | _, _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+             BU.format2 "For lift %s~>%s, effect abbreviations are not allowed"
+               sub.source.str sub.target.str) (Env.get_range env) in
 
-  if is_layered sub.source || is_layered sub.target
+
+  if is_layered
   then tc_layered_lift env sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
