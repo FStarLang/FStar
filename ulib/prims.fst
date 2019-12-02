@@ -230,7 +230,9 @@ effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 unfold
 let pure_null_wp (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
 
-effect Tot (a:Type) = PURE a (pure_null_wp a)
+// effect Tot (a:Type) = PURE a (pure_null_wp a)
+
+effect Tot (a:Type) = Pure a True (fun _ -> True)
 
 [@"opaque_to_smt"]
 unfold
