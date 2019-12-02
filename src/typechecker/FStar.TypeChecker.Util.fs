@@ -279,23 +279,26 @@ let join_layered env (l:lident) (m:lident) : (lident * lift_comp_t * lift_comp_t
   aux m (fun c -> c)
 
 let join env l1 l2 =
-  let unfold_first (f:lift_comp_t) : lift_comp_t =
-    fun en c -> c |> Env.unfold_effect_abbrev en |> S.mk_Comp |> f en in
-
-  let norm_l1, norm_l2 = norm_eff_name env l1, norm_eff_name env l2 in
-  let l1_layered, l2_layered = Env.is_layered_effect env norm_l1, Env.is_layered_effect env norm_l2 in
-  
-  if (l1_layered && l2_layered) ||
-     (not l1_layered && not l2_layered)
-
-  then
-    let m, lift1, lift2 = Env.join env norm_l1 norm_l2 in
-    m, unfold_first lift1.mlift_wp, unfold_first lift2.mlift_wp
-
+  if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid)
+  then l2, Env.identity_mlift.mlift_wp, Env.identity_mlift.mlift_wp
   else
-    let norm_l, m, flip = if l1_layered then norm_l1, l2, false else norm_l2, l1, true in
-    let m, lift1, lift2 = join_layered env norm_l m in
-    if flip then m, lift2, unfold_first lift1 else m, unfold_first lift1, lift2
+    let unfold_first (f:lift_comp_t) : lift_comp_t =
+      fun en c -> c |> Env.unfold_effect_abbrev en |> S.mk_Comp |> f en in
+
+    let norm_l1, norm_l2 = norm_eff_name env l1, norm_eff_name env l2 in
+    let l1_layered, l2_layered = Env.is_layered_effect env norm_l1, Env.is_layered_effect env norm_l2 in
+  
+    if (l1_layered && l2_layered) ||
+       (not l1_layered && not l2_layered)
+
+    then
+      let m, lift1, lift2 = Env.join env norm_l1 norm_l2 in
+      m, unfold_first lift1.mlift_wp, unfold_first lift2.mlift_wp
+
+    else
+      let norm_l, m, flip = if l1_layered then norm_l1, l2, false else norm_l2, l1, true in
+     let m, lift1, lift2 = join_layered env norm_l m in
+     if flip then m, lift2, unfold_first lift1 else m, unfold_first lift1, lift2
 
 let join_effects env l1 l2 =
   let m, _, _ = join env l1 l2 in
@@ -306,6 +309,14 @@ let join_lcomp env c1 c2 =
   && TcComm.is_total_lcomp c2
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
+
+let join_comp env c1 c2 =
+  if U.is_total_comp c1 &&
+     U.is_total_comp c2
+  then C.effect_Tot_lid
+  else if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid)
+  then c2 |> U.comp_effect_name
+  else join_effects env (c1 |> U.comp_effect_name) (c2 |> U.comp_effect_name)
 
 let lift_comps env (c1:comp) (c2:comp) (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
   let c1, c2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
@@ -696,6 +707,8 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
 let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags : comp * guard_t =
     if env.lax
     then c, Env.trivial_guard
+    else if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid)
+    then c, Env.trivial_guard
     else let r = Env.get_range env in
          (*
           * The following code does:
@@ -822,7 +835,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
 
-  let joined_eff = join_lcomp env lc1 lc2 in
+  // let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1
       || should_not_inline_lc lc2
@@ -843,6 +856,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           then TRIVIAL_POSTCONDITION::flags
           else flags
   in
+  let c1, g_c1 = TcComm.lcomp_comp lc1 in
+  let c2, g_c2 = TcComm.lcomp_comp lc2 in
+  let joined_eff = join_comp env c1 c2 in
   let bind_it () =
       if env.lax
       && Options.ml_ish() //NS: disabling this optimization temporarily
@@ -850,8 +866,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
          let u_t = env.universe_of env lc2.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ [], Env.trivial_guard  //AR: TODO: FIXME: fix for layered effects
       else begin
-          let c1, g_c1 = TcComm.lcomp_comp lc1 in
-          let c2, g_c2 = TcComm.lcomp_comp lc2 in
+          //let c1, g_c1 = TcComm.lcomp_comp lc1 in
+          //let c2, g_c2 = TcComm.lcomp_comp lc2 in
           debug (fun () ->
             BU.print3 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n(1. end bind)\n"
             (Print.comp_to_string c1)

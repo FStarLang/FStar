@@ -161,8 +161,8 @@ assume val g : unit -> HoareST int (fun _ -> True) (fun _ n _ -> n == 1)
 assume val f : n:int -> Pure unit (requires True) (ensures fun _ -> pred n)
 
 //#set-options "--debug HoareST --debug_level LayeredEffects --debug_level Extreme --print_effect_args --ugly"
-#restart-solver
-#set-options "--log_queries"
+//#restart-solver
+//#set-options "--log_queries"
 let test ()
 : HoareST unit
   (requires fun _ -> True)
