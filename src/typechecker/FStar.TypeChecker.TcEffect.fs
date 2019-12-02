@@ -1148,7 +1148,6 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     let f_b, g_f_b =
       let f_sort, g = TcUtil.fresh_effect_repr_en
         (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
-      BU.print1 "In layered lift, f_sort is: %s\n\n" (Print.term_to_string f_sort);
       S.gen_bv "f" None f_sort |> S.mk_binder, g in
 
     let bs = a::(rest_bs@[f_b]) in
