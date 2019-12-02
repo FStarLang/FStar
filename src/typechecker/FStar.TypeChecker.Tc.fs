@@ -980,6 +980,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
     | Sig_sub_effect sub ->
       Env.update_effect_lattice env sub.source sub.target (TcUtil.get_mlift_for_subeff env sub)
 
+    | Sig_effect_abbrev (l, _, _, _, _) ->
+      Env.push_new_effect_abbrev env l
+
     | _ -> env
 
 let tc_decls env ses =
