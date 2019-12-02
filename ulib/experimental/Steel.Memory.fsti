@@ -339,6 +339,10 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
 val upd (#a:_) (r:ref a) (v:a)
   : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
 
-val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
-  : (x:ref a &
-     tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
+val alloc (#a:_) (v:a)
+  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
+
+val lock (p:hprop) : Type0
+
+val new_lock (p:hprop)
+  : m_action p (lock p) (fun _ -> emp)

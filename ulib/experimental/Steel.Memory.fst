@@ -837,7 +837,11 @@ let upd #a (r:ref a) (v:a)
     upd_depends_only_on_fp r v;
     upd' r v
 
-let alloc #a v frame m
+val alloc' (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
+  : (x:ref a &
+     tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
+
+let alloc' #a v frame m
   = let x : ref a = m.ctr in
     let cell = Ref a full_permission v in
     let mem : heap = F.on _ (fun i -> if i = x then Some cell else None) in
@@ -857,9 +861,6 @@ let alloc #a v frame m
       properties = ();
     } in
     (| x, t |)
-
-val alloc_action (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
 
 #push-options "--z3rlimit_factor 4 --query_stats"
 let singleton_heap #a (x:ref a) (c:cell) : heap =
@@ -1011,7 +1012,7 @@ let alloc_depends_only_on (#a:_) (v:a)
     ()
 #pop-options
 
-let alloc_m_action (#a:_) (v:a)
+let alloc (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
   = alloc_is_frame_preserving v;
     alloc_depends_only_on v;
@@ -1107,7 +1108,7 @@ let new_lock_is_frame_preserving (p:hprop)
     ()
 #pop-options
 
-let new_lock_action (p:hprop)
+let new_lock (p:hprop)
   : m_action p (lock p) (fun _ -> emp)
   = new_lock_is_frame_preserving p;
     new_lock_pre_m_action p
