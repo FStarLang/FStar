@@ -105,9 +105,10 @@ and edge = {
 }
 
 and effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  decls   : list<(eff_decl * list<qualifier>)>;
+  abbrevs : list<lident>; 
+  order   : list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins   : list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
 and env = {
@@ -292,6 +293,9 @@ val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 //client constructs the mlift and gives it to us
 val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
 
+val push_new_effect_abbrev
+                          : env -> lident -> env
+
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
 val pop_bv                : env -> option<(bv * env)>
@@ -316,6 +320,7 @@ val lidents      : env -> list<lident>
 
 (* operations on monads *)
 val identity_mlift         : mlift
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
 val join                   : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq              : env -> lident -> lident -> option<edge>
 val effect_decl_opt        : env -> lident -> option<(eff_decl * list<qualifier>)>
@@ -323,6 +328,7 @@ val get_effect_decl        : env -> lident -> eff_decl
 val is_layered_effect      : env -> lident -> bool
 val wp_signature           : env -> lident -> (bv * term)
 val comp_to_comp_typ       : env -> comp -> comp_typ
+val unfold_effect_abbrev_one_step : env -> comp -> comp * bool
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term

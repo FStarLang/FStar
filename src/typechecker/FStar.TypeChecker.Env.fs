@@ -133,9 +133,10 @@ and edge = {
 }
 
 and effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  decls   : list<(eff_decl * list<qualifier>)>;
+  abbrevs : list<lident>; 
+  order   : list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins   : list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
 and env = {
@@ -261,7 +262,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]};
+    effects={decls=[]; abbrevs=[]; order=[]; joins=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
@@ -1102,15 +1103,24 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join env l1 l2 : (lident * mlift * mlift) =
+let join_opt env l1 l2 =
   if lid_equals l1 l2
-  then l1, identity_mlift, identity_mlift
+  then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, identity_mlift, identity_mlift
+  then Some (Const.effect_GTot_lid, identity_mlift, identity_mlift)
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise_error (Errors.Fatal_EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
-        | Some (_, _, m3, j1, j2) -> m3, j1, j2
+        | None -> None
+        | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
+
+let join env l1 l2 : (lident * mlift * mlift) =
+  match join_opt env l1 l2 with
+  | None ->
+    raise_error (Errors.Fatal_EffectsCannotBeComposed,
+      BU.format2 "Effects %s and %s cannot be composed"
+        (Print.lid_to_string l1)
+        (Print.lid_to_string l2)) env.range
+  | Some t -> t
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
@@ -1146,10 +1156,10 @@ let comp_to_comp_typ (env:env) c =
             | _ -> c in
     U.comp_to_comp_typ c
 
-let rec unfold_effect_abbrev env comp =
+let unfold_effect_abbrev_one_step env comp =
   let c = comp_to_comp_typ env comp in
   match lookup_effect_abbrev env c.comp_univs c.effect_name with
-    | None -> c
+    | None -> c |> mk_Comp, false
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
@@ -1159,8 +1169,14 @@ let rec unfold_effect_abbrev env comp =
                                 (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
-      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
+      {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp,
+      true
+
+let rec unfold_effect_abbrev env comp =
+  let c, b = unfold_effect_abbrev_one_step env comp in
+  if b
+  then unfold_effect_abbrev env c
+  else comp_to_comp_typ env c
 
 let effect_repr_aux only_reifiable env c u_res =
   let check_partial_application eff_name (args:args) =
@@ -1316,7 +1332,7 @@ let update_effect_lattice env src tgt st_mlift =
   // in
 
   let order = edge::env.effects.order in
-  let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
+  let ms = (env.effects.decls |> List.map (fun (e, _) -> e.mname)) @ env.effects.abbrevs in
 
   let find_edge order (i, j) =
     if lid_equals i j
@@ -1387,9 +1403,13 @@ let update_effect_lattice env src tgt st_mlift =
   in
 
   let effects = {env.effects with order=order; joins=joins} in
-//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
-//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
+  //order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
+  //joins |> List.iter (fun (e1, e2, e3, l1, l2) -> BU.print3 "%s join %s = %s\n\n" e1.str e2.str e3.str);
   {env with effects=effects}
+
+let push_new_effect_abbrev env l =
+  let effects = { env.effects with abbrevs = env.effects.abbrevs@[l] } in
+  {env with effects = effects }
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
