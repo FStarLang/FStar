@@ -36,27 +36,67 @@ effect Steel
     post h0 x h1
   )
 
-assume val get (#r:hprop) (_:unit)
+assume val get (r:hprop)
   :Steel mem (r) (fun _ -> r)
              (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
 
-val perm_to_ptr (#a:Type) (#p:permission) (r:ref a) : Steel unit
+// TODO: How should we account for locks here? Should this just be trusted and only used through
+// very specific functions such as ptr_update? Should we take a mem instead and only
+// expose m_actions from Steel.Memory?
+assume val put (r_init r_out:hprop) (h:heap)
+  :Steel unit (r_init) (fun _ -> r_out)
+             (requires (fun m -> interp r_out h))
+             (ensures (fun _ _ m1 -> heap_of_mem m1 == h))
+
+let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
+  : Lemma (requires interp (ptr_perm r p) h)
+          (ensures interp (ptr r) h)
+  = let lem (v:a) (h:heap) : Lemma
+   (requires interp (pts_to r p v) h)
+   (ensures interp (ptr r) h)
+   = intro_exists v (pts_to r p) h;
+     intro_exists p (ptr_perm r) h
+   in Classical.forall_intro (Classical.move_requires (fun v -> lem v h));
+   elim_exists (pts_to r p) (ptr r) h
+
+let interp_pts_to_perm (#a:Type) (p:permission) (r:ref a) (v:a) (h:heap)
+  : Lemma (requires interp (pts_to r p v) h)
+          (ensures interp (ptr_perm r p) h)
+  = let lem (v:a) (h:heap) : Lemma
+     (requires interp (pts_to r p v) h)
+     (ensures interp (ptr_perm r p) h)
+     = intro_exists v (pts_to r p) h
+     in Classical.forall_intro (Classical.move_requires (fun v -> lem v h))
+
+let pts_to_sel (#a:Type) (p:permission) (r:ref a) (v:a) (h:heap)
+  : Lemma (requires interp (pts_to r p v) h)
+          (ensures interp (ptr r) h /\ sel r h == v)
+  = interp_pts_to_perm p r v h; interp_perm_to_ptr p r h;
+    sel_lemma r p h;
+    pts_to_injective r p v (sel r h) h
+
+val perm_to_ptr (#a:Type) (p:permission) (r:ref a) : Steel unit
   (ptr_perm r p)
   (fun _ -> ptr r)
   (fun _ -> True)
   (fun h0 _ h1 -> h0 == h1)
 
-let perm_to_ptr #a #p r =
- let h = get #(ptr_perm r p) () in
- assert (interp (ptr_perm r p) (heap_of_mem h));
- let lem (v:a) (h:heap) : Lemma
-   (requires interp (pts_to r p v) h)
-   (ensures interp (ptr r) h)
-   = intro_exists v (pts_to r p) h;
-     intro_exists p (ptr_perm r) h
- in Classical.forall_intro (Classical.move_requires (fun v -> lem v (heap_of_mem h)));
- elim_exists (pts_to r p) (ptr r) (heap_of_mem h)
+let perm_to_ptr #a p r =
+ let h = get (ptr_perm r p) in
+ interp_perm_to_ptr p r (heap_of_mem h)
+
+val pts_to_perm (#a:Type) (p:permission) (r:ref a) (v:a) : Steel unit
+  (pts_to r p v)
+  (fun _ -> ptr_perm r p)
+  (fun _ -> True)
+  (fun h0 _ h1 -> interp (ptr r) (heap_of_mem h1) /\ h0 == h1 /\ sel r (heap_of_mem h1) == v)
+
+let pts_to_perm  #a p r v =
+ let h = get (pts_to r p v) in
+ interp_pts_to_perm p r v (heap_of_mem h);
+ interp_perm_to_ptr p r (heap_of_mem h);
+ pts_to_sel p r v (heap_of_mem h)
 
 val ptr_read (#a:Type) (r:ref a) : Steel a
   (ptr_perm r full_permission)
@@ -65,11 +105,50 @@ val ptr_read (#a:Type) (r:ref a) : Steel a
   (fun _ _ _ -> True)
 
 let ptr_read #a r =
- perm_to_ptr #a #full_permission r;
- let h = get #(ptr r) () in
+ perm_to_ptr full_permission r;
+ let h = get (ptr r) in
  let v = sel r (heap_of_mem h) in
  sel_lemma r full_permission (heap_of_mem h);
  v
+
+val ptr_update (#a:Type) (r:ref a) (v:a) : Steel unit
+  (ptr_perm r full_permission)
+  (fun _ -> pts_to r full_permission v)
+  (fun _ -> True)
+  (fun _ _ _ -> True)
+
+let ptr_update #a r v =
+  perm_to_ptr #a full_permission r;
+  let h = get (ptr_perm r full_permission) in
+  let (| _, h' |) = upd r v (heap_of_mem h) in
+  put (ptr_perm r full_permission) (pts_to r full_permission v) h'
+
+let fptr (#a:Type) (r:ref a) : hprop = ptr_perm r full_permission
+
+let fsel (#a:Type) (r:ref a) (h:hheap (fptr r)) : a =
+  interp_perm_to_ptr full_permission r h;
+  sel r h
+
+val fread (#a:Type) (r:ref a) : Steel a
+  (fptr r) (fun _ -> fptr r)
+  (requires fun _ -> True)
+  // TODO: Why is this assume needed?
+  (ensures fun _ v m1 -> assume (interp (fptr r) (heap_of_mem m1)); fsel r (heap_of_mem m1) == v)
+
+let fread #a r =
+  let v = ptr_read #a r in
+  pts_to_perm full_permission r v;
+  v
+
+val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
+  (fptr r) (fun _ -> fptr r)
+  (requires fun _ -> True)
+  // TODO: Why is this assume needed?
+  (ensures fun _ _ m1 -> assume (interp (fptr r) (heap_of_mem m1)); fsel r (heap_of_mem m1) == v)
+
+let fupd #a r v =
+  ptr_update r v;
+  pts_to_perm full_permission r v
 
 assume
 val frame
