@@ -301,14 +301,11 @@ let join_effects env l1 l2 =
   let m, _, _ = join env l1 l2 in
   m
 
-let join_lcomp env c1 c2 : lident * guard_t =
+let join_lcomp env c1 c2 =
   if TcComm.is_total_lcomp c1
   && TcComm.is_total_lcomp c2
-  then C.effect_Tot_lid, Env.trivial_guard
-  else
-    let l1, g1 = c1 |> lcomp_comp |> (fun (c, g) -> U.comp_effect_name c, g) in
-    let l2, g2 = c2 |> lcomp_comp |> (fun (c, g) -> U.comp_effect_name c, g) in
-    join_effects env l1 l2, Env.conj_guard g1 g2
+  then C.effect_Tot_lid
+  else join_effects env c1.eff_name c2.eff_name
 
 let lift_comps env (c1:comp) (c2:comp) (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
   let c1, c2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
@@ -762,7 +759,7 @@ let strengthen_precondition
                    let c, g_s = strengthen_comp env reason c f flags in
                    c, Env.conj_guard g_c g_s
          in
-       TcComm.mk_lcomp (lc.eff_name)
+       TcComm.mk_lcomp (norm_eff_name env lc.eff_name)
                        lc.res_typ
                        flags
                        strengthen,
@@ -825,7 +822,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
 
-  let joined_eff, g_join = join_lcomp env lc1 lc2 in
+  let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1
       || should_not_inline_lc lc2
@@ -913,14 +910,14 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
                             reason
                             (Print.comp_to_string c));
-            c, Env.conj_guard g_c (Env.conj_guard (Env.conj_guard g_c1 g_c2) g_join)
+            c, Env.conj_guard g_c (Env.conj_guard g_c1 g_c2)
           | Inr reason ->
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
             let mk_bind c1 b c2 =  (* AR: end code for inlining pure and ghost terms *)
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
-              c, Env.conj_guard (Env.conj_guard (Env.conj_guard g_c1 g_c2) g_join) g_bind in
+              c, Env.conj_guard (Env.conj_guard g_c1 g_c2) g_bind in
 
             let mk_seq c1 b c2 =
                 //c1 is PURE or GHOST
@@ -936,7 +933,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                     r1
                 in
                 let c, g_s = strengthen_comp env None c2 vc1 bind_flags in
-                c, Env.conj_guards [g_c1; g_c2; g_join; g2; g_s]
+                c, Env.conj_guards [g_c1; g_c2; g2; g_s]
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let u_res_t1, res_t1 =
@@ -1618,7 +1615,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                                  | CPS -> [CPS] // KM : Not exactly sure if it is necessary
                                                  | _ -> [])
           in
-          let lc = TcComm.mk_lcomp (lc.eff_name) t flags strengthen in
+          let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
           let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
