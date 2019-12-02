@@ -87,11 +87,11 @@ type st0 = {
   hprop:Type u#1;
   heap_of_mem: mem -> heap;
   locks_invariant: mem -> hprop;
-  upd_heap: mem -> heap -> mem;
 
   m_disjoint: mem -> heap -> prop;
   disjoint: heap -> heap -> prop;
   join: h0:heap -> h1:heap{disjoint h0 h1} -> heap;
+  upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem;
 
   interp: hprop -> heap -> prop;
 
@@ -178,10 +178,10 @@ let m_implies_disjoint (st:st0) =
 let mem_valid_locks_invariant (st:st0) =
   forall (m:st.mem). st.interp (st.locks_invariant m) (st.heap_of_mem m)
 
-let valid_upd_heap (st:st0) =
-  forall (m:st.mem) (h:st.heap).
-               st.heap_of_mem (st.upd_heap m h) == h /\
-               st.locks_invariant m == st.locks_invariant (st.upd_heap m h)
+let valid_upd_heap (st:st0{m_implies_disjoint st}) =
+  forall (m:st.mem) (h:st.heap{st.m_disjoint m h}).
+               st.heap_of_mem (st.upd_joined_heap m h) == st.join (st.heap_of_mem m) h /\
+               st.locks_invariant m == st.locks_invariant (st.upd_joined_heap m h)
 
 ////////////////////////////////////////////////////////////////////////////////
 let st_laws (st:st0) =
@@ -233,9 +233,7 @@ let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:pre_action pr
   = forall (m0:hmem pre)
       (h1:st.heap {st.m_disjoint m0 h1})
       (post: (x:a -> fp_prop (post x))).
-      (let h0 = st.heap_of_mem m0 in
-       let h = st.join h0 h1 in
-       let m1 = st.upd_heap m0 h in
+      (let m1 = st.upd_joined_heap m0 h1 in
        let (| x0, m |) = f m0 in
        let (| x1, m' |) = f m1 in
        x0 == x1 /\
