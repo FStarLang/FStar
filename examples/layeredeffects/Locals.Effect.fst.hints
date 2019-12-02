@@ -1,5 +1,5 @@
 [
-  "½Ù*É‡q¾E´z\u000b[¿\u001bXÕ",
+  "¬\n²pé2Oâü@6/ãHýC",
   [
     [
       "Locals.Effect.locals_t'",
@@ -464,7 +464,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7f69242dca281948ad4e6fa578535020"
+      "012051fec7d1255f7b22b8a5d2936d8d"
     ],
     [
       "Locals.Effect.test1",
@@ -491,7 +491,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "ce109b2be96ecfc1678f60e4057b41a6"
+      "82805e38185f44ba467807258c360c87"
     ]
   ]
 ]

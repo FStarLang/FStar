@@ -163,6 +163,7 @@ let run_with_locals (#a:Type)
 
 /// Testing some termination
 
+#set-options "--print_effect_args"
 let rec sum (n:nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
 = if n = 0 then 0
   else

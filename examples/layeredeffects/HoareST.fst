@@ -145,96 +145,119 @@ let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 = wp_monotonic_pure ();
   fun _ -> f ()
 
-sub_effect PURE ~> HoareST = lift_pure_hoarest
+let lift_pure_hoarest_ (a:Type) (pre:pure_pre) (post:pure_post a) (f:unit -> Pure a pre post)
+: repr a
+  (fun _ -> pre)
+  (fun h0 r h1 -> post r /\ h0 == h1)
+= wp_monotonic_pure ();
+  fun _ -> f ()
 
+sub_effect Pure ~> HoareST = lift_pure_hoarest_
 
-/// Implementing the array library using the layered effect
+// sub_effect PURE ~> HoareST = lift_pure_hoarest
 
+assume val pred : int -> Type0
+assume val g : unit -> HoareST int (fun _ -> True) (fun _ n _ -> n == 1)
+assume val f : n:int -> Pure unit (requires True) (ensures fun _ -> pred n)
 
-module Seq = FStar.Seq
-
-
-type array (a:Type0) = ref (Seq.seq a)
-
-let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
-: HoareST (array a)
-  (fun _ -> True)
-  (fun h0 r h1 ->
-    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
-    modifies Set.empty h0 h1)
-= let s1 = !s1 in
-  let s2 = !s2 in
-  alloc (Seq.append s1 s2)
-
-let index (#a:Type0) (x:array a) (i:nat)
-: HoareST a
-  (fun h -> i < Seq.length (sel h x))
-  (fun h0 v h1 ->
-    i < Seq.length (sel h0 x) /\
-    h0 == h1 /\
-    v == Seq.index (sel h0 x) i)
-= let s = !x in
-  Seq.index s i
-
-let upd (#a:Type0) (x:array a) (i:nat) (v:a)
+//#set-options "--debug HoareST --debug_level LayeredEffects --debug_level Extreme --print_effect_args --ugly"
+#restart-solver
+#set-options "--log_queries"
+let test ()
 : HoareST unit
-  (fun h -> i < Seq.length (sel h x))
-  (fun h0 _ h1 ->
-    i < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
-    sel h1 x == Seq.upd (sel h0 x) i v)
-= let s = !x in
-  let s = Seq.upd s i v in
-  x := s
-
-let length (#a:Type0) (x:array a)
-: HoareST nat
-  (fun _ -> True)
-  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
-= let s = !x in
-  Seq.length s
-
-let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
-: HoareST unit
-  (fun h -> j < Seq.length (sel h x))
-  (fun h0 _ h1 ->
-    j < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
-    sel h1 x == Seq.swap (sel h0 x) i j)
-= let v_i = index x i in
-  let v_j = index x j in
-  upd x j v_i;
-  upd x i v_j
-
-let rec copy_aux
-  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
-: HoareST unit
-  (fun h ->
-    addr_of s =!= addr_of cpy /\
-    Seq.length (sel h cpy) == Seq.length (sel h s) /\
-    ctr <= Seq.length (sel h cpy) /\
-    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
-  (fun h0 _ h1 ->
-    modifies (only cpy) h0 h1 /\
-    Seq.equal (sel h1 cpy) (sel h1 s))
-= recall s; recall cpy;
-  let len = length cpy in
-  match len - ctr with
-  | 0 -> ()
-  | _ ->
-    upd cpy ctr (index s ctr);
-    copy_aux s cpy (ctr + 1)
+  (requires fun _ -> True)
+  (ensures fun _ r _ -> pred 1)
+= let x = g () in
+  f x
 
 
-let copy (#a:Type0) (s:array a)
-: HoareST (array a)
-  (fun h -> Seq.length (sel h s) > 0)
-  (fun h0 r h1 ->
-    modifies Set.empty h0 h1 /\
-    r `unused_in` h0 /\
-    contains h1 r /\
-    sel h1 r == sel h0 s)
-= recall s;
-  let cpy = alloc (Seq.create (length s) (index s 0)) in
-  copy_aux s cpy 0;
-  cpy
+// /// Implementing the array library using the layered effect
+
+
+// module Seq = FStar.Seq
+
+
+// type array (a:Type0) = ref (Seq.seq a)
+
+// let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
+// : HoareST (array a)
+//   (fun _ -> True)
+//   (fun h0 r h1 ->
+//     sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
+//     modifies Set.empty h0 h1)
+// = let s1 = !s1 in
+//   let s2 = !s2 in
+//   alloc (Seq.append s1 s2)
+
+// let index (#a:Type0) (x:array a) (i:nat)
+// : HoareST a
+//   (fun h -> i < Seq.length (sel h x))
+//   (fun h0 v h1 ->
+//     i < Seq.length (sel h0 x) /\
+//     h0 == h1 /\
+//     v == Seq.index (sel h0 x) i)
+// = let s = !x in
+//   Seq.index s i
+
+// let upd (#a:Type0) (x:array a) (i:nat) (v:a)
+// : HoareST unit
+//   (fun h -> i < Seq.length (sel h x))
+//   (fun h0 _ h1 ->
+//     i < Seq.length (sel h0 x) /\
+//     modifies (Set.singleton (addr_of x)) h0 h1 /\
+//     sel h1 x == Seq.upd (sel h0 x) i v)
+// = let s = !x in
+//   let s = Seq.upd s i v in
+//   x := s
+
+// let length (#a:Type0) (x:array a)
+// : HoareST nat
+//   (fun _ -> True)
+//   (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+// = let s = !x in
+//   Seq.length s
+
+// let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
+// : HoareST unit
+//   (fun h -> j < Seq.length (sel h x))
+//   (fun h0 _ h1 ->
+//     j < Seq.length (sel h0 x) /\
+//     modifies (Set.singleton (addr_of x)) h0 h1 /\
+//     sel h1 x == Seq.swap (sel h0 x) i j)
+// = let v_i = index x i in
+//   let v_j = index x j in
+//   upd x j v_i;
+//   upd x i v_j
+
+// let rec copy_aux
+//   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
+// : HoareST unit
+//   (fun h ->
+//     addr_of s =!= addr_of cpy /\
+//     Seq.length (sel h cpy) == Seq.length (sel h s) /\
+//     ctr <= Seq.length (sel h cpy) /\
+//     (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
+//   (fun h0 _ h1 ->
+//     modifies (only cpy) h0 h1 /\
+//     Seq.equal (sel h1 cpy) (sel h1 s))
+// = recall s; recall cpy;
+//   let len = length cpy in
+//   match len - ctr with
+//   | 0 -> ()
+//   | _ ->
+//     upd cpy ctr (index s ctr);
+//     copy_aux s cpy (ctr + 1)
+
+
+// let copy (#a:Type0) (s:array a)
+// : HoareST (array a)
+//   (fun h -> Seq.length (sel h s) > 0)
+//   (fun h0 r h1 ->
+//     modifies Set.empty h0 h1 /\
+//     r `unused_in` h0 /\
+//     contains h1 r /\
+//     sel h1 r == sel h0 s)
+// = recall s;
+//   let cpy = alloc (Seq.create (length s) (index s 0)) in
+//   copy_aux s cpy 0;
+//   cpy
