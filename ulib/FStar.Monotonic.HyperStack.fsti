@@ -26,10 +26,12 @@ include FStar.Monotonic.HyperHeap
 unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
-let is_eternal_color c = c <= 0
+let is_heap_color c = c <= 0
 
 [@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
-let is_eternal_region r  = is_eternal_color (color r)
+let is_eternal_region r  = is_heap_color (color r) && not (rid_freeable r)
+
+unfold let is_eternal_region_hs r = is_heap_color (color r) && not (rid_freeable r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
@@ -52,9 +54,10 @@ unfold private let map_invariant_predicate (m:hmap) :Type0 =
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
-            \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
-                          /\ s `is_in` h   //that is also in the memory
-                     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
+            \/ (forall (s:rid). (r `is_above` s  //or, any region beneath it
+                           /\ s `is_in` h)   //that is also in the memory
+                     ==> ((is_stack_region r = is_stack_region s) /\  //must be of the same flavor as itself
+                          ((is_heap_color (color r) /\ rid_freeable r) ==> s == r)))) //and if r is a freeable heap region, s can only be r (no regions strictly below r)
 
 [@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
@@ -84,7 +87,12 @@ let is_tip (tip:rid) (h:hmap) =
   tip_top tip h                          //any other sid activation is a above (or equal to) the tip
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid)
-  = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
+  = (not (rid_freeable root)) /\
+    root `is_in` h /\
+    tip `is_tip` h /\
+    map_invariant h /\
+    downward_closed h /\
+    rid_ctr_pred h ctr
 
 private val mem' :Type u#1
 
@@ -134,9 +142,9 @@ val lemma_map_invariant (m:mem) (r s:rid)
 
 val lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` get_hmap m /\ s `is_above` r))
-         (ensures  (is_eternal_color (color r) == is_eternal_color (color s) /\
+         (ensures  (is_heap_color (color r) == is_heap_color (color s) /\
 	            is_stack_region r == is_stack_region s))
-         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_color (color s))];
+         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_heap_color (color s))];
                     [SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
 
@@ -166,16 +174,16 @@ val lemma_rid_ctr_pred (_:unit)
 (****** Operations on mem ******)
 
 
-let empty_mem (m:hmap) :mem =
-  let empty_map = Map.restrict (Set.empty) m in
+let empty_mem : mem =
+  let empty_map = Map.restrict Set.empty (Map.const Heap.emp) in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
   lemma_is_wf_ctr_and_tip_intro h 1 tip;
   mk_mem 1 h tip
 
-let eternal_region_does_not_overlap_with_tip
-  (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
+let heap_region_does_not_overlap_with_tip
+  (m:mem) (r:rid{is_heap_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
   : Lemma (requires True)
           (ensures (~ (r `is_in` get_hmap m)))
   = root_has_color_zero()
@@ -248,13 +256,13 @@ let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
 let mref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && not (is_mm s) }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && not (is_mm s) }
 
 let mmmstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
 
 let mmmref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && is_mm s }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && is_mm s }
 
 //NS: Why do we need this one?
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
@@ -350,8 +358,8 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) new_tip_rid;
     mk_mem (rid_ctr + 1) h new_tip_rid
 
-let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ get_hmap m `Map.contains` parent})
-                       (c:option int{None? c \/ is_eternal_color (Some?.v c)})
+let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})
+                       (c:option int{None? c \/ is_heap_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
   = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
     lemma_is_wf_ctr_and_tip_elim m;
@@ -362,6 +370,31 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ ge
     let h = Map.upd h new_rid Heap.emp in
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
     new_rid, mk_mem (rid_ctr + 1) h tip
+
+let new_freeable_heap_region
+  (m:mem)
+  (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})  
+: t:(rid * mem){fresh_region (fst t) m (snd t) /\ rid_freeable (fst t)}
+= let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
+  lemma_is_wf_ctr_and_tip_elim m;
+  let new_rid = extend_monochrome_freeable parent rid_ctr true in
+  let h = Map.upd h new_rid Heap.emp in
+  lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
+  new_rid, mk_mem (rid_ctr + 1) h tip
+
+let free_heap_region
+  (m0:mem)
+  (r:rid{
+    is_heap_color (color r) /\
+    rid_freeable r /\
+    get_hmap m0 `Map.contains` r})
+: mem
+= let h0, rid_ctr0 = get_hmap m0, get_rid_ctr m0 in
+  lemma_is_wf_ctr_and_tip_elim m0;
+  let dom = remove_elt (Map.domain h0) r in
+  let h1 = Map.restrict dom h0 in
+  lemma_is_wf_ctr_and_tip_intro h1 rid_ctr0 (get_tip m0);
+  mk_mem (get_rid_ctr m0) h1 (get_tip m0)
 
 
 (****** The following two lemmas are only used in FStar.Pointer.Base, and invoked explicitly ******)
@@ -450,7 +483,7 @@ unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
 //////
 
 val eternal_disjoint_from_tip (h:mem{is_stack_region (get_tip h)})
-                              (r:rid{is_eternal_color (color r) /\
+                              (r:rid{is_heap_color (color r) /\
                                      r =!= root /\
                                      r `is_in` get_hmap h})
   :Lemma (disjoint (get_tip h) r)

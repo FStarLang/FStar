@@ -865,7 +865,7 @@ let rec declToSmt' print_captions z3options decl =
   | Module (s, decls) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
     if Options.keep_query_captions()
-    then BU.format5 "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
+    then BU.format5 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)"
                     s
                     res
                     s
@@ -925,8 +925,6 @@ let rec declToSmt' print_captions z3options decl =
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
 and declToSmt         z3options decl = declToSmt' (Options.keep_query_captions())  z3options decl
-and declToSmt_no_caps z3options decl = declToSmt' false z3options decl
-and declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 
 and mkPrelude z3options =
   let basic = z3options ^
@@ -1037,6 +1035,8 @@ and mkPrelude z3options =
       then valid_elim
       else "")
 
+let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
+let declToSmt_no_caps z3options decl = declToSmt' false z3options decl
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *)
 (* For ids, to avoid dealing with generation of fresh ids,

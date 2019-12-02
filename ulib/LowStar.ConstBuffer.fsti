@@ -152,6 +152,57 @@ val sub (c:const_buffer 'a) (i len:U32.t)
       qbuf_qual qc == qbuf_qual qc' /\
       qbuf_mbuf qc' == B.mgsub (qbuf_pre qc) (qbuf_mbuf qc) i len)
 
+/// Discussion between NS and JP (20191119)
+///
+/// Why is it safe to generate C code that casts away the const qualifier with the
+/// cast operations below? Looking at the C11 standard, 6.7.3 alinea 6:
+///
+/// > If an attempt is made to modify an object defined with a const-qualified type
+/// > through useof an lvalue with non-const-qualified type, the behavior is
+/// > undefined.
+///
+/// So, dangerous things happen in situations where the original object is *created*
+/// with a const qualifier (the object's _identity_ is const).
+///
+/// ```
+/// #include <stdio.h>
+/// #include <stdlib.h>
+///
+/// extern void f(const int *x);
+///
+/// int main() {
+///   const int x = 0;
+///   f(&x); // f promises not to modify x
+///   printf("%d\n", x); // prints 0 at -O3 but 1 at -O0
+///   return 0;
+/// }
+/// ```
+///
+/// with:
+///
+/// ```
+/// void f(const int *x) {
+///   int *y = (int *)x;
+///   *y = 1;
+/// }
+/// ```
+///
+/// In Low*, however, we never create objects that are marked const from the start.
+/// This is for historical reasons; in particular, immutable buffers are not marked
+/// const (they certainly could be).
+///
+/// So, the casts seem to be safe? Also, the difference in behavior noted above
+/// does not happen if x is defined as
+///
+/// ```
+///   const int *x = calloc(1, sizeof *x);
+/// ```
+///
+/// Finally, the compiler, if the const qualifier is stripped from x, could still
+/// potentially rely on an argument of freshness (pointer provenance?) to deduce
+/// that &x is the sole pointer to x and that therefore the value of x should remain
+/// the same. This does not seem to be happening.
+
 /// `cast`: It is possible to cast away the const qualifier recovering
 ///  a mutable or immutable pointer, in case the context can prove
 ///  that `qbuf_qual c` is MUTABLE or IMMUTABLE, respectively

@@ -1,0 +1,145 @@
+[
+  "XŸgëéÁì9¨\u0015jú+Òc\u001c",
+  [
+    [
+      "Param.lookup",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Param.bvmap", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "5e843cc4d9fa07da443b853a65c53d8d"
+    ],
+    [
+      "Param.list_rec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "c14d227d2b75295712c101660aec0685"
+    ],
+    [
+      "Param.id_is_unique",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e6eb65a616e7add781c075b1e3e6fbec"
+    ],
+    [
+      "Param.list_rec_of_function_is_map",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
+        "@fuel_correspondence_Param.list_rec.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.map.fuel_instrumented",
+        "@fuel_irrelevance_Param.list_rec.fuel_instrumented", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "Param_interpretation_Tm_arrow_f0e39fda591bb23469f07b4ffb1ad647",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "binder_x_57af2c0907f883669f14a9b761d251ac_4",
+        "binder_x_8e2b3e2e2d5822bdb0266bcb517fa74a_6",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_3",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_Param.rel_of_fun",
+        "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
+        "equation_with_fuel_Param.list_rec.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list",
+        "interpretation_Tm_abs_2c834161e6cbd0e46e0fc853df55fd25",
+        "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "true_interp",
+        "typing_Param.rel_of_fun",
+        "typing_Tm_abs_2c834161e6cbd0e46e0fc853df55fd25"
+      ],
+      0,
+      "9f17b5e269282307d0ba5bdc479b18c0"
+    ],
+    [
+      "Param.reverse_commutes_with_map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Param.list_rec.fuel_instrumented", "@query",
+        "equation_Param.param_list", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "de8eb23399db83f72bd2248eda2bc8c1"
+    ],
+    [
+      "Param.lookup",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Param.bvmap", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "7e36d9dc59641560d9afe2556ea7b9c0"
+    ],
+    [
+      "Param.list_rec",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "f8a8c12c8ef52802955b380d3bd3f9ca"
+    ],
+    [
+      "Param.param",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Tactics.Result.uu___is_Failed"
+      ],
+      0,
+      "30d6b9d2835eab7b64268193c94d0e0a"
+    ]
+  ]
+]

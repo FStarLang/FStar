@@ -228,20 +228,6 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
-    let comp_typ_set_flags (c:comp) =
-        match c.n with
-        | Total _
-        | GTotal _ -> c
-        | Comp ct ->
-          let ct = {ct with flags=fs} in
-          {c with n=Comp ct}
-    in
-    Syntax.mk_lcomp lc.eff_name
-                    lc.res_typ
-                    fs
-                    (fun () -> comp_typ_set_flags (lcomp_comp lc))
-
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
@@ -254,6 +240,16 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+let destruct_comp c : (universe * typ * typ) =
+  let wp = match c.effect_args with
+    | [(wp, _)] -> wp
+    | _ ->
+      failwith (U.format2
+        "Impossible: Got a computation %s with %s effect args"
+        c.effect_name.str
+        (c.effect_args |> List.length |> string_of_int)) in
+  List.hd c.comp_univs, c.result_typ, wp
+
 let is_named_tot c =
     match c.n with
         | Comp c -> lid_equals c.effect_name PC.effect_Tot_lid
@@ -264,15 +260,7 @@ let is_total_comp c =
     lid_equals (comp_effect_name c) PC.effect_Tot_lid
     || comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
-
-let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
-                             || lid_equals c.eff_name PC.effect_GTot_lid
-                             || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
-
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
-
-let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
@@ -303,14 +291,6 @@ let is_div_effect l =
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
-
-let is_pure_lcomp lc =
-    is_total_lcomp lc
-    || is_pure_effect lc.eff_name
-    || lc.cflags |> U.for_some (function LEMMA -> true | _ -> false)
-
-let is_pure_or_ghost_lcomp lc =
-    is_pure_lcomp lc || is_ghost_effect lc.eff_name
 
 let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
@@ -371,9 +351,6 @@ let set_result_typ c t = match c.n with
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
-let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
-  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun _ -> set_result_typ (lcomp_comp lc) t)
-
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
@@ -425,7 +402,7 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
-let rec unlazy_emb t =
+let unlazy_emb t =
     match (compress t).n with
     | Tm_lazy i ->
         begin match i.lkind with
@@ -448,7 +425,8 @@ let eq_lazy_kind k k' =
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_uvar, Lazy_uvar -> true
      | _ -> false
-let rec unlazy_as_t k t =
+
+let unlazy_as_t k t =
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v})
         when eq_lazy_kind k k' ->
@@ -629,16 +607,6 @@ and eq_antiquotes a1 a2 =
               | _ -> Unknown)
             | Equal -> eq_antiquotes a1 a2
 
-and eq_aqual a1 a2 =
-    match a1, a2 with
-    | None, None -> Equal
-    | None, _
-    | _, None -> NotEqual
-    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
-    | Some Equality, Some Equality -> Equal
-    | _ -> NotEqual
-
 and branch_matches b1 b2 =
     let related_by f o1 o2 =
         match o1, o2 with
@@ -669,6 +637,16 @@ and eq_args (a1:args) (a2:args) : eq_result =
 and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs
     && List.forall2 eq_univs us vs
+
+let eq_aqual a1 a2 =
+    match a1, a2 with
+    | None, None -> Equal
+    | None, _
+    | _, None -> NotEqual
+    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
+    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
+    | _ -> NotEqual
 
 let rec unrefine t =
   let t = compress t in
@@ -750,7 +728,6 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)
   | Sig_assume (lid, _, _) -> [lid]
-  | Sig_new_effect_for_free(n)
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
@@ -849,11 +826,6 @@ let ses_of_sigbundle (se:sigelt) :list<sigelt> =
   | Sig_bundle (ses, _) -> ses
   | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
 
-let eff_decl_of_new_effect (se:sigelt) :eff_decl =
-  match se.sigel with
-  | Sig_new_effect ne -> ne
-  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
-
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
@@ -935,10 +907,9 @@ let rec arrow_formals_comp k =
           aux s k
         | _ -> [], Syntax.mk_Total k
 
-let rec arrow_formals k =
+let arrow_formals k =
     let bs, c = arrow_formals_comp k in
     bs, comp_result c
-
 
 (* let_rec_arity e f:
     if `f` is a let-rec bound name in e
@@ -1201,14 +1172,6 @@ let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: o
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
-let lcomp_of_comp (c0:comp) : lcomp =
-    let eff_name, flags =
-        match c0.n with
-        | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
-        | Comp c -> c.effect_name, c.flags in
-    Syntax.mk_lcomp eff_name (comp_result c0) flags (fun () -> c0)
-
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
@@ -1224,12 +1187,6 @@ let residual_comp_of_comp (c:comp) = {
     residual_typ=Some (comp_result c);
     residual_flags=comp_flags c;
   }
-let residual_comp_of_lcomp (lc:lcomp) = {
-    residual_effect=lc.eff_name;
-    residual_typ=Some (lc.res_typ);
-    residual_flags=lc.cflags
-  }
-
 
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);
@@ -1245,7 +1202,7 @@ let mk_forall (u:universe) (x:bv) (body:typ) : typ =
 let close_forall_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ (fst b) f) bs f
 
-let rec is_wild_pat p =
+let is_wild_pat p =
     match p.v with
     | Pat_wild _ -> true
     | _ -> false
@@ -1334,16 +1291,19 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
+let arrow_one_ln (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
 let arrow_one (t:typ) : option<(binder * comp)> =
-    bind_opt (match (compress t).n with
-              | Tm_arrow ([], c) ->
-                  failwith "fatal: empty binders on arrow?"
-              | Tm_arrow ([b], c) ->
-                  Some (b, c)
-              | Tm_arrow (b::bs, c) ->
-                  Some (b, mk_Total (arrow bs c))
-              | _ ->
-                  None) (fun (b, c) ->
+    bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
             | [b] -> b
@@ -1591,7 +1551,7 @@ let dm4f_lid ed name : lident =
     let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
     lid_of_path p' Range.dummyRange
 
-let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
+let mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args None pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
@@ -1750,8 +1710,6 @@ and binder_eq_dbg (dbg : bool) b1 b2 =
     eqprod (fun b1 b2 -> check "binder sort"  (term_eq_dbg dbg b1.sort b2.sort))
            (fun q1 q2 -> check "binder qual"  (eq_aqual q1 q2 = Equal))
            b1 b2
-and lcomp_eq_dbg (c1:lcomp) (c2:lcomp) = fail "lcomp" // TODO
-and residual_eq_dbg (r1:residual_comp) (r2:residual_comp) = fail "residual"
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let c1 = comp_to_comp_typ_nouniv c1 in
     let c2 = comp_to_comp_typ_nouniv c2 in
@@ -2047,7 +2005,13 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
         | Tm_fvar fv, [(_, _); arg]
             when fv_eq_lid fv PC.smtpat_lid ->
           arg
-        | _ -> failwith "Unexpected pattern term"
+        | _ ->
+            Errors.raise_error (Errors.Error_IllSMTPat,
+                                U.format1 "Not an atomic SMT pattern: %s; \
+                                           patterns on lemmas must be a list of simple SMTPat's \
+                                           or a single SMTPatOr containing a list \
+                                           of lists of patterns" (tts p))
+                               p.pos
     in
 
     let lemma_pats p =
@@ -2094,3 +2058,135 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     quant
 
 (* End SMT Lemma utilities *)
+
+
+(* Effect utilities *)
+
+(*
+ * Mainly reading the combinators out of the eff_decl record
+ *
+ * For combinators that are present only in either wp or layered effects,
+ *   their getters return option<tscheme>
+ * Leaving it to the callers to deal with it
+ *)
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _ -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+
+let is_layered (ed:eff_decl) : bool =
+  match ed.combinators with
+  | Layered_eff _ -> true
+  | _ -> false
+
+let is_dm4f (ed:eff_decl) : bool =
+  match ed.combinators with
+  | DM4F_eff _ -> true
+  | _ -> false
+
+let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
+: wp_eff_combinators
+= { ret_wp = f combs.ret_wp;
+    bind_wp = f combs.bind_wp;
+    stronger = f combs.stronger;
+    if_then_else = f combs.if_then_else;
+    ite_wp = f combs.ite_wp;
+    close_wp = f combs.close_wp;
+    trivial = f combs.trivial;
+    
+    repr = map_option f combs.repr;
+    return_repr = map_option f combs.return_repr;
+    bind_repr = map_option f combs.bind_repr }
+
+let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
+: layered_eff_combinators
+= let map_tuple (ts1, ts2) = (f ts1, f ts2) in
+  { l_base_effect = combs.l_base_effect;
+    l_repr = map_tuple combs.l_repr;
+    l_return = map_tuple combs.l_return;
+    l_bind = map_tuple combs.l_bind;
+    l_subcomp = map_tuple combs.l_subcomp;
+    l_if_then_else = map_tuple combs.l_if_then_else }
+
+let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
+  match combs with
+  | Primitive_eff combs -> Primitive_eff (apply_wp_eff_combinators f combs)
+  | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)
+  | Layered_eff combs -> Layered_eff (apply_layered_eff_combinators f combs)
+
+let get_wp_close_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> Some combs.close_wp
+  | _ -> None
+
+let get_eff_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.repr
+  | Layered_eff combs -> combs.l_repr |> fst |> Some
+  
+let get_bind_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.bind_wp
+  | Layered_eff combs -> combs.l_bind |> snd
+
+let get_return_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.ret_wp
+  | Layered_eff combs -> combs.l_return |> snd
+  
+let get_bind_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.bind_repr
+  | Layered_eff combs -> combs.l_bind |> fst |> Some
+
+let get_return_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.return_repr  
+  | Layered_eff combs -> combs.l_return |> fst |> Some
+
+let get_wp_trivial_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.trivial |> Some
+  | _ -> None
+
+let get_layered_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Layered_eff combs -> combs.l_if_then_else |> fst |> Some
+  | _ -> None
+
+let get_wp_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.if_then_else |> Some
+  | _ -> None
+
+let get_wp_ite_combinator (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.ite_wp |> Some
+  | _ -> None
+
+let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
+  match ed.combinators with
+  | Primitive_eff combs
+  | DM4F_eff combs -> combs.stronger
+  | Layered_eff combs -> combs.l_subcomp |> snd
+
+let get_stronger_repr (ed:eff_decl) : option<tscheme> =
+  match ed.combinators with
+  | Primitive_eff _
+  | DM4F_eff _ -> None
+  | Layered_eff combs -> combs.l_subcomp |> fst |> Some
+
+let get_layered_effect_base (ed:eff_decl) : option<lident> =
+  match ed.combinators with
+  | Layered_eff combs -> combs.l_base_effect |> Some
+  | _ -> None

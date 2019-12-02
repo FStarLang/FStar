@@ -1283,62 +1283,63 @@ let (collect_one :
              | FStar_Parser_AST.Exception (uu____4270,t) ->
                  FStar_Util.iter_opt t collect_term
              | FStar_Parser_AST.NewEffect ed -> collect_effect_decl ed
-             | FStar_Parser_AST.Fsdoc uu____4277 -> ()
-             | FStar_Parser_AST.Pragma uu____4278 -> ()
+             | FStar_Parser_AST.LayeredEffect ed -> collect_effect_decl ed
+             | FStar_Parser_AST.Fsdoc uu____4278 -> ()
+             | FStar_Parser_AST.Pragma uu____4279 -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
                  (FStar_Util.incr num_of_toplevelmods;
-                  (let uu____4281 =
-                     let uu____4283 = FStar_ST.op_Bang num_of_toplevelmods
+                  (let uu____4282 =
+                     let uu____4284 = FStar_ST.op_Bang num_of_toplevelmods
                         in
-                     uu____4283 > Prims.int_one  in
-                   if uu____4281
+                     uu____4284 > Prims.int_one  in
+                   if uu____4282
                    then
-                     let uu____4308 =
-                       let uu____4314 =
-                         let uu____4316 = string_of_lid lid true  in
+                     let uu____4309 =
+                       let uu____4315 =
+                         let uu____4317 = string_of_lid lid true  in
                          FStar_Util.format1
                            "Automatic dependency analysis demands one module per file (module %s not supported)"
-                           uu____4316
+                           uu____4317
                           in
-                       (FStar_Errors.Fatal_OneModulePerFile, uu____4314)  in
-                     let uu____4321 = FStar_Ident.range_of_lid lid  in
-                     FStar_Errors.raise_error uu____4308 uu____4321
+                       (FStar_Errors.Fatal_OneModulePerFile, uu____4315)  in
+                     let uu____4322 = FStar_Ident.range_of_lid lid  in
+                     FStar_Errors.raise_error uu____4309 uu____4322
                    else ()))
            
-           and collect_tycon uu___6_4324 =
-             match uu___6_4324 with
-             | FStar_Parser_AST.TyconAbstract (uu____4325,binders,k) ->
+           and collect_tycon uu___6_4325 =
+             match uu___6_4325 with
+             | FStar_Parser_AST.TyconAbstract (uu____4326,binders,k) ->
                  (collect_binders binders; FStar_Util.iter_opt k collect_term)
-             | FStar_Parser_AST.TyconAbbrev (uu____4337,binders,k,t) ->
+             | FStar_Parser_AST.TyconAbbrev (uu____4338,binders,k,t) ->
                  (collect_binders binders;
                   FStar_Util.iter_opt k collect_term;
                   collect_term t)
-             | FStar_Parser_AST.TyconRecord (uu____4351,binders,k,identterms)
+             | FStar_Parser_AST.TyconRecord (uu____4352,binders,k,identterms)
                  ->
                  (collect_binders binders;
                   FStar_Util.iter_opt k collect_term;
                   FStar_List.iter
-                    (fun uu____4397  ->
-                       match uu____4397 with
-                       | (uu____4406,t,uu____4408) -> collect_term t)
+                    (fun uu____4398  ->
+                       match uu____4398 with
+                       | (uu____4407,t,uu____4409) -> collect_term t)
                     identterms)
              | FStar_Parser_AST.TyconVariant
-                 (uu____4413,binders,k,identterms) ->
+                 (uu____4414,binders,k,identterms) ->
                  (collect_binders binders;
                   FStar_Util.iter_opt k collect_term;
                   FStar_List.iter
-                    (fun uu____4475  ->
-                       match uu____4475 with
-                       | (uu____4489,t,uu____4491,uu____4492) ->
+                    (fun uu____4476  ->
+                       match uu____4476 with
+                       | (uu____4490,t,uu____4492,uu____4493) ->
                            FStar_Util.iter_opt t collect_term) identterms)
            
-           and collect_effect_decl uu___7_4503 =
-             match uu___7_4503 with
-             | FStar_Parser_AST.DefineEffect (uu____4504,binders,t,decls) ->
+           and collect_effect_decl uu___7_4504 =
+             match uu___7_4504 with
+             | FStar_Parser_AST.DefineEffect (uu____4505,binders,t,decls) ->
                  (collect_binders binders;
                   collect_term t;
                   collect_decls decls)
-             | FStar_Parser_AST.RedefineEffect (uu____4518,binders,t) ->
+             | FStar_Parser_AST.RedefineEffect (uu____4519,binders,t) ->
                  (collect_binders binders; collect_term t)
            
            and collect_binders binders =
@@ -1349,34 +1350,34 @@ let (collect_one :
              (match b with
               | {
                   FStar_Parser_AST.b = FStar_Parser_AST.Annotated
-                    (uu____4531,t);
-                  FStar_Parser_AST.brange = uu____4533;
-                  FStar_Parser_AST.blevel = uu____4534;
-                  FStar_Parser_AST.aqual = uu____4535;_} -> collect_term t
+                    (uu____4532,t);
+                  FStar_Parser_AST.brange = uu____4534;
+                  FStar_Parser_AST.blevel = uu____4535;
+                  FStar_Parser_AST.aqual = uu____4536;_} -> collect_term t
               | {
                   FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated
-                    (uu____4538,t);
-                  FStar_Parser_AST.brange = uu____4540;
-                  FStar_Parser_AST.blevel = uu____4541;
-                  FStar_Parser_AST.aqual = uu____4542;_} -> collect_term t
+                    (uu____4539,t);
+                  FStar_Parser_AST.brange = uu____4541;
+                  FStar_Parser_AST.blevel = uu____4542;
+                  FStar_Parser_AST.aqual = uu____4543;_} -> collect_term t
               | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
-                  FStar_Parser_AST.brange = uu____4546;
-                  FStar_Parser_AST.blevel = uu____4547;
-                  FStar_Parser_AST.aqual = uu____4548;_} -> collect_term t
-              | uu____4551 -> ())
+                  FStar_Parser_AST.brange = uu____4547;
+                  FStar_Parser_AST.blevel = uu____4548;
+                  FStar_Parser_AST.aqual = uu____4549;_} -> collect_term t
+              | uu____4552 -> ())
            
-           and collect_aqual uu___8_4552 =
-             match uu___8_4552 with
+           and collect_aqual uu___8_4553 =
+             match uu___8_4553 with
              | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
                  collect_term t
-             | uu____4556 -> ()
+             | uu____4557 -> ()
            
            and collect_term t = collect_term' t.FStar_Parser_AST.tm
            
-           and collect_constant uu___9_4560 =
-             match uu___9_4560 with
+           and collect_constant uu___9_4561 =
+             match uu___9_4561 with
              | FStar_Const.Const_int
-                 (uu____4561,FStar_Pervasives_Native.Some (signedness,width))
+                 (uu____4562,FStar_Pervasives_Native.Some (signedness,width))
                  ->
                  let u =
                    match signedness with
@@ -1388,65 +1389,65 @@ let (collect_one :
                    | FStar_Const.Int16  -> "16"
                    | FStar_Const.Int32  -> "32"
                    | FStar_Const.Int64  -> "64"  in
-                 let uu____4588 =
-                   let uu____4589 =
-                     let uu____4595 =
-                       let uu____4596 =
+                 let uu____4589 =
+                   let uu____4590 =
+                     let uu____4596 =
+                       let uu____4597 =
                          FStar_Util.format2 "fstar.%sint%s" u w  in
-                       FStar_All.pipe_right uu____4596 FStar_Ident.lid_of_str
+                       FStar_All.pipe_right uu____4597 FStar_Ident.lid_of_str
                         in
-                     (false, uu____4595)  in
-                   P_dep uu____4589  in
-                 add_to_parsing_data uu____4588
-             | FStar_Const.Const_char uu____4602 ->
-                 let uu____4604 =
-                   let uu____4605 =
-                     let uu____4611 =
+                     (false, uu____4596)  in
+                   P_dep uu____4590  in
+                 add_to_parsing_data uu____4589
+             | FStar_Const.Const_char uu____4603 ->
+                 let uu____4605 =
+                   let uu____4606 =
+                     let uu____4612 =
                        FStar_All.pipe_right "fstar.char"
                          FStar_Ident.lid_of_str
                         in
-                     (false, uu____4611)  in
-                   P_dep uu____4605  in
-                 add_to_parsing_data uu____4604
-             | FStar_Const.Const_float uu____4616 ->
-                 let uu____4617 =
-                   let uu____4618 =
-                     let uu____4624 =
+                     (false, uu____4612)  in
+                   P_dep uu____4606  in
+                 add_to_parsing_data uu____4605
+             | FStar_Const.Const_float uu____4617 ->
+                 let uu____4618 =
+                   let uu____4619 =
+                     let uu____4625 =
                        FStar_All.pipe_right "fstar.float"
                          FStar_Ident.lid_of_str
                         in
-                     (false, uu____4624)  in
-                   P_dep uu____4618  in
-                 add_to_parsing_data uu____4617
-             | uu____4629 -> ()
+                     (false, uu____4625)  in
+                   P_dep uu____4619  in
+                 add_to_parsing_data uu____4618
+             | uu____4630 -> ()
            
-           and collect_term' uu___12_4630 =
-             match uu___12_4630 with
+           and collect_term' uu___12_4631 =
+             match uu___12_4631 with
              | FStar_Parser_AST.Wild  -> ()
              | FStar_Parser_AST.Const c -> collect_constant c
              | FStar_Parser_AST.Op (s,ts) ->
-                 ((let uu____4639 =
-                     let uu____4641 = FStar_Ident.text_of_id s  in
-                     uu____4641 = "@"  in
-                   if uu____4639
+                 ((let uu____4640 =
+                     let uu____4642 = FStar_Ident.text_of_id s  in
+                     uu____4642 = "@"  in
+                   if uu____4640
                    then
-                     let uu____4646 =
-                       let uu____4647 =
-                         let uu____4648 =
+                     let uu____4647 =
+                       let uu____4648 =
+                         let uu____4649 =
                            FStar_Ident.path_of_text
                              "FStar.List.Tot.Base.append"
                             in
-                         FStar_Ident.lid_of_path uu____4648
+                         FStar_Ident.lid_of_path uu____4649
                            FStar_Range.dummyRange
                           in
-                       FStar_Parser_AST.Name uu____4647  in
-                     collect_term' uu____4646
+                       FStar_Parser_AST.Name uu____4648  in
+                     collect_term' uu____4647
                    else ());
                   FStar_List.iter collect_term ts)
-             | FStar_Parser_AST.Tvar uu____4652 -> ()
-             | FStar_Parser_AST.Uvar uu____4653 -> ()
+             | FStar_Parser_AST.Tvar uu____4653 -> ()
+             | FStar_Parser_AST.Uvar uu____4654 -> ()
              | FStar_Parser_AST.Var lid -> add_to_parsing_data (P_lid lid)
-             | FStar_Parser_AST.Projector (lid,uu____4656) ->
+             | FStar_Parser_AST.Projector (lid,uu____4657) ->
                  add_to_parsing_data (P_lid lid)
              | FStar_Parser_AST.Discrim lid ->
                  add_to_parsing_data (P_lid lid)
@@ -1454,19 +1455,19 @@ let (collect_one :
              | FStar_Parser_AST.Construct (lid,termimps) ->
                  (add_to_parsing_data (P_lid lid);
                   FStar_List.iter
-                    (fun uu____4681  ->
-                       match uu____4681 with
-                       | (t,uu____4687) -> collect_term t) termimps)
+                    (fun uu____4682  ->
+                       match uu____4682 with
+                       | (t,uu____4688) -> collect_term t) termimps)
              | FStar_Parser_AST.Abs (pats,t) ->
                  (collect_patterns pats; collect_term t)
-             | FStar_Parser_AST.App (t1,t2,uu____4697) ->
+             | FStar_Parser_AST.App (t1,t2,uu____4698) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.Let (uu____4699,patterms,t) ->
+             | FStar_Parser_AST.Let (uu____4700,patterms,t) ->
                  (FStar_List.iter
-                    (fun uu____4749  ->
-                       match uu____4749 with
+                    (fun uu____4750  ->
+                       match uu____4750 with
                        | (attrs_opt,(pat,t1)) ->
-                           ((let uu____4778 =
+                           ((let uu____4779 =
                                FStar_Util.map_opt attrs_opt
                                  (FStar_List.iter collect_term)
                                 in
@@ -1476,7 +1477,7 @@ let (collect_one :
                   collect_term t)
              | FStar_Parser_AST.LetOpen (lid,t) ->
                  (add_to_parsing_data (P_open (true, lid)); collect_term t)
-             | FStar_Parser_AST.Bind (uu____4789,t1,t2) ->
+             | FStar_Parser_AST.Bind (uu____4790,t1,t2) ->
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1,t2) ->
                  (collect_term t1; collect_term t2)
@@ -1495,53 +1496,53 @@ let (collect_one :
              | FStar_Parser_AST.Record (t,idterms) ->
                  (FStar_Util.iter_opt t collect_term;
                   FStar_List.iter
-                    (fun uu____4885  ->
-                       match uu____4885 with
-                       | (uu____4890,t1) -> collect_term t1) idterms)
-             | FStar_Parser_AST.Project (t,uu____4893) -> collect_term t
+                    (fun uu____4886  ->
+                       match uu____4886 with
+                       | (uu____4891,t1) -> collect_term t1) idterms)
+             | FStar_Parser_AST.Project (t,uu____4894) -> collect_term t
              | FStar_Parser_AST.Product (binders,t) ->
                  (collect_binders binders; collect_term t)
              | FStar_Parser_AST.Sum (binders,t) ->
                  (FStar_List.iter
-                    (fun uu___10_4922  ->
-                       match uu___10_4922 with
+                    (fun uu___10_4923  ->
+                       match uu___10_4923 with
                        | FStar_Util.Inl b -> collect_binder b
                        | FStar_Util.Inr t1 -> collect_term t1) binders;
                   collect_term t)
-             | FStar_Parser_AST.QForall (binders,(uu____4930,ts),t) ->
+             | FStar_Parser_AST.QForall (binders,(uu____4931,ts),t) ->
                  (collect_binders binders;
                   FStar_List.iter (FStar_List.iter collect_term) ts;
                   collect_term t)
-             | FStar_Parser_AST.QExists (binders,(uu____4964,ts),t) ->
+             | FStar_Parser_AST.QExists (binders,(uu____4965,ts),t) ->
                  (collect_binders binders;
                   FStar_List.iter (FStar_List.iter collect_term) ts;
                   collect_term t)
              | FStar_Parser_AST.Refine (binder,t) ->
                  (collect_binder binder; collect_term t)
-             | FStar_Parser_AST.NamedTyp (uu____5000,t) -> collect_term t
+             | FStar_Parser_AST.NamedTyp (uu____5001,t) -> collect_term t
              | FStar_Parser_AST.Paren t -> collect_term t
-             | FStar_Parser_AST.Requires (t,uu____5004) -> collect_term t
-             | FStar_Parser_AST.Ensures (t,uu____5012) -> collect_term t
-             | FStar_Parser_AST.Labeled (t,uu____5020,uu____5021) ->
+             | FStar_Parser_AST.Requires (t,uu____5005) -> collect_term t
+             | FStar_Parser_AST.Ensures (t,uu____5013) -> collect_term t
+             | FStar_Parser_AST.Labeled (t,uu____5021,uu____5022) ->
                  collect_term t
-             | FStar_Parser_AST.Quote (t,uu____5027) -> collect_term t
+             | FStar_Parser_AST.Quote (t,uu____5028) -> collect_term t
              | FStar_Parser_AST.Antiquote t -> collect_term t
              | FStar_Parser_AST.VQuote t -> collect_term t
              | FStar_Parser_AST.Attributes cattributes ->
                  FStar_List.iter collect_term cattributes
              | FStar_Parser_AST.CalcProof (rel,init1,steps) ->
-                 ((let uu____5041 =
-                     let uu____5042 =
-                       let uu____5048 = FStar_Ident.lid_of_str "FStar.Calc"
+                 ((let uu____5042 =
+                     let uu____5043 =
+                       let uu____5049 = FStar_Ident.lid_of_str "FStar.Calc"
                           in
-                       (false, uu____5048)  in
-                     P_dep uu____5042  in
-                   add_to_parsing_data uu____5041);
+                       (false, uu____5049)  in
+                     P_dep uu____5043  in
+                   add_to_parsing_data uu____5042);
                   collect_term rel;
                   collect_term init1;
                   FStar_List.iter
-                    (fun uu___11_5060  ->
-                       match uu___11_5060 with
+                    (fun uu___11_5061  ->
+                       match uu___11_5061 with
                        | FStar_Parser_AST.CalcStep (rel1,just,next) ->
                            (collect_term rel1;
                             collect_term just;
@@ -1551,27 +1552,27 @@ let (collect_one :
            
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
            
-           and collect_pattern' uu___13_5070 =
-             match uu___13_5070 with
-             | FStar_Parser_AST.PatVar (uu____5071,aqual) ->
+           and collect_pattern' uu___13_5071 =
+             match uu___13_5071 with
+             | FStar_Parser_AST.PatVar (uu____5072,aqual) ->
                  collect_aqual aqual
-             | FStar_Parser_AST.PatTvar (uu____5077,aqual) ->
+             | FStar_Parser_AST.PatTvar (uu____5078,aqual) ->
                  collect_aqual aqual
              | FStar_Parser_AST.PatWild aqual -> collect_aqual aqual
-             | FStar_Parser_AST.PatOp uu____5086 -> ()
-             | FStar_Parser_AST.PatConst uu____5087 -> ()
+             | FStar_Parser_AST.PatOp uu____5087 -> ()
+             | FStar_Parser_AST.PatConst uu____5088 -> ()
              | FStar_Parser_AST.PatApp (p,ps) ->
                  (collect_pattern p; collect_patterns ps)
-             | FStar_Parser_AST.PatName uu____5095 -> ()
+             | FStar_Parser_AST.PatName uu____5096 -> ()
              | FStar_Parser_AST.PatList ps -> collect_patterns ps
              | FStar_Parser_AST.PatOr ps -> collect_patterns ps
-             | FStar_Parser_AST.PatTuple (ps,uu____5103) ->
+             | FStar_Parser_AST.PatTuple (ps,uu____5104) ->
                  collect_patterns ps
              | FStar_Parser_AST.PatRecord lidpats ->
                  FStar_List.iter
-                   (fun uu____5124  ->
-                      match uu____5124 with
-                      | (uu____5129,p) -> collect_pattern p) lidpats
+                   (fun uu____5125  ->
+                      match uu____5125 with
+                      | (uu____5130,p) -> collect_pattern p) lidpats
              | FStar_Parser_AST.PatAscribed
                  (p,(t,FStar_Pervasives_Native.None )) ->
                  (collect_pattern p; collect_term t)
@@ -1581,25 +1582,25 @@ let (collect_one :
            
            and collect_branches bs = FStar_List.iter collect_branch bs
            
-           and collect_branch uu____5174 =
-             match uu____5174 with
+           and collect_branch uu____5175 =
+             match uu____5175 with
              | (pat,t1,t2) ->
                  (collect_pattern pat;
                   FStar_Util.iter_opt t1 collect_term;
                   collect_term t2)
             in
-           let uu____5192 = FStar_Parser_Driver.parse_file filename  in
-           match uu____5192 with
-           | (ast,uu____5218) ->
+           let uu____5193 = FStar_Parser_Driver.parse_file filename  in
+           match uu____5193 with
+           | (ast,uu____5219) ->
                (collect_module ast;
                 (let pd1 =
-                   let uu____5235 =
-                     let uu____5238 = FStar_ST.op_Bang pd  in
-                     FStar_List.rev uu____5238  in
-                   Mk_pd uu____5235  in
-                 let uu____5264 = from_parsing_data pd1 original_map filename
+                   let uu____5236 =
+                     let uu____5239 = FStar_ST.op_Bang pd  in
+                     FStar_List.rev uu____5239  in
+                   Mk_pd uu____5236  in
+                 let uu____5265 = from_parsing_data pd1 original_map filename
                     in
-                 match uu____5264 with
+                 match uu____5265 with
                  | (deps,has_inline_for_extraction,mo_roots) ->
                      (pd1, deps, has_inline_for_extraction, mo_roots))))
   
@@ -1607,17 +1608,17 @@ let (collect_one_cache :
   (dependence Prims.list * dependence Prims.list * Prims.bool)
     FStar_Util.smap FStar_ST.ref)
   =
-  let uu____5323 = FStar_Util.smap_create Prims.int_zero  in
-  FStar_Util.mk_ref uu____5323 
+  let uu____5324 = FStar_Util.smap_create Prims.int_zero  in
+  FStar_Util.mk_ref uu____5324 
 let (set_collect_one_cache :
   (dependence Prims.list * dependence Prims.list * Prims.bool)
     FStar_Util.smap -> unit)
   = fun cache  -> FStar_ST.op_Colon_Equals collect_one_cache cache 
 let (dep_graph_copy : dependence_graph -> dependence_graph) =
   fun dep_graph  ->
-    let uu____5445 = dep_graph  in
-    match uu____5445 with
-    | Deps g -> let uu____5449 = FStar_Util.smap_copy g  in Deps uu____5449
+    let uu____5446 = dep_graph  in
+    match uu____5446 with
+    | Deps g -> let uu____5450 = FStar_Util.smap_copy g  in Deps uu____5450
   
 let (widen_deps :
   module_name Prims.list ->
@@ -1629,11 +1630,11 @@ let (widen_deps :
       fun file_system_map  ->
         fun widened  ->
           let widened1 = FStar_Util.mk_ref widened  in
-          let uu____5491 = dep_graph  in
-          match uu____5491 with
+          let uu____5492 = dep_graph  in
+          match uu____5492 with
           | Deps dg ->
-              let uu____5500 = deps_empty ()  in
-              (match uu____5500 with
+              let uu____5501 = deps_empty ()  in
+              (match uu____5501 with
                | Deps dg' ->
                    let widen_one deps =
                      FStar_All.pipe_right deps
@@ -1646,19 +1647,19 @@ let (widen_deps :
                                  ->
                                  (FStar_ST.op_Colon_Equals widened1 true;
                                   FriendImplementation m)
-                             | uu____5555 -> d))
+                             | uu____5556 -> d))
                       in
                    (FStar_Util.smap_fold dg
                       (fun filename  ->
                          fun dep_node  ->
-                           fun uu____5563  ->
-                             let uu____5565 =
-                               let uu___985_5566 = dep_node  in
-                               let uu____5567 = widen_one dep_node.edges  in
-                               { edges = uu____5567; color = White }  in
-                             FStar_Util.smap_add dg' filename uu____5565) ();
-                    (let uu____5568 = FStar_ST.op_Bang widened1  in
-                     (uu____5568, (Deps dg')))))
+                           fun uu____5564  ->
+                             let uu____5566 =
+                               let uu___986_5567 = dep_node  in
+                               let uu____5568 = widen_one dep_node.edges  in
+                               { edges = uu____5568; color = White }  in
+                             FStar_Util.smap_add dg' filename uu____5566) ();
+                    (let uu____5569 = FStar_ST.op_Bang widened1  in
+                     (uu____5569, (Deps dg')))))
   
 let (topological_dependences_of' :
   files_for_module_name ->
@@ -1672,65 +1673,65 @@ let (topological_dependences_of' :
       fun interfaces_needing_inlining  ->
         fun root_files  ->
           fun widened  ->
-            let rec all_friend_deps_1 dep_graph1 cycle uu____5734 filename =
-              match uu____5734 with
+            let rec all_friend_deps_1 dep_graph1 cycle uu____5735 filename =
+              match uu____5735 with
               | (all_friends,all_files) ->
                   let dep_node =
-                    let uu____5775 = deps_try_find dep_graph1 filename  in
-                    FStar_Util.must uu____5775  in
+                    let uu____5776 = deps_try_find dep_graph1 filename  in
+                    FStar_Util.must uu____5776  in
                   (match dep_node.color with
                    | Gray  ->
                        failwith
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black  -> (all_friends, all_files)
                    | White  ->
-                       ((let uu____5806 = FStar_Options.debug_any ()  in
-                         if uu____5806
+                       ((let uu____5807 = FStar_Options.debug_any ()  in
+                         if uu____5807
                          then
-                           let uu____5809 =
-                             let uu____5811 =
+                           let uu____5810 =
+                             let uu____5812 =
                                FStar_List.map dep_to_string dep_node.edges
                                 in
-                             FStar_String.concat ", " uu____5811  in
+                             FStar_String.concat ", " uu____5812  in
                            FStar_Util.print2
                              "Visiting %s: direct deps are %s\n" filename
-                             uu____5809
+                             uu____5810
                          else ());
                         deps_add_dep dep_graph1 filename
-                          (let uu___1007_5822 = dep_node  in
-                           { edges = (uu___1007_5822.edges); color = Gray });
-                        (let uu____5823 =
-                           let uu____5834 =
+                          (let uu___1008_5823 = dep_node  in
+                           { edges = (uu___1008_5823.edges); color = Gray });
+                        (let uu____5824 =
+                           let uu____5835 =
                              dependences_of file_system_map dep_graph1
                                root_files filename
                               in
                            all_friend_deps dep_graph1 cycle
-                             (all_friends, all_files) uu____5834
+                             (all_friends, all_files) uu____5835
                             in
-                         match uu____5823 with
+                         match uu____5824 with
                          | (all_friends1,all_files1) ->
                              (deps_add_dep dep_graph1 filename
-                                (let uu___1013_5870 = dep_node  in
+                                (let uu___1014_5871 = dep_node  in
                                  {
-                                   edges = (uu___1013_5870.edges);
+                                   edges = (uu___1014_5871.edges);
                                    color = Black
                                  });
-                              (let uu____5872 = FStar_Options.debug_any ()
+                              (let uu____5873 = FStar_Options.debug_any ()
                                   in
-                               if uu____5872
+                               if uu____5873
                                then FStar_Util.print1 "Adding %s\n" filename
                                else ());
-                              (let uu____5878 =
-                                 let uu____5882 =
+                              (let uu____5879 =
+                                 let uu____5883 =
                                    FStar_List.collect
-                                     (fun uu___14_5889  ->
-                                        match uu___14_5889 with
+                                     (fun uu___14_5890  ->
+                                        match uu___14_5890 with
                                         | FriendImplementation m -> [m]
                                         | d -> []) dep_node.edges
                                     in
-                                 FStar_List.append uu____5882 all_friends1
+                                 FStar_List.append uu____5883 all_friends1
                                   in
-                               (uu____5878, (filename :: all_files1)))))))
+                               (uu____5879, (filename :: all_files1)))))))
             
             and all_friend_deps dep_graph1 cycle all_friends filenames =
               FStar_List.fold_left
@@ -1739,40 +1740,40 @@ let (topological_dependences_of' :
                      all_friend_deps_1 dep_graph1 (k :: cycle) all_friends1 k)
                 all_friends filenames
              in
-            let uu____5954 = all_friend_deps dep_graph [] ([], []) root_files
+            let uu____5955 = all_friend_deps dep_graph [] ([], []) root_files
                in
-            match uu____5954 with
+            match uu____5955 with
             | (friends,all_files_0) ->
-                ((let uu____5997 = FStar_Options.debug_any ()  in
-                  if uu____5997
+                ((let uu____5998 = FStar_Options.debug_any ()  in
+                  if uu____5998
                   then
-                    let uu____6000 =
-                      let uu____6002 =
+                    let uu____6001 =
+                      let uu____6003 =
                         FStar_Util.remove_dups (fun x  -> fun y  -> x = y)
                           friends
                          in
-                      FStar_String.concat ", " uu____6002  in
+                      FStar_String.concat ", " uu____6003  in
                     FStar_Util.print3
                       "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n\tinterfaces_with_inlining=%s\n"
-                      (FStar_String.concat ", " all_files_0) uu____6000
+                      (FStar_String.concat ", " all_files_0) uu____6001
                       (FStar_String.concat ", " interfaces_needing_inlining)
                   else ());
-                 (let uu____6020 =
+                 (let uu____6021 =
                     widen_deps friends dep_graph file_system_map widened  in
-                  match uu____6020 with
+                  match uu____6021 with
                   | (widened1,dep_graph1) ->
-                      let uu____6038 =
-                        (let uu____6050 = FStar_Options.debug_any ()  in
-                         if uu____6050
+                      let uu____6039 =
+                        (let uu____6051 = FStar_Options.debug_any ()  in
+                         if uu____6051
                          then
                            FStar_Util.print_string
                              "==============Phase2==================\n"
                          else ());
                         all_friend_deps dep_graph1 [] ([], []) root_files  in
-                      (match uu____6038 with
-                       | (uu____6073,all_files) ->
-                           ((let uu____6088 = FStar_Options.debug_any ()  in
-                             if uu____6088
+                      (match uu____6039 with
+                       | (uu____6074,all_files) ->
+                           ((let uu____6089 = FStar_Options.debug_any ()  in
+                             if uu____6089
                              then
                                FStar_Util.print1
                                  "Phase2 complete: all_files = %s\n"
@@ -1789,15 +1790,15 @@ let (phase1 :
     fun dep_graph  ->
       fun interfaces_needing_inlining  ->
         fun for_extraction  ->
-          (let uu____6134 = FStar_Options.debug_any ()  in
-           if uu____6134
+          (let uu____6135 = FStar_Options.debug_any ()  in
+           if uu____6135
            then
              FStar_Util.print_string
                "==============Phase1==================\n"
            else ());
           (let widened = false  in
-           let uu____6143 = (FStar_Options.cmi ()) && for_extraction  in
-           if uu____6143
+           let uu____6144 = (FStar_Options.cmi ()) && for_extraction  in
+           if uu____6144
            then
              widen_deps interfaces_needing_inlining dep_graph file_system_map
                widened
@@ -1815,11 +1816,11 @@ let (topological_dependences_of :
       fun interfaces_needing_inlining  ->
         fun root_files  ->
           fun for_extraction  ->
-            let uu____6210 =
+            let uu____6211 =
               phase1 file_system_map dep_graph interfaces_needing_inlining
                 for_extraction
                in
-            match uu____6210 with
+            match uu____6211 with
             | (widened,dep_graph1) ->
                 topological_dependences_of' file_system_map dep_graph1
                   interfaces_needing_inlining root_files widened
@@ -1835,16 +1836,16 @@ let (collect :
         FStar_All.pipe_right all_cmd_line_files
           (FStar_List.map
              (fun fn  ->
-                let uu____6287 = FStar_Options.find_file fn  in
-                match uu____6287 with
+                let uu____6288 = FStar_Options.find_file fn  in
+                match uu____6288 with
                 | FStar_Pervasives_Native.None  ->
-                    let uu____6293 =
-                      let uu____6299 =
+                    let uu____6294 =
+                      let uu____6300 =
                         FStar_Util.format1 "File %s could not be found\n" fn
                          in
-                      (FStar_Errors.Fatal_ModuleOrFileNotFound, uu____6299)
+                      (FStar_Errors.Fatal_ModuleOrFileNotFound, uu____6300)
                        in
-                    FStar_Errors.raise_err uu____6293
+                    FStar_Errors.raise_err uu____6294
                 | FStar_Pervasives_Native.Some fn1 -> fn1))
          in
       let dep_graph = deps_empty ()  in
@@ -1852,35 +1853,35 @@ let (collect :
       let interfaces_needing_inlining = FStar_Util.mk_ref []  in
       let add_interface_for_inlining l =
         let l1 = lowercase_module_name l  in
-        let uu____6329 =
-          let uu____6333 = FStar_ST.op_Bang interfaces_needing_inlining  in
-          l1 :: uu____6333  in
-        FStar_ST.op_Colon_Equals interfaces_needing_inlining uu____6329  in
+        let uu____6330 =
+          let uu____6334 = FStar_ST.op_Bang interfaces_needing_inlining  in
+          l1 :: uu____6334  in
+        FStar_ST.op_Colon_Equals interfaces_needing_inlining uu____6330  in
       let parse_results = FStar_Util.smap_create (Prims.of_int (40))  in
       let rec discover_one file_name =
-        let uu____6400 =
-          let uu____6402 = deps_try_find dep_graph file_name  in
-          uu____6402 = FStar_Pervasives_Native.None  in
-        if uu____6400
+        let uu____6401 =
+          let uu____6403 = deps_try_find dep_graph file_name  in
+          uu____6403 = FStar_Pervasives_Native.None  in
+        if uu____6401
         then
-          let uu____6408 =
-            let uu____6424 =
-              let uu____6438 = FStar_ST.op_Bang collect_one_cache  in
-              FStar_Util.smap_try_find uu____6438 file_name  in
-            match uu____6424 with
+          let uu____6409 =
+            let uu____6425 =
+              let uu____6439 = FStar_ST.op_Bang collect_one_cache  in
+              FStar_Util.smap_try_find uu____6439 file_name  in
+            match uu____6425 with
             | FStar_Pervasives_Native.Some cached -> ((Mk_pd []), cached)
             | FStar_Pervasives_Native.None  ->
-                let uu____6568 =
+                let uu____6569 =
                   collect_one file_system_map file_name
                     get_parsing_data_from_cache
                    in
-                (match uu____6568 with
+                (match uu____6569 with
                  | (parsing_data,deps,needs_interface_inlining,additional_roots)
                      ->
                      (parsing_data,
                        (deps, additional_roots, needs_interface_inlining)))
              in
-          match uu____6408 with
+          match uu____6409 with
           | (parsing_data,(deps,mo_roots,needs_interface_inlining)) ->
               (if needs_interface_inlining
                then add_interface_for_inlining file_name
@@ -1888,26 +1889,26 @@ let (collect :
                FStar_Util.smap_add parse_results file_name parsing_data;
                (let deps1 =
                   let module_name = lowercase_module_name file_name  in
-                  let uu____6662 =
+                  let uu____6663 =
                     (is_implementation file_name) &&
                       (has_interface file_system_map module_name)
                      in
-                  if uu____6662
+                  if uu____6663
                   then FStar_List.append deps [UseInterface module_name]
                   else deps  in
                 let dep_node =
-                  let uu____6670 = FStar_List.unique deps1  in
-                  { edges = uu____6670; color = White }  in
+                  let uu____6671 = FStar_List.unique deps1  in
+                  { edges = uu____6671; color = White }  in
                 deps_add_dep dep_graph file_name dep_node;
-                (let uu____6672 =
+                (let uu____6673 =
                    FStar_List.map
                      (file_of_dep file_system_map all_cmd_line_files1)
                      (FStar_List.append deps1 mo_roots)
                     in
-                 FStar_List.iter discover_one uu____6672)))
+                 FStar_List.iter discover_one uu____6673)))
         else ()  in
       profile
-        (fun uu____6682  -> FStar_List.iter discover_one all_cmd_line_files1)
+        (fun uu____6683  -> FStar_List.iter discover_one all_cmd_line_files1)
         "FStar.Parser.Dep.discover";
       (let cycle_detected dep_graph1 cycle filename =
          FStar_Util.print1
@@ -1915,28 +1916,28 @@ let (collect :
            (FStar_String.concat "\n`used by` " cycle);
          print_graph dep_graph1;
          FStar_Util.print_string "\n";
-         (let uu____6715 =
-            let uu____6721 =
+         (let uu____6716 =
+            let uu____6722 =
               FStar_Util.format1 "Recursive dependency on module %s\n"
                 filename
                in
-            (FStar_Errors.Fatal_CyclicDependence, uu____6721)  in
-          FStar_Errors.raise_err uu____6715)
+            (FStar_Errors.Fatal_CyclicDependence, uu____6722)  in
+          FStar_Errors.raise_err uu____6716)
           in
        let full_cycle_detection all_command_line_files file_system_map1 =
          let dep_graph1 = dep_graph_copy dep_graph  in
          let mo_files = FStar_Util.mk_ref []  in
          let rec aux cycle filename =
            let node =
-             let uu____6773 = deps_try_find dep_graph1 filename  in
-             match uu____6773 with
+             let uu____6774 = deps_try_find dep_graph1 filename  in
+             match uu____6774 with
              | FStar_Pervasives_Native.Some node -> node
              | FStar_Pervasives_Native.None  ->
-                 let uu____6777 =
+                 let uu____6778 =
                    FStar_Util.format1 "Failed to find dependences of %s"
                      filename
                     in
-                 failwith uu____6777
+                 failwith uu____6778
               in
            let direct_deps =
              FStar_All.pipe_right node.edges
@@ -1944,61 +1945,61 @@ let (collect :
                   (fun x  ->
                      match x with
                      | UseInterface f ->
-                         let uu____6791 =
+                         let uu____6792 =
                            implementation_of_internal file_system_map1 f  in
-                         (match uu____6791 with
+                         (match uu____6792 with
                           | FStar_Pervasives_Native.None  -> [x]
                           | FStar_Pervasives_Native.Some fn when
                               fn = filename -> [x]
-                          | uu____6802 -> [x; UseImplementation f])
+                          | uu____6803 -> [x; UseImplementation f])
                      | PreferInterface f ->
-                         let uu____6808 =
+                         let uu____6809 =
                            implementation_of_internal file_system_map1 f  in
-                         (match uu____6808 with
+                         (match uu____6809 with
                           | FStar_Pervasives_Native.None  -> [x]
                           | FStar_Pervasives_Native.Some fn when
                               fn = filename -> [x]
-                          | uu____6819 -> [x; UseImplementation f])
-                     | uu____6823 -> [x]))
+                          | uu____6820 -> [x; UseImplementation f])
+                     | uu____6824 -> [x]))
               in
            match node.color with
            | Gray  -> cycle_detected dep_graph1 cycle filename
            | Black  -> ()
            | White  ->
                (deps_add_dep dep_graph1 filename
-                  (let uu___1134_6826 = node  in
+                  (let uu___1135_6827 = node  in
                    { edges = direct_deps; color = Gray });
-                (let uu____6828 =
+                (let uu____6829 =
                    dependences_of file_system_map1 dep_graph1
                      all_command_line_files filename
                     in
-                 FStar_List.iter (fun k  -> aux (k :: cycle) k) uu____6828);
+                 FStar_List.iter (fun k  -> aux (k :: cycle) k) uu____6829);
                 deps_add_dep dep_graph1 filename
-                  (let uu___1139_6839 = node  in
+                  (let uu___1140_6840 = node  in
                    { edges = direct_deps; color = Black });
-                (let uu____6840 = is_interface filename  in
-                 if uu____6840
+                (let uu____6841 = is_interface filename  in
+                 if uu____6841
                  then
-                   let uu____6843 =
-                     let uu____6847 = lowercase_module_name filename  in
-                     implementation_of_internal file_system_map1 uu____6847
+                   let uu____6844 =
+                     let uu____6848 = lowercase_module_name filename  in
+                     implementation_of_internal file_system_map1 uu____6848
                       in
-                   FStar_Util.iter_opt uu____6843
+                   FStar_Util.iter_opt uu____6844
                      (fun impl  ->
                         if
                           Prims.op_Negation
                             (FStar_List.contains impl all_command_line_files)
                         then
-                          let uu____6856 =
-                            let uu____6860 = FStar_ST.op_Bang mo_files  in
-                            impl :: uu____6860  in
-                          FStar_ST.op_Colon_Equals mo_files uu____6856
+                          let uu____6857 =
+                            let uu____6861 = FStar_ST.op_Bang mo_files  in
+                            impl :: uu____6861  in
+                          FStar_ST.op_Colon_Equals mo_files uu____6857
                         else ())
                  else ()))
             in
          FStar_List.iter (aux []) all_command_line_files;
-         (let uu____6922 = FStar_ST.op_Bang mo_files  in
-          FStar_List.iter (aux []) uu____6922)
+         (let uu____6923 = FStar_ST.op_Bang mo_files  in
+          FStar_List.iter (aux []) uu____6923)
           in
        full_cycle_detection all_cmd_line_files1 file_system_map;
        FStar_All.pipe_right all_cmd_line_files1
@@ -2008,20 +2009,20 @@ let (collect :
                FStar_Options.add_verify_module m));
        (let inlining_ifaces = FStar_ST.op_Bang interfaces_needing_inlining
            in
-        let uu____6994 =
+        let uu____6995 =
           profile
-            (fun uu____7013  ->
-               let uu____7014 =
-                 let uu____7016 = FStar_Options.codegen ()  in
-                 uu____7016 <> FStar_Pervasives_Native.None  in
+            (fun uu____7014  ->
+               let uu____7015 =
+                 let uu____7017 = FStar_Options.codegen ()  in
+                 uu____7017 <> FStar_Pervasives_Native.None  in
                topological_dependences_of file_system_map dep_graph
-                 inlining_ifaces all_cmd_line_files1 uu____7014)
+                 inlining_ifaces all_cmd_line_files1 uu____7015)
             "FStar.Parser.Dep.topological_dependences_of"
            in
-        match uu____6994 with
-        | (all_files,uu____7030) ->
-            ((let uu____7040 = FStar_Options.debug_any ()  in
-              if uu____7040
+        match uu____6995 with
+        | (all_files,uu____7031) ->
+            ((let uu____7041 = FStar_Options.debug_any ()  in
+              if uu____7041
               then
                 FStar_Util.print1 "Interfaces needing inlining: %s\n"
                   (FStar_String.concat ", " inlining_ifaces)
@@ -2039,16 +2040,16 @@ let (deps_of : deps -> Prims.string -> Prims.string Prims.list) =
 let (print_digest : (Prims.string * Prims.string) Prims.list -> Prims.string)
   =
   fun dig  ->
-    let uu____7093 =
+    let uu____7094 =
       FStar_All.pipe_right dig
         (FStar_List.map
-           (fun uu____7119  ->
-              match uu____7119 with
+           (fun uu____7120  ->
+              match uu____7120 with
               | (m,d) ->
-                  let uu____7133 = FStar_Util.base64_encode d  in
-                  FStar_Util.format2 "%s:%s" m uu____7133))
+                  let uu____7134 = FStar_Util.base64_encode d  in
+                  FStar_Util.format2 "%s:%s" m uu____7134))
        in
-    FStar_All.pipe_right uu____7093 (FStar_String.concat "\n")
+    FStar_All.pipe_right uu____7094 (FStar_String.concat "\n")
   
 let (print_make : deps -> unit) =
   fun deps  ->
@@ -2060,8 +2061,8 @@ let (print_make : deps -> unit) =
       (FStar_List.iter
          (fun f  ->
             let dep_node =
-              let uu____7168 = deps_try_find deps1 f  in
-              FStar_All.pipe_right uu____7168 FStar_Option.get  in
+              let uu____7169 = deps_try_find deps1 f  in
+              FStar_All.pipe_right uu____7169 FStar_Option.get  in
             let files =
               FStar_List.map (file_of_dep file_system_map all_cmd_line_files)
                 dep_node.edges
@@ -2074,28 +2075,28 @@ let (print_make : deps -> unit) =
   
 let (print_raw : deps -> unit) =
   fun deps  ->
-    let uu____7197 = deps.dep_graph  in
-    match uu____7197 with
+    let uu____7198 = deps.dep_graph  in
+    match uu____7198 with
     | Deps deps1 ->
-        let uu____7201 =
-          let uu____7203 =
+        let uu____7202 =
+          let uu____7204 =
             FStar_Util.smap_fold deps1
               (fun k  ->
                  fun dep_node  ->
                    fun out  ->
-                     let uu____7221 =
-                       let uu____7223 =
-                         let uu____7225 =
+                     let uu____7222 =
+                       let uu____7224 =
+                         let uu____7226 =
                            FStar_List.map dep_to_string dep_node.edges  in
-                         FStar_All.pipe_right uu____7225
+                         FStar_All.pipe_right uu____7226
                            (FStar_String.concat ";\n\t")
                           in
-                       FStar_Util.format2 "%s -> [\n\t%s\n] " k uu____7223
+                       FStar_Util.format2 "%s -> [\n\t%s\n] " k uu____7224
                         in
-                     uu____7221 :: out) []
+                     uu____7222 :: out) []
              in
-          FStar_All.pipe_right uu____7203 (FStar_String.concat ";;\n")  in
-        FStar_All.pipe_right uu____7201 FStar_Util.print_endline
+          FStar_All.pipe_right uu____7204 (FStar_String.concat ";;\n")  in
+        FStar_All.pipe_right uu____7202 FStar_Util.print_endline
   
 let (print_full : deps -> unit) =
   fun deps  ->
@@ -2106,13 +2107,13 @@ let (print_full : deps -> unit) =
       let visited_other_modules = FStar_Util.smap_create (Prims.of_int (41))
          in
       let should_visit lc_module_name =
-        (let uu____7297 =
+        (let uu____7298 =
            FStar_Util.smap_try_find remaining_output_files lc_module_name  in
-         FStar_Option.isSome uu____7297) ||
-          (let uu____7304 =
+         FStar_Option.isSome uu____7298) ||
+          (let uu____7305 =
              FStar_Util.smap_try_find visited_other_modules lc_module_name
               in
-           FStar_Option.isNone uu____7304)
+           FStar_Option.isNone uu____7305)
          in
       let mark_visiting lc_module_name =
         let ml_file_opt =
@@ -2124,31 +2125,31 @@ let (print_full : deps -> unit) =
         match ml_file_opt with
         | FStar_Pervasives_Native.None  -> ()
         | FStar_Pervasives_Native.Some ml_file ->
-            let uu____7347 =
-              let uu____7351 = FStar_ST.op_Bang order  in ml_file ::
-                uu____7351
+            let uu____7348 =
+              let uu____7352 = FStar_ST.op_Bang order  in ml_file ::
+                uu____7352
                in
-            FStar_ST.op_Colon_Equals order uu____7347
+            FStar_ST.op_Colon_Equals order uu____7348
          in
-      let rec aux uu___15_7414 =
-        match uu___15_7414 with
+      let rec aux uu___15_7415 =
+        match uu___15_7415 with
         | [] -> ()
         | lc_module_name::modules_to_extract ->
             let visit_file file_opt =
               match file_opt with
               | FStar_Pervasives_Native.None  -> ()
               | FStar_Pervasives_Native.Some file_name ->
-                  let uu____7442 = deps_try_find deps.dep_graph file_name  in
-                  (match uu____7442 with
+                  let uu____7443 = deps_try_find deps.dep_graph file_name  in
+                  (match uu____7443 with
                    | FStar_Pervasives_Native.None  ->
-                       let uu____7445 =
+                       let uu____7446 =
                          FStar_Util.format2
                            "Impossible: module %s: %s not found"
                            lc_module_name file_name
                           in
-                       failwith uu____7445
+                       failwith uu____7446
                    | FStar_Pervasives_Native.Some
-                       { edges = immediate_deps; color = uu____7449;_} ->
+                       { edges = immediate_deps; color = uu____7450;_} ->
                        let immediate_deps1 =
                          FStar_List.map
                            (fun x  ->
@@ -2157,14 +2158,14 @@ let (print_full : deps -> unit) =
                           in
                        aux immediate_deps1)
                in
-            ((let uu____7458 = should_visit lc_module_name  in
-              if uu____7458
+            ((let uu____7459 = should_visit lc_module_name  in
+              if uu____7459
               then
                 let ml_file_opt = mark_visiting lc_module_name  in
-                ((let uu____7466 = implementation_of deps lc_module_name  in
-                  visit_file uu____7466);
-                 (let uu____7471 = interface_of deps lc_module_name  in
-                  visit_file uu____7471);
+                ((let uu____7467 = implementation_of deps lc_module_name  in
+                  visit_file uu____7467);
+                 (let uu____7472 = interface_of deps lc_module_name  in
+                  visit_file uu____7472);
                  emit_output_file_opt ml_file_opt)
               else ());
              aux modules_to_extract)
@@ -2172,84 +2173,84 @@ let (print_full : deps -> unit) =
       let all_extracted_modules = FStar_Util.smap_keys orig_output_file_map
          in
       aux all_extracted_modules;
-      (let uu____7483 = FStar_ST.op_Bang order  in FStar_List.rev uu____7483)
+      (let uu____7484 = FStar_ST.op_Bang order  in FStar_List.rev uu____7484)
        in
     let sb =
-      let uu____7514 = FStar_BigInt.of_int_fs (Prims.of_int (10000))  in
-      FStar_StringBuffer.create uu____7514  in
+      let uu____7515 = FStar_BigInt.of_int_fs (Prims.of_int (10000))  in
+      FStar_StringBuffer.create uu____7515  in
     let pr str =
-      let uu____7524 = FStar_StringBuffer.add str sb  in
-      FStar_All.pipe_left (fun a1  -> ()) uu____7524  in
+      let uu____7525 = FStar_StringBuffer.add str sb  in
+      FStar_All.pipe_left (fun a1  -> ()) uu____7525  in
     let print_entry target first_dep all_deps =
       pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n"
        in
     let keys = deps_keys deps.dep_graph  in
     let output_file ext fst_file =
       let ml_base_name =
-        let uu____7577 =
-          let uu____7579 =
-            let uu____7583 = FStar_Util.basename fst_file  in
-            check_and_strip_suffix uu____7583  in
-          FStar_Option.get uu____7579  in
-        FStar_Util.replace_chars uu____7577 46 "_"  in
-      let uu____7588 = FStar_String.op_Hat ml_base_name ext  in
-      FStar_Options.prepend_output_dir uu____7588  in
+        let uu____7578 =
+          let uu____7580 =
+            let uu____7584 = FStar_Util.basename fst_file  in
+            check_and_strip_suffix uu____7584  in
+          FStar_Option.get uu____7580  in
+        FStar_Util.replace_chars uu____7578 46 "_"  in
+      let uu____7589 = FStar_String.op_Hat ml_base_name ext  in
+      FStar_Options.prepend_output_dir uu____7589  in
     let norm_path s = FStar_Util.replace_chars s 92 "/"  in
     let output_ml_file f =
-      let uu____7610 = output_file ".ml" f  in norm_path uu____7610  in
+      let uu____7611 = output_file ".ml" f  in norm_path uu____7611  in
     let output_krml_file f =
-      let uu____7622 = output_file ".krml" f  in norm_path uu____7622  in
+      let uu____7623 = output_file ".krml" f  in norm_path uu____7623  in
     let output_cmx_file f =
-      let uu____7634 = output_file ".cmx" f  in norm_path uu____7634  in
+      let uu____7635 = output_file ".cmx" f  in norm_path uu____7635  in
     let cache_file f =
-      let uu____7646 = cache_file_name f  in norm_path uu____7646  in
-    let uu____7648 =
+      let uu____7647 = cache_file_name f  in norm_path uu____7647  in
+    let uu____7649 =
       phase1 deps.file_system_map deps.dep_graph
         deps.interfaces_with_inlining true
        in
-    match uu____7648 with
+    match uu____7649 with
     | (widened,dep_graph) ->
         let all_checked_files =
           FStar_All.pipe_right keys
             (FStar_List.fold_left
                (fun all_checked_files  ->
                   fun file_name  ->
-                    let process_one_key uu____7690 =
+                    let process_one_key uu____7691 =
                       let dep_node =
-                        let uu____7692 =
+                        let uu____7693 =
                           deps_try_find deps.dep_graph file_name  in
-                        FStar_All.pipe_right uu____7692 FStar_Option.get  in
+                        FStar_All.pipe_right uu____7693 FStar_Option.get  in
                       let iface_deps =
-                        let uu____7702 = is_interface file_name  in
-                        if uu____7702
+                        let uu____7703 = is_interface file_name  in
+                        if uu____7703
                         then FStar_Pervasives_Native.None
                         else
-                          (let uu____7713 =
-                             let uu____7717 = lowercase_module_name file_name
+                          (let uu____7714 =
+                             let uu____7718 = lowercase_module_name file_name
                                 in
-                             interface_of deps uu____7717  in
-                           match uu____7713 with
+                             interface_of deps uu____7718  in
+                           match uu____7714 with
                            | FStar_Pervasives_Native.None  ->
                                FStar_Pervasives_Native.None
                            | FStar_Pervasives_Native.Some iface ->
-                               let uu____7729 =
-                                 let uu____7732 =
-                                   let uu____7733 =
+                               let uu____7730 =
+                                 let uu____7733 =
+                                   let uu____7734 =
                                      deps_try_find deps.dep_graph iface  in
-                                   FStar_Option.get uu____7733  in
-                                 uu____7732.edges  in
-                               FStar_Pervasives_Native.Some uu____7729)
+                                   FStar_Option.get uu____7734  in
+                                 uu____7733.edges  in
+                               FStar_Pervasives_Native.Some uu____7730)
                          in
                       let iface_deps1 =
                         FStar_Util.map_opt iface_deps
                           (FStar_List.filter
                              (fun iface_dep  ->
-                                let uu____7750 =
+                                let uu____7751 =
                                   FStar_Util.for_some
                                     (dep_subsumed_by iface_dep)
                                     dep_node.edges
                                    in
-                                Prims.op_Negation uu____7750))
+                                Prims.op_Negation uu____7751))
                          in
                       let norm_f = norm_path file_name  in
                       let files =
@@ -2279,29 +2280,29 @@ let (print_full : deps -> unit) =
                       let files4 = FStar_String.concat "\\\n\t" files3  in
                       let cache_file_name1 = cache_file file_name  in
                       let all_checked_files1 =
-                        let uu____7815 =
-                          let uu____7817 =
-                            let uu____7819 = module_name_of_file file_name
+                        let uu____7816 =
+                          let uu____7818 =
+                            let uu____7820 = module_name_of_file file_name
                                in
-                            FStar_Options.should_be_already_cached uu____7819
+                            FStar_Options.should_be_already_cached uu____7820
                              in
-                          Prims.op_Negation uu____7817  in
-                        if uu____7815
+                          Prims.op_Negation uu____7818  in
+                        if uu____7816
                         then
                           (print_entry cache_file_name1 norm_f files4;
                            cache_file_name1
                            ::
                            all_checked_files)
                         else all_checked_files  in
-                      let uu____7829 =
-                        let uu____7838 = FStar_Options.cmi ()  in
-                        if uu____7838
+                      let uu____7830 =
+                        let uu____7839 = FStar_Options.cmi ()  in
+                        if uu____7839
                         then
                           profile
-                            (fun uu____7859  ->
-                               let uu____7860 = dep_graph_copy dep_graph  in
+                            (fun uu____7860  ->
+                               let uu____7861 = dep_graph_copy dep_graph  in
                                topological_dependences_of'
-                                 deps.file_system_map uu____7860
+                                 deps.file_system_map uu____7861
                                  deps.interfaces_with_inlining [file_name]
                                  widened)
                             "FStar.Parser.Dep.topological_dependences_of_2"
@@ -2320,15 +2321,15 @@ let (print_full : deps -> unit) =
                              | FStar_Pervasives_Native.Some iface_deps2 ->
                                  maybe_widen_deps iface_deps2
                               in
-                           let uu____7898 =
+                           let uu____7899 =
                              FStar_Util.remove_dups
                                (fun x  -> fun y  -> x = y)
                                (FStar_List.append fst_files
                                   fst_files_from_iface)
                               in
-                           (uu____7898, false))
+                           (uu____7899, false))
                          in
-                      match uu____7829 with
+                      match uu____7830 with
                       | (all_fst_files_dep,widened1) ->
                           let all_checked_fst_dep_files =
                             FStar_All.pipe_right all_fst_files_dep
@@ -2338,93 +2339,93 @@ let (print_full : deps -> unit) =
                             FStar_String.concat " \\\n\t"
                               all_checked_fst_dep_files
                              in
-                          ((let uu____7945 = is_implementation file_name  in
-                            if uu____7945
+                          ((let uu____7946 = is_implementation file_name  in
+                            if uu____7946
                             then
-                              ((let uu____7949 =
+                              ((let uu____7950 =
                                   (FStar_Options.cmi ()) && widened1  in
-                                if uu____7949
+                                if uu____7950
                                 then
-                                  ((let uu____7953 = output_ml_file file_name
+                                  ((let uu____7954 = output_ml_file file_name
                                        in
-                                    print_entry uu____7953 cache_file_name1
+                                    print_entry uu____7954 cache_file_name1
                                       all_checked_fst_dep_files_string);
-                                   (let uu____7955 =
+                                   (let uu____7956 =
                                       output_krml_file file_name  in
-                                    print_entry uu____7955 cache_file_name1
+                                    print_entry uu____7956 cache_file_name1
                                       all_checked_fst_dep_files_string))
                                 else
-                                  ((let uu____7960 = output_ml_file file_name
+                                  ((let uu____7961 = output_ml_file file_name
                                        in
-                                    print_entry uu____7960 cache_file_name1
+                                    print_entry uu____7961 cache_file_name1
                                       "");
-                                   (let uu____7963 =
+                                   (let uu____7964 =
                                       output_krml_file file_name  in
-                                    print_entry uu____7963 cache_file_name1
+                                    print_entry uu____7964 cache_file_name1
                                       "")));
                                (let cmx_files =
                                   let extracted_fst_files =
                                     FStar_All.pipe_right all_fst_files_dep
                                       (FStar_List.filter
                                          (fun df  ->
-                                            (let uu____7988 =
+                                            (let uu____7989 =
                                                lowercase_module_name df  in
-                                             let uu____7990 =
+                                             let uu____7991 =
                                                lowercase_module_name
                                                  file_name
                                                 in
-                                             uu____7988 <> uu____7990) &&
-                                              (let uu____7994 =
+                                             uu____7989 <> uu____7991) &&
+                                              (let uu____7995 =
                                                  lowercase_module_name df  in
                                                FStar_Options.should_extract
-                                                 uu____7994)))
+                                                 uu____7995)))
                                      in
                                   FStar_All.pipe_right extracted_fst_files
                                     (FStar_List.map output_cmx_file)
                                    in
-                                let uu____8004 =
-                                  let uu____8006 =
+                                let uu____8005 =
+                                  let uu____8007 =
                                     lowercase_module_name file_name  in
-                                  FStar_Options.should_extract uu____8006  in
-                                if uu____8004
+                                  FStar_Options.should_extract uu____8007  in
+                                if uu____8005
                                 then
                                   let cmx_files1 =
                                     FStar_String.concat "\\\n\t" cmx_files
                                      in
-                                  let uu____8012 = output_cmx_file file_name
+                                  let uu____8013 = output_cmx_file file_name
                                      in
-                                  let uu____8014 = output_ml_file file_name
+                                  let uu____8015 = output_ml_file file_name
                                      in
-                                  print_entry uu____8012 uu____8014
+                                  print_entry uu____8013 uu____8015
                                     cmx_files1
                                 else ()))
                             else
-                              (let uu____8020 =
-                                 (let uu____8024 =
-                                    let uu____8026 =
+                              (let uu____8021 =
+                                 (let uu____8025 =
+                                    let uu____8027 =
                                       lowercase_module_name file_name  in
                                     has_implementation deps.file_system_map
-                                      uu____8026
+                                      uu____8027
                                      in
-                                  Prims.op_Negation uu____8024) &&
+                                  Prims.op_Negation uu____8025) &&
                                    (is_interface file_name)
                                   in
-                               if uu____8020
+                               if uu____8021
                                then
-                                 let uu____8029 =
+                                 let uu____8030 =
                                    (FStar_Options.cmi ()) &&
                                      (widened1 || true)
                                     in
-                                 (if uu____8029
+                                 (if uu____8030
                                   then
-                                    let uu____8033 =
+                                    let uu____8034 =
                                       output_krml_file file_name  in
-                                    print_entry uu____8033 cache_file_name1
+                                    print_entry uu____8034 cache_file_name1
                                       all_checked_fst_dep_files_string
                                   else
-                                    (let uu____8037 =
+                                    (let uu____8038 =
                                        output_krml_file file_name  in
-                                     print_entry uu____8037 cache_file_name1
+                                     print_entry uu____8038 cache_file_name1
                                        ""))
                                else ()));
                            all_checked_files1)
@@ -2433,16 +2434,16 @@ let (print_full : deps -> unit) =
                       "FStar.Parser.Dep.process_one_key") [])
            in
         let all_fst_files =
-          let uu____8051 =
+          let uu____8052 =
             FStar_All.pipe_right keys (FStar_List.filter is_implementation)
              in
-          FStar_All.pipe_right uu____8051
+          FStar_All.pipe_right uu____8052
             (FStar_Util.sort_with FStar_String.compare)
            in
         let all_fsti_files =
-          let uu____8073 =
+          let uu____8074 =
             FStar_All.pipe_right keys (FStar_List.filter is_interface)  in
-          FStar_All.pipe_right uu____8073
+          FStar_All.pipe_right uu____8074
             (FStar_Util.sort_with FStar_String.compare)
            in
         let all_ml_files =
@@ -2451,11 +2452,11 @@ let (print_full : deps -> unit) =
             (FStar_List.iter
                (fun fst_file  ->
                   let mname = lowercase_module_name fst_file  in
-                  let uu____8114 = FStar_Options.should_extract mname  in
-                  if uu____8114
+                  let uu____8115 = FStar_Options.should_extract mname  in
+                  if uu____8115
                   then
-                    let uu____8117 = output_ml_file fst_file  in
-                    FStar_Util.smap_add ml_file_map mname uu____8117
+                    let uu____8118 = output_ml_file fst_file  in
+                    FStar_Util.smap_add ml_file_map mname uu____8118
                   else ()));
           sort_output_files ml_file_map  in
         let all_krml_files =
@@ -2464,8 +2465,8 @@ let (print_full : deps -> unit) =
             (FStar_List.iter
                (fun fst_file  ->
                   let mname = lowercase_module_name fst_file  in
-                  let uu____8144 = output_krml_file fst_file  in
-                  FStar_Util.smap_add krml_file_map mname uu____8144));
+                  let uu____8145 = output_krml_file fst_file  in
+                  FStar_Util.smap_add krml_file_map mname uu____8145));
           sort_output_files krml_file_map  in
         let print_all tag files =
           pr tag;
@@ -2481,15 +2482,15 @@ let (print_full : deps -> unit) =
   
 let (print : deps -> unit) =
   fun deps  ->
-    let uu____8194 = FStar_Options.dep ()  in
-    match uu____8194 with
+    let uu____8195 = FStar_Options.dep ()  in
+    match uu____8195 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "full" ->
-        profile (fun uu____8203  -> print_full deps)
+        profile (fun uu____8204  -> print_full deps)
           "FStar.Parser.Deps.print_full_deps"
     | FStar_Pervasives_Native.Some "graph" -> print_graph deps.dep_graph
     | FStar_Pervasives_Native.Some "raw" -> print_raw deps
-    | FStar_Pervasives_Native.Some uu____8209 ->
+    | FStar_Pervasives_Native.Some uu____8210 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
@@ -2501,38 +2502,38 @@ let (print_fsmap :
   fun fsmap  ->
     FStar_Util.smap_fold fsmap
       (fun k  ->
-         fun uu____8264  ->
+         fun uu____8265  ->
            fun s  ->
-             match uu____8264 with
+             match uu____8265 with
              | (v0,v1) ->
-                 let uu____8293 =
-                   let uu____8295 =
+                 let uu____8294 =
+                   let uu____8296 =
                      FStar_Util.format3 "%s -> (%s, %s)" k
                        (FStar_Util.dflt "_" v0) (FStar_Util.dflt "_" v1)
                       in
-                   FStar_String.op_Hat "; " uu____8295  in
-                 FStar_String.op_Hat s uu____8293) ""
+                   FStar_String.op_Hat "; " uu____8296  in
+                 FStar_String.op_Hat s uu____8294) ""
   
 let (module_has_interface : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps  ->
     fun module_name  ->
-      let uu____8316 =
-        let uu____8318 = FStar_Ident.string_of_lid module_name  in
-        FStar_String.lowercase uu____8318  in
-      has_interface deps.file_system_map uu____8316
+      let uu____8317 =
+        let uu____8319 = FStar_Ident.string_of_lid module_name  in
+        FStar_String.lowercase uu____8319  in
+      has_interface deps.file_system_map uu____8317
   
 let (deps_has_implementation : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps  ->
     fun module_name  ->
       let m =
-        let uu____8334 = FStar_Ident.string_of_lid module_name  in
-        FStar_String.lowercase uu____8334  in
+        let uu____8335 = FStar_Ident.string_of_lid module_name  in
+        FStar_String.lowercase uu____8335  in
       FStar_All.pipe_right deps.all_files
         (FStar_Util.for_some
            (fun f  ->
               (is_implementation f) &&
-                (let uu____8345 =
-                   let uu____8347 = module_name_of_file f  in
-                   FStar_String.lowercase uu____8347  in
-                 uu____8345 = m)))
+                (let uu____8346 =
+                   let uu____8348 = module_name_of_file f  in
+                   FStar_String.lowercase uu____8348  in
+                 uu____8346 = m)))
   

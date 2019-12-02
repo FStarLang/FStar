@@ -111,18 +111,6 @@ let term_as_formula' (t:term) : Tac formula =
             App h0 (fst t)
         end
 
-    // This case is shady, our logical connectives are squashed and we
-    // usually don't get arrows. Nevertheless keeping it in case it helps.
-    | Tv_Arrow b c ->
-        let bv, _ = inspect_binder b in
-        begin match inspect_comp c with
-        | C_Total t _ ->
-            if is_free bv t
-            then Forall bv t
-            else Implies (type_of_bv bv) t
-        | _ -> F_Unknown
-        end
-
     | Tv_Const (C_Int i) ->
         IntLit i
 
@@ -162,13 +150,13 @@ let unsquash_total (t : term) : term =
     | _ -> t
 
 // Unsquashing
-let rec term_as_formula (t:term) : Tac formula =
+let term_as_formula (t:term) : Tac formula =
     match unsquash t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
 
-let rec term_as_formula_total (t:term) : Tac formula =
+let term_as_formula_total (t:term) : Tac formula =
     term_as_formula' (unsquash_total t)
 
 let formula_as_term_view (f:formula) : Tot term_view =

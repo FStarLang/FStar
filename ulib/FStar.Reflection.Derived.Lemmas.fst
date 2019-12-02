@@ -46,7 +46,7 @@ let rec mk_app_collect_inv_s t args =
     | _ -> ()
 
 val mk_app_collect_inv : (t:term) -> Lemma (uncurry mk_app (collect_app t) == t)
-let rec mk_app_collect_inv t = mk_app_collect_inv_s t []
+let mk_app_collect_inv t = mk_app_collect_inv_s t []
 
 (*
  * The way back is not stricly true: the list of arguments could grow.

@@ -293,7 +293,7 @@ let rec size_remove (#a:eqtype) #f x s = match s with
   | hd::tl ->
     if x = hd then () else size_remove #_ #f x tl
 
-let rec size_singleton (#a:eqtype) #f x = ()
+let size_singleton (#a:eqtype) #f x = ()
 
 val subset_size: #a:eqtype -> #f:cmp a -> x:ordset a f -> y:ordset a f
                  -> Lemma (requires (subset #a #f x y))
@@ -316,7 +316,8 @@ assume val size_union: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 
 (**********)
 
-abstract let rec fold (#a:eqtype) (#acc:Type) (#f:cmp a) (g:acc -> a -> acc) (init:acc) (s:ordset a f)
+abstract
+let fold (#a:eqtype) (#acc:Type) (#f:cmp a) (g:acc -> a -> acc) (init:acc) (s:ordset a f)
   :Tot acc = List.Tot.fold_left g init s
 
 private abstract
