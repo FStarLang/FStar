@@ -41,9 +41,6 @@ assume val get (r:hprop)
              (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
 
-// TODO: How should we account for locks here? Should this just be trusted and only used through
-// very specific functions such as ptr_update? Should we take a mem instead and only
-// expose m_actions from Steel.Memory?
 assume val put (r_init r_out:hprop) (m:hmem r_out)
   :Steel unit (r_init) (fun _ -> r_out)
              (requires fun m -> True)
