@@ -37,17 +37,17 @@ effect Steel
   )
 
 assume val get (r:hprop)
-  :Steel mem (r) (fun _ -> r)
+  :Steel (hmem r) (r) (fun _ -> r)
              (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
 
 // TODO: How should we account for locks here? Should this just be trusted and only used through
 // very specific functions such as ptr_update? Should we take a mem instead and only
 // expose m_actions from Steel.Memory?
-assume val put (r_init r_out:hprop) (h:heap)
+assume val put (r_init r_out:hprop) (m:hmem r_out)
   :Steel unit (r_init) (fun _ -> r_out)
-             (requires (fun m -> interp r_out h))
-             (ensures (fun _ _ m1 -> heap_of_mem m1 == h))
+             (requires fun m -> True)
+             (ensures (fun _ _ m1 -> m1 == m))
 
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
   : Lemma (requires interp (ptr_perm r p) h)
@@ -120,7 +120,7 @@ val ptr_update (#a:Type) (r:ref a) (v:a) : Steel unit
 let ptr_update #a r v =
   perm_to_ptr #a full_permission r;
   let h = get (ptr_perm r full_permission) in
-  let (| _, h' |) = upd r v (heap_of_mem h) in
+  let (| _, h' |) = upd r v h in
   put (ptr_perm r full_permission) (pts_to r full_permission v) h'
 
 let fptr (#a:Type) (r:ref a) : hprop = ptr_perm r full_permission
