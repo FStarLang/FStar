@@ -318,8 +318,14 @@ val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
 // Allocation
 ////////////////////////////////////////////////////////////////////////////////
 val mem : Type u#1
+val locks_invariant : mem -> hprop
+
 val heap_of_mem (x:mem) : heap
 
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
      tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
+
+val m_disjoint: mem -> heap -> prop
+
+val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem

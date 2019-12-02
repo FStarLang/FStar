@@ -768,6 +768,8 @@ type mem = {
   )
 }
 
+let locks_invariant m = lock_store_invariant m.locks
+
 let heap_of_mem (x:mem) : heap = x.heap
 
 let alloc #a v frame m
@@ -802,13 +804,16 @@ let m_disjoint (m:mem) (h:heap) =
   disjoint (heap_of_mem m) h /\
   (forall i. i >= m.ctr ==> h i == None)
 
+let upd_joined_heap (m:mem) (h:heap{m_disjoint m h}) =
+  let h0 = heap_of_mem m in
+  let h = join h0 h in
+  {m with heap = h}
+
 let m_action_depends_only_on #pre #a #post (f:pre_m_action pre a post)
   = forall (m0:hmem pre)
       (h1:heap {m_disjoint m0 h1})
       (post: (x:a -> fp_prop (post x))).
-      (let h0 = heap_of_mem m0 in
-       let h = join h0 h1 in
-       let m1 = { m0 with heap = h } in
+      (let m1 = upd_joined_heap m0 h1 in
        let (| x0, m |) = f m0 in
        let (| x1, m' |) = f m1 in
        x0 == x1 /\
