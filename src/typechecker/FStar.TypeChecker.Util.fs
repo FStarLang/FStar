@@ -258,23 +258,61 @@ let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt 
 
 let destruct_wp_comp c : (universe * typ * typ) = U.destruct_comp c
 
-let lift_comp env (c:comp_typ) lift : comp * guard_t =
-  ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
+let lift_comp env (c:comp_typ) (lift:Env.lift_comp_t) : comp * guard_t =
+  ({ c with flags = [] }) |> S.mk_Comp |> lift env
+
+let join_layered env (l:lident) (m:lident) : (lident * lift_comp_t * lift_comp_t) =
+  let rec aux m (f_m:comp -> comp) =
+    match Env.join_opt env l m with
+    | None ->
+      (match Env.lookup_effect_abbrev env [U_unknown] m with
+       | None ->
+         raise_error (Errors.Fatal_EffectsCannotBeComposed,
+           BU.format2 "Effects %s and %s cannot be composed"
+             (Print.lid_to_string l)
+             (Print.lid_to_string m)) env.range
+       | Some (_, c) ->
+         let m = U.comp_effect_name c in
+         aux m (fun c -> c |> f_m |> unfold_effect_abbrev_one_step env |> fst))
+    | Some (n, lift1, lift2) ->
+      n, lift1.mlift_wp, (fun en c -> c |> f_m |> lift2.mlift_wp en) in
+  aux m (fun c -> c)
+
+let join env l1 l2 =
+  let unfold_first (f:lift_comp_t) : lift_comp_t =
+    fun en c -> c |> Env.unfold_effect_abbrev en |> S.mk_Comp |> f en in
+
+  let norm_l1, norm_l2 = norm_eff_name env l1, norm_eff_name env l2 in
+  let l1_layered, l2_layered = Env.is_layered_effect env norm_l1, Env.is_layered_effect env norm_l2 in
+  
+  if (l1_layered && l2_layered) ||
+     (not l1_layered && not l2_layered)
+
+  then
+    let m, lift1, lift2 = Env.join env norm_l1 norm_l2 in
+    m, unfold_first lift1.mlift_wp, unfold_first lift2.mlift_wp
+
+  else
+    let norm_l, m, flip = if l1_layered then norm_l1, l2, false else norm_l2, l1, true in
+    let m, lift1, lift2 = join_layered env norm_l m in
+    if flip then m, lift2, unfold_first lift1 else m, unfold_first lift1, lift2
 
 let join_effects env l1 l2 =
-  let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
+  let m, _, _ = join env l1 l2 in
   m
 
-let join_lcomp env c1 c2 =
+let join_lcomp env c1 c2 : lident * guard_t =
   if TcComm.is_total_lcomp c1
   && TcComm.is_total_lcomp c2
-  then C.effect_Tot_lid
-  else join_effects env c1.eff_name c2.eff_name
+  then C.effect_Tot_lid, Env.trivial_guard
+  else
+    let l1, g1 = c1 |> lcomp_comp |> (fun (c, g) -> U.comp_effect_name c, g) in
+    let l2, g2 = c2 |> lcomp_comp |> (fun (c, g) -> U.comp_effect_name c, g) in
+    join_effects env l1 l2, Env.conj_guard g1 g2
 
-let lift_comps env c1 c2 (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
-  let c1 = Env.unfold_effect_abbrev env c1 in
-  let c2 = Env.unfold_effect_abbrev env c2 in
-  let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
+let lift_comps env (c1:comp) (c2:comp) (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
+  let c1, c2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
+  let m, lift1, lift2 = join env c1.effect_name c2.effect_name in
 
   let c1, g1 = lift_comp env c1 lift1 in
   let c2, g2 =
@@ -724,7 +762,7 @@ let strengthen_precondition
                    let c, g_s = strengthen_comp env reason c f flags in
                    c, Env.conj_guard g_c g_s
          in
-       TcComm.mk_lcomp (norm_eff_name env lc.eff_name)
+       TcComm.mk_lcomp (lc.eff_name)
                        lc.res_typ
                        flags
                        strengthen,
@@ -783,9 +821,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || debug env <| Options.Other "bind"
       then f ()
   in
+  
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
-  let joined_eff = join_lcomp env lc1 lc2 in
+
+  let joined_eff, g_join = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1
       || should_not_inline_lc lc2
@@ -873,20 +913,19 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
                             reason
                             (Print.comp_to_string c));
-            c, Env.conj_guard g_c (Env.conj_guard g_c1 g_c2)
+            c, Env.conj_guard g_c (Env.conj_guard (Env.conj_guard g_c1 g_c2) g_join)
           | Inr reason ->
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
             let mk_bind c1 b c2 =  (* AR: end code for inlining pure and ghost terms *)
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
-              c, Env.conj_guard (Env.conj_guard g_c1 g_c2) g_bind in
+              c, Env.conj_guard (Env.conj_guard (Env.conj_guard g_c1 g_c2) g_join) g_bind in
 
             let mk_seq c1 b c2 =
                 //c1 is PURE or GHOST
-                let c1 = Env.unfold_effect_abbrev env c1 in
-                let c2 = Env.unfold_effect_abbrev env c2 in
-                let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
+                let c1, c2 = Env.comp_to_comp_typ env c1, Env.comp_to_comp_typ env c2 in
+                let m, _, lift2 = join env c1.effect_name c2.effect_name in
                 let c2, g2 = lift_comp env c2 lift2 in
                 let u1, t1, wp1 = destruct_wp_comp c1 in
                 let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
@@ -897,7 +936,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                     r1
                 in
                 let c, g_s = strengthen_comp env None c2 vc1 bind_flags in
-                c, Env.conj_guards [g_c1; g_c2; g2; g_s]
+                c, Env.conj_guards [g_c1; g_c2; g_join; g2; g_s]
             in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let u_res_t1, res_t1 =
@@ -1579,7 +1618,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                                  | CPS -> [CPS] // KM : Not exactly sure if it is necessary
                                                  | _ -> [])
           in
-          let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
+          let lc = TcComm.mk_lcomp (lc.eff_name) t flags strengthen in
           let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
@@ -2379,10 +2418,8 @@ let must_erase_for_extraction (g:env) (t:typ) =
     in
     aux g t
 
-let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
+let fresh_effect_repr env r eff_name signature repr_ts_opt u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
-  
-  let _, signature = Env.inst_tscheme signature_ts in
 
   (*
    * We go through the binders in the signature a -> bs
@@ -2418,9 +2455,15 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
   | _ -> fail signature
 
 let fresh_effect_repr_en env r eff_name u a_tm =
-  eff_name
-  |> Env.get_effect_decl env
-  |> (fun ed -> fresh_effect_repr env r eff_name ed.signature (ed |> U.get_eff_repr)  u a_tm)
+  //this works for both effects and effect abbrevs
+  let signature = Env.try_lookup_and_inst_lid env [u] eff_name |> must |> fst in
+
+  //now we need to get the repr_ts
+  let repr_ts_opt = BU.bind_opt
+    (Env.effect_decl_opt env eff_name)
+    (fun x -> x |> fst |> (fun ed -> U.get_eff_repr ed)) in
+
+  fresh_effect_repr env r eff_name signature repr_ts_opt u a_tm
 
 let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in
@@ -2512,7 +2555,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let guard_f =
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
-    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) in
+    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env (Env.norm_eff_name env ct.effect_name)) in
     List.fold_left2
       (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
       Env.trivial_guard c_is f_sort_is in
@@ -2556,7 +2599,9 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   mk (Tm_app (lift, args)) None e.pos
 
 let get_mlift_for_subeff env sub =
-  if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
+  //source is allowed to be an effect abbreviation for lifts to layered effects
+  if sub.source |> Env.norm_eff_name env |> Env.is_layered_effect env ||
+     sub.target |> Env.is_layered_effect env
 
   then
     ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must);
