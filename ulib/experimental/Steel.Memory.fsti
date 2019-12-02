@@ -134,59 +134,6 @@ val star_congruence (p1 p2 p3 p4:hprop)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
 ////////////////////////////////////////////////////////////////////////////////
-// Actions:
-// sel, split, update
-////////////////////////////////////////////////////////////////////////////////
-let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  hheap fp -> (x:a & hheap (fp' x))
-
-let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
-  forall frame h0.
-    interp (fp `star` frame) h0 ==>
-    (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1)
-
-let depends_only_on (q:heap -> prop) (fp: hprop) =
-  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
-
-let fp_prop fp = p:(heap -> prop){p `depends_only_on` fp}
-
-let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
-  = forall (h0:hheap pre)
-      (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (interp pre (join h0 h1) /\ (
-       let (| x0, h |) = f h0 in
-       let (| x1, h' |) = f (join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
-
-let action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_action fp a fp'{ is_frame_preserving f /\
-                         action_depends_only_on_fp f }
-
-val sel (#a:_) (r:ref a) (m:hheap (ptr r))
-  : a
-
-/// sel respect pts_to
-val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
-  : Lemma (interp (ptr r) m /\
-           interp (pts_to r p (sel r m)) m)
-
-/// memories satisfying [p1 `star` p2] can be split
-/// into disjoint fragments satisfying each of them
-val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
-  : Tot (ms:(hheap p1 & hheap p2){
-            let m1, m2 = ms in
-            disjoint m1 m2 /\
-            m == join m1 m2})
-
-/// upd requires a full permission
-val upd (#a:_) (r:ref a) (v:a)
-  : action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
-
-////////////////////////////////////////////////////////////////////////////////
 // wand
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -291,6 +238,12 @@ val emp_unit (p:hprop)
 // refinement
 ////////////////////////////////////////////////////////////////////////////////
 
+let depends_only_on (q:heap -> prop) (fp: hprop) =
+  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
+  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+
+let fp_prop fp = p:(heap -> prop){p `depends_only_on` fp}
+
 val weaken_depends_only_on (q:heap -> prop) (fp fp': hprop)
   : Lemma (depends_only_on q fp ==> depends_only_on q (fp `star` fp'))
 
@@ -306,6 +259,58 @@ val refine_star (p0 p1:hprop) (q:fp_prop p0)
 val interp_depends_only (p:hprop)
   : Lemma (interp p `depends_only_on` p)
 
+////////////////////////////////////////////////////////////////////////////////
+// Memory
+////////////////////////////////////////////////////////////////////////////////
+val mem : Type u#1
+val locks_invariant : mem -> hprop
+
+val heap_of_mem (x:mem) : heap
+
+val m_disjoint: mem -> heap -> prop
+
+val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
+
+let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
+
+////////////////////////////////////////////////////////////////////////////////
+// Actions:
+// sel, split, update
+////////////////////////////////////////////////////////////////////////////////
+let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hheap fp -> (x:a & hheap (fp' x))
+
+let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
+  forall frame h0.
+    interp (fp `star` frame) h0 ==>
+    (let (| x, h1 |) = f h0 in
+     interp (fp' x `star` frame) h1)
+
+let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
+  = forall (h0:hheap pre)
+      (h1:heap {disjoint h0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (interp pre (join h0 h1) /\ (
+       let (| x0, h |) = f h0 in
+       let (| x1, h' |) = f (join h0 h1) in
+       x0 == x1 /\
+       (post x0 h <==> post x1 h')))
+
+let action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_action fp a fp'{ is_frame_preserving f /\
+                         action_depends_only_on_fp f }
+
+
+let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hmem fp -> (x:a & hmem (fp' x))
+
+val m_action_depends_only_on (#pre:hprop) (#a:Type) (#post:a -> hprop) (f:pre_m_action pre a post) : prop
+
+val is_m_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') : prop
+
+let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_m_action fp a fp'{ is_m_frame_preserving f /\ m_action_depends_only_on f }
+
 val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
                   (#frame:hprop) (q:fp_prop frame)
    : Lemma (forall (h0:hheap (fp `star` frame)).
@@ -314,18 +319,26 @@ val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
                (let (| x, h1 |) = act h0 in
                 q h1)))
 
-////////////////////////////////////////////////////////////////////////////////
-// Allocation
-////////////////////////////////////////////////////////////////////////////////
-val mem : Type u#1
-val locks_invariant : mem -> hprop
+val sel (#a:_) (r:ref a) (m:hheap (ptr r))
+  : a
 
-val heap_of_mem (x:mem) : heap
+/// sel respect pts_to
+val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
+  : Lemma (interp (ptr r) m /\
+           interp (pts_to r p (sel r m)) m)
+
+/// memories satisfying [p1 `star` p2] can be split
+/// into disjoint fragments satisfying each of them
+val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
+  : Tot (ms:(hheap p1 & hheap p2){
+            let m1, m2 = ms in
+            disjoint m1 m2 /\
+            m == join m1 m2})
+
+/// upd requires a full permission
+val upd (#a:_) (r:ref a) (v:a)
+  : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
 
 val alloc (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
      tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
-
-val m_disjoint: mem -> heap -> prop
-
-val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
