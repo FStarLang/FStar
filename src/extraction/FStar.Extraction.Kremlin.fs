@@ -750,8 +750,13 @@ and translate_expr env e: expr =
          string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc_of_list" ->
       EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of ralloc_drgn is same as ralloc
+    *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
+    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn")->
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
@@ -772,8 +777,13 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "LowStar.UninitializedBuffer.ugcmalloc" ->
       EBufCreateNoInit (Eternal, translate_expr env elen)
 
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of ralloc_drgn_mm is same as ralloc_mm
+    *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ->
+    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn_mm") ->
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
@@ -838,6 +848,15 @@ and translate_expr env e: expr =
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
+      EUnit
+
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of new_drgn and free_drgn is same just unit
+    *)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid ])
+    when (string_of_mlpath p = "FStar.HyperStack.ST.free_drgn") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.new_drgn") ->
       EUnit
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ebuf; _eseq ])
