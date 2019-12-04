@@ -39,6 +39,7 @@ module FC = FStar.Const
 - v27: Added PConstant
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
+- v29: added EComment
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -129,6 +130,7 @@ and expr =
   | EBufFree of expr
   | EBufCreateNoInit of lifetime * expr
   | EAbortT of string * typ
+  | EComment of string * expr * string
 
 
 and op =
@@ -908,6 +910,22 @@ and translate_expr env e: expr =
       | _ ->
           failwith "Cannot extract string_of_literal applied to a non-literal"
       end
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = ebefore }; e ; { expr = eafter } ] )
+    when string_of_mlpath p = "C.comment_gen" ->
+      begin match ebefore, eafter with
+      | MLE_Const (MLC_String sbefore), MLE_Const (MLC_String safter) ->
+          if contains sbefore "*/"
+          then failwith "Before Comment contains end-of-comment marker";
+          if contains safter "*/"
+          then failwith "After Comment contains end-of-comment marker";
+          EComment (sbefore, translate_expr env e, safter)
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
+      end
+
+  | MLE_App ({ expr = MLE_Name ([ "C" ], "comment_gen") }, args) ->
+     failwith ("comment_gen called with wrong number of arguments: " ^ string_of_int (List.length args))
 
   | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
       begin match e with
