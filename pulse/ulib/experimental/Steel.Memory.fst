@@ -640,7 +640,7 @@ let upd_array' (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
   = fun h ->
     (| (), upd_array_seq' a v h |)
 
-#push-options "--z3rlimit 100 --initial_fuel 3 --initial_ifuel 3 --max_fuel 3 --max_ifuel 3"
+#push-options "--z3rlimit 500 --initial_fuel 3 --initial_ifuel 3 --max_fuel 3 --max_ifuel 3"
 let upd_array_lemma'
   (#t:_)
   (a:array_ref t)
@@ -1120,7 +1120,7 @@ let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
 val alloc_action (#a:_) (v:a)
   : m_action emp (ref a) (fun x -> pts_to x full_permission v)
 
-#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4  --max_fuel 4 --max_ifuel 4"
 let singleton_heap #a (x:ref a) (c:cell) : heap =
     F.on _ (fun i -> if i = x then Some c else None)
 
@@ -1154,7 +1154,7 @@ let alloc_pre_m_action (#a:_) (v:a)
     (| x, t |)
 #pop-options
 
-#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4  --max_fuel 4 --max_ifuel 4"
 let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
   : Lemma
     (requires
@@ -1180,7 +1180,7 @@ let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
     assert (interp (pts_to x full_permission v `star` frame `star` mem_invariant m) h1)
 #pop-options
 
-#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
+#push-options "--z3rlimit 500 --initial_ifuel 4 --initial_fuel 4 --max_fuel 4 --max_ifuel 4"
 let alloc_is_frame_preserving (#a:_) (v:a)
   : Lemma (is_m_frame_preserving (alloc_pre_m_action v))
   = let aux (frame:hprop) (m:hmem (emp `star` frame))
@@ -1194,7 +1194,7 @@ let alloc_is_frame_preserving (#a:_) (v:a)
     ()
 #pop-options
 
-#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4"
+#push-options "--z3rlimit 100 --initial_ifuel 4 --initial_fuel 4  --max_fuel 4 --max_ifuel 4"
 let alloc_preserves_disjoint (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
   : Lemma (let (| x0, m |) = alloc_pre_m_action v m0 in
            disjoint (heap_of_mem m) h1)
