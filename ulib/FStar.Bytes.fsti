@@ -296,7 +296,7 @@ open FStar.HyperStack.ST
 
 type lbuffer (l:UInt32.t) = b:B.buffer UInt8.t {B.length b == U32.v l}
 
-val of_buffer (#p #q:_) (l:UInt32.t) (buf:B.mbuffer UInt8.t p q{B.length buf == U32.v l})
+val of_buffer (l:UInt32.t) (#p #q:_) (buf:B.mbuffer UInt8.t p q{B.length buf == U32.v l})
   : Stack (b:bytes{length b = UInt32.v l})
   (requires fun h0 ->
     B.live h0 buf)
