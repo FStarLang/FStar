@@ -78,3 +78,13 @@ let test_int_nat_2 (x : int) : Tot (erased nat) = hide x
 let test_int_nat_1' (x : erased int) : GTot nat = x
 [@expect_failure]
 let test_int_nat_2' (x : int) : Tot (erased nat) = x
+
+
+(*
+ * Conditionally erased types
+ *)
+assume val flag : bool
+
+let c_erased_int : Type0 = if flag then int else erased int
+
+let c_erased_zero () : c_erased_int = if flag then 0 else hide 0
