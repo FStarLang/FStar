@@ -1364,14 +1364,15 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
         | Yes _ | Maybe -> Maybe
         | No ->
           let _, _, br_body = Subst.open_branch br in
-          let br_erased =
+          match
             br_body
             |> check_erased
                 (br_body
                  |> Free.names
                  |> BU.set_elements
-                 |> Env.push_bvs env) in
-          if br_erased = No then No else Maybe) No
+                 |> Env.push_bvs env) with
+          | No -> No
+          | _ -> Maybe) No
 
 
     (* Anything else cannot be `erased` *)
