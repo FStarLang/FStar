@@ -1346,7 +1346,8 @@ let check_erased (env:Env.env) (t:term) : isErased =
     (* In these two cases, we cannot guarantee that `t` is not
      * an erased, so we're conservatively returning `false` *)
     | Tm_uvar _, _
-    | Tm_unknown, _ ->
+    | Tm_unknown, _
+    | Tm_match _, _ ->
       Maybe
 
     (* Anything else cannot be `erased` *)
