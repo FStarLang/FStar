@@ -39,7 +39,6 @@ module FC = FStar.Const
 - v27: Added PConstant
 - v28: added many things for which the AST wasn't bumped; bumped it for
   TConstBuf which will expect will be used soon
-- v29: added EComment
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -131,7 +130,7 @@ and expr =
   | EBufCreateNoInit of lifetime * expr
   | EAbortT of string * typ
   | EComment of string * expr * string
-
+  | EStandaloneComment of string
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -924,8 +923,16 @@ and translate_expr env e: expr =
           failwith "Cannot extract comment applied to a non-literal"
       end
 
-  | MLE_App ({ expr = MLE_Name ([ "C" ], "comment_gen") }, args) ->
-     failwith ("comment_gen called with wrong number of arguments: " ^ string_of_int (List.length args))
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = e } ] )
+    when string_of_mlpath p = "C.comment" ->
+      begin match e with
+      | MLE_Const (MLC_String s) ->
+          if contains s "*/"
+          then failwith "Standalone Comment contains end-of-comment marker";
+          EStandaloneComment s
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
+      end
 
   | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
       begin match e with
