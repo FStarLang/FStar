@@ -19,7 +19,7 @@ module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open Steel.Permissions
 
-#set-options "--initial_fuel 3 --max_fuel 3 --initial_ifuel 3 --max_ifuel 3 "
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2 "
 
 // In the future, we may have other cases of cells
 // for arrays and structs
@@ -116,7 +116,7 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
   )
 
 
-#push-options "--z3rlimit_factor 4 --initial_fuel 2 --initial_ifuel 2"
+#push-options "--z3rlimit_factor 4"
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
@@ -177,7 +177,7 @@ let join_commutative' (m0 m1:heap)
 
 let join_commutative m0 m1 = ()
 
-#push-options "--z3rlimit_factor 12 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_fuel 2"
+#push-options "--z3rlimit_factor 12"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -200,7 +200,7 @@ let join_associative' (m0 m1 m2:heap)
 
 let join_associative (m0 m1 m2:heap) = join_associative' m0 m1 m2
 
-#push-options "--z3rlimit_factor 4 --max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+#push-options "--z3rlimit_factor 4"
 let join_associative2 (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -321,6 +321,8 @@ let star = Star
 let wand = Wand
 let h_exists = Ex
 let h_forall = All
+
+#set-options "--max_fuel 1 --initial_fuel 1"
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
@@ -508,7 +510,9 @@ let intro_wand (p q r:hprop) (m:hheap q)
     in
     intro_wand_alt p r m
 
+#push-options "--max_fuel 2"
 let elim_wand (p1 p2:hprop) (m:heap) = ()
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // or
@@ -522,9 +526,11 @@ let intro_or_r (p1 p2:hprop) (m:hheap p2)
   : Lemma (interp (h_or p1 p2) m)
   = ()
 
+#push-options "--max_fuel 2"
 let or_star (p1 p2 p:hprop) (m:hheap ((p1 `star` p) `h_or` (p2 `star` p)))
   : Lemma (interp ((p1 `h_or` p2) `star` p) m)
   = ()
+#pop-options
 
 let elim_or (p1 p2 q:hprop) (m:hheap (p1 `h_or` p2))
   : Lemma (((forall (m:hheap p1). interp q m) /\
@@ -578,7 +584,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#push-options "--z3rlimit 500"
+#push-options "--z3rlimit 50"
 #push-options "--warn_error -271" //local patterns miss variables; ok
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
@@ -652,12 +658,10 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
 #pop-options
 #pop-options
 
-#push-options "--z3rlimit 50"
 let affine_star (p q:hprop) (m:heap)
   : Lemma
     (ensures (interp (p `star` q) m ==> interp p m /\ interp q m))
   = ()
-#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // emp
@@ -667,6 +671,7 @@ let intro_emp (m:heap)
   : Lemma (interp emp m)
   = ()
 
+#push-options "--max_fuel 2"
 let emp_unit (p:hprop)
   : Lemma
     ((p `star` emp) `equiv` p)
@@ -689,6 +694,7 @@ let emp_unit (p:hprop)
       = affine_star p emp m
     in
     ()
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // Frameable heap predicates
@@ -703,11 +709,13 @@ let refine_equiv (p:hprop) (q:fp_prop p) (h:heap)
   : Lemma (interp p h /\ q h <==> interp (Refine p q) h)
   = ()
 
+#push-options "--max_fuel 2"
 let refine_star (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (equiv (Refine (p0 `star` p1) q) (Refine p0 q `star` p1))
   = ()
+#pop-options
 
-#push-options "--z3rlimit 50"
+#push-options "--initial_fuel 2 --max_fuel 2 --z3rlimit 10"
 let refine_star_r (p0 p1:hprop) (q:fp_prop p1)
   : Lemma (equiv (Refine (p0 `star` p1) q) (p0 `star` Refine p1 q))
   = ()
@@ -774,13 +782,15 @@ let m_action_depends_only_on #pre #a #post (f:pre_m_action pre a post)
        x0 == x1 /\
        (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
 
+#push-options "--max_fuel 2"
 let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
   forall frame (m0:hmem (fp `star` frame)).
     (affine_star fp frame (heap_of_mem m0);
      let (| x, m1 |) = f m0 in
      interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1))
+#pop-options
 
-#push-options "--z3rlimit 500"
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 70"
 let frame_fp_prop' #fp #a #fp' frame
                    (q:fp_prop frame)
                    (act:action fp a fp')
@@ -796,7 +806,7 @@ let frame_fp_prop' #fp #a #fp' frame
      refine_star_r (fp' x) frame q;
      assert (interp (Refine (fp' x `star` frame) q) h1);
      assert (q h1)
-
+#pop-options
 
 let frame_fp_prop #fp #a #fp' (act:action fp a fp')
                   (#frame:hprop) (q:fp_prop frame)
@@ -810,7 +820,6 @@ let frame_fp_prop #fp #a #fp' (act:action fp a fp')
        = frame_fp_prop' frame q act h0
      in
      ()
-#pop-options
 
 let test_q (pre:_) (a:_) (post:_)
            (k:(x:a -> fp_prop (post x))) : fp_prop pre =
@@ -823,14 +832,17 @@ let test_q (pre:_) (a:_) (post:_)
 ////////////////////////////////////////////////////////////////////////////////
 // sel
 ////////////////////////////////////////////////////////////////////////////////
+#push-options "--max_fuel 3"
 let sel #a (r:ref a) (m:hheap (ptr r))
   : a
   = let Ref _ _ v = select_addr m r in
     v
+#pop-options
 
+#push-options "--max_fuel 2"
 let sel_lemma #a (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
   = ()
-
+#pop-options
 
 /// F*'s indefinite_description is only available in the Ghost effect
 /// That's to prevent us from mistakenly extracting code that uses the
@@ -857,8 +869,7 @@ let upd_heap #a (r:ref a) (v:a)
   : pre_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = fun h -> (| (), update_addr h r (Ref a full_permission v) |)
 
-
-#push-options "--z3rlimit 100"
+#push-options "--initial_fuel 2 --max_fuel 2 --z3rlimit 10"
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
     (requires
@@ -905,6 +916,7 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
    ()
 #pop-options
 
+#push-options "--initial_fuel 2 --max_fuel 2"
 let upd'_preserves_join #a (r:ref a) (v:a)
                        (h0:hheap (ptr_perm r full_permission))
                        (h1:heap {disjoint h0 h1})
@@ -945,7 +957,7 @@ let upd'_depends_only_on_fp #a (r:ref a) (v:a)
     ()
 #pop-options
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 30"
 let upd' #a (r:ref a) (v:a)
   : pre_m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = fun m ->
@@ -953,7 +965,9 @@ let upd' #a (r:ref a) (v:a)
       let (| _, h' |) = upd_heap r v m.heap in
       let m':mem = {m with heap = h'} in
       (| (), m' |)
+#pop-options
 
+#push-options "--warn_error -271"
 let upd_is_frame_preserving (#a:_) (r:ref a) (v:a)
   : Lemma (is_m_frame_preserving (upd' r v))
   =
@@ -970,7 +984,7 @@ let upd_is_frame_preserving (#a:_) (r:ref a) (v:a)
    ()
 #pop-options
 
-
+#push-options "--warn_error -271"
 let upd_depends_only_on_fp (#a:_) (r:ref a) (v:a)
   : Lemma (m_action_depends_only_on (upd' r v))
   =
@@ -991,6 +1005,7 @@ let upd_depends_only_on_fp (#a:_) (r:ref a) (v:a)
       assert (m'.heap == join m.heap h1)
     in
     ()
+#pop-options
 
 let upd #a (r:ref a) (v:a)
   : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
