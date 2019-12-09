@@ -245,48 +245,46 @@ let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
     action_depends_only_on_fp f
   }
 
-let depends_only_on_0_2 (#heap:Type) (#hprop:Type)
+let depends_only_on_0_2 (#a:Type) (#heap:Type) (#hprop:Type)
   (interp:hprop -> heap -> prop)
   (disjoint:heap -> heap -> prop)
   (join:(h0:heap -> h1:heap{disjoint h0 h1} -> heap))
-  (q:heap -> heap -> prop) (fp_pre fp_post:hprop) =
+  (q:heap -> a -> heap -> prop) (fp_pre:hprop) (fp_post:a -> hprop) =
 
   // (forall h_pre h_post h. (q h_pre h_post /\ disjoint h_pre h /\ disjoint h_post h) ==>
   //                    (q (join h_pre h) (join h_post h))) /\
 
-  (forall (h_pre:fp_heap_0 interp fp_pre) h_post (h:heap{disjoint h_pre h}).
-     q h_pre h_post <==> q (join h_pre h) h_post) /\
+  (forall x (h_pre:fp_heap_0 interp fp_pre) h_post (h:heap{disjoint h_pre h}).
+     q h_pre x h_post <==> q (join h_pre h) x h_post) /\
 
-  (forall h_pre (h_post:fp_heap_0 interp fp_post) (h:heap{disjoint h_post h}).
-     q h_pre h_post <==> q h_pre (join h_post h))
+  (forall x h_pre (h_post:fp_heap_0 interp (fp_post x)) (h:heap{disjoint h_post h}).
+     q h_pre x h_post <==> q h_pre x (join h_post h))
 
   // (forall (h_pre:fp_heap_0 interp fp_pre) (h_post:fp_heap_0 interp fp_post) (h:heap{disjoint h_pre h /\ disjoint h_post h}).
   //    q h_pre h_post <==> q (join h_pre h) (join h_post h))
 
-let fp_prop_0_2 (#heap #hprop:Type)
+let fp_prop_0_2 (#a:Type) (#heap #hprop:Type)
   (interp:hprop -> heap -> prop)
   (disjoint:heap -> heap -> prop)
   (join:(h0:heap -> h1:heap{disjoint h0 h1} -> heap))
-  (fp_pre fp_post:hprop) =
+  (fp_pre:hprop) (fp_post:a -> hprop) =
 
-  q:(heap -> heap -> prop){depends_only_on_0_2 interp disjoint join q fp_pre fp_post}
+  q:(heap -> a -> heap -> prop){depends_only_on_0_2 interp disjoint join q fp_pre fp_post}
 
-let depends_only_on2 (#st:st0) (q:st.heap -> st.heap -> prop) (fp_pre fp_post:st.hprop) =
+let depends_only_on2 (#st:st0) (#a:Type) (q:st.heap -> a -> st.heap -> prop) (fp_pre:st.hprop) (fp_post:a -> st.hprop) =
   depends_only_on_0_2 st.interp st.disjoint st.join q fp_pre fp_post
 
-let fp_prop2 (#st:st0) (fp_pre fp_post:st.hprop) =
-  fp_prop_0_2 st.interp st.disjoint st.join fp_pre fp_post
-
+let fp_prop2 (#st:st0) (#a:Type) (fp_pre:st.hprop) (fp_post:a -> st.hprop) =
+  q:(st.heap -> a -> st.heap -> prop){depends_only_on2 q fp_pre fp_post}
 
 let l_pre (#st:st) (pre:st.hprop) = fp_prop pre
-let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) =
-  x:a -> fp_prop2 pre (post x)
+let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) = fp_prop2 pre post
 
 let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post) : l_pre pre =
   st.interp pre
 
 let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post) : l_post pre post =
-  fun x h0 h1 -> st.interp pre h0 /\ st.interp (post x) h1
+  fun h0 x h1 -> st.interp (post x) h1
 
 // let a_prop (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a) (lpre_a:l_pre pre)
 //   (lpost_a:l_post pre post_a) (#b:Type0) (#post_b:post st b)
@@ -328,7 +326,7 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     post:post st a ->
     x:a ->
     lpost:l_post (post x) post ->
-    m st a (post x) post (fun h -> lpost x h h) lpost
+    m st a (post x) post (fun h -> lpost h x h) lpost
 
   | Act:
     #a:Type0 ->
@@ -348,7 +346,7 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     f_frame:fp_prop frame ->
     m st a (pre `st.star` frame) (fun x -> post x `st.star` frame)
       (fun h -> lpre h /\ f_frame h)
-      (fun x h0 h1 -> lpost x h0 h1 /\ f_frame h1)
+      (fun h0 x h1 -> lpost h0 x h1 /\ f_frame h1)
 
   | Bind:
     #a:Type0 ->
@@ -361,13 +359,13 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     #lpre_b:(x:a -> l_pre (post_a x)) ->
     #lpost_b:(x:a -> l_post (post_a x) post_b) ->
     f:m st a pre post_a lpre_a lpost_a ->
-    g:(x:a -> m st b (post_a x) post_b (lpre_b x) (lpost_b x)) ->
+    g:(x:a -> Dv (m st b (post_a x) post_b (lpre_b x) (lpost_b x))) ->
     m st b pre post_b
-      (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a x h h1 ==> lpre_b x h1))
-      (fun y h0 h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) y h1 h2))
+      (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1))
+      (fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2))
 
 noeq
-type step_result (#st:st) a (p:st.hprop) (q:post st a) (frame:st.hprop) =
+type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
   | Step:
     fpost:st.hprop ->
     state:hmem (fpost `st.star` frame) ->
@@ -375,7 +373,184 @@ type step_result (#st:st) a (p:st.hprop) (q:post st a) (frame:st.hprop) =
     lpost:l_post fpost q ->
     m st a fpost q lpre lpost ->
     nat ->
-    step_result a p q frame
+    step_result a q frame
+
+unfold
+let step_req (#st:st)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost)
+  (state:st.mem)
+= st.interp (st.locks_invariant state `st.star` pre `st.star` frame) (st.heap_of_mem state) /\
+  lpre (st.heap_of_mem state)
+
+unfold
+let step_ens (#st:st)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost)
+  (state:st.mem)
+: step_result a post frame -> Type0
+= fun r ->
+  let Step _ new_state new_lpre new_lpost _ _ = r in
+  ((lpre (st.heap_of_mem state) ==> new_lpre (st.heap_of_mem new_state)) /\
+   (forall x h_final. new_lpost (st.heap_of_mem new_state) x h_final ==>
+                 lpost (st.heap_of_mem state) x h_final))
+
+let step_ret (#st:st) (i:nat) (#a:Type)
+  (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost{Ret? f})
+  (state:st.mem)
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+= let Ret p x lp = f in
+  Step (p x) state lpre lpost f i
+
+let step_act (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost{Act? f})
+  (state:st.mem)
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+= let Act pre post f = f in
+  let (| x, state |) = f state in
+
+  let lpost : l_post (post x) post = fun _ x h1 -> st.interp (post x) h1 in
+  Step (post x) state (fun h -> lpost h x h) lpost (Ret post x lpost) i
+
+// let commute4_1_2_3 (#st:st) (p q r s:st.hprop)
+//   : Lemma (
+//      ((p `st.star` q) `st.star` (r `st.star` s)) `st.equals`
+//      ((s `st.star` p) `st.star` (q `st.star` r))
+//    )
+//    = admit ()
+// let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.mem)
+//   : Lemma
+//     ((st.interp (p `st.star` (q `st.star` r)) (st.heap_of_mem state) /\
+//       fq (st.heap_of_mem state)) <==>
+//       st.interp (p `st.star` (st.refine q fq `st.star` r)) (st.heap_of_mem state))
+//   =  admit ()
+
+#set-options "--z3rlimit 200"
+let rec step (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost)
+  (state:st.mem)
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+= match f with
+  | Ret _ _ _ -> step_ret i frame f state
+
+  | Act _ _ _ -> step_act i frame f state
+
+  | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
+    Step (p x) state (lpre_b x) (lpost_b x) (g x) i
+
+  | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b f g ->
+    let Step next_pre next_state next_lpre next_lpost f j = step i frame f state in
+    
+    let lpre : l_pre next_pre =
+      fun h -> next_lpre h /\ (forall x h1. next_lpost h x h1 ==> lpre_b x h1) in
+
+    let lpost : l_post next_pre post =
+      fun h0 y h2 -> next_lpre h0 /\ (exists x h1. (lpost_b x) h1 y h2) in
+
+    Step next_pre next_state lpre lpost (Bind f g) j
+
+  | Frame _pre _post _lpre _lpost (Ret p x lp) frame f_frame ->
+    let ret_post = fun x -> p x `st.star` frame in
+    let lpre : l_pre (ret_post x) = fun h -> lp h x h /\ f_frame h in
+    Step (ret_post x) state lpre lpost (Ret ret_post x lpost) i
+
+  | _ -> admit ()
+ 
+//admit ()
+  // match f with
+  // | Frame f_pre f_post f_lpre f_lpost f frame' f_frame' ->
+  //   commute4_1_2_3 pre frame' frame (st.locks_invariant state);
+  //   refine_middle (st.locks_invariant state `st.star` pre) frame' frame f_frame' state;
+
+  //   assert (st.interp (st.locks_invariant state `st.star` f_pre `st.star` (st.refine frame' f_frame' `st.star` frame)) (st.heap_of_mem state));
+  //   //lpre (st.heap_of_mem state)
+
+
+  //   //let Step next_pre next_state next_lpre next_lpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
+  //   admit ()
+
+
+  // | _ -> admit ()
+
+  //   assume (st.interp (st.locks_invariant state `st.star` f_pre `st.star` frame) (st.heap_of_mem state));
+  //   assume (f_lpre (st.heap_of_mem state));
+
+  //   let Step next_pre next_state next_lpre next_lpost f j = step i frame f state in
+
+  //   let lpre (h:st.heap) : prop =
+  //     let p = next_lpre h /\ f_frame' h in
+  //     assume (p `subtype_of` unit);
+  //     p in
+
+  //   let lpost (h0:st.heap) x (h1:st.heap) : prop =
+  //     let p = next_lpost h0 x h1 /\ f_frame' h1 in
+  //     assume (p `subtype_of` unit);
+  //     p in
+
+  //   assume (lpre `depends_only_on` (next_pre `st.star` frame'));
+  //   assume (depends_only_on2 lpost (next_pre `st.star` frame') (fun x -> f_post x `st.star` frame));
+
+  //   let next_state : hmem ((next_pre `st.star` frame') `st.star` frame) = magic () in
+  //   assume (lpre (st.heap_of_mem next_state));
+    
+  //   let s = Step (next_pre `st.star` frame') next_state lpre lpost (Frame next_pre f_post next_lpre next_lpost f frame' f_frame') i in
+  //   admit ();
+  //   s
+  
+  //   // let lpre = //: l_pre (next_pre `st.star` frame') =
+  //   //   fun (h:st.heap) -> next_lpre h /\ f_frame' h in
+  //   // let lpre : st.heap -> Type0 = lpre in
+
+  //   // 
+
+    //admit ()
+
+
+    // commute4_1_2_3 f_pre frame' frame (st.locks_invariant state);
+    // refine_middle (st.locks_invariant state `st.star` f_pre) frame' frame f_frame' state;
+    // assume (st.interp (st.locks_invariant `st.star` f_pre `st.star` frame) (st.heap_of_mem state));
+    //
+    //let Step next_pre next_state next_lpre next_lpost f j = step i frame f state in
+
+    // let lpre : l_pre ((next_pre `st.star` frame') `st.star` frame) =
+    //   fun h -> next_lpre h /\ f_frame' h in
+
+    // let lpost : l_post ((next_pre `st.star` frame') `st.star` frame) (fun x -> (post x `st.star` frame')) =
+    //   fun h0 x h1 -> next_lpost h0 x h1 /\ f_frame' h1 in
+
+    //let next_state : hmem ((next_pre `st.star` frame') `st.star` frame) = magic () in
+    //assume (lpre (st.heap_of_mem next_state));
+
+    //Step (next_pre `st.star` frame') next_state lpre lpost (Frame next_pre post next_lpre next_lpost f frame' f_frame') i
+
+
+
+   //  let lpre : l_pre (next_pre `st.star` frame) =
+   //    fun h -> next_lpre h /\ f_frame h in
+
+   //  assume (lpre (st.heap_of_mem next_state));
+
+   admit ()
+   //Step (next_pre `st.star` frame') next_state lpre lpost (Frame next_pre post next_lpre next_lpost f frame' f_frame') i
+
+   //admit ()
+
+  // | _ -> admit ()
+
+
+
+
+
+
+
 
 let step_ret (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -412,36 +587,6 @@ let step_act (#st:st) (i:nat)
   let lpost : l_post (post x) post = fun x h0 h1 -> st.interp (post x) h1 in
   Step (post x) state (fun h -> lpost x h h) lpost (Ret post x lpost) i
 
-
-let rec step (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
-  (f:m st a pre post lpre lpost)
-  (state:st.mem)
-
-: Div
-  (step_result a pre post frame)
-  (requires
-    st.interp (st.locks_invariant state `st.star` pre `st.star` frame) (st.heap_of_mem state) /\
-    lpre (st.heap_of_mem state))
-  (ensures fun _ -> True)
-
-= match f with
-  | Ret p x _ ->
-    Step (p x) state lpre lpost f i
-
-  | Act pre post f ->
-    let (| x, state |) = f state in
-
-    let lpost : l_post (post x) post = fun x h0 h1 -> st.interp (post x) h1 in
-    Step (post x) state (fun h -> lpost x h h) lpost (Ret post x lpost) i
-
-  | Bind #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
-    let lpre_b : (x:a -> l_pre (p x)) = lpre_b in
-    admit ()
-    //Step (p x) state (lpre_b x) (lpost_b x) (g x) i
-
-  | _ -> admit ()
 
 
 
