@@ -440,14 +440,15 @@ let step_act (#st:st) (i:nat)
   let lpost : l_post (post x) post = fun _ x h1 -> st.interp (post x) h1 in
   Step (post x) state (fun h -> lpost h x h) lpost (Ret post x lpost) i
 
-#set-options "--z3rlimit 200"
-let rec step : step_t =
-  fun #st i #a #pre #post #lpre #lpost frame f state ->
-  match f with
-  | Ret _ _ _ -> step_ret i frame f state
-
-  | Act _ _ _ -> step_act i frame f state
-
+#push-options "--z3rlimit 50"
+let step_bind (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost{Bind? f})
+  (state:st.mem)
+  (step:step_t)
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+= match f with
   | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
     Step (p x) state (lpre_b x) (lpost_b x) (g x) i
 
@@ -462,6 +463,14 @@ let rec step : step_t =
 
     Step next_pre next_state lpre lpost (Bind f g) j
 
+let step_frame (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost{Frame? f})
+  (state:st.mem)
+  (step:step_t)
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+= match f with
   | Frame (Ret p x lp) frame f_frame ->
     let ret_post = fun x -> p x `st.star` frame in
     let lpre : l_pre (ret_post x) = fun h -> lp h x h /\ f_frame h in
@@ -495,9 +504,21 @@ let rec step : step_t =
     // assert (lpre (st.heap_of_mem next_state));
 
     Step (next_fpre `st.star` frame') next_state lpre lpost (Frame f frame' f_frame') j
+#pop-options
+
+
+let rec step : step_t =
+  fun #st i #a #pre #post #lpre #lpost frame f state ->
+  match f with
+  | Ret _ _ _ -> step_ret i frame f state
+
+  | Act _ _ _ -> step_act i frame f state
+
+  | Bind _ _ -> step_bind i frame f state step
+
+  | Frame _ _ _ -> step_frame i frame f state step
 
   | _ -> admit ()
-
 
 // match f with
 
