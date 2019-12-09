@@ -1806,13 +1806,6 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                 flags=flags@decreases_clause})
 
 and desugar_formula env (f:term) : S.term =
-  let connective s = match s with
-    | "/\\"  -> Some C.and_lid
-    | "\\/"  -> Some C.or_lid
-    | "==>"  -> Some C.imp_lid
-    | "<==>" -> Some C.iff_lid
-    | "~"    -> Some C.not_lid
-    | _ -> None in
   let mk t = S.mk t None f.range in
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
