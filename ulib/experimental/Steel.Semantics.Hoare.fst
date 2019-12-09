@@ -70,7 +70,7 @@ let depends_only_on_0 (#heap:Type) (#hprop:Type)
                       (disjoint: heap -> heap -> prop)
                       (join: (h0:heap -> h1:heap{disjoint h0 h1} -> heap))
                       (q:heap -> prop) (fp: hprop) =
-  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
+  //(forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1))
   (forall (h0:fp_heap_0 interp fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 
 let fp_prop_0 (#heap:Type) (#hprop:Type)
@@ -251,10 +251,17 @@ let depends_only_on_0_2 (#heap:Type) (#hprop:Type)
   (join:(h0:heap -> h1:heap{disjoint h0 h1} -> heap))
   (q:heap -> heap -> prop) (fp_pre fp_post:hprop) =
 
-  (forall h_pre h_post h. (q h_pre h_post /\ disjoint h_pre h /\ disjoint h_post h) ==>
-                     (q (join h_pre h) (join h_post h))) /\
-  (forall (h_pre:fp_heap_0 interp fp_pre) (h_post:fp_heap_0 interp fp_post) (h:heap{disjoint h_pre h /\ disjoint h_post h}).
-     q h_pre h_post <==> q (join h_pre h) (join h_post h))
+  // (forall h_pre h_post h. (q h_pre h_post /\ disjoint h_pre h /\ disjoint h_post h) ==>
+  //                    (q (join h_pre h) (join h_post h))) /\
+
+  (forall (h_pre:fp_heap_0 interp fp_pre) h_post (h:heap{disjoint h_pre h}).
+     q h_pre h_post <==> q (join h_pre h) h_post) /\
+
+  (forall h_pre (h_post:fp_heap_0 interp fp_post) (h:heap{disjoint h_post h}).
+     q h_pre h_post <==> q h_pre (join h_post h))
+
+  // (forall (h_pre:fp_heap_0 interp fp_pre) (h_post:fp_heap_0 interp fp_post) (h:heap{disjoint h_pre h /\ disjoint h_post h}).
+  //    q h_pre h_post <==> q (join h_pre h) (join h_post h))
 
 let fp_prop_0_2 (#heap #hprop:Type)
   (interp:hprop -> heap -> prop)
@@ -281,6 +288,39 @@ let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t
 let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post) : l_post pre post =
   fun x h0 h1 -> st.interp pre h0 /\ st.interp (post x) h1
 
+// let a_prop (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a) (lpre_a:l_pre pre)
+//   (lpost_a:l_post pre post_a) (#b:Type0) (#post_b:post st b)
+//   (lpre_b:(x:a -> l_pre (post_a x)))
+//   (lpost_b:(x:a -> l_post (post_a x) post_b))
+ 
+// : st.heap -> prop
+
+// = fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a x h h1 ==> lpre_b x h1) 
+
+// let or_hprop (#st:st) (p q : st.heap -> prop) : st.heap -> prop = fun (h:st.heap) -> p h \/ q h
+// let and_hprop (#st:st) (p q : st.heap -> prop) : st.heap -> prop = fun (h:st.heap) -> p h /\ q h
+// let imp_hprop (#st:st) (p q : st.heap -> prop) : st.heap -> prop = fun (h:st.heap) -> p h ==> q h
+
+// let depends_only_on_conjunctive (#st:st) (p q:st.heap -> prop) (fp:st.hprop)
+// : Lemma
+//   (requires p `depends_only_on` fp /\ q `depends_only_on` fp)
+//   (ensures
+//     (or_hprop p q) `depends_only_on` fp /\
+//     (and_hprop p q) `depends_only_on` fp /\
+//     (imp_hprop p q) `depends_only_on` fp)
+// = ()
+
+// let a_prop_lemma (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a) (lpre_a:l_pre pre)
+//   (lpost_a:l_post pre post_a) (#b:Type0) (#post_b:post st b)
+//   (lpre_b:(x:a -> l_pre (post_a x)))
+//   (lpost_b:(x:a -> l_post (post_a x) post_b))
+ 
+// : Lemma (a_prop lpre_a lpost_a lpre_b lpost_b `depends_only_on` pre)
+//   [SMTPat (a_prop lpre_a lpost_a lpre_b lpost_b)]
+
+// = ()
+
+#set-options "--__temp_no_proj Steel.Semantics.Hoare"
 noeq
 type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
@@ -296,6 +336,35 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     post:post st a ->
     f:action_t pre a post ->
     m st a pre post (action_lpre f) (action_lpost f)
+
+  | Frame:
+    #a:Type0 ->
+    pre:st.hprop ->
+    post:post st a ->
+    lpre:l_pre pre ->
+    lpost:l_post pre post ->
+    f:m st a pre post lpre lpost ->
+    frame:st.hprop ->
+    f_frame:fp_prop frame ->
+    m st a (pre `st.star` frame) (fun x -> post x `st.star` frame)
+      (fun h -> lpre h /\ f_frame h)
+      (fun x h0 h1 -> lpost x h0 h1 /\ f_frame h1)
+
+  | Bind:
+    #a:Type0 ->
+    #pre:st.hprop ->
+    #post_a:post st a ->
+    #lpre_a:l_pre pre ->
+    #lpost_a:l_post pre post_a ->
+    #b:Type0 ->
+    #post_b:post st b ->
+    #lpre_b:(x:a -> l_pre (post_a x)) ->
+    #lpost_b:(x:a -> l_post (post_a x) post_b) ->
+    f:m st a pre post_a lpre_a lpost_a ->
+    g:(x:a -> m st b (post_a x) post_b (lpre_b x) (lpost_b x)) ->
+    m st b pre post_b
+      (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a x h h1 ==> lpre_b x h1))
+      (fun y h0 h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) y h1 h2))
 
 noeq
 type step_result (#st:st) a (p:st.hprop) (q:post st a) (frame:st.hprop) =
@@ -343,6 +412,36 @@ let step_act (#st:st) (i:nat)
   let lpost : l_post (post x) post = fun x h0 h1 -> st.interp (post x) h1 in
   Step (post x) state (fun h -> lpost x h h) lpost (Ret post x lpost) i
 
+
+let rec step (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost)
+  (state:st.mem)
+
+: Div
+  (step_result a pre post frame)
+  (requires
+    st.interp (st.locks_invariant state `st.star` pre `st.star` frame) (st.heap_of_mem state) /\
+    lpre (st.heap_of_mem state))
+  (ensures fun _ -> True)
+
+= match f with
+  | Ret p x _ ->
+    Step (p x) state lpre lpost f i
+
+  | Act pre post f ->
+    let (| x, state |) = f state in
+
+    let lpost : l_post (post x) post = fun x h0 h1 -> st.interp (post x) h1 in
+    Step (post x) state (fun h -> lpost x h h) lpost (Ret post x lpost) i
+
+  | Bind #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
+    let lpre_b : (x:a -> l_pre (p x)) = lpre_b in
+    admit ()
+    //Step (p x) state (lpre_b x) (lpost_b x) (g x) i
+
+  | _ -> admit ()
 
 
 
