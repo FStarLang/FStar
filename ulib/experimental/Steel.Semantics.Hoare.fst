@@ -214,6 +214,81 @@ let st_laws (st:st0) =
 
 let st = s:st0 { st_laws s }
 
+let equals_ext_right (#st:st) (p q r:st.hprop) : Lemma
+  (requires q `st.equals` r)
+  (ensures (p `st.star` q) `st.equals` (p `st.star` r))
+  = calc (st.equals) {
+      p `st.star` q;
+        (st.equals) { }
+      q `st.star` p;
+        (st.equals) { }
+      r `st.star` p;
+        (st.equals) { }
+      p `st.star` r;
+    }
+
+
+let commute4_1_2_3 (#st:st) (p q r s:st.hprop)
+  : Lemma (
+     ((p `st.star` q) `st.star` (r `st.star` s)) `st.equals`
+     ((s `st.star` p) `st.star` (q `st.star` r))
+   )
+   = calc (st.equals) {
+        (p `st.star` q) `st.star` (r `st.star` s);
+           (st.equals) { }
+        p `st.star` (q `st.star` (r `st.star` s));
+           (st.equals) {
+             calc (st.equals) {
+               q `st.star` (r `st.star` s);
+                 (st.equals) { equals_ext_right q (r `st.star` s) (s `st.star` r) }
+               s `st.star` (q `st.star` r);
+             };
+             equals_ext_right p
+                 (q `st.star` (r `st.star` s))
+                 (s `st.star` (q `st.star` r))
+           }
+        p `st.star` (s `st.star` (q `st.star` r));
+          (st.equals) { }
+        (p `st.star` s) `st.star` (q `st.star` r);
+          (st.equals) { }
+        (s `st.star` p) `st.star` (q `st.star` r);
+     }
+
+
+let refine_star_left (#st:st) (r0 r1:st.hprop) (p:fp_prop r0) (s:st.mem)
+  : Lemma
+    ((st.interp (r0 `st.star` r1) (st.heap_of_mem s) /\
+      p (st.heap_of_mem s)) <==>
+      st.interp (st.refine r0 p `st.star` r1) (st.heap_of_mem s))
+   = assert (st.interp (st.refine (r0 `st.star` r1) p) (st.heap_of_mem s) <==>
+                        st.interp (st.refine r0 p `st.star` r1) (st.heap_of_mem s))
+
+let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.mem)
+  : Lemma
+    ((st.interp (p `st.star` (q `st.star` r)) (st.heap_of_mem state) /\
+      fq (st.heap_of_mem state)) <==>
+      st.interp (p `st.star` (st.refine q fq `st.star` r)) (st.heap_of_mem state))
+  =   calc (st.equals) {
+        p `st.star` (q `st.star` r);
+          (st.equals) { }
+        (p `st.star` q) `st.star` r;
+          (st.equals) { }
+        (q `st.star` p) `st.star` r;
+          (st.equals) { }
+        q `st.star` (p `st.star` r);
+      };
+      refine_star_left q (p `st.star` r) fq state;
+      calc (st.equals) {
+        (st.refine q fq) `st.star` (p `st.star` r);
+          (st.equals) { }
+        (st.refine q fq `st.star` p) `st.star` r;
+          (st.equals) { }
+        (p `st.star` st.refine q fq) `st.star` r;
+          (st.equals) { }
+        p `st.star` (st.refine q fq `st.star` r);
+      }
+
+
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (st:st) (a:Type) = a -> st.hprop
 
@@ -364,18 +439,6 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
       (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1))
       (fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2))
 
-let commute4_1_2_3 (#st:st) (p q r s:st.hprop)
-  : Lemma (
-     ((p `st.star` q) `st.star` (r `st.star` s)) `st.equals`
-     ((s `st.star` p) `st.star` (q `st.star` r))
-   )
-   = admit ()
-let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.mem)
-  : Lemma
-    ((st.interp (p `st.star` (q `st.star` r)) (st.heap_of_mem state) /\
-      fq (st.heap_of_mem state)) <==>
-      st.interp (p `st.star` (st.refine q fq `st.star` r)) (st.heap_of_mem state))
-  =  admit ()
 
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
