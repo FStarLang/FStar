@@ -337,10 +337,10 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
 
   | Frame:
     #a:Type0 ->
-    pre:st.hprop ->
-    post:post st a ->
-    lpre:l_pre pre ->
-    lpost:l_post pre post ->
+    #pre:st.hprop ->
+    #post:post st a ->
+    #lpre:l_pre pre ->
+    #lpost:l_post pre post ->
     f:m st a pre post lpre lpost ->
     frame:st.hprop ->
     f_frame:fp_prop frame ->
@@ -418,18 +418,18 @@ let step_act (#st:st) (i:nat)
   let lpost : l_post (post x) post = fun _ x h1 -> st.interp (post x) h1 in
   Step (post x) state (fun h -> lpost h x h) lpost (Ret post x lpost) i
 
-// let commute4_1_2_3 (#st:st) (p q r s:st.hprop)
-//   : Lemma (
-//      ((p `st.star` q) `st.star` (r `st.star` s)) `st.equals`
-//      ((s `st.star` p) `st.star` (q `st.star` r))
-//    )
-//    = admit ()
-// let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.mem)
-//   : Lemma
-//     ((st.interp (p `st.star` (q `st.star` r)) (st.heap_of_mem state) /\
-//       fq (st.heap_of_mem state)) <==>
-//       st.interp (p `st.star` (st.refine q fq `st.star` r)) (st.heap_of_mem state))
-//   =  admit ()
+let commute4_1_2_3 (#st:st) (p q r s:st.hprop)
+  : Lemma (
+     ((p `st.star` q) `st.star` (r `st.star` s)) `st.equals`
+     ((s `st.star` p) `st.star` (q `st.star` r))
+   )
+   = admit ()
+let refine_middle (#st:st) (p q r:st.hprop) (fq:fp_prop q) (state:st.mem)
+  : Lemma
+    ((st.interp (p `st.star` (q `st.star` r)) (st.heap_of_mem state) /\
+      fq (st.heap_of_mem state)) <==>
+      st.interp (p `st.star` (st.refine q fq `st.star` r)) (st.heap_of_mem state))
+  =  admit ()
 
 #set-options "--z3rlimit 200"
 let rec step (#st:st) (i:nat)
@@ -457,28 +457,35 @@ let rec step (#st:st) (i:nat)
 
     Step next_pre next_state lpre lpost (Bind f g) j
 
-  | Frame _pre _post _lpre _lpost (Ret p x lp) frame f_frame ->
+  | Frame (Ret p x lp) frame f_frame ->
     let ret_post = fun x -> p x `st.star` frame in
     let lpre : l_pre (ret_post x) = fun h -> lp h x h /\ f_frame h in
     Step (ret_post x) state lpre lpost (Ret ret_post x lpost) i
 
+  | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame' f_frame' ->
+    assume (st.interp (st.locks_invariant state `st.star` f_pre `st.star` (st.refine frame' f_frame' `st.star` frame)) 
+                      (st.heap_of_mem state));
+    assume (f_lpre (st.heap_of_mem state));
+    
+    let Step next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
+    let lpre : l_pre (next_fpre `st.star` frame') =
+      fun h -> next_flpre h /\ f_frame' h in
+    let lpost : l_post (next_fpre `st.star` frame') post =
+      fun h0 x h1 -> next_flpost h0 x h1 /\ f_frame' h1 in
+    assume (next_fpre `st.star` (st.refine frame' f_frame' `st.star` frame) ==
+            (next_fpre `st.star` frame') `st.star` frame);
+    assume (lpre (st.heap_of_mem next_state));
+
+    Step (next_fpre `st.star` frame') next_state lpre lpost (Frame f frame' f_frame') j
+
   | _ -> admit ()
+
+
+// match f with
+
+//   | _ -> admit ()
  
 //admit ()
-  // match f with
-  // | Frame f_pre f_post f_lpre f_lpost f frame' f_frame' ->
-  //   commute4_1_2_3 pre frame' frame (st.locks_invariant state);
-  //   refine_middle (st.locks_invariant state `st.star` pre) frame' frame f_frame' state;
-
-  //   assert (st.interp (st.locks_invariant state `st.star` f_pre `st.star` (st.refine frame' f_frame' `st.star` frame)) (st.heap_of_mem state));
-  //   //lpre (st.heap_of_mem state)
-
-
-  //   //let Step next_pre next_state next_lpre next_lpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
-  //   admit ()
-
-
-  // | _ -> admit ()
 
   //   assume (st.interp (st.locks_invariant state `st.star` f_pre `st.star` frame) (st.heap_of_mem state));
   //   assume (f_lpre (st.heap_of_mem state));
