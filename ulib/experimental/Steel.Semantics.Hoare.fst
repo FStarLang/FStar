@@ -608,15 +608,10 @@ let step_frame (#st:st) (i:nat)
 let rec step : step_t =
   fun #st i #a #pre #post #lpre #lpost frame f state ->
   match f with
-  | Ret _ _ _ -> step_ret i frame f state
-
-  | Act _ _ _ -> step_act i frame f state
-
-  | Bind _ _ -> step_bind i frame f state step
-
+  | Ret _ _ _   ->   step_ret i frame f state
+  | Act _ _ _   ->   step_act i frame f state
+  | Bind _ _    ->  step_bind i frame f state step
   | Frame _ _ _ -> step_frame i frame f state step
-
-  | _ -> admit ()
 
 // match f with
 
