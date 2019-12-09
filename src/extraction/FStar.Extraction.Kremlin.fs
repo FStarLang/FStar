@@ -911,7 +911,7 @@ and translate_expr env e: expr =
       end
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = ebefore }; e ; { expr = eafter } ] )
-    when string_of_mlpath p = "C.comment_gen" ->
+    when string_of_mlpath p = "LowStar.Comment.comment_gen" ->
       begin match ebefore, eafter with
       | MLE_Const (MLC_String sbefore), MLE_Const (MLC_String safter) ->
           if contains sbefore "*/"
@@ -924,7 +924,7 @@ and translate_expr env e: expr =
       end
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = e } ] )
-    when string_of_mlpath p = "C.comment" ->
+    when string_of_mlpath p = "LowStar.Comment.comment" ->
       begin match e with
       | MLE_Const (MLC_String s) ->
           if contains s "*/"
