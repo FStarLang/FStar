@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "45829ef96cebda4c2abc4d9e4ccd1634"
+      "5debbef434d4218d5f4291ca43ed7800"
     ],
     [
       "FStar.HyperStack.ST.StackInline",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "0a8bf77b5de996c57c748d0edc864866"
+      "b2669139ed948050796fcca1306fbc2d"
     ],
     [
       "FStar.HyperStack.ST.Inline",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "28f5e53c1b41b56045e8f9d44dbaed65"
+      "333acb939dd65265a4079cc7fe622023"
     ],
     [
       "FStar.HyperStack.ST.pop_frame",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "534274602ef910bb5ecf644bc5d5e30d"
+      "8b4fe7a18e61af458d4fd38eaba221cd"
     ],
     [
       "FStar.HyperStack.ST.salloc_post",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a"
       ],
       0,
-      "2cc680e19bc51c82812a5539d5aeb226"
+      "40bcf79507bcbbf1d4c673fb29559f16"
     ],
     [
       "FStar.HyperStack.ST.salloc",
@@ -60,7 +60,7 @@
       1,
       [ "@query" ],
       0,
-      "95ae072e7f998a51b999e36dff94e9b8"
+      "e9a5151fc762eedaa1c924b3e3a7a9c3"
     ],
     [
       "FStar.HyperStack.ST.salloc_mm",
@@ -69,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "f672a51890fc7de8df93565821c00220"
+      "534536eb4e9d0f8bda5c0095d1116275"
     ],
     [
       "FStar.HyperStack.ST.sfree",
@@ -78,7 +78,7 @@
       1,
       [ "@query" ],
       0,
-      "5e099d8809239433d3e78f2f53e3e81d"
+      "b3f26761590f90bc32255dd152f0e32f"
     ],
     [
       "FStar.HyperStack.ST.new_region",
@@ -98,7 +98,7 @@
         "refinement_interpretation_Tm_refine_161e04719814801d293219f408210f95"
       ],
       0,
-      "e150b779d0bafb85aafaf7fbfc472842"
+      "dddd867e2195d3a008e5e82c76965814"
     ],
     [
       "FStar.HyperStack.ST.new_colored_region",
@@ -118,7 +118,7 @@
         "typing_FStar.Monotonic.HyperStack.is_heap_color"
       ],
       0,
-      "74855bfd1f352b0d35a9287f848b132c"
+      "76b073d908154c7e7aa503811daad6f6"
     ],
     [
       "FStar.HyperStack.ST.ralloc_post",
@@ -127,38 +127,34 @@
       1,
       [ "@query", "equation_FStar.Monotonic.HyperStack.live_region" ],
       0,
-      "b0ca4d6bda90a6ccc0fcbc518ab7f054"
+      "824d2d83b7e1c100fb2e2978514a9df0"
     ],
     [
       "FStar.HyperStack.ST.ralloc",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.HyperStack.ST.is_eternal_region" ],
+      [ "@query" ],
       0,
-      "cca8bb880b595f9e1ab7df55142da59a"
+      "98397056bbda8a1fcfd49b10fecf50b8"
     ],
     [
       "FStar.HyperStack.ST.ralloc_mm",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.HyperStack.ST.is_eternal_region" ],
+      [ "@query" ],
       0,
-      "f716e32f5fdfc49a7d06585215b9cf5f"
+      "5091c278b8c9f5b4b99c739bbcfe795b"
     ],
     [
       "FStar.HyperStack.ST.rfree",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.HyperStack.ST.mmmref",
-        "refinement_interpretation_Tm_refine_38378a752eceb5d6a72bc0c44cfdc7c2"
-      ],
+      [ "@query" ],
       0,
-      "2eefb2c8a763b22b7ede7f09824fc333"
+      "53ee0c4d1962eded5eb85c6aedaf9a2d"
     ],
     [
       "FStar.HyperStack.ST.assign_post",
@@ -171,7 +167,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6633bc0c5180a470a1d2748cb7183f24"
+      "3369a8108e244ca1885f9921e3d4200c"
     ],
     [
       "FStar.HyperStack.ST.stable_on_t",
@@ -180,7 +176,7 @@
       1,
       [ "@query" ],
       0,
-      "98bcc8a14fdbfa77f3f08e31dcd4aad3"
+      "a57f59acc90136579f01abab9cd3af87"
     ],
     [
       "FStar.HyperStack.ST.new_drgn",
@@ -194,7 +190,7 @@
         "refinement_interpretation_Tm_refine_161e04719814801d293219f408210f95"
       ],
       0,
-      "07984a8e34d2a9cf2dfea3d5a2d30bb3"
+      "c8152c4b515f419dabaf679d4793adc0"
     ],
     [
       "FStar.HyperStack.ST.free_drgn",
@@ -207,7 +203,7 @@
         "refinement_interpretation_Tm_refine_e8c39d6ee903737b62bc3fc299bf243a"
       ],
       0,
-      "cd098d0967f0070058625463ed1b0676"
+      "ad89affa3e1cafa89648c6d1ddca6f80"
     ]
   ]
 ]
