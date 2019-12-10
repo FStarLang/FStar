@@ -137,8 +137,8 @@ val of_ibuffer (b:I.ibuffer 'a)
 /// `of_qbuf`: A constructors for const buffers from either mutable and
 /// immutable buffers. It is fully specified in terms of the
 /// `qbuf/mbuf` model
-val of_qbuf (#q:_) (#a:_) (b:B.mbuffer a (q_preorder q a) (q_preorder q a))
-  : Pure (const_buffer a)
+val of_qbuf (#q:qual) (b:B.mbuffer 'a (q_preorder q 'a) (q_preorder q 'a))
+  : Pure (const_buffer 'a)
     (requires True)
     (ensures fun c ->
       let c = as_qbuf c in

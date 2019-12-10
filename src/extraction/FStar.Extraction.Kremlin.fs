@@ -876,6 +876,11 @@ and translate_expr env e: expr =
      // non-const pointer should always be checkable.
      translate_expr env e1
 
+ | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ t ]) }, [ _eqal; e1 ])
+   when string_of_mlpath p = "LowStar.ConstBuffer.of_qbuf"
+   ->
+     ECast (translate_expr env e1, TConstBuf (translate_type env t))
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ t ]) }, [ e1 ])
     when string_of_mlpath p = "LowStar.ConstBuffer.cast" ||
       string_of_mlpath p = "LowStar.ConstBuffer.to_buffer" ||
@@ -962,7 +967,8 @@ and translate_expr env e: expr =
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
-      failwith "todo: translate_expr [MLE_Let]"
+      failwith (BU.format1 "todo: translate_expr [MLE_Let] (expr is: %s)"
+        (ML.Code.string_of_mlexpr ([],"") e))
   | MLE_App (head, _) ->
       failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))

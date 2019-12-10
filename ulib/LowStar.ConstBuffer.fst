@@ -32,7 +32,7 @@ let of_buffer b = (| MUTABLE, b |)
 
 let of_ibuffer b = (| IMMUTABLE, b |)
 
-let of_qbuf #q #a b = (| q, b |)
+let of_qbuf #_ #q b = (| q, b |)
 
 let index c i =
   let x = qbuf_mbuf c in
