@@ -27,6 +27,7 @@ open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
+open FStar.SMTEncoding.QIReport
 
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -201,6 +202,10 @@ type query_settings = {
     query_hash:option<string>
 }
 
+let settings_to_info s = {
+  query_info_name=s.query_name;
+  query_info_index=s.query_index;
+  query_info_range=s.query_range }
 
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
@@ -259,7 +264,7 @@ let detail_hint_replay settings z3result =
          | UNSAT _ -> ()
          | _failed ->
            let ask_z3 label_assumptions =
-               Z3.ask settings.query_range
+               Z3.ask (settings_to_info settings)
                       (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
@@ -346,7 +351,7 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
               }
            in
            let ask_z3 label_assumptions =
-              Z3.ask  settings.query_range
+              Z3.ask  (settings_to_info settings)
                       (filter_facts_without_core settings.query_env)
                       settings.query_hash
                       settings.query_all_labels
@@ -677,7 +682,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
 
     let check_one_config config : z3result =
           if Options.z3_refresh() then Z3.refresh();
-          Z3.ask config.query_range
+          Z3.ask (settings_to_info config)
                   (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels
