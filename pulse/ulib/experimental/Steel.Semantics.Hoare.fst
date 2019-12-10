@@ -429,6 +429,22 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
       (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1))
       (fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2))
 
+  | Par:
+    #aL:Type0 ->
+    #preL:st.hprop ->
+    #postL:post st aL ->
+    #lpreL:l_pre preL ->
+    #lpostL:l_post preL postL ->
+    mL:m st aL preL postL lpreL lpostL ->
+    #aR:Type0 ->
+    #preR:st.hprop ->
+    #postR:post st aR ->
+    #lpreR:l_pre preR ->
+    #lpostR:l_post preR postR ->
+    mR:m st aR preR postR lpreR lpostR ->
+    m st (aL & aR) (preL `st.star` preR) (fun (xL, xR) -> postL xL `st.star` postR xR)
+      (fun h -> lpreL h /\ lpreR h)
+      (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
@@ -571,7 +587,7 @@ let step_frame (#st:st) (i:nat)
      * we want the following assertion to hold, for calling step recursively:
      *   assert (st.interp (st.locks_invariant state `st.star` f_pre `st.star` (st.refine frame' f_frame' `st.star` frame)) 
      *                     (st.heap_of_mem state))
-     * the following lemma calls (commute and refine_middle achieve it
+     * the following lemma calls (commute and refine_middle) achieve it
      *)
     commute4_1_2_3 f_pre frame' frame (st.locks_invariant state);
     refine_middle (st.locks_invariant state `st.star` f_pre) frame' frame f_frame' state;
@@ -605,9 +621,25 @@ let step_frame (#st:st) (i:nat)
 
 /// The `step` function
 
+#set-options "--z3rlimit 100"
+
 let rec step : step_t =
   fun #st i #a #pre #post #lpre #lpost frame f state ->
   match f with
+  | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
+
+    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
+
+    Step (pL xL `st.star` pR xR) state
+      (fun h -> lpL h xL h /\ lpR h xR h)
+      lpost 
+      (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
+      i
+
+  | _ -> admit ()
+
+
+
   | Ret _ _ _   ->   step_ret i frame f state
   | Act _ _ _   ->   step_act i frame f state
   | Bind _ _    ->  step_bind i frame f state step
