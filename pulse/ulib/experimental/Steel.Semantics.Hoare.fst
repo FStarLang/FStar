@@ -294,6 +294,12 @@ let commute4_middle (#st:st) (p q r s:st.hprop)
      (p `st.star` (q `st.star` r) `st.star` s))
   = admit ()
 
+let commute3_1_2 (#st:st) (p q r:st.hprop)
+  : Lemma
+    ((p `st.star` (q `st.star` r))  `st.equals`
+     (q `st.star` (p `st.star` r)))
+  = admit ()
+
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (st:st) (a:Type) = a -> st.hprop
@@ -635,6 +641,51 @@ let rec step : step_t =
   fun #st i #a #pre #post #o_lpre #o_lpost frame f state ->
   match f with
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
+    commute3_1_2 preL preR frame;
+    equals_ext_right (st.locks_invariant state)
+      ((preL `st.star` preR) `st.star` frame)
+      (preR `st.star` (preL `st.star` frame));
+    refine_middle (st.locks_invariant state `st.star` preR) preL frame lpreL state;
+
+    let Step next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
+
+    assert (lpreL (st.heap_of_mem next_state));
+    assume (st.interp (st.locks_invariant next_state `st.star` (next_preR `st.star`
+                                                                (st.refine preL lpreL `st.star` frame))) (st.heap_of_mem next_state)
+
+            <==>
+
+            st.interp (st.locks_invariant next_state `st.star` ((preL `st.star` next_preR) `st.star` frame)) (st.heap_of_mem next_state));    
+
+    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpreL h0 /\ next_lpreR h0 /\ lpostL h0 xL h1 /\ next_lpostR h0 xR h1 in
+    let t : m st a _ _ _ lpost = Par mL mR in
+
+    assume (forall x h_final. lpostL (st.heap_of_mem state) x h_final <==>
+                         lpostL (st.heap_of_mem next_state) x h_final);
+
+
+    Step (preL `st.star` next_preR) next_state
+      (fun h -> lpreL h /\ next_lpreR h)
+      lpost
+      t
+      j
+
+  | _ -> admit ()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     commute4_middle (st.locks_invariant state) preL preR frame;
     refine_middle (st.locks_invariant state `st.star` preL) preR frame lpreR state;
 
