@@ -339,6 +339,13 @@ let commute3_2_1_interp (#st:st) (p q r:st.hprop) state
   = commute4_2_3_1 (st.locks_invariant state) p q r
 
 
+let commute3_2_1_refine_middle_interp (#st:st) (p q r:st.hprop) (fq:fp_prop q) state
+: Lemma (st.interp (st.locks_invariant state `st.star` (p `st.star` (st.refine q fq `st.star` r))) (st.heap_of_mem state) <==>
+         (fq (st.heap_of_mem state) /\
+          st.interp (st.locks_invariant state `st.star` ((q `st.star` p) `st.star` r)) (st.heap_of_mem state)))
+= admit ()
+
+
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (st:st) (a:Type) = a -> st.hprop
 
@@ -697,7 +704,6 @@ let rec step : step_t =
       j
     end
     else begin
-    admit ();
     commute3_1_2 preL preR frame;
     equals_ext_right (st.locks_invariant state)
       ((preL `st.star` preR) `st.star` frame)
@@ -706,13 +712,7 @@ let rec step : step_t =
 
     let Step next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
 
-    assert (lpreL (st.heap_of_mem next_state));
-    assume (st.interp (st.locks_invariant next_state `st.star` (next_preR `st.star`
-                                                                (st.refine preL lpreL `st.star` frame))) (st.heap_of_mem next_state)
-
-            <==>
-
-            st.interp (st.locks_invariant next_state `st.star` ((preL `st.star` next_preR) `st.star` frame)) (st.heap_of_mem next_state));    
+    commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
 
     let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpreL h0 /\ next_lpreR h0 /\ lpostL h0 xL h1 /\ next_lpostR h0 xR h1 in
     let t : m st a _ _ _ lpost = Par mL mR in
@@ -743,25 +743,25 @@ let rec step : step_t =
     
     
     
-  | _ -> admit ()
+  // | _ -> admit ()
   
   
-  | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
+  // | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
 
-    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
+  //   let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
 
-    Step (pL xL `st.star` pR xR) state
-      (fun h -> lpL h xL h /\ lpR h xR h)
-      lpost 
-      (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
-      i
+  //   Step (pL xL `st.star` pR xR) state
+  //     (fun h -> lpL h xL h /\ lpR h xR h)
+  //     lpost 
+  //     (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
+  //     i
 
 
 
-  | Ret _ _ _   ->   step_ret i frame f state
-  | Act _ _ _   ->   step_act i frame f state
-  | Bind _ _    ->  step_bind i frame f state step
-  | Frame _ _ _ -> step_frame i frame f state step
+  // | Ret _ _ _   ->   step_ret i frame f state
+  // | Act _ _ _   ->   step_act i frame f state
+  // | Bind _ _    ->  step_bind i frame f state step
+  // | Frame _ _ _ -> step_frame i frame f state step
 
 // match f with
 
