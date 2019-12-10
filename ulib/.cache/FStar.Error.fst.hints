@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ca43a3a233e3e08b3debef1ab7b97eae"
+      "2969d9cbee38df98733360a6bdb8a4ed"
     ],
     [
       "FStar.Error.__proj__Error__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
       ],
       0,
-      "7fa525bb995716b99057055b422be6d8"
+      "5a9ef0275db2ac2d5ce624fc5772fcf3"
     ],
     [
       "FStar.Error.__proj__Correct__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_9570651724fccc40ed9243df14ac4feb"
       ],
       0,
-      "fde6ced8e4c52118371f7a17d9d23cc5"
+      "386ac4458ce9f8397b0a3632792cc140"
     ],
     [
       "FStar.Error.invertOptResult",
@@ -50,43 +50,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fd39830a9c873024facb2c4bd9bb5e51"
-    ],
-    [
-      "FStar.Error.optResult",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2f9af3ec6969cbef7ba7af5dd4603c20"
-    ],
-    [
-      "FStar.Error.__proj__Error__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Error.Error",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
-      ],
-      0,
-      "eccbf010de94e4a6c15e508c18947e94"
-    ],
-    [
-      "FStar.Error.__proj__Correct__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Error.Correct",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9570651724fccc40ed9243df14ac4feb"
-      ],
-      0,
-      "79800026cd4042af7b09626f669af71a"
+      "eafc133efe6a79940ce0a00aa168668c"
     ]
   ]
 ]
