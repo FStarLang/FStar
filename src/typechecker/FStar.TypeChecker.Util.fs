@@ -1328,11 +1328,11 @@ type isErased =
     | Maybe
     | No
 
-let check_erased (env:Env.env) (t:term) : isErased =
+let rec check_erased (env:Env.env) (t:term) : isErased =
   let norm' = N.normalize [Env.Beta; Env.Eager_unfolding;
                            Env.UnfoldUntil delta_constant;
                            Env.Exclude Env.Zeta; Env.Primops;
-                           Env.Weak; Env.HNF]
+                           Env.Weak; Env.HNF; Env.Iota]
   in
   let t = norm' env t in
   let t = U.unrefine t in
@@ -1346,11 +1346,38 @@ let check_erased (env:Env.env) (t:term) : isErased =
     (* In these two cases, we cannot guarantee that `t` is not
      * an erased, so we're conservatively returning `false` *)
     | Tm_uvar _, _
-    | Tm_unknown, _ ->
-      Maybe
+    | Tm_unknown, _ -> Maybe
+
+    (*
+     * AR: For Tm_match:
+     *     We are only interested in returning a No or Maybe
+     *     Since even if all the branched are erased types,
+     *       we need to find their join to return to the caller
+     *     That's messy
+     *     We can't always return Maybe, since that breaks simple
+     *       cases like the int types in FStar.Integers
+     *     So we iterate over all the branches and return a No if possible
+     *)
+    | Tm_match (_, branches), _ ->
+      branches |> List.fold_left (fun acc br ->
+        match acc with
+        | Yes _ | Maybe -> Maybe
+        | No ->
+          let _, _, br_body = Subst.open_branch br in
+          match
+            br_body
+            |> check_erased
+                (br_body
+                 |> Free.names
+                 |> BU.set_elements
+                 |> Env.push_bvs env) with
+          | No -> No
+          | _ -> Maybe) No
+
 
     (* Anything else cannot be `erased` *)
-    | _ -> No
+    | _ ->
+      No
   in
   (* if Options.debug_any () then *)
   (*   BU.print2 "check_erased (%s) = %s\n" *)

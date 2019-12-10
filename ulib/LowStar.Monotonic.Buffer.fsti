@@ -1914,6 +1914,23 @@ val recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
 
 val region_lifetime_buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Type0
 
+(*
+ * A functoriality lemma
+ *)
+unfold
+let rrel_rel_always_compatible (#a:Type0) (rrel rel:srel a) =
+  forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_subseq_preorder len rrel i j rel
+
+
+val region_lifetime_sub (#a:Type0) (#rrel #rel #subrel:srel a)
+  (b0:mbuffer a rrel rel)
+  (b1:mbuffer a rrel subrel)
+: Lemma
+  (requires rrel_rel_always_compatible rrel subrel)
+  (ensures
+    (region_lifetime_buf b0 /\
+     (exists i len. U32.v i + U32.v len <= length b0 /\ b1 == mgsub subrel b0 i len)) ==> region_lifetime_buf b1)
+
 val recallable_null (#a:Type0) (#rrel #rel:srel a)
   :Lemma (recallable (mnull #a #rrel #rel)) [SMTPat (recallable (mnull #a #rrel #rel))]
 
@@ -1971,13 +1988,6 @@ val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
 val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ p (as_seq h0 b)))
-
-(*
- * A functoriality lemma
- *)
-unfold
-let rrel_rel_always_compatible (#a:Type0) (rrel rel:srel a) =
-  forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_subseq_preorder len rrel i j rel
 
 val witnessed_functorial (#a:Type0)
   (#rrel #rel1 #rel2:srel a)
@@ -2275,6 +2285,19 @@ val mmalloc_drgn_mm (#a:Type0) (#rrel:srel a)
 : HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ freeable b})
   (requires fun h -> alloc_drgn_pre h d len)
   (ensures fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
+
+val mmalloc_drgn_and_blit (#a:Type0) (#rrel:srel a)
+  (#rrel1 #rel1:srel a)
+  (d:HST.drgn) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ region_lifetime_buf b})
+  (requires fun h ->
+    alloc_drgn_pre h d len /\
+    live h src /\
+    U32.v id_src + U32.v len <= length src)
+  (ensures fun h0 b h1 ->
+    alloc_post_mem_common b h0 h1
+      (Seq.slice (as_seq h0 src) (U32.v id_src) (U32.v id_src + U32.v len)))
+
 
 
 (***** End allocation functions *****)

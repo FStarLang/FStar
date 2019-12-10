@@ -129,7 +129,8 @@ and expr =
   | EBufFree of expr
   | EBufCreateNoInit of lifetime * expr
   | EAbortT of string * typ
-
+  | EComment of string * expr * string
+  | EStandaloneComment of string
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -750,8 +751,13 @@ and translate_expr env e: expr =
          string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc_of_list" ->
       EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of ralloc_drgn is same as ralloc
+    *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
+    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn")->
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
@@ -772,8 +778,13 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "LowStar.UninitializedBuffer.ugcmalloc" ->
       EBufCreateNoInit (Eternal, translate_expr env elen)
 
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of ralloc_drgn_mm is same as ralloc_mm
+    *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ->
+    when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn_mm") ->
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
@@ -840,6 +851,15 @@ and translate_expr env e: expr =
       // structure.
       EUnit
 
+   (*
+    * AR: TODO: FIXME:
+    *     temporarily extraction of new_drgn and free_drgn is same just unit
+    *)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid ])
+    when (string_of_mlpath p = "FStar.HyperStack.ST.free_drgn") ||
+         (string_of_mlpath p = "FStar.HyperStack.ST.new_drgn") ->
+      EUnit
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ebuf; _eseq ])
     when (string_of_mlpath p = "LowStar.Monotonic.Buffer.witness_p" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.recall_p" ||
@@ -856,6 +876,11 @@ and translate_expr env e: expr =
      // the C semantics: if the context wants a const pointer, providing a
      // non-const pointer should always be checkable.
      translate_expr env e1
+
+ | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ t ]) }, [ _eqal; e1 ])
+   when string_of_mlpath p = "LowStar.ConstBuffer.of_qbuf"
+   ->
+     ECast (translate_expr env e1, TConstBuf (translate_type env t))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ t ]) }, [ e1 ])
     when string_of_mlpath p = "LowStar.ConstBuffer.cast" ||
@@ -888,6 +913,30 @@ and translate_expr env e: expr =
           EString s
       | _ ->
           failwith "Cannot extract string_of_literal applied to a non-literal"
+      end
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = ebefore }; e ; { expr = eafter } ] )
+    when string_of_mlpath p = "LowStar.Comment.comment_gen" ->
+      begin match ebefore, eafter with
+      | MLE_Const (MLC_String sbefore), MLE_Const (MLC_String safter) ->
+          if contains sbefore "*/"
+          then failwith "Before Comment contains end-of-comment marker";
+          if contains safter "*/"
+          then failwith "After Comment contains end-of-comment marker";
+          EComment (sbefore, translate_expr env e, safter)
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
+      end
+
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = e } ] )
+    when string_of_mlpath p = "LowStar.Comment.comment" ->
+      begin match e with
+      | MLE_Const (MLC_String s) ->
+          if contains s "*/"
+          then failwith "Standalone Comment contains end-of-comment marker";
+          EStandaloneComment s
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
       end
 
   | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
@@ -943,7 +992,8 @@ and translate_expr env e: expr =
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
-      failwith "todo: translate_expr [MLE_Let]"
+      failwith (BU.format1 "todo: translate_expr [MLE_Let] (expr is: %s)"
+        (ML.Code.string_of_mlexpr ([],"") e))
   | MLE_App (head, _) ->
       failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
