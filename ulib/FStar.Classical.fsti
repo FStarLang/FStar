@@ -96,6 +96,10 @@ val move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
   ($_:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
   :Lemma (p x ==> q x)
 
+val move_requires_2 (#a:Type) (#b:Type) (#p:a -> b -> Type) (#q:a -> b -> Type)
+  ($_:(x:a -> y:b -> Lemma (requires (p x y)) (ensures (q x y)))) (x:a) (y:b)
+  :Lemma (p x y ==> q x y)
+
 val forall_impl_intro (#a:Type) (#p:(a -> GTot Type)) (#q:(a -> GTot Type))
   ($_:(x:a -> (squash(p x)) -> Lemma (q x)))
   :Lemma (forall x. p x ==> q x)

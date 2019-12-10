@@ -114,6 +114,9 @@ let move_requires #a #p #q f x =
             | Right hnp -> give_witness hnp
           )))
 
+let move_requires_2 #a #b #p #q f x y =
+  move_requires (f x) y
+
 let forall_impl_intro #a #p #q f =
   let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
   forall_intro (move_requires f')

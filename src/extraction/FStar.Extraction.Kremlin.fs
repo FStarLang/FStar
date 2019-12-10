@@ -129,7 +129,8 @@ and expr =
   | EBufFree of expr
   | EBufCreateNoInit of lifetime * expr
   | EAbortT of string * typ
-
+  | EComment of string * expr * string
+  | EStandaloneComment of string
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -912,6 +913,30 @@ and translate_expr env e: expr =
           EString s
       | _ ->
           failwith "Cannot extract string_of_literal applied to a non-literal"
+      end
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = ebefore }; e ; { expr = eafter } ] )
+    when string_of_mlpath p = "LowStar.Comment.comment_gen" ->
+      begin match ebefore, eafter with
+      | MLE_Const (MLC_String sbefore), MLE_Const (MLC_String safter) ->
+          if contains sbefore "*/"
+          then failwith "Before Comment contains end-of-comment marker";
+          if contains safter "*/"
+          then failwith "After Comment contains end-of-comment marker";
+          EComment (sbefore, translate_expr env e, safter)
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
+      end
+
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = e } ] )
+    when string_of_mlpath p = "LowStar.Comment.comment" ->
+      begin match e with
+      | MLE_Const (MLC_String s) ->
+          if contains s "*/"
+          then failwith "Standalone Comment contains end-of-comment marker";
+          EStandaloneComment s
+      | _ ->
+          failwith "Cannot extract comment applied to a non-literal"
       end
 
   | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
