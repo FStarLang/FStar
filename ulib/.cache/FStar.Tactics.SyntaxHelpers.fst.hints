@@ -11,19 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "a480d372b40e02839daba72a866fabc4"
-    ],
-    [
-      "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
-      ],
-      0,
-      "fd14b3956b835c89451b8f329c17eda4"
+      "6b550ad5ce4ac301f4b195881bfec3ab"
     ]
   ]
 ]
