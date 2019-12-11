@@ -1259,7 +1259,11 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
-  //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
+  if false then
+    BU.print3 "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n"
+            (Print.term_to_string e)
+            (Print.comp_to_string c)
+            (Print.comp_to_string c');
   match Rel.sub_comp env c c' with
     | None ->
         if env.use_eq
