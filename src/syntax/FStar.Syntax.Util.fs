@@ -678,20 +678,6 @@ let is_eqtype_no_unrefine (t:term) =
   | Tm_fvar fv -> fv_eq_lid fv PC.eqtype_lid
   | _ -> false
 
-let rec non_informative t =
-    match (unrefine t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv ->
-      fv_eq_lid fv PC.unit_lid
-      || fv_eq_lid fv PC.squash_lid
-      || fv_eq_lid fv PC.erased_lid
-    | Tm_app(head, _) -> non_informative head
-    | Tm_uinst (t, _) -> non_informative t
-    | Tm_arrow(_, c) ->
-      is_tot_or_gtot_comp c
-      && non_informative (comp_result c)
-    | _ -> false
-
 let is_fun e = match (compress e).n with
   | Tm_abs _ -> true
   | _ -> false
