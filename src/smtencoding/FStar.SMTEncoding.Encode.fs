@@ -1757,7 +1757,7 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
-    let phi, qdecls = encode_formula q env in
+    let (phi, qdecls), ms = BU.record_time (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
@@ -1777,4 +1777,9 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print_string "} Done encoding\n";
+    if debug tcenv Options.Medium
+    || debug tcenv <| Options.Other "SMTEncoding"
+    || debug tcenv <| Options.Other "SMTQuery"
+    || debug tcenv <| Options.Other "Time"
+    then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix
