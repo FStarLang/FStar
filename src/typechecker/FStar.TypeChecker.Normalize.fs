@@ -1002,6 +1002,11 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+(* GM: Please consider this function private outside of this recursive
+ * group, and call `normalize` instead. `normalize` will print timing
+ * information when --debug_level NormTop is given, which makes it a
+ * whole lot easier to find normalization calls that are taking a long
+ * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
