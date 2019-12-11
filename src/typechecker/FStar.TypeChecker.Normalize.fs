@@ -2594,7 +2594,14 @@ let normalize s e t =
                       (Some (Ident.string_of_lid (Env.current_module e)))
                       "FStar.TypeChecker.Normalize"
 
-let normalize_comp s e t = norm_comp (config s e) [] t
+let normalize_comp s e c =
+    let cfg = config s e in
+    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
+    c
+
 let normalize_universe env u = norm_universe (config [] env) [] u
 
 (* Promotes Ghost T, when T is not informative to Pure T
