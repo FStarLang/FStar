@@ -312,7 +312,7 @@ let rec reification_aux (ts:list term) (am:amap term)
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
-    if term_eq (pack (Tv_FVar fv)) mult
+    if unify (pack (Tv_FVar fv)) mult
     then (let (e1, ts, am) = reification_aux ts am mult unit t1 in
           let (e2, ts, am) = reification_aux ts am mult unit t2 in
           (Mult e1 e2, ts, am))

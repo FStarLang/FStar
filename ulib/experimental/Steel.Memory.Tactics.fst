@@ -2,6 +2,7 @@ module Steel.Memory.Tactics
 
 module M = Steel.Memory
 
+
 open FStar.Algebra.CommMonoid.Equiv
 open FStar.Tactics
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
