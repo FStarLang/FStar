@@ -911,6 +911,7 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
        [SMTPat (disjoint h0 h1)]
      = let (| _, h'|) = upd_heap r v h in
        let h0' = update_addr h0 r (Ref a full_permission v) in
+       assume (disjoint h0' h1);  //AR: 12/11: TODO
        mem_equiv_eq h' (join h0' h1)
    in
    ()
