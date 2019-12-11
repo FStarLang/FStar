@@ -2609,6 +2609,9 @@ let normalize_universe env u = norm_universe (config [] env) [] u
 *)
 let ghost_to_pure env c =
     let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
+                      HNF;
+                      (* We could use Weak too were it not that we need
+                       * to descend in the codomain of arrows. *)
                       Unascribe;   //remove ascriptions
                       ForExtraction //and refinement types
                      ]
