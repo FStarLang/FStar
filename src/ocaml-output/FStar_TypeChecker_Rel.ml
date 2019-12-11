@@ -10697,7 +10697,7 @@ and (solve_c :
                  | (FStar_Syntax_Syntax.GTotal
                     (t1,uu____28730),FStar_Syntax_Syntax.Total
                     (t2,uu____28732)) when
-                     FStar_Syntax_Util.non_informative t2 ->
+                     FStar_TypeChecker_Env.non_informative env t2 ->
                      let uu____28749 =
                        problem_using_guard orig t1
                          problem.FStar_TypeChecker_Common.relation t2
