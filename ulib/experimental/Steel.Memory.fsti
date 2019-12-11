@@ -103,8 +103,18 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
 val upd (#a:_) (r:ref a) (v:a)
   : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
 
-val upd_array (#t:_) (a:array_ref t) (v:Seq.lseq t (U32.v (length a)))
-  : action (array_perm a full_permission) unit (fun _ -> pts_to_array a full_permission v)
+
+val upd_array
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Seq.lseq t (U32.v (length a)))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (v: t)
+  : m_action
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+
 
 
 val alloc (#a:_) (v:a)
