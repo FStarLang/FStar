@@ -30,6 +30,7 @@ type view (a:Type) (fp:hprop) = (m:hheap fp) -> a
     For hprops for which we cannot defined a view, we thus could use unit.
     TODO: This should have a better name. hprop_with_view?
     **)
+[@__reduce__]
 noeq
 type viewable' = {
     t:Type0;
@@ -38,6 +39,7 @@ type viewable' = {
 
 (** Redefine an inductive for Star on top of hprops/viewables. This will allow us
     to normalize by induction on the datatype **)
+[@__reduce__]
 noeq type viewable =
    | VUnit: viewable' -> viewable
    | VStar: viewable -> viewable -> viewable
@@ -60,41 +62,6 @@ let rec sel_of (v:viewable) (h:hheap (fp_of v)) : t_of v = match v with
     affine_star (fp_of v1) (fp_of v2) h;
     (sel_of v1 h, sel_of v2 h)
 
-(** Completely incorrect, but used for test purposes. In the tests below, the left resource
-    will always be the leftmost starred hprop **)
-[@__reduce__]
-let rec incorrect_left_sel
-  (outer inner:viewable)
-  (delta:viewable)
-  (v:t_of outer)
-  : GTot (t_of inner)
-  = match outer with
-    | VUnit r -> assume (VUnit r == inner); v
-    | VStar r1 r2 ->
-      let (v1, v2) : t_of r1 * t_of r2 = v in incorrect_left_sel r1 inner delta v1
-
-(** Similar for right_sel **)
-[@__reduce__]
-let rec incorrect_right_sel
-  (outer:viewable{VStar? outer})
-  (inner delta:viewable)
-  (v:t_of outer)
-  : GTot (t_of delta)
-  = match outer with
-    | VStar (VUnit r1) r2 ->
-        let (v1, v2) : t_of (VUnit r1) * t_of r2 = v in
-        assume (r2 == delta);
-        v2
-    | VStar r1 r2 ->
-        let (v1, v2) : t_of r1 * t_of r2 = v in
-        admit();
-        incorrect_right_sel r1 inner delta v1, v2
-
-
-/// Reimplementing tactics for framing.
-/// AF: This should be moved to a separate module once hprops with views are stable and
-/// moved to Steel.Memory
-
 // Irreducible for now because of goals disappearing in tactics again...
 // This should just be hidden behind a val in another module,
 // while exposing all the necessary lemmas
@@ -103,6 +70,29 @@ let equiv (r1 r2:viewable) : prop = equiv (fp_of r1) (fp_of r2) /\ True
 
 let can_be_split_into (outer inner delta:viewable) : prop =
   (VStar inner delta) `equiv` outer
+
+(** A shortcut for the normalization. We need to reduce all our recursive functions **)
+unfold
+let normal (#a:Type) (x:a) =
+  let open FStar.Algebra.CommMonoid.Equiv in
+  norm [delta_attr [`%__reduce__];
+       delta;
+        delta_only [
+          `%__proj__CM__item__mult;
+          `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+          `%fst; `%snd];
+        primops; iota; zeta] x
+
+
+/// Selectors for hprops
+/// AF: Will we need to limit this to r0:viewable{VUnit? r0 /\ is_subresource} ? This might
+/// allow an easier, reduceable definition for mk_rmem
+let rmem (r: viewable) : Type =
+   (r0:viewable{exists delta. can_be_split_into r r0 delta}) -> normal (t_of r0)
+
+/// Reimplementing tactics for framing.
+/// AF: This should be moved to a separate module once hprops with views are stable and
+/// moved to Steel.Memory
 
 (** A more convenient notation for VStar **)
 [@__reduce__]
@@ -154,7 +144,7 @@ let star_associative (p1 p2 p3:viewable)
   = admit()
 
 let star_congruence (p1 p2 p3 p4:viewable)
-  : Lemma (requires p1 `equiv` p3 /\ p2 `equiv`p4)
+  : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 <*> p2) `equiv` (p3 <*> p4))
   = admit()
 
@@ -180,11 +170,6 @@ let can_be_split_into_star (res1 res2 res3:viewable)
     (ensures  (can_be_split_into res1 res2 res3))
   = ()
 
-// AF: The tactic is not yet working because of <*>.
-// Inside canon_monoid, specifically in reification_aux, a normalized mult is compared
-// to the current function applied. Since <*> is not the same term as VStar,
-// the resource is not split into atoms.
-// Why does this happen although <*> is defined as unfold?
 inline_for_extraction noextract let resolve_frame () : T.Tac unit =
   T.refine_intro();
   T.flip();
@@ -203,64 +188,44 @@ inline_for_extraction noextract let reprove_frame () : T.Tac unit =
   T.trivial()
 
 
+/// The function creating a selector out of a resource
+/// Interestingly, we do not seem to require any more info about this function
+/// We might need something when implementing frame, although the definition of rmem might be enough
+assume
+val mk_rmem
+  (r: viewable)
+  (h: hheap (fp_of r)) :
+  Tot (rh:rmem r)
+  // {
+  //   forall (r0:viewable{exists delta. can_be_split_into r r0 delta}).
+  //     rh r0 == sel_of r0 (heap_of_mem h)
+  // })
 
-(** A shortcut for the normalization. We need to reduce all our recursive functions **)
-unfold
-let normal (#a:Type) (x:a) =
-  let open FStar.Algebra.CommMonoid.Equiv in
-  norm [delta_attr [`%__reduce__];
-       delta;
-        delta_only [
-          `%__proj__CM__item__mult;
-          `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-          `%fst; `%snd];
-        primops; iota; zeta] x
-
-
-
-(** AF: These functions should be the ones actually doing the rewriting in the end.
-    I think we can implement them using a variant of the canon_monoid tactic.
-    The postconditions are here for documentation purposes, we would probably need them
-    as lemmas to prove the correctness of frame
-    **)
-assume val left_sel
-  (outer inner:viewable)
-  (delta:viewable{can_be_split_into outer inner delta})
-  (v:t_of outer)
-  : Ghost (t_of inner)
-          (requires True)
-         (ensures fun v' -> (forall (h:hheap (fp_of outer)).
-           (assume (interp (fp_of inner) h);
-           (sel_of outer h) == v ==> (sel_of inner h) == v')))
-
-assume val right_sel
-  (outer inner:viewable)
-  (delta:viewable{can_be_split_into outer inner delta})
-  (v:t_of outer)
-  : Ghost (t_of delta)
-          (requires True)
-         (ensures fun v' -> (forall (h:hheap (fp_of outer)).
-           (assume (interp (fp_of delta) h);
-           (sel_of outer h) == v ==> (sel_of delta h) == v')))
 
 effect Steel
   (a: Type)
   (res0: viewable)
   (res1: a -> viewable)
-  (pre: (t_of res0) -> prop)
-  (post: (t_of res0) -> (x:a) -> (t_of (res1 x)) -> prop)
+  (pre: (rmem res0) -> GTot prop)
+  (post: (rmem res0) -> (x:a) -> (rmem (res1 x)) -> GTot prop)
 = ST
   a
   (fun h0 ->
     interp (fp_of res0) (heap_of_mem h0) /\
-    pre (normal (sel_of res0 (heap_of_mem h0))))
+    pre (mk_rmem res0 (heap_of_mem h0)))
+//    (normal (sel_of res0 (heap_of_mem h0))))
   (fun h0 x h1 ->
     interp (fp_of res0) (heap_of_mem h0) /\
-    pre (normal (sel_of res0 (heap_of_mem h0))) /\
+    pre (mk_rmem res0 (heap_of_mem h0)) /\
+//    pre (normal (sel_of res0 (heap_of_mem h0))) /\
     interp (fp_of (res1 x)) (heap_of_mem h1) /\
-    post (normal (sel_of res0 (heap_of_mem h0)))
+    post (mk_rmem res0 (heap_of_mem h0))
          x
-         (normal (sel_of (res1 x) (heap_of_mem h1)))
+         (mk_rmem (res1 x) (heap_of_mem h1))
+
+    // post (normal (sel_of res0 (heap_of_mem h0)))
+    //      x
+    //      (normal (sel_of (res1 x) (heap_of_mem h1)))
   )
 
 (** We underspecify get: It returns a heap about which we only know that
@@ -270,7 +235,7 @@ assume val get (r:viewable)
   :Steel (hheap (fp_of r)) (r) (fun _ -> r)
              (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0 == m1 /\
-               m0 == normal (sel_of r x)))
+               m0 == mk_rmem r x)) // normal (sel_of r x)))
 
 (*
 
@@ -392,10 +357,34 @@ let vptr' (#a:Type) (r:ref a) : viewable' =
 [@__reduce__]
 let vptr (#a:Type) (r:ref a) : viewable = VUnit (vptr' r)
 
+#push-options "--no_tactics"
+
+/// AF: We need the memory to be the last argument. If not, we finish with an implicit argument,
+/// which F* expects us to provide. If we do not provide it, the type of an application seems to
+/// be the type of the partial application
+/// TODO: This should also be renamed to something better during cleanup of this module
+/// TODO: We probably can take the pointer directly instead of the viewable
+[@__reduce__]
+let view_sel
+  (#outer:viewable)
+  (inner:viewable)
+  (#[resolve_frame()]
+    delta:viewable{
+      FStar.Tactics.with_tactic
+      reprove_frame
+      (can_be_split_into outer inner delta /\ True)})
+  (h:rmem outer)
+ : GTot (normal (t_of inner))
+  = T.by_tactic_seman reprove_frame (can_be_split_into outer inner delta /\ True);
+    h inner
+
+#pop-options
+
 val fread (#a:Type) (r:ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
-  (ensures fun m0 v m1 -> m0 == m1 /\ m1 == v)
+  (ensures fun m0 v m1 ->
+    m0 == m1 /\ v == view_sel (vptr r) m1)
 
 (** TODO: Reimplement this **)
 let fread #a r = admit()
@@ -406,19 +395,56 @@ let fread #a r = admit()
 val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
-  (ensures fun _ _ m1 -> m1 == v)
+  (ensures fun _ _ m1 -> view_sel (vptr r) m1 == v)
 
 (** TODO: Reimplement this **)
 let fupd #a r v = admit()
   // ptr_update r v;
   // pts_to_perm full_permission r v
 
+[@__reduce__]
+let focus_rmem (#r: viewable) (h: rmem r)
+  (r0: viewable{exists delta. can_be_split_into r r0 delta})
+  : Tot (h':rmem r0)
+  = (fun (r':viewable{exists delta. can_be_split_into r0 r' delta}) ->
+      assume (exists delta. can_be_split_into r r' delta);
+      h r')
 
-(** For test purposes, assume that outer is a star.
-    Remove once left/right_sel are done correctly through tactics **)
+#push-options "--z3rlimit 20"
+
+/// Going back to the tuples representation here for convenience,
+/// but it's only exposed to the SMT solver as a postcondition of frame
+[@__reduce__]
+let rec expand_delta (#outer:viewable) (h0:rmem outer)
+  (delta:viewable)
+  (inner:viewable{can_be_split_into outer inner delta})
+  : t_of delta
+  = match delta with
+    | VStar v1 v2 ->
+      Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
+      calc (equiv) {
+        inner <*> v2 <*> v1;
+        (equiv) { star_associative inner v2 v1 }
+        inner <*> (v2 <*> v1);
+        (equiv) { star_commutative v2 v1;
+                  equiv_refl inner;
+                  star_congruence inner (v2 <*> v1) inner (v1 <*> v2) }
+        inner <*> (v1 <*> v2);
+      };
+      calc (equiv) {
+        inner <*> v1 <*> v2;
+        (equiv) { star_associative inner v1 v2 }
+        inner <*> delta;
+      };
+      (expand_delta h0 v1 (inner <*> v2), expand_delta h0 v2 (inner <*> v1))
+    | v ->
+      star_commutative delta inner;
+      equiv_trans (delta <*> inner)  (inner <*> delta) outer;
+      h0 v
+
 assume
 val frame
-  (outer:viewable{VStar? outer})
+  (outer:viewable)
   (#inner0:viewable)
   (#a:Type)
   (#inner1:a -> viewable)
@@ -427,8 +453,8 @@ val frame
       FStar.Tactics.with_tactic
       reprove_frame
       (can_be_split_into outer inner0 delta /\ True)})
-  (#pre:t_of inner0 -> prop)
-  (#post:t_of inner0 -> (x:a) -> t_of (inner1 x) -> prop)
+  (#pre:rmem inner0 -> prop)
+  (#post:rmem inner0 -> (x:a) -> rmem (inner1 x) -> prop)
   ($f:unit -> Steel a inner0 inner1 pre post)
   : Steel a
           outer
@@ -436,14 +462,17 @@ val frame
           (fun v -> (inner1 v) <*> delta)
           (* We should satisfy the precondition of the framed function, using only the views
               of inner0 *)
-          (fun v -> pre (normal (incorrect_left_sel outer inner0 delta v)))
-          (* fst v1 is here the view of inner1, snd v1 the view of delta after execution
-              by definition of sel_of *)
-          (fun v0 x v1 ->
-            post (normal (incorrect_left_sel outer inner0 delta v0)) x (normal (fst v1)) /\
-           (normal (incorrect_right_sel outer inner0 delta v0)) == normal (snd v1))
+          (fun v ->
+            assume (can_be_split_into outer inner0 delta);
+            normal (pre (focus_rmem v inner0)))
+          (fun h0 x h1 ->
+             assume (can_be_split_into outer inner0 delta);
+             assume (can_be_split_into (inner1 x <*> delta) (inner1 x) delta);
+             normal (post (focus_rmem h0 inner0) x (focus_rmem h1 (inner1 x))) /\
+             normal (expand_delta h0 delta inner0 == expand_delta h1 delta (inner1 x))
+          )
 
-#reset-options "--max_fuel 1 --max_ifuel 0"
+#reset-options "--max_fuel 0 --max_ifuel 0"
 
 (** A few tests of framing and normalization. An interesting observation is that we
     do not need fuel to obtain egalities on "atomic" resources inside delta. **)
@@ -452,20 +481,27 @@ val test1 (#a:Type) (r1 r2:ref a) : Steel a
   (vptr r1 <*> vptr r2)
   (fun _ -> vptr r1 <*> vptr r2)
   (fun _ -> True)
-  (fun (ov1, ov2) v (v1, v2) -> ov1 == v1 /\ v == v1 /\ ov2 == v2)
+  (fun olds v news ->
+     view_sel (vptr r1) news == v /\
+     view_sel (vptr r2) olds == view_sel (vptr r2) news
+     )
 
 let test1 #a r1 r2 =
-  frame (vptr r1 <*> vptr r2)
-        (fun () -> fread r1)
+  let v = frame (vptr r1 <*> vptr r2)
+        (fun () -> fread r1) in
+// For debug purposes, we can check the SMT context and state of normalization
+// by uncommenting the following assertion
+//  assert (True) by (T.dump "test1");
+  v
 
 val test2 (#a:Type) (r1 r2 r3:ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3)
   (fun _ -> vptr r1 <*> (vptr r2 <*> vptr r3))
   (fun _ -> True)
-  (fun ov x v ->
-    let ((ov1, ov2), ov3) = ov in
-    let (v1, (v2, v3)) = v in
-    v1 == x /\ v2 == ov2 /\ v3 == ov3)
+  (fun olds x news ->
+    view_sel (vptr r1) news == x /\
+    view_sel (vptr r2) news == view_sel (vptr r2) olds /\
+    view_sel (vptr r3) news == view_sel (vptr r3) olds)
 
 let test2 #a r1 r2 r3 =
   frame (vptr r1 <*> vptr r2 <*> vptr r3)
@@ -473,21 +509,16 @@ let test2 #a r1 r2 r3 =
 
 val test3 (#a:Type) (r1 r2 r3 r4:ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
-  (fun _ -> vptr r1 <*> (vptr r2 <*> vptr r3 <*> vptr r4))
+  // The ordering is a bit annoying… We should try to have a final "rewriting" pass through
+  // normalization once we have the frame inference tactic
+  (fun _ -> vptr r1 <*> (vptr r2 <*> (vptr r3 <*> vptr r4)))
   (fun _ -> True)
-  (fun ov x v ->
-    let (((ov1, ov2), ov3), ov4) = ov in
-    let (v1, ((v2, v3), v4)) = v in
-    v1 == x /\ v2 == ov2 /\ v3 == ov3 /\ v4 == ov4)
+  (fun olds x news ->
+    view_sel (vptr r1) news == x /\
+    view_sel (vptr r4) news == view_sel (vptr r4) olds /\
+    view_sel (vptr r2) news == view_sel (vptr r2) olds /\
+    view_sel (vptr r3) news == view_sel (vptr r3) olds)
 
-// Not yet working because of a mismatch on select_left: We have an equality between
-// ((old ptr2, old_ptr3), old_ptr4) and (ptr_2, (ptr_3, ptr4))
 let test3 #a r1 r2 r3 r4 =
-  let v =
   frame (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
-        // #_ #_ #_
-        // #(vptr r2 <*> vptr r3 <*> vptr r4)
         (fun () -> fread r1)
-  in
-  assert (True) by (T.dump "test3");
-  v
