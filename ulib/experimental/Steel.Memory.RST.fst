@@ -191,18 +191,18 @@ inline_for_extraction noextract let reprove_frame () : T.Tac unit =
 
 
 /// The function creating a selector out of a resource
-/// Interestingly, we do not seem to require any more info about this function
-/// We might need something when implementing frame, although the definition of rmem might be enough
-assume
-val mk_rmem
+/// Interestingly, we do not seem to require any more info about this function:
+/// A previous version with an assume val an no other postcondition that the type rmem r
+/// was sufficient for this file to go through
+[@__reduce__]
+let mk_rmem
   (r: viewable)
   (h: hheap (fp_of r)) :
   Tot (rh:rmem r)
-  // {
-  //   forall (r0:viewable{exists delta. can_be_split_into r r0 delta}).
-  //     rh r0 == sel_of r0 (heap_of_mem h)
-  // })
-
+  =
+  fun (r0:viewable{exists delta. can_be_split_into r r0 delta}) ->
+    Classical.forall_intro_3 affine_star;
+    sel_of r0 h
 
 effect Steel
   (a: Type)
@@ -214,40 +214,106 @@ effect Steel
   a
   (fun h0 ->
     interp (fp_of res0) (heap_of_mem h0) /\
-    pre (mk_rmem res0 (heap_of_mem h0)))
-//    (normal (sel_of res0 (heap_of_mem h0))))
+    normal (pre (mk_rmem res0 (heap_of_mem h0))))
   (fun h0 x h1 ->
     interp (fp_of res0) (heap_of_mem h0) /\
-    pre (mk_rmem res0 (heap_of_mem h0)) /\
-//    pre (normal (sel_of res0 (heap_of_mem h0))) /\
+    normal (pre (mk_rmem res0 (heap_of_mem h0))) /\
     interp (fp_of (res1 x)) (heap_of_mem h1) /\
-    post (mk_rmem res0 (heap_of_mem h0))
-         x
-         (mk_rmem (res1 x) (heap_of_mem h1))
-
-    // post (normal (sel_of res0 (heap_of_mem h0)))
-    //      x
-    //      (normal (sel_of (res1 x) (heap_of_mem h1)))
+    normal (post (mk_rmem res0 (heap_of_mem h0))
+                 x
+                 (mk_rmem (res1 x) (heap_of_mem h1)))
   )
 
+/// Going back to the tuples representation here for convenience,
+/// but it's only exposed to the SMT solver as a postcondition of frame and get
+[@__reduce__]
+let rec expand_delta (#outer:viewable) (h0:rmem outer)
+  (delta:viewable)
+  (inner:viewable{can_be_split_into outer inner delta})
+  : GTot (t_of delta)
+  = match delta with
+    | VStar v1 v2 ->
+      Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
+      calc (equiv) {
+        inner <*> v2 <*> v1;
+        (equiv) { star_associative inner v2 v1 }
+        inner <*> (v2 <*> v1);
+        (equiv) { star_commutative v2 v1;
+                  equiv_refl inner;
+                  star_congruence inner (v2 <*> v1) inner (v1 <*> v2) }
+        inner <*> (v1 <*> v2);
+      };
+      calc (equiv) {
+        inner <*> v1 <*> v2;
+        (equiv) { star_associative inner v1 v2 }
+        inner <*> delta;
+      };
+      (expand_delta h0 v1 (inner <*> v2), expand_delta h0 v2 (inner <*> v1))
+    | v ->
+      star_commutative delta inner;
+      equiv_trans (delta <*> inner)  (inner <*> delta) outer;
+      h0 v
+
+[@__reduce__]
+let rec expand_delta_heap (#outer:viewable) (h0:hheap (fp_of outer))
+  (delta:viewable)
+  (inner:viewable{can_be_split_into outer inner delta})
+  : GTot (t_of delta)
+  = match delta with
+    | VStar v1 v2 ->
+      Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
+      calc (equiv) {
+        inner <*> v2 <*> v1;
+        (equiv) { star_associative inner v2 v1 }
+        inner <*> (v2 <*> v1);
+        (equiv) { star_commutative v2 v1;
+                  equiv_refl inner;
+                  star_congruence inner (v2 <*> v1) inner (v1 <*> v2) }
+        inner <*> (v1 <*> v2);
+      };
+      calc (equiv) {
+        inner <*> v1 <*> v2;
+        (equiv) { star_associative inner v1 v2 }
+        inner <*> delta;
+      };
+
+      (expand_delta_heap h0 v1 (inner <*> v2), expand_delta_heap h0 v2 (inner <*> v1))
+    | VUnit v ->
+      star_commutative delta inner;
+      equiv_trans (delta <*> inner)  (inner <*> delta) outer;
+      affine_star v.fp (fp_of inner) h0;
+      v.sel h0
+
+
+/// AF: get_mem and put_mem should only be used in trusted, core libraries (to lift actions
+/// to functions with the Steel effect)
+/// For proof purposes (i.e. the current HS.get()), we should expose a get returning selectors instead
 (** We underspecify get: It returns a heap about which we only know that
-    the resource invariant is satisfied, and that the views of the resouce
-    correspond to the ones we would compute from this heap **)
-assume val get (r:viewable)
-  :Steel (hheap (fp_of r)) (r) (fun _ -> r)
+    the resource invariant is satisfied, and that the view of the resouce
+    corresponds to the ones we would compute from this heap **)
+assume val get_mem (r:viewable)
+  :Steel (hmem (fp_of r)) (r) (fun _ -> r)
              (requires (fun m -> True))
-             (ensures (fun m0 x m1 -> m0 == m1 /\
-               m0 == mk_rmem r x)) // normal (sel_of r x)))
+             (ensures (fun h0 x h1 ->
+               (**) cm_identity r;
+               (**) star_commutative r vemp;
+               (**) affine_star (fp_of r) (locks_invariant x) (heap_of_mem x);
+               // Instead of equality on selectors, we expose equalities on applications
+               // of the selector to all subresources
+               normal (expand_delta h0 r vemp) == normal (expand_delta h1 r vemp) /\
+               h0 r == sel_of r (heap_of_mem x)))
 
-(*
-
-assume val put (r_init r_out:viewable) (m:hmem r_out.fp)
+assume val put_mem (r_init r_out:viewable) (m:hmem (fp_of r_out))
   :Steel unit (r_init) (fun _ -> r_out)
              (requires fun m -> True)
              (ensures (fun _ _ m1 ->
-               affine_star r_out.fp (locks_invariant m) (heap_of_mem m);
-               m1 == r_out.sel (heap_of_mem m)))
-*)
+               (**) cm_identity r_out;
+               (**) star_commutative r_out vemp;
+               (**) affine_star (fp_of r_out) (locks_invariant m) (heap_of_mem m);
+               // Again, we expose equalities on applications of selectors.
+               // This allows a better normalization instead of an equality on functions
+               normal (expand_delta m1 r_out vemp) ==
+                 normal (expand_delta_heap #r_out (heap_of_mem m) r_out vemp)))
 
 (** A few lemmas to cast between the different pointer hprops **)
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
@@ -276,72 +342,6 @@ let pts_to_sel (#a:Type) (p:permission) (r:ref a) (v:a) (h:heap)
   = interp_pts_to_perm p r v h; interp_perm_to_ptr p r h;
     sel_lemma r p h;
     pts_to_injective r p v (sel r h) h
-(*
-let vptr_perm #a (r:ref a) (p:permission) = {
-  t = unit;
-  fp = ptr_perm r p;
-  sel = fun _ -> ()}
-
-let vptr #a (r:ref a) = {
-  t = a;
-  fp = ptr r;
-  sel = fun h -> sel r h}
-
-let vpts_to #a (r:ref a) (p:permission) (v:a) = {
-  t = a;
-  fp = pts_to r p v;
-  sel = fun _ -> v}
-
-val perm_to_ptr (#a:Type) (p:permission) (r:ref a) : Steel unit
-  (vptr_perm r p)
-  (fun _ -> vptr r)
-  (fun _ -> True)
-  (fun h0 _ h1 -> h0 == h1)
-
-let perm_to_ptr #a p r =
- admit();
- let h = get (vptr_perm r p) in
- interp_perm_to_ptr p r (heap_of_mem h)
-
-val pts_to_perm (#a:Type) (p:permission) (r:ref a) (v:a) : Steel unit
-  (vpts_to r p v)
-  (fun _ -> vptr_perm r p)
-  (fun _ -> True)
-  (fun h0 _ h1 -> True) // interp (ptr r) (heap_of_mem h1) /\ h0 == h1 /\ sel r (heap_of_mem h1) == v)
-
-let pts_to_perm  #a p r v =
- admit();
- let h = get (vpts_to r p v) in
- interp_pts_to_perm p r v (heap_of_mem h);
- interp_perm_to_ptr p r (heap_of_mem h);
- pts_to_sel p r v (heap_of_mem h)
-
-val ptr_read (#a:Type) (r:ref a) : Steel a
-  (vptr_perm r full_permission)
-  (fun v -> vpts_to r full_permission v)
-  (fun _ -> True)
-  (fun _ _ _ -> True)
-
-let ptr_read #a r =
- admit();
- perm_to_ptr full_permission r;
- let h = get (vptr r) in
- let v = sel r (heap_of_mem h) in
- sel_lemma r full_permission (heap_of_mem h);
- v
-
-val ptr_update (#a:Type) (r:ref a) (v:a) : Steel unit
-  (ptr_perm r full_permission)
-  (fun _ -> pts_to r full_permission v)
-  (fun _ -> True)
-  (fun _ _ _ -> True)
-
-let ptr_update #a r v =
-  perm_to_ptr #a full_permission r;
-  let h = get (ptr_perm r full_permission) in
-  let (| _, h' |) = upd r v h in
-  put (ptr_perm r full_permission) (pts_to r full_permission v) h'
-*)
 
 (** Shortcut for a pointer with full permission **)
 let fptr (#a:Type) (r:ref a) : hprop = ptr_perm r full_permission
@@ -385,24 +385,29 @@ let view_sel
 val fread (#a:Type) (r:ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
-  (ensures fun m0 v m1 ->
-    m0 == m1 /\ v == view_sel (vptr r) m1)
+  (ensures fun h0 v h1 ->
+    view_sel (vptr r) h0 == view_sel (vptr r) h1 /\ v == view_sel (vptr r) h1)
 
-(** TODO: Reimplement this **)
-let fread #a r = admit()
-  // let v = ptr_read #a r in
-  // pts_to_perm full_permission r v;
-  // v
+let fread #a r =
+  let m = get_mem (vptr r) in
+  (**) affine_star (fp_of (vptr r)) (locks_invariant m) (heap_of_mem m);
+  fsel r (heap_of_mem m)
 
 val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ m1 -> view_sel (vptr r) m1 == v)
 
-(** TODO: Reimplement this **)
-let fupd #a r v = admit()
-  // ptr_update r v;
-  // pts_to_perm full_permission r v
+let fupd #a r v =
+  let m = get_mem (vptr r) in
+  let (| _, m' |) = upd r v m in
+  (**) let h1, h2 = split_mem (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m') in
+  (**) interp_pts_to_perm full_permission r v h1;
+  (**) intro_star (fptr r) (locks_invariant m') h1 h2;
+  (**) affine_star (fp_of (vptr r)) (locks_invariant m') (heap_of_mem m');
+  (**) affine_star (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m');
+  (**) pts_to_sel full_permission r v (heap_of_mem m');
+  put_mem (vptr r) (vptr r) m'
 
 let lemma_sub_subresource (outer inner r:viewable)
   (delta:viewable{can_be_split_into outer inner delta})
@@ -433,35 +438,6 @@ let focus_rmem (#outer: viewable) (h: rmem outer)
 
 #push-options "--z3rlimit 20"
 
-/// Going back to the tuples representation here for convenience,
-/// but it's only exposed to the SMT solver as a postcondition of frame
-[@__reduce__]
-let rec expand_delta (#outer:viewable) (h0:rmem outer)
-  (delta:viewable)
-  (inner:viewable{can_be_split_into outer inner delta})
-  : GTot (t_of delta)
-  = match delta with
-    | VStar v1 v2 ->
-      Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
-      calc (equiv) {
-        inner <*> v2 <*> v1;
-        (equiv) { star_associative inner v2 v1 }
-        inner <*> (v2 <*> v1);
-        (equiv) { star_commutative v2 v1;
-                  equiv_refl inner;
-                  star_congruence inner (v2 <*> v1) inner (v1 <*> v2) }
-        inner <*> (v1 <*> v2);
-      };
-      calc (equiv) {
-        inner <*> v1 <*> v2;
-        (equiv) { star_associative inner v1 v2 }
-        inner <*> delta;
-      };
-      (expand_delta h0 v1 (inner <*> v2), expand_delta h0 v2 (inner <*> v1))
-    | v ->
-      star_commutative delta inner;
-      equiv_trans (delta <*> inner)  (inner <*> delta) outer;
-      h0 v
 
 #push-options "--no_tactics"
 
@@ -547,3 +523,32 @@ val test3 (#a:Type) (r1 r2 r3 r4:ref a) : Steel a
 let test3 #a r1 r2 r3 r4 =
   frame (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
         (fun () -> fread r3)
+
+val test_upd1 (#a:Type) (r1 r2:ref a) (v:a) : Steel unit
+  (vptr r1 <*> vptr r2)
+  (fun _ -> vptr r1 <*> vptr r2)
+  (fun _ -> True)
+  (fun olds _ news ->
+     view_sel (vptr r1) news == v /\
+     view_sel (vptr r2) olds == view_sel (vptr r2) news
+     )
+
+let test_upd1 #a r1 r2 v =
+  frame (vptr r1 <*> vptr r2)
+        (fun () -> fupd r1 v)
+
+val test_upd2 (#a:Type) (r1 r2 r3 r4:ref a) (v:a) : Steel unit
+  (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
+  // The ordering is a bit annoying… We should try to have a final "rewriting" pass through
+  // normalization once we have the frame inference tactic
+  (fun _ -> vptr r3 <*> (vptr r1 <*> (vptr r2 <*> vptr r4)))
+  (fun _ -> True)
+  (fun olds _ news ->
+    view_sel (vptr r3) news == v /\
+    view_sel (vptr r1) news == view_sel (vptr r1) olds /\
+    view_sel (vptr r2) news == view_sel (vptr r2) olds /\
+    view_sel (vptr r4) news == view_sel (vptr r4) olds)
+
+let test_upd2 #a r1 r2 r3 r4 v =
+  frame (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
+        (fun () -> fupd r3 v)
