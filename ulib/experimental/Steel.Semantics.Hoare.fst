@@ -675,7 +675,7 @@ let step_act (#st:st) (i:nat)
 
 /// Bind and Frame
 
-#push-options "--z3rlimit 200"
+#push-options "--z3rlimit 50"
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
@@ -763,16 +763,13 @@ let step_par_left (#st:st) (i:nat)
     refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
     commute3_2_1_interp next_preL preR frame next_state;
 
-    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> next_lpreL h0 /\ lpreR h0 /\ next_lpostL h0 xL h1 /\ lpostR h0 xR h1 in
-    let t : m st a _ post _ lpost = Par mL mR in
-
     assume (forall x h_final. lpostR (st.heap_of_mem state) x h_final <==>
                          lpostR (st.heap_of_mem next_state) x h_final);
 
     Step (next_preL `st.star` preR) next_state
       (par_lpre next_lpreL lpreR)
-      lpost
-      t
+      (par_lpost next_lpreL next_lpostL lpreR lpostR)
+      (Par mL mR)
       j
 
 let step_par_right (#st:st) (i:nat)
@@ -796,17 +793,14 @@ let step_par_right (#st:st) (i:nat)
 
     commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
 
-    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpreL h0 /\ next_lpreR h0 /\ lpostL h0 xL h1 /\ next_lpostR h0 xR h1 in
-    let t : m st a _ _ _ lpost = Par mL mR in
-
     assume (forall x h_final. lpostL (st.heap_of_mem state) x h_final <==>
                          lpostL (st.heap_of_mem next_state) x h_final);
 
 
     Step (preL `st.star` next_preR) next_state
       (par_lpre lpreL next_lpreR)
-      lpost
-      t
+      (par_lpost lpreL lpostL next_lpreR next_lpostR)
+      (Par mL mR)
       j
 #pop-options
 
