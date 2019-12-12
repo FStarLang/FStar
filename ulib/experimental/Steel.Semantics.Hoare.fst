@@ -675,7 +675,7 @@ let step_act (#st:st) (i:nat)
 
 /// Bind and Frame
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 20"
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
@@ -802,11 +802,9 @@ let step_par_right (#st:st) (i:nat)
       (par_lpost lpreL lpostL next_lpreR next_lpostR)
       (Par mL mR)
       j
-#pop-options
 
 assume val go_left : nat -> bool
 
-#push-options "--z3rlimit 20"
 let step_par (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
