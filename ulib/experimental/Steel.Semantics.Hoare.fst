@@ -498,7 +498,7 @@ let bind_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a)
   (#b:Type0) (#post_b:post st b)
   (lpost_b:(x:a -> l_post (post_a x) post_b))
 : l_post pre post_b
-= fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2)  //TODO: strengthen with lpost_a h0 x h1
+= fun h0 y h2 -> lpre_a h0 /\ (exists x h1. lpost_a h0 x h1 /\ (lpost_b x) h1 y h2)
 
 
 let par_lpre (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
