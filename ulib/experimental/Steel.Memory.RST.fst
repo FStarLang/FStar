@@ -66,7 +66,8 @@ let rec sel_of (v:viewable) (h:hheap (fp_of v)) : t_of v = match v with
 // This should just be hidden behind a val in another module,
 // while exposing all the necessary lemmas
 irreducible
-let equiv (r1 r2:viewable) : prop = equiv (fp_of r1) (fp_of r2) /\ True
+let equiv (r1 r2:viewable) : (p:prop{p <==> equiv (fp_of r1) (fp_of r2)})
+  = equiv (fp_of r1) (fp_of r2) /\ True
 
 let can_be_split_into (outer inner delta:viewable) : prop =
   (VStar inner delta) `equiv` outer
@@ -88,7 +89,7 @@ let normal (#a:Type) (x:a) =
 /// AF: Will we need to limit this to r0:viewable{VUnit? r0 /\ is_subresource} ? This might
 /// allow an easier, reduceable definition for mk_rmem
 let rmem (r: viewable) : Type =
-   (r0:viewable{exists delta. can_be_split_into r r0 delta}) -> normal (t_of r0)
+   (r0:viewable{exists delta. can_be_split_into r r0 delta}) -> GTot (normal (t_of r0))
 
 /// Reimplementing tactics for framing.
 /// AF: This should be moved to a separate module once hprops with views are stable and
@@ -103,17 +104,17 @@ module CME = FStar.Algebra.CommMonoid.Equiv
 module T = FStar.Tactics
 module TCE = FStar.Tactics.CanonCommMonoidSimple.Equiv
 
-let equiv_refl (x:viewable) : Lemma (equiv x x) = admit()
+let equiv_refl (x:viewable) : Lemma (equiv x x) = ()
 
 let equiv_sym (x y:viewable) : Lemma
   (requires equiv x y)
   (ensures equiv y x)
-  = admit()
+  = ()
 
 let equiv_trans (x y z:viewable) : Lemma
   (requires equiv x y /\ equiv y z)
   (ensures equiv x z)
-  = admit()
+  = ()
 
 inline_for_extraction noextract
 let req : CME.equiv viewable =
@@ -131,22 +132,23 @@ let vemp' : viewable' = {
 let vemp : viewable = VUnit vemp'
 
 let cm_identity (x:viewable) : Lemma ((vemp <*> x) `equiv` x)
-  = admit()
+  = star_commutative emp (fp_of x);
+    emp_unit (fp_of x)
 
 let star_commutative (p1 p2:viewable)
   : Lemma ((p1 <*> p2) `equiv` (p2 <*> p1))
-  = admit()
+  = star_commutative (fp_of p1) (fp_of p2)
 
 let star_associative (p1 p2 p3:viewable)
   : Lemma ((p1 <*> p2 <*> p3)
            `equiv`
            (p1 <*> (p2 <*> p3)))
-  = admit()
+  = star_associative (fp_of p1) (fp_of p2) (fp_of p3)
 
 let star_congruence (p1 p2 p3 p4:viewable)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 <*> p2) `equiv` (p3 <*> p4))
-  = admit()
+  = star_congruence (fp_of p1) (fp_of p2) (fp_of p3) (fp_of p4)
 
 [@__reduce__]
 inline_for_extraction noextract
@@ -402,13 +404,32 @@ let fupd #a r v = admit()
   // ptr_update r v;
   // pts_to_perm full_permission r v
 
+let lemma_sub_subresource (outer inner r:viewable)
+  (delta:viewable{can_be_split_into outer inner delta})
+  (delta':viewable)
+  : Lemma
+      (requires can_be_split_into inner r delta')
+      (ensures can_be_split_into outer r (delta' <*> delta))
+  = Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
+    Classical.forall_intro_2 (fun x -> Classical.move_requires (equiv_sym x));
+    calc (equiv) {
+      r <*> (delta' <*> delta);
+      (equiv) { star_associative r delta' delta }
+      (r <*> delta') <*> delta;
+      (equiv) { equiv_refl delta; star_congruence inner delta (r <*> delta') delta }
+      inner <*> delta;
+      (equiv) {  }
+      outer;
+    }
+
 [@__reduce__]
-let focus_rmem (#r: viewable) (h: rmem r)
-  (r0: viewable{exists delta. can_be_split_into r r0 delta})
-  : Tot (h':rmem r0)
-  = (fun (r':viewable{exists delta. can_be_split_into r0 r' delta}) ->
-      assume (exists delta. can_be_split_into r r' delta);
-      h r')
+let focus_rmem (#outer: viewable) (h: rmem outer)
+  (inner: viewable)
+  (delta:viewable{can_be_split_into outer inner delta})
+  : Tot (h':rmem inner)
+  = (fun (r:viewable{exists delta'. can_be_split_into inner r delta'}) ->
+      Classical.forall_intro (Classical.move_requires (lemma_sub_subresource outer inner r delta));
+      h r)
 
 #push-options "--z3rlimit 20"
 
@@ -418,7 +439,7 @@ let focus_rmem (#r: viewable) (h: rmem r)
 let rec expand_delta (#outer:viewable) (h0:rmem outer)
   (delta:viewable)
   (inner:viewable{can_be_split_into outer inner delta})
-  : t_of delta
+  : GTot (t_of delta)
   = match delta with
     | VStar v1 v2 ->
       Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
@@ -442,6 +463,8 @@ let rec expand_delta (#outer:viewable) (h0:rmem outer)
       equiv_trans (delta <*> inner)  (inner <*> delta) outer;
       h0 v
 
+#push-options "--no_tactics"
+
 assume
 val frame
   (outer:viewable)
@@ -463,14 +486,16 @@ val frame
           (* We should satisfy the precondition of the framed function, using only the views
               of inner0 *)
           (fun v ->
-            assume (can_be_split_into outer inner0 delta);
-            normal (pre (focus_rmem v inner0)))
+            (**) T.by_tactic_seman reprove_frame (can_be_split_into outer inner0 delta /\ True);
+            normal (pre (focus_rmem v inner0 delta)))
           (fun h0 x h1 ->
-             assume (can_be_split_into outer inner0 delta);
-             assume (can_be_split_into (inner1 x <*> delta) (inner1 x) delta);
-             normal (post (focus_rmem h0 inner0) x (focus_rmem h1 (inner1 x))) /\
-             normal (expand_delta h0 delta inner0 == expand_delta h1 delta (inner1 x))
+            (**) T.by_tactic_seman reprove_frame (can_be_split_into outer inner0 delta /\ True);
+            (**) equiv_refl (inner1 x <*> delta);
+            normal (post (focus_rmem h0 inner0 delta) x (focus_rmem h1 (inner1 x) delta)) /\
+            normal (expand_delta h0 delta inner0 == expand_delta h1 delta (inner1 x))
           )
+
+#pop-options
 
 #reset-options "--max_fuel 0 --max_ifuel 0"
 
@@ -511,14 +536,14 @@ val test3 (#a:Type) (r1 r2 r3 r4:ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
   // The ordering is a bit annoying… We should try to have a final "rewriting" pass through
   // normalization once we have the frame inference tactic
-  (fun _ -> vptr r1 <*> (vptr r2 <*> (vptr r3 <*> vptr r4)))
+  (fun _ -> vptr r3 <*> (vptr r1 <*> (vptr r2 <*> vptr r4)))
   (fun _ -> True)
   (fun olds x news ->
-    view_sel (vptr r1) news == x /\
-    view_sel (vptr r4) news == view_sel (vptr r4) olds /\
+    view_sel (vptr r3) news == x /\
+    view_sel (vptr r1) news == view_sel (vptr r1) olds /\
     view_sel (vptr r2) news == view_sel (vptr r2) olds /\
-    view_sel (vptr r3) news == view_sel (vptr r3) olds)
+    view_sel (vptr r4) news == view_sel (vptr r4) olds)
 
 let test3 #a r1 r2 r3 r4 =
   frame (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
-        (fun () -> fread r1)
+        (fun () -> fread r3)
