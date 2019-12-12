@@ -1,6 +1,8 @@
 module Steel.Memory.RST
 
 open Steel.Memory
+open Steel.Actions
+open Steel.Actions.Pointer
 open Steel.Memory.Tactics
 open LowStar.Permissions
 
