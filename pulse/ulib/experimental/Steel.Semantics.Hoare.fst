@@ -457,15 +457,61 @@ let l_pre (#st:st) (pre:st.hprop) = fp_prop pre
 let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) = fp_prop2 pre post
 
 
+(**** Begin definition of the computation AST ****)
+
+/// Gadgets for building lpre- and lpostconditions for various nodes
+
+let return_lpre (#st:st) (#a:Type0) (#post:post st a) (x:a) (lpost:l_post (post x) post)
+: l_pre (post x)
+= fun h -> lpost h x h
+
+
 /// Actions don't have a separate logical payload
 
-let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-  : l_pre pre =
-  st.interp pre
+let action_lpre (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
+: l_pre pre
+= st.interp pre
 
-let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-  : l_post pre post =
-  fun h0 x h1 -> st.interp (post x) h1
+let action_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
+: l_post pre post
+= fun h0 x h1 -> st.interp (post x) h1
+
+
+let frame_lpre (#st:st) (#pre:st.hprop) (lpre:l_pre pre) (#frame:st.hprop) (f_frame:fp_prop frame)
+: l_pre (pre `st.star` frame)
+= fun h -> lpre h /\ f_frame h
+
+let frame_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
+  (#frame:st.hprop) (f_frame:fp_prop frame)
+: l_post (pre `st.star` frame) (fun x -> post x `st.star` frame)
+= fun h0 x h1 -> lpre h0 /\ lpost h0 x h1 /\ f_frame h1
+
+
+let bind_lpre (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a)
+  (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
+  (lpre_b:(x:a -> l_pre (post_a x)))
+: l_pre pre
+= fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1)
+
+let bind_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a)
+  (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
+  (#b:Type0) (#post_b:post st b)
+  (lpost_b:(x:a -> l_post (post_a x) post_b))
+: l_post pre post_b
+= fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2)  //TODO: strengthen with lpost_a h0 x h1
+
+
+let par_lpre (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
+  (#preR:st.hprop) (lpreR:l_pre preR)
+: l_pre (preL `st.star` preR)
+= fun h -> lpreL h /\ lpreR h
+
+let par_lpost (#st:st) (#aL:Type0) (#preL:st.hprop) (#postL:post st aL)
+  (lpreL:l_pre preL) (lpostL:l_post preL postL)
+  (#aR:Type0) (#preR:st.hprop) (#postR:post st aR)
+  (lpreR:l_pre preR) (lpostR:l_post preR postR)
+: l_post (preL `st.star` preR) (fun (xL, xR) -> postL xL `st.star` postR xR)
+= fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
 //we don't use projectors at all, so don't bother generating (and typechecking!) them
@@ -478,7 +524,7 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     post:post st a ->
     x:a ->
     lpost:l_post (post x) post ->
-    m st a (post x) post (fun h -> lpost h x h) lpost
+    m st a (post x) post (return_lpre #_ #_ #post x lpost) lpost
 
   | Act:
     #a:Type0 ->
@@ -497,8 +543,8 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     frame:st.hprop ->
     f_frame:fp_prop frame ->
     m st a (pre `st.star` frame) (fun x -> post x `st.star` frame)
-      (fun h -> lpre h /\ f_frame h)
-      (fun h0 x h1 -> lpre h0 /\ lpost h0 x h1 /\ f_frame h1)
+      (frame_lpre lpre f_frame)
+      (frame_lpost lpre lpost f_frame)
 
   | Bind:
     #a:Type0 ->
@@ -513,8 +559,8 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     f:m st a pre post_a lpre_a lpost_a ->
     g:(x:a -> Dv (m st b (post_a x) post_b (lpre_b x) (lpost_b x))) ->
     m st b pre post_b
-      (fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1))
-      (fun h0 y h2 -> lpre_a h0 /\ (exists x h1. (lpost_b x) h1 y h2))
+      (bind_lpre lpre_a lpost_a lpre_b)
+      (bind_lpost lpre_a lpost_a lpost_b)
 
   | Par:
     #aL:Type0 ->
@@ -530,8 +576,8 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
     #lpostR:l_post preR postR ->
     mR:m st aR preR postR lpreR lpostR ->
     m st (aL & aR) (preL `st.star` preR) (fun (xL, xR) -> postL xL `st.star` postR xR)
-      (fun h -> lpreL h /\ lpreR h)
-      (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
+      (par_lpre lpreL lpreR)
+      (par_lpost lpreL lpostL lpreR lpostR)
 
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
@@ -647,8 +693,8 @@ let step_bind (#st:st) (i:nat)
     let Step next_pre next_state next_lpre next_lpost f j = step i frame f state in
     
     Step next_pre next_state
-      (fun h -> next_lpre h /\ (forall x h1. next_lpost h x h1 ==> lpre_b x h1))
-      (fun h0 y h2 -> next_lpre h0 /\ (exists x h1. (lpost_b x) h1 y h2))
+      (bind_lpre next_lpre next_lpost lpre_b)
+      (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
 
@@ -693,8 +739,8 @@ let step_frame (#st:st) (i:nat)
     commute3_2_1_interp next_fpre frame' frame next_state;
 
     Step (next_fpre `st.star` frame') next_state
-      (fun h -> next_flpre h /\ f_frame' h)
-      (fun h0 x h1 -> next_flpre h0 /\ next_flpost h0 x h1 /\ f_frame' h1)
+      (frame_lpre next_flpre f_frame')
+      (frame_lpost next_flpre next_flpost f_frame')
       (Frame f frame' f_frame')
       j
 
@@ -724,7 +770,7 @@ let step_par_left (#st:st) (i:nat)
                          lpostR (st.heap_of_mem next_state) x h_final);
 
     Step (next_preL `st.star` preR) next_state
-      (fun h -> next_lpreL h /\ lpreR h)
+      (par_lpre next_lpreL lpreR)
       lpost
       t
       j
@@ -758,7 +804,7 @@ let step_par_right (#st:st) (i:nat)
 
 
     Step (preL `st.star` next_preR) next_state
-      (fun h -> lpreL h /\ next_lpreR h)
+      (par_lpre lpreL next_lpreR)
       lpost
       t
       j
