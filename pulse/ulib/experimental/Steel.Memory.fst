@@ -628,7 +628,62 @@ let upd_array'
       (| (), m' |)
 #pop-options
 
-#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
+#push-options "--warn_error -271 --initial_fuel 2 --max_fuel 2 --z3rlimit 20"
+let upd_array_is_frame_preserving
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Seq.lseq t (U32.v (length a)))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (v: t)
+  : Lemma (is_m_frame_preserving (upd_array' a iseq i v))
+  =
+  let aux
+    (#t:_)
+    (a:array_ref t)
+    (iseq: Seq.lseq t (U32.v (length a)))
+    (i:U32.t{U32.v i < U32.v (length a)})
+    (v: t)
+    (frame:hprop) (m:hmem (pts_to_array a full_permission iseq `star` frame))
+      : Lemma
+        (ensures (
+          let (| _, m1 |) = upd_array' a iseq i v m in
+          interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) `star` frame `star` locks_invariant m1) m1.heap))
+        [SMTPat ()]
+      = star_associative (pts_to_array a full_permission iseq) frame (locks_invariant m);
+        star_associative (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)) frame (locks_invariant m);
+        upd_array_lemma' a iseq i v m.heap (frame `star` locks_invariant m)
+   in
+   ()
+#pop-options
+
+#push-options "--warn_error -271"
+let upd_array_depends_only_on_fp
+    (#t:_)
+    (a:array_ref t)
+    (iseq: Seq.lseq t (U32.v (length a)))
+    (i:U32.t{U32.v i < U32.v (length a)})
+    (v: t)
+  : Lemma (m_action_depends_only_on (upd_array' a iseq i v))
+  =
+    let pre = pts_to_array a full_permission iseq in
+    let post = pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) in
+    let aux (m0:hmem pre)
+            (h1:heap {m_disjoint m0 h1})
+            (q:fp_prop post)
+    : Lemma
+      (let (| x0, m |) = upd_array' a iseq i v m0 in
+       let (| x1, m' |) = upd_array' a iseq i v (upd_joined_heap m0 h1) in
+        x0 == x1 /\
+        (q (heap_of_mem m) <==> q (heap_of_mem m')))
+      [SMTPat ()]
+    = let (| x0, m |) = upd_array' a iseq i v m0 in
+      let (| x1, m' |) = upd_array' a iseq i v (upd_joined_heap m0 h1) in
+      upd_array'_preserves_join a iseq i v m0.heap h1;
+      assert (m'.heap == join m.heap h1)
+    in
+    ()
+#pop-options
+
 let upd_array
   (#t:_)
   (a:array_ref t)
@@ -639,13 +694,9 @@ let upd_array
     (pts_to_array a full_permission iseq)
     unit
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
-  = upd_array'_is_frame_preserving a iseq i v;
-    upd_array'_depends_only_on_fp a iseq i v;
-    let f = upd_array' a iseq i v in
-    assume(is_m_frame_preserving f);
-    assert(m_action_depends_only_on f);
-    f
-#pop-options
+  = upd_array_is_frame_preserving a iseq i v;
+    upd_array_depends_only_on_fp a iseq i v;
+    upd_array' a iseq i v
 
 val alloc' (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
