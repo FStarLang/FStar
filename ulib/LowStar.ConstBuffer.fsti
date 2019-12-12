@@ -48,6 +48,8 @@ module B = LowStar.Buffer
 /// The concrete type `const_buffer` is defined later
 
 /// `qual`: mutability qualifier
+[@erasable]
+noeq
 type qual =
   | MUTABLE
   | IMMUTABLE
@@ -61,6 +63,7 @@ let qbuf_cases (q:qual) (a:Type) =
 /// `q_preorder q a`: As we'll see shortly, it is convenient to also
 /// define a disjunction of the preorder indices on a qualified
 /// buffer
+inline_for_extraction
 let q_preorder (q:qual) (a:Type) =
   match q with
   | MUTABLE -> B.trivial_preorder a
@@ -86,10 +89,14 @@ let qbuf_mbuf (c:qbuf 'a) : B.mbuffer 'a (qbuf_pre c) (qbuf_pre c) = dsnd c
 ///  An abstract type of a read-only pointer to an array of `a`
 val const_buffer (a:Type u#0) : Type u#0
 
-
 /// `as_qbuf`: For specificational purposes, a const_buffer can be
 /// seen as an existentially quantified qbuf
-val as_qbuf (c:const_buffer 'a) : GTot (qbuf 'a)
+val as_qbuf (c:const_buffer 'a) : Tot (qbuf 'a)
+
+/// `qual_of`:
+let qual_of (#a:_) (c:const_buffer a)
+  : Tot qual
+  = dfst (as_qbuf c)
 
 /// `as_mbuf`: A convenience function to turn a const_buffer into a
 /// regular mbuffer, for spec purposes
@@ -126,6 +133,19 @@ val of_ibuffer (b:I.ibuffer 'a)
       qbuf_qual c == IMMUTABLE /\
       qbuf_mbuf c == b)
 
+
+/// `of_qbuf`: A constructors for const buffers from either mutable and
+/// immutable buffers. It is fully specified in terms of the
+/// `qbuf/mbuf` model
+val of_qbuf (#q:qual) (b:B.mbuffer 'a (q_preorder q 'a) (q_preorder q 'a))
+  : Pure (const_buffer 'a)
+    (requires True)
+    (ensures fun c ->
+      let c = as_qbuf c in
+      qbuf_qual c == q /\
+      qbuf_mbuf c == b)
+
+
 (*** OPERATIONS ON CONST POINTERS **)
 
 /// `index c i`: Very similar to the spec for `Buffer.index`
@@ -138,10 +158,24 @@ val index (c:const_buffer 'a) (i:U32.t)
       h0 == h1 /\
       y == Seq.index (as_seq h0 c) (U32.v i))
 
+
+/// Specification of sub
+let gsub (c:const_buffer 'a) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length c})
+  : GTot (const_buffer 'a)
+  = let qc = as_qbuf c in
+    of_qbuf (B.mgsub (qbuf_pre qc) (qbuf_mbuf qc) i len)
+
+/// Relational specification of sub
+let const_sub_buffer (i:U32.t) (len:U32.t) (csub c:const_buffer 'a) =
+  let qc = as_qbuf c in
+  let qcsub = as_qbuf csub in
+  U32.v i + U32.v len <= length c /\
+  csub == gsub c i len
+
 /// `sub`: A sub-buffer of a const buffer points to a given
 /// within-bounds offset of its head
-val sub (c:const_buffer 'a) (i len:U32.t)
-  : Stack (const_buffer 'a)
+val sub (#a:_) (c:const_buffer a) (i:U32.t) (len:Ghost.erased (U32.t))
+  : Stack (const_buffer a)
     (requires fun h ->
       live h c /\
       U32.v i + U32.v len <= length c)
@@ -149,8 +183,58 @@ val sub (c:const_buffer 'a) (i len:U32.t)
       let qc = as_qbuf c in
       let qc' = as_qbuf c' in
       h0 == h1 /\
-      qbuf_qual qc == qbuf_qual qc' /\
-      qbuf_mbuf qc' == B.mgsub (qbuf_pre qc) (qbuf_mbuf qc) i len)
+      c' `const_sub_buffer i len` c)
+
+/// Discussion between NS and JP (20191119)
+///
+/// Why is it safe to generate C code that casts away the const qualifier with the
+/// cast operations below? Looking at the C11 standard, 6.7.3 alinea 6:
+///
+/// > If an attempt is made to modify an object defined with a const-qualified type
+/// > through useof an lvalue with non-const-qualified type, the behavior is
+/// > undefined.
+///
+/// So, dangerous things happen in situations where the original object is *created*
+/// with a const qualifier (the object's _identity_ is const).
+///
+/// ```
+/// #include <stdio.h>
+/// #include <stdlib.h>
+///
+/// extern void f(const int *x);
+///
+/// int main() {
+///   const int x = 0;
+///   f(&x); // f promises not to modify x
+///   printf("%d\n", x); // prints 0 at -O3 but 1 at -O0
+///   return 0;
+/// }
+/// ```
+///
+/// with:
+///
+/// ```
+/// void f(const int *x) {
+///   int *y = (int *)x;
+///   *y = 1;
+/// }
+/// ```
+///
+/// In Low*, however, we never create objects that are marked const from the start.
+/// This is for historical reasons; in particular, immutable buffers are not marked
+/// const (they certainly could be).
+///
+/// So, the casts seem to be safe? Also, the difference in behavior noted above
+/// does not happen if x is defined as
+///
+/// ```
+///   const int *x = calloc(1, sizeof *x);
+/// ```
+///
+/// Finally, the compiler, if the const qualifier is stripped from x, could still
+/// potentially rely on an argument of freshness (pointer provenance?) to deduce
+/// that &x is the sole pointer to x and that therefore the value of x should remain
+/// the same. This does not seem to be happening.
 
 /// `cast`: It is possible to cast away the const qualifier recovering
 ///  a mutable or immutable pointer, in case the context can prove

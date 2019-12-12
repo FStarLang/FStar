@@ -444,8 +444,6 @@ and aqual_to_string' s = function
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-and aqual_to_string aq = aqual_to_string' "" aq
-
 and imp_to_string s aq =
     aqual_to_string' s aq
 
@@ -479,13 +477,6 @@ and arg_to_string = function
 and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
-
-and comp_to_string' env c =
-  if Options.ugly ()
-  then comp_to_string c
-  else let e = Resugar.resugar_comp' env c in
-       let d = ToDocument.term_to_document e in
-       Pp.pretty_string (float_of_string "1.0") 100 d
 
 and comp_to_string c =
   if not (Options.ugly()) then
@@ -571,6 +562,15 @@ and metadata_to_string = function
 
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
+
+let aqual_to_string aq = aqual_to_string' "" aq
+
+let comp_to_string' env c =
+  if Options.ugly ()
+  then comp_to_string c
+  else let e = Resugar.resugar_comp' env c in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
 
 let term_to_string' env x =
   if Options.ugly ()
@@ -772,12 +772,12 @@ let rec sigelt_to_string (x: sigelt) =
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
+let sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ ->
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
-let rec modul_to_string (m:modul) =
+let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
                                                                      (List.map sigelt_to_string m.declarations |> String.concat "\n")
                                                                      (List.map sigelt_to_string m.exports |> String.concat "\n")

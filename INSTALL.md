@@ -185,7 +185,7 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.04.X to 4.08.1 should work.
+The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 should work.
 
 #### Instructions for Windows ####
 

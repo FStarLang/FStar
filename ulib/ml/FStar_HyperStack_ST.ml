@@ -72,3 +72,9 @@ type ('a, 'b, 'c, 'd) stable_on = unit
 type ('a, 'b, 'c, 'd) token = unit
 let witness_p _ _ = ()
 let recall_p _ _ = ()
+
+type drgn = rid
+let new_drgn _ = ()
+let free_drgn _ = ()
+let ralloc_drgn = ralloc
+let ralloc_drgn_mm = ralloc_mm

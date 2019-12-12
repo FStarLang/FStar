@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ae107a228e4ef17f238c5ef54ce12bd1"
+      "1daaf6bcbbf22e5cf275e4383dc5c5f6"
     ],
     [
       "EtM.CPA.aes_key",
@@ -25,7 +25,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "73ea3077839af00bc003059498629996"
+      "73dbd2887db3cfe6c42bdc46b88baa28"
     ],
     [
       "EtM.CPA.log_entry",
@@ -41,7 +41,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "48f907a233aaa49455cac028420a2c56"
+      "40b4f57c2bb7497c2becc0b4add13beb"
     ],
     [
       "EtM.CPA.iv_of_entry",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "bfbced9442216e227703e1aa8f25846d"
+      "8fc29321c126da4f28ac77087d4eb0dd"
     ],
     [
       "EtM.CPA.raw_cipher",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "b05c8b98a99f1064551ed663f807e86f"
+      "bd3f7c766b2024bdceea8a0f7859f66f"
     ],
     [
       "EtM.CPA.split_entry",
@@ -122,7 +122,7 @@
         "typing_Platform.Bytes.op_At_Bar", "typing_Platform.Bytes.split"
       ],
       0,
-      "6a4ca131da0c1d4c897ce8546b45ff98"
+      "9b8f41705e2dbeeb6b00720570dd7aab"
     ],
     [
       "EtM.CPA.iv_of_entry_inj",
@@ -151,7 +151,7 @@
         "typing_EtM.CPA.iv_of_entry"
       ],
       0,
-      "9b2c3977714d54221aa3191b13d16040"
+      "f4d1d1338e445b1e4055b3e1948b13ac"
     ],
     [
       "EtM.CPA.__proj__Key__item__log",
@@ -163,7 +163,7 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "5255cc0ebe34c565b579f5aec4a0ee7e"
+      "a04eb5ef6a4297bc8e1b310b394f0421"
     ],
     [
       "EtM.CPA.iv_not_in",
@@ -177,7 +177,7 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "521acfc75a548be60cff975915a22d50"
+      "71dfa4d1069b1999a374ba3d844645b5"
     ],
     [
       "EtM.CPA.pairwise_distinct_ivs",
@@ -210,7 +210,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cf3ba348a6ee91281bc7d3241c0dc510"
+      "2853b445759eac805d3a51c4ff8ffbb8"
     ],
     [
       "EtM.CPA.pairwise_snoc",
@@ -235,7 +235,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "188ffdb09c836f92892995b947083fd7"
+      "bda4f01dfb56920562e5415eb3f612cf"
     ],
     [
       "EtM.CPA.invert_pairwise",
@@ -256,7 +256,7 @@
         "refinement_interpretation_Tm_refine_b80d66df2e638bd4e8ce22b10f41ad1a"
       ],
       0,
-      "eb3104324ce8531152d4046726f8035d"
+      "c3ec1f28a50e0c9976ecb5bcf2fc5026"
     ],
     [
       "EtM.CPA.entry_functional_correctness",
@@ -269,7 +269,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fb6546ad9c9c1385c62791f54e5bf688"
+      "b37437a177c9db25ac5da7ed4c76b61e"
     ],
     [
       "EtM.CPA.cipher_functional_correctness",
@@ -278,7 +278,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "43675ecb3111c8d6a7ce7816b5567c4d"
+      "daf9f5c79d42a563f574e04f69bd09b7"
     ],
     [
       "EtM.CPA.keygen",
@@ -306,7 +306,7 @@
         "equation_FStar.Monotonic.HyperHeap.modifies_just",
         "equation_FStar.Monotonic.HyperStack.contains",
         "equation_FStar.Monotonic.HyperStack.fresh_region",
-        "equation_FStar.Monotonic.HyperStack.is_eternal_color",
+        "equation_FStar.Monotonic.HyperStack.is_heap_color",
         "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.mem",
@@ -332,7 +332,6 @@
         "lemma_FStar.Map.lemma_SelRestrict", "lemma_FStar.Map.lemma_SelUpd1",
         "lemma_FStar.Map.lemma_SelUpd2", "lemma_FStar.Map.lemma_UpdDomain",
         "lemma_FStar.Map.lemma_equal_intro",
-        "lemma_FStar.Monotonic.HyperHeap.lemma_extends_includes",
         "lemma_FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
         "lemma_FStar.Monotonic.HyperStack.lemma_mk_mem__projectors",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_complement",
@@ -353,12 +352,12 @@
         "refinement_interpretation_Tm_refine_161e04719814801d293219f408210f95",
         "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_4deaad73cd92bc948bb28924e869c4ab",
         "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
         "refinement_interpretation_Tm_refine_6fbd4d82bb3e7e5b2939e88df41fcbe3",
         "refinement_interpretation_Tm_refine_b80d66df2e638bd4e8ce22b10f41ad1a",
         "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_Tm_refine_cbd24d5334c6bfffa6fd8a84fb787f7a",
-        "refinement_interpretation_Tm_refine_ecfe710eaddaa768c46a7d024350dcbc",
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "true_interp", "typing_FStar.Map.concat",
         "typing_FStar.Map.contains", "typing_FStar.Map.domain",
@@ -367,12 +366,13 @@
         "typing_FStar.Monotonic.HyperHeap.color",
         "typing_FStar.Monotonic.HyperHeap.extends",
         "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperHeap.rid_freeable",
         "typing_FStar.Monotonic.HyperHeap.root",
         "typing_FStar.Monotonic.HyperStack.as_ref",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_rid_ctr",
         "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_FStar.Monotonic.HyperStack.is_eternal_color",
+        "typing_FStar.Monotonic.HyperStack.is_heap_color",
         "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.empty",
         "typing_FStar.Seq.Base.seq", "typing_FStar.Set.complement",
@@ -380,7 +380,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "ba798d61ee3562ff08b5ea30868bc799"
+      "820026b4c1bf9a042d3890d9883a1886"
     ],
     [
       "EtM.CPA.encrypt",
@@ -432,7 +432,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "d6aa8292fa966881a9caeaa1f8d3d781"
+      "0af457b7efd1743a444e35c37ef460b6"
     ],
     [
       "EtM.CPA.find_entry",
@@ -462,7 +462,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "d13813fb05e8d9f743a194b2d8db7ede"
+      "13824562c1bb20799254fb1f49c5ea01"
     ],
     [
       "EtM.CPA.decrypt",
@@ -556,7 +556,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "3dae82110dce2c1dc3beb02a0b1c03f4"
+      "e297962afef3997b15099ec7e41a46fa"
     ],
     [
       "EtM.CPA.iv",
@@ -570,7 +570,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f30c9616848e683e0e672d7b127aa2be"
+      "74e5ea557812c99d1e3515db375abd6d"
     ],
     [
       "EtM.CPA.aes_key",
@@ -582,7 +582,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2e14ae5f090aa6d2eefdfd782e5cdf28"
+      "75e0f00e58f62c741bba3976dda3eda5"
     ],
     [
       "EtM.CPA.log_entry",
@@ -598,7 +598,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "f96c83cfe2a3a04ccbdf6e3687c5d4db"
+      "73e8e2a299b048daeb5ac6b65c734a35"
     ],
     [
       "EtM.CPA.iv_of_entry",
@@ -616,7 +616,7 @@
         "refinement_interpretation_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "aea66c28a2792e6fc8f9abe5ee6db2a1"
+      "658032085423d635f1af0ca38adfeae2"
     ],
     [
       "EtM.CPA.raw_cipher",
@@ -633,7 +633,7 @@
         "refinement_interpretation_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "96b2dc05ebbaa7560ae1c7b4f73adfe6"
+      "b1dea4b8fba9aedc297dcaa46cd9031d"
     ],
     [
       "EtM.CPA.split_entry",
@@ -653,7 +653,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "e17a74ee2aeea9332eb8e46d3036fa30"
+      "4cb52caa4a6b005e185e3160f5ea51d6"
     ],
     [
       "EtM.CPA.iv_of_entry_inj",
@@ -668,7 +668,7 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "e420bc741610565ccb9c9b33b677ef0d"
+      "4efea1495d9127f98247b0acd6f8a056"
     ],
     [
       "EtM.CPA.__proj__Key__item__log",
@@ -680,7 +680,7 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "032ed5fe82ff5f320e2377e33be5077c"
+      "bf4df670a6b9491520c80cf381dd65ff"
     ],
     [
       "EtM.CPA.iv_not_in",
@@ -694,7 +694,7 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "df94398ba8968cad5239be7a039314a0"
+      "e2122d188775eabe0ec62b27db8cf27f"
     ],
     [
       "EtM.CPA.pairwise_distinct_ivs",
@@ -727,7 +727,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "99cd3155eb79b57a9ed182c2c3255361"
+      "236f2874d88fef7ee669eba5841f183d"
     ],
     [
       "EtM.CPA.invert_pairwise",
@@ -740,7 +740,7 @@
         "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "e1a684bd29e1bf0d10b8abc4f90e725e"
+      "400cdb7ffa93c8f636442d0bdeae8ad4"
     ],
     [
       "EtM.CPA.entry_functional_correctness",
@@ -753,7 +753,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "17a29c31b49842ad5d07233c92b16793"
+      "2f43a1efa34d8fc4dad1ccc2496a7dfb"
     ],
     [
       "EtM.CPA.cipher_functional_correctness",
@@ -762,7 +762,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "d518f61b4c62c4b35fdd8839759a1369"
+      "31cbc728b9f3329824f3abdc8d33ab60"
     ],
     [
       "EtM.CPA.find_entry",
@@ -795,7 +795,7 @@
         "typing_Tm_abs_96dd785760b0512f52ef379c087ee665"
       ],
       0,
-      "b11397283351ef2797e2feea71cd1049"
+      "8a1fc2e9be8722d0bb758107b9aea06f"
     ],
     [
       "EtM.CPA.find_entry",
@@ -804,7 +804,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "1fe1b461b856b4dd75f99cdf6548db31"
+      "a794c7f82f3c391c4366cd0fcac787c8"
     ],
     [
       "EtM.CPA.decrypt",
@@ -813,7 +813,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "e19f621cdfa34e9bd12df265344ccd24"
+      "d1d2d2e6702914327eb5e230c852182b"
     ]
   ]
 ]

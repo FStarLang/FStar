@@ -23,7 +23,9 @@ module FlightsStExn
 /// But that can also be encapsulated in a state effect
 ///
 /// This module layers a state effect over Exn
-
+///
+/// We could define the state effect parametric in the state,
+///   but that currently does not extract, see ParametricStateissue.fst
 
 open FStar.Integers
 
@@ -39,38 +41,47 @@ open MExn
 module M = Messages
 
 
-
 /// Layering state on top of EXN
 
+/// Type of the state
 
-type pre_t (state:Type0) = state -> HS.mem -> Type0
-type post_t (state:Type0) (a:Type) = option (a & state) -> HS.mem -> Type0
-type wp_t0 (state:Type0) (a:Type) = post_t state a -> pre_t state
+noeq
+type state = {
+  b  : B.buffer uint_8;
+  id : i:uint_32{i <= B.len b}
+}
+
+
+
+type pre_t = state -> HS.mem -> Type0
+type post_t (a:Type) = option (a & state) -> HS.mem -> Type0
+type wp_t0 (a:Type) = post_t a -> pre_t
+
 
 /// Require the wp to be monotonic
 
 unfold
-let monotonic_wp (#state:Type0) (#a:Type) (wp:wp_t0 state a) : Type0 =
+let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
   forall p q.
     (forall r h. p r h ==> q r h) ==>
     (forall st h. wp p st h ==> wp q st h)
 
-type wp_t (state:Type0) (a:Type) = wp:(post_t state a -> pre_t state){monotonic_wp wp}
+type wp_t (a:Type) = wp:(post_t a -> pre_t){monotonic_wp wp}
 
 
 /// Underlying representation in terms of EXN
 
 
 inline_for_extraction
-type mrepr (a:Type) (state:Type0) (wp:wp_t state a) =
+type mrepr (a:Type) (wp:wp_t a) =
   st:state -> EXN (a & state) (fun p h -> wp p st h)
 
 
 /// Effect combinators
 
 inline_for_extraction noextract
-let return (a:Type) (state:Type0) (x:a)
-: mrepr a state (fun p st h -> p (Some (x, st)) h)
+let return (a:Type) (x:a)
+: mrepr a (fun p st h -> p (Some (x, st)) h)
 = fun st -> (x, st)
 
 
@@ -79,34 +90,34 @@ let return (a:Type) (state:Type0) (x:a)
 open FStar.Tactics
 
 let lemma_monotonic
-  (#a:Type) (#b:Type) (#state:Type0)
-  (wp_f:wp_t state a) (wp_g:a -> wp_t state b)
-  (post_a:(#a:Type -> #b:Type -> #state:Type0 -> wp_g:(a -> wp_t state b) -> p:post_t state b -> post_t state a))
-  (p:post_t state b) (q:post_t state b) (st:state) (h:HS.mem)
+  (#a:Type) (#b:Type)
+  (wp_f:wp_t a) (wp_g:a -> wp_t b)
+  (post_a:(#a:Type -> #b:Type -> wp_g:(a -> wp_t b) -> p:post_t b -> post_t a))
+  (p:post_t b) (q:post_t b) (st:state) (h:HS.mem)
 : Lemma
   (requires forall (r:option (a & state)) (h:HS.mem). (post_a wp_g p) r h ==> (post_a wp_g q) r h)
   (ensures wp_f (post_a wp_g p) st h ==> wp_f (post_a wp_g q) st h)
 = ()
 
 unfold
-let post_a (#a:Type) (#b:Type) (#state:Type0) (wp_g:a -> wp_t state b) (p:post_t state b) : post_t state a =
+let post_a (#a:Type) (#b:Type) (wp_g:a -> wp_t b) (p:post_t b) : post_t a =
   fun r h ->
   match r with
   | None -> p None h
   | Some r -> wp_g (Mktuple2?._1 r) p (Mktuple2?._2 r) h
 
 unfold
-let bind_wp0 (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> wp_t state b) : wp_t0 state b =
+let bind_wp0 (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t0 b =
   fun p -> wp_f (post_a wp_g p)
 
 unfold
-let bind_wp (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> wp_t state b) : wp_t state b
+let bind_wp (#a:Type) (#b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t b
 = assert (monotonic_wp (bind_wp0 wp_f wp_g)) by
     (norm [delta_only [`%monotonic_wp; `%bind_wp0]];
      ignore (repeatn 5 l_intro);
      let wp_f, wp_g =
        match (cur_binders ()) with
-       | _::_::_::wp_f::wp_g::_ -> wp_f, wp_g
+       | _::_::wp_f::wp_g::_ -> wp_f, wp_g
        | _ -> fail "" in
      apply_lemma (`(lemma_monotonic
        (`#(binder_to_term wp_f))
@@ -116,35 +127,34 @@ let bind_wp (#a:Type) (#b:Type) (#state:Type0) (wp_f:wp_t state a) (wp_g:a -> wp
      norm [delta_only [`%post_a]]);
   bind_wp0 wp_f wp_g
 
+//AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
+#push-options "--admit_smt_queries true"
 inline_for_extraction noextract
 let bind (a:Type) (b:Type)
-  (state:Type0)
-  (wp_f:wp_t state a) (wp_g:a -> wp_t state b)
-  (f:mrepr a state wp_f) (g:(x:a -> mrepr b state (wp_g x)))
-: mrepr b state (bind_wp wp_f wp_g)
+  (wp_f:wp_t a) (wp_g:a -> wp_t b)
+  (f:mrepr a wp_f) (g:(x:a -> mrepr b (wp_g x)))
+: mrepr b (bind_wp wp_f wp_g)
 = fun st ->
-  admit ();  //AR: this proof works when we make `auto_squash` not private in prims, and add `auto_squash` to the Some branch of `post_a`
   let (x, st) = f st in
   g x st
+#pop-options
 
 inline_for_extraction noextract
 let subcomp (a:Type)
-  (state:Type0)
-  (wp_f:wp_t state a) (wp_g:wp_t state a)
-  (f:mrepr a state wp_f)
-: Pure (mrepr a state wp_g)
+  (wp_f:wp_t a) (wp_g:wp_t a)
+  (f:mrepr a wp_f)
+: Pure (mrepr a wp_g)
   (requires forall p st h. wp_g p st h ==> wp_f p st h)
   (ensures fun _ -> True)
 = f
 
 inline_for_extraction noextract
 let if_then_else (a:Type)
-  (state:Type0)
-  (wp_f:wp_t state a) (wp_g:wp_t state a)
-  (f:mrepr a state wp_f) (g:mrepr a state wp_g)
+  (wp_f:wp_t a) (wp_g:wp_t a)
+  (f:mrepr a wp_f) (g:mrepr a wp_g)
   (p:Type0)
 : Type
-= mrepr a state
+= mrepr a
   (fun post st h ->
     (p ==> wp_f post st h) /\
     (( ~p) ==> wp_g post st h))
@@ -152,7 +162,7 @@ let if_then_else (a:Type)
 
 reifiable reflectable
 layered_effect {
-  STEXN : a:Type -> state:Type0 -> wp_t state a -> Effect
+  STEXN : a:Type -> wp_t a -> Effect
   with
   repr = mrepr;
   return = return;
@@ -165,8 +175,8 @@ layered_effect {
 /// Lift from DIV (on monotonic wps)
 
 inline_for_extraction noextract
-let lift_div_stexn (a:Type) (state:Type0) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
-: mrepr a state (fun p st h -> wp (fun x -> p (Some (x, st)) h))
+let lift_div_stexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
+: mrepr a (fun p st h -> wp (fun x -> p (Some (x, st)) h))
 = fun st -> (f (), st)
 
 sub_effect DIV ~> STEXN = lift_div_stexn
@@ -175,23 +185,14 @@ sub_effect DIV ~> STEXN = lift_div_stexn
 /// Hoare-style abbreviation
 
 
-/// Type of the state
-
-noeq
-type rcv_state = {
-  b  : B.buffer uint_8;
-  id : i:uint_32{i <= B.len b}
-}
-
-
-effect StExn (a:Type) (pre:rcv_state -> HS.mem -> Type0) (post:rcv_state -> HS.mem -> option (a & rcv_state) -> HS.mem -> Type) =
-  STEXN a rcv_state (fun p st h -> pre st h /\ (forall r h1. post st h r h1 ==> p r h1))
+effect StExn (a:Type) (pre:state -> HS.mem -> Type0) (post:state -> HS.mem -> option (a & state) -> HS.mem -> Type) =
+  STEXN a (fun p st h -> pre st h /\ (forall r h1. post st h r h1 ==> p r h1))
 
 
 /// parse_common function, this time in terms of `StExn`
 
 
-unfold let parse_common_wp (a:Type0) : wp_t rcv_state (M.repr a)
+unfold let parse_common_wp (a:Type0) : wp_t (M.repr a)
 = fun p st h0 ->
   B.live h0 st.b /\
   (forall r h1.
@@ -205,8 +206,8 @@ inline_for_extraction noextract
 let parse_common_exn (#a:Type0)
   (parser:parser_t a)
   (_:unit)
-  (st:rcv_state)
-: EXN (M.repr a & rcv_state) (fun p h0 -> parse_common_wp a p st h0)
+  (st:state)
+: EXN (M.repr a & state) (fun p h0 -> parse_common_wp a p st h0)
 = EXN?.reflect (fun _ ->
     let r = parser st.b st.id in
     match r with
@@ -244,6 +245,7 @@ let parse_t3 = parse_common #t3 t3_parser
 #set-options "--using_facts_from '* -LowStar -FStar.HyperStack -FStar.Monotonic -FStar.Heap'"
 
 inline_for_extraction noextract
+//#set-options "--debug FlightsStExn --debug_level Extraction --ugly --print_implicits"
 let parse_flt_aux ()
 : StExn flt (fun st h -> pre_f st.b st.id h)
   (fun st h0 r h1 ->
