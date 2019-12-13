@@ -30,12 +30,18 @@ module T = FStar.Tactics
  * these semantics.
  *
  *)
-#push-options "--using_facts_from '-* +Prims +FStar.Pervasives +Steel.Semantics' --max_fuel 0 --max_ifuel 2 --initial_ifuel 2"
+#push-options "--using_facts_from '-* +Prims +FStar.Pervasives +Steel.Semantics.Hoare' \
+  --fuel  0 \
+  --ifuel 2 \
+  --z3rlimit 20 \
+  --__temp_no_proj Steel.Semantics.Hoare"
+
 
 /// We start by defining some basic notions for a commutative monoid.
 ///
 /// We could reuse FStar.Algebra.CommMonoid, but this style with
 /// quanitifers was more convenient for the proof done here.
+
 
 let symmetry #a (equals: a -> a -> prop) =
   forall x y. {:pattern (x `equals` y)}
@@ -535,9 +541,6 @@ let par_lpost (#st:st) (#aL:Type0) (#preL:st.hprop) (#postL:post st aL)
 = fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
-//we don't use projectors at all, so don't bother generating (and typechecking!) them
-#set-options "--__temp_no_proj Steel.Semantics.Hoare"
-
 noeq
 type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
@@ -731,7 +734,6 @@ let step_act (#st:st) (i:nat)
 
 /// Bind and Frame
 
-#push-options "--z3rlimit 20"
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
@@ -754,7 +756,6 @@ let step_bind (#st:st) (i:nat)
       (Bind f g)
       j
 
-#set-options "--z3rlimit 20"
 let step_frame (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (frame:st.hprop)
@@ -886,7 +887,6 @@ let step_par (#st:st) (i:nat)
     if go_left i
     then step_par_left i frame f state step
     else step_par_right i frame f state step
-#pop-options
 
 
 /// The `step` function
