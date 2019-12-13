@@ -807,15 +807,16 @@ let step_par_left (#st:st) (i:nat)
     commute4_middle (st.locks_invariant state) preL preR frame;
     refine_middle (st.locks_invariant state `st.star` preL) preR frame lpreR state;
 
-    let Step next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) (st.refine preR lpreR `st.star` frame) mL state in
+    let Step state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) (st.refine preR lpreR `st.star` frame) mL state in
 
     refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
     commute3_2_1_interp next_preL preR frame next_state;
 
-    assume (forall x h_final. lpostR (st.heap_of_mem state) x h_final <==>
-                         lpostR (st.heap_of_mem next_state) x h_final);
+    let lpostR' : l_post (st.refine preR lpreR `st.star` frame) postR = lpostR in
 
-    Step (next_preL `st.star` preR) next_state
+    assert (frame_postcondition_is_framed_0 (st.refine preR lpreR `st.star` frame) lpostR' state next_state);
+
+    Step state (next_preL `st.star` preR) next_state
       (par_lpre next_lpreL lpreR)
       (par_lpost next_lpreL next_lpostL lpreR lpostR)
       (Par mL mR)
@@ -838,15 +839,15 @@ let step_par_right (#st:st) (i:nat)
       (preR `st.star` (preL `st.star` frame));
     refine_middle (st.locks_invariant state `st.star` preR) preL frame lpreL state;
 
-    let Step next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
+    let Step state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
 
     commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
 
-    assume (forall x h_final. lpostL (st.heap_of_mem state) x h_final <==>
-                         lpostL (st.heap_of_mem next_state) x h_final);
+    let lpostL' : l_post (st.refine preL lpreL `st.star` frame) postL = lpostL in
 
+    assert (frame_postcondition_is_framed_0 (st.refine preL lpreL `st.star` frame) lpostL' state next_state);
 
-    Step (preL `st.star` next_preR) next_state
+    Step state (preL `st.star` next_preR) next_state
       (par_lpre lpreL next_lpreR)
       (par_lpost lpreL lpostL next_lpreR next_lpostR)
       (Par mL mR)
