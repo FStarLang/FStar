@@ -383,31 +383,6 @@ let hheap (#st:st) (fp:st.hprop) = fp_heap_0 st.interp fp
 
 let hmem (#st:st) (fp:st.hprop) = m:st.mem{st.interp (st.locks_invariant m `st.star` fp) (st.heap_of_mem m)}
 
-let action0 (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  hmem fp -> (x:a & hmem (fp' x))
-
-let is_frame_preserving (#st:st) #a #fp #fp' (f:action0 fp a fp') =
-  forall frame (h0:hmem (fp `st.star` frame)).  //we don't need locks_invariant for h0?
-    (let (| x, h1 |) = f h0 in
-     st.interp (fp' x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1))
-
-let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:action0 pre a post)
-  = forall (m0:hmem pre)
-      (h1:st.heap {st.m_disjoint m0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (let m1 = st.upd_joined_heap m0 h1 in
-       let (| x0, m |) = f m0 in
-       let (| x1, m' |) = f m1 in
-       x0 == x1 /\
-       (post x0 (st.heap_of_mem m) <==> post x1 (st.heap_of_mem m')))
-
-let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  f:action0 fp a fp'{
-    is_frame_preserving f /\
-    action_depends_only_on_fp f
-  }
-
-
 
 /// We now define the notion of depends_only_on for two state postconditions
 /// 
@@ -455,6 +430,35 @@ let fp_prop2 (#st:st0) (#a:Type) (fp_pre:st.hprop) (fp_post:a -> st.hprop) =
 let l_pre (#st:st) (pre:st.hprop) = fp_prop pre
 
 let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) = fp_prop2 pre post
+
+
+(**** The interface of actions ****)
+
+let action0 (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
+  hmem fp -> (x:a & hmem (fp' x))
+
+let is_frame_preserving (#st:st) #a #fp #fp' (f:action0 fp a fp') =
+  forall frame (h0:hmem (fp `st.star` frame)).  //we don't need locks_invariant for h0?
+    (let (| x, h1 |) = f h0 in
+     st.interp (fp' x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1) /\
+     (forall (b:Type0) (post:post st b) (lpost:l_post frame post).
+        (forall x h2. lpost (st.heap_of_mem h0) x h2 <==> lpost (st.heap_of_mem h1) x h2)))
+
+let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:action0 pre a post)
+  = forall (m0:hmem pre)
+      (h1:st.heap {st.m_disjoint m0 h1})
+      (post: (x:a -> fp_prop (post x))).
+      (let m1 = st.upd_joined_heap m0 h1 in
+       let (| x0, m |) = f m0 in
+       let (| x1, m' |) = f m1 in
+       x0 == x1 /\
+       (post x0 (st.heap_of_mem m) <==> post x1 (st.heap_of_mem m')))
+
+let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
+  f:action0 fp a fp'{
+    is_frame_preserving f /\
+    action_depends_only_on_fp f
+  }
 
 
 (**** Begin definition of the computation AST ****)
@@ -579,12 +583,39 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
       (par_lpre lpreL lpreR)
       (par_lpost lpreL lpostL lpreR lpostR)
 
+let frame_postcondition_is_framed_0 (#st:st) (#a:Type0) (#post:post st a)
+  (frame:st.hprop) (lpost:l_post frame post)
+  (m0 m1:st.mem)
+= forall x h2. lpost (st.heap_of_mem m0) x h2 <==>
+          lpost (st.heap_of_mem m1) x h2
+
+let frame_postcondition_is_framed (#st:st) (frame:st.hprop) (m0 m1:st.mem) =
+  forall (a:Type0) (post:post st a) (lpost:l_post frame post).
+    frame_postcondition_is_framed_0 frame lpost m0 m1
+
+#push-options "--warn_error -271"
+let postcondition_framing_subhprop (#st:st) (frame:st.hprop) (fp:st.hprop) (m0 m1:st.mem)
+: Lemma
+  (requires frame_postcondition_is_framed (fp `st.star` frame) m0 m1)
+  (ensures frame_postcondition_is_framed frame m0 m1)
+  [SMTPat (frame_postcondition_is_framed (fp `st.star` frame) m0 m1);
+   SMTPat (frame_postcondition_is_framed frame m0 m1)]
+= let aux (#a:Type0) (#post:post st a) (lpost:l_post frame post)
+    : Lemma
+      (ensures frame_postcondition_is_framed_0 frame lpost m0 m1)
+      [SMTPat ()]
+    = assert (frame_postcondition_is_framed_0 #st #a #post (fp `st.star` frame) lpost m0 m1)
+  in
+  ()
+#pop-options
+
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
   | Step:
+    old_state:st.mem ->
     fpost:st.hprop ->
-    state:hmem (fpost `st.star` frame) ->
-    lpre:l_pre fpost{lpre (st.heap_of_mem state)} ->
+    new_state:hmem (fpost `st.star` frame){frame_postcondition_is_framed frame old_state new_state} ->
+    lpre:l_pre fpost{lpre (st.heap_of_mem new_state)} ->
     lpost:l_post fpost q ->
     m st a fpost q lpre lpost ->
     nat ->
@@ -623,8 +654,9 @@ let step_ens (#st:st)
   (state:st.mem)
 : step_result a post frame -> Type0
 = fun r ->
-  let Step _ new_state new_lpre new_lpost _ _ = r in
-  ((lpre (st.heap_of_mem state) ==> new_lpre (st.heap_of_mem new_state)) /\
+  let Step state1 _ new_state new_lpre new_lpost _ _ = r in
+  ((state1 == state) /\
+   (lpre (st.heap_of_mem state) ==> new_lpre (st.heap_of_mem new_state)) /\
    (forall x h_final. new_lpost (st.heap_of_mem new_state) x h_final ==>
                  lpost (st.heap_of_mem state) x h_final))
 
@@ -653,7 +685,7 @@ let step_ret (#st:st) (i:nat) (#a:Type)
 : Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
 
 = let Ret p x lp = f in
-  Step (p x) state lpre lpost f i
+  Step state (p x) state lpre lpost f i
 
 
 /// Action
@@ -667,10 +699,10 @@ let step_act (#st:st) (i:nat)
 : Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
 
 = let Act pre post f = f in
-  let (| x, state |) = f state in
+  let (| x, new_state |) = f state in
 
   let lpost : l_post (post x) post = fun _ x h1 -> st.interp (post x) h1 in
-  Step (post x) state (fun h -> lpost h x h) lpost (Ret post x lpost) i
+  Step state (post x) new_state (fun h -> lpost h x h) lpost (Ret post x lpost) i
 
 
 /// Bind and Frame
@@ -687,29 +719,46 @@ let step_bind (#st:st) (i:nat)
 
 = match f with
   | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
-    Step (p x) state (lpre_b x) (lpost_b x) (g x) i
+    Step state (p x) state (lpre_b x) (lpost_b x) (g x) i
 
   | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b f g ->
-    let Step next_pre next_state next_lpre next_lpost f j = step i frame f state in
+    let Step state next_pre next_state next_lpre next_lpost f j = step i frame f state in
     
-    Step next_pre next_state
+    Step state next_pre next_state
       (bind_lpre next_lpre next_lpost lpre_b)
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
 
+let weaken_depends_only_on2_pre_right (#st:st) (#a:Type) (q:st.heap -> a -> st.heap -> prop)
+  (fp_pre:st.hprop) (fp_post:a -> st.hprop)
+  (fp:st.hprop)
+: Lemma
+  (requires depends_only_on2 q fp_pre fp_post)
+  (ensures depends_only_on2 q (fp_pre `st.star` fp) fp_post)
+= ()
+
+let weaken_depends_only_on2_pre_left (#st:st) (#a:Type) (q:st.heap -> a -> st.heap -> prop)
+  (fp_pre:st.hprop) (fp_post:a -> st.hprop)
+  (fp:st.hprop)
+: Lemma
+  (requires depends_only_on2 q fp_pre fp_post)
+  (ensures depends_only_on2 q (fp `st.star` fp_pre) fp_post)
+= ()
+
+#set-options "--z3rlimit 100"
 let step_frame (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (frame:st.hprop)
-  (f:m st a pre post lpre lpost{Frame? f})
+  (f:m st a pre p lpre lpost{Frame? f})
   (state:st.mem)
   (step:step_t)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a p frame) (step_req frame f state) (step_ens frame f state)
 
 = match f with
   | Frame (Ret p x lp) frame f_frame ->
-    Step (p x `st.star` frame) state
+    Step state (p x `st.star` frame) state
       (fun h -> lpost h x h)
       lpost
       (Ret (fun x -> p x `st.star` frame) x lpost)
@@ -726,7 +775,7 @@ let step_frame (#st:st) (i:nat)
     refine_middle (st.locks_invariant state `st.star` f_pre) frame' frame f_frame' state;
 
 
-    let Step next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
+    let Step state next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
 
     (*
      * next_state has type
@@ -738,7 +787,7 @@ let step_frame (#st:st) (i:nat)
     refine_middle (st.locks_invariant next_state `st.star` next_fpre) frame' frame f_frame' next_state;
     commute3_2_1_interp next_fpre frame' frame next_state;
 
-    Step (next_fpre `st.star` frame') next_state
+    Step state (next_fpre `st.star` frame') next_state
       (frame_lpre next_flpre f_frame')
       (frame_lpost next_flpre next_flpost f_frame')
       (Frame f frame' f_frame')
