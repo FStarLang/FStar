@@ -746,7 +746,7 @@ let weaken_depends_only_on2_pre_left (#st:st) (#a:Type) (q:st.heap -> a -> st.he
   (ensures depends_only_on2 q (fp `st.star` fp_pre) fp_post)
 = ()
 
-#set-options "--z3rlimit 100"
+#set-options "--z3rlimit 20"
 let step_frame (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (frame:st.hprop)
