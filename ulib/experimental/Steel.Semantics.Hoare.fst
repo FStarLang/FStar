@@ -869,7 +869,7 @@ let step_par (#st:st) (i:nat)
 
     let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
 
-    Step (pL xL `st.star` pR xR) state
+    Step state (pL xL `st.star` pR xR) state
       (fun h -> lpL h xL h /\ lpR h xR h)
       lpost 
       (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
