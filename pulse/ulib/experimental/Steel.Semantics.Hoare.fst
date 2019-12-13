@@ -464,7 +464,7 @@ let is_frame_preserving (#st:st) #a #fp #fp' (f:action0 fp a fp') =
   forall frame (h0:hmem (fp `st.star` frame)).  //we don't need locks_invariant for h0?
     (let (| x, h1 |) = f h0 in
      st.interp (fp' x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1) /\
-     (forall (b:Type0) (post:post st b) (lpost:l_post frame post).
+     (forall (b:Type) (post:post st b) (lpost:l_post frame post).
         (forall x h2. lpost (st.heap_of_mem h0) x h2 <==> lpost (st.heap_of_mem h1) x h2)))
 
 let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:action0 pre a post)
@@ -488,18 +488,18 @@ let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
 
 /// Gadgets for building lpre- and lpostconditions for various nodes
 
-let return_lpre (#st:st) (#a:Type0) (#post:post st a) (x:a) (lpost:l_post (post x) post)
+let return_lpre (#st:st) (#a:Type) (#post:post st a) (x:a) (lpost:l_post (post x) post)
 : l_pre (post x)
 = fun h -> lpost h x h
 
 
 /// Actions don't have a separate logical payload
 
-let action_lpre (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
+let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
 : l_pre pre
 = st.interp pre
 
-let action_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
+let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
 : l_post pre post
 = fun h0 x h1 -> st.interp (post x) h1
 
@@ -508,21 +508,21 @@ let frame_lpre (#st:st) (#pre:st.hprop) (lpre:l_pre pre) (#frame:st.hprop) (f_fr
 : l_pre (pre `st.star` frame)
 = fun h -> lpre h /\ f_frame h
 
-let frame_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
+let frame_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
   (#frame:st.hprop) (f_frame:fp_prop frame)
 : l_post (pre `st.star` frame) (fun x -> post x `st.star` frame)
 = fun h0 x h1 -> lpre h0 /\ lpost h0 x h1 /\ f_frame h1
 
 
-let bind_lpre (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a)
+let bind_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post st a)
   (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
   (lpre_b:(x:a -> l_pre (post_a x)))
 : l_pre pre
 = fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1)
 
-let bind_lpost (#st:st) (#a:Type0) (#pre:st.hprop) (#post_a:post st a)
+let bind_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post st a)
   (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
-  (#b:Type0) (#post_b:post st b)
+  (#b:Type) (#post_b:post st b)
   (lpost_b:(x:a -> l_post (post_a x) post_b))
 : l_post pre post_b
 = fun h0 y h2 -> lpre_a h0 /\ (exists x h1. lpost_a h0 x h1 /\ (lpost_b x) h1 y h2)
@@ -533,37 +533,38 @@ let par_lpre (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
 : l_pre (preL `st.star` preR)
 = fun h -> lpreL h /\ lpreR h
 
-let par_lpost (#st:st) (#aL:Type0) (#preL:st.hprop) (#postL:post st aL)
+let par_lpost (#st:st) (#aL:Type) (#preL:st.hprop) (#postL:post st aL)
   (lpreL:l_pre preL) (lpostL:l_post preL postL)
-  (#aR:Type0) (#preR:st.hprop) (#postR:post st aR)
+  (#aR:Type) (#preR:st.hprop) (#postR:post st aR)
   (lpreR:l_pre preR) (lpostR:l_post preR postR)
 : l_post (preL `st.star` preR) (fun (xL, xR) -> postL xL `st.star` postR xR)
 = fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
+#set-options "--print_universes"
 noeq
-type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
+type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
-    #a:Type0 ->
+    #a:Type ->
     post:post st a ->
     x:a ->
     lpost:l_post (post x) post ->
     m st a (post x) post (return_lpre #_ #_ #post x lpost) lpost
 
   | Act:
-    #a:Type0 ->
+    #a:Type ->
     pre:st.hprop ->
     post:post st a ->
     f:action_t pre a post ->
     m st a pre post (action_lpre f) (action_lpost f)
 
   | Bind:
-    #a:Type0 ->
+    #a:Type ->
     #pre:st.hprop ->
     #post_a:post st a ->
     #lpre_a:l_pre pre ->
     #lpost_a:l_post pre post_a ->
-    #b:Type0 ->
+    #b:Type ->
     #post_b:post st b ->
     #lpre_b:(x:a -> l_pre (post_a x)) ->
     #lpost_b:(x:a -> l_post (post_a x) post_b) ->
@@ -574,7 +575,7 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
       (bind_lpost lpre_a lpost_a lpost_b)
 
   | Frame:
-    #a:Type0 ->
+    #a:Type ->
     #pre:st.hprop ->
     #post:post st a ->
     #lpre:l_pre pre ->
@@ -587,13 +588,13 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
       (frame_lpost lpre lpost f_frame)
 
   | Par:
-    #aL:Type0 ->
+    #aL:Type ->
     #preL:st.hprop ->
     #postL:post st aL ->
     #lpreL:l_pre preL ->
     #lpostL:l_post preL postL ->
     mL:m st aL preL postL lpreL lpostL ->
-    #aR:Type0 ->
+    #aR:Type ->
     #preR:st.hprop ->
     #postR:post st aR ->
     #lpreR:l_pre preR ->
@@ -607,14 +608,14 @@ type m (st:st) : (a:Type0) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_p
 (**** Setting up the stepping relation ****)
 
 
-let frame_postcondition_is_framed_0 (#st:st) (#a:Type0) (#post:post st a)
+let frame_postcondition_is_framed_0 (#st:st) (#a:Type) (#post:post st a)
   (frame:st.hprop) (lpost:l_post frame post)
   (m0 m1:st.mem)
 = forall x h2. lpost (st.heap_of_mem m0) x h2 <==>
           lpost (st.heap_of_mem m1) x h2
 
 let frame_postcondition_is_framed (#st:st) (frame:st.hprop) (m0 m1:st.mem) =
-  forall (a:Type0) (post:post st a) (lpost:l_post frame post).
+  forall (a:Type) (post:post st a) (lpost:l_post frame post).
     frame_postcondition_is_framed_0 frame lpost m0 m1
 
 #push-options "--warn_error -271"
@@ -624,7 +625,7 @@ let postcondition_framing_subhprop (#st:st) (frame:st.hprop) (fp:st.hprop) (m0 m
   (ensures frame_postcondition_is_framed frame m0 m1)
   [SMTPat (frame_postcondition_is_framed (fp `st.star` frame) m0 m1);
    SMTPat (frame_postcondition_is_framed frame m0 m1)]
-= let aux (#a:Type0) (#post:post st a) (lpost:l_post frame post)
+= let aux (#a:Type) (#post:post st a) (lpost:l_post frame post)
     : Lemma
       (ensures frame_postcondition_is_framed_0 frame lpost m0 m1)
       [SMTPat ()]
@@ -901,7 +902,7 @@ let rec step : step_t =
   | Par _ _     ->   step_par i frame f state step
 
 
-let rec run (#st:st) (i:nat) (#a:Type0) (#pre:st.hprop) (#post:post st a)
+let rec run (#st:st) (i:nat) (#a:Type) (#pre:st.hprop) (#post:post st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
