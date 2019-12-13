@@ -257,25 +257,25 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_hacl &
-            fetch_and_make_kremlin &
-            fetch_mitls &
-            fetch_and_make_qd &
-            {
-                if [ ! -d hacl-star-old ]; then
-                    git clone https://github.com/mitls/hacl-star hacl-star-old
-                    cd hacl-star-old && git reset --hard 98755f79579a0c153140e8d9a186145beafacf8f
-                fi
-            } &
-            wait
-            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
-            fetch_vale
+            # fetch_hacl &
+            # fetch_and_make_kremlin &
+            # fetch_mitls &
+            # fetch_and_make_qd &
+            # {
+            #     if [ ! -d hacl-star-old ]; then
+            #         git clone https://github.com/mitls/hacl-star hacl-star-old
+            #         cd hacl-star-old && git reset --hard 98755f79579a0c153140e8d9a186145beafacf8f
+            #     fi
+            # } &
+            # wait
+            # # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+            # fetch_vale
 
-            # The commands above were executed in sub-shells and their EXPORTs are not
-            # propagated to the current shell. Re-do.
-            export_home HACL "$(pwd)/hacl-star"
-            export_home KREMLIN "$(pwd)/kremlin"
-            export_home QD "$(pwd)/qd"
+            # # The commands above were executed in sub-shells and their EXPORTs are not
+            # # propagated to the current shell. Re-do.
+            # export_home HACL "$(pwd)/hacl-star"
+            # export_home KREMLIN "$(pwd)/kremlin"
+            # export_home QD "$(pwd)/qd"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
@@ -284,50 +284,50 @@ function build_fstar() {
                 echo Done building FStar
             } &
 
-            {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
-                NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
-                    {
-                        echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
-                        echo " - min-test (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
+            # {
+            #     OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
+            #     NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
+            #         {
+            #             echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
+            #             echo " - min-test (HACL*)" >>$ORANGE_FILE
+            #         }
+            # } &
 
-	    # The LowParse test suite is now in project-everest/everparse
-	    {
-		$gnutime make -C qd -j $threads -k lowparse-fstar-test || {
-		    echo "Error - LowParse"
-		    echo " - min-test (LowParse)" >>$ORANGE_FILE
-		}
-	    } &
+	    # # The LowParse test suite is now in project-everest/everparse
+	    # {
+	    # 	$gnutime make -C qd -j $threads -k lowparse-fstar-test || {
+	    # 	    echo "Error - LowParse"
+	    # 	    echo " - min-test (LowParse)" >>$ORANGE_FILE
+	    # 	}
+	    # } &
 	    
-            # We now run all (hardcoded) tests in mitls-fstar@master
-            {
-                # First regenerate dependencies and parsers (maybe not
-                # really needed for now, since any test of this set
-                # already does this; but it will become necessary if
-                # we later decide to perform these tests in parallel,
-                # to avoid races.)
-                make -C mitls-fstar/src/tls refresh-depend
+            # # We now run all (hardcoded) tests in mitls-fstar@master
+            # {
+            #     # First regenerate dependencies and parsers (maybe not
+            #     # really needed for now, since any test of this set
+            #     # already does this; but it will become necessary if
+            #     # we later decide to perform these tests in parallel,
+            #     # to avoid races.)
+            #     make -C mitls-fstar/src/tls refresh-depend
 
-                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
-                    {
-                        echo "Error - StreamAE.fst-ver (mitls)"
-                        echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
-                    }
+            #     OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+            #         {
+            #             echo "Error - StreamAE.fst-ver (mitls)"
+            #             echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
+            #         }
 
-                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver (mitls verify)"
-                        echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-                    }
+            #     OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+            #         {
+            #             echo "Error - Pkg.fst-ver (mitls verify)"
+            #             echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
+            #         }
 
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                        echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
-                    }
-            } &
+            #     OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+            #         {
+            #             echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
+            #             echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
+            #         }
+            # } &
 
             wait
 
