@@ -954,3 +954,26 @@ let rec run (#st:st) (i:nat) (#a:Type) (#pre:st.hprop) (#post:post st a)
   | _ ->
     let Step _ _ state _ _ f j = step i st.emp f state in
     run j f state
+
+
+(**** Trying to define the layered effect ****)
+
+type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
+= unit -> m st a pre post lpre lpost
+
+
+/// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
+
+let return (a:Type) (st:st) (post:post st a) (x:a) (lpost:l_post (post x) post)
+: repr a st (post x) post (fun h -> lpost h x h) lpost
+= fun _ -> Ret post x lpost
+
+let bind (a:Type) (b:Type) (st:st)
+  (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
+  (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
+  (f:repr a st pre_f post_f lpre_f lpost_f)
+  (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
+: repr b st pre_f post_g
+    (bind_lpre lpre_f lpost_f lpre_g)
+    (bind_lpost lpre_f lpost_f lpost_g)
+= fun _ -> Bind (f ()) (fun x -> g x ())
