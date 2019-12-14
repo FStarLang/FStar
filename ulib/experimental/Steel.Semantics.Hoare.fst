@@ -464,8 +464,7 @@ let is_frame_preserving (#st:st) #a #fp #fp' (f:action0 fp a fp') =
   forall frame (h0:hmem (fp `st.star` frame)).  //we don't need locks_invariant for h0?
     (let (| x, h1 |) = f h0 in
      st.interp (fp' x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1) /\
-     (forall (b:Type) (post:post st b) (lpost:l_post frame post).
-        (forall x h2. lpost (st.heap_of_mem h0) x h2 <==> lpost (st.heap_of_mem h1) x h2)))
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem h0) <==> f_frame (st.heap_of_mem h1)))
 
 let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:action0 pre a post)
   = forall (m0:hmem pre)
@@ -541,7 +540,6 @@ let par_lpost (#st:st) (#aL:Type) (#preL:st.hprop) (#postL:post st aL)
 = fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
-#set-options "--print_universes"
 noeq
 type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
@@ -607,39 +605,71 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
 
 (**** Setting up the stepping relation ****)
 
-
-let frame_postcondition_is_framed_0 (#st:st) (#a:Type) (#post:post st a)
-  (frame:st.hprop) (lpost:l_post frame post)
+let fp_prop_weakening_frame (#st:st) (frame frame':st.hprop) (f_frame':fp_prop frame')
   (m0 m1:st.mem)
-= forall x h2. lpost (st.heap_of_mem m0) x h2 <==>
-          lpost (st.heap_of_mem m1) x h2
-
-let frame_postcondition_is_framed (#st:st) (frame:st.hprop) (m0 m1:st.mem) =
-  forall (a:Type) (post:post st a) (lpost:l_post frame post).
-    frame_postcondition_is_framed_0 frame lpost m0 m1
-
-#push-options "--warn_error -271"
-let postcondition_framing_subhprop (#st:st) (frame:st.hprop) (fp:st.hprop) (m0 m1:st.mem)
 : Lemma
-  (requires frame_postcondition_is_framed (fp `st.star` frame) m0 m1)
-  (ensures frame_postcondition_is_framed frame m0 m1)
-  [SMTPat (frame_postcondition_is_framed (fp `st.star` frame) m0 m1);
-   SMTPat (frame_postcondition_is_framed frame m0 m1)]
-= let aux (#a:Type) (#post:post st a) (lpost:l_post frame post)
-    : Lemma
-      (ensures frame_postcondition_is_framed_0 frame lpost m0 m1)
-      [SMTPat ()]
-    = assert (frame_postcondition_is_framed_0 #st #a #post (fp `st.star` frame) lpost m0 m1)
-  in
+  (requires forall (f_frame':fp_prop (st.refine frame' f_frame' `st.star` frame)).
+              f_frame' (st.heap_of_mem m0) <==> f_frame' (st.heap_of_mem m1))
+  (ensures forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+= ()
+
+let inst_heap_prop_for_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a)
+  (lpost:l_post pre post)
+  (state:st.mem)
+: fp_prop pre
+= fun h ->
+  forall x final_state. lpost h x final_state <==>
+                   lpost (st.heap_of_mem state) x final_state
+
+let frame_post_for_par (#st:st)
+  (#a:Type) (#pre:st.hprop) (#post:post st a)
+  (lpre:l_pre pre) (lpost:l_post pre post)
+  (frame:st.hprop) (m0 m1:st.mem)
+: Lemma
+  (requires forall (f_frame:fp_prop (st.refine pre lpre `st.star` frame)).
+              f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+  (ensures
+    forall (x:a) (final_state:st.heap). lpost (st.heap_of_mem m0) x final_state <==>
+                                   lpost (st.heap_of_mem m1) x final_state)
+= let inst : fp_prop (st.refine pre lpre `st.star` frame) =
+    inst_heap_prop_for_par lpost m0 in
   ()
-#pop-options
+
+
+// let frame_postcondition_is_framed_0 (#st:st) (#a:Type) (#post:post st a)
+//   (frame:st.hprop) (lpost:l_post frame post)
+//   (m0 m1:st.mem)
+// = forall x h2. lpost (st.heap_of_mem m0) x h2 <==>
+//           lpost (st.heap_of_mem m1) x h2
+
+// let frame_postcondition_is_framed (#st:st) (frame:st.hprop) (m0 m1:st.mem) =
+//   forall (a:Type) (post:post st a) (lpost:l_post frame post).
+//     frame_postcondition_is_framed_0 frame lpost m0 m1
+
+// #push-options "--warn_error -271"
+// let postcondition_framing_subhprop (#st:st) (frame:st.hprop) (fp:st.hprop) (m0 m1:st.mem)
+// : Lemma
+//   (requires frame_postcondition_is_framed (fp `st.star` frame) m0 m1)
+//   (ensures frame_postcondition_is_framed frame m0 m1)
+//   [SMTPat (frame_postcondition_is_framed (fp `st.star` frame) m0 m1);
+//    SMTPat (frame_postcondition_is_framed frame m0 m1)]
+// = let aux (#a:Type) (#post:post st a) (lpost:l_post frame post)
+//     : Lemma
+//       (ensures frame_postcondition_is_framed_0 frame lpost m0 m1)
+//       [SMTPat ()]
+//     = assert (frame_postcondition_is_framed_0 #st #a #post (fp `st.star` frame) lpost m0 m1)
+//   in
+//   ()
+// #pop-options
 
 noeq
 type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
   | Step:
     old_state:st.mem ->
     fpost:st.hprop ->
-    new_state:hmem (fpost `st.star` frame){frame_postcondition_is_framed frame old_state new_state} ->
+    new_state:hmem (fpost `st.star` frame){
+      forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem old_state) <==>
+                                 f_frame (st.heap_of_mem new_state)} ->
     lpre:l_pre fpost{lpre (st.heap_of_mem new_state)} ->
     lpost:l_post fpost q ->
     m st a fpost q lpre lpost ->
@@ -788,6 +818,11 @@ let step_frame (#st:st) (i:nat)
     let Step state next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
 
     (*
+     * to prove forall f_frame:fp_prop frame. f_frame state <==> f_frame next_state,
+     *   we rely on fp_prop_weakening_frame lemma
+     *)
+
+    (*
      * next_state has type
      *   hmem (next_fpre `st.star` (st.refine frame' f_frame' `st.star` frame))
      * we require it to have type
@@ -797,12 +832,15 @@ let step_frame (#st:st) (i:nat)
     refine_middle (st.locks_invariant next_state `st.star` next_fpre) frame' frame f_frame' next_state;
     commute3_2_1_interp next_fpre frame' frame next_state;
 
+    fp_prop_weakening_frame frame frame' f_frame' state next_state;
+
     Step state (next_fpre `st.star` frame') next_state
       (frame_lpre next_flpre f_frame')
       (frame_lpost next_flpre next_flpost f_frame')
       (Frame f frame' f_frame')
       j
 
+#push-options "--z3rlimit 50"
 let step_par_left (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
@@ -822,9 +860,7 @@ let step_par_left (#st:st) (i:nat)
     refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
     commute3_2_1_interp next_preL preR frame next_state;
 
-    let lpostR' : l_post (st.refine preR lpreR `st.star` frame) postR = lpostR in
-
-    assert (frame_postcondition_is_framed_0 (st.refine preR lpreR `st.star` frame) lpostR' state next_state);
+    frame_post_for_par lpreR lpostR frame state next_state;
 
     Step state (next_preL `st.star` preR) next_state
       (par_lpre next_lpreL lpreR)
@@ -852,16 +888,15 @@ let step_par_right (#st:st) (i:nat)
     let Step state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
 
     commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
-
-    let lpostL' : l_post (st.refine preL lpreL `st.star` frame) postL = lpostL in
-
-    assert (frame_postcondition_is_framed_0 (st.refine preL lpreL `st.star` frame) lpostL' state next_state);
+    
+    frame_post_for_par lpreL lpostL frame state next_state;
 
     Step state (preL `st.star` next_preR) next_state
       (par_lpre lpreL next_lpreR)
       (par_lpost lpreL lpostL next_lpreR next_lpostR)
       (Par mL mR)
       j
+#pop-options
 
 assume val go_left : nat -> bool
 
