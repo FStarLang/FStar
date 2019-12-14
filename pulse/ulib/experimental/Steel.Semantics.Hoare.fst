@@ -840,7 +840,7 @@ let step_frame (#st:st) (i:nat)
       (Frame f frame' f_frame')
       j
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 100"
 let step_par_left (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
