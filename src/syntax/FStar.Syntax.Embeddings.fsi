@@ -50,7 +50,7 @@ type norm_cb = FStar.Util.either<Ident.lident, term> -> term // a callback to th
 val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
-type shadow_term = option<FStar.Common.thunk<term>>
+type shadow_term = option<Thunk.t<term>>
 
 type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we should warn on a failure

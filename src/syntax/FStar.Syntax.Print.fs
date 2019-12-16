@@ -274,7 +274,7 @@ and term_to_string x =
       // TODO: add an option to mark where this happens
       | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
         "[LAZYEMB:" ^
-        term_to_string (FStar.Common.force_thunk thunk) ^ "]"
+        term_to_string (Thunk.force thunk) ^ "]"
       | Tm_lazy i ->
         "[lazy:" ^
         term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
