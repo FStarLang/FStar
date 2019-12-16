@@ -827,31 +827,26 @@ let step_frame (#st:st) (i:nat)
       (Frame f frame' f_frame')
       j
 
-let par_weaker_pre_l (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
-  (#next_preL:st.hprop) (next_lpreL:l_pre next_preL)
-  (#preR:st.hprop) (lpreR:l_pre preR)
-  (state next_state:st.mem)
-: Lemma
-  (requires weaker_pre lpreL next_lpreL state next_state /\ lpreR (st.heap_of_mem next_state))
-  (ensures weaker_pre (par_lpre lpreL lpreR) (par_lpre next_lpreL lpreR) state next_state)
-= ()
-
-let par_stronger_post_l (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
+let par_weaker_pre_and_stronger_post_l (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
   (#aL:Type) (#postL:post st aL) (lpostL:l_post preL postL)
   (#next_preL:st.hprop) (next_lpreL:l_pre next_preL) (next_lpostL:l_post next_preL postL)
   (#preR:st.hprop) (lpreR:l_pre preR)
   (#aR:Type) (#postR:post st aR) (lpostR:l_post preR postR)
+  (frame:st.hprop)
   (state next_state:st.mem)
 : Lemma
   (requires
+    weaker_pre lpreL next_lpreL state next_state /\
     stronger_post lpostL next_lpostL state next_state /\
-    (forall x h_final. lpostR (st.heap_of_mem state) x h_final <==>
-                  lpostR (st.heap_of_mem next_state) x h_final) /\
+    (forall (f_frame:fp_prop (st.refine preR lpreR `st.star` frame)).
+                f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
     lpreL (st.heap_of_mem state) /\
     lpreR (st.heap_of_mem state))
   (ensures
+    (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
+    weaker_pre (par_lpre lpreL lpreR) (par_lpre next_lpreL lpreR) state next_state /\
     stronger_post (par_lpost lpreL lpostL lpreR lpostR) (par_lpost next_lpreL next_lpostL lpreR lpostR) state next_state)
-= ()
+= frame_post_for_par lpreR lpostR frame state next_state
 
 let step_par_left (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -864,19 +859,15 @@ let step_par_left (#st:st) (i:nat)
 
 = match f with
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
-    commute4_middle (st.locks_invariant state) preL preR frame;
-    refine_middle (st.locks_invariant state `st.star` preL) preR frame lpreR state;
+    (**) commute4_middle (st.locks_invariant state) preL preR frame;
+    (**) refine_middle (st.locks_invariant state `st.star` preL) preR frame lpreR state;
 
     let Step state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) (st.refine preR lpreR `st.star` frame) mL state in
 
-    refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
-    commute3_2_1_interp next_preL preR frame next_state;
+    (**) refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
+    (**) commute3_2_1_interp next_preL preR frame next_state;
 
-    frame_post_for_par lpreR lpostR frame state next_state;
-    fp_prop_weakening_frame frame preR lpreR state next_state;
-
-    par_weaker_pre_l lpreL next_lpreL lpreR state next_state;
-    par_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR state next_state;
+    (**) par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR frame state next_state;
 
     Step state (next_preL `st.star` preR) next_state
       (par_lpre next_lpreL lpreR)
@@ -884,33 +875,27 @@ let step_par_left (#st:st) (i:nat)
       (Par mL mR)
       j
 
-
-let par_weaker_pre_r (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
-  (#preR:st.hprop) (lpreR:l_pre preR)
-  (#next_preR:st.hprop) (next_lpreR:l_pre next_preR)
-  (state next_state:st.mem)
-: Lemma
-  (requires weaker_pre lpreR next_lpreR state next_state /\ lpreL (st.heap_of_mem next_state))
-  (ensures weaker_pre (par_lpre lpreL lpreR) (par_lpre lpreL next_lpreR) state next_state)
-= ()
-
-let par_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
+let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
   (#aL:Type) (#postL:post st aL) (lpostL:l_post preL postL)
   (#preR:st.hprop) (lpreR:l_pre preR)
   (#aR:Type) (#postR:post st aR) (lpostR:l_post preR postR)
   (#next_preR:st.hprop) (next_lpreR:l_pre next_preR)
   (next_lpostR:l_post next_preR postR)
+  (frame:st.hprop)
   (state next_state:st.mem)
 : Lemma
   (requires
+    weaker_pre lpreR next_lpreR state next_state /\
     stronger_post lpostR next_lpostR state next_state /\
-    (forall x h_final. lpostL (st.heap_of_mem state) x h_final <==>
-                  lpostL (st.heap_of_mem next_state) x h_final) /\
+    (forall (f_frame:fp_prop (st.refine preL lpreL `st.star` frame)).
+                f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
     lpreR (st.heap_of_mem state) /\
     lpreL (st.heap_of_mem state))
   (ensures
+    (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
+    weaker_pre (par_lpre lpreL lpreR) (par_lpre lpreL next_lpreR) state next_state /\
     stronger_post (par_lpost lpreL lpostL lpreR lpostR) (par_lpost lpreL lpostL next_lpreR next_lpostR) state next_state)
-= ()
+= frame_post_for_par lpreL lpostL frame state next_state
 
 let step_par_right (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -933,10 +918,7 @@ let step_par_right (#st:st) (i:nat)
 
     commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
     
-    frame_post_for_par lpreL lpostL frame state next_state;
-
-    par_weaker_pre_r lpreL lpreR next_lpreR state next_state;
-    par_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR state next_state;
+    par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR frame state next_state;
 
     Step state (preL `st.star` next_preR) next_state
       (par_lpre lpreL next_lpreR)
