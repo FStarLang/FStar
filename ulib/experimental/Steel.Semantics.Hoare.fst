@@ -774,6 +774,40 @@ let step_bind (#st:st) (i:nat)
       (Bind f g)
       j
 
+
+let step_frame_establish_pre (#st:st)
+  (f_pre frame' frame:st.hprop) (f_frame':fp_prop frame')
+  (state:st.mem)
+: Lemma
+  ((st.interp ((st.locks_invariant state `st.star` (f_pre `st.star` frame')) `st.star` frame)
+              (st.heap_of_mem state) /\ f_frame' (st.heap_of_mem state)) <==>
+   st.interp ((st.locks_invariant state `st.star` f_pre) `st.star` (st.refine frame' f_frame' `st.star` frame))
+             (st.heap_of_mem state))
+= calc (st.equals) {
+    (st.locks_invariant state `st.star` (f_pre `st.star` frame')) `st.star` frame;
+       (st.equals) { }
+    ((st.locks_invariant state `st.star` f_pre) `st.star` frame') `st.star` frame;
+       (st.equals) { }
+    (frame' `st.star` (st.locks_invariant state `st.star` f_pre)) `st.star` frame;
+       (st.equals) { }
+    frame' `st.star` ((st.locks_invariant state `st.star` f_pre) `st.star` frame);
+  };
+
+  refine_star_left frame' ((st.locks_invariant state `st.star` f_pre) `st.star` frame) f_frame' state;
+  
+  calc (st.equals) {
+    st.refine frame' f_frame' `st.star` ((st.locks_invariant state `st.star` f_pre) `st.star` frame);
+       (st.equals) { }
+    ((st.locks_invariant state `st.star` f_pre) `st.star` frame) `st.star` st.refine frame' f_frame';
+       (st.equals) { }
+    (st.locks_invariant state `st.star` f_pre) `st.star` (frame `st.star` st.refine frame' f_frame');
+       (st.equals) { equals_ext_right
+                       (st.locks_invariant state `st.star` f_pre)
+                       (frame `st.star` st.refine frame' f_frame') 
+                       (st.refine frame' f_frame' `st.star` frame) }
+    (st.locks_invariant state `st.star` f_pre) `st.star` (st.refine frame' f_frame' `st.star` frame);
+  }
+
 let step_frame (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (frame:st.hprop)
@@ -792,32 +826,11 @@ let step_frame (#st:st) (i:nat)
       i
 
   | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame' f_frame' ->
-    (*
-     * we want the following assertion to hold, for calling step recursively:
-     *   assert (st.interp (st.locks_invariant state `st.star` f_pre `st.star` (st.refine frame' f_frame' `st.star` frame)) 
-     *                     (st.heap_of_mem state))
-     * the following lemma calls (commute and refine_middle) achieve it
-     *)
-    commute4_1_2_3 f_pre frame' frame (st.locks_invariant state);
-    refine_middle (st.locks_invariant state `st.star` f_pre) frame' frame f_frame' state;
-
+    step_frame_establish_pre f_pre frame' frame f_frame' state;
 
     let Step state next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
 
-    (*
-     * to prove forall f_frame:fp_prop frame. f_frame state <==> f_frame next_state,
-     *   we rely on fp_prop_weakening_frame lemma
-     *)
-
-    (*
-     * next_state has type
-     *   hmem (next_fpre `st.star` (st.refine frame' f_frame' `st.star` frame))
-     * we require it to have type
-     *   hmem ((next_fpre `st.star` frame') `st.star` frame)
-     * the following refine_middle lemma call, and then an application of associativity achieves it
-     *)
-    refine_middle (st.locks_invariant next_state `st.star` next_fpre) frame' frame f_frame' next_state;
-    commute3_2_1_interp next_fpre frame' frame next_state;
+    step_frame_establish_pre next_fpre frame' frame f_frame' next_state;
 
     fp_prop_weakening_frame frame frame' f_frame' state next_state;
 
