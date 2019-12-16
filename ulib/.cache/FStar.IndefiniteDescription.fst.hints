@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "aa0aedf184adee1bf1e0cd5ea9857021"
+      "a97849e67af067d07d77e08d131d2b0a"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -22,23 +22,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "8f2b54360c0e57dd7051dbb096526377"
-    ],
-    [
-      "FStar.IndefiniteDescription.stronger_markovs_principle",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "526d52575e9146ee9893310dedb4c62e"
+      "adbfde54527c9a70f38ae7797b0dfa35"
     ]
   ]
 ]

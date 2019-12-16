@@ -230,6 +230,7 @@ let defaults =
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
+      ("report_qi"                    , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -382,6 +383,7 @@ let get_quake_lo                ()      = lookup_opt "quake_lo"                 
 let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_report_qi               ()      = lookup_opt "report_qi"                as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
@@ -980,7 +982,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
 
        ( noshort,
-        "reuse_hint_for",
+        "report_qi",
+        Const (Bool true),
+        "Generates a quantifier instantiation report");
+
+       ( noshort,        "reuse_hint_for",
         SimpleStr "toplevel_name",
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
 
@@ -1624,6 +1630,7 @@ let quake_hi                     () = get_quake_hi                    ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
+let report_qi                    () = get_report_qi                   ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()

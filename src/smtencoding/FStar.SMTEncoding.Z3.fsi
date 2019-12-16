@@ -20,6 +20,7 @@ open FStar.ST
 open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
+open FStar.SMTEncoding.QIReport
 open FStar.BaseTypes
 open FStar.Util
 module BU = FStar.Util
@@ -41,11 +42,12 @@ type z3result = {
       z3result_time        : int;
       z3result_statistics  : z3statistics;
       z3result_query_hash  : option<string>;
+      z3result_query_decls : list<decl>;
       z3result_log_file    : option<string>
 }
 val giveZ3 : list<decl> -> unit
 
-val ask: r:Range.range
+val ask: query_info
        -> filter:(list<decl> -> list<decl> * bool)
        -> cache:(option<string>) // hash
        -> label_messages:error_labels
