@@ -387,38 +387,38 @@ let rec (extract_quantifiers_from_decls :
                          "Could not extract quantifiers from SMT term:\n"
                          uu____2422
                         in
-                     FStar_Util.print uu____2420 []);
+                     FStar_Util.print_string uu____2420);
                     aux t))
           | FStar_SMTEncoding_Term.Let (tms,t) ->
-              let uu____2435 = aux t  in
-              let uu____2443 = FStar_List.collect aux tms  in
-              FStar_List.append uu____2435 uu____2443
-          | FStar_SMTEncoding_Term.Labeled (t,uu____2462,uu____2463) -> aux t
-          | FStar_SMTEncoding_Term.LblPos (t,uu____2467) -> aux t
-          | uu____2470 -> []  in
+              let uu____2434 = aux t  in
+              let uu____2442 = FStar_List.collect aux tms  in
+              FStar_List.append uu____2434 uu____2442
+          | FStar_SMTEncoding_Term.Labeled (t,uu____2461,uu____2462) -> aux t
+          | FStar_SMTEncoding_Term.LblPos (t,uu____2466) -> aux t
+          | uu____2469 -> []  in
         aux tm0  in
       match decl with
-      | FStar_SMTEncoding_Term.DefineFun (nm,args,ret1,tm,uu____2487) ->
+      | FStar_SMTEncoding_Term.DefineFun (nm,args,ret1,tm,uu____2486) ->
           from_term tm tm
       | FStar_SMTEncoding_Term.Assume a ->
           from_term a.FStar_SMTEncoding_Term.assumption_term
             a.FStar_SMTEncoding_Term.assumption_term
       | FStar_SMTEncoding_Term.Module (s,ds) ->
           extract_quantifiers (query, ds)
-      | uu____2505 -> []
+      | uu____2504 -> []
 
 and (extract_quantifiers :
   (query_info * FStar_SMTEncoding_Term.decl Prims.list) ->
     (Prims.string * quantifier_info) Prims.list)
   =
-  fun uu____2511  ->
-    match uu____2511 with
+  fun uu____2510  ->
+    match uu____2510 with
     | (query,decls) ->
         FStar_List.fold_left
           (fun l  ->
              fun d  ->
-               let uu____2557 = extract_quantifiers_from_decls query d  in
-               FStar_List.append uu____2557 l) [] decls
+               let uu____2556 = extract_quantifiers_from_decls query d  in
+               FStar_List.append uu____2556 l) [] decls
 
 let (profile_quantifiers :
   (query_info * FStar_SMTEncoding_Term.decl Prims.list) Prims.list ->
@@ -426,8 +426,8 @@ let (profile_quantifiers :
   =
   fun queries  ->
     fun qiprofile_output  ->
-      let comp uu____2628 uu____2629 =
-        match (uu____2628, uu____2629) with
+      let comp uu____2627 uu____2628 =
+        match (uu____2627, uu____2628) with
         | ((id1,q1),(id2,q2)) -> FStar_Util.compare id1 id2  in
       let conflate l =
         let rec aux i id1 ls o =
@@ -440,43 +440,43 @@ let (profile_quantifiers :
         match l with
         | [] -> []
         | (s,q)::tl1 ->
-            let uu____2878 = aux tl1 s [q] []  in FStar_List.rev uu____2878
+            let uu____2877 = aux tl1 s [q] []  in FStar_List.rev uu____2877
          in
       let remove_duplicates l =
         let equal_range q1 q2 =
-          (let uu____2933 = quantifier_file q1  in
-           let uu____2935 = quantifier_file q2  in uu____2933 = uu____2935)
+          (let uu____2932 = quantifier_file q1  in
+           let uu____2934 = quantifier_file q2  in uu____2932 = uu____2934)
             &&
-            (let uu____2940 = quantifier_range q1  in
-             let uu____2942 = quantifier_range q2  in uu____2940 = uu____2942)
+            (let uu____2939 = quantifier_range q1  in
+             let uu____2941 = quantifier_range q2  in uu____2939 = uu____2941)
            in
         let rec rm q i o =
           match i with
           | hd1::tl1 ->
-              let uu____2977 =
-                let uu____2980 = equal_range hd1 q  in
-                if uu____2980 then o else hd1 :: o  in
-              rm q tl1 uu____2977
+              let uu____2976 =
+                let uu____2979 = equal_range hd1 q  in
+                if uu____2979 then o else hd1 :: o  in
+              rm q tl1 uu____2976
           | [] -> FStar_List.rev o  in
         let rec aux i o =
           match i with
           | hd1::tl1 ->
-              let uu____3014 = rm hd1 i []  in aux uu____3014 (hd1 :: o)
+              let uu____3013 = rm hd1 i []  in aux uu____3013 (hd1 :: o)
           | [] -> FStar_List.rev o  in
         aux l []  in
       let qip = parse_qiprofile qiprofile_output  in
-      let insert o uu____3039 =
-        match uu____3039 with
+      let insert o uu____3038 =
+        match uu____3038 with
         | (id1,info) ->
-            let uu____3061 =
-              let uu____3071 = FStar_Util.psmap_try_find qip id1  in
-              match uu____3071 with
+            let uu____3060 =
+              let uu____3070 = FStar_Util.psmap_try_find qip id1  in
+              match uu____3070 with
               | FStar_Pervasives_Native.None  ->
                   (Prims.int_zero, Prims.int_zero, Prims.int_zero)
               | FStar_Pervasives_Native.Some x -> x  in
-            (match uu____3061 with
+            (match uu____3060 with
              | (inst1,gen1,cost) ->
-                 let uu____3146 = uu____3061  in
+                 let uu____3145 = uu____3060  in
                  let value =
                    {
                      qiprofile_id = id1;
@@ -487,90 +487,90 @@ let (profile_quantifiers :
                    }  in
                  FStar_Util.psmap_add o id1 value)
          in
-      let uu____3157 =
-        let uu____3167 =
-          let uu____3177 =
-            let uu____3185 = FStar_List.collect extract_quantifiers queries
+      let uu____3156 =
+        let uu____3166 =
+          let uu____3176 =
+            let uu____3184 = FStar_List.collect extract_quantifiers queries
                in
-            FStar_All.pipe_right uu____3185 (FStar_Util.sort_with comp)  in
-          FStar_All.pipe_right uu____3177 conflate  in
-        FStar_All.pipe_right uu____3167
+            FStar_All.pipe_right uu____3184 (FStar_Util.sort_with comp)  in
+          FStar_All.pipe_right uu____3176 conflate  in
+        FStar_All.pipe_right uu____3166
           (FStar_List.map
-             (fun uu____3275  ->
-                match uu____3275 with
+             (fun uu____3274  ->
+                match uu____3274 with
                 | (s,q) ->
-                    let uu____3298 = remove_duplicates q  in (s, uu____3298)))
+                    let uu____3297 = remove_duplicates q  in (s, uu____3297)))
          in
-      let uu____3304 =
-        let uu____3320 = FStar_Util.psmap_empty ()  in
-        FStar_List.fold_left insert uu____3320  in
-      FStar_All.pipe_right uu____3157 uu____3304
+      let uu____3303 =
+        let uu____3319 = FStar_Util.psmap_empty ()  in
+        FStar_List.fold_left insert uu____3319  in
+      FStar_All.pipe_right uu____3156 uu____3303
   
 let (tabular_profile :
   qiprofile FStar_Util.psmap -> Prims.string Prims.list Prims.list) =
   fun q  ->
-    let comp uu____3385 uu____3386 =
-      match (uu____3385, uu____3386) with
+    let comp uu____3384 uu____3385 =
+      match (uu____3384, uu____3385) with
       | ((i1,q1),(i2,q2)) ->
           if i1 < i2
           then Prims.int_one
           else if i1 > i2 then ~- Prims.int_one else Prims.int_zero
        in
     let qid_to_tail_rows info =
-      let uu____3460 =
-        let uu____3464 =
-          let uu____3468 = quantifier_module info  in
-          let uu____3470 =
-            let uu____3474 = quantifier_file info  in
-            let uu____3476 =
-              let uu____3480 = quantifier_range info  in [uu____3480]  in
-            uu____3474 :: uu____3476  in
-          uu____3468 :: uu____3470  in
-        "" :: uu____3464  in
-      "" :: uu____3460  in
+      let uu____3459 =
+        let uu____3463 =
+          let uu____3467 = quantifier_module info  in
+          let uu____3469 =
+            let uu____3473 = quantifier_file info  in
+            let uu____3475 =
+              let uu____3479 = quantifier_range info  in [uu____3479]  in
+            uu____3473 :: uu____3475  in
+          uu____3467 :: uu____3469  in
+        "" :: uu____3463  in
+      "" :: uu____3459  in
     let qid_to_rows o k =
       let prof =
-        let uu____3524 = FStar_Util.psmap_try_find q k  in
-        FStar_Util.must uu____3524  in
+        let uu____3523 = FStar_Util.psmap_try_find q k  in
+        FStar_Util.must uu____3523  in
       if prof.qiprofile_instances > Prims.int_zero
       then
         match prof.qiprofile_quantifiers with
         | [] -> failwith "QID not found"
         | hd1::tl1 ->
-            let uu____3549 =
-              let uu____3555 =
-                let uu____3559 =
-                  let uu____3563 =
+            let uu____3548 =
+              let uu____3554 =
+                let uu____3558 =
+                  let uu____3562 =
                     FStar_Util.string_of_int prof.qiprofile_instances  in
-                  let uu____3565 =
-                    let uu____3569 = quantifier_module hd1  in
-                    let uu____3571 =
-                      let uu____3575 = quantifier_file hd1  in
-                      let uu____3577 =
-                        let uu____3581 = quantifier_range hd1  in
-                        [uu____3581]  in
-                      uu____3575 :: uu____3577  in
-                    uu____3569 :: uu____3571  in
-                  uu____3563 :: uu____3565  in
-                (prof.qiprofile_id) :: uu____3559  in
-              let uu____3589 = FStar_List.map qid_to_tail_rows tl1  in
-              uu____3555 :: uu____3589  in
-            FStar_List.append o uu____3549
+                  let uu____3564 =
+                    let uu____3568 = quantifier_module hd1  in
+                    let uu____3570 =
+                      let uu____3574 = quantifier_file hd1  in
+                      let uu____3576 =
+                        let uu____3580 = quantifier_range hd1  in
+                        [uu____3580]  in
+                      uu____3574 :: uu____3576  in
+                    uu____3568 :: uu____3570  in
+                  uu____3562 :: uu____3564  in
+                (prof.qiprofile_id) :: uu____3558  in
+              let uu____3588 = FStar_List.map qid_to_tail_rows tl1  in
+              uu____3554 :: uu____3588  in
+            FStar_List.append o uu____3548
       else o  in
-    let uu____3606 =
-      let uu____3610 =
-        let uu____3619 =
+    let uu____3605 =
+      let uu____3609 =
+        let uu____3618 =
           FStar_Util.psmap_fold q
             (fun k  ->
                fun v1  -> fun acc  -> ((v1.qiprofile_instances), k) :: acc)
             []
            in
-        FStar_All.pipe_right uu____3619 (FStar_Util.sort_with comp)  in
-      FStar_All.pipe_right uu____3610
+        FStar_All.pipe_right uu____3618 (FStar_Util.sort_with comp)  in
+      FStar_All.pipe_right uu____3609
         (FStar_List.map
-           (fun uu____3708  -> match uu____3708 with | (i,q1) -> q1))
+           (fun uu____3707  -> match uu____3707 with | (i,q1) -> q1))
        in
-    FStar_All.pipe_right uu____3606 (FStar_List.fold_left qid_to_rows [])
+    FStar_All.pipe_right uu____3605 (FStar_List.fold_left qid_to_rows [])
   
 let (qiprofile_analysis :
   (query_info * FStar_SMTEncoding_Term.decl Prims.list) Prims.list ->
@@ -580,36 +580,36 @@ let (qiprofile_analysis :
     fun qiprofile_output  ->
       match queries with
       | [] -> ()
-      | uu____3774 ->
+      | uu____3773 ->
           let q = profile_quantifiers queries qiprofile_output  in
           let tab = tabular_profile q  in
           let fmt =
             [PrettyRight; PrettyRight; PrettyLeft; PrettyRight; PrettyLeft]
              in
-          let uu____3795 = prettyprint_table fmt tab  in
-          (match uu____3795 with
+          let uu____3794 = prettyprint_table fmt tab  in
+          (match uu____3794 with
            | (content_string,content_length) ->
-               let uu____3808 = uu____3795  in
-               let uu____3815 =
+               let uu____3807 = uu____3794  in
+               let uu____3814 =
                  let headers =
                    FStar_All.pipe_right queries
                      (FStar_List.map
-                        (fun uu____3847  ->
-                           match uu____3847 with | (q1,ds) -> query_name q1))
+                        (fun uu____3846  ->
+                           match uu____3846 with | (q1,ds) -> query_name q1))
                     in
-                 let uu____3861 =
+                 let uu____3860 =
                    FStar_List.fold_left
                      (fun x  -> fun s  -> max x (FStar_String.length s))
                      Prims.int_zero headers
                     in
-                 ((FStar_String.concat "\n" headers), uu____3861)  in
-               (match uu____3815 with
+                 ((FStar_String.concat "\n" headers), uu____3860)  in
+               (match uu____3814 with
                 | (header_string,header_length) ->
-                    let uu____3881 = uu____3815  in
+                    let uu____3880 = uu____3814  in
                     let line =
-                      let uu____3890 = max content_length header_length  in
-                      FStar_Util.repeat uu____3890 "-"  in
-                    FStar_Util.print
+                      let uu____3889 = max content_length header_length  in
+                      FStar_Util.repeat uu____3889 "-"  in
+                    FStar_Util.print_string
                       (Prims.op_Hat line
                          (Prims.op_Hat "\n"
                             (Prims.op_Hat header_string
@@ -618,6 +618,5 @@ let (qiprofile_analysis :
                                      (Prims.op_Hat "\n"
                                         (Prims.op_Hat content_string
                                            (Prims.op_Hat "\n"
-                                              (Prims.op_Hat line "\n\n")))))))))
-                      []))
+                                              (Prims.op_Hat line "\n\n")))))))))))
   
