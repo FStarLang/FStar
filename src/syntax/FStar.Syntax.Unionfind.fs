@@ -88,7 +88,7 @@ let set_term_graph tg =
 
 (*private*)
 let chk_v_t (u, v) =
-    let uvar_to_string u = "?" ^ (PU.puf_id (get_term_graph ()) u |> string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_id (get_term_graph ()) u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
@@ -116,7 +116,7 @@ let get_univ_graph () = (get()).univ_graph
 
 (*private*)
 let chk_v_u (u, v) =
-    let uvar_to_string u = "?" ^ (PU.puf_id (get_univ_graph ()) u |> string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_id (get_univ_graph ()) u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
