@@ -465,7 +465,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            ->
            let uu____1743 =
              let uu____1745 =
-               let uu____1747 = FStar_Common.force_thunk thunk1  in
+               let uu____1747 = FStar_Thunk.force thunk1  in
                term_to_string uu____1747  in
              Prims.op_Hat uu____1745 "]"  in
            Prims.op_Hat "[LAZYEMB:" uu____1743
