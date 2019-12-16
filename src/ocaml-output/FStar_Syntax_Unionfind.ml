@@ -129,7 +129,7 @@ let (chk_v_t :
             let uu____470 =
               let uu____472 = get_term_graph ()  in
               FStar_Unionfind.puf_id uu____472 u1  in
-            FStar_All.pipe_right uu____470 Prims.string_of_int  in
+            FStar_All.pipe_right uu____470 FStar_Util.string_of_int  in
           Prims.op_Hat "?" uu____468  in
         let expected = get_version ()  in
         if
@@ -223,7 +223,7 @@ let (chk_v_u :
             let uu____745 =
               let uu____747 = get_univ_graph ()  in
               FStar_Unionfind.puf_id uu____747 u1  in
-            FStar_All.pipe_right uu____745 Prims.string_of_int  in
+            FStar_All.pipe_right uu____745 FStar_Util.string_of_int  in
           Prims.op_Hat "?" uu____743  in
         let expected = get_version ()  in
         if
