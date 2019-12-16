@@ -774,7 +774,6 @@ let step_bind (#st:st) (i:nat)
       (Bind f g)
       j
 
-
 let step_frame_establish_pre (#st:st)
   (f_pre frame' frame:st.hprop) (f_frame':fp_prop frame')
   (state:st.mem)
@@ -872,15 +871,12 @@ let step_par_left (#st:st) (i:nat)
 
 = match f with
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
-    (**) commute4_middle (st.locks_invariant state) preL preR frame;
-    (**) refine_middle (st.locks_invariant state `st.star` preL) preR frame lpreR state;
+    step_frame_establish_pre preL preR frame lpreR state;
 
     let Step state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) (st.refine preR lpreR `st.star` frame) mL state in
+    step_frame_establish_pre next_preL preR frame lpreR next_state;
 
-    (**) refine_middle (st.locks_invariant next_state `st.star` next_preL) preR frame lpreR next_state;
-    (**) commute3_2_1_interp next_preL preR frame next_state;
-
-    (**) par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR frame state next_state;
+    par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR frame state next_state;
 
     Step state (next_preL `st.star` preR) next_state
       (par_lpre next_lpreL lpreR)
