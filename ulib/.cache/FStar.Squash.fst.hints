@@ -1,0 +1,51 @@
+[
+  "®É\u0018µKdV±c·Ø\u0012OÈYı",
+  [
+    [
+      "FStar.Squash.return_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e6d29a2b353125d75399991794803b0d"
+    ],
+    [
+      "FStar.Squash.get_proof",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c96c0da3c0ce433f5df8961f1ae6cfa8"
+    ],
+    [
+      "FStar.Squash.give_proof",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4a4068b515d81ee0f939a59ce8445037"
+    ],
+    [
+      "FStar.Squash.proof_irrelevance",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_inversion"
+      ],
+      0,
+      "1a4f05fa9aef3265a6cbd9ce8688880c"
+    ]
+  ]
+]

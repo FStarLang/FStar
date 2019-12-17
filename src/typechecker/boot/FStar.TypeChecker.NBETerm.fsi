@@ -55,7 +55,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
+  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 

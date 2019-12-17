@@ -14,14 +14,15 @@
    limitations under the License.
 *)
 
+
 (*
    This module provides an erased type
    to abstract computationally irrelevant values.
 
    It relies on the GHOST effect defined in Prims.
 
-   [erased a] is an abstract type that receives
-   special treatment in the compiler.
+   [erased a] is decorated with the erasable attribute
+   As such,
 
    1. The type is considered non-informative.
       So, [Ghost (erased a)] can be subsumed to [Pure (erased a)]
@@ -37,8 +38,15 @@
    Just like Coq's prop, it is okay to use erased types
    freely as long as we produce an erased type.
 
+   [reveal] and [hide] are coercions: the typechecker
+   will automatically insert them when required. That is,
+   if the type of an expression is [erased X], and the
+   expected type is NOT an [erased Y], it will insert [reveal],
+   and viceversa for [hide].
+
 *)
 module FStar.Ghost
+[@erasable]
 val erased : Type u#a -> Type u#a
 val reveal : #a:Type u#a -> erased a -> GTot a
 val hide   : #a:Type u#a -> a -> Tot (erased a)

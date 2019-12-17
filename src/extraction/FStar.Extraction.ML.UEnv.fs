@@ -65,6 +65,7 @@ type tydef = {
 type uenv = {
     env_tcenv: TypeChecker.Env.env;
     env_bindings:list<binding>;
+    env_mlident_map:psmap<mlident>;
     tydefs:list<tydef>;
     type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
@@ -207,8 +208,9 @@ let extend_ty (g:uenv) (a:bv) (mapped_to:option<mlty>) : uenv =
         | None -> MLTY_Var ml_a
         | Some t -> t in
     let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.env_bindings in
+    let mlident_map = BU.psmap_add g.env_mlident_map ml_a "" in
     let tcenv = TypeChecker.Env.push_bv g.env_tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
-    {g with env_bindings=gamma; env_tcenv=tcenv}
+    {g with env_bindings=gamma; env_mlident_map=mlident_map; env_tcenv=tcenv}
 
 let sanitize (s:string) : string =
   let cs = FStar.String.list_of_string s in
@@ -222,22 +224,16 @@ let sanitize (s:string) : string =
 
 
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
-let find_uniq gamma mlident =
-  let rec find_uniq mlident i =
-    let suffix = if i = 0 then "" else string_of_int i in
-    let target_mlident = mlident ^ suffix in
-    let has_collision = List.existsb (function
-        | Bv (_, Inl ty_b) -> target_mlident = ty_b.ty_b_name
-        | Fv (_, exp_b)
-        | Bv (_, Inr exp_b) -> target_mlident = exp_b.exp_b_name
-      ) gamma in
-    if has_collision then
-      find_uniq mlident (i + 1)
-    else
-      target_mlident
-  in
+let find_uniq ml_ident_map mlident =
   let mlident = sanitize mlident in
-  find_uniq mlident 0
+
+  let rec aux sm mlident i =
+    let target_mlident = if i = 0 then mlident else mlident ^ (string_of_int i) in
+    match BU.psmap_try_find sm target_mlident with
+      | Some x -> aux sm mlident (i+1)
+      | None -> target_mlident
+  in
+  aux ml_ident_map mlident 0
 
 let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               (mk_unit:bool (*some pattern terms become unit while extracting*))
@@ -247,7 +243,7 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlident = find_uniq g.env_bindings (bv_as_mlident x) in
+    let mlident = find_uniq g.env_mlident_map (bv_as_mlident x) in
     let mlx = MLE_Var mlident in
     let mlx = if mk_unit
               then ml_unit
@@ -257,8 +253,9 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let t_x = if add_unit then pop_unit t_x else t_x in
     let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
     let gamma = Bv(x, Inr exp_binding)::g.env_bindings in
+    let mlident_map = BU.psmap_add g.env_mlident_map mlident "" in
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
-    {g with env_bindings=gamma; env_tcenv=tcenv}, mlident, exp_binding
+    {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
 let rec mltyFvars (t: mlty) : list<mlident>  =
     match t with
@@ -288,7 +285,6 @@ let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_r
             | _ -> MLTY_Top in
         let mlpath, mlsymbol =
           let ns, i = y in
-          (* let mlsymbol = find_uniq g.gamma (avoid_keyword i) in *)
           let mlsymbol = avoid_keyword i in
           (ns, mlsymbol), mlsymbol
         in
@@ -297,7 +293,8 @@ let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_r
         let t_x = if add_unit then pop_unit t_x else t_x in
         let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
         let gamma = Fv(x, exp_binding)::g.env_bindings in
-        {g with env_bindings=gamma}, mlsymbol, exp_binding
+        let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
+        {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
 
 let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
@@ -348,7 +345,7 @@ let is_fv_type g fv =
 let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : uenv =
-   let env = { env_tcenv = e; env_bindings =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
+   let env = { env_tcenv = e; env_bindings =[]; env_mlident_map=BU.psmap_empty (); tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    let g, _, _ =

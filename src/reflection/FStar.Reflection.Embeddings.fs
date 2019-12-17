@@ -23,6 +23,8 @@ module EMB = FStar.Syntax.Embeddings
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 module NBETerm = FStar.TypeChecker.NBETerm
 module PC = FStar.Parser.Const
+module O = FStar.Options
+module RD = FStar.Reflection.Data
 
 open FStar.Dyn
 
@@ -70,6 +72,23 @@ let e_binder =
             None
     in
     mk_emb embed_binder unembed_binder fstar_refl_binder
+
+let e_optionstate =
+    let embed_optionstate (rng:Range.range) (b:O.optionstate) : term =
+        U.mk_lazy b fstar_refl_optionstate Lazy_optionstate (Some rng)
+    in
+    let unembed_optionstate w (t:term) : option<O.optionstate> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=b; lkind=Lazy_optionstate} ->
+            Some (undyn b)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_optionstate unembed_optionstate fstar_refl_optionstate
+
+let _ = FStar.Reflection.Basic.e_optionstate_hook := Some e_optionstate
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -250,7 +269,7 @@ let rec e_pattern' () =
         | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_const rng c)] None rng
         | Pat_Cons (fv, ps) ->
-            S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed e_fv rng fv); S.as_arg (embed (e_list (e_pattern' ())) rng ps)] None rng
+            S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed e_fv rng fv); S.as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) rng ps)] None rng
         | Pat_Var bv ->
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv)] None rng
         | Pat_Wild bv ->
@@ -270,7 +289,7 @@ let rec e_pattern' () =
 
         | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed' w e_fv f) (fun f ->
-            BU.bind_opt (unembed' w (e_list (e_pattern' ())) ps) (fun ps ->
+            BU.bind_opt (unembed' w (e_list (e_tuple2 (e_pattern' ()) e_bool)) ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
 
         | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
@@ -346,8 +365,9 @@ let e_term_view_aq aq =
                          S.as_arg (U.mk_lazy (u,d) U.t_ctx_uvar_and_sust Lazy_uvar None)]
                         None rng
 
-        | Tv_Let (r, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, t1, t2) ->
             S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed e_bool rng r);
+                                      S.as_arg (embed (e_list e_term) rng attrs);
                                       S.as_arg (embed e_bv rng b);
                                       S.as_arg (embed (e_term_aq aq) rng t1);
                                       S.as_arg (embed (e_term_aq aq) rng t2)]
@@ -423,12 +443,13 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = U.unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Tm_fvar fv, [(r, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Tm_fvar fv, [(r, _); (attrs, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
+            BU.bind_opt (unembed' w (e_list e_term) attrs) (fun attrs ->
             BU.bind_opt (unembed' w e_bv b) (fun b ->
             BU.bind_opt (unembed' w e_term t1) (fun t1 ->
             BU.bind_opt (unembed' w e_term t2) (fun t2 ->
-            Some <| Tv_Let (r, b, t1, t2)))))
+            Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
         | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
@@ -691,6 +712,165 @@ let e_binder_view = e_tuple2 e_bv e_aqualv
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
+(* embeds as a string list *)
+let e_lid : embedding<I.lid> =
+    let embed rng lid : term =
+        embed e_string_list rng (I.path_of_lid lid)
+    in
+    let unembed w t : option<I.lid> =
+        BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
+    in
+    EMB.mk_emb_full (fun x r _ _ -> embed r x)
+               (fun x w _ -> unembed w x)
+               (t_list_of t_string)
+               I.string_of_lid
+               ET_abstract
+
+let e_qualifier =
+    let embed (rng:Range.range) (q:RD.qualifier) : term =
+        let r =
+        match q with
+        | RD.Assumption                       -> ref_qual_Assumption.t
+        | RD.New                              -> ref_qual_New.t
+        | RD.Private                          -> ref_qual_Private.t
+        | RD.Unfold_for_unification_and_vcgen -> ref_qual_Unfold_for_unification_and_vcgen.t
+        | RD.Visible_default                  -> ref_qual_Visible_default.t
+        | RD.Irreducible                      -> ref_qual_Irreducible.t
+        | RD.Abstract                         -> ref_qual_Abstract.t
+        | RD.Inline_for_extraction            -> ref_qual_Inline_for_extraction.t
+        | RD.NoExtract                        -> ref_qual_NoExtract.t
+        | RD.Noeq                             -> ref_qual_Noeq.t
+        | RD.Unopteq                          -> ref_qual_Unopteq.t
+        | RD.TotalEffect                      -> ref_qual_TotalEffect.t
+        | RD.Logic                            -> ref_qual_Logic.t
+        | RD.Reifiable                        -> ref_qual_Reifiable.t
+        | RD.ExceptionConstructor             -> ref_qual_ExceptionConstructor.t
+        | RD.HasMaskedEffect                  -> ref_qual_HasMaskedEffect.t
+        | RD.Effect                           -> ref_qual_Effect.t
+        | RD.OnlyName                         -> ref_qual_OnlyName.t
+        | RD.Reflectable l ->
+            S.mk_Tm_app ref_qual_Reflectable.t [S.as_arg (embed e_lid rng l)]
+                        None Range.dummyRange
+
+        | RD.Discriminator l ->
+            S.mk_Tm_app ref_qual_Discriminator.t [S.as_arg (embed e_lid rng l)]
+                        None Range.dummyRange
+
+        | RD.Action l ->
+            S.mk_Tm_app ref_qual_Action.t [S.as_arg (embed e_lid rng l)]
+                        None Range.dummyRange
+
+        | RD.Projector (l, i) ->
+            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed e_lid rng l);
+                                              S.as_arg (embed e_ident rng i)]
+                        None Range.dummyRange
+
+        | RD.RecordType (ids1, ids2) ->
+            S.mk_Tm_app ref_qual_RecordType.t [S.as_arg (embed (e_list e_ident) rng ids1);
+                                               S.as_arg (embed (e_list e_ident) rng ids2)]
+                        None Range.dummyRange
+
+        | RD.RecordConstructor (ids1, ids2) ->
+            S.mk_Tm_app ref_qual_RecordConstructor.t [S.as_arg (embed (e_list e_ident) rng ids1);
+                                                      S.as_arg (embed (e_list e_ident) rng ids2)]
+                        None Range.dummyRange
+
+        in { r with pos = rng }
+    in
+    let unembed w (t: term) : option<RD.qualifier> =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Assumption.lid ->
+             Some RD.Assumption
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_New.lid ->
+             Some RD.New
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Private.lid ->
+              Some RD.Private
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Unfold_for_unification_and_vcgen.lid ->
+              Some RD.Unfold_for_unification_and_vcgen
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Visible_default.lid ->
+              Some RD.Visible_default
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Irreducible.lid ->
+              Some RD.Irreducible
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Abstract.lid ->
+              Some RD.Abstract
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Inline_for_extraction.lid ->
+              Some RD.Inline_for_extraction
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_NoExtract.lid ->
+              Some RD.NoExtract
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Noeq.lid ->
+              Some RD.Noeq
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Unopteq.lid ->
+              Some RD.Unopteq
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_TotalEffect.lid ->
+              Some RD.TotalEffect
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Logic.lid ->
+              Some RD.Logic
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Reifiable.lid ->
+              Some RD.Reifiable
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_ExceptionConstructor.lid ->
+              Some RD.ExceptionConstructor
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_HasMaskedEffect.lid ->
+              Some RD.HasMaskedEffect
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Effect.lid ->
+              Some RD.Effect
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_OnlyName.lid ->
+              Some RD.OnlyName
+
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
+            BU.bind_opt (unembed' w e_lid l) (fun l ->
+            Some <| RD.Reflectable l)
+
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
+            BU.bind_opt (unembed' w e_lid l) (fun l ->
+            Some <| RD.Discriminator l)
+
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Action.lid ->
+            BU.bind_opt (unembed' w e_lid l) (fun l ->
+            Some <| RD.Action l)
+
+        | Tm_fvar fv, [(l, _); (i, _)] when S.fv_eq_lid fv ref_qual_Projector.lid ->
+            BU.bind_opt (unembed' w e_lid l) (fun l ->
+            BU.bind_opt (unembed' w e_ident i) (fun i ->
+            Some <| RD.Projector (l, i)))
+
+        | Tm_fvar fv, [(ids1, _); (ids2, _)] when S.fv_eq_lid fv ref_qual_RecordType.lid ->
+            BU.bind_opt (unembed' w (e_list e_ident) ids1) (fun ids1 ->
+            BU.bind_opt (unembed' w (e_list e_ident) ids2) (fun ids2 ->
+            Some <| RD.RecordType (ids1, ids2)))
+
+        | Tm_fvar fv, [(ids1, _); (ids2, _)] when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
+            BU.bind_opt (unembed' w (e_list e_ident) ids1) (fun ids1 ->
+            BU.bind_opt (unembed' w (e_list e_ident) ids2) (fun ids2 ->
+            Some <| RD.RecordConstructor (ids1, ids2)))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded qualifier: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed unembed fstar_refl_qualifier
+
+let e_qualifiers = e_list e_qualifier
+
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
@@ -725,6 +905,10 @@ let unfold_lazy_comp (i : lazyinfo) : term =
 
 let unfold_lazy_env (i : lazyinfo) : term =
     (* Not needed, metaprograms never see concrete environments. *)
+    U.exp_unit
+
+let unfold_lazy_optionstate (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete optionstates . *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =

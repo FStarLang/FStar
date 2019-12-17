@@ -51,8 +51,6 @@ let (set_check_kind :
           (uu___4_71.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
           (uu___4_71.FStar_TypeChecker_Env.attrtab);
-        FStar_TypeChecker_Env.is_pattern =
-          (uu___4_71.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
           (uu___4_71.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
@@ -103,6 +101,8 @@ let (set_check_kind :
           (uu___4_71.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___4_71.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.mpreprocess =
+          (uu___4_71.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___4_71.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -114,7 +114,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.dsenv = uu____72;
         FStar_TypeChecker_Env.nbe = (uu___4_71.FStar_TypeChecker_Env.nbe);
         FStar_TypeChecker_Env.strict_args_tab =
-          (uu___4_71.FStar_TypeChecker_Env.strict_args_tab)
+          (uu___4_71.FStar_TypeChecker_Env.strict_args_tab);
+        FStar_TypeChecker_Env.erasable_types_tab =
+          (uu___4_71.FStar_TypeChecker_Env.erasable_types_tab)
       }
   
 let (repl_ld_tasks_of_deps :

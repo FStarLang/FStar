@@ -1,0 +1,39 @@
+[
+  "*¿\u0002ó<‚È:S¬Âì´ûUg",
+  [
+    [
+      "Coercions.c_erased_zero",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Coercions.c_erased_int", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "6af5962501a7c8e1a25af30cac5e44fd"
+    ],
+    [
+      "Coercions.c_erased_zero",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Coercions.c_erased_int", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "ff5f46e360448939115258c9b0d4ed61"
+    ]
+  ]
+]

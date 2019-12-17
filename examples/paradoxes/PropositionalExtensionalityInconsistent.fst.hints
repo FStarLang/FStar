@@ -32,7 +32,7 @@
         "unit_inversion"
       ],
       0,
-      "fbb4c1425458ff2ca1f96be5cbd92381"
+      "0d6702919ab79b4ca7e23a4694d97110"
     ],
     [
       "PropositionalExtensionalityInconsistent.propExt_sub_singleton_inconsistent",
@@ -54,7 +54,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_inversion"
       ],
       0,
-      "accf97964f0a885de61a21f94c589cb6"
+      "68b45a0430b583af07235b055517b47a"
     ],
     [
       "PropositionalExtensionalityInconsistent.predExt_Type_inconsistent",
@@ -77,7 +77,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "768ef387dc3846c7acac9e58086ca89b"
+      "a9fe36d0ba0680a021c035ad02727476"
     ],
     [
       "PropositionalExtensionalityInconsistent.predExt_ss_inconsistent",
@@ -102,7 +102,7 @@
         "unit_typing"
       ],
       0,
-      "e8c9a6e1dd39183d695813ffea6fbc31"
+      "ef4bc252446c480b9f335ae3b2fe9369"
     ]
   ]
 ]

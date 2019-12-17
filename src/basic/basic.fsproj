@@ -83,9 +83,10 @@
     <Compile Include="boot/NotFStar.Dyn.fs" />
     <Compile Include="boot/FStar.StringBuffer.fsi" />
     <Compile Include="boot/FStar.StringBuffer.fs" />
-    <Compile Include="profiling.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />
+    <Compile Include="FStar.Thunk.fsi" />
+    <Compile Include="FStar.Thunk.fs" />
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
     <Compile Include="NotFStar.Getopt.fs" />
@@ -100,6 +101,8 @@
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
+    <Compile Include="FStar.Profiling.fsi" />
+    <Compile Include="FStar.Profiling.fs" />
     <Compile Include="FStar.Version.fsi" />
     <Compile Include="FStar.Version.fs" />
     <Content Include="packages.config" />

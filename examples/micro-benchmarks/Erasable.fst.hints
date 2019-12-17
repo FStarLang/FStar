@@ -1,0 +1,55 @@
+[
+  "\u0014|\u007f\u0010²¾]d<ªX^A|&‚",
+  [
+    [
+      "Erasable.__proj__This__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.This",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3c192a2edf78cec4f1eb553cb69a4e8f"
+      ],
+      0,
+      "0701231049d58051e6ec48e93092da0c"
+    ],
+    [
+      "Erasable.__proj__That__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.That",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec597d6979f8847712206596e24a9e2d"
+      ],
+      0,
+      "557c5803a2247dd012dcca7157470aae"
+    ],
+    [
+      "Erasable.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.That",
+        "disc_equation_Erasable.This", "fuel_guarded_inversion_Erasable.t"
+      ],
+      0,
+      "5917b569c365554419c0071b3dbd8f9e"
+    ],
+    [
+      "Erasable.test_promotion",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.That",
+        "disc_equation_Erasable.This", "fuel_guarded_inversion_Erasable.t"
+      ],
+      0,
+      "a1952c9578e25c20203421a5cc0be9c2"
+    ]
+  ]
+]

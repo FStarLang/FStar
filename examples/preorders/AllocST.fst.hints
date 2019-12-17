@@ -8,10 +8,10 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "7b2d98743c5a9fdc211dee0f65b8a582"
+      "3f62e453a9d535c263959d41a9a291d6"
     ],
     [
-      "AllocST.1687",
+      "AllocST.1704",
       1,
       2,
       1,
@@ -23,25 +23,25 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "04f054ec3e2a94d3cfb18c1e9426e8a4"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "82e40ee0d3dc7da6e1f28713214c6ed9"
+      "ed5cc42c44d4f6070f8b06e81022e058"
     ],
     [
       "AllocST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0,
+      "e123853af49330c2acc0137fbff923ab"
+    ],
+    [
+      "AllocST.ist_witnessed",
       2,
       2,
       1,
@@ -53,7 +53,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "13902214a93bde4fa191331104a2d97e"
+      "362f63f424a0573f595ad02fd26fb056"
     ],
     [
       "AllocST.ist_witness",
@@ -68,7 +68,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "f0fa0ddc5b46cbbf57f4487e71c53e88"
+      "1c5420108f8e5384e1c73f91cc1f9c1d"
     ],
     [
       "AllocST.ist_recall",
@@ -83,7 +83,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "52a317e0ee2e3aa8e92ae1746cce4081"
+      "bda9959fb67fb339683f2cebc36fd46d"
     ],
     [
       "AllocST.ref",
@@ -97,7 +97,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "27e5157673f4ab3b7fdd363d8fd5aa87"
+      "1b492ba1c11386e63724bf671b324e94"
     ],
     [
       "AllocST.alloc",
@@ -117,7 +117,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_NatHeap.ref"
       ],
       0,
-      "776abee45b53684184e1dfa49ab33d88"
+      "6d312e1dbfb88660a2f8f714f2a0125d"
     ],
     [
       "AllocST.read",
@@ -126,7 +126,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "8257bb66c4f0c16060ab59d52736dca6"
+      "9d3a9cc00ae0b8b423a42eca7d89b263"
     ],
     [
       "AllocST.read",
@@ -142,7 +142,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "972c1e496812d7b9a07b0e36205b1380"
+      "c0c49a8c5492821fa20a2ac5594c4769"
     ],
     [
       "AllocST.write",
@@ -151,7 +151,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "b53a04cea0f8bd71004eb016def8dbde"
+      "1d278bd80dfe7da27a1adedc3eeb065f"
     ],
     [
       "AllocST.write",
@@ -169,7 +169,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "711887bb41e2da6a00bf38daceba9eda"
+      "51d5bdde1c4f2b05f0aa4660344d25f3"
     ],
     [
       "AllocST.recall",
@@ -184,10 +184,10 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "e4b434a8817a3a953107601e13c780b5"
+      "50fc9ee3b573c6728cedf1b2e77864c3"
     ],
     [
-      "AllocST.10827",
+      "AllocST.10949",
       1,
       2,
       1,
@@ -199,7 +199,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "d01f63e768d28dc715440c7343dfc9b0"
+      "bcbcf0897975117a21538430c2d06898"
     ],
     [
       "AllocST.ist_witnessed",
@@ -214,7 +214,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "8a511fb928e9c5cc34c683372ad9faff"
+      "633a5d0bb1f667702c301b93c8011eb0"
     ],
     [
       "AllocST.ist_witnessed",
@@ -229,7 +229,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "362ec87c67a614fa67918b6671cc8539"
+      "692454d8f54b53bb3c033ed8137e8360"
     ],
     [
       "AllocST.ist_witnessed",
@@ -244,7 +244,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "9d59f82a36a3177aea76947fe93f4e8d"
+      "1c514675f0a1cb4452eb8293e4ba1234"
     ],
     [
       "AllocST.ist_witness",
@@ -259,7 +259,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "e83928fbe9711271ae5ee7cb863744d6"
+      "f9b476b528e2bb59d1429cf229bd98eb"
     ],
     [
       "AllocST.ist_recall",
@@ -274,7 +274,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "39935c9ec70de7494830784f1285608b"
+      "f0de9f3647912b6b461539320ea5987e"
     ],
     [
       "AllocST.ref",
@@ -288,7 +288,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "d43df7351afdc600ed5663f22b4c8726"
+      "46943686deee6cdf527ee27b760b0bd6"
     ],
     [
       "AllocST.read",
@@ -297,7 +297,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "619a0b5f9e788684480bc08f60c21238"
+      "b567d5045cc26de0fd69e5726c298326"
     ],
     [
       "AllocST.write",
@@ -306,7 +306,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "8e00d6488857e3cb742b298badd50cf5"
+      "f76c70b3ad26eb8224407012429a7240"
     ]
   ]
 ]

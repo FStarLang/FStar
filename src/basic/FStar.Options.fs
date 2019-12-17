@@ -116,7 +116,7 @@ let copy_optionstate m = Util.smap_copy m
 let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
 
 let internal_peek () = List.hd (List.hd !fstar_options)
-let peek () = internal_peek()
+let peek () = copy_optionstate (internal_peek())
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
@@ -146,7 +146,7 @@ let set o =
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
-let set_option k v = Util.smap_add (peek()) k v
+let set_option k v = Util.smap_add (internal_peek()) k v
 let set_option' (k,v) =  set_option k v
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
@@ -184,6 +184,7 @@ let defaults =
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
+      ("hint_dir"                     , Unset);
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
@@ -191,7 +192,8 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
-      ("profile"                      , Bool false);
+      ("fuel"                         , Unset);
+      ("ifuel"                        , Unset);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -222,8 +224,12 @@ let defaults =
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("quake"                        , Int 0);
+      ("quake_lo"                     , Int 1);
+      ("quake_hi"                     , Int 1);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
+      ("record_options"               , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -265,7 +271,11 @@ let defaults =
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
-                                      , Bool true);]
+                                      , Bool true);
+      ("profile_group_by_decl"        , Bool false);
+      ("profile_component"            , Unset);
+      ("profile"                      , Unset);
+      ]
 
 let parse_warn_error_set_get =
     let r = Util.mk_ref None in
@@ -286,7 +296,7 @@ let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
 let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
-   let o = peek () in
+   let o = internal_peek () in
    Util.smap_clear o;
    defaults |> List.iter set_option'                          //initialize it with the default values
 
@@ -299,7 +309,7 @@ let clear () =
 let _run = clear()
 
 let get_option s =
-  match Util.smap_try_find (peek()) s with
+  match Util.smap_try_find (internal_peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
@@ -332,6 +342,7 @@ let get_extract_namespace       ()      = lookup_opt "extract_namespace"        
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
+let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
@@ -339,7 +350,6 @@ let get_lsp                     ()      = lookup_opt "lsp"                      
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
-let get_profile                 ()      = lookup_opt "profile"                  as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -368,8 +378,11 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
+let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -413,6 +426,9 @@ let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" 
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
+let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
+let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
 let dlevel = function
    | "Low" -> Low
@@ -431,7 +447,11 @@ let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
 let universe_include_path_base_dirs =
+  let sub_dirs = ["legacy"; "experimental"; ".cache"] in
   ["/ulib"; "/lib/fstar"]
+  |> List.collect (fun d -> d :: (sub_dirs |> List.map (fun s -> d ^ "/" ^ s)))
+
+
 
 // See comment in the interface file
 let _version = FStar.Util.mk_ref ""
@@ -565,7 +585,7 @@ let rec desc_of_opt_type typ : option<string> =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
+let arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
   | None -> ZeroArgs (fun () -> parser "")
@@ -721,9 +741,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Don't print unification variable numbers");
 
        ( noshort,
+         "hint_dir",
+         PathStr "path",
+        "Read/write hints to <dir>/module_name.hints (instead of placing hint-file alongside source file)");
+
+       ( noshort,
          "hint_file",
          PathStr "path",
-        "Read/write hints to <path> (instead of module-specific hints files)");
+        "Read/write hints to <path> (instead of module-specific hints files; overrides hint_dir)");
 
        ( noshort,
         "hint_info",
@@ -761,9 +786,40 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Parses and prettyprints in place the files included on the command line");
 
        ( noshort,
-        "profile",
-        Const (Bool true),
-        "Prints timing information for various operations in the compiler");
+        "fuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --fuel"
+                         in
+                         set_option "initial_fuel" (p min);
+                         set_option "max_fuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_fuel and max_fuel at once");
+
+       ( noshort,
+        "ifuel",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "," with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --ifuel"
+                         in
+                         set_option "initial_ifuel" (p min);
+                         set_option "max_ifuel" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "Set initial_ifuel and max_ifuel at once");
 
        ( noshort,
         "initial_fuel",
@@ -891,6 +947,24 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
+        "quake",
+        PostProcessed
+            ((function | String s ->
+                         let p f = Int (int_of_string f) in
+                         let min, max =
+                           match split s "/" with
+                           | [f] -> f, f
+                           | [f1;f2] -> f1, f2
+                           | _ -> failwith "unexpected value for --quake"
+                         in
+                         set_option "quake_lo" (p min);
+                         set_option "quake_hi" (p max);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "non-negative integer or pair of non-negative integers"),
+        "N/M repeats each query M times and checks that it succeeds at least N times");
+
+       ( noshort,
         "query_stats",
         Const (Bool true),
         "Print SMT query statistics");
@@ -899,6 +973,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "record_hints",
         Const (Bool true),
         "Record a database of hints for efficient proof replay");
+
+       ( noshort,
+        "record_options",
+        Const (Bool true),
+        "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
 
        ( noshort,
         "reuse_hint_for",
@@ -1160,6 +1239,25 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                           (Const (Bool true))),
         "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
 
+       ( noshort,
+        "profile_group_by_decl",
+         Const (Bool true),
+        "Emit profiles grouped by declaration rather than by module");
+
+       ( noshort,
+        "profile_component",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
+        "\n\tSpecific source locations in the compiler are instrumented with profiling counters.\n\t\
+          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t\
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+
+       ( noshort,
+         "profile",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\tProfiling can be enabled when the compiler is processing a given set of source modules.\n\t\
+          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t\
+          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (Bool true))),
@@ -1184,8 +1282,11 @@ let settable = function
     | "detail_hint_replay"
     | "eager_subtyping"
     | "hide_uvar_nums"
+    | "hint_dir"
     | "hint_file"
     | "hint_info"
+    | "fuel"
+    | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
@@ -1207,7 +1308,11 @@ let settable = function
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
+    | "quake_lo"
+    | "quake_hi"
+    | "quake"
     | "query_stats"
+    | "record_options"
     | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
@@ -1239,8 +1344,9 @@ let settable = function
     | "z3rlimit_factor"
     | "z3seed"
     | "trivial_pre_for_unannotated_effectful_fns"
-    -> true
-
+    | "profile_group_by_decl"
+    | "profile_component"
+    | "profile" -> true
     | _ -> false
 
 let all_specs = specs ()
@@ -1451,6 +1557,7 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
@@ -1465,18 +1572,22 @@ let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
+let hint_dir                     () = get_hint_dir                    ()
 let hint_file                    () = get_hint_file                   ()
+let hint_file_for_src src_filename =
+      match hint_file() with
+      | Some fn -> fn
+      | None ->
+        let file_name =
+          match hint_dir () with
+          | Some dir ->
+            Util.concat_dir_filename dir (Util.basename src_filename)
+          | _ -> src_filename
+        in
+        Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
-let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
-    if get_profile()
-    then let a, time = Util.record_time f in
-         Util.print2 "Elapsed time %s ms: %s\n"
-                     (Util.string_of_int time)
-                     (msg a);
-         a
-    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
@@ -1508,8 +1619,11 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+let quake_lo                     () = get_quake_lo                    ()
+let quake_hi                     () = get_quake_hi                    ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
+let record_options               () = get_record_options              ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
@@ -1598,6 +1712,11 @@ let module_matches_namespace_filter m filter =
     | None -> false
     | Some (_, flag) -> flag
 
+let matches_namespace_filter_opt m =
+  function
+  | None -> false
+  | Some filter -> module_matches_namespace_filter m filter
+
 
 let should_extract m =
     let m = String.lowercase m in
@@ -1646,3 +1765,12 @@ let error_flags =
           Util.smap_add cache we r;
           r
         | Some r -> r
+
+let profile_enabled modul_opt phase =
+  match modul_opt with
+  | None -> //the phase is not associated with a module
+    matches_namespace_filter_opt phase (get_profile_component())
+
+  | Some modul ->
+    matches_namespace_filter_opt modul (get_profile())
+    && matches_namespace_filter_opt phase (get_profile_component())

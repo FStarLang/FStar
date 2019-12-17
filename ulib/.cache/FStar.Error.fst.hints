@@ -1,0 +1,92 @@
+[
+  "ò3È=Ã¼\u000frkm&µ¹j!ƒ",
+  [
+    [
+      "FStar.Error.optResult",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ca43a3a233e3e08b3debef1ab7b97eae"
+    ],
+    [
+      "FStar.Error.__proj__Error__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Error.Error",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
+      ],
+      0,
+      "7fa525bb995716b99057055b422be6d8"
+    ],
+    [
+      "FStar.Error.__proj__Correct__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9570651724fccc40ed9243df14ac4feb"
+      ],
+      0,
+      "fde6ced8e4c52118371f7a17d9d23cc5"
+    ],
+    [
+      "FStar.Error.invertOptResult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "disc_equation_FStar.Error.Error",
+        "fuel_guarded_inversion_FStar.Error.optResult",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "fd39830a9c873024facb2c4bd9bb5e51"
+    ],
+    [
+      "FStar.Error.optResult",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2f9af3ec6969cbef7ba7af5dd4603c20"
+    ],
+    [
+      "FStar.Error.__proj__Error__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Error.Error",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
+      ],
+      0,
+      "eccbf010de94e4a6c15e508c18947e94"
+    ],
+    [
+      "FStar.Error.__proj__Correct__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9570651724fccc40ed9243df14ac4feb"
+      ],
+      0,
+      "79800026cd4042af7b09626f669af71a"
+    ]
+  ]
+]

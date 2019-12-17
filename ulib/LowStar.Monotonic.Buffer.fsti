@@ -30,6 +30,20 @@ module HST = FStar.HyperStack.ST
 (* Shorthand for preorder over sequences *)
 unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 
+(*
+ * A compatibility relation between preorders of a sequence and its subsequence
+ *)
+[@"opaque_to_smt"]
+unfold
+let compatible_subseq_preorder (#a:Type0)
+  (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
+  = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}  //for any two sequences s1 and s2
+                         (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>  //of length len, and related by rel
+		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //their slices [i, j) are related by sub_rel
+    (forall (s s2:Seq.seq a). {:pattern (sub_rel (Seq.slice s i j) s2); (rel s (Seq.replace_subseq s i j s2))}  //for any two sequences s and s2
+                        (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>  //such that s has length len and s2 has length (j - i), and the slice [i, j) of s is related to s2 by sub_rel
+  		        (rel s (Seq.replace_subseq s i j s2)))  //if we replace the slice [i, j) in s by s2, then s and the resulting buffer are related by rel
+
 
 /// Low* buffers
 /// ==============
@@ -256,17 +270,8 @@ val mbuffer_injectivity_in_first_preorder (_:unit)
 unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = (forall (s1 s2:Seq.seq a).{:pattern (rel s1 s2);
-                                   (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
-			                    (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))}  //for any two sequences s1 and s2
-                         (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>  //that have lengths same as b, and are related by the preorder rel
-		         (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
-			          (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //their slices [i, i + len) should be related by the preorder sub_rel,
-    (forall (s s2:Seq.seq a).{:pattern (sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2);
-                                  (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2))} //for any two sequences s and s2
-                        (Seq.length s == length b /\ Seq.length s2 == U32.v len /\  //such that s has length same as b and s2 has length len
-                         sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>  //and the slice [i, i + len) of s is related to s2 by sub_rel,
-  		        (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //if we replace the slice [i, i + len) in s by s2, then s and the resulting buffer should be related by rel
+  = compatible_subseq_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
+
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from
@@ -347,7 +352,7 @@ val gsub_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel)
   (i1:U32.t) (len1:U32.t) (sub_rel1:srel a)
   (i2: U32.t) (len2: U32.t) (sub_rel2:srel a)
-  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\ 
+  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\
                     U32.v i2 + U32.v len2 <= U32.v len1))
          (ensures  (((compatible_sub b i1 len1 sub_rel1 /\  compatible_sub (mgsub sub_rel1 b i1 len1) i2 len2 sub_rel2) ==> compatible_sub b (U32.add i1 i2) len2 sub_rel2) /\
                     mgsub sub_rel2 (mgsub sub_rel1 b i1 len1) i2 len2 == mgsub sub_rel2 b (U32.add i1 i2) len2))
@@ -1325,7 +1330,7 @@ val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
   [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
 
 val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
-  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_heap_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies loc_none m0 m1
@@ -1390,7 +1395,7 @@ val modifies_ralloc_post
   (i: HS.rid)
   (init: a)
   (h: HS.mem)
-  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (x: HST.mreference a rel)
   (h' : HS.mem)
 : Lemma
   (requires (HST.ralloc_post i init h x h'))
@@ -1459,7 +1464,7 @@ val modifies_loc_buffer_from_to_intro
     Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
   ))
   (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
-  
+
 
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
@@ -1799,11 +1804,10 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 /// ``b + i`` (or, equivalently, ``&b[i]``.)
 
 val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
-  (i:U32.t) (len:U32.t)
+  (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
-             (requires (fun h -> U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ live h b))
-             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i len))
-
+             (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b))
+             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
 /// ``offset b i`` construct the tail of the buffer ``b`` starting from
 /// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
@@ -1908,6 +1912,25 @@ let upd
 
 val recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
 
+val region_lifetime_buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Type0
+
+(*
+ * A functoriality lemma
+ *)
+unfold
+let rrel_rel_always_compatible (#a:Type0) (rrel rel:srel a) =
+  forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_subseq_preorder len rrel i j rel
+
+
+val region_lifetime_sub (#a:Type0) (#rrel #rel #subrel:srel a)
+  (b0:mbuffer a rrel rel)
+  (b1:mbuffer a rrel subrel)
+: Lemma
+  (requires rrel_rel_always_compatible rrel subrel)
+  (ensures
+    (region_lifetime_buf b0 /\
+     (exists i len. U32.v i + U32.v len <= length b0 /\ b1 == mgsub subrel b0 i len)) ==> region_lifetime_buf b1)
+
 val recallable_null (#a:Type0) (#rrel #rel:srel a)
   :Lemma (recallable (mnull #a #rrel #rel)) [SMTPat (recallable (mnull #a #rrel #rel))]
 
@@ -1932,7 +1955,7 @@ val recallable_mgsub (#a:Type0) (#rrel #rel:srel a)
          ]]
 
 val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
-  :HST.Stack unit (requires (fun _ -> recallable b))
+  :HST.Stack unit (requires (fun m -> recallable b \/ (region_lifetime_buf b /\ HS.live_region m (frameOf b))))
                   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 
 (*
@@ -1965,6 +1988,36 @@ val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
 val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ p (as_seq h0 b)))
+
+val witnessed_functorial (#a:Type0)
+  (#rrel #rel1 #rel2:srel a)
+  (b1:mbuffer a rrel rel1) (b2:mbuffer a rrel rel2) (i len:U32.t)
+  (s1 s2:spred a)
+: Lemma
+  (requires
+    rrel_rel_always_compatible rrel rel1 /\  //e.g. trivial_preorder, immutable preorder etc.
+    U32.v i + U32.v len <= length b1 /\
+    b2 == mgsub rel2 b1 i len /\  //the underlying allocation unit for b1 and b2 must be the same
+    witnessed b1 s1 /\
+    (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
+  (ensures witnessed b2 s2)
+
+(*
+ * A stateful version that relaxes the rrel and rel compatibility
+ *   but requires liveness of b1
+ *)
+val witnessed_functorial_st (#a:Type0)
+  (#rrel #rel1 #rel2:srel a)
+  (b1:mbuffer a rrel rel1) (b2:mbuffer a rrel rel2) (i len:U32.t)
+  (s1 s2:spred a)
+: HST.Stack unit
+  (requires fun h ->
+    live h b1 /\
+    U32.v i + U32.v len <= length b1 /\
+    b2 == mgsub rel2 b1 i len /\
+    witnessed b1 s1 /\
+    (forall h. s1 (as_seq h b1) ==> s2 (as_seq h b2)))
+  (ensures fun h0 _ h1 -> h0 == h1 /\ witnessed b2 s2)
 
 (* End: API for general witness and recall *)
 
@@ -2217,6 +2270,34 @@ let mgcmalloc_of_list_partial (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
           (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.seq_of_list init)))
 
   = mgcmalloc_of_list r init
+
+
+unfold let alloc_drgn_pre (h:HS.mem) (d:HST.drgn) (len:U32.t) = h `HS.live_region` (HST.rid_of_drgn d) /\ U32.v len > 0
+
+val mmalloc_drgn (#a:Type0) (#rrel:srel a)
+  (d:HST.drgn) (init:a) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ region_lifetime_buf b})
+  (requires fun h -> alloc_drgn_pre h d len)
+  (ensures fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
+
+val mmalloc_drgn_mm (#a:Type0) (#rrel:srel a)
+  (d:HST.drgn) (init:a) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ freeable b})
+  (requires fun h -> alloc_drgn_pre h d len)
+  (ensures fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init))
+
+val mmalloc_drgn_and_blit (#a:Type0) (#rrel:srel a)
+  (#rrel1 #rel1:srel a)
+  (d:HST.drgn) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
+: HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == HST.rid_of_drgn d /\ region_lifetime_buf b})
+  (requires fun h ->
+    alloc_drgn_pre h d len /\
+    live h src /\
+    U32.v id_src + U32.v len <= length src)
+  (ensures fun h0 b h1 ->
+    alloc_post_mem_common b h0 h1
+      (Seq.slice (as_seq h0 src) (U32.v id_src) (U32.v id_src + U32.v len)))
+
 
 
 (***** End allocation functions *****)

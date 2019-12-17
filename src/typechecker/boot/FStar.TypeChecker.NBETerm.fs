@@ -82,7 +82,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
+  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
@@ -271,9 +271,9 @@ and atom_to_string (a: atom) =
   | Var v -> "Var " ^ (P.bv_to_string v)
   | Match (t, _, _) -> "Match " ^ (t_to_string t)
 
-and arg_to_string (a : arg) = a |> fst |> t_to_string
+let arg_to_string (a : arg) = a |> fst |> t_to_string
 
-and args_to_string args = args |> List.map arg_to_string |> String.concat " "
+let args_to_string args = args |> List.map arg_to_string |> String.concat " "
 
 // Embedding and de-embedding
 
@@ -317,19 +317,19 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
                          (P.emb_typ_to_string et);
     if !Options.eager_embedding
     then f()
-    else let thunk = FStar.Common.mk_thunk f in
+    else let thunk = Thunk.mk f in
          let li = FStar.Dyn.mkdyn x, et in
          Lazy (BU.Inr li, thunk)
 
 let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
     match x with
     | Lazy (BU.Inl li, thunk) ->
-      f (FStar.Common.force_thunk thunk)
+      f (Thunk.force thunk)
 
     | Lazy (BU.Inr (b, et'), thunk) ->
       if et <> et'
       || !Options.eager_embedding
-      then let res = f (FStar.Common.force_thunk thunk) in
+      then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancellation failed\n\t%s <> %s\n"
                                 (P.emb_typ_to_string et)

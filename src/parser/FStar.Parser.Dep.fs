@@ -38,6 +38,8 @@ open FStar.Errors
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
+let profile f c = Profiling.profile f None c
+
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
  * In the [VerifyUserList] case, for every [--verify_module X], we check we
@@ -739,8 +741,9 @@ let collect_one
             end
         | Exception (_, t) ->
             iter_opt t collect_term
-        | NewEffect ed ->
-            collect_effect_decl ed
+        | NewEffect ed
+        | LayeredEffect ed ->
+             collect_effect_decl ed
         | Fsdoc _
         | Pragma _ ->
             ()
@@ -1202,7 +1205,7 @@ let collect (all_cmd_line_files: list<file_name>)
   in
 
   let parse_results = BU.smap_create 40 in
-
+  
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
   let rec discover_one (file_name:file_name) =
@@ -1235,9 +1238,7 @@ let collect (all_cmd_line_files: list<file_name>)
                       (deps @ mo_roots))
     end
   in
-  FStar.Options.profile
-    (fun () -> List.iter discover_one all_cmd_line_files)
-    (fun _ -> "Dependence analysis: Initial scan");
+  profile (fun () -> List.iter discover_one all_cmd_line_files) "FStar.Parser.Dep.discover";
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected dep_graph cycle filename =
@@ -1343,7 +1344,7 @@ let collect (all_cmd_line_files: list<file_name>)
 
   let inlining_ifaces = !interfaces_needing_inlining in
   let all_files, _ =
-    FStar.Options.profile
+    profile
       (fun () ->
          topological_dependences_of
            file_system_map
@@ -1351,8 +1352,7 @@ let collect (all_cmd_line_files: list<file_name>)
            inlining_ifaces
            all_cmd_line_files
            (Options.codegen()<>None))
-      (fun _ ->
-        "Dependence analysis: topological sort for full file list")
+      "FStar.Parser.Dep.topological_dependences_of"
   in
   if Options.debug_any()
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
@@ -1514,11 +1514,7 @@ let print_full (deps:deps) : unit =
             in
             let files = List.map norm_path files in
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-            let files =
-                Options.profile
-                  (fun () -> String.concat "\\\n\t" files)
-                  (fun _ -> "Dependence analysis: concat files")
-            in
+            let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
             let all_checked_files =
@@ -1534,7 +1530,7 @@ let print_full (deps:deps) : unit =
             // excluding files in ulib, since these are packaged in fstarlib.cmxa
           let all_fst_files_dep, widened =
               if Options.cmi()
-              then Options.profile
+              then profile
                    (fun () ->
                      topological_dependences_of'
                      deps.file_system_map
@@ -1542,10 +1538,7 @@ let print_full (deps:deps) : unit =
                      deps.interfaces_with_inlining
                      [file_name]
                      widened)
-                   (fun _ ->
-                     //would be nice to eliminate this; it adds up to about
-                     //6 seconds in the miTLS dependence analysis
-                     "Dependence analysis: cmi, second topological sort")
+                    "FStar.Parser.Dep.topological_dependences_of_2"
               else
                    let maybe_widen_deps (f_deps:dependences) =
                       List.map
@@ -1632,9 +1625,7 @@ let print_full (deps:deps) : unit =
           in
           all_checked_files
         in
-        Options.profile
-          process_one_key
-          (fun _ -> BU.format1 "Dependence analysis: output key %s" file_name))
+        profile process_one_key "FStar.Parser.Dep.process_one_key")
         []
     in
     let all_fst_files =
@@ -1682,9 +1673,7 @@ let print deps =
   | Some "make" ->
       print_make deps
   | Some "full" ->
-      FStar.Options.profile
-        (fun () -> print_full deps)
-        (fun _ -> "Dependence analysis: printing")
+      profile (fun () -> print_full deps) "FStar.Parser.Deps.print_full_deps"
   | Some "graph" ->
       print_graph deps.dep_graph
   | Some "raw" ->

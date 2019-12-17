@@ -404,7 +404,7 @@ let nth_lemma #n a b =
 val zero_nth_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True) (ensures nth (zero n) i = false)
         [SMTPat (nth (zero n) i)]
-let rec zero_nth_lemma #n i = ()
+let zero_nth_lemma #n i = ()
 
 val pow2_nth_lemma: #n:pos -> p:nat{p < n} -> i:nat{i < n} ->
   Lemma (requires True)
@@ -423,7 +423,7 @@ let one_nth_lemma #n i = ()
 val ones_nth_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True) (ensures (nth (ones n) i) = true)
         [SMTPat (nth (ones n) i)]
-let rec ones_nth_lemma #n i = ()
+let ones_nth_lemma #n i = ()
 
 (* Bitwise operators *)
 val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
@@ -981,6 +981,7 @@ let lemma_lognot_zero_ext #n a =
   assert (neav_l = neav_r);
   assert (from_vec neav_r = lhs)
 
+#set-options "--z3rlimit 20"
 val lemma_lognot_one_ext: #n:pos -> a:uint_t n ->
   Lemma (lognot #(n+1) (one_extend a) = lognot #n a)
 let lemma_lognot_one_ext #n a =
@@ -999,7 +1000,6 @@ let lemma_lognot_one_ext #n a =
   let neav_l = Seq.append hd0 nav in
   Seq.Base.lemma_eq_elim neav_l neav_r
 
-#set-options "--z3rlimit 10"
 val lemma_lognot_value_mod: #n:pos -> a:uint_t n ->
   Lemma
   (requires True)

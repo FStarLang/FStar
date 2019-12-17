@@ -23,6 +23,9 @@ module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
+module O = FStar.Options
+module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
 
 open FStar.Dyn
 
@@ -154,7 +157,7 @@ let rec inspect_ln (t:term) : term_view =
         failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
-        begin match U.arrow_one t with
+        begin match U.arrow_one_ln t with
         | Some (b, c) -> Tv_Arrow (b, c)
         | None -> failwith "impossible"
         end
@@ -175,21 +178,21 @@ let rec inspect_ln (t:term) : term_view =
         | BU.Inr _ -> Tv_Unknown // no top level lets
         | BU.Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
-            Tv_Let (false, bv, lb.lbdef, t2)
+            Tv_Let (false, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
         | BU.Inr _  -> Tv_Unknown // no top level lets
-        | BU.Inl bv -> Tv_Let (true, bv, lb.lbdef, t2)
+        | BU.Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
     | Tm_match (t, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -285,12 +288,12 @@ let pack_ln (tv:term_view) : term =
     | Tv_Uvar (u, ctx_u_s) ->
       S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
-    | Tv_Let (false, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (false, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((false, [lb]), t2)) None Range.dummyRange
 
-    | Tv_Let (true, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (true, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((true, [lb]), t2)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
@@ -298,7 +301,7 @@ let pack_ln (tv:term_view) : term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
@@ -356,6 +359,74 @@ let sigelt_attrs (se : sigelt) : list<attribute> =
 
 let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
+
+(* PRIVATE, and hacky :-( *)
+let rd_to_syntax_qual : RD.qualifier -> qualifier = function
+  | RD.Assumption -> Assumption
+  | RD.New -> New
+  | RD.Private -> Private
+  | RD.Unfold_for_unification_and_vcgen -> Unfold_for_unification_and_vcgen
+  | RD.Visible_default -> Visible_default
+  | RD.Irreducible -> Irreducible
+  | RD.Abstract -> Abstract
+  | RD.Inline_for_extraction -> Inline_for_extraction
+  | RD.NoExtract -> NoExtract
+  | RD.Noeq -> Noeq
+  | RD.Unopteq -> Unopteq
+  | RD.TotalEffect -> TotalEffect
+  | RD.Logic -> Logic
+  | RD.Reifiable -> Reifiable
+  | RD.Reflectable l -> Reflectable l
+  | RD.Discriminator l -> Discriminator l
+  | RD.Projector (l, i) -> Projector (l, i)
+  | RD.RecordType (l1, l2) -> RecordType (l1, l2)
+  | RD.RecordConstructor (l1, l2) -> RecordConstructor (l1, l2)
+  | RD.Action l -> Action l
+  | RD.ExceptionConstructor -> ExceptionConstructor
+  | RD.HasMaskedEffect -> HasMaskedEffect
+  | RD.Effect -> S.Effect
+  | RD.OnlyName -> OnlyName
+
+let syntax_to_rd_qual = function
+  | Assumption -> RD.Assumption
+  | New -> RD.New
+  | Private -> RD.Private
+  | Unfold_for_unification_and_vcgen -> RD.Unfold_for_unification_and_vcgen
+  | Visible_default -> RD.Visible_default
+  | Irreducible -> RD.Irreducible
+  | Abstract -> RD.Abstract
+  | Inline_for_extraction -> RD.Inline_for_extraction
+  | NoExtract -> RD.NoExtract
+  | Noeq -> RD.Noeq
+  | Unopteq -> RD.Unopteq
+  | TotalEffect -> RD.TotalEffect
+  | Logic -> RD.Logic
+  | Reifiable -> RD.Reifiable
+  | Reflectable l -> RD.Reflectable l
+  | Discriminator l -> RD.Discriminator l
+  | Projector (l, i) -> RD.Projector (l, i)
+  | RecordType (l1, l2) -> RD.RecordType (l1, l2)
+  | RecordConstructor (l1, l2) -> RD.RecordConstructor (l1, l2)
+  | Action l -> RD.Action l
+  | ExceptionConstructor -> RD.ExceptionConstructor
+  | HasMaskedEffect -> RD.HasMaskedEffect
+  | S.Effect -> RD.Effect
+  | OnlyName -> RD.OnlyName
+
+
+let sigelt_quals (se : sigelt) : list<RD.qualifier> =
+    se.sigquals |> List.map syntax_to_rd_qual
+
+let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
+    { se with sigquals = List.map rd_to_syntax_qual quals }
+
+let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+
+let sigelt_opts (se : sigelt) : option<term> =
+    match se.sigopts with
+    | None -> None
+    | Some o -> Some (EMB.embed (!e_optionstate_hook |> BU.must) o
+                        Range.dummyRange None EMB.id_norm_cb)
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

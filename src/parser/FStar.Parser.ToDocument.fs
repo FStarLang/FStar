@@ -52,7 +52,7 @@ let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
   in
   aux l []
 
-let rec map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
+let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
   let rec aux l acc =
     match l with
     | [] -> acc
@@ -254,7 +254,7 @@ let rec extract_from_list e = match e.tm with
 
 let is_array e = match e.tm with
     (* TODO check that there is no implicit parameters *)
-    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_mk_array_lid && is_list l
+    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && is_list l
     | _ -> false
 
 let rec is_ref_set e = match e.tm with

@@ -14,6 +14,7 @@ let return_all x = x
 
 type time = float
 let now () = BatUnix.gettimeofday ()
+let now_ms () = Z.of_int (int_of_float (now () *. 1000.0))
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n,
@@ -613,6 +614,10 @@ let remove_dups f l =
     | hd::tl -> let _, tl' = BatList.partition (f hd) tl in aux (hd::out) tl'
     | _ -> out in
   aux [] l
+
+let is_none = function
+  | None -> true
+  | Some _ -> false
 
 let is_some = function
   | None -> false

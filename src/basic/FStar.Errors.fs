@@ -334,6 +334,11 @@ type raw_error =
   | Warning_UnexpectedCheckedFile
   | Fatal_ExtractionUnsupported
   | Warning_SMTErrorReason
+  | Warning_CoercionNotFound
+  | Error_QuakeFailed
+  | Error_IllSMTPat
+  | Error_IllScopedTerm
+  | Warning_UnusedLetRec
 
 type flag = error_flag
 
@@ -665,13 +670,20 @@ let default_flags =
   (Warning_UnexpectedCheckedFile                     , CWarning); //321
   (Fatal_ExtractionUnsupported                       , CFatal);
   (Warning_SMTErrorReason                            , CWarning);
+  (Warning_CoercionNotFound                          , CWarning);
+  (Error_QuakeFailed                                 , CError);
+  (Error_IllSMTPat                                   , CError); //326
+  (Error_IllScopedTerm                               , CError);
+  (Warning_UnusedLetRec                              , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
+type error = raw_error * string * Range.range
+
 exception Err     of raw_error * string
-exception Error   of raw_error * string * Range.range
-exception Warning of raw_error * string * Range.range
+exception Error   of error
+exception Warning of error
 exception Stop
 
 (* Raised when an empty fragment is parsed *)

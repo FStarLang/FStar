@@ -95,7 +95,7 @@ let debug_sigmap (m : BU.smap<sigelt>) =
  *)
 let unlazy t =
     match t with
-    | Lazy (_, t) -> FStar.Common.force_thunk t
+    | Lazy (_, t) -> Thunk.force t
     | t -> t
 
 let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
@@ -629,7 +629,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
           debug (fun () -> BU.print1 ">> Unfolding Tm_lazy to %s\n" (P.term_to_string t));
           translate cfg bs t
       in
-      Lazy (BU.Inl li, FStar.Common.mk_thunk f)
+      Lazy (BU.Inl li, Thunk.mk f)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -729,7 +729,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            else []
        in
        let t =
-       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
+       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> BU.must |> snd)))
                       [Univ U_unknown, None;  //We are cheating here a bit
                       Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
                                               //and ty below; but this should be okay since these
@@ -803,7 +803,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
-        let ret = match (SS.compress (snd ed.return_repr)).n with
+        let ret = match (SS.compress (ed |> U.get_return_repr |> BU.must |> snd)).n with
                   | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) None e.pos
                   | _ -> failwith "NYI: Reification of indexed effect (NBE)"
         in
@@ -833,7 +833,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
       let lift_lam =
         let x = S.new_bv None S.tun in
         U.abs [(x, None)]
-              (lift U_unknown ty S.tun (S.bv_to_name x))
+              (lift U_unknown ty (S.bv_to_name x))
               None
       in
       let cfg' = {cfg with reifying=false} in
@@ -990,7 +990,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
         S.mk (Tm_lazy li) None Range.dummyRange
 
     | Lazy (_, thunk) ->
-        readback cfg (FStar.Common.force_thunk thunk)
+        readback cfg (Thunk.force thunk)
 
 type step =
   | Primops

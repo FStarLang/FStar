@@ -54,6 +54,11 @@ Guidelines for the changelog:
 
      See issue #1542 for more discussion.
 
+   * The ulib directory has been restructured with old modules in
+     legacy (consider them deprecated), an experimental directory as a
+     staging ground, and a .cache directory in which .checked and
+     .hints files are maintained.
+
 ## Syntax
 
    * We now overload `&` to construct both dependent and non-dependent
@@ -196,6 +201,12 @@ Guidelines for the changelog:
      (`--already_cached`, `--extract`, `--using_facts_from`, etc.),
      those lists of namespaces can be given under the form `+A -B +C`
      (space-separated) or `+A,-B,+C` (comma-separated).
+
+   * [PR #1985](https://github.com/FStarLang/FStar/pull/1985): The
+     `--profile` flag changed to take instead a set of modules on
+     which to enable profiling. The output of F* on its finished
+     message changed to not print the time it took to verify a module.
+
 
 ## Editors
 

@@ -57,7 +57,7 @@ let rec blah (t : term) : Tac term =
              | Tv_Type u -> Tv_Type ()
              | Tv_Const c -> Tv_Const c
              | Tv_Uvar u t -> Tv_Uvar u t
-             | Tv_Let r b t1 t2 -> Tv_Let r b t1 t2
+             | Tv_Let r attrs b t1 t2 -> Tv_Let r attrs b t1 t2
              | Tv_Match t brs -> Tv_Match t brs
              | Tv_AscribedT e t tac -> Tv_AscribedT e t tac
              | Tv_AscribedC e c tac -> Tv_AscribedC e c tac
@@ -97,25 +97,6 @@ let _ = assert True
                 | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
                 | _ -> fail "What?")
 
-let _ = assert True
-            by (let t = quote ((x:int) -> x == 2 /\ False) in
-                match term_as_formula' t with
-                | Forall _ _ -> ()
-                | _ -> fail ("This should be a forall: " ^ term_to_string t))
-
-// The implicit type argument for eq2 (==) mentions x and y, so this is not seen as an implication...
-// In detail, initially the type is `?u y x` for some unification variable `?u`, and unification
-// then resolves it to `(fun _ _ -> int) y x`, so `y` and `x` are still free.
-//
-// Tweaking inference to do some normalization could get rid of this, I think..
-let _ = assert True
-            by (let t = quote ((y:int) -> (x:int) -> x + 2 == 5) in
-                match term_as_formula t with
-                | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
-                | f -> debug ("This should be an implication: " ^ formula_to_string f);
-                       debug "But that's a known issue...";
-                       ())
-
 open FStar.Tactics
 
 let arith_test1 =
@@ -137,7 +118,7 @@ let arith_test2 (x : int) =
 let _ = assert True
             by (let t = quote (let x = 2 in x + 6) in
                 match inspect t with
-                | Tv_Let r bv t1 t2 -> (
+                | Tv_Let r attrs bv t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);
@@ -148,7 +129,7 @@ let _ = assert True
 let _ = assert True
             by (let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
-                | Tv_Let r bv t1 t2 -> (
+                | Tv_Let r attrs bv t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);

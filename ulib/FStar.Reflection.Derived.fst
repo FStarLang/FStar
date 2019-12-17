@@ -74,11 +74,12 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec mk_tot_arr (bs: list binder) (cod : term) : Tot term (decreases bs) =
+let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) None)))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) None)))
 
+private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ ->
@@ -91,25 +92,26 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
     | _ -> (bs, c)
     end
 
-val collect_arr_bs : typ -> list binder * comp
-let collect_arr_bs t =
+val collect_arr_ln_bs : typ -> list binder * comp
+let collect_arr_ln_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
     (List.Tot.rev bs, c)
 
-val collect_arr : typ -> list typ * comp
-let collect_arr t =
+val collect_arr_ln : typ -> list typ * comp
+let collect_arr_ln t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
     let ts = List.Tot.map type_of_binder bs in
     (List.Tot.rev ts, c)
 
+private
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
     match inspect_ln t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> list binder * term
-let collect_abs t =
+val collect_abs_ln : term -> list binder * term
+let collect_abs_ln t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
@@ -124,7 +126,7 @@ let compare_name (n1 n2 : name) : order =
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
 
-let rec compare_const (c1 c2 : vconst) : order =
+let compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
     | C_Int i, C_Int j -> order_from_int (i - j)
@@ -180,7 +182,7 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
-    | Tv_Let r1 bv1 t1 t1', Tv_Let r2 bv2 t2 t2' ->
+    | Tv_Let _r1 _attrs1 bv1 t1 t1', Tv_Let _r2 _attrs2 bv2 t2 t2' ->
         lex (compare_bv bv1 bv2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
              compare_term t1' t2'))
@@ -304,7 +306,7 @@ let mkpair (t1 t2 : term) : term =
 let rec head (t : term) : term =
     match inspect_ln t with
     | Tv_Match t _
-    | Tv_Let _ _ t _
+    | Tv_Let _ _ _ t _
     | Tv_Abs _ t
     | Tv_Refine _ t
     | Tv_App t _

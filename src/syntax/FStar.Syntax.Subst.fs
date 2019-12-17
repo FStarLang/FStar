@@ -244,12 +244,17 @@ let rec subst' (s:subst_ts) t =
       //    since its solution may eventually end up being an open term
       mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
 
-and subst_flags' s flags =
+let subst_flags' s flags =
     flags |> List.map (function
         | DECREASES a -> DECREASES (subst' s a)
         | f -> f)
 
-and subst_comp_typ' s t =
+let subst_imp' s i =
+  match i with
+  | Some (Meta t) -> Some (Meta (subst' s t))
+  | i -> i
+
+let subst_comp_typ' s t =
   match s with
   | [], NoUseRange
   | [[]], NoUseRange -> t
@@ -260,7 +265,7 @@ and subst_comp_typ' s t =
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, subst_imp' s imp) t.effect_args}
 
-and subst_comp' s t =
+let subst_comp' s t =
   match s with
   | [], NoUseRange
   | [[]], NoUseRange -> t
@@ -269,11 +274,6 @@ and subst_comp' s t =
       | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
-
-and subst_imp' s i =
-  match i with
-  | Some (Meta t) -> Some (Meta (subst' s t))
-  | i -> i
 
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
@@ -585,13 +585,6 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs
-
-let close_lcomp (bs:binders) lc =
-    let s = closing_subst bs in
-    Syntax.mk_lcomp lc.eff_name
-                    lc.res_typ
-                    lc.cflags
-                    (fun () -> subst_comp s (lcomp_comp lc))
 
 let close_pat p =
     let rec aux sub p = match p.v with

@@ -761,7 +761,7 @@ let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
     reduce (List.flatten docs)
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mllib_r (MLLib mllib) =
+let doc_of_mllib_r (MLLib mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
         let x = Util.flatten_mlpath x in
         let head = reduce1 [text "module"; text x; text ":"; text "sig"] in

@@ -139,7 +139,7 @@ let e_proofstate_nbe =
                  ; ltyp = t_proofstate
                  ; rng = Range.dummyRange }
         in
-        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
+        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
         NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
@@ -180,7 +180,7 @@ let e_goal_nbe =
                  ; ltyp = t_goal
                  ; rng = Range.dummyRange }
         in
-        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
+        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
         NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =

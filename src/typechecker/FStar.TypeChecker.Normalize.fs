@@ -30,6 +30,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
@@ -43,6 +44,8 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+
+module TcComm = FStar.TypeChecker.Common
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -89,17 +92,18 @@ let set_memo cfg (r:memo<'a>) (t:'a) =
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
-let rec env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
+let closure_to_string = function
+    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
+    | Univ _ -> "Univ"
+    | Dummy -> "dummy"
+
+let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
     List.map (fun (bopt, c) ->
                 BU.format2 "(%s, %s)"
                    (match bopt with None -> "." | Some x -> FStar.Syntax.Print.binder_to_string x)
                    (closure_to_string c))
              env
             |> String.concat "; "
-and closure_to_string = function
-    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
-    | Univ _ -> "Univ"
-    | Dummy -> "dummy"
 
 let stack_elt_to_string = function
     | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
@@ -527,10 +531,6 @@ and close_comp cfg env c =
                 effect_args=args;
                 flags=flags})
 
-and filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    flags |> List.filter (function DECREASES _ -> false | _ -> true)
-
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some rc ->
       let flags =
@@ -539,6 +539,10 @@ and close_lcomp_opt cfg env lopt = match lopt with
       let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (inline_closure_env cfg env [])} in
       Some rc
     | _ -> lopt
+
+let filter_out_lcomp_cflags flags =
+    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 
@@ -719,7 +723,12 @@ let tr_norm_step = function
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
-    List.concatMap tr_norm_step s
+    let s = List.concatMap tr_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
@@ -738,15 +747,10 @@ let get_norm_request cfg (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s ->
-        let s = Beta::s in
-        let s = add_exclude s Zeta in
-        let s = add_exclude s Iota in
-        Some (inherited_steps @ s, tm)
+      | Some s -> Some (inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -760,12 +764,6 @@ let nbe_eval (cfg:cfg) (s:steps) (tm:term) : term =
     let tm_norm = (cfg_env cfg).nbe s cfg.tcenv tm in
     log_nbe cfg (fun () -> BU.print1 "Result of NBE is  %s\n" (Print.term_to_string tm_norm));
     tm_norm
-
-let is_reify_head = function
-    | App(_, {n=Tm_constant FC.Const_reify}, _, _)::_ ->
-      true
-    | _ ->
-      false
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack =
@@ -1004,6 +1002,11 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+(* GM: Please consider this function private outside of this recursive
+ * group, and call `normalize` instead. `normalize` will print timing
+ * information when --debug_level NormTop is given, which makes it a
+ * whole lot easier to find normalization calls that are taking a long
+ * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -1049,7 +1052,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | None -> rebuild cfg env stack t
             end
 
-          | Tm_quoted _ ->
+          | Tm_quoted (qt, qi) ->
+            let qi = S.on_antiquoted (norm cfg env []) qi in
+            let t = mk (Tm_quoted (qt, qi)) t.pos in
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app(hd, args)
@@ -1582,7 +1587,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*                                                                            *)
       (* ****************************************************************************)
       let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
-      let _, bind_repr = ed.bind_repr in
+      let _, bind_repr = ed |> U.get_bind_repr |> must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
         | Inl x ->
@@ -1640,16 +1645,36 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                       as_arg (embed_simple EMB.e_range body.pos body.pos)]
                 else []
               in
-              let reified = S.mk (Tm_app(bind_inst, [
-                  (* a, b *)
-                  as_arg lb.lbtyp; as_arg t] @
-                  maybe_range_arg @ [
-                  (* wp_head, head--the term shouldn't depend on wp_head *)
-                  as_arg S.tun; as_arg head;
-                  (* wp_body, body--the term shouldn't depend on wp_body *)
-                  as_arg S.tun; as_arg body]))
-                None rng
-              in
+              let reified =
+                (*
+                 * Arguments to bind_repr for layered effects are:
+                 *   a b ..units for binders that compute indices.. head body
+                 *
+                 * For non-layered effects, as before
+                 *)
+                let args =
+                  if U.is_layered ed then
+                    let unit_args =
+                      match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                        bs
+                        |> List.splitAt (List.length bs - 2)
+                        |> fst
+                        |> List.map (fun _ -> S.as_arg S.unit_const)
+                      | _ ->
+                        raise_error (Errors.Fatal_UnexpectedEffect,
+                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                            (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
+                  else
+                    [ (* a, b *)
+                      as_arg lb.lbtyp; as_arg t] @
+                      maybe_range_arg @ [
+                      (* wp_head, head--the term shouldn't depend on wp_head *)
+                      as_arg S.tun; as_arg head;
+                      (* wp_body, body--the term shouldn't depend on wp_body *)
+                      as_arg S.tun; as_arg body] in
+                S.mk (Tm_app(bind_inst, args)) None rng in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1753,16 +1778,43 @@ and reify_lift cfg e msrc mtgt t : term =
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
-  if U.is_pure_effect msrc || U.is_div_effect msrc
+
+  (*
+   * AR: Not sure why we should use return, if the programmer has also provided a lift
+   *     This seems like a mismatch, since to verify we use lift (else we give an error)
+   *       but to run, we are relying on return
+   *     Disabling this for layered effects, and using the lift instead
+   *)
+  if (U.is_pure_effect msrc || U.is_div_effect msrc) &&
+     not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
-    let _, return_repr = ed.return_repr in
+    let _, return_repr = ed |> U.get_return_repr |> must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    let args =
+      (*
+       * Arguments for layered effects are:
+       *   a ..units for binders that compute indices.. x
+       *)
+      if U.is_layered ed then
+        let unit_args =
+          match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
+          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+            bs
+            |> List.splitAt (List.length bs - 1)
+            |> fst
+            |> List.map (fun _ -> S.as_arg S.unit_const)
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedEffect,
+              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
+                (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
+        (S.as_arg t)::(unit_args@[S.as_arg e])
+      else [as_arg t ; as_arg e] in
+    S.mk (Tm_app(return_inst, args)) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
@@ -1774,10 +1826,24 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      (* We don't have any reasonable wp to provide so we just pass unknow *)
-      (* Usually the wp is only necessary to typecheck, so this should not *)
-      (* create a big issue. *)
-      lift (env.universe_of env t) t S.tun (U.mk_reify e)
+      (*
+       * AR: we need to apply the lift combinator to `e`
+       *     if source effect (i.e. e's effect) is reifiable, then we first reify e
+       *     else if it is not, then we thunk e
+       *     this is how lifts are written for layered effects
+       *     not sure what's the convention for DM4F, but DM4F lifts don't come to this point anyway
+       *     they are handled as a `return` in the `then` branch above
+       *)
+      let e =
+        if Env.is_reifiable_effect env msrc
+        then U.mk_reify e
+        else S.mk
+               (Tm_abs ([S.null_binder S.t_unit], e,
+                        Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))
+               None e.pos in
+      lift (env.universe_of env t) t e
+
+      
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -1792,7 +1858,7 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
-        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements"
+        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
                                         (Print.comp_to_string comp)
                                         (BU.string_of_int (List.length env)));
         match comp.n with
@@ -2528,56 +2594,64 @@ let normalize_with_primitive_steps ps s e t =
       r
     end
 
-let normalize s e t = normalize_with_primitive_steps [] s e t
-let normalize_comp s e t = norm_comp (config s e) [] t
+let normalize s e t =
+    Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
+                      (Some (Ident.string_of_lid (Env.current_module e)))
+                      "FStar.TypeChecker.Normalize"
+
+let normalize_comp s e c =
+    let cfg = config s e in
+    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
+    c
+
 let normalize_universe env u = norm_universe (config [] env) [] u
+
+let non_info_norm env t =
+  let steps = [UnfoldUntil delta_constant;
+               AllowUnboundUniverses;
+               EraseUniverses;
+               HNF;
+               (* We could use Weak too were it not that we need
+                * to descend in the codomain of arrows. *)
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative env (normalize steps env t)
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
-                      Unascribe;   //remove ascriptions
-                      ForExtraction //and refinement types
-                     ]
-              env in
-    let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
+    | GTotal (t, uopt) when non_info_norm env t -> {c with n = Total (t, uopt)}
     | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
-        && non_info ct.result_typ
+        && non_info_norm env ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
                    let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
                    {ct with effect_name=pure_eff; flags=flags}
                  | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    let ct = unfold_effect_abbrev env c in //must be GHOST
                     {ct with effect_name=PC.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-     let cfg =
-        config [Eager_unfolding;
-                UnfoldUntil delta_constant;
-                EraseUniverses;
-                AllowUnboundUniverses;
-                Unascribe;   //remove ascriptions
-                ForExtraction //and refinement types
-                ]
-        env in
-    let non_info t = non_informative (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
-    && non_info lc.res_typ
+    && non_info_norm env lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           S.mk_lcomp pure_eff lc.res_typ lc.cflags
-                      (fun () -> ghost_to_pure env (lcomp_comp lc))
+           { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc
+             with eff_name = pure_eff }
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
@@ -2849,10 +2923,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us, _, t = elim_uvars_aux_t env us [] t in
       {s with sigel = Sig_assume (l, us, t)}
 
-    | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
-
     | Sig_new_effect ed ->
-      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      //AR: S.t_unit is just a dummy comp type, we only care about the binders
+      let univs, binders, _ = elim_uvars_aux_t env ed.univs ed.binders S.t_unit in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in
         univs_opening, SS.univ_var_closing univs
@@ -2871,8 +2944,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
             b_opening |> SS.shift_subst n_us,
             b_closing |> SS.shift_subst n_us in
         let univs_opening, univs_closing =
-            univs_opening |> SS.shift_subst n_us,
-            univs_closing |> SS.shift_subst n_us in
+            univs_opening |> SS.shift_subst (n_us + n_binders),
+            univs_closing |> SS.shift_subst (n_us + n_binders) in
         let t = SS.subst univs_opening (SS.subst b_opening t) in
         let _, _, t = elim_uvars_aux_t env [] [] t in
         let t = SS.subst univs_closing (SS.subst b_closing (SS.close_univ_vars us t)) in
@@ -2912,20 +2985,11 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
         a'
       in
       let ed = { ed with
-               univs        = univs;
-               binders      = binders;
-               signature    = signature;
-               ret_wp       = elim_tscheme ed.ret_wp;
-               bind_wp      = elim_tscheme ed.bind_wp;
-               if_then_else = elim_tscheme ed.if_then_else;
-               ite_wp       = elim_tscheme ed.ite_wp;
-               stronger     = elim_tscheme ed.stronger;
-               close_wp     = elim_tscheme ed.close_wp;
-               trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
-               return_repr  = elim_tscheme ed.return_repr;
-               bind_repr    = elim_tscheme ed.bind_repr;
-               actions      = List.map elim_action ed.actions } in
+                 univs         = univs;
+                 binders       = binders;
+                 signature     = elim_tscheme ed.signature;
+                 combinators   = apply_eff_combinators elim_tscheme ed.combinators;
+                 actions       = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 
     | Sig_sub_effect sub_eff ->

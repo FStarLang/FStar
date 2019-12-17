@@ -7,10 +7,13 @@ open FStar.TypeChecker.NBETerm
 open FStar.Order
 open FStar.TypeChecker.Env
 open FStar.Reflection.Data
+module O = FStar.Options
+module RD = FStar.Reflection.Data
 
 (* Embeddings *)
 val e_bv          : embedding<bv>
 val e_binder      : embedding<binder>
+val e_optionstate : embedding<O.optionstate>
 val e_binder_view : embedding<binder_view>
 val e_binders     : embedding<binders>
 val e_term        : embedding<term>
@@ -31,6 +34,8 @@ val e_bv_view     : embedding<bv_view>
 val e_exp         : embedding<exp>
 val e_attribute   : embedding<attribute>
 val e_attributes  : embedding<list<attribute>> (* This seems rather silly, but `attributes` is a keyword *)
+val e_qualifier   : embedding<RD.qualifier>
+val e_qualifiers  : embedding<list<RD.qualifier>>
 val e_ident       : embedding<Ident.ident>
 val e_univ_name   : embedding<univ_name>
 val e_univ_names  : embedding<list<univ_name>>

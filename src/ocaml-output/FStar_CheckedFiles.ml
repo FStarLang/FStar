@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (14)) 
+let (cache_version_number : Prims.int) = (Prims.of_int (15)) 
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -472,15 +472,9 @@ let (load_module_from_cache :
                   cache_file
               else ());
              FStar_Pervasives_Native.Some tc_result)
-        | uu____1653 ->
-            failwith
-              "load_checked_file_tc_result must have an Invalid or Valid entry"
          in
-      FStar_Options.profile load_it
-        (fun res  ->
-           let msg = if FStar_Option.isSome res then "ok" else "failed"  in
-           let uu____1678 = FStar_Parser_Dep.cache_file_name fn  in
-           FStar_Util.format2 "Loading checked file %s ... %s" uu____1678 msg)
+      FStar_Profiling.profile load_it FStar_Pervasives_Native.None
+        "FStar.CheckedFiles"
   
 let (store_values_to_cache :
   Prims.string ->
@@ -498,53 +492,53 @@ let (store_module_to_cache :
     fun fn  ->
       fun parsing_data  ->
         fun tc_result  ->
-          let uu____1722 =
+          let uu____1698 =
             (FStar_Options.cache_checked_modules ()) &&
-              (let uu____1725 = FStar_Options.cache_off ()  in
-               Prims.op_Negation uu____1725)
+              (let uu____1701 = FStar_Options.cache_off ()  in
+               Prims.op_Negation uu____1701)
              in
-          if uu____1722
+          if uu____1698
           then
             let cache_file = FStar_Parser_Dep.cache_file_name fn  in
             let digest =
-              let uu____1744 =
+              let uu____1720 =
                 FStar_TypeChecker_Env.dep_graph
                   env.FStar_Extraction_ML_UEnv.env_tcenv
                  in
-              hash_dependences uu____1744 fn  in
+              hash_dependences uu____1720 fn  in
             match digest with
             | FStar_Util.Inr hashes ->
                 let tc_result1 =
-                  let uu___225_1764 = tc_result  in
+                  let uu___221_1740 = tc_result  in
                   {
-                    checked_module = (uu___225_1764.checked_module);
-                    mii = (uu___225_1764.mii);
-                    smt_decls = (uu___225_1764.smt_decls);
+                    checked_module = (uu___221_1740.checked_module);
+                    mii = (uu___221_1740.mii);
+                    smt_decls = (uu___221_1740.smt_decls);
                     tc_time = Prims.int_zero;
                     extraction_time = Prims.int_zero
                   }  in
                 let stage1 =
-                  let uu____1768 = FStar_Util.digest_of_file fn  in
+                  let uu____1744 = FStar_Util.digest_of_file fn  in
                   {
                     version = cache_version_number;
-                    digest = uu____1768;
+                    digest = uu____1744;
                     parsing_data
                   }  in
                 let stage2 = { deps_dig = hashes; tc_res = tc_result1 }  in
                 store_values_to_cache cache_file stage1 stage2
             | FStar_Util.Inl msg ->
-                let uu____1782 =
-                  let uu____1783 =
+                let uu____1758 =
+                  let uu____1759 =
                     FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
-                  let uu____1786 =
+                  let uu____1762 =
                     FStar_Range.mk_pos Prims.int_zero Prims.int_zero  in
-                  FStar_Range.mk_range fn uu____1783 uu____1786  in
-                let uu____1789 =
-                  let uu____1795 =
+                  FStar_Range.mk_range fn uu____1759 uu____1762  in
+                let uu____1765 =
+                  let uu____1771 =
                     FStar_Util.format2 "%s was not written since %s"
                       cache_file msg
                      in
-                  (FStar_Errors.Warning_FileNotWritten, uu____1795)  in
-                FStar_Errors.log_issue uu____1782 uu____1789
+                  (FStar_Errors.Warning_FileNotWritten, uu____1771)  in
+                FStar_Errors.log_issue uu____1758 uu____1765
           else ()
   

@@ -8,6 +8,7 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
@@ -70,7 +71,7 @@ let run_safe t p =
          | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, p)
          | e -> Failed (e, p)
 
-let rec log ps (f : unit -> unit) : unit =
+let log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg
     then f ()
     else ()
@@ -547,6 +548,9 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
+let curms () : tac<Z.t> =
+    ret (BU.now_ms () |> Z.of_int_fs)
+
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts label : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
@@ -658,18 +662,17 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
                fail1 "Forcing the guard failed (%s)" reason))))))
 
-let tcc (t : term) : tac<comp> = wrap_err "tcc" <|
-    bind (cur_goal ()) (fun goal ->
-    bind (__tc_lax (goal_env goal) t) (fun (_, lc, _) ->
+let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
+    bind (__tc_lax e t) (fun (_, lc, _) ->
     (* Why lax? What about the guard? It doesn't matter! tc is only
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
-    ret (S.lcomp_comp lc)
-    ))
+    ret (TcComm.lcomp_comp lc |> fst)  //dropping the guard from lcomp_comp too!
+    )
 
-let tc (t : term) : tac<typ> = wrap_err "tc" <|
-    bind (tcc t) (fun c -> ret (U.comp_result c))
+let tc (e : env) (t : term) : tac<typ> = wrap_err "tc" <|
+    bind (tcc e t) (fun c -> ret (U.comp_result c))
 
 let add_irrelevant_goal reason env phi opts label : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts label) (fun goal ->
@@ -1247,7 +1250,7 @@ let revert () : tac<unit> =
 let free_in bv t =
     Util.set_mem bv (SF.names t)
 
-let rec clear (b : binder) : tac<unit> =
+let clear (b : binder) : tac<unit> =
     let bv = fst b in
     bind (cur_goal ()) (fun goal ->
     mlog (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
@@ -1379,7 +1382,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
-    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let rewrite_eq =
@@ -1492,7 +1495,7 @@ let rewrite_rec (ps : proofstate)
     if not should_rewrite
     then ret (t, ctrl)
     else let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in //re-typechecking the goal is expensive
-         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+         if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
            ret (t, globalStop) // Don't do anything for possibly impure terms
          else
            let typ = lcomp.res_typ in
@@ -1580,7 +1583,7 @@ let dup () : tac<unit> =
     ret ())))))
 
 // longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
-let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
+let longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
     let rec aux acc l1 l2 =
         match l1, l2 with
         | x::xs, y::ys ->
@@ -1771,6 +1774,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) s_tm) (fun (s_tm, s_ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
+    let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+                           (goal_env g) s_ty in
     let h, args = U.head_and_args' s_ty in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
@@ -1791,10 +1796,13 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
        * user do that (with the returned arity). `.ps` represents inaccesible patterns
        * for the type's parameters.
        *)
+      let erasable = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
+      failwhen (erasable && not (is_irrelevant g)) "cannot destruct erasable type to solve proof-relevant goal" (fun () ->
 
       (* Instantiate formal universes to the actuals,
        * and substitute accordingly in binders and types *)
       failwhen (List.length a_us <> List.length t_us) "t_us don't match?" (fun () ->
+
 
       (* Not needed currently? *)
       (* let s = Env.mk_univ_subst t_us a_us in *)
@@ -1854,7 +1862,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, pat_t, _, _guard_pat = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
+                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
@@ -1873,7 +1881,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
       let w = mk (Tm_match (s_tm, brs)) None s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
-      ret infos))))
+      ret infos)))))
 
     | _ -> fail "not an inductive type"))))
 
@@ -1968,7 +1976,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, fst b, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, fst b, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -1981,7 +1989,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | [lb] ->
                 (match lb.lbname with
                  | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, bv, lb.lbdef, t2))
+                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -1989,7 +1997,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -2041,12 +2049,12 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Uvar (_u, ctx_u_s) ->
         ret <| S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
-    | Tv_Let (false, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (false, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
 
-    | Tv_Let (true, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+    | Tv_Let (true, attrs, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
@@ -2055,7 +2063,7 @@ let pack (tv:term_view) : tac<term> =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
@@ -2091,13 +2099,20 @@ let goal_of_goal_ty env typ : goal * guard_t =
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
-let proofstate_of_goal_ty rng env typ =
-    let g, g_u = goal_of_goal_ty env typ in
+let tac_env (env:Env.env) : Env.env =
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
+    let env = { env with failhard = true } in
+    (* TODO: We do not faithfully expose universes to metaprograms *)
+    let env = { env with Env.lax_universes = true } in
+    env
+
+let proofstate_of_goals rng env goals imps =
+    let env = tac_env env in
     let ps = {
         main_context = env;
-        main_goal = g;
-        all_implicits = g_u.implicits;
-        goals = [g];
+        all_implicits = imps;
+        goals = goals;
         smt_goals = [];
         depth = 0;
         __dump = do_dump_proofstate;
@@ -2109,4 +2124,10 @@ let proofstate_of_goal_ty rng env typ =
         local_state = BU.psmap_empty ();
     }
     in
-    (ps, (goal_witness g))
+    ps
+
+let proofstate_of_goal_ty rng env typ =
+    let env = tac_env env in
+    let g, g_u = goal_of_goal_ty env typ in
+    let ps = proofstate_of_goals rng env [g] g_u.implicits in
+    (ps, goal_witness g)

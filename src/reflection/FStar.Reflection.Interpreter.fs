@@ -123,11 +123,20 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_bv"               pack_bv               E.e_bv_view         E.e_bv
                                 pack_bv               NRE.e_bv_view       NRE.e_bv;
 
+    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option E.e_term)
+                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NRE.e_term);
+
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
 
     mk2 "set_sigelt_attrs"      set_sigelt_attrs      E.e_attributes      E.e_sigelt         E.e_sigelt
                                 set_sigelt_attrs      NRE.e_attributes    NRE.e_sigelt       NRE.e_sigelt;
+
+    mk1 "sigelt_quals"          sigelt_quals          E.e_sigelt          E.e_qualifiers
+                                sigelt_quals          NRE.e_sigelt        NRE.e_qualifiers;
+
+    mk2 "set_sigelt_quals"      set_sigelt_quals      E.e_qualifiers      E.e_sigelt         E.e_sigelt
+                                set_sigelt_quals      NRE.e_qualifiers    NRE.e_sigelt       NRE.e_sigelt;
 
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;

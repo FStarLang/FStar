@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "654e7f962ef735cbe6fa6db1819dfee1"
+      "d1d07d449d2b1f0b1ec6a727b971116e"
     ],
     [
       "StrictUnfolding.test1",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Tm_refine_88b070fdaa2704b0d1fcf1ddd6ee47eb"
       ],
       0,
-      "61eba65ee90fcf35155db3bdf95ed8f9"
+      "5bfa5c4878639ab95aae68b3af6181b0"
     ],
     [
       "StrictUnfolding.test2",
@@ -45,7 +45,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v", "true_interp"
       ],
       0,
-      "c9c8bcebf83f5496f65af5fe63b96e60"
+      "670431f50bcf46702b2141945fc286ba"
     ],
     [
       "StrictUnfolding.test_integer_generic",
@@ -116,13 +116,13 @@
         "typing_FStar.Int63.add", "typing_FStar.Int64.add",
         "typing_FStar.Int8.add", "typing_FStar.Integers.nat_of_width",
         "typing_FStar.Integers.v", "typing_FStar.Integers.width_of_sw",
-        "typing_FStar.UInt128.add", "typing_FStar.UInt16.add",
+        "typing_FStar.UInt128.op_Plus_Hat", "typing_FStar.UInt16.add",
         "typing_FStar.UInt31.add", "typing_FStar.UInt32.add",
         "typing_FStar.UInt63.add", "typing_FStar.UInt64.add",
         "typing_FStar.UInt8.add"
       ],
       0,
-      "7a197f2d480a3347ba4af60456bd6d75"
+      "bcb7c54f96361c9bf01661d4f3535b42"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
@@ -131,7 +131,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "e925e133cfe2992e0a3b640c1a9949cd"
+      "0fc162f34efef1c70d9bacb1c8d76a94"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -140,7 +140,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "2eb55076e819ff5457f6eb39e7a0e4da"
+      "1f3968731f3d84d0ecc6b447a8f15e38"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -153,7 +153,7 @@
         "typing_FStar.UInt64.add"
       ],
       0,
-      "cffa7d6fc50640ec29e322a04e71bdb5"
+      "fd128fba2163230439794e748b7ee383"
     ],
     [
       "StrictUnfolding.test_extraction_generic",
@@ -162,7 +162,7 @@
       1,
       [ "@query" ],
       0,
-      "d73d35b01e44b00dd9b0d797d0e6a7b7"
+      "a2647e28796e13182d8d38ff0ffe04a4"
     ],
     [
       "StrictUnfolding.test_extraction_specific",
@@ -171,7 +171,7 @@
       1,
       [ "@query" ],
       0,
-      "e313b1468e0b5e847cf7e2e514b7f2a2"
+      "c059348a7d7c53903e584e73b82c129b"
     ],
     [
       "StrictUnfolding.project",
@@ -185,7 +185,7 @@
         "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "53fd5fa469e9b99db42a53a0034c3e18"
+      "2a044fd101fe2002a9f0fd1a46adab79"
     ],
     [
       "StrictUnfolding.test1",
@@ -202,7 +202,7 @@
         "refinement_interpretation_Tm_refine_88b070fdaa2704b0d1fcf1ddd6ee47eb"
       ],
       0,
-      "92bc26b83a485d40a33f96906a2c2d17"
+      "2582c6d70eec6583ce9a9e93ab202775"
     ],
     [
       "StrictUnfolding.test2",
@@ -217,7 +217,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v", "true_interp"
       ],
       0,
-      "e1ae38f626a1729db82371f30e3eda8c"
+      "829c2491137976c639040c20a31cabe4"
     ],
     [
       "StrictUnfolding.test_integer_generic",
@@ -288,13 +288,13 @@
         "typing_FStar.Int63.add", "typing_FStar.Int64.add",
         "typing_FStar.Int8.add", "typing_FStar.Integers.nat_of_width",
         "typing_FStar.Integers.v", "typing_FStar.Integers.width_of_sw",
-        "typing_FStar.UInt128.add", "typing_FStar.UInt16.add",
+        "typing_FStar.UInt128.op_Plus_Hat", "typing_FStar.UInt16.add",
         "typing_FStar.UInt31.add", "typing_FStar.UInt32.add",
         "typing_FStar.UInt63.add", "typing_FStar.UInt64.add",
         "typing_FStar.UInt8.add"
       ],
       0,
-      "a789a8ad814d9a4ed718ba4335e45998"
+      "99470e1d869f0ca25032adcc1ddf340f"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -303,7 +303,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "6f0f443f057e4fe7b173f00229844c73"
+      "81caf648a9c6b977ad7a53bca4d6c340"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -316,7 +316,7 @@
         "typing_FStar.UInt64.add"
       ],
       0,
-      "753612e91ff37293ea1079b28385ad9e"
+      "5f11a1504fb30ad476cb667dbaf73d7f"
     ],
     [
       "StrictUnfolding.test_extraction_generic",
@@ -325,7 +325,7 @@
       1,
       [ "@query" ],
       0,
-      "384dba89c3c73865761b005ed187000d"
+      "655fba9a15633d57f8ed46298ca8cfd4"
     ],
     [
       "StrictUnfolding.test_extraction_specific",
@@ -334,7 +334,7 @@
       1,
       [ "@query" ],
       0,
-      "ef0b000e7b46c3a7cda273187258674d"
+      "3b9e75ea43e327f6a2963f6a406e0d01"
     ]
   ]
 ]

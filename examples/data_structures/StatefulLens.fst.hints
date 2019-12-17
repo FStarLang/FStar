@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "1a4c2d6b28bd8589d5c181b6860f816a"
+      "19dcf3a3703805f63c0dab3ccd7cbb3f"
     ],
     [
       "StatefulLens.as_stlens",
@@ -44,7 +44,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "47766bad484c71df9e2d08345eee442f"
+      "cddd808a039102ae19b1603b0d725c6a"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -70,7 +70,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "912ca5f6c66c3c65ab7d4b53fbd64c27"
+      "ae17235a8db6e5d0e3fd345877d6b16e"
     ],
     [
       "StatefulLens.test0",
@@ -90,7 +90,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "14830f4beef8f352e02b7c66ece2b2c2"
+      "e62ebf13b2eb32fbaf5d7101cde4d581"
     ],
     [
       "StatefulLens.test1",
@@ -128,7 +128,7 @@
         "typing_FStar.ST.mref"
       ],
       0,
-      "7b6c21cd07c183a3b721055faaae2625"
+      "7aaeb4bd816042d583cc72e4d24fb7d2"
     ],
     [
       "StatefulLens.test2",
@@ -167,7 +167,7 @@
         "typing_FStar.ST.mref"
       ],
       0,
-      "9759bcfdef78b5525cfe7e4e9871db4e"
+      "9e96e4577394ef619f0129ddb5890a5e"
     ],
     [
       "StatefulLens.test4",
@@ -206,7 +206,7 @@
         "typing_FStar.ST.mref"
       ],
       0,
-      "627f535fc73c0f81e949fab868b20a9f"
+      "072706f2a086c6646db597c4ebb804e4"
     ],
     [
       "StatefulLens.move_x",
@@ -252,7 +252,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "fcb070c891e51a2c631f5ae12d4f5a74"
+      "e8e830bbedc80368adcd0dc942f1027f"
     ],
     [
       "StatefulLens.move_x2",
@@ -293,120 +293,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "f0dfb2fcb2694a7fec87e6970d29c301"
-    ],
-    [
-      "StatefulLens.compose_stlens",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_StatefulLens.compose_hlens",
-        "fuel_guarded_inversion_StatefulLens.stlens",
-        "interpretation_Tm_abs_106f73abf9d4751ff515c66ee21e5216",
-        "interpretation_Tm_abs_eb58a5c7378d916320d8f69adb3470f7",
-        "proj_equation_StatefulLens.Mkhlens_get",
-        "proj_equation_StatefulLens.Mkhlens_put",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_StatefulLens.Mkhlens_get",
-        "projection_inverse_StatefulLens.Mkhlens_put",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__get",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
-      ],
-      0,
-      "488af6a79de6397539196cd3401b72aa"
-    ],
-    [
-      "StatefulLens.as_stlens",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_StatefulLens.as_hlens",
-        "fuel_guarded_inversion_Lens.lens",
-        "interpretation_Tm_abs_4c574a44c59a8826c9f20f8889049f16",
-        "interpretation_Tm_abs_67044bd756546113eab810f29d691656",
-        "proj_equation_StatefulLens.Mkhlens_get",
-        "proj_equation_StatefulLens.Mkhlens_put",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_StatefulLens.Mkhlens_get",
-        "projection_inverse_StatefulLens.Mkhlens_put",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__get",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
-      ],
-      0,
-      "6896efd0b00a0c23050f24e522c2ff8f"
-    ],
-    [
-      "StatefulLens.stlens_ref",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref", "equation_StatefulLens.hlens_ref",
-        "interpretation_Tm_abs_7ce64cbdc33523e52445d94bdd42f107",
-        "interpretation_Tm_abs_9f4f7acfd7a439677b2ba928cc1d7220",
-        "proj_equation_StatefulLens.Mkhlens_get",
-        "proj_equation_StatefulLens.Mkhlens_put",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_StatefulLens.Mkhlens_get",
-        "projection_inverse_StatefulLens.Mkhlens_put",
-        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__get",
-        "token_correspondence_StatefulLens.__proj__Mkhlens__item__put",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.sel"
-      ],
-      0,
-      "724875aef31e1bbaa87639946bad2dff"
-    ],
-    [
-      "StatefulLens.test1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "300b426de33a87bf3fa89e8b2d9725eb"
-    ],
-    [
-      "StatefulLens.test2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "583e770a3cb1e25a5977c260e2dc4654"
-    ],
-    [
-      "StatefulLens.test4",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "0cb7ec19e1579ee8f2d9395bfa460058"
+      "651534490c8c2ae0181cfc160065b456"
     ]
   ]
 ]

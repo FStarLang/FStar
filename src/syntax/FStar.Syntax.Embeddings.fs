@@ -25,12 +25,11 @@ let id_norm_cb : norm_cb = function
     | BU.Inl l -> S.fv_to_tm (S.lid_as_fv l delta_equational None)
 exception Embedding_failure
 exception Unembedding_failure
-type shadow_term = option<FStar.Common.thunk<term>>
+type shadow_term = option<Thunk.t<term>>
 
 let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
-    BU.map_opt s (fun s ->
-    FStar.Common.mk_thunk (fun () -> f (FStar.Common.force_thunk s)))
-let force_shadow (s:shadow_term) = BU.map_opt s FStar.Common.force_thunk
+    BU.map_opt s (Thunk.map f)
+let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
@@ -91,7 +90,7 @@ let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
                          (pa x);
     if !Options.eager_embedding
     then f()
-    else let thunk = FStar.Common.mk_thunk f in
+    else let thunk = Thunk.mk f in
          S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
                         ltyp=S.tun;
                         rng=rng;
@@ -105,7 +104,7 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
       if et <> et'
       || !Options.eager_embedding
-      then let res = f (FStar.Common.force_thunk t) in
+      then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
                    then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                                 (Print.emb_typ_to_string et)
@@ -800,7 +799,7 @@ let arrow_as_prim_step_1 (ea:embedding<'a>) (eb:embedding<'b>)
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
         let shadow_app =
-            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+            Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
         in
         match
             (BU.map_opt
@@ -821,7 +820,7 @@ let arrow_as_prim_step_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl rest_args) in
         let shadow_app =
-            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+            Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
         in
         match
             (BU.bind_opt (unembed ea x true norm) (fun x ->
@@ -844,7 +843,7 @@ let arrow_as_prim_step_3 (ea:embedding<'a>) (eb:embedding<'b>)
         let y, _ = List.hd (List.tl rest_args) in
         let z, _ = List.hd (List.tl (List.tl rest_args)) in
         let shadow_app =
-            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+            Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
         in
         match
             (BU.bind_opt (unembed ea x true norm) (fun x ->

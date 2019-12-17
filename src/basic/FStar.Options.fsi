@@ -122,6 +122,8 @@ val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_module                : string  -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
+val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
+val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>
@@ -141,12 +143,11 @@ val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
-val hint_file                   : unit    -> option<string>
+val hint_file_for_src           : string  -> string
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
-val profile                     :  (unit -> 'a) -> ('a -> string) -> 'a
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
@@ -183,8 +184,11 @@ val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
+val quake_lo                    : unit    -> int
+val quake_hi                    : unit    -> int
 val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
+val record_options              : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res

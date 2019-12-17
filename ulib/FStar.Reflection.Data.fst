@@ -33,7 +33,10 @@ type vconst =
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> list pattern -> pattern  // A fully applied constructor
+    | Pat_Cons     : fv -> list (pattern * bool) -> pattern
+                                                    // A fully applied constructor, each boolean marks
+                                                    // whether the argument was an explicitly-provided
+                                                    // implicit argument
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
     | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
@@ -67,7 +70,7 @@ type term_view =
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
-  | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
@@ -109,6 +112,34 @@ type sigelt_view =
 
   | Unk
 
+(* Qualifiers for sigelts, see FStar.Syntax.Syntax for an explanation. *)
+noeq
+type qualifier =
+  | Assumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Abstract
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable       of name
+  | Discriminator     of name
+  | Projector         of name * ident
+  | RecordType        of list ident * list ident
+  | RecordConstructor of list ident * list ident
+  | Action            of name
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
+
 let var : eqtype = nat
 
 type exp : Type =
@@ -138,8 +169,8 @@ let smaller tv t =
     | Tv_Refine b t' ->
         bv << t /\ t' << t
 
-    | Tv_Let r bv t1 t2 ->
-        bv << t /\ t1 << t /\ t2 << t
+    | Tv_Let r attrs bv t1 t2 ->
+        (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
 
     | Tv_Match t1 brs ->
         t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)

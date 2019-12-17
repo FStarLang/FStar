@@ -1,0 +1,26 @@
+[
+  "\u0019seÿ‡êtXÊ9ş\u001f–ßÛ",
+  [
+    [
+      "Bug1799.test",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f80f3cc2175469cc291e478021b11f0d"
+    ],
+    [
+      "Bug1799.test'",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug1799.op_Less_Equals_Equals", "l_and-interp",
+        "l_or-interp"
+      ],
+      0,
+      "75653df51653c60a167502af13efdc6e"
+    ]
+  ]
+]

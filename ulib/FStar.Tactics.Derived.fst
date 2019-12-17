@@ -22,6 +22,7 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Result
 open FStar.Tactics.Util
+open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 
 (* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
@@ -119,10 +120,15 @@ let later () : Tac unit =
     | _ -> fail "later: no goals"
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
+[t] in [Gamma]. *)
 let exact (t : term) : Tac unit =
     with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
 
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
@@ -226,7 +232,7 @@ let iterAllSMT (t : unit -> Tac unit) : Tac unit =
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
-let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
+let seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
     focus (fun () -> f (); iterAll g)
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
@@ -264,10 +270,6 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
-let norm_term (s : list norm_step) (t : term) : Tac term =
-    let e = cur_env () in
-    norm_term_env e s t
-
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
@@ -297,7 +299,7 @@ val (<|>) : (unit -> Tac 'a) ->
             (unit -> Tac 'a)
 let (<|>) t1 t2 = fun () -> or_else t1 t2
 
-let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
+let first (ts : list (unit -> Tac 'a)) : Tac 'a =
     L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
@@ -310,6 +312,13 @@ let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 
 let repeat' (f : unit -> Tac 'a) : Tac unit =
     let _ = repeat f in ()
+
+let norm_term (s : list norm_step) (t : term) : Tac term =
+    let e =
+        try cur_env ()
+        with | _ -> top_env ()
+    in
+    norm_term_env e s t
 
 (** Join all of the SMT goals into one. This helps when all of them are
 expected to be similar, and therefore easier to prove at once by the SMT
@@ -354,7 +363,7 @@ let guards_to_smt () : Tac unit =
     ()
 
 let simpl   () : Tac unit = norm [simplify; primops]
-let whnf    () : Tac unit = norm [weak; hnf; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
@@ -474,17 +483,8 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-let grewrite' (t1 t2 eq : term) : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l _ ->
-        if term_eq l t1
-        then exact eq
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
+The lemmas need to prove *propositional* equalities, that is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
@@ -503,7 +503,8 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
+    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    pointwise (fun () -> try exact e with | _ -> trefl ())
 
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
@@ -536,7 +537,7 @@ let rec apply_squash_or_lem d t =
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
 
-    let ty = tc t in
+    let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->
@@ -661,3 +662,121 @@ let tlabel' (l:string) =
 let focus_all () : Tac unit =
     set_goals (goals () @ smt_goals ());
     set_smt_goals []
+
+private
+let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+  match n, l with
+  | _, [] -> None
+  | 0, hd::tl -> Some (hd, tl)
+  | _, hd::tl -> begin
+    match extract_nth (n-1) tl with
+    | Some (hd', tl') -> Some (hd', hd::tl')
+    | None -> None
+  end
+
+let bump_nth (n:pos) : Tac unit =
+  // n-1 since goal numbering begins at 1
+  match extract_nth (n - 1) (goals ()) with
+  | None -> fail "bump_nth: not that many goals"
+  | Some (h, t) -> set_goals (h :: t)
+
+let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
+  let bvv = inspect_bv xbv in
+  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
+  let bv = pack_bv bvv in
+  bv
+
+let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
+  let (bv, q) = inspect_binder b in
+  let bv = on_sort_bv f bv in
+  let b = pack_binder bv q in
+  b
+
+let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
+  let tv = inspect_ln t in
+  let tv' =
+    match tv with
+    | Tv_FVar _ -> tv
+    | Tv_Var bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_Var bv
+
+    | Tv_BVar bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_BVar bv
+
+    | Tv_Type () -> Tv_Type ()
+    | Tv_Const c -> Tv_Const c
+    | Tv_Uvar i u -> Tv_Uvar i u
+    | Tv_Unknown -> Tv_Unknown
+    | Tv_Arrow b c ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let c = visit_comp ff c in
+        Tv_Arrow b c
+    | Tv_Abs b t ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let t = visit_tm ff t in
+        Tv_Abs b t
+    | Tv_App l (r, q) ->
+         let l = visit_tm ff l in
+         let r = visit_tm ff r in
+         Tv_App l (r, q)
+    | Tv_Refine b r ->
+        let r = visit_tm ff r in
+        Tv_Refine b r
+    | Tv_Let r attrs b def t ->
+        let def = visit_tm ff def in
+        let t = visit_tm ff t in
+        Tv_Let r attrs b def t
+    | Tv_Match sc brs ->
+        let sc = visit_tm ff sc in
+        let brs = map (visit_br ff) brs in
+        Tv_Match sc brs
+    | Tv_AscribedT e t topt ->
+        let e = visit_tm ff e in
+        let t = visit_tm ff t in
+        Tv_AscribedT e t topt
+    | Tv_AscribedC e c topt ->
+        let e = visit_tm ff e in
+        Tv_AscribedC e c topt
+  in
+  ff (pack_ln tv')
+and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
+  let (p, t) = b in
+  (p, visit_tm ff t)
+and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
+  let cv = inspect_comp c in
+  let cv' =
+    match cv with
+    | C_Total ret decr ->
+        let ret = visit_tm ff ret in
+        let decr =
+            match decr with
+            | None -> None
+            | Some d -> Some (visit_tm ff d)
+        in
+        C_Total ret decr
+    | C_Lemma pre post ->
+        let pre = visit_tm ff pre in
+        let post = visit_tm ff post in
+        C_Lemma pre post
+    | C_Unknown -> C_Unknown
+  in
+  pack_comp cv'
+
+exception NotAListLiteral
+
+let rec destruct_list (t : term) : Tac (list term) =
+    let head, args = collect_app t in
+    match inspect_ln head, args with
+    | Tv_FVar fv, [(a1, Q_Explicit); (a2, Q_Explicit)]
+    | Tv_FVar fv, [(_, Q_Implicit); (a1, Q_Explicit); (a2, Q_Explicit)] ->
+      if inspect_fv fv = cons_qn
+      then a1 :: destruct_list a2
+      else raise NotAListLiteral
+    | Tv_FVar fv, _ ->
+      if inspect_fv fv = nil_qn
+      then []
+      else raise NotAListLiteral
+    | _ ->
+      raise NotAListLiteral

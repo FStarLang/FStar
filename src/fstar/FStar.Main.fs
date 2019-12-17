@@ -39,13 +39,10 @@ let cleanup () = Util.kill_all ()
 let finished_message fmods errs =
   let print_to = if errs > 0 then Util.print_error else Util.print_string in
   if not (Options.silent()) then begin
-    fmods |> List.iter (fun ((iface, name), time) ->
+    fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
                 if Options.should_print_message name.str
-                then if time >= 0
-                then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n"
-                                                        tag (Ident.text_of_lid name) (Util.string_of_int time))
-                else print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
+                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
     if errs > 0
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
@@ -90,7 +87,9 @@ let load_native_tactics () =
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
-    Tactics.Load.load_tactics cmxs_files
+    Tactics.Load.load_tactics cmxs_files;
+    iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
+    ()
 
 
 (* Need to keep names of input files for a second pass when prettyprinting *)
@@ -172,14 +171,13 @@ let go _ =
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
           let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
           ignore (cleanup env);
-          let module_names_and_times =
+          let module_names =
             tcrs
             |> List.map (fun tcr ->
-               Universal.module_or_interface_name tcr.checked_module,
-               tcr.tc_time)
+               Universal.module_or_interface_name tcr.checked_module)
           in
-          report_errors module_names_and_times;
-          finished_message module_names_and_times 0
+          report_errors module_names;
+          finished_message module_names 0
         end //end batch mode
 
         else
@@ -190,6 +188,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
     | FStar.Syntax.Syntax.Lazy_bv         -> FStar.Reflection.Embeddings.unfold_lazy_bv          i
     | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_optionstate -> FStar.Reflection.Embeddings.unfold_lazy_optionstate i
     | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
     | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
     | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Embeddings.unfold_lazy_env         i
@@ -197,14 +196,16 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
     | FStar.Syntax.Syntax.Lazy_goal       -> FStar.Tactics.Embedding.unfold_lazy_goal i
     | FStar.Syntax.Syntax.Lazy_uvar       -> FStar.Syntax.Util.exp_string "((uvar))"
-    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> FStar.Common.force_thunk t
+    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
     Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
+    FStar.TypeChecker.Tc.unembed_optionstate_knot := Some FStar.Reflection.Embeddings.e_optionstate;
+    ()
 
 let handle_error e =
     if FStar.Errors.handleable e then

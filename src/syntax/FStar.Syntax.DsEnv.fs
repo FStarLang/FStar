@@ -35,8 +35,11 @@ module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Const = FStar.Parser.Const
 
-type local_binding = (ident * bv)                         (* local name binding for name resolution, paired with an env-generated unique name *)
-type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
+type used_marker = ref<bool>
+
+type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
+type rec_binding   = (ident * lid * delta_depth *         (* name bound by recursive type and top-level let-bindings definitions only *)
+                      used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
 type open_kind =                                          (* matters only for resolving names with some module qualifier *)
@@ -285,19 +288,23 @@ let try_lookup_id''
   (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>) : option<'a>
   =
     let check_local_binding_id : local_binding -> bool = function
-      (id', _) -> id'.idText=id.idText
+      (id', _, _) -> id'.idText=id.idText
     in
     let check_rec_binding_id : rec_binding -> bool = function
-      (id', _, _) -> id'.idText=id.idText
+      (id', _, _, _) -> id'.idText=id.idText
     in
     let curmod_ns = ids_of_lid (current_module env) in
     let proc = function
       | Local_binding l
         when check_local_binding_id l ->
+        let (_, _, used_marker) = l in
+        used_marker := true;
         k_local_binding l
 
       | Rec_binding r
         when check_rec_binding_id r ->
+        let (_, _, _, used_marker) = r in
+        used_marker := true;
         k_rec_binding r
 
       | Open_module_or_namespace (ns, Open_module) ->
@@ -331,7 +338,7 @@ let try_lookup_id''
 
     in aux env.scope_mods
 
-let found_local_binding r (id', x) =
+let found_local_binding r (id', x, _) =
     (bv_to_name x r)
 
 let find_in_module env lid k_global_def k_not_found =
@@ -567,7 +574,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                    Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
-            | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+            | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
             | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
             | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
@@ -578,7 +585,9 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
   let k_local_binding r = let t = found_local_binding (range_of_lid lid) r in Some (Term_name (t, []))
   in
 
-  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
+  let k_rec_binding (id, l, dd, used_marker) =
+    used_marker := true;
+    Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
   in
 
   let found_unmangled = match lid.ns with
@@ -605,13 +614,11 @@ let try_lookup_effect_name env l =
 let try_lookup_effect_name_and_attributes env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, l) -> Some (l, ne.cattributes)
-        | Some ({ sigel = Sig_new_effect_for_free(ne) }, l) -> Some (l, ne.cattributes)
         | Some ({ sigel = Sig_effect_abbrev(_,_,_,_,cattributes) }, l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, _) -> Some ne
-        | Some ({ sigel = Sig_new_effect_for_free(ne) }, _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with
@@ -628,7 +635,6 @@ let try_lookup_root_effect_name env l =
 	      | None -> None
 	      | Some (s, _) ->
 	        begin match s.sigel with
-                | Sig_new_effect_for_free (ne)
 		| Sig_new_effect(ne)
 		  -> Some (set_lid_range ne.mname (range_of_lid l))
 		| Sig_effect_abbrev (_, _, _, cmp, _) ->
@@ -893,14 +899,21 @@ let unique any_val exclude_interface env lid =
 let push_scope_mod env scope_mod =
  {env with scope_mods = scope_mod :: env.scope_mods}
 
-let push_bv env (x:ident) =
+let push_bv' env (x:ident) =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
-  push_scope_mod env (Local_binding (x, bv)), bv
+  let used_marker = BU.mk_ref false in
+  push_scope_mod env (Local_binding (x, bv, used_marker)), bv, used_marker
 
-let push_top_level_rec_binding env (x:ident) dd =
-  let l = qualify env x in
-  if unique false true env l || Options.interactive ()
-  then push_scope_mod env (Rec_binding (x,l,dd))
+let push_bv env x =
+  let (env, bv, _) = push_bv' env x in
+  (env, bv)
+
+let push_top_level_rec_binding env0 (x:ident) dd : env * ref<bool> =
+  let l = qualify env0 x in
+  if unique false true env0 l || Options.interactive ()
+  then
+    let used_marker = BU.mk_ref false in
+    (push_scope_mod env0 (Rec_binding (x,l,dd,used_marker)), used_marker)
   else raise_error (Errors.Fatal_DuplicateTopLevelNames, ("Duplicate top-level names " ^ l.str)) (range_of_lid l)
 
 let push_sigelt' fail_on_dup env s =

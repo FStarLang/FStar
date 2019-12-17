@@ -1,0 +1,31 @@
+[
+  "Ý›LE¾æ\u0004ü‹hâ5Ÿ¡æ»",
+  [
+    [
+      "Coercions1Phase.c_erased_zero",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Coercions1Phase.c_erased_int", "int_typing" ],
+      0,
+      "0f23824a902846ed35928bb1fe8625b6"
+    ],
+    [
+      "Coercions1Phase.c_erased_zero",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Coercions1Phase.c_erased_int", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "b719948bba2358560da9562edf313454"
+    ]
+  ]
+]

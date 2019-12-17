@@ -30,6 +30,7 @@ val return_all: 'a -> ML<'a>
 type time
   = System.DateTime // JUST FSHARP
 val now : unit -> time
+val now_ms : unit -> int
 val time_diff: time -> time -> float*int
 val record_time: (unit -> 'a) -> ('a * int)
 val is_before: time -> time -> bool
@@ -321,6 +322,7 @@ val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
 (* on top of the leftover input list *)
 val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
 
+val is_none: option<'a> -> Tot<bool>
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
 val dflt: 'a -> option<'a> -> Tot<'a>

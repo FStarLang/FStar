@@ -1,0 +1,101 @@
+[
+  ")\u0003³\u001e£À\u001bÿær›\u001d\u007f\t\fš",
+  [
+    [
+      "LowStar.BufferCompat.rcreate",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8",
+        "refinement_interpretation_Tm_refine_c91c357d8b481b71bcfe70f0ece722d9"
+      ],
+      0,
+      "2e897fab7cce855080866fef2cd82a9a"
+    ],
+    [
+      "LowStar.BufferCompat.rcreate_mm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_2c83c7bb607ce0f4ff3dd6d04eabda6f",
+        "refinement_interpretation_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+      ],
+      0,
+      "d00fa91670f699795be2e9c7070c951c"
+    ],
+    [
+      "LowStar.BufferCompat.create",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_485808b6c08b8fa1bad00cc3070d942a",
+        "refinement_interpretation_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
+      ],
+      0,
+      "bbe1c7c3091dd4ecb74ada8e12713002"
+    ],
+    [
+      "LowStar.BufferCompat.createL",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_LowStar.Buffer.buffer",
+        "equation_LowStar.Buffer.trivial_preorder",
+        "lemma_LowStar.Monotonic.Buffer.length_as_seq",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "refinement_interpretation_Tm_refine_145731bec775c591ae321893c0c371e6",
+        "refinement_interpretation_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
+        "refinement_interpretation_Tm_refine_fdd6ab907516d1d3b973a4a3f9b40794",
+        "typing_FStar.Seq.Properties.seq_of_list",
+        "typing_LowStar.Buffer.trivial_preorder"
+      ],
+      0,
+      "7f4d8f204d1a563347b85b977147533d"
+    ],
+    [
+      "LowStar.BufferCompat.rcreate",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+      ],
+      0,
+      "9415bc387cb6e4ce9633ca3436524ea0"
+    ],
+    [
+      "LowStar.BufferCompat.rcreate_mm",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+      ],
+      0,
+      "ba144d040b64e3203285265d9b1961bb"
+    ],
+    [
+      "LowStar.BufferCompat.create",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
+      ],
+      0,
+      "20e718442cdaca59bda518d5cf79bf4c"
+    ]
+  ]
+]

@@ -25,6 +25,10 @@ assume val xi : Type
 
 assume val p : squash xi
 
+let dump s =
+    (* dump s; *)
+    ()
+
 let l1 : int -> int =
     _ by (
         dump "A";
@@ -46,16 +50,14 @@ let _ =
         by (let h0 = implies_intro () in
             let x = quote (fun x -> 1 + x) in
             let t = mk_e_app x [pack (Tv_Const C_Unit)] in
-            let _ = tc t in
+            let _ = tc (cur_env ()) t in
             trivial ())
-
-#set-options "--tactic_trace_d 1"
 
 let constr (a b : prop) : Lemma (a ==> b ==> b /\ a) =
   assert (a ==> b ==> b /\ a)
       by (let ha = implies_intro () in
           let hb = implies_intro () in
           split ();
-          mapply (binder_to_term hb);
-          mapply (binder_to_term ha);
+          mapply hb;
+          mapply ha;
           qed ())
