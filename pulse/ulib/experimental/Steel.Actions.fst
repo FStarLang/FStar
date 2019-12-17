@@ -94,6 +94,41 @@ let upd_heap #a (r:ref a) (v:a)
   : pre_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
   = fun h -> (| (), update_addr h r (Ref a full_permission v) |)
 
+#push-options "--z3rlimit 10 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let upd_disjointness_lemma'
+  #a (r:ref a) (v:a)
+  (h0 h1:heap)
+  (frame:hprop)
+  : Lemma
+    (requires
+      disjoint h0 h1 /\
+      interp (ptr_perm r full_permission) h0 /\
+      interp frame h1)
+    (ensures (
+      let h0' = update_addr h0 r (Ref a full_permission v) in
+      disjoint h0' h1))
+  =
+  let aux (addr: addr) : Lemma (
+    let h0' = update_addr h0 r (Ref a full_permission v) in
+    disjoint_addr h0' h1 addr
+  ) =
+    let h0' = update_addr h0 r (Ref a full_permission v) in
+    match h0' addr, h1 addr, h0 addr with
+    | Some (Ref a0' p0' x0'), Some (Ref a1 p1 x1),
+      Some (Ref a0 p0 x0) ->
+      if addr = r then begin
+        assert(Permission?.r p0 +. Permission?.r p1 <=. 1.0R);
+        assert(full_permission `lesser_equal_permission` p0);
+        assert(Permission?.r p1 = 0.0R);
+        assert(Permission?.r p1 >. 0.0R)
+      end else begin
+        ()
+      end
+    | _ -> ()
+  in
+  Classical.forall_intro aux
+#pop-options
+
 #push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 10"
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
@@ -119,7 +154,8 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
        [SMTPat (disjoint h0 h1)]
      = let (| _, h'|) = upd_heap r v h in
        let h0' = update_addr h0 r (Ref a full_permission v) in
-       assume (disjoint h0' h1);  //AR: 12/11: TODO
+       upd_disjointness_lemma' r v h0 h1 frame;
+       assert (disjoint h0' h1);
        mem_equiv_eq h' (join h0' h1)
    in
    ()
