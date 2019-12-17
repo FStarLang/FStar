@@ -468,6 +468,20 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
       (par_lpre lpreL lpreR)
       (par_lpost lpreL lpostL lpreR lpostR)
 
+  | Weaken:
+    #a:Type ->
+    #pre:st.hprop ->
+    #post:post st a ->
+    #lpre:l_pre pre ->
+    #lpost:l_post pre post ->
+    #wlpre:l_pre pre ->
+    #wlpost:l_post pre post ->
+    #_:squash
+      ((forall h. wlpre h ==> lpre h) /\
+       (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)) ->
+    m st a pre post lpre lpost ->
+    m st a pre post wlpre wlpost
+
 
 (**** End definition of the computation AST ****)
 
@@ -942,17 +956,30 @@ let step_par (#st:st) (i:nat)
         j
       end
 
+let step_weaken (#st:st) (i:nat) (#a:Type)
+  (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (frame:st.hprop)
+  (f:m st a pre post lpre lpost{Weaken? f})
+  (state:st.mem)
+
+: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+
+= let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ f = f in
+
+  Step state pre state lpre lpost f i
+
 
 /// Step function
 
 let rec step : step_t =
   fun #st i #a #pre #post #o_lpre #o_lpost frame f state ->
   match f with
-  | Ret _ _ _   ->   step_ret i frame f state
-  | Act _ _ _   ->   step_act i frame f state
-  | Bind _ _    ->  step_bind i frame f state step
-  | Frame _ _ _ -> step_frame i frame f state step
-  | Par _ _     ->   step_par i frame f state step
+  | Ret _ _ _   ->    step_ret i frame f state
+  | Act _ _ _   ->    step_act i frame f state
+  | Bind _ _    ->   step_bind i frame f state step
+  | Frame _ _ _ ->  step_frame i frame f state step
+  | Par _ _     ->    step_par i frame f state step
+  | Weaken _    -> step_weaken i frame f state
 
 
 /// Top-level run function
@@ -984,9 +1011,9 @@ type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpo
 
 /// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
 
-let return (a:Type) (st:st) (post:post st a) (x:a) (lpost:l_post (post x) post)
-: repr a st (post x) post (fun h -> lpost h x h) lpost
-= fun _ -> Ret post x lpost
+let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
+: repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
+= fun _ -> Ret post x (lpost x)
 
 let bind (a:Type) (b:Type) (st:st)
   (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
@@ -997,3 +1024,4 @@ let bind (a:Type) (b:Type) (st:st)
     (bind_lpre lpre_f lpost_f lpre_g)
     (bind_lpost lpre_f lpost_f lpost_g)
 = fun _ -> Bind (f ()) (fun x -> g x ())
+
