@@ -14,17 +14,11 @@
    limitations under the License.
 *)
 module Steel.Actions
-open Steel.Heap
-open Steel.HProp
 open Steel.Memory
 open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
-////////////////////////////////////////////////////////////////////////////////
-// Actions:
-// sel, split, update
-////////////////////////////////////////////////////////////////////////////////
 let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hheap fp -> (x:a & hheap (fp' x))
 
@@ -66,3 +60,51 @@ val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
                q h0 ==>
                (let (| x, h1 |) = act h0 in
                 q h1)))
+
+////////////////////////////////////////////////////////////////////////////////
+// References
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+val sel (#a:_) (r:ref a) (m:hheap (ptr r))
+  : a
+
+/// sel respect pts_to
+val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
+  : Lemma (interp (ptr r) m /\
+           interp (pts_to r p (sel r m)) m)
+
+
+/// upd requires a full permission
+val upd (#a:_) (r:ref a) (v:a)
+  : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
+
+
+val alloc (#a:_) (v:a)
+  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
+
+////////////////////////////////////////////////////////////////////////////////
+// Arrays
+////////////////////////////////////////////////////////////////////////////////
+
+
+val upd_array
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Seq.lseq t (U32.v (length a)))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (v: t)
+  : m_action
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+
+///////////////////////////////////////////////////////////////////////////////
+// Locks
+///////////////////////////////////////////////////////////////////////////////
+
+val lock (p:hprop) : Type0
+
+val new_lock (p:hprop)
+  : m_action p (lock p) (fun _ -> emp)
