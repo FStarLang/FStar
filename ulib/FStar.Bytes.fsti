@@ -210,7 +210,7 @@ val bytes_of_int_of_bytes:
   -> Lemma (ensures (bytes_of_int (length b) (int_of_bytes b) == b))
           [SMTPat (int_of_bytes b)]
 
-//18-02-25 use [uint32] instead of [int32] etc? 
+//18-02-25 use [uint32] instead of [int32] etc?
 val int32_of_bytes:
     b:bytes{length b <= 4}
   -> n:u32{U32.v n == int_of_bytes b}
@@ -296,9 +296,13 @@ open FStar.HyperStack.ST
 
 type lbuffer (l:UInt32.t) = b:B.buffer UInt8.t {B.length b == U32.v l}
 
-val of_buffer: l:UInt32.t -> buf:lbuffer l -> Stack (b:bytes{length b = U32.v l})
-  (requires (fun h0 -> B.live h0 buf))
-  (ensures  (fun h0 b h1 -> M.(modifies loc_none h0 h1) /\ b = hide (B.as_seq h0 buf)))
+val of_buffer (l:UInt32.t) (#p #q:_) (buf:B.mbuffer UInt8.t p q{B.length buf == U32.v l})
+  : Stack (b:bytes{length b = UInt32.v l})
+  (requires fun h0 ->
+    B.live h0 buf)
+  (ensures  fun h0 b h1 ->
+    B.(modifies loc_none h0 h1) /\
+    b = hide (B.as_seq h0 buf))
 
 val store_bytes: src:bytes { length src <> 0 } ->
   dst:lbuffer (len src) ->

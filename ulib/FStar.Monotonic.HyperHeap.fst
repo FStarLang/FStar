@@ -24,20 +24,27 @@ open FStar.Ghost
 (*
  * This is a temporary assumption, we should fix the model to get rid of it
  *)
-assume HasEq_rid: hasEq (erased (list (int * int)))
+assume HasEq_rid: hasEq (erased (list (int * int * bool)))
 
-let rid = erased (list (int * int))
+let rid = erased (list (int * int * bool))
 
-let reveal r = Ghost.reveal r
+let reveal r = FStar.List.Tot.map (fun (i, j, _) -> i, j) (reveal r)
 
 let color r =
   match reveal r with
   | [] -> 0
   | (c, _)::_ -> c
 
+let rid_freeable r =
+  match Ghost.reveal r with
+  | [] -> false
+  | (_, _, b)::_ -> b
+
 let root = hide []
 
 let lemma_root_has_color_zero _ = ()
+
+let root_is_not_freeable () = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
@@ -86,14 +93,16 @@ let lemma_extends_not_root _ _ = ()
 
 let lemma_extends_only_parent _ _ = ()
 
-private abstract let test0 :unit = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
-private abstract let test1 (r1:rid) (r2:rid{includes r1 r2}) :unit = assert (includes r1 (hide ((0,0)::(reveal r2))))
+private abstract let test0 :unit =
+  assert (includes (hide [(0, 1, false) ; (1, 0, false)]) (hide [(2, 2, false); (0, 1, false); (1, 0, false)]))
+
+private abstract let test1 (r1:rid) (r2:rid{includes r1 r2}) :unit = assert (includes r1 (hide ((0, 0, false)::(Ghost.reveal r2))))
 
 let mod_set _ = magic ()
 
 let rec lemma_includes_trans i j k =
   if j = k then ()
-  else match reveal k with
+  else match Ghost.reveal k with
         | hd::tl -> lemma_includes_trans i j (hide tl)
 
 let lemma_modset _ _ = ()
@@ -112,6 +121,17 @@ let includes_child _ _ = ()
 
 let root_is_root _ = ()
 
-let extend r n c = elift1 (fun r -> (c, n)::r) r
+let extend r n c =
+  elift1 (fun r ->
+    let freeable = rid_freeable (hide r) in
+    (c, n, freeable)::r
+  ) r
 
-let extend_monochrome r n = elift1 (fun r -> ((match r with | [] -> 0 | (c, _) :: _ -> c), n)::r) r
+let extend_monochrome_freeable r n freeable =
+  elift1 (fun r ->
+    let c = color (hide r) in
+    (c, n, freeable)::r
+  ) r
+
+let extend_monochrome r n = extend_monochrome_freeable r n (rid_freeable r)
+

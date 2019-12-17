@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "3ef88104888ebc2554294e496a4a9efe"
+      "7036349f8c4dcd0f86bb5708cc796726"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -26,7 +26,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "50e669b9f53e522f5266256c841b20ca"
+      "4d6ef70f7eb009ec7c2edf6df109f6aa"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "532d6959c3c56893438f13e73d35611b"
+      "3474fbfbe7d45b03c1346491f37cda56"
     ]
   ]
 ]

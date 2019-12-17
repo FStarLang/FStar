@@ -169,7 +169,7 @@ let print_ifamily i =
             ^ Print.term_to_string d.dtyp)
         |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals attrs
+let bundle_as_inductive_families env ses quals
     : UEnv.uenv
     * list<inductive_family> =
     let env, ifams =
@@ -185,7 +185,7 @@ let bundle_as_inductive_families env ses quals attrs
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
+                let metadata = extract_metadata se.sigattrs @ List.choose flag_of_qual quals in
                 let fv = S.lid_as_fv l delta_constant None in
                 let env = UEnv.extend_type_name env fv in
                 env, [{   ifv = fv
@@ -413,7 +413,7 @@ let extract_bundle_iface env se
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, empty_iface
         else begin
-          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, ifams = bundle_as_inductive_families env ses quals in
           let env, td = BU.fold_map extract_one_family env ifams in
           env,
           iface_union
@@ -705,7 +705,7 @@ let extract_bundle env se =
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, []
         else begin
-          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, ifams = bundle_as_inductive_families env ses quals in
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
         end

@@ -158,7 +158,7 @@ let permute_via_swaps (#b:Type) (p:permute b) =
   (#a:Type) -> (vm:vmap a b) -> xs:list var ->
     Lemma (exists ss. p a vm xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux
+let permute_via_swaps_correct_aux
   (#b:Type) (p:permute b) (pvs:permute_via_swaps p)
   (#a:Type) (m:cm a) (vm:vmap a b)  (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (p a vm xs)) =
@@ -197,11 +197,11 @@ let sortWith_via_swaps (#a #b:Type) (f:nat -> nat -> int)
   let ss = equal_counts_implies_swaps #nat xs (sortWith #b f a vm xs) in
   assert (sortWith #b f a vm xs == apply_swaps xs ss)
 
-let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
+let sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
   permute_via_swaps_correct #unit sort sort_via_swaps m vm xs
 
-let rec sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a) (vm:vmap a b) (xs:list var) :
+let sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a) (vm:vmap a b) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sortWith #b f a vm xs)) =
   permute_via_swaps_correct (sortWith f) (fun #a -> sortWith_via_swaps f) m vm xs
 
@@ -264,9 +264,9 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
     Tac (list exp * vmap a b) =
-  let tmult: term = norm_term [delta] tmult in
-  let tunit: term = norm_term [delta] tunit in
-  let ts   = Tactics.Util.map (norm_term [delta]) ts in
+  let tmult: term = norm_term [delta;zeta;iota] tmult in
+  let tunit: term = norm_term [delta;zeta;iota] tunit in
+  let ts   = Tactics.Util.map (norm_term [delta;zeta;iota]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
   //     ";  t   = " ^ term_to_string t);
@@ -399,7 +399,7 @@ let canon_monoid_aux
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";
                             "FStar.List.Tot.Base.compare_of_bool";
-             ]; primops] // TODO: restrict primops to "less than" only
+             ]; zeta; iota; primops] // TODO: restrict primops to "less than" only
                          // - would need this even if unfold_def did it's job?
           // ; dump "done"
         | _ -> fail "Unexpected"
