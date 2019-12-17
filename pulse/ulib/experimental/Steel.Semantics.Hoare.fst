@@ -1025,3 +1025,15 @@ let bind (a:Type) (b:Type) (st:st)
     (bind_lpost lpre_f lpost_f lpost_g)
 = fun _ -> Bind (f ()) (fun x -> g x ())
 
+let subcomp (a:Type) (st:st)
+  (pre:st.hprop) (post:post st a)
+  (lpre_f:l_pre pre) (lpost_f:l_post pre post)
+  (lpre_g:l_pre pre) (lpost_g:l_post pre post)
+  (f:repr a st pre post lpre_f lpost_f)
+: Pure (repr a st pre post lpre_g lpost_g)
+  (requires
+    (forall h. lpre_g h ==> lpre_f h) /\
+    (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
+  (ensures fun _ -> True)
+= fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())
+
