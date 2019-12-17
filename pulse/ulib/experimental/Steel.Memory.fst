@@ -709,7 +709,8 @@ let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
       interp (ptr_perm r full_permission `star` frame) h)
     (ensures (
       let (| x, h1 |) = upd_heap r v h in
-      interp (pts_to r full_permission v `star` frame) h1))
+      interp (pts_to r full_permission v `star` frame) h1 /\
+      preserves_frame_prop frame h h1))
   = let aux (h0 h1:heap)
      : Lemma
        (requires
@@ -741,7 +742,8 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
           interp (ptr_perm r full_permission `star` frame) h)
         (ensures (
           let (| _, h1 |) = (upd_heap r v h) in
-          interp (pts_to r full_permission v `star` frame) h1))
+          interp (pts_to r full_permission v `star` frame) h1 /\
+          preserves_frame_prop frame h h1))
         [SMTPat ()]
       = upd_lemma' r v h frame
    in
@@ -897,14 +899,15 @@ let alloc_pre_m_action (#a:_) (v:a)
     (| x, t |)
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --query_stats"
+#push-options "--z3rlimit_factor 16 --query_stats"
 let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
   : Lemma
     (requires
       interp (frame `star` locks_invariant m) (heap_of_mem m))
     (ensures (
       let (| x, m1 |) = alloc_pre_m_action v m in
-      interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
+      interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
+      preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
   = let (| x, m1 |) = alloc_pre_m_action v m in
     assert (x == m.ctr);
     assert (m1.ctr = m.ctr + 1);
@@ -930,7 +933,8 @@ let alloc_is_frame_preserving (#a:_) (v:a)
       : Lemma
           (ensures (
             let (| x, m1 |) = alloc_pre_m_action v m in
-            interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
+            interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
+            preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
           [SMTPat ()]
       = alloc_is_frame_preserving' v m frame
     in
