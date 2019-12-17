@@ -319,7 +319,6 @@ val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
 let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
 
 
-
 /// memories satisfying [p1 `star` p2] can be split
 /// into disjoint fragments satisfying each of them
 val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))

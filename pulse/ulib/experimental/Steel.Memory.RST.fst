@@ -148,40 +148,41 @@ let fupd #a r v =
   ptr_update r v;
   pts_to_perm full_permission r v
 
-assume
-val frame
-  (outer0:hprop)
-  (#inner0:hprop)
-  (#a:Type)
-  (#inner1:a -> hprop)
-  (#[resolve_frame()]
-    delta:hprop{
-      FStar.Tactics.with_tactic
-      reprove_frame
-      (can_be_split_into outer0 inner0 delta /\ True)})
-  (#pre:mem -> prop)
-  (#post:mem -> a -> mem -> prop)
-  ($f:unit -> Steel a inner0 inner1 pre post)
-  : Steel a outer0 (fun v -> inner1 v `star` delta) pre post
 
-val test1 (#a:Type) (r1 r2:ref a) : Steel a
-  (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-  (fun v -> pts_to r1 full_permission v `star` ptr_perm r2 full_permission)
-  (fun _ -> True)
-  (fun _ _ _ -> True)
+// assume
+// val frame
+//   (outer0:hprop)
+//   (#inner0:hprop)
+//   (#a:Type)
+//   (#inner1:a -> hprop)
+//   (#[resolve_frame()]
+//     delta:hprop{
+//       FStar.Tactics.with_tactic
+//       reprove_frame
+//       (can_be_split_into outer0 inner0 delta /\ True)})
+//   (#pre:mem -> prop)
+//   (#post:mem -> a -> mem -> prop)
+//   ($f:unit -> Steel a inner0 inner1 pre post)
+//   : Steel a outer0 (fun v -> inner1 v `star` delta) pre post
 
-let test1 #a r1 r2 =
-  frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-//        #(ptr_perm r2 full_permission)
-        (fun () -> ptr_read r1)
+// val test1 (#a:Type) (r1 r2:ref a) : Steel a
+//   (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+//   (fun v -> pts_to r1 full_permission v `star` ptr_perm r2 full_permission)
+//   (fun _ -> True)
+//   (fun _ _ _ -> True)
 
-val test2 (#a:Type) (r1 r2:ref a) : Steel a
-  (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-  (fun v -> pts_to r2 full_permission v `star` ptr_perm r1 full_permission)
-  (fun _ -> True)
-  (fun _ v _ -> True)
+// let test1 #a r1 r2 =
+//   frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+// //        #(ptr_perm r2 full_permission)
+//         (fun () -> ptr_read r1)
 
-let test2 #a r1 r2 =
-  let v = frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
-        (fun () -> ptr_read r2) in
-  v
+// val test2 (#a:Type) (r1 r2:ref a) : Steel a
+//   (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+//   (fun v -> pts_to r2 full_permission v `star` ptr_perm r1 full_permission)
+//   (fun _ -> True)
+//   (fun _ v _ -> True)
+
+// let test2 #a r1 r2 =
+//   let v = frame (ptr_perm r1 full_permission `star` ptr_perm r2 full_permission)
+//         (fun () -> ptr_read r2) in
+//   v
