@@ -464,7 +464,32 @@ let alloc (#a:_) (v:a)
 // Arrays
 /////////////////////////////////////////////////////////////////////////////
 
+#push-options "--max_fuel 3"
+let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
+  let Array t' len' seq = select_addr m a.array_addr in
+  let len = U32.v a.array_length in
+  assert(U32.v a.array_offset + U32.v a.array_length <= len');
+  Seq.init len (fun i -> let (x, _) =  Seq.index seq (U32.v a.array_offset + i) in x)
+#pop-options
 
+#push-options "--max_fuel 2"
+let as_seq_lemma
+  (#t:_)
+  (a:array_ref t)
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (p:permission)
+  (m:hheap (array_perm a p))
+  =
+  ()
+#pop-options
+
+let index
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Seq.lseq t (U32.v (length a)))
+  (p: permission)
+  (i:U32.t{U32.v i < U32.v (length a)}) =
+  magic()
 
 let update_addr_array
   (#t:_)
