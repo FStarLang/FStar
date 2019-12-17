@@ -906,6 +906,44 @@ let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
     stronger_post (par_lpost lpreL lpostL lpreR lpostR) (par_lpost lpreL lpostL next_lpreR next_lpostR) state next_state)
 = frame_post_for_par lpreL lpostL frame state next_state
 
+let step_frame_aux_right (#st:st)
+  (#preL preR frame:st.hprop) (lpreL:l_pre preL)
+  (state:st.mem)
+: Lemma
+  (((st.interp (st.locks_invariant state `st.star` ((preL `st.star` preR) `st.star` frame)) (st.heap_of_mem state)) /\
+    lpreL (st.heap_of_mem state))  <==>
+   (st.interp ((st.locks_invariant state `st.star` preR) `st.star` (st.refine preL lpreL `st.star` frame)) (st.heap_of_mem state)))
+= calc (st.equals) {
+    st.locks_invariant state `st.star` ((preL `st.star` preR) `st.star` frame);
+       (st.equals) { equals_ext_right (st.locks_invariant state)
+                                      ((preL `st.star` preR) `st.star` frame)
+                                      (preL `st.star` (preR `st.star` frame)) }
+    st.locks_invariant state `st.star` (preL `st.star` (preR `st.star` frame));
+       (st.equals) { }
+    (st.locks_invariant state `st.star` preL) `st.star` (preR `st.star` frame);
+       (st.equals) { }
+    (preL `st.star` st.locks_invariant state) `st.star` (preR `st.star` frame);
+       (st.equals) { }
+    preL `st.star` (st.locks_invariant state `st.star` (preR `st.star` frame));
+  };
+
+  refine_star_left preL (st.locks_invariant state `st.star` (preR `st.star` frame)) lpreL state;
+
+  calc (st.equals) {
+    st.refine preL lpreL `st.star` (st.locks_invariant state `st.star` (preR `st.star` frame));
+       (st.equals) { equals_ext_right (st.refine preL lpreL)
+                                      (st.locks_invariant state `st.star` (preR `st.star` frame))
+                                      ((st.locks_invariant state `st.star` preR) `st.star` frame) }
+    st.refine preL lpreL `st.star` ((st.locks_invariant state `st.star` preR) `st.star` frame);
+       (st.equals) { }
+    (st.refine preL lpreL `st.star` (st.locks_invariant state `st.star` preR)) `st.star` frame;
+       (st.equals) { }
+    ((st.locks_invariant state `st.star` preR) `st.star` st.refine preL lpreL) `st.star` frame;
+       (st.equals) { }
+    (st.locks_invariant state `st.star` preR) `st.star` (st.refine preL lpreL `st.star` frame);
+  }
+
+
 let step_par_right (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (frame:st.hprop)
@@ -917,15 +955,11 @@ let step_par_right (#st:st) (i:nat)
 
 = match f with
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
-    commute3_1_2 preL preR frame;
-    equals_ext_right (st.locks_invariant state)
-      ((preL `st.star` preR) `st.star` frame)
-      (preR `st.star` (preL `st.star` frame));
-    refine_middle (st.locks_invariant state `st.star` preR) preL frame lpreL state;
+    step_frame_aux_right preR frame lpreL state;
 
     let Step state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (st.refine preL lpreL `st.star` frame) mR state in
 
-    commute3_2_1_refine_middle_interp next_preR preL frame lpreL next_state;
+    step_frame_aux_right next_preR frame lpreL next_state;
     
     par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR frame state next_state;
 
