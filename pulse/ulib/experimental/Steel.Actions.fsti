@@ -88,6 +88,29 @@ val alloc (#a:_) (v:a)
 // Arrays
 ////////////////////////////////////////////////////////////////////////////////
 
+val as_seq (#t:_) (a:array_ref t) (m:hheap (array a))
+  : (Seq.lseq t (U32.v (length a)))
+
+/// as_seq respect pts_to_array
+val as_seq_lemma
+  (#t:_)
+  (a:array_ref t)
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (p:permission)
+  (m:hheap (array_perm a p))
+  : Lemma (interp (array a) m /\
+           interp (pts_to_array a p (as_seq a m)) m)
+
+val index
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Seq.lseq t (U32.v (length a)))
+  (p: permission)
+  (i:U32.t{U32.v i < U32.v (length a)})
+  : m_action
+    (pts_to_array a p iseq)
+    (x:t{x == Seq.index iseq (U32.v i)})
+    (fun _ -> pts_to_array a p iseq)
 
 val upd_array
   (#t:_)
