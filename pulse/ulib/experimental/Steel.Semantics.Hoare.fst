@@ -866,6 +866,31 @@ let step_bind (#st:st) (i:nat)
       j
 
 
+let ac_reasoning_for_frame (#st:st) (p q r s:st.hprop)
+: Lemma
+  (((p `st.star` (q `st.star` r)) `st.star` s) `st.equals`
+   ((p `st.star` q) `st.star` (r `st.star` s)))
+= calc (st.equals) {
+    (p `st.star` (q `st.star` r)) `st.star` s;
+       (st.equals) { }
+    ((p `st.star` q) `st.star` r) `st.star` s;
+       (st.equals) { }
+    (p `st.star` q) `st.star` (r `st.star` s);
+   }
+
+let frame_fp_props_for_frame (#st:st) (frame frame':st.hprop) (f_frame':fp_prop frame')
+  (state next_state:st.mem)
+: Lemma
+  (requires
+    f_frame' (st.heap_of_mem state) /\
+    (forall (hp:fp_prop (frame' `st.star` frame)).
+       hp (st.heap_of_mem state) <==> hp (st.heap_of_mem next_state)))
+  (ensures
+    f_frame' (st.heap_of_mem next_state) /\
+    (forall (hp:fp_prop frame).
+       hp (st.heap_of_mem state) <==> hp (st.heap_of_mem next_state)))
+= ()
+
 let step_frame (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (frame:st.hprop)
@@ -875,7 +900,7 @@ let step_frame (#st:st) (i:nat)
 
 : Div (step_result a p frame) (step_req frame f state) (step_ens frame f state)
 
-= match f with
+= match f with  
   | Frame (Ret p x lp) frame f_frame ->
     Step state (p x `st.star` frame) state
       (fun h -> lpost h x h)
@@ -884,13 +909,13 @@ let step_frame (#st:st) (i:nat)
       i
 
   | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame' f_frame' ->
-    frame_and_par_l_aux f_pre frame' frame f_frame' state;
+    ac_reasoning_for_frame (st.locks_invariant state) f_pre frame' frame;
 
-    let Step state next_fpre next_state next_flpre next_flpost f j = step i (st.refine frame' f_frame' `st.star` frame) f state in
+    let Step state next_fpre next_state next_flpre next_flpost f j = step i (frame' `st.star` frame) f state in
+    
+    ac_reasoning_for_frame (st.locks_invariant next_state) next_fpre frame' frame;
 
-    frame_and_par_l_aux next_fpre frame' frame f_frame' next_state;
-
-    fp_prop_weakening_frame frame frame' f_frame' state next_state;
+    frame_fp_props_for_frame frame frame' f_frame' state next_state;
 
     Step state (next_fpre `st.star` frame') next_state
       (frame_lpre next_flpre f_frame')
