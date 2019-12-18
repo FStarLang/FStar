@@ -19,6 +19,13 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
+let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
+  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+
+let preserves_frame_prop (frame:hprop) (h0 h1:heap) =
+  forall (q:(heap -> prop){q `depends_only_on_without_affinity` frame}).
+    q h0 <==> q h1
+
 let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hheap fp -> (x:a & hheap (fp' x))
 
@@ -26,7 +33,8 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
   forall frame h0.
     interp (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1)
+     interp (fp' x `star` frame) h1 /\
+     preserves_frame_prop frame h0 h1)
 
 let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
   = forall (h0:hheap pre)

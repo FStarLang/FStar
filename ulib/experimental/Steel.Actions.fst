@@ -129,14 +129,15 @@ let upd_disjointness_lemma'
   Classical.forall_intro aux
 #pop-options
 
-#push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 10"
+#push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 30"
 let upd_lemma' (#a:_) (r:ref a) (v:a) (h:heap) (frame:hprop)
   : Lemma
     (requires
       interp (ptr_perm r full_permission `star` frame) h)
     (ensures (
       let (| x, h1 |) = upd_heap r v h in
-      interp (pts_to r full_permission v `star` frame) h1))
+      interp (pts_to r full_permission v `star` frame) h1 /\
+      preserves_frame_prop frame h h1))
   = let aux (h0 h1:heap)
      : Lemma
        (requires
@@ -171,7 +172,8 @@ let upd'_is_frame_preserving (#a:_) (r:ref a) (v:a)
           interp (ptr_perm r full_permission `star` frame) h)
         (ensures (
           let (| _, h1 |) = (upd_heap r v h) in
-          interp (pts_to r full_permission v `star` frame) h1))
+          interp (pts_to r full_permission v `star` frame) h1 /\
+          preserves_frame_prop frame h h1))
         [SMTPat ()]
       = upd_lemma' r v h frame
    in
@@ -338,14 +340,25 @@ let alloc_pre_m_action (#a:_) (v:a)
     (| x, t |)
 #pop-options
 
-#push-options "--z3rlimit 70 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let alloc_preserves_frame_prop  (#a:_) (v:a) (m:mem) (frame:hprop)
+  : Lemma (requires
+      interp (frame `star` locks_invariant m) (heap_of_mem m))
+          (ensures  (
+      let (| x, m1 |) = alloc_pre_m_action v m in
+      preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
+      = ()
+#pop-options
+
+#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
   : Lemma
     (requires
       interp (frame `star` locks_invariant m) (heap_of_mem m))
     (ensures (
       let (| x, m1 |) = alloc_pre_m_action v m in
-      interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
+      interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
+      preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
   = let (| x, m1 |) = alloc_pre_m_action v m in
     assert (x == m.ctr);
     assert (m1.ctr = m.ctr + 1);
@@ -361,7 +374,8 @@ let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
     intro_star (pts_to x full_permission v) (frame `star` locks_invariant m) (singleton_heap x cell) h;
     assert (interp (pts_to x full_permission v `star` (frame `star` locks_invariant m)) h1);
     star_associative (pts_to x full_permission v) frame (locks_invariant m);
-    assert (interp (pts_to x full_permission v `star` frame `star` locks_invariant m) h1)
+    assert (interp (pts_to x full_permission v `star` frame `star` locks_invariant m) h1);
+    alloc_preserves_frame_prop v m frame
 #pop-options
 
 #push-options "--z3rlimit 150 --warn_error -271 --initial_fuel 2 --max_fuel 2"
@@ -371,7 +385,8 @@ let alloc_is_frame_preserving (#a:_) (v:a)
       : Lemma
           (ensures (
             let (| x, m1 |) = alloc_pre_m_action v m in
-            interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
+            interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
+            preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
           [SMTPat ()]
       = alloc_is_frame_preserving' v m frame
     in
@@ -617,7 +632,7 @@ let upd_array_joint_lemma'
   | _ -> ()
 #pop-options
 
-#push-options "--z3rlimit 80 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_lemma'
   (#t:_)
   (a:array_ref t)
@@ -631,7 +646,8 @@ let upd_array_lemma'
       interp (pts_to_array a full_permission iseq `star` frame) h)
     (ensures (
       let (| _, h1 |) = upd_array_heap a iseq i v h in
-      interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)  `star` frame) h1))
+      interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)  `star` frame) h1 /\
+      preserves_frame_prop frame h h1))
   = let aux (h0 h1:heap)
      : Lemma
        (requires
@@ -679,7 +695,8 @@ let upd_array'_is_frame_preserving
           interp (pts_to_array a full_permission iseq `star` frame) h)
         (ensures (
           let (| _, h1 |) = (upd_array_heap a iseq i v h) in
-          interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) `star` frame) h1))
+          interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) `star` frame) h1 /\
+          preserves_frame_prop frame h h1))
         [SMTPat ()]
       = upd_array_lemma' a iseq i v h frame
    in
@@ -785,7 +802,7 @@ let upd_array'_depends_only_on_fp
     ()
 #pop-options
 
-#push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2"
+#push-options "--z3rlimit 300 --max_fuel 2 --initial_fuel 2"
 let upd_array'
   (#t:_)
   (a:array_ref t)
@@ -798,6 +815,7 @@ let upd_array'
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
   = fun m ->
       upd_array'_is_frame_preserving a iseq i v;
+      upd_array'_depends_only_on_fp a iseq i v;
       let (| _, h' |) = upd_array_heap a iseq i v m.heap in
       let m':mem = {m with heap = h'} in
       (| (), m' |)
