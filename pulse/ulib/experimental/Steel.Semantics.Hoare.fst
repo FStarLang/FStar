@@ -307,21 +307,8 @@ let is_frame_preserving (#st:st) #a #pre #post (f:action0 pre a post) =
      st.interp (post x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1) /\
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem h0) <==> f_frame (st.heap_of_mem h1)))
 
-let action_depends_only_on_fp (#st:st) (#pre:st.hprop) #a #post (f:action0 pre a post)
-  = forall (m0:hmem pre)
-      (h1:st.heap {st.m_disjoint m0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (let m1 = st.upd_joined_heap m0 h1 in
-       let (| x0, m |) = f m0 in
-       let (| x1, m' |) = f m1 in
-       x0 == x1 /\
-       (post x0 (st.heap_of_mem m) <==> post x1 (st.heap_of_mem m')))
-
 let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  f:action0 fp a fp'{
-    is_frame_preserving f /\
-    action_depends_only_on_fp f
-  }
+  f:action0 fp a fp'{is_frame_preserving f}
 
 
 (**** End interface of actions ****)
