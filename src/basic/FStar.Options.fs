@@ -270,6 +270,7 @@ let defaults =
       ("warn_error"                   , List []);
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
+      ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
       ("profile_group_by_decl"        , Bool false);
@@ -424,6 +425,7 @@ let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertio
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
@@ -1223,6 +1225,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "Use normalization by evaluation as the default normalization strategy (default 'false')");
 
         ( noshort,
+         "use_nbe_for_extraction",
+          BoolStr,
+         "Use normalization by evaluation for normalizing terms before extraction (default 'false')");
+
+        ( noshort,
          "trivial_pre_for_unannotated_effectful_fns",
           BoolStr,
          "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
@@ -1674,6 +1681,7 @@ let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
+let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
 
