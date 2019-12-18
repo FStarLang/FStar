@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Steel.Semantics.Hoare
-module T = FStar.Tactics
 
 (*
  * This module provides a semantic model for a combined effect of
@@ -33,11 +32,10 @@ module T = FStar.Tactics
  *   See Steel.Semantics.fst for the wp variant
  *)
 
-#push-options "--using_facts_from '-* +Prims +FStar.Pervasives +Steel.Semantics.Hoare' \
-  --fuel  0 \
-  --ifuel 2 \
-  --z3rlimit 20 \
-  --__temp_no_proj Steel.Semantics.Hoare"
+
+/// Disabling projectors because we don't use them and they increase the typechecking time
+
+#push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --__temp_no_proj Steel.Semantics.Hoare"
 
 
 (**** Begin state defn ****)
