@@ -899,7 +899,7 @@ let (bv_as_mlty :
       | FStar_Util.Inl ty_b -> ty_b.FStar_Extraction_ML_UEnv.ty_b_ty
       | uu____2983 -> FStar_Extraction_ML_Syntax.MLTY_Top
   
-let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
+let (extraction_norm_steps_core : FStar_TypeChecker_Env.step Prims.list) =
   [FStar_TypeChecker_Env.AllowUnboundUniverses;
   FStar_TypeChecker_Env.EraseUniverses;
   FStar_TypeChecker_Env.Inlining;
@@ -909,12 +909,13 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
   FStar_TypeChecker_Env.Unascribe;
   FStar_TypeChecker_Env.ForExtraction] 
 let (extraction_norm_steps_nbe : FStar_TypeChecker_Env.step Prims.list) =
-  FStar_TypeChecker_Env.NBE :: extraction_norm_steps 
-let (get_extraction_norm_steps :
-  unit -> FStar_TypeChecker_Env.step Prims.list) =
+  FStar_TypeChecker_Env.NBE :: extraction_norm_steps_core 
+let (extraction_norm_steps : unit -> FStar_TypeChecker_Env.step Prims.list) =
   fun uu____2997  ->
     let uu____2998 = FStar_Options.use_nbe_for_extraction ()  in
-    if uu____2998 then extraction_norm_steps_nbe else extraction_norm_steps
+    if uu____2998
+    then extraction_norm_steps_nbe
+    else extraction_norm_steps_core
   
 let (comp_no_args :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -1244,7 +1245,7 @@ let (term_as_mlty :
          FStar_Util.print1 "Starting to normalize type %s\n" uu____4181
        else ());
       (let t =
-         let uu____4187 = get_extraction_norm_steps ()  in
+         let uu____4187 = extraction_norm_steps ()  in
          FStar_TypeChecker_Normalize.normalize uu____4187
            g.FStar_Extraction_ML_UEnv.env_tcenv t0
           in
@@ -3500,7 +3501,7 @@ and (term_as_mlexpr' :
                                 (let norm_call uu____12432 =
                                    let uu____12433 =
                                      let uu____12434 =
-                                       get_extraction_norm_steps ()  in
+                                       extraction_norm_steps ()  in
                                      FStar_TypeChecker_Env.PureSubtermsWithinComputations
                                        :: uu____12434
                                       in

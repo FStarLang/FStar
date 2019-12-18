@@ -589,7 +589,7 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps =
+let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -600,12 +600,12 @@ let extraction_norm_steps =
      Env.ForExtraction]
 
 let extraction_norm_steps_nbe =
-  Env.NBE::extraction_norm_steps
+  Env.NBE::extraction_norm_steps_core
 
-let get_extraction_norm_steps () = 
+let extraction_norm_steps () = 
   if Options.use_nbe_for_extraction()
   then extraction_norm_steps_nbe
-  else extraction_norm_steps
+  else extraction_norm_steps_core
   
 let comp_no_args c =
     match c.n with
@@ -775,7 +775,7 @@ let term_as_mlty g t0 =
     then
       BU.print1 "Starting to normalize type %s\n"
                    (Print.term_to_string t0);
-    let t = N.normalize (get_extraction_norm_steps()) g.env_tcenv t0 in
+    let t = N.normalize (extraction_norm_steps()) g.env_tcenv t0 in
     translate_term_to_mlty g t
 
 
@@ -1567,7 +1567,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::(get_extraction_norm_steps())) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::(extraction_norm_steps())) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"

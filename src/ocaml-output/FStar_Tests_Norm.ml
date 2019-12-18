@@ -1268,7 +1268,28 @@ let (tests :
                                                                     uu____3201,
                                                                     uu____3205)
                                                                      in
-                                                                    [uu____3189]
+                                                                    let uu____3215
+                                                                    =
+                                                                    let uu____3229
+                                                                    =
+                                                                    let uu____3241
+                                                                    =
+                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    "(fun (x:list int) -> match x with | [] -> 0 | hd::tl -> 1) []"
+                                                                     in
+                                                                    let uu____3245
+                                                                    =
+                                                                    FStar_Tests_Pars.tc_nbe
+                                                                    "0"  in
+                                                                    ((Prims.of_int (405)),
+                                                                    uu____3241,
+                                                                    uu____3245)
+                                                                     in
+                                                                    [uu____3229]
+                                                                     in
+                                                                    uu____3189
+                                                                    ::
+                                                                    uu____3215
                                                                      in
                                                                     uu____3149
                                                                     ::
@@ -1411,33 +1432,33 @@ let (tests :
    uu____860 :: uu____894)
   
 let run_either :
-  'Auu____3853 .
+  'Auu____3904 .
     Prims.int ->
-      'Auu____3853 ->
+      'Auu____3904 ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           (FStar_TypeChecker_Env.env ->
-             'Auu____3853 -> FStar_Syntax_Syntax.term)
+             'Auu____3904 -> FStar_Syntax_Syntax.term)
             -> unit
   =
   fun i  ->
     fun r  ->
       fun expected  ->
         fun normalizer  ->
-          (let uu____3891 = FStar_Util.string_of_int i  in
-           FStar_Util.print1 "%s: ... \n\n" uu____3891);
+          (let uu____3942 = FStar_Util.string_of_int i  in
+           FStar_Util.print1 "%s: ... \n\n" uu____3942);
           (let tcenv = FStar_Tests_Pars.init ()  in
-           (let uu____3896 = FStar_Main.process_args ()  in
-            FStar_All.pipe_right uu____3896 (fun a1  -> ()));
+           (let uu____3947 = FStar_Main.process_args ()  in
+            FStar_All.pipe_right uu____3947 (fun a1  -> ()));
            (let x1 = normalizer tcenv r  in
             FStar_Options.init ();
             FStar_Options.set_option "print_universes"
               (FStar_Options.Bool true);
             FStar_Options.set_option "print_implicits"
               (FStar_Options.Bool true);
-            (let uu____3919 =
-               let uu____3921 = FStar_Syntax_Util.unascribe x1  in
-               FStar_Tests_Util.term_eq uu____3921 expected  in
-             FStar_Tests_Util.always i uu____3919)))
+            (let uu____3970 =
+               let uu____3972 = FStar_Syntax_Util.unascribe x1  in
+               FStar_Tests_Util.term_eq uu____3972 expected  in
+             FStar_Tests_Util.always i uu____3970)))
   
 let (run_interpreter :
   Prims.int ->
@@ -1476,11 +1497,11 @@ let (run_interpreter_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let interp uu____4000 = run_interpreter i r expected  in
-        let uu____4001 =
-          let uu____4002 = FStar_Util.return_execution_time interp  in
-          FStar_Pervasives_Native.snd uu____4002  in
-        (i, uu____4001)
+        let interp uu____4051 = run_interpreter i r expected  in
+        let uu____4052 =
+          let uu____4053 = FStar_Util.return_execution_time interp  in
+          FStar_Pervasives_Native.snd uu____4053  in
+        (i, uu____4052)
   
 let (run_nbe_with_time :
   Prims.int ->
@@ -1491,50 +1512,50 @@ let (run_nbe_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let nbe1 uu____4040 = run_nbe i r expected  in
-        let uu____4041 =
-          let uu____4042 = FStar_Util.return_execution_time nbe1  in
-          FStar_Pervasives_Native.snd uu____4042  in
-        (i, uu____4041)
+        let nbe1 uu____4091 = run_nbe i r expected  in
+        let uu____4092 =
+          let uu____4093 = FStar_Util.return_execution_time nbe1  in
+          FStar_Pervasives_Native.snd uu____4093  in
+        (i, uu____4092)
   
 let run_tests :
-  'Auu____4053 .
+  'Auu____4104 .
     (Prims.int ->
        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'Auu____4053)
-      -> 'Auu____4053 Prims.list
+         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'Auu____4104)
+      -> 'Auu____4104 Prims.list
   =
   fun run1  ->
     FStar_Options.__set_unit_tests ();
     (let l =
        FStar_List.map
-         (fun uu___0_4105  ->
-            match uu___0_4105 with | (no,test,res) -> run1 no test res) tests
+         (fun uu___0_4156  ->
+            match uu___0_4156 with | (no,test,res) -> run1 no test res) tests
         in
      FStar_Options.__clear_unit_tests (); l)
   
 let (run_all_nbe : unit -> unit) =
-  fun uu____4136  ->
+  fun uu____4187  ->
     FStar_Util.print_string "Testing NBE\n";
-    (let uu____4139 = run_tests run_nbe  in
+    (let uu____4190 = run_tests run_nbe  in
      FStar_Util.print_string "NBE ok\n")
   
 let (run_all_interpreter : unit -> unit) =
-  fun uu____4148  ->
+  fun uu____4199  ->
     FStar_Util.print_string "Testing the normalizer\n";
-    (let uu____4151 = run_tests run_interpreter  in
+    (let uu____4202 = run_tests run_interpreter  in
      FStar_Util.print_string "Normalizer ok\n")
   
 let (run_all_nbe_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
-  fun uu____4167  ->
+  fun uu____4218  ->
     FStar_Util.print_string "Testing NBE\n";
     (let l = run_tests run_nbe_with_time  in
      FStar_Util.print_string "NBE ok\n"; l)
   
 let (run_all_interpreter_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
-  fun uu____4197  ->
+  fun uu____4248  ->
     FStar_Util.print_string "Testing the normalizer\n";
     (let l = run_tests run_interpreter_with_time  in
      FStar_Util.print_string "Normalizer ok\n"; l)
@@ -1547,24 +1568,24 @@ let (run_both_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let nbe1 uu____4242 = run_nbe i r expected  in
-        let norm1 uu____4248 = run_interpreter i r expected  in
+        let nbe1 uu____4293 = run_nbe i r expected  in
+        let norm1 uu____4299 = run_interpreter i r expected  in
         FStar_Util.measure_execution_time "nbe" nbe1;
         FStar_Util.print_string "\n";
         FStar_Util.measure_execution_time "normalizer" norm1;
         FStar_Util.print_string "\n"
   
 let (compare : unit -> unit) =
-  fun uu____4261  ->
+  fun uu____4312  ->
     FStar_Util.print_string "Comparing times for normalization and nbe\n";
-    (let uu____4264 =
-       let uu____4265 = encode (Prims.of_int (1000))  in
-       let uu____4267 =
-         let uu____4270 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-         let uu____4271 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-         minus uu____4270 uu____4271  in
-       let_ FStar_Tests_Util.x uu____4265 uu____4267  in
-     run_both_with_time (Prims.of_int (14)) uu____4264 z)
+    (let uu____4315 =
+       let uu____4316 = encode (Prims.of_int (1000))  in
+       let uu____4318 =
+         let uu____4321 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+         let uu____4322 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+         minus uu____4321 uu____4322  in
+       let_ FStar_Tests_Util.x uu____4316 uu____4318  in
+     run_both_with_time (Prims.of_int (14)) uu____4315 z)
   
 let (compare_times :
   (Prims.int * FStar_BaseTypes.float) Prims.list ->
@@ -1576,26 +1597,26 @@ let (compare_times :
       FStar_List.iter2
         (fun res1  ->
            fun res2  ->
-             let uu____4347 = res1  in
-             match uu____4347 with
+             let uu____4398 = res1  in
+             match uu____4398 with
              | (t1,time_int) ->
-                 let uu____4357 = res2  in
-                 (match uu____4357 with
+                 let uu____4408 = res2  in
+                 (match uu____4408 with
                   | (t2,time_nbe) ->
                       if t1 = t2
                       then
-                        let uu____4369 = FStar_Util.string_of_int t1  in
+                        let uu____4420 = FStar_Util.string_of_int t1  in
                         FStar_Util.print3 "Test %s\nNBE %s\nInterpreter %s\n"
-                          uu____4369 (FStar_Util.string_of_float time_nbe)
+                          uu____4420 (FStar_Util.string_of_float time_nbe)
                           (FStar_Util.string_of_float time_int)
                       else
                         FStar_Util.print_string
                           "Test numbers do not match...\n")) l_int l_nbe
   
 let (run_all : unit -> unit) =
-  fun uu____4380  ->
-    (let uu____4382 = FStar_Syntax_Print.term_to_string znat  in
-     FStar_Util.print1 "%s" uu____4382);
+  fun uu____4431  ->
+    (let uu____4433 = FStar_Syntax_Print.term_to_string znat  in
+     FStar_Util.print1 "%s" uu____4433);
     (let l_int = run_all_interpreter_with_time ()  in
      let l_nbe = run_all_nbe_with_time ()  in compare_times l_int l_nbe)
   
