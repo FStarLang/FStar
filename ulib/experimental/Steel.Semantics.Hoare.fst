@@ -108,7 +108,6 @@ type st0 = {
 
   emp:hprop;
   star: hprop -> hprop -> hprop;
-  refine: (fp:hprop -> fp_prop_0 interp disjoint join fp -> hprop);
 
   equals: hprop -> hprop -> prop;
 }
@@ -171,16 +170,6 @@ let lemma_weaken_depends_only_on (#st:st0{weaken_depends_only_on st})
   : Lemma (q `depends_only_on` (fp0 `st.star` fp1))
   = ()
 
-let refine_equiv (st:st0) =
-  forall (p:st.hprop) (q:fp_prop p) (h:st.heap).
-    (st.interp p h /\ q h <==> st.interp (st.refine p q) h)
-
-let refine_star (st:st0{weaken_depends_only_on st}) =
-  forall (p0 p1:st.hprop) (q:fp_prop p0).
-     (lemma_weaken_depends_only_on p0 p1 q;
-      st.equals (st.refine (p0 `st.star` p1) q)
-                (st.refine p0 q `st.star` p1))
-
 let interp_depends_only (st:st0) =
   forall p. st.interp p `depends_only_on` p
 
@@ -216,10 +205,7 @@ let st_laws (st:st0) =
     disjoint_join st /\
     join_commutative st /\
     join_associative st /\
-    (* refinement *)
     weaken_depends_only_on st /\
-    refine_equiv st /\
-    refine_star st /\
     (* Relations between mem and heap *)
     m_implies_disjoint st /\
     mem_valid_locks_invariant st /\
