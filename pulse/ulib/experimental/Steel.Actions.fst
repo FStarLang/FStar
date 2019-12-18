@@ -504,7 +504,7 @@ let index
   (iseq: Seq.lseq t (U32.v (length a)))
   (p: permission)
   (i:U32.t{U32.v i < U32.v (length a)}) =
-  magic()
+  magic() //TODO: DM 12/18/2019
 
 let update_addr_array
   (#t:_)

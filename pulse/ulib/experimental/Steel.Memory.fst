@@ -97,7 +97,6 @@ let invert_array_ref_s (a: Type0)
   =
   allow_inversion (array_ref a)
 
-
 let offset (#t: Type) (a: array_ref t) = a.array_offset
 
 let length (#t: Type) (a: array_ref t) = a.array_length
@@ -599,7 +598,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#push-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 150 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
