@@ -1,6 +1,6 @@
 module Steel.Semantics.Instantiate
 
-module S = Steel.Semantics
+module S = Steel.Semantics.Hoare
 open Steel.Memory
 
 #set-options "--z3rlimit 20"
@@ -23,7 +23,6 @@ let state0 : S.st0 =
 
     S.emp = emp;
     S.star = star;
-    S.refine = refine;
 
     S.equals = equals
   }
@@ -59,10 +58,6 @@ val lemma_join_associative (u:unit) : Lemma (lemma_disjoint_join(); S.join_assoc
 
 val lemma_weaken_depends_only_on (u:unit) : Lemma (S.weaken_depends_only_on state0)
 
-val lemma_refine_equiv (u:unit) : Lemma (S.refine_equiv state0)
-
-val lemma_refine_star (u:unit) : Lemma (lemma_weaken_depends_only_on(); S.refine_star state0)
-
 val lemma_m_implies_disjoint (u:unit) : Lemma (S.m_implies_disjoint state0)
 
 val lemma_mem_valid_locks_invariant (u:unit) : Lemma (S.mem_valid_locks_invariant state0)
@@ -85,8 +80,6 @@ let st_laws_lemma () : Lemma (S.st_laws state0) =
   lemma_join_commutative();
   lemma_join_associative();
   lemma_weaken_depends_only_on();
-  lemma_refine_equiv();
-  lemma_refine_star();
   lemma_m_implies_disjoint();
   lemma_mem_valid_locks_invariant();
   lemma_valid_upd_heap()
