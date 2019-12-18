@@ -1,3 +1,20 @@
+(*
+   Copyright 2017-2019 Microsoft Research
+
+   Authors: Zoe Paraskevopoulou, Guido Martinez, Nikhil Swamy
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 #light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.All
@@ -18,9 +35,26 @@ module Z = FStar.BigInt
 module C = FStar.Const
 open FStar.Char
 
+(*
+   This module provides the internal term representations used in the
+   NBE algorithm implemented by FStar.TypeChecker.NBE.fs (see the
+   comments at the header of that file, for some general context about
+   the algorithm).
+
+   Although the type provided by this module is mostly of relevance to
+   the internal of the NBE algorithm, we expose its definitions mainly
+   so that we can (in FStar.TypeChecker.Cfg and
+   FStar.Tactics.Interpreter) provide NBE compatible implementations
+   of primitive computation steps.
+*)
+
 type var = bv
 type sort = int
 
+// This type mostly mirrors the definition of FStar.Const.sconst
+// There are several missing cases, however.
+// TODO: We should also provide implementations for float, bytearray,
+// etc.
 type constant =
   | Unit
   | Bool of bool
@@ -29,6 +63,9 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
+// Atoms represent the head of an irreducible application
+// They can either be variables
+// Or, un-reduced match terms
 type atom
 //IN F*: : Type0
   =

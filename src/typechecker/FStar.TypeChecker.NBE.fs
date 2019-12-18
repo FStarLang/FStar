@@ -44,7 +44,38 @@ module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 open FStar.TypeChecker.Cfg
 
-(* Utils *)
+(* Broadly, the algorithm implemented here is inspired by
+
+   Full Reduction at Full Throttle:
+     https://dl.acm.org/citation.cfm?id=2178141
+
+   Except, we don't implement any of the native tricks in the OCaml
+   runtime for compiling inductives and pattern matching. So, you
+   could see what we're doing here as, perhaps, "Full Reduction at
+   Half Throttle".
+
+   More classically, what we have here is a definitional interpreter,
+   in the tradition of Reynolds' Definitional Interpreters:
+     https://dl.acm.org/citation.cfm?id=805852 (1972)
+     A more recent version of that paper is here:
+     http://homepages.inf.ed.ac.uk/wadler/papers/papers-we-love/reynolds-definitional-interpreters-1998.pdf
+
+   The broad idea of the algorithm is sketched for a tiny lambda
+   calculus in examples/metatheory/FullReductionInterpreter.fst
+
+   That's a good thing to digest before getting into the complexity of
+   the module here.
+
+   A lot of the complexity here is in handling all the features of F*,
+   notably in the handling of inductive datatypes, pattern matching,
+   recursive definitions, and reified effects.
+*)
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Utilities: Many of these should just move to FStar.List, if it's
+// not already there
+////////////////////////////////////////////////////////////////////////////////
 
 // VD: This seems necessary for the OCaml build
 let max a b = if a > b then a else b
@@ -103,6 +134,11 @@ let debug_term (t : term) =
 
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+//End utilities
+////////////////////////////////////////////////////////////////////////////////
 
 (* GM, Aug 19th 2018: This should not (at least always) be recursive.
  * Forcing the thunk on an NBE term (Lazy i) triggers arbitrary
