@@ -227,38 +227,59 @@ effect Steel
 /// Going back to the tuples representation here for convenience,
 /// but it's only exposed to the SMT solver as a postcondition of frame and get
 [@__reduce__]
-let rec expand_delta (#outer:viewable) (h0:rmem outer)
+let rec expand_delta
+  (#outer0:viewable) (h0:rmem outer0)
+  (#outer1:viewable) (h1:rmem outer1)
   (delta:viewable)
-  (inner:viewable{can_be_split_into outer inner delta})
-  : GTot (t_of delta)
+  (inner0:viewable{can_be_split_into outer0 inner0 delta})
+  (inner1:viewable{can_be_split_into outer1 inner1 delta})
+  : GTot prop
   = match delta with
     | VStar v1 v2 ->
       Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
       calc (equiv) {
-        inner <*> v2 <*> v1;
-        (equiv) { star_associative inner v2 v1 }
-        inner <*> (v2 <*> v1);
+        inner0 <*> v2 <*> v1;
+        (equiv) { star_associative inner0 v2 v1 }
+        inner0 <*> (v2 <*> v1);
         (equiv) { star_commutative v2 v1;
-                  equiv_refl inner;
-                  star_congruence inner (v2 <*> v1) inner (v1 <*> v2) }
-        inner <*> (v1 <*> v2);
+                  equiv_refl inner0;
+                  star_congruence inner0 (v2 <*> v1) inner0 (v1 <*> v2) }
+        inner0 <*> (v1 <*> v2);
       };
       calc (equiv) {
-        inner <*> v1 <*> v2;
-        (equiv) { star_associative inner v1 v2 }
-        inner <*> delta;
+        inner0 <*> v1 <*> v2;
+        (equiv) { star_associative inner0 v1 v2 }
+        inner0 <*> delta;
       };
-      (expand_delta h0 v1 (inner <*> v2), expand_delta h0 v2 (inner <*> v1))
+      calc (equiv) {
+        inner1 <*> v2 <*> v1;
+        (equiv) { star_associative inner1 v2 v1 }
+        inner1 <*> (v2 <*> v1);
+        (equiv) { star_commutative v2 v1;
+                  equiv_refl inner1;
+                  star_congruence inner1 (v2 <*> v1) inner1 (v1 <*> v2) }
+        inner1 <*> (v1 <*> v2);
+      };
+      calc (equiv) {
+        inner1 <*> v1 <*> v2;
+        (equiv) { star_associative inner1 v1 v2 }
+        inner1 <*> delta;
+      };
+      expand_delta h0 h1 v1 (inner0 <*> v2) (inner1 <*> v2) /\
+      expand_delta h0 h1 v2 (inner0 <*> v1) (inner1 <*> v1)
     | v ->
-      star_commutative delta inner;
-      equiv_trans (delta <*> inner)  (inner <*> delta) outer;
-      h0 v
+      star_commutative delta inner0;
+      equiv_trans (delta <*> inner0)  (inner0 <*> delta) outer0;
+      star_commutative delta inner1;
+      equiv_trans (delta <*> inner1)  (inner1 <*> delta) outer1;
+      h0 v == h1 v
 
 [@__reduce__]
-let rec expand_delta_heap (#outer:viewable) (h0:hheap (fp_of outer))
+let rec expand_delta_heap
+  (#outer:viewable) (h0:hheap (fp_of outer)) (s0:rmem outer)
   (delta:viewable)
   (inner:viewable{can_be_split_into outer inner delta})
-  : GTot (t_of delta)
+  : GTot prop
   = match delta with
     | VStar v1 v2 ->
       Classical.forall_intro_3 (fun x y -> Classical.move_requires (equiv_trans x y));
@@ -277,12 +298,13 @@ let rec expand_delta_heap (#outer:viewable) (h0:hheap (fp_of outer))
         inner <*> delta;
       };
 
-      (expand_delta_heap h0 v1 (inner <*> v2), expand_delta_heap h0 v2 (inner <*> v1))
+      expand_delta_heap h0 s0 v1 (inner <*> v2) /\
+      expand_delta_heap h0 s0 v2 (inner <*> v1)
     | VUnit v ->
       star_commutative delta inner;
       equiv_trans (delta <*> inner)  (inner <*> delta) outer;
       affine_star v.fp (fp_of inner) h0;
-      v.sel h0
+      s0 (VUnit v) == v.sel h0
 
 
 /// AF: get_mem and put_mem should only be used in trusted, core libraries (to lift actions
@@ -300,7 +322,7 @@ assume val get_mem (r:viewable)
                (**) affine_star (fp_of r) (locks_invariant x) (heap_of_mem x);
                // Instead of equality on selectors, we expose equalities on applications
                // of the selector to all subresources
-               normal (expand_delta h0 r vemp) == normal (expand_delta h1 r vemp) /\
+               normal (expand_delta h0 h1 r vemp vemp) /\
                h0 r == sel_of r (heap_of_mem x)))
 
 assume val put_mem (r_init r_out:viewable) (m:hmem (fp_of r_out))
@@ -312,8 +334,7 @@ assume val put_mem (r_init r_out:viewable) (m:hmem (fp_of r_out))
                (**) affine_star (fp_of r_out) (locks_invariant m) (heap_of_mem m);
                // Again, we expose equalities on applications of selectors.
                // This allows a better normalization instead of an equality on functions
-               normal (expand_delta m1 r_out vemp) ==
-                 normal (expand_delta_heap #r_out (heap_of_mem m) r_out vemp)))
+               normal (expand_delta_heap #r_out (heap_of_mem m) m1 r_out vemp)))
 
 (** A few lemmas to cast between the different pointer hprops **)
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
@@ -468,7 +489,7 @@ val frame
             (**) T.by_tactic_seman reprove_frame (can_be_split_into outer inner0 delta /\ True);
             (**) equiv_refl (inner1 x <*> delta);
             normal (post (focus_rmem h0 inner0 delta) x (focus_rmem h1 (inner1 x) delta)) /\
-            normal (expand_delta h0 delta inner0 == expand_delta h1 delta (inner1 x))
+            normal (expand_delta h0 h1 delta inner0 (inner1 x))
           )
 
 #pop-options
@@ -492,7 +513,7 @@ let test1 #a r1 r2 =
         (fun () -> fread r1) in
 // For debug purposes, we can check the SMT context and state of normalization
 // by uncommenting the following assertion
-//  assert (True) by (T.dump "test1");
+  assert (True) by (T.dump "test1");
   v
 
 val test2 (#a:Type) (r1 r2 r3:ref a) : Steel a
@@ -505,8 +526,9 @@ val test2 (#a:Type) (r1 r2 r3:ref a) : Steel a
     view_sel (vptr r3) news == view_sel (vptr r3) olds)
 
 let test2 #a r1 r2 r3 =
-  frame (vptr r1 <*> vptr r2 <*> vptr r3)
-        (fun () -> fread r1)
+  let v = frame (vptr r1 <*> vptr r2 <*> vptr r3)
+        (fun () -> fread r1) in
+  v
 
 val test3 (#a:Type) (r1 r2 r3 r4:ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
