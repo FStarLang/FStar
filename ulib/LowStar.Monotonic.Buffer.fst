@@ -1349,6 +1349,12 @@ let region_lifetime_buf #_ #_ #_ b =
     buffer_compatible b
   )
 
+let region_lifetime_sub #a #rrel #rel #subrel b0 b1 =
+  match b1 with
+  | Null -> ()
+  | Buffer max_len content idx length ->
+    assert (forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_sub_preorder len rrel i j subrel)
+
 let recallable_null #_ #_ #_ = ()
 
 let recallable_mgsub #_ #rrel #rel b i len sub_rel =
@@ -1484,16 +1490,14 @@ let malloca #a #rrel init len =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
   in
-  let b = Buffer len content 0ul (Ghost.hide len) in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let malloca_and_blit #a #rrel #_ #_ src id_src len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (read_sub_buffer src id_src len)
   in
-  let b = Buffer len content 0ul (Ghost.hide len) in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let malloca_of_list #a #rrel init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
@@ -1502,8 +1506,7 @@ let malloca_of_list #a #rrel init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc s
   in
-  let b = Buffer len content 0ul (Ghost.hide len) in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let mgcmalloc_of_list #a #rrel r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
@@ -1512,8 +1515,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.ralloc r s
   in
-  let b = Buffer len content 0ul (Ghost.hide len) in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let mmalloc_drgn #a #rrel d init len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
@@ -1526,6 +1528,13 @@ let mmalloc_drgn_mm #a #rrel d init len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content : HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.ralloc_drgn_mm d (Seq.create (U32.v len) init)
+  in
+  Buffer len content 0ul len
+
+let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn d (read_sub_buffer src id_src len)
   in
   Buffer len content 0ul len
 

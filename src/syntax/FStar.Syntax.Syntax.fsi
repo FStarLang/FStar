@@ -268,7 +268,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme

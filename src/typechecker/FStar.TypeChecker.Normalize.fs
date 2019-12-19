@@ -1002,6 +1002,11 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+(* GM: Please consider this function private outside of this recursive
+ * group, and call `normalize` instead. `normalize` will print timing
+ * information when --debug_level NormTop is given, which makes it a
+ * whole lot easier to find normalization calls that are taking a long
+ * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -2594,51 +2599,55 @@ let normalize s e t =
                       (Some (Ident.string_of_lid (Env.current_module e)))
                       "FStar.TypeChecker.Normalize"
 
-let normalize_comp s e t = norm_comp (config s e) [] t
+let normalize_comp s e c =
+    let cfg = config s e in
+    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
+    c
+
 let normalize_universe env u = norm_universe (config [] env) [] u
+
+let non_info_norm env t =
+  let steps = [UnfoldUntil delta_constant;
+               AllowUnboundUniverses;
+               EraseUniverses;
+               HNF;
+               (* We could use Weak too were it not that we need
+                * to descend in the codomain of arrows. *)
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative env (normalize steps env t)
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
-                      Unascribe;   //remove ascriptions
-                      ForExtraction //and refinement types
-                     ]
-              env in
-    let non_info t = non_informative env (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
+    | GTotal (t, uopt) when non_info_norm env t -> {c with n = Total (t, uopt)}
     | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
-        && non_info ct.result_typ
+        && non_info_norm env ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
                    let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
                    {ct with effect_name=pure_eff; flags=flags}
                  | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    let ct = unfold_effect_abbrev env c in //must be GHOST
                     {ct with effect_name=PC.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-     let cfg =
-        config [Eager_unfolding;
-                UnfoldUntil delta_constant;
-                EraseUniverses;
-                AllowUnboundUniverses;
-                Unascribe;   //remove ascriptions
-                ForExtraction //and refinement types
-                ]
-        env in
-    let non_info t = non_informative env (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
-    && non_info lc.res_typ
+    && non_info_norm env lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
            { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc

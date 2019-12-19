@@ -852,19 +852,30 @@ tmNoEqWith(X):
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }
 
+binop_name:
+  | o=OPINFIX0a              { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX0b              { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX0c              { mk_ident (o, rhs parseState 1) }
+  | o=EQUALS                 { mk_ident ("=", rhs parseState 1) }
+  | o=OPINFIX0d              { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX1               { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX2               { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX3               { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX4               { mk_ident (o, rhs parseState 1) }
+  | o=IMPLIES                { mk_ident ("==>", rhs parseState 1) }
+  | o=CONJUNCTION            { mk_ident ("\\/", rhs parseState 1) }
+  | o=DISJUNCTION            { mk_ident ("/\\", rhs parseState 1) }
+  | o=IFF                    { mk_ident ("<==>", rhs parseState 1) }
+  | o=PIPE_RIGHT             { mk_ident ("|>", rhs parseState 1) }
+  | o=COLON_EQUALS           { mk_ident (":=", rhs parseState 1) }
+  | o=COLON_COLON            { mk_ident ("::", rhs parseState 1) }
+  | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rhs parseState 1) }
+  | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
+
 binop:
-  | o=OPINFIX0a { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX0b { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX0c { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=EQUALS    { let i = mk_ident ("=", rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX0d { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX1  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX2  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX3  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | o=OPINFIX4  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 2) Expr }
   | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
   | t=atomicTerm { t }
-
 
 tmEqNoRefinement:
   | e=tmEqWith(appTerm) { e }
@@ -1141,21 +1152,11 @@ range:
 
 %inline operator:
   | op=OPPREFIX
-  | op=OPINFIX3
-  | op=OPINFIX4
-     { mk_ident (op, rhs parseState 1) }
-  | op=operatorInfix0ad12
-     { op }
-       | op=PIPE_RIGHT
-     { mk_ident("|>", rhs parseState 1) }
-  | op=COLON_EQUALS
-     { mk_ident(":=", rhs parseState 1) }
-  | op=COLON_COLON
-     { mk_ident("::", rhs parseState 1) }
-  | op=OP_MIXFIX_ASSIGNMENT
-     { mk_ident(op, rhs parseState 1) }
-  | op=OP_MIXFIX_ACCESS
-     { mk_ident(op, rhs parseState 1) }
+    { mk_ident (op, rhs parseState 1) }
+  | op=binop_name
+    { op }
+  | op=TILDE
+    { mk_ident (op, rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
