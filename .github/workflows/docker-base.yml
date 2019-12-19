@@ -13,7 +13,7 @@ jobs:
     - name: Build base image
       run: |
         ./build_local.sh
-        docker tag FStar:local franziskus/everest-ci:${GITHUB_SHA:0:12}
+        docker tag fstar:local franziskus/everest-ci:${GITHUB_SHA:0:12}
     #- name: Push image (Github)
     #    This currently fails. Also see:
     #    https://github.community/t5/GitHub-Actions/Push-large-docker-image-to-Github-Package-failed/td-p/38446
