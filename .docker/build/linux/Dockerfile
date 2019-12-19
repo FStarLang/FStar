@@ -6,7 +6,8 @@
 # replace latest with the commit id from github using 12 characters.
 ARG DOCKERHUBPROJECT
 ARG COMMITID
-FROM ${DOCKERHUBPROJECT}everest-ci-linux:${COMMITID}
+FROM franziskus/project-everest:6d1f11480981
+#FROM ${DOCKERHUBPROJECT}everest-ci-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
