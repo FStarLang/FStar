@@ -577,7 +577,7 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x  ->
     let uu____2356 = x  in
-    match uu____2356 with | (uu____2358,uu____2359,force) -> force
+    match uu____2356 with | (uu____2358,uu____2359,force1) -> force1
   
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x  ->

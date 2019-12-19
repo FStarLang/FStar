@@ -11,6 +11,7 @@ open FStar.Errors
 module O = FStar.Options
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+module Thunk = FStar.Thunk
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
@@ -58,7 +59,7 @@ let mk_lazy cb obj ty kind =
         ; rng = Range.dummyRange
     }
     in
-    let thunk = FStar.Common.mk_thunk (fun () -> translate_cb cb (U.unfold_lazy li)) in
+    let thunk = Thunk.mk (fun () -> translate_cb cb (U.unfold_lazy li)) in
     Lazy (BU.Inl li, thunk)
 
 let e_bv =
