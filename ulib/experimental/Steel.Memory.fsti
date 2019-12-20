@@ -139,12 +139,12 @@ let array_perm (#t: Type) (a: array_ref t) (p:permission) =
   h_exists (pts_to_array a p)
 
 let array (#t: Type) (a: array_ref t) =
-  h_exists (array_perm a)
+  h_exists (fun (p:permission{allows_read p}) -> array_perm a p)
 
 val pts_to_array_injective
   (#t: _)
   (a: array_ref t)
-  (p:permission)
+  (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m: heap)
   : Lemma
