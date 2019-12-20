@@ -267,30 +267,9 @@ let ask_process
     raise e)
 
 let kill_process (p: proc): string =
-  if not p.killed then begin
-    let result = ref None in
-    let discard = Buffer.create 16 in
-    Unix.close (Unix.descr_of_out_channel p.outc);
-      (* ARP : commenting this out - kill closes the channels, and I need them open to read the final QI output *)
-      (* (try Unix.kill p.pid Sys.sigkill
-       with Unix.Unix_error (Unix.ESRCH, _, _) -> ()); *)
-      (* Avoid zombie processes (Unix.close_process does the same thing. *)
-      waitpid_ignore_signals p.pid;
-      let out = (try
-          process_read_async p None (read_and_signal p discard false true result) ;
-          (match !result with
-          | None
-          | Some EOF -> ()
-          | Some SIGINT -> raise SigInt);
-          Buffer.contents p.aux_buffer
-        with e -> raise e ) in
-      (* Close the fds directly: close_in and close_out both call `flush`,
-         potentially forcing us to wait until p starts reading again *)
-      Unix.close (Unix.descr_of_in_channel p.inc);
-      p.killed <- true ;
-      out
-    end
-    else ""
+  let _ = ask_process p "(exit)\n" (fun () -> "") in
+  if not p.killed then kill_process_for_good p else () ;
+  Buffer.contents p.aux_buffer
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
