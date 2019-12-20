@@ -50,6 +50,7 @@ let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange
 let pat p = withinfo p dummyRange
+let snat_type = tm_fv (S.lid_as_fv (lid "snat") delta_constant None)
 open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =
@@ -65,6 +66,8 @@ let pred_nat s  =
     mk_match s [zbranch;sbranch]
 let minus_nat t1 t2 =
     let minus = m in
+    let x = { x with sort = snat_type } in
+    let y = { y with sort = snat_type } in
     let zbranch = pat (Pat_cons(znat_l, [])),
                   None,
                   nm x in
