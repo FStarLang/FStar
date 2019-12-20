@@ -57,19 +57,32 @@ type atom
 //IN F*: : Type0
   =
   | Var of var
-  | Match of t * (* the scutinee *)
-             (t -> t) * (* case analysis *)
-             ((t -> term) -> list<branch>)
-             (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
-             // ZP: Keep the original branches to reconstruct just the patterns
-             // NS: add a thunked pattern translations here
+  | Match of
+       // 1. the scrutinee
+       t *
+       // 2. case analysis, currently not used, but could be in the future
+       (t -> t) *
+       // 3. reconstructs the pattern matching, parameterized by the readback function
+       ((t -> term) -> list<branch>)
+
 and t
 //IN F*: : Type0
   =
-  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
-         * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-         * int                     // arity
-         * option<(list<t> -> residual_comp)> // optional residual comp
+  | Lam of
+        // 1. We represent n-ary functions that receive their arguments as a list
+        //    The arguments are in reverse binder order (optimized for convenience beta reduction)
+       (list<t> -> t) *
+       // 2. This list represents the type annotations on the lambda binders
+       //    Each one is a function from the representation of values substituted for a
+       //    prefix of the binders to a representation of the type of the binder in question.
+       //    NS: I wonder why we don't represent this as a list<t> -> list<arg>
+       //    NS: How do we reconstruct the name of the binder on readback?
+       list<(list<t> -> arg)> *
+       // 3. The arity of the function
+       int *
+       // 4. Lambda terms in F* are optionally decorated with the "residual" computation type of
+       //    the body. This argument provides a way to reconstruct that decoration
+       option<(list<t> -> residual_comp)>
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -78,13 +91,48 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
-  | Refinement of (t -> t) * (unit -> arg)
+  | Arrow of
+          // 1. A representation of the computation type
+          //       in a scope containing all the binders
+          (list<t> -> comp) *
+          // 2. A representation of each of the binders, in scope.
+          //       See the comment on the representation of the binders in Lam
+          list<(list<t> -> arg)>
+  | Refinement of
+          // 1. A representation of the refinment formula in scope of its binder
+          (t -> t) *
+          // 2. A representation of the base type.
+          //       NS: Why is it a thunk? Why is it an arg rather than just a t?
+          (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
-  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+  | TopLevelRec of
+       // 2. The definition of the fv
+       letbinding *
+       // 3. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 4. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
+       list<bool> *
+       // 5. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | LocalLetRec of
+       // 0. the index of the ith let rec
+       int *
+       // 1. the definition of the let rec bound name
+       letbinding *
+       // 2. its mutually recursive definitions, if any
+       list<letbinding> *
+       // 3. the local environment of the recursive definition
+       list<t> *
+       // 4. accumulated arguments (in order)
+       args *
+       // 5. natural arity
+       int *
+       // 6. whether or not a given argument decreases
+       list<bool> // *
+       // // 7. callback to translate letbinding
+       // (list<t> -> letbinding -> t)
 
 and comp =
   | Tot of t * option<universe>
@@ -264,7 +312,8 @@ let rec t_to_string (x:t) =
   | Quote _ -> "Quote _"
   | Lazy (BU.Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
   | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
-  | Rec (_,_, l, _, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
+  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
 
 and atom_to_string (a: atom) =
   match a with

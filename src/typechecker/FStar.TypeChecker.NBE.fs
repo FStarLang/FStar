@@ -123,6 +123,17 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
+let let_rec_arity (b:letbinding) =
+  let (ar, maybe_lst) = U.let_rec_arity b in
+  match maybe_lst with
+  | None ->
+    ar,
+    FStar.Common.tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
+  | Some lst ->
+    ar, lst
+    // let l = trim lst in
+    // List.length l, l
+
 // NBE debuging
 
 let debug cfg f =
@@ -227,15 +238,31 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         None
   in pickBranch_aux scrut branches branches
 
-(* Succeds if the application is full and if none of the recursive arguments is symbolic *)
-let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list x residual args *)
-  let rec aux ts ar_list acc res =
+// Tests if a recursive function should be reduced based on
+// the arguments provided and the arity/decreases clause of the function.
+// Returns:
+//  should_unfold: bool, true, if the application is full and if none of the recursive
+//                 arguments is symbolic.
+//  arguments : list<arg>, the arguments to the recursive function in reverse order
+//  residual args: list<arg>, any additional arguments, beyond the arity of the function
+let should_reduce_recursive_definition
+       (arguments:args)
+       (formals_in_decreases:list<bool>)
+  : (bool * args * args) (* can unfold x full arg list x residual args *)
+  =
+  let rec aux ts ar_list acc =
     match ts, ar_list with
-    | _, [] -> true, List.rev acc, ts
-    | [], _ :: _ -> (false, List.rev acc, [])  (* It's partial! *)
-    | t :: ts, b :: bs -> aux ts bs (t :: acc) (res && implies b (not (isAccu (fst t))))
+    | _, [] ->
+      true, acc, ts
+    | [], _ :: _ ->
+      false, acc, []  (* It's partial! *)
+    | t :: ts, in_decreases_clause :: bs ->
+      if in_decreases_clause
+      && isAccu (fst t)  //one of the recursive arguments is symbolic, so we shouldn't reduce
+      then false, List.rev_append ts acc, []
+      else aux ts bs (t::acc)
   in
-  aux ts ar_list [] true
+  aux arguments formals_in_decreases []
 
 let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
@@ -330,39 +357,43 @@ let rec iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
-  | Rec(lb, lbs, bs, acc, ar, ar_lst, tr_lb) ->
-    (* ZP : this can be made more efficient by storing the arity and avoiding test args for
-            partial apps *)
-    let no_args = List.length args in
-    if (ar > no_args) then
-      (* Application is still partial -- accumulate args *)
-      Rec (lb, lbs, bs, acc @ args, ar - no_args, ar_lst, tr_lb)
-    else if (ar = 0) then
-      (* Cannot unfold -- accumulate args *)
-      Rec (lb, lbs, bs, acc @ args, ar, ar_lst, tr_lb)
-    else (* Full application, test for unfolding. This should happen only once for each application *)
-      begin
-        let full_args = acc @ args in (* Not in reverse order *)
 
-        let (can_unfold, args, res) = test_args full_args ar_lst in
+  | TopLevelRec (lb, arity, decreases_list, args') ->
+    let args = List.append args' args in
+    if List.length args >= arity
+    then let should_reduce, _, _ =
+           should_reduce_recursive_definition args decreases_list
+         in
+         if not should_reduce
+         then let fv = BU.right lb.lbname in
+              iapp cfg (FV (fv, [], [])) args
+         else let univs, rest = BU.first_N (List.length lb.lbunivs) args in
+              iapp cfg (translate cfg (List.map fst univs) lb.lbdef) rest
+    else //not enough args yet
+         TopLevelRec (lb, arity, decreases_list, args)
 
-        if not cfg.steps.zeta then
-          begin
-            debug cfg (fun () -> BU.print1 "Zeta is not set; will not unfold %s\n" (P.lbname_to_string lb.lbname));
-            Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
-          end
-        else if can_unfold then (* compute *)
-          begin
-            debug cfg (fun () -> BU.print1 "Beta reducing recursive function %s\n" (P.lbname_to_string lb.lbname));
-             match res with
-             | [] -> (* no residual args *)
-               iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args
-             | _ :: _ ->
-               let t = iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args in
-               iapp cfg t res
-          end
-        else (* cannot unfold -- accumulate args *)
-          Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
+  | LocalLetRec(i, lb, mutual_lbs, local_env, acc_args, remaining_arity, decreases_list) ->
+    if remaining_arity = 0 //we've already decided to not unfold this, so just accumulate
+    then LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity, decreases_list)
+    else
+      let n_args = List.length args in
+      if n_args < remaining_arity //still a partial application, just accumulate
+      then LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity - n_args, decreases_list)
+      else begin
+         let args = acc_args @ args in (* Not in reverse order *)
+         let should_reduce, _, _ =
+           should_reduce_recursive_definition args decreases_list
+         in
+         //local let binding don't have universes
+         if not should_reduce
+         then LocalLetRec(i, lb, mutual_lbs, local_env, args, 0, decreases_list)
+         else let env = make_rec_env mutual_lbs local_env in
+              let _ =
+                debug cfg (fun () ->
+                  BU.print1 "LocalLetRec Env = {\n\t%s\n}\n" (String.concat ",\n\t " (List.map t_to_string env));
+                  BU.print1 "LocalLetRec Args = {\n\t%s\n}\n" (String.concat ",\n\t " (List.map (fun (t, _) -> t_to_string t) args)))
+              in
+              iapp cfg (translate cfg env lb.lbdef) args
       end
 
   | Quote _ | Reflect _
@@ -410,16 +441,12 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          let lbm = find_let lbs fvar in
          begin match lbm with
          | Some lb ->
-           if is_rec then
-             mkRec cfg lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
-                               since they are already present in the global environment *)
+           if is_rec && cfg.steps.zeta
+           then
+             let ar, lst = let_rec_arity lb in
+             TopLevelRec(lb, ar, lst, [])
            else
-             begin
-               debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
-               debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
-               debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-               translate_letbinding cfg bs lb
-             end
+             translate_letbinding cfg bs lb
          | None -> failwith "Could not find let binding"
          end
        | _ -> mkFV fvar [] []
@@ -443,32 +470,14 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   // rather than top-level pure computation
 
 
-and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
-  let (ar, maybe_lst) = U.let_rec_arity b in
-  let (ar, ar_lst) =
-    match maybe_lst with
-    | None ->
-      //BU.print "No rec list\n" [];
-      ar, FStar.Common.tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
-    | Some lst ->
-      //BU.print "Trimming rec list\n" [];
-      let l = trim lst in List.length l, l
-  in
-  // BU.print2 "Creating rec definition with arrity %s : %s\n"
-  //   (BU.string_of_int ar) (P.list_to_string BU.string_of_bool ar_lst);
-  // BU.print1 "Type of rec def: %s\n" (P.term_to_string b.lbtyp);
-  Rec(b, bs, env, [], ar, ar_lst, callback)
-
-and mkRec cfg b bs env = mkRec' (translate_letbinding cfg) b bs env
+and mkRec i (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
+  let (ar, ar_lst) = let_rec_arity b in
+  LocalLetRec(i, b, bs, env, [], ar, ar_lst)
 
 (* Creates the environment of mutually recursive function definitions *)
-and make_rec_env callback (lbs:list<letbinding>) (bs:list<t>) : list<t> =
-  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
-  match lbs with
-  | [] -> bs
-  | lb::lbs' -> aux lbs' lbs0 ((mkRec' callback lb lbs0 bs0) :: bs) bs0
-  in
-  aux lbs lbs bs bs
+and make_rec_env (all_lbs:list<letbinding>) (all_outer_bs:list<t>) : list<t> =
+  let rec_bindings = List.mapi (fun i lb -> mkRec i lb all_lbs all_outer_bs) all_lbs in
+  List.rev_append rec_bindings all_outer_bs
 
 and translate_constant (c : sconst) : constant =
     match c with
@@ -483,7 +492,7 @@ and translate_constant (c : sconst) : constant =
 and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     let debug = debug cfg in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
-    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
+//    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
 
     match (SS.compress e).n with
     | Tm_delayed (_, _) ->
@@ -496,7 +505,10 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_bvar db -> //de Bruijn
       if db.index < List.length bs
-      then List.nth bs db.index
+      then
+        let t = List.nth bs db.index in
+        debug (fun () -> BU.print1 "Resolved bvar to %s\n" (t_to_string t));
+        t
       else failwith "de Bruijn index out of bounds"
 
     | Tm_uinst(t, us) ->
@@ -654,7 +666,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       translate cfg bs' body
 
     | Tm_let((true, lbs), body) ->
-      translate cfg (make_rec_env (translate_letbinding cfg) lbs bs) body
+      translate cfg (make_rec_env lbs bs) body
 
     | Tm_meta (e, _) ->
       //TODO: we need to put the "meta" back when reading back
@@ -1001,7 +1013,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           e.g., Consider this source node:
 
               (match x with
-               | Inl (a:ta) -> e1
+               | Inl (a:ta) -> e1eenv
                | Inr (b:tb) -> e2)
 
           Match([[x]],
@@ -1020,23 +1032,67 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
        | [] -> head
        | _ -> U.mk_app head args)
 
-    | Rec(lb, lbs, bs, args, _ar, _ar_lst, _cfg) -> (* if this point is reached then we cannot unfold Rec *)
-      let head =
-       (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
-        match lb.lbname with
-        | BU.Inl bv ->
-          failwith "Reading back of local recursive definitions is not supported yet."
-        | BU.Inr fv -> S.mk (Tm_fvar fv) None Range.dummyRange
-      in
+    | TopLevelRec(lb, _, _, args) ->
+      let fv = BU.right lb.lbname in
+      let head = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let args = List.map (fun (t, q) -> readback cfg t, q) args in
+      U.mk_app head args
 
-      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      (match args with
-          | [] -> head
-          | _ -> U.mk_app head args)
+    | LocalLetRec(i, _, lbs, bs, args, _ar, _ar_lst) ->
+      (* if this point is reached then the local let rec is unreduced
+         and we have to read it back as a let rec.
+
+         The idea is to read it back as a `
+         ```
+           (let rec f0 = e0
+            and ... fn = en
+            in fi) args
+         ```
+         where `e0 ... en` are the normalized bodies of
+         each erm of the mutually recursive nest, reduced in
+         context where all the mutually recursive definitions
+         are just fresh symbolic variables
+         (so, reducing the e_i will not trigger further
+          recursive reductions of th f0..fn)
+      *)
+      //1. generate fresh symbolic names for the let recs
+      let lbnames =
+          List.map (fun lb -> S.gen_bv (Ident.text_of_id (BU.left lb.lbname).ppname) None lb.lbtyp) lbs
+      in
+      //2. these names are in scope for all the bodies
+      //   together with whatever other names (bs) that
+      //   are in scope at this point
+      let let_rec_env =
+          List.rev_append (List.map (fun x -> Accu (Var x, [])) lbnames) bs
+      in
+      //3. Reduce each e_i, both its definition (in the rec env)
+      //   and its type, which doesn't have the recursive names in scope
+      let lbs =
+          List.map2
+            (fun lb lbname ->
+              let lbdef = readback cfg (translate cfg let_rec_env lb.lbdef) in
+              let lbtyp = readback cfg (translate cfg bs lb.lbtyp) in
+              {lb with
+                lbname = BU.Inl lbname;
+                lbdef  = lbdef;
+                lbtyp  = lbtyp})
+            lbs
+            lbnames
+      in
+      //4. Set the body of let rec  ... in ...
+      //   to be the name chosen for the ith let rec, the one
+      //   referred to in the LocalLetRec
+      let body = S.bv_to_name (List.nth lbnames i) in
+      //5. close everything to switch back to locally nameless
+      let lbs, body = FStar.Syntax.Subst.close_let_rec lbs body in
+      //6. Build the head term
+      let head = S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange in
+      //7. Readback the arguments and apply it to the head
+      let args = List.map (fun (x, q) -> readback cfg x, q) args in
+      U.mk_app head args
 
     | Quote (qt, qi) ->
         S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
-
 
     // Need this case for "cheat" embeddings
     | Lazy (BU.Inl li, _) ->

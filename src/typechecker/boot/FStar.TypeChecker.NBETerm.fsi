@@ -70,9 +70,13 @@ type atom
 //IN F*: : Type0
   =
   | Var of var
-  | Match of t *
-             (t -> t) *
-             ((t -> term) -> list<branch>)
+  | Match of
+       // 1. the scrutinee
+       t *
+       // 2. case analysis, currently not used, but could be in the future
+       (t -> t) *
+       // 3. reconstructs the pattern matching, parameterized by the readback function
+       ((t -> term) -> list<branch>)
 
 and t
 //IN F*: : Type0
@@ -83,7 +87,7 @@ and t
         * option<(list<t> -> residual_comp)> // residual comp
   | Accu of atom * args
   | Construct of fv * list<universe> * args
-  | FV of fv * list<universe> * args
+  | FV of fv * list<universe> * args //universes and args in reverse order
   | Constant of constant
   | Type_t of universe
   | Univ of universe
@@ -93,8 +97,32 @@ and t
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
-  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+  | TopLevelRec of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
+       list<bool> *
+       // 4. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | LocalLetRec of
+      // 1. index of the let binding in the mutually recursive list
+      int *
+      letbinding *
+      // 2. Mutally recursive letbindings (only for local mutually recursive let bindings)
+      list<letbinding> *
+      // 3. rec env
+      list<t> *
+      // 4. Argument accumulator
+      args *
+      // 5. natural arity (including universes) of the main let binding `f` (see Util.let_rec_arity)
+      int *
+      // 6. for each argument, a bool records if that argument appears in the decreases
+      //    This is used to detect potentially non-terminating loops
+      list<bool>//  *
+      // // 7. callback to translate letbinding
+      // (list<t> -> letbinding -> t)
 
 and comp =
   | Tot of t * option<universe>
@@ -127,19 +155,18 @@ and cflag =
   | CPS
   | DECREASES of t
 
-
 and arg = t * aqual
 and args = list<(arg)>
 
 type head = t
 type annot = option<t>
 
-// Term equality
-val eq_t : t -> t -> U.eq_result
-val eq_atom : atom -> atom -> U.eq_result
-val eq_arg : arg -> arg -> U.eq_result
-val eq_args : args -> args -> U.eq_result
-val eq_constant : constant -> constant -> U.eq_result
+// // Term equality
+// val eq_t : t -> t -> U.eq_result
+// val eq_atom : atom -> atom -> U.eq_result
+// val eq_arg : arg -> arg -> U.eq_result
+// val eq_args : args -> args -> U.eq_result
+// val eq_constant : constant -> constant -> U.eq_result
 
 // Printing functions
 
