@@ -67,7 +67,6 @@ type constant =
 // They can either be variables
 // Or, un-reduced match terms
 type atom
-//IN F*: : Type0
   =
   | Var of var
   | Match of
@@ -79,7 +78,6 @@ type atom
        ((t -> term) -> list<branch>)
 
 and t
-//IN F*: : Type0
   =
   | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
         * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)

@@ -54,7 +54,6 @@ type constant =
   | Range of Range.range
 
 type atom
-//IN F*: : Type0
   =
   | Var of var
   | Match of
@@ -66,7 +65,6 @@ type atom
        ((t -> term) -> list<branch>)
 
 and t
-//IN F*: : Type0
   =
   | Lam of
         // 1. We represent n-ary functions that receive their arguments as a list
