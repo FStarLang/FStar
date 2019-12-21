@@ -120,9 +120,7 @@ and t
       int *
       // 6. for each argument, a bool records if that argument appears in the decreases
       //    This is used to detect potentially non-terminating loops
-      list<bool>//  *
-      // // 7. callback to translate letbinding
-      // (list<t> -> letbinding -> t)
+      list<bool>
 
 and comp =
   | Tot of t * option<universe>
