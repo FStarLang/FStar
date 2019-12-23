@@ -501,7 +501,7 @@ let as_seq_lemma
 let index
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission)
   (i:U32.t{U32.v i < U32.v (length a)}) =
   magic()
@@ -533,7 +533,7 @@ let update_addr_array
 let upd_array_seq'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h: hheap (pts_to_array a full_permission iseq)) : heap =
@@ -544,7 +544,7 @@ let upd_array_seq'
 let upd_array_heap
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : pre_action
@@ -558,7 +558,7 @@ let upd_array_heap
 let upd_array_disjointness_lemma'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h h0 h1:heap)
@@ -603,7 +603,7 @@ let upd_array_disjointness_lemma'
 let upd_array_joint_lemma'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h h0 h1:heap)
@@ -636,7 +636,7 @@ let upd_array_joint_lemma'
 let upd_array_lemma'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h:heap)
@@ -680,7 +680,7 @@ let upd_array_lemma'
 let upd_array'_is_frame_preserving
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : Lemma (is_frame_preserving (upd_array_heap a iseq i v))
@@ -706,7 +706,7 @@ let upd_array'_is_frame_preserving
 let upd_array_disjointness_lemma2'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h0:hheap (pts_to_array a full_permission iseq))
@@ -746,7 +746,7 @@ let upd_array_disjointness_lemma2'
 let upd_array'_preserves_join
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   (h0:hheap (pts_to_array a full_permission iseq))
@@ -777,7 +777,7 @@ let upd_array'_preserves_join
 let upd_array'_depends_only_on_fp
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : Lemma (action_depends_only_on_fp (upd_array_heap a iseq i v))
@@ -806,7 +806,7 @@ let upd_array'_depends_only_on_fp
 let upd_array'
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : pre_m_action
@@ -825,7 +825,7 @@ let upd_array'
 let upd_array_is_frame_preserving
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : Lemma (is_m_frame_preserving (upd_array' a iseq i v))
@@ -853,7 +853,7 @@ let upd_array_is_frame_preserving
 let upd_array_depends_only_on_fp
     (#t:_)
     (a:array_ref t)
-    (iseq: Seq.lseq t (U32.v (length a)))
+    (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
     (i:U32.t{U32.v i < U32.v (length a)})
     (v: t)
   : Lemma (m_action_depends_only_on (upd_array' a iseq i v))
@@ -880,7 +880,7 @@ let upd_array_depends_only_on_fp
 let upd_array
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : m_action

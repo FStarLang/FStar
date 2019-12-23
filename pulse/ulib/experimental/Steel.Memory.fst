@@ -260,7 +260,7 @@ type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to : #a:Type0 -> r:ref a -> perm:permission -> v:a -> hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission ->
-		  contents:Seq.lseq t (U32.v (length a)) -> hprop
+		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -599,7 +599,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#push-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 300 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))

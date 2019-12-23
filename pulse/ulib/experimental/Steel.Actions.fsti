@@ -112,7 +112,7 @@ val as_seq_lemma
 val index
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission)
   (i:U32.t{U32.v i < U32.v (length a)})
   : m_action
@@ -123,7 +123,7 @@ val index
 val upd_array
   (#t:_)
   (a:array_ref t)
-  (iseq: Seq.lseq t (U32.v (length a)))
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
   : m_action

@@ -94,7 +94,7 @@ val pts_to_array
   (#t: Type0)
   (a:array_ref t)
   (p:permission)
-  (contents:Seq.lseq t (U32.v (length a)))
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
