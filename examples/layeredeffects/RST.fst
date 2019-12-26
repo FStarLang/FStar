@@ -43,7 +43,7 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) =
   unit -> STATE a (fun p h -> forall x h1. p x h1)
 
 
-let returnc (a:Type) (r:a -> resource) (x:a)
+let returnc (a:Type) (x:a) (r:a -> resource)
 : repr a (r x) r
 = fun _ -> x
 
@@ -82,7 +82,7 @@ layered_effect {
 
 let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r
-= RSTATE?.reflect (returnc a r x)
+= RSTATE?.reflect (returnc a x r)
 
 
 let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
