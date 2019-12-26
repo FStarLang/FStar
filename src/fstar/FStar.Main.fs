@@ -196,7 +196,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
     | FStar.Syntax.Syntax.Lazy_goal       -> FStar.Tactics.Embedding.unfold_lazy_goal i
     | FStar.Syntax.Syntax.Lazy_uvar       -> FStar.Syntax.Util.exp_string "((uvar))"
-    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> FStar.Common.force_thunk t
+    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =

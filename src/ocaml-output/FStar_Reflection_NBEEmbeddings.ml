@@ -72,7 +72,7 @@ let mk_lazy :
               FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
             }  in
           let thunk1 =
-            FStar_Common.mk_thunk
+            FStar_Thunk.mk
               (fun uu____190  ->
                  let uu____191 = FStar_Syntax_Util.unfold_lazy li  in
                  FStar_TypeChecker_NBETerm.translate_cb cb uu____191)

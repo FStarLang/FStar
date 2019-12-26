@@ -291,7 +291,7 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.Lazy_uvar  ->
           FStar_Syntax_Util.exp_string "((uvar))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu____607,t) ->
-          FStar_Common.force_thunk t
+          FStar_Thunk.force t
   
 let (setup_hooks : unit -> unit) =
   fun uu____624  ->

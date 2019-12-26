@@ -102,8 +102,7 @@ let (debug_sigmap : FStar_Syntax_Syntax.sigelt FStar_Util.smap -> unit) =
 let (unlazy : FStar_TypeChecker_NBETerm.t -> FStar_TypeChecker_NBETerm.t) =
   fun t  ->
     match t with
-    | FStar_TypeChecker_NBETerm.Lazy (uu____459,t1) ->
-        FStar_Common.force_thunk t1
+    | FStar_TypeChecker_NBETerm.Lazy (uu____459,t1) -> FStar_Thunk.force t1
     | t1 -> t1
   
 let (pickBranch :
@@ -1482,7 +1481,7 @@ and (translate :
                       uu____5851);
                translate cfg bs t  in
              let uu____5854 =
-               let uu____5869 = FStar_Common.mk_thunk f  in
+               let uu____5869 = FStar_Thunk.mk f  in
                ((FStar_Util.Inl li), uu____5869)  in
              FStar_TypeChecker_NBETerm.Lazy uu____5854)
 
@@ -2514,7 +2513,7 @@ and (readback :
            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_lazy li)
              FStar_Pervasives_Native.None FStar_Range.dummyRange
        | FStar_TypeChecker_NBETerm.Lazy (uu____8129,thunk1) ->
-           let uu____8151 = FStar_Common.force_thunk thunk1  in
+           let uu____8151 = FStar_Thunk.force thunk1  in
            readback cfg uu____8151)
 
 type step =

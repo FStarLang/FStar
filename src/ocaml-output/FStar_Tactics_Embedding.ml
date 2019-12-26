@@ -267,7 +267,7 @@ let (e_proofstate_nbe :
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
     let thunk1 =
-      FStar_Common.mk_thunk
+      FStar_Thunk.mk
         (fun uu____673  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
@@ -352,7 +352,7 @@ let (e_goal_nbe :
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
     let thunk1 =
-      FStar_Common.mk_thunk
+      FStar_Thunk.mk
         (fun uu____841  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
