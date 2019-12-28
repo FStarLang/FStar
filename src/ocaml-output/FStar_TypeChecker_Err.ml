@@ -202,7 +202,7 @@ let (subtyping_failed :
   fun env  ->
     fun t1  ->
       fun t2  ->
-        fun x  ->
+        fun uu____665  ->
           let uu____666 = err_msg_type_strings env t1 t2  in
           match uu____666 with
           | (s1,s2) ->

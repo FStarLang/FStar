@@ -357,7 +357,7 @@ and lazy_kind =
   | Lazy_goal 
   | Lazy_sigelt 
   | Lazy_uvar 
-  | Lazy_embedding of (emb_typ * term' syntax FStar_Common.thunk) 
+  | Lazy_embedding of (emb_typ * term' syntax FStar_Thunk.t) 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_name Prims.list * term'
@@ -981,7 +981,7 @@ let (uu___is_Lazy_embedding : lazy_kind -> Prims.bool) =
     match projectee with | Lazy_embedding _0 -> true | uu____5073 -> false
   
 let (__proj__Lazy_embedding__item___0 :
-  lazy_kind -> (emb_typ * term' syntax FStar_Common.thunk)) =
+  lazy_kind -> (emb_typ * term' syntax FStar_Thunk.t)) =
   fun projectee  -> match projectee with | Lazy_embedding _0 -> _0 
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee  ->

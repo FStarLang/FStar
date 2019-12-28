@@ -64,7 +64,7 @@ and t =
   | Lazy of
   ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn *
                                    FStar_Syntax_Syntax.emb_typ))
-  FStar_Util.either * t FStar_Common.thunk) 
+  FStar_Util.either * t FStar_Thunk.t) 
   | Rec of (FStar_Syntax_Syntax.letbinding * FStar_Syntax_Syntax.letbinding
   Prims.list * t Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list *
   Prims.int * Prims.bool Prims.list *
@@ -206,7 +206,7 @@ let (__proj__Lazy__item___0 :
   t ->
     ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn *
                                      FStar_Syntax_Syntax.emb_typ))
-      FStar_Util.either * t FStar_Common.thunk))
+      FStar_Util.either * t FStar_Thunk.t))
   = fun projectee  -> match projectee with | Lazy _0 -> _0 
 let (uu___is_Rec : t -> Prims.bool) =
   fun projectee  ->
@@ -748,7 +748,7 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
          if uu____3843
          then f ()
          else
-           (let thunk1 = FStar_Common.mk_thunk f  in
+           (let thunk1 = FStar_Thunk.mk f  in
             let li = let uu____3877 = FStar_Dyn.mkdyn x  in (uu____3877, et)
                in
             Lazy ((FStar_Util.Inr li), thunk1)))
@@ -767,8 +767,7 @@ let lazy_unembed :
         fun f  ->
           match x with
           | Lazy (FStar_Util.Inl li,thunk1) ->
-              let uu____3956 = FStar_Common.force_thunk thunk1  in
-              f uu____3956
+              let uu____3956 = FStar_Thunk.force thunk1  in f uu____3956
           | Lazy (FStar_Util.Inr (b,et'),thunk1) ->
               let uu____3976 =
                 (et <> et') ||
@@ -777,8 +776,8 @@ let lazy_unembed :
               if uu____3976
               then
                 let res =
-                  let uu____4005 = FStar_Common.force_thunk thunk1  in
-                  f uu____4005  in
+                  let uu____4005 = FStar_Thunk.force thunk1  in f uu____4005
+                   in
                 ((let uu____4007 =
                     FStar_ST.op_Bang FStar_Options.debug_embedding  in
                   if uu____4007

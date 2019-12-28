@@ -36,8 +36,6 @@ let lemma_join_associative () = ()
 #push-options "--max_fuel 1 --max_ifuel 1"
 
 let lemma_weaken_depends_only_on () = ()
-let lemma_refine_equiv () = ()
-let lemma_refine_star () = Classical.forall_intro_3 refine_star
 
 let lemma_m_implies_disjoint () = ()
 let lemma_mem_valid_locks_invariant () = ()

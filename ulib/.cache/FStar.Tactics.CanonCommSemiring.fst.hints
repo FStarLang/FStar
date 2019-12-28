@@ -1655,7 +1655,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "153d6800990e9689a2be63de73b5d48f"
+      "3241f6ab5b18f485be38740d2f2a5462"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__distribute",
@@ -2434,7 +2434,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "ce45e0ccf0948cd95e6bcc40aeb1f30f"
+      "bc1c59a711e09abab73f68a02a5c1367"
     ]
   ]
 ]

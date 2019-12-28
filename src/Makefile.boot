@@ -21,7 +21,7 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
+EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range FStar.Thunk		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
