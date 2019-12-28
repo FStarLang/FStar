@@ -30,8 +30,8 @@ val heap  : Type u#1
 val ref (a:Type u#0) : Type u#0
 val array_ref (a: Type u#0) : Type u#0
 
-val offset (#t: Type) (a: array_ref t) : Tot (n:U32.t{U32.v n >= 0})
-val length (#t: Type) (a: array_ref t) : Tot (n:U32.t{U32.v n >= 0})
+val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
+val length (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
@@ -139,12 +139,12 @@ let array_perm (#t: Type) (a: array_ref t) (p:permission) =
   h_exists (pts_to_array a p)
 
 let array (#t: Type) (a: array_ref t) =
-  h_exists (array_perm a)
+  h_exists (fun (p:permission{allows_read p}) -> array_perm a p)
 
 val pts_to_array_injective
   (#t: _)
   (a: array_ref t)
-  (p:permission)
+  (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m: heap)
   : Lemma

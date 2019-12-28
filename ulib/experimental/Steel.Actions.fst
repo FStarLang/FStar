@@ -484,7 +484,7 @@ let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
   let Array t' len' seq = select_addr m a.array_addr in
   let len = U32.v a.array_length in
   assert(U32.v a.array_offset + U32.v a.array_length <= len');
-  Seq.init len (fun i -> let (x, _) =  Seq.index seq (U32.v a.array_offset + i) in x)
+  Seq.init len (fun i -> let (x, _) =  select_index seq (U32.v a.array_offset + i) in x)
 #pop-options
 
 #push-options "--max_fuel 2"
@@ -492,7 +492,7 @@ let as_seq_lemma
   (#t:_)
   (a:array_ref t)
   (i:U32.t{U32.v i < U32.v (length a)})
-  (p:permission)
+  (p:permission{allows_read p})
   (m:hheap (array_perm a p))
   =
   ()
@@ -504,7 +504,7 @@ let index
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission)
   (i:U32.t{U32.v i < U32.v (length a)}) =
-  magic()
+  magic() //TODO: DM 12/18/2019
 
 let update_addr_array
   (#t:_)
@@ -522,7 +522,7 @@ let update_addr_array
   | Some (Array t' len seq) ->
     on _ (fun a' ->
       if a.array_addr = a' then
-        let new_seq = Seq.upd seq (U32.v i + U32.v a.array_offset) (v, perm) in
+        let new_seq = Seq.upd seq (U32.v i + U32.v a.array_offset) (Some (v, perm)) in
         Some (Array t len new_seq)
       else
         m a'
@@ -554,7 +554,7 @@ let upd_array_heap
   = fun h ->
     (| (), upd_array_seq' a iseq i v h |)
 
-#push-options "--z3rlimit 10 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_disjointness_lemma'
   (#t:_)
   (a:array_ref t)
@@ -573,30 +573,7 @@ let upd_array_disjointness_lemma'
       let h0' = upd_array_seq' a iseq i v h0 in
       disjoint h0' h1))
   =
-  let aux (addr: addr) : Lemma (
-    let h0' = upd_array_seq' a iseq i v h0 in
-    disjoint_addr h0' h1 addr
-  ) =
-    let h0' = upd_array_seq' a iseq i v h0 in
-    match h0' addr, h1 addr, h0 addr with
-    | Some (Array t0' len0' seq0'), Some (Array t1 len1 seq1),
-      Some (Array t0 len0 seq0) ->
-      if addr = a.array_addr then begin
-        let aux (i':nat{i' < U32.v (length a)}) : Lemma (False) =
-          let (x0, p0) = Seq.index seq0 (U32.v a.array_offset + i') in
-          let (x1, p1) = Seq.index seq1 ( U32.v a.array_offset +i') in
-          assert(Permission?.r p0 +. Permission?.r p1 <=. 1.0R);
-          assert(full_permission `lesser_equal_permission` p0);
-          assert(Permission?.r p1 = 0.0R);
-          assert(Permission?.r p1 >. 0.0R)
-        in
-        if U32.v (length a) = 0 then () else aux 0
-      end else begin
-        ()
-      end
-    | _ -> ()
-  in
-  Classical.forall_intro aux
+  ()
 #pop-options
 
 #push-options "--z3rlimit 30 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
@@ -632,7 +609,7 @@ let upd_array_joint_lemma'
   | _ -> ()
 #pop-options
 
-#push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_lemma'
   (#t:_)
   (a:array_ref t)
@@ -703,6 +680,7 @@ let upd_array'_is_frame_preserving
    ()
 #pop-options
 
+#push-options "--z3rlimit 10 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_disjointness_lemma2'
   (#t:_)
   (a:array_ref t)
@@ -716,31 +694,8 @@ let upd_array_disjointness_lemma2'
     (ensures (
       let (| _, h |) = upd_array_heap a iseq i v h0 in
       disjoint h h1))
-  =
-  let aux (addr: addr) : Lemma (
-    let (| _, h |) = upd_array_heap a iseq i v h0 in
-    disjoint_addr h h1 addr
-  ) =
-    let (| _, h |) = upd_array_heap a iseq i v h0 in
-    match h addr, h1 addr, h0 addr with
-    | Some (Array t len seq), Some (Array t1 len1 seq1),
-      Some (Array t0 len0 seq0) ->
-      if addr = a.array_addr then begin
-        let aux (i':nat{i' < U32.v (length a)}) : Lemma (False) =
-          let (x0, p0) = Seq.index seq0 (U32.v a.array_offset + i') in
-          let (x1, p1) = Seq.index seq1 ( U32.v a.array_offset +i') in
-          assert(Permission?.r p0 +. Permission?.r p1 <=. 1.0R);
-          assert(full_permission `lesser_equal_permission` p0);
-          assert(Permission?.r p1 = 0.0R);
-          assert(Permission?.r p1 >. 0.0R)
-        in
-        if U32.v (length a) = 0 then () else aux 0
-      end else begin
-        ()
-      end
-    | _ -> ()
-  in
-  Classical.forall_intro aux
+  = ()
+#pop-options
 
 #push-options "--z3rlimit 30 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array'_preserves_join
