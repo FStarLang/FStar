@@ -23,6 +23,10 @@ open FStar.FunctionalExtensionality
 
 // In the future, we may have other cases of cells
 // for arrays and structs
+
+let array_seq (a: Type) (len: nat) = Seq.lseq (option (a & perm:permission{allows_read perm})) len
+
+
 noeq
 type cell =
   | Ref : a:Type u#0 ->
@@ -31,7 +35,7 @@ type cell =
           cell
   | Array: a:Type u#0 ->
            len: nat ->
-           seq:Seq.lseq (a & perm:permission{allows_read perm}) len  ->
+           seq:array_seq a len  ->
 	   cell
 
 let _ : squash (inversion cell) = allow_inversion cell
@@ -47,9 +51,17 @@ let contains_addr (m:heap) (a:addr)
   : bool
   = Some? (m a)
 
+let contains_index (#a: Type) (#len: nat) (s: array_seq a len) (i:nat{i < len})
+  : bool
+  = Some? (Seq.index s i)
+
 let select_addr (m:heap) (a:addr{contains_addr m a})
   : cell
   = Some?.v (m a)
+
+let select_index (#a: Type) (#len: nat) (s: array_seq a len) (i:nat{i < len /\ contains_index s i})
+  : (a & perm:permission{allows_read perm})
+  = Some?.v (Seq.index s i)
 
 let update_addr (m:heap) (a:addr) (c:cell)
   : heap
@@ -66,10 +78,13 @@ let disjoint_addr (m0 m1:heap) (a:addr)
       t0 == t1 /\
       len0 == len1 /\
       (forall (i:nat{i < len0}).
-        let (x0, p0) = Seq.index seq0 i in
-	let (x1, p1) = Seq.index seq1 i in
-	x0 == x1 /\ summable_permissions p0 p1)
-
+        if contains_index seq0 i && contains_index seq1 i then
+          let (x0, p0) = select_index seq0 i in
+	  let (x1, p1) = select_index seq1 i in
+          x0 == x1 /\ summable_permissions p0 p1
+        else if (not (contains_index seq0 i)) && (not (contains_index seq1 i)) then True
+        else False
+      )
     | Some _, None
     | None, Some _
     | None, None ->
@@ -97,7 +112,6 @@ let invert_array_ref_s (a: Type0)
   =
   allow_inversion (array_ref a)
 
-
 let offset (#t: Type) (a: array_ref t) = a.array_offset
 
 let length (#t: Type) (a: array_ref t) = a.array_length
@@ -121,14 +135,21 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
         Some (Ref a0 (sum_permissions p0 p1) v0)
       | Some (Array a0 len0 seq0), Some (Array a1 len1 seq1) ->
         Some (Array a0 len0 (Seq.init len0 (fun i ->
-	  let (x0, p0) = Seq.index seq0 i in
-          let (_, p1) = Seq.index seq1 i in
-	  (x0, (sum_permissions p0 p1 <: (perm:permission{allows_read perm})))
+          if contains_index seq0 i && contains_index seq1 i then
+            let (_, p1) = select_index seq1 i in
+            let (x0, p0) = select_index seq0 i in
+	    Some (x0, (sum_permissions p0 p1 <: (perm:permission{allows_read perm})))
+          else if contains_index seq0 i then
+            Seq.index seq0 i
+          else if contains_index seq1 i then
+            Seq.index seq1 i
+          else
+            None
       )))
   )
 
 
-#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 15"
+#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 30"
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
@@ -290,11 +311,16 @@ let rec interp (p:hprop) (m:heap)
         | Array t' len' seq ->
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
-          (forall (i:nat{i < U32.v a.array_length}).
-	    let x = Seq.index contents i in
-	    let (x', perm') = Seq.index seq (U32.v a.array_offset + i) in
-	    x == x' /\
-	    perm `lesser_equal_permission` perm'
+          (forall (i:nat{i < len'}).
+            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+              ~ (contains_index seq i)
+            else if perm `lesser_equal_permission` zero_permission then True
+            else if contains_index seq i then
+	      let x = Seq.index contents (i - U32.v a.array_offset) in
+	      let (x', perm') = select_index seq i in
+	      x == x' /\
+	      perm `lesser_equal_permission` perm'
+            else False
           )
 	| _ -> False
       )
@@ -386,11 +412,16 @@ let intro_pts_to_array
         | Array t' len' seq ->
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
-          (forall (i:nat{i < U32.v a.array_length}).
-	    let x = Seq.index contents i in
-	    let (x', perm') = Seq.index seq (U32.v a.array_offset + i) in
-	    x == x' /\
-	    perm `lesser_equal_permission` perm'
+          (forall (i:nat{i < len'}).
+            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+              ~ (contains_index seq i)
+            else if perm `lesser_equal_permission` zero_permission then True
+            else if contains_index seq i then
+	      let x = Seq.index contents (i - U32.v a.array_offset) in
+	      let (x', perm') = select_index seq i in
+	      x == x' /\
+	      perm `lesser_equal_permission` perm'
+            else False
           )
 	| _ -> False)
     ))
@@ -401,11 +432,26 @@ let intro_pts_to_array
 let pts_to_array_injective
   (#t: _)
   (a: array_ref t)
-  (p:permission)
+  (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m: heap)
   =
-  assert(c0 `Seq.equal` c1)
+  match select_addr m a.array_addr with
+  | Array t' len' seq ->
+    let aux (i':nat{i' < U32.v a.array_length}) : Lemma (Seq.index c0 i' == Seq.index c1 i') =
+      let i = i' + U32.v a.array_offset in
+      assert(contains_index seq i);
+      let x0 = Seq.index c0 i' in
+      let x1 = Seq.index c1 i' in
+      let (x', p') = select_index seq i in
+      assert(x' == x0);
+      assert(x' == x1);
+      assert(x0 == x1)
+    in
+    Classical.forall_intro aux;
+    assert(c0 `Seq.equal` c1)
+  | _ -> ()
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // star

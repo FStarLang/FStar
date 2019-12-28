@@ -104,7 +104,7 @@ val as_seq_lemma
   (#t:_)
   (a:array_ref t)
   (i:U32.t{U32.v i < U32.v (length a)})
-  (p:permission)
+  (p:permission{allows_read p})
   (m:hheap (array_perm a p))
   : Lemma (interp (array a) m /\
            interp (pts_to_array a p (as_seq a m)) m)
@@ -113,7 +113,7 @@ val index
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission)
+  (p: permission{allows_read p})
   (i:U32.t{U32.v i < U32.v (length a)})
   : m_action
     (pts_to_array a p iseq)
