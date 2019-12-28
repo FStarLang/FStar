@@ -255,8 +255,8 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) (wp:rst_wp a r_in r_out
 inline_for_extraction
 val returnc
   (a:Type)
-  (r:a -> resource)
   (x:a)
+  (r:a -> resource)
   : repr a (r x) r (fun (p:r_post a r) h -> p x h)
 
 inline_for_extraction
@@ -300,7 +300,7 @@ let return (#a:Type)
   (#r:a -> resource)
   (x:a)
 : RSTATE a (r x) r (fun (p:r_post a r) h -> p x h)
-= RSTATE?.reflect (returnc a r x)
+= RSTATE?.reflect (returnc a x r)
 
 
 /// Since RST wps are monotonic, we need monotonicity of PURE for lifts to typecheck

@@ -170,7 +170,7 @@ let reveal_rst_inv () = ()
 
 let rst_inv_star res0 res1 h = reveal_star ()
 
-inline_for_extraction let returnc a r x = fun _ -> x
+inline_for_extraction let returnc a x r = fun _ -> x
 
 inline_for_extraction let bind a b r_in_f r_out_f wp_f r_out_g wp_g f g =
   fun _ -> let x = f () in g x ()
