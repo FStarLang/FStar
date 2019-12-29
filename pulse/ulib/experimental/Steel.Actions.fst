@@ -697,7 +697,7 @@ let upd_array_disjointness_lemma2'
   = ()
 #pop-options
 
-#push-options "--z3rlimit 30 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 200 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let upd_array'_preserves_join
   (#t:_)
   (a:array_ref t)
@@ -719,9 +719,20 @@ let upd_array'_preserves_join
     let aux (addr: addr) : Lemma (h' addr == (join h h1) addr) =
        if addr <> a.array_addr then () else
        if not (h1 `contains_addr` addr) then ()
-       else match  h' addr, (join h h1) addr with
-         | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
-          assert(seq2 `Seq.equal` seq3)
+       else match  h' addr, (join h h1) addr, h addr, h0 addr, h1 addr with
+         | Some (Array t' len' seq'), Some (Array tj lenj seqj), Some (Array t len seq),
+           Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
+          let aux (j:nat{j < len'}) : Lemma (Seq.index seq' j == Seq.index seqj j) =
+            if contains_index seq0 j && contains_index seq1 j then begin
+              ()
+            end else if contains_index seq0 j then
+              ()
+            else if contains_index seq1 j then
+              ()
+            else ()
+          in
+          Classical.forall_intro aux;
+          assert(seq' `Seq.equal` seqj)
          | _ -> ()
      in
      Classical.forall_intro aux;
