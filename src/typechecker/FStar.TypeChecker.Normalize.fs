@@ -1788,26 +1788,7 @@ and reify_lift cfg e msrc mtgt t : term =
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    let args =
-      (*
-       * Arguments for layered effects are:
-       *   a ..units for binders that compute indices.. x
-       *)
-      if U.is_layered ed then
-        let unit_args =
-          match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
-          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
-            bs
-            |> List.splitAt (List.length bs - 1)
-            |> fst
-            |> List.map (fun _ -> S.as_arg S.unit_const)
-          | _ ->
-            raise_error (Errors.Fatal_UnexpectedEffect,
-              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
-                (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
-        (S.as_arg t)::(unit_args@[S.as_arg e])
-      else [as_arg t ; as_arg e] in
-    S.mk (Tm_app(return_inst, args)) None e.pos
+    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
