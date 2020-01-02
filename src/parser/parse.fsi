@@ -443,6 +443,7 @@ type nonTerminalId =
     | NONTERM_tmEqWith_tmRefinement_
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_binop_name
     | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
