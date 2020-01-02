@@ -131,6 +131,16 @@ and t
        list<bool> // *
        // // 7. callback to translate letbinding
        // (list<t> -> letbinding -> t)
+  | UnreducedLet of
+     // Especially when extracting, we do not always want to reduce let bindings
+     // since that can lead to exponential code size blowup. This node represents
+     // an unreduced let binding which can be read back as an F* let
+     // 1. The name of the let-bound term
+       var *
+     // 2. Its definition
+       t   *
+     // 3. The body of the let binding
+       t
 
 and comp =
   | Tot of t * option<universe>

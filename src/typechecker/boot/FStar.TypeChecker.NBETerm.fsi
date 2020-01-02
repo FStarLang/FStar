@@ -119,6 +119,16 @@ and t
       // 6. for each argument, a bool records if that argument appears in the decreases
       //    This is used to detect potentially non-terminating loops
       list<bool>
+  | UnreducedLet of
+     // Especially when extracting, we do not always want to reduce let bindings
+     // since that can lead to exponential code size blowup. This node represents
+     // an unreduced let binding which can be read back as an F* let
+     // 1. The name of the let-bound term
+       var *
+     // 2. Its definition
+       t   *
+     // 3. The body of the let binding
+       t
 
 and comp =
   | Tot of t * option<universe>
@@ -156,13 +166,6 @@ and args = list<(arg)>
 
 type head = t
 type annot = option<t>
-
-// // Term equality
-// val eq_t : t -> t -> U.eq_result
-// val eq_atom : atom -> atom -> U.eq_result
-// val eq_arg : arg -> arg -> U.eq_result
-// val eq_args : args -> args -> U.eq_result
-// val eq_constant : constant -> constant -> U.eq_result
 
 // Printing functions
 
