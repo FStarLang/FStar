@@ -684,20 +684,32 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 
      | N.Should_unfold_reify
      | N.Should_unfold_yes ->
-       begin match qninfo with
-       | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
-         let lbm = find_let lbs fvar in
-         begin match lbm with
-         | Some lb ->
-           if is_rec && cfg.steps.zeta
-           then
-             let ar, lst = let_rec_arity lb in
-             TopLevelRec(lb, ar, lst, [])
-           else
-             translate_letbinding cfg bs lb
-         | None -> failwith "Could not find let binding"
+       let is_qninfo_visible =
+         Option.isSome (Env.lookup_definition_qninfo cfg.delta_level fvar.fv_name.v qninfo)
+       in
+       if is_qninfo_visible
+       then begin
+         match qninfo with
+         | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
+           debug (fun () -> BU.print1 "(1) Decided to unfold %s\n" (P.fv_to_string fvar));
+           let lbm = find_let lbs fvar in
+           begin match lbm with
+           | Some lb ->
+             if is_rec && cfg.steps.zeta
+             then
+               let ar, lst = let_rec_arity lb in
+               TopLevelRec(lb, ar, lst, [])
+             else
+               translate_letbinding cfg bs lb
+           | None -> failwith "Could not find let binding"
+           end
+         | _ ->
+           debug (fun () -> BU.print1 "(1) qninfo is None for (%s)\n" (P.fv_to_string fvar));
+           mkFV fvar [] []
          end
-       | _ -> mkFV fvar [] []
+     else begin
+         debug (fun () -> BU.print1 "(1) qninfo is not visible at this level (%s)\n" (P.fv_to_string fvar));
+         mkFV fvar [] []
        end
 
 (* translate a let-binding - local or global *)
