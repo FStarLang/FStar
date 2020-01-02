@@ -147,11 +147,7 @@ let rec waitpid_ignore_signals pid =
   with Unix.Unix_error (Unix.EINTR, _, _) ->
     waitpid_ignore_signals pid
 
-<<<<<<< HEAD
 let kill_process (p: proc): unit =
-=======
-let kill_process_for_good (p: proc) =
->>>>>>> 3690116cf9a2c15998bc605261cd6b2f8d0556e4
   if not p.killed then begin
       (* Close the fds directly: close_in and close_out both call `flush`,
          potentially forcing us to wait until p starts reading again. They
@@ -267,21 +263,12 @@ let ask_process
      | None -> ());
     Buffer.contents out
   with e -> (* Ensure that reader_fn gets an EOF and exits *)
-<<<<<<< HEAD
     (kill_process p;
     raise e)
 
 let kill_z3_process (p: proc): string =
   let _ = ask_process p "(exit)\n" (fun () -> "") in
   if not p.killed then kill_process p else () ;
-=======
-    (kill_process_for_good p;
-    raise e)
-
-let kill_process (p: proc): string =
-  let _ = ask_process p "(exit)\n" (fun () -> "") in
-  if not p.killed then kill_process_for_good p else () ;
->>>>>>> 3690116cf9a2c15998bc605261cd6b2f8d0556e4
   Buffer.contents p.aux_buffer
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
