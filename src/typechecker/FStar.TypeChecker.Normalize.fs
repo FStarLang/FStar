@@ -46,7 +46,7 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
 module TcComm = FStar.TypeChecker.Common
-
+ 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -1345,14 +1345,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_let((false, [lb]), body) ->
-            let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps.do_not_unfold_pure_lets) //we're allowed to do some delta steps, and ..
-            && ((cfg.steps.pure_subterms_within_computations &&
-                 U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
-             || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
-                                        || U.has_attribute lb.lbattrs PC.inline_let_attr)) //it's marked @inline_let
-             || (U.is_ghost_effect n &&                                //Or, 3. it's ghost and we're not extracting
-                    not (cfg.steps.pure_subterms_within_computations)))
+            if Cfg.should_reduce_local_let cfg lb
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
@@ -1386,8 +1379,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
-                let env = List.map (fun _ -> dummy) lbs
-                        @ List.map (fun _ -> dummy) xs
+                let env = List.map (fun _ -> dummy) xs //first the bound vars for the arguments
+                        @ List.map (fun _ -> dummy) lbs //then the recursively bound names
                         @ env in
                 let def_body = norm cfg env [] def_body in
                 let lopt =

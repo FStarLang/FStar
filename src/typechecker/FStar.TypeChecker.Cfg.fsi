@@ -132,3 +132,5 @@ val register_extra_step: primitive_step -> unit
 
 val config': list<primitive_step> -> list<step> -> Env.env -> cfg
 val config: list<step> -> Env.env -> cfg
+
+val should_reduce_local_let : cfg -> letbinding -> bool

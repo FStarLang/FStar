@@ -125,10 +125,25 @@ and t
      // an unreduced let binding which can be read back as an F* let
      // 1. The name of the let-bound term
        var *
-     // 2. Its definition
+     // 2. The type of the let-bound term
        t   *
-     // 3. The body of the let binding
-       t
+     // 3. Its definition
+       t   *
+     // 4. The body of the let binding
+       t   *
+     // 5. The source letbinding for readback (of attributes etc.)
+       letbinding
+  | UnreducedLetRec of
+     // Same as UnreducedLet, but for local let recs
+     // 1. list of names of all mutually recursive let-rec-bound terms
+     //    * their types
+     //    * their definitions
+        list<(var * t * t)> *
+     // 2. the body of the let binding
+        t *
+     // 3. the source letbinding for readback (of attributes etc.)
+     //    equal in length to the first list
+        list<letbinding>
 
 and comp =
   | Tot of t * option<universe>
