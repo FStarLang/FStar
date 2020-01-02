@@ -31,7 +31,7 @@ HyE.PlainPKE.fst \
 HyE.Plain.fst \
 HyE.AE.fst \
 HyE.CCA2.fst \
-HyE.HCCA2.fst
+HyE.HCCA2.fst \
 
 LIB = ../../ucontrib/CoreCrypto/ml
 
@@ -64,6 +64,7 @@ verify_hh-%: __force__
 		 --z3rlimit 20 $*
 
 all: uall
+	$(MAKE) -f Makefile.oplss
 
 uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) RPC.ml CntProtocol.ml
 
