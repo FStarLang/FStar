@@ -69,7 +69,7 @@ let hheap (p:hprop) = m:heap{interp p m}
 
 /// Equivalence relation on hprops is just
 /// equivalence of their interpretations
-let equiv (p1 p2:hprop) =
+let equiv (p1 p2:hprop) : prop =
   forall m. interp p1 m <==> interp p2 m
 
 /// All the standard connectives of separation logic
