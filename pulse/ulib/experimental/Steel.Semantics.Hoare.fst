@@ -284,12 +284,6 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) = fp_prop2 pre pos
 (**** End expects, provides, requires, and ensures defns ****)
 
 
-/// An abbreviation
-
-let hmem (#st:st) (fp:st.hprop) =
-  m:st.mem{st.interp (st.locks_invariant m `st.star` fp) (st.heap_of_mem m)}
-
-
 (**** Begin interface of actions ****)
 
 let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
@@ -340,18 +334,6 @@ let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre)
 let return_lpre (#st:st) (#a:Type) (#post:post st a) (x:a) (lpost:l_post (post x) post)
 : l_pre (post x)
 = fun h -> lpost h x h
-
-
-// /// Actions don't have a separate logical payload
-
-// let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-// : l_pre pre
-// = st.interp pre
-
-// let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-// : l_post pre post
-// = fun h0 x h1 -> st.interp (post x) h1
-
 
 let frame_lpre (#st:st) (#pre:st.hprop) (lpre:l_pre pre) (#frame:st.hprop) (f_frame:fp_prop frame)
 : l_pre (pre `st.star` frame)
@@ -487,7 +469,9 @@ type step_result (#st:st) (a:Type u#a) (q:post st a) =
     old_state:st.mem ->
     step_pre:st.hprop ->
     fpost:st.hprop ->
-    new_state:hmem fpost{preserves_frame step_pre fpost old_state new_state} ->
+    new_state:st.mem{
+      st.interp (st.locks_invariant new_state `st.star` fpost) (st.heap_of_mem new_state) /\
+      preserves_frame step_pre fpost old_state new_state} ->
     lpre:l_pre fpost{lpre (st.heap_of_mem new_state)} ->
     lpost:l_post fpost q ->
     m st a fpost q lpre lpost ->
@@ -939,36 +923,36 @@ let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
     (x, final_state)
 
 
-(**** Trying to define the layered effect ****)
+// (**** Trying to define the layered effect ****)
 
-type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
-= unit -> m st a pre post lpre lpost
+// type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
+// = unit -> m st a pre post lpre lpost
 
 
-/// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
+// /// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
 
-let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
-: repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
-= fun _ -> Ret post x (lpost x)
+// let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
+// : repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
+// = fun _ -> Ret post x (lpost x)
 
-let bind (a:Type) (b:Type) (st:st)
-  (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
-  (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
-  (f:repr a st pre_f post_f lpre_f lpost_f)
-  (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
-: repr b st pre_f post_g
-    (bind_lpre lpre_f lpost_f lpre_g)
-    (bind_lpost lpre_f lpost_f lpost_g)
-= fun _ -> Bind (f ()) (fun x -> g x ())
+// let bind (a:Type) (b:Type) (st:st)
+//   (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
+//   (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
+//   (f:repr a st pre_f post_f lpre_f lpost_f)
+//   (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
+// : repr b st pre_f post_g
+//     (bind_lpre lpre_f lpost_f lpre_g)
+//     (bind_lpost lpre_f lpost_f lpost_g)
+// = fun _ -> Bind (f ()) (fun x -> g x ())
 
-let subcomp (a:Type) (st:st)
-  (pre:st.hprop) (post:post st a)
-  (lpre_f:l_pre pre) (lpost_f:l_post pre post)
-  (lpre_g:l_pre pre) (lpost_g:l_post pre post)
-  (f:repr a st pre post lpre_f lpost_f)
-: Pure (repr a st pre post lpre_g lpost_g)
-  (requires
-    (forall h. lpre_g h ==> lpre_f h) /\
-    (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
-  (ensures fun _ -> True)
-= fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())
+// let subcomp (a:Type) (st:st)
+//   (pre:st.hprop) (post:post st a)
+//   (lpre_f:l_pre pre) (lpost_f:l_post pre post)
+//   (lpre_g:l_pre pre) (lpost_g:l_post pre post)
+//   (f:repr a st pre post lpre_f lpost_f)
+// : Pure (repr a st pre post lpre_g lpost_g)
+//   (requires
+//     (forall h. lpre_g h ==> lpre_f h) /\
+//     (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
+//   (ensures fun _ -> True)
+// = fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())
