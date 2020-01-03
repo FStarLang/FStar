@@ -31,11 +31,11 @@ type req_t (pre:pre_t) = q:(Mem.heap -> prop){q `Mem.depends_only_on_without_aff
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   q:(Mem.heap -> a -> Mem.heap -> prop){ens_depends_only_on q pre post}
 
-let preserves_frame (pre post:Mem.hprop) (m0 m1:Mem.mem) =
-  forall (frame:Mem.hprop).
-    Mem.interp (Mem.locks_invariant m0 `Mem.star` (pre `Mem.star` frame)) (Mem.heap_of_mem m0) ==>
-    (Mem.interp (Mem.locks_invariant m1 `Mem.star` (post `Mem.star` frame)) (Mem.heap_of_mem m1) /\
-     (forall (f_frame:req_t frame). f_frame (Mem.heap_of_mem m0) <==> f_frame (Mem.heap_of_mem m1)))
+// let preserves_frame (pre post:Mem.hprop) (m0 m1:Mem.mem) =
+//   forall (frame:Mem.hprop).
+//     Mem.interp (Mem.locks_invariant m0 `Mem.star` (pre `Mem.star` frame)) (Mem.heap_of_mem m0) ==>
+//     (Mem.interp (Mem.locks_invariant m1 `Mem.star` (post `Mem.star` frame)) (Mem.heap_of_mem m1) /\
+//      (forall (f_frame:req_t frame). f_frame (Mem.heap_of_mem m0) <==> f_frame (Mem.heap_of_mem m1)))
 
 type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post req ens
