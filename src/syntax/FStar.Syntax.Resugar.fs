@@ -525,7 +525,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_as_app e args
 
         (* These have implicits, don't do the fancy printing when --print_implicits is on *)
-        | Some (op, _) when (op = "=" || op = "==" || op = "===" || op = "@" || op = ":=" || op = "|>")
+        | Some (op, _) when (op = "="
+                          || op = "=="
+                          || op = "==="
+                          || op = "@"
+                          || op = ":="
+                          || op = "|>"
+                          || op = "<<")
             && Options.print_implicits () ->
           resugar_as_app e args
 
