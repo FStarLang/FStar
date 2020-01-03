@@ -232,7 +232,16 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, _) -> mk_Total t
+    | C_Total (t, None) -> mk_Total t
+    | C_Total (t, Some d) ->
+        let ct = { comp_univs=[U_zero]
+                 ; effect_name=PC.effect_Tot_lid
+                 ; result_typ = t
+                 ; effect_args = []
+                 ; flags = [DECREASES d] }
+        in
+        S.mk_Comp ct
+
     | C_Lemma (pre, post) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
