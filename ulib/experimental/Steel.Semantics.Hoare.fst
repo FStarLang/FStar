@@ -298,15 +298,6 @@ let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
     (st.interp (st.locks_invariant m1 `st.star` (post `st.star` frame)) (st.heap_of_mem m1) /\
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
 
-let preserves_frame_trans (#st:st)
-  (hp1 hp2 hp3:st.hprop) (m1 m2 m3:st.mem)
-: Lemma
-  (requires
-    preserves_frame hp1 hp2 m1 m2 /\
-    preserves_frame hp2 hp3 m2 m3)
-  (ensures preserves_frame hp1 hp3 m1 m3)
-= ()
-
 let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post) =
   m0:st.mem ->
   Div (a & st.mem)
@@ -551,6 +542,7 @@ type step_t =
 
 (**** Auxiliary lemmas ****)
 
+/// Some AC lemmas on `st.star`
 
 let equals_ext_right (#st:st) (p q r:st.hprop)
 : Lemma
@@ -565,6 +557,129 @@ let equals_ext_right (#st:st) (p q r:st.hprop)
        (st.equals) { }
     p `st.star` r;
   }
+
+let commute_star_right (#st:st) (p q r:st.hprop)
+: Lemma
+  ((p `st.star` (q `st.star` r)) `st.equals`
+   (p `st.star` (r `st.star` q)))
+= calc (st.equals) {
+    p `st.star` (q `st.star` r);
+       (st.equals) { equals_ext_right p (q `st.star` r) (r `st.star` q) }
+    p `st.star` (r `st.star` q);
+  }
+
+let assoc_star_right (#st:st) (p q r s:st.hprop)
+: Lemma
+  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
+   (p `st.star` (q `st.star` (r `st.star` s))))
+= calc (st.equals) {
+    p `st.star` ((q `st.star` r) `st.star` s);
+       (st.equals) { equals_ext_right p ((q `st.star` r) `st.star` s)
+                                        (q `st.star` (r `st.star` s)) }
+    p `st.star` (q `st.star` (r `st.star` s));
+  }
+
+let commute_assoc_star_right (#st:st) (p q r s:st.hprop)
+: Lemma
+  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
+   (p `st.star` (r `st.star` (q `st.star` s))))
+= calc (st.equals) {
+    p `st.star` ((q `st.star` r) `st.star` s);
+       (st.equals) { equals_ext_right p
+                       ((q `st.star` r) `st.star` s)
+                       ((r `st.star` q) `st.star` s) }
+    p `st.star` ((r `st.star` q) `st.star` s);
+       (st.equals) { assoc_star_right p r q s }
+    p `st.star` (r `st.star` (q `st.star` s));
+  }
+
+
+/// Apply extensionality manually, control proofs
+
+let apply_interp_ext (#st:st) (p q:st.hprop) (m:st.mem)
+: Lemma
+  (requires
+    st.interp p (st.heap_of_mem m) /\
+    p `st.equals` q)
+  (ensures st.interp q (st.heap_of_mem m))
+= ()
+
+let weaken_fp_prop (#st:st) (frame frame':st.hprop) (m0 m1:st.mem)
+: Lemma
+  (requires
+    forall (f_frame:fp_prop (frame `st.star` frame')).
+      f_frame (st.heap_of_mem m0) <==>
+      f_frame (st.heap_of_mem m1))
+   (ensures
+    forall (f_frame:fp_prop frame').
+      f_frame (st.heap_of_mem m0) <==>
+      f_frame (st.heap_of_mem m1))
+= ()
+
+
+/// Lemmas about preserves_frame
+
+let preserves_frame_trans (#st:st)
+  (hp1 hp2 hp3:st.hprop) (m1 m2 m3:st.mem)
+: Lemma
+  (requires
+    preserves_frame hp1 hp2 m1 m2 /\
+    preserves_frame hp2 hp3 m2 m3)
+  (ensures preserves_frame hp1 hp3 m1 m3)
+= ()
+
+#push-options "--z3rlimit 40"
+let preserves_frame_star (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
+: Lemma
+  (requires preserves_frame pre post m0 m1)
+  (ensures preserves_frame (pre `st.star` frame) (post `st.star` frame) m0 m1)
+= let aux (frame':st.hprop)
+    : Lemma
+      (requires
+        st.interp (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame')) (st.heap_of_mem m0))
+      (ensures
+        st.interp (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame')) (st.heap_of_mem m1) /\
+        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+    = assoc_star_right (st.locks_invariant m0) pre frame frame';
+      apply_interp_ext
+        (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame'))
+        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
+        m0;
+      assoc_star_right (st.locks_invariant m1) post frame frame';
+      apply_interp_ext
+        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
+        (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame'))
+        m1;
+      weaken_fp_prop frame frame' m0 m1
+  in
+  Classical.forall_intro (Classical.move_requires aux)
+
+let preserves_frame_star_left (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
+: Lemma
+  (requires preserves_frame pre post m0 m1)
+  (ensures preserves_frame (frame `st.star` pre) (frame `st.star` post) m0 m1)
+= let aux (frame':st.hprop)
+    : Lemma
+      (requires
+        st.interp (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame')) (st.heap_of_mem m0))
+      (ensures
+        st.interp (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame')) (st.heap_of_mem m1) /\
+        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+    = commute_assoc_star_right (st.locks_invariant m0) frame pre frame';
+      apply_interp_ext
+        (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame'))
+        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
+        m0;
+      commute_assoc_star_right (st.locks_invariant m1) frame post frame';
+      apply_interp_ext
+        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
+        (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame'))
+        m1;
+      weaken_fp_prop frame frame' m0 m1
+  in
+  Classical.forall_intro (Classical.move_requires aux)
+#pop-options
+
 
 /// Lemma frame_post_for_par is used in the par proof
 ///
@@ -654,42 +769,6 @@ let par_weaker_pre_and_stronger_post_l (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
 = frame_post_for_par preL next_preL state next_state lpreR lpostR;
   assert (weaker_pre (par_lpre lpreL lpreR) (par_lpre next_lpreL lpreR) state next_state) by
     (norm [delta_only [`%weaker_pre; `%par_lpre] ])
-
-let commute_star_right (#st:st) (p q r:st.hprop)
-: Lemma
-  ((p `st.star` (q `st.star` r)) `st.equals`
-   (p `st.star` (r `st.star` q)))
-= calc (st.equals) {
-    p `st.star` (q `st.star` r);
-       (st.equals) { equals_ext_right p (q `st.star` r) (r `st.star` q) }
-    p `st.star` (r `st.star` q);
-  }
-
-let assoc_star_right (#st:st) (p q r s:st.hprop)
-: Lemma
-  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
-   (p `st.star` (q `st.star` (r `st.star` s))))
-= calc (st.equals) {
-    p `st.star` ((q `st.star` r) `st.star` s);
-       (st.equals) { equals_ext_right p ((q `st.star` r) `st.star` s)
-                                        (q `st.star` (r `st.star` s)) }
-    p `st.star` (q `st.star` (r `st.star` s));
-  }
-
-let commute_assoc_star_right (#st:st) (p q r s:st.hprop)
-: Lemma
-  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
-   (p `st.star` (r `st.star` (q `st.star` s))))
-= admit ()
-
-
-let apply_interp_ext (#st:st) (p q:st.hprop) (m:st.mem)
-: Lemma
-  (requires
-    st.interp p (st.heap_of_mem m) /\
-    p `st.equals` q)
-  (ensures st.interp q (st.heap_of_mem m))
-= ()
 
 let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
   (#aL:Type) (#postL:post st aL) (lpostL:l_post preL postL)
@@ -786,47 +865,7 @@ let step_bind (#st:st) (i:nat)
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
-
-
-let weaken_fp_prop (#st:st) (frame frame':st.hprop) (m0 m1:st.mem)
-: Lemma
-  (requires
-    forall (f_frame:fp_prop (frame `st.star` frame')).
-      f_frame (st.heap_of_mem m0) <==>
-      f_frame (st.heap_of_mem m1))
-   (ensures
-    forall (f_frame:fp_prop frame').
-      f_frame (st.heap_of_mem m0) <==>
-      f_frame (st.heap_of_mem m1))
-= ()
     
-#push-options "--z3rlimit 40"
-let preserves_frame_star (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
-: Lemma
-  (requires preserves_frame pre post m0 m1)
-  (ensures preserves_frame (pre `st.star` frame) (post `st.star` frame) m0 m1)
-= let aux (frame':st.hprop)
-    : Lemma
-      (requires
-        st.interp (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame')) (st.heap_of_mem m0))
-      (ensures
-        st.interp (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame')) (st.heap_of_mem m1) /\
-        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
-    = assoc_star_right (st.locks_invariant m0) pre frame frame';
-      apply_interp_ext
-        (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame'))
-        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
-        m0;
-      assoc_star_right (st.locks_invariant m1) post frame frame';
-      apply_interp_ext
-        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
-        (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame'))
-        m1;
-      weaken_fp_prop frame frame' m0 m1
-  in
-  Classical.forall_intro (Classical.move_requires aux)
-#pop-options
-
 let step_frame (#st:st) (i:nat)
   (#a:Type u#a) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (f:m st a pre p lpre lpost{Frame? f})
@@ -858,33 +897,6 @@ let step_frame (#st:st) (i:nat)
 /// Stream of booleans to decide whether we go left or right
 
 assume val go_left : nat -> bool
-
-#push-options "--z3rlimit 40"
-let preserves_frame_star_left (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
-: Lemma
-  (requires preserves_frame pre post m0 m1)
-  (ensures preserves_frame (frame `st.star` pre) (frame `st.star` post) m0 m1)
-= let aux (frame':st.hprop)
-    : Lemma
-      (requires
-        st.interp (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame')) (st.heap_of_mem m0))
-      (ensures
-        st.interp (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame')) (st.heap_of_mem m1) /\
-        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
-    = commute_assoc_star_right (st.locks_invariant m0) frame pre frame';
-      apply_interp_ext
-        (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame'))
-        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
-        m0;
-      commute_assoc_star_right (st.locks_invariant m1) frame post frame';
-      apply_interp_ext
-        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
-        (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame'))
-        m1;
-      weaken_fp_prop frame frame' m0 m1
-  in
-  Classical.forall_intro (Classical.move_requires aux)
-#pop-options
 
 let step_par (#st:st) (i:nat)
   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
