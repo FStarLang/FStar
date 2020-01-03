@@ -261,7 +261,10 @@ type with_wps : list code -> Type =
    with_wps cs
 
 [@qattr]
-let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post) : state -> Type0 = fun (s0:state) ->
+let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
+  : Tot (state -> Type0)
+        (decreases qcs) =
+  fun s0 -> admit();
   match qcs with
   | QEmpty ->
     k s0 //no instructions; prove the postcondition right away
@@ -402,16 +405,544 @@ let vc_sound_norm
 [@qattr]
 let codes_Triple : list code =
   [Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
+Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
+Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//1
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//2
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//3
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//4
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//5
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//6
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//7
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//8
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//9
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//10
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+   Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
+//11
    Ins (Add64 (OReg Rax) (OReg Rbx));   //add rax rbx;
    Ins (Add64 (OReg Rbx) (OReg Rax))]   //add rbx rax
 
 [@qattr]
 let inst_Triple : with_wps codes_Triple = //A typeclass instance for our program
   QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+  QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
+
   QSeq (inst_Add (OReg Rax) (OReg Rbx)) (
   QSeq (inst_Add (OReg Rbx) (OReg Rax)) (
-  QEmpty)))
-
+  QEmpty))
+  ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 open FStar.FunctionalExtensionality
 open FStar.Mul
 
@@ -438,26 +969,26 @@ let state_eq (s0 s1:state) : Ghost Type0
   s0 Rdx == s1 Rdx
 
 #reset-options
-let lemma_Triple (s0:state)
-  : Ghost (state & fuel)
-    (requires
-      s0 Rax < 100)
-    (ensures fun (sM, f0) ->
-      eval_code (Block codes_Triple) f0 s0 == Some sM /\
-      sM Rbx == 3 * s0 Rax /\
-      sM `feq` update_state Rax sM (update_state Rbx sM s0)) =
-// Naive proof:
-  let b1 = codes_Triple in
-  let (s2, fc2) = lemma_Move s0 (OReg Rbx) (OReg Rax) in let b2 = Cons?.tl b1 in
-  let (s3, fc3) = lemma_Add s2 (OReg Rax) (OReg Rbx) in  let b3 = Cons?.tl b2 in
-  let (s4, fc4) = lemma_Add s3 (OReg Rbx) (OReg Rax) in  let b4 = Cons?.tl b3 in
-  let (sM, f4) = (s4, 0) in
-  let f3 = lemma_merge (Cons?.hd b3) b4 s3 fc4 s4 f4 sM in
-  let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in
-  let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in
-  (sM, fM)
+// let lemma_Triple (s0:state)
+//   : Ghost (state & fuel)
+//     (requires
+//       s0 Rax < 100)
+//     (ensures fun (sM, f0) ->
+//       eval_code (Block codes_Triple) f0 s0 == Some sM /\
+//       sM Rbx == 3 * s0 Rax /\
+//       sM `feq` update_state Rax sM (update_state Rbx sM s0)) =
+// // Naive proof:
+//   let b1 = codes_Triple in
+//   let (s2, fc2) = lemma_Move s0 (OReg Rbx) (OReg Rax) in let b2 = Cons?.tl b1 in
+//   let (s3, fc3) = lemma_Add s2 (OReg Rax) (OReg Rbx) in  let b3 = Cons?.tl b2 in
+//   let (s4, fc4) = lemma_Add s3 (OReg Rbx) (OReg Rax) in  let b4 = Cons?.tl b3 in
+//   let (sM, f4) = (s4, 0) in
+//   let f3 = lemma_merge (Cons?.hd b3) b4 s3 fc4 s4 f4 sM in
+//   let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in
+//   let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in
+//   (sM, fM)
 
-
+#push-options "--profile_component FStar.TypeChecker --profile MiniValeSemantics"
 let lemma_Triple_opt (s0:state)
   : Ghost (state & fuel)
     (requires

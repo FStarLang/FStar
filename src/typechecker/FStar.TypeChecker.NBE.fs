@@ -612,10 +612,16 @@ and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
            should_reduce_recursive_definition args decreases_list
          in
          if not should_reduce
-         then let fv = BU.right lb.lbname in
-              iapp cfg (FV (fv, [], [])) args
-         else let univs, rest = BU.first_N (List.length lb.lbunivs) args in
-              iapp cfg (translate cfg (List.map fst univs) lb.lbdef) rest
+         then begin
+           let fv = BU.right lb.lbname in
+           debug cfg (fun () -> BU.print1 "Decided to not unfold recursive definition %s\n" (P.fv_to_string fv));
+           iapp cfg (FV (fv, [], [])) args
+         end
+         else begin
+           debug cfg (fun () -> BU.print1 "Yes, Decided to unfold recursive definition %s\n" (P.fv_to_string (BU.right lb.lbname)));
+           let univs, rest = BU.first_N (List.length lb.lbunivs) args in
+           iapp cfg (translate cfg (List.map fst univs) lb.lbdef) rest
+         end
     else //not enough args yet
          TopLevelRec (lb, arity, decreases_list, args)
 
