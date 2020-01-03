@@ -89,7 +89,7 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
     (fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h))
     (fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1))
 
-reflectable
+reifiable reflectable
 layered_effect {
   Steel : a:Type -> pre:pre_t -> post:post_t a -> req:req_t pre -> ens:ens_t pre a post -> Effect
   with
