@@ -298,6 +298,14 @@ let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
     (st.interp (st.locks_invariant m1 `st.star` (post `st.star` frame)) (st.heap_of_mem m1) /\
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
   
+let preserves_frame_trans (#st:st)
+  (hp1 hp2 hp3:st.hprop) (m1 m2 m3:st.mem)
+: Lemma
+  (requires
+    preserves_frame hp1 hp2 m1 m2 /\
+    preserves_frame hp2 hp3 m2 m3)
+  (ensures preserves_frame hp1 hp3 m1 m3)
+= ()
 
 let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post) =
   m0:st.mem ->
@@ -824,7 +832,8 @@ let preserves_frame_star_left (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame
 = admit ()
 
 
-
+#restart-solver
+#push-options "--z3rlimit 150"
 let step_par (#st:st) (i:nat)
   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Par? f})
@@ -863,12 +872,15 @@ let step_par (#st:st) (i:nat)
       preserves_frame_star_left pre next_preR state next_state preL;
       par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR state next_state;
 
+      assume (st.interp (st.locks_invariant next_state `st.star` (preL `st.star` next_preR)) (st.heap_of_mem next_state));
+
       Step state (preL `st.star` pre) (preL `st.star` next_preR) next_state
         (par_lpre lpreL next_lpreR)
         (par_lpost lpreL lpostL next_lpreR next_lpostR)
         (Par mL mR)
         j
     end
+#pop-options
 
 let step_weaken (#st:st) (i:nat) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -922,10 +934,8 @@ let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
 
   | _ ->
     let Step _ _ new_pre new_state _ _ f j = step i f state in
-    assert (preserves_frame pre new_pre state new_state);
     let (x, final_state) = run j f new_state in
-    assert (preserves_frame new_pre (post x) new_state final_state);
-    assume (preserves_frame pre (post x) state final_state);
+    preserves_frame_trans pre new_pre (post x) state new_state final_state;
     (x, final_state)
 
 
