@@ -262,9 +262,9 @@ type with_wps : list code -> Type =
 
 [@qattr]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
-  : Tot (state -> Type0)
-        (decreases qcs) =
-  fun s0 -> admit();
+  : Tot (state -> Tot Type0 (decreases qcs))
+  =
+  fun s0 ->
   match qcs with
   | QEmpty ->
     k s0 //no instructions; prove the postcondition right away
@@ -384,7 +384,7 @@ let normal_steps : list string =
 
 unfold
 let normal (x:Type0) : Type0 =
-  norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
+  norm [nbe; iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 let vc_sound_norm
      (cs:list code)
