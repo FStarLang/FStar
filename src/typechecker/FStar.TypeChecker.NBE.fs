@@ -358,7 +358,10 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       if db.index < List.length bs
       then
         let t = List.nth bs db.index in
-        debug (fun () -> BU.print1 "Resolved bvar to %s\n" (t_to_string t));
+        debug (fun () -> BU.print2 "Resolved bvar to %s\n\tcontext is [%s]\n"
+                    (t_to_string t)
+                    (List.map t_to_string bs |> String.concat "; ")
+                    );
         t
       else failwith "de Bruijn index out of bounds"
 
@@ -392,6 +395,13 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs (xs, body, resc) ->
+      debug (fun () ->
+        let open FStar.Syntax.Syntax in
+        BU.print1 "Translating lambda with residual type %s\n"
+          (match resc with
+            | Some {residual_typ=Some t} -> P.term_to_string t
+            | _ -> "None"));
+      let arity = List.length xs in
       Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
            List.fold_right (fun x formals ->
                              let next_formal prefix_of_xs_rev =
@@ -401,8 +411,9 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
                              next_formal :: formals)
                           xs
                           [],
-           List.length xs,
-           BU.map_opt resc (fun c -> (fun formals -> translate_residual_comp cfg (List.rev_append formals bs) c)))
+           arity,
+           BU.map_opt resc (fun c -> (fun formals ->
+             translate_residual_comp cfg (List.rev_append formals bs) c)))
 
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
@@ -520,7 +531,7 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
            let name = freshen_bv (BU.left lb.lbname) in
            let bs = Accu (Var name, []) :: bs in
            let body = translate cfg bs body in
-           UnreducedLet(name, typ, def, body, lb)
+           Accu(UnreducedLet(name, typ, def, body, lb), [])
 
     | Tm_let((_rec, lbs), body) -> //recursive let
       if not cfg.steps.zeta &&
@@ -531,7 +542,7 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
            let rec_bs = List.map (fun v -> Accu (Var v, [])) vars @ bs in
            let defs = List.map (fun lb -> translate cfg rec_bs lb.lbdef) lbs in
            let body = translate cfg rec_bs body in
-           UnreducedLetRec(List.zip3 vars typs defs, body, lbs)
+           Accu(UnreducedLetRec(List.zip3 vars typs defs, body, lbs), [])
       else translate cfg (make_rec_env lbs bs) body
 
     | Tm_meta (e, _) ->
@@ -577,7 +588,15 @@ and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
       // partial application
       let (_, targs') = List.splitAt m targs in
       let targs' = List.map (fun targ -> (fun (l (* has length n - m *)) -> targ (List.rev (map_append fst args l)))) targs' in
-      Lam ((fun l -> f (map_append fst args l)), targs', n - m, res)
+      let res =
+        match res with
+        | None -> None
+        | Some f -> Some (fun l -> f (map_append fst args l))
+      in
+      Lam ((fun l -> f (map_append fst args l)),
+           targs',
+           n - m,
+           res)
     else if m = n then
       // full application
       f (List.map fst args)
@@ -649,8 +668,7 @@ and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
               iapp cfg (translate cfg env lb.lbdef) args
       end
 
-  | Quote _ | Reflect _
-  | Lazy _ | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ ->
+  | _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 
 
@@ -787,12 +805,12 @@ and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
         ; S.residual_typ     = residual_typ
         ; S.residual_flags   = residual_flags } = c in
     { residual_effect = residual_effect;
-      residual_typ = BU.map_opt residual_typ (translate cfg bs);
+      residual_typ = BU.map_opt residual_typ (fun x -> debug cfg (fun () -> BU.print1 "Translating residual type %s\n" (P.term_to_string x)); translate cfg bs x);
       residual_flags = List.map (translate_flag cfg bs) residual_flags }
 
 and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
     { S.residual_effect = c.residual_effect;
-      S.residual_typ = BU.map_opt c.residual_typ (readback cfg);
+      S.residual_typ = BU.map_opt c.residual_typ (fun x -> debug cfg (fun () -> BU.print1 "Reading back residualtype %s\n" (t_to_string x)); readback cfg x);
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
 and translate_flag cfg bs (f : S.cflag) : cflag =
@@ -1056,6 +1074,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
       | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
       end
+
     | Accu (Var bv, []) ->
       S.bv_to_name bv
 
@@ -1093,10 +1112,36 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           match (readback [[x]])
                 branches
        *)
+      U.mk_app head args
 
-      (match ts with
-       | [] -> head
-       | _ -> U.mk_app head args)
+    | Accu(UnreducedLet (var, typ, defn, body, lb), args) ->
+      let typ = readback cfg typ in
+      let defn = readback cfg defn in
+      let body = SS.close [var, None] (readback cfg body) in
+      let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
+      let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
+      let hd = S.mk (Tm_let((false, [lb]), body)) None Range.dummyRange in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
+      U.mk_app hd args
+
+    | Accu(UnreducedLetRec (vars_typs_defns, body, lbs), args) ->
+      let lbs =
+        List.map2
+        (fun (v,t,d) lb ->
+          let t = readback cfg t in
+          let def = readback cfg d in
+          let v = {v with sort = t} in
+          {lb with lbname = BU.Inl v;
+                   lbtyp = t;
+                   lbdef = def})
+        vars_typs_defns
+        lbs
+      in
+      let body = readback cfg body in
+      let lbs, body = SS.close_let_rec lbs body in
+      let hd = S.mk (Tm_let((true, lbs), body)) None Range.dummyRange in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
+      U.mk_app hd args
 
     | TopLevelRec(lb, _, _, args) ->
       let fv = BU.right lb.lbname in
@@ -1156,31 +1201,6 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       //7. Readback the arguments and apply it to the head
       let args = List.map (fun (x, q) -> readback cfg x, q) args in
       U.mk_app head args
-
-    | UnreducedLet (var, typ, defn, body, lb) ->
-      let typ = readback cfg typ in
-      let defn = readback cfg defn in
-      let body = SS.close [var, None] (readback cfg body) in
-      let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
-      let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
-      S.mk (Tm_let((false, [lb]), body)) None Range.dummyRange
-
-    | UnreducedLetRec (vars_typs_defns, body, lbs) ->
-      let lbs =
-        List.map2
-        (fun (v,t,d) lb ->
-          let t = readback cfg t in
-          let def = readback cfg d in
-          let v = {v with sort = t} in
-          {lb with lbname = BU.Inl v;
-                   lbtyp = t;
-                   lbdef = def})
-        vars_typs_defns
-        lbs
-      in
-      let body = readback cfg body in
-      let lbs, body = SS.close_let_rec lbs body in
-      S.mk (Tm_let((true, lbs), body)) None Range.dummyRange
 
     | Quote (qt, qi) ->
         S.mk (Tm_quoted (qt, qi)) None Range.dummyRange

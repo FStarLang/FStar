@@ -1557,9 +1557,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                       [lb], e' in
           let lbs =
             if top_level
-            then lbs |> List.map (fun lb ->
-                    let tcenv = TcEnv.set_current_module g.env_tcenv
+            then 
+            let tcenv = TcEnv.set_current_module g.env_tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
+            let _ = 
+              if TcEnv.debug tcenv <| Options.Other "Extraction"
+              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+              then BU.print1 "Pre-normalization of top-level:\n%s\n"
+                           (Print.term_to_string t) in
+            lbs |> List.map (fun lb ->
+                    // let tcenv = TcEnv.set_current_module g.env_tcenv
+                    //             (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
                     // debug g (fun () ->
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
@@ -1571,8 +1579,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s)\n\tlbdef=%s"
+                             then let _ = BU.print3 "Starting to normalize top-level let %s<%s>\n\tlbdef=%s"
                                             (Print.lbname_to_string lb.lbname)
+                                            (Print.univ_names_to_string lb.lbunivs)
                                             (Print.term_to_string lb.lbdef) in
                                   // Options.set_option "debug_level"
                                   //   (Options.List [Options.String "Norm"; Options.String "Extraction"]);

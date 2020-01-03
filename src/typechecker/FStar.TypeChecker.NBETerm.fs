@@ -63,7 +63,31 @@ type atom
        (t -> t) *
        // 3. reconstructs the pattern matching, parameterized by the readback function
        ((t -> term) -> list<branch>)
-
+  | UnreducedLet of
+     // Especially when extracting, we do not always want to reduce let bindings
+     // since that can lead to exponential code size blowup. This node represents
+     // an unreduced let binding which can be read back as an F* let
+     // 1. The name of the let-bound term
+       var *
+     // 2. The type of the let-bound term
+       t   *
+     // 3. Its definition
+       t   *
+     // 4. The body of the let binding
+       t   *
+     // 5. The source letbinding for readback (of attributes etc.)
+       letbinding
+  | UnreducedLetRec of
+     // Same as UnreducedLet, but for local let recs
+     // 1. list of names of all mutually recursive let-rec-bound terms
+     //    * their types
+     //    * their definitions
+        list<(var * t * t)> *
+     // 2. the body of the let binding
+        t *
+     // 3. the source letbinding for readback (of attributes etc.)
+     //    equal in length to the first list
+        list<letbinding>
 and t
   =
   | Lam of
@@ -131,31 +155,6 @@ and t
        list<bool> // *
        // // 7. callback to translate letbinding
        // (list<t> -> letbinding -> t)
-  | UnreducedLet of
-     // Especially when extracting, we do not always want to reduce let bindings
-     // since that can lead to exponential code size blowup. This node represents
-     // an unreduced let binding which can be read back as an F* let
-     // 1. The name of the let-bound term
-       var *
-     // 2. The type of the let-bound term
-       t   *
-     // 3. Its definition
-       t   *
-     // 4. The body of the let binding
-       t   *
-     // 5. The source letbinding for readback (of attributes etc.)
-       letbinding
-  | UnreducedLetRec of
-     // Same as UnreducedLet, but for local let recs
-     // 1. list of names of all mutually recursive let-rec-bound terms
-     //    * their types
-     //    * their definitions
-        list<(var * t * t)> *
-     // 2. the body of the let binding
-        t *
-     // 3. the source letbinding for readback (of attributes etc.)
-     //    equal in length to the first list
-        list<letbinding>
 
 and comp =
   | Tot of t * option<universe>
@@ -337,11 +336,12 @@ let rec t_to_string (x:t) =
   | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
   | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
-
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
   | Match (t, _, _) -> "Match " ^ (t_to_string t)
+  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in " ^ (t_to_string body) ^ ")"
+  | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
 
 let arg_to_string (a : arg) = a |> fst |> t_to_string
 
