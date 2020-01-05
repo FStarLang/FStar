@@ -1886,7 +1886,7 @@ and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp
         match lopt with
         | Some rc ->
           let flags = filter_out_lcomp_cflags rc.residual_flags in
-          Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
+          Some ({rc with residual_typ=if cfg.steps.for_extraction then None else BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
 
 and maybe_simplify cfg env stack tm =
