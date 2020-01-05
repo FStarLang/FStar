@@ -118,6 +118,13 @@ and t
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | TopLevelLet of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
   | TopLevelRec of
        // 1. The definition of the fv
        letbinding *

@@ -127,6 +127,13 @@ and t
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | TopLevelLet of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
   | TopLevelRec of
        // 2. The definition of the fv
        letbinding *
@@ -333,6 +340,7 @@ let rec t_to_string (x:t) =
   | Lazy (BU.Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
   | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
+  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
   | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
 and atom_to_string (a: atom) =
   match a with

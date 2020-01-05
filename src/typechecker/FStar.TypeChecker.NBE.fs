@@ -640,6 +640,36 @@ and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
 
+  | TopLevelLet(lb, arity, args_rev) ->
+    let args_rev = List.rev_append args args_rev in
+    let n_args_rev = List.length args_rev in
+    let n_univs = List.length lb.lbunivs in
+    debug cfg (fun () ->
+      BU.print3 "Reached iapp for %s with arity %s and n_args = %s\n"
+                (P.lbname_to_string lb.lbname)
+                (BU.string_of_int arity)
+                (BU.string_of_int n_args_rev));
+    if n_args_rev >= arity
+    then let bs, body =
+           match (U.unascribe lb.lbdef).n with
+           | Tm_abs(bs, body, _) -> bs, body
+           | _ -> [], lb.lbdef
+         in
+         if n_univs + List.length bs = arity
+         then let extra, args_rev = BU.first_N (n_args_rev - arity) args_rev in
+              debug cfg (fun () ->
+                BU.print3 "Reducing body of %s = %s,\n\twith args = %s\n"
+                  (P.lbname_to_string lb.lbname)
+                  (P.term_to_string body)
+                  (List.map (fun (x, _) -> t_to_string x) args_rev |> String.concat ", "));
+              let t = translate cfg (List.map fst args_rev) body in
+              match extra with
+              | [] -> t
+              | _ -> iapp cfg t (List.rev extra)
+         else let extra, univs = BU.first_N (n_args_rev - n_univs) args_rev in
+              iapp cfg (translate cfg (List.map fst univs) lb.lbdef) (List.rev extra)
+    else TopLevelLet (lb, arity, args_rev) //not enough args  yet
+
   | TopLevelRec (lb, arity, decreases_list, args') ->
     let args = List.append args' args in
     if List.length args >= arity
@@ -655,7 +685,7 @@ and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
          else begin
            debug cfg (fun () -> BU.print1 "Yes, Decided to unfold recursive definition %s\n" (P.fv_to_string (BU.right lb.lbname)));
            let univs, rest = BU.first_N (List.length lb.lbunivs) args in
-           iapp cfg (translate cfg (List.map fst univs) lb.lbdef) rest
+           iapp cfg (translate cfg (List.rev (List.map fst univs)) lb.lbdef) rest
          end
     else //not enough args yet
          TopLevelRec (lb, arity, decreases_list, args)
@@ -756,15 +786,22 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
   let us = lb.lbunivs in
-  // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
-  let id x = x in
-  match us with
-  | [] -> translate cfg bs lb.lbdef
-  | _ ->
-    Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-          List.map (fun _ -> (fun _ts -> id <| (Constant Unit, None))) us,
-          // Zoe: Bogus type! The idea is that we will never readback these lambdas
-          List.length us, None)
+  let formals, _ = U.arrow_formals lb.lbtyp in
+  let arity = List.length us + List.length formals in
+  if arity = 0
+  then translate cfg bs lb.lbdef
+  else if BU.is_right lb.lbname
+  then let _ = debug (fun () -> BU.print2 "Making TopLevelLet for %s with arity %s\n" (P.lbname_to_string lb.lbname) (BU.string_of_int arity)) in
+       TopLevelLet(lb, arity, [])
+  else  // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
+        let id x = x in
+        match us with
+        | [] -> translate cfg bs lb.lbdef
+        | _ ->
+          Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
+                List.map (fun _ -> (fun _ts -> id <| (Constant Unit, None))) us,
+                // Zoe: Bogus type! The idea is that we will never readback these lambdas
+                List.length us, None)
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
@@ -1164,6 +1201,12 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let hd = S.mk (Tm_let((true, lbs), body)) None Range.dummyRange in
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       U.mk_app hd args
+
+    | TopLevelLet(lb, arity, args_rev) ->
+      let n_univs = List.length lb.lbunivs in
+      let n_args = List.length args_rev in
+      let args_rev, univs = BU.first_N (n_args - n_univs) args_rev in
+      readback cfg (iapp cfg (translate cfg (List.map fst univs) lb.lbdef) (List.rev args_rev))
 
     | TopLevelRec(lb, _, _, args) ->
       let fv = BU.right lb.lbname in
