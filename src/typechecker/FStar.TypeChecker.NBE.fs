@@ -163,6 +163,7 @@ let unlazy t =
     | t -> t
 
 let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
+  let all_branches = branches in
   let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
@@ -225,7 +226,9 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         r
     in
     match branches with
-    | [] -> failwith "Branch not found"
+    | [] ->
+      None
+
     // TODO: Consider the when clause!
     | (p, _wopt, e)::branches ->
       match matches_pat scrut p with
@@ -383,7 +386,10 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
                                    next_formal :: formals) xs [])
 
     | Tm_refine (bv, tm) ->
-      Refinement ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
+      if cfg.steps.for_extraction
+      then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
+      else Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
+                       (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
     | Tm_ascribed (t, _, _) -> translate cfg bs t
 
@@ -443,8 +449,7 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_match(scrut, branches) ->
       (* Thunked computation that reconstructs the patterns *)
-      (* Zoe TODO : maybe rewrite in CPS? *)
-      let make_branches (readback:t -> term) : list<branch> =
+      let make_branches () : list<branch> =
         let cfg = {cfg with steps={cfg.steps with zeta=false}} in // disable zeta flag
         let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *)
           let (bs, p_new) =
@@ -458,31 +463,32 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
               in
               (bs', Pat_cons (fvar, List.rev args'))
             | Pat_var bvar ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
             | Pat_wild bvar ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
-              (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
             | Pat_dot_term (bvar, tm) ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (bs,
-               Pat_dot_term (x, readback (translate cfg bs tm)))
+               Pat_dot_term (x, readback cfg (translate cfg bs tm)))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in
         List.map (fun (pat, when_clause, e) ->
                   let (bs', pat') = process_pattern bs pat in
                   (* TODO : handle when clause *)
-                  U.branch (pat', when_clause, readback (translate cfg bs' e))) branches
+                  U.branch (pat', when_clause, readback cfg (translate cfg bs' e))) branches
       in
 
-      let rec case (scrut : t) : t =
-        debug (fun () -> BU.print2 "Match case: (%s) -- (%s)\n" (P.term_to_string (readback cfg scrut))
-                                                        (t_to_string scrut));
-        let scrut = unlazy scrut in
-        match scrut with
-        | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
+      let scrut = translate cfg bs scrut in
+      debug (fun () -> BU.print2 "%s: Translating match %s\n"
+                              (Range.string_of_range e.pos)
+                              (P.term_to_string e));
+      let scrut = unlazy scrut in
+      begin
+      match scrut with
+      | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
              are binders -- i.e. no nested patterns for now *)
           debug (fun () ->
@@ -495,9 +501,9 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate cfg (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut case make_branches
+            mkAccuMatch scrut make_branches
           end
-        | Constant c ->
+      | Constant c ->
           debug (fun () -> BU.print1 "Match constant : %s\n" (t_to_string scrut));
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
           (match pickBranch cfg scrut branches with
@@ -506,13 +512,12 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate cfg (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut case make_branches
+             mkAccuMatch scrut make_branches
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut case make_branches
-      in
-      case (translate cfg bs scrut)
+          mkAccuMatch scrut make_branches
+      end
 
     | Tm_meta (e, Meta_monadic(m, t))
         when cfg.reifying ->
@@ -524,14 +529,25 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_let((false, [lb]), body) -> // non-recursive let
       if Cfg.should_reduce_local_let cfg lb
-      then let bs = translate_letbinding cfg bs lb :: bs in
-           translate cfg bs body
-      else let def = translate cfg bs lb.lbdef in
-           let typ = translate cfg bs lb.lbtyp in
+      then if cfg.steps.for_extraction
+           && U.is_unit lb.lbtyp
+           && U.is_pure_or_ghost_effect lb.lbeff
+           then let bs = Constant Unit :: bs in
+                translate cfg bs body
+           else let bs = translate_letbinding cfg bs lb :: bs in
+                translate cfg bs body
+      else let def () =
+               if cfg.steps.for_extraction
+               && U.is_unit lb.lbtyp
+               && U.is_pure_or_ghost_effect lb.lbeff
+               then Constant Unit
+               else translate cfg bs lb.lbdef
+           in
+           let typ () = translate cfg bs lb.lbtyp in
            let name = freshen_bv (BU.left lb.lbname) in
            let bs = Accu (Var name, []) :: bs in
-           let body = translate cfg bs body in
-           Accu(UnreducedLet(name, typ, def, body, lb), [])
+           let body () = translate cfg bs body in
+           Accu(UnreducedLet(name, Thunk.mk typ, Thunk.mk def, Thunk.mk body, lb), [])
 
     | Tm_let((_rec, lbs), body) -> //recursive let
       if not cfg.steps.zeta &&
@@ -805,7 +821,10 @@ and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
         ; S.residual_typ     = residual_typ
         ; S.residual_flags   = residual_flags } = c in
     { residual_effect = residual_effect;
-      residual_typ = BU.map_opt residual_typ (fun x -> debug cfg (fun () -> BU.print1 "Translating residual type %s\n" (P.term_to_string x)); translate cfg bs x);
+      residual_typ =
+        (if cfg.steps.for_extraction
+         then None
+         else BU.map_opt residual_typ (translate cfg bs));
       residual_flags = List.map (translate_flag cfg bs) residual_flags }
 
 and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
@@ -1031,9 +1050,12 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
             (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk accus)))
 
     | Refinement (f, targ) ->
-      let x =  S.new_bv None (readback cfg (fst (targ ()))) in
-      let body = readback cfg (f (mkAccuVar x)) in
-      U.refine x body
+      if cfg.steps.for_extraction
+      then readback cfg (fst (targ ()))
+      else
+        let x =  S.new_bv None (readback cfg (fst (targ ()))) in
+        let body = readback cfg (f (mkAccuVar x)) in
+        U.refine x body
 
     | Reflect t ->
       let tm = readback cfg t in
@@ -1082,11 +1104,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, cases, make_branches), ts) ->
+    | Accu (Match (scrut, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
       let head =
         let scrut_new = readback cfg scrut in
-        let branches_new = make_branches (readback cfg) in
+        let branches_new = make_branches () in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
       in
       (*  When `cases scrut` returns a Accu(Match ..))
@@ -1115,9 +1137,9 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       U.mk_app head args
 
     | Accu(UnreducedLet (var, typ, defn, body, lb), args) ->
-      let typ = readback cfg typ in
-      let defn = readback cfg defn in
-      let body = SS.close [var, None] (readback cfg body) in
+      let typ = readback cfg (Thunk.force typ) in
+      let defn = readback cfg (Thunk.force defn) in
+      let body = SS.close [var, None] (readback cfg (Thunk.force body)) in
       let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
       let hd = S.mk (Tm_let((false, [lb]), body)) None Range.dummyRange in

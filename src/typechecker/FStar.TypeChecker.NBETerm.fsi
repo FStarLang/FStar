@@ -72,10 +72,8 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. case analysis, currently not used, but could be in the future
-       (t -> t) *
-       // 3. reconstructs the pattern matching, parameterized by the readback function
-       ((t -> term) -> list<branch>)
+       // 2. reconstructs the pattern matching, if it needs to be readback
+       (unit -> list<branch>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -83,11 +81,11 @@ type atom
      // 1. The name of the let-bound term
        var *
      // 2. The type of the let-bound term
-       t   *
+       Thunk.t<t>   *
      // 3. Its definition
-       t   *
+       Thunk.t<t>   *
      // 4. The body of the let binding
-       t   *
+       Thunk.t<t>   *
      // 5. The source letbinding for readback (of attributes etc.)
        letbinding
   | UnreducedLetRec of
@@ -199,7 +197,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> list<branch>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg

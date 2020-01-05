@@ -59,10 +59,8 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. case analysis, currently not used, but could be in the future
-       (t -> t) *
-       // 3. reconstructs the pattern matching, parameterized by the readback function
-       ((t -> term) -> list<branch>)
+       // 2. reconstructs the pattern matching
+       (unit -> list<branch>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -70,11 +68,11 @@ type atom
      // 1. The name of the let-bound term
        var *
      // 2. The type of the let-bound term
-       t   *
+       Thunk.t<t>   *
      // 3. Its definition
-       t   *
+       Thunk.t<t>   *
      // 4. The body of the let binding
-       t   *
+       Thunk.t<t>   *
      // 5. The source letbinding for readback (of attributes etc.)
        letbinding
   | UnreducedLetRec of
@@ -221,7 +219,7 @@ let mkConstruct i us ts = Construct(i, us, ts)
 let mkFV i us ts = FV(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
+let mkAccuMatch (s:t) (bs:(unit -> list<branch>)) = Accu(Match (s, bs), [])
 
 // Term equality
 
@@ -339,8 +337,8 @@ let rec t_to_string (x:t) =
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
-  | Match (t, _, _) -> "Match " ^ (t_to_string t)
-  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in " ^ (t_to_string body) ^ ")"
+  | Match (t, _) -> "Match " ^ (t_to_string t)
+  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
   | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
 
 let arg_to_string (a : arg) = a |> fst |> t_to_string
