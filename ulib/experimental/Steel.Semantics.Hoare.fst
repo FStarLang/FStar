@@ -15,6 +15,9 @@
 *)
 module Steel.Semantics.Hoare
 
+open FStar.Tactics
+
+
 (*
  * This module provides a semantic model for a combined effect of
  * divergence, state, and parallel composition of atomic actions.
@@ -35,7 +38,8 @@ module Steel.Semantics.Hoare
 
 /// Disabling projectors because we don't use them and they increase the typechecking time
 
-#push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --__temp_no_proj Steel.Semantics.Hoare"
+#push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --print_implicits --print_universes \
+  --using_facts_from 'Prims FStar.Pervasives Steel.Semantics.Hoare'"
 
 
 (**** Begin state defn ****)
@@ -55,7 +59,7 @@ let transitive #a (equals:a -> a -> prop) =
   forall x y z. x `equals` y /\ y `equals` z ==> x `equals` z
 
 let associative #a (equals: a -> a -> prop) (f: a -> a -> a)=
-  forall x y z.{:pattern f x (f y z) \/ f (f x y) z}
+  forall x y z. //{:pattern f x (f y z) \/ f (f x y) z}
     f x (f y z) `equals` f (f x y) z
 
 let commutative #a (equals: a -> a -> prop) (f: a -> a -> a) =
@@ -284,29 +288,26 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) = fp_prop2 pre pos
 (**** End expects, provides, requires, and ensures defns ****)
 
 
-/// An abbreviation
-
-let hmem (#st:st) (fp:st.hprop) =
-  m:st.mem{st.interp (st.locks_invariant m `st.star` fp) (st.heap_of_mem m)}
-
-
 (**** Begin interface of actions ****)
 
+/// Actions are essentially state transformers that preserve frames
 
-let action0 (#st:st) (pre:st.hprop) (a:Type) (post:a -> st.hprop) =
-  hmem pre -> (x:a & hmem (post x))
+let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
+  forall (frame:st.hprop).
+    st.interp (st.locks_invariant m0 `st.star` (pre `st.star` frame)) (st.heap_of_mem m0) ==>
+    (st.interp (st.locks_invariant m1 `st.star` (post `st.star` frame)) (st.heap_of_mem m1) /\
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
 
-
-/// Actions preserve frames AND all fp_props of frames
-
-let is_frame_preserving (#st:st) #a #pre #post (f:action0 pre a post) =
-  forall frame (h0:hmem (pre `st.star` frame)).  //we don't need locks_invariant for h0?
-    (let (| x, h1 |) = f h0 in
-     st.interp (post x `st.star` frame `st.star` st.locks_invariant h1) (st.heap_of_mem h1) /\
-     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem h0) <==> f_frame (st.heap_of_mem h1)))
-
-let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
-  f:action0 fp a fp'{is_frame_preserving f}
+let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post) =
+  m0:st.mem ->
+  Div (a & st.mem)
+  (requires
+    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    lpre (st.heap_of_mem m0))
+  (ensures fun (x, m1) ->
+    st.interp (st.locks_invariant m1 `st.star` (post x)) (st.heap_of_mem m1) /\
+    lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
+    preserves_frame pre (post x) m0 m1)
 
 
 (**** End interface of actions ****)
@@ -323,18 +324,6 @@ let action_t (#st:st) (fp:st.hprop) (a:Type) (fp':a -> st.hprop) =
 let return_lpre (#st:st) (#a:Type) (#post:post st a) (x:a) (lpost:l_post (post x) post)
 : l_pre (post x)
 = fun h -> lpost h x h
-
-
-/// Actions don't have a separate logical payload
-
-let action_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-: l_pre pre
-= st.interp pre
-
-let action_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (_:action_t pre a post)
-: l_post pre post
-= fun h0 x h1 -> st.interp (post x) h1
-
 
 let frame_lpre (#st:st) (#pre:st.hprop) (lpre:l_pre pre) (#frame:st.hprop) (f_frame:fp_prop frame)
 : l_pre (pre `st.star` frame)
@@ -377,29 +366,25 @@ let par_lpost (#st:st) (#aL:Type) (#preL:st.hprop) (#postL:post st aL)
 = fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
+/// We never use projectors from m, so don't bother generating, typechecking, and verifying them
+
+#push-options "--__temp_no_proj Steel.Semantics.Hoare"
 noeq
-type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
+type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
-    #a:Type ->
+    #a:Type u#a ->
     post:post st a ->
     x:a ->
     lpost:l_post (post x) post ->
     m st a (post x) post (return_lpre #_ #_ #post x lpost) lpost
 
-  | Act:
-    #a:Type ->
-    pre:st.hprop ->
-    post:post st a ->
-    f:action_t pre a post ->
-    m st a pre post (action_lpre f) (action_lpost f)
-
   | Bind:
-    #a:Type ->
+    #a:Type u#a ->
     #pre:st.hprop ->
     #post_a:post st a ->
     #lpre_a:l_pre pre ->
     #lpost_a:l_post pre post_a ->
-    #b:Type ->
+    #b:Type u#a ->
     #post_b:post st b ->
     #lpre_b:(x:a -> l_pre (post_a x)) ->
     #lpost_b:(x:a -> l_post (post_a x) post_b) ->
@@ -408,6 +393,15 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
     m st b pre post_b
       (bind_lpre lpre_a lpost_a lpre_b)
       (bind_lpost lpre_a lpost_a lpost_b)
+
+  | Act:
+    #a:Type u#a ->
+    #pre:st.hprop ->
+    #post:post st a ->
+    #lpre:l_pre pre ->
+    #lpost:l_post pre post ->
+    f:action_t pre post lpre lpost ->
+    m st a pre post lpre lpost
 
   | Frame:
     #a:Type ->
@@ -423,13 +417,13 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
       (frame_lpost lpre lpost f_frame)
 
   | Par:
-    #aL:Type ->
+    #aL:Type u#a ->
     #preL:st.hprop ->
     #postL:post st aL ->
     #lpreL:l_pre preL ->
     #lpostL:l_post preL postL ->
     mL:m st aL preL postL lpreL lpostL ->
-    #aR:Type ->
+    #aR:Type u#a ->
     #preR:st.hprop ->
     #postR:post st aR ->
     #lpreR:l_pre preR ->
@@ -440,7 +434,7 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
       (par_lpost lpreL lpostL lpreR lpostR)
 
   | Weaken:
-    #a:Type ->
+    #a:Type u#a ->
     #pre:st.hprop ->
     #post:post st a ->
     #lpre:l_pre pre ->
@@ -452,7 +446,7 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
        (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)) ->
     m st a pre post lpre lpost ->
     m st a pre post wlpre wlpost
-
+#pop-options
 
 (**** End definition of the computation AST ****)
 
@@ -460,22 +454,22 @@ type m (st:st) : (a:Type u#a) -> pre:st.hprop -> post:post st a -> l_pre pre -> 
 (**** Stepping relation ****)
 
 
-/// All steps preserve frames and their fp props
+/// All steps preserve frames
 
 noeq
-type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
+type step_result (#st:st) (a:Type u#a) (q:post st a) =
   | Step:
-    old_state:st.mem ->
-    fpost:st.hprop ->
-    new_state:hmem (fpost `st.star` frame){
-      forall (f_frame:fp_prop frame).
-         f_frame (st.heap_of_mem old_state) <==>
-         f_frame (st.heap_of_mem new_state)} ->
-    lpre:l_pre fpost{lpre (st.heap_of_mem new_state)} ->
-    lpost:l_post fpost q ->
-    m st a fpost q lpre lpost ->
+    prev_pre:st.hprop ->
+    prev_state:st.mem ->
+    next_pre:st.hprop ->
+    next_state:st.mem{
+      st.interp (st.locks_invariant next_state `st.star` next_pre) (st.heap_of_mem next_state) /\
+      preserves_frame prev_pre next_pre prev_state next_state} ->
+    lpre:l_pre next_pre{lpre (st.heap_of_mem next_state)} ->
+    lpost:l_post next_pre q ->
+    m st a next_pre q lpre lpost ->
     nat ->
-    step_result a q frame
+    step_result a q
 
 
 (**** Type of the single-step interpreter ****)
@@ -498,13 +492,10 @@ type step_result (#st:st) a (q:post st a) (frame:st.hprop) =
 
 unfold
 let step_req (#st:st)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
-= st.interp
-    (st.locks_invariant state `st.star` pre `st.star` frame)
-    (st.heap_of_mem state) /\
+= st.interp (st.locks_invariant state `st.star` pre) (st.heap_of_mem state) /\
   lpre (st.heap_of_mem state)
 
 let weaker_pre (#st:st)
@@ -513,7 +504,7 @@ let weaker_pre (#st:st)
   (state next_state:st.mem)
 = lpre (st.heap_of_mem state) ==> next_lpre (st.heap_of_mem next_state)
 
-let stronger_post (#st:st) (#a:Type)
+let stronger_post (#st:st) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a)
   (lpost:l_post pre post)
   (#next_pre:st.hprop) (next_lpost:l_post next_pre post)
@@ -524,13 +515,13 @@ let stronger_post (#st:st) (#a:Type)
 
 unfold
 let step_ens (#st:st)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
-: step_result a post frame -> Type0
+: step_result a post -> Type0
 = fun r ->
-  let Step state1 next_pre next_state next_lpre next_lpost _post _frame = r in
+  let Step pre1 state1 next_pre next_state next_lpre next_lpost _ _ = r in
+  pre1 == pre /\
   state1 == state /\
   weaker_pre lpre next_lpre state next_state /\
   stronger_post lpost next_lpost state next_state
@@ -538,20 +529,20 @@ let step_ens (#st:st)
 
 /// The type of the stepping function
 
-unfold
-let step_t =
+type step_t =
   #st:st -> i:nat ->
-  #a:Type -> #pre:st.hprop -> #post:post st a -> #lpre:l_pre pre -> #lpost:l_post pre post ->
-  frame:st.hprop ->
+  #a:Type u#a ->
+  #pre:st.hprop -> #post:post st a -> #lpre:l_pre pre -> #lpost:l_post pre post ->
   f:m st a pre post lpre lpost ->
   state:st.mem ->
-  Div (step_result a post frame)
-      (step_req frame f state)
-      (step_ens frame f state)
+  Div (step_result a post)
+  (step_req f state)
+  (step_ens f state)
 
 
 (**** Auxiliary lemmas ****)
 
+/// Some AC lemmas on `st.star`
 
 let equals_ext_right (#st:st) (p q r:st.hprop)
 : Lemma
@@ -567,60 +558,145 @@ let equals_ext_right (#st:st) (p q r:st.hprop)
     p `st.star` r;
   }
 
-let ac_reasoning_for_frame (#st:st) (p q r s:st.hprop)
+let commute_star_right (#st:st) (p q r:st.hprop)
 : Lemma
-  (((p `st.star` (q `st.star` r)) `st.star` s) `st.equals`
-   ((p `st.star` q) `st.star` (r `st.star` s)))
+  ((p `st.star` (q `st.star` r)) `st.equals`
+   (p `st.star` (r `st.star` q)))
 = calc (st.equals) {
-    (p `st.star` (q `st.star` r)) `st.star` s;
-       (st.equals) { }
-    ((p `st.star` q) `st.star` r) `st.star` s;
-       (st.equals) { }
-    (p `st.star` q) `st.star` (r `st.star` s);
-   }
+    p `st.star` (q `st.star` r);
+       (st.equals) { equals_ext_right p (q `st.star` r) (r `st.star` q) }
+    p `st.star` (r `st.star` q);
+  }
 
-let frame_fp_props_for_frame (#st:st) (frame frame':st.hprop) (f_frame':fp_prop frame')
-  (state next_state:st.mem)
+let assoc_star_right (#st:st) (p q r s:st.hprop)
+: Lemma
+  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
+   (p `st.star` (q `st.star` (r `st.star` s))))
+= calc (st.equals) {
+    p `st.star` ((q `st.star` r) `st.star` s);
+       (st.equals) { equals_ext_right p ((q `st.star` r) `st.star` s)
+                                        (q `st.star` (r `st.star` s)) }
+    p `st.star` (q `st.star` (r `st.star` s));
+  }
+
+let commute_assoc_star_right (#st:st) (p q r s:st.hprop)
+: Lemma
+  ((p `st.star` ((q `st.star` r) `st.star` s)) `st.equals`
+   (p `st.star` (r `st.star` (q `st.star` s))))
+= calc (st.equals) {
+    p `st.star` ((q `st.star` r) `st.star` s);
+       (st.equals) { equals_ext_right p
+                       ((q `st.star` r) `st.star` s)
+                       ((r `st.star` q) `st.star` s) }
+    p `st.star` ((r `st.star` q) `st.star` s);
+       (st.equals) { assoc_star_right p r q s }
+    p `st.star` (r `st.star` (q `st.star` s));
+  }
+
+
+/// Apply extensionality manually, control proofs
+
+let apply_interp_ext (#st:st) (p q:st.hprop) (m:st.mem)
 : Lemma
   (requires
-    f_frame' (st.heap_of_mem state) /\
-    (forall (hp:fp_prop (frame' `st.star` frame)).
-       hp (st.heap_of_mem state) <==> hp (st.heap_of_mem next_state)))
-  (ensures
-    f_frame' (st.heap_of_mem next_state) /\
-    (forall (hp:fp_prop frame).
-       hp (st.heap_of_mem state) <==> hp (st.heap_of_mem next_state)))
+    st.interp p (st.heap_of_mem m) /\
+    p `st.equals` q)
+  (ensures st.interp q (st.heap_of_mem m))
 = ()
 
-let ac_reasoning_for_par_right (#st:st) (p q r s:st.hprop)
+let weaken_fp_prop (#st:st) (frame frame':st.hprop) (m0 m1:st.mem)
 : Lemma
-  (((p `st.star` (q `st.star` r)) `st.star` s) `st.equals`
-   ((p `st.star` r) `st.star` (q `st.star` s)))
-= calc (st.equals) {
-    (p `st.star` (q `st.star` r)) `st.star` s;
-       (st.equals) { equals_ext_right p (q `st.star` r) (r `st.star` q) }
-    (p `st.star` (r `st.star` q)) `st.star` s;
-       (st.equals) { }
-    ((p `st.star` r) `st.star` q) `st.star` s;
-       (st.equals) { }
-    (p `st.star` r) `st.star` (q `st.star` s);
-  }
+  (requires
+    forall (f_frame:fp_prop (frame `st.star` frame')).
+      f_frame (st.heap_of_mem m0) <==>
+      f_frame (st.heap_of_mem m1))
+   (ensures
+    forall (f_frame:fp_prop frame').
+      f_frame (st.heap_of_mem m0) <==>
+      f_frame (st.heap_of_mem m1))
+= ()
+
+
+/// Lemmas about preserves_frame
+
+let preserves_frame_trans (#st:st)
+  (hp1 hp2 hp3:st.hprop) (m1 m2 m3:st.mem)
+: Lemma
+  (requires
+    preserves_frame hp1 hp2 m1 m2 /\
+    preserves_frame hp2 hp3 m2 m3)
+  (ensures preserves_frame hp1 hp3 m1 m3)
+= ()
+
+#push-options "--z3rlimit 40"
+let preserves_frame_star (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
+: Lemma
+  (requires preserves_frame pre post m0 m1)
+  (ensures preserves_frame (pre `st.star` frame) (post `st.star` frame) m0 m1)
+= let aux (frame':st.hprop)
+    : Lemma
+      (requires
+        st.interp (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame')) (st.heap_of_mem m0))
+      (ensures
+        st.interp (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame')) (st.heap_of_mem m1) /\
+        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+    = assoc_star_right (st.locks_invariant m0) pre frame frame';
+      apply_interp_ext
+        (st.locks_invariant m0 `st.star` ((pre `st.star` frame) `st.star` frame'))
+        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
+        m0;
+      assoc_star_right (st.locks_invariant m1) post frame frame';
+      apply_interp_ext
+        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
+        (st.locks_invariant m1 `st.star` ((post `st.star` frame) `st.star` frame'))
+        m1;
+      weaken_fp_prop frame frame' m0 m1
+  in
+  Classical.forall_intro (Classical.move_requires aux)
+
+let preserves_frame_star_left (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
+: Lemma
+  (requires preserves_frame pre post m0 m1)
+  (ensures preserves_frame (frame `st.star` pre) (frame `st.star` post) m0 m1)
+= let aux (frame':st.hprop)
+    : Lemma
+      (requires
+        st.interp (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame')) (st.heap_of_mem m0))
+      (ensures
+        st.interp (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame')) (st.heap_of_mem m1) /\
+        (forall (f_frame:fp_prop frame'). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+    = commute_assoc_star_right (st.locks_invariant m0) frame pre frame';
+      apply_interp_ext
+        (st.locks_invariant m0 `st.star` ((frame `st.star` pre) `st.star` frame'))
+        (st.locks_invariant m0 `st.star` (pre `st.star` (frame `st.star` frame')))
+        m0;
+      commute_assoc_star_right (st.locks_invariant m1) frame post frame';
+      apply_interp_ext
+        (st.locks_invariant m1 `st.star` (post `st.star` (frame `st.star` frame')))
+        (st.locks_invariant m1 `st.star` ((frame `st.star` post) `st.star` frame'))
+        m1;
+      weaken_fp_prop frame frame' m0 m1
+  in
+  Classical.forall_intro (Classical.move_requires aux)
+#pop-options
+
 
 /// Lemma frame_post_for_par is used in the par proof
 ///
 /// E.g. in the par rule, when L takes a step, we can frame the requires of R
-///   by adding it to the frame used in the stepping relation
+///   by using the preserves_frame property of the stepping relation
 ///
-/// However we also need to frame the ensures of R, basically, we need:
+/// However we also need to frame the ensures of R, for establishing stronger_post
 ///
-/// forall x h_final. postR old_state x h_final <==> postR next_state x h_final
+/// Basically, we need:
+///
+/// forall x h_final. postR prev_state x h_final <==> postR next_state x h_final
 ///
 /// (the proof only requires the reverse implication, but we can prove iff)
 ///
 /// To prove this, we rely on the framing of all frame fp props provides by the stepping relation
 ///
 /// To use it, we instantiate the fp prop with inst_heap_prop_for_par
-
 
 let inst_heap_prop_for_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a)
   (lpost:l_post pre post)
@@ -630,21 +706,38 @@ let inst_heap_prop_for_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a)
   forall x final_state. lpost h x final_state <==>
                    lpost (st.heap_of_mem state) x final_state
 
-let frame_post_for_par (#st:st)
-  (#a:Type) (#pre:st.hprop) (#post:post st a)
-  (lpre:l_pre pre) (lpost:l_post pre post)
-  (frame:st.hprop) (m0 m1:st.mem)
+let frame_post_for_par_tautology (#st:st)
+  (#a:Type) (#pre_f:st.hprop) (#post_f:post st a) (lpost_f:l_post pre_f post_f)
+  (m0:st.mem)
+: Lemma (inst_heap_prop_for_par lpost_f m0 (st.heap_of_mem m0))
+= ()
+
+let frame_post_for_par_aux (#st:st)
+  (pre_s post_s:st.hprop) (m0 m1:st.mem)
+  (#a:Type) (#pre_f:st.hprop) (#post_f:post st a) (lpost_f:l_post pre_f post_f)
 : Lemma
   (requires
-    forall (f_frame:fp_prop (pre `st.star` frame)).
-      f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+    preserves_frame pre_s post_s m0 m1 /\
+    st.interp (st.locks_invariant m0 `st.star` (pre_s `st.star` pre_f)) (st.heap_of_mem m0))
   (ensures
-    forall (x:a) (final_state:st.heap).
-      lpost (st.heap_of_mem m0) x final_state <==>
-      lpost (st.heap_of_mem m1) x final_state)
-= let inst : fp_prop (pre `st.star` frame) =
-    inst_heap_prop_for_par lpost m0 in
-  ()
+    inst_heap_prop_for_par lpost_f m0 (st.heap_of_mem m0) <==>
+    inst_heap_prop_for_par lpost_f m0 (st.heap_of_mem m1))
+= ()
+
+let frame_post_for_par (#st:st)
+  (pre_s post_s:st.hprop) (m0 m1:st.mem)
+  (#a:Type) (#pre_f:st.hprop) (#post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
+: Lemma
+  (requires
+    preserves_frame pre_s post_s m0 m1 /\
+    st.interp (st.locks_invariant m0 `st.star` (pre_s `st.star` pre_f)) (st.heap_of_mem m0))
+  (ensures
+    (lpre_f (st.heap_of_mem m0) <==> lpre_f (st.heap_of_mem m1)) /\
+    (forall (x:a) (final_state:st.heap).
+       lpost_f (st.heap_of_mem m0) x final_state <==>
+       lpost_f (st.heap_of_mem m1) x final_state))
+= frame_post_for_par_tautology lpost_f m0;
+  frame_post_for_par_aux pre_s post_s m0 m1 lpost_f
 
 
 /// Finally lemmas for proving that in the par rules preconditions get weaker
@@ -655,19 +748,16 @@ let par_weaker_pre_and_stronger_post_l (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
   (#next_preL:st.hprop) (next_lpreL:l_pre next_preL) (next_lpostL:l_post next_preL postL)
   (#preR:st.hprop) (lpreR:l_pre preR)
   (#aR:Type) (#postR:post st aR) (lpostR:l_post preR postR)
-  (frame:st.hprop)
   (state next_state:st.mem)
 : Lemma
   (requires
     weaker_pre lpreL next_lpreL state next_state /\
     stronger_post lpostL next_lpostL state next_state /\
-    (forall (f_frame:fp_prop (preR `st.star` frame)).
-       f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
+    preserves_frame preL next_preL state next_state /\
     lpreL (st.heap_of_mem state) /\
-    lpreR (st.heap_of_mem state))
+    lpreR (st.heap_of_mem state) /\
+    st.interp (st.locks_invariant state `st.star` (preL `st.star` preR)) (st.heap_of_mem state))
   (ensures
-    (forall (f_frame:fp_prop frame).
-       f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
     weaker_pre
       (par_lpre lpreL lpreR)
       (par_lpre next_lpreL lpreR)
@@ -676,8 +766,9 @@ let par_weaker_pre_and_stronger_post_l (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
       (par_lpost lpreL lpostL lpreR lpostR)
       (par_lpost next_lpreL next_lpostL lpreR lpostR)
       state next_state)
-= frame_post_for_par lpreR lpostR frame state next_state
-
+= frame_post_for_par preL next_preL state next_state lpreR lpostR;
+  assert (weaker_pre (par_lpre lpreL lpreR) (par_lpre next_lpreL lpreR) state next_state) by
+    (norm [delta_only [`%weaker_pre; `%par_lpre] ])
 
 let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre preL)
   (#aL:Type) (#postL:post st aL) (lpostL:l_post preL postL)
@@ -685,19 +776,17 @@ let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
   (#aR:Type) (#postR:post st aR) (lpostR:l_post preR postR)
   (#next_preR:st.hprop) (next_lpreR:l_pre next_preR)
   (next_lpostR:l_post next_preR postR)
-  (frame:st.hprop)
   (state next_state:st.mem)
 : Lemma
   (requires
     weaker_pre lpreR next_lpreR state next_state /\
     stronger_post lpostR next_lpostR state next_state /\
-    (forall (f_frame:fp_prop (preL `st.star` frame)).
-       f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
+    preserves_frame preR next_preR state next_state /\
     lpreR (st.heap_of_mem state) /\
-    lpreL (st.heap_of_mem state))
+    lpreL (st.heap_of_mem state) /\
+    st.interp (st.locks_invariant state `st.star` (preL `st.star` preR)) (st.heap_of_mem state))
   (ensures
-    (forall (f_frame:fp_prop frame).
-       f_frame (st.heap_of_mem state) <==> f_frame (st.heap_of_mem next_state)) /\
+    st.interp (st.locks_invariant next_state `st.star` (preL `st.star` next_preR)) (st.heap_of_mem next_state) /\
     weaker_pre
       (par_lpre lpreL lpreR)
       (par_lpre lpreL next_lpreR)
@@ -706,90 +795,102 @@ let par_weaker_pre_and_stronger_post_r (#st:st) (#preL:st.hprop) (lpreL:l_pre pr
       (par_lpost lpreL lpostL lpreR lpostR)
       (par_lpost lpreL lpostL next_lpreR next_lpostR)
       state next_state)
-= frame_post_for_par lpreL lpostL frame state next_state
-
+= commute_star_right (st.locks_invariant state) preL preR;
+  apply_interp_ext
+    (st.locks_invariant state `st.star` (preL `st.star` preR))
+    (st.locks_invariant state `st.star` (preR `st.star` preL))
+    state;
+  frame_post_for_par preR next_preR state next_state lpreL lpostL;
+  assert (weaker_pre (par_lpre lpreL lpreR) (par_lpre lpreL next_lpreR) state next_state) by
+    (norm [delta_only [`%weaker_pre; `%par_lpre] ]);
+  commute_star_right (st.locks_invariant next_state) next_preR preL;
+  apply_interp_ext
+    (st.locks_invariant next_state `st.star` (next_preR `st.star` preL))
+    (st.locks_invariant next_state `st.star` (preL `st.star` next_preR))
+    next_state
 
 (**** Begin stepping functions ****)
 
-let step_ret (#st:st) (i:nat) (#a:Type)
+let step_ret (#st:st) (i:nat) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
   (f:m st a pre post lpre lpost{Ret? f})
   (state:st.mem)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a post) (step_req f state) (step_ens f state)
 
 = let Ret p x lp = f in
-  Step state (p x) state lpre lpost f i
+  Step (p x) state (p x) state lpre lpost f i
 
+
+let lpost_ret_act (#st:st) (#a:Type) (#pre:st.hprop) (#post:post st a) (lpost:l_post pre post)
+  (x:a) (state:st.mem)
+: l_post (post x) post
+= fun _ x h1 -> lpost (st.heap_of_mem state) x h1
 
 let step_act (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Act? f})
   (state:st.mem)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a post) (step_req f state) (step_ens f state)
 
-= let Act pre post f = f in
-  let (| x, new_state |) = f state in
+= let Act #_ #_ #_ #_ #_ #_ f = f in
 
-  let lpost : l_post (post x) post = fun _ x h1 -> st.interp (post x) h1 in
-  Step state (post x) new_state (fun h -> lpost h x h) lpost (Ret post x lpost) i
+  let x, next_state = f state in
 
+  let lpost : l_post (post x) post = lpost_ret_act lpost x state in
+
+  Step pre state (post x) next_state (fun h -> lpost h x h) lpost (Ret post x lpost) i
 
 let step_bind (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
   (state:st.mem)
   (step:step_t)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a post) (step_req f state) (step_ens f state)
 
 = match f with
   | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->
-    Step state (p x) state (lpre_b x) (lpost_b x) (g x) i
+    Step (p x) state (p x) state (lpre_b x) (lpost_b x) (g x) i
 
-  | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b f g ->
-    let Step _ next_pre next_state next_lpre next_lpost f j = step i frame f state in
-    
-    Step state next_pre next_state
+  | Bind #_ #_ #pre_a #_ #lpre_a #lpost_a #_ #_ #lpre_b #lpost_b f g ->
+    let Step pre_a state1 next_pre next_state next_lpre next_lpost f j = step i f state in
+
+    assert (bind_lpre next_lpre next_lpost lpre_b (st.heap_of_mem next_state)) by
+      norm ([delta_only [`%bind_lpre]]);
+
+    Step pre_a state1 next_pre next_state
       (bind_lpre next_lpre next_lpost lpre_b)
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
-
+    
 let step_frame (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (f:m st a pre p lpre lpost{Frame? f})
   (state:st.mem)
   (step:step_t)
 
-: Div (step_result a p frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a p) (step_req f state) (step_ens f state)
 
 = match f with  
   | Frame (Ret p x lp) frame f_frame ->
-    Step state (p x `st.star` frame) state
+    Step (p x `st.star` frame) state (p x `st.star` frame) state
       (fun h -> lpost h x h)
       lpost
       (Ret (fun x -> p x `st.star` frame) x lpost)
       i
 
-  | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame' f_frame' ->
-    ac_reasoning_for_frame (st.locks_invariant state) f_pre frame' frame;
+  | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame f_frame ->
+    let Step pre state next_fpre next_state next_flpre next_flpost f j = step i f state in
 
-    let Step state next_fpre next_state next_flpre next_flpost f j = step i (frame' `st.star` frame) f state in
-    
-    ac_reasoning_for_frame (st.locks_invariant next_state) next_fpre frame' frame;
+    preserves_frame_star pre next_fpre state next_state frame;
 
-    frame_fp_props_for_frame frame frame' f_frame' state next_state;
-
-    Step state (next_fpre `st.star` frame') next_state
-      (frame_lpre next_flpre f_frame')
-      (frame_lpost next_flpre next_flpost f_frame')
-      (Frame f frame' f_frame')
+    Step (pre `st.star` frame) state (next_fpre `st.star` frame) next_state
+      (frame_lpre next_flpre f_frame)
+      (frame_lpost next_flpre next_flpost f_frame)
+      (Frame f frame f_frame)
       j
 
 
@@ -798,20 +899,19 @@ let step_frame (#st:st) (i:nat)
 assume val go_left : nat -> bool
 
 let step_par (#st:st) (i:nat)
-  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
+  (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Par? f})
   (state:st.mem)
   (step:step_t)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a post) (step_req f state) (step_ens f state)
 
 = match f with
   | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
 
     let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
 
-    Step state (pL xL `st.star` pR xR) state
+    Step (pL xL `st.star` pR xR) state (pL xL `st.star` pR xR) state
       (fun h -> lpL h xL h /\ lpR h xR h)
       lpost 
       (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
@@ -819,65 +919,60 @@ let step_par (#st:st) (i:nat)
 
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
     if go_left i then begin
-      ac_reasoning_for_frame (st.locks_invariant state) preL preR frame;
+      let Step pre state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) mL state in
 
-      let Step state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) (preR `st.star` frame) mL state in
+      preserves_frame_star pre next_preL state next_state preR;
+      par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR state next_state;
 
-      ac_reasoning_for_frame (st.locks_invariant next_state) next_preL preR frame;
-
-      par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR frame state next_state;
-
-      Step state (next_preL `st.star` preR) next_state
+      Step (pre `st.star` preR) state (next_preL `st.star` preR) next_state
         (par_lpre next_lpreL lpreR)
         (par_lpost next_lpreL next_lpostL lpreR lpostR)
         (Par mL mR)
         j
     end
     else begin
-      ac_reasoning_for_par_right (st.locks_invariant state) preL preR frame;
+      let Step pre state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) mR state in
 
-      let Step state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) (preL `st.star` frame) mR state in
+      preserves_frame_star_left pre next_preR state next_state preL;
+      par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR state next_state;
 
-      ac_reasoning_for_par_right (st.locks_invariant next_state) preL next_preR frame;
-    
-      par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR frame state next_state;
-
-      Step state (preL `st.star` next_preR) next_state
+      Step (preL `st.star` pre) state (preL `st.star` next_preR) next_state
         (par_lpre lpreL next_lpreR)
         (par_lpost lpreL lpostL next_lpreR next_lpostR)
         (Par mL mR)
         j
     end
 
-let step_weaken (#st:st) (i:nat) (#a:Type)
+let step_weaken (#st:st) (i:nat) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (frame:st.hprop)
   (f:m st a pre post lpre lpost{Weaken? f})
   (state:st.mem)
 
-: Div (step_result a post frame) (step_req frame f state) (step_ens frame f state)
+: Div (step_result a post) (step_req f state) (step_ens f state)
 
 = let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ f = f in
 
-  Step state pre state lpre lpost f i
+  Step pre state pre state lpre lpost f i
 
 
 /// Step function
 
-let rec step : step_t =
-  fun #st i #a #pre #post #o_lpre #o_lpost frame f state ->
-  match f with
-  | Ret _ _ _   ->    step_ret i frame f state
-  | Act _ _ _   ->    step_act i frame f state
-  | Bind _ _    ->   step_bind i frame f state step
-  | Frame _ _ _ ->  step_frame i frame f state step
-  | Par _ _     ->    step_par i frame f state step
-  | Weaken _    -> step_weaken i frame f state
+let rec step (#st:st) (i:nat) (#a:Type u#a)
+  (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (f:m st a pre post lpre lpost)
+  (state:st.mem)
+: Div (step_result a post)
+  (step_req f state)
+  (step_ens f state)
+= match f with
+  | Ret _ _ _ -> step_ret i f state
+  | Bind _ _ -> step_bind i f state step
+  | Act _ -> step_act i f state
+  | Frame _ _ _ -> step_frame i f state step
+  | Par _ _ -> step_par i f state step
+  | Weaken _ -> step_weaken i f state
 
-
-/// Top-level run function
-
-let rec run (#st:st) (i:nat) (#a:Type) (#pre:st.hprop) (#post:post st a)
+let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
@@ -887,45 +982,48 @@ let rec run (#st:st) (i:nat) (#a:Type) (#pre:st.hprop) (#post:post st a)
     lpre (st.heap_of_mem state))
   (ensures fun (x, new_state) ->
     st.interp (st.locks_invariant new_state `st.star` post x) (st.heap_of_mem new_state) /\
-    lpost (st.heap_of_mem state) x (st.heap_of_mem new_state))
+    lpost (st.heap_of_mem state) x (st.heap_of_mem new_state) /\
+    preserves_frame pre (post x) state new_state)
 = match f with
   | Ret _ x _ -> x, state
 
   | _ ->
-    let Step _ _ state _ _ f j = step i st.emp f state in
-    run j f state
+    let Step _ _ new_pre new_state _ _ f j = step i f state in
+    let (x, final_state) = run j f new_state in
+    preserves_frame_trans pre new_pre (post x) state new_state final_state;
+    (x, final_state)
 
 
-(**** Trying to define the layered effect ****)
+// // (**** Trying to define the layered effect ****)
 
-type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
-= unit -> m st a pre post lpre lpost
+// // type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
+// // = unit -> m st a pre post lpre lpost
 
 
-/// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
+// // /// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
 
-let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
-: repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
-= fun _ -> Ret post x (lpost x)
+// // let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
+// // : repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
+// // = fun _ -> Ret post x (lpost x)
 
-let bind (a:Type) (b:Type) (st:st)
-  (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
-  (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
-  (f:repr a st pre_f post_f lpre_f lpost_f)
-  (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
-: repr b st pre_f post_g
-    (bind_lpre lpre_f lpost_f lpre_g)
-    (bind_lpost lpre_f lpost_f lpost_g)
-= fun _ -> Bind (f ()) (fun x -> g x ())
+// // let bind (a:Type) (b:Type) (st:st)
+// //   (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
+// //   (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
+// //   (f:repr a st pre_f post_f lpre_f lpost_f)
+// //   (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
+// // : repr b st pre_f post_g
+// //     (bind_lpre lpre_f lpost_f lpre_g)
+// //     (bind_lpost lpre_f lpost_f lpost_g)
+// // = fun _ -> Bind (f ()) (fun x -> g x ())
 
-let subcomp (a:Type) (st:st)
-  (pre:st.hprop) (post:post st a)
-  (lpre_f:l_pre pre) (lpost_f:l_post pre post)
-  (lpre_g:l_pre pre) (lpost_g:l_post pre post)
-  (f:repr a st pre post lpre_f lpost_f)
-: Pure (repr a st pre post lpre_g lpost_g)
-  (requires
-    (forall h. lpre_g h ==> lpre_f h) /\
-    (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
-  (ensures fun _ -> True)
-= fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())
+// // let subcomp (a:Type) (st:st)
+// //   (pre:st.hprop) (post:post st a)
+// //   (lpre_f:l_pre pre) (lpost_f:l_post pre post)
+// //   (lpre_g:l_pre pre) (lpost_g:l_post pre post)
+// //   (f:repr a st pre post lpre_f lpost_f)
+// // : Pure (repr a st pre post lpre_g lpost_g)
+// //   (requires
+// //     (forall h. lpre_g h ==> lpre_f h) /\
+// //     (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
+// //   (ensures fun _ -> True)
+// // = fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())

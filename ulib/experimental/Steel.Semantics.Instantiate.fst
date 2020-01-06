@@ -2,43 +2,18 @@ module Steel.Semantics.Instantiate
 
 friend Steel.Memory
 
-#reset-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
-let lemma_symmetry () = ()
-let lemma_transitive () = ()
-let lemma_interp_extensionality () = ()
-let lemma_interp_depends_only () = ()
+let associative () : Lemma (S.associative equiv star)
+= Classical.forall_intro_3 star_associative
 
-let lemma_associative () = Classical.forall_intro_3 star_associative
-let lemma_commutative () = Classical.forall_intro_2 star_commutative
+let commutative () : Lemma (S.commutative equiv star)
+= Classical.forall_intro_2 star_commutative
 
-let lemma_is_unit () =
-  let lem (y:hprop) : Lemma (star emp y `equals` y /\ star y emp `equals` y)
+let is_unit () : Lemma (S.is_unit emp equiv star)
+= let aux (y:hprop) : Lemma (star emp y `equiv` y /\ star y emp `equiv` y)
     = emp_unit y; star_commutative emp y
   in
-  Classical.forall_intro lem
+  Classical.forall_intro aux
 
-#push-options "--max_ifuel 1 --max_fuel 1"
-
-let lemma_equals_ext () = ()
-
-#pop-options
-
-let lemma_affine () = Classical.forall_intro_3 affine_star
-let lemma_emp_valid () = Classical.forall_intro intro_emp
-
-let lemma_disjoint_sym () = ()
-let lemma_disjoint_join () = ()
-
-let lemma_join_commutative () = ()
-let lemma_join_associative () = ()
-
-#push-options "--max_fuel 1 --max_ifuel 1"
-
-let lemma_weaken_depends_only_on () = ()
-
-let lemma_m_implies_disjoint () = ()
-let lemma_mem_valid_locks_invariant () = ()
-let lemma_valid_upd_heap () = ()
-
-#pop-options
+let state_obeys_st_laws () = associative (); commutative (); is_unit ()

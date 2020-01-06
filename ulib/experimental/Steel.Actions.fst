@@ -340,7 +340,7 @@ let alloc_pre_m_action (#a:_) (v:a)
     (| x, t |)
 #pop-options
 
-#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 80 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let alloc_preserves_frame_prop  (#a:_) (v:a) (m:mem) (frame:hprop)
   : Lemma (requires
       interp (frame `star` locks_invariant m) (heap_of_mem m))

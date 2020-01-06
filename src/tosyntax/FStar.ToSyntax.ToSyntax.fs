@@ -485,6 +485,7 @@ let generalize_annotated_univs (s:sigelt) :sigelt =
            | _ -> empty_set
          in
          BU.set_union uvs1 uvs2
+       | Tm_arrow (bs, _) -> bs_univnames bs
        | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
        | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
        | _ -> empty_set)
