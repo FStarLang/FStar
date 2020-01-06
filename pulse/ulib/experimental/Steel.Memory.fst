@@ -516,7 +516,9 @@ let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
 
 (* Properties of star *)
 
+#push-options "--z3rlimit 10"
 let star_commutative (p1 p2:hprop) = ()
+#pop-options
 
 #push-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 10"
 let star_associative (p1 p2 p3:hprop)
