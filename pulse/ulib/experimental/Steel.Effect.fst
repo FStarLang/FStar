@@ -67,6 +67,23 @@ let bind (a:Type) (b:Type)
   g x m1
 #pop-options
 
+assume WP_monotonic_pure:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall x. p x ==> q x) ==>
+       (wp p ==> wp q))
+
+let bind_PURE_M (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True))
+    (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
+= fun m0 ->
+  let x = f () in
+  g x m0
+
 let subcomp (a:Type) (pre:pre_t) (post:post_t a)
   (req_f:req_t pre) (ens_f:ens_t pre a post)
   (req_g:req_t pre) (ens_g:ens_t pre a post)
@@ -99,6 +116,14 @@ layered_effect {
   subcomp = subcomp;
   if_then_else = if_then_else
 }
+
+
+let lift_pure_steel (a:Type) (wp:pure_wp a) (p:Mem.hprop) (f:unit -> PURE a wp)
+: repr a p (fun _ -> p)
+  (fun _ -> wp (fun _ -> True) /\ True)
+  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+= admit ()
+
 
 let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
