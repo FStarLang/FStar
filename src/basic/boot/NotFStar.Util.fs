@@ -174,7 +174,7 @@ let ask_process (p:proc) (input:string) (exn_handler: unit -> string): string =
     System.Threading.Monitor.Exit(p.m);
     x
 
-let kill_process (p:proc) : string =
+let kill_z3_process (p:proc) : string =
 //    Printf.printf "Killing process %s\n" (p.id);
     p.killed := true;
     System.Threading.Monitor.Enter(p.m);
@@ -183,7 +183,10 @@ let kill_process (p:proc) : string =
     p.proc.WaitForExit();
     p.outbuf.ToString()
 
-let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then ignore (kill_process p))
+let kill_process (p : proc) : unit =
+  ignore (kill_z3_process p)
+
+let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then ignore (kill_z3_process p))
 
 let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<string>) : string =
   let pinfo = new ProcessStartInfo(prog, quote_args args) in

@@ -94,7 +94,7 @@ let debug_sigmap (m : BU.smap<sigelt>) =
  *)
 let unlazy t =
     match t with
-    | Lazy (_, t) -> FStar.Common.force_thunk t
+    | Lazy (_, t) -> Thunk.force t
     | t -> t
 
 let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
@@ -625,7 +625,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
           debug (fun () -> BU.print1 ">> Unfolding Tm_lazy to %s\n" (P.term_to_string t));
           translate cfg bs t
       in
-      Lazy (BU.Inl li, FStar.Common.mk_thunk f)
+      Lazy (BU.Inl li, Thunk.mk f)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -983,7 +983,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
         S.mk (Tm_lazy li) None Range.dummyRange
 
     | Lazy (_, thunk) ->
-        readback cfg (FStar.Common.force_thunk thunk)
+        readback cfg (Thunk.force thunk)
 
 type step =
   | Primops

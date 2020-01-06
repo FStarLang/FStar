@@ -105,7 +105,7 @@ let err_msg_comp_strings env c1 c2 :(string * string) =
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
-     fun env t1 t2 x ->
+     fun env t1 t2 () ->
        let s1, s2 = err_msg_type_strings env t1 t2 in
        BU.format2 "Subtyping check failed; expected type %s; got type %s" s2 s1
 let ill_kinded_type = "Ill-kinded type"

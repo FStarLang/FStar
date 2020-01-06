@@ -236,7 +236,8 @@ type proc
 val run_process : string -> string -> list<string> -> option<string> -> string
 val start_process: string -> string -> list<string> -> (string -> bool) -> (string -> bool) -> proc
 val ask_process: proc -> string -> (unit -> string) -> string
-val kill_process: proc -> string
+val kill_z3_process: proc -> string
+val kill_process: proc -> unit
 val kill_all: unit -> unit
 
 val get_file_extension: string -> string

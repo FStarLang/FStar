@@ -262,7 +262,7 @@ let bg_z3_proc =
           if (Options.log_queries()) || (!the_z3proc_ask_count > 0) || (not (old_params = next_params)) then begin
             if (Options.query_stats()) && (not (!the_z3proc = None)) then
               BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
-            let out = BU.kill_process (z3proc ()) in
+            let out = BU.kill_z3_process (z3proc ()) in
             make_new_z3_proc next_params ;
             the_queries := [] ;
             Some out
@@ -421,7 +421,7 @@ let doZ3Exe (log_file:_) (info:query_info) (decls:list<decl>) (fresh:bool) (inpu
       let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
       let kill_handler () = "\nkilled\n" in
       let out = BU.ask_process proc input kill_handler in
-      let qip_output = BU.kill_process proc in
+      let qip_output = BU.kill_z3_process proc in
       if Options.report_qi () then begin
         let query_data = [(info , decls)] in
         qiprofile_analysis query_data qip_output
