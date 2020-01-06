@@ -210,7 +210,7 @@ let join_commutative' (m0 m1:heap)
 
 let join_commutative m0 m1 = ()
 
-#push-options "--z3rlimit 25"
+#push-options "--z3rlimit 35"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -518,27 +518,10 @@ let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
 
 let star_commutative (p1 p2:hprop) = ()
 
+#push-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 10"
 let star_associative (p1 p2 p3:hprop)
-= let ltor (m:heap)
-  : Lemma
-    (requires interp (p1 `star` (p2 `star` p3)) m)
-    (ensures interp ((p1 `star` p2) `star` p3) m)
-    [SMTPat (interp (p1 `star` (p2 `star` p3)) m)]
-  = let (m1, m2) = split_mem_ghost p1 (p2 `star` p3) m in
-    let (m2, m3) = split_mem_ghost p2 p3 m2 in
-    intro_star p1 p2 m1 m2;
-    intro_star (p1 `star` p2) p3 (m1 `join` m2) m3 in
-
-  let rtol (p1 p2 p3:hprop) (m:heap)
-  : Lemma
-    (requires interp ((p1 `star` p2) `star` p3) m)
-    (ensures interp (p1 `star` (p2 `star` p3)) m)
-    [SMTPat (interp (p1 `star` (p2 `star` p3)) m)]
-  = let (m1, m3) = split_mem_ghost (p1 `star` p2) p3 m in
-    let (m1, m2) = split_mem_ghost p1 p2 m1 in
-    intro_star p2 p3 m2 m3;
-    intro_star p1 (p2 `star` p3) m1 (m2 `join` m3) in
-  ()
+= ()
+#pop-options
 
 let star_congruence (p1 p2 p3 p4:hprop) = ()
 
