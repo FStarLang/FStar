@@ -769,12 +769,6 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    if (TcEnv.debug g.env_tcenv <| Options.Other "Extraction"
-        || TcEnv.debug g.env_tcenv <| Options.Other "ExtractNorm")
-    && Options.use_nbe_for_extraction()
-    then
-      BU.print1 "Starting to normalize type %s\n"
-                   (Print.term_to_string t0);
     let t = N.normalize (extraction_norm_steps()) g.env_tcenv t0 in
     translate_term_to_mlty g t
 
@@ -1560,15 +1554,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             then 
             let tcenv = TcEnv.set_current_module g.env_tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-            let _ = 
-              if TcEnv.debug tcenv <| Options.Other "Extraction"
-              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-              then BU.print1 "Pre-normalization of top-level:\n%s\n"
-                           (Print.term_to_string t) in
             lbs |> List.map (fun lb ->
                     // let tcenv = TcEnv.set_current_module g.env_tcenv
                     //             (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-                    // debug g (fun () ->
+                    // debug g (fun () -> 
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
@@ -1579,17 +1568,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print3 "Starting to normalize top-level let %s<%s>\n\tlbdef=%s"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.univ_names_to_string lb.lbunivs)
-                                            (Print.term_to_string lb.lbdef) in
+                             then let _ = BU.print1 "Starting to normalize top-level let %s\n"
+                                            (Print.lbname_to_string lb.lbname) in
+//                                            (Print.univ_names_to_string lb.lbunivs)
+//                                           (Print.term_to_string lb.lbdef) in
                                   // Options.set_option "debug_level"
                                   //   (Options.List [Options.String "Norm"; Options.String "Extraction"]);
                                   let a = FStar.Util.measure_execution_time
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in

@@ -91,18 +91,10 @@ and t
   | Lam of
         // 1. We represent n-ary functions that receive their arguments as a list
         //    The arguments are in reverse binder order (optimized for convenience beta reduction)
-       (list<t> -> t) *
-       // 2. This list represents the type annotations on the lambda binders
-       //    Each one is a function from the representation of values substituted for a
-       //    prefix of the binders to a representation of the type of the binder in question.
-       //    NS: I wonder why we don't represent this as a list<t> -> list<arg>
-       //    NS: How do we reconstruct the name of the binder on readback?
-       list<(list<t> -> arg)> *
-       // 3. The arity of the function
-       int *
-       // 4. Lambda terms in F* are optionally decorated with the "residual" computation type of
-       //    the body. This argument provides a way to reconstruct that decoration
-       option<(list<t> -> residual_comp)>
+       (list<t> -> t)
+       * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>>//a context, binders (in order) and residual_comp for readback
+                                                                        //or a list of arguments, for primitive unembeddings
+       * int                        // arity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -111,13 +103,7 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of
-          // 1. A representation of the computation type
-          //       in a scope containing all the binders
-          (list<t> -> comp) *
-          // 2. A representation of each of the binders, in scope.
-          //       See the comment on the representation of the binders in Lam
-          list<(list<t> -> arg)>
+  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of
           // 1. A representation of the refinment formula in scope of its binder
           (t -> t) *
@@ -314,7 +300,7 @@ let constant_to_string (c: constant) =
 
 let rec t_to_string (x:t) =
   match x with
-  | Lam (b, args, arity, _) -> BU.format2 "Lam (_, %s args, %s)" (BU.string_of_int (List.length args)) (BU.string_of_int arity)
+  | Lam (b, _, arity) -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -387,7 +373,7 @@ let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
-let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> Tot (t1, None)), [(fun _ -> a)])
+let make_arrow1 t1 (a:arg) : t = Arrow (BU.Inr ([a], Tot (t1, None)))
 
 let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding
@@ -618,7 +604,8 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
         Lam((fun tas -> match unembed ea cb (List.hd tas) with
                         | Some a -> embed eb cb (f a)
                         | None -> failwith "cannot unembed function argument"),
-                [fun _ -> as_arg (type_of eb)], 1, None))
+            BU.Inr [as_arg (type_of eb)],
+            1))
     in
     let un cb (lam : t) : option<('a -> 'b)> =
         let k (lam:t) : option<('a -> 'b)> =

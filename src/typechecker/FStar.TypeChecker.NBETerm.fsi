@@ -102,10 +102,10 @@ type atom
 
 and t
   =
-  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-        * int                     // arity
-        * option<(list<t> -> residual_comp)> // residual comp
+  | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
+                                                                 //or a list of arguments, for primitive unembeddings
+        * int                        // arity
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args //universes and args in reverse order
@@ -113,7 +113,7 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
+  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo

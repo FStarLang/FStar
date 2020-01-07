@@ -137,8 +137,9 @@ let let_rec_arity (b:letbinding) =
 // NBE debuging
 
 let debug cfg f =
-  if Env.debug (Cfg.cfg_env cfg) (Options.Other "NBE")
-  then f ()
+  log cfg f
+  // if Env.debug (Cfg.cfg_env cfg) (Options.Other "NBE")
+  // then f ()
 
 let debug_term (t : term) =
   BU.print1 "%s\n" (P.term_to_string t)
@@ -377,13 +378,21 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       Type_t (translate_univ cfg bs u)
 
     | Tm_arrow (xs, c) ->
-      Arrow ((fun ys -> translate_comp cfg (List.rev_append ys bs) c),
-              List.fold_right (fun x formals ->
-                                   let next_formal prefix_of_xs_rev = (* will only be fully applied during readback *)
-                                     translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
-                                     snd x
-                                   in
-                                   next_formal :: formals) xs [])
+      let norm () =
+        let ctx, binders_rev =
+          List.fold_left
+            (fun (ctx, binders_rev) (x, q) ->
+              let t = readback cfg (translate cfg ctx x.sort) in
+              let x = { S.freshen_bv x with sort = t } in
+              let ctx = mkAccuVar x :: ctx in
+              ctx, (x, q) :: binders_rev)
+            (bs, [])
+            xs
+        in
+        let c = readback_comp cfg (translate_comp cfg ctx c) in
+        U.arrow (List.rev binders_rev) c
+      in
+      Arrow (BU.Inl (Thunk.mk norm))
 
     | Tm_refine (bv, tm) ->
       if cfg.steps.for_extraction
@@ -401,25 +410,9 @@ let rec translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs (xs, body, resc) ->
-      debug (fun () ->
-        let open FStar.Syntax.Syntax in
-        BU.print1 "Translating lambda with residual type %s\n"
-          (match resc with
-            | Some {residual_typ=Some t} -> P.term_to_string t
-            | _ -> "None"));
-      let arity = List.length xs in
-      Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
-           List.fold_right (fun x formals ->
-                             let next_formal prefix_of_xs_rev =
-                                 translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
-                                 snd x
-                             in
-                             next_formal :: formals)
-                          xs
-                          [],
-           arity,
-           BU.map_opt resc (fun c -> (fun formals ->
-             translate_residual_comp cfg (List.rev_append formals bs) c)))
+      Lam ((fun ys -> translate cfg (List.append ys bs) body),
+           BU.Inl (bs, xs, resc),
+           List.length xs)
 
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
@@ -598,28 +591,33 @@ and translate_comp cfg bs (c:S.comp) : comp =
 (* uncurried application *)
 and iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
   match f with
-  | Lam (f, targs, n, res) ->
+  | Lam (f, binders, n) ->
     let m = List.length args in
     if m < n then
       // partial application
-      let (_, targs') = List.splitAt m targs in
-      let targs' = List.map (fun targ -> (fun (l (* has length n - m *)) -> targ (List.rev (map_append fst args l)))) targs' in
-      let res =
-        match res with
-        | None -> None
-        | Some f -> Some (fun l -> f (map_append fst args l))
+      let arg_values_rev = map_rev fst args in
+      let binders =
+        match binders with
+        | BU.Inr raw_args ->
+          let _, raw_args = List.splitAt m raw_args in
+          BU.Inr raw_args
+
+        | BU.Inl (ctx, xs, rc) ->
+          let _, xs = List.splitAt m xs in
+          let ctx = List.append arg_values_rev ctx in
+          BU.Inl (ctx, xs, rc)
       in
-      Lam ((fun l -> f (map_append fst args l)),
-           targs',
-           n - m,
-           res)
+      Lam((fun l -> f (List.append l arg_values_rev)),
+          binders,
+          n - m)
     else if m = n then
       // full application
-      f (List.map fst args)
+      let arg_values_rev = map_rev fst args in
+      f arg_values_rev
     else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp cfg (f (List.map fst args)) args'
+      iapp cfg (f (map_rev fst args)) args'
   | Accu (a, ts) -> Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
@@ -733,19 +731,23 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
-         Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in
-              let callbacks = {
-                iapp = iapp cfg;
-                translate = translate cfg bs;
-              }
-              in
-              match prim_step.interpretation_nbe callbacks args' with
-              | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
-                         x
-              | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                       iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in FStar.Common.tabulate arity f),
-              arity, None)
+         Lam ((fun args_rev ->
+                 let args' = map_rev NBETerm.as_arg args_rev in
+                 let callbacks = {
+                   iapp = iapp cfg;
+                   translate = translate cfg bs;
+                 }
+                 in
+                 match prim_step.interpretation_nbe callbacks args' with
+                 | Some x ->
+                   debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
+                   x
+                 | None ->
+                   debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
+                   iapp cfg (mkFV fvar [] []) args'),
+              (let f (_:int) = S.new_bv None S.t_unit, None in
+               BU.Inl ([], FStar.Common.tabulate arity f, None)),
+              arity)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -793,15 +795,7 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   else if BU.is_right lb.lbname
   then let _ = debug (fun () -> BU.print2 "Making TopLevelLet for %s with arity %s\n" (P.lbname_to_string lb.lbname) (BU.string_of_int arity)) in
        TopLevelLet(lb, arity, [])
-  else  // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
-        let id x = x in
-        match us with
-        | [] -> translate cfg bs lb.lbdef
-        | _ ->
-          Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-                List.map (fun _ -> (fun _ts -> id <| (Constant Unit, None))) us,
-                // Zoe: Bogus type! The idea is that we will never readback these lambdas
-                List.length us, None)
+  else translate cfg bs lb.lbdef //local let-binding, cannot be universe polymorphic
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
@@ -1069,22 +1063,43 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
-    | Lam (f, targs, arity, resc) ->
-      let (args_rev, accus_rev) =
-          List.fold_left (fun (args_rev, accus_rev) tf ->
-                            let (xt, q) = tf accus_rev in
-                            let x = S.new_bv None (readback cfg xt) in
-                            ((x, q) :: args_rev,
-                            (mkAccuVar x) :: accus_rev))
-                         ([], [])
-                         targs
+    | Lam (f, binders, arity) ->
+      let binders, accus_rev, rc =
+        match binders with
+        | BU.Inl (ctx, binders, rc) ->
+          let ctx, binders_rev, accus_rev =
+            List.fold_left
+              (fun (ctx, binders_rev, accus_rev) (x, q) ->
+                let tnorm = readback cfg (translate cfg ctx x.sort) in
+                let x = { S.freshen_bv x with sort = tnorm } in
+                let ax = mkAccuVar x in
+                let ctx = ax :: ctx in
+                ctx, (x,q)::binders_rev, ax::accus_rev)
+              (ctx, [], [])
+              binders
+          in
+          let rc =
+            match rc with
+            | None -> None
+            | Some rc ->
+              Some (readback_residual_comp cfg (translate_residual_comp cfg ctx rc))
+          in
+          List.rev binders_rev,
+          accus_rev,
+          rc
+        | BU.Inr args ->
+          let binders, accus =
+            List.fold_right
+              (fun (t, _) (binders, accus) ->
+                let x = S.new_bv None (readback cfg t) in
+                (x, None)::binders, mkAccuVar x :: accus)
+              args
+              ([],[])
+          in
+          binders, List.rev accus, None
       in
-      let accus = List.rev accus_rev in
-      let body = readback cfg (f accus) in
-      // GM: Isn't this closing the binders over the body/lcomp? Why?
-      U.abs (List.rev args_rev)
-            body
-            (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk accus)))
+      let body = readback cfg (f accus_rev) in
+      U.abs binders body rc
 
     | Refinement (f, targ) ->
       if cfg.steps.for_extraction
@@ -1092,54 +1107,53 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       else
         let x =  S.new_bv None (readback cfg (fst (targ ()))) in
         let body = readback cfg (f (mkAccuVar x)) in
-        U.refine x body
+        let refinement = U.refine x body in
+        if cfg.steps.simplify
+        then Common.simplify cfg.debug.wpe refinement
+        else refinement
 
     | Reflect t ->
       let tm = readback cfg t in
       U.mk_reflect tm
 
-    | Arrow (f, targs) ->
-      let (args_rev, accus_rev) =
-          List.fold_left (fun (args_rev, accus_rev) tf ->
-                             let (xt, q) = tf accus_rev in
-                             let x = S.new_bv None (readback cfg xt) in
-                             ((x, q) :: args_rev,
-                             (mkAccuVar x) :: accus_rev))
-                         ([], [])
-                         targs in
+    | Arrow (BU.Inl f) ->
+      Thunk.force f
 
-      let cmp = readback_comp cfg (f (List.rev accus_rev)) in
-      U.arrow (List.rev args_rev) cmp
+    | Arrow (BU.Inr (args, c)) ->
+      let binders =
+        List.map
+          (fun (t, q) ->
+            let t = readback cfg t in
+            let x = S.new_bv None t in
+            (x, q))
+          args
+      in
+      let c = readback_comp cfg c in
+      U.arrow binders c
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      let apply tm =
-      match args with
-      | [] -> tm
-      | _ ->  U.mk_app tm args
-      in
-      (match us with
-       | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
-       | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
+      let fv = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
+      app
 
     | FV (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      let apply tm =
-        match args with
-         | [] -> tm
-         | _ ->  U.mk_app tm args
-      in
-      begin match us with
-      | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
-      | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
-      end
+      let fv = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
+      if cfg.steps.simplify
+      then Common.simplify cfg.debug.wpe app
+      else app
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv
 
     | Accu (Var bv, ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
-      U.mk_app (S.bv_to_name bv) args
+      let app = U.mk_app (S.bv_to_name bv) args in
+      if cfg.steps.simplify
+      then Common.simplify cfg.debug.wpe app
+      else app
 
     | Accu (Match (scrut, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
@@ -1171,7 +1185,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           match (readback [[x]])
                 branches
        *)
-      U.mk_app head args
+      let app = U.mk_app head args in
+      if cfg.steps.simplify
+      then Common.simplify cfg.debug.wpe app
+      else app
+
 
     | Accu(UnreducedLet (var, typ, defn, body, lb), args) ->
       let typ = readback cfg (Thunk.force typ) in
@@ -1298,9 +1316,13 @@ let normalize psteps (steps:list<Env.step>)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  debug cfg (fun () -> BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e));
+  if Env.debug env (Options.Other "NBETop")
+  ||  Env.debug env (Options.Other "NBE")
+  then BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e);
   let r = readback cfg (translate cfg [] e) in
-  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r));
+  if Env.debug env (Options.Other "NBETop")
+  ||  Env.debug env (Options.Other "NBE")
+  then BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r);
   r
 
 (* ONLY FOR UNIT TESTS! *)
