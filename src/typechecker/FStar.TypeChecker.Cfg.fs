@@ -194,6 +194,7 @@ type debug_switches = {
     wpe              : bool;
     norm_delayed     : bool;
     print_normalized : bool;
+    debug_nbe        : bool;
 }
 
 let no_debug_switches = {
@@ -206,6 +207,7 @@ let no_debug_switches = {
     wpe              = false;
     norm_delayed     = false;
     print_normalized = false;
+    debug_nbe        = false;
 }
 
 type primitive_step = {
@@ -280,8 +282,7 @@ let log_unfolding cfg f =
     if cfg.debug.unfolding then f () else ()
 
 let log_nbe cfg f =
-    if Env.debug cfg.tcenv <| Options.Other "NBE"
-    then f()
+    if cfg.debug.debug_nbe then f ()
 
 
 (*******************************************************************)
@@ -1013,7 +1014,8 @@ let config' psteps s e =
              ; b380 = Env.debug e (Options.Other "380")
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")}
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
+             ; debug_nbe = Env.debug e (Options.Other "NBE")}
             else no_debug_switches
       ;
      steps = steps;

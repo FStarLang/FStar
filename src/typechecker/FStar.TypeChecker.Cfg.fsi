@@ -89,6 +89,7 @@ type debug_switches = {
     wpe              : bool;
     norm_delayed     : bool;
     print_normalized : bool;
+    debug_nbe        : bool;
 }
 
 type cfg = {
