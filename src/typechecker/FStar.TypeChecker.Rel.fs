@@ -3363,11 +3363,11 @@ let with_guard env prob dopt =
 
 let with_guard_no_simp env prob dopt = match dopt with
     | None -> None
-    | Some d ->
+    | Some (deferred, implicits) ->
       Some ({guard_f=(p_guard prob |> NonTrivial);
-             deferred=d;
+             deferred=deferred;
              univ_ineqs=([], []);
-             implicits=[]})
+             implicits=implicits})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
      if debug env <| Options.Other "Rel" then
