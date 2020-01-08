@@ -3364,13 +3364,16 @@ let with_guard env prob dopt =
 let with_guard_no_simp env prob dopt = match dopt with
     | None -> None
     | Some d ->
-      Some ({guard_f=(p_guard prob |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
+      Some ({guard_f=(p_guard prob |> NonTrivial);
+             deferred=d;
+             univ_ineqs=([], []);
+             implicits=[]})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
      if debug env <| Options.Other "Rel" then
        BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
      let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
-     let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
+     let g = with_guard_no_simp env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
      if debug env <| Options.Other "Rel" then
        BU.print1 "} res = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
      g
@@ -3401,7 +3404,7 @@ let sub_comp env c1 c2 =
   let prob = CProb prob in
   def_check_prob "sub_comp" prob;
   let (r, ms) = BU.record_time
-                  (fun () -> with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
+                  (fun () -> with_guard_no_simp env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
   in
   if Env.debug env <| Options.Other "RelBench" then
     BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
@@ -3727,7 +3730,7 @@ let check_subtyping env t1 t2 =
     if debug env <| Options.Other "Rel"
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
+    let g = with_guard_no_simp env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
     if debug env <| Options.Other "Rel"
     && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
