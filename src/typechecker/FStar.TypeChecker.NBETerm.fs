@@ -92,8 +92,8 @@ and t
         // 1. We represent n-ary functions that receive their arguments as a list
         //    The arguments are in reverse binder order (optimized for convenience beta reduction)
        (list<t> -> t)
-       * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>>//a context, binders (in order) and residual_comp for readback
-                                                                        //or a list of arguments, for primitive unembeddings
+       * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders (in order) and residual_comp for readback
+                                                                             //or a list of arguments, for primitive unembeddings
        * int                        // arity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)

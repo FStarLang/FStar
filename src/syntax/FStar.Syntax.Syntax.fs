@@ -382,9 +382,9 @@ type layered_eff_combinators = {
 }
 
 type eff_combinators =
-  | Primitive_eff: wp_eff_combinators -> eff_combinators
-  | DM4F_eff: wp_eff_combinators -> eff_combinators
-  | Layered_eff: layered_eff_combinators -> eff_combinators
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
 
 type eff_decl = {
   mname       : lident;
