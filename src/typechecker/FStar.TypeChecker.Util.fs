@@ -684,6 +684,22 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 
          bind_pure_wp_with env pure_assert_wp c flags
 
+let record_simplify = 
+  let x = BU.mk_ref 0 in
+  fun env guard ->
+    let n = !x in
+    x := n + 1;
+    let start = BU.now() in
+    let g = Rel.simplify_guard env guard in
+    let fin = BU.now () in
+    if Options.debug_any()
+    then
+      BU.print2 "Simplify_guard %s in %s ms\n"
+        (BU.string_of_int n)
+        (BU.string_of_int (snd (BU.time_diff start fin)));
+    g
+
+  
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
@@ -2005,7 +2021,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 
-let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
+let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
@@ -2031,6 +2047,11 @@ let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname
              univnames_lecs
              generalized_lecs
 
+let generalize env is_rec lecs = 
+  Profiling.profile (fun () -> generalize' env is_rec lecs)
+                    (Some (Ident.string_of_lid (Env.current_module env)))
+                    "FStar.TypeChecker.Util.generalize"
+                    
 (************************************************************************)
 (* Convertibility *)
 (************************************************************************)
