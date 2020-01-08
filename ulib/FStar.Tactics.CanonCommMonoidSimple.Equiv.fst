@@ -334,11 +334,14 @@ let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
                     // WARNING: right_identity is currently fixed to types at u#1
                     // because otherwise Meta-F* picks up a universe level u#0 for
                     // types that are in u#1, such as, LowStar.Resource.resource
-          (fun _ -> apply_lemma (`CM?.congruence (`#m));
-                    split ();
-                    apply_lemma (`EQ?.reflexivity (`#eq));
-                    repeat_cong_right_identity eq m
-                    )
+          (fun _ -> or_else (fun _ -> apply_lemma (`CM?.identity))
+                          (fun _ -> apply_lemma (`CM?.congruence (`#m));
+                                 split ();
+                                 apply_lemma (`EQ?.reflexivity (`#eq));
+                                 repeat_cong_right_identity eq m
+                                 )
+           )
+
 
 let rec convert_map (m : list (atom * term)) : term =
   match m with

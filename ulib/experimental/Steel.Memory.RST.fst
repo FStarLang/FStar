@@ -23,7 +23,7 @@ let __reduce__ = ()
 (** TODO: Add a value_depends_only_on fp predicate. With this predicate,
     we should be able to conclude that any predicate defined using only the views
     is on fp_prop fp **)
-type view (a:Type) (fp:hprop) = (m:hheap fp) -> a
+type view (a:Type) (fp:hprop) = (m:hheap fp) -> GTot a
 
 (** An extension of hprops to include a view.
     Note that the type of the view is not related to the fprop, and is completely up to the user.
@@ -56,7 +56,7 @@ let rec fp_of (v:viewable) = match v with
   | VStar v1 v2 -> (fp_of v1 `star` fp_of v2)
 
 [@__reduce__]
-let rec sel_of (v:viewable) (h:hheap (fp_of v)) : t_of v = match v with
+let rec sel_of (v:viewable) (h:hheap (fp_of v)) : GTot (t_of v) = match v with
   | VUnit v -> v.sel h
   | VStar v1 v2 ->
     affine_star (fp_of v1) (fp_of v2) h;
@@ -197,8 +197,10 @@ inline_for_extraction noextract let reprove_frame () : T.Tac unit =
 [@__reduce__]
 let mk_rmem
   (r: viewable)
-  (h: hheap (fp_of r)) :
-  Tot (rh:rmem r)
+  (h: heap) :
+  Pure (rmem r)
+    (requires interp (fp_of r) h)
+    (ensures fun _ -> True)
   =
   fun (r0:viewable{exists delta. can_be_split_into r r0 delta}) ->
     Classical.forall_intro_3 affine_star;
@@ -335,6 +337,14 @@ assume val put_mem (r_init r_out:viewable) (m:hmem (fp_of r_out))
                // Again, we expose equalities on applications of selectors.
                // This allows a better normalization instead of an equality on functions
                normal (expand_delta_heap #r_out (heap_of_mem m) m1 r_out vemp)))
+
+/// This primitive should be used for proof purposes only, in a similar manner as HS.get
+/// It returns the selector for the current resource in the context. The selector should probably
+/// be erased
+assume val get (r:viewable)
+  : Steel (rmem r) r (fun _ -> r)
+          (requires fun _ -> True)
+          (ensures fun m0 v m1 -> m0 == m1 /\ v == m1)
 
 (** A few lemmas to cast between the different pointer hprops **)
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)

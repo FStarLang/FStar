@@ -206,6 +206,8 @@ val elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hheap (h_exists p))
     ((forall (x:a). interp (p x) m ==> interp q m) ==>
      interp q m)
 
+val reveal_exists (#a:_) (p:a -> hprop) (m:hheap (h_exists p))
+  : Lemma (exists (x:a). interp (p x) m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall
@@ -334,6 +336,17 @@ val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
             let m1, m2 = ms in
             disjoint m1 m2 /\
             m == join m1 m2})
+
+val sel_split_lemma (#a:Type) (r:ref a) (m1 m2:heap)
+  : Lemma
+  (requires
+    disjoint m1 m2 /\
+    interp (ptr r) m1)
+  (ensures (
+    (**) intro_emp m2;
+    (**) intro_star (ptr r) emp m1 m2;
+    (**) emp_unit (ptr r);
+    sel r m1 == sel r (join m1 m2)))
 
 /// upd requires a full permission
 val upd (#a:_) (r:ref a) (v:a)

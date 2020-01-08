@@ -413,6 +413,7 @@ let elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hheap (h_exists p))
      interp q m)
   = ()
 
+let reveal_exists (#a:_) (p:a -> hprop) (m:hheap (h_exists p)) = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall
@@ -697,6 +698,8 @@ let split_mem (p1 p2:hprop) (m:hheap (p1 `Star` p2))
             disjoint m1 m2 /\
             m == join m1 m2})
   = axiom_ghost_to_tot (split_mem_ghost p1 p2) m
+
+let sel_split_lemma #a r m1 m2 = ()
 
 let upd_heap #a (r:ref a) (v:a)
   : pre_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
