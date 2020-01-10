@@ -55,7 +55,7 @@ type retry = hs_ch & hs_sh
 
 let bounded_list 'a n = l:list 'a{List.Tot.length l < n}
 
-assume val max_transcript_size : nat
+assume val max_transcript_size : pos
 
 noeq
 type transcript_t =
