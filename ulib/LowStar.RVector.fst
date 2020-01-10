@@ -757,11 +757,14 @@ val alloc_reserve:
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
-      modifies (V.loc_vector rv) h0 h1 /\
+      modifies loc_none h0 h1 /\
       rv_inv h1 rv /\
       V.frameOf rv = rid /\
       V.size_of rv = 0ul /\
-      S.equal (as_seq h1 rv) S.empty))
+      S.equal (as_seq h1 rv) S.empty /\
+      Set.equal (Map.domain (HS.get_hmap h0))
+                (Map.domain (HS.get_hmap h1)) /\
+      B.fresh_loc (V.loc_vector rv) h0 h1))
 let alloc_reserve #a rg len rid =
   V.alloc_reserve len (Rgl?.dummy rg) rid
 
