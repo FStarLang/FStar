@@ -11649,8 +11649,7 @@ let (sub_comp :
                         solve_and_commit env (singleton wl prob1 true)
                           (fun uu____30215  -> FStar_Pervasives_Native.None)
                          in
-                      FStar_All.pipe_left (with_guard_no_simp env prob1)
-                        uu____30206)
+                      FStar_All.pipe_left (with_guard env prob1) uu____30206)
                   in
                match uu____30193 with
                | (r,ms) ->
