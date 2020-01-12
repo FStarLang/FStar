@@ -204,7 +204,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "7045dd53d9d375b47f54b4a51e60ee0f"
+      "a3fe6680941ec6401d411e54ce160ee7"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__transcript",
@@ -558,7 +558,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "e526c758282c45084fdf16952bf4c69c"
+      "4e023152bdfd8afa528a4cd2325ea8de"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__transcript",
