@@ -3344,7 +3344,7 @@ let simplify_guard env g = match g.guard_f with
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
       let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+              [Env.NBE; Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -3542,7 +3542,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
       let vc = 
         Profiling.profile
-          (fun () -> N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc)
+          (fun () -> N.normalize [Env.NBE; Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc)
           (Some (Ident.string_of_lid (Env.current_module env)))
           "FStar.TypeChecker.Rel.vc_normalization"
       in
