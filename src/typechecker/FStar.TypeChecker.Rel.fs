@@ -3404,7 +3404,7 @@ let sub_comp env c1 c2 =
   let prob = CProb prob in
   def_check_prob "sub_comp" prob;
   let (r, ms) = BU.record_time
-                  (fun () -> with_guard_no_simp env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
+                  (fun () -> with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
   in
   if Env.debug env <| Options.Other "RelBench" then
     BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
