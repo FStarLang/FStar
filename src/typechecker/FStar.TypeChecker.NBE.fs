@@ -864,7 +864,7 @@ and translate_constant (c : sconst) : constant =
     | C.Const_string (s, r) -> String (s,r)
     | C.Const_char c -> Char c
     | C.Const_range r -> Range r
-    | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
+    | _ -> SConst c
 
 and readback_comp cfg (c: comp) : S.comp =
   let c' =
@@ -1108,6 +1108,8 @@ and readback (cfg:config) (x:t) : term =
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) None Range.dummyRange
     | Constant (Char c) -> U.exp_char c
     | Constant (Range r) -> Cfg.embed_simple EMB.e_range r Range.dummyRange
+    | Constant (SConst c) -> mk (S.Tm_constant c) None Range.dummyRange
+
 
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange

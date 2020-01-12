@@ -52,6 +52,7 @@ type constant =
   | String of string * Range.range
   | Char of FStar.Char.char
   | Range of Range.range
+  | SConst of FStar.Const.sconst
 
 type atom
   =
@@ -299,6 +300,7 @@ let constant_to_string (c: constant) =
   | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
+  | SConst s -> P.const_to_string s
 
 let rec t_to_string (x:t) =
   match x with
