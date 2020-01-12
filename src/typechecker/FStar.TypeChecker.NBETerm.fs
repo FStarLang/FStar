@@ -86,6 +86,8 @@ type atom
      // 3. the source letbinding for readback (of attributes etc.)
      //    equal in length to the first list
         list<letbinding>
+  | UVar of Thunk.t<S.term>
+
 and t
   =
   | Lam of
@@ -334,6 +336,7 @@ and atom_to_string (a: atom) =
   | Match (t, _) -> "Match " ^ (t_to_string t)
   | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
   | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
+  | UVar _ -> "UVar"
 
 let arg_to_string (a : arg) = a |> fst |> t_to_string
 
