@@ -99,6 +99,7 @@ type atom
      // 3. the source letbinding for readback (of attributes etc.)
      //    equal in length to the first list
         list<letbinding>
+  | UVar of Thunk.t<S.term>
 
 and t
   =

@@ -424,7 +424,23 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_ascribed (t, _, _) -> translate cfg bs t
 
-    | Tm_uvar (uvar, t) -> debug_term e; failwith "Tm_uvar: Not yet implemented"
+    | Tm_uvar (u, (subst, set_use_range)) ->
+      let norm_uvar () =
+        let norm_subst_elt = function
+          | NT(x, t) ->
+            NT(x, readback cfg (translate cfg bs t))
+          | NM(x, i) ->
+            let x_i = S.bv_to_tm ({x with index=i}) in
+            let t = readback cfg (translate cfg bs x_i) in
+            (match t.n with
+            | Tm_bvar x_j -> NM(x, x_j.index)
+            | _ -> NT(x, t))
+          | _ -> failwith "Impossible: subst invariant of uvar nodes"
+        in
+        let subst = List.map (List.map norm_subst_elt) subst in
+        { e with n = Tm_uvar(u, (subst, set_use_range)) }
+      in
+      Accu(UVar (Thunk.mk norm_uvar), [])
 
     | Tm_name x ->
       mkAccuVar x
@@ -1076,6 +1092,9 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
 /// in an extended context with a fresh name in scope.
 and readback (cfg:config) (x:t) : term =
     let debug = debug cfg in
+    let readback_args cfg args =
+      map_rev (fun (x, q) -> (readback cfg x, q)) args
+    in
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
@@ -1178,15 +1197,15 @@ and readback (cfg:config) (x:t) : term =
     | Accu (Var bv, []) ->
       S.bv_to_name bv
 
-    | Accu (Var bv, ts) ->
-      let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
+    | Accu (Var bv, args) ->
+      let args = readback_args cfg args in
       let app = U.mk_app (S.bv_to_name bv) args in
       if cfg.core_cfg.steps.simplify
       then Common.simplify cfg.core_cfg.debug.wpe app
       else app
 
-    | Accu (Match (scrut, make_branches), ts) ->
-      let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
+    | Accu (Match (scrut, make_branches), args) ->
+      let args = readback_args cfg args in
       let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches () in
@@ -1228,7 +1247,7 @@ and readback (cfg:config) (x:t) : term =
       let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
       let hd = S.mk (Tm_let((false, [lb]), body)) None Range.dummyRange in
-      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
+      let args = readback_args cfg args in
       U.mk_app hd args
 
     | Accu(UnreducedLetRec (vars_typs_defns, body, lbs), args) ->
@@ -1247,7 +1266,12 @@ and readback (cfg:config) (x:t) : term =
       let body = readback cfg body in
       let lbs, body = SS.close_let_rec lbs body in
       let hd = S.mk (Tm_let((true, lbs), body)) None Range.dummyRange in
-      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
+      let args = readback_args cfg args in
+      U.mk_app hd args
+
+    | Accu(UVar f, args) ->
+      let hd = Thunk.force f in
+      let args = readback_args cfg args in
       U.mk_app hd args
 
     | TopLevelLet(lb, arity, args_rev) ->
