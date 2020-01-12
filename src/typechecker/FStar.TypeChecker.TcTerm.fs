@@ -679,7 +679,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     //NS: Maybe redundant strengthen
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    // let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, topt), Some c.eff_name)) None top.pos) c in
     let final_guard = Env.conj_guard f (Env.conj_guard g f2) in
     let final_guard = wrap_guard_with_tactic_opt topt final_guard in
@@ -1786,8 +1786,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
 
       (* Each conjunct in g is already labeled *)
       //NS: Maybe redundant strengthen      
-      //let comp, g = comp, guard in
-      let comp, g = TcUtil.strengthen_precondition None env app comp guard in
+      let comp, g = comp, guard in
+      // let comp, g = TcUtil.strengthen_precondition None env app comp guard in
       if Env.debug env Options.Extreme then BU.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
         (Print.term_to_string app)
         (TcComm.lcomp_to_string comp);
@@ -1989,8 +1989,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
           let e = mk_Tm_app head args None r  in
           let c = if ghost then S.mk_GTotal res_t |> TcComm.lcomp_of_comp else TcComm.lcomp_of_comp c in
           //NS: maybe redundant strengthen
-          // let c, g = c, guard in
-          let c, g = TcUtil.strengthen_precondition None env e c guard in
+          let c, g = c, guard in
+          // let c, g = TcUtil.strengthen_precondition None env e c guard in
           e, c, g
 
         | _ -> //fallback
@@ -3101,10 +3101,10 @@ and check_let_bound_def top_level env lb
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     //NS: Maybe redundant strengthen
-    // let c1, guard_f = c1, wf_annot in 
-    let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> return_all Err.ill_kinded_type))
-                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
+    let c1, guard_f = c1, wf_annot in 
+    // let c1, guard_f = TcUtil.strengthen_precondition
+    //                     (Some (fun () -> return_all Err.ill_kinded_type))
+    //                     (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = Env.conj_guard g1 guard_f in
 
     if Env.debug env Options.Extreme
