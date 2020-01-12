@@ -1098,11 +1098,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
               if cfg.debug.print_normalized
               then begin
                 let cfg' = Cfg.config' [] s cfg.tcenv in
-                BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                BU.print1 "NBE result timing (%s ms)\n"
                        (BU.string_of_int (snd (BU.time_diff start fin)))                
-                       (Print.term_to_string tm')
-                       (Cfg.cfg_to_string cfg')
-                       (Print.term_to_string tm_norm)
+                // BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                //        (BU.string_of_int (snd (BU.time_diff start fin)))                
+                //        (Print.term_to_string tm')
+                //        (Cfg.cfg_to_string cfg')
+                //        (Print.term_to_string tm_norm)
               end;
                    
               rebuild cfg env stack tm_norm
@@ -2280,11 +2282,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.debug.print_normalized
         then begin
           let time_now = BU.now () in
-          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+          BU.print1 "Normalizer result timing (%s ms)\n"
                        (BU.string_of_int (snd (BU.time_diff time_then time_now)))
-                       (Print.term_to_string tm)
-                       (Cfg.cfg_to_string cfg)
-                       (Print.term_to_string t)
+          // BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+          //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+          //              (Print.term_to_string tm)
+          //              (Cfg.cfg_to_string cfg)
+          //              (Print.term_to_string t)
         end;
         rebuild cfg env stack t
 
