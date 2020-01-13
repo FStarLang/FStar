@@ -29,13 +29,13 @@ include gmake/Makefile.tmpl
 	@echo --use_hints --hint_info
 
 # bumping the rlimit for these files
-%/.cache/FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
-%/.cache/LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
+%.cache/FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
+%.cache/LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 
 # disabling USE_EXTRACTED_INTERFACES for these files
 # Something's wrong with how the normalization attributes are propagated when this
 # this option is turned on
-%/.cache/LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
+%.cache/LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 
 verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
