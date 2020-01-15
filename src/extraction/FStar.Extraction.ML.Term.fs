@@ -1013,7 +1013,7 @@ let maybe_promote_effect ml_e tag t =
 
 
 let extract_lb_sig (g:uenv) (lbs:letbindings) =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef}
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
             : lbname //just lbname returned back
             * e_tag  //the ML version of the effect label lbeff
             * (typ   //just the source type lbtyp=t, after compression
@@ -1022,6 +1022,20 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
             * bool   //whether or not to add a unit argument
             * term   //the term e, maybe after some type binders have been erased
             =
+              begin match lbattrs with
+              | [] -> ()
+              | _ ->
+                BU.print1 "Testing whether term has any rename_let %s..." "";
+                begin match U.get_attribute PC.rename_let_attr lbattrs with
+                | Some ((arg, _) :: _) ->
+                  begin match arg.n with
+                  | Tm_constant (Const_string (arg, _)) ->
+                    BU.print1 "Term has rename_let %s\n" arg
+                  | _ -> BU.print1 "Term has some rename_let %s\n" ""
+                  end
+                | _ -> BU.print1 "no rename_let found %s\n" ""
+                end
+              end;
               let f_e = effect_as_etag g lbeff in
               let lbtyp = SS.compress lbtyp in
               let no_gen () =

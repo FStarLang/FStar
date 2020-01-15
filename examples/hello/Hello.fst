@@ -15,6 +15,12 @@
 *)
 module Hello
 
+open FStar.All
 open FStar.IO
 
-let main = print_string "Hello F*!\n"
+let f () : ML string = "Hello F*!\n"
+
+let main =
+  [@(rename_let "essai")]
+  let x = f () in
+  print_string x
