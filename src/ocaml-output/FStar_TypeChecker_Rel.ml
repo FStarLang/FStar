@@ -11415,8 +11415,7 @@ let (simplify_guard :
             else ());
            (let f1 =
               norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-                [FStar_TypeChecker_Env.NBE;
-                FStar_TypeChecker_Env.Beta;
+                [FStar_TypeChecker_Env.Beta;
                 FStar_TypeChecker_Env.Eager_unfolding;
                 FStar_TypeChecker_Env.Simplify;
                 FStar_TypeChecker_Env.Primops;
