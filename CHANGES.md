@@ -30,9 +30,14 @@ Guidelines for the changelog:
     This is a breaking change, see this commit for how we fixed the F* examples:
     https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
 
-
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
+
+  * NBE: A call-by-value reduction strategy for F* terms is
+    implemented using "normalization by evaluation". Specific calls to
+    the normalizer (e.g., via `Pervasives.norm`) can request to use
+    this reduction strategy by passing the `nbe:norm_step` among the
+    reduction steps.
 
 ## Libraries
 
@@ -77,6 +82,10 @@ Guidelines for the changelog:
      soon be the default behavior. Also see:
      https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
      and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+   * `--use_nbe_for_extraction`: A new option that enables the use of
+     the call-by-value normalization-by-evaluation reduction strategy
+     for normalizing code prior to extraction.
 
 ## SMT Encoding
 
