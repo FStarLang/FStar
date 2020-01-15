@@ -3396,9 +3396,9 @@ let rec universe_of_aux env e =
 
 let universe_of env e = level_of_type env e (universe_of_aux env e)
 
-let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
-    let tps, env, g, us = tc_binders env tps in
-    Rel.force_trivial_guard env g;
+let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
+    let tps, env, g, us = tc_binders env0 tps in
+    Rel.force_trivial_guard env0 g;
     tps, env, us
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -11523,12 +11523,12 @@ let (tc_tparams :
       (FStar_Syntax_Syntax.binders * FStar_TypeChecker_Env.env *
         FStar_Syntax_Syntax.universes))
   =
-  fun env  ->
+  fun env0  ->
     fun tps  ->
-      let uu____29094 = tc_binders env tps  in
+      let uu____29094 = tc_binders env0 tps  in
       match uu____29094 with
-      | (tps1,env1,g,us) ->
-          (FStar_TypeChecker_Rel.force_trivial_guard env1 g; (tps1, env1, us))
+      | (tps1,env,g,us) ->
+          (FStar_TypeChecker_Rel.force_trivial_guard env0 g; (tps1, env, us))
   
 let rec (type_of_well_typed_term :
   FStar_TypeChecker_Env.env ->
