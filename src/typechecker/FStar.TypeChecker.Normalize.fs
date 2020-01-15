@@ -46,7 +46,7 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
 module TcComm = FStar.TypeChecker.Common
- 
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -1089,8 +1089,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) when is_nbe_request s ->
-              // if cfg.debug.print_normalized
-              // then BU.print1 "Starting NBE request on %s ... \n" (Print.term_to_string tm);
               let tm' = closure_as_term cfg env tm in
               let start = BU.now() in
               let tm_norm = nbe_eval cfg s tm' in
@@ -1098,22 +1096,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
               if cfg.debug.print_normalized
               then begin
                 let cfg' = Cfg.config' [] s cfg.tcenv in
-                BU.print1 "NBE result timing (%s ms)\n"
-                       (BU.string_of_int (snd (BU.time_diff start fin)))                
-                // BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                //        (BU.string_of_int (snd (BU.time_diff start fin)))                
-                //        (Print.term_to_string tm')
-                //        (Cfg.cfg_to_string cfg')
-                //        (Print.term_to_string tm_norm)
+                // BU.print1 "NBE result timing (%s ms)\n"
+                //        (BU.string_of_int (snd (BU.time_diff start fin)))
+                BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                       (BU.string_of_int (snd (BU.time_diff start fin)))
+                       (Print.term_to_string tm')
+                       (Cfg.cfg_to_string cfg')
+                       (Print.term_to_string tm_norm)
               end;
-                   
               rebuild cfg env stack tm_norm
-              (* Zoe, NS:
-                 This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm
-                 But, it's potentially wasteful, since norm will attempt to normalize tm_norm again.
-                 In cases where tm_norm is small (e.g., 2), this is not a big deal;
-                 but in general, this may incur a large unnecessary traversal
-               *)
+
             | Some (s, tm) ->
               // if cfg.debug.print_normalized
               // then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
@@ -1823,7 +1815,7 @@ and reify_lift cfg e msrc mtgt t : term =
                None e.pos in
       lift (env.universe_of env t) t e
 
-      
+
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -2282,13 +2274,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.debug.print_normalized
         then begin
           let time_now = BU.now () in
-          BU.print1 "Normalizer result timing (%s ms)\n"
-                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
-          // BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+          // BU.print1 "Normalizer result timing (%s ms)\n"
           //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
-          //              (Print.term_to_string tm)
-          //              (Cfg.cfg_to_string cfg)
-          //              (Print.term_to_string t)
+          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                       (Print.term_to_string tm)
+                       (Cfg.cfg_to_string cfg)
+                       (Print.term_to_string t)
         end;
         rebuild cfg env stack t
 

@@ -158,6 +158,10 @@ let reifying_false (cfg:config) =
   if cfg.core_cfg.reifying
   then new_config ({cfg.core_cfg with reifying=false}) //blow away cache
   else cfg
+let reifying_true (cfg:config) =
+  if not (cfg.core_cfg.reifying)
+  then new_config ({cfg.core_cfg with reifying=true}) //blow away cache
+  else cfg
 let zeta_false (cfg:config) =
     let cfg_core = cfg.core_cfg in
     if cfg_core.steps.zeta
@@ -475,7 +479,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.core_cfg.steps.reify_ ->
       assert (not cfg.core_cfg.reifying);
-      let cfg = reifying_false cfg in
+      let cfg = reifying_true cfg in
       translate cfg bs (fst arg)
 
     | Tm_app(head, args) ->

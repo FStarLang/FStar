@@ -201,7 +201,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
          | None -> ()
          | Some _ -> failwith "Impossible! check_expected_effect, gopt should have been None"
        in
-       
+
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
        if debug env <| Options.Medium then
@@ -406,7 +406,7 @@ let wrap_guard_with_tactic_opt topt g =
 
 (*
  * This is pattern matching an `(M.reflect e) <: C`
- * 
+ *
  * As we special case typechecking of such terms (as a subcase of `Tm_ascribed` in the main `tc_term` loop
  *
  * Returns the (e, arg_qualifier) and the lident of M
@@ -421,7 +421,7 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
         | _ -> None)
      | _ -> None)
    | _ -> None
-    
+
 
 
 (************************************************************************************************************)
@@ -612,7 +612,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_ascribed (_, (Inr expected_c, _tacopt), _)
     when top |> is_comp_ascribed_reflect |> is_some ->
-    
+
     let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
 
     let env0, _ = Env.clear_expected_typ env in
@@ -679,7 +679,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     //NS: Maybe redundant strengthen
-    // let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, topt), Some c.eff_name)) None top.pos) c in
     let final_guard = Env.conj_guard f (Env.conj_guard g f2) in
     let final_guard = wrap_guard_with_tactic_opt topt final_guard in
@@ -756,7 +756,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if not (is_user_reflectable_effect env l) then
       raise_error (Errors.Fatal_EffectCannotBeReified,
         BU.format1 "Effect %s cannot be reflected" l.str) e.pos;
-        
+
     let reflect_op, _ = U.head_and_args top in
 
     begin match Env.effect_decl_opt env l with
@@ -796,13 +796,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         effect_args=eff_args;
         flags=[]
       }) |> TcComm.lcomp_of_comp in
-      
+
       let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
 
       let e, c, g' = comp_check_expected_typ env e c in
-      
+
       let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
-      
+
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
@@ -1785,9 +1785,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
       in
 
       (* Each conjunct in g is already labeled *)
-      //NS: Maybe redundant strengthen      
-      let comp, g = comp, guard in
-      // let comp, g = TcUtil.strengthen_precondition None env app comp guard in
+      //NS: Maybe redundant strengthen
+      // let comp, g = comp, guard in
+      let comp, g = TcUtil.strengthen_precondition None env app comp guard in
       if Env.debug env Options.Extreme then BU.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
         (Print.term_to_string app)
         (TcComm.lcomp_to_string comp);
@@ -1989,8 +1989,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
           let e = mk_Tm_app head args None r  in
           let c = if ghost then S.mk_GTotal res_t |> TcComm.lcomp_of_comp else TcComm.lcomp_of_comp c in
           //NS: maybe redundant strengthen
-          let c, g = c, guard in
-          // let c, g = TcUtil.strengthen_precondition None env e c guard in
+          // let c, g = c, guard in
+          let c, g = TcUtil.strengthen_precondition None env e c guard in
           e, c, g
 
         | _ -> //fallback
@@ -2185,7 +2185,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             inner_t
             [tm |> S.as_arg] None Range.dummyRange in
           U.abs [x_b] tm None in
-        
+
         match p.v with
         | Pat_dot_term _ ->
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
@@ -2538,7 +2538,7 @@ and tc_eqn scrutinee env branch
   (*        For wp-based effects, closing means applying the close_wp combinator                               *)
   (*        For layered effects, we substitute the pattern variables with their projector expressions applied  *)
   (*          to the scrutinee                                                                                 *)
-  
+
   let effect_label, cflags, maybe_return_c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
@@ -2619,7 +2619,7 @@ and tc_eqn scrutinee env branch
             mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] None Range.dummyRange
           ) |> List.map (N.normalize [Env.Beta] env) in  //a bit of beta to simplify the term
 
-          let _ = 
+          let _ =
             if Env.debug env <| Options.Other "LayeredEffects" then
               BU.print1 "tc_eqn: typechecked pat_bv_tms %s"
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
@@ -2741,7 +2741,7 @@ and check_top_level_let env e =
                     None e2.pos in
 
                 (* wp = M.bind wp_c1 (fun _ -> wp2) *)
-                let wp = 
+                let wp =
                   let bind = c1_eff_decl |> U.get_bind_vc_combinator in
                   mk_Tm_app
                     (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl bind)
@@ -3101,10 +3101,10 @@ and check_let_bound_def top_level env lb
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     //NS: Maybe redundant strengthen
-    let c1, guard_f = c1, wf_annot in 
-    // let c1, guard_f = TcUtil.strengthen_precondition
-    //                     (Some (fun () -> return_all Err.ill_kinded_type))
-    //                     (Env.set_range env1 e1.pos) e1 c1 wf_annot in
+    // let c1, guard_f = c1, wf_annot in
+    let c1, guard_f = TcUtil.strengthen_precondition
+                        (Some (fun () -> return_all Err.ill_kinded_type))
+                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = Env.conj_guard g1 guard_f in
 
     if Env.debug env Options.Extreme
