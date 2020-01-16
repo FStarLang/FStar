@@ -23,6 +23,8 @@ module Embeddings
 open FStar.Reflection
 open FStar.Tactics
 
+#set-options "--warn_error @238"
+
 (* Simple types *)
 [@plugin]
 let int_tac: int -> Tac int = fun n -> admit ()
