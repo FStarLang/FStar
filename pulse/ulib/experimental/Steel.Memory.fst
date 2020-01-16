@@ -78,12 +78,12 @@ let disjoint_addr (m0 m1:heap) (a:addr)
       t0 == t1 /\
       len0 == len1 /\
       (forall (i:nat{i < len0}).
-        if contains_index seq0 i && contains_index seq1 i then
+        match contains_index seq0 i, contains_index seq1 i with
+	| true, true ->
           let (x0, p0) = select_index seq0 i in
 	  let (x1, p1) = select_index seq1 i in
           x0 == x1 /\ summable_permissions p0 p1
-        else if (not (contains_index seq0 i)) && (not (contains_index seq1 i)) then True
-        else False
+        | _ -> False
       )
     | Some _, None
     | None, Some _
@@ -135,16 +135,14 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
         Some (Ref a0 (sum_permissions p0 p1) v0)
       | Some (Array a0 len0 seq0), Some (Array a1 len1 seq1) ->
         Some (Array a0 len0 (Seq.init len0 (fun i ->
-          if contains_index seq0 i && contains_index seq1 i then
+          match contains_index seq0 i,  contains_index seq1 i with
+	  | true, true ->
             let (_, p1) = select_index seq1 i in
             let (x0, p0) = select_index seq0 i in
 	    Some (x0, (sum_permissions p0 p1 <: (perm:permission{allows_read perm})))
-          else if contains_index seq0 i then
-            Seq.index seq0 i
-          else if contains_index seq1 i then
-            Seq.index seq1 i
-          else
-            None
+          | true, false -> Seq.index seq0 i
+          | false, true -> Seq.index seq1 i
+	  | false, false -> None
       )))
   )
 
@@ -313,14 +311,15 @@ let rec interp (p:hprop) (m:heap)
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
-              ~ (contains_index seq i)
-            else if perm `lesser_equal_permission` zero_permission then True
+	     (* Outside of the range *)
+             True
             else if contains_index seq i then
+	      (* In the range, contains some value *)
 	      let x = Seq.index contents (i - U32.v a.array_offset) in
 	      let (x', perm') = select_index seq i in
 	      x == x' /\
 	      perm `lesser_equal_permission` perm'
-            else False
+            else (* In the range, does not contain anything *) False
           )
 	| _ -> False
       )
@@ -413,15 +412,16 @@ let intro_pts_to_array
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
-            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
-              ~ (contains_index seq i)
-            else if perm `lesser_equal_permission` zero_permission then True
+             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+	     (* Outside of the range *)
+             True
             else if contains_index seq i then
+	      (* In the range, contains some value *)
 	      let x = Seq.index contents (i - U32.v a.array_offset) in
 	      let (x', perm') = select_index seq i in
 	      x == x' /\
 	      perm `lesser_equal_permission` perm'
-            else False
+            else (* In the range, does not contain anything *) False
           )
 	| _ -> False)
     ))
@@ -464,56 +464,6 @@ let intro_star (p q:hprop) (mp:hheap p) (mq:hheap q)
     (ensures
       interp (p `star` q) (join mp mq))
   = ()
-
-/// The main caveat of this model is that because we're working
-/// with proof-irrelevant propositions (squashed proofs), I end up
-/// using the indefinite_description axiom to extract witnesses
-/// of disjoint memories from squashed proofs of `star`
-
-
-#push-options "--max_fuel 1"
-let split_mem_ghost (p1 p2:hprop) (m:hheap (p1 `Star` p2))
-  : GTot (ms:(hheap p1 & hheap p2){
-            let m1, m2 = ms in
-            disjoint m1 m2 /\
-            m == join m1 m2})
-  = let open FStar.IndefiniteDescription in
-    let (| m1, p |)
-      : (m1:heap &
-        (exists (m2:heap).
-          m1 `disjoint` m2 /\
-          m == join m1 m2 /\
-          interp p1 m1 /\
-          interp p2 m2))
-        =
-      indefinite_description
-        heap
-        (fun (m1:heap) ->
-          exists (m2:heap).
-            m1 `disjoint` m2 /\
-            m == join m1 m2 /\
-            interp p1 m1 /\
-            interp p2 m2)
-    in
-    let p :
-      (exists (m2:heap).
-        m1 `disjoint` m2 /\
-        m == join m1 m2 /\
-        interp p1 m1 /\
-        interp p2 m2) = p
-    in
-    let _ = FStar.Squash.return_squash p in
-    let (| m2, _ |) =
-      indefinite_description
-        heap
-        (fun (m2:heap) ->
-           m1 `disjoint` m2 /\
-           m == join m1 m2 /\
-           interp p1 m1 /\
-           interp p2 m2)
-    in
-    (m1, m2)
-
 (* Properties of star *)
 
 #push-options "--z3rlimit 10"
@@ -630,7 +580,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#push-options "--z3rlimit 300 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 150 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
@@ -825,25 +775,3 @@ let upd_joined_heap (m:mem) (h:heap{m_disjoint m h}) =
   let h0 = heap_of_mem m in
   let h = join h0 h in
   {m with heap = h}
-
-
-/// F*'s indefinite_description is only available in the Ghost effect
-/// That's to prevent us from mistakenly extracting code that uses the
-/// axiom, since, clearly, we can't execute code that invents witnesses
-/// from squashed proofs of existentials.
-///
-/// Here, we're just building a logical model of heaps, so I don't really
-/// care about enforcing the ghostiness of indefinite_description.
-///
-/// So, this axiom explicitly punches a hole in the ghost effect, allowing
-/// me to coerce it to Tot
-assume
-val axiom_ghost_to_tot (#a:Type) (#b:a -> Type) ($f: (x:a -> GTot (b x))) (x:a)
-  : Tot (b x)
-
-let split_mem (p1 p2:hprop) (m:hheap (p1 `Star` p2))
-  : Tot (ms:(hheap p1 & hheap p2){
-            let m1, m2 = ms in
-            disjoint m1 m2 /\
-            m == join m1 m2})
-  = axiom_ghost_to_tot (split_mem_ghost p1 p2) m
