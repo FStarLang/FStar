@@ -1,3 +1,19 @@
+(*
+   Copyright 2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Steel.Effect
 
 module Sem = Steel.Semantics.Hoare
@@ -111,3 +127,28 @@ let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 = Steel?.reflect (fun m -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)) m)
+
+#push-options "--admit_smt_queries true"  //the h0 =!= h1 part is not `depends_only_on`
+let lift_pure_steel (a:Type) (wp:pure_wp a) (p:Mem.hprop) (f:unit -> PURE a wp)
+: repr a p (fun _ -> p)
+  (fun _ -> wp (fun _ -> True) /\ True)
+  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+= admit ()
+#pop-options
+
+assume WP_monotonic_pure:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall x. p x ==> q x) ==>
+       (wp p ==> wp q))
+
+let bind_PURE_M (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True))
+    (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
+= fun m0 ->
+  let x = f () in
+  g x m0
