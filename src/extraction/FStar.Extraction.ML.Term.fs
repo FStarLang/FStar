@@ -1022,20 +1022,20 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
             * bool   //whether or not to add a unit argument
             * term   //the term e, maybe after some type binders have been erased
             =
-              begin match lbattrs with
-              | [] -> ()
-              | _ ->
-                BU.print1 "Testing whether term has any rename_let %s..." "";
-                begin match U.get_attribute PC.rename_let_attr lbattrs with
-                | Some ((arg, _) :: _) ->
-                  begin match arg.n with
-                  | Tm_constant (Const_string (arg, _)) ->
-                    BU.print1 "Term has rename_let %s\n" arg
-                  | _ -> BU.print1 "Term has some rename_let %s\n" ""
-                  end
-                | _ -> BU.print1 "no rename_let found %s\n" ""
-                end
-              end;
+              // begin match lbattrs with
+              // | [] -> ()
+              // | _ ->
+              //   // BU.print1 "Testing whether term has any rename_let %s..." "";
+              //   begin match U.get_attribute PC.rename_let_attr lbattrs with
+              //   | Some ((arg, _) :: _) ->
+              //     begin match arg.n with
+              //     | Tm_constant (Const_string (arg, _)) ->
+              //       BU.print1 "Term has rename_let %s\n" arg
+              //     | _ -> BU.print1 "Term has some rename_let %s\n" ""
+              //     end
+              //   | _ -> BU.print1 "no rename_let found %s\n" ""
+              //   end
+              // end;
               let f_e = effect_as_etag g lbeff in
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
@@ -1551,6 +1551,54 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let e, t = check_term_as_mlexpr g e0 f t in
           e, f, t
 
+        | Tm_let((false, [lb]), e') 
+          when not (is_top_level [lb])
+          && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
+          let b = BU.left lb.lbname, None in
+          let ((x, _)::_), body = SS.open_term [b] e' in
+          // BU.print_string "Reached let with rename_let attribute\n";
+          let suggested_name = 
+              let attr = U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs in
+              match attr with
+              | Some ([(str, _)]) -> 
+                begin
+                match (SS.compress str).n with
+                | Tm_constant (Const_string (s, _)) -> 
+                  // BU.print1 "Found suggested name %s\n" s;
+                  let id = Ident.mk_ident (s, range_of_bv x) in
+                  let bv = { ppname = id; index = 0; sort = x.sort } in
+                  let bv = freshen_bv bv in
+                  Some bv
+                | _ -> 
+                  None
+                end
+              | None -> 
+                None
+          in
+          let remove_attr attrs =
+            let _, other_attrs =
+              List.partition 
+                (fun attr -> BU.is_some (U.get_attribute PC.rename_let_attr [attr]))
+                lb.lbattrs          
+            in
+            other_attrs
+          in
+          let maybe_rewritten_let = 
+            match suggested_name with
+            | None ->
+              let other_attrs = remove_attr lb.lbattrs in
+              Tm_let ((false, [{lb with lbattrs=other_attrs}]), e')
+
+            | Some y -> 
+              let other_attrs = remove_attr lb.lbattrs in
+              let rename = [NT(x, S.bv_to_name y)] in
+              let body = SS.close ([y, None]) (SS.subst rename body) in 
+              let lb = { lb with lbname=Inl y; lbattrs=other_attrs } in
+              Tm_let ((false, [lb]), body)
+           in
+           let top = {top with n = maybe_rewritten_let } in
+           term_as_mlexpr' g top
+          
         | Tm_let((is_rec, lbs), e') ->
           let top_level = is_top_level lbs in
           let lbs, e' =
