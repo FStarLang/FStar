@@ -17,6 +17,7 @@ module Steel.Memory
 open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
+module DepMap = FStar.DependentMap
 open FStar.FunctionalExtensionality
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -24,21 +25,53 @@ open FStar.FunctionalExtensionality
 // In the future, we may have other cases of cells
 // for arrays and structs
 
-let array_seq (a: Type) (len: nat) = Seq.lseq (option (a & perm:permission{allows_read perm})) len
+let value_with_perm (a: Type) = option (a & perm:permission{allows_read perm})
 
+let lseq_with_perms (a: Type) (len: nat) = Seq.lseq (value_with_perm a) len
+
+let struct_fields_types (a: Type) = string ^-> option a
 
 noeq
-type cell =
-  | Ref : a:Type u#0 ->
-          perm:permission{allows_read perm} ->
-          v:a ->
-          cell
-  | Array: a:Type u#0 ->
-           len: nat ->
-           seq:array_seq a len  ->
-	   cell
+type cell_layout : Type u#1 =
+  | LValue: value_typ:Type u#0 -> cell_layout
+  | LArray: value_typ:cell_layout -> len: nat -> cell_layout
+  | LStruct: fields:struct_fields_types cell_layout  -> cell_layout
 
-let _ : squash (inversion cell) = allow_inversion cell
+let _ : squash (inversion cell_layout) = allow_inversion cell_layout
+
+#push-options "--max_ifuel 2 --max_fuel 2"
+let rec  cell_type (l: cell_layout) : Tot Type (decreases l) = match l with
+  | LValue value_typ -> with_perm value_typ
+  | LArray value_typ len -> lseq_with_perms (cell_type value_typ) len
+  | LStruct fields -> DepMap.t string (fun f -> match fields f with
+    | None -> unit
+    | Some small_l ->
+    assume(small_l << l);
+    cell_type small_l)
+#pop-options
+
+noeq
+type cell = {
+  layout: cell_layout;
+  value: cell_type layout
+}
+
+type path =
+  | PEnd
+  | PIndexArray: index: nat -> next:path -> path
+  | PStructField: field: string -> next:path -> path
+
+#push-options "--max_ifuel 1"
+let rec valid_path (p: path) (l:cell_layout) : bool = match p, l with
+  | PEnd, _ -> true
+  | PIndexArray index next, LArray value_typ len ->
+    index < len && (valid_path next value_typ)
+  | PStructField field next, LStruct fields -> begin match fields field with
+    | None -> false
+    | Some l -> valid_path next l
+  end
+  | _ -> false
+#pop-options
 
 let addr = nat
 
@@ -51,7 +84,7 @@ let contains_addr (m:heap) (a:addr)
   : bool
   = Some? (m a)
 
-let contains_index (#a: Type) (#len: nat) (s: array_seq a len) (i:nat{i < len})
+let contains_index (#a: Type) (#len: nat) (s: lseq_with_perms a len) (i:nat{i < len})
   : bool
   = Some? (Seq.index s i)
 
@@ -59,7 +92,7 @@ let select_addr (m:heap) (a:addr{contains_addr m a})
   : cell
   = Some?.v (m a)
 
-let select_index (#a: Type) (#len: nat) (s: array_seq a len) (i:nat{i < len /\ contains_index s i})
+let select_index (#a: Type) (#len: nat) (s: lseq_with_perms a len) (i:nat{i < len /\ contains_index s i})
   : (a & perm:permission{allows_read perm})
   = Some?.v (Seq.index s i)
 
@@ -67,24 +100,27 @@ let update_addr (m:heap) (a:addr) (c:cell)
   : heap
   = on _ (fun a' -> if a = a' then Some c else m a')
 
-let disjoint_addr (m0 m1:heap) (a:addr)
+#push-options "--max_ifuel 0 --max_fuel 1"
+let rec disjoint_cells (cell0 cell1: cell) : prop =
+  match cell0.layout, cell1.layout with
+  | LValue t0, LValue t1 ->
+    assert_norm(cell_type (LValue t0) == with_perms t0);
+    //let v0 : with_perm t0 = cell0.value in
+    True (*(assert(cell_type cell0.layout == with_perms t0); True)(*
+    begin match cell0.value, cell1.value with
+      | None, None
+      | Some _, None
+      | None, Some _ -> True
+      | Some v0, Some v1 ->
+        summable_permissions (snd v0) (snd v1)
+    end*)*)
+  | _ -> True
+#pop-options
+
+let  disjoint_addr (m0 m1:heap) (a:addr)
   : prop
   = match m0 a, m1 a with
-    | Some (Ref t0 p0 v0), Some (Ref t1 p1 v1) ->
-      summable_permissions p0 p1 /\
-      t0 == t1 /\
-      v0 == v1
-    | Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
-      t0 == t1 /\
-      len0 == len1 /\
-      (forall (i:nat{i < len0}).
-        match contains_index seq0 i, contains_index seq1 i with
-	| true, true ->
-          let (x0, p0) = select_index seq0 i in
-	  let (x1, p1) = select_index seq1 i in
-          x0 == x1 /\ summable_permissions p0 p1
-        | _ -> False
-      )
+    | Some cell0, Some cell1 -> disjoint_cells cell0 cell1
     | Some _, None
     | None, Some _
     | None, None ->
