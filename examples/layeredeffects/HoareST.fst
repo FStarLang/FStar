@@ -146,6 +146,7 @@ let bind_pure_hoarest (a:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t 
   let x = f () in
   g x ()
 
+
 polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
 

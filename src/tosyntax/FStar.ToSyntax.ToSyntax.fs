@@ -2379,6 +2379,15 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
          rebind res true
 
+let lookup_effect_lid env (l:lident) r : S.eff_decl =
+  match Env.try_lookup_effect_defn env l with
+  | None ->
+    raise_error
+      (Errors.Fatal_EffectNotFound,
+       "Effect name " ^ Print.lid_to_string l ^ " not found")
+      r
+  | Some l -> l
+
 let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
@@ -2990,14 +2999,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
-    let lookup l = match Env.try_lookup_effect_defn env l with
-        | None ->
-          raise_error
-            (Errors.Fatal_EffectNotFound, "Effect name " ^Print.lid_to_string l^ " not found")
-            d.drange
-        | Some l -> l in
-    let src_ed = lookup l.msource in
-    let dst_ed = lookup l.mdest in
+    let src_ed = lookup_effect_lid env l.msource d.drange in
+    let dst_ed = lookup_effect_lid env l.mdest d.drange in
     if not (U.is_layered src_ed || U.is_layered dst_ed)
     then let lift_wp, lift = match l.lift_op with
            | NonReifiableLift t -> Some ([],desugar_term env t), None
@@ -3029,7 +3032,20 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            sigopts = None}]
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
-  | Polymonadic_bind _ -> failwith "PB NYI!"
+  | Polymonadic_bind pb ->
+    let m = lookup_effect_lid env pb.m_eff d.drange in
+    let n = lookup_effect_lid env pb.n_eff d.drange in
+    let p = lookup_effect_lid env pb.p_eff d.drange in
+    env, [{
+      sigel = Sig_polymonadic_bind (
+        m.mname, n.mname, p.mname,
+        ([], desugar_term env pb.bind),
+        ([], S.tun));
+      sigquals = [];
+      sigrng = d.drange;
+      sigmeta = default_sigmeta;
+      sigattrs = [];
+      sigopts = None }]
 
   | Splice (ids, t) ->
     let t = desugar_term env t in
