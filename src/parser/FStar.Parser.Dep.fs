@@ -744,6 +744,7 @@ let collect_one
         | NewEffect ed
         | LayeredEffect ed ->
              collect_effect_decl ed
+        | Polymonadic_bind pb -> collect_term pb.bind
         | Fsdoc _
         | Pragma _ ->
             ()
