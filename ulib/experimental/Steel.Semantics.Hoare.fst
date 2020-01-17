@@ -300,15 +300,19 @@ let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
 
 let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post) =
-  m0:st.mem ->
-  Div (a & st.mem)
-  (requires
+  unit ->
+  MST a st.mem st.locks_preorder
+  (requires fun m0 ->
     st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
     lpre (st.heap_of_mem m0))
-  (ensures fun (x, m1) ->
+  (ensures fun m0 x m1 ->
     st.interp (st.locks_invariant m1 `st.star` (post x)) (st.heap_of_mem m1) /\
     lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
     preserves_frame pre (post x) m0 m1)
+
+
+  m0:st.mem ->
+  Div (a & st.mem)
 
 
 (**** End interface of actions ****)
