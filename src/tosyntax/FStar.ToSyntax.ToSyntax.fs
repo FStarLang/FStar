@@ -3032,14 +3032,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            sigopts = None}]
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
-  | Polymonadic_bind pb ->
-    let m = lookup_effect_lid env pb.m_eff d.drange in
-    let n = lookup_effect_lid env pb.n_eff d.drange in
-    let p = lookup_effect_lid env pb.p_eff d.drange in
+  | Polymonadic_bind (m_eff, n_eff, p_eff, bind) ->
+    let m = lookup_effect_lid env m_eff d.drange in
+    let n = lookup_effect_lid env n_eff d.drange in
+    let p = lookup_effect_lid env p_eff d.drange in
     env, [{
       sigel = Sig_polymonadic_bind (
         m.mname, n.mname, p.mname,
-        ([], desugar_term env pb.bind),
+        ([], desugar_term env bind),
         ([], S.tun));
       sigquals = [];
       sigrng = d.drange;

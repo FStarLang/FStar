@@ -1228,11 +1228,7 @@ let resugar_sigelt' env se : option<A.decl> =
   | Sig_main _ -> None
 
   | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
-    Some (decl'_to_decl se (A.Polymonadic_bind ({
-      m_eff = m;
-      n_eff = n;
-      p_eff = p;
-      bind = resugar_term' env t})))
+    Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
 (* Old interface: no envs *)
 

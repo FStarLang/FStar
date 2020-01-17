@@ -343,7 +343,7 @@ subEffect:
 
 polymonadic_bind:
   | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
-      { { m_eff = m_eff; n_eff = n_eff; p_eff = p_eff; bind = bind } }
+      { (m_eff, n_eff, p_eff, bind) }
 
 
 /******************************************************************************/
