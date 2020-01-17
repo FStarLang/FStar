@@ -3029,6 +3029,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            sigopts = None}]
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
+  | Polymonadic_bind _ -> failwith "PB NYI!"
+
   | Splice (ids, t) ->
     let t = desugar_term env t in
     let se = { sigel = Sig_splice(List.map (qualify env) ids, t);

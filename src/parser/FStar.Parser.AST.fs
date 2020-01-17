@@ -187,6 +187,13 @@ type lift = {
   lift_op: lift_op;
 }
 
+type polymonadic_bind = {
+  m_eff : lid;
+  n_eff : lid;
+  p_eff : lid;
+  bind  : term;  
+}
+
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
@@ -211,6 +218,7 @@ type decl' =
   | NewEffect of effect_decl
   | LayeredEffect of effect_decl
   | SubEffect of lift
+  | Polymonadic_bind of polymonadic_bind
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term
