@@ -776,7 +776,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     check_must_erase_attribute env0 se;
 
-    [se], [], env0)
+    [se], [], env0
+
+  | Sig_polymonadic_bind _ -> failwith "tc Sig_polymonadic_bind NYI")
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
@@ -911,7 +913,8 @@ let for_export env hidden se : list<sigelt> * list<lident> =
 
   | Sig_new_effect     _
   | Sig_sub_effect     _
-  | Sig_effect_abbrev  _ -> [se], hidden
+  | Sig_effect_abbrev  _
+  | Sig_polymonadic_bind _ -> [se], hidden
 
   | Sig_let((false, [lb]), _)
         when se.sigquals |> BU.for_some is_hidden_proj_or_disc ->
@@ -1118,7 +1121,8 @@ let check_exports env (modul:modul) exports =
         | Sig_new_effect _
         | Sig_sub_effect _
         | Sig_splice _
-        | Sig_pragma _ -> ()
+        | Sig_pragma _
+        | Sig_polymonadic_bind _ -> ()
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1255,8 +1259,9 @@ let extract_interface (en:env) (m:modul) :modul =
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_sub_effect _
-    | Sig_effect_abbrev _ -> [s]
-    | Sig_pragma _ -> [s]
+    | Sig_effect_abbrev _
+    | Sig_pragma _
+    | Sig_polymonadic_bind _ -> [s]
   in
 
   { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }

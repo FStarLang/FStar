@@ -806,7 +806,8 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_new_effect _
       | Sig_sub_effect _
       | Sig_effect_abbrev _ (* None? *)
-      | Sig_pragma  _ -> None
+      | Sig_pragma  _
+      | Sig_polymonadic_bind _ -> None
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
