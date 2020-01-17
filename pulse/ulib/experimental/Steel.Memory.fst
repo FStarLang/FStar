@@ -840,6 +840,16 @@ let upd #a (r:ref a) (v:a)
     upd_depends_only_on_fp r v;
     upd' r v
 
+MST = MST mem locks_preorder
+
+let (:=) #a r v
+: action_t (ptr r) (fun _ -> points_to r v) (fun _ -> True)
+  (fun h0 _ h1 -> True)
+  let m = MST.get () in
+  let m1 = upd r v m in
+  MST.put m1
+
+
 val alloc' (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
      tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
@@ -1180,6 +1190,17 @@ let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
     star_commutative p q;
     star_associative q p r;
     h
+
+
+lock p -> action_t bool emp (fun b -> h_or (pure (b == false)) p) (fun _ -> True) (fun _ _ _ -> True)
+
+
+let m0 = MST.get () in
+recall (lock_ok l);
+let b, m1 = maybe_acquire l m0 in
+MST.put m1;
+b
+
 
 let maybe_acquire #p (l:lock p) (m:mem { lock_ok l m } )
   : (b:bool &
