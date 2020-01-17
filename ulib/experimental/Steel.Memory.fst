@@ -27,27 +27,31 @@ open FStar.FunctionalExtensionality
 
 let value_with_perm (a: Type) = option (a & perm:permission{allows_read perm})
 
-let lseq_with_perms (a: Type) (len: nat) = Seq.lseq (value_with_perm a) len
-
-let struct_fields_types (a: Type) = string ^-> option a
+let fields_layout_list (a: Type) = l:list (string & a){
+  Cons? l /\ List.Tot.noRepeats (List.Tot.map fst l)
+}
 
 noeq
-type cell_layout : Type u#1 =
-  | LValue: value_typ:Type u#0 -> cell_layout
+type cell_layout: Type  =
+  | LValue: value_typ:Type -> cell_layout
   | LArray: value_typ:cell_layout -> len: nat -> cell_layout
-  | LStruct: fields:struct_fields_types cell_layout  -> cell_layout
+  | LStruct: fields:fields_layout_list cell_layout  -> cell_layout
 
 let _ : squash (inversion cell_layout) = allow_inversion cell_layout
 
-#push-options "--max_ifuel 2 --max_fuel 2"
-let rec  cell_type (l: cell_layout) : Tot Type (decreases l) = match l with
-  | LValue value_typ -> with_perm value_typ
-  | LArray value_typ len -> lseq_with_perms (cell_type value_typ) len
-  | LStruct fields -> DepMap.t string (fun f -> match fields f with
-    | None -> unit
-    | Some small_l ->
-    assume(small_l << l);
-    cell_type small_l)
+#push-options "--max_ifuel 0 --max_fuel 0 --z3rlimit 20"
+let rec cell_type (l: cell_layout) : Tot Type (decreases l) = match l with
+  | LValue value_typ -> value_with_perm value_typ
+  | LArray l' len -> Seq.lseq (cell_type l') len
+  | LStruct fields -> l:list (
+    f:string{List.Tot.mem f (List.Tot.map fst fields)} &
+    cell_type (
+      List.Tot.Properties.assoc_mem f fields;
+      let l' = Some?.v (List.Tot.assoc f fields) in
+      List.Tot.Properties.assoc_precedes f fields l';
+      l'
+    )
+  )
 #pop-options
 
 noeq
@@ -66,7 +70,7 @@ let rec valid_path (p: path) (l:cell_layout) : bool = match p, l with
   | PEnd, _ -> true
   | PIndexArray index next, LArray value_typ len ->
     index < len && (valid_path next value_typ)
-  | PStructField field next, LStruct fields -> begin match fields field with
+  | PStructField field next, LStruct fields -> begin match List.Tot.assoc field fields with
     | None -> false
     | Some l -> valid_path next l
   end
@@ -84,38 +88,54 @@ let contains_addr (m:heap) (a:addr)
   : bool
   = Some? (m a)
 
-let contains_index (#a: Type) (#len: nat) (s: lseq_with_perms a len) (i:nat{i < len})
-  : bool
-  = Some? (Seq.index s i)
-
 let select_addr (m:heap) (a:addr{contains_addr m a})
   : cell
   = Some?.v (m a)
-
-let select_index (#a: Type) (#len: nat) (s: lseq_with_perms a len) (i:nat{i < len /\ contains_index s i})
-  : (a & perm:permission{allows_read perm})
-  = Some?.v (Seq.index s i)
 
 let update_addr (m:heap) (a:addr) (c:cell)
   : heap
   = on _ (fun a' -> if a = a' then Some c else m a')
 
-#push-options "--max_ifuel 0 --max_fuel 1"
-let rec disjoint_cells (cell0 cell1: cell) : prop =
-  match cell0.layout, cell1.layout with
-  | LValue t0, LValue t1 ->
-    assert_norm(cell_type (LValue t0) == with_perms t0);
-    //let v0 : with_perm t0 = cell0.value in
-    True (*(assert(cell_type cell0.layout == with_perms t0); True)(*
-    begin match cell0.value, cell1.value with
+#push-options "--max_fuel 1"
+let rec disjoint_cell_values (l: cell_layout) (v0 v1: cell_type l) =
+  match l with
+  | LValue t ->
+    assert_norm(cell_type (LValue t) == value_with_perm t);
+    let v0 : value_with_perm t = v0 in
+    let v1 : value_with_perm t = v1 in
+    begin match v0, v1 with
       | None, None
       | Some _, None
       | None, Some _ -> True
       | Some v0, Some v1 ->
-        summable_permissions (snd v0) (snd v1)
-    end*)*)
-  | _ -> True
+        v0 == v1 /\ summable_permissions (snd v0) (snd v1)
+    end
+  | LArray l' len ->
+    assert_norm(cell_type (LArray l' len) == Seq.lseq (cell_type l') len);
+    let t = cell_type l' in
+    let v0 : Seq.lseq t len = v0 in
+    let v1 : Seq.lseq t len = v1 in
+    (forall (i:nat{i < len}). {:pattern (Seq.index v0 i)}
+      disjoint_cell_values l' (Seq.index v0 i) (Seq.index v1 i)
+    )
+  | LStruct fields ->
+    assert_norm(cell_type (LStruct fields) == l:list (
+      f:string{List.Tot.mem f (List.Tot.map fst fields)} &
+      cell_type (
+        List.Tot.Properties.assoc_mem f fields;
+        let l' = Some?.v (List.Tot.assoc f fields) in
+        List.Tot.Properties.assoc_precedes f fields l';
+        l'))
+    );
+    (forall (i:nat{i < List.Tot.length fields}).
+      True
+    )
 #pop-options
+
+
+let disjoint_cells (cell0 cell1: cell) : prop =
+  cell0.layout == cell1.layout /\
+  disjoint_cell_values cell0.layout cell0.value cell1.value
 
 let  disjoint_addr (m0 m1:heap) (a:addr)
   : prop
