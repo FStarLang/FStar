@@ -50,6 +50,41 @@ let dmff_cps_and_elaborate env ed =
   DMFF.cps_and_elaborate env ed
 
 (*
+ * Helper function used to typecheck and generalize various effect combinators
+ *
+ * comb is the name of the combinator (used for error messages)
+ * n is the number of universes that the combinator should be polymorphic in
+ * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
+ *)
+let check_and_gen env0 (eff_name:lident) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
+  let us, t = SS.open_univ_vars us t in
+  let t, ty =
+    let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env0 us) t in
+    Rel.force_trivial_guard env0 g;
+    t, lc.res_typ in
+  let g_us, t = TcUtil.generalize_universes env0 t in
+  let ty = SS.close_univ_vars g_us ty in
+  //check that n = List.length g_us and that if us is set, it is same as g_us
+  let univs_ok =
+    if List.length g_us <> n then
+      let error = BU.format5
+        "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
+        eff_name.str comb (string_of_int n) (g_us |> List.length |> string_of_int)
+        (Print.tscheme_to_string (g_us, t)) in
+      raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
+    match us with
+    | [] -> ()
+    | _ ->
+     if List.length us = List.length g_us &&
+      List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     then ()
+     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+            (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+               eff_name.str comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
+            t.pos in
+  g_us, t, ty
+
+(*
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
@@ -61,41 +96,6 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     raise_error
       (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ ed.mname.str ^")")
       (range_of_lid ed.mname);
-
-  (*
-   * Helper function used to typecheck and generalize various effect combinators
-   *
-   * comb is the name of the combinator (used for error messages)
-   * n is the number of universes that the combinator should be polymorphic in
-   * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
-   *)
-  let check_and_gen (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
-    let us, t = SS.open_univ_vars us t in
-    let t, ty =
-      let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env0 us) t in
-      Rel.force_trivial_guard env0 g;
-      t, lc.res_typ in
-    let g_us, t = TcUtil.generalize_universes env0 t in
-    let ty = SS.close_univ_vars g_us ty in
-    //check that n = List.length g_us and that if us is set, it is same as g_us
-    let univs_ok =
-      if List.length g_us <> n then
-        let error = BU.format5
-          "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
-          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int)
-          (Print.tscheme_to_string (g_us, t)) in
-        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
-      match us with
-      | [] -> ()
-      | _ ->
-       if List.length us = List.length g_us &&
-          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
-       then ()
-       else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-              (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                 ed.mname.str comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
-            t.pos in
-    g_us, t, ty in
 
   let log_combinator s (us, t, ty) =
     if Env.debug env0 <| Options.Other "LayeredEffects" then
@@ -117,6 +117,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    *   - Unify the type of the combinator (as typechecked) with k
    *   - Record k in the effect declaration (along with the combinator)
    *)
+
+  let check_and_gen = check_and_gen env0 ed.mname in
 
 
   (*
@@ -637,10 +639,6 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions }
-
-let check_and_gen env t k =
-    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
-    TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
@@ -1201,6 +1199,10 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let tc_lift env sub r =
+  let check_and_gen env t k =
+    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
+    TcUtil.generalize_universes env (tc_check_trivial_guard env t k) in
+
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
@@ -1351,3 +1353,8 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
                                   (Print.term_to_string t)) r
   end;
   (lid, uvs, tps, c)
+
+//let tc_polymonadic_bind env (m n p:lident) (t:S.term) : (S.term * S.typ) =  
+
+
+
