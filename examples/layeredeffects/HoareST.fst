@@ -136,9 +136,9 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-let bind_pure_hoarest (a:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t a)
-  (f:unit -> PURE a wp) (g:(x:a -> repr a (req x) (ens x)))
-: repr a
+let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
+  (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
+: repr b
   (fun h -> wp (fun x -> req x h))
   (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
 = wp_monotonic_pure ();
