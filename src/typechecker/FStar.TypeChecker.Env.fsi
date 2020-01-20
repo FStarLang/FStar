@@ -92,6 +92,8 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+and polymonadic_bind_t = env -> comp -> option<bv> -> comp -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -108,6 +110,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
 }
 
 and env = {
@@ -292,6 +295,8 @@ val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 //client constructs the mlift and gives it to us
 val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
 
+val add_polymonadic_bind : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
+
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
 val pop_bv                : env -> option<(bv * env)>
@@ -326,6 +331,7 @@ val comp_to_comp_typ       : env -> comp -> comp_typ
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
+val exists_polymonadic_bind: env -> lident -> lident -> option<polymonadic_bind_t>
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)

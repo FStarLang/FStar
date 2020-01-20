@@ -1001,8 +1001,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       let env = Env.push_new_effect env (ne, se.sigquals) in
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
 
-    | Sig_sub_effect sub ->
-      Env.update_effect_lattice env sub.source sub.target (TcUtil.get_mlift_for_subeff env sub)
+    | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub
+
+    | Sig_polymonadic_bind (m, n, p, _, ty) -> TcUtil.update_env_polymonadic_bind env m n p ty
 
     | _ -> env
 

@@ -2606,7 +2606,23 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
   mk (Tm_app (lift, args)) None e.pos
 
-let get_mlift_for_subeff env sub =
+let get_field_projector_name env datacon index =
+  let _, t = Env.lookup_datacon env datacon in
+  let err n =
+    raise_error (Errors.Fatal_UnexpectedDataConstructor,
+      BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
+        (Ident.string_of_lid datacon) (string_of_int n) (string_of_int index)) (Env.get_range env) in
+  match (SS.compress t).n with
+  | Tm_arrow (bs, _) ->
+    let bs = bs |> List.filter (fun (_, q) -> match q with | Some (Implicit true) -> false | _ -> true) in
+    if List.length bs <= index then err (List.length bs)
+    else
+      let b = List.nth bs index in
+      U.mk_field_projector_name datacon (fst b) index |> fst
+  | _ -> err 0
+
+
+let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
@@ -2649,17 +2665,10 @@ let get_mlift_for_subeff env sub =
          | None -> Some (fun _ _ e -> return_all e)
          | Some ts -> Some (mk_mlift_term ts) })
 
-let get_field_projector_name env datacon index =
-  let _, t = Env.lookup_datacon env datacon in
-  let err n =
-    raise_error (Errors.Fatal_UnexpectedDataConstructor,
-      BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
-        (Ident.string_of_lid datacon) (string_of_int n) (string_of_int index)) (Env.get_range env) in
-  match (SS.compress t).n with
-  | Tm_arrow (bs, _) ->
-    let bs = bs |> List.filter (fun (_, q) -> match q with | Some (Implicit true) -> false | _ -> true) in
-    if List.length bs <= index then err (List.length bs)
-    else
-      let b = List.nth bs index in
-      U.mk_field_projector_name datacon (fst b) index |> fst
-  | _ -> err 0
+
+let update_env_sub_eff env sub =
+  Env.update_effect_lattice env sub.source sub.target (get_mlift_for_subeff env sub)
+
+let update_env_polymonadic_bind env m n p ty =
+  Env.add_polymonadic_bind env m n p (fun env c1 bv_opt c2 flags r ->
+    mk_indexed_bind env m n p ty (c1 |> U.comp_to_comp_typ) bv_opt (c2 |> U.comp_to_comp_typ) flags r)

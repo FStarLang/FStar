@@ -121,6 +121,8 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+and polymonadic_bind_t = env -> comp -> option<bv> -> comp -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -136,6 +138,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
 }
 
 and env = {
@@ -261,7 +264,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]};
+    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
@@ -1103,15 +1106,23 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join env l1 l2 : (lident * mlift * mlift) =
+let join_opt env (l1:lident) (l2:lident) : option<(lident * mlift * mlift)> =
   if lid_equals l1 l2
-  then l1, identity_mlift, identity_mlift
+  then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, identity_mlift, identity_mlift
+  then Some (Const.effect_GTot_lid, identity_mlift, identity_mlift)
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise_error (Errors.Fatal_EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
-        | Some (_, _, m3, j1, j2) -> m3, j1, j2
+        | None -> None
+        | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
+
+let join env l1 l2 : (lident * mlift * mlift) =
+  match join_opt env l1 l2 with
+  | None ->
+    raise_error (Errors.Fatal_EffectsCannotBeComposed,
+      (BU.format2 "Effects %s and %s cannot be composed" 
+        (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+  | Some t -> t
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
@@ -1238,6 +1249,10 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
+let exists_polymonadic_bind env m n =
+  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, _, t) -> Some t
+  | _ -> None
 
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
@@ -1392,6 +1407,13 @@ let update_effect_lattice env src tgt st_mlift =
 //    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
   {env with effects=effects}
 
+
+let add_polymonadic_bind env m n p ty =
+  //AR: TODO: FIXME: check that this is not duplicate,
+  //                 that there is no join between m and n already
+  //                 would update_effect_lattice also need such a check? possibly.
+  { env with effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
+  
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
 
