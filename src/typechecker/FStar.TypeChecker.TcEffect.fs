@@ -56,20 +56,20 @@ let dmff_cps_and_elaborate env ed =
  * n is the number of universes that the combinator should be polymorphic in
  * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
  *)
-let check_and_gen env0 (eff_name:lident) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
+let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
   let us, t = SS.open_univ_vars us t in
   let t, ty =
-    let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env0 us) t in
-    Rel.force_trivial_guard env0 g;
+    let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
+    Rel.force_trivial_guard env g;
     t, lc.res_typ in
-  let g_us, t = TcUtil.generalize_universes env0 t in
+  let g_us, t = TcUtil.generalize_universes env t in
   let ty = SS.close_univ_vars g_us ty in
   //check that n = List.length g_us and that if us is set, it is same as g_us
   let univs_ok =
     if List.length g_us <> n then
       let error = BU.format5
         "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
-        eff_name.str comb (string_of_int n) (g_us |> List.length |> string_of_int)
+        eff_name comb (string_of_int n) (g_us |> List.length |> string_of_int)
         (Print.tscheme_to_string (g_us, t)) in
       raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
     match us with
@@ -80,7 +80,7 @@ let check_and_gen env0 (eff_name:lident) (comb:string) (n:int) (us, t) : (univ_n
      then ()
      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-               eff_name.str comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
+               eff_name comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
             t.pos in
   g_us, t, ty
 
@@ -118,7 +118,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    *   - Record k in the effect declaration (along with the combinator)
    *)
 
-  let check_and_gen = check_and_gen env0 ed.mname in
+  let check_and_gen = check_and_gen env0 ed.mname.str in
 
 
   (*
@@ -1354,7 +1354,52 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   end;
   (lid, uvs, tps, c)
 
-//let tc_polymonadic_bind env (m n p:lident) (t:S.term) : (S.term * S.typ) =  
+let tc_polymonadic_bind env (m n p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+  let eff_name = BU.format3 "(%s, %s) |> %s)"
+    (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
+  let r = (snd ts).pos in
+  
+  //typecheck the term making sure that it is universe polymorphic in 2 universes
+  let (us, t, ty) = check_and_gen env eff_name "polymonadic_bind" 2 ts in
 
+  //make sure that the bind is of the right shape
 
+  let us, ty = SS.open_univ_vars us ty in
+  let env = Env.push_univ_vars env us in
 
+  //construct the expected type k to be:
+  //a:Type -> b:Type -> <some binders> -> m_repr a is -> (x:a -> n_repr b js) -> p_repr b ks
+
+  let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
+  let b, u_b = U.type_u () |> (fun (t, u) -> S.gen_bv "b" None t |> S.mk_binder, u) in
+
+  let rest_bs =
+    match (SS.compress ty).n with
+    | Tm_arrow (bs, _) when List.length bs >= 4 ->
+      let ((a', _)::(b', _)::bs) = SS.open_binders bs in
+      bs |> List.splitAt (List.length bs - 2) |> fst
+         |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name); NT (b', b |> fst |> S.bv_to_name)]
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format3 "Type of %s is not an arrow with >= 4 binders (%s::%s)" eff_name
+          (Print.tag_of_term ty) (Print.term_to_string ty)) r in
+
+  let bs = a::b::rest_bs in
+
+  let f, guard_f =
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u_a (a |> fst |> S.bv_to_name) in
+    S.gen_bv "f" None repr |> S.mk_binder, g in
+
+  let g, guard_g =
+    let x_a = S.gen_bv "x" None (a |> fst |> S.bv_to_name) |> S.mk_binder in
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b |> fst |> S.bv_to_name) in
+    S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
+
+  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b |> fst |> S.bv_to_name) in
+
+  let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
+  
+  let guard_eq = Rel.teq env ty k in
+  List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
+
+  (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
