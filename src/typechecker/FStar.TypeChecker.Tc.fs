@@ -778,7 +778,26 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     [se], [], env0
 
-  | Sig_polymonadic_bind _ -> failwith "tc Sig_polymonadic_bind NYI")
+  | Sig_polymonadic_bind (m, n, p, t, _) ->
+    let t =
+      if Options.use_two_phase_tc () && Env.should_verify env then
+        let t, ty =
+          TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
+          |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
+          |> N.elim_uvars env
+          |> (fun se ->
+             match se.sigel with
+             | Sig_polymonadic_bind (_, _, _, t, ty) -> t, ty
+             | _ -> failwith "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
+        if Env.debug env <| Options.Other "TwoPhases"
+          then BU.print1 "Polymonadic bind after phase 1: %s\n"
+                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }));
+        t
+      else t in
+    let t, ty = TcEff.tc_polymonadic_bind env m n p t in
+    let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }) in
+    [se], [], env0)
+
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)

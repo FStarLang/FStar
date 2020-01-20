@@ -1402,4 +1402,9 @@ let tc_polymonadic_bind env (m n p:lident) (ts:S.tscheme) : (S.tscheme * S.tsche
   let guard_eq = Rel.teq env ty k in
   List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
 
+  if Env.debug env <| Options.Extreme
+  then BU.print3 "Polymonadic bind %s after typechecking (%s::%s)\n"
+         eff_name (Print.tscheme_to_string (us, t))
+                  (Print.tscheme_to_string (us, k));
+
   (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
