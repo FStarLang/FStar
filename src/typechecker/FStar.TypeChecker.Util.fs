@@ -261,8 +261,9 @@ let destruct_wp_comp c : (universe * typ * typ) = U.destruct_comp c
 let lift_comp env (c:comp_typ) lift : comp * guard_t =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
-let join_effects env l1 l2 =
-  match Env.join_opt env (norm_eff_name env l1) (norm_eff_name env l2) with
+let join_effects env l1_in l2_in =
+  let l1, l2 = Env.norm_eff_name env l1_in, Env.norm_eff_name env l2_in in
+  match Env.join_opt env l1 l2 with
   | Some (m, _, _) -> m
   | None ->
     match Env.exists_polymonadic_bind env l1 l2 with
@@ -270,7 +271,7 @@ let join_effects env l1 l2 =
     | None ->
       raise_error (Errors.Fatal_EffectsCannotBeComposed,
         (BU.format2 "Effects %s and %s cannot be composed" 
-          (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+          (Print.lid_to_string l1_in) (Print.lid_to_string l2_in))) env.range
 
 let join_lcomp env c1 c2 =
   if TcComm.is_total_lcomp c1
