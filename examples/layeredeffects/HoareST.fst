@@ -136,6 +136,7 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
+
 let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
   (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
 : repr b
@@ -148,6 +149,25 @@ let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -
 
 
 polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
+
+
+let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
+  (f:repr a req ens) (g:(x:a -> PURE b (wp x)))
+: repr b
+  (fun h -> req h /\ (exists x h1. (wp x) (ens h x h1)))
+  (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
+= admit ()
+
+assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
+
+let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
+= f 0
+
+
+assume val g : int -> int -> PURE int (fun p -> forall x. p x)
+
+let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
+= g 2 (f 0)
 
 
 // /// lift from PURE
