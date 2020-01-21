@@ -16,7 +16,11 @@
 
 module Steel.Semantics.Hoare
 
+module P = FStar.Preorder
+
 open FStar.Tactics
+
+open MST
 
 
 (*
@@ -40,7 +44,7 @@ open FStar.Tactics
 /// Disabling projectors because we don't use them and they increase the typechecking time
 
 #push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --print_implicits --print_universes \
-  --using_facts_from 'Prims FStar.Pervasives Steel.Semantics.Hoare'"
+  --using_facts_from 'Prims FStar.Pervasives FStar.Preorder MST Steel.Semantics.Hoare'"
 
 
 (**** Begin state defn ****)
@@ -98,6 +102,7 @@ noeq
 type st0 = {
   heap:Type u#1;
   mem:Type u#1;
+  locks_preorder:P.preorder mem;
   hprop:Type u#1;
   heap_of_mem: mem -> heap;
   locks_invariant: mem -> hprop;
@@ -311,10 +316,6 @@ let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post st a) (lpre:l_pre pre)
     preserves_frame pre (post x) m0 m1)
 
 
-  m0:st.mem ->
-  Div (a & st.mem)
-
-
 (**** End interface of actions ****)
 
 
@@ -499,31 +500,33 @@ unfold
 let step_req (#st:st)
   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
-  (state:st.mem)
-= st.interp (st.locks_invariant state `st.star` pre) (st.heap_of_mem state) /\
-  lpre (st.heap_of_mem state)
+: st.mem -> Type0
+= fun m0 ->
+  st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+  lpre (st.heap_of_mem m0)
 
 let weaker_pre (#st:st)
   (#pre:st.hprop) (lpre:l_pre pre)
   (#next_pre:st.hprop) (next_lpre:l_pre next_pre)
-  (state next_state:st.mem)
-= lpre (st.heap_of_mem state) ==> next_lpre (st.heap_of_mem next_state)
+  (m0 m1:st.mem)
+= lpre (st.heap_of_mem m0) ==> next_lpre (st.heap_of_mem m1)
 
 let stronger_post (#st:st) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a)
   (lpost:l_post pre post)
   (#next_pre:st.hprop) (next_lpost:l_post next_pre post)
-  (state next_state:st.mem)
+  (m0 m1:st.mem)
 = forall (x:a) (h_final:st.heap).
-    next_lpost (st.heap_of_mem next_state) x h_final ==>
-    lpost (st.heap_of_mem state) x h_final                         
+    next_lpost (st.heap_of_mem m1) x h_final ==>
+    lpost (st.heap_of_mem m0) x h_final
+    
 
 unfold
 let step_ens (#st:st)
   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
-: step_result a post -> Type0
+: st.mem -> step_result a post -> st.mem -> Type0
 = fun r ->
   let Step pre1 state1 next_pre next_state next_lpre next_lpost _ _ = r in
   pre1 == pre /\
