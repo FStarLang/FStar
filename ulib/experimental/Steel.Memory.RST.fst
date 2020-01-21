@@ -23,7 +23,16 @@ let __reduce__ = ()
 (** TODO: Add a value_depends_only_on fp predicate. With this predicate,
     we should be able to conclude that any predicate defined using only the views
     is on fp_prop fp **)
-type view (a:Type) (fp:hprop) = (m:hheap fp) -> GTot a
+type view' (a:Type) (fp:hprop) = (m:hheap fp) -> GTot a
+
+let view_depends_only_on (#a:Type) (#fp: hprop) (f:view' a fp) =
+  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). (
+    (**) intro_emp h1;
+    (**) intro_star fp emp h0 h1;
+    (**) emp_unit fp;
+    f h0 == f (join h0 h1)))
+
+let view (a:Type) (fp:hprop) = f:view' a fp{view_depends_only_on f}
 
 (** An extension of hprops to include a view.
     Note that the type of the view is not related to the fprop, and is completely up to the user.
@@ -381,11 +390,27 @@ let fsel (#a:Type) (r:ref a) (h:hheap (fptr r)) : a =
   interp_perm_to_ptr full_permission r h;
   sel r h
 
+let fsel_is_view (#a:Type) (r:ref a) (h0:hheap (fptr r)) (h1:heap{disjoint h0 h1})
+  : Lemma
+  (ensures
+    interp (fptr r) (join h0 h1) /\
+    fsel r h0 == fsel r (join h0 h1))
+  = (**) intro_emp h1;
+    (**) intro_star (fptr r) emp h0 h1;
+    (**) emp_unit (fptr r);
+    interp_perm_to_ptr full_permission r h0;
+    sel_split_lemma r h0 h1
+
+
+let fsel_view (#a:Type) (r:ref a) : view a (fptr r) =
+    Classical.forall_intro_2 (fsel_is_view r);
+    fsel r
+
 (** The actual hprop with view for a pointer. Its view has the same type as the pointer **)
 let vptr' (#a:Type) (r:ref a) : viewable' =
   ({ t = a;
     fp = fptr r;
-    sel = fun h -> fsel r h })
+    sel = fsel_view r})
 
 [@__reduce__]
 let vptr (#a:Type) (r:ref a) : viewable = VUnit (vptr' r)

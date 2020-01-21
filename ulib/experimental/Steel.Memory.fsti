@@ -346,6 +346,7 @@ val sel_split_lemma (#a:Type) (r:ref a) (m1 m2:heap)
     (**) intro_emp m2;
     (**) intro_star (ptr r) emp m1 m2;
     (**) emp_unit (ptr r);
+    interp (ptr r) m1 /\ interp (ptr r) (join m1 m2) /\
     sel r m1 == sel r (join m1 m2)))
 
 /// upd requires a full permission
