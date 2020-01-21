@@ -245,7 +245,7 @@ let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
   upd x j v_i;
   upd x i v_j
 
-let rec copy_aux
+assume val copy_aux
   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
 : HoareST unit
   (fun h ->
@@ -256,24 +256,24 @@ let rec copy_aux
   (fun h0 _ h1 ->
     modifies (only cpy) h0 h1 /\
     Seq.equal (sel h1 cpy) (sel h1 s))
-= recall s; recall cpy;
-  let len = length cpy in
-  match len - ctr with
-  | 0 -> ()
-  | _ ->
-    upd cpy ctr (index s ctr);
-    copy_aux s cpy (ctr + 1)
+  // recall s; recall cpy;
+  // let len = length cpy in
+  // match len - ctr with
+  // | 0 -> ()
+  // | _ ->
+  //   upd cpy ctr (index s ctr);
+  //   copy_aux s cpy (ctr + 1)
 
 
-// let copy (#a:Type0) (s:array a)
-// : HoareST (array a)
-//   (fun h -> Seq.length (sel h s) > 0)
-//   (fun h0 r h1 ->
-//     modifies Set.empty h0 h1 /\
-//     r `unused_in` h0 /\
-//     contains h1 r /\
-//     sel h1 r == sel h0 s)
-// = recall s;
-//   let cpy = alloc (Seq.create (length s) (index s 0)) in
-//   copy_aux s cpy 0;
-//   cpy
+let copy (#a:Type0) (s:array a)
+: HoareST (array a)
+  (fun h -> Seq.length (sel h s) > 0)
+  (fun h0 r h1 ->
+    modifies Set.empty h0 h1 /\
+    r `unused_in` h0 /\
+    contains h1 r /\
+    sel h1 r == sel h0 s)
+= recall s;
+  let cpy = alloc (Seq.create (length s) (index s 0)) in
+  copy_aux s cpy 0;
+  cpy
