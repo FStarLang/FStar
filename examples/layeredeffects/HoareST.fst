@@ -150,13 +150,18 @@ let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -
 
 polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
-
 let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
-  (f:repr a req ens) (g:(x:a -> PURE b (wp x)))
+  (f:repr a req ens) (g:(x:a -> (unit -> PURE b (wp x))))
 : repr b
-  (fun h -> req h /\ (exists x h1. (wp x) (ens h x h1)))
+  (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
   (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
-= admit ()
+= wp_monotonic_pure ();
+  fun _ ->
+  let x = f () in
+  (g x) ()
+
+polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
+
 
 assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
 
@@ -185,79 +190,79 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 // /// Implementing the array library using the layered effect
 
 
-// module Seq = FStar.Seq
+module Seq = FStar.Seq
 
 
-// type array (a:Type0) = ref (Seq.seq a)
+type array (a:Type0) = ref (Seq.seq a)
 
-// let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
-// : HoareST (array a)
-//   (fun _ -> True)
-//   (fun h0 r h1 ->
-//     sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
-//     modifies Set.empty h0 h1)
-// = let s1 = !s1 in
-//   let s2 = !s2 in
-//   alloc (Seq.append s1 s2)
+let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
+: HoareST (array a)
+  (fun _ -> True)
+  (fun h0 r h1 ->
+    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
+    modifies Set.empty h0 h1)
+= let s1 = !s1 in
+  let s2 = !s2 in
+  alloc (Seq.append s1 s2)
 
-// let index (#a:Type0) (x:array a) (i:nat)
-// : HoareST a
-//   (fun h -> i < Seq.length (sel h x))
-//   (fun h0 v h1 ->
-//     i < Seq.length (sel h0 x) /\
-//     h0 == h1 /\
-//     v == Seq.index (sel h0 x) i)
-// = let s = !x in
-//   Seq.index s i
+let index (#a:Type0) (x:array a) (i:nat)
+: HoareST a
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 v h1 ->
+    i < Seq.length (sel h0 x) /\
+    h0 == h1 /\
+    v == Seq.index (sel h0 x) i)
+= let s = !x in
+  Seq.index s i
 
-// let upd (#a:Type0) (x:array a) (i:nat) (v:a)
-// : HoareST unit
-//   (fun h -> i < Seq.length (sel h x))
-//   (fun h0 _ h1 ->
-//     i < Seq.length (sel h0 x) /\
-//     modifies (Set.singleton (addr_of x)) h0 h1 /\
-//     sel h1 x == Seq.upd (sel h0 x) i v)
-// = let s = !x in
-//   let s = Seq.upd s i v in
-//   x := s
+let upd (#a:Type0) (x:array a) (i:nat) (v:a)
+: HoareST unit
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    i < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.upd (sel h0 x) i v)
+= let s = !x in
+  let s = Seq.upd s i v in
+  x := s
 
-// let length (#a:Type0) (x:array a)
-// : HoareST nat
-//   (fun _ -> True)
-//   (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
-// = let s = !x in
-//   Seq.length s
+let length (#a:Type0) (x:array a)
+: HoareST nat
+  (fun _ -> True)
+  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+= let s = !x in
+  Seq.length s
 
-// let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
-// : HoareST unit
-//   (fun h -> j < Seq.length (sel h x))
-//   (fun h0 _ h1 ->
-//     j < Seq.length (sel h0 x) /\
-//     modifies (Set.singleton (addr_of x)) h0 h1 /\
-//     sel h1 x == Seq.swap (sel h0 x) i j)
-// = let v_i = index x i in
-//   let v_j = index x j in
-//   upd x j v_i;
-//   upd x i v_j
+let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
+: HoareST unit
+  (fun h -> j < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    j < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.swap (sel h0 x) i j)
+= let v_i = index x i in
+  let v_j = index x j in
+  upd x j v_i;
+  upd x i v_j
 
-// let rec copy_aux
-//   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
-// : HoareST unit
-//   (fun h ->
-//     addr_of s =!= addr_of cpy /\
-//     Seq.length (sel h cpy) == Seq.length (sel h s) /\
-//     ctr <= Seq.length (sel h cpy) /\
-//     (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
-//   (fun h0 _ h1 ->
-//     modifies (only cpy) h0 h1 /\
-//     Seq.equal (sel h1 cpy) (sel h1 s))
-// = recall s; recall cpy;
-//   let len = length cpy in
-//   match len - ctr with
-//   | 0 -> ()
-//   | _ ->
-//     upd cpy ctr (index s ctr);
-//     copy_aux s cpy (ctr + 1)
+let rec copy_aux
+  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
+: HoareST unit
+  (fun h ->
+    addr_of s =!= addr_of cpy /\
+    Seq.length (sel h cpy) == Seq.length (sel h s) /\
+    ctr <= Seq.length (sel h cpy) /\
+    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
+  (fun h0 _ h1 ->
+    modifies (only cpy) h0 h1 /\
+    Seq.equal (sel h1 cpy) (sel h1 s))
+= recall s; recall cpy;
+  let len = length cpy in
+  match len - ctr with
+  | 0 -> ()
+  | _ ->
+    upd cpy ctr (index s ctr);
+    copy_aux s cpy (ctr + 1)
 
 
 // let copy (#a:Type0) (s:array a)
