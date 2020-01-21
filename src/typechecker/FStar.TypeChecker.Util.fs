@@ -575,7 +575,7 @@ let mk_indexed_bind env
 
   c, Env.conj_guards [ g_uvars; f_guard; g_guard ]
 
-let mk_non_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
+let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
   : comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
@@ -605,16 +605,21 @@ let mk_non_layered_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_t
   mk_comp md u_t2 t2 wp flags
 
 let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
-  let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
-  let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
+  let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
 
-  let c, g_bind =
-    if Env.is_layered_effect env m
-    then
-      let bind_t = m |> Env.get_effect_decl env |> U.get_bind_vc_combinator in
-      mk_indexed_bind env m m m bind_t ct1 b ct2 flags r1
-    else mk_non_layered_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
-  c, Env.conj_guard g_lift g_bind
+  match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
+  | Some (p, f_bind) -> f_bind env ct1 b ct2 flags r1
+  | None ->    
+    let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
+    let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
+
+    let c, g_bind =
+      if Env.is_layered_effect env m
+      then
+        let bind_t = m |> Env.get_effect_decl env |> U.get_bind_vc_combinator in
+        mk_indexed_bind env m m m bind_t ct1 b ct2 flags r1
+      else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
+    c, Env.conj_guard g_lift g_bind
 
 let bind_pure_wp_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
   let r = Env.get_range env in
