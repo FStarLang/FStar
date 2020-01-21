@@ -262,8 +262,15 @@ let lift_comp env (c:comp_typ) lift : comp * guard_t =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
 let join_effects env l1 l2 =
-  let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
-  m
+  match Env.join_opt env (norm_eff_name env l1) (norm_eff_name env l2) with
+  | Some (m, _, _) -> m
+  | None ->
+    match Env.exists_polymonadic_bind env l1 l2 with
+    | Some (m, _) -> m
+    | None ->
+      raise_error (Errors.Fatal_EffectsCannotBeComposed,
+        (BU.format2 "Effects %s and %s cannot be composed" 
+          (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
 
 let join_lcomp env c1 c2 =
   if TcComm.is_total_lcomp c1
@@ -2670,5 +2677,5 @@ let update_env_sub_eff env sub =
   Env.update_effect_lattice env sub.source sub.target (get_mlift_for_subeff env sub)
 
 let update_env_polymonadic_bind env m n p ty =
-  Env.add_polymonadic_bind env m n p (fun env c1 bv_opt c2 flags r ->
-    mk_indexed_bind env m n p ty (c1 |> U.comp_to_comp_typ) bv_opt (c2 |> U.comp_to_comp_typ) flags r)
+  Env.add_polymonadic_bind env m n p
+    (fun env c1 bv_opt c2 flags r -> mk_indexed_bind env m n p ty c1 bv_opt c2 flags r)

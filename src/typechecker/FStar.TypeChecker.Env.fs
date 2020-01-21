@@ -121,7 +121,7 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
-and polymonadic_bind_t = env -> comp -> option<bv> -> comp -> list<cflag> -> Range.range -> comp * guard_t
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
@@ -1251,7 +1251,7 @@ let reify_comp env c u_c : term =
 
 let exists_polymonadic_bind env m n =
   match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, _, t) -> Some t
+  | Some (_, _, p, t) -> Some (p, t)
   | _ -> None
 
 ///////////////////////////////////////////////////////////
