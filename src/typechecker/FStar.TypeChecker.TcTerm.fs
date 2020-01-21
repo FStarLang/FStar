@@ -2834,6 +2834,7 @@ and check_inner_let env e =
            e2
            (Some x, c2)
        in
+       //AR: TODO: FIXME: monadic annotations need to be adjusted for polymonadic binds
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
