@@ -99,8 +99,9 @@ module U32 = FStar.UInt32
 
 noeq type array_ref (a: Type0) : Type0 = {
   array_addr: addr;
-  array_length: U32.t;
-  array_offset: U32.t;
+  array_max_length: U32.t;
+  array_length: n:U32.t{U32.v n <= U32.v array_max_length};
+  array_offset: n:U32.t{U32.v n + U32.v array_length <= U32.v array_max_length};
 }
 
 
@@ -112,9 +113,14 @@ let invert_array_ref_s (a: Type0)
   =
   allow_inversion (array_ref a)
 
+let length (#t: Type) (a: array_ref t) = a.array_length
+
+
 let offset (#t: Type) (a: array_ref t) = a.array_offset
 
-let length (#t: Type) (a: array_ref t) = a.array_length
+let max_length (#t: Type) (a: array_ref t) = a.array_max_length
+
+let address (#t: Type) (a: array_ref t) = a.array_addr
 
 let disjoint (m0 m1:heap)
   : prop
@@ -580,7 +586,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#push-options "--z3rlimit 150 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 300 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
