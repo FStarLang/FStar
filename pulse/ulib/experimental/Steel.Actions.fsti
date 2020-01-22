@@ -70,29 +70,6 @@ val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
                 q h1)))
 
 ////////////////////////////////////////////////////////////////////////////////
-// References
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-val sel (#a:_) (r:ref a) (m:hheap (ptr r))
-  : a
-
-/// sel respect pts_to
-val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
-  : Lemma (interp (ptr r) m /\
-           interp (pts_to r p (sel r m)) m)
-
-
-/// upd requires a full permission
-val upd (#a:_) (r:ref a) (v:a)
-  : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
-
-
-val alloc (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
-
-////////////////////////////////////////////////////////////////////////////////
 // Arrays
 ////////////////////////////////////////////////////////////////////////////////
 

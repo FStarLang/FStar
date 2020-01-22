@@ -29,10 +29,6 @@ let array_seq (a: Type) (len: nat) = Seq.lseq (option (a & perm:permission{allow
 
 noeq
 type cell =
-  | Ref : a:Type u#0 ->
-          perm:permission{allows_read perm} ->
-          v:a ->
-          cell
   | Array: a:Type u#0 ->
            len: nat ->
            seq:array_seq a len  ->
@@ -70,10 +66,6 @@ let update_addr (m:heap) (a:addr) (c:cell)
 let disjoint_addr (m0 m1:heap) (a:addr)
   : prop
   = match m0 a, m1 a with
-    | Some (Ref t0 p0 v0), Some (Ref t1 p1 v1) ->
-      summable_permissions p0 p1 /\
-      t0 == t1 /\
-      v0 == v1
     | Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
       t0 == t1 /\
       len0 == len1 /\
@@ -92,8 +84,6 @@ let disjoint_addr (m0 m1:heap) (a:addr)
 
     | _ ->
       False
-
-let ref (a:Type) = addr
 
 module U32 = FStar.UInt32
 
@@ -137,8 +127,6 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
       | None, None -> None
       | None, Some x -> Some x
       | Some x, None -> Some x
-      | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
-        Some (Ref a0 (sum_permissions p0 p1) v0)
       | Some (Array a0 len0 seq0), Some (Array a1 len1 seq1) ->
         Some (Array a0 len0 (Seq.init len0 (fun i ->
           match contains_index seq0 i,  contains_index seq1 i with
@@ -283,7 +271,6 @@ module W = FStar.WellFounded
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
-  | Pts_to : #a:Type0 -> r:ref a -> perm:permission -> v:a -> hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
@@ -300,15 +287,6 @@ let rec interp (p:hprop) (m:heap)
   : Tot prop (decreases p)
   = match p with
     | Emp -> True
-    | Pts_to #a r perm v ->
-      m `contains_addr` r /\
-      (match select_addr m r with
-        | Ref a' perm' v' ->
-          a == a' /\
-          v == v' /\
-          perm `lesser_equal_permission` perm'
-       | _ -> False
-     )
     | Pts_to_array #t a perm contents ->
       m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
@@ -360,7 +338,6 @@ let rec interp (p:hprop) (m:heap)
       forall x. (W.axiom1 f x; interp (f x) m)
 
 let emp = Emp
-let pts_to = Pts_to
 let pts_to_array = Pts_to_array
 let h_and = And
 let h_or = Or
@@ -378,27 +355,6 @@ let equiv_symmetric (p1 p2:hprop) = ()
 
 #set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let equiv_extensional_on_star (p1 p2 p3:hprop) = ()
-
-////////////////////////////////////////////////////////////////////////////////
-//pts_to
-////////////////////////////////////////////////////////////////////////////////
-
-let intro_pts_to (#a:_) (x:ref a) (p:permission) (v:a) (m:heap)
-  : Lemma
-    (requires
-       m `contains_addr` x /\
-       (match select_addr m x with
-         | Ref a' perm' v' ->
-           a == a' /\
-           v == v' /\
-           p `lesser_equal_permission` perm'
-	  | _ -> False))
-     (ensures
-       interp (pts_to x p v) m)
-  = ()
-
-let pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
-  = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_array
@@ -593,8 +549,6 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     [SMTPat (interp p (join m m'))]
   = match p with
     | Emp -> ()
-
-    | Pts_to _ _ _ -> ()
     | Pts_to_array _ _ _ -> ()
 
     | Refine p q -> affine_star_aux p m m'
