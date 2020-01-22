@@ -30,8 +30,20 @@ val heap  : Type u#1
 val ref (a:Type u#0) : Type u#0
 val array_ref (a: Type u#0) : Type u#0
 
-val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
-val length (#t: Type) (a: array_ref t) : GTot (n:U32.t{U32.v n >= 0})
+val length (#t: Type) (a: array_ref t) : GTot (n:U32.t)
+val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{
+  U32.v n + U32.v (length a) <= UInt.max_int 32
+})
+
+val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
+  U32.v (offset a) + U32.v (length a) <= U32.v n
+})
+
+val address (#t: Type) (a: array_ref t) : nat
+
+let freeable (#t: Type) (a: array_ref t) =
+  offset a = 0ul /\ length a = max_length a
+
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
