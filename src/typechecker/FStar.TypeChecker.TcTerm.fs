@@ -2605,15 +2605,16 @@ and tc_eqn scrutinee env branch
             BU.print_string "Typechecking pat_bv_tms ...\n" in
 
           //typecheck the pat_bv_tms, to resolve implicits etc.
-          let pat_bv_tms =
-            List.fold_left2 (fun acc pat_bv_tm bv ->
+          //AR: keep adding pat bvs to the env as we move from left to right
+          let _, pat_bv_tms =
+            List.fold_left2 (fun (env, acc) pat_bv_tm bv ->
               let expected_t = U.arrow [S.null_binder pat_t] (S.mk_Total' bv.sort (Env.new_u_univ () |> Some)) in
               //note, we are explicitly setting lax = true, since these terms apply projectors
               //which we know are sound as per the branch guard, but hard to convince the typechecker
               let env = { (Env.set_expected_typ env expected_t) with lax = true } in
               let pat_bv_tm = tc_trivial_guard env pat_bv_tm |> fst in
-              acc@[pat_bv_tm]
-            ) [] pat_bv_tms pat_bvs in
+              Env.push_bv env bv, acc@[pat_bv_tm]
+            ) (env, []) pat_bv_tms pat_bvs in
 
           let pat_bv_tms = pat_bv_tms |> List.map (fun pat_bv_tm ->
             mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] None Range.dummyRange
