@@ -23,11 +23,14 @@ type post_t (state:Type u#1) (a:Type u#a) = state -> a -> state -> Type0
 
 type repr (a:Type) (state:Type u#1) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) =
   s0:state ->
-  Div (a & state)
-  (requires req s0)
-  (ensures fun (r, s1) ->
-    ens s0 r s1 /\
-    rel s0 s1)
+  DIV (a & state)
+  (fun p ->
+    req s0 /\
+    (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1)))
+  // (requires req s0)
+  // (ensures fun (r, s1) ->
+  //   ens s0 r s1) // /\
+  //   // rel s0 s1)
 
 
 let return (a:Type) (x:a) (state:Type u#1) (rel:P.preorder state)
@@ -109,3 +112,22 @@ assume val recall (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
 : MST unit state rel
   (fun _ -> witnessed state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ p s1)
+
+assume val wp_monotonic_pure (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a).
+       (forall (p q:pure_post a).
+          (forall (x:a). p x ==> q x) ==>
+          (wp p ==> wp q)))
+
+
+let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a state rel
+  (fun s0 -> wp (fun _ -> True))
+  (fun s0 x s1 -> ~ (wp (fun r -> r =!= x \/ s0 =!= s1)))
+= wp_monotonic_pure ();
+  fun s0 -> 
+  let x = f () in
+  x, s0
+
+sub_effect PURE ~> MST = lift_pure_mst
