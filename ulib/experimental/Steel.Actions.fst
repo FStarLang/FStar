@@ -73,6 +73,75 @@ let frame_fp_prop #fp #a #fp' (act:action fp a fp')
      in
      ()
 
+#push-options "--z3rlimit 80 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let action_preserves_frame_prop_intro
+  (fp:hprop) (a: Type) (fp': a -> hprop) (f: pre_action fp a fp')
+  (action_preserves_frame_disjointness:
+    (frame: hprop) ->
+    (h0:hheap fp) ->
+    (h1:hheap frame{disjoint h0 h1}) ->
+    Lemma (
+      let (|x_alone, h0'|) = f h0 in
+      let (|x_joint, h'|) = f (join h0 h1) in
+      disjoint h0' h1 /\ h' == join h0' h1 /\
+      x_alone == x_joint
+    )
+  )
+  : Lemma (forall  (frame: hprop) (h: hheap (fp `star` frame)).
+    let (|x, h' |) = f h in
+    preserves_frame_prop frame h h' /\
+    interp (fp' x `star` frame) h'
+  )
+  =
+  let aux (frame: hprop) (h: hheap (fp `star` frame))
+    : Lemma (
+      let (|x, h' |) = f h in
+      preserves_frame_prop frame h h' /\
+      interp (fp' x `star` frame) h'
+    )
+    =
+    let (| x, h' |) = f h in
+    let pf :squash (exists (h0:heap). (exists (h1:heap).
+      disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+    )) =
+      assert(interp (fp `star` frame) h)
+    in
+    Classical.exists_elim
+      (preserves_frame_prop frame h h' /\ interp (fp' x `star` frame) h') pf
+      (fun h0 ->
+        let pf: squash (exists (h1: hheap frame).
+          disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+        ) =
+          ()
+        in
+        Classical.exists_elim
+          (preserves_frame_prop frame h h' /\ interp (fp' x `star` frame) h') pf
+          (fun h1 ->
+            action_preserves_frame_disjointness frame h0 h1;
+            let aux (q:(heap -> prop){q `depends_only_on_without_affinity` frame})
+              : Lemma (q h <==> q h')
+            = ()
+            in
+            Classical.forall_intro aux;
+            let h0 : hheap fp = h0 in
+            let h1 : (h1:hheap frame{disjoint h0 h1 /\ h == join h0 h1}) = h1 in
+            let (|x_alone, h0'|) = f h0 in
+            let (|x_joint, h'|) = f (join h0 h1) in
+            assert(x_alone == x);
+            assert(x_joint == x);
+            assert(interp (fp' x_alone) h0');
+            assert(interp frame h1);
+            assert(h' == join h0' h1);
+            assert(disjoint h0' h1);
+            intro_star (fp' x) (frame) h0' h1;
+            assert(interp (fp' x `star` frame) h')
+        )
+    )
+  in
+  Classical.forall_intro_2 aux
+#pop-options
+
+
 (*
 val alloc' (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
   : (x:ref a &
@@ -303,7 +372,7 @@ let index
   (i:U32.t{U32.v i < U32.v (length a)}) =
   magic() //TODO: DM 12/18/2019
 
-let update_addr_array
+let update_array_addr
   (#t:_)
   (a: array_ref t)
   (i:U32.t{U32.v i < U32.v (length a)})
@@ -327,7 +396,7 @@ let update_addr_array
    | _ -> m
 
 #push-options "--max_fuel 2 --initial_fuel 2"
-let upd_array_seq'
+let upd_array_heap
   (#t:_)
   (a:array_ref t)
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
@@ -335,10 +404,33 @@ let upd_array_seq'
   (v: t)
   (h: hheap (pts_to_array a full_permission iseq)) : heap =
   let Array _ len v_orig = select_addr h a.array_addr in
-  update_addr_array a i v full_permission h
+  update_array_addr a i v full_permission h
 #pop-options
 
-let upd_array_heap
+#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let upd_array_heap_frame_disjointness_preservation
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (v: t)
+  (h h0 h1:heap)
+  (frame:hprop)
+  : Lemma
+    (requires
+      disjoint h0 h1 /\
+      h == join h0 h1 /\
+      interp (pts_to_array a full_permission iseq) h0 /\
+      interp frame h1)
+    (ensures (
+      let h0' = upd_array_heap a iseq i v h0 in
+      disjoint h0' h1))
+  =
+  ()
+#pop-options
+
+
+let upd_array_pre_action
   (#t:_)
   (a:array_ref t)
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
@@ -349,10 +441,10 @@ let upd_array_heap
     unit
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
   = fun h ->
-    (| (), upd_array_seq' a iseq i v h |)
+    (| (), upd_array_heap a iseq i v h |)
 
-#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let upd_array_disjointness_lemma'
+#push-options "--z3rlimit 60 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
@@ -367,47 +459,55 @@ let upd_array_disjointness_lemma'
       interp (pts_to_array a full_permission iseq) h0 /\
       interp frame h1)
     (ensures (
-      let h0' = upd_array_seq' a iseq i v h0 in
-      disjoint h0' h1))
+      let (| _, h' |) = upd_array_pre_action a iseq i v h in
+      let h0' = upd_array_heap a iseq i v h0 in
+      upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+      h' == (join h0' h1)))
   =
-  ()
+  let (| _, h' |) = upd_array_pre_action a iseq i v h in
+  let h0' = upd_array_heap a iseq i v h0 in
+  let aux (addr: addr) : Lemma (
+    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+    h' addr == (join h0' h1) addr
+  ) =
+    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+    if addr <> a.array_addr then () else
+    if not (h1 `contains_addr` addr) then ()
+    else match  h' addr, (join h0' h1) addr with
+    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      assert(seq2 `Seq.equal` seq3)
+    | _ -> ()
+  in
+  Classical.forall_intro aux;
+  mem_equiv_eq h' (join h0' h1)
 #pop-options
 
-#push-options "--z3rlimit 30 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let upd_array_joint_lemma'
+let upd_array_pre_action_lemma
   (#t:_)
   (a:array_ref t)
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
-  (h h0 h1:heap)
-  (frame:hprop)
-  (addr: addr)
-  : Lemma
-    (requires
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp (pts_to_array a full_permission iseq) h0 /\
-      interp frame h1)
-    (ensures (
-      let (| _, h' |) = upd_array_heap a iseq i v h in
-      let h0' = upd_array_seq' a iseq i v h0 in
-      upd_array_disjointness_lemma' a iseq i v h h0 h1 frame;
-      h' addr == (join h0' h1) addr))
+  (frame: hprop)
+  (h0:hheap (pts_to_array a full_permission iseq))
+  (h1:hheap frame{disjoint h0 h1})
+  :  Lemma (
+      let (|x_alone, h0'|) = upd_array_pre_action a iseq i v h0 in
+      let (|x_joint, h'|) = upd_array_pre_action a iseq i v (join h0 h1) in
+      disjoint h0' h1 /\ h' == join h0' h1 /\
+      x_alone == x_joint
+    )
   =
-  let (| _, h' |) = upd_array_heap a iseq i v h in
-  let h0' = upd_array_seq' a iseq i v h0 in
-  upd_array_disjointness_lemma' a iseq i v h h0 h1 frame;
-  if addr <> a.array_addr then () else
-  if not (h1 `contains_addr` addr) then ()
-  else match  h' addr, (join h0' h1) addr with
-  | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
-    assert(seq2 `Seq.equal` seq3)
-  | _ -> ()
-#pop-options
+  let (|x_alone, h0'|) = upd_array_pre_action a iseq i v h0 in
+  let (|x_joint, h'|) = upd_array_pre_action a iseq i v (join h0 h1) in
+  upd_array_heap_frame_disjointness_preservation a iseq i v (join h0 h1) h0 h1 frame;
+  upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame;
+  assert(disjoint h0' h1);
+  assert(h' == join h0' h1);
+  assert(x_alone == x_joint)
 
 #push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let upd_array_lemma'
+let upd_array_action_preserves_spec_and_framing_preservation
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
@@ -419,45 +519,26 @@ let upd_array_lemma'
     (requires
       interp (pts_to_array a full_permission iseq `star` frame) h)
     (ensures (
-      let (| _, h1 |) = upd_array_heap a iseq i v h in
-      interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)  `star` frame) h1 /\
-      preserves_frame_prop frame h h1))
-  = let aux (h0 h1:heap)
-     : Lemma
-       (requires
-         disjoint h0 h1 /\
-         h == join h0 h1 /\
-         interp (pts_to_array a full_permission iseq) h0 /\
-         interp frame h1)
-       (ensures (
-         let (| _, h' |) = upd_array_heap a iseq i v h in
-         let h0' = upd_array_seq' a iseq i v h0 in
-         disjoint h0' h1 /\
-         interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)) h0' /\
-         interp frame h1 /\
-         h' == join h0' h1))
-       [SMTPat (disjoint h0 h1)]
-     =
-     let (| _, h'|) = upd_array_heap a iseq i v h in
-     let h0' = upd_array_seq' a iseq i v h0 in
-     upd_array_disjointness_lemma' a iseq i v h h0 h1 frame;
-     let aux (addr: addr) : Lemma (h' addr == (join h0' h1) addr) =
-       upd_array_joint_lemma' a iseq i v h h0 h1 frame addr
-     in
-     Classical.forall_intro aux;
-     mem_equiv_eq h' (join h0' h1)
-   in
-   ()
+      let (| _, h' |) = upd_array_pre_action a iseq i v h in
+      interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)  `star` frame) h' /\
+      preserves_frame_prop frame h h'))
+  =
+  action_preserves_frame_prop_intro
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+    (upd_array_pre_action a iseq i v)
+    (upd_array_pre_action_lemma a iseq i v)
 #pop-options
 
 #push-options "--warn_error -271"
-let upd_array'_is_frame_preserving
+let upd_array_pre_action_is_frame_preserving
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
-  : Lemma (is_frame_preserving (upd_array_heap a iseq i v))
+  : Lemma (is_frame_preserving (upd_array_pre_action a iseq i v))
   = let aux
     (#t:_)
     (a:array_ref t)
@@ -468,82 +549,23 @@ let upd_array'_is_frame_preserving
         (requires
           interp (pts_to_array a full_permission iseq `star` frame) h)
         (ensures (
-          let (| _, h1 |) = (upd_array_heap a iseq i v h) in
+          let (| _, h1 |) = (upd_array_pre_action a iseq i v h) in
           interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) `star` frame) h1 /\
           preserves_frame_prop frame h h1))
         [SMTPat ()]
-      = upd_array_lemma' a iseq i v h frame
+      = upd_array_action_preserves_spec_and_framing_preservation a iseq i v h frame
    in
    ()
 #pop-options
 
-#push-options "--z3rlimit 10 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let upd_array_disjointness_lemma2'
-  (#t:_)
-  (a:array_ref t)
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (i:U32.t{U32.v i < U32.v (length a)})
-  (v: t)
-  (h0:hheap (pts_to_array a full_permission iseq))
-  (h1:heap {disjoint h0 h1})
-  : Lemma
-    (requires True)
-    (ensures (
-      let (| _, h |) = upd_array_heap a iseq i v h0 in
-      disjoint h h1))
-  = ()
-#pop-options
-
-#push-options "--z3rlimit 200 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let upd_array'_preserves_join
-  (#t:_)
-  (a:array_ref t)
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (i:U32.t{U32.v i < U32.v (length a)})
-  (v: t)
-  (h0:hheap (pts_to_array a full_permission iseq))
-  (h1:heap {disjoint h0 h1})
-  : Lemma
-     (let (| x0, h |) = upd_array_heap a iseq i v h0 in
-      let (| x1, h' |) = upd_array_heap a iseq i v (join h0 h1) in
-      x0 == x1 /\
-      disjoint h h1 /\
-      h' == join h h1)
-  =
-    let (| x0, h |) = upd_array_heap a iseq i v h0 in
-    let (| x1, h' |) = upd_array_heap a iseq i v (join h0 h1) in
-    upd_array_disjointness_lemma2' a iseq i v h0 h1;
-    let aux (addr: addr) : Lemma (h' addr == (join h h1) addr) =
-       if addr <> a.array_addr then () else
-       if not (h1 `contains_addr` addr) then ()
-       else match  h' addr, (join h h1) addr, h addr, h0 addr, h1 addr with
-         | Some (Array t' len' seq'), Some (Array tj lenj seqj), Some (Array t len seq),
-           Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
-          let aux (j:nat{j < len'}) : Lemma (Seq.index seq' j == Seq.index seqj j) =
-            if contains_index seq0 j && contains_index seq1 j then begin
-              ()
-            end else if contains_index seq0 j then
-              ()
-            else if contains_index seq1 j then
-              ()
-            else ()
-          in
-          Classical.forall_intro aux;
-          assert(seq' `Seq.equal` seqj)
-         | _ -> ()
-     in
-     Classical.forall_intro aux;
-    assert (h' `mem_equiv` join h h1)
-#pop-options
-
 #push-options "--warn_error -271"
-let upd_array'_depends_only_on_fp
+let upd_array_pre_action_depends_only_on_fp
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
-  : Lemma (action_depends_only_on_fp (upd_array_heap a iseq i v))
+  : Lemma (action_depends_only_on_fp (upd_array_pre_action a iseq i v))
   =
     let pre = pts_to_array a full_permission iseq in
     let post = pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) in
@@ -551,22 +573,22 @@ let upd_array'_depends_only_on_fp
             (h1:heap {disjoint h0 h1})
             (q:fp_prop post)
     : Lemma
-      (let (| x0, h |) = upd_array_heap a iseq i v h0 in
-        let (| x1, h' |) = upd_array_heap a iseq i v (join h0 h1) in
+      (let (| x0, h |) = upd_array_pre_action a iseq i v h0 in
+        let (| x1, h' |) = upd_array_pre_action a iseq i v (join h0 h1) in
         x0 == x1 /\
         (q h <==> q h'))
       [SMTPat ()]
-    = let (| x0, h |) = upd_array_heap a iseq i v h0 in
-      let (| x1, h' |) = upd_array_heap a iseq i v (join h0 h1) in
+    = let (| x0, h |) = upd_array_pre_action a iseq i v h0 in
+      let (| x1, h' |) = upd_array_pre_action a iseq i v (join h0 h1) in
       assert (x0 == x1);
-      upd_array'_preserves_join a iseq i v h0 h1;
+      upd_array_pre_action_lemma a iseq i v emp h0 h1;
       assert (h' == join h h1)
     in
     ()
 #pop-options
 
 #push-options "--z3rlimit 300 --max_fuel 2 --initial_fuel 2"
-let upd_array'
+let upd_array_pre_m_action
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
@@ -577,21 +599,21 @@ let upd_array'
     unit
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
   = fun m ->
-      upd_array'_is_frame_preserving a iseq i v;
-      upd_array'_depends_only_on_fp a iseq i v;
-      let (| _, h' |) = upd_array_heap a iseq i v m.heap in
+      upd_array_pre_action_is_frame_preserving a iseq i v;
+      upd_array_pre_action_depends_only_on_fp a iseq i v;
+      let (| _, h' |) = upd_array_pre_action a iseq i v m.heap in
       let m':mem = {m with heap = h'} in
       (| (), m' |)
 #pop-options
 
 #push-options "--warn_error -271 --initial_fuel 2 --max_fuel 2 --z3rlimit 20"
-let upd_array_is_frame_preserving
+let upd_array_pre_m_action_is_frame_preserving
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
-  : Lemma (is_m_frame_preserving (upd_array' a iseq i v))
+  : Lemma (is_m_frame_preserving (upd_array_pre_m_action a iseq i v))
   =
   let aux
     (#t:_)
@@ -602,24 +624,24 @@ let upd_array_is_frame_preserving
     (frame:hprop) (m:hmem (pts_to_array a full_permission iseq `star` frame))
       : Lemma
         (ensures (
-          let (| _, m1 |) = upd_array' a iseq i v m in
+          let (| _, m1 |) = upd_array_pre_m_action a iseq i v m in
           interp (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) `star` frame `star` locks_invariant m1) m1.heap))
         [SMTPat ()]
       = star_associative (pts_to_array a full_permission iseq) frame (locks_invariant m);
         star_associative (pts_to_array a full_permission (Seq.upd iseq (U32.v i) v)) frame (locks_invariant m);
-        upd_array_lemma' a iseq i v m.heap (frame `star` locks_invariant m)
+        upd_array_action_preserves_spec_and_framing_preservation a iseq i v m.heap (frame `star` locks_invariant m)
    in
    ()
 #pop-options
 
 #push-options "--warn_error -271"
-let upd_array_depends_only_on_fp
+let upd_array_pre_m_action_depends_only_on_fp
     (#t:_)
     (a:array_ref t)
     (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
     (i:U32.t{U32.v i < U32.v (length a)})
     (v: t)
-  : Lemma (m_action_depends_only_on (upd_array' a iseq i v))
+  : Lemma (m_action_depends_only_on (upd_array_pre_m_action a iseq i v))
   =
     let pre = pts_to_array a full_permission iseq in
     let post = pts_to_array a full_permission (Seq.upd iseq (U32.v i) v) in
@@ -627,14 +649,14 @@ let upd_array_depends_only_on_fp
             (h1:heap {m_disjoint m0 h1})
             (q:fp_prop post)
     : Lemma
-      (let (| x0, m |) = upd_array' a iseq i v m0 in
-       let (| x1, m' |) = upd_array' a iseq i v (upd_joined_heap m0 h1) in
+      (let (| x0, m |) = upd_array_pre_m_action a iseq i v m0 in
+       let (| x1, m' |) = upd_array_pre_m_action a iseq i v (upd_joined_heap m0 h1) in
         x0 == x1 /\
         (q (heap_of_mem m) <==> q (heap_of_mem m')))
       [SMTPat ()]
-    = let (| x0, m |) = upd_array' a iseq i v m0 in
-      let (| x1, m' |) = upd_array' a iseq i v (upd_joined_heap m0 h1) in
-      upd_array'_preserves_join a iseq i v m0.heap h1;
+    = let (| x0, m |) = upd_array_pre_m_action a iseq i v m0 in
+      let (| x1, m' |) = upd_array_pre_m_action a iseq i v (upd_joined_heap m0 h1) in
+      upd_array_pre_action_lemma a iseq i v emp m0.heap h1;
       assert (m'.heap == join m.heap h1)
     in
     ()
@@ -650,9 +672,9 @@ let upd_array
     (pts_to_array a full_permission iseq)
     unit
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
-  = upd_array_is_frame_preserving a iseq i v;
-    upd_array_depends_only_on_fp a iseq i v;
-    upd_array' a iseq i v
+  = upd_array_pre_m_action_is_frame_preserving a iseq i v;
+    upd_array_pre_m_action_depends_only_on_fp a iseq i v;
+    upd_array_pre_m_action a iseq i v
 
 
 let alloc_array
