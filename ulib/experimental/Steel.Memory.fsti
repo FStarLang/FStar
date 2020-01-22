@@ -27,7 +27,6 @@ module U32 = FStar.UInt32
 val heap  : Type u#1
 
 /// A memory maps a reference to its associated value
-val ref (a:Type u#0) : Type u#0
 val array_ref (a: Type u#0) : Type u#0
 
 val length (#t: Type) (a: array_ref t) : GTot (n:U32.t)
@@ -101,7 +100,6 @@ let equiv (p1 p2:hprop) : prop =
 
 /// All the standard connectives of separation logic
 val emp : hprop
-val pts_to (#a:_) (r:ref a) (p:permission) (v:a) : hprop
 val pts_to_array
   (#t: Type0)
   (a:array_ref t)
@@ -124,24 +122,6 @@ val equiv_symmetric (p1 p2:hprop)
 
 val equiv_extensional_on_star (p1 p2 p3:hprop)
   : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
-
-
-////////////////////////////////////////////////////////////////////////////////
-// pts_to and abbreviations
-////////////////////////////////////////////////////////////////////////////////
-let ptr_perm #a (r:ref a) (p:permission) =
-    h_exists (pts_to r p)
-
-let ptr #a (r:ref a) =
-    h_exists (ptr_perm r)
-
-val pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
-  : Lemma
-    (requires
-      interp (pts_to x p v0) m /\
-      interp (pts_to x p v1) m)
-    (ensures
-      v0 == v1)
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_array and abbreviations
