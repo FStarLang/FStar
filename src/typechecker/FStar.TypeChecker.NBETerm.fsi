@@ -1,3 +1,20 @@
+(*
+   Copyright 2017-2019 Microsoft Research
+
+   Authors: Zoe Paraskevopoulou, Guido Martinez, Nikhil Swamy
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 #light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.All
@@ -18,9 +35,26 @@ module Z = FStar.BigInt
 module C = FStar.Const
 open FStar.Char
 
+(*
+   This module provides the internal term representations used in the
+   NBE algorithm implemented by FStar.TypeChecker.NBE.fs (see the
+   comments at the header of that file, for some general context about
+   the algorithm).
+
+   Although the type provided by this module is mostly of relevance to
+   the internal of the NBE algorithm, we expose its definitions mainly
+   so that we can (in FStar.TypeChecker.Cfg and
+   FStar.Tactics.Interpreter) provide NBE compatible implementations
+   of primitive computation steps.
+*)
+
 type var = bv
 type sort = int
 
+// This type mostly mirrors the definition of FStar.Const.sconst
+// There are several missing cases, however.
+// TODO: We should also provide implementations for float, bytearray,
+// etc.
 type constant =
   | Unit
   | Bool of bool
@@ -28,36 +62,95 @@ type constant =
   | String of string * Range.range
   | Char of FStar.Char.char
   | Range of Range.range
+  | SConst of FStar.Const.sconst
 
+// Atoms represent the head of an irreducible application
+// They can either be variables
+// Or, un-reduced match terms
 type atom
-//IN F*: : Type0
   =
   | Var of var
-  | Match of t *
-             (t -> t) *
-             ((t -> term) -> list<branch>)
+  | Match of
+       // 1. the scrutinee
+       t *
+       // 2. reconstructs the pattern matching, if it needs to be readback
+       (unit -> list<branch>)
+  | UnreducedLet of
+     // Especially when extracting, we do not always want to reduce let bindings
+     // since that can lead to exponential code size blowup. This node represents
+     // an unreduced let binding which can be read back as an F* let
+     // 1. The name of the let-bound term
+       var *
+     // 2. The type of the let-bound term
+       Thunk.t<t>   *
+     // 3. Its definition
+       Thunk.t<t>   *
+     // 4. The body of the let binding
+       Thunk.t<t>   *
+     // 5. The source letbinding for readback (of attributes etc.)
+       letbinding
+  | UnreducedLetRec of
+     // Same as UnreducedLet, but for local let recs
+     // 1. list of names of all mutually recursive let-rec-bound terms
+     //    * their types
+     //    * their definitions
+        list<(var * t * t)> *
+     // 2. the body of the let binding
+        t *
+     // 3. the source letbinding for readback (of attributes etc.)
+     //    equal in length to the first list
+        list<letbinding>
+  | UVar of Thunk.t<S.term>
 
 and t
-//IN F*: : Type0
   =
-  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-        * int                     // arity
-        * option<(unit -> residual_comp)> // thunked residual comp
+  | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
+                                                                 //or a list of arguments, for primitive unembeddings
+        * int                        // arity
   | Accu of atom * args
   | Construct of fv * list<universe> * args
-  | FV of fv * list<universe> * args
+  | FV of fv * list<universe> * args //universes and args in reverse order
   | Constant of constant
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
+  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
-  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+  | TopLevelLet of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | TopLevelRec of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
+       list<bool> *
+       // 4. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | LocalLetRec of
+      // 1. index of the let binding in the mutually recursive list
+      int *
+      letbinding *
+      // 2. Mutally recursive letbindings (only for local mutually recursive let bindings)
+      list<letbinding> *
+      // 3. rec env
+      list<t> *
+      // 4. Argument accumulator
+      args *
+      // 5. natural arity (including universes) of the main let binding `f` (see Util.let_rec_arity)
+      int *
+      // 6. for each argument, a bool records if that argument appears in the decreases
+      //    This is used to detect potentially non-terminating loops
+      list<bool>
 
 and comp =
   | Tot of t * option<universe>
@@ -90,19 +183,11 @@ and cflag =
   | CPS
   | DECREASES of t
 
-
 and arg = t * aqual
 and args = list<(arg)>
 
 type head = t
 type annot = option<t>
-
-// Term equality
-val eq_t : t -> t -> U.eq_result
-val eq_atom : atom -> atom -> U.eq_result
-val eq_arg : arg -> arg -> U.eq_result
-val eq_args : args -> args -> U.eq_result
-val eq_constant : constant -> constant -> U.eq_result
 
 // Printing functions
 
@@ -121,7 +206,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> list<branch>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg

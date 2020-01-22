@@ -54,7 +54,16 @@ let norm_before_encoding env t =
                  Env.AllowUnboundUniverses;
                  Env.EraseUniverses;
                  Env.Exclude Env.Zeta] in
-    N.normalize steps env.tcenv t
+    Profiling.profile
+      (fun () -> N.normalize steps env.tcenv t)
+      (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+
+let norm_with_steps steps env t =
+  Profiling.profile
+      (fun () -> N.normalize steps env t)
+      (Some (Ident.string_of_lid (Env.current_module env)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm"
 
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
@@ -661,10 +670,10 @@ let encode_top_level_let :
           arrow_formals_comp_norm norm (U.unrefine t)
 
         | _ when not norm ->
-          let t_norm = N.normalize [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
-                                    (* we don't know if this will terminate; so don't do recursive steps *)
-                                    Env.Exclude Env.Zeta;
-                                    Env.UnfoldUntil delta_constant; Env.EraseUniverses]
+          let t_norm = norm_with_steps [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
+                                       (* we don't know if this will terminate; so don't do recursive steps *)
+                                       Env.Exclude Env.Zeta;
+                                       Env.UnfoldUntil delta_constant; Env.EraseUniverses]
                         tcenv t
           in
           arrow_formals_comp_norm true t_norm
@@ -1746,7 +1755,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
+                let t = norm_with_steps [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in

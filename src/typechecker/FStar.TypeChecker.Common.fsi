@@ -168,3 +168,4 @@ val is_pure_or_ghost_lcomp : lcomp -> bool
 val set_result_typ_lc : lcomp -> typ -> lcomp
 val residual_comp_of_lcomp : lcomp -> residual_comp
 val lcomp_of_comp : comp -> lcomp
+val simplify : debug:bool -> term -> term

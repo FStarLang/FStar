@@ -194,6 +194,7 @@ type debug_switches = {
     wpe              : bool;
     norm_delayed     : bool;
     print_normalized : bool;
+    debug_nbe        : bool;
 }
 
 let no_debug_switches = {
@@ -206,6 +207,7 @@ let no_debug_switches = {
     wpe              = false;
     norm_delayed     = false;
     print_normalized = false;
+    debug_nbe        = false;
 }
 
 type primitive_step = {
@@ -280,8 +282,7 @@ let log_unfolding cfg f =
     if cfg.debug.unfolding then f () else ()
 
 let log_nbe cfg f =
-    if Env.debug cfg.tcenv <| Options.Other "NBE"
-    then f()
+    if cfg.debug.debug_nbe then f ()
 
 
 (*******************************************************************)
@@ -944,7 +945,11 @@ let primop_time_report () : string =
 
 let extendable_primops_dirty : ref<bool> = BU.mk_ref true
 
-let mk_extendable_primop_set () =
+type register_prim_step_t = primitive_step -> unit
+type retrieve_prim_step_t = unit -> prim_step_set
+let mk_extendable_primop_set ()
+  : register_prim_step_t
+  * retrieve_prim_step_t =
   let steps = BU.mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
@@ -957,7 +962,7 @@ let mk_extendable_primop_set () =
 let plugins = mk_extendable_primop_set ()
 let extra_steps = mk_extendable_primop_set ()
 
-let register_plugin p = fst plugins p
+let register_plugin (p:primitive_step) = fst plugins p
 let retrieve_plugins () =
     if Options.no_plugins ()
     then empty_prim_steps ()
@@ -1009,7 +1014,8 @@ let config' psteps s e =
              ; b380 = Env.debug e (Options.Other "380")
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")}
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
+             ; debug_nbe = Env.debug e (Options.Other "NBE")}
             else no_debug_switches
       ;
      steps = steps;
@@ -1021,3 +1027,18 @@ let config' psteps s e =
      reifying = false}
 
 let config s e = config' [] s e
+
+let should_reduce_local_let cfg lb =
+  if cfg.steps.do_not_unfold_pure_lets
+  then false //we're not allowed to do any local delta steps
+  else if cfg.steps.pure_subterms_within_computations &&
+          U.has_attribute lb.lbattrs PC.inline_let_attr
+  then true //1. we're extracting, and it's marked @inline_let
+  else
+    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+    if U.is_pure_effect n &&
+       (cfg.normalize_pure_lets
+        || U.has_attribute lb.lbattrs PC.inline_let_attr)
+    then true //Or, 2. it's pure and we either not extracting, or it's marked @inline_let
+    else U.is_ghost_effect n && //Or, 3. it's ghost and we're not extracting
+         not (cfg.steps.pure_subterms_within_computations)

@@ -14,6 +14,9 @@ open FStar.HyperStack.ST
 module M = FStar.Map
 module HS = FStar.HyperStack
 
+(* A primitive to update the state monolithically with the result of a ghost function *)
+assume val gput: f:(unit -> GTot HS.mem) -> ST unit (requires (fun _ -> True)) (ensures (fun _ _ h1 -> h1 == f()))
+
 (* Some fixed set of registers *)
 type reg =
   | R1
@@ -50,12 +53,12 @@ let rec n_arrow (n:arity) (result:Type) =
   if n = 0 then result
   else uint_64 -> n_arrow (n - 1) result
 
-(* `elim` is a coercon to force a bit of normalization *)
+(* `elim` is a coercion to force a bit of normalization *)
 let elim #n #result (f:n_arrow n result)
   : normalize_term (n_arrow n result)
   = f
 
-(* `elim_1` peels of one arrow in an n_arrow *)
+(* `elim_1` peels off one arrow in an n_arrow *)
 let elim_1 (#n:arity{n > 0}) #r (f:n_arrow n r)
   : (uint_64 -> n_arrow (n - 1) r)
   = f
@@ -116,8 +119,6 @@ let rec as_lowstar_sig (n:arity{n > 0}) (pre:vale_pre n) (post:vale_post n) : Ty
                             (ensures (fun h0 _ h1 -> elim #1 post x h0 h1))
   | _ -> x:uint_64 -> as_lowstar_sig (n - 1) (elim_1 pre x) (elim_1 post x)
 
-(* A primitives to update the state monolithically with the result of a ghost function *)
-assume val gput: f:(unit -> GTot HS.mem) -> ST unit (requires (fun _ -> True)) (ensures (fun _ _ h1 -> h1 == f()))
 
 //Avoid some inductive proofs by just letting Z3 unfold the recursive functions above
 #reset-options "--z3rlimit_factor 10 --max_fuel 5 --initial_fuel 5 --max_ifuel 1 --initial_ifuel 1 --z3cliopt 'smt.qi.eager_threshold=20'"
