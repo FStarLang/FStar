@@ -518,9 +518,9 @@ let step_ens (#st:st)
 = fun m0 r m1 ->
   let Step next_pre next_lpre next_lpost _ _ = r in
   next_lpre (st.heap_of_mem m1) /\
-  st.interp (st.locks_invariant m1 `st.star` next_pre) (st.heap_of_mem m1) /\
-  preserves_frame pre next_pre m0 m1 /\
-  weaker_pre lpre next_lpre m0 m1 /\
+  // st.interp (st.locks_invariant m1 `st.star` next_pre) (st.heap_of_mem m1) /\
+  // preserves_frame pre next_pre m0 m1 /\
+  // weaker_pre lpre next_lpre m0 m1 /\
   stronger_post lpost next_lpost m0 m1
 
 
@@ -848,27 +848,44 @@ let step_bind_ret (#st:st) (i:nat)
     | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->  
       Step (p x) (lpre_b x) (lpost_b x) (g x) i, m0)
 
+#set-options "--z3rlimit 50" // --log_queries"
+//#restart-solver
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
   (step:step_t)
 
-: MST (step_result a post) st.mem st.locks_preorder (step_req f) (step_ens f)
+: MST (p:st.hprop & l_pre p) st.mem st.locks_preorder (step_req f)
+  (fun m0 r m1 ->
+   let (| _, f |) = r in
+   f (st.heap_of_mem m1))
 
 = match f with
-  | Bind (Ret _ _ _) _ -> step_bind_ret i f step
-
-  | Bind #_ #_ #pre_a #_ #lpre_a #lpost_a #_ #_ #lpre_b #lpost_b f g ->
+  | Bind #_ #b #pre_a #post_a #lpre_a #lpost_a #a #_ #lpre_b #lpost_b f g ->
     let Step next_pre next_lpre next_lpost f j = step i f in
 
     let m1 = MST.get st.mem st.locks_preorder () in
-    assume (bind_lpre next_lpre next_lpost lpre_b (st.heap_of_mem m1));  //by norm ([delta_only [`%bind_lpre]]);
 
-    Step next_pre
-      (bind_lpre next_lpre next_lpost lpre_b)
-      (bind_lpost next_lpre next_lpost lpost_b)
-      (Bind f g)
-      j
+    let lpre : l_pre next_pre = bind_lpre next_lpre next_lpost lpre_b in
+    assert (lpre (st.heap_of_mem m1)) by norm ([delta_only [`%bind_lpre]]);
+    admit ();
+    (| next_pre, lpre |)
+
+    let lpost : l_post next_pre post = bind_lpost next_lpre next_lpost lpost_b in
+    let f : m st a next_pre post lpre lpost = Bind #st #b #next_pre #post_a #next_lpre #next_lpost #a #post #lpre_b #lpost_b f g in
+
+    //assume (lpre (st.heap_of_mem m1));
+
+    let s = Step next_pre
+      lpre
+      lpost
+      f
+      j in
+    s
+
+
+  | Bind (Ret _ _ _) _ -> step_bind_ret i f step
+
 
 let step_frame_ret (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
