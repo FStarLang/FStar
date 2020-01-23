@@ -141,7 +141,7 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
   )
 
 
-#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 70"
+#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 150"
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
