@@ -670,30 +670,6 @@ let upd_array_action_memory_split_independence
   mem_equiv_eq h' (join h0' h1)
 #pop-options
 
-let upd_array_pre_action_lemma
-  (#t:_)
-  (a:array_ref t)
-  (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (i:U32.t{U32.v i < U32.v (length a)})
-  (v: t)
-  (frame: hprop)
-  (h0:hheap (pts_to_array a full_permission iseq))
-  (h1:hheap frame{disjoint h0 h1})
-  :  Lemma (
-      let (|x_alone, h0'|) = upd_array_pre_action a iseq i v h0 in
-      let (|x_joint, h'|) = upd_array_pre_action a iseq i v (join h0 h1) in
-      disjoint h0' h1 /\ h' == join h0' h1 /\
-      x_alone == x_joint
-    )
-  =
-  let (|x_alone, h0'|) = upd_array_pre_action a iseq i v h0 in
-  let (|x_joint, h'|) = upd_array_pre_action a iseq i v (join h0 h1) in
-  upd_array_heap_frame_disjointness_preservation a iseq i v (join h0 h1) h0 h1 frame;
-  upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame;
-  assert(disjoint h0' h1);
-  assert(h' == join h0' h1);
-  assert(x_alone == x_joint)
-
 let upd_array_action
   (#t:_)
   (a:array_ref t)
@@ -722,7 +698,8 @@ let upd_array_action
       let (| x0, h |) = upd_array_pre_action a iseq i v h0 in
       let (| x1, h' |) = upd_array_pre_action a iseq i v (join h0 h1) in
       assert (x0 == x1);
-      upd_array_pre_action_lemma a iseq i v emp h0 h1;
+      upd_array_heap_frame_disjointness_preservation a iseq i v (join h0 h1) h0 h1 frame;
+      upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame;
       assert (h' == join h h1)
     )
 
