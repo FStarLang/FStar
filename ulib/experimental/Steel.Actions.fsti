@@ -36,11 +36,11 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
      interp (fp' x `star` frame) h1 /\
      preserves_frame_prop frame h0 h1)
 
-let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
-  = forall (h0:hheap pre)
+let action_depends_only_on_fp (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
+  = forall (h0:hheap fp)
       (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (interp pre (join h0 h1) /\ (
+      (post: (x:a -> fp_prop (fp' x))).
+      (interp fp (join h0 h1) /\ (
        let (| x0, h |) = f h0 in
        let (| x1, h' |) = f (join h0 h1) in
        x0 == x1 /\
