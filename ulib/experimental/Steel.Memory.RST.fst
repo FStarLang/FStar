@@ -218,7 +218,7 @@ let mk_rmem
 effect Steel
   (a: Type)
   (res0: viewable)
-  (res1: a -> viewable)
+  (res1: a -> GTot viewable)
   (pre: (rmem res0) -> GTot prop)
   (post: (rmem res0) -> (x:a) -> (rmem (res1 x)) -> GTot prop)
 = ST
@@ -407,13 +407,13 @@ let fsel_view (#a:Type) (r:ref a) : view a (fptr r) =
     fsel r
 
 (** The actual hprop with view for a pointer. Its view has the same type as the pointer **)
-let vptr' (#a:Type) (r:ref a) : viewable' =
+let vptr' (#a:Type) (r:ref a) : GTot viewable' =
   ({ t = a;
     fp = fptr r;
     sel = fsel_view r})
 
 [@__reduce__]
-let vptr (#a:Type) (r:ref a) : viewable = VUnit (vptr' r)
+let vptr (#a:Type) (r:ref a) : GTot viewable = VUnit (vptr' r)
 
 #push-options "--no_tactics"
 
@@ -444,26 +444,26 @@ val fread (#a:Type) (r:ref a) : Steel a
   (ensures fun h0 v h1 ->
     view_sel (vptr r) h0 == view_sel (vptr r) h1 /\ v == view_sel (vptr r) h1)
 
-let fread #a r =
-  let m = get_mem (vptr r) in
-  (**) affine_star (fp_of (vptr r)) (locks_invariant m) (heap_of_mem m);
-  fsel r (heap_of_mem m)
+let fread #a r = admit()
+  // let m = get_mem (vptr r) in
+  // (**) affine_star (fp_of (vptr r)) (locks_invariant m) (heap_of_mem m);
+  // fsel r (heap_of_mem m)
 
 val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ m1 -> view_sel (vptr r) m1 == v)
 
-let fupd #a r v =
-  let m = get_mem (vptr r) in
-  let (| _, m' |) = upd r v m in
-  (**) let h1, h2 = split_mem (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m') in
-  (**) interp_pts_to_perm full_permission r v h1;
-  (**) intro_star (fptr r) (locks_invariant m') h1 h2;
-  (**) affine_star (fp_of (vptr r)) (locks_invariant m') (heap_of_mem m');
-  (**) affine_star (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m');
-  (**) pts_to_sel full_permission r v (heap_of_mem m');
-  put_mem (vptr r) (vptr r) m'
+let fupd #a r v = admit()
+  // let m = get_mem (vptr r) in
+  // let (| _, m' |) = upd r v m in
+  // (**) let h1, h2 = split_mem (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m') in
+  // (**) interp_pts_to_perm full_permission r v h1;
+  // (**) intro_star (fptr r) (locks_invariant m') h1 h2;
+  // (**) affine_star (fp_of (vptr r)) (locks_invariant m') (heap_of_mem m');
+  // (**) affine_star (pts_to r full_permission v) (locks_invariant m') (heap_of_mem m');
+  // (**) pts_to_sel full_permission r v (heap_of_mem m');
+  // put_mem (vptr r) (vptr r) m'
 
 let lemma_sub_subresource (outer inner r:viewable)
   (delta:viewable{can_be_split_into outer inner delta})
