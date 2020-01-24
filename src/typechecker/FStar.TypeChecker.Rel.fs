@@ -3021,16 +3021,21 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 
         //sub problems for uvar indices in c1
         let is_sub_probs, wl =
-          let is_uvar t =
+          let rec is_uvar t =
             match (SS.compress t).n with
-            | Tm_uvar _ 
-            | Tm_uinst ({ n = Tm_uvar _ }, _)
-            | Tm_app ({ n = Tm_uvar _ }, _) -> true
+            | Tm_uvar _ -> true
+            | Tm_uinst (t, _) -> is_uvar t
+            | Tm_app (t, _) -> is_uvar t
             | _ -> false in
           List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
             if is_uvar a1
-            then let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
-                 p::is_sub_probs, wl
+            then begin
+                   if Env.debug env <| Options.Other "LayeredEffects" then
+                   BU.print2 "solve_layered_sub: adding index equality for %s and %s (since a1 uvar)\n"
+                     (Print.term_to_string a1) (Print.term_to_string a2);
+                   let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
+                   p::is_sub_probs, wl
+                 end
             else is_sub_probs, wl
           ) c1.effect_args c2.effect_args ([], wl) in
 
