@@ -2588,7 +2588,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     effect_name = tgt;
     result_typ = a;
     effect_args = is |> List.map (SS.subst substs) |> List.map S.as_arg;
-    flags = ct.flags
+    flags = []  //AR: setting the flags to empty
   }) in
 
   if debug env <| Options.Other "LayeredEffects" then
