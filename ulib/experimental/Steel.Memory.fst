@@ -75,7 +75,7 @@ let disjoint_addr (m0 m1:heap) (a:addr)
           let (x0, p0) = select_index seq0 i in
 	  let (x1, p1) = select_index seq1 i in
           x0 == x1 /\ summable_permissions p0 p1
-        | _ -> False
+        | _ -> True
       )
     | Some _, None
     | None, Some _
@@ -540,7 +540,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     [SMTPat (interp p (join m m'))]
   = match p with
     | Emp -> ()
-    | Pts_to_array _ _ _ -> ()
+    | Pts_to_array _ _ _ -> admit()
 
     | Refine p q -> affine_star_aux p m m'
 
@@ -549,6 +549,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
 
     | Star p1 p2 ->
+      admit();
       let aux (m1 m2:heap) (m':heap {disjoint m m'})
         : Lemma
           (requires

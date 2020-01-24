@@ -733,6 +733,30 @@ let alloc_array
   =
   admit()
 
+let free_array_pre_action
+  (#t: _)
+  (a: array_ref t{freeable a})
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  : pre_action
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> emp)
+  = fun h -> (| (), h |)
+
+let free_array_action
+  (#t: _)
+  (a: array_ref t{freeable a})
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  =
+  pre_action_to_action
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> emp)
+    (free_array_pre_action a iseq)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 post -> ())
+
 let free_array
   (#t: _)
   (a: array_ref t{freeable a})
@@ -742,7 +766,116 @@ let free_array
     unit
     (fun _ -> emp)
   =
-  admit()
+  non_alloc_action_to_non_locking_m_action
+    (pts_to_array a full_permission iseq)
+    unit
+    (fun _ -> emp)
+    (free_array_action a iseq)
+    (fun h addr -> ())
+
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 30"
+let share_array_pre_action
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  : pre_action
+    (pts_to_array a p iseq)
+    (a':array_ref t{
+      length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+      address a = address a'
+    })
+    (fun a' -> star
+      (pts_to_array a (half_permission p) iseq)
+      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    = fun h ->
+      let split_h_1 : heap = on _ (fun addr ->
+        if addr <> a.array_addr then h addr else
+        match h a.array_addr with
+        | Some (Array t len seq) ->
+          let new_seq = Seq.init len (fun i ->
+            match Seq.index seq i with
+            | None -> None
+            | Some (x, p) -> Some (x, (half_permission p <: (perm:permission{allows_read perm})))
+          ) in
+          assert(Seq.length new_seq = len);
+          Some (Array t len new_seq)
+        | _ -> h addr
+      ) in
+      let split_h_2 : heap = on _ (fun addr ->
+        if addr <> a.array_addr then None else
+        match h a.array_addr with
+        | Some (Array t len seq) ->
+          let new_seq = Seq.init len (fun i ->
+            match Seq.index seq i with
+            | None -> None
+            | Some (x, p) -> Some (x, (half_permission p <: (perm:permission{allows_read perm})))
+          ) in
+          assert(Seq.length new_seq = len);
+          Some (Array t len new_seq)
+        | _ -> None
+      ) in
+      assert(interp (pts_to_array a (half_permission p) iseq) split_h_1);
+      let aux (addr: addr) : Lemma (disjoint_addr split_h_1 split_h_2 addr) =
+        if addr <> a.array_addr then () else match split_h_1 addr, split_h_2 addr with
+        | Some (Array t1 len1 seq1), Some (Array t2 len2 seq2) ->
+          assert(t1 == t2);
+          assert(len1 == len2);
+          let aux (i:nat{i < len1}) : Lemma (
+            match contains_index seq1 i, contains_index seq2 i with
+	    | true, true ->
+              let (x0, p0) = select_index seq1 i in
+	      let (x1, p1) = select_index seq2 i in
+              x0 == x1 /\ summable_permissions p0 p1
+            | _ -> True
+          ) = match contains_index seq1 i, contains_index seq2 i with
+	    | true, true ->
+              let (x0, p0) = select_index seq1 i in
+	      let (x1, p1) = select_index seq2 i in
+              assert(x0 == x1);
+              assume(p0 == half_permission p);
+              assume(p1 == half_permission p);
+              ()
+            | _ -> ()
+          in
+          Classical.forall_intro aux
+        | _ -> ()
+      in
+      Classical.forall_intro aux;
+      assert(disjoint split_h_1 split_h_2);
+      let aux (addr: addr) : Lemma ((join split_h_1 split_h_2) addr == h addr) =
+        if addr <> a.array_addr then () else match split_h_1 addr, split_h_2 addr, h addr with
+        | Some (Array t1 len1 seq1), Some (Array t2 len2 seq2), Some (Array t len seq) ->
+          assert(t1 == t2 /\ t == t1);
+          assert(len1 == len2 /\ len == len1);
+          let aux (i:nat{i < len1}) : Lemma (
+            match contains_index seq1 i,  contains_index seq2 i with
+	    | true, true ->
+              let (_, p1) = select_index seq1 i in
+              let (x0, p0) = select_index seq2 i in
+	      Seq.index seq i == Some(x0, sum_permissions p0 p1)
+            | true, false -> Seq.index seq i == Seq.index seq1 i
+            | false, true -> Seq.index seq i == Seq.index seq2 i
+	    | false, false -> Seq.index seq i == None
+          ) = match contains_index seq1 i, contains_index seq2 i with
+	    | true, true ->
+              let (x0, p0) = select_index seq1 i in
+	      let (x1, p1) = select_index seq2 i in
+              assume(p0 == half_permission p);
+              assume(p1 == half_permission p);
+              assert(p == sum_permissions (half_permission p) (half_permission p));
+              admit()
+            | _ -> ()
+          in
+          Classical.forall_intro aux;
+          admit()
+        | _ -> ()
+      in
+      Classical.forall_intro aux;
+      mem_equiv_eq (join split_h_1 split_h_2) h;
+      (| a, h|)
+#pop-options
 
 let share_array
   (#t: _)
