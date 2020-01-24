@@ -848,43 +848,32 @@ let step_bind_ret (#st:st) (i:nat)
     | Bind #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b (Ret p x _) g ->  
       Step (p x) (lpre_b x) (lpost_b x) (g x) i, m0)
 
-#set-options "--z3rlimit 50" // --log_queries"
-//#restart-solver
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
   (step:step_t)
 
-: MST (p:st.hprop & l_pre p) st.mem st.locks_preorder (step_req f)
-  (fun m0 r m1 ->
-   let (| _, f |) = r in
-   f (st.heap_of_mem m1))
+: MST (step_result a post) st.mem st.locks_preorder (step_req f) (step_ens f)
 
 = match f with
+  | Bind (Ret _ _ _) _ -> step_bind_ret i f step
+
   | Bind #_ #b #pre_a #post_a #lpre_a #lpost_a #a #_ #lpre_b #lpost_b f g ->
     let Step next_pre next_lpre next_lpost f j = step i f in
 
     let m1 = MST.get st.mem st.locks_preorder () in
 
-    let lpre : l_pre next_pre = bind_lpre next_lpre next_lpost lpre_b in
-    assert (lpre (st.heap_of_mem m1)) by norm ([delta_only [`%bind_lpre]]);
-    admit ();
-    (| next_pre, lpre |)
+    assert ((bind_lpre next_lpre next_lpost lpre_b) (st.heap_of_mem m1))
+      by norm ([delta_only [`%bind_lpre]]);
 
-    let lpost : l_post next_pre post = bind_lpost next_lpre next_lpost lpost_b in
-    let f : m st a next_pre post lpre lpost = Bind #st #b #next_pre #post_a #next_lpre #next_lpost #a #post #lpre_b #lpost_b f g in
+    let f : m st a next_pre post _ _ =
+      Bind #st #b #next_pre #post_a #next_lpre #next_lpost #a #post #lpre_b #lpost_b f g in
 
-    //assume (lpre (st.heap_of_mem m1));
-
-    let s = Step next_pre
-      lpre
-      lpost
+    Step next_pre
+      (bind_lpre next_lpre next_lpost lpre_b)
+      (bind_lpost next_lpre next_lpost lpost_b)
       f
-      j in
-    s
-
-
-  | Bind (Ret _ _ _) _ -> step_bind_ret i f step
+      j
 
 
 let step_frame_ret (#st:st) (i:nat)
