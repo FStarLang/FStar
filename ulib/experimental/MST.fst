@@ -57,7 +57,7 @@ let subcomp (a:Type) (state:Type u#1) (rel:P.preorder state)
 : Pure (repr a state rel req_g ens_g)
   (requires
     (forall s. req_g s ==> req_f s) /\
-    (forall s0 x s1. ens_f s0 x s1 ==> ens_g s0 x s1))
+    (forall s0 x s1. (req_g s0 /\ ens_f s0 x s1) ==> ens_g s0 x s1))
   (ensures fun _ -> True)
 = f
 
