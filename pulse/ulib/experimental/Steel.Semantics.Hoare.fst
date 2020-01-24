@@ -1017,26 +1017,66 @@ let rec step (#st:st) (i:nat) (#a:Type u#a)
   | Weaken _ -> step_weaken i f
 
 
+// let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
+//   (#lpre:l_pre pre) (#lpost:l_post pre post)
+//   (f:m st a pre post lpre lpost)
+//   (state:st.mem)
+// : Div (a & st.mem)
+//   (requires
+//     st.interp (st.locks_invariant state `st.star` pre) (st.heap_of_mem state) /\
+//     lpre (st.heap_of_mem state))
+//   (ensures fun (x, new_state) ->
+//     st.interp (st.locks_invariant new_state `st.star` post x) (st.heap_of_mem new_state) /\
+//     lpost (st.heap_of_mem state) x (st.heap_of_mem new_state) /\
+//     preserves_frame pre (post x) state new_state)
+// = match f with
+//   | Ret _ x _ -> x, state
+
+//   | _ ->
+//     let Step _ _ new_pre new_state _ _ f j = step i f state in
+//     let (x, final_state) = run j f new_state in
+//     preserves_frame_trans pre new_pre (post x) state new_state final_state;
+//     (x, final_state)
+
+
+let run_ret (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
+  (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (f:m st a pre post lpre lpost{Ret? f})
+: MST a st.mem st.locks_preorder
+  (requires fun m0 ->
+    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    lpre (st.heap_of_mem m0))
+  (ensures fun m0 x m1 ->
+    st.interp (st.locks_invariant m1 `st.star` post x) (st.heap_of_mem m1) /\
+    lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
+    preserves_frame pre (post x) m0 m1)
+= MST?.reflect (fun m0 ->
+    let Ret _ x _ = f in
+    x, m0)
+
+
 let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
-  (state:st.mem)
-: Div (a & st.mem)
-  (requires
-    st.interp (st.locks_invariant state `st.star` pre) (st.heap_of_mem state) /\
-    lpre (st.heap_of_mem state))
-  (ensures fun (x, new_state) ->
-    st.interp (st.locks_invariant new_state `st.star` post x) (st.heap_of_mem new_state) /\
-    lpost (st.heap_of_mem state) x (st.heap_of_mem new_state) /\
-    preserves_frame pre (post x) state new_state)
+: MST a st.mem st.locks_preorder
+  (requires fun m0 ->
+    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    lpre (st.heap_of_mem m0))
+  (ensures fun m0 x m1 ->
+    st.interp (st.locks_invariant m1 `st.star` post x) (st.heap_of_mem m1) /\
+    lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
+    preserves_frame pre (post x) m0 m1)
 = match f with
-  | Ret _ x _ -> x, state
+  | Ret _ x _ -> run_ret i f
 
   | _ ->
-    let Step _ _ new_pre new_state _ _ f j = step i f state in
-    let (x, final_state) = run j f new_state in
-    preserves_frame_trans pre new_pre (post x) state new_state final_state;
-    (x, final_state)
+    let m0 = MST.get st.mem st.locks_preorder () in
+    let Step new_pre _ _ f j = step i f in
+    let m1 = MST.get st.mem st.locks_preorder () in
+    let x = run j f in
+    let m2 = MST.get st.mem st.locks_preorder () in
+    preserves_frame_trans pre new_pre (post x) m0 m1 m2;
+    x
 
 
 // // // // // (**** Trying to define the layered effect ****)
