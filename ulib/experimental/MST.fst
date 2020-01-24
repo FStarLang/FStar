@@ -23,11 +23,14 @@ type post_t (state:Type u#1) (a:Type u#a) = state -> a -> state -> Type0
 
 type repr (a:Type) (state:Type u#1) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) =
   s0:state ->
-  Div (a & state)
-  (requires req s0)
-  (ensures fun (r, s1) ->
-    ens s0 r s1 /\
-    rel s0 s1)
+  DIV (a & state)
+  (fun p ->
+    req s0 /\
+    (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1)))
+  // (requires req s0)
+  // (ensures fun (r, s1) ->
+  //   ens s0 r s1) // /\
+  //   // rel s0 s1)
 
 
 let return (a:Type) (x:a) (state:Type u#1) (rel:P.preorder state)
@@ -71,7 +74,7 @@ let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
 
 reifiable reflectable
 layered_effect {
-  MST : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
+  MSTATE : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
   with
   repr = repr;
   return = return;
@@ -80,17 +83,17 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get (state:Type u#1) (rel:P.preorder state) ()
-: MST state state rel
+let get (#state:Type u#1) (#rel:P.preorder state) ()
+: MSTATE state state rel
   (fun _ -> True)
   (fun s0 r s1 -> s0 == r /\ r == s1)
-= MST?.reflect (fun s0 -> s0, s0)
+= MSTATE?.reflect (fun s0 -> s0, s0)
 
-let put (state:Type u#1) (rel:P.preorder state) (s:state)
-: MST unit state rel
+let put (#state:Type u#1) (#rel:P.preorder state) (s:state)
+: MSTATE unit state rel
   (fun s0 -> rel s0 s)
   (fun _ _ s1 -> s1 == s)
-= MST?.reflect (fun _ -> (), s)
+= MSTATE?.reflect (fun _ -> (), s)
 
 
 type s_predicate (state:Type u#1) = state -> Type0
@@ -101,11 +104,56 @@ let stable (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
 assume val witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) : Type0
 
 assume val witness (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
-: MST unit state rel
+: MSTATE unit state rel
   (fun s0 -> p s0 /\ stable state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
 
 assume val recall (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
-: MST unit state rel
+: MSTATE unit state rel
   (fun _ -> witnessed state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ p s1)
+
+assume val wp_monotonic_pure (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a).
+       (forall (p q:pure_post a).
+          (forall (x:a). p x ==> q x) ==>
+          (wp p ==> wp q)))
+
+
+(*
+ * AR: why do we need the first conjunct in the postcondition?
+ *
+ *     without this some proofs that use `assert e by t` fail
+ *     the way `assert e by t` works is that, it is desugared into `with_tactic e t` that is abstract
+ *       and remains in the VC as is
+ *       at some point, we take a pass over the VC, find the `with_tactic e t` nodes in it, farm out
+ *       `G |= e by t` where `G` is the context at that point in the VC
+ *       in the original VC, `with_tactic e t` is simply replace by `True`
+ *     so why is it OK to replace it by `True`, don't we lose the fact that `e` holds for the rest of the VC?
+ *     in the wp world of things, this works fine, since the wp of `assert e by t` is
+ *       (fun _ -> with_tactic e t /\ (e ==> ...))
+ *     i.e. the type of `assert e by t` already introduces a cut, so replacing it by `True` works fine
+ *
+ *     but this doesn't work when we use the intricate `~ (wp (fun r -> r =!= x))` combinator to convert
+ *       from wp to pre post
+ *
+ *     basically, the shape of the VC in that case becomes:
+ *       (with_tactic e t /\ (((~ with_tactic e t) \/ (e /\ ...)) ==> ...))
+ *
+ *     in this VC, if we replace the first `with_tactic e t` with `True`, for the second conjunct,
+ *       the solver can no longer reason that the first disjunct cannot hold
+ *
+ *     the wp (fun _ -> True) below helps add that assumption to the second conjunct
+ *)
+
+let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a state rel
+  (fun s0 -> wp (fun _ -> True))
+  (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
+= wp_monotonic_pure ();
+  fun s0 -> 
+  let x = f () in
+  x, s0
+
+sub_effect PURE ~> MSTATE = lift_pure_mst

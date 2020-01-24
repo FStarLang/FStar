@@ -1,19 +1,15 @@
 (*
    Copyright 2019 Microsoft Research
-
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
-
        http://www.apache.org/licenses/LICENSE-2.0
-
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
 module Steel.Semantics.Hoare
 
 open FStar.Tactics
@@ -25,7 +21,6 @@ open FStar.Tactics
  *
  * It also builds a generic separation-logic-style program logic
  * for this effect, in a partial correctness setting.
-
  * It is also be possible to give a variant of this semantics for
  * total correctness. However, we specifically focus on partial correctness
  * here so that this semantics can be instantiated with lock operations,
@@ -860,7 +855,6 @@ let step_bind (#st:st) (i:nat)
 
     assert (bind_lpre next_lpre next_lpost lpre_b (st.heap_of_mem next_state)) by
       norm ([delta_only [`%bind_lpre]]);
-
     Step pre_a state1 next_pre next_state
       (bind_lpre next_lpre next_lpost lpre_b)
       (bind_lpost next_lpre next_lpost lpost_b)
@@ -872,9 +866,7 @@ let step_frame (#st:st) (i:nat)
   (f:m st a pre p lpre lpost{Frame? f})
   (state:st.mem)
   (step:step_t)
-
 : Div (step_result a p) (step_req f state) (step_ens f state)
-
 = match f with  
   | Frame (Ret p x lp) frame f_frame ->
     Step (p x `st.star` frame) state (p x `st.star` frame) state
@@ -882,12 +874,9 @@ let step_frame (#st:st) (i:nat)
       lpost
       (Ret (fun x -> p x `st.star` frame) x lpost)
       i
-
   | Frame #_ #_ #f_pre #_ #f_lpre #f_lpost f frame f_frame ->
     let Step pre state next_fpre next_state next_flpre next_flpost f j = step i f state in
-
     preserves_frame_star pre next_fpre state next_state frame;
-
     Step (pre `st.star` frame) state (next_fpre `st.star` frame) next_state
       (frame_lpre next_flpre f_frame)
       (frame_lpost next_flpre next_flpost f_frame)
@@ -909,9 +898,7 @@ let step_par (#st:st) (i:nat)
 
 = match f with
   | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
-
     let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
-
     Step (pL xL `st.star` pR xR) state (pL xL `st.star` pR xR) state
       (fun h -> lpL h xL h /\ lpR h xR h)
       lpost 
@@ -921,10 +908,8 @@ let step_par (#st:st) (i:nat)
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
     if go_left i then begin
       let Step pre state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) mL state in
-
       preserves_frame_star pre next_preL state next_state preR;
       par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR state next_state;
-
       Step (pre `st.star` preR) state (next_preL `st.star` preR) next_state
         (par_lpre next_lpreL lpreR)
         (par_lpost next_lpreL next_lpostL lpreR lpostR)
@@ -933,10 +918,8 @@ let step_par (#st:st) (i:nat)
     end
     else begin
       let Step pre state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) mR state in
-
       preserves_frame_star_left pre next_preR state next_state preL;
       par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR state next_state;
-
       Step (preL `st.star` pre) state (preL `st.star` next_preR) next_state
         (par_lpre lpreL next_lpreR)
         (par_lpost lpreL lpostL next_lpreR next_lpostR)
@@ -944,15 +927,13 @@ let step_par (#st:st) (i:nat)
         j
     end
 
+
 let step_weaken (#st:st) (i:nat) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Weaken? f})
   (state:st.mem)
-
 : Div (step_result a post) (step_req f state) (step_ens f state)
-
 = let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ f = f in
-
   Step pre state pre state lpre lpost f i
 
 
@@ -962,9 +943,11 @@ let rec step (#st:st) (i:nat) (#a:Type u#a)
   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
+
 : Div (step_result a post)
   (step_req f state)
   (step_ens f state)
+
 = match f with
   | Ret _ _ _ -> step_ret i f state
   | Bind _ _ -> step_bind i f state step
@@ -973,10 +956,12 @@ let rec step (#st:st) (i:nat) (#a:Type u#a)
   | Par _ _ -> step_par i f state step
   | Weaken _ -> step_weaken i f state
 
+
 let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
   (state:st.mem)
+
 : Div (a & st.mem)
   (requires
     st.interp (st.locks_invariant state `st.star` pre) (st.heap_of_mem state) /\
@@ -985,46 +970,11 @@ let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post st a)
     st.interp (st.locks_invariant new_state `st.star` post x) (st.heap_of_mem new_state) /\
     lpost (st.heap_of_mem state) x (st.heap_of_mem new_state) /\
     preserves_frame pre (post x) state new_state)
+
 = match f with
   | Ret _ x _ -> x, state
-
   | _ ->
     let Step _ _ new_pre new_state _ _ f j = step i f state in
     let (x, final_state) = run j f new_state in
     preserves_frame_trans pre new_pre (post x) state new_state final_state;
     (x, final_state)
-
-
-// // (**** Trying to define the layered effect ****)
-
-// // type repr (a:Type) (st:st) (pre:st.hprop) (post:post st a) (lpre:l_pre pre) (lpost:l_post pre post)
-// // = unit -> m st a pre post lpre lpost
-
-
-// // /// This will not be allowed currently as the extra binders must appear before x in the implementation, can change
-
-// // let return (a:Type) (st:st) (post:post st a) (lpost:(x:a -> l_post (post x) post)) (x:a)
-// // : repr a st (post x) post (fun h -> (lpost x) h x h) (lpost x)
-// // = fun _ -> Ret post x (lpost x)
-
-// // let bind (a:Type) (b:Type) (st:st)
-// //   (pre_f:st.hprop) (post_f:post st a) (lpre_f:l_pre pre_f) (lpost_f:l_post pre_f post_f)
-// //   (post_g:post st b) (lpre_g:(x:a -> l_pre (post_f x))) (lpost_g:(x:a -> l_post (post_f x) post_g))
-// //   (f:repr a st pre_f post_f lpre_f lpost_f)
-// //   (g:(x:a -> repr b st (post_f x) post_g (lpre_g x) (lpost_g x)))
-// // : repr b st pre_f post_g
-// //     (bind_lpre lpre_f lpost_f lpre_g)
-// //     (bind_lpost lpre_f lpost_f lpost_g)
-// // = fun _ -> Bind (f ()) (fun x -> g x ())
-
-// // let subcomp (a:Type) (st:st)
-// //   (pre:st.hprop) (post:post st a)
-// //   (lpre_f:l_pre pre) (lpost_f:l_post pre post)
-// //   (lpre_g:l_pre pre) (lpost_g:l_post pre post)
-// //   (f:repr a st pre post lpre_f lpost_f)
-// // : Pure (repr a st pre post lpre_g lpost_g)
-// //   (requires
-// //     (forall h. lpre_g h ==> lpre_f h) /\
-// //     (forall h0 x h1. lpost_f h0 x h1 ==> lpost_g h0 x h1))
-// //   (ensures fun _ -> True)
-// // = fun _ -> Weaken #_ #a #pre #post #lpre_f #lpost_f #lpre_g #lpost_g #() (f ())

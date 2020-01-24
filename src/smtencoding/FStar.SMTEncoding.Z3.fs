@@ -598,7 +598,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
       (Some (query_logging.get_module_name()))
-      "FStar.SMTEncoding.Z3"
+      "FStar.SMTEncoding.Z3 (aggregate query time)"
   in
   { z3result_status     = status;
     z3result_time       = elapsed_time;

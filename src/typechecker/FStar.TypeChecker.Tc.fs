@@ -782,6 +782,8 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   let env = set_hint_correlator env se in
+  if Options.debug_any()
+  then BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with

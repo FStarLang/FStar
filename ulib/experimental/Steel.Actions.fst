@@ -643,6 +643,14 @@ let upd_array
     upd_array_pre_m_action_depends_only_on_fp a iseq i v;
     upd_array_pre_m_action a iseq i v
 
+// MST = MST mem locks_preorder
+
+// let (:=) #a r v
+// : action_t (ptr r) (fun _ -> points_to r v) (fun _ -> True)
+//   (fun h0 _ h1 -> True)
+//   let m = MST.get () in
+//   let m1 = upd r v m in
+//   MST.put m1
 
 let alloc_array
   (#t: _)

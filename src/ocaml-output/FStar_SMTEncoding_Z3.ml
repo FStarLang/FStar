@@ -1047,7 +1047,7 @@ let (z3_job :
                        with
                        | uu___486_5212 ->
                            (refresh (); FStar_Exn.raise uu___486_5212))
-                    uu____5166 "FStar.SMTEncoding.Z3"
+                    uu____5166 "FStar.SMTEncoding.Z3 (aggregate query time)"
                    in
                 match uu____5156 with
                 | ((status,statistics),elapsed_time) ->

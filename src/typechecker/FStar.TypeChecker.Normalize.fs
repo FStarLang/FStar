@@ -1089,28 +1089,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) when is_nbe_request s ->
-              if cfg.debug.print_normalized
-              then BU.print1 "Starting NBE request on %s ... \n" (Print.term_to_string tm);
               let tm' = closure_as_term cfg env tm in
               let start = BU.now() in
               let tm_norm = nbe_eval cfg s tm' in
               let fin = BU.now () in
               if cfg.debug.print_normalized
-              then BU.print3 "NBE'd (%s ms) %s\n\tto %s\n"
-                   (BU.string_of_int (snd (BU.time_diff start fin)))
-                   (Print.term_to_string tm')
-                   (Print.term_to_string tm_norm);
+              then begin
+                let cfg' = Cfg.config' [] s cfg.tcenv in
+                // BU.print1 "NBE result timing (%s ms)\n"
+                //        (BU.string_of_int (snd (BU.time_diff start fin)))
+                BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                       (BU.string_of_int (snd (BU.time_diff start fin)))
+                       (Print.term_to_string tm')
+                       (Cfg.cfg_to_string cfg')
+                       (Print.term_to_string tm_norm)
+              end;
+              rebuild cfg env stack tm_norm
 
-              norm cfg env stack tm_norm
-              (* Zoe, NS:
-                 This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm
-                 But, it's potentially wasteful, since norm will attempt to normalize tm_norm again.
-                 In cases where tm_norm is small (e.g., 2), this is not a big deal;
-                 but in general, this may incur a large unnecessary traversal
-               *)
             | Some (s, tm) ->
-              if cfg.debug.print_normalized
-              then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
+              // if cfg.debug.print_normalized
+              // then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
@@ -1121,7 +1119,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack' =
                 let tail = (Cfg cfg)::stack in
                 if cfg.debug.print_normalized
-                then (Debug(t, BU.now())::tail)
+                then (Debug(tm, BU.now())::tail)
                 else tail in
               norm cfg' env stack' tm
             end
@@ -1345,14 +1343,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_let((false, [lb]), body) ->
-            let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps.do_not_unfold_pure_lets) //we're allowed to do some delta steps, and ..
-            && ((cfg.steps.pure_subterms_within_computations &&
-                 U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
-             || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
-                                        || U.has_attribute lb.lbattrs PC.inline_let_attr)) //it's marked @inline_let
-             || (U.is_ghost_effect n &&                                //Or, 3. it's ghost and we're not extracting
-                    not (cfg.steps.pure_subterms_within_computations)))
+            if Cfg.should_reduce_local_let cfg lb
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
@@ -1386,8 +1377,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
-                let env = List.map (fun _ -> dummy) lbs
-                        @ List.map (fun _ -> dummy) xs
+                let env = List.map (fun _ -> dummy) xs //first the bound vars for the arguments
+                        @ List.map (fun _ -> dummy) lbs //then the recursively bound names
                         @ env in
                 let def_body = norm cfg env [] def_body in
                 let lopt =
@@ -1824,7 +1815,7 @@ and reify_lift cfg e msrc mtgt t : term =
                None e.pos in
       lift (env.universe_of env t) t e
 
-      
+
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -1893,7 +1884,7 @@ and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp
         match lopt with
         | Some rc ->
           let flags = filter_out_lcomp_cflags rc.residual_flags in
-          Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
+          Some ({rc with residual_typ=if cfg.steps.for_extraction then None else BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
 
 and maybe_simplify cfg env stack tm =
@@ -2283,9 +2274,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.debug.print_normalized
         then begin
           let time_now = BU.now () in
-          BU.print3 "Normalized term (%s ms) %s\n\tto term %s\n"
+          // BU.print1 "Normalizer result timing (%s ms)\n"
+          //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
                        (BU.string_of_int (snd (BU.time_diff time_then time_now)))
                        (Print.term_to_string tm)
+                       (Cfg.cfg_to_string cfg)
                        (Print.term_to_string t)
         end;
         rebuild cfg env stack t

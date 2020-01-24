@@ -902,7 +902,11 @@ let solve use_env_msg tcenv q : unit =
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
     else
-    do_solve use_env_msg tcenv q
+    Profiling.profile
+      (fun () -> do_solve use_env_msg tcenv q)
+      (Some (Ident.string_of_lid (Env.current_module tcenv)))
+      "FStar.TypeChecker.SMTEncoding.solve_top_level"
+
 
 (**********************************************************************************************)
 (* Top-level interface *)

@@ -202,3 +202,5 @@ val lock (p:hprop) : Type0
 
 val new_lock (p:hprop)
   : m_action p (lock p) (fun _ -> emp)
+
+val mem_evolves  : Preorder.preorder mem

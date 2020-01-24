@@ -2,6 +2,8 @@ module Steel.Semantics.Instantiate
 
 friend Steel.Memory
 
+module S = Steel.Semantics.Hoare.MST
+
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
 let associative () : Lemma (S.associative equiv star)
