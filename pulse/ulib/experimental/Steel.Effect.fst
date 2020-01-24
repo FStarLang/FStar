@@ -16,7 +16,7 @@
 
 module Steel.Effect
 
-module Sem = Steel.Semantics.Hoare
+module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
 
 open Steel.Semantics.Instantiate
@@ -68,7 +68,8 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
 
 let return (a:Type u#a) (x:a) (post:post_t a) (ens:ens_t (post x) a post)
 : repr a (post x) post (fun h -> ens h x h) ens
-= fun m -> x, m
+= admit ();
+  fun _ -> x
 
 #push-options "--z3rlimit 50"
 let bind (a:Type) (b:Type)
@@ -79,8 +80,8 @@ let bind (a:Type) (b:Type)
     (fun h -> req_f h /\ (forall (x:a) h1. ens_f h x h1 ==> req_g x h1))
     (fun h0 y h2 -> req_f h0 /\ (exists x h1. ens_f h0 x h1 /\ (ens_g x) h1 y h2))
 = fun m0 ->
-  let x, m1 = f m0 in
-  g x m1
+  let x = f () in
+  g x ()
 #pop-options
 
 let subcomp (a:Type) (pre:pre_t) (post:post_t a)
@@ -125,7 +126,7 @@ let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-= Steel?.reflect (fun m -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)) m)
+= Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 #push-options "--admit_smt_queries true"  //the h0 =!= h1 part is not `depends_only_on`
 let lift_pure_steel (a:Type) (wp:pure_wp a) (p:Mem.hprop) (f:unit -> PURE a wp)
