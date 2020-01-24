@@ -121,6 +121,32 @@ assume val wp_monotonic_pure (_:unit)
           (wp p ==> wp q)))
 
 
+(*
+ * AR: why do we need the first conjunct in the postcondition?
+ *
+ *     without this some proofs that use `assert e by t` fail
+ *     the way `assert e by t` works is that, it is desugared into `with_tactic e t` that is abstract
+ *       and remains in the VC as is
+ *       at some point, we take a pass over the VC, find the `with_tactic e t` nodes in it, farm out
+ *       `G |= e by t` where `G` is the context at that point in the VC
+ *       in the original VC, `with_tactic e t` is simply replace by `True`
+ *     so why is it OK to replace it by `True`, don't we lose the fact that `e` holds for the rest of the VC?
+ *     in the wp world of things, this works fine, since the wp of `assert e by t` is
+ *       (fun _ -> with_tactic e t /\ (e ==> ...))
+ *     i.e. the type of `assert e by t` already introduces a cut, so replacing it by `True` works fine
+ *
+ *     but this doesn't work when we use the intricate `~ (wp (fun r -> r =!= x))` combinator to convert
+ *       from wp to pre post
+ *
+ *     basically, the shape of the VC in that case becomes:
+ *       (with_tactic e t /\ ((~ with_tactic e t) \/ (e /\ ...)))
+ *
+ *     in this VC, if we replace the first `with_tactic e t` with `True`, for the second conjunct,
+ *       the solver can no longer reason that the first disjunct cannot hold
+ *
+ *     the wp (fun _ -> True) below helps add that assumption to the second conjunct
+ *)
+
 let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a state rel
   (fun s0 -> wp (fun _ -> True))
