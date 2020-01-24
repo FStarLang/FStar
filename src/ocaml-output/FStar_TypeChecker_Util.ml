@@ -6679,8 +6679,7 @@ let (lift_tf_layered_effect :
                                       FStar_Syntax_Syntax.result_typ = a;
                                       FStar_Syntax_Syntax.effect_args =
                                         uu____18044;
-                                      FStar_Syntax_Syntax.flags =
-                                        (ct.FStar_Syntax_Syntax.flags)
+                                      FStar_Syntax_Syntax.flags = []
                                     }  in
                                   FStar_Syntax_Syntax.mk_Comp uu____18043  in
                                 (let uu____18075 =
