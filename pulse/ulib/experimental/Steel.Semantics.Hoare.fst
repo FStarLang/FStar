@@ -948,8 +948,6 @@ let step_par_ret (#st:st) (i:nat)
       i, m0)
 
 
-#set-options "--z3rlimit 50"
-#restart-solver
 let step_par (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Par? f})
@@ -958,6 +956,8 @@ let step_par (#st:st) (i:nat)
 : MST (step_result a post) st.mem st.locks_preorder (step_req f) (step_ens f)
 
 = match f with
+  | Par (Ret _ _ _) (Ret _ _ _) -> step_par_ret i f step
+
   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
     if go_left i then begin
       let m0 = MST.get st.mem st.locks_preorder () in
@@ -976,24 +976,23 @@ let step_par (#st:st) (i:nat)
         j
 
     end
-    else admit ()
+    else begin
+      let m0 = MST.get st.mem st.locks_preorder () in
 
+      let Step next_preR next_lpreR next_lpostR mR j = step (i + 1) mR in
 
-  | Par (Ret _ _ _) (Ret _ _ _) -> step_par_ret i f step
+      let m1 = MST.get st.mem st.locks_preorder () in
 
+      preserves_frame_star_left preR next_preR m0 m1 preL;
+      par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR m0 m1;
 
+      Step (preL `st.star` next_preR)
+        (par_lpre lpreL next_lpreR)
+        (par_lpost lpreL lpostL next_lpreR next_lpostR)
+        (Par mL mR)
+        j
+    end
 
-// // //       let Step pre state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) mR state in
-
-// // //       preserves_frame_star_left pre next_preR state next_state preL;
-// // //       par_weaker_pre_and_stronger_post_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR state next_state;
-
-// // //       Step (preL `st.star` pre) state (preL `st.star` next_preR) next_state
-// // //         (par_lpre lpreL next_lpreR)
-// // //         (par_lpost lpreL lpostL next_lpreR next_lpostR)
-// // //         (Par mL mR)
-// // //         j
-// // //     end
 
 // // // let step_weaken (#st:st) (i:nat) (#a:Type u#a)
 // // //   (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
