@@ -74,7 +74,7 @@ let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
 
 reifiable reflectable
 layered_effect {
-  MST : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
+  MSTATE : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
   with
   repr = repr;
   return = return;
@@ -83,17 +83,17 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get (state:Type u#1) (rel:P.preorder state) ()
-: MST state state rel
+let get (#state:Type u#1) (#rel:P.preorder state) ()
+: MSTATE state state rel
   (fun _ -> True)
   (fun s0 r s1 -> s0 == r /\ r == s1)
-= MST?.reflect (fun s0 -> s0, s0)
+= MSTATE?.reflect (fun s0 -> s0, s0)
 
-let put (state:Type u#1) (rel:P.preorder state) (s:state)
-: MST unit state rel
+let put (#state:Type u#1) (#rel:P.preorder state) (s:state)
+: MSTATE unit state rel
   (fun s0 -> rel s0 s)
   (fun _ _ s1 -> s1 == s)
-= MST?.reflect (fun _ -> (), s)
+= MSTATE?.reflect (fun _ -> (), s)
 
 
 type s_predicate (state:Type u#1) = state -> Type0
@@ -104,12 +104,12 @@ let stable (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
 assume val witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) : Type0
 
 assume val witness (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
-: MST unit state rel
+: MSTATE unit state rel
   (fun s0 -> p s0 /\ stable state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
 
 assume val recall (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
-: MST unit state rel
+: MSTATE unit state rel
   (fun _ -> witnessed state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
@@ -130,4 +130,4 @@ let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a
   let x = f () in
   x, s0
 
-sub_effect PURE ~> MST = lift_pure_mst
+sub_effect PURE ~> MSTATE = lift_pure_mst
