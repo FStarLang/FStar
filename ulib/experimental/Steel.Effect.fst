@@ -69,8 +69,7 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
 
 let return (a:Type u#a) (x:a) (post:post_t a) (ens:ens_t (post x) a post)
 : repr a (post x) post (fun h -> ens h x h) ens
-= admit ();
-  fun _ -> x
+= fun _ -> x
 
 #push-options "--z3rlimit 50"
 let bind (a:Type) (b:Type)
