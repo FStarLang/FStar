@@ -948,39 +948,41 @@ let step_par_ret (#st:st) (i:nat)
       i, m0)
 
 
-// // // let step_par (#st:st) (i:nat)
-// // //   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
-// // //   (f:m st a pre post lpre lpost{Par? f})
-// // //   (state:st.mem)
-// // //   (step:step_t)
+#set-options "--z3rlimit 50"
+#restart-solver
+let step_par (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (f:m st a pre post lpre lpost{Par? f})
+  (step:step_t)
 
-// // // : Div (step_result a post) (step_req f state) (step_ens f state)
+: MST (step_result a post) st.mem st.locks_preorder (step_req f) (step_ens f)
 
-// // // = match f with
-// // //   | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
+= match f with
+  | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
+    if go_left i then begin
+      let m0 = MST.get st.mem st.locks_preorder () in
 
-// // //     let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
+      let Step next_preL next_lpreL next_lpostL mL j = step (i + 1) mL in
 
-// // //     Step (pL xL `st.star` pR xR) state (pL xL `st.star` pR xR) state
-// // //       (fun h -> lpL h xL h /\ lpR h xR h)
-// // //       lpost 
-// // //       (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
-// // //       i
+      let m1 = MST.get st.mem st.locks_preorder () in
 
-// // //   | Par #_ #aL #preL #postL #lpreL #lpostL mL #aR #preR #postR #lpreR #lpostR mR ->
-// // //     if go_left i then begin
-// // //       let Step pre state next_preL next_state next_lpreL next_lpostL mL j = step (i + 1) mL state in
+      preserves_frame_star preL next_preL m0 m1 preR;
+      par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR m0 m1;
 
-// // //       preserves_frame_star pre next_preL state next_state preR;
-// // //       par_weaker_pre_and_stronger_post_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR state next_state;
+      Step (next_preL `st.star` preR)
+        (par_lpre next_lpreL lpreR)
+        (par_lpost next_lpreL next_lpostL lpreR lpostR)
+        (Par mL mR)
+        j
 
-// // //       Step (pre `st.star` preR) state (next_preL `st.star` preR) next_state
-// // //         (par_lpre next_lpreL lpreR)
-// // //         (par_lpost next_lpreL next_lpostL lpreR lpostR)
-// // //         (Par mL mR)
-// // //         j
-// // //     end
-// // //     else begin
+    end
+    else admit ()
+
+
+  | Par (Ret _ _ _) (Ret _ _ _) -> step_par_ret i f step
+
+
+
 // // //       let Step pre state next_preR next_state next_lpreR next_lpostR mR j = step (i + 1) mR state in
 
 // // //       preserves_frame_star_left pre next_preR state next_state preL;
