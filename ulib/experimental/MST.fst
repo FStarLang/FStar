@@ -139,7 +139,7 @@ assume val wp_monotonic_pure (_:unit)
  *       from wp to pre post
  *
  *     basically, the shape of the VC in that case becomes:
- *       (with_tactic e t /\ ((~ with_tactic e t) \/ (e /\ ...)))
+ *       (with_tactic e t /\ (((~ with_tactic e t) \/ (e /\ ...)) ==> ...))
  *
  *     in this VC, if we replace the first `with_tactic e t` with `True`, for the second conjunct,
  *       the solver can no longer reason that the first disjunct cannot hold
