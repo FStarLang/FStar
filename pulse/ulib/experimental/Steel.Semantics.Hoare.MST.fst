@@ -27,6 +27,8 @@ open MST
  * This module provides a semantic model for a combined effect of
  * divergence, state, and parallel composition of atomic actions.
  *
+ * It is built over a monotonic state effect -- so that we can give lock semantics using monotonicity
+ *
  * It also builds a generic separation-logic-style program logic
  * for this effect, in a partial correctness setting.
 
