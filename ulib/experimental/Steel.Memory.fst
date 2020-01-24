@@ -140,8 +140,17 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
       )))
   )
 
+#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 200"
+let disjoint_join_addr' (m0 m1 m2:heap) (a: addr) : Lemma (disjoint m1 m2 /\
+           disjoint m0 (join m1 m2) ==>
+	   disjoint m0 m1 /\
+           disjoint m0 m2 /\
+	   disjoint_addr (join m0 m1) m2 a /\
+           disjoint_addr (join m0 m2) m1 a)
+  =
+  ()
+#pop-options
 
-#push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 150"
 let disjoint_join' (m0 m1 m2:heap)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
@@ -151,25 +160,7 @@ let disjoint_join' (m0 m1 m2:heap)
            disjoint (join m0 m2) m1)
           [SMTPat (disjoint m0 (join m1 m2))]
   =
-  let aux (a: addr) : Lemma (disjoint m1 m2 /\
-           disjoint m0 (join m1 m2) ==>
-           disjoint_addr m0 m1 a /\
-           disjoint_addr m0 m2 a)
-   =
-    ()
-  in
-  Classical.forall_intro aux;
-  let aux' (a: addr) : Lemma (disjoint m1 m2 /\
-           disjoint m0 (join m1 m2) ==>
-	   disjoint m0 m1 /\
-           disjoint m0 m2 /\
-	   disjoint_addr (join m0 m1) m2 a /\
-           disjoint_addr (join m0 m2) m1 a)
-  =
-    ()
-  in
-  Classical.forall_intro aux'
-#pop-options
+  Classical.forall_intro (disjoint_join_addr' m0 m1 m2)
 
 let disjoint_join m0 m1 m2 = disjoint_join' m0 m1 m2
 
