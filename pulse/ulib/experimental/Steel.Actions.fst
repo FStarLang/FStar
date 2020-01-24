@@ -102,6 +102,21 @@ let action_depends_only_on_fp_intro (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:p
    admit() //TODO: DM 22/01/20 figure out why F* can't recognize the intro...
 #pop-options
 
+#push-options "--z3rlimit 50 --max_ifuel 3 --initial_ifuel 3 --max_fuel 3 --initial_fuel 3"
+let acton_depends_only_on_fp_elim
+  (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
+  (h0: hheap fp) (h1:heap{disjoint h0 h1}) (post: (x:a -> fp_prop (fp' x)))
+  : Lemma (requires (action_depends_only_on_fp f)) (ensures (
+    interp fp (join h0 h1) /\ (
+     let (| x0, h |) = f h0 in
+     let (| x1, h' |) = f (join h0 h1) in
+     x0 == x1 /\
+     (post x0 h <==> post x1 h'))
+  ))
+=
+  admit()
+#pop-options
+
 #push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let pre_action_to_action
   (fp:hprop) (a: Type) (fp': a -> hprop) (f: pre_action fp a fp')
@@ -267,36 +282,6 @@ let non_alloc_action_to_pre_m_action
     (| x, m' |)
 #pop-options
 
-#push-options "--warn_error -271"
-let m_action_depends_only_on_intro (fp:hprop) (a:Type) (fp':a -> hprop) (f:pre_m_action fp a fp')
-  (lemma:
-    (m0:hmem fp) ->
-    (h1:heap{m_disjoint m0 h1}) ->
-    (post: (x:a -> fp_prop (fp' x))) ->
-    Lemma (
-      let m1 = upd_joined_heap m0 h1 in
-      let (|x0, m|) = f m0 in
-      let (|x1, m'|) = f m1 in
-      x0 == x1 /\
-      (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))
-    )
-  )
-  : Lemma (m_action_depends_only_on f)
-  =
-  let aux (m0:hmem fp) (h1:heap {m_disjoint m0 h1}) (post: (x:a -> fp_prop (fp' x)))
-    : Lemma (
-     let m1 = upd_joined_heap m0 h1 in
-      let (|x0, m|) = f m0 in
-      let (|x1, m'|) = f m1 in
-      x0 == x1 /\
-      (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))
-    )
-   =
-     lemma m0 h1 post
-   in
-   Classical.forall_intro_3 aux;
-   admit() //TODO: DM 22/01/20 figure out why F* can't recognize the intro...
-#pop-options
 
 #push-options "--warn_error -271 --z3rlimit 150 --max_fuel 2 --initial_fuel 2"
 let alloc_action_to_pre_m_action
@@ -329,205 +314,60 @@ let alloc_action_to_pre_m_action
     (| x, m' |)
 #pop-options
 
-
-(*
-val alloc' (#a:_) (v:a) (frame:hprop) (tmem:mem{interp frame (heap_of_mem tmem)})
-  : (x:ref a &
-     tmem:mem { interp (pts_to x full_permission v `star` frame) (heap_of_mem tmem)} )
-
-
-#push-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let alloc' #a v frame m
-  = let x : ref a = m.ctr in
-    let cell = Ref a full_permission v in
-    let mem : heap = on _ (fun i -> if i = x then Some cell else None) in
-    assert (disjoint mem m.heap);
-    assert (mem `contains_addr` x);
-    assert (select_addr mem x == cell);
-    let mem' = join mem m.heap in
-    intro_pts_to x full_permission v mem;
-    assert (interp (pts_to x full_permission v) mem);
-    assert (interp frame m.heap);
-    intro_star (pts_to x full_permission v) frame mem m.heap;
-    assert (interp (pts_to x full_permission v `star` frame) mem');
-    let t = {
-      ctr = x + 1;
-      heap = mem';
-      locks = m.locks;
-      properties = ();
-    } in
-    (| x, t |)
+#push-options "--warn_error -271"
+let m_action_depends_only_on_intro (fp:hprop) (a:Type) (fp':a -> hprop) (f:pre_m_action fp a fp')
+  (lemma:
+    (m0:hmem fp) ->
+    (h1:heap{m_disjoint m0 h1}) ->
+    (post: (x:a -> fp_prop (fp' x))) ->
+    Lemma (
+      let m1 = upd_joined_heap m0 h1 in
+      let (|x0, m|) = f m0 in
+      let (|x1, m'|) = f m1 in
+      x0 == x1 /\
+      (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))
+    )
+  )
+  : Lemma (m_action_depends_only_on f)
+  =
+  let aux (m0:hmem fp) (h1:heap {m_disjoint m0 h1}) (post: (x:a -> fp_prop (fp' x)))
+    : Lemma (
+     let m1 = upd_joined_heap m0 h1 in
+      let (|x0, m|) = f m0 in
+      let (|x1, m'|) = f m1 in
+      x0 == x1 /\
+      (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))
+    )
+   =
+     lemma m0 h1 post
+   in
+   Classical.forall_intro_3 aux;
+   admit() //TODO: DM 22/01/20 figure out why F* can't recognize the intro...
 #pop-options
 
-let singleton_heap #a (x:ref a) (c:cell) : heap =
-    on _ (fun i -> if i = x then Some c else None)
 
-let singleton_pts_to #a (x:ref a) (c:cell{Ref? c})
-  : Lemma (requires (Ref?.a c == a))
-          (ensures (interp (pts_to x (Ref?.perm c) (Ref?.v c)) (singleton_heap x c)))
-  = ()
-
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 50"
-let alloc_pre_m_action (#a:_) (v:a)
-  : pre_m_action emp (ref a) (fun x -> pts_to x full_permission v)
-  = fun m ->
-    let x : ref a = m.ctr in
-    let cell = Ref a full_permission v in
-    let mem : heap = singleton_heap x cell in
-    assert (disjoint mem m.heap);
-    assert (mem `contains_addr` x);
-    assert (select_addr mem x == cell);
-    let mem' = join mem m.heap in
-    intro_pts_to x full_permission v mem;
-    assert (interp (pts_to x full_permission v) mem);
-    let frame = (lock_store_invariant m.locks) in
-    assert (interp frame m.heap);
-    intro_star (pts_to x full_permission v) frame mem m.heap;
-    assert (interp (pts_to x full_permission v `star` frame) mem');
-    let t = {
-      ctr = x + 1;
-      heap = mem';
-      locks = m.locks;
-      properties = ();
-    } in
-    (| x, t |)
+#push-options "--z3rlimit 150 --max_ifuel 1 --initial_ifuel 1"
+let non_alloc_action_to_m_action
+  (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
+  (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
+    (requires (h addr == None))
+    (ensures (let (| _, h'|) = f h in h' addr == None))
+  )
+  : Tot (m_action fp a fp')
+=
+  let f_m = non_alloc_action_to_pre_m_action fp a fp' f non_alloc in
+  m_action_depends_only_on_intro fp a fp' f_m (fun m0 h1 post ->
+    let m1 = upd_joined_heap m0 h1 in
+    let (|x0, m|) = f_m m0 in
+    let (|x1, m'|) = f_m m1 in
+    assert(action_depends_only_on_fp f);
+    assume(x0 == x1);
+    assume(post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))
+  );
+  assert(m_action_depends_only_on f_m);
+  assume(is_m_frame_preserving f_m);
+  f_m
 #pop-options
-
-#push-options "--z3rlimit 80 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let alloc_preserves_frame_prop  (#a:_) (v:a) (m:mem) (frame:hprop)
-  : Lemma (requires
-      interp (frame `star` locks_invariant m) (heap_of_mem m))
-          (ensures  (
-      let (| x, m1 |) = alloc_pre_m_action v m in
-      preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
-      = ()
-#pop-options
-
-#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let alloc_is_frame_preserving' (#a:_) (v:a) (m:mem) (frame:hprop)
-  : Lemma
-    (requires
-      interp (frame `star` locks_invariant m) (heap_of_mem m))
-    (ensures (
-      let (| x, m1 |) = alloc_pre_m_action v m in
-      interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
-      preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
-  = let (| x, m1 |) = alloc_pre_m_action v m in
-    assert (x == m.ctr);
-    assert (m1.ctr = m.ctr + 1);
-    assert (m1.locks == m.locks);
-    let h = heap_of_mem m in
-    let h1 = heap_of_mem m1 in
-    let cell = (Ref a full_permission v) in
-    assert (h1 == join (singleton_heap x cell) h);
-    intro_pts_to x full_permission v (singleton_heap x cell);
-    singleton_pts_to x cell;
-    assert (interp (pts_to x full_permission v) (singleton_heap x cell));
-    assert (interp (frame `star` locks_invariant m) h);
-    intro_star (pts_to x full_permission v) (frame `star` locks_invariant m) (singleton_heap x cell) h;
-    assert (interp (pts_to x full_permission v `star` (frame `star` locks_invariant m)) h1);
-    star_associative (pts_to x full_permission v) frame (locks_invariant m);
-    assert (interp (pts_to x full_permission v `star` frame `star` locks_invariant m) h1);
-    alloc_preserves_frame_prop v m frame
-#pop-options
-
-#push-options "--z3rlimit 150 --warn_error -271 --initial_fuel 2 --max_fuel 2"
-let alloc_is_frame_preserving (#a:_) (v:a)
-  : Lemma (is_m_frame_preserving (alloc_pre_m_action v))
-  = let aux (frame:hprop) (m:hmem (emp `star` frame))
-      : Lemma
-          (ensures (
-            let (| x, m1 |) = alloc_pre_m_action v m in
-            interp (pts_to x full_permission v `star` frame `star` locks_invariant m1) (heap_of_mem m1) /\
-            preserves_frame_prop frame (heap_of_mem m) (heap_of_mem m1)))
-          [SMTPat ()]
-      = alloc_is_frame_preserving' v m frame
-    in
-    ()
-#pop-options
-
-#push-options "--z3rlimit 10 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
-let alloc_preserves_disjoint (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
-  : Lemma (let (| x0, m |) = alloc_pre_m_action v m0 in
-           disjoint (heap_of_mem m) h1)
-  = let (| x0, m |) = alloc_pre_m_action v m0 in
-    let h0 = heap_of_mem m0 in
-    let h' = heap_of_mem m in
-    let aux (ad:addr) : Lemma (disjoint_addr h' h1 ad)
-      = if ad >= m0.ctr then ()
-        else begin
-          let h_alloc = singleton_heap #a m0.ctr (Ref a full_permission v) in
-          assert (h' == join h_alloc h0);
-          assert (h_alloc ad == None);
-         assert (h0 ad == h' ad);
-         assert (disjoint_addr h0 h1 ad)
-        end
-    in Classical.forall_intro aux
-#pop-options
-
-#push-options "--z3rlimit 30 --max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let alloc_preserves_join (#a:_) (v:a) (m0:hmem emp) (h1:heap {m_disjoint m0 h1})
-  : Lemma (
-      let h0 = heap_of_mem m0 in
-      let h = join h0 h1 in
-      let m1:mem = { m0 with heap = h } in
-      let (| x0, m |) = (alloc_pre_m_action v) m0 in
-      let (| x1, m' |) = (alloc_pre_m_action v) m1 in
-      heap_of_mem m' == join (heap_of_mem m) h1)
-   = let h0 = heap_of_mem m0 in
-     let h = join h0 h1 in
-     let m1:mem = { m0 with heap = h } in
-     let (| x0, m |) = (alloc_pre_m_action v) m0 in
-     let (| x1, m' |) = (alloc_pre_m_action v) m1 in
-     let h_alloc = singleton_heap #a m0.ctr (Ref a full_permission v) in
-     // let hm = heap_of_mem m in
-     // let hm' = heap_of_mem m' in
-     // assert (hm == join h_alloc h0);
-     // assert (hm' == join h_alloc h);
-     // assert (hm' == join h_alloc (join h0 h1));
-     join_associative' h_alloc h0 h1
-#pop-options
-
-#push-options "--z3rlimit 10 --warn_error -271"
-let alloc_depends_only_on (#a:_) (v:a)
-  : Lemma (m_action_depends_only_on (alloc_pre_m_action v))
-  = let aux
-        (m0:hmem emp)
-        (h1:heap { m_disjoint m0 h1 })
-        (post:(x:ref a -> fp_prop (pts_to x full_permission v)))
-      : Lemma
-          (ensures (
-            let h0 = heap_of_mem m0 in
-            let h = join h0 h1 in
-            let m1 = { m0 with heap = h } in
-            let (| x0, m |) = (alloc_pre_m_action v) m0 in
-            let (| x1, m' |) = (alloc_pre_m_action v) m1 in
-            x0 == x1 /\
-            (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m'))))
-          [SMTPat ()]
-      =
-        let h0 = heap_of_mem m0 in
-        let h = join h0 h1 in
-        let m1 = { m0 with heap = h } in
-        let (| x0, m |) = (alloc_pre_m_action v) m0 in
-        let (| x1, m' |) = (alloc_pre_m_action v) m1 in
-        assert (x0 == x1);
-        alloc_preserves_disjoint v m0 h1;
-//        assert (disjoint (heap_of_mem m) h1);
-        affine_star (pts_to x0 full_permission v) (locks_invariant m) (heap_of_mem m);
-        alloc_preserves_join v m0 h1
-//        assert (interp (pts_to x0 full_permission v) (heap_of_mem m));
-//        assert (heap_of_mem m' == join (heap_of_mem m) h1)
-    in
-    ()
-#pop-options
-
-let alloc (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
-  = alloc_is_frame_preserving v;
-    alloc_depends_only_on v;
-    alloc_pre_m_action v
-*)
 
 /////////////////////////////////////////////////////////////////////////////
 // Arrays
@@ -749,7 +589,10 @@ let upd_array_pre_m_action_is_frame_preserving
    ()
 #pop-options
 
-#push-options "--warn_error -271 --z3rlimit 100"
+
+#restart-solver
+
+#push-options "--warn_error -271 --z3rlimit 50"
 let upd_array_pre_m_action_depends_only_on_fp
     (#t:_)
     (a:array_ref t)
@@ -768,13 +611,22 @@ let upd_array_pre_m_action_depends_only_on_fp
        let (| x1, m' |) = upd_array_pre_m_action a iseq i v (upd_joined_heap m0 h1) in
         x0 == x1 /\
         (q (heap_of_mem m) <==> q (heap_of_mem m')))
-      [SMTPat ()]
-    = let (| x0, m |) = upd_array_pre_m_action a iseq i v m0 in
+    =
+      let (| x0, m |) = upd_array_pre_m_action a iseq i v m0 in
       let (| x1, m' |) = upd_array_pre_m_action a iseq i v (upd_joined_heap m0 h1) in
-      upd_array_pre_action_lemma a iseq i v emp m0.heap h1;
+      upd_array_action_memory_split_independence a iseq i v (join m0.heap h1) m0.heap h1 emp;
+      let (| _, h|) = upd_array_action a iseq i v m0.heap in
+      let (|_, h'|) = upd_array_action a iseq i v (join m0.heap h1) in
+      assert(h == m.heap);
+      assert(h' == m'.heap);
+      upd_array_heap_frame_disjointness_preservation a iseq i v (join m0.heap h1) m0.heap h1 emp;
+      assert(h' == (join h h1));
       assert (m'.heap == join m.heap h1)
     in
-    ()
+    m_action_depends_only_on_intro pre unit (fun _ -> post)
+    (upd_array_pre_m_action a iseq i v) (fun m0 h1 q ->
+      aux m0 h1 (q ())
+    )
 #pop-options
 
 let upd_array
