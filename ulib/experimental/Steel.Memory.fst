@@ -294,7 +294,7 @@ let rec interp (p:hprop) (m:heap)
 	      let (x', perm') = select_index seq i in
 	      x == x' /\
 	      perm `lesser_equal_permission` perm'
-            else (* In the range, does not contain anything *) False
+            else (* In the range, does not contain anything *) perm == zero_permission
           )
 	| _ -> False
       )

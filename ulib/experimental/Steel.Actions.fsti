@@ -86,7 +86,7 @@ val as_seq_lemma
   : Lemma (interp (array a) m /\
            interp (pts_to_array a p (as_seq a m)) m)
 
-val index
+val index_array
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))

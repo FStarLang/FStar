@@ -42,7 +42,7 @@ let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
      interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1))
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2 --z3rlimit 10"
+#push-options "--max_fuel 2 --initial_fuel 2 --z3rlimit 30"
 let frame_fp_prop' #fp #a #fp' frame
                    (q:fp_prop frame)
                    (act:action fp a fp')
@@ -288,26 +288,8 @@ let pre_action_to_action
   f
 #pop-options
 
-let affine_star_aux_dual (p0 p1: hprop) (h: heap) :
-  Lemma (requires (interp (p0 `star` p1) h)) (ensures (interp p0 h))
-  =
-  let pf: squash (exists (h0:heap). (exists (h1:heap).
-    disjoint h0 h1 /\ h == join h0 h1 /\ interp p0 h0 /\ interp p1 h1
-  )) =
-    ()
-  in
-  Classical.exists_elim (interp p0 h) pf (fun h0 ->
-    let pf: squash (exists (h1: heap).
-      disjoint h0 h1 /\ h == join h0 h1 /\ interp p0 h0 /\ interp p1 h1
-    ) =
-      ()
-    in
-    Classical.exists_elim (interp p0 h) pf (fun h1 ->
-      affine_star_aux p0 h0 h1
-    )
-  )
 
-#push-options "--warn_error -271 --z3rlimit 150 --max_fuel 2 --initial_fuel 2"
+#push-options "--warn_error -271 --max_fuel 1 --initial_fuel 1"
 let non_alloc_action_to_non_locking_pre_m_action
   (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
   (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
@@ -329,7 +311,7 @@ let non_alloc_action_to_non_locking_pre_m_action
       assert(interp (fp `star` lock_p) h);
       let (| x, h' |) = f h in
       assert(interp (fp' x `star` lock_p) h');
-      affine_star_aux_dual (fp' x) lock_p h';
+      affine_star (fp' x) lock_p h';
       assert(interp lock_p h')
     in
     assert(interp (lock_store_invariant m.locks) h');
@@ -338,7 +320,7 @@ let non_alloc_action_to_non_locking_pre_m_action
 #pop-options
 
 
-#push-options "--warn_error -271 --z3rlimit 150 --max_fuel 2 --initial_fuel 2"
+#push-options "--warn_error -271 --max_fuel 1 --initial_fuel 1"
 let alloc_action_to_non_locking_pre_m_action
   (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
   (alloc_lemma: (h: hheap fp) -> (alloc_addr: addr) -> Lemma
@@ -361,7 +343,7 @@ let alloc_action_to_non_locking_pre_m_action
       assert(interp (fp `star` lock_p) h);
       let (| x, h' |) = f h in
       assert(interp (fp' x `star` lock_p) h');
-      affine_star_aux_dual (fp' x) lock_p h';
+      affine_star (fp' x) lock_p h';
       assert(interp lock_p h')
     in
     assert(interp (lock_store_invariant m.locks) h');
@@ -506,13 +488,69 @@ let as_seq_lemma
   ()
 #pop-options
 
-let index
+let read_array_addr
+  (#t: _)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i: U32.t{U32.v i < U32.v (length a)})
+  (p:permission{allows_read p})
+  (m: hheap (pts_to_array a p iseq))
+  : Tot (x:t{x == Seq.index iseq (U32.v i)})
+  =
+  match m a.array_addr with
+  | Some (Array t' len seq) ->
+    assert(contains_index seq (U32.v a.array_offset + U32.v i));
+    match Seq.index seq (U32.v a.array_offset + U32.v i) with
+    | None -> ()
+    | Some (x, _) -> x
+  | _ -> ()
+
+let index_array_pre_action
+  (#t: _)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i: U32.t{U32.v i < U32.v (length a)})
+  (p:permission{allows_read p})
+  : Tot (pre_action
+    (pts_to_array a p iseq)
+    (x:t{x == Seq.index iseq (U32.v i)})
+    (fun _ -> pts_to_array a p iseq))
+  = fun h ->
+  let x = read_array_addr a iseq i p h in
+  (| x, h |)
+
+let index_array_action
+  (#t: _)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i: U32.t{U32.v i < U32.v (length a)})
+  (p:permission{allows_read p})
+  : Tot (pre_action
+    (pts_to_array a p iseq)
+    (x:t{x == Seq.index iseq (U32.v i)})
+    (fun _ -> pts_to_array a p iseq))
+  =
+  pre_action_to_action
+    (pts_to_array a p iseq)
+    (x:t{x == Seq.index iseq (U32.v i)})
+    (fun _ -> pts_to_array a p iseq)
+    (index_array_pre_action a iseq i p)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+
+let index_array
   (#t:_)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission)
+  (p: permission{allows_read p})
   (i:U32.t{U32.v i < U32.v (length a)}) =
-  magic() //TODO: DM 12/18/2019
+  non_alloc_action_to_non_locking_m_action
+    (pts_to_array a p iseq)
+    (x:t{x == Seq.index iseq (U32.v i)})
+    (fun _ -> pts_to_array a p iseq)
+    (index_array_action a iseq i p)
+    (fun h addr -> ())
 
 let update_array_addr
   (#t:_)
