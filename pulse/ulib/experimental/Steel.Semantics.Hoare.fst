@@ -518,9 +518,9 @@ let step_ens (#st:st)
 = fun m0 r m1 ->
   let Step next_pre next_lpre next_lpost _ _ = r in
   next_lpre (st.heap_of_mem m1) /\
-  // st.interp (st.locks_invariant m1 `st.star` next_pre) (st.heap_of_mem m1) /\
-  // preserves_frame pre next_pre m0 m1 /\
-  // weaker_pre lpre next_lpre m0 m1 /\
+  st.interp (st.locks_invariant m1 `st.star` next_pre) (st.heap_of_mem m1) /\
+  preserves_frame pre next_pre m0 m1 /\
+  weaker_pre lpre next_lpre m0 m1 /\
   stronger_post lpost next_lpost m0 m1
 
 
@@ -892,6 +892,7 @@ let step_frame_ret (#st:st) (i:nat)
         (Ret (fun x -> p x `st.star` frame) x lpost)
         i, m0)
 
+
 let step_frame (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
   (f:m st a pre p lpre lpost{Frame? f})
@@ -911,14 +912,16 @@ let step_frame (#st:st) (i:nat)
 
     preserves_frame_star f_pre next_fpre m0 m1 frame;
 
-    let s = Step (next_fpre `st.star` frame)
+    assert ((frame_lpre next_flpre f_frame) (st.heap_of_mem m1))
+      by (norm [delta_only [`%frame_lpre]]);
+    assert (st.interp (st.locks_invariant m1 `st.star` (next_fpre `st.star` frame))
+                      (st.heap_of_mem m1));
+
+    Step (next_fpre `st.star` frame)
       (frame_lpre next_flpre f_frame)
       (frame_lpost next_flpre next_flpost f_frame)
       (Frame f frame f_frame)
-      j in
-
-    admit ();
-    s
+      j
 
 
 // // // /// Stream of booleans to decide whether we go left or right
