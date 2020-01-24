@@ -2,7 +2,7 @@ module Steel.Semantics.Instantiate
 
 friend Steel.Memory
 
-module S = Steel.Semantics.Hoare
+module S = Steel.Semantics.Hoare.MST
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
