@@ -924,9 +924,29 @@ let step_frame (#st:st) (i:nat)
       j
 
 
-// // // /// Stream of booleans to decide whether we go left or right
+/// Stream of booleans to decide whether we go left or right
 
-// // // assume val go_left : nat -> bool
+assume val go_left : nat -> bool
+
+let step_par_ret (#st:st) (i:nat)
+  (#a:Type) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (f:m st a pre post lpre lpost{Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f)})
+  (step:step_t)
+
+: MST (step_result a post) st.mem st.locks_preorder (step_req f) (step_ens f)
+
+= MST?.reflect (fun m0 ->
+  match f with
+  | Par #_ #aL #_ #_ #_ #_ (Ret pL xL lpL) #aR #_ #_ #_ #_ (Ret pR xR lpR) ->
+
+    let lpost : l_post #st #(aL & aR) _ _ = fun h0 (xL, xR) h1 -> lpL h0 xL h1 /\ lpR h0 xR h1 in
+
+    Step (pL xL `st.star` pR xR)
+      (fun h -> lpL h xL h /\ lpR h xR h)
+      lpost 
+      (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
+      i, m0)
+
 
 // // // let step_par (#st:st) (i:nat)
 // // //   (#a:Type u#a) (#pre:st.hprop) (#post:post st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
