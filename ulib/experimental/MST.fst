@@ -124,7 +124,7 @@ assume val wp_monotonic_pure (_:unit)
 let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a state rel
   (fun s0 -> wp (fun _ -> True))
-  (fun s0 x s1 -> ~ (wp (fun r -> r =!= x \/ s0 =!= s1)))
+  (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
 = wp_monotonic_pure ();
   fun s0 -> 
   let x = f () in
