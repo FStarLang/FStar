@@ -523,8 +523,10 @@ let mk_indexed_bind env
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
     env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
     (fun b -> BU.format3
-      "implicit var for binder %s of %s:bind at %s"
-      (Print.binder_to_string b) "" (Range.string_of_range r1)) r1 in  //AR: TODO: FIXME: "" -> proper string
+      "implicit var for binder %s of %s at %s"
+      (Print.binder_to_string b)
+      (BU.format3 "(%s, %s) |> %s" (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p))
+      (Range.string_of_range r1)) r1 in
 
   let subst = List.map2
     (fun b t -> NT (b |> fst, t))
