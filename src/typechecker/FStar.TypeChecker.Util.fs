@@ -461,17 +461,20 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<t
 
 
 (*
- * Bind for layered effects:
+ * Bind for indexed effects
+ *
+ * This covers both the binds of an effect M,
+ *   and polymonadic binds (M, N) |> P (this former is just (M, M) |> M)
  * 
- * Let c1 = M c1_a (t1 ... tn)
- *     c2 = M c2_a (s1 ... sn) - where b is free in (s1 ... sn)
+ * Let c1 = M c1_a (t1 ... tm)
+ *     c2 = N c2_a (s1 ... sn) - where b is free in (s1 ... sn)
  *
- *     M.bind_wp = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
- *                              f:repr a i_1 ... i_n ->
- *                              g:(x:a -> repr b j_1 ... j_n) ->
- *                              repr b k_1 ... k_n)
+ *     bind_t = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
+ *                           f:M.repr a i_1 ... i_n ->
+ *                           g:(x:a -> N.repr b j_1 ... j_n) ->
+ *                           P.repr b k_1 ... k_p)
  *
- * First we instantiate M.bind_wp with [u_c1_a, u_c2_a]
+ * First we instantiate bind_t with [u_c1_a, u_c2_a]
  *
  * Then we substitute [a/c1_a; b/c2_a] in <some binders>
  *
