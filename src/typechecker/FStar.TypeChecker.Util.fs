@@ -561,7 +561,7 @@ let mk_indexed_bind env
 
   let is : list<term> =  //indices of the resultant computation
     effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1
-    |> List.map (SS.subst subst) in  //AR: TODO: FIXME: this will not work when we have x:a -> unit -> M a wp, since binders will be collected together?
+    |> List.map (SS.subst subst) in
 
   let c = mk_Comp ({
     comp_univs = ct2.comp_univs;
