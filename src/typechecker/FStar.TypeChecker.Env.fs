@@ -1249,11 +1249,6 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
-let exists_polymonadic_bind env m n =
-  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, p, t) -> Some (p, t)
-  | _ -> None
-
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
@@ -1288,6 +1283,11 @@ let push_sigelt env s =
 let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
   {env with effects=effects}
+
+let exists_polymonadic_bind env m n =
+  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, p, t) -> Some (p, t)
+  | _ -> None
 
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
@@ -1399,7 +1399,15 @@ let update_effect_lattice env src tgt st_mlift =
     in
     match join_opt with
     | None -> []
-    | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)]))
+    | Some (k, e1, e2) ->
+      if exists_polymonadic_bind env i j |> is_some
+      then raise_error (Errors.Fatal_PolymonadicBind_conflict,
+             BU.format4 "Updating effect lattice with a lift between %s and %s \
+               induces a path from %s and %s in the effect lattice, and this \
+               conflicts with a polymonadic bind between them"
+               (Ident.string_of_lid src) (Ident.string_of_lid tgt)
+               (Ident.string_of_lid i) (Ident.string_of_lid j)) env.range
+      else [(i, j, k, e1.mlift, e2.mlift)]))
   in
 
   let effects = {env.effects with order=order; joins=joins} in
@@ -1407,12 +1415,20 @@ let update_effect_lattice env src tgt st_mlift =
 //    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
   {env with effects=effects}
 
-
 let add_polymonadic_bind env m n p ty =
-  //AR: TODO: FIXME: check that this is not duplicate,
-  //                 that there is no join between m and n already
-  //                 would update_effect_lattice also need such a check? possibly.
-  { env with effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
+  let err_msg (poly:bool) =
+    BU.format4 "Polymonadic bind ((%s, %s) |> %s) conflicts with \
+      an already existing %s"
+      (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
+      (if poly then "polymonadic bind"
+       else "path in the effect lattice") in
+
+  if exists_polymonadic_bind env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
+  else if join_opt env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
+  else { env with
+         effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
   
 let push_local_binding env b =
   {env with gamma=b::env.gamma}

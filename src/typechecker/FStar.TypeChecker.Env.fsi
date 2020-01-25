@@ -293,9 +293,12 @@ val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 //client constructs the mlift and gives it to us
-val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
 
-val add_polymonadic_bind : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
+val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
+
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
+val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
@@ -321,7 +324,6 @@ val lidents      : env -> list<lident>
 
 (* operations on monads *)
 val identity_mlift         : mlift
-val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
 val join                   : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq              : env -> lident -> lident -> option<edge>
 val effect_decl_opt        : env -> lident -> option<(eff_decl * list<qualifier>)>
@@ -332,7 +334,6 @@ val comp_to_comp_typ       : env -> comp -> comp_typ
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
-val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
