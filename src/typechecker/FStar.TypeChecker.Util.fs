@@ -551,7 +551,7 @@ let mk_indexed_bind env
         let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
-        |> List.map (SS.subst subst) in  //AR: TODO: FIXME: this will not work when we have x:a -> unit -> M a wp, since binders will be collected together?
+        |> List.map (SS.subst subst) in
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2

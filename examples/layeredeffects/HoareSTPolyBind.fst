@@ -163,7 +163,7 @@ polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
 
 let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
-  (f:repr a req ens) (g:(x:a -> (unit -> PURE b (wp x))))
+  (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
 : repr b
   (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
   (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
