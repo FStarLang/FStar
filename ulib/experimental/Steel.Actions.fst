@@ -182,7 +182,6 @@ let pre_action_to_action
     (addr: addr) ->
     Lemma (
       let (|_, h0'|) = f h0 in
-      let (|_, h'|) = f (join h0 h1) in
       disjoint_addr h0' h1 addr
     )
   )
@@ -193,7 +192,6 @@ let pre_action_to_action
     (addr: addr) ->
     Lemma (requires (
       let (|_, h0'|) = f h0 in
-      let (|_, h'|) = f (join h0 h1) in
       disjoint h0' h1
     ))
     (ensures (
@@ -623,7 +621,7 @@ let upd_array_pre_action
   = fun h ->
     (| (), upd_array_heap a iseq i v h |)
 
-#push-options "--z3rlimit 80 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t)
