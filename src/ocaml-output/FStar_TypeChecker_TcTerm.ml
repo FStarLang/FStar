@@ -2817,7 +2817,8 @@ and (tc_maybe_toplevel_term :
                                               (FStar_Syntax_Syntax.Tm_meta
                                                  (e4,
                                                    (FStar_Syntax_Syntax.Meta_monadic
-                                                      ((c1.FStar_TypeChecker_Common.eff_name),
+                                                      ((FStar_Syntax_Syntax.Meta_monadic_bind
+                                                          (c1.FStar_TypeChecker_Common.eff_name)),
                                                         (c1.FStar_TypeChecker_Common.res_typ)))))
                                               FStar_Pervasives_Native.None
                                               e4.FStar_Syntax_Syntax.pos
@@ -5825,7 +5826,8 @@ and (check_application_args :
                                                       (FStar_Syntax_Syntax.Tm_meta
                                                          (letbinding,
                                                            (FStar_Syntax_Syntax.Meta_monadic
-                                                              (m,
+                                                              ((FStar_Syntax_Syntax.Meta_monadic_bind
+                                                                  m),
                                                                 (comp1.FStar_TypeChecker_Common.res_typ)))))
                                                       FStar_Pervasives_Native.None
                                                       e.FStar_Syntax_Syntax.pos
