@@ -493,7 +493,7 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<t
  * and return k_i as the output indices
  *)
 let mk_indexed_bind env
-  (m n p:lident) (bind_t:tscheme)
+  (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
   (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
 

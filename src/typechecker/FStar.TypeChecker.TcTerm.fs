@@ -2850,7 +2850,22 @@ and check_inner_let env e =
        let xbinder = List.hd xb in
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
-       let e2, c2, g2 = tc_term env_x e2 in
+       let e2, c2, g2 =
+         (*
+          * AR: we typecheck e2 and fold its guard into the returned lcomp
+          *     so that the guard is under the equality x=e1 when we later (in the next line)
+          *     bind c1 and c2
+          *)
+         tc_term env_x e2
+         |> (fun (e2, c2, g2) ->
+            let c2, g2 = TcUtil.strengthen_precondition
+              ((fun _ -> "folding guard g2 of e2 in the lcomp") |> Some)
+              env_x
+              e2
+              c2
+              g2 in
+            e2, c2, g2) in
+       //g2 now has no logical payload after this, it may have unresolved implicits
        let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
          TcUtil.maybe_return_e2_and_bind
@@ -2867,9 +2882,6 @@ and check_inner_let env e =
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
-       let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
-       let g2 = Env.close_guard env xb
-                      (Env.imp_guard (Env.guard_of_guard_formula x_eq_e1) g2) in
 
        //AR: for layered effects, solve any deferred constraints first
        //    we can do it at other calls to close_guard_implicits too, but let's see

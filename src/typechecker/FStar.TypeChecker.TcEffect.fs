@@ -1354,7 +1354,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   end;
   (lid, uvs, tps, c)
 
-let tc_polymonadic_bind env (m n p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
     (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
   let r = (snd ts).pos in
