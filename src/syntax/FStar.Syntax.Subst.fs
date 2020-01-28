@@ -436,14 +436,16 @@ let rec push_subst s t =
         let sn = shift_subst' n s in
         let body = subst' sn body in
         let lbs = lbs |> List.map (fun lb ->
-        let lbt = subst' s lb.lbtyp in
-        let lbd = if is_rec && U.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
+          let lbt = subst' s lb.lbtyp in
+          let lbd = if is_rec && U.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
                     then subst' sn lb.lbdef
                     else subst' s lb.lbdef in
-        let lbname = match lb.lbname with
-            | Inl x -> Inl ({x with sort=lbt})
-            | Inr fv -> Inr fv in
-        {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
+          let lbname = match lb.lbname with
+              | Inl x -> Inl ({x with sort=lbt})
+              | Inr fv -> Inr fv
+          in
+          let lbattrs = List.map (subst' s) lb.lbattrs in
+          {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd; lbattrs=lbattrs}) in
         mk (Tm_let((is_rec, lbs), body))
 
     | Tm_meta(t0, Meta_pattern (bs, ps)) ->

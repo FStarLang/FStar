@@ -373,7 +373,8 @@ let rec inline_closure_env cfg (env:env) stack t =
                  Inl ({x with sort=typ}),
                  non_tail_inline_closure_env cfg (dummy::env0) body
         in
-        let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
+        let attrs = List.map (non_tail_inline_closure_env cfg env0) lb.lbattrs in
+        let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def; lbattrs=attrs} in
         let t = mk (Tm_let((false, [lb]), body)) t.pos in
         rebuild_closure cfg env0 stack t
 
@@ -1360,7 +1361,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- definiens\n");
                  let lb = {lb with lbname=lbname;
                                    lbtyp=ty;
-                                   lbdef=norm cfg env [] lb.lbdef} in
+                                   lbdef=norm cfg env [] lb.lbdef;
+                                   lbattrs=List.map (norm cfg env []) lb.lbattrs} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
                  let stack = (Cfg cfg)::stack in
                  let cfg = { cfg with strong = true } in
