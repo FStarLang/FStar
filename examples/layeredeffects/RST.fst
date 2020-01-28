@@ -103,3 +103,24 @@ let test ()
 : RSTATE array emp array_resource
 = let ptr = alloc () in
   return ptr
+
+
+(*
+ * Following example showcases a bug in checking match terms for layered effects
+ *
+ * When typechecking the pattern `C a x`, we generate a term with projectors and discriminators
+ *   for each of the pattern bvs, a and x in this case, and those terms are then lax checked
+ * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environement,
+ *   earlier it wasn't
+ *)
+
+noeq
+type m : Type -> Type =
+| C : a:Type -> x:a -> m a
+
+
+assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
+
+let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
+= match f with
+  | C a x -> rst_unit ()

@@ -2604,28 +2604,55 @@ and tc_eqn scrutinee env branch
           let _ = if Env.debug env <| Options.Other "LayeredEffects" then
             BU.print_string "Typechecking pat_bv_tms ...\n" in
 
-          //typecheck the pat_bv_tms, to resolve implicits etc.
-          let pat_bv_tms =
-            List.fold_left2 (fun acc pat_bv_tm bv ->
-              let expected_t = U.arrow [S.null_binder pat_t] (S.mk_Total' bv.sort (Env.new_u_univ () |> Some)) in
-              //note, we are explicitly setting lax = true, since these terms apply projectors
-              //which we know are sound as per the branch guard, but hard to convince the typechecker
-              let env = { (Env.set_expected_typ env expected_t) with lax = true } in
-              let pat_bv_tm = tc_trivial_guard env pat_bv_tm |> fst in
-              acc@[pat_bv_tm]
-            ) [] pat_bv_tms pat_bvs in
+          (*
+           * AR: typecheck the pat_bv_tms, to resolve implicits etc.
+           * 
+           * recall that pat_bv_tms are terms that are definitionally equal to the pat_bvs
+           *   but are in terms of projectors on the scrutinee term
+           * these will be used to substitute pat bvs in the computation type
+           * of the corresponding branch
+           *
+           * a pat_bv_tm's expected type is the sort of the corresponding pat bv
+           * however, we need to be careful about dependent pat bvs of the like (a:Type) (x:a)
+           *
+           * so when we typecheck a pat_bv_tm with expected type as corresponding pat_bv.sort,
+           *   we substitute the already seen pat bvs with their pat bv tms in the sort
+           *)
 
+          //first apply the pat_bv_tms to the scrutinee term
           let pat_bv_tms = pat_bv_tms |> List.map (fun pat_bv_tm ->
             mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] None Range.dummyRange
-          ) |> List.map (N.normalize [Env.Beta] env) in  //a bit of beta to simplify the term
+          ) in
+
+          let pat_bv_tms =
+            //note, we are explicitly setting lax = true, since these terms apply projectors
+            //which we know are sound as per the branch guard, but hard to convince the typechecker
+            //AR: TODO: should we instead do the non-lax typechecking but drop the logical payload in the guard?
+            let env = { (Env.push_bv env scrutinee) with lax = true } in
+            List.fold_left2 (fun (substs, acc) pat_bv_tm bv ->
+              let expected_t = SS.subst substs bv.sort in
+              //we also substitute in the pat_bv_tm, since in the case of nested patterns,
+              //  there are cases when sorts of the bound scrutinee variable for the inner pattern vars
+              //  contains some outer patterns vars
+              let pat_bv_tm =
+                pat_bv_tm
+                |> SS.subst substs
+                |> tc_trivial_guard (Env.set_expected_typ env expected_t)
+                |> fst in
+              substs@[NT (bv, pat_bv_tm)], acc@[pat_bv_tm]
+            ) ([], []) pat_bv_tms pat_bvs
+
+            |> snd
+            |> List.map (N.normalize [Env.Beta] env) in
 
           let _ =
             if Env.debug env <| Options.Other "LayeredEffects" then
-              BU.print1 "tc_eqn: typechecked pat_bv_tms %s"
+              BU.print2 "tc_eqn: typechecked pat_bv_tms %s (pat_bvs : %s)\n"
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
+                (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs)
             else () in
 
-          TcUtil.close_layered_lcomp env pat_bvs pat_bv_tms c_weak
+          TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms c_weak
         else TcUtil.close_wp_lcomp env pat_bvs c_weak
     in
 
@@ -2823,7 +2850,22 @@ and check_inner_let env e =
        let xbinder = List.hd xb in
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
-       let e2, c2, g2 = tc_term env_x e2 in
+       let e2, c2, g2 =
+         (*
+          * AR: we typecheck e2 and fold its guard into the returned lcomp
+          *     so that the guard is under the equality x=e1 when we later (in the next line)
+          *     bind c1 and c2
+          *)
+         tc_term env_x e2
+         |> (fun (e2, c2, g2) ->
+            let c2, g2 = TcUtil.strengthen_precondition
+              ((fun _ -> "folding guard g2 of e2 in the lcomp") |> Some)
+              env_x
+              e2
+              c2
+              g2 in
+            e2, c2, g2) in
+       //g2 now has no logical payload after this, it may have unresolved implicits
        let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
          TcUtil.maybe_return_e2_and_bind
@@ -2839,9 +2881,6 @@ and check_inner_let env e =
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
-       let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
-       let g2 = Env.close_guard env xb
-                      (Env.imp_guard (Env.guard_of_guard_formula x_eq_e1) g2) in
 
        //AR: for layered effects, solve any deferred constraints first
        //    we can do it at other calls to close_guard_implicits too, but let's see
