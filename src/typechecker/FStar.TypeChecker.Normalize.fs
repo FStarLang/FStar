@@ -1423,12 +1423,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_meta (head, m) ->
             log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
+
             begin match m with
-              | Meta_monadic (m, t) ->
-                reduce_impure_comp cfg env stack head (Inl m) t
+              | Meta_monadic (Meta_monadic_bind m, t) ->
+                reduce_impure_comp cfg env stack head
+                  (fun t -> (Meta_monadic (Meta_monadic_bind m, t))) t
+
+              | Meta_monadic (Meta_polymonadic_bind (m, n, p), t) ->
+                reduce_impure_comp cfg env stack head
+                  (fun t -> (Meta_monadic (Meta_polymonadic_bind (m, n, p), t))) t
 
               | Meta_monadic_lift (m, m', t) ->
-                reduce_impure_comp cfg env stack head (Inr (m, m')) t
+                reduce_impure_comp cfg env stack head
+                  (fun t -> Meta_monadic_lift (m, m', t)) t
 
               | _ ->
                 if cfg.steps.unmeta
@@ -1513,7 +1520,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          end
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
-                                     (m : either<monad_name,(monad_name * monad_name)>)
+                                     (m : S.typ -> S.metadata)
                                         // relevant monads.
                                         // Inl m - this is a Meta_monadic with monad m
                                         // Inr (m, m') - this is a Meta_monadic_lift with monad m
@@ -1551,10 +1558,8 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
       else cfg
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
-    let metadata = match m with
-                   | Inl m -> Meta_monadic (m, t)
-                   | Inr (m, m') -> Meta_monadic_lift (m, m', t)
-    in
+    let metadata = m t in
+
     norm cfg env (Meta(env,metadata, head.pos)::stack) head
 
 and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
@@ -1712,7 +1717,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         in
         let fallback2 () =
             log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string head0) "");
-            norm cfg env (List.tl stack) (mk (Tm_meta (head, Meta_monadic(m, t))) head0.pos)
+            //AR: TODO: FIXME: seems like the m annotation is not used in functional applications
+            norm cfg env (List.tl stack) (mk (Tm_meta (head, Meta_monadic (Meta_monadic_bind m, t))) head0.pos)
         in
 
         (* This application case is only interesting for fully-applied dm4f actions. Otherwise,
@@ -2354,8 +2360,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            rebuild cfg env stack' t
         in
         begin match (SS.compress t).n with
-        | Tm_meta (t, Meta_monadic (m, ty)) ->
+        | Tm_meta (t, Meta_monadic (Meta_monadic_bind m, ty)) ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty
+
+        | Tm_meta (t, Meta_monadic (Meta_polymonadic_bind (m, n, p), ty)) ->
+          failwith "NYI: reification of polymonadic binds"
 
         | Tm_meta (t, Meta_monadic_lift (msrc, mtgt, ty)) ->
            let lifted = reify_lift cfg t msrc mtgt (closure_as_term cfg env ty) in

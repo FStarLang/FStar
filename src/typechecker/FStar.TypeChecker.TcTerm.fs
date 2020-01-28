@@ -801,7 +801,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let e, c, g' = comp_check_expected_typ env e c in
 
-      let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
+      let e = S.mk (Tm_meta(e, Meta_monadic(Meta_monadic_bind c.eff_name, c.res_typ))) None e.pos in
 
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
@@ -1779,7 +1779,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             | Some (x, m, t, e1) ->
               let lb = U.mk_letbinding (Inl x) [] t m e1 [] e1.pos in
               let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) None e.pos in
-              mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos
+              mk (Tm_meta(letbinding, Meta_monadic (Meta_monadic_bind m, comp.res_typ))) None e.pos
           in
           List.fold_left bind_lifted_args app lifted_args
       in

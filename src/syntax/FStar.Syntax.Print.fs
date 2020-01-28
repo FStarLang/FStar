@@ -296,7 +296,10 @@ and term_to_string x =
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-      | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+      | Tm_meta(t, Meta_monadic (Meta_monadic_bind m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+      | Tm_meta(t, Meta_monadic (Meta_polymonadic_bind (m, n, p), t')) ->
+        U.format6 ("(PolyMonadic-%s{((%s, %s) |> %s) %s} %s)")
+          (tag_of_term t) (sli m) (sli n) (sli p) (term_to_string t') (term_to_string t)
 
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
@@ -557,8 +560,12 @@ and metadata_to_string = function
     | Meta_desugared msi ->
         "{Meta_desugared}"
 
-    | Meta_monadic (m, t) ->
+    | Meta_monadic (Meta_monadic_bind m, t) ->
         U.format2 "{Meta_monadic(%s @ %s)}" (sli m) (term_to_string t)
+
+    | Meta_monadic (Meta_polymonadic_bind (m, n, p), t) ->
+        U.format4 "{Meta_polymonadic(((%s, %s) |> %s) @ %s)}"
+          (sli m) (sli n) (sli p) (term_to_string t)
 
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)

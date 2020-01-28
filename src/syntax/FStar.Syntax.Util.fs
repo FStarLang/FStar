@@ -1647,8 +1647,16 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
 
   | Tm_meta (t1, m1), Tm_meta (t2, m2) ->
     begin match m1, m2 with
-    | Meta_monadic (n1, ty1), Meta_monadic (n2, ty2) ->
+    | Meta_monadic (Meta_monadic_bind n1, ty1),
+      Meta_monadic (Meta_monadic_bind n2, ty2) ->
         (check "meta_monadic lid"   (lid_equals n1 n2)) &&
+        (check "meta_monadic type"  (term_eq_dbg dbg ty1 ty2))
+   
+    | Meta_monadic (Meta_polymonadic_bind (m1, n1, p1), ty1),
+      Meta_monadic (Meta_polymonadic_bind (m2, n2, p2), ty2) ->
+        (check "meta_monadic lid"   (lid_equals m1 m2)) &&
+        (check "meta_monadic lid"   (lid_equals n1 n2)) &&
+        (check "meta_monadic lid"   (lid_equals p1 p2)) &&
         (check "meta_monadic type"  (term_eq_dbg dbg ty1 ty2))
 
     | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
