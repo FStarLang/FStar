@@ -533,7 +533,7 @@ let elim_forall (#a:_) (p : a -> hprop) (m:hheap (h_forall p))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#push-options "--z3rlimit 300 --initial_fuel 1 --max_fuel 1 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 300 --initial_fuel 2 --max_fuel 2 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   : Lemma
     (ensures interp p m ==> interp p (join m m'))
