@@ -39,7 +39,7 @@ let view (a:Type) (fp:hprop) = f:view' a fp{view_depends_only_on f}
     For hprops for which we cannot defined a view, we thus could use unit.
     TODO: This should have a better name. hprop_with_view?
     **)
-[@__reduce__]
+[@(__reduce__) erasable]
 noeq
 type viewable' = {
     t:Type0;
@@ -48,7 +48,7 @@ type viewable' = {
 
 (** Redefine an inductive for Star on top of hprops/viewables. This will allow us
     to normalize by induction on the datatype **)
-[@__reduce__]
+[@(__reduce__) erasable]
 noeq type viewable =
    | VUnit: viewable' -> viewable
    | VStar: viewable -> viewable -> viewable
@@ -60,7 +60,7 @@ let rec t_of (v:viewable) = match v with
   | VStar v1 v2 -> (t_of v1 * t_of v2)
 
 [@__reduce__]
-let rec fp_of (v:viewable) = match v with
+let rec fp_of (v:viewable) : GTot hprop = match v with
   | VUnit v -> v.fp
   | VStar v1 v2 -> (fp_of v1 `star` fp_of v2)
 
