@@ -771,7 +771,7 @@ let free_array
     (free_array_action a iseq)
     (fun h addr -> ())
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 80"
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
 let share_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -824,28 +824,9 @@ let share_array_pre_action
       ) in
       let aux (addr: addr) : Lemma (h addr == (join split_h_1 split_h_2) addr) =
         if addr <> a.array_addr then () else
-        match h addr, split_h_1 addr, split_h_2 addr, (join split_h_1 split_h_2) addr with
-        | Some (Array t len seq), Some (Array t1 len1 seq1), Some (Array t2 len2 seq2),
-          Some (Array _ _ joint_seq_expected) ->
-           assert(t == t1 /\ t1 == t2);
-           assert(len == len1 /\ len1 == len2);
-           let joint_seq = Seq.init len1 (fun i ->
-             match contains_index seq1 i,  contains_index seq2 i with
-	     | true, true ->
-               let (_, p2) = select_index seq2 i in
-               let (x1, p1) = select_index seq1 i in
-	       Some (x1, (sum_permissions p1 p2 <: (perm:permission{allows_read perm})))
-             | true, false -> Seq.index seq1 i
-             | false, true -> Seq.index seq2 i
-	     | false, false -> None
-           ) in
-           let aux (i:nat{i < len}) : Lemma (Seq.index seq i == Seq.index joint_seq i) =
-             ()
-           in
-           Classical.forall_intro aux;
-           assert(seq `Seq.equal` joint_seq);
-           assert(joint_seq `Seq.equal` joint_seq_expected);
-           assert(Some (Array t1 len1 joint_seq) == (join split_h_1 split_h_2) addr)
+        match h addr, (join split_h_1 split_h_2) addr with
+        | Some (Array _ _ seq), Some (Array _ _ joint_seq) ->
+           assert(seq `Seq.equal` joint_seq)
         | _ -> ()
       in
       Classical.forall_intro aux;
@@ -854,24 +835,70 @@ let share_array_pre_action
       (| a, h |)
 #pop-options
 
-
-let share_array
+let share_array_action
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
-  : m_action
-    (pts_to_array a p iseq)
+  (perm: permission{allows_read perm})
+  : action
+    (pts_to_array a perm iseq)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
       address a = address a'
     })
     (fun a' -> star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a (half_permission perm) iseq)
+      (pts_to_array a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)))
+    )
+  =
+  pre_action_to_action
+    (pts_to_array a perm iseq)
+    (a':array_ref t{
+      length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+      address a = address a'
+    })
+    (fun a' -> star
+      (pts_to_array a (half_permission perm) iseq)
+      (pts_to_array a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    (share_array_pre_action a iseq perm)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post ->
+      let (|x_alone, h0'|) = share_array_pre_action a iseq perm h0 in
+      let (|x_joint, h'|) = share_array_pre_action a iseq perm (join h0 h1) in
+      assert(x_alone == x_joint);
+      assert(post x_alone h0' <==> post x_joint h')
+    )
+
+let share_array
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (perm: permission{allows_read perm})
+  : m_action
+    (pts_to_array a perm iseq)
+    (a':array_ref t{
+      length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+      address a = address a'
+    })
+    (fun a' -> star
+      (pts_to_array a (half_permission perm) iseq)
+      (pts_to_array a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)))
     )
     =
-    admit()
+    non_alloc_action_to_non_locking_m_action
+       (pts_to_array a perm iseq)
+    (a':array_ref t{
+      length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+      address a = address a'
+    })
+    (fun a' -> star
+      (pts_to_array a (half_permission perm) iseq)
+      (pts_to_array a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    (share_array_action a iseq perm)
+    (fun h addr -> ())
 
 let gather_array
   (#t: _)
