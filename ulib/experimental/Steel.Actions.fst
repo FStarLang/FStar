@@ -979,6 +979,77 @@ let gather_array
       (gather_array_action a a' iseq p)
       (fun h addr -> ())
 
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 150"
+let split_array_pre_action
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i < U32.v (length a)})
+  : pre_action
+    (pts_to_array a p iseq)
+    (as:(array_ref t & array_ref t){(
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      offset (fst as) = offset a /\ offset (snd as) = U32.add (offset a) i /\
+      max_length (fst as) = max_length a /\ max_length (snd as) = max_length a /\
+      address (fst as) = address a /\ address (snd as) = address a
+    )})
+    (fun (a1, a2) -> star
+      (pts_to_array a1 p (Seq.slice iseq 0 (U32.v i)))
+      (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
+    )
+  = fun h ->
+  let a1 = { a with
+    array_offset = a.array_offset;
+    array_length = i;
+  } in
+  let a2 = { a with
+    array_offset = U32.add i a.array_offset;
+    array_length = U32.sub a.array_length i;
+  } in
+  let split_h_1 : heap = on _ (fun addr ->
+    if addr <> a.array_addr then h addr else
+    match h a.array_addr with
+    | Some (Array t len seq) ->
+      let new_seq = Seq.init len (fun j ->
+        if j < U32.v a.array_offset || j >= U32.v a.array_offset + U32.v a.array_length then
+          Seq.index seq j
+        else if j <  U32.v a.array_offset + U32.v i then
+          Seq.index seq j
+        else None
+      ) in
+      assert(Seq.length new_seq = len);
+      Some (Array t len new_seq)
+    | _ -> h addr
+  ) in
+   let split_h_2 : heap = on _ (fun addr ->
+    if addr <> a.array_addr then None else
+    match h a.array_addr with
+    | Some (Array t len seq) ->
+      let new_seq = Seq.init len (fun j ->
+        if j < U32.v a.array_offset || j >= U32.v a.array_offset + U32.v a.array_length then
+          None
+        else if j <  U32.v a.array_offset + U32.v i then
+          None
+        else Seq.index seq j
+      ) in
+      assert(Seq.length new_seq = len);
+      Some (Array t len new_seq)
+    | _ -> h addr
+  ) in
+  let aux (addr: addr) : Lemma (h addr == (join split_h_1 split_h_2) addr) =
+    if addr <> a.array_addr then () else
+    match h addr, (join split_h_1 split_h_2) addr with
+    | Some (Array _ _ seq), Some (Array _ _ joint_seq) ->
+      assert(seq `Seq.equal` joint_seq)
+    | _ -> ()
+  in
+  Classical.forall_intro aux;
+  mem_equiv_eq h (join split_h_1 split_h_2);
+  assert(h == join split_h_1 split_h_2);
+  (| (a1, a2), h  |)
+#pop-options
+
 let split_array
   (#t: _)
   (a: array_ref t)
