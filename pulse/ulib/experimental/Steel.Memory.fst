@@ -541,13 +541,9 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
   = match p with
     | Emp -> ()
     | Pts_to_array _ _ _ -> ()
-
     | Refine p q -> affine_star_aux p m m'
-
     | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
-
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
-
     | Star p1 p2 ->
       let aux (m1 m2:heap) (m':heap {disjoint m m'})
         : Lemma
@@ -558,7 +554,9 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
             interp p2 m2)
           (ensures interp (Star p1 p2) (join m m'))
           [SMTPat (interp (Star p1 p2) (join (join m1 m2) m'))]
-        = affine_star_aux p2 m2 m';
+        =
+          disjoint_join m' m1 m2;
+          affine_star_aux p2 m2 m';
           // assert (interp p2 (join m2 m'));
           affine_star_aux p1 m1 (join m2 m');
           // assert (interp p1 (join m1 (join m2 m')));
@@ -567,7 +565,6 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
           intro_star p1 p2 m1 (join m2 m')
       in
       ()
-
     | Wand p q ->
       let aux (mp:hheap p)
         : Lemma
@@ -583,7 +580,6 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
           affine_star_aux q (join mp m) m'
       in
       assert (interp (wand p q) m ==> interp (wand p q) (join m m'))
-
     | Ex #a f ->
       let aux (x:a)
         : Lemma (ensures interp (f x) m ==> interp (f x) (join m m'))
@@ -592,7 +588,6 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
           affine_star_aux (f x) m m'
       in
       ()
-
     | All #a f ->
       let aux (x:a)
         : Lemma (ensures interp (f x) m ==> interp (f x) (join m m'))
