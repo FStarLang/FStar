@@ -103,7 +103,7 @@ val emp : hprop
 val pts_to_array
   (#t: Type0)
   (a:array_ref t)
-  (p:permission)
+  (p:permission{allows_read p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
 val h_and (p1 p2:hprop) : hprop
@@ -127,7 +127,7 @@ val equiv_extensional_on_star (p1 p2 p3:hprop)
 // pts_to_array and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
-let array_perm (#t: Type) (a: array_ref t) (p:permission) =
+let array_perm (#t: Type) (a: array_ref t) (p:permission{allows_read p}) =
   h_exists (pts_to_array a p)
 
 let array (#t: Type) (a: array_ref t) =

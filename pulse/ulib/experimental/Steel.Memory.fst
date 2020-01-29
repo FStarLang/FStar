@@ -262,7 +262,7 @@ module W = FStar.WellFounded
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
-  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission ->
+  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission{allows_read perm} ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
@@ -294,7 +294,7 @@ let rec interp (p:hprop) (m:heap)
 	      let (x', perm') = select_index seq i in
 	      x == x' /\
 	      perm `lesser_equal_permission` perm'
-            else (* In the range, does not contain anything *) perm == zero_permission
+            else (* In the range, does not contain anything *) False
           )
 	| _ -> False
       )
@@ -354,7 +354,7 @@ let equiv_extensional_on_star (p1 p2 p3:hprop) = ()
 let intro_pts_to_array
   (#t: Type0)
   (a:array_ref t)
-  (perm:permission)
+  (perm:permission{allows_read perm})
   (contents:Seq.lseq t (U32.v a.array_length))
   (m: heap)
   : Lemma
@@ -540,7 +540,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     [SMTPat (interp p (join m m'))]
   = match p with
     | Emp -> ()
-    | Pts_to_array _ _ _ -> admit()
+    | Pts_to_array _ _ _ -> ()
 
     | Refine p q -> affine_star_aux p m m'
 
@@ -549,7 +549,6 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
 
     | Star p1 p2 ->
-      admit();
       let aux (m1 m2:heap) (m':heap {disjoint m m'})
         : Lemma
           (requires
