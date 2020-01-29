@@ -900,6 +900,58 @@ let share_array
     (share_array_action a iseq perm)
     (fun h addr -> ())
 
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
+let gather_array_pre_action
+  (#t: _)
+  (a: array_ref t)
+  (a':array_ref t{
+    length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+    address a = address a'
+  })
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  : pre_action
+    (star
+      (pts_to_array a (half_permission p) iseq)
+      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    unit
+    (fun _ -> pts_to_array a p iseq)
+  = fun h ->
+    (| (), h |)
+#pop-options
+
+#push-options "--max_ifuel 1 --initial_ifuel 1"
+let gather_array_action
+  (#t: _)
+  (a: array_ref t)
+  (a':array_ref t{
+    length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+    address a = address a'
+  })
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  : action
+    (star
+      (pts_to_array a (half_permission p) iseq)
+      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    unit
+    (fun _ -> pts_to_array a p iseq)
+  =
+  pre_action_to_action
+    (star
+      (pts_to_array a (half_permission p) iseq)
+      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+    )
+    unit
+    (fun _ -> pts_to_array a p iseq)
+    (gather_array_pre_action a a' iseq p)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+#pop-options
+
 let gather_array
   (#t: _)
   (a: array_ref t)
@@ -917,7 +969,15 @@ let gather_array
     unit
     (fun _ -> pts_to_array a p iseq)
     =
-    admit()
+    non_alloc_action_to_non_locking_m_action
+      (star
+        (pts_to_array a (half_permission p) iseq)
+        (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      )
+      unit
+      (fun _ -> pts_to_array a p iseq)
+      (gather_array_action a a' iseq p)
+      (fun h addr -> ())
 
 let split_array
   (#t: _)
