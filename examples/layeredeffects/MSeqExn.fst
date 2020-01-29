@@ -157,6 +157,7 @@ effect StExn (a:Type) (pre:trace -> Type0) (post:trace -> result a -> trace -> T
   STEXN a (fun p h0 -> pre (i_sel h0 trace_ref) /\ (forall x h1. post (i_sel h0 trace_ref) x (i_sel h1 trace_ref) ==> p x h1))
 
 
+
 /// To work with this new effect
 ///   while the DIV (and PURE) computations be lifted by the typechecker automatically,
 ///   STATE computations need to be `reflected` explicitly
@@ -259,146 +260,82 @@ let test_st (i j:nat)
 = reify (test i j) ()
 
 
+type epre = Type0
+type epost (a:Type) = result a -> Type0
+type ewp (a:Type) = wp:(epost a -> epre){
+  forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)
+}
 
 
+type erepr (a:Type) (wp:ewp a) = unit -> PURE (result a) wp
 
 
+let ereturn (a:Type) (x:a)
+: erepr a (fun p -> p (Success x))
+= fun _ -> Success x
 
+let ebind (a:Type) (b:Type)
+  (wp_f:ewp a) (wp_g:a -> ewp b)
+  (f:erepr a wp_f) (g:(x:a -> erepr b (wp_g x)))
+: erepr b
+  (fun p -> wp_f (fun r ->
+    match r with
+    | Success x -> (wp_g x) p
+    | Error s -> p (Error s)))
+= fun _ ->
+  let r = f () in
+  match r with
+  | Success x -> (g x) ()
+  | Error s -> Error s
 
-// assume val f_st (x:int)
-// : st_erepr int
-//   (fun p n ->
-//    match x with
-//    | 0 -> p (Error "") n
-//    | _ -> p (Success x) n)
+let esubcomp (a:Type)
+  (wp_f:ewp a) (wp_g:ewp a)
+  (f:erepr a wp_f)
+: Pure (erepr a wp_g)
+  (requires forall p. wp_g p ==> wp_f p)
+  (ensures fun _ -> True)
+= f
 
-
-// assume val g_st (x:int)
-// : st_erepr int
-//   (fun p n ->
-//    match x with
-//    | 0 -> p (Error "f_st throws an exception") n
-//    | _ -> p (Success x) n)
-
-
-// let f (x:int)
-// : StExn int
-//   (requires fun _ -> True)
-//   (ensures fun n0 r n1 -> n0 == n1 /\ ((x == 0 ==> Error? r) /\ (x =!= 0 ==> r == Success x)))
-// = STEXN?.reflect (f_st x)
-
-
-// let g (x:int)
-// : StExn int
-//   (requires fun _ -> True)
-//   (ensures fun n0 r n1 -> n0 == n1 /\ ((x == 0 ==> Error? r) /\ (x =!= 0 ==> r == (Success x))))
-// = STEXN?.reflect (g_st x)
-
-
-// assume val some_pure_function (x:int) : int
-
-
-// let test ()
-// : StExn unit
-//   (requires fun _ -> True)
-//   (ensures fun n0 r n1 ->
-//     let x = some_pure_function n0 in
-//     match x with
-//     | 0 -> Error? r /\ n1 == n0
-//     | _ -> Success? r /\ n1 == 2)
-// = let n = read () in
-
-//   let n = some_pure_function n in
-
-//   let n = f n in
-
-//   let n = g n in
-
-//   write 2
-
-// let test_st ()
-// : ST (result unit)
-//   (requires fun _ -> True)
-//   (ensures fun h0 r h1 ->
-//     Heap.equal_dom h0 h1 /\
-//     Heap.modifies (Set.singleton (Heap.addr_of global_ref)) h0 h1 /\
-//     (let x = some_pure_function (sel h0 global_ref) in
-//      match x with
-//      | 0 -> Error? r /\ sel h0 global_ref == sel h1 global_ref
-//      | _ -> Success? r /\ sel h1 global_ref == 2))
-// = reify (test ())  ()
-
-
-
-// let lift_exn_stexn (a:Type) (wp:ewp a) (f:erepr a wp)
-// : st_erepr a (fun p n -> wp (fun x -> p x n))
-// = fun _ -> f ()
-
-// sub_effect EXN ~> STEXN = lift_exn_stexn
-
-
-
-// type epre = Type0
-// type epost (a:Type) = result a -> Type0
-// type ewp (a:Type) = wp:(epost a -> epre){
-//   forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)
-// }
-
-
-// type erepr (a:Type) (wp:ewp a) = unit -> PURE (result a) wp
-
-
-// let ereturn (a:Type) (x:a)
-// : erepr a (fun p -> p (Success x))
-// = fun _ -> Success x
-
-// let ebind (a:Type) (b:Type)
-//   (wp_f:ewp a) (wp_g:a -> ewp b)
-//   (f:erepr a wp_f) (g:(x:a -> erepr b (wp_g x)))
-// : erepr b
-//   (fun p -> wp_f (fun r ->
-//     match r with
-//     | Success x -> (wp_g x) p
-//     | Error s -> p (Error s)))
-// = fun _ ->
-//   let r = f () in
-//   match r with
-//   | Success x -> (g x) ()
-//   | Error s -> Error s
-
-// let esubcomp (a:Type)
-//   (wp_f:ewp a) (wp_g:ewp a)
-//   (f:erepr a wp_f)
-// : Pure (erepr a wp_g)
-//   (requires forall p. wp_g p ==> wp_f p)
-//   (ensures fun _ -> True)
-// = f
-
-// let eif_then_else (a:Type)
-//   (wp_then:ewp a) (wp_else:ewp a)
-//   (f:erepr a wp_then) (g:erepr a wp_else)
-//   (p:Type0)
-// : Type
-// = erepr a (fun post ->
-//     (p ==> wp_then post) /\
-//     ((~ p) ==> wp_else post))
+let eif_then_else (a:Type)
+  (wp_then:ewp a) (wp_else:ewp a)
+  (f:erepr a wp_then) (g:erepr a wp_else)
+  (p:Type0)
+: Type
+= erepr a (fun post ->
+    (p ==> wp_then post) /\
+    ((~ p) ==> wp_else post))
   
 
-// reifiable reflectable
-// layered_effect {
-//   EXN : a:Type -> ewp a -> Effect
-//   with
-//   repr = erepr;
-//   return = ereturn;
-//   bind = ebind;
-//   subcomp = esubcomp;
-//   if_then_else = eif_then_else
-// }
+reifiable reflectable
+layered_effect {
+  EXN : a:Type -> ewp a -> Effect
+  with
+  repr = erepr;
+  return = ereturn;
+  bind = ebind;
+  subcomp = esubcomp;
+  if_then_else = eif_then_else
+}
 
 
-// let lift_pure_exn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> PURE a wp)
-// : erepr a (fun p -> wp (fun x -> p (Success x)))
-// = fun _ -> Success (f ())
+let lift_pure_exn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> PURE a wp)
+: erepr a (fun p -> wp (fun x -> p (Success x)))
+= fun _ -> Success (f ())
 
-// sub_effect PURE ~> EXN = lift_pure_exn
+sub_effect PURE ~> EXN = lift_pure_exn
 
+
+let lift_exn_stexn (a:Type) (wp:ewp a) (f:erepr a wp)
+: st_erepr a (fun p h -> wp (fun r -> p r h))
+= f
+
+
+sub_effect EXN ~> STEXN = lift_exn_stexn
+
+
+assume val test_lift_exn_stexn0 (b:bool)
+: EXN int (fun p -> (b ==> p (Error "")) /\ ((~ b) ==> p (Success 0)))
+
+let test_lift_exn_stexn1 ()
+: STEXN int (fun p h -> p (Success 0) h)
+= test_lift_exn_stexn0 false

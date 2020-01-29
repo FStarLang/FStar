@@ -23,10 +23,15 @@ module U128 = FStar.UInt128
 
 module HS = FStar.HyperStack
 
+inline_for_extraction
 type u8 = U8.t
+inline_for_extraction
 type u16 = U16.t
+inline_for_extraction
 type u32 = U32.t
+inline_for_extraction
 type u64 = U64.t
+inline_for_extraction
 type u128 = U128.t
 
 /// Byte-swapping operations

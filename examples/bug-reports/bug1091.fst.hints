@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "3027db5b3e95a8778db05419c7055144"
+      "90474f36bc7af7a5446eb9b8eb93e434"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "06c27929c47e8188a6389a058f431ff6"
+      "f23ee5472d800d3fb0af632935b41033"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2bae284179b7e86d1b17dfb31d73489a"
+      "0dc741acd28d25c49aa58a517399c0d7"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6f4df1470eb27f3d883d76d541dfdbb9"
+      "9fb58b4edf5f94a4003d6b16b19961ba"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1820b2b08f2faf4ec1e3597e048f209f"
+      "1606d74ad247c048a74d5e25ceccc32c"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7a112661b19d7b4e6e63ae971a1135ab"
+      "441d53a7f28942c4f8c0308cf94c77c5"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "39572429866aa27e5dfbe1bb243f153e"
+      "b64350a5a2bccbc8c1936c239d7caa45"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cae3538e2367b56b5f6401f785ceda05"
+      "35cb47cbc9b53e94d4c75d0de160f46d"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -124,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "99e77766f8b90c222c3d8637c873e13e"
+      "cc2ff5f53500de4b95a4d4b5b946d71d"
     ]
   ]
 ]

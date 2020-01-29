@@ -279,7 +279,7 @@ let (invoke_full_lax :
   fun gst  ->
     fun fname  ->
       fun text  ->
-        fun force  ->
+        fun force1  ->
           let aux uu____326 =
             FStar_Parser_ParseIt.add_vfs_entry fname text;
             (let uu____328 =
@@ -314,7 +314,7 @@ let (invoke_full_lax :
              in
           match uu____375 with
           | FStar_Pervasives_Native.Some uu____382 ->
-              if force
+              if force1
               then aux ()
               else (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
           | FStar_Pervasives_Native.None  -> aux ()

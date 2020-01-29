@@ -458,7 +458,7 @@ let rec kind_of_fstar_option_type = function
   | Options.ReverseAccumulated typ
   | Options.WithSideEffect (_, typ) -> kind_of_fstar_option_type typ
 
-let rec snippets_of_fstar_option name typ =
+let snippets_of_fstar_option name typ =
   let mk_field field_name =
     "${" ^ field_name ^ "}" in
   let mk_snippet name argstring =

@@ -92,17 +92,18 @@ let set_memo cfg (r:memo<'a>) (t:'a) =
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
-let rec env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
+let closure_to_string = function
+    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
+    | Univ _ -> "Univ"
+    | Dummy -> "dummy"
+
+let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
     List.map (fun (bopt, c) ->
                 BU.format2 "(%s, %s)"
                    (match bopt with None -> "." | Some x -> FStar.Syntax.Print.binder_to_string x)
                    (closure_to_string c))
              env
             |> String.concat "; "
-and closure_to_string = function
-    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
-    | Univ _ -> "Univ"
-    | Dummy -> "dummy"
 
 let stack_elt_to_string = function
     | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
@@ -530,10 +531,6 @@ and close_comp cfg env c =
                 effect_args=args;
                 flags=flags})
 
-and filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    flags |> List.filter (function DECREASES _ -> false | _ -> true)
-
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some rc ->
       let flags =
@@ -542,6 +539,10 @@ and close_lcomp_opt cfg env lopt = match lopt with
       let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (inline_closure_env cfg env [])} in
       Some rc
     | _ -> lopt
+
+let filter_out_lcomp_cflags flags =
+    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 
@@ -722,7 +723,12 @@ let tr_norm_step = function
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
-    List.concatMap tr_norm_step s
+    let s = List.concatMap tr_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
@@ -741,15 +747,10 @@ let get_norm_request cfg (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s ->
-        let s = Beta::s in
-        let s = add_exclude s Zeta in
-        let s = add_exclude s Iota in
-        Some (inherited_steps @ s, tm)
+      | Some s -> Some (inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -1001,6 +1002,11 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+(* GM: Please consider this function private outside of this recursive
+ * group, and call `normalize` instead. `normalize` will print timing
+ * information when --debug_level NormTop is given, which makes it a
+ * whole lot easier to find normalization calls that are taking a long
+ * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -1083,28 +1089,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) when is_nbe_request s ->
-              if cfg.debug.print_normalized
-              then BU.print1 "Starting NBE request on %s ... \n" (Print.term_to_string tm);
               let tm' = closure_as_term cfg env tm in
               let start = BU.now() in
               let tm_norm = nbe_eval cfg s tm' in
               let fin = BU.now () in
               if cfg.debug.print_normalized
-              then BU.print3 "NBE'd (%s ms) %s\n\tto %s\n"
-                   (BU.string_of_int (snd (BU.time_diff start fin)))
-                   (Print.term_to_string tm')
-                   (Print.term_to_string tm_norm);
+              then begin
+                let cfg' = Cfg.config' [] s cfg.tcenv in
+                // BU.print1 "NBE result timing (%s ms)\n"
+                //        (BU.string_of_int (snd (BU.time_diff start fin)))
+                BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                       (BU.string_of_int (snd (BU.time_diff start fin)))
+                       (Print.term_to_string tm')
+                       (Cfg.cfg_to_string cfg')
+                       (Print.term_to_string tm_norm)
+              end;
+              rebuild cfg env stack tm_norm
 
-              norm cfg env stack tm_norm
-              (* Zoe, NS:
-                 This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm
-                 But, it's potentially wasteful, since norm will attempt to normalize tm_norm again.
-                 In cases where tm_norm is small (e.g., 2), this is not a big deal;
-                 but in general, this may incur a large unnecessary traversal
-               *)
             | Some (s, tm) ->
-              if cfg.debug.print_normalized
-              then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
+              // if cfg.debug.print_normalized
+              // then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
@@ -1115,7 +1119,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack' =
                 let tail = (Cfg cfg)::stack in
                 if cfg.debug.print_normalized
-                then (Debug(t, BU.now())::tail)
+                then (Debug(tm, BU.now())::tail)
                 else tail in
               norm cfg' env stack' tm
             end
@@ -1339,14 +1343,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_let((false, [lb]), body) ->
-            let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps.do_not_unfold_pure_lets) //we're allowed to do some delta steps, and ..
-            && ((cfg.steps.pure_subterms_within_computations &&
-                 U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
-             || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
-                                        || U.has_attribute lb.lbattrs PC.inline_let_attr)) //it's marked @inline_let
-             || (U.is_ghost_effect n &&                                //Or, 3. it's ghost and we're not extracting
-                    not (cfg.steps.pure_subterms_within_computations)))
+            if Cfg.should_reduce_local_let cfg lb
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
@@ -1380,8 +1377,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
-                let env = List.map (fun _ -> dummy) lbs
-                        @ List.map (fun _ -> dummy) xs
+                let env = List.map (fun _ -> dummy) xs //first the bound vars for the arguments
+                        @ List.map (fun _ -> dummy) lbs //then the recursively bound names
                         @ env in
                 let def_body = norm cfg env [] def_body in
                 let lopt =
@@ -1789,26 +1786,7 @@ and reify_lift cfg e msrc mtgt t : term =
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    let args =
-      (*
-       * Arguments for layered effects are:
-       *   a ..units for binders that compute indices.. x
-       *)
-      if U.is_layered ed then
-        let unit_args =
-          match (ed |> U.get_return_vc_combinator |> snd |> SS.compress).n with
-          | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
-            bs
-            |> List.splitAt (List.length bs - 1)
-            |> fst
-            |> List.map (fun _ -> S.as_arg S.unit_const)
-          | _ ->
-            raise_error (Errors.Fatal_UnexpectedEffect,
-              BU.format2 "ret_wp for layered effect %s is not an arrow with >= 2 binders (%s)"
-                (Ident.string_of_lid ed.mname) (ed |> U.get_return_vc_combinator |> snd |> Print.term_to_string)) e.pos in
-        (S.as_arg t)::(unit_args@[S.as_arg e])
-      else [as_arg t ; as_arg e] in
-    S.mk (Tm_app(return_inst, args)) None e.pos
+    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
@@ -1820,7 +1798,24 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
-      lift (env.universe_of env t) t (U.mk_reify e)
+      (*
+       * AR: we need to apply the lift combinator to `e`
+       *     if source effect (i.e. e's effect) is reifiable, then we first reify e
+       *     else if it is not, then we thunk e
+       *     this is how lifts are written for layered effects
+       *     not sure what's the convention for DM4F, but DM4F lifts don't come to this point anyway
+       *     they are handled as a `return` in the `then` branch above
+       *)
+      let e =
+        if Env.is_reifiable_effect env msrc
+        then U.mk_reify e
+        else S.mk
+               (Tm_abs ([S.null_binder S.t_unit], e,
+                        Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })))
+               None e.pos in
+      lift (env.universe_of env t) t e
+
+
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -1889,7 +1884,7 @@ and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp
         match lopt with
         | Some rc ->
           let flags = filter_out_lcomp_cflags rc.residual_flags in
-          Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
+          Some ({rc with residual_typ=if cfg.steps.for_extraction then None else BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
 
 and maybe_simplify cfg env stack tm =
@@ -2279,9 +2274,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.debug.print_normalized
         then begin
           let time_now = BU.now () in
-          BU.print3 "Normalized term (%s ms) %s\n\tto term %s\n"
+          // BU.print1 "Normalizer result timing (%s ms)\n"
+          //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
                        (BU.string_of_int (snd (BU.time_diff time_then time_now)))
                        (Print.term_to_string tm)
+                       (Cfg.cfg_to_string cfg)
                        (Print.term_to_string t)
         end;
         rebuild cfg env stack t
@@ -2576,51 +2574,55 @@ let normalize s e t =
                       (Some (Ident.string_of_lid (Env.current_module e)))
                       "FStar.TypeChecker.Normalize"
 
-let normalize_comp s e t = norm_comp (config s e) [] t
+let normalize_comp s e c =
+    let cfg = config s e in
+    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
+    c
+
 let normalize_universe env u = norm_universe (config [] env) [] u
+
+let non_info_norm env t =
+  let steps = [UnfoldUntil delta_constant;
+               AllowUnboundUniverses;
+               EraseUniverses;
+               HNF;
+               (* We could use Weak too were it not that we need
+                * to descend in the codomain of arrows. *)
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative env (normalize steps env t)
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
-                      Unascribe;   //remove ascriptions
-                      ForExtraction //and refinement types
-                     ]
-              env in
-    let non_info t = non_informative env (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
+    | GTotal (t, uopt) when non_info_norm env t -> {c with n = Total (t, uopt)}
     | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
-        && non_info ct.result_typ
+        && non_info_norm env ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
                    let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
                    {ct with effect_name=pure_eff; flags=flags}
                  | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    let ct = unfold_effect_abbrev env c in //must be GHOST
                     {ct with effect_name=PC.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-     let cfg =
-        config [Eager_unfolding;
-                UnfoldUntil delta_constant;
-                EraseUniverses;
-                AllowUnboundUniverses;
-                Unascribe;   //remove ascriptions
-                ForExtraction //and refinement types
-                ]
-        env in
-    let non_info t = non_informative env (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
-    && non_info lc.res_typ
+    && non_info_norm env lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
            { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc

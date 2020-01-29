@@ -97,25 +97,6 @@ let _ = assert True
                 | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
                 | _ -> fail "What?")
 
-let _ = assert True
-            by (let t = quote ((x:int) -> x == 2 /\ False) in
-                match term_as_formula' t with
-                | Forall _ _ -> ()
-                | _ -> fail ("This should be a forall: " ^ term_to_string t))
-
-// The implicit type argument for eq2 (==) mentions x and y, so this is not seen as an implication...
-// In detail, initially the type is `?u y x` for some unification variable `?u`, and unification
-// then resolves it to `(fun _ _ -> int) y x`, so `y` and `x` are still free.
-//
-// Tweaking inference to do some normalization could get rid of this, I think..
-let _ = assert True
-            by (let t = quote ((y:int) -> (x:int) -> x + 2 == 5) in
-                match term_as_formula t with
-                | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
-                | f -> debug ("This should be an implication: " ^ formula_to_string f);
-                       debug "But that's a known issue...";
-                       ())
-
 open FStar.Tactics
 
 let arith_test1 =

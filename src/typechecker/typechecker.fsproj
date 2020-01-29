@@ -56,8 +56,8 @@
     <Compile Include="FStar.TypeChecker.Common.fs" />
     <Compile Include="FStar.TypeChecker.Env.fsi" />
     <Compile Include="FStar.TypeChecker.Env.fs" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fsi" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fs" />
+    <Compile Include="FStar.TypeChecker.NBETerm.fsi" />
+    <Compile Include="FStar.TypeChecker.NBETerm.fs" />
     <Compile Include="FStar.TypeChecker.Cfg.fsi" />
     <Compile Include="FStar.TypeChecker.Cfg.fs" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fsi" />

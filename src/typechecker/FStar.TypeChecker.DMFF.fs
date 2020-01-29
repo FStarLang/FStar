@@ -91,19 +91,24 @@ let gen_wps_for_free
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
   let rec collect_binders (t : term) =
-    match (U.unascribe <| compress t).n with
+    let t = U.unascribe t in
+    match (compress t).n with
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total (t, _) -> t
-          | _ -> failwith "wp_a contains non-Tot arrow"
+          | _ -> raise_error (Error_UnexpectedDM4FType,
+                               BU.format1 "wp_a contains non-Tot arrow: %s" (Print.comp_to_string comp))
+                    comp.pos
         in
         bs @ (collect_binders rest)
     | Tm_type _ ->
         []
     | _ ->
-        failwith "wp_a doesn't end in Type0" in
-
+        raise_error (Error_UnexpectedDM4FType,
+                     BU.format1 "wp_a doesn't end in Type0, but rather in %s" (Print.term_to_string t))
+                    t.pos
+  in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
@@ -362,11 +367,12 @@ let gen_wps_for_free
                 (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
             in
             mk_forall a1 (mk_forall a2 body)
-    | Tm_arrow (binder :: binders, comp) -> //TODO: a bit confusing, since binders may be []
+    | Tm_arrow (binder :: binders, comp) ->
+        (* split away the first binder and recurse, so we fall in the case above *)
         let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
         mk_rel t x y
-    | Tm_arrow _ ->
-        failwith "unhandled arrow"
+    | Tm_arrow ([], _) ->
+        failwith "impossible: arrow with empty binders"
     | _ ->
         (* TODO: assert that this is a base type. *)
         (* BU.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -387,7 +393,7 @@ let gen_wps_for_free
           in
           let (rel0,rels) =
               match List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args with
-                  | [] -> failwith "Impossible : Empty application when creating stronger relation in DM4F"
+                  | [] -> failwith "Impossible: empty application when creating stronger relation in DM4F"
                   | rel0 :: rels -> rel0, rels
           in
           List.fold_left U.mk_conj rel0 rels
@@ -736,18 +742,24 @@ let rec is_C (t: typ): bool =
       let r = is_C (fst (List.hd args)) in
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
-          failwith "not a C (A * C)";
+          raise_error (Error_UnexpectedDM4FType,
+                         BU.format1 "Not a C-type (A * C): %s" (Print.term_to_string t))
+                      t.pos;
         true
       end else begin
         if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
-          failwith "not a C (C * A)";
+          raise_error (Error_UnexpectedDM4FType,
+                         BU.format1 "Not a C-type (C * A): %s" (Print.term_to_string t))
+                      t.pos;
         false
       end
   | Tm_arrow (binders, comp) ->
       begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
-            failwith "not a C (C -> C)";
+            raise_error (Error_UnexpectedDM4FType,
+                           BU.format1 "Not a C-type (C -> C): %s" (Print.term_to_string t))
+                        t.pos;
           true
       | N t ->
           // assert (List.exists is_C binders) ==> is_C comp
@@ -1260,7 +1272,7 @@ and type_of_comp t = U.comp_result t
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
   if not (is_C c) then
-    failwith "not a C";
+    raise_error (Error_UnexpectedDM4FType, BU.format1 "Not a DM4F C-type: %s" (Print.term_to_string c)) c.pos;
   let mk x = mk x None c.pos in
   match (SS.compress c).n with
   | Tm_app (head, args) ->
@@ -1517,7 +1529,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
   in
   let rec apply_last f l = match l with
-    | [] -> failwith "empty path.."
+    | [] -> failwith "impossible: empty path.."
     | [a] -> [f a]
     | (x::xs) -> x :: (apply_last f xs)
   in

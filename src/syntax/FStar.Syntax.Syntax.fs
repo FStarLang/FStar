@@ -285,7 +285,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * Thunk.t<term>
 
 and binding =
   | Binding_var      of bv
@@ -382,9 +382,9 @@ type layered_eff_combinators = {
 }
 
 type eff_combinators =
-  | Primitive_eff: wp_eff_combinators -> eff_combinators
-  | DM4F_eff: wp_eff_combinators -> eff_combinators
-  | Layered_eff: layered_eff_combinators -> eff_combinators
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
 
 type eff_decl = {
   mname       : lident;

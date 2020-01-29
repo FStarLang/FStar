@@ -418,8 +418,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
-    //propagate attributes from the bundle to its elements
-    let ses = ses |> List.map (fun e -> {e with sigattrs = e.sigattrs@se.sigattrs}) in
     let ses =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
@@ -555,7 +553,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
 
     // Check the tactic
-    let t, _, g = tc_tactic t_unit t_unit env t in
+    let t, _, g = tc_tactic t_unit S.t_decls env t in
     Rel.force_trivial_guard env g;
 
     let ses = env.splice env t in
@@ -672,6 +670,8 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let lbdef = Env.preprocess env tau lb.lbdef in
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "lb preprocessed into: %s\n" (Print.term_to_string lbdef);
         { lb with lbdef = lbdef }
     in
     // Preprocess the letbindings with the tactic, if any
@@ -782,6 +782,8 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   let env = set_hint_correlator env se in
+  if Options.debug_any()
+  then BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with

@@ -214,10 +214,15 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    * return_repr
    *
    * return_repr must have type:
-   *   a:Type -> <some binders> -> x:a -> repr a i_1 ... i_n  //polymorphic in one universe (that of a)
+   *   a:Type -> x:a -> <some binders> -> repr a i_1 ... i_n  //polymorphic in one universe (that of a)
    *   where i_1 ... i_n are terms of effect indices types (as in the signature)
    *
    * The binders have arbitrary sorts
+   *
+   * The positioning of the binders is a little asymmetric with other binders,
+   *   e.g. in others, the binders are stuffed in the middle
+   *   but this seems ok for return where the remaining binder is always a value (x:a)
+   *   and not a repr
    *)
   let return_repr =
     let return_repr_ts = ed |> U.get_return_repr |> must in
@@ -228,14 +233,15 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let env = Env.push_univ_vars env0 us in
 
     let a, u_a = fresh_a_and_u_a "a" in
+    let x_a = fresh_x_a "x" a in
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        let ((a', _)::bs) = SS.open_binders bs in
-        bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+        let ((a', _)::(x', _)::bs) = SS.open_binders bs in
+        bs |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+           |> SS.subst_binders [NT (x', bv_to_name (fst x_a))]
       | _ -> not_an_arrow_error "return" 2 ty r in
-    let bs = a::(rest_bs@[fresh_x_a "x" a]) in
+    let bs = a::x_a::rest_bs in
     let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in

@@ -684,6 +684,22 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 
          bind_pure_wp_with env pure_assert_wp c flags
 
+let record_simplify = 
+  let x = BU.mk_ref 0 in
+  fun env guard ->
+    let n = !x in
+    x := n + 1;
+    let start = BU.now() in
+    let g = Rel.simplify_guard env guard in
+    let fin = BU.now () in
+    if Options.debug_any()
+    then
+      BU.print2 "Simplify_guard %s in %s ms\n"
+        (BU.string_of_int n)
+        (BU.string_of_int (snd (BU.time_diff start fin)));
+    g
+
+  
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
@@ -1259,7 +1275,11 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
-  //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
+  if false then
+    BU.print3 "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n"
+            (Print.term_to_string e)
+            (Print.comp_to_string c)
+            (Print.comp_to_string c');
   match Rel.sub_comp env c c' with
     | None ->
         if env.use_eq
@@ -1323,7 +1343,72 @@ let coerce_with (env:Env.env)
                                             (string_of_lid f)));
         e, lc
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+type isErased =
+    | Yes of term
+    | Maybe
+    | No
+
+let rec check_erased (env:Env.env) (t:term) : isErased =
+  let norm' = N.normalize [Env.Beta; Env.Eager_unfolding;
+                           Env.UnfoldUntil delta_constant;
+                           Env.Exclude Env.Zeta; Env.Primops;
+                           Env.Weak; Env.HNF; Env.Iota]
+  in
+  let t = norm' env t in
+  let t = U.unrefine t in
+  let h, args = U.head_and_args t in
+  let h = U.un_uinst h in
+  let r =
+    match (SS.compress h).n, args with
+    | Tm_fvar fv, [(a, None)] when S.fv_eq_lid fv C.erased_lid ->
+      Yes a
+
+    (* In these two cases, we cannot guarantee that `t` is not
+     * an erased, so we're conservatively returning `false` *)
+    | Tm_uvar _, _
+    | Tm_unknown, _ -> Maybe
+
+    (*
+     * AR: For Tm_match:
+     *     We are only interested in returning a No or Maybe
+     *     Since even if all the branched are erased types,
+     *       we need to find their join to return to the caller
+     *     That's messy
+     *     We can't always return Maybe, since that breaks simple
+     *       cases like the int types in FStar.Integers
+     *     So we iterate over all the branches and return a No if possible
+     *)
+    | Tm_match (_, branches), _ ->
+      branches |> List.fold_left (fun acc br ->
+        match acc with
+        | Yes _ | Maybe -> Maybe
+        | No ->
+          let _, _, br_body = Subst.open_branch br in
+          match
+            br_body
+            |> check_erased
+                (br_body
+                 |> Free.names
+                 |> BU.set_elements
+                 |> Env.push_bvs env) with
+          | No -> No
+          | _ -> Maybe) No
+
+
+    (* Anything else cannot be `erased` *)
+    | _ ->
+      No
+  in
+  (* if Options.debug_any () then *)
+  (*   BU.print2 "check_erased (%s) = %s\n" *)
+  (*     (Print.term_to_string t) *)
+  (*     (match r with *)
+  (*      | Yes a -> "Yes " ^ Print.term_to_string a *)
+  (*      | Maybe -> "Maybe" *)
+  (*      | No -> "No"); *)
+  r
+
+let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
     let should_coerce =
          not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
       || env.phase1 // otherwise only on phase1
@@ -1331,7 +1416,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       || Options.lax ()
     in
     if not should_coerce
-    then (e, lc)
+    then (e, lc, Env.trivial_guard)
     else
     let is_t_term t =
         let t = N.unfold_whnf env t in
@@ -1358,40 +1443,52 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (t:term) : term * lcomp =
                     (Range.string_of_range e.pos)
                     (Print.term_to_string e)
                     (Print.term_to_string res_typ)
-                    (Print.term_to_string t);
+                    (Print.term_to_string exp_t);
 
-    // checks if `t2 == erased t1`
-    let is_erased env t1 t2 =
-        let head, args = U.head_and_args t2 in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(x, None)] ->
-            S.fv_eq_lid fv C.erased_lid && U.term_eq x t1
-
-        | _ -> false
+    let mk_erased u t =
+      U.mk_app
+        (S.mk_Tm_uinst (fvar_const env C.erased_lid) [u])
+        [S.as_arg t]
     in
     match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type t ->
-        coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
+        let e, lc = coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total in
+        e, lc, Env.trivial_guard
 
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view t ->
-        coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
+        let e, lc = coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term t ->
-        coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
+        let e, lc = coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term t ->
-        coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac
-
-
-    | _ when is_erased env t res_typ ->
-        coerce_with env e lc t C.reveal [env.universe_of env t] [S.iarg t] S.mk_GTotal
-
-    | _ when is_erased env res_typ t ->
-        coerce_with env e lc t C.hide [env.universe_of env res_typ] [S.iarg res_typ] S.mk_Total
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
+        let e, lc = coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac in
+        e, lc, Env.trivial_guard
 
     | _ ->
-      e, lc
+    match check_erased env res_typ, check_erased env exp_t with
+    | No, Yes ty ->
+        begin
+        let u = env.universe_of env ty in
+        match Rel.get_subtyping_predicate env res_typ ty with
+        | None ->
+          e, lc, Env.trivial_guard
+        | Some g ->
+          let g = Env.apply_guard g e in
+          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
+          e, lc, g
+        end
+
+    | Yes ty, No ->
+        let u = env.universe_of env ty in
+        let e, lc = coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal in
+        e, lc, Env.trivial_guard
+
+    | _ ->
+      e, lc, Env.trivial_guard
 
 (* Coerces regardless of expected type if a view exists, useful for matches *)
 (* Returns `None` if no coercion was applied. *)
@@ -1401,7 +1498,7 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
     let hd, args = U.head_and_args rt in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Total
+        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
     | _ ->
         None
 
@@ -1924,7 +2021,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 
-let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
+let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
@@ -1950,6 +2047,11 @@ let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname
              univnames_lecs
              generalized_lecs
 
+let generalize env is_rec lecs = 
+  Profiling.profile (fun () -> generalize' env is_rec lecs)
+                    (Some (Ident.string_of_lid (Env.current_module env)))
+                    "FStar.TypeChecker.Util.generalize"
+                    
 (************************************************************************)
 (* Convertibility *)
 (************************************************************************)
@@ -1971,18 +2073,18 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
     | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
     | _ -> e
   in
-  let e, lc = maybe_coerce_lc env e lc t2 in
+  let e, lc, g_c = maybe_coerce_lc env e lc t2 in
   match check env lc.res_typ t2 with
   | None ->
     raise_error (Err.expected_expression_of_type env t2 e lc.res_typ) (Env.get_range env)
   | Some g ->
     if debug env <| Options.Other "Rel" then
       BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    decorate e t2, lc, g
+    decorate e t2, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
-  if debug env Options.Low then
+  if debug env Options.Medium then
     BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
@@ -2474,7 +2576,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     effect_name = tgt;
     result_typ = a;
     effect_args = is |> List.map (SS.subst substs) |> List.map S.as_arg;
-    flags = ct.flags
+    flags = []  //AR: setting the flags to empty
   }) in
 
   if debug env <| Options.Other "LayeredEffects" then
@@ -2502,15 +2604,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
         BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
-  //reify the term
-  //if the source effect does not have a repr (e.g. primitive) then we thunk it
-  //in sync with how lifts are defined from such effects (with their thunked terms as arguments)
-  let e_reified =
-    match sub.source |> Env.get_effect_decl env |> U.get_eff_repr with
-    | None -> U.abs [S.null_binder S.t_unit] e None
-    | _ -> reify_body env [Env.Inlining] e in
-
-  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e_reified]) in
+  let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
   mk (Tm_app (lift, args)) None e.pos
 
 let get_mlift_for_subeff env sub =

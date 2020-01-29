@@ -1,7 +1,10 @@
 module Steel.Memory.RST
 
 open Steel.Memory
+open Steel.Actions
+open Steel.Memory.Tactics
 open LowStar.Permissions
+module U32 = FStar.UInt32
 
 new_effect GST = STATE_h mem
 
@@ -188,6 +191,7 @@ inline_for_extraction noextract let resolve_frame () : T.Tac unit =
   T.split();
   T.apply_lemma (`can_be_split_into_star);
   T.flip();
+  T.dump "pre canon";
   canon();
   T.trivial()
 
@@ -355,7 +359,7 @@ assume val get (r:viewable)
           (requires fun _ -> True)
           (ensures fun m0 v m1 -> m0 == m1 /\ v == m1)
 
-(** A few lemmas to cast between the different pointer hprops **)
+(*
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
   : Lemma (requires interp (ptr_perm r p) h)
           (ensures interp (ptr r) h)
@@ -382,38 +386,45 @@ let pts_to_sel (#a:Type) (p:permission) (r:ref a) (v:a) (h:heap)
   = interp_pts_to_perm p r v h; interp_perm_to_ptr p r h;
     sel_lemma r p h;
     pts_to_injective r p v (sel r h) h
+*)
 
-(** Shortcut for a pointer with full permission **)
-let fptr (#a:Type) (r:ref a) : hprop = ptr_perm r full_permission
+let has_length_1 (#a:Type) (r:array_ref a) (h:heap) : prop = U32.v (length r) == 1
 
-let fsel (#a:Type) (r:ref a) (h:hheap (fptr r)) : a =
-  interp_perm_to_ptr full_permission r h;
-  sel r h
+let fptr (#a:Type) (r:array_ref a) : hprop =
+  refine (array_perm r full_permission) (has_length_1 r)
 
-let fsel_is_view (#a:Type) (r:ref a) (h0:hheap (fptr r)) (h1:heap{disjoint h0 h1})
+let fsel (#a:Type) (r:array_ref a) (h:hheap (fptr r)) : a =
+  refine_equiv (array_perm r full_permission) (has_length_1 r) h;
+//  interp_perm_to_ptr full_permission r h;
+  assume (interp (array r) h);
+  Seq.index (as_seq r h) 0
+
+let fsel_is_view (#a:Type) (r:array_ref a) (h0:hheap (fptr r)) (h1:heap{disjoint h0 h1})
   : Lemma
   (ensures
     interp (fptr r) (join h0 h1) /\
     fsel r h0 == fsel r (join h0 h1))
-  = (**) intro_emp h1;
+  = admit()
+  (*
+    (**) intro_emp h1;
     (**) intro_star (fptr r) emp h0 h1;
     (**) emp_unit (fptr r);
     interp_perm_to_ptr full_permission r h0;
     sel_split_lemma r h0 h1
+    *)
 
-
-let fsel_view (#a:Type) (r:ref a) : view a (fptr r) =
+let fsel_view (#a:Type) (r:array_ref a) : view a (fptr r) =
     Classical.forall_intro_2 (fsel_is_view r);
     fsel r
 
 (** The actual hprop with view for a pointer. Its view has the same type as the pointer **)
-let vptr' (#a:Type) (r:ref a) : GTot viewable' =
+let vptr' (#a:Type) (r:array_ref a) : GTot viewable' =
   ({ t = a;
     fp = fptr r;
     sel = fsel_view r})
 
 [@__reduce__]
-let vptr (#a:Type) (r:ref a) : GTot viewable = VUnit (vptr' r)
+let vptr (#a:Type) (r:array_ref a) : GTot viewable = VUnit (vptr' r)
 
 #push-options "--no_tactics"
 
@@ -438,7 +449,7 @@ let view_sel
 
 #pop-options
 
-val fread (#a:Type) (r:ref a) : Steel a
+val fread (#a:Type) (r:array_ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 v h1 ->
@@ -450,7 +461,7 @@ let fread #a r = admit()
   // fsel r (heap_of_mem m)
 
 val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
-  (vptr r) (fun _ -> vptr r)
+  (fptr r) (fun _ -> fptr r)
   (requires fun _ -> True)
   (ensures fun _ _ m1 -> view_sel (vptr r) m1 == v)
 
