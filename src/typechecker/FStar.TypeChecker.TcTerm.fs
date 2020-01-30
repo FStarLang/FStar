@@ -2876,20 +2876,12 @@ and check_inner_let env e =
            e2
            (Some x, c2)
        in
-
-       let e =
-         let m, n = Env.norm_eff_name env c1.eff_name, Env.norm_eff_name env c2.eff_name in
-         match Env.exists_polymonadic_bind env m n with
-         | Some (p, _) ->
-           let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
-           let e = mk (Tm_let ((false, [lb]), SS.close xb e2)) None e.pos in
-           mk (Tm_meta (e, Meta_monadic (Meta_polymonadic_bind (m, n, p), cres.res_typ))) None e.pos
-         | None ->
-           let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
-           let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-           let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
-           let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
-           TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
+       //AR: TODO: FIXME: monadic annotations need to be adjusted for polymonadic binds
+       let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
+       let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
+       let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
+       let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
+       let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
 
        //AR: for layered effects, solve any deferred constraints first
        //    we can do it at other calls to close_guard_implicits too, but let's see
