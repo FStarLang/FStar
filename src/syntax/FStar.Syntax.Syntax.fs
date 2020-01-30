@@ -203,18 +203,15 @@ and cflag =                                                      (* flags applic
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
-and meta_monadic_bind =
-  | Meta_monadic_bind of monad_name                                 (* monadic bind for monad m *)
-  | Meta_polymonadic_bind of monad_name * monad_name * monad_name   (* polymonadic bind (m, n) |> p *)
 and metadata =
-  | Meta_pattern       of list<term> * list<args>                        (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
-  | Meta_named         of lident                                         (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of string * Range.range * bool                    (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
-  | Meta_desugared     of meta_source_info                               (* Node tagged with some information about source term before desugaring *)
-  | Meta_monadic       of meta_monadic_bind * typ                        (* Annotation on a Tm_app or Tm_let node in case it is monadic and not in {Pure, Ghost, Div} *)
-                                                                         (* Contains the name of the monadic effect and  the type of the subterm *)
-  | Meta_monadic_lift  of monad_name * monad_name * typ                  (* Sub-effecting: lift the subterm of type typ *)
-                                                                         (* from the first monad_name m1 to the second monad name  m2 *)
+  | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
+  | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
+  | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
+  | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
+                                                                 (* Contains the name of the monadic effect and  the type of the subterm *)
+  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
 and meta_source_info =
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)

@@ -558,12 +558,9 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           mkAccuMatch scrut make_branches
       end
 
-    | Tm_meta (e, Meta_monadic (Meta_monadic_bind m, t))
+    | Tm_meta (e, Meta_monadic(m, t))
         when cfg.core_cfg.reifying ->
       translate_monadic (m, t) cfg bs e
-
-    | Tm_meta (e, Meta_monadic (Meta_polymonadic_bind (m, n, p), t)) ->
-      failwith "NYI: NBE reification of polymonadic binds"
 
     | Tm_meta (e, Meta_monadic_lift(m, m', t))
         when cfg.core_cfg.reifying ->
@@ -999,7 +996,7 @@ and translate_monadic (m, ty) cfg bs e : t =
          translate cfg bs e
      in
      let fallback2 () =
-         translate (reifying_false cfg) bs (S.mk (Tm_meta (e, Meta_monadic (Meta_monadic_bind m, ty))) None e.pos)
+         translate (reifying_false cfg) bs (S.mk (Tm_meta (e, Meta_monadic (m, ty))) None e.pos)
      in
      begin match (U.un_uinst head).n with
      | Tm_fvar fv ->

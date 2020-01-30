@@ -2234,7 +2234,7 @@ let maybe_monadic env e c t =
     || Ident.lid_equals m C.effect_Tot_lid
     || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
-    else mk (Tm_meta (e, Meta_monadic (Meta_monadic_bind m, t))) None e.pos
+    else mk (Tm_meta(e, Meta_monadic (m, t))) None e.pos
 
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 

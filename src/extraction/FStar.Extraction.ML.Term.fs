@@ -1224,7 +1224,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               term_as_mlexpr g t
           end
 
-        | Tm_meta(t, Meta_monadic (Meta_monadic_bind m, _)) ->
+        | Tm_meta(t, Meta_monadic (m, _)) ->
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
@@ -1235,9 +1235,6 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 failwith "This should not happen (should have been handled at Tm_abs level)"
             | _ -> term_as_mlexpr g t
          end
-
-        | Tm_meta(t, Meta_monadic (Meta_polymonadic_bind (m, n, p), _)) ->
-          failwith "NYI: extraction of polymonadic binds"
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
