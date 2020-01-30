@@ -191,7 +191,6 @@ inline_for_extraction noextract let resolve_frame () : T.Tac unit =
   T.split();
   T.apply_lemma (`can_be_split_into_star);
   T.flip();
-  T.dump "pre canon";
   canon();
   T.trivial()
 
@@ -201,7 +200,6 @@ inline_for_extraction noextract let reprove_frame () : T.Tac unit =
   T.apply_lemma (`can_be_split_into_star);
   canon();
   T.trivial()
-
 
 /// The function creating a selector out of a resource
 /// Interestingly, we do not seem to require any more info about this function:
@@ -222,7 +220,7 @@ let mk_rmem
 effect Steel
   (a: Type)
   (res0: viewable)
-  (res1: a -> GTot viewable)
+  (res1: a -> viewable)
   (pre: (rmem res0) -> GTot prop)
   (post: (rmem res0) -> (x:a) -> (rmem (res1 x)) -> GTot prop)
 = ST
@@ -453,15 +451,15 @@ val fread (#a:Type) (r:array_ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 v h1 ->
-    view_sel (vptr r) h0 == view_sel (vptr r) h1 /\ v == view_sel (vptr r) h1)
+   view_sel (vptr r) h0 == view_sel (vptr r) h1 /\ v == view_sel (vptr r) h1)
 
 let fread #a r = admit()
   // let m = get_mem (vptr r) in
   // (**) affine_star (fp_of (vptr r)) (locks_invariant m) (heap_of_mem m);
   // fsel r (heap_of_mem m)
 
-val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
-  (fptr r) (fun _ -> fptr r)
+val fupd (#a:Type) (r:array_ref a) (v:a) : Steel unit
+  (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ m1 -> view_sel (vptr r) m1 == v)
 
@@ -545,7 +543,7 @@ val frame
 (** A few tests of framing and normalization. An interesting observation is that we
     do not need fuel to obtain egalities on "atomic" resources inside delta. **)
 
-val test1 (#a:Type) (r1 r2:ref a) : Steel a
+val test1 (#a:Type) (r1 r2:array_ref a) : Steel a
   (vptr r1 <*> vptr r2)
   (fun _ -> vptr r1 <*> vptr r2)
   (fun _ -> True)
@@ -562,7 +560,7 @@ let test1 #a r1 r2 =
   assert (True) by (T.dump "test1");
   v
 
-val test2 (#a:Type) (r1 r2 r3:ref a) : Steel a
+val test2 (#a:Type) (r1 r2 r3:array_ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3)
   (fun _ -> vptr r1 <*> (vptr r2 <*> vptr r3))
   (fun _ -> True)
@@ -576,7 +574,7 @@ let test2 #a r1 r2 r3 =
         (fun () -> fread r1) in
   v
 
-val test3 (#a:Type) (r1 r2 r3 r4:ref a) : Steel a
+val test3 (#a:Type) (r1 r2 r3 r4:array_ref a) : Steel a
   (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
   // The ordering is a bit annoying… We should try to have a final "rewriting" pass through
   // normalization once we have the frame inference tactic
@@ -592,7 +590,7 @@ let test3 #a r1 r2 r3 r4 =
   frame (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
         (fun () -> fread r3)
 
-val test_upd1 (#a:Type) (r1 r2:ref a) (v:a) : Steel unit
+val test_upd1 (#a:Type) (r1 r2:array_ref a) (v:a) : Steel unit
   (vptr r1 <*> vptr r2)
   (fun _ -> vptr r1 <*> vptr r2)
   (fun _ -> True)
@@ -605,7 +603,7 @@ let test_upd1 #a r1 r2 v =
   frame (vptr r1 <*> vptr r2)
         (fun () -> fupd r1 v)
 
-val test_upd2 (#a:Type) (r1 r2 r3 r4:ref a) (v:a) : Steel unit
+val test_upd2 (#a:Type) (r1 r2 r3 r4:array_ref a) (v:a) : Steel unit
   (vptr r1 <*> vptr r2 <*> vptr r3 <*> vptr r4)
   // The ordering is a bit annoying… We should try to have a final "rewriting" pass through
   // normalization once we have the frame inference tactic
