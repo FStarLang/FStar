@@ -350,7 +350,7 @@ let alloc_action_to_non_locking_pre_m_action
 #pop-options
 
 #push-options "--warn_error -271"
-let m_action_depends_only_on_intro (fp:hprop) (a:Type) (fp':a -> hprop) (f:pre_m_action fp a fp')
+let m_action_depends_only_on_intro (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
   (lemma:
     (m0:hmem fp) ->
     (h1:heap{m_disjoint m0 h1}) ->
@@ -413,7 +413,7 @@ let non_alloc_action_to_non_locking_m_action
   : Tot (m_action fp a fp')
 =
   let f_m = non_alloc_action_to_non_locking_pre_m_action fp a fp' f non_alloc in
-  m_action_depends_only_on_intro fp a fp' f_m (fun m0 h1 post ->
+  m_action_depends_only_on_intro f_m (fun m0 h1 post ->
     let m1 = upd_joined_heap m0 h1 in
     let (|x0, m|) = f_m m0 in
     let (|x1, m'|) = f_m m1 in
@@ -443,7 +443,7 @@ let alloc_action_to_non_locking_m_action
   : Tot (m_action fp a fp')
 =
   let f_m = non_alloc_action_to_non_locking_pre_m_action fp a fp' f non_alloc in
-  m_action_depends_only_on_intro fp a fp' f_m (fun m0 h1 post ->
+  m_action_depends_only_on_intro f_m (fun m0 h1 post ->
     let m1 = upd_joined_heap m0 h1 in
     let (|x0, m|) = f_m m0 in
     let (|x1, m'|) = f_m m1 in
@@ -720,6 +720,126 @@ let upd_array
 //   let m1 = upd r v m in
 //   MST.put m1
 
+let singleton_heap
+  (#t: _)
+  (len:U32.t)
+  (init: t)
+  (a: array_ref t{
+    U32.v len = U32.v a.array_length /\
+    U32.v len = U32.v a.array_max_length /\
+    0 = U32.v a.array_offset
+  })
+  : hheap (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+  =
+  let h = on _ (fun a' ->
+    if a' <> a.array_addr then None else
+    Some (Array t (U32.v len) (Seq.init (U32.v len) (fun i ->
+      Some (init, (full_permission <: (perm:permission{allows_read perm})))
+    )))
+  ) in
+  h
+
+
+#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
+let alloc_array_pre_m_action
+  (#t: _)
+  (len:U32.t)
+  (init: t)
+  : pre_m_action
+    emp
+    (a:array_ref t{length a = len /\ offset a = 0ul})
+    (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+  =  fun m ->
+  let a = {
+    array_addr = m.ctr;
+    array_max_length = len;
+    array_length = len;
+    array_offset = 0ul;
+  } in
+  let single_h = singleton_heap len init a in
+  let new_h = join (heap_of_mem m) single_h in
+  assert(forall i. i>= m.ctr + 1 ==> new_h i == None);
+  assert(disjoint m.heap single_h);
+  assert(interp (lock_store_invariant m.locks) (heap_of_mem m));
+  assert(interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
+  assert(interp ((pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+    `star` (lock_store_invariant m.locks)) new_h);
+  let new_m = { m with heap = new_h; ctr = m.ctr +1 } in
+  (| a, new_m |)
+#pop-options
+
+#push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
+let alloc_array_is_frame_preserving
+  (#t: _)
+  (len:U32.t)
+  (init: t)
+  : Lemma (is_m_frame_preserving (alloc_array_pre_m_action len init))
+  =
+  is_m_frame_preserving_intro (alloc_array_pre_m_action len init) (fun frame m ->
+    let h = heap_of_mem m in
+    let a : array_ref t = {
+      array_addr = m.ctr;
+      array_max_length = len;
+      array_length = len;
+      array_offset = 0ul;
+    } in
+    let (| a, m1 |) = alloc_array_pre_m_action len init m in
+    assert (m1.ctr = m.ctr + 1);
+    assert (m1.locks == m.locks);
+    let h1 = heap_of_mem m1 in
+    let single_h = singleton_heap len init a in
+    assert (h1 == join single_h h);
+    intro_pts_to_array a full_permission (Seq.Base.create (U32.v len) init) single_h;
+    assert (interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
+    assert (interp (frame `star` locks_invariant m) h);
+    intro_star
+      (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+      (frame `star` locks_invariant m)
+      single_h
+      h;
+    assert (interp
+      (pts_to_array a full_permission (Seq.Base.create (U32.v len) init) `star`
+      (frame `star` locks_invariant m)) h1
+    );
+    star_associative
+      (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+      frame
+      (locks_invariant m);
+    assert (interp
+      (pts_to_array a full_permission (Seq.Base.create (U32.v len) init) `star`
+      frame `star` locks_invariant m) h1
+    )
+  )
+#pop-options
+
+#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
+let alloc_array_depends_only_on
+  (#t: _)
+  (len:U32.t)
+  (init: t)
+  : Lemma (m_action_depends_only_on (alloc_array_pre_m_action len init))
+  =
+  m_action_depends_only_on_intro (alloc_array_pre_m_action len init) (fun m0 h1 post ->
+    let h0 = heap_of_mem m0 in
+    let h = join h0 h1 in
+    let m1 = { m0 with heap = h } in
+    let (| x0, m |) = (alloc_array_pre_m_action len init) m0 in
+    let (| x1, m' |) = (alloc_array_pre_m_action len init) m1 in
+    alloc_array_is_frame_preserving len init;
+    assert (x0 == x1);
+    assert (disjoint (heap_of_mem m) h1);
+    affine_star
+      (pts_to_array x0 full_permission (Seq.Base.create (U32.v len) init))
+      (locks_invariant m)
+      (heap_of_mem m);
+    assert (interp
+      (pts_to_array x0 full_permission (Seq.Base.create (U32.v len) init))
+      (heap_of_mem m)
+    );
+    assert (heap_of_mem m' == join (heap_of_mem m) h1)
+  )
+#pop-options
+
 let alloc_array
   (#t: _)
   (len:U32.t)
@@ -729,7 +849,9 @@ let alloc_array
     (a:array_ref t{length a = len /\ offset a = 0ul})
     (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
   =
-  admit()
+  alloc_array_is_frame_preserving len init;
+  alloc_array_depends_only_on len init;
+  alloc_array_pre_m_action len init
 
 let free_array_pre_action
   (#t: _)
