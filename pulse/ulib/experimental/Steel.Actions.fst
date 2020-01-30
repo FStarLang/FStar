@@ -1050,6 +1050,44 @@ let split_array_pre_action
   (| (a1, a2), h  |)
 #pop-options
 
+#push-options "--initial_ifuel 1 --max_ifuel 1"
+let split_array_action
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i < U32.v (length a)})
+  : action
+    (pts_to_array a p iseq)
+    (as:(array_ref t & array_ref t){(
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      offset (fst as) = offset a /\ offset (snd as) = U32.add (offset a) i /\
+      max_length (fst as) = max_length a /\ max_length (snd as) = max_length a /\
+      address (fst as) = address a /\ address (snd as) = address a
+    )})
+    (fun (a1, a2) -> star
+      (pts_to_array a1 p (Seq.slice iseq 0 (U32.v i)))
+      (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
+    )
+  =
+  pre_action_to_action
+    (pts_to_array a p iseq)
+    (as:(array_ref t & array_ref t){(
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      offset (fst as) = offset a /\ offset (snd as) = U32.add (offset a) i /\
+      max_length (fst as) = max_length a /\ max_length (snd as) = max_length a /\
+      address (fst as) = address a /\ address (snd as) = address a
+    )})
+    (fun (a1, a2) -> star
+      (pts_to_array a1 p (Seq.slice iseq 0 (U32.v i)))
+      (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
+    )
+    (split_array_pre_action a iseq p i)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+#pop-options
+
 let split_array
   (#t: _)
   (a: array_ref t)
@@ -1069,7 +1107,76 @@ let split_array
       (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
     )
   =
-  admit()
+  non_alloc_action_to_non_locking_m_action
+    (pts_to_array a p iseq)
+    (as:(array_ref t & array_ref t){(
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      offset (fst as) = offset a /\ offset (snd as) = U32.add (offset a) i /\
+      max_length (fst as) = max_length a /\ max_length (snd as) = max_length a /\
+      address (fst as) = address a /\ address (snd as) = address a
+    )})
+    (fun (a1, a2) -> star
+      (pts_to_array a1 p (Seq.slice iseq 0 (U32.v i)))
+      (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
+    )
+    (split_array_action a iseq p i)
+    (fun h addr -> ())
+
+
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 30"
+let glue_array_pre_action
+  (#t: _)
+  (a: array_ref t)
+  (a': array_ref t{
+    address a = address a' /\ max_length a = max_length a' /\
+    offset a' = U32.add (offset a) (length a)
+  })
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
+  (p: permission{allows_read p})
+  : pre_action
+    (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
+    (new_a:array_ref t{
+      address new_a = address a /\ max_length new_a = max_length a /\
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+    })
+    (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
+  = fun h ->
+  let new_a : array_ref t = { a with array_length = U32.add a.array_length a'.array_length} in
+  (| new_a, h |)
+#pop-options
+
+#push-options "--initial_ifuel 1 --max_ifuel 1"
+let glue_array_action
+  (#t: _)
+  (a: array_ref t)
+  (a': array_ref t{
+    address a = address a' /\ max_length a = max_length a' /\
+    offset a' = U32.add (offset a) (length a)
+  })
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
+  (p: permission{allows_read p})
+  : action
+    (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
+    (new_a:array_ref t{
+      address new_a = address a /\ max_length new_a = max_length a /\
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+    })
+    (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
+  =
+  pre_action_to_action
+    (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
+    (new_a:array_ref t{
+      address new_a = address a /\ max_length new_a = max_length a /\
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+    })
+    (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
+    (glue_array_pre_action a a' iseq iseq' p)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+#pop-options
 
 let glue_array
   (#t: _)
@@ -1089,7 +1196,15 @@ let glue_array
     })
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
   =
-  admit()
+  non_alloc_action_to_non_locking_m_action
+    (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
+    (new_a:array_ref t{
+      address new_a = address a /\ max_length new_a = max_length a /\
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+    })
+    (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
+    (glue_array_action a a' iseq iseq' p)
+    (fun h addr -> ())
 
 ////////////////////////////////////////////////////////////////////////////////
 // Locks
