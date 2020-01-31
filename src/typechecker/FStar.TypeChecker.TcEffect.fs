@@ -1358,7 +1358,14 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   let eff_name = BU.format3 "(%s, %s) |> %s)"
     (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
   let r = (snd ts).pos in
-  
+
+  //p should be non-reifiable, reification of polymonadic binds is not yet implemented
+  if Env.is_user_reifiable_effect env p
+  then raise_error (Errors.Fatal_EffectCannotBeReified,
+         BU.format2 "Error typechecking the polymonadic bind %s, the final effect %s is reifiable \
+           and reification of polymondic binds is not yet implemented"
+           eff_name (Ident.string_of_lid p)) r;
+
   //typecheck the term making sure that it is universe polymorphic in 2 universes
   let (us, t, ty) = check_and_gen env eff_name "polymonadic_bind" 2 ts in
 
