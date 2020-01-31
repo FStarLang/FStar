@@ -5,41 +5,47 @@ open Steel.Permissions
 module M = Steel.Memory
 module L = FStar.List.Tot
 module FI = FStar.IndefiniteDescription
+module U32 = FStar.UInt32
 
 #reset-options "--__no_positivity"
 
 noeq
 type t (a:Type0) =
-  ptr:M.ref (cell a)
+  ptr:M.array_ref (cell a){U32.v (M.length ptr) <= 1}
 
 and cell (a:Type0) = {
   next: t a;
   data: a;
 }
 
-/// These predicates and assumptions should go into Memory at some point
-assume val null (#a:Type0) : M.ref a
-assume val is_null (#a:Type0) (r:M.ref a) : Tot (b:bool{b <==> r == null})
+let pred_is_null (#a:Type) (ptr:t a) : prop = U32.v (M.length ptr) == 0
+let pred_is_not_null (#a:Type) (ptr:t a) : prop = U32.v (M.length ptr) == 1
 
-let pred_is_null (#a:Type) (ptr:t a) : Tot (M.fp_prop M.emp) = fun h -> ptr == null
-let pred_is_not_null (#a:Type) (ptr:t a) : Tot (M.fp_prop M.emp) = fun h -> ptr =!= null
+assume
+val is_null (#a:Type) (ptr: t a) : Steel bool
+  (vemp) (fun _ -> vemp) (fun _ -> True)
+  (fun _ b _ -> b <==> pred_is_null ptr)
+
+let pure (p:prop) : M.hprop = M.refine M.emp (fun _ -> p)
+let pts_to (#a:Type) (ptr:t a) (v:cell a) : M.hprop =
+  M.pts_to_array ptr full_permission (Seq.create 1 v)
+
 
 /// Similarly, once we have a good model for null, the refinements pred_is_null/not_null should
 /// not be needed since they should be derivable from pts_to
 let rec slist' (#a:Type) (ptr:t a) (l:list (cell a)) : Tot M.hprop
   (decreases l)
   = match l with
-  | [] -> M.refine M.emp (pred_is_null ptr)
-  | hd::tl -> M.refine M.emp (pred_is_not_null ptr) `M.star` (M.pts_to ptr full_permission hd `M.star` slist' hd.next tl)
-
-let slist_exists (#a:Type) (ptr:t a) : Tot M.hprop =
-    M.h_exists (slist' ptr)
+  | [] -> pure (pred_is_null ptr)
+  | hd::tl -> pts_to ptr hd `M.star` slist' hd.next tl
 
 let rec injective_slist' (#a:Type) (ptr:t a) (l1 l2:list (cell a)) (h:M.heap) : Lemma
   (requires M.interp (slist' ptr l1) h /\ M.interp (slist' ptr l2) h)
   (ensures l1 == l2)
   (decreases l1)
-  = match l1, l2 with
+  = admit()
+  (*
+  match l1, l2 with
     | [], [] -> ()
     | [], hd::tl | hd::tl, [] ->
       M.refine_equiv M.emp (pred_is_null ptr) h;
@@ -55,28 +61,24 @@ let rec injective_slist' (#a:Type) (ptr:t a) (l1 l2:list (cell a)) (h:M.heap) : 
       M.affine_star (M.pts_to ptr full_permission hd2) (slist' hd2.next tl2) h;
       M.pts_to_injective ptr full_permission hd1 hd2 h;
       injective_slist' hd1.next tl1 tl2 h
+  *)
+
 
 let split_interp_slist (#a:Type) (ptr:t a) (l:list (cell a)) (h:M.heap) : Lemma
-  (requires M.interp (slist' ptr l) h /\ ptr =!= null)
-  (ensures Cons? l /\ M.interp (M.ptr ptr) h /\ M.interp (slist' (M.sel ptr h).next (L.tl l)) h)
+  (requires M.interp (slist' ptr l) h /\ pred_is_not_null ptr)
+  (ensures Cons? l /\ M.interp (slist' (L.hd l).next (L.tl l)) h)
   = admit()
 
 let rec length' (#a:Type) (ptr:t a) (l:list (cell a)) (h:M.hheap (slist' ptr l))
-  : Tot nat
+  : GTot nat
   (decreases l)
   =
-  if is_null ptr then 0
+  if U32.v (M.length ptr) = 0 then 0
   else (
     split_interp_slist ptr l h;
-    let next = (M.sel ptr h).next in
+    let next = (L.hd l).next in
     1 + length' next (L.tl l) h
   )
-
-let length (#a:Type) (ptr:t a) (h:M.hheap (slist_exists ptr)) : GTot nat =
-  M.reveal_exists (slist' ptr) h;
-  assert (exists x. M.interp (slist' ptr x) h);
-  let (|l, _ |) = FI.indefinite_description (list (cell a)) (fun x -> M.interp (slist' ptr x) h) in
-  length' ptr l h
 
 let rec list_view' (#a:Type) (ptr:t a) (l:list (cell a)) (h:M.hheap (slist' ptr l))
   : Tot (list a)
@@ -84,9 +86,68 @@ let rec list_view' (#a:Type) (ptr:t a) (l:list (cell a)) (h:M.hheap (slist' ptr 
   match l with
   | [] -> []
   | hd::tl ->
-    M.affine_star (M.refine M.emp (pred_is_not_null ptr)) (M.pts_to ptr full_permission hd `M.star` slist' hd.next tl) h;
-    M.affine_star (M.pts_to ptr full_permission hd) (slist' hd.next tl) h;
+    M.affine_star (pts_to ptr hd) (slist' hd.next tl) h;
     hd.data :: list_view' hd.next tl h
+
+let list_view'_is_view (#a:Type) (ptr:t a) (l:list (cell a))
+  (h0:M.hheap (slist' ptr l)) (h1:M.heap{M.disjoint h0 h1})
+  : Lemma
+  (ensures
+    M.interp (slist' ptr l) (M.join h0 h1) /\
+    list_view' ptr l h0 == list_view' ptr l (M.join h0 h1))
+  = admit()
+
+let list_view (#a:Type) (ptr:t a) (l:list (cell a)) : view (list a) (slist' ptr l) =
+    Classical.forall_intro_2 (list_view'_is_view ptr l);
+    list_view' ptr l
+
+let slist (#a:Type) (ptr:t a) (l:list (cell a)) : Tot viewable'
+   = {t = list a;
+      fp = slist' ptr l;
+      sel = list_view ptr l}
+
+[@__reduce__]
+let vlist (#a:Type) (ptr:t a) (l:list (cell a)) = VUnit (slist ptr l)
+
+val intro_list_nil (#a:Type) (ptr:t a)
+   : Steel unit
+     (vemp) (fun _ -> vlist ptr [])
+     (requires fun _ -> U32.v (M.length ptr) == 0)
+     (ensures fun _ _ h1 -> view_sel (vlist ptr []) h1 == [])
+
+val elim_list_nil (#a:Type) (ptr:t a)
+   : Steel unit
+   (vlist ptr []) (fun _ -> vemp)
+   (requires fun _ -> True) (ensures fun _ _ _ -> True)
+
+val expose_list_nil (#a:Type) (ptr:t a) (l:list (cell a))
+  : Steel unit
+  (vlist ptr l) (fun _ -> vlist ptr l)
+  (requires fun _ -> U32.v (M.length ptr) == 0)
+  (ensures fun h0 _ h1 ->
+    view_sel (vlist ptr l) h0 == view_sel (vlist ptr l) h1 /\
+    view_sel (vlist ptr l) h1 == [])
+
+let intro_list_nil #a ptr = admit()
+let elim_list_nil #a ptr = admit()
+let expose_list_nil #a ptr l = admit()
+
+val length_st (#a:Type) (ptr:t a) (l:list (cell a)) : Steel nat
+  (vlist ptr l) (fun _ -> vlist ptr l <*> vemp)
+  (requires fun _ -> True)
+  (ensures fun h0 v h1 -> v == L.length (view_sel (vlist ptr l) h0))
+
+//TODO: Need a resource_assert to clean post resource
+let length_st #a ptr l =
+  if frame (vlist ptr l) (fun () -> is_null ptr) then (
+    assert (pred_is_null ptr);
+    frame (vemp <*> vlist ptr l) (fun () -> expose_list_nil ptr l);
+    0
+  ) else admit()
+
+(*
+let slist_exists (#a:Type) (ptr:t a) : Tot M.hprop =
+    M.h_exists (slist' ptr)
 
 let list_view (#a:Type) (ptr:t a) (h:M.hheap (slist_exists ptr)) : GTot (list a) =
   M.reveal_exists (slist' ptr) h;
@@ -94,13 +155,15 @@ let list_view (#a:Type) (ptr:t a) (h:M.hheap (slist_exists ptr)) : GTot (list a)
   let (|l, _ |) = FI.indefinite_description (list (cell a)) (fun x -> M.interp (slist' ptr x) h) in
   list_view' ptr l h
 
-let slist (#a:Type) (ptr:t a) : Tot viewable'
-   = {t = list a;
-      fp = slist_exists ptr;
-      sel = list_view ptr }
 
-[@__reduce__]
-let vlist (#a:Type) (ptr:t a) = VUnit (slist ptr)
+
+let length (#a:Type) (ptr:t a) (h:M.hheap (slist_exists ptr)) : GTot nat =
+  M.reveal_exists (slist' ptr) h;
+  assert (exists x. M.interp (slist' ptr x) h);
+  let (|l, _ |) = FI.indefinite_description (list (cell a)) (fun x -> M.interp (slist' ptr x) h) in
+  length' ptr l h
+
+
 
 assume
 val cell_alloc (#a:Type)
@@ -200,3 +263,4 @@ let cons #a ptr v =
   pack_list hd ptr;
   assert (view_sel (vlist ptr) m0 == view_sel (vlist ptr) m1);
   hd
+*)
