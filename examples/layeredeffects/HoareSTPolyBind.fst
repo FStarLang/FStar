@@ -82,7 +82,7 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-reifiable reflectable
+reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr         = repr;
