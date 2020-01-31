@@ -104,7 +104,7 @@ val pts_to_array
   (#t: Type0)
   (a:array_ref t)
   (p:permission)
-  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (contents:Ghost.erased (Seq.seq t))
   : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
@@ -137,7 +137,7 @@ val pts_to_array_injective
   (#t: _)
   (a: array_ref t)
   (p:permission{allows_read p})
-  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (c0 c1: Seq.seq t)
   (m: heap)
   : Lemma
     (requires (

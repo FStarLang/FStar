@@ -263,7 +263,7 @@ noeq
 type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission ->
-		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) -> hprop
+		  contents:Ghost.erased (Seq.seq t) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -284,6 +284,7 @@ let rec interp (p:hprop) (m:heap)
         | Array t' len' seq ->
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
+          Seq.length contents == U32.v a.array_length /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
 	     (* Outside of the range *)
@@ -355,7 +356,7 @@ let intro_pts_to_array
   (#t: Type0)
   (a:array_ref t)
   (perm:permission)
-  (contents:Seq.lseq t (U32.v a.array_length))
+  (contents:Seq.seq t)
   (m: heap)
   : Lemma
     (requires (
@@ -364,6 +365,7 @@ let intro_pts_to_array
         | Array t' len' seq ->
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
+          Seq.length contents == U32.v a.array_length /\
           (forall (i:nat{i < len'}).
              if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
 	     (* Outside of the range *)
@@ -386,7 +388,7 @@ let pts_to_array_injective
   (#t: _)
   (a: array_ref t)
   (p:permission{allows_read p})
-  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (c0 c1: Seq.seq t)
   (m: heap)
   =
   match select_addr m a.array_addr with
