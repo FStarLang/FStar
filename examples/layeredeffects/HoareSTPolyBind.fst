@@ -41,7 +41,7 @@ type post_t (a:Type) = heap -> a -> heap -> Type0
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
   unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 
-let return (a:Type) (x:a)
+let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
 
@@ -86,7 +86,7 @@ reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr         = repr;
-       return       = return;
+       return       = returnc;
        bind         = bind;
        subcomp      = subcomp;
        if_then_else = if_then_else
@@ -251,7 +251,13 @@ let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
 /// Just writing `admit ()` at the end of a HoareST function also doesn't work for the same reason
 
 
-assume val copy_aux
+/// But we can define a return combinator and use it
+
+let return (#a:Type) (x:a)
+: HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
+= HoareST?.reflect (returnc a x)
+
+let rec copy_aux
   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
 : HoareST unit
   (fun h ->
@@ -262,17 +268,24 @@ assume val copy_aux
   (fun h0 _ h1 ->
     modifies (only cpy) h0 h1 /\
     Seq.equal (sel h1 cpy) (sel h1 s))
+= recall s; recall cpy;
+  let diff = length cpy - ctr in
+  match diff with
+  | 0 -> return ()
+  | _ ->
+    upd cpy ctr (index s ctr);
+    copy_aux s cpy (ctr + 1)
 
 
-let copy (#a:Type0) (s:array a)
-: HoareST (array a)
-  (fun h -> Seq.length (sel h s) > 0)
-  (fun h0 r h1 ->
-    modifies Set.empty h0 h1 /\
-    r `unused_in` h0 /\
-    contains h1 r /\
-    sel h1 r == sel h0 s)
-= recall s;
-  let cpy = alloc (Seq.create (length s) (index s 0)) in
-  copy_aux s cpy 0;
-  cpy
+// let copy (#a:Type0) (s:array a)
+// : HoareST (array a)
+//   (fun h -> Seq.length (sel h s) > 0)
+//   (fun h0 r h1 ->
+//     modifies Set.empty h0 h1 /\
+//     r `unused_in` h0 /\
+//     contains h1 r /\
+//     sel h1 r == sel h0 s)
+// = recall s;
+//   let cpy = alloc (Seq.create (length s) (index s 0)) in
+//   copy_aux s cpy 0;
+//   cpy
