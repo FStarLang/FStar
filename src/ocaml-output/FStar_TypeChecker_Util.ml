@@ -5894,9 +5894,7 @@ let (maybe_monadic :
           else
             FStar_Syntax_Syntax.mk
               (FStar_Syntax_Syntax.Tm_meta
-                 (e,
-                   (FStar_Syntax_Syntax.Meta_monadic
-                      ((FStar_Syntax_Syntax.Meta_monadic_bind m), t))))
+                 (e, (FStar_Syntax_Syntax.Meta_monadic (m, t))))
               FStar_Pervasives_Native.None e.FStar_Syntax_Syntax.pos
   
 let (d : Prims.string -> unit) =
