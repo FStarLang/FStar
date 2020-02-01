@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module HoareST
+module HoareSTPolyBind
 
 open FStar.Heap
 open FStar.ST
@@ -22,7 +22,12 @@ open FStar.ST
 module P = FStar.Preorder
 module ST = FStar.ST
 
+
 /// ST effect implemented as a layered effect over STATE
+///
+/// This module uses polymonadic binds to compose HoareST and PURE computations
+///
+/// See the `copy_aux` function below for some limitations of the polymonadic bind
 
 #set-options "--max_fuel 0 --max_ifuel 0"
 
@@ -36,7 +41,7 @@ type post_t (a:Type) = heap -> a -> heap -> Type0
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
   unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 
-let return (a:Type) (x:a)
+let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
 
@@ -51,6 +56,7 @@ let bind (a:Type) (b:Type)
 = fun _ ->
   let x = f () in
   g x ()
+
 
 /// sub comp rule
 
@@ -76,11 +82,11 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-reifiable reflectable
+reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr         = repr;
-       return       = return;
+       return       = returnc;
        bind         = bind;
        subcomp      = subcomp;
        if_then_else = if_then_else
@@ -136,19 +142,50 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-/// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-: repr a
-  (fun _ -> wp (fun _ -> True))
-  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+/// We don't define a traditional lift from PURE to HoareST
+///
+/// But rather we define two polymonadic binds
+
+
+let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
+  (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
+: repr b
+  (fun h -> wp (fun x -> req x h))
+  (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
 = wp_monotonic_pure ();
-  fun _ -> f ()
+  fun _ ->
+  let x = f () in
+  g x ()
 
-sub_effect PURE ~> HoareST = lift_pure_hoarest
+
+polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
 
-/// Implementing the array library using the layered effect
+let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
+  (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
+: repr b
+  (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
+  (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
+= wp_monotonic_pure ();
+  fun _ ->
+  let x = f () in
+  (g x) ()
+
+
+polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
+
+
+assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
+
+let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
+= f 0
+
+
+assume val g : int -> int -> PURE int (fun p -> forall x. p x)
+
+let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
+= g 2 (f 0)
 
 
 module Seq = FStar.Seq
@@ -206,6 +243,26 @@ let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
   upd x j v_i;
   upd x i v_j
 
+
+/// `match` with PURE code in one branch and HoareST in another doesn't work
+///
+/// Since it requires lifts
+///
+/// Just writing `admit ()` at the end of a HoareST function also doesn't work for the same reason
+
+
+/// But we can define a return combinator and use it
+
+let return (#a:Type) (x:a)
+: HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
+= HoareST?.reflect (returnc a x)
+
+
+let test_lift (b:bool) : HoareST int (fun _ -> b == true) (fun h0 x h1 -> h0 == h1 /\ x == 0)
+= match b with
+  | true -> return 0
+  | false -> return 1
+
 let rec copy_aux
   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
 : HoareST unit
@@ -218,9 +275,9 @@ let rec copy_aux
     modifies (only cpy) h0 h1 /\
     Seq.equal (sel h1 cpy) (sel h1 s))
 = recall s; recall cpy;
-  let len = length cpy in
-  match len - ctr with
-  | 0 -> ()
+  let diff = length cpy - ctr in
+  match diff with
+  | 0 -> return ()
   | _ ->
     upd cpy ctr (index s ctr);
     copy_aux s cpy (ctr + 1)

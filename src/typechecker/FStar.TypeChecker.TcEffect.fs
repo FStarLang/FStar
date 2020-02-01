@@ -50,6 +50,41 @@ let dmff_cps_and_elaborate env ed =
   DMFF.cps_and_elaborate env ed
 
 (*
+ * Helper function used to typecheck and generalize various effect combinators
+ *
+ * comb is the name of the combinator (used for error messages)
+ * n is the number of universes that the combinator should be polymorphic in
+ * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
+ *)
+let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
+  let us, t = SS.open_univ_vars us t in
+  let t, ty =
+    let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
+    Rel.force_trivial_guard env g;
+    t, lc.res_typ in
+  let g_us, t = TcUtil.generalize_universes env t in
+  let ty = SS.close_univ_vars g_us ty in
+  //check that n = List.length g_us and that if us is set, it is same as g_us
+  let univs_ok =
+    if List.length g_us <> n then
+      let error = BU.format5
+        "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
+        eff_name comb (string_of_int n) (g_us |> List.length |> string_of_int)
+        (Print.tscheme_to_string (g_us, t)) in
+      raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
+    match us with
+    | [] -> ()
+    | _ ->
+     if List.length us = List.length g_us &&
+      List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     then ()
+     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+            (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+               eff_name comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
+            t.pos in
+  g_us, t, ty
+
+(*
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
@@ -61,41 +96,6 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     raise_error
       (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ ed.mname.str ^")")
       (range_of_lid ed.mname);
-
-  (*
-   * Helper function used to typecheck and generalize various effect combinators
-   *
-   * comb is the name of the combinator (used for error messages)
-   * n is the number of universes that the combinator should be polymorphic in
-   * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
-   *)
-  let check_and_gen (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
-    let us, t = SS.open_univ_vars us t in
-    let t, ty =
-      let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env0 us) t in
-      Rel.force_trivial_guard env0 g;
-      t, lc.res_typ in
-    let g_us, t = TcUtil.generalize_universes env0 t in
-    let ty = SS.close_univ_vars g_us ty in
-    //check that n = List.length g_us and that if us is set, it is same as g_us
-    let univs_ok =
-      if List.length g_us <> n then
-        let error = BU.format5
-          "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
-          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int)
-          (Print.tscheme_to_string (g_us, t)) in
-        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
-      match us with
-      | [] -> ()
-      | _ ->
-       if List.length us = List.length g_us &&
-          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
-       then ()
-       else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-              (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                 ed.mname.str comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
-            t.pos in
-    g_us, t, ty in
 
   let log_combinator s (us, t, ty) =
     if Env.debug env0 <| Options.Other "LayeredEffects" then
@@ -117,6 +117,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    *   - Unify the type of the combinator (as typechecked) with k
    *   - Record k in the effect declaration (along with the combinator)
    *)
+
+  let check_and_gen = check_and_gen env0 ed.mname.str in
 
 
   (*
@@ -637,10 +639,6 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions }
-
-let check_and_gen env t k =
-    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
-    TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.eff_decl =
   if Env.debug env0 <| Options.Other "ED" then
@@ -1201,6 +1199,10 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let tc_lift env sub r =
+  let check_and_gen env t k =
+    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
+    TcUtil.generalize_universes env (tc_check_trivial_guard env t k) in
+
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
@@ -1351,3 +1353,65 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
                                   (Print.term_to_string t)) r
   end;
   (lid, uvs, tps, c)
+
+let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+  let eff_name = BU.format3 "(%s, %s) |> %s)"
+    (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
+  let r = (snd ts).pos in
+
+  //p should be non-reifiable, reification of polymonadic binds is not yet implemented
+  if Env.is_user_reifiable_effect env p
+  then raise_error (Errors.Fatal_EffectCannotBeReified,
+         BU.format2 "Error typechecking the polymonadic bind %s, the final effect %s is reifiable \
+           and reification of polymondic binds is not yet implemented"
+           eff_name (Ident.string_of_lid p)) r;
+
+  //typecheck the term making sure that it is universe polymorphic in 2 universes
+  let (us, t, ty) = check_and_gen env eff_name "polymonadic_bind" 2 ts in
+
+  //make sure that the bind is of the right shape
+
+  let us, ty = SS.open_univ_vars us ty in
+  let env = Env.push_univ_vars env us in
+
+  //construct the expected type k to be:
+  //a:Type -> b:Type -> <some binders> -> m_repr a is -> (x:a -> n_repr b js) -> p_repr b ks
+
+  let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
+  let b, u_b = U.type_u () |> (fun (t, u) -> S.gen_bv "b" None t |> S.mk_binder, u) in
+
+  let rest_bs =
+    match (SS.compress ty).n with
+    | Tm_arrow (bs, _) when List.length bs >= 4 ->
+      let ((a', _)::(b', _)::bs) = SS.open_binders bs in
+      bs |> List.splitAt (List.length bs - 2) |> fst
+         |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name); NT (b', b |> fst |> S.bv_to_name)]
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format3 "Type of %s is not an arrow with >= 4 binders (%s::%s)" eff_name
+          (Print.tag_of_term ty) (Print.term_to_string ty)) r in
+
+  let bs = a::b::rest_bs in
+
+  let f, guard_f =
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u_a (a |> fst |> S.bv_to_name) in
+    S.gen_bv "f" None repr |> S.mk_binder, g in
+
+  let g, guard_g =
+    let x_a = S.gen_bv "x" None (a |> fst |> S.bv_to_name) |> S.mk_binder in
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b |> fst |> S.bv_to_name) in
+    S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
+
+  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b |> fst |> S.bv_to_name) in
+
+  let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
+  
+  let guard_eq = Rel.teq env ty k in
+  List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
+
+  if Env.debug env <| Options.Extreme
+  then BU.print3 "Polymonadic bind %s after typechecking (%s::%s)\n"
+         eff_name (Print.tscheme_to_string (us, t))
+                  (Print.tscheme_to_string (us, k));
+
+  (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)

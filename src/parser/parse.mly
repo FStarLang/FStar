@@ -71,7 +71,7 @@ let logic_qualifier_deprecation_warning =
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -230,6 +230,8 @@ rawDecl:
       { LayeredEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
+  | POLYMONADIC_BIND b=polymonadic_bind
+      { Polymonadic_bind b }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
 
@@ -338,6 +340,10 @@ subEffect:
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      }
+
+polymonadic_bind:
+  | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
+      { (m_eff, n_eff, p_eff, bind) }
 
 
 /******************************************************************************/

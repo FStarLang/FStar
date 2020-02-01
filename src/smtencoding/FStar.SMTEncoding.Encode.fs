@@ -1026,7 +1026,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_pragma _
      | Sig_main _
      | Sig_effect_abbrev _
-     | Sig_sub_effect _ -> [], env
+     | Sig_sub_effect _
+     | Sig_polymonadic_bind _ -> [], env
 
      | Sig_new_effect(ed) ->
        if not (is_smt_reifiable_effect env.tcenv ed.mname)
