@@ -257,6 +257,12 @@ let return (#a:Type) (x:a)
 : HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = HoareST?.reflect (returnc a x)
 
+
+let test_lift (b:bool) : HoareST int (fun _ -> b == true) (fun h0 x h1 -> h0 == h1 /\ x == 0)
+= match b with
+  | true -> return 0
+  | false -> return 1
+
 let rec copy_aux
   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
 : HoareST unit
@@ -276,16 +282,15 @@ let rec copy_aux
     upd cpy ctr (index s ctr);
     copy_aux s cpy (ctr + 1)
 
-
-// let copy (#a:Type0) (s:array a)
-// : HoareST (array a)
-//   (fun h -> Seq.length (sel h s) > 0)
-//   (fun h0 r h1 ->
-//     modifies Set.empty h0 h1 /\
-//     r `unused_in` h0 /\
-//     contains h1 r /\
-//     sel h1 r == sel h0 s)
-// = recall s;
-//   let cpy = alloc (Seq.create (length s) (index s 0)) in
-//   copy_aux s cpy 0;
-//   cpy
+let copy (#a:Type0) (s:array a)
+: HoareST (array a)
+  (fun h -> Seq.length (sel h s) > 0)
+  (fun h0 r h1 ->
+    modifies Set.empty h0 h1 /\
+    r `unused_in` h0 /\
+    contains h1 r /\
+    sel h1 r == sel h0 s)
+= recall s;
+  let cpy = alloc (Seq.create (length s) (index s 0)) in
+  copy_aux s cpy 0;
+  cpy
