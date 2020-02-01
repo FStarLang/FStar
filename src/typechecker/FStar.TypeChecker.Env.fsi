@@ -92,7 +92,10 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
-and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+(*
+ * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
+ *)
+and polymonadic_bind_t = env -> c1:comp_typ -> x:option<bv> -> c2:comp_typ -> list<cflag> -> Range.range -> comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
@@ -110,7 +113,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
 }
 
 and env = {

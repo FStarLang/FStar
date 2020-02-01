@@ -488,7 +488,7 @@ type sigelt' =
   | Sig_pragma            of pragma
   | Sig_splice            of list<lident> * term
 
-  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
 
 and sigelt = {
     sigel:    sigelt';

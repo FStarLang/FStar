@@ -778,7 +778,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     [se], [], env0
 
-  | Sig_polymonadic_bind (m, n, p, t, _) ->
+  | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
     let t =
       if Options.use_two_phase_tc () && Env.should_verify env then
         let t, ty =
