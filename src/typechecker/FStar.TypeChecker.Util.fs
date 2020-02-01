@@ -447,7 +447,7 @@ let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool) : lident * comp * comp *
       let try_lift c1 c2 : option<(lident * comp * comp * guard_t)> =
         let p_bind_opt = Env.exists_polymonadic_bind env c1.effect_name c2.effect_name in
         if p_bind_opt |> is_some
-        then let Some (p, f_bind) = p_bind_opt in
+        then let p, f_bind = p_bind_opt |> must in
              if lid_equals p c2.effect_name
              then (let c1, g = bind_with_return c1 p f_bind in
                    Some (c2.effect_name, c1, S.mk_Comp c2, g))
