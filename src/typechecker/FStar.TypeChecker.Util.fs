@@ -258,6 +258,113 @@ let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt 
 
 let destruct_wp_comp c : (universe * typ * typ) = U.destruct_comp c
 
+let mk_comp_l mname u_result result wp flags =
+  mk_Comp ({ comp_univs=[u_result];
+             effect_name=mname;
+             result_typ=result;
+             effect_args=[S.as_arg wp];
+             flags=flags})
+
+let mk_comp md = mk_comp_l md.mname
+
+let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<term> =
+  let err () =
+    raise_error (Errors.Fatal_UnexpectedEffect,
+      BU.format2 "Could not get effect args from repr %s with is_layered %s"
+        (Print.term_to_string repr) (string_of_bool is_layered)) r in
+  let repr = SS.compress repr in
+  if is_layered
+  then match repr.n with
+       | Tm_app (_, _::is) -> is |> List.map fst
+       | _ -> err ()
+  else match repr.n with 
+       | Tm_arrow (_, c) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | _ -> err ()
+
+
+(*
+ * Build the M.return comp for a wp effect
+ *
+ * Caller must ensure that ed is a wp-based effect
+ *)
+let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+: comp
+= let ret_wp = ed |> U.get_return_vc_combinator in
+  let wp = mk_Tm_app
+    (inst_effect_fun_with [u_a] env ed ret_wp)
+    [S.as_arg a; S.as_arg e]
+    None
+    r in
+  mk_comp ed u_a a wp [RETURN]
+
+
+(*
+ * Build the M.return comp for an indexed effect
+ *
+ * Caller must ensure that ed is an indexed effect
+ *)
+let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+: comp * guard_t
+= if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
+         (Ident.string_of_lid ed.mname) (Print.univ_to_string u_a)
+         (Print.term_to_string a) (Print.term_to_string e);
+
+  let _, return_t = Env.inst_tscheme_with
+    (ed |> U.get_return_vc_combinator)
+    [u_a] in
+
+  let return_t_shape_error (s:string) =
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+      "%s.return %s does not have proper shape (reason:%s)"
+      (Ident.string_of_lid ed.mname) (Print.term_to_string return_t) s) in
+
+  let a_b, x_b, rest_bs, return_ct =
+    match (SS.compress return_t).n with
+    | Tm_arrow (bs, c) when List.length bs >= 2 ->
+      let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
+      a_b, x_b, bs, U.comp_to_comp_typ c
+    | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
+
+  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
+    env rest_bs [NT (a_b |> fst, a); NT (x_b |> fst, e)]
+    (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
+             (Print.binder_to_string b)
+             (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
+             (Range.string_of_range r)) r in
+
+  let subst = List.map2
+    (fun b t -> NT (b |> fst, t))
+    (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
+
+  let is =
+    effect_args_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
+    |> List.map (SS.subst subst) in
+
+  let c = mk_Comp ({
+    comp_univs = [u_a];
+    effect_name = ed.mname;
+    result_typ = a;
+    effect_args = is |> List.map S.as_arg;
+    flags = []
+  }) in
+
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
+
+  c, g_uvars
+
+
+(*
+ * Wrapper over mk_wp_return and mk_indexed_return
+ *)
+let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+: comp * guard_t
+= if ed |> U.is_layered
+  then mk_indexed_return env ed u_a a e r
+  else mk_wp_return env ed u_a a e r, Env.trivial_guard
+
+
 let lift_comp env (c:comp_typ) lift : comp * guard_t =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
@@ -279,23 +386,87 @@ let join_lcomp env c1 c2 =
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
-let lift_comps env c1 c2 (b:option<bv>) (b_maybe_free_in_c2:bool) : lident * comp * comp * guard_t =
+
+let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool) : lident * comp * comp * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
-  let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
+  match Env.join_opt env c1.effect_name c2.effect_name with
+  | Some (m, lift1, lift2) ->
+    let c1, g1 = lift_comp env c1 lift1 in
+    let c2, g2 =
+      if not for_bind then lift_comp env c2 lift2
+      else
+        let x_a =
+          match b with
+          | None -> S.null_binder (U.comp_result c1)
+          | Some x -> S.mk_binder x in
+        let env_x = Env.push_binders env [x_a] in
+        let c2, g2 = lift_comp env_x c2 lift2 in
+        c2, Env.close_guard env [x_a] g2 in
+    m, c1, c2, Env.conj_guard g1 g2
+  | None ->
 
-  let c1, g1 = lift_comp env c1 lift1 in
-  let c2, g2 =
-    if not b_maybe_free_in_c2 then lift_comp env c2 lift2
+    (*
+     * AR: we could not lift the comps using the wp lattice
+     *     try using the polymonadic binds
+     *     if there exists a polymonadic bind (M1, M2) |> M2,
+     *       then lift using, lift_M1_M2 e = bind_M1_M2 e (fun x -> M2.return x)
+     *
+     *     (and similarly if exists (M2, M1) |> M1
+     *
+     *     we could also try to find a P such that (M1, P) |> P and (M2, P) |> P exist
+     *       but leaving that for later
+     *)
+
+    let rng = env.range in
+    let err () =
+      raise_error (Errors.Fatal_EffectsCannotBeComposed,
+        (BU.format2 "Effects %s and %s cannot be composed" 
+          (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) rng in
+
+    if Env.debug env <| Options.Other "LayeredEffects"
+    then BU.print3 "Lifting comps %s and %s with for_bind %s{\n"
+           (c1 |> S.mk_Comp |> Print.comp_to_string)
+           (c2 |> S.mk_Comp |> Print.comp_to_string)
+           (string_of_bool for_bind);
+
+    if for_bind then err ()
     else
-      let x_a =
-        match b with
-        | None -> S.null_binder (U.comp_result c1)
-        | Some x -> S.mk_binder x in
-      let env_x = Env.push_binders env [x_a] in
-      let c2, g2 = lift_comp env_x c2 lift2 in
-      c2, Env.close_guard env [x_a] g2 in
-  m, c1, c2, Env.conj_guard g1 g2  
+
+      let bind_with_return (ct:comp_typ) (ret_eff:lident) (f_bind:Env.polymonadic_bind_t)
+      : comp * guard_t =
+        let x_bv = S.gen_bv "x" None ct.result_typ in
+        let c_ret, g_ret = mk_return
+          (Env.push_bv env x_bv)
+          (Env.get_effect_decl env ret_eff)
+          (List.hd ct.comp_univs)
+          ct.result_typ (S.bv_to_name x_bv) rng in
+        let c, g_bind = f_bind env ct (Some x_bv) (U.comp_to_comp_typ c_ret) [] rng in
+        c, Env.conj_guard g_ret g_bind in
+
+      let try_lift c1 c2 : option<(lident * comp * comp * guard_t)> =
+        let p_bind_opt = Env.exists_polymonadic_bind env c1.effect_name c2.effect_name in
+        if p_bind_opt |> is_some
+        then let Some (p, f_bind) = p_bind_opt in
+             if lid_equals p c2.effect_name
+             then (let c1, g = bind_with_return c1 p f_bind in
+                   Some (c2.effect_name, c1, S.mk_Comp c2, g))
+             else None
+        else None in
+  
+      let p, c1, c2, g =
+        match try_lift c1 c2 with
+        | Some (p, c1, c2, g) -> p, c1, c2, g
+        | None ->
+          match try_lift c2 c1 with
+          | Some (p, c2, c1, g) -> p, c1, c2, g
+          | None -> err () in
+
+      if Env.debug env <| Options.Other "LayeredEffects"
+      then BU.print3 "} Returning p %s, c1 %s, and c2 %s\n"
+             (Ident.string_of_lid p) (Print.comp_to_string c1) (Print.comp_to_string c2);
+
+      p, c1, c2, g
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -305,15 +476,6 @@ let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
   || lid_equals l C.effect_GHOST_lid
-
-let mk_comp_l mname u_result result wp flags =
-  mk_Comp ({ comp_univs=[u_result];
-             effect_name=mname;
-             result_typ=result;
-             effect_args=[S.as_arg wp];
-             flags=flags})
-
-let mk_comp md = mk_comp_l md.mname
 
 let lax_mk_tot_or_comp_l mname u_result result flags =
     if Ident.lid_equals mname C.effect_Tot_lid
@@ -424,9 +586,7 @@ let return_value env u_t_opt t v =
             if env.lax
             && Options.ml_ish() //NS: Disabling this optimization temporarily
             then S.tun
-            else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
-                 let k = SS.subst [NT(a, t)] kwp in
-                 let ret_wp = m |> U.get_return_vc_combinator in
+            else let ret_wp = m |> U.get_return_vc_combinator in
                  N.normalize [Env.Beta; Env.NoFullNorm]
                             env
                             (mk_Tm_app (inst_effect_fun_with [u_t] env m ret_wp)
@@ -443,22 +603,6 @@ let return_value env u_t_opt t v =
   c
 
 (* private *)
-
-
-let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<term> =
-  let err () =
-    raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format2 "Could not get effect args from repr %s with is_layered %s"
-        (Print.term_to_string repr) (string_of_bool is_layered)) r in
-  let repr = SS.compress repr in
-  if is_layered
-  then match repr.n with
-       | Tm_app (_, _::is) -> is |> List.map fst
-       | _ -> err ()
-  else match repr.n with 
-       | Tm_arrow (_, c) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
-       | _ -> err ()
-
 
 (*
  * Bind for indexed effects
