@@ -165,10 +165,9 @@ let bind_steel_pure (a:Type) (b:Type)
 polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 
 
-// let return (#a:Type) (x:a)
+// let return_emp (#a:Type) (x:a)
 // : Steel a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
 // = Steel?.reflect (returnc a x)
-
 
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
@@ -235,3 +234,25 @@ let alloc_and_upd (n:int)
 = let r = alloc n in
   upd r n (n+1);
   return r
+
+effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+
+let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
+  (f:unit -> SteelT aL preL postL)
+  (#aR:Type) (#preR:pre_t) (#postR:post_t aR)
+  (g:unit -> SteelT aR preR postR)
+: SteelT (aL & aR)
+  (preL `Mem.star` preR)
+  (fun (xL, xR) -> postL xL `Mem.star` postR xR)
+= par #aL #preL #postL #(fun _ -> True) #(fun _ _ _ -> True) f #aR #preR #postR #(fun _ -> True) #(fun _ _ _ -> True) g
+
+let incr (r:ref int) (prev:int) ()
+: SteelT unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission (prev+1))
+= upd r prev (prev+1)
+
+let incr2 (r1 r2:ref int) (prev1 prev2:int)
+: SteelT (unit & unit)
+  (pts_to r1 full_permission prev1 `star` pts_to r2 full_permission prev2)
+  (fun _ -> pts_to r1 full_permission (prev1+1) `star` pts_to r2 full_permission (prev2+1))
+= incr r1 prev1 || incr r2 prev2
