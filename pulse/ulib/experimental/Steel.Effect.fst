@@ -93,7 +93,7 @@ let subcomp (a:Type) (pre:pre_t) (post:post_t a)
 : Pure (repr a pre post req_g ens_g)
   (requires
     (forall h. req_g h ==> req_f h) /\
-    (forall h0 x h1. ens_f h0 x h1 ==> ens_g h0 x h1))
+    (forall h0 x h1. (req_g h0 /\ ens_f h0 x h1) ==> ens_g h0 x h1))
   (ensures fun _ -> True)
 = f
 
@@ -131,7 +131,7 @@ let bind_pure_steel (a:Type) (b:Type)
   (f:unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
 : repr b pre_g post_g
     (fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True))
-    (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
+    (fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1))
 = fun m0 ->
   let x = f () in
   g x m0
@@ -165,6 +165,11 @@ let bind_steel_pure (a:Type) (b:Type)
 polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 
 
+// let return (#a:Type) (x:a)
+// : Steel a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
+// = Steel?.reflect (returnc a x)
+
+
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
@@ -185,7 +190,6 @@ assume val par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-
 
 let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   (f:repr a pre post req ens)
@@ -210,3 +214,24 @@ assume val frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 
 
+open Steel.Memory
+open Steel.Permissions
+
+assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
+: Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
+    (fun _ -> True) (fun _ _ _ -> True)
+
+assume val alloc (#a:Type) (v:a)
+: Steel (ref a) emp (fun x -> pts_to x full_permission v)
+    (fun _ -> True) (fun _ _ _ -> True)
+
+assume val return (#a:Type) (#hp:a -> hprop) (x:a)
+: Steel a (hp x) hp (fun _ -> True) (fun _ r _ -> r == x)
+
+
+let alloc_and_upd (n:int)
+: Steel (ref int) emp (fun x -> pts_to x full_permission (n+1))
+    (fun _ -> True) (fun _ _ _ -> True)
+= let r = alloc n in
+  upd r n (n+1);
+  return r
