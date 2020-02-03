@@ -863,8 +863,8 @@ binop_name:
   | o=OPINFIX3               { mk_ident (o, rhs parseState 1) }
   | o=OPINFIX4               { mk_ident (o, rhs parseState 1) }
   | o=IMPLIES                { mk_ident ("==>", rhs parseState 1) }
-  | o=CONJUNCTION            { mk_ident ("\\/", rhs parseState 1) }
-  | o=DISJUNCTION            { mk_ident ("/\\", rhs parseState 1) }
+  | o=CONJUNCTION            { mk_ident ("/\\", rhs parseState 1) }
+  | o=DISJUNCTION            { mk_ident ("\\/", rhs parseState 1) }
   | o=IFF                    { mk_ident ("<==>", rhs parseState 1) }
   | o=PIPE_RIGHT             { mk_ident ("|>", rhs parseState 1) }
   | o=COLON_EQUALS           { mk_ident (":=", rhs parseState 1) }
