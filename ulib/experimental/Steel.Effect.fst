@@ -181,9 +181,9 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 assume val par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
-  (f:unit -> Steel aL preL postL lpreL lpostL)
+  ($f:unit -> Steel aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
-  (g:unit -> Steel aR preR postR lpreR lpostR)
+  ($g:unit -> Steel aR preR postR lpreR lpostR)
 : Steel (aL & aR)
   (preL `Mem.star` preR)
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
@@ -203,7 +203,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
 
 
 assume val frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  (f:unit -> Steel a pre post req ens)
+  ($f:unit -> Steel a pre post req ens)
   (frame:Mem.hprop)
   (f_frame:fp_prop frame)
 : Steel a
@@ -239,13 +239,13 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
-  (f:unit -> SteelT aL preL postL)
+  ($f:unit -> SteelT aL preL postL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR)
-  (g:unit -> SteelT aR preR postR)
+  ($g:unit -> SteelT aR preR postR)
 : SteelT (aL & aR)
   (preL `Mem.star` preR)
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
-= par #aL #preL #postL #(fun _ -> True) #(fun _ _ _ -> True) f #aR #preR #postR #(fun _ -> True) #(fun _ _ _ -> True) g
+= par f g
 
 let incr (r:ref int) (prev:int) ()
 : SteelT unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission (prev+1))
