@@ -340,6 +340,7 @@ type raw_error =
   | Error_IllScopedTerm
   | Warning_UnusedLetRec
   | Fatal_PolymonadicBind_conflict
+  | Warning_BleedingEdge_Feature
 
 type flag = error_flag
 
@@ -679,6 +680,7 @@ let default_flags =
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   (Fatal_PolymonadicBind_conflict                    , CError);
+  (Warning_BleedingEdge_Feature                      , CWarning);
   ]
 
 type error = raw_error * string * Range.range

@@ -6125,18 +6125,29 @@ let (tc_polymonadic_bind :
                                                      eff_name uu____12036
                                                      uu____12042
                                                  else ());
-                                                (let uu____12051 =
-                                                   let uu____12052 =
-                                                     let uu____12055 =
+                                                (let uu____12052 =
+                                                   let uu____12058 =
+                                                     FStar_Util.format1
+                                                       "Polymonadic binds (%s in this case) is a bleeding edge F* feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                                       eff_name
+                                                      in
+                                                   (FStar_Errors.Warning_BleedingEdge_Feature,
+                                                     uu____12058)
+                                                    in
+                                                 FStar_Errors.log_issue r
+                                                   uu____12052);
+                                                (let uu____12062 =
+                                                   let uu____12063 =
+                                                     let uu____12066 =
                                                        FStar_All.pipe_right k
                                                          (FStar_TypeChecker_Normalize.remove_uvar_solutions
                                                             env1)
                                                         in
                                                      FStar_All.pipe_right
-                                                       uu____12055
+                                                       uu____12066
                                                        (FStar_Syntax_Subst.close_univ_vars
                                                           us1)
                                                       in
-                                                   (us1, uu____12052)  in
-                                                 ((us1, t), uu____12051))))))))))
+                                                   (us1, uu____12063)  in
+                                                 ((us1, t), uu____12062))))))))))
   
