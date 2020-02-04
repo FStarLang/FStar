@@ -50,24 +50,8 @@ type req_t (pre:pre_t) = fp_prop pre
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   q:(Mem.heap -> a -> Mem.heap -> prop){ens_depends_only_on q pre post}
 
-// let preserves_frame (pre post:Mem.hprop) (m0 m1:Mem.mem) =
-//   forall (frame:Mem.hprop).
-//     Mem.interp (Mem.locks_invariant m0 `Mem.star` (pre `Mem.star` frame)) (Mem.heap_of_mem m0) ==>
-//     (Mem.interp (Mem.locks_invariant m1 `Mem.star` (post `Mem.star` frame)) (Mem.heap_of_mem m1) /\
-//      (forall (f_frame:req_t frame). f_frame (Mem.heap_of_mem m0) <==> f_frame (Mem.heap_of_mem m1)))
-
 type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post req ens
-
-  // m0:Mem.mem ->
-  // Div (a & Mem.mem)
-  // (requires
-  //   Mem.interp (Mem.locks_invariant m0 `Mem.star` pre) (Mem.heap_of_mem m0) /\
-  //   req (Mem.heap_of_mem m0))
-  // (ensures fun (x, m1) ->
-  //   Mem.interp (Mem.locks_invariant m1 `Mem.star` post x) (Mem.heap_of_mem m1) /\
-  //   ens (Mem.heap_of_mem m0) x (Mem.heap_of_mem m1) /\
-  //   preserves_frame pre (post x) m0 m1)
 
 let returnc (a:Type u#a) (x:a)
 : repr a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
@@ -169,6 +153,11 @@ polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 // : Steel a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
 // = Steel?.reflect (returnc a x)
 
+assume val steel_reify (#a:Type) (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+: repr a pre post req ens
+
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
@@ -180,7 +169,7 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
-assume val par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
+let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   ($f:unit -> Steel aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
   ($g:unit -> Steel aR preR postR lpreR lpostR)
@@ -189,6 +178,7 @@ assume val par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
+= par0 (steel_reify f) (steel_reify g)
 
 let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   (f:repr a pre post req ens)
@@ -201,8 +191,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
 
-
-assume val frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+let frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:unit -> Steel a pre post req ens)
   (frame:Mem.hprop)
   (f_frame:fp_prop frame)
@@ -211,7 +200,7 @@ assume val frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:
   (fun x -> post x `Mem.star` frame)
   (fun h -> req h /\ f_frame h)
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-
+= frame0 (steel_reify f) frame f_frame
 
 open Steel.Memory
 open Steel.Permissions
