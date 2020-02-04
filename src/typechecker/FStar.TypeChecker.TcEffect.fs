@@ -1414,4 +1414,9 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
 
+  log_issue r (Errors.Warning_BleedingEdge_Feature,
+    BU.format1 "Polymonadic binds (%s in this case) is a bleeding edge F* feature;\
+      it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+      eff_name);
+
   (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
