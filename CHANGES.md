@@ -39,6 +39,8 @@ Guidelines for the changelog:
     this reduction strategy by passing the `nbe:norm_step` among the
     reduction steps.
 
+  * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds.
+
 ## Libraries
 
    * Two core axioms were discovered by Aseem Rastogi to be formulated
