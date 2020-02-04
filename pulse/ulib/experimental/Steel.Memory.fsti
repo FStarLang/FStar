@@ -22,6 +22,8 @@ module U32 = FStar.UInt32
 // Heap
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Abstract type of addresses
+val addr: eqtype
 
 /// Abstract type of memories
 val heap  : Type u#1
@@ -38,7 +40,7 @@ val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
   U32.v (offset a) + U32.v (length a) <= U32.v n
 })
 
-val address (#t: Type) (a: array_ref t) : nat
+val address (#t: Type) (a: array_ref t) : addr
 
 let freeable (#t: Type) (a: array_ref t) =
   offset a = 0ul /\ length a = max_length a
