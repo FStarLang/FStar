@@ -2,6 +2,7 @@ module Steel.Semantics.Instantiate
 
 module S = Steel.Semantics.Hoare.MST
 open Steel.Memory
+open Steel.Actions
 
 type state0 : S.st0 =
   { S.heap = heap;

@@ -18,6 +18,7 @@ module Steel.Effect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
+module Act = Steel.Actions
 
 open Steel.Semantics.Instantiate
 
@@ -42,11 +43,11 @@ let ens_depends_only_on (#a:Type)
      q h_pre x h_post <==> q h_pre x (Mem.join h_post h))
 
 type fp_prop (hp:Mem.hprop) =
-  q:(Mem.heap -> prop){q `Mem.depends_only_on_without_affinity` hp}
+  q:(Mem.heap -> prop){q `Act.depends_only_on_without_affinity` hp}
 
 type pre_t = Mem.hprop
 type post_t (a:Type) = a -> Mem.hprop
-type req_t (pre:pre_t) = fp_prop pre
+type req_t (pre:pre_t) = q:(Mem.heap -> prop){q `Act.depends_only_on_without_affinity` pre}
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   q:(Mem.heap -> a -> Mem.heap -> prop){ens_depends_only_on q pre post}
 
