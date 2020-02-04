@@ -1,6 +1,7 @@
 module Steel.Memory.RST
 
 open Steel.Memory
+open Steel.Actions
 open Steel.Memory.Tactics
 open LowStar.Permissions
 
@@ -46,6 +47,7 @@ assume val put (r_init r_out:hprop) (m:hmem r_out)
              (requires fun m -> True)
              (ensures (fun _ _ m1 -> m1 == m))
 
+(*
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
   : Lemma (requires interp (ptr_perm r p) h)
           (ensures interp (ptr r) h)
@@ -146,7 +148,7 @@ val fupd (#a:Type) (r:ref a) (v:a) : Steel unit
 let fupd #a r v =
   ptr_update r v;
   pts_to_perm full_permission r v
-
+*)
 
 // assume
 // val frame

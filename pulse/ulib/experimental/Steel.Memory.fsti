@@ -16,12 +16,33 @@
 module Steel.Memory
 open FStar.Real
 open Steel.Permissions
+module U32 = FStar.UInt32
+
+////////////////////////////////////////////////////////////////////////////////
+// Heap
+////////////////////////////////////////////////////////////////////////////////
+
 
 /// Abstract type of memories
 val heap  : Type u#1
 
 /// A memory maps a reference to its associated value
-val ref (a:Type u#0) : Type u#0
+val array_ref (a: Type u#0) : Type u#0
+
+val length (#t: Type) (a: array_ref t) : GTot (n:U32.t)
+val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{
+  U32.v n + U32.v (length a) <= UInt.max_int 32
+})
+
+val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
+  U32.v (offset a) + U32.v (length a) <= U32.v n
+})
+
+val address (#t: Type) (a: array_ref t) : nat
+
+let freeable (#t: Type) (a: array_ref t) =
+  offset a = 0ul /\ length a = max_length a
+
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
@@ -59,6 +80,11 @@ val join_associative (m0 m1 m2:heap)
       (disjoint_join m0 m1 m2;
        join m0 (join m1 m2) == join (join m0 m1) m2))
 
+////////////////////////////////////////////////////////////////////////////////
+// HProp
+////////////////////////////////////////////////////////////////////////////////
+
+
 /// The type of heap assertions
 val hprop : Type u#1
 /// interpreting heap assertions as memory predicates
@@ -74,7 +100,12 @@ let equiv (p1 p2:hprop) : prop =
 
 /// All the standard connectives of separation logic
 val emp : hprop
-val pts_to (#a:_) (r:ref a) (p:permission) (v:a) : hprop
+val pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (p:permission{allows_read p})
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -92,23 +123,28 @@ val equiv_symmetric (p1 p2:hprop)
 val equiv_extensional_on_star (p1 p2 p3:hprop)
   : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// pts_to and abbreviations
-//////////////////////////////////////////////////////////////////////////////////////////
-let ptr_perm #a (r:ref a) (p:permission) =
-    h_exists (pts_to r p)
+// pts_to_array and abbreviations
+////////////////////////////////////////////////////////////////////////////////
 
-let ptr #a (r:ref a) =
-    h_exists (ptr_perm r)
+let array_perm (#t: Type) (a: array_ref t) (p:permission{allows_read p}) =
+  h_exists (pts_to_array a p)
 
-val pts_to_injective (#a:_) (x:ref a) (p:permission) (v0 v1:a) (m:heap)
+let array (#t: Type) (a: array_ref t) =
+  h_exists (fun (p:permission{allows_read p}) -> array_perm a p)
+
+val pts_to_array_injective
+  (#t: _)
+  (a: array_ref t)
+  (p:permission{allows_read p})
+  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (m: heap)
   : Lemma
-    (requires
-      interp (pts_to x p v0) m /\
-      interp (pts_to x p v1) m)
-    (ensures
-      v0 == v1)
+    (requires (
+      interp (pts_to_array a p c0) m /\
+      interp (pts_to_array a p c1) m))
+    (ensures (c0 == c1))
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -259,6 +295,7 @@ val refine_star (p0 p1:hprop) (q:fp_prop p0)
 val interp_depends_only (p:hprop)
   : Lemma (interp p `depends_only_on` p)
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Memory
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,87 +309,3 @@ val m_disjoint: mem -> heap -> prop
 val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
 
 let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
-
-////////////////////////////////////////////////////////////////////////////////
-// Actions:
-// sel, split, update
-////////////////////////////////////////////////////////////////////////////////
-let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
-
-let preserves_frame_prop (frame:hprop) (h0 h1:heap) =
-  forall (q:(heap -> prop){q `depends_only_on_without_affinity` frame}).
-    q h0 <==> q h1
-
-let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  hheap fp -> (x:a & hheap (fp' x))
-
-let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
-  forall frame h0.
-    interp (fp `star` frame) h0 ==>
-    (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1 /\
-     preserves_frame_prop frame h0 h1)
-
-let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
-  = forall (h0:hheap pre)
-      (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (interp pre (join h0 h1) /\ (
-       let (| x0, h |) = f h0 in
-       let (| x1, h' |) = f (join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
-
-let action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_action fp a fp'{ is_frame_preserving f /\
-                         action_depends_only_on_fp f }
-
-
-let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  hmem fp -> (x:a & hmem (fp' x))
-
-val m_action_depends_only_on (#pre:hprop) (#a:Type) (#post:a -> hprop) (f:pre_m_action pre a post) : prop
-
-val is_m_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') : prop
-
-let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_m_action fp a fp'{ is_m_frame_preserving f /\ m_action_depends_only_on f }
-
-val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
-                  (#frame:hprop) (q:fp_prop frame)
-   : Lemma (forall (h0:hheap (fp `star` frame)).
-              (affine_star fp frame h0;
-               q h0 ==>
-               (let (| x, h1 |) = act h0 in
-                q h1)))
-
-val sel (#a:_) (r:ref a) (m:hheap (ptr r))
-  : a
-
-/// sel respect pts_to
-val sel_lemma (#a:_) (r:ref a) (p:permission) (m:hheap (ptr_perm r p))
-  : Lemma (interp (ptr r) m /\
-           interp (pts_to r p (sel r m)) m)
-
-/// memories satisfying [p1 `star` p2] can be split
-/// into disjoint fragments satisfying each of them
-val split_mem (p1 p2:hprop) (m:hheap (p1 `star` p2))
-  : Tot (ms:(hheap p1 & hheap p2){
-            let m1, m2 = ms in
-            disjoint m1 m2 /\
-            m == join m1 m2})
-
-/// upd requires a full permission
-val upd (#a:_) (r:ref a) (v:a)
-  : m_action (ptr_perm r full_permission) unit (fun _ -> pts_to r full_permission v)
-
-val alloc (#a:_) (v:a)
-  : m_action emp (ref a) (fun x -> pts_to x full_permission v)
-
-val lock (p:hprop) : Type0
-
-val new_lock (p:hprop)
-  : m_action p (lock p) (fun _ -> emp)
-
-val mem_evolves  : Preorder.preorder mem
