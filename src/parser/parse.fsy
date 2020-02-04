@@ -1959,10 +1959,10 @@ binop_name:
                              ( mk_ident ("==>", rhs parseState 1) )}
 | CONJUNCTION
     {let o = () in
-                             ( mk_ident ("\\/", rhs parseState 1) )}
+                             ( mk_ident ("/\\", rhs parseState 1) )}
 | DISJUNCTION
     {let o = () in
-                             ( mk_ident ("/\\", rhs parseState 1) )}
+                             ( mk_ident ("\\/", rhs parseState 1) )}
 | IFF
     {let o = () in
                              ( mk_ident ("<==>", rhs parseState 1) )}
