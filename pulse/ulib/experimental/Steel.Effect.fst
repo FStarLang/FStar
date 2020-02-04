@@ -206,43 +206,43 @@ let frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t p
 open Steel.Memory
 open Steel.Permissions
 
-assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
-: Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
-    (fun _ -> True) (fun _ _ _ -> True)
+// assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
+// : Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
+//     (fun _ -> True) (fun _ _ _ -> True)
 
-assume val alloc (#a:Type) (v:a)
-: Steel (ref a) emp (fun x -> pts_to x full_permission v)
-    (fun _ -> True) (fun _ _ _ -> True)
+// assume val alloc (#a:Type) (v:a)
+// : Steel (ref a) emp (fun x -> pts_to x full_permission v)
+//     (fun _ -> True) (fun _ _ _ -> True)
 
-assume val return (#a:Type) (#hp:a -> hprop) (x:a)
-: Steel a (hp x) hp (fun _ -> True) (fun _ r _ -> r == x)
+// assume val return (#a:Type) (#hp:a -> hprop) (x:a)
+// : Steel a (hp x) hp (fun _ -> True) (fun _ r _ -> r == x)
 
 
-let alloc_and_upd (n:int)
-: Steel (ref int) emp (fun x -> pts_to x full_permission (n+1))
-    (fun _ -> True) (fun _ _ _ -> True)
-= let r = alloc n in
-  upd r n (n+1);
-  return r
+// let alloc_and_upd (n:int)
+// : Steel (ref int) emp (fun x -> pts_to x full_permission (n+1))
+//     (fun _ -> True) (fun _ _ _ -> True)
+// = let r = alloc n in
+//   upd r n (n+1);
+//   return r
 
-effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
-  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+// effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+//   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
-  ($f:unit -> SteelT aL preL postL)
-  (#aR:Type) (#preR:pre_t) (#postR:post_t aR)
-  ($g:unit -> SteelT aR preR postR)
-: SteelT (aL & aR)
-  (preL `Mem.star` preR)
-  (fun (xL, xR) -> postL xL `Mem.star` postR xR)
-= par f g
+// let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
+//   ($f:unit -> SteelT aL preL postL)
+//   (#aR:Type) (#preR:pre_t) (#postR:post_t aR)
+//   ($g:unit -> SteelT aR preR postR)
+// : SteelT (aL & aR)
+//   (preL `Mem.star` preR)
+//   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
+// = par f g
 
-let incr (r:ref int) (prev:int) ()
-: SteelT unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission (prev+1))
-= upd r prev (prev+1)
+// let incr (r:ref int) (prev:int) ()
+// : SteelT unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission (prev+1))
+// = upd r prev (prev+1)
 
-let incr2 (r1 r2:ref int) (prev1 prev2:int)
-: SteelT (unit & unit)
-  (pts_to r1 full_permission prev1 `star` pts_to r2 full_permission prev2)
-  (fun _ -> pts_to r1 full_permission (prev1+1) `star` pts_to r2 full_permission (prev2+1))
-= incr r1 prev1 || incr r2 prev2
+// let incr2 (r1 r2:ref int) (prev1 prev2:int)
+// : SteelT (unit & unit)
+//   (pts_to r1 full_permission prev1 `star` pts_to r2 full_permission prev2)
+//   (fun _ -> pts_to r1 full_permission (prev1+1) `star` pts_to r2 full_permission (prev2+1))
+// = incr r1 prev1 || incr r2 prev2
