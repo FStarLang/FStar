@@ -5,7 +5,7 @@ PKG pprint
 PKG yojson
 PKG zarith
 PKG menhirLib
-PKG ulex
+PKG sedlex
 PKG ocaml-migrate-parsetree
 
 S src/basic/ml
