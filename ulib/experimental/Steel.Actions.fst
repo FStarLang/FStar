@@ -1330,6 +1330,98 @@ let glue_array
     (glue_array_action a a' iseq iseq' p)
     (fun h addr -> ())
 
+///////////////////////////////////////////////////////////////////////////////
+// References
+///////////////////////////////////////////////////////////////////////////////
+
+let sel_ref (#t: Type0) (r: reference t) (h: hheap (ref r)) : t =
+  admit()
+
+let sel_ref_lemma
+  (t: Type0)
+  (p: permission{allows_read p})
+  (r: reference t)
+  (m: hheap (ref_perm r p))
+  : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
+  =
+  admit()
+
+let get_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    (x:t{x == Ghost.reveal contents})
+    (fun _ -> pts_to_ref r p contents)
+  =
+  admit()
+
+let set_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (v: t)
+  : m_action
+    (ref_perm r p)
+    unit
+    (fun _ -> pts_to_ref r p v)
+  =
+  admit()
+
+let alloc_ref
+  (#t: Type0)
+  (v: t)
+  : m_action
+    emp
+    (reference t)
+    (fun r -> pts_to_ref r full_permission v)
+  =
+  admit()
+
+let free_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    unit
+    (fun _ -> emp)
+  =
+  admit()
+
+let share_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    (r':reference t{ref_address r' = ref_address r})
+    (fun r' ->
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r (half_permission p) contents
+    )
+  =
+  admit()
+
+let gather_ref
+  (#t: Type0)
+  (r: reference t)
+  (r':reference t{ref_address r' = ref_address r})
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r (half_permission p) contents)
+    unit
+    (fun _ -> pts_to_ref r p contents)
+  =
+  admit()
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Locks
 ////////////////////////////////////////////////////////////////////////////////
@@ -1525,7 +1617,7 @@ let maybe_acquire #p (l:lock p) (m:mem { lock_ok l m } )
 let hmem_emp (p:hprop) (m:hmem p) : hmem emp = m
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 60"
 let release #p (l:lock p) (m:hmem p { lock_ok l m } )
   : (b:bool &
      hmem emp)

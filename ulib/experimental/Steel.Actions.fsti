@@ -19,8 +19,6 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
-#set-options "--query_stats"
-
 let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
   (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 
@@ -198,6 +196,86 @@ val glue_array
     })
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
 
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// References
+///////////////////////////////////////////////////////////////////////////////
+
+val sel_ref (#t: Type0) (r: reference t) (h: hheap (ref r)) : t
+
+val sel_ref_lemma
+  (t: Type0)
+  (p: permission{allows_read p})
+  (r: reference t)
+  (m: hheap (ref_perm r p))
+  : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
+
+val get_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    (x:t{x == Ghost.reveal contents})
+    (fun _ -> pts_to_ref r p contents)
+
+val set_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (v: t)
+  : m_action
+    (ref_perm r p)
+    unit
+    (fun _ -> pts_to_ref r p v)
+
+val alloc_ref
+  (#t: Type0)
+  (v: t)
+  : m_action
+    emp
+    (reference t)
+    (fun r -> pts_to_ref r full_permission v)
+
+val free_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    unit
+    (fun _ -> emp)
+
+val share_ref
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r p contents)
+    (r':reference t{ref_address r' = ref_address r})
+    (fun r' ->
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r (half_permission p) contents
+    )
+
+val gather_ref
+  (#t: Type0)
+  (r: reference t)
+  (r':reference t{ref_address r' = ref_address r})
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : m_action
+    (pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r (half_permission p) contents)
+    unit
+    (fun _ -> pts_to_ref r p contents)
+
+///////////////////////////////////////////////////////////////////////////////
+// Locks
 ///////////////////////////////////////////////////////////////////////////////
 
 val lock (p:hprop) : Type0
