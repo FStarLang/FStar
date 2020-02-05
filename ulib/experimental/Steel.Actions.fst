@@ -749,7 +749,7 @@ let alloc_array_pre_m_action
   (init: t)
   : pre_m_action
     emp
-    (a:array_ref t{length a = len /\ offset a = 0ul})
+    (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
     (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
   =  fun m ->
   let a = {
@@ -842,13 +842,14 @@ let alloc_array_depends_only_on
   )
 #pop-options
 
+
 let alloc_array
   (#t: _)
   (len:U32.t)
   (init: t)
   : m_action
     emp
-    (a:array_ref t{length a = len /\ offset a = 0ul})
+    (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
     (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
   =
   alloc_array_is_frame_preserving len init;
@@ -1334,9 +1335,12 @@ let glue_array
 // References
 ///////////////////////////////////////////////////////////////////////////////
 
+#push-options "--max_fuel 2 --initial_fuel 2"
 let sel_ref (#t: Type0) (r: reference t) (h: hheap (ref r)) : t =
-  admit()
+  Seq.index (as_seq r h) 0
+#pop-options
 
+#push-options "--max_fuel 2 --initial_fuel 2"
 let sel_ref_lemma
   (t: Type0)
   (p: permission{allows_read p})
@@ -1344,8 +1348,10 @@ let sel_ref_lemma
   (m: hheap (ref_perm r p))
   : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
   =
-  admit()
+  ()
+#pop-options
 
+#push-options "--max_fuel 2 --initial_fuel 2 --z3rlimit 20"
 let get_ref
   (#t: Type0)
   (r: reference t)
@@ -1356,19 +1362,21 @@ let get_ref
     (x:t{x == Ghost.reveal contents})
     (fun _ -> pts_to_ref r p contents)
   =
-  admit()
+  index_array r (Seq.create 1 (Ghost.reveal contents)) p 0ul
+#pop-options
 
 let set_ref
   (#t: Type0)
   (r: reference t)
-  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
   (v: t)
   : m_action
-    (ref_perm r p)
+    (pts_to_ref r full_permission contents)
     unit
-    (fun _ -> pts_to_ref r p v)
+    (fun _ -> pts_to_ref r full_permission v)
   =
-  admit()
+  assert(Seq.upd (Seq.create 1 (Ghost.reveal contents)) 0 v `Seq.equal` Seq.create 1 v);
+  upd_array r (Seq.create 1 (Ghost.reveal contents)) 0ul v
 
 let alloc_ref
   (#t: Type0)
@@ -1378,19 +1386,18 @@ let alloc_ref
     (reference t)
     (fun r -> pts_to_ref r full_permission v)
   =
-  admit()
+  alloc_array 1ul v
 
 let free_ref
   (#t: Type0)
   (r: reference t)
-  (p: permission{allows_read p})
   (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r p contents)
+    (pts_to_ref r full_permission contents)
     unit
     (fun _ -> emp)
   =
-  admit()
+  free_array r (Seq.create 1 (Ghost.reveal contents))
 
 let share_ref
   (#t: Type0)
@@ -1405,7 +1412,7 @@ let share_ref
       pts_to_ref r (half_permission p) contents
     )
   =
-  admit()
+  share_array r (Seq.create 1 (Ghost.reveal contents)) p
 
 let gather_ref
   (#t: Type0)
@@ -1419,7 +1426,7 @@ let gather_ref
     unit
     (fun _ -> pts_to_ref r p contents)
   =
-  admit()
+  gather_array r r' (Seq.create 1 (Ghost.reveal contents)) p
 
 
 ////////////////////////////////////////////////////////////////////////////////
