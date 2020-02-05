@@ -215,11 +215,10 @@ val get_ref
   (#t: Type0)
   (r: reference t)
   (p: permission{allows_read p})
-  (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r p contents)
-    (x:t{x == Ghost.reveal contents})
-    (fun _ -> pts_to_ref r p contents)
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
 
 val set_ref
   (#t: Type0)
