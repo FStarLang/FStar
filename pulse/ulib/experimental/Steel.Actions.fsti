@@ -224,10 +224,9 @@ val get_ref
 val set_ref
   (#t: Type0)
   (r: reference t)
-  (contents: Ghost.erased t)
   (v: t)
   : m_action
-    (pts_to_ref r full_permission contents)
+    (ref_perm r full_permission)
     unit
     (fun _ -> pts_to_ref r full_permission v)
 

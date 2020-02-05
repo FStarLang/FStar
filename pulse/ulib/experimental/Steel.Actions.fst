@@ -1365,18 +1365,70 @@ let get_ref
   index_array r (Seq.create 1 (Ghost.reveal contents)) p 0ul
 #pop-options
 
-let set_ref
+let set_ref_pre_action
   (#t: Type0)
   (r: reference t)
-  (contents: Ghost.erased t)
   (v: t)
-  : m_action
-    (pts_to_ref r full_permission contents)
+  : pre_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> pts_to_ref r full_permission v)
+  = fun h ->
+  let contents = sel_ref r h in
+  sel_ref_lemma t full_permission r h;
+  assert(Seq.upd (Seq.create 1 contents) 0 v `Seq.equal` Seq.create 1 v);
+  upd_array_pre_action r (Seq.create 1 contents) 0ul v h
+
+let set_ref_action
+  (#t: Type0)
+  (r: reference t)
+  (v: t)
+  : action
+    (ref_perm r full_permission)
     unit
     (fun _ -> pts_to_ref r full_permission v)
   =
-  assert(Seq.upd (Seq.create 1 (Ghost.reveal contents)) 0 v `Seq.equal` Seq.create 1 v);
-  upd_array r (Seq.create 1 (Ghost.reveal contents)) 0ul v
+  pre_action_to_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> pts_to_ref r full_permission v)
+    (set_ref_pre_action r v)
+     (fun frame h0 h1 addr -> (* Disjointness preservation *)
+     let iseq = Seq.create 1 (sel_ref r h0) in
+     sel_ref_lemma t full_permission r h0;
+      upd_array_heap_frame_disjointness_preservation r iseq 0ul v (join h0 h1) h0 h1 frame
+    )
+    (fun frame h0 h1 addr -> (* Does not depend on framing *)
+      let iseq = Seq.create 1 (sel_ref r h0) in
+      sel_ref_lemma t full_permission r h0;
+      upd_array_action_memory_split_independence r iseq 0ul v (join h0 h1) h0 h1 frame
+    )
+    (fun frame h0 h1 post -> (* Return and post *)
+      let iseq = Seq.create 1 (sel_ref r h0) in
+      sel_ref_lemma t full_permission r h0;
+      let (| x0, h |) = set_ref_pre_action r v h0 in
+      let (| x1, h' |) = set_ref_pre_action r v (join h0 h1) in
+      assert (x0 == x1);
+      upd_array_heap_frame_disjointness_preservation r iseq 0ul v (join h0 h1) h0 h1 frame;
+      upd_array_action_memory_split_independence r iseq 0ul v (join h0 h1) h0 h1 frame;
+      assert (h' == join h h1)
+    )
+
+let set_ref
+  (#t: Type0)
+  (r: reference t)
+  (v: t)
+  : m_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> pts_to_ref r full_permission v)
+  =
+  non_alloc_action_to_non_locking_m_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> pts_to_ref r full_permission v)
+    (set_ref_action r v)
+    (fun h0 addr -> ())
 
 let alloc_ref
   (#t: Type0)
