@@ -380,8 +380,9 @@ let m_action_depends_only_on_intro (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pr
    admit() //TODO: DM 22/01/20 figure out why F* can't recognize the intro...
 #pop-options
 
+#restart-solver
 
-#push-options "--max_fuel 2 --initial_ifuel 2"
+#push-options "--max_fuel 2 --initial_ifuel 2 --z3rlimit 20"
 let is_m_frame_preserving_intro
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
   (preserves_framing_intro:
@@ -394,6 +395,7 @@ let is_m_frame_preserving_intro
   : Lemma (is_m_frame_preserving f)
   =
   let aux (frame: hprop) (m0: hmem (fp `star` frame)) : Lemma (
+     affine_star fp frame m0.heap;
      let (| x, m1 |) = f m0 in
      interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1)
   ) =
@@ -768,7 +770,7 @@ let alloc_array_pre_m_action
   (| a, new_m |)
 #pop-options
 
-#push-options "--z3rlimit 100 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
+#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
 let alloc_array_is_frame_preserving
   (#t: _)
   (len:U32.t)

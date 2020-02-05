@@ -19,6 +19,8 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
+#set-options "--query_stats"
+
 let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
   (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 
