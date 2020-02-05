@@ -859,9 +859,8 @@ let alloc_array
 let free_array_pre_action
   (#t: _)
   (a: array_ref t{freeable a})
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   : pre_action
-    (pts_to_array a full_permission iseq)
+    (array_perm a full_permission)
     unit
     (fun _ -> emp)
   = fun h -> (| (), h |)
@@ -869,13 +868,12 @@ let free_array_pre_action
 let free_array_action
   (#t: _)
   (a: array_ref t{freeable a})
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   =
   pre_action_to_action
-    (pts_to_array a full_permission iseq)
+    (array_perm a full_permission)
     unit
     (fun _ -> emp)
-    (free_array_pre_action a iseq)
+    (free_array_pre_action a)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 post -> ())
     (fun frame h0 h1 post -> ())
@@ -883,17 +881,16 @@ let free_array_action
 let free_array
   (#t: _)
   (a: array_ref t{freeable a})
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   : m_action
-    (pts_to_array a full_permission iseq)
+    (array_perm a full_permission)
     unit
     (fun _ -> emp)
   =
   non_alloc_action_to_non_locking_m_action
-    (pts_to_array a full_permission iseq)
+    (array_perm a full_permission)
     unit
     (fun _ -> emp)
-    (free_array_action a iseq)
+    (free_array_action a)
     (fun h addr -> ())
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
@@ -1391,16 +1388,50 @@ let alloc_ref
   =
   alloc_array 1ul v
 
-let free_ref
+let free_ref_pre_action
   (#t: Type0)
   (r: reference t)
-  (contents: Ghost.erased t)
-  : m_action
-    (pts_to_ref r full_permission contents)
+  : pre_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> emp)
+  = fun h ->
+    free_array_pre_action r h
+
+let free_ref_action
+  (#t: Type0)
+  (r: reference t)
+  : pre_action
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
   =
-  free_array r (Seq.create 1 (Ghost.reveal contents))
+  pre_action_to_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> emp)
+    (free_ref_pre_action r)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+
+
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
+let free_ref
+  (#t: Type0)
+  (r: reference t)
+  : m_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> emp)
+  =
+  non_alloc_action_to_non_locking_m_action
+    (ref_perm r full_permission)
+    unit
+    (fun _ -> emp)
+    (free_ref_action r)
+    (fun h0 addr -> ())
+#pop-options
 
 let share_ref
   (#t: Type0)
