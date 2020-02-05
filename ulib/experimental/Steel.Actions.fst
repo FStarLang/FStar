@@ -73,7 +73,7 @@ let frame_fp_prop #fp #a #fp' (act:action fp a fp')
      in
      ()
 
-#push-options "--warn_error -271"
+#push-options "--warn_error -271 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let action_depends_only_on_fp_intro (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
   (lemma:
     (h0:hheap fp) ->
@@ -770,7 +770,7 @@ let alloc_array_pre_m_action
   (| a, new_m |)
 #pop-options
 
-#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
+#push-options "--z3rlimit 200 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
 let alloc_array_is_frame_preserving
   (#t: _)
   (len:U32.t)
