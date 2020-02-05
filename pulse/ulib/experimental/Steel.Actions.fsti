@@ -114,7 +114,7 @@ val alloc_array
   (init: t)
   : m_action
     emp
-    (a:array_ref t{length a = len /\ offset a = 0ul})
+    (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
     (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
 
 val free_array
@@ -224,12 +224,12 @@ val get_ref
 val set_ref
   (#t: Type0)
   (r: reference t)
-  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
   (v: t)
   : m_action
-    (ref_perm r p)
+    (pts_to_ref r full_permission contents)
     unit
-    (fun _ -> pts_to_ref r p v)
+    (fun _ -> pts_to_ref r full_permission v)
 
 val alloc_ref
   (#t: Type0)
@@ -242,10 +242,9 @@ val alloc_ref
 val free_ref
   (#t: Type0)
   (r: reference t)
-  (p: permission{allows_read p})
   (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r p contents)
+    (pts_to_ref r full_permission contents)
     unit
     (fun _ -> emp)
 
