@@ -1035,13 +1035,14 @@ let gather_array_pre_action
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   : pre_action
     (star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a p iseq)
+      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a p iseq)
+    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
   = fun h ->
     (| (), h |)
 #pop-options
@@ -1056,22 +1057,23 @@ let gather_array_action
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   : action
     (star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a p iseq)
+      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a p iseq)
+    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
   =
   pre_action_to_action
     (star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a p iseq)
+      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a p iseq)
-    (gather_array_pre_action a a' iseq p)
+    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
+    (gather_array_pre_action a a' iseq p p')
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 post -> ())
@@ -1086,22 +1088,23 @@ let gather_array
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   : m_action
     (star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a p iseq)
+      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a p iseq)
+    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
     =
     non_alloc_action_to_non_locking_m_action
       (star
-        (pts_to_array a (half_permission p) iseq)
-        (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+        (pts_to_array a p iseq)
+        (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
       )
       unit
-      (fun _ -> pts_to_array a p iseq)
-      (gather_array_action a a' iseq p)
+      (fun _ -> pts_to_array a (sum_permissions p p') iseq)
+      (gather_array_action a a' iseq p p')
       (fun h addr -> ())
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 150"
@@ -1409,7 +1412,7 @@ let share_ref
     (r':reference t{ref_address r' = ref_address r})
     (fun r' ->
       pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r (half_permission p) contents
+      pts_to_ref r' (half_permission p) contents
     )
   =
   share_array r (Seq.create 1 (Ghost.reveal contents)) p
@@ -1419,14 +1422,15 @@ let gather_ref
   (r: reference t)
   (r':reference t{ref_address r' = ref_address r})
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r (half_permission p) contents)
+    (pts_to_ref r p contents `star`
+      pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r p contents)
+    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
   =
-  gather_array r r' (Seq.create 1 (Ghost.reveal contents)) p
+  gather_array r r' (Seq.create 1 (Ghost.reveal contents)) p p'
 
 
 ////////////////////////////////////////////////////////////////////////////////
