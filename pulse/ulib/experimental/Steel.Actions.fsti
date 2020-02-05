@@ -151,13 +151,14 @@ val gather_array
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   : m_action
     (star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a p iseq)
+      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a p iseq)
+    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
 
 val split_array
   (#t: _)
@@ -258,7 +259,7 @@ val share_ref
     (r':reference t{ref_address r' = ref_address r})
     (fun r' ->
       pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r (half_permission p) contents
+      pts_to_ref r' (half_permission p) contents
     )
 
 val gather_ref
@@ -266,12 +267,13 @@ val gather_ref
   (r: reference t)
   (r':reference t{ref_address r' = ref_address r})
   (p: permission{allows_read p})
+  (p': permission{allows_read p' /\ summable_permissions p p'})
   (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r (half_permission p) contents)
+    (pts_to_ref r p contents `star`
+      pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r p contents)
+    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Locks
