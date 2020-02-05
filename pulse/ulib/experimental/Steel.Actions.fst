@@ -1351,19 +1351,56 @@ let sel_ref_lemma
   ()
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2 --z3rlimit 20"
+let get_ref_pre_action
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  : pre_action
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
+  = fun h ->
+  let contents = sel_ref r h in
+  sel_ref_lemma t p r h;
+  let (| x, h' |) = index_array_pre_action r (Seq.create 1 contents) 0ul p h in
+  (| x, h' |)
+
+
+#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let get_ref_action
+  (#t: Type0)
+  (r: reference t)
+  (p: permission{allows_read p})
+  : action
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
+  =
+  pre_action_to_action
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
+    (get_ref_pre_action r p)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 post -> ())
+#pop-options
+
 let get_ref
   (#t: Type0)
   (r: reference t)
   (p: permission{allows_read p})
-  (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r p contents)
-    (x:t{x == Ghost.reveal contents})
-    (fun _ -> pts_to_ref r p contents)
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
   =
-  index_array r (Seq.create 1 (Ghost.reveal contents)) p 0ul
-#pop-options
+  non_alloc_action_to_non_locking_m_action
+    (ref_perm r p)
+    (x:t)
+    (fun x -> pts_to_ref r p x)
+    (get_ref_action r p)
+    (fun h0 addr -> ())
 
 let set_ref_pre_action
   (#t: Type0)
