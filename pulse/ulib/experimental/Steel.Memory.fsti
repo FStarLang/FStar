@@ -40,14 +40,14 @@ val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
   U32.v (offset a) + U32.v (length a) <= U32.v n
 })
 
-val address (#t: Type) (a: array_ref t) : addr
+val address (#t: Type) (a: array_ref t) : GTot addr
 
 let freeable (#t: Type) (a: array_ref t) =
   offset a = 0ul /\ length a = max_length a
 
 val reference (t: Type0) : Type0
 
-val ref_address (#t: Type0) (r: reference t) : addr
+val ref_address (#t: Type0) (r: reference t) : GTot addr
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
