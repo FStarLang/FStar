@@ -112,6 +112,12 @@ let max_length (#t: Type) (a: array_ref t) = a.array_max_length
 
 let address (#t: Type) (a: array_ref t) = a.array_addr
 
+let reference (t: Type u#0) = a:array_ref t{
+  length a = 1ul /\ offset a = 0ul /\ max_length a = 1ul
+}
+
+let ref_address (#t: Type0) (r: reference t) = r.array_addr
+
 let disjoint (m0 m1:heap)
   : prop
   = forall a. disjoint_addr m0 m1 a
@@ -330,6 +336,12 @@ let rec interp (p:hprop) (m:heap)
 
 let emp = Emp
 let pts_to_array = Pts_to_array
+let pts_to_ref
+  (#t: Type0)
+  (r: reference t)
+  (p:permission{allows_read p})
+  (contents: Ghost.erased t) : hprop
+  = pts_to_array r p (Seq.Base.create 1 (Ghost.reveal contents))
 let h_and = And
 let h_or = Or
 let star = Star

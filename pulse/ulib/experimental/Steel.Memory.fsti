@@ -45,6 +45,9 @@ val address (#t: Type) (a: array_ref t) : addr
 let freeable (#t: Type) (a: array_ref t) =
   offset a = 0ul /\ length a = max_length a
 
+val reference (t: Type0) : Type0
+
+val ref_address (#t: Type0) (r: reference t) : addr
 
 /// A predicate describing non-overlapping memories
 val disjoint (m0 m1:heap) : prop
@@ -108,6 +111,11 @@ val pts_to_array
   (p:permission{allows_read p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
+val pts_to_ref
+  (#t: Type0)
+  (r: reference t)
+  (p:permission{allows_read p})
+  (contents: Ghost.erased t) : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -147,6 +155,15 @@ val pts_to_array_injective
       interp (pts_to_array a p c1) m))
     (ensures (c0 == c1))
 
+////////////////////////////////////////////////////////////////////////////////
+// pts_to_ref and abbreviations
+////////////////////////////////////////////////////////////////////////////////
+
+let ref_perm (#t: Type0) (r: reference t) (p:permission{allows_read p}) : hprop
+  = h_exists (pts_to_ref r p)
+
+let ref (#t: Type0) (r: reference t) : hprop
+  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
