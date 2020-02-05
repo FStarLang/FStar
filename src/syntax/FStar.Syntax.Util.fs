@@ -31,6 +31,7 @@ open FStar.Dyn
 module U = FStar.Util
 module List = FStar.List
 module PC = FStar.Parser.Const
+
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -717,7 +718,8 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ -> []
+  | Sig_main _ 
+  | Sig_polymonadic_bind _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l

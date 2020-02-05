@@ -131,6 +131,7 @@ let logic_qualifier_deprecation_warning =
 %token <string> OP_MIXFIX_ASSIGNMENT
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
+%token POLYMONADIC_BIND
 %token PRAGMALIGHT
 %token PRAGMA_POP_OPTIONS
 %token PRAGMA_PUSH_OPTIONS
@@ -752,6 +753,9 @@ let ids =     ( xs ) in
 | SUB_EFFECT subEffect
     {let (_1, se) = ((), $2) in
       ( SubEffect se )}
+| POLYMONADIC_BIND polymonadic_bind
+    {let (_1, b) = ((), $2) in
+      ( Polymonadic_bind b )}
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
@@ -921,6 +925,11 @@ in
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
+
+polymonadic_bind:
+  LPAREN quident COMMA quident RPAREN PIPE_RIGHT quident EQUALS simpleTerm
+    {let (_1, m_eff, _3, n_eff, _5, _6, p_eff, _8, bind) = ((), $2, (), $4, (), (), $7, (), $9) in
+      ( (m_eff, n_eff, p_eff, bind) )}
 
 qualifier:
   ASSUME
@@ -1950,10 +1959,10 @@ binop_name:
                              ( mk_ident ("==>", rhs parseState 1) )}
 | CONJUNCTION
     {let o = () in
-                             ( mk_ident ("\\/", rhs parseState 1) )}
+                             ( mk_ident ("/\\", rhs parseState 1) )}
 | DISJUNCTION
     {let o = () in
-                             ( mk_ident ("/\\", rhs parseState 1) )}
+                             ( mk_ident ("\\/", rhs parseState 1) )}
 | IFF
     {let o = () in
                              ( mk_ident ("<==>", rhs parseState 1) )}

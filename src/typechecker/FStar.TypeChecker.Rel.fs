@@ -3068,6 +3068,11 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (fun b -> BU.format3 "implicit for binder %s in stronger of %s at %s"
             (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
 
+        if debug env <| Options.Other "LayeredEffects"
+        then BU.print1 "Introduced uvars for subcomp: %s\n"
+               (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
+
+
         let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 
         let substs = List.map2
