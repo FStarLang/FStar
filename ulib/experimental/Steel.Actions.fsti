@@ -120,9 +120,8 @@ val alloc_array
 val free_array
   (#t: _)
   (a: array_ref t{freeable a})
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   : m_action
-    (pts_to_array a full_permission iseq)
+    (array_perm a full_permission)
     unit
     (fun _ -> emp)
 
@@ -243,9 +242,8 @@ val alloc_ref
 val free_ref
   (#t: Type0)
   (r: reference t)
-  (contents: Ghost.erased t)
   : m_action
-    (pts_to_ref r full_permission contents)
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
 
