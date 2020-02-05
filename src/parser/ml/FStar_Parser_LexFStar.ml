@@ -4,7 +4,6 @@ open FStar_Parser_Util
 module Option  = BatOption
 module String  = BatString
 module Hashtbl = BatHashtbl
-module Ulexing = FStar_Ulexing
 module L = Sedlexing
 module E = FStar_Errors
 
@@ -509,7 +508,9 @@ match%sedlex lexbuf with
  | '`', '`', (Plus (Compl ('`' | 10 | 13 | 0x2028 | 0x2029) | '`', Compl ('`' | 10 | 13 | 0x2028 | 0x2029))), '`', '`' ->
    IDENT (trim_both lexbuf 2 2)
 
+ (*
  | op_token  -> L.lexeme lexbuf |> Hashtbl.find operators
+ *)
  | "<"       -> if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")
  | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
  (* Operators. *)
@@ -547,10 +548,12 @@ match%sedlex lexbuf with
 and one_line_comment pre lexbuf =
 match%sedlex lexbuf with
  | Star (Compl (10 | 13 | 0x2028 | 0x2029)) -> push_one_line_comment pre lexbuf; token lexbuf
+ | _ -> assert false
 
 and symbolchar_parser lexbuf =
 match%sedlex lexbuf with
  | Star symbolchar -> OPINFIX0c (">" ^  L.lexeme lexbuf)
+ | _ -> assert false
 
 and string buffer start_pos lexbuf =
 match%sedlex lexbuf with
@@ -569,10 +572,10 @@ match%sedlex lexbuf with
    (* as above *)
    lexbuf.Ulexing.start_p <- start_pos;
    BYTEARRAY (ba_of_string (Buffer.contents buffer))
- | _ ->
-   Buffer.add_string buffer (L.lexeme lexbuf);
-   string buffer start_pos lexbuf
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
+ | _ ->
+  Buffer.add_string buffer (L.lexeme lexbuf);
+  string buffer start_pos lexbuf
 
 and comment inner buffer startpos lexbuf =
 match%sedlex lexbuf with
@@ -587,12 +590,13 @@ match%sedlex lexbuf with
  | "*)" ->
    terminate_comment buffer startpos lexbuf;
    if inner then EOF else token lexbuf
+ | eof ->
+   terminate_comment buffer startpos lexbuf; EOF
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    comment inner buffer startpos lexbuf
- | eof ->
-   terminate_comment buffer startpos lexbuf; EOF
 
 and ignore_endline lexbuf =
 match%sedlex lexbuf with
  | Star ' ', newline -> token lexbuf
+ | _ -> assert false
