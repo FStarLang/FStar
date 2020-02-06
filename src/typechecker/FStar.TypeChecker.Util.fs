@@ -2231,10 +2231,9 @@ let generalize env is_rec lecs =
 (************************************************************************)
 (* Convertibility *)
 (************************************************************************)
-//check_and_ascribe env e t1 t2
-//checks is e:t1 is convertible to t2, subject to some guard.
-//e is ascribed the type t2 and the guard is returned'
-let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+//check_has_type env e t1 t2
+//checks is e:t1 has type t2, subject to some guard.
+let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
     if env.use_eq
@@ -2243,12 +2242,6 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
             | None -> None
             | Some f -> Some <| apply_guard f e
   in
-  let decorate e t =
-    let e = compress e in
-    match e.n with
-    | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
-    | _ -> e
-  in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
   match check env lc.res_typ t2 with
   | None ->
@@ -2256,7 +2249,7 @@ let check_and_ascribe env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t 
   | Some g ->
     if debug env <| Options.Other "Rel" then
       BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    decorate e t2, lc, (Env.conj_guard g g_c)
+    e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =

@@ -41,6 +41,13 @@ Guidelines for the changelog:
 
   * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds
 
+  * Names in the expressions are now annotated with the types at their binding sites
+    rather than with the expected types at the use sites. This change resulted in
+    a regression in the F* examples:
+    https://github.com/FStarLang/FStar/commit/752d457bda9c0a38eef04e71886cc16899d9c13d
+
+    The workaround is an explicit annotation (see comments in the commit above).
+
 ## Libraries
 
    * Two core axioms were discovered by Aseem Rastogi to be formulated
