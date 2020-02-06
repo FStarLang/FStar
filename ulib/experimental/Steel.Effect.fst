@@ -192,7 +192,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
 
-let frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:unit -> Steel a pre post req ens)
   (frame:Mem.hprop)
   (f_frame:fp_prop frame)
@@ -203,8 +203,42 @@ let frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t p
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 = frame0 (steel_reify f) frame f_frame
 
+(*** Small examples for frame inference ***)
+
+(**** Specialize to trivial req and ens ****)
+
 open Steel.Memory
-open Steel.Permissions
+
+effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+
+
+let steel_frame_t (#a:Type) (#pre:pre_t) (#post:post_t a)
+  ($f:unit -> Steel a pre post (fun _ -> True) (fun _ _ _ -> True))
+  (frame:hprop)
+: SteelT a
+  (pre `Mem.star` frame)
+  (fun x -> post x `Mem.star` frame)
+= steel_frame f frame (fun _ -> True)
+
+
+assume val r1 : hprop
+assume val r2 : hprop
+assume val r3 : hprop
+
+
+assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
+assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+
+let test_frame1 (_:unit)
+: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+= steel_frame_t #_ #(r1 `star` r2) #(fun _ -> r1 `star` r2) f12 r3;
+  steel_frame_t #_ #(r1 `star` r2) #(fun _ -> r1 `star` r2) f12 r3;
+  f123 ()
+
+
+
+// open Steel.Permissions
 
 // assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
 // : Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
@@ -225,8 +259,6 @@ open Steel.Permissions
 //   upd r n (n+1);
 //   return r
 
-// effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
-//   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 // let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
 //   ($f:unit -> SteelT aL preL postL)
