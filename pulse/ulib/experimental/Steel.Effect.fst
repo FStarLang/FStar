@@ -232,10 +232,9 @@ assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 
 
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-= steel_frame_t #_ #(r1 `star` r2) #(fun _ -> r1 `star` r2) f12 r3;
-  steel_frame_t #_ #(r1 `star` r2) #(fun _ -> r1 `star` r2) f12 r3;
+= steel_frame_t f12 _;
+  steel_frame_t f12 _;
   f123 ()
-
 
 
 // open Steel.Permissions
