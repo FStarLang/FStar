@@ -1669,7 +1669,6 @@ let lock_ok_stable (#p:_) (l:lock p) (m0 m1:mem)
            lock_ok l m1)
   = ()
 
-let pure (p:prop) : hprop = refine emp (fun _ -> p)
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
 let intro_pure (p:prop) (q:hprop) (h:hheap q { p })

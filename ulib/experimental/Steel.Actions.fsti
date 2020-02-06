@@ -278,4 +278,20 @@ val lock (p:hprop) : Type0
 val new_lock (p:hprop)
   : m_action p (lock p) (fun _ -> emp)
 
+val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
+
+let pure (p:prop) : hprop = refine emp (fun _ -> p)
+
 val mem_evolves  : Preorder.preorder mem
+
+val maybe_acquire
+  (#p: hprop)
+  (l:lock p) 
+  (m:mem { lock_ok l m } )
+  : (b:bool & m:hmem (h_or (pure (b == false)) p))
+
+val release 
+  (#p: hprop) 
+  (l:lock p)
+  (m:hmem p { lock_ok l m } )
+  : (b:bool & hmem emp)
