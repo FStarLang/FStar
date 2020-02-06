@@ -238,7 +238,22 @@ let test_frame1 (_:unit)
   steel_frame_t f1 _  //this fails to infer frame
 
 
-// open Steel.Permissions
+(*** Lifting actions to MST and then to Steel ***)
+open Steel.Permissions
+open Steel.Actions
+
+assume val mst_admit (#a:Type) (_:unit) : Sem.Mst a #state (fun _ -> True) (fun _ _ _ -> False)
+
+let get_ref (#a:Type0) (r:reference a) (p:permission{allows_read p})
+: repr a (ref_perm r p) (fun x -> pts_to_ref r p x) (fun _ -> True) (fun _ _ _ -> True)
+= fun _ ->
+  let m = MST.get () in
+  assume (Mem.interp (Mem.locks_invariant m `Mem.star` (ref_perm r p)) (Mem.heap_of_mem m));
+  mst_admit ();
+  let (| x, m |) = get_ref r p m in
+  MST.put m;
+  x
+
 
 // assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
 // : Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
