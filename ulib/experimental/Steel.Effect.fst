@@ -242,16 +242,22 @@ let test_frame1 (_:unit)
 open Steel.Permissions
 open Steel.Actions
 
+assume val mst_assume (p:Type) : Sem.Mst unit #state (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
 assume val mst_admit (#a:Type) (_:unit) : Sem.Mst a #state (fun _ -> True) (fun _ _ _ -> False)
+assume val mst_assert (p:Type) : Sem.Mst unit #state (fun _ -> p) (fun m0 _ m1 -> m0 == m1 /\ p)
 
-let get_ref (#a:Type0) (r:reference a) (p:permission{allows_read p})
-: repr a (ref_perm r p) (fun x -> pts_to_ref r p x) (fun _ -> True) (fun _ _ _ -> True)
-= fun _ ->
-  let m = MST.get () in
-  assume (Mem.interp (Mem.locks_invariant m `Mem.star` (ref_perm r p)) (Mem.heap_of_mem m));
-  mst_admit ();
-  let (| x, m |) = get_ref r p m in
-  MST.put m;
+let get_ref (#a:Type0) (r:reference a) (p:permission{allows_read p}) (_:unit)
+: Sem.Mst a #state
+  (requires fun m0 -> interp (locks_invariant m0 `star` ref_perm r p) (heap_of_mem m0))
+  (ensures fun m0 x m1 ->
+    interp (locks_invariant m1 `star` pts_to_ref r p x) (heap_of_mem m1) /\
+    Sem.preserves_frame (ref_perm r p) (pts_to_ref r p x) m0 m1)
+// : repr a (ref_perm r p) (fun x -> pts_to_ref r p x) (fun _ -> True) (fun _ _ _ -> True)
+= let m0 = MST.get () in
+  let (| x, m1 |) = get_ref r p m0 in
+  mst_assume (Sem.preserves_frame (ref_perm r p) (pts_to_ref r p x) m0 m1);
+  mst_assume (mem_evolves m0 m1);
+  MST.put #mem #mem_evolves m1;
   x
 
 

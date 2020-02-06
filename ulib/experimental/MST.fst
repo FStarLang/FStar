@@ -45,7 +45,7 @@ let bind (a:Type) (b:Type) (state:Type u#1) (rel:P.preorder state)
   (f:repr a state rel req_f ens_f) (g:(x:a -> repr b state rel (req_g x) (ens_g x)))
 : repr b state rel
   (fun s0 -> req_f s0 /\ (forall x s1. ens_f s0 x s1 ==> (req_g x) s1))
-  (fun s0 r s2 -> req_f s0 /\ (exists x s1. ens_f s0 x s1 /\ (ens_g x) s1 r s2))
+  (fun s0 r s2 -> req_f s0 /\ (exists x s1. ens_f s0 x s1 /\ (req_g x) s1 /\ (ens_g x) s1 r s2))
 = fun s0 ->
   let x, s1 = f s0 in
   (g x) s1

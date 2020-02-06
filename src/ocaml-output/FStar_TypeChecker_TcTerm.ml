@@ -396,7 +396,7 @@ let (value_check_expected_typ :
              | FStar_Pervasives_Native.None  -> ((memo_tk e t), lc, guard)
              | FStar_Pervasives_Native.Some t' ->
                  let uu____506 =
-                   FStar_TypeChecker_Util.check_and_ascribe env e lc t'  in
+                   FStar_TypeChecker_Util.check_has_type env e lc t'  in
                  (match uu____506 with
                   | (e1,lc1,g) ->
                       ((let uu____523 =
@@ -415,7 +415,7 @@ let (value_check_expected_typ :
                             FStar_TypeChecker_Rel.guard_to_string env guard
                              in
                           FStar_Util.print4
-                            "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
+                            "value_check_expected_typ: type is %s<:%s \tguard is %s, %s\n"
                             uu____526 uu____528 uu____530 uu____532
                         else ());
                        (let t1 = lc1.FStar_TypeChecker_Common.res_typ  in
@@ -5254,7 +5254,7 @@ and (tc_abs :
                                          FStar_TypeChecker_Common.lcomp_of_comp
                                         in
                                      let uu____14852 =
-                                       FStar_TypeChecker_Util.check_and_ascribe
+                                       FStar_TypeChecker_Util.check_has_type
                                          env1 e lc t1
                                         in
                                      (match uu____14852 with
