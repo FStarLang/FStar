@@ -118,9 +118,9 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc, g = TcUtil.check_and_ascribe env e lc t' in
+     let e, lc, g = TcUtil.check_has_type env e lc t' in
      if debug env Options.Medium
-     then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
+     then BU.print4 "value_check_expected_typ: type is %s<:%s \tguard is %s, %s\n"
                 (TcComm.lcomp_to_string lc) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
      let t = lc.res_typ in
@@ -1566,7 +1566,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     e, t_annot, guard
                 | _ ->
                     let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
-                    let e, _, guard' = TcUtil.check_and_ascribe env e lc t in  //QUESTION: t should also probably be t_annot here
+                    let e, _, guard' = TcUtil.check_has_type env e lc t in  //QUESTION: t should also probably be t_annot here
                     e, t_annot, Env.conj_guard guard guard'
            end
 
@@ -3304,6 +3304,14 @@ let level_of_type env e t =
                aux false t
           else let t_u, u = U.type_u() in
                let env = {env with lax=true} in
+               (*
+                * AR: This is a little harsh
+                *     If t is a uvar, then this prevents t to be inferred as something more
+                *       precise than Type, e.g. eqtype
+                *     So ideally, we could here generate a subtyping constraint
+                *     But for that this function needs to return a guard, and
+                *       the guard needs to be accounted for in the callers
+                *)
                let g = FStar.TypeChecker.Rel.teq env t t_u in
                begin match g.guard_f with
                      | NonTrivial f ->
