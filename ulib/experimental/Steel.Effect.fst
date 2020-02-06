@@ -227,14 +227,15 @@ assume val r2 : hprop
 assume val r3 : hprop
 
 
+assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
 assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
 assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 
+[@expect_failure]
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-= steel_frame_t f12 _;
-  steel_frame_t f12 _;
-  f123 ()
+= steel_frame_t f12 _;  //this succeeds, simple unification
+  steel_frame_t f1 _  //this fails to infer frame
 
 
 // open Steel.Permissions
