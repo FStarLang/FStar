@@ -35,3 +35,20 @@ let alloc (#a:eqtype) #b #inv (r: erid):
       inv (MDM.empty_partial_dependent_map #a #b) /\
       ralloc_post r (MDM.empty #a #b) h0 x h1))
   = MDM.alloc #a #b #inv #r ()
+
+
+(*
+ * The testcase that lead us to remove the typechecker code in question
+ *)
+
+assume val merkle_addr:eqtype
+assume val is_proper_desc (d a: merkle_addr) : Type0
+assume val is_desc_empty (d:merkle_addr) (a:merkle_addr{is_proper_desc d a}) : Type0
+
+//silence the definition not recursive warning
+#set-options "--admit_smt_queries true --warn_error -328"
+let rec lemma_desc_hash_empty_implies_no_desc 
+  (a:merkle_addr)
+  (d:merkle_addr{is_desc_empty d a})
+: bool
+= admit ()
