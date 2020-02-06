@@ -1469,10 +1469,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   let subterm_ordering =
                     let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
                     if lid_equals d Const.lextop_lid
+                    && false
                     then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
                          let xtm = mkFreeV x in
                          Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                                ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
+                                                ([[mk_Precedes lex_t lex_t xtm dapp]],
+                                                  [x],
+                                                  mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
                                      Some "lextop is top",
                                      (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
