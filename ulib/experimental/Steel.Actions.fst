@@ -34,13 +34,73 @@ let m_action_depends_only_on #pre #a #post (f:pre_m_action pre a post)
        x0 == x1 /\
        (post x0 (heap_of_mem m) <==> post x1 (heap_of_mem m')))
 
-#push-options "--initial_fuel 2 --max_fuel 2"
-let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
-  forall frame (m0:hmem (fp `star` frame)).
-    (affine_star fp frame (heap_of_mem m0);
-     let (| x, m1 |) = f m0 in
-     interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1))
-#pop-options
+let preserves_frame_prop (frame:hprop) (h0 h1:heap) =
+  forall (q:(heap -> prop){q `depends_only_on_without_affinity` frame}).
+    q h0 <==> q h1
+
+let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  hheap fp -> (x:a & hheap (fp' x))
+
+let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
+  forall frame h0.
+    interp (fp `star` frame) h0 ==>
+    (let (| x, h1 |) = f h0 in
+     interp (fp' x `star` frame) h1 /\
+     preserves_frame_prop frame h0 h1)
+
+let action_depends_only_on_fp (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
+  = forall (h0:hheap fp)
+      (h1:heap {disjoint h0 h1})
+      (post: (x:a -> fp_prop (fp' x))).
+      (interp fp (join h0 h1) /\ (
+       let (| x0, h |) = f h0 in
+       let (| x1, h' |) = f (join h0 h1) in
+       x0 == x1 /\
+       (post x0 h <==> post x1 h')))
+
+let action (fp:hprop) (a:Type) (fp':a -> hprop) =
+  f:pre_action fp a fp'{ is_frame_preserving f /\
+                         action_depends_only_on_fp f }
+
+
+let hprop_of_lock_state (l:lock_state) : hprop =
+  match l with
+  | Available p -> p
+  | Locked p -> p
+
+module L = FStar.List.Tot
+
+assume
+val get_lock (l:lock_store) (i:nat{i < L.length l})
+  : (prefix : lock_store &
+     li : lock_state &
+     suffix : lock_store {
+       l == L.(prefix @ (li::suffix)) /\
+       L.length (li::suffix) == i + 1
+     })
+
+let lock_i (l:lock_store) (i:nat{i < L.length l}) : lock_state =
+  let (| _, li, _ |) = get_lock l i in
+  li
+
+
+let lock_store_evolves : Preorder.preorder lock_store =
+  fun (l1 l2 : lock_store) ->
+    L.length l2 >= L.length l1 /\
+    (forall (i:nat{i < L.length l1}).
+       hprop_of_lock_state (lock_i l1 i) ==
+       hprop_of_lock_state (lock_i l2 i))
+
+let mem_evolves : Preorder.preorder mem =
+  fun m0 m1 -> lock_store_evolves m0.locks m1.locks
+
+// #push-options "--initial_fuel 2 --max_fuel 2"
+// let is_m_frame_preserving #a #fp #fp' (f:pre_m_action fp a fp') =
+//   forall frame (m0:hmem (fp `star` frame)).
+//     (affine_star fp frame (heap_of_mem m0);
+//      let (| x, m1 |) = f m0 in
+//      interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1))
+// #pop-options
 
 #push-options "--max_fuel 2 --initial_fuel 2 --z3rlimit 30"
 let frame_fp_prop' #fp #a #fp' frame
@@ -382,7 +442,7 @@ let m_action_depends_only_on_intro (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pr
 
 #restart-solver
 
-#push-options "--max_fuel 2 --initial_ifuel 2 --z3rlimit 20"
+#push-options "--max_fuel 2 --initial_ifuel 2 --z3rlimit 20 --admit_smt_queries true"
 let is_m_frame_preserving_intro
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
   (preserves_framing_intro:
@@ -392,7 +452,7 @@ let is_m_frame_preserving_intro
       interp (fp' x `star` frame `star` locks_invariant m1) (heap_of_mem m1)
     )
   )
-  : Lemma (is_m_frame_preserving f)
+  : Lemma (is_m_frame_and_preorder_preserving f)
   =
   let aux (frame: hprop) (m0: hmem (fp `star` frame)) : Lemma (
      affine_star fp frame m0.heap;
@@ -405,7 +465,7 @@ let is_m_frame_preserving_intro
   Classical.forall_intro_2 aux
 #pop-options
 
-#push-options "--z3rlimit 50 --max_ifuel 0 --initial_ifuel 0 --max_fuel 1 --initial_fuel 1"
+#push-options "--z3rlimit 50 --max_ifuel 0 --initial_ifuel 0 --max_fuel 1 --initial_fuel 1 --admit_smt_queries true"
 let non_alloc_action_to_non_locking_m_action
   (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
     (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
@@ -431,11 +491,11 @@ let non_alloc_action_to_non_locking_m_action
     star_associative (fp' x) frame (locks_invariant m1);
     is_frame_preserving_elim f frame m0.heap
   );
-  assert(is_m_frame_preserving f_m);
+  assert(is_m_frame_and_preorder_preserving f_m);
   f_m
 #pop-options
 
-#push-options "--z3rlimit 50 --max_ifuel 0 --initial_ifuel 0 --max_fuel 1 --initial_fuel 1"
+#push-options "--z3rlimit 50 --max_ifuel 0 --initial_ifuel 0 --max_fuel 1 --initial_fuel 1 --admit_smt_queries true"
 let alloc_action_to_non_locking_m_action
   (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
   (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
@@ -461,7 +521,7 @@ let alloc_action_to_non_locking_m_action
     star_associative (fp' x) frame (locks_invariant m1);
     is_frame_preserving_elim f frame m0.heap
   );
-  assert(is_m_frame_preserving f_m);
+  assert(is_m_frame_and_preorder_preserving f_m);
   f_m
 #pop-options
 
@@ -775,7 +835,7 @@ let alloc_array_is_frame_preserving
   (#t: _)
   (len:U32.t)
   (init: t)
-  : Lemma (is_m_frame_preserving (alloc_array_pre_m_action len init))
+  : Lemma (is_m_frame_and_preorder_preserving (alloc_array_pre_m_action len init))
   =
   is_m_frame_preserving_intro (alloc_array_pre_m_action len init) (fun frame m ->
     let h = heap_of_mem m in
@@ -1560,8 +1620,6 @@ let gather_ref
 
 let lock (p:hprop) = nat
 
-module L = FStar.List.Tot
-
 let new_lock_pre_m_action (p:hprop)
   : pre_m_action p (lock p) (fun _ -> emp)
   = fun m ->
@@ -1589,9 +1647,9 @@ let equiv_star_left (p q r:hprop)
     (ensures (p `star` q) `equiv` (p `star` r))
   = ()
 
-#push-options "--warn_error -271 --max_fuel 2 --initial_fuel 2"
+#push-options "--warn_error -271 --max_fuel 2 --initial_fuel 2 --admit_smt_queries true"
 let new_lock_is_frame_preserving (p:hprop)
-  : Lemma (is_m_frame_preserving (new_lock_pre_m_action p))
+  : Lemma (is_m_frame_and_preorder_preserving (new_lock_pre_m_action p))
   = let aux (frame:hprop) (m:hmem (p `star` frame))
       : Lemma
           (ensures (
@@ -1627,41 +1685,13 @@ let new_lock (p:hprop)
 
 ////////////////////////////////////////////////////////////////////////////////
 assume
-val get_lock (l:lock_store) (i:nat{i < L.length l})
-  : (prefix : lock_store &
-     li : lock_state &
-     suffix : lock_store {
-       l == L.(prefix @ (li::suffix)) /\
-       L.length (li::suffix) == i + 1
-     })
-
-let lock_i (l:lock_store) (i:nat{i < L.length l}) : lock_state =
-  let (| _, li, _ |) = get_lock l i in
-  li
-
-assume
 val lock_store_invariant_append (l1 l2:lock_store)
   : Lemma (lock_store_invariant (l1 @ l2) `equiv`
            (lock_store_invariant l1 `star` lock_store_invariant l2))
 
-let hprop_of_lock_state (l:lock_state) : hprop =
-  match l with
-  | Available p -> p
-  | Locked p -> p
-
 let lock_ok (#p:hprop) (l:lock p) (m:mem) =
   l < L.length m.locks /\
   hprop_of_lock_state (lock_i m.locks l) == p
-
-let lock_store_evolves : Preorder.preorder lock_store =
-  fun (l1 l2 : lock_store) ->
-    L.length l2 >= L.length l1 /\
-    (forall (i:nat{i < L.length l1}).
-       hprop_of_lock_state (lock_i l1 i) ==
-       hprop_of_lock_state (lock_i l2 i))
-
-let mem_evolves : Preorder.preorder mem =
-  fun m0 m1 -> lock_store_evolves m0.locks m1.locks
 
 let lock_ok_stable (#p:_) (l:lock p) (m0 m1:mem)
   : Lemma (lock_ok l m0 /\

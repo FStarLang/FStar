@@ -22,52 +22,83 @@ module U32 = FStar.UInt32
 let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
   (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 
-let preserves_frame_prop (frame:hprop) (h0 h1:heap) =
-  forall (q:(heap -> prop){q `depends_only_on_without_affinity` frame}).
-    q h0 <==> q h1
+// let preserves_frame_prop (frame:hprop) (h0 h1:heap) =
+//   forall (q:(heap -> prop){q `depends_only_on_without_affinity` frame}).
+//     q h0 <==> q h1
 
-let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  hheap fp -> (x:a & hheap (fp' x))
+// let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+//   hheap fp -> (x:a & hheap (fp' x))
 
-let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
-  forall frame h0.
-    interp (fp `star` frame) h0 ==>
-    (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1 /\
-     preserves_frame_prop frame h0 h1)
+// let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
+//   forall frame h0.
+//     interp (fp `star` frame) h0 ==>
+//     (let (| x, h1 |) = f h0 in
+//      interp (fp' x `star` frame) h1 /\
+//      preserves_frame_prop frame h0 h1)
 
-let action_depends_only_on_fp (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
-  = forall (h0:hheap fp)
-      (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (fp' x))).
-      (interp fp (join h0 h1) /\ (
-       let (| x0, h |) = f h0 in
-       let (| x1, h' |) = f (join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
+// let action_depends_only_on_fp (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
+//   = forall (h0:hheap fp)
+//       (h1:heap {disjoint h0 h1})
+//       (post: (x:a -> fp_prop (fp' x))).
+//       (interp fp (join h0 h1) /\ (
+//        let (| x0, h |) = f h0 in
+//        let (| x1, h' |) = f (join h0 h1) in
+//        x0 == x1 /\
+//        (post x0 h <==> post x1 h')))
 
-let action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_action fp a fp'{ is_frame_preserving f /\
-                         action_depends_only_on_fp f }
+// let action (fp:hprop) (a:Type) (fp':a -> hprop) =
+//   f:pre_action fp a fp'{ is_frame_preserving f /\
+//                          action_depends_only_on_fp f }
 
 
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hmem fp -> (x:a & hmem (fp' x))
 
-val m_action_depends_only_on (#pre:hprop) (#a:Type) (#post:a -> hprop) (f:pre_m_action pre a post) : prop
+// val m_action_depends_only_on (#pre:hprop) (#a:Type) (#post:a -> hprop) (f:pre_m_action pre a post) : prop
 
-val is_m_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') : prop
+let fp_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
+
+let ac_reasoning_for_m_frame_preserving
+  (p q r:hprop) (m:mem)
+: Lemma
+  (requires interp (p `star` (q `star` r)) (heap_of_mem m))
+  (ensures interp (q `star` p) (heap_of_mem m))
+= calc (equiv) {
+    p `star` (q `star` r);
+       (equiv) { star_associative p q r }
+    (p `star` q) `star` r;
+       (equiv) { star_commutative p q;
+                 equiv_extensional_on_star (p `star` q) (q `star` p) r }
+    (q `star` p) `star` r;
+  };
+  assert (interp ((q `star` p) `star` r) (heap_of_mem m));
+  affine_star (q `star` p) r (heap_of_mem m)
+
+
+val mem_evolves : FStar.Preorder.preorder mem
+
+
+let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
+  forall (frame:hprop) (m0:mem).
+    interp (locks_invariant m0 `star` (fp `star` frame)) (heap_of_mem m0) ==>
+    (ac_reasoning_for_m_frame_preserving (locks_invariant m0) fp frame m0;
+     let (| x, m1 |) = f m0 in
+     interp (locks_invariant m1 `star` (fp' x `star` frame)) (heap_of_mem m1) /\
+     mem_evolves m0 m1 /\
+     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+
 
 let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  f:pre_m_action fp a fp'{ is_m_frame_preserving f /\ m_action_depends_only_on f }
+  f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f } ///\ m_action_depends_only_on f }
 
-val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
-                  (#frame:hprop) (q:fp_prop frame)
-   : Lemma (forall (h0:hheap (fp `star` frame)).
-              (affine_star fp frame h0;
-               q h0 ==>
-               (let (| x, h1 |) = act h0 in
-                q h1)))
+
+// val frame_fp_prop (#fp:_) (#a:Type) (#fp':_) (act:action fp a fp')
+//                   (#frame:hprop) (q:fp_prop frame)
+//    : Lemma (forall (h0:hheap (fp `star` frame)).
+//               (affine_star fp frame h0;
+//                q h0 ==>
+//                (let (| x, h1 |) = act h0 in
+//                 q h1)))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Arrays
@@ -281,8 +312,6 @@ val new_lock (p:hprop)
 val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
 
 let pure (p:prop) : hprop = refine emp (fun _ -> p)
-
-val mem_evolves  : Preorder.preorder mem
 
 val maybe_acquire
   (#p: hprop)
