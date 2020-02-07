@@ -238,6 +238,43 @@ let test_frame1 (_:unit)
   steel_frame_t f1 _  //this fails to infer frame
 
 
+(**** How we were framing framing earlier ****)
+
+let can_be_split_into (p q r:hprop) = equiv p (q `star` r)
+
+let star_can_be_split_into0 (p q:hprop)
+: Lemma (can_be_split_into (p `star` q) p q)
+  [SMTPat (can_be_split_into (p `star` q) p q)]
+= ()
+
+let star_can_be_split_into1 (p q:hprop)
+: Lemma (can_be_split_into (p `star` q) q p)
+  [SMTPat (can_be_split_into (p `star` q) q p)]
+= star_commutative p q
+
+let can_be_split_into_emp_left (p:hprop)
+: Lemma (can_be_split_into p emp p)
+  [SMTPat (can_be_split_into p emp p)]
+= star_commutative p emp;
+  emp_unit p
+
+let can_be_split_into_emp_right (p:hprop)
+: Lemma (can_be_split_into p p emp)
+  [SMTPat (can_be_split_into p p emp)]
+= emp_unit p
+
+
+assume val steel_frame_delta (#a:Type)
+  (outer0:hprop) (#inner0:hprop)
+  (#inner1:a -> hprop)
+  (outer1:a -> hprop)
+  (delta:hprop{
+    can_be_split_into outer0 inner0 delta /\
+    (forall x. can_be_split_into (outer1 x) (inner1 x) delta)})
+  ($f:unit -> SteelT a inner0 inner1)
+: SteelT a outer0 outer1
+
+
 (*** Lifting actions to MST and then to Steel ***)
 
 open Steel.Permissions
@@ -320,6 +357,18 @@ let free (#a:Type0) (r:reference a)
     let (| _, m1 |) = free_ref r m0 in
     act_preserves_frame_and_preorder (free_ref r) m0;
     mst_put m1)
+
+let writable (#a:Type) (r:reference a) (x:a) = pts_to_ref r full_permission x
+
+let swap (#a:Type0) (r1 r2:reference a) (x1 x2:a)
+: SteelT unit (writable r1 x1 `star` writable r2 x2) (fun _ -> writable r1 x2 `star` writable r2 x2)
+= steel_frame_delta #unit
+    (writable r1 x1 `star` writable r2 x2)
+    #(writable r1 x1)
+    #(fun _ -> writable r1 x2)
+    (fun _ -> writable r1 x2 `star` writable r2 x2)
+    (writable r2 x2)
+    (fun _ -> write r1 x2)
 
 
 
