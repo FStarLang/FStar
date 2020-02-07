@@ -376,6 +376,9 @@ let par_lpost (#st:st) (#aL:Type) (#preL:st.hprop) (#postL:post st aL)
 = fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1
 
 
+/// Setting the flag just to reduce the time to typecheck the type m
+
+#push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
 noeq
 type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post st a -> l_pre pre -> l_post pre post -> Type =
   | Ret:
@@ -453,6 +456,7 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post st a -> l_pre pre -> l_
        (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)) ->
     m st a pre post lpre lpost ->
     m st a pre post wlpre wlpost
+#pop-options
 
 (**** End definition of the computation AST ****)
 
