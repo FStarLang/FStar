@@ -157,3 +157,16 @@ let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a
   x, s0
 
 sub_effect PURE ~> MSTATE = lift_pure_mst
+
+
+let mst_assume (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+: MSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
+= assume p
+
+let mst_admit (#state:Type u#1) (#rel:P.preorder state) (#a:Type) ()
+: MSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
+= admit ()
+
+let mst_assert (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+: MSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
+= assert p
