@@ -416,7 +416,24 @@ let pts_to_array_injective
     Classical.forall_intro aux;
     assert(c0 `Seq.equal` c1)
   | _ -> ()
+////////////////////////////////////////////////////////////////////////////////
+// pts_to_ref
+////////////////////////////////////////////////////////////////////////////////
 
+let pts_to_ref_injective
+  (#t: _)
+  (a: reference t)
+  (p:permission{allows_read p})
+  (c0 c1: t)
+  (m: heap)
+  =
+  let s0 = Seq.create 1 c0 in
+  let s1 = Seq.create 1 c1 in
+  pts_to_array_injective a p s0 s1 m;
+  assert(s0 `Seq.equal` s1);
+  assert(c0 == Seq.index s0 0);
+  assert(c1 == Seq.index s1 0);
+  ()
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
