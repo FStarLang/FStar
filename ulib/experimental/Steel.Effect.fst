@@ -321,12 +321,25 @@ let act_preserves_frame_and_preorder (#a:Type) (#pre:hprop) (#post:a -> hprop) (
 = ()
 #pop-options
 
+let pts_to_implies_ref_perm (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:a)
+  (m:mem)
+: Lemma
+  (requires interp (pts_to_ref r p x) (heap_of_mem m))
+  (ensures interp (ref_perm r p) (heap_of_mem m))
+= admit ()
+
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
-: SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
+: Steel a
+    (ref_perm r p) (fun x -> pts_to_ref r p x)
+    (fun _ -> True)
+    (fun m0 x m1 -> sel_ref r m1 == x)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
     let (| x, m1 |) = get_ref r p m0 in
     act_preserves_frame_and_preorder (get_ref r p) m0;
+    pts_to_implies_ref_perm r p x m1;
+    sel_ref_lemma a p r (heap_of_mem m1);
+    pts_to_ref_injective r p (sel_ref r (heap_of_mem m1)) x (heap_of_mem m1);
     mst_put m1;
     x)
 
