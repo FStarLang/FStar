@@ -90,27 +90,72 @@ let bijective_resource_refinement (#a: Type) (p: pointer a)
   assume(Fext.on_domain_g HS.mem old_res.view.sel == Fext.on_domain_g HS.mem new_res.view.sel);
   assert(old_res.view.sel == new_res.view.sel)
 
-let ptr_alloc #a init =
-  let ptr = A.alloc init 1ul in
-  array_to_pointer ptr;
-  return ptr
+assume val ptr_alloc'
+  (#a:Type)
+  (init:a)
+  : RST (pointer a)
+    (empty_resource)
+    (fun ptr -> ptr_resource ptr)
+    (fun _ -> True)
+    (fun _ ptr h1 ->
+      A.freeable ptr /\
+      get_val ptr h1 == init /\
+      get_perm ptr h1 == P.full_permission
+    )
+let ptr_alloc #a init = ptr_alloc' #a init
 
-let ptr_free #a ptr =
-  pointer_to_array ptr;
-  A.free ptr
+assume val ptr_free'
+  (#a:Type)
+  (ptr:pointer a)
+  : RST unit
+    (ptr_resource ptr)
+    (fun ptr -> empty_resource)
+    (fun h0 -> A.freeable ptr /\ P.allows_write (get_perm ptr h0))
+    (fun _ _ _ -> True)
+let ptr_free #a ptr = ptr_free' #a ptr
 
 (**** Reading and writing using a pointer resource *)
+assume val ptr_read'
+  (#a:Type)
+  (ptr:pointer a)
+  : RST a
+    (ptr_resource ptr)
+    (fun _ -> ptr_resource ptr)
+    (fun _ -> True)
+    (fun h0 x h1 ->
+      get_val ptr h0 == x /\ get_val ptr h1 == x /\
+      get_perm ptr h0 == get_perm ptr h1
+    )
+let ptr_read #a ptr = ptr_read' #a ptr
 
+(*
 let ptr_read #a ptr =
   pointer_to_array ptr;
   let x = A.index ptr 0ul in
   array_to_pointer ptr;
   return x
+*)
 
+assume val ptr_write'
+  (#a:Type)
+  (ptr:pointer a)
+  (x:a)
+  : RST unit
+    (ptr_resource ptr)
+    (fun _ -> ptr_resource ptr)
+    (fun h0 -> P.allows_write (get_perm ptr h0))
+    (fun h0 _ h1 ->
+      get_perm ptr h0 == get_perm ptr h1 /\
+      get_val ptr h1 == x
+    )
+let ptr_write #a ptr x = ptr_write' #a ptr x
+
+(*
 let ptr_write #a ptr x =
   pointer_to_array ptr;
   A.upd ptr 0ul x;
   array_to_pointer ptr
+ *)
 
 (*
 let ptr_share #a ptr =
