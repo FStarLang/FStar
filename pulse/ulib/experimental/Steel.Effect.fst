@@ -239,26 +239,88 @@ let test_frame1 (_:unit)
 
 
 (*** Lifting actions to MST and then to Steel ***)
+
 open Steel.Permissions
 open Steel.Actions
 
-assume val mst_assume (p:Type) : Sem.Mst unit #state (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
-assume val mst_admit (#a:Type) (_:unit) : Sem.Mst a #state (fun _ -> True) (fun _ _ _ -> False)
-assume val mst_assert (p:Type) : Sem.Mst unit #state (fun _ -> p) (fun m0 _ m1 -> m0 == m1 /\ p)
 
-let get_ref (#a:Type0) (r:reference a) (p:permission{allows_read p}) (_:unit)
-: Sem.Mst a #state
-  (requires fun m0 -> interp (locks_invariant m0 `star` ref_perm r p) (heap_of_mem m0))
-  (ensures fun m0 x m1 ->
-    interp (locks_invariant m1 `star` pts_to_ref r p x) (heap_of_mem m1) /\
-    Sem.preserves_frame (ref_perm r p) (pts_to_ref r p x) m0 m1)
-// : repr a (ref_perm r p) (fun x -> pts_to_ref r p x) (fun _ -> True) (fun _ _ _ -> True)
-= let m0 = MST.get () in
-  let (| x, m1 |) = get_ref r p m0 in
-  mst_assume (Sem.preserves_frame (ref_perm r p) (pts_to_ref r p x) m0 m1);
-  mst_assume (mem_evolves m0 m1);
-  MST.put #mem #mem_evolves m1;
-  x
+(*
+ * We are going to work with instiation of MSTATE with mem and mem_evolves
+ *
+ * Define abbreviations to ease the implicit inference for them
+ *)
+
+
+effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
+  MST.MSTATE a mem mem_evolves req ens
+
+let mst_get ()
+: Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
+= MST.get ()
+
+let mst_put (m:mem)
+: Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
+= MST.put m
+
+let mst_assume (p:Type)
+: Mst unit (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
+= MST.mst_assume p
+
+let mst_admit (#a:Type) ()
+: Mst a (fun _ -> True) (fun _ _ _ -> False)
+= MST.mst_admit ()
+
+let mst_assert (p:Type)
+: Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
+= MST.mst_assert p
+
+#push-options "--z3rlimit 50"
+let act_preserves_frame_and_preorder (#a:Type) (#pre:hprop) (#post:a -> hprop) (act:m_action pre a post)
+  (m0:hmem pre)
+: Lemma
+  (let (| x, m1 |) = act m0 in
+   Sem.preserves_frame #state pre (post x) m0 m1 /\
+   mem_evolves m0 m1)
+= ()
+#pop-options
+
+let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
+: SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    let (| x, m1 |) = get_ref r p m0 in
+    act_preserves_frame_and_preorder (get_ref r p) m0;
+    mst_put m1;
+    x)
+
+
+let write (#a:Type0) (r:reference a) (x:a)
+: SteelT unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    let (| _, m1 |) = set_ref r x m0 in
+    act_preserves_frame_and_preorder (set_ref r x) m0;
+    mst_put m1)
+
+
+let alloc (#a:Type0) (x:a)
+: SteelT (reference a) emp (fun r -> pts_to_ref r full_permission x)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    let (| r, m1 |) = alloc_ref #a x m0 in
+    act_preserves_frame_and_preorder (alloc_ref #a x) m0;
+    mst_put m1;
+    r)
+    
+
+let free (#a:Type0) (r:reference a)
+: SteelT unit (ref_perm r full_permission) (fun _ -> emp)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    let (| _, m1 |) = free_ref r m0 in
+    act_preserves_frame_and_preorder (free_ref r) m0;
+    mst_put m1)
+
 
 
 // assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
