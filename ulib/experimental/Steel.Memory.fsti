@@ -165,6 +165,18 @@ let ref_perm (#t: Type0) (r: reference t) (p:permission{allows_read p}) : hprop
 let ref (#t: Type0) (r: reference t) : hprop
   = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)
 
+val pts_to_ref_injective
+  (#t: _)
+  (a: reference t)
+  (p:permission{allows_read p})
+  (c0 c1: t)
+  (m: heap)
+  : Lemma
+    (requires (
+      interp (pts_to_ref a p c0) m /\
+      interp (pts_to_ref a p c1) m))
+    (ensures (c0 == c1))
+
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
