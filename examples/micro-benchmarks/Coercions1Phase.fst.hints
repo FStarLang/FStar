@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Coercions1Phase.c_erased_int", "int_typing" ],
       0,
-      "0f23824a902846ed35928bb1fe8625b6"
+      "fc6f22a843cf9bb88f1e8d93329c5fdc"
     ],
     [
       "Coercions1Phase.c_erased_zero",
@@ -25,7 +25,7 @@
         "typing_FStar.Ghost.hide"
       ],
       0,
-      "b719948bba2358560da9562edf313454"
+      "b24904d020a424767d7330dc0139c435"
     ]
   ]
 ]
