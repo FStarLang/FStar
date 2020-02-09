@@ -376,6 +376,7 @@ assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
 assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 
 let test_frame1 (_:unit)
-: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> r1 `star` (r2 `star` r3))
+: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 = steel_frame_t f12;  //this succeeds, simple unification
-  steel_frame_t #((r1 `star` r2) `star` r3) f1  //this fails to infer frame
+  steel_frame_t #((r1 `star` r2) `star` r3) f1;  //this fails to infer frame
+  rewrite_hprop (r1 `star` (r2 `star` r3)) ((r1 `star` r2) `star` r3)
