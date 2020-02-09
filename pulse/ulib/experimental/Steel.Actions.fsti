@@ -228,6 +228,12 @@ val glue_array
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
 
 ///////////////////////////////////////////////////////////////////////////////
+// Utilities
+///////////////////////////////////////////////////////////////////////////////
+
+val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ -> p')
+
+///////////////////////////////////////////////////////////////////////////////
 // References
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -315,12 +321,12 @@ let pure (p:prop) : hprop = refine emp (fun _ -> p)
 
 val maybe_acquire
   (#p: hprop)
-  (l:lock p) 
+  (l:lock p)
   (m:mem { lock_ok l m } )
   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
-val release 
-  (#p: hprop) 
+val release
+  (#p: hprop)
   (l:lock p)
   (m:hmem p { lock_ok l m } )
   : (b:bool & hmem emp)
