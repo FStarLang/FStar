@@ -2,7 +2,7 @@ module MLInterop
 
 (** ** `public` and `tainted` classes *)
 (* Intuition, without extra checking and wrapping:
-- the types we can safely import for malicious ML code have to be `tainted`
+- the types we can safely import from malicious ML code have to be `tainted`
 - the types we can safely export to malicious ML code have to be `public` *)
 
 class public (t:Type) = { pdummy : unit }
