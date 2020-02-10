@@ -272,6 +272,7 @@ unfold let op_Less_Equals_Hat = lte
 
 (* To input / output constants *)
 assume val to_string: t -> Tot string
+assume val to_string_hex: t -> Tot string
 assume val of_string: string -> Tot t
 
 #set-options "--lax"
