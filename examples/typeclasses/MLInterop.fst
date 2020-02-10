@@ -1,6 +1,7 @@
 module MLInterop
 
 (** ** `public` and `tainted` classes *)
+(* TODO: now unused, the examples should be ported to the other type classes *)
 (* Intuition, without extra checking and wrapping:
 - the types we can safely import from malicious ML code have to be `tainted`
 - the types we can safely export to malicious ML code have to be `public` *)
@@ -78,6 +79,21 @@ let _ = is_public (bool -> x:int{x = 42}); is_public (bool -> Ex (x:int{x = 42})
 (* let _ = is_public (x:int -> y:int{x=42}) -- fails as it should? *)
 (* let _ = is_tainted (x:int -> y:int{x=42}) -- fails as it should? *)
 
+(** ** `ml` class *)
+(* Intuition, this are morally ML types written in F* syntax *)
+
+class ml (t:Type) = { mldummy : unit }
+
+// Basic ML types
+instance ml_unit : ml unit = { mldummy = () }
+instance ml_bool : ml bool = { mldummy = () }
+instance ml_int : ml int = { mldummy = () }
+instance ml_string : ml string = { mldummy = () }
+
+instance ml_pair t1 t2 [| ml t1 |] [| ml t2 |] : ml (t1 * t2) = { mldummy = () }
+
+instance ml_mlarrow t1 t2 [| ml t1 |] [| ml t2 |] : ml (t1 -> ML t2) = { mldummy = () }
+
 (** ** `exportable` and `importable` classes *)
 (* Intuition, **with** extra checking and wrapping:
 - the types of values we can safely `import` from malicious ML code
@@ -87,19 +103,19 @@ open FStar.Tactics.Typeclasses
 
 exception Contract_failure
 
-class exportable (t : Type) = { etype : Type; export : t -> etype; public_etype : public etype }
-class importable (t : Type) = { itype : Type; import : itype -> Ex t; tainted_itype : tainted itype }
+class exportable (t : Type) = { etype : Type; export : t -> etype; ml_etype : ml etype }
+class importable (t : Type) = { itype : Type; import : itype -> Ex t; ml_itype : ml itype }
 
-let mk_exportable (#t1 t2 : Type) [|public t2|] (exp : t1 -> t2) : exportable t1 =
-  { etype = t2; export = exp;  public_etype = solve }
-let mk_importable (t1 #t2 : Type) [|tainted t1|] (imp : t1 -> Ex t2) : importable t2 =
-  { itype = t1; import = imp;  tainted_itype = solve }
+let mk_exportable (#t1 t2 : Type) [|ml t2|] (exp : t1 -> t2) : exportable t1 =
+  { etype = t2; export = exp;  ml_etype = solve }
+let mk_importable (t1 #t2 : Type) [|ml t1|] (imp : t1 -> Ex t2) : importable t2 =
+  { itype = t1; import = imp;  ml_itype = solve }
 
-instance public_exportable (#t : Type) (d : exportable t) : public (d.etype) = d.public_etype
-instance tainted_importable (#t : Type) (d : importable t) : tainted (d.itype) = d.tainted_itype
+instance ml_exportable (#t : Type) (d : exportable t) : ml (d.etype) = d.ml_etype
+instance ml_importable (#t : Type) (d : importable t) : ml (d.itype) = d.ml_itype
 
-instance exportable_public t [| public t|] : exportable t = mk_exportable t (fun x -> x)
-instance importable_tainted t [| tainted t|] : importable t = mk_importable t (fun x -> x)
+instance exportable_ml t [| ml t|] : exportable t = mk_exportable t (fun x -> x)
+instance importable_ml t [| ml t|] : importable t = mk_importable t (fun x -> x)
 
 instance exportable_refinement t [| d:exportable t |] (p : t -> Type0)  : exportable (x:t{p x})
 = mk_exportable (d.etype) (fun (x:(x:t{p x})) -> export (x <: t))
@@ -120,12 +136,12 @@ instance exportable_pair t1 t2 [| d1:exportable t1 |] [| d2:exportable t2 |] : e
 (*   mk_importable (d1.itype * d2.itype) (fun (x,y) -> (import x, import y)) *)
 
 instance exportable_arrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] : exportable (t1 -> t2)  =
-  mk_exportable (d1.itype -> Ex d2.etype)
-    (fun (f:(t1->t2)) -> (fun (x:d1.itype) -> export (f (import x)) <: Ex d2.etype))
+  mk_exportable (d1.itype -> ML d2.etype)
+    (fun (f:(t1->t2)) -> (fun (x:d1.itype) -> export (f (import x)) <: ML d2.etype))
 
 instance exportable_exarrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] : exportable (t1 -> Ex t2)  =
-  mk_exportable (d1.itype -> Ex d2.etype)
-    (fun (f:(t1->Ex t2)) -> (fun (x:d1.itype) -> export (f (import x)) <: Ex d2.etype))
+  mk_exportable (d1.itype -> ML d2.etype)
+    (fun (f:(t1->Ex t2)) -> (fun (x:d1.itype) -> export (f (import x)) <: ML d2.etype))
 
 instance exportable_mlarrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] : exportable (t1 -> ML t2)  =
   mk_exportable (d1.itype -> ML d2.etype)
