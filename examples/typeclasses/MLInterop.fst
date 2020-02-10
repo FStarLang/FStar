@@ -1,10 +1,12 @@
 module MLInterop
 
 (** ** `public` and `tainted` classes *)
-(* TODO: now unused, the examples should be ported to the other type classes *)
 (* Intuition, without extra checking and wrapping:
 - the types we can safely import from malicious ML code have to be `tainted`
-- the types we can safely export to malicious ML code have to be `public` *)
+- the types we can safely export to malicious ML code have to be `public`
+This interoperability model is all *up to extraction*,
+but again without adding extra checking and wrapping.
+*)
 
 class public (t:Type) = { pdummy : unit }
 class tainted (t:Type) = { tdummy : unit }
@@ -95,9 +97,12 @@ instance ml_pair t1 t2 [| ml t1 |] [| ml t2 |] : ml (t1 * t2) = { mldummy = () }
 instance ml_mlarrow t1 t2 [| ml t1 |] [| ml t2 |] : ml (t1 -> ML t2) = { mldummy = () }
 
 (** ** `exportable` and `importable` classes *)
-(* Intuition, **with** extra checking and wrapping:
+(* Intuition, **with** extra checking, wrapping, and type erasure (extraction):
 - the types of values we can safely `import` from malicious ML code
-- the types of values we can safely `export` to malicious ML code *)
+- the types of values we can safely `export` to malicious ML code
+This interoperability model includes extraction as well as
+adding extra checking and wrapping.
+*)
 
 open FStar.Tactics.Typeclasses
 
@@ -150,3 +155,5 @@ instance exportable_mlarrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] 
 instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] : importable (t1 -> ML t2)  =
   mk_importable (d1.etype -> ML d2.itype)
     (fun (f:(d1.etype -> ML d2.itype)) -> (fun (x:t1) -> import (f (export x)) <: ML t2))
+
+(* TODO: Is this related in any way to the F*-ML interop of Zoe / native tactics? *)
