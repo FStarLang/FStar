@@ -44,7 +44,6 @@ let ac_reasoning_for_m_frame_preserving
 
 val mem_evolves : FStar.Preorder.preorder mem
 
-
 let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
   forall (frame:hprop) (m0:hmem (fp `star` frame)).
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;

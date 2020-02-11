@@ -489,7 +489,7 @@ let index_array_action
     (index_array_pre_action a iseq i p)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 -> ())
 
 let index_array
   (#t:_)
@@ -575,7 +575,7 @@ let upd_array_pre_action
   = fun h ->
     (| (), upd_array_heap a iseq i v h |)
 
-#push-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 70 --max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t)
@@ -638,13 +638,10 @@ let upd_array_action
     (fun frame h0 h1 addr -> (* Does not depend on framing *)
       upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame
     )
-    (fun frame h0 h1 post -> (* Return and post *)
+    (fun frame h0 h1 -> (* Return  *)
       let (| x0, h |) = upd_array_pre_action a iseq i v h0 in
       let (| x1, h' |) = upd_array_pre_action a iseq i v (join h0 h1) in
-      assert (x0 == x1);
-      upd_array_heap_frame_disjointness_preservation a iseq i v (join h0 h1) h0 h1 frame;
-      upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame;
-      assert (h' == join h h1)
+      assert (x0 == x1)
     )
 
 let upd_array
@@ -722,14 +719,30 @@ let alloc_array_pre_m_action
   (| a, new_m |)
 #pop-options
 
-#push-options "--z3rlimit 200 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
-let alloc_array_is_frame_preserving
+#restart-solver
+
+let ac_reasoning_for_m_frame_preserving'
+  (p q r:hprop) (m:mem)
+: Lemma
+  (requires interp ((p `star` q) `star` r) (heap_of_mem m))
+  (ensures interp (q `star` r) (heap_of_mem m))
+= calc (equiv) {
+    (p `star` q) `star` r;
+       (equiv) { star_associative p q r }
+    p `star` (q `star` r);
+  };
+  assert (interp (p `star` (q `star` r)) (heap_of_mem m));
+  affine_star p (q `star` r) (heap_of_mem m)
+
+
+#push-options " --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let alloc_array_is_m_frame_and_preorder_preserving
   (#t: _)
   (len:U32.t)
   (init: t)
   : Lemma (is_m_frame_and_preorder_preserving (alloc_array_pre_m_action len init))
   =
-  is_m_frame_preserving_intro (alloc_array_pre_m_action len init) (fun frame m ->
+  is_m_frame_and_preorder_preserving_intro (alloc_array_pre_m_action len init) (fun frame m ->
     let h = heap_of_mem m in
     let a : array_ref t = {
       array_addr = m.ctr;
@@ -737,6 +750,7 @@ let alloc_array_is_frame_preserving
       array_length = len;
       array_offset = 0ul;
     } in
+    ac_reasoning_for_m_frame_preserving emp frame (locks_invariant m) m;
     let (| a, m1 |) = alloc_array_pre_m_action len init m in
     assert (m1.ctr = m.ctr + 1);
     assert (m1.locks == m.locks);
@@ -745,6 +759,7 @@ let alloc_array_is_frame_preserving
     assert (h1 == join single_h h);
     intro_pts_to_array a full_permission (Seq.Base.create (U32.v len) init) single_h;
     assert (interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
+    ac_reasoning_for_m_frame_preserving' emp frame (locks_invariant m) m;
     assert (interp (frame `star` locks_invariant m) h);
     intro_star
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
@@ -762,38 +777,31 @@ let alloc_array_is_frame_preserving
     assert (interp
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init) `star`
       frame `star` locks_invariant m) h1
-    )
-  )
-#pop-options
-
-#push-options "--z3rlimit 150 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1 --warn_error -271"
-let alloc_array_depends_only_on
-  (#t: _)
-  (len:U32.t)
-  (init: t)
-  : Lemma (m_action_depends_only_on (alloc_array_pre_m_action len init))
-  =
-  m_action_depends_only_on_intro (alloc_array_pre_m_action len init) (fun m0 h1 post ->
-    let h0 = heap_of_mem m0 in
-    let h = join h0 h1 in
-    let m1 = { m0 with heap = h } in
-    let (| x0, m |) = (alloc_array_pre_m_action len init) m0 in
-    let (| x1, m' |) = (alloc_array_pre_m_action len init) m1 in
-    alloc_array_is_frame_preserving len init;
-    assert (x0 == x1);
-    assert (disjoint (heap_of_mem m) h1);
-    affine_star
-      (pts_to_array x0 full_permission (Seq.Base.create (U32.v len) init))
-      (locks_invariant m)
-      (heap_of_mem m);
-    assert (interp
-      (pts_to_array x0 full_permission (Seq.Base.create (U32.v len) init))
-      (heap_of_mem m)
     );
-    assert (heap_of_mem m' == join (heap_of_mem m) h1)
+    assert(mem_evolves m m1)
+  ) (fun frame m f_frame ->
+   let h = heap_of_mem m in
+    let a : array_ref t = {
+      array_addr = m.ctr;
+      array_max_length = len;
+      array_length = len;
+      array_offset = 0ul;
+    } in
+    ac_reasoning_for_m_frame_preserving emp frame (locks_invariant m) m;
+    let (| a, m1 |) = alloc_array_pre_m_action len init m in
+    assert (m1.ctr = m.ctr + 1);
+    assert (m1.locks == m.locks);
+    let h1 = heap_of_mem m1 in
+    let single_h = singleton_heap len init a in
+    assert (h1 == join single_h h);
+    assert(depends_only_on_without_affinity f_frame frame);
+    assert (interp ((emp `star` frame) `star` (locks_invariant m)) h);
+    affine_star (emp `star` frame) (locks_invariant m) h;
+    affine_star emp frame h;
+    assert(interp frame h);
+    assert(f_frame h <==> f_frame (join single_h h))
   )
 #pop-options
-
 
 let alloc_array
   (#t: _)
@@ -804,8 +812,7 @@ let alloc_array
     (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
     (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
   =
-  alloc_array_is_frame_preserving len init;
-  alloc_array_depends_only_on len init;
+  alloc_array_is_m_frame_and_preorder_preserving len init;
   alloc_array_pre_m_action len init
 
 let free_array_pre_action
@@ -828,7 +835,7 @@ let free_array_action
     (free_array_pre_action a)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 post -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1  -> ())
 
 let free_array
   (#t: _)
@@ -938,11 +945,10 @@ let share_array_action
     (share_array_pre_action a iseq perm)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post ->
+    (fun frame h0 h1 ->
       let (|x_alone, h0'|) = share_array_pre_action a iseq perm h0 in
       let (|x_joint, h'|) = share_array_pre_action a iseq perm (join h0 h1) in
-      assert(x_alone == x_joint);
-      assert(post x_alone h0' <==> post x_joint h')
+      assert(x_alone == x_joint)
     )
 
 let share_array
@@ -1025,7 +1031,7 @@ let gather_array_action
     (gather_array_pre_action a a' iseq p p')
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 -> ())
 #pop-options
 
 let gather_array
@@ -1162,7 +1168,7 @@ let split_array_action
     (split_array_pre_action a iseq p i)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 -> ())
 #pop-options
 
 let split_array
@@ -1252,7 +1258,7 @@ let glue_array_action
     (glue_array_pre_action a a' iseq iseq' p)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 -> ())
 #pop-options
 
 let glue_array
@@ -1318,7 +1324,7 @@ let get_ref_pre_action
   (| x, h' |)
 
 
-#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let get_ref_action
   (#t: Type0)
   (r: reference t)
@@ -1335,7 +1341,7 @@ let get_ref_action
     (get_ref_pre_action r p)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1  -> ())
 #pop-options
 
 let get_ref
@@ -1392,15 +1398,12 @@ let set_ref_action
       sel_ref_lemma t full_permission r h0;
       upd_array_action_memory_split_independence r iseq 0ul v (join h0 h1) h0 h1 frame
     )
-    (fun frame h0 h1 post -> (* Return and post *)
+    (fun frame h0 h1  -> (* Return and post *)
       let iseq = Seq.create 1 (sel_ref r h0) in
       sel_ref_lemma t full_permission r h0;
       let (| x0, h |) = set_ref_pre_action r v h0 in
       let (| x1, h' |) = set_ref_pre_action r v (join h0 h1) in
-      assert (x0 == x1);
-      upd_array_heap_frame_disjointness_preservation r iseq 0ul v (join h0 h1) h0 h1 frame;
-      upd_array_action_memory_split_independence r iseq 0ul v (join h0 h1) h0 h1 frame;
-      assert (h' == join h h1)
+      assert (x0 == x1)
     )
 
 let set_ref
@@ -1454,7 +1457,7 @@ let free_ref_action
     (free_ref_pre_action r)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 post -> ())
+    (fun frame h0 h1 -> ())
 
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
