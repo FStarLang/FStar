@@ -31,8 +31,15 @@ let mem_affine_star_smt (p q:Mem.hprop) (m:Mem.heap)
   [SMTPat (Mem.interp (p `Mem.star` q) m)]
 = Mem.affine_star p q m
 
-let ens_depends_only_on (#a:Type)
-  (q:Mem.heap -> a -> Mem.heap -> prop) (pre:Mem.hprop) (post:a -> Mem.hprop)
+let interp_join_smt (p:Mem.hprop) (h0:Mem.hheap p) (h1:Mem.heap)
+: Lemma
+  (requires Mem.disjoint h0 h1)
+  (ensures Mem.interp p (Mem.join h0 h1))
+  [SMTPat (Mem.interp p (Mem.join h0 h1))]
+= admit ()
+
+let ens_depends_only_on (#a:Type) (pre:Mem.hprop) (post:a -> Mem.hprop)
+  (q:(Mem.hheap pre -> x:a -> Mem.hheap (post x) -> prop))
 
 = //can join any disjoint heap to the pre-heap and q is still valid
   (forall x (h_pre:Mem.hheap pre) h_post (h:Mem.heap{Mem.disjoint h_pre h}).
@@ -42,17 +49,26 @@ let ens_depends_only_on (#a:Type)
   (forall x h_pre (h_post:Mem.hheap (post x)) (h:Mem.heap{Mem.disjoint h_post h}).
      q h_pre x h_post <==> q h_pre x (Mem.join h_post h))
 
-type fp_prop (hp:Mem.hprop) =
-  q:(Mem.heap -> prop){q `Act.depends_only_on_without_affinity` hp}
+// type fp_prop (pre:Mem.hprop) = q:(Mem.hheap pre -> prop){
+//   forall (h0:Mem.hheap pre) (h1:Mem.heap{Mem.disjoint h0 h1}). q h0 <==> q (Mem.join h0 h1)
+// }
 
 type pre_t = Mem.hprop
 type post_t (a:Type) = a -> Mem.hprop
-type req_t (pre:pre_t) = q:(Mem.heap -> prop){q `Act.depends_only_on_without_affinity` pre}
-type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
-  q:(Mem.heap -> a -> Mem.heap -> prop){ens_depends_only_on q pre post}
+type req_t (pre:Mem.hprop) = q:(Mem.hheap pre -> prop){
+  forall (h0:Mem.hheap pre) (h1:Mem.heap{Mem.disjoint h0 h1}). q h0 <==> q (Mem.join h0 h1)
+}
+#set-options "--print_universes --print_implicits --ugly"
+type ens_t (pre:pre_t) (a:Type u#a) (post:post_t a) =
+  q:(Mem.hheap pre -> x:a -> Mem.hheap (post x) -> prop){ens_depends_only_on pre post q}
 
-type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
-  Sem.action_t #state #a pre post req ens
+type repr (a:Type u#a) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+  Sem.action_t #state #a pre post
+    (fun h0 -> Mem.interp pre h0 /\ req h0)
+    (fun h0 x h1 ->
+      Mem.interp pre h0 /\
+      Mem.interp (post x) h1 /\
+      ens h0 x h1)
 
 let returnc (a:Type u#a) (x:a)
 : repr a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
@@ -159,6 +175,7 @@ assume val steel_reify (#a:Type) (#pre:pre_t) (#post:post_t a)
   ($f:unit -> Steel a pre post req ens)
 : repr a pre post req ens
 
+#push-options "--z3rlimit 100"
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
@@ -169,6 +186,7 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+#pop-options
 
 let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   ($f:unit -> Steel aL preL postL lpreL lpostL)
@@ -181,6 +199,10 @@ let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 = par0 (steel_reify f) (steel_reify g)
 
+type fp_prop (hp:Mem.hprop) =
+  q:(Mem.heap -> prop){q `Act.depends_only_on_without_affinity` hp}
+
+#push-options "--z3rlimit 100"
 let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   (f:repr a pre post req ens)
   (frame:Mem.hprop)
@@ -191,6 +213,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
   (fun h -> req h /\ f_frame h)
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
+#pop-options
 
 let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:unit -> Steel a pre post req ens)
@@ -271,8 +294,9 @@ assume val steel_frame_delta (#a:Type)
   (delta:hprop{
     can_be_split_into outer0 inner0 delta /\
     (forall x. can_be_split_into (outer1 x) (inner1 x) delta)})
-  ($f:unit -> SteelT a inner0 inner1)
-: SteelT a outer0 outer1
+  (#req:req_t inner0) (#ens:ens_t inner0 a inner1)
+  ($f:unit -> Steel a inner0 inner1 req ens)
+: Steel a outer0 outer1 req ens
 
 
 (*** Lifting actions to MST and then to Steel ***)
@@ -321,36 +345,179 @@ let act_preserves_frame_and_preorder (#a:Type) (#pre:hprop) (#post:a -> hprop) (
 = ()
 #pop-options
 
-let pts_to_implies_ref_perm (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:a)
-  (m:mem)
+module G = FStar.Ghost
+
+let pts_to_implies_ref_perm (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:G.erased a)
+  (h:heap)
 : Lemma
-  (requires interp (pts_to_ref r p x) (heap_of_mem m))
-  (ensures interp (ref_perm r p) (heap_of_mem m))
+  (requires interp (pts_to_ref r p x) h)
+  (ensures interp (ref_perm r p) h)
+  [SMTPat (interp (pts_to_ref r p x) h)]
 = admit ()
+
+let pts_to_implies_ref (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:G.erased a)
+  (h:heap)
+: Lemma
+  (requires interp (pts_to_ref r p x) h)
+  (ensures interp (ref r) h)
+  [SMTPat (interp (pts_to_ref r p x) h)]
+= admit ()
+
+let ref_perm_implies_ref (#a:Type0) (r:reference a) (p:permission{allows_read p})
+  (h:heap)
+: Lemma
+  (requires interp (ref_perm r p) h)
+  (ensures interp (ref r) h)
+  [SMTPat (interp (ref_perm r p) h)]
+= admit ()
+
+let sel_ref_depends_only_on (#a:Type0) (r:reference a) (x:G.erased a) (p:permission{allows_read p}) (h:hheap (pts_to_ref r p x)) (h1:heap{disjoint h h1})
+: Lemma
+  ((sel_ref r h == G.reveal x) <==> (sel_ref r (join h h1) == G.reveal x))
+  [SMTPat (sel_ref r (join h h1)); SMTPat (pts_to_ref r p x)]
+= admit ()
+
+let sel_ref_depends_only_on_ref_perm (#a:Type0) (r:reference a) (p:permission{allows_read p}) (h:hheap (ref_perm r p)) (h1:heap{disjoint h h1})
+: Lemma
+  (forall x. (sel_ref r h == x) <==> (sel_ref r (join h h1) == x))
+  [SMTPat (sel_ref r (join h h1)); SMTPat (ref_perm r p)]
+= admit ()
+
+assume val weaken
+  (#a:Type0)
+  (#pre1:hprop) (#post1:a -> hprop) (#req1:req_t pre1)(#ens1:ens_t pre1 a post1)
+  (#pre2:hprop{forall h. interp pre2 h ==> interp pre1 h})
+  (#post2:(a -> hprop){forall x h. interp (post1 x) h ==> interp (post2 x) h})
+  (#req2:req_t pre2{forall (h:hheap pre2). req2 h ==> req1 h})
+  (#ens2:ens_t pre2 a post2{forall (h0:hheap pre2) (x:a) (h1:hheap (post1 x)). ens1 h0 x h1 ==> ens2 h0 x h1})
+  ($f:unit -> Steel a pre1 post1 req1 ens1)
+: Steel a pre2 post2 req2 ens2
+
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
 : Steel a
-    (ref_perm r p) (fun x -> pts_to_ref r p x)
+    (ref_perm r p) (fun x -> pts_to_ref r p (G.hide x))
     (fun _ -> True)
-    (fun m0 x m1 -> sel_ref r m1 == x)
+    (fun _ x m1 -> sel_ref r m1 == x)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
     let (| x, m1 |) = get_ref r p m0 in
     act_preserves_frame_and_preorder (get_ref r p) m0;
-    pts_to_implies_ref_perm r p x m1;
+    pts_to_implies_ref_perm r p x (heap_of_mem m1);
     sel_ref_lemma a p r (heap_of_mem m1);
     pts_to_ref_injective r p (sel_ref r (heap_of_mem m1)) x (heap_of_mem m1);
     mst_put m1;
     x)
 
+let read0 (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:G.erased a)
+: Steel a
+    (pts_to_ref r p x) (fun x -> pts_to_ref r p (G.hide x))
+    (fun _ -> True)
+    (fun _ _ _ -> True)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    mst_assume (interp (ref_perm r p `star` locks_invariant m0) (heap_of_mem m0));
+    let (| x, m1 |) = get_ref r p m0 in
+    act_preserves_frame_and_preorder (get_ref r p) m0;
+    mst_put m1;
+    mst_admit ();
+    x)
+
+let read_s (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:G.erased a)
+: unit -> Steel a (pts_to_ref r p x) (fun x -> pts_to_ref r p (G.hide x)) (fun _ -> True) (fun _ _ _ -> True)
+= fun _ -> weaken (fun _ -> read r p)
 
 let write (#a:Type0) (r:reference a) (x:a)
-: SteelT unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
+: Steel unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
+    (fun _ -> True)
+    (fun _ _ m1 -> sel_ref r m1 == x)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
     let (| _, m1 |) = set_ref r x m0 in
     act_preserves_frame_and_preorder (set_ref r x) m0;
+    sel_ref_lemma a full_permission r (heap_of_mem m1);
+    pts_to_ref_injective r full_permission (sel_ref r (heap_of_mem m1)) x (heap_of_mem m1);
     mst_put m1)
+
+let one_ref (#a:Type0) (r:reference a) (x:G.erased a) : hprop = pts_to_ref r full_permission x
+
+let two_refs (#a:Type0) (r1 r2:reference a) (x1 x2:G.erased a) : hprop =
+  pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2
+
+let read_two (#a:Type0) (r1 r2:reference a) (x1 x2:G.erased a)
+: SteelT a
+  (two_refs r1 r2 x1 x2)
+  (fun x2 -> two_refs r1 r2 x1 (G.hide x2))
+= 
+  let _ = steel_frame_delta
+    (two_refs r1 r2 x1 x2)
+    (fun x1 -> two_refs r1 r2 (G.hide x1) x2)
+    (one_ref r2 x2)
+    (read_s r1 full_permission x1) in
+  steel_frame_delta
+    (two_refs r1 r2 x1 x2)
+    (fun x2 -> two_refs r1 r2 x1 (G.hide x2))
+    (one_ref r1 x1)
+    (read_s r2 full_permission x2)
+
+  
+  steel_frame_delta
+    (two_refs r1 r2 x1 x2)
+    (two_refs r1 r2 x1 x2)
+    (one_ref r1 x1)
+    (fun _ -> read_s r2 full_permission x2)
+
+let swap (#a:Type0) (r1 r2:reference a) (x1 x2:Ghost.erased a)
+: Steel unit
+  (pts_to_ref r1 full_permission (G.reveal x1) `star` pts_to_ref r2 full_permission (G.reveal x2))
+  (fun _ -> pts_to_ref r1 full_permission (G.reveal x2) `star` pts_to_ref r2 full_permission (G.reveal x1))
+  (fun _ -> True) (fun _ _ _ -> True)
+= let x1 = steel_frame_delta
+    (pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2)  
+    (fun _ -> pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2)
+    (pts_to_ref r2 full_permission x2)
+    (fun _ -> read_s r1 full_permission x1) in
+  let x2 = steel_frame_delta
+    (pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2)  
+    (fun _ -> pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2)
+    (pts_to_ref r1 full_permission x1)
+    (fun _ -> read_s r2 full_permission x2) in
+  steel_frame
+    (pts_to_ref r1 full_permission x1 `star` pts_to_ref r2 full_permission x2)  
+    (fun _ -> pts_to_ref r1 full_permission x2 `star` pts_to_ref r2 full_permission x2)
+    (pts_to_ref r2 full_permission x2)
+    (fun _ -> write r1 x2);
+  steel_frame
+    (pts_to_ref r1 full_permission x2 `star` pts_to_ref r2 full_permission x2)  
+    (fun _ -> pts_to_ref r1 full_permission x2 `star` pts_to_ref r2 full_permission x1)
+    (pts_to_ref r1 full_permission x2)
+    (fun _ -> write r2 x1)
+
+
+let read_w (#a:Type0) (r:reference a) (p:permission{allows_read p})
+: Steel a
+  (ref_perm r p) (fun _ -> ref_perm r p)
+  (fun _ -> True)
+  (fun _ x m1 -> sel_ref r m1 == x)
+= weaken (fun _ -> read r p)
+
+
+
+let write_w (#a:Type0) (r:reference a) (x:a)
+: Steel unit
+  (ref_perm r full_permission) (fun _ -> ref_perm r full_permission)
+  (fun _ -> True)
+  (fun _ _ m1 -> sel_ref r m1 == x)
+= weaken (fun _ -> write r x)
+
+
+let swap (#a:Type0) (r1 r2:reference a)
+: Steel unit
+  (ref_perm r1 full_permission `star` ref_perm r2 full_permission)
+  (fun _ -> ref_perm r1 full_permission `star` ref_perm r2 full_permission)
+  (fun _ -> True)
+  (fun m0 _ m1 -> sel_ref r1 m1 == sel_ref r2 m0 /\ sel_ref r2 m1 == sel_ref r1 m0)
+= 
 
 
 let alloc (#a:Type0) (x:a)
