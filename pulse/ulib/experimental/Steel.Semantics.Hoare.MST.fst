@@ -1035,12 +1035,11 @@ let step_par (#st:st) (i:nat)
 
       assume (stronger_post post next_post);
 
-      let s = Step (next_preL `st.star` preR) next_post
+      Step (next_preL `st.star` preR) next_post
         (par_lpre next_lpreL lpreR)
         (par_lpost next_lpreL next_lpostL lpreR lpostR)
         (Par mL mR)
-        j in
-      s
+        j
 
     end
     else begin
