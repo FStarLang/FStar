@@ -58,20 +58,21 @@ let _ = is_public (int*bool); is_tainted (int*bool)
 (* let _ = is_tainted (int*untainted) -- fails as it should *)
 
 // Dependent pairs are not tainted
-(* let _ = is_tainted (x:int & (y:int{True})) -- fails as it should *)
+(* let _ = is_tainted (x:int & (y:int{x = y} -> int)) -- fails as it should *)
 
-// Dependent pairs could in principle be made public
+// Dependent pairs are not public either
+
 // TODO: provided we find a way to make this actually work in practice:
-
-instance public_dpair t1 t2 (_ : public t1) (f : (x:t1 -> public (t2 x))) : public (x:t1 & (t2 x))
-  = { pdummy = () }
+// here is an old attempt
+(* instance public_dpair t1 t2 (_ : public t1) (f : (x:t1 -> public (t2 x))) : public (x:t1 & (t2 x)) *)
+(*   = { pdummy = () } *)
   
 open FStar.Tactics.Typeclasses
 
-//let _ = is_public (x:int & (y:int{True}))
-// GM: Again the unifier failing to apply public_dpair
-let _ = is_public (x:int & (y:int{True})) #(public_dpair int (fun _ -> int) solve (fun _ -> solve))
-// GM: ^ that works by giving the types manually
+(* //let _ = is_public (x:int & (y:int{True})) *)
+(* // GM: Again the unifier failing to apply public_dpair *)
+(* let _ = is_public (x:int & (y:int{True})) #(public_dpair int (fun _ -> int) solve (fun _ -> solve)) *)
+(* // GM: ^ that works by giving the types manually *)
 
 // Simple inductives like lists are also co-variant
 instance public_list t [| public t |] : public (list t) = { pdummy = () }
@@ -148,7 +149,7 @@ instance exportable_ml t [| ml t|] : exportable t = mk_exportable t (fun x -> x)
 instance importable_ml t [| ml t|] : importable t = mk_importable t (fun x -> x)
 
 instance exportable_refinement t [| d:exportable t |] (p : t -> Type0)  : exportable (x:t{p x})
-= mk_exportable (d.etype) (fun (x:(x:t{p x})) -> export (x <: t))
+= mk_exportable (d.etype) export // TODO: Eta expanding causes type error
 
 class decidable (t:Type) (p : t -> Type0) = { dec : (x:t -> b:bool{b <==> p x}) }
 
@@ -163,7 +164,7 @@ instance exportable_pair t1 t2 [| d1:exportable t1 |] [| d2:exportable t2 |] : e
 
 (* TODO: this explodes, minimize and file bug: *)
 (* instance importable_pair t1 t2 [| d1:importable t1 |] [| d2:importable t2 |] : importable (t1 * t2) = *)
-(*   mk_importable (d1.itype * d2.itype) (fun (x,y) -> (import x, import y)) *)
+(*   mk_importable (d1.itype * d2.itype) (fun (x,y) -> (import x, import y) <: Ex (t1 * t2)) *)
 
 instance exportable_arrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] : exportable (t1 -> t2)  =
   mk_exportable (d1.itype -> ML d2.etype)
@@ -181,4 +182,18 @@ instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] 
   mk_importable (d1.etype -> ML d2.itype)
     (fun (f:(d1.etype -> ML d2.itype)) -> (fun (x:t1) -> import (f (export x)) <: ML t2))
 
-(* TODO: Is this related in any way to the F*-ML interop of Zoe / native tactics? *)
+(* TODO: Is this related in any way to the F*-ML interop of Zoe / native tactics?
+   - similar instances for arrows and pairs
+     https://arxiv.org/pdf/1803.06547.pdf#page=42
+*)
+
+(* Dependent pairs are neither importable not exportable? *)
+(* instance exportable_dpair t1 t2 [| d1:exportable t1 |] (d2:(x:t1 -> exportable (t2 x))) : exportable (x:t1 & t2 x) = *)
+(*   mk_exportable (d1.etype * d2.etype) (fun (x,y) -> (export x, export y)) *)
+
+(* TODO: What would be a good soundness criterion for all this?
+         And can it be internalized within F*? Maybe for importable/exportable?
+  - Do Michael Sammler et al prove any generic property? (Section 6)
+  - Can we take inspiration from the dynamic contracts / gradual typing world?
+  - Is etype always a supertype? Is itype always a subtype?
+ *)
