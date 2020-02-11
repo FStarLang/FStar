@@ -10,9 +10,18 @@ but again without adding extra checking and wrapping.
 
 class public (t:Type) = { pdummy : unit }
 class tainted (t:Type) = { tdummy : unit }
+
+
 // TODO: How to properly declare empty type classes?
+// GM: I should add that.
+
 // TODO: Any way to declare "sealed type classes"? Or more generally,
 //       restricting who can add new instances, since it's a dangerous operation
+// GM: Not in any very robust way. We don't have "real" typeclasses as in
+//     Haskell. Instead we have 1) custom implicit argument resolution and
+//     2) a bunch of sugar. I think there's a way by making the class private
+//     and using a proxy, but not sure it's bulletproof. In any case I'd be wary
+//     of using typeclasses to enforce any kind of invariant.
 
 let is_public t [| public t |] = ()
 let is_tainted t [| tainted t |] = ()
@@ -30,9 +39,15 @@ instance tainted_string : tainted string = { tdummy = () }
 // Refinement types are public, but only trivial refinements are tainted
 instance public_refined t p [| public t |] : public (x:t{p x}) = { pdummy = () }
 instance tainted_refined t [| tainted t |] : tainted (x:t{True}) = { tdummy = () }
+
 let untainted = x:int{x = 42}
+
 let _ = is_public (x:int{x = 42}); is_tainted (x:int{True})
+
 (* let _ = is_public untainted -- TODO: this should work, why are things not unfolded *)
+(* GM: This is the unifier failing to unify `x:int{x = 42}` with `x:?t{?p x}`. Will look into it.
+       Also reminds me of #1486 *)
+
 (* [@(expect_failure)] -- TODO: the code below does fail, but this expect_failure blows up
 let _ = is_tainted untainted *)
 
@@ -47,16 +62,26 @@ let _ = is_public (int*bool); is_tainted (int*bool)
 
 // Dependent pairs could in principle be made public
 // TODO: provided we find a way to make this actually work in practice:
-(* instance public_dpair t1 t2 [| public t1 |] [| (x:t1 -> public (t2 x)) |] : public (x:t1 & (t2 x)) *)
-(*   = { pdummy = () } *)
-(* let _ = is_public (x:int & (y:int{True})) -- try to make this work *)
+
+instance public_dpair t1 t2 (_ : public t1) (f : (x:t1 -> public (t2 x))) : public (x:t1 & (t2 x))
+  = { pdummy = () }
+  
+open FStar.Tactics.Typeclasses
+
+//let _ = is_public (x:int & (y:int{True}))
+// GM: Again the unifier failing to apply public_dpair
+let _ = is_public (x:int & (y:int{True})) #(public_dpair int (fun _ -> int) solve (fun _ -> solve))
+// GM: ^ that works by giving the types manually
 
 // Simple inductives like lists are also co-variant
 instance public_list t [| public t |] : public (list t) = { pdummy = () }
 instance tainted_list t [| tainted t |] : tainted (list t) = { tdummy = () }
 let _ = is_public (list int); is_tainted (list bool)
 (* let _ = is_tainted (list untainted) -- fails as it should *)
+
+
 // TODO: any kind of "deriving" mechanism that could give us instances for all ML-like inductives?
+// GM: we've coded up similar things, as in `examples/tactics/Printers.fst`
 
 open FStar.Exn
 open FStar.All
