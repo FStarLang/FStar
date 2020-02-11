@@ -43,8 +43,10 @@ module HST = FStar.HyperStack.ST
 
 // Motivation: we want to ensure that all stateful operations for a value of
 // type `a` are within the `region_of` the value.
-noeq type regional a =
+inline_for_extraction noeq type regional (st:eqtype) a =
 | Rgl:
+    state: st ->
+    
     // The target type should have a region where it belongs.
     region_of: (a -> GTot HS.rid) ->
 
@@ -53,7 +55,7 @@ noeq type regional a =
 
     // A stateless value of type `a`.
     // It does not have to satisfy the invariant `r_inv` described below.
-    dummy: a ->
+    dummy: ((s:st{s=state}) -> d:a) ->
 
     // An invariant we want to maintain for each operation.
     // For example, it may include `live` and `freeable` properties
@@ -87,7 +89,7 @@ noeq type regional a =
     // An allocation operation. We might have several ways of initializing a
     // given target type `a`; then multiple typeclass instances should be
     // defined, and each of them can be used properly.
-    r_alloc: (r:HST.erid ->
+    r_alloc: ((s:st{s = state}) -> r:HST.erid ->
       HST.ST a
         (requires (fun h0 -> True))
         (ensures (fun h0 v h1 ->
@@ -101,9 +103,37 @@ noeq type regional a =
     // Destruction: note that it allows to `modify` all the regions, including
     // its subregions. It is fair when we want to `free` a vector and its
     // elements as well, assuming the elements belong to subregions.
-    r_free: (v:a ->
+    r_free: ((s:st{s = state}) -> v:a ->
       HST.ST unit
         (requires (fun h0 -> r_inv h0 v))
         (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
-    regional a
+          
+    regional st a
+
+
+let rg_dummy #a #rst (rg:regional rst a)
+: Tot a 
+= Rgl?.dummy rg (Rgl?.state rg)
+
+let rg_alloc #a #rst (rg:regional rst a) (r:HST.erid)
+: HST.ST a 
+  (requires (fun h0 -> True))
+  (ensures (fun h0 v h1 ->
+           Set.subset (Map.domain (HS.get_hmap h0))
+                      (Map.domain (HS.get_hmap h1)) /\
+           modifies loc_none h0 h1 /\
+           fresh_loc (Rgl?.loc_of rg v) h0 h1 /\
+           (Rgl?.r_alloc_p rg) v /\ (Rgl?.r_inv rg) h1 v /\ (Rgl?.region_of rg) v == r /\
+           (Rgl?.r_repr rg) h1 v == Ghost.reveal (Rgl?.irepr rg)))
+= Rgl?.r_alloc rg (Rgl?.state rg) r
+
+let rg_free #a #rst (rg:regional rst a) (v:a)
+: HST.ST unit 
+ (requires (fun h0 -> Rgl?.r_inv rg h0 v))
+ (ensures (fun h0 _ h1 ->
+          modifies (loc_all_regions_from false (Rgl?.region_of rg v)) h0 h1))
+= (Rgl?.r_free rg) (Rgl?.state rg) v
+
+type no_state_t = b:bool{b=false}
+let no_state_val = false
