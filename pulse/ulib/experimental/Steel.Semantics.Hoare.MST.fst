@@ -381,6 +381,12 @@ let weaker_pre (#st:st)
     st.interp (pre `st.star` frame) h ==>
     st.interp (next_pre `st.star` frame) h
 
+let stronger_post (#st:st) (#a:Type u#a)
+  (post next_post:post_t st a)
+= forall (x:a) (h:st.heap) (frame:st.hprop).
+    st.interp (next_post x `st.star` frame) h ==>
+    st.interp (post x `st.star` frame) h
+
 
 /// Setting the flag just to reduce the time to typecheck the type m
 
@@ -456,13 +462,17 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post_t st a -> l_pre pre -> 
     #post:post_t st a ->
     #lpre:l_pre pre ->
     #lpost:l_post pre post ->
-    #wlpre:l_pre pre ->
-    #wlpost:l_post pre post ->
+    #wpre:st.hprop ->
+    #wpost:post_t st a ->
+    #wlpre:l_pre wpre ->
+    #wlpost:l_post wpre wpost ->
     #_:squash
-      ((forall h. wlpre h ==> lpre h) /\
+      (weaker_pre wpre pre /\
+       stronger_post wpost post /\
+       (forall h. wlpre h ==> lpre h) /\
        (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)) ->
     m st a pre post lpre lpost ->
-    m st a pre post wlpre wlpost
+    m st a wpre wpost wlpre wlpost
 #pop-options
 
 (**** End definition of the computation AST ****)
@@ -525,13 +535,6 @@ let stronger_lpost (#st:st) (#a:Type u#a)
 = forall (x:a) (h_final:st.heap).
     next_lpost (st.heap_of_mem m1) x h_final ==>
     lpost (st.heap_of_mem m0) x h_final
-
-let stronger_post (#st:st) (#a:Type u#a)
-  (post next_post:post_t st a)
-= forall (x:a) (h:st.heap) (frame:st.hprop).
-    st.interp (next_post x `st.star` frame) h ==>
-    st.interp (post x `st.star` frame) h
-
 
 unfold
 let step_ens (#st:st)
@@ -645,6 +648,51 @@ let preserves_frame_trans (#st:st)
     preserves_frame hp2 hp3 m2 m3)
   (ensures preserves_frame hp1 hp3 m1 m3)
 = ()
+
+#push-options "--warn_error -271"
+let preserves_frame_stronger_post (#st:st) (#a:Type)
+  (pre:st.hprop) (post post_s:post_t st a) (x:a) (m1 m2:st.mem)
+: Lemma
+  (requires
+    preserves_frame pre (post_s x) m1 m2 /\
+    stronger_post post post_s)
+  (ensures preserves_frame pre (post x) m1 m2)
+= let aux (frame:st.hprop)
+    : Lemma
+      (requires st.interp (st.locks_invariant m1 `st.star` (pre `st.star` frame)) (st.heap_of_mem m1))
+      (ensures
+        st.interp (st.locks_invariant m2 `st.star` (post x `st.star` frame)) (st.heap_of_mem m2) /\
+        (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m1) <==> f_frame (st.heap_of_mem m2)))
+      [SMTPat ()]
+    = assert (st.interp (st.locks_invariant m2 `st.star` (post_s x `st.star` frame)) (st.heap_of_mem m2));
+      
+      calc (st.equals) {
+        st.locks_invariant m2 `st.star` (post_s x `st.star` frame);
+           (st.equals) { }
+        (st.locks_invariant m2 `st.star` post_s x) `st.star` frame;
+           (st.equals) { }
+        (post_s x `st.star` st.locks_invariant m2) `st.star` frame;
+           (st.equals) { }
+        post_s x `st.star` (st.locks_invariant m2 `st.star` frame);
+      };
+
+      assert (st.interp (post_s x `st.star` (st.locks_invariant m2 `st.star` frame)) (st.heap_of_mem m2));
+      assert (st.interp (post x `st.star` (st.locks_invariant m2 `st.star` frame)) (st.heap_of_mem m2));
+
+      calc (st.equals) {
+        post x `st.star` (st.locks_invariant m2 `st.star` frame);
+           (st.equals) { }
+        (post x `st.star` st.locks_invariant m2) `st.star` frame;
+           (st.equals) { }
+        (st.locks_invariant m2 `st.star` post x) `st.star` frame;
+           (st.equals) { }
+         st.locks_invariant m2 `st.star` (post x `st.star` frame);
+      };
+
+      assert (st.interp (st.locks_invariant m2 `st.star` (post x `st.star` frame)) (st.heap_of_mem m2))
+  in
+  ()
+#pop-options
 
 #push-options "--z3rlimit 40"
 let preserves_frame_star (#st:st) (pre post:st.hprop) (m0 m1:st.mem) (frame:st.hprop)
@@ -1024,7 +1072,7 @@ let step_weaken (#st:st) (i:nat) (#a:Type u#a)
 : Mst (step_result st a) (step_req f) (step_ens f)
 
 = MSTATE?.reflect (fun m0 ->
-    let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ f = f in
+    let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ #_ #_ f = f in
 
     Step pre post lpre lpost f i, m0)
 
@@ -1060,17 +1108,6 @@ let run_ret (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
 = MSTATE?.reflect (fun m0 ->
     let Ret _ x _ = f in
     x, m0)
-
-
-let preserves_frame_stronger_post (#st:st) (#a:Type)
-  (pre:st.hprop) (post post_s:post_t st a) (x:a) (m1 m2:st.mem)
-: Lemma
-  (requires
-    preserves_frame pre (post_s x) m1 m2 /\
-    stronger_post post post_s)
-  (ensures preserves_frame pre (post x) m1 m2)
-= admit ()
-
 
 let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
