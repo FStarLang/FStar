@@ -132,7 +132,7 @@ let polymonadic_bind_steel_pure_pre (#a:Type) (#b:Type)
   //           ens_f h0 x h1 <==> ens_f (Mem.join h0 h2) x h1);
   // assert (forall x h1 (h0:Mem.hheap pre_f) (h2:Mem.heap{Mem.disjoint h0 h2}).
   //         (ens_f h0 x h1 ==> p) <==> (ens_f (Mem.join h0 h2) x h1 ==> p));
-  admit ();          
+  admit ();
   fun h -> req_f h /\ (forall x h1. ens_f h x h1 ==> (wp_g x) (fun _ -> True))
 
 let bind_steel_pure (a:Type) (b:Type)
@@ -274,14 +274,39 @@ let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
 = MST.mst_assert p
 
-#push-options "--z3rlimit 50"
-let act_preserves_frame_and_preorder (#a:Type) (#pre:hprop) (#post:a -> hprop) (act:m_action pre a post)
+#restart-solver
+
+#push-options "--z3rlimit 1000 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let act_preserves_frame_and_preorder
+  (#a:Type)
+  (#pre:hprop)
+  (#post:a -> hprop)
+  (act:m_action pre a post)
   (m0:hmem pre)
-: Lemma
-  (let (| x, m1 |) = act m0 in
-   Sem.preserves_frame #state pre (post x) m0 m1 /\
-   mem_evolves m0 m1)
-= ()
+  : Lemma (
+    let (| x, m1 |) = act m0 in
+    Sem.preserves_frame #state pre (post x) m0 m1 /\
+    mem_evolves m0 m1
+  ) =
+  let (| x, m1 |) = act m0 in
+  let aux (frame:state.Sem.hprop) : Lemma (
+    interp
+      (state.Sem.locks_invariant m0 `state.Sem.star` (pre `state.Sem.star` frame))
+      (state.Sem.heap_of_mem m0) ==>
+    (state.Sem.interp
+      (state.Sem.locks_invariant m1 `state.Sem.star` ((post x) `state.Sem.star` frame))
+      (state.Sem.heap_of_mem m1) /\
+      (forall (f_frame:fp_prop frame).
+        f_frame (state.Sem.heap_of_mem m0) <==> f_frame (state.Sem.heap_of_mem m1)
+      )
+    )
+  ) =
+    star_commutative (state.Sem.locks_invariant m0) (pre `state.Sem.star` frame);
+    star_commutative  (state.Sem.locks_invariant m1) ((post x) `state.Sem.star` frame)
+  in
+  Classical.forall_intro aux;
+  assert(Sem.preserves_frame #state pre (post x) m0 m1);
+  assert(mem_evolves m0 m1)
 #pop-options
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
@@ -311,7 +336,7 @@ let alloc (#a:Type0) (x:a)
     act_preserves_frame_and_preorder (alloc_ref #a x) m0;
     mst_put m1;
     r)
-    
+
 
 let free (#a:Type0) (r:reference a)
 : SteelT unit (ref_perm r full_permission) (fun _ -> emp)
