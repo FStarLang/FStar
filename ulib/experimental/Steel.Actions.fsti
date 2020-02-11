@@ -29,29 +29,27 @@ let fp_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` f
 let ac_reasoning_for_m_frame_preserving
   (p q r:hprop) (m:mem)
 : Lemma
-  (requires interp (p `star` (q `star` r)) (heap_of_mem m))
-  (ensures interp (q `star` p) (heap_of_mem m))
+  (requires interp ((p `star` q) `star` r) (heap_of_mem m))
+  (ensures interp (p `star` r) (heap_of_mem m))
 = calc (equiv) {
-    p `star` (q `star` r);
-       (equiv) { star_associative p q r }
     (p `star` q) `star` r;
        (equiv) { star_commutative p q;
                  equiv_extensional_on_star (p `star` q) (q `star` p) r }
     (q `star` p) `star` r;
+       (equiv) { star_associative q p r }
+    q `star` (p `star` r);
   };
-  assert (interp ((q `star` p) `star` r) (heap_of_mem m));
-  affine_star (q `star` p) r (heap_of_mem m)
-
+  assert (interp (q `star` (p `star` r)) (heap_of_mem m));
+  affine_star q (p `star` r) (heap_of_mem m)
 
 val mem_evolves : FStar.Preorder.preorder mem
 
 
 let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
-  forall (frame:hprop) (m0:mem).
-    interp (locks_invariant m0 `star` (fp `star` frame)) (heap_of_mem m0) ==>
-    (ac_reasoning_for_m_frame_preserving (locks_invariant m0) fp frame m0;
+  forall (frame:hprop) (m0:hmem (fp `star` frame)).
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
      let (| x, m1 |) = f m0 in
-     interp (locks_invariant m1 `star` (fp' x `star` frame)) (heap_of_mem m1) /\
+     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
      mem_evolves m0 m1 /\
      (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
 
