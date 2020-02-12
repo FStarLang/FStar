@@ -641,6 +641,22 @@ let weaken_fp_prop (#st:st) (frame frame':st.hprop) (m0 m1:st.mem)
       f_frame (st.heap_of_mem m1))
 = ()
 
+let depends_only_on_commutes_with_weaker (#st:st) (q:st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop)
+: Lemma
+  (requires
+    depends_only_on q fp /\
+    weaker_pre fp_next fp)
+  (ensures depends_only_on q fp_next)
+= assert (forall (h0:fp_heap_0 st.interp fp_next). st.interp (fp_next `st.star` st.emp) h0)
+
+let depends_only_on2_commutes_with_weaker (#st:st) (#a:Type)
+  (q:st.heap -> a -> st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop) (fp_post:a -> st.hprop)
+: Lemma
+  (requires
+    depends_only_on2 q fp fp_post /\
+    weaker_pre fp_next fp)
+  (ensures depends_only_on2 q fp_next fp_post)
+= assert (forall (h0:fp_heap_0 st.interp fp_next). st.interp (fp_next `st.star` st.emp) h0)
 
 /// Lemmas about preserves_frame
 
@@ -923,24 +939,6 @@ let step_bind_ret (#st:st) (i:nat)
     | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
       Step (p x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
 
-let depends_only_on_commutes_with_weaker (#st:st) (q:st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop)
-: Lemma
-  (requires
-    depends_only_on q fp /\
-    weaker_pre fp_next fp)
-  (ensures depends_only_on q fp_next)
-= admit ()
-
-let depends_only_on2_commutes_with_weaker (#st:st) (#a:Type)
-  (q:st.heap -> a -> st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop) (fp_post:a -> st.hprop)
-: Lemma
-  (requires
-    depends_only_on2 q fp fp_post /\
-    weaker_pre fp_next fp)
-  (ensures depends_only_on2 q fp_next fp_post)
-= admit ()
-
-
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
@@ -978,6 +976,7 @@ let step_bind (#st:st) (i:nat)
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
+
 
 let step_frame_ret (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
@@ -1126,7 +1125,7 @@ let rec step (#st:st) (i:nat) (#a:Type u#a)
   | Act _ -> step_act i f
   | Frame _ _ _ -> step_frame i f step
   | Par _ _ -> step_par i f step
-  | Weaken _ -> step_weaken i f
+  | Weaken _ _ _ _ -> step_weaken i f
 
 
 let run_ret (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
