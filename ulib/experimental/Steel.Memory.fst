@@ -1,3 +1,4 @@
+
 (*
    Copyright 2019 Microsoft Research
 
@@ -24,8 +25,21 @@ open FStar.FunctionalExtensionality
 // In the future, we may have other cases of cells
 // for arrays and structs
 
-let array_seq (a: Type) (len: nat) = Seq.lseq (option (a & perm:permission{allows_read perm})) len
+noeq type array_seq_member (a: Type) = {
+   value: a;
+   perm: (p:permission{allows_read p});
+   preorder: Preorder.preorder a
+}
 
+let invert_array_seq_member (a: Type0)
+  : Lemma
+    (requires True)
+    (ensures (inversion (array_seq_member a)))
+    [ SMTPat (array_seq_member a) ]
+  =
+  allow_inversion (array_seq_member a)
+
+let array_seq (a: Type) (len: nat) = Seq.lseq (option (array_seq_member a)) len
 
 noeq
 type cell =
@@ -56,7 +70,7 @@ let select_addr (m:heap) (a:addr{contains_addr m a})
   = Some?.v (m a)
 
 let select_index (#a: Type) (#len: nat) (s: array_seq a len) (i:nat{i < len /\ contains_index s i})
-  : (a & perm:permission{allows_read perm})
+  : (array_seq_member a)
   = Some?.v (Seq.index s i)
 
 let update_addr (m:heap) (a:addr) (c:cell)
@@ -72,9 +86,10 @@ let disjoint_addr (m0 m1:heap) (a:addr)
       (forall (i:nat{i < len0}).
         match contains_index seq0 i, contains_index seq1 i with
 	| true, true ->
-          let (x0, p0) = select_index seq0 i in
-	  let (x1, p1) = select_index seq1 i in
-          x0 == x1 /\ summable_permissions p0 p1
+          let x0 = select_index seq0 i in
+	  let x1 = select_index seq1 i in
+          x0.value == x1.value /\ summable_permissions x0.perm x1.perm /\
+          x0.preorder == x1.preorder
         | _ -> True
       )
     | Some _, None
@@ -137,9 +152,11 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
         Some (Array a0 len0 (Seq.init len0 (fun i ->
           match contains_index seq0 i,  contains_index seq1 i with
 	  | true, true ->
-            let (_, p1) = select_index seq1 i in
-            let (x0, p0) = select_index seq0 i in
-	    Some (x0, (sum_permissions p0 p1 <: (perm:permission{allows_read perm})))
+            let x1 = select_index seq1 i in
+            let x0 = select_index seq0 i in
+	    Some ({x0 with
+              perm = (sum_permissions x0.perm x1.perm <: (perm:permission{allows_read perm}))
+            })
           | true, false -> Seq.index seq0 i
           | false, true -> Seq.index seq1 i
 	  | false, false -> None
@@ -269,7 +286,8 @@ noeq
 type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission{allows_read perm} ->
-		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) -> hprop
+		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
+                  preorder: Ghost.erased (Preorder.preorder t) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -284,7 +302,7 @@ let rec interp (p:hprop) (m:heap)
   : Tot prop (decreases p)
   = match p with
     | Emp -> True
-    | Pts_to_array #t a perm contents ->
+    | Pts_to_array #t a perm contents preorder ->
       m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq ->
@@ -297,9 +315,10 @@ let rec interp (p:hprop) (m:heap)
             else if contains_index seq i then
 	      (* In the range, contains some value *)
 	      let x = Seq.index contents (i - U32.v a.array_offset) in
-	      let (x', perm') = select_index seq i in
-	      x == x' /\
-	      perm `lesser_equal_permission` perm'
+	      let x' = select_index seq i in
+	      x == x'.value /\
+              x'.preorder == Ghost.reveal preorder /\
+	      perm `lesser_equal_permission` x'.perm
             else (* In the range, does not contain anything *) False
           )
 	| _ -> False
@@ -335,13 +354,14 @@ let rec interp (p:hprop) (m:heap)
       forall x. (W.axiom1 f x; interp (f x) m)
 
 let emp = Emp
-let pts_to_array = Pts_to_array
-let pts_to_ref
+let pts_to_array_with_preorder = Pts_to_array
+let pts_to_ref_with_preorder
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
-  (contents: Ghost.erased t) : hprop
-  = pts_to_array r p (Seq.Base.create 1 (Ghost.reveal contents))
+  (contents: Ghost.erased t)
+  (preorder: Ghost.erased (Preorder.preorder t))
+  = pts_to_array_with_preorder r p (Seq.Base.create 1 (Ghost.reveal contents)) preorder
 let h_and = And
 let h_or = Or
 let star = Star
@@ -363,34 +383,37 @@ let equiv_extensional_on_star (p1 p2 p3:hprop) = ()
 // pts_to_array
 ////////////////////////////////////////////////////////////////////////////////
 
-let intro_pts_to_array
+let intro_pts_to_array_with_preorder
   (#t: Type0)
   (a:array_ref t)
   (perm:permission{allows_read perm})
   (contents:Seq.lseq t (U32.v a.array_length))
+  (preorder: Preorder.preorder t)
   (m: heap)
   : Lemma
     (requires (
-      m `contains_addr` a.array_addr /\
+    m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq ->
 	  t' == t /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
-             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
 	     (* Outside of the range *)
              True
             else if contains_index seq i then
 	      (* In the range, contains some value *)
 	      let x = Seq.index contents (i - U32.v a.array_offset) in
-	      let (x', perm') = select_index seq i in
-	      x == x' /\
-	      perm `lesser_equal_permission` perm'
+	      let x' = select_index seq i in
+	      x == x'.value /\
+              x'.preorder == Ghost.reveal preorder /\
+	      perm `lesser_equal_permission` x'.perm
             else (* In the range, does not contain anything *) False
           )
-	| _ -> False)
+	| _ -> False
+      )
     ))
-    (ensures (interp (pts_to_array a perm contents) m))
+    (ensures (interp (pts_to_array_with_preorder a perm contents preorder) m))
   =
   ()
 
@@ -399,23 +422,27 @@ let pts_to_array_injective
   (a: array_ref t)
   (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
+  (pre: Preorder.preorder t)
   (m: heap)
   =
   match select_addr m a.array_addr with
   | Array t' len' seq ->
-    let aux (i':nat{i' < U32.v a.array_length}) : Lemma (Seq.index c0 i' == Seq.index c1 i') =
+    let aux (i':nat{i' < U32.v a.array_length})
+      : Lemma (Seq.index c0 i' == Seq.index c1 i')
+    =
       let i = i' + U32.v a.array_offset in
       assert(contains_index seq i);
       let x0 = Seq.index c0 i' in
       let x1 = Seq.index c1 i' in
-      let (x', p') = select_index seq i in
-      assert(x' == x0);
-      assert(x' == x1);
+      let x' = select_index seq i in
+      assert(x'.value == x0);
+      assert(x'.value == x1);
       assert(x0 == x1)
     in
     Classical.forall_intro aux;
     assert(c0 `Seq.equal` c1)
   | _ -> ()
+
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_ref
 ////////////////////////////////////////////////////////////////////////////////
@@ -425,11 +452,12 @@ let pts_to_ref_injective
   (a: reference t)
   (p:permission{allows_read p})
   (c0 c1: t)
+  (pre: Preorder.preorder t)
   (m: heap)
   =
   let s0 = Seq.create 1 c0 in
   let s1 = Seq.create 1 c1 in
-  pts_to_array_injective a p s0 s1 m;
+  pts_to_array_injective a p s0 s1 pre m;
   assert(s0 `Seq.equal` s1);
   assert(c0 == Seq.index s0 0);
   assert(c1 == Seq.index s1 0);
@@ -569,7 +597,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint m m' })
     [SMTPat (interp p (join m m'))]
   = match p with
     | Emp -> ()
-    | Pts_to_array _ _ _ -> ()
+    | Pts_to_array _ _ _ _ -> ()
     | Refine p q -> affine_star_aux p m m'
     | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
