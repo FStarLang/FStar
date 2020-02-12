@@ -1045,6 +1045,16 @@ let step_par_ret (#st:st) (i:nat)
       (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
       i, m0)
 
+let stronger_post_par_r (#st:st) (#aL #aR:Type u#a)
+  (postL:post_t st aL) (postR:post_t st aR) (next_postR:post_t st aR)
+: Lemma
+  (requires stronger_post postR next_postR)
+  (ensures
+    forall xL xR frame h.
+      st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h ==>
+      st.interp ((postL xL `st.star` postR xR) `st.star` frame) h)
+= admit ()
+
 let step_par (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Par? f})
@@ -1089,10 +1099,7 @@ let step_par (#st:st) (i:nat)
 
       let next_post = (fun (xL, xR) -> postL xL `st.star` next_postR xR) in
 
-      assume (forall xL xR frame h.
-                st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h ==>
-                st.interp ((postL xL `st.star` postR xR) `st.star` frame) h);
-      
+      stronger_post_par_r postL postR next_postR;
 
       Step (preL `st.star` next_preR) next_post
         (par_lpre lpreL next_lpreR)
