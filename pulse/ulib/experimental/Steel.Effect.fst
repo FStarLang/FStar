@@ -279,14 +279,6 @@ let act_preserves_frame_and_preorder
   assert(mem_evolves m0 m1)
 #pop-options
 
-let rewrite_hprop (p:hprop) (p':hprop{Mem.equiv p p'})
-  : SteelT unit p (fun _ -> p')
-  = Steel?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let (| _, m1 |) = rewrite_hprop p p' m0 in
-      act_preserves_frame_and_preorder (rewrite_hprop p p') m0;
-      mst_put m1)
-
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
 : SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
@@ -373,6 +365,20 @@ open Steel.Memory.Tactics
 
 #push-options "--no_tactics"
 
+let rassert
+  (#h_in:hprop)
+  (h_out:hprop{
+    FStar.Tactics.with_tactic
+    reprove_frame
+    (can_be_split_into h_in h_out emp /\ True)})
+  : SteelT unit h_in (fun _ -> h_out)
+  = Steel?.reflect (fun _ ->
+      let m0 = mst_get () in
+      FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into h_in h_out emp /\ True);
+      let (| _, m1 |) = rewrite_hprop h_in h_out m0 in
+      act_preserves_frame_and_preorder (rewrite_hprop h_in h_out) m0;
+      mst_put m1)
+
 let steel_frame_t
   (#outer:hprop)
   (#a:Type) (#pre:pre_t) (#post:post_t a)
@@ -387,7 +393,10 @@ let steel_frame_t
   outer
   (fun x -> post x `Mem.star` frame)
 = FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into outer pre frame /\ True);
-  rewrite_hprop outer (pre `Mem.star` frame);
+  Mem.emp_unit (pre `Mem.star` frame);
+  FStar.Tactics.unfold_with_tactic reprove_frame
+    (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
+  rassert (pre `Mem.star` frame);
   steel_frame f frame (fun _ -> True)
 
 #pop-options
@@ -400,8 +409,13 @@ assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
 assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
 assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 
+module T = FStar.Tactics
+
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 = steel_frame_t f12;  //this succeeds, simple unification
-  steel_frame_t #((r1 `star` r2) `star` r3) f1;  //this fails to infer frame
-  rewrite_hprop (r1 `star` (r2 `star` r3)) ((r1 `star` r2) `star` r3)
+  steel_frame_t f1; //#((r1 `star` r2) `star` r3) f1;  //this fails to infer frame
+//  steel_frame_t f123;
+//  steel_frame_t f1
+//  assume ((r1 `star` (r2 `star` r3)) `equiv` ((r3 `star` r1) `star` r2));
+  rassert ((r1 `star` r2) `star` r3)
