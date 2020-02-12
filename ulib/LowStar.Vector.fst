@@ -341,7 +341,6 @@ let alloc_by_buffer #a len buf =
 
 /// Destruction
 
-inline_for_extraction
 val free:
   #a:Type -> vec:vector a ->
   HST.ST unit
@@ -474,43 +473,6 @@ let insert #a vec v =
     (B.upd vs sz v;
     Vec (sz + 1ul) cap vs)
 
-val shrink:
-  #a:Type -> vec:vector a ->
-  new_size:uint32_t{new_size <= size_of vec} ->
-  Tot (r:vector a{size_of r = new_size})
-let shrink #a vec new_size =
-  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
-
-private
-let rec shift_down (#a:Type) (vec:vector a) (i:uint32_t) (d:uint32_t): HST.ST (rvec:vector a)
-  (requires (fun h0 -> 
-                 live h0 vec /\ 
-                 UInt.size (U32.v i + U32.v d) 32 /\ i + d < size_of vec /\
-                 (i + d) < size_of vec /\
-                 HST.is_eternal_region (frameOf vec)))
-  (ensures (fun h0 rvec h1 -> 
-                live h1 vec /\ live h1 rvec /\ size_of rvec = size_of vec /\
-                modifies (loc_union (loc_vector vec) (loc_vector rvec)) h0 h1 /\
-                frameOf vec = frameOf rvec /\
-                hmap_dom_eq h0 h1 /\
-                (let n_shifted = (size_of vec) - i in
-                 S.equal (S.slice (as_seq h1 rvec) 0 (U32.v n_shifted))
-                         (S.slice (as_seq h0 vec) (U32.v i) (U32.v (size_of vec))))
-                 ))
-  (decreases (U32.v (size_of vec) - U32.v i))
-= let h0 = HST.get() in
-  if i + d >= size_of vec then vec
-  else begin    
-    let e = (index vec (i + d)) in
-    assign vec i e;
-    let h1 = HST.get() in
-    assert (S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) e));
-    assume (S.equal (as_seq h1 vec) (S.slice (as_seq h0 vec) (U32.v i + 1) (U32.v (size_of vec))));
-    if (i + d + 1ul >= size_of vec) then vec         
-    else (shift_down vec (i + 1ul) d)
-  end
-
-
 // Flush elements in the vector until the index `i`.
 // It also frees the original allocation and reallocates a smaller space for
 // remaining elements.
@@ -534,23 +496,18 @@ let flush #a vec ia i =
   let fsz = Vec?.sz vec - i in
   let asz = if Vec?.sz vec = i then 1ul else fsz in
   let vs = Vec?.vs vec in
-  // let fvs = B.malloc (B.frameOf vs) ia asz in
-  // B.blit vs i fvs 0ul fsz;
-  // B.free vs;      
-  let h0 = HST.get() in
-  if (i = size_of vec) then
-    Vec 0ul 1ul (B.malloc (B.frameOf vs) ia 1ul)
-  else begin
-    let shifted = shift_down vec 0ul i in
-    let h1 = HST.get() in
-    let n_shifted = (size_of vec) - i in
-    admit();
-    assert (S.equal (S.slice (as_seq h1 shifted) 0 (U32.v n_shifted))
-                    (S.slice (as_seq h0 vec) (U32.v i) (U32.v (size_of vec))));
-    shrink shifted (size_of vec - i)
-  end
-  
+  let fvs = B.malloc (B.frameOf vs) ia asz in
+  B.blit vs i fvs 0ul fsz;
+  B.free vs;
+  Vec fsz asz fvs
 
+val shrink:
+  #a:Type -> vec:vector a ->
+  new_size:uint32_t{new_size <= size_of vec} ->
+  Tot (vector a)
+let shrink #a vec new_size =
+  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
+  
 
 /// Iteration
 
