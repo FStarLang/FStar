@@ -954,28 +954,28 @@ let step_bind (#st:st) (i:nat)
   | Bind #_ #b #_ #post_a #_ #_ #_ #post_b #lpre_b #lpost_b f g ->
     let Step next_pre next_post next_lpre next_lpost f j = step i f in
 
-    let lpre_b' : (x:b -> l_pre (next_post x)) =
+    let lpre_b : (x:b -> l_pre (next_post x)) =
       fun x ->
       depends_only_on_commutes_with_weaker (lpre_b x) (post_a x) (next_post x);
       lpre_b x in
 
-    let lpost_b' : (x:b -> l_post (next_post x) post_b) =
+    let lpost_b : (x:b -> l_post (next_post x) post_b) =
       fun x ->
       depends_only_on2_commutes_with_weaker (lpost_b x) (post_a x) (next_post x) post_b;
       lpost_b x in
 
-    let g : (x:b -> Dv (m st _ (next_post x) post_b (lpre_b' x) (lpost_b' x))) =
+    let g : (x:b -> Dv (m st _ (next_post x) post_b (lpre_b x) (lpost_b x))) =
       fun x ->
-      Weaken (lpre_b' x) (lpost_b' x) () (g x) in
+      Weaken (lpre_b x) (lpost_b x) () (g x) in
 
     let m1 = get () in
 
-    assert ((bind_lpre next_lpre next_lpost lpre_b') (st.heap_of_mem m1))
+    assert ((bind_lpre next_lpre next_lpost lpre_b) (st.heap_of_mem m1))
       by norm ([delta_only [`%bind_lpre]]);
 
     Step next_pre post_b
-      (bind_lpre next_lpre next_lpost lpre_b')
-      (bind_lpost next_lpre next_lpost lpost_b')
+      (bind_lpre next_lpre next_lpost lpre_b)
+      (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
 
