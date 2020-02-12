@@ -895,6 +895,42 @@ let par_weaker_lpre_and_stronger_lpost_r (#st:st) (#preL:st.hprop) (lpreL:l_pre 
     (st.locks_invariant next_state `st.star` (preL `st.star` next_preR))
     next_state
 
+#push-options "--warn_error -271"
+let stronger_post_par_r (#st:st) (#aL #aR:Type u#a)
+  (postL:post_t st aL) (postR:post_t st aR) (next_postR:post_t st aR)
+: Lemma
+  (requires stronger_post postR next_postR)
+  (ensures
+    forall xL xR frame h.
+      st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h ==>
+      st.interp ((postL xL `st.star` postR xR) `st.star` frame) h)
+= let aux xL xR frame h
+    : Lemma
+      (requires st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h)
+      (ensures st.interp ((postL xL `st.star` postR xR) `st.star` frame) h)
+      [SMTPat ()]
+    = calc (st.equals) {
+        (postL xL `st.star` next_postR xR) `st.star` frame;
+           (st.equals) { }
+        (next_postR xR `st.star` postL xL) `st.star` frame;
+           (st.equals) { }
+        next_postR xR `st.star` (postL xL `st.star` frame);
+      };
+
+      assert (st.interp (next_postR xR `st.star` (postL xL `st.star` frame)) h);
+
+      assert (st.interp (postR xR `st.star` (postL xL `st.star` frame)) h);
+
+      calc (st.equals) {
+        postR xR `st.star` (postL xL `st.star` frame);
+           (st.equals) { }
+        (postR xR `st.star` postL xL) `st.star` frame;
+           (st.equals) { }
+        (postL xL `st.star` postR xR) `st.star` frame;
+      } in
+  () 
+#pop-options
+
 (**** Begin stepping functions ****)
 
 let step_ret (#st:st) (i:nat) (#a:Type u#a)
@@ -1044,16 +1080,6 @@ let step_par_ret (#st:st) (i:nat)
       lpost 
       (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR) lpost)
       i, m0)
-
-let stronger_post_par_r (#st:st) (#aL #aR:Type u#a)
-  (postL:post_t st aL) (postR:post_t st aR) (next_postR:post_t st aR)
-: Lemma
-  (requires stronger_post postR next_postR)
-  (ensures
-    forall xL xR frame h.
-      st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h ==>
-      st.interp ((postL xL `st.star` postR xR) `st.star` frame) h)
-= admit ()
 
 let step_par (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
