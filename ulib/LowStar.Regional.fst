@@ -43,7 +43,7 @@ module HST = FStar.HyperStack.ST
 
 // Motivation: we want to ensure that all stateful operations for a value of
 // type `a` are within the `region_of` the value.
-inline_for_extraction noeq type regional (st:eqtype) a =
+noeq type regional (st:Type) (a:Type0) =
 | Rgl:
     state: st ->
     
@@ -55,7 +55,7 @@ inline_for_extraction noeq type regional (st:eqtype) a =
 
     // A stateless value of type `a`.
     // It does not have to satisfy the invariant `r_inv` described below.
-    dummy: ((s:st{s=state}) -> d:a) ->
+    dummy: ((s:st{s == state}) -> d:a) ->
 
     // An invariant we want to maintain for each operation.
     // For example, it may include `live` and `freeable` properties
@@ -89,7 +89,7 @@ inline_for_extraction noeq type regional (st:eqtype) a =
     // An allocation operation. We might have several ways of initializing a
     // given target type `a`; then multiple typeclass instances should be
     // defined, and each of them can be used properly.
-    r_alloc: ((s:st{s = state}) -> r:HST.erid ->
+    r_alloc: ((s:st{s == state}) -> r:HST.erid ->
       HST.ST a
         (requires (fun h0 -> True))
         (ensures (fun h0 v h1 ->
@@ -103,7 +103,7 @@ inline_for_extraction noeq type regional (st:eqtype) a =
     // Destruction: note that it allows to `modify` all the regions, including
     // its subregions. It is fair when we want to `free` a vector and its
     // elements as well, assuming the elements belong to subregions.
-    r_free: ((s:st{s = state}) -> v:a ->
+    r_free: ((s:st{s == state}) -> v:a ->
       HST.ST unit
         (requires (fun h0 -> r_inv h0 v))
         (ensures (fun h0 _ h1 ->
@@ -134,6 +134,3 @@ let rg_free #a #rst (rg:regional rst a) (v:a)
  (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from false (Rgl?.region_of rg v)) h0 h1))
 = (Rgl?.r_free rg) (Rgl?.state rg) v
-
-type no_state_t = b:bool{b=false}
-let no_state_val = false
