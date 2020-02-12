@@ -347,16 +347,16 @@ let frame_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a) (lpre:l_p
 
 /// The bind rule bakes in weakening of requires / ensures
 
-let bind_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a) (#pre_b:a -> st.hprop)
+let bind_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a)
   (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
-  (lpre_b:(x:a -> l_pre (pre_b x)))
+  (lpre_b:(x:a -> l_pre (post_a x)))
 : l_pre pre
 = fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1)
 
 let bind_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a)
   (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
-  (#b:Type) (#pre_b:a -> st.hprop) (#post_b:post_t st b)
-  (lpost_b:(x:a -> l_post (pre_b x) post_b))
+  (#b:Type) (#post_b:post_t st b)
+  (lpost_b:(x:a -> l_post (post_a x) post_b))
 : l_post pre post_b
 = fun h0 y h2 -> lpre_a h0 /\ (exists x h1. lpost_a h0 x h1 /\ (lpost_b x) h1 y h2)
 
@@ -407,12 +407,11 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post_t st a -> l_pre pre -> 
     #lpre_a:l_pre pre ->
     #lpost_a:l_post pre post_a ->
     #b:Type u#a ->
-    #pre_b:(a -> st.hprop){forall (x:a). weaker_pre (post_a x) (pre_b x)} ->
     #post_b:post_t st b ->
-    #lpre_b:(x:a -> l_pre (pre_b x)) ->
-    #lpost_b:(x:a -> l_post (pre_b x) post_b) ->
+    #lpre_b:(x:a -> l_pre (post_a x)) ->
+    #lpost_b:(x:a -> l_post (post_a x) post_b) ->
     f:m st a pre post_a lpre_a lpost_a ->
-    g:(x:a -> Dv (m st b (pre_b x) post_b (lpre_b x) (lpost_b x))) ->
+    g:(x:a -> Dv (m st b (post_a x) post_b (lpre_b x) (lpost_b x))) ->
     m st b pre post_b
       (bind_lpre lpre_a lpost_a lpre_b)
       (bind_lpost lpre_a lpost_a lpost_b)
@@ -916,8 +915,8 @@ let step_bind_ret (#st:st) (i:nat)
 
 = MSTATE?.reflect (fun m0 ->
     match f with
-    | Bind #_ #_ #_ #_ #_ #_ #_ #pre_b #post_b #lpre_b #lpost_b (Ret p x _) g ->
-      Step (pre_b x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
+    | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
+      Step (p x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
 
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -929,8 +928,17 @@ let step_bind (#st:st) (i:nat)
 = match f with
   | Bind (Ret _ _ _) _ -> step_bind_ret i f
 
-  | Bind #_ #_ #_ #_ #_ #_ #_ #_ #_ #lpre_b #lpost_b f g ->
+  | Bind #_ #_ #_ #post_a #_ #_ #_ #post_b #lpre_b #lpost_b f g ->
     let Step next_pre next_post next_lpre next_lpost f j = step i f in
+
+    let f : m st _ next_pre next_post next_lpre next_lpost = f in
+    let g : (x:_ -> Dv (m st _ (post_a x) post_b (lpre_b x) (lpost_b x))) = g in
+    let test (x:_) =
+      let g : m st _ (post_a x) post_b (lpre_b x) (lpost_b x) = g x in
+      let g : m st _ (next_post x) post_b (lpre_b x) (lpost_b x) =
+        Weaken #_ #_ #(post_a x) post_b (lpre_c
+    in
+    admit ()
 
     let m1 = get () in
 
