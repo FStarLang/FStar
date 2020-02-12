@@ -203,46 +203,16 @@ let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:e
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
 = frame0 (steel_reify f) frame f_frame
 
-(*** Small examples for frame inference ***)
-
-(**** Specialize to trivial req and ens ****)
-
-open Steel.Memory
-
-effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
-  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
-
-
-let steel_frame_t (#a:Type) (#pre:pre_t) (#post:post_t a)
-  ($f:unit -> Steel a pre post (fun _ -> True) (fun _ _ _ -> True))
-  (frame:hprop)
-: SteelT a
-  (pre `Mem.star` frame)
-  (fun x -> post x `Mem.star` frame)
-= steel_frame f frame (fun _ -> True)
-
-
-assume val r1 : hprop
-assume val r2 : hprop
-assume val r3 : hprop
-
-
-assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
-assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
-assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-
-[@expect_failure]
-let test_frame1 (_:unit)
-: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-= steel_frame_t f12 _;  //this succeeds, simple unification
-  steel_frame_t f1 _  //this fails to infer frame
-
-
 (*** Lifting actions to MST and then to Steel ***)
 
 open Steel.Permissions
 open Steel.Actions
+open Steel.Memory
 
+(**** Specialize to trivial req and ens ****)
+
+effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*
  * We are going to work with instiation of MSTATE with mem and mem_evolves
@@ -308,6 +278,15 @@ let act_preserves_frame_and_preorder
   assert(Sem.preserves_frame #state pre (post x) m0 m1);
   assert(mem_evolves m0 m1)
 #pop-options
+
+let rewrite_hprop (p:hprop) (p':hprop{Mem.equiv p p'})
+  : SteelT unit p (fun _ -> p')
+  = Steel?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let (| _, m1 |) = rewrite_hprop p p' m0 in
+      act_preserves_frame_and_preorder (rewrite_hprop p p') m0;
+      mst_put m1)
+
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
 : SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
@@ -386,3 +365,43 @@ let free (#a:Type0) (r:reference a)
 //   (pts_to r1 full_permission prev1 `star` pts_to r2 full_permission prev2)
 //   (fun _ -> pts_to r1 full_permission (prev1+1) `star` pts_to r2 full_permission (prev2+1))
 // = incr r1 prev1 || incr r2 prev2
+
+
+(*** Small examples for frame inference ***)
+
+open Steel.Memory.Tactics
+
+#push-options "--no_tactics"
+
+let steel_frame_t
+  (#outer:hprop)
+  (#a:Type) (#pre:pre_t) (#post:post_t a)
+  (#[resolve_frame()]
+    frame:hprop{
+      FStar.Tactics.with_tactic
+      reprove_frame
+      (can_be_split_into outer pre frame /\ True)}
+  )
+  ($f:unit -> Steel a pre post (fun _ -> True) (fun _ _ _ -> True))
+: SteelT a
+  outer
+  (fun x -> post x `Mem.star` frame)
+= FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into outer pre frame /\ True);
+  rewrite_hprop outer (pre `Mem.star` frame);
+  steel_frame f frame (fun _ -> True)
+
+#pop-options
+
+assume val r1 : hprop
+assume val r2 : hprop
+assume val r3 : hprop
+
+assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
+assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
+assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+
+let test_frame1 (_:unit)
+: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+= steel_frame_t f12;  //this succeeds, simple unification
+  steel_frame_t #((r1 `star` r2) `star` r3) f1;  //this fails to infer frame
+  rewrite_hprop (r1 `star` (r2 `star` r3)) ((r1 `star` r2) `star` r3)

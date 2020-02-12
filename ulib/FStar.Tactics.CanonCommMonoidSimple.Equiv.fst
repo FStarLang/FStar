@@ -303,7 +303,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
   | Some v -> (Atom v, ts, am)
   | None ->
     let vfresh = length ts in
-    let t = norm_term [] t in
+    let t = norm_term [iota; zeta] t in
     (Atom vfresh, ts @ [t], update vfresh t am)
 
 // This expects that mult, unit, and t have already been normalized
@@ -324,9 +324,9 @@ let rec reification_aux (ts:list term) (am:amap term)
 
 let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
     Tac (exp * list term * amap term) =
-  let mult = norm_term [delta] (`CM?.mult (`#m)) in
-  let unit = norm_term [delta] (`CM?.unit (`#m)) in
-  let t    = norm_term [] t in
+  let mult = norm_term [iota; zeta; delta] (`CM?.mult (`#m)) in
+  let unit = norm_term [iota; zeta; delta] (`CM?.unit (`#m)) in
+  let t    = norm_term [iota; zeta] t in
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
@@ -364,7 +364,7 @@ let rec quote_exp (e:exp) : term =
                 (`Atom (`#nt))
 
 let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
-  let m_unit = norm_term [delta](`CM?.unit (`#m)) in
+  let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1, ts, am) = reification eq m [] am lhs in
   let (r2,  _, am) = reification eq m ts am rhs in
@@ -385,7 +385,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   (*            xsdenote eq m am (canon r2))))); *)
   apply (`monoid_reflect);
   //dump ("after apply monoid_reflect");
-  norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
+  norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
                     `%(@); `%append; `%List.Tot.Base.sortWith;
                     `%List.Tot.Base.partition; `%bool_of_compare;
@@ -397,7 +397,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
 [@plugin]
 let canon_monoid (eq: term) (m: term) : Tac unit =
-  norm [];
+  norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
   let sq, rel_xy = collect_app_ref t in

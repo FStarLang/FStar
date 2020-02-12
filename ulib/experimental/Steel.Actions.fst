@@ -1290,6 +1290,35 @@ let glue_array
     (fun h addr -> ())
 
 ///////////////////////////////////////////////////////////////////////////////
+// Utilities
+///////////////////////////////////////////////////////////////////////////////
+
+let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
+  : pre_action p unit (fun _ -> p')
+  = fun h -> (| (), h |)
+
+#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
+  : action p unit (fun _ -> p') =
+  pre_action_to_action
+    p
+    (x:unit)
+    (fun _ -> p')
+    (rewrite_hprop_pre p p')
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+#pop-options
+
+let rewrite_hprop p p' =
+  non_alloc_action_to_non_locking_m_action
+    p
+    (x:unit)
+    (fun _ -> p')
+    (rewrite_hprop_action p p')
+    (fun h0 addr -> ())
+
+///////////////////////////////////////////////////////////////////////////////
 // References
 ///////////////////////////////////////////////////////////////////////////////
 
