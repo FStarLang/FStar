@@ -426,7 +426,7 @@ let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
   let Array t' len' seq = select_addr m a.array_addr in
   let len = U32.v a.array_length in
   assert(U32.v a.array_offset + U32.v a.array_length <= len');
-  Seq.init len (fun i -> let (x, _) =  select_index seq (U32.v a.array_offset + i) in x)
+  Seq.init len (fun i -> let x =  select_index seq (U32.v a.array_offset + i) in x.value)
 #pop-options
 
 #push-options "--max_fuel 2"
@@ -454,7 +454,7 @@ let read_array_addr
     assert(contains_index seq (U32.v a.array_offset + U32.v i));
     match Seq.index seq (U32.v a.array_offset + U32.v i) with
     | None -> ()
-    | Some (x, _) -> x
+    | Some x -> x.value
   | _ -> ()
 
 let index_array_pre_action
@@ -520,7 +520,9 @@ let update_array_addr
   | Some (Array t' len seq) ->
     on _ (fun a' ->
       if a.array_addr = a' then
-        let new_seq = Seq.upd seq (U32.v i + U32.v a.array_offset) (Some (v, perm)) in
+        let new_seq = Seq.upd seq (U32.v i + U32.v a.array_offset) (Some ({
+          value = v; perm =  perm; preorder = trivial_preorder t
+        })) in
         Some (Array t len new_seq)
       else
         m a'
@@ -575,7 +577,7 @@ let upd_array_pre_action
   = fun h ->
     (| (), upd_array_heap a iseq i v h |)
 
-#push-options "--z3rlimit 70 --max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 150 --max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t)
@@ -600,6 +602,7 @@ let upd_array_action_memory_split_independence
   let h0' = upd_array_heap a iseq i v h0 in
   let aux (addr: addr) : Lemma (
     upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+    assert(disjoint h0' h1);
     h' addr == (join h0' h1) addr
   ) =
     upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
@@ -685,7 +688,11 @@ let singleton_heap
   let h = on _ (fun a' ->
     if a' <> a.array_addr then None else
     Some (Array t (U32.v len) (Seq.init (U32.v len) (fun i ->
-      Some (init, (full_permission <: (perm:permission{allows_read perm})))
+      Some ({
+        value = init;
+        perm = (full_permission <: (perm:permission{allows_read perm}));
+        preorder = trivial_preorder t
+      })
     )))
   ) in
   h
@@ -757,7 +764,8 @@ let alloc_array_is_m_frame_and_preorder_preserving
     let h1 = heap_of_mem m1 in
     let single_h = singleton_heap len init a in
     assert (h1 == join single_h h);
-    intro_pts_to_array a full_permission (Seq.Base.create (U32.v len) init) single_h;
+    intro_pts_to_array_with_preorder
+      a full_permission (Seq.Base.create (U32.v len) init) (trivial_preorder t) single_h;
     assert (interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
     ac_reasoning_for_m_frame_preserving' emp frame (locks_invariant m) m;
     assert (interp (frame `star` locks_invariant m) h);
@@ -878,10 +886,10 @@ let share_array_pre_action
               Seq.index seq i
             else match Seq.index seq i with
             | None -> None
-            | Some (x, p) ->
-              assert(perm `lesser_equal_permission` p);
-              let new_p = sub_permissions p (half_permission perm) in
-              Some (x, (new_p <: (perm:permission{allows_read perm})))
+            | Some x ->
+              assert(perm `lesser_equal_permission` x.perm);
+              let new_p = sub_permissions x.perm (half_permission perm) in
+              Some ({x with perm = (new_p <: (perm:permission{allows_read perm}))})
           ) in
           assert(Seq.length new_seq = len);
           Some (Array t len new_seq)
@@ -896,8 +904,8 @@ let share_array_pre_action
               None
             else match Seq.index seq i with
             | None -> None
-            | Some (x, _) ->
-              Some (x, (half_permission perm <: (perm:permission{allows_read perm})))
+            | Some x ->
+              Some ({x with perm = (half_permission perm <: (perm:permission{allows_read perm}))})
           ) in
           assert(Seq.length new_seq = len);
           Some (Array t len new_seq)

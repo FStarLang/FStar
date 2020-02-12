@@ -18,6 +18,8 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
+let trivial_preorder (a: Type) : Preorder.preorder a = fun _ _ -> True
+
 ////////////////////////////////////////////////////////////////////////////////
 // Heap
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,17 +107,20 @@ let equiv (p1 p2:hprop) : prop =
 
 /// All the standard connectives of separation logic
 val emp : hprop
-val pts_to_array
+val pts_to_array_with_preorder
   (#t: Type0)
   (a:array_ref t)
   (p:permission{allows_read p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (preorder: Ghost.erased (Preorder.preorder t))
   : hprop
-val pts_to_ref
+val pts_to_ref_with_preorder
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
-  (contents: Ghost.erased t) : hprop
+  (contents: Ghost.erased t)
+  (preorder: Ghost.erased (Preorder.preorder t))
+  : hprop
 val h_and (p1 p2:hprop) : hprop
 val h_or  (p1 p2:hprop) : hprop
 val star  (p1 p2:hprop) : hprop
@@ -137,6 +142,14 @@ val equiv_extensional_on_star (p1 p2 p3:hprop)
 // pts_to_array and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
+let pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (p:permission{allows_read p})
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  : hprop =
+    pts_to_array_with_preorder a p contents (Ghost.hide (trivial_preorder t))
+
 let array_perm (#t: Type) (a: array_ref t) (p:permission{allows_read p}) =
   h_exists (pts_to_array a p)
 
@@ -148,16 +161,25 @@ val pts_to_array_injective
   (a: array_ref t)
   (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
+  (pre: Preorder.preorder t)
   (m: heap)
   : Lemma
     (requires (
-      interp (pts_to_array a p c0) m /\
-      interp (pts_to_array a p c1) m))
+      interp (pts_to_array_with_preorder a p c0 pre) m /\
+      interp (pts_to_array_with_preorder a p c1 pre) m))
     (ensures (c0 == c1))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_ref and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
+
+let pts_to_ref
+  (#t: Type0)
+  (r: reference t)
+  (p:permission{allows_read p})
+  (contents: Ghost.erased t)
+  : hprop =
+  pts_to_ref_with_preorder r p contents (Ghost.hide (trivial_preorder t))
 
 let ref_perm (#t: Type0) (r: reference t) (p:permission{allows_read p}) : hprop
   = h_exists (pts_to_ref r p)
@@ -170,11 +192,12 @@ val pts_to_ref_injective
   (a: reference t)
   (p:permission{allows_read p})
   (c0 c1: t)
+  (pre: Preorder.preorder t)
   (m: heap)
   : Lemma
     (requires (
-      interp (pts_to_ref a p c0) m /\
-      interp (pts_to_ref a p c1) m))
+      interp (pts_to_ref_with_preorder a p c0 pre) m /\
+      interp (pts_to_ref_with_preorder a p c1 pre) m))
     (ensures (c0 == c1))
 
 ////////////////////////////////////////////////////////////////////////////////
