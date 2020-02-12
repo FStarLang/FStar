@@ -196,4 +196,16 @@ instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] 
   - Do Michael Sammler et al prove any generic property? (Section 6)
   - Can we take inspiration from the dynamic contracts / gradual typing world?
   - Is etype always a supertype? Is itype always a subtype?
+  - Roundtripping of imports and exports (as long as we don't do affine sealing)
  *)
+
+(* Next steps:
+   - deal with pre-post conditions / WPs for effects (refined computation types)
+   - stateful coercions (dynamic sealing)
+   - connect this with our IO work
+     + export and import instances for IO functions with pre/post conditions
+     + Michael: the untrusted part is really just C (the context in our
+       diagram), and the interaction with anything happen via wrappers
+     + Michael: if one tracks capabilities like file handlers one is able
+       to reduce the amount of global state.
+*)
