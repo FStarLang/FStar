@@ -975,6 +975,7 @@ let step_bind_ret (#st:st) (i:nat)
     | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
       Step (p x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
 
+#push-options "--z3rlimit 40"
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
@@ -1012,7 +1013,7 @@ let step_bind (#st:st) (i:nat)
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
-
+#pop-options
 
 let step_frame_ret (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#p:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre p)
