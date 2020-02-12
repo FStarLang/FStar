@@ -388,6 +388,15 @@ let stronger_post (#st:st) (#a:Type u#a)
     st.interp (post x `st.star` frame) h
 
 
+let weakening_ok (#st:st) (#a:Type u#a)
+  (#pre:st.hprop) (#post:post_t st a) (lpre:l_pre pre) (lpost:l_post pre post)
+  (#wpre:st.hprop) (#wpost:post_t st a) (wlpre:l_pre wpre) (wlpost:l_post wpre wpost)
+= weaker_pre wpre pre /\
+  stronger_post wpost post /\
+  (forall h. wlpre h ==> lpre h) /\
+  (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)
+
+
 /// Setting the flag just to reduce the time to typecheck the type m
 
 #push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
@@ -463,13 +472,9 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post_t st a -> l_pre pre -> 
     #lpost:l_post pre post ->
     #wpre:st.hprop ->
     #wpost:post_t st a ->
-    #wlpre:l_pre wpre ->
-    #wlpost:l_post wpre wpost ->
-    #_:squash
-      (weaker_pre wpre pre /\
-       stronger_post wpost post /\
-       (forall h. wlpre h ==> lpre h) /\
-       (forall h0 x h1. lpost h0 x h1 ==> wlpost h0 x h1)) ->
+    wlpre:l_pre wpre ->
+    wlpost:l_post wpre wpost ->
+    _:squash (weakening_ok lpre lpost wlpre wlpost) ->
     m st a pre post lpre lpost ->
     m st a wpre wpost wlpre wlpost
 #pop-options
@@ -918,6 +923,24 @@ let step_bind_ret (#st:st) (i:nat)
     | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
       Step (p x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
 
+let depends_only_on_commutes_with_weaker (#st:st) (q:st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop)
+: Lemma
+  (requires
+    depends_only_on q fp /\
+    weaker_pre fp_next fp)
+  (ensures depends_only_on q fp_next)
+= admit ()
+
+let depends_only_on2_commutes_with_weaker (#st:st) (#a:Type)
+  (q:st.heap -> a -> st.heap -> prop) (fp:st.hprop) (fp_next:st.hprop) (fp_post:a -> st.hprop)
+: Lemma
+  (requires
+    depends_only_on2 q fp fp_post /\
+    weaker_pre fp_next fp)
+  (ensures depends_only_on2 q fp_next fp_post)
+= admit ()
+
+
 let step_bind (#st:st) (i:nat)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Bind? f})
@@ -928,26 +951,31 @@ let step_bind (#st:st) (i:nat)
 = match f with
   | Bind (Ret _ _ _) _ -> step_bind_ret i f
 
-  | Bind #_ #_ #_ #post_a #_ #_ #_ #post_b #lpre_b #lpost_b f g ->
+  | Bind #_ #b #_ #post_a #_ #_ #_ #post_b #lpre_b #lpost_b f g ->
     let Step next_pre next_post next_lpre next_lpost f j = step i f in
 
-    let f : m st _ next_pre next_post next_lpre next_lpost = f in
-    let g : (x:_ -> Dv (m st _ (post_a x) post_b (lpre_b x) (lpost_b x))) = g in
-    let test (x:_) =
-      let g : m st _ (post_a x) post_b (lpre_b x) (lpost_b x) = g x in
-      let g : m st _ (next_post x) post_b (lpre_b x) (lpost_b x) =
-        Weaken #_ #_ #(post_a x) post_b (lpre_c
-    in
-    admit ()
+    let lpre_b' : (x:b -> l_pre (next_post x)) =
+      fun x ->
+      depends_only_on_commutes_with_weaker (lpre_b x) (post_a x) (next_post x);
+      lpre_b x in
+
+    let lpost_b' : (x:b -> l_post (next_post x) post_b) =
+      fun x ->
+      depends_only_on2_commutes_with_weaker (lpost_b x) (post_a x) (next_post x) post_b;
+      lpost_b x in
+
+    let g : (x:b -> Dv (m st _ (next_post x) post_b (lpre_b' x) (lpost_b' x))) =
+      fun x ->
+      Weaken (lpre_b' x) (lpost_b' x) () (g x) in
 
     let m1 = get () in
 
-    assert ((bind_lpre next_lpre next_lpost lpre_b) (st.heap_of_mem m1))
+    assert ((bind_lpre next_lpre next_lpost lpre_b') (st.heap_of_mem m1))
       by norm ([delta_only [`%bind_lpre]]);
 
-    Step next_pre _
-      (bind_lpre next_lpre next_lpost lpre_b)
-      (bind_lpost next_lpre next_lpost lpost_b)
+    Step next_pre post_b
+      (bind_lpre next_lpre next_lpost lpre_b')
+      (bind_lpost next_lpre next_lpost lpost_b')
       (Bind f g)
       j
 
