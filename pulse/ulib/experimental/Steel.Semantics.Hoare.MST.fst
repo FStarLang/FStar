@@ -1089,7 +1089,10 @@ let step_par (#st:st) (i:nat)
 
       let next_post = (fun (xL, xR) -> postL xL `st.star` next_postR xR) in
 
-      assume (stronger_post post next_post);  //by (norm [delta_only [`%stronger_post]]);
+      assume (forall xL xR frame h.
+                st.interp ((postL xL `st.star` next_postR xR) `st.star` frame) h ==>
+                st.interp ((postL xL `st.star` postR xR) `st.star` frame) h);
+      
 
       Step (preL `st.star` next_preR) next_post
         (par_lpre lpreL next_lpreR)
