@@ -108,10 +108,8 @@ type st0 = {
   heap_of_mem: mem -> heap;
   locks_invariant: mem -> hprop;
 
-  m_disjoint: mem -> heap -> prop;
   disjoint: heap -> heap -> prop;
   join: h0:heap -> h1:heap{disjoint h0 h1} -> heap;
-  upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem;
 
   interp: hprop -> heap -> prop;
 
@@ -165,34 +163,14 @@ let emp_valid (st:st0) =
 let depends_only_on (#st:st0) (q:st.heap -> prop) (fp: st.hprop) =
   depends_only_on_0 st.interp st.disjoint st.join q fp
 
-let weaken_depends_only_on (st:st0)
-  = forall (q:st.heap -> prop) (fp fp': st.hprop).
-      depends_only_on q fp ==>
-      depends_only_on q (fp `st.star` fp')
-
 let fp_prop (#st:st0) (fp:st.hprop) =
   fp_prop_0 st.interp st.disjoint st.join fp
 
-let lemma_weaken_depends_only_on (#st:st0{weaken_depends_only_on st})
+let lemma_weaken_depends_only_on (#st:st0{affine st})
        (fp0 fp1:st.hprop)
        (q:fp_prop fp0)
   : Lemma (q `depends_only_on` (fp0 `st.star` fp1))
   = ()
-
-let interp_depends_only (st:st0) =
-  forall p. st.interp p `depends_only_on` p
-
-let m_implies_disjoint (st:st0) =
-  forall (m:st.mem) (h1:st.heap).
-       st.m_disjoint m h1 ==> st.disjoint (st.heap_of_mem m) h1
-
-let mem_valid_locks_invariant (st:st0) =
-  forall (m:st.mem). st.interp (st.locks_invariant m) (st.heap_of_mem m)
-
-let valid_upd_heap (st:st0{m_implies_disjoint st}) =
-  forall (m:st.mem) (h:st.heap{st.m_disjoint m h}).
-               st.heap_of_mem (st.upd_joined_heap m h) == st.join (st.heap_of_mem m) h /\
-               st.locks_invariant m == st.locks_invariant (st.upd_joined_heap m h)
 
 ////////////////////////////////////////////////////////////////////////////////
 let st_laws (st:st0) =
@@ -200,7 +178,6 @@ let st_laws (st:st0) =
     symmetry st.equals /\
     transitive st.equals /\
     interp_extensionality st.equals st.interp /\
-    interp_depends_only st /\
     (* standard laws for star forming a CM *)
     associative st.equals st.star /\
     commutative st.equals st.star /\
@@ -213,12 +190,7 @@ let st_laws (st:st0) =
     disjoint_sym st /\
     disjoint_join st /\
     join_commutative st /\
-    join_associative st /\
-    weaken_depends_only_on st /\
-    (* Relations between mem and heap *)
-    m_implies_disjoint st /\
-    mem_valid_locks_invariant st /\
-    valid_upd_heap st
+    join_associative st
 
 let st = s:st0 { st_laws s }
 
@@ -569,6 +541,16 @@ type step_t =
 
 /// Some AC lemmas on `st.star`
 
+let apply_assoc (#st:st) (p q r:st.hprop)
+: Lemma (st.equals (p `st.star` (q `st.star` r)) ((p `st.star` q) `st.star` r))
+= ()
+
+let equals_ext_left (#st:st) (p q r:st.hprop)
+: Lemma
+  (requires p `st.equals` q)
+  (ensures (p `st.star` r) `st.equals` (q `st.star` r))
+= ()
+
 let equals_ext_right (#st:st) (p q r:st.hprop)
 : Lemma
   (requires q `st.equals` r)
@@ -705,8 +687,8 @@ let preserves_frame_stronger_post (#st:st) (#a:Type)
         (post x `st.star` st.locks_invariant m2) `st.star` frame;
            (st.equals) { }
         (st.locks_invariant m2 `st.star` post x) `st.star` frame;
-           (st.equals) { }
-         st.locks_invariant m2 `st.star` (post x `st.star` frame);
+           (st.equals) { apply_assoc (st.locks_invariant m2) (post x) frame }
+        st.locks_invariant m2 `st.star` (post x `st.star` frame);
       };
 
       assert (st.interp (st.locks_invariant m2 `st.star` (post x `st.star` frame)) (st.heap_of_mem m2))
