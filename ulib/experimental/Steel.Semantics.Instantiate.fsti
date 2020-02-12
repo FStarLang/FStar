@@ -12,10 +12,8 @@ type state0 : S.st0 =
     S.heap_of_mem = heap_of_mem;
     S.locks_invariant = locks_invariant;
 
-    S.m_disjoint = m_disjoint;
     S.disjoint = disjoint;
     S.join = join;
-    S.upd_joined_heap = upd_joined_heap;
 
     S.interp = interp;
 
