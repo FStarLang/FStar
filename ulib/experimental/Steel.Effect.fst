@@ -413,9 +413,9 @@ module T = FStar.Tactics
 
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-= steel_frame_t f12;  //this succeeds, simple unification
-  steel_frame_t f1; //#((r1 `star` r2) `star` r3) f1;  //this fails to infer frame
-//  steel_frame_t f123;
-//  steel_frame_t f1
-//  assume ((r1 `star` (r2 `star` r3)) `equiv` ((r3 `star` r1) `star` r2));
-  rassert ((r1 `star` r2) `star` r3)
+= steel_frame_t f12;
+  steel_frame_t f1;
+  steel_frame_t f123;
+  steel_frame_t f1;
+  // Why is there a universe issue if we don't specify an implicit?
+  rassert #(r1 `star` (r2 `star` (r3 `star` emp))) ((r1 `star` r2) `star` r3)

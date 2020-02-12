@@ -11,6 +11,7 @@ let normal (#a:Type) (x:a) =
   norm [delta_attr [`%__reduce__];
        delta;
         delta_only [
+          `%__proj__CM__item__unit;
           `%__proj__CM__item__mult;
           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
           `%fst; `%snd];
@@ -66,6 +67,7 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
   norm [delta_attr [`%__reduce__];
        delta;
         delta_only [
+          `%__proj__CM__item__unit;
           `%__proj__CM__item__mult;
           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
           `%fst; `%snd];
@@ -82,6 +84,7 @@ inline_for_extraction noextract let reprove_frame () : Tac unit =
   norm [delta_attr [`%__reduce__];
        delta;
         delta_only [
+          `%__proj__CM__item__unit;
           `%__proj__CM__item__mult;
           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
           `%fst; `%snd];
