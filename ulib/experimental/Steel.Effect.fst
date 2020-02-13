@@ -258,6 +258,7 @@ let act_preserves_frame_and_preorder
     Sem.preserves_frame #state pre (post x) m0 m1 /\
     mem_evolves m0 m1
   ) =
+  admit ();
   let (| x, m1 |) = act m0 in
   let aux (frame:state.Sem.hprop) : Lemma (
     interp
