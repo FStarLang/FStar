@@ -60,12 +60,9 @@ let _ = is_public (int*bool); is_tainted (int*bool)
 // Dependent pairs are not tainted
 (* let _ = is_tainted (x:int & (y:int{x = y} -> int)) -- fails as it should *)
 
-// Dependent pairs are not public either
-
-// TODO: provided we find a way to make this actually work in practice:
-// here is an old attempt
-(* instance public_dpair t1 t2 (_ : public t1) (f : (x:t1 -> public (t2 x))) : public (x:t1 & (t2 x)) *)
-(*   = { pdummy = () } *)
+// Dependent pairs could be public if we can make it work technically
+instance public_dpair t1 t2 (_ : public t1) (f : (x:t1 -> public (t2 x))) : public (x:t1 & (t2 x))
+  = { pdummy = () }
   
 open FStar.Tactics.Typeclasses
 
@@ -187,9 +184,17 @@ instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] 
      https://arxiv.org/pdf/1803.06547.pdf#page=42
 *)
 
-(* Dependent pairs are neither importable not exportable? *)
+(* Dependent pairs are neither importable not exportable?
+
+   For the exportable part things are quite funny.
+   It seems We can't implement this in F*: *)
 (* instance exportable_dpair t1 t2 [| d1:exportable t1 |] (d2:(x:t1 -> exportable (t2 x))) : exportable (x:t1 & t2 x) = *)
 (*   mk_exportable (d1.etype * d2.etype) (fun (x,y) -> (export x, export y)) *)
+// - intuitively I still think it should be public/exportable
+//   + the problem seems technical, not being able to internalize F* erasure
+//   + which might be justification for building exportable/importable on top of
+//     public/tainted (which doesn't require to internalize extraction)
+//     instead of ml (which does)
 
 (* TODO: What would be a good soundness criterion for all this?
          And can it be internalized within F*? Maybe for importable/exportable?
