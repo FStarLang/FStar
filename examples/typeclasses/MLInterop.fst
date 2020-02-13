@@ -179,11 +179,6 @@ instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] 
   mk_importable (d1.etype -> ML d2.itype)
     (fun (f:(d1.etype -> ML d2.itype)) -> (fun (x:t1) -> import (f (export x)) <: ML t2))
 
-(* TODO: Is this related in any way to the F*-ML interop of Zoe / native tactics?
-   - similar instances for arrows and pairs
-     https://arxiv.org/pdf/1803.06547.pdf#page=42
-*)
-
 (* Dependent pairs are neither importable not exportable?
 
    For the exportable part things are quite funny.
@@ -196,12 +191,29 @@ instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] 
 //     public/tainted (which doesn't require to internalize extraction)
 //     instead of ml (which does)
 
+(* TODO: This seems related to Eric's early work on Coq-ML interop
+         https://arxiv.org/abs/1506.04205
+         http://www.mlworkshop.org/lost-in-extraction-recovered.pdf
+         https://github.com/tabareau/Cocasse
+   - interesting idea on type dependencies: "To recover type dependencies, we
+     propose to exploit type isomorphisms between dependently-typed structures
+     and plain structures with subset types, and then exploit the cast framework
+     presented in the previous section to safely eliminate the subset types."
+   - they don't properly deal with ML effects (ignored) and cast failures
+     (unsound axiom), but we can do much better here *)
+
+(* TODO: Is this related in any way to the F*-ML interop of Zoe / native tactics?
+   - similar instances for arrows and pairs
+     https://arxiv.org/pdf/1803.06547.pdf#page=42 *)
+
 (* TODO: What would be a good soundness criterion for all this?
          And can it be internalized within F*? Maybe for importable/exportable?
-  - Do Michael Sammler et al prove any generic property? (Section 6)
+  - Do Michael Sammler et al prove any generic property?
+      No, they couldn't find any, especially for (affine) sealing!
   - Can we take inspiration from the dynamic contracts / gradual typing world?
   - Is etype always a supertype? Is itype always a subtype?
   - Roundtripping of imports and exports (as long as we don't do affine sealing)
+  - Secure compilation to ML (need to formalize extraction, see MetaCoq work)
  *)
 
 (* Next steps:
