@@ -2103,8 +2103,6 @@ let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let env = { env with failhard = true } in
-    (* TODO: We do not faithfully expose universes to metaprograms *)
-    let env = { env with Env.lax_universes = true } in
     env
 
 let proofstate_of_goals rng env goals imps =

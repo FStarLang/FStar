@@ -433,9 +433,6 @@ let run_tactic_on_ps
     if !tacdbg then
         BU.print_string "}\n";
 
-    (* TODO: We do not faithfully expose universes to metaprograms *)
-    let env = { env with Env.lax_universes = true } in
-
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
