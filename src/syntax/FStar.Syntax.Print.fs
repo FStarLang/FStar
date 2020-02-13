@@ -765,6 +765,13 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice (lids, t) ->
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
+      | Sig_polymonadic_bind (m, n, p, t, ty) ->
+        U.format5 "polymonadic_bind (%s, %s) |> %s = (%s, %s)"
+          (Ident.string_of_lid m)
+          (Ident.string_of_lid n)
+          (Ident.string_of_lid p)
+          (tscheme_to_string t)
+          (tscheme_to_string ty)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter

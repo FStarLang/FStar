@@ -54,7 +54,16 @@ let norm_before_encoding env t =
                  Env.AllowUnboundUniverses;
                  Env.EraseUniverses;
                  Env.Exclude Env.Zeta] in
-    N.normalize steps env.tcenv t
+    Profiling.profile
+      (fun () -> N.normalize steps env.tcenv t)
+      (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+
+let norm_with_steps steps env t =
+  Profiling.profile
+      (fun () -> N.normalize steps env t)
+      (Some (Ident.string_of_lid (Env.current_module env)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm"
 
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
@@ -661,10 +670,10 @@ let encode_top_level_let :
           arrow_formals_comp_norm norm (U.unrefine t)
 
         | _ when not norm ->
-          let t_norm = N.normalize [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
-                                    (* we don't know if this will terminate; so don't do recursive steps *)
-                                    Env.Exclude Env.Zeta;
-                                    Env.UnfoldUntil delta_constant; Env.EraseUniverses]
+          let t_norm = norm_with_steps [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
+                                       (* we don't know if this will terminate; so don't do recursive steps *)
+                                       Env.Exclude Env.Zeta;
+                                       Env.UnfoldUntil delta_constant; Env.EraseUniverses]
                         tcenv t
           in
           arrow_formals_comp_norm true t_norm
@@ -1017,7 +1026,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_pragma _
      | Sig_main _
      | Sig_effect_abbrev _
-     | Sig_sub_effect _ -> [], env
+     | Sig_sub_effect _
+     | Sig_polymonadic_bind _ -> [], env
 
      | Sig_new_effect(ed) ->
        if not (is_smt_reifiable_effect env.tcenv ed.mname)
@@ -1458,15 +1468,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
                     let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
-                    if lid_equals d Const.lextop_lid
-                    then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
-                         let xtm = mkFreeV x in
-                         Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                                ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
-                                     Some "lextop is top",
-                                     (varops.mk_unique "lextop"))
-                    else (* subterm ordering *)
-                      let prec =
+                    (* subterm ordering *)
+                    let prec =
                         vars
                           |> List.mapi (fun i v ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
@@ -1474,9 +1477,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then []
                                 else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
-                      in
-                      Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                             ([[ty_pred]], add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
+                     in
+                     Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                             ([[ty_pred]],
+                                              add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                              mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
                                     ("subterm_ordering_"^ddconstrsym))
                   in
@@ -1746,7 +1751,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
+                let t = norm_with_steps [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in

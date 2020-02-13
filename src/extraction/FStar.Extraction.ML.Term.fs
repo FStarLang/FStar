@@ -589,7 +589,7 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps =
+let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -599,6 +599,14 @@ let extraction_norm_steps =
      Env.Unascribe;
      Env.ForExtraction]
 
+let extraction_norm_steps_nbe =
+  Env.NBE::extraction_norm_steps_core
+
+let extraction_norm_steps () = 
+  if Options.use_nbe_for_extraction()
+  then extraction_norm_steps_nbe
+  else extraction_norm_steps_core
+  
 let comp_no_args c =
     match c.n with
     | Total _
@@ -761,7 +769,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize extraction_norm_steps g.env_tcenv t0 in
+    let t = N.normalize (extraction_norm_steps()) g.env_tcenv t0 in
     translate_term_to_mlty g t
 
 
@@ -1543,30 +1551,34 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                       [lb], e' in
           let lbs =
             if top_level
-            then lbs |> List.map (fun lb ->
-                    let tcenv = TcEnv.set_current_module g.env_tcenv
+            then 
+            let tcenv = TcEnv.set_current_module g.env_tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-                    // debug g (fun () ->
+            lbs |> List.map (fun lb ->
+                    // let tcenv = TcEnv.set_current_module g.env_tcenv
+                    //             (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
+                    // debug g (fun () -> 
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::extraction_norm_steps) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::(extraction_norm_steps())) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s)\n\tlbdef=%s"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.term_to_string lb.lbdef) in
+                             then let _ = BU.print1 "Starting to normalize top-level let %s\n"
+                                            (Print.lbname_to_string lb.lbname) in
+//                                            (Print.univ_names_to_string lb.lbunivs)
+//                                           (Print.term_to_string lb.lbdef) in
                                   // Options.set_option "debug_level"
                                   //   (Options.List [Options.String "Norm"; Options.String "Extraction"]);
                                   let a = FStar.Util.measure_execution_time
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in

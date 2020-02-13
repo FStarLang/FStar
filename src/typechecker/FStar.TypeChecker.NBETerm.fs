@@ -52,24 +52,52 @@ type constant =
   | String of string * Range.range
   | Char of FStar.Char.char
   | Range of Range.range
+  | SConst of FStar.Const.sconst
 
 type atom
-//IN F*: : Type0
   =
   | Var of var
-  | Match of t * (* the scutinee *)
-             (t -> t) * (* case analysis *)
-             ((t -> term) -> list<branch>)
-             (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
-             // ZP: Keep the original branches to reconstruct just the patterns
-             // NS: add a thunked pattern translations here
+  | Match of
+       // 1. the scrutinee
+       t *
+       // 2. reconstructs the pattern matching
+       (unit -> list<branch>)
+  | UnreducedLet of
+     // Especially when extracting, we do not always want to reduce let bindings
+     // since that can lead to exponential code size blowup. This node represents
+     // an unreduced let binding which can be read back as an F* let
+     // 1. The name of the let-bound term
+       var *
+     // 2. The type of the let-bound term
+       Thunk.t<t>   *
+     // 3. Its definition
+       Thunk.t<t>   *
+     // 4. The body of the let binding
+       Thunk.t<t>   *
+     // 5. The source letbinding for readback (of attributes etc.)
+       letbinding
+  | UnreducedLetRec of
+     // Same as UnreducedLet, but for local let recs
+     // 1. list of names of all mutually recursive let-rec-bound terms
+     //    * their types
+     //    * their definitions
+        list<(var * t * t)> *
+     // 2. the body of the let binding
+        t *
+     // 3. the source letbinding for readback (of attributes etc.)
+     //    equal in length to the first list
+        list<letbinding>
+  | UVar of Thunk.t<S.term>
+
 and t
-//IN F*: : Type0
   =
-  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
-         * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-         * int                     // arity
-         * option<(unit -> residual_comp)> // thunked residual comp
+  | Lam of
+        // 1. We represent n-ary functions that receive their arguments as a list
+        //    The arguments are in reverse binder order (optimized for convenience beta reduction)
+       (list<t> -> t)
+       * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders (in order) and residual_comp for readback
+                                                                             //or a list of arguments, for primitive unembeddings
+       * int                        // arity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -78,13 +106,49 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
-  | Refinement of (t -> t) * (unit -> arg)
+  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
+  | Refinement of
+          // 1. A representation of the refinment formula in scope of its binder
+          (t -> t) *
+          // 2. A representation of the base type.
+          //       NS: Why is it a thunk? Why is it an arg rather than just a t?
+          (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
-  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+  | TopLevelLet of
+       // 1. The definition of the fv
+       letbinding *
+       // 2. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 3. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | TopLevelRec of
+       // 2. The definition of the fv
+       letbinding *
+       // 3. Its natural arity including universes (see Util.let_rec_arity)
+       int *
+       // 4. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
+       list<bool> *
+       // 5. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
+       args
+  | LocalLetRec of
+       // 0. the index of the ith let rec
+       int *
+       // 1. the definition of the let rec bound name
+       letbinding *
+       // 2. its mutually recursive definitions, if any
+       list<letbinding> *
+       // 3. the local environment of the recursive definition
+       list<t> *
+       // 4. accumulated arguments (in order)
+       args *
+       // 5. natural arity
+       int *
+       // 6. whether or not a given argument decreases
+       list<bool> // *
+       // // 7. callback to translate letbinding
+       // (list<t> -> letbinding -> t)
 
 and comp =
   | Tot of t * option<universe>
@@ -151,7 +215,7 @@ let mkConstruct i us ts = Construct(i, us, ts)
 let mkFV i us ts = FV(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
+let mkAccuMatch (s:t) (bs:(unit -> list<branch>)) = Accu(Match (s, bs), [])
 
 // Term equality
 
@@ -236,10 +300,11 @@ let constant_to_string (c: constant) =
   | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
+  | SConst s -> P.const_to_string s
 
 let rec t_to_string (x:t) =
   match x with
-  | Lam (b, args, arity, _) -> BU.format2 "Lam (_, %s args, %s)" (BU.string_of_int (List.length args)) (BU.string_of_int arity)
+  | Lam (b, _, arity) -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -264,12 +329,16 @@ let rec t_to_string (x:t) =
   | Quote _ -> "Quote _"
   | Lazy (BU.Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
   | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
-  | Rec (_,_, l, _, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
-
+  | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
+  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
+  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
-  | Match (t, _, _) -> "Match " ^ (t_to_string t)
+  | Match (t, _) -> "Match " ^ (t_to_string t)
+  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
+  | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
+  | UVar _ -> "UVar"
 
 let arg_to_string (a : arg) = a |> fst |> t_to_string
 
@@ -309,7 +378,7 @@ let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
-let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> Tot (t1, None)), [(fun _ -> a)])
+let make_arrow1 t1 (a:arg) : t = Arrow (BU.Inr ([a], Tot (t1, None)))
 
 let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding
@@ -540,7 +609,8 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
         Lam((fun tas -> match unembed ea cb (List.hd tas) with
                         | Some a -> embed eb cb (f a)
                         | None -> failwith "cannot unembed function argument"),
-                [fun _ -> as_arg (type_of eb)], 1, None))
+            BU.Inr [as_arg (type_of eb)],
+            1))
     in
     let un cb (lam : t) : option<('a -> 'b)> =
         let k (lam:t) : option<('a -> 'b)> =
