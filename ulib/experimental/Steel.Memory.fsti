@@ -363,3 +363,12 @@ val m_disjoint: mem -> heap -> prop
 val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
 
 let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
+
+(*
+ * Mem versions of the functions that semantics needs
+ *)
+val disjoint_mem (m0 m1:mem) : prop
+
+val join_mem (m0:mem) (m1:mem{disjoint_mem m0 m1}) : mem
+
+let interp_mem (hp:hprop) (m:mem) : prop = interp hp (heap_of_mem m)

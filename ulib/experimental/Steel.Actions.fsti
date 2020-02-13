@@ -19,18 +19,19 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
-let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+let depends_only_on_without_affinity (q:mem -> prop) (fp:hprop) =
+  (forall (h0:(m:mem{interp_mem fp m})) (h1:mem{disjoint_mem h0 h1}). q h0 <==> q (join_mem h0 h1))
+
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hmem fp -> (x:a & hmem (fp' x))
 
-let fp_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
+let fp_mprop (fp:hprop) = q:(mem -> prop){q `depends_only_on_without_affinity` fp}
 
 let ac_reasoning_for_m_frame_preserving
   (p q r:hprop) (m:mem)
 : Lemma
-  (requires interp ((p `star` q) `star` r) (heap_of_mem m))
-  (ensures interp (p `star` r) (heap_of_mem m))
+  (requires interp_mem ((p `star` q) `star` r) m)
+  (ensures interp_mem (p `star` r) m)
 = calc (equiv) {
     (p `star` q) `star` r;
        (equiv) { star_commutative p q;
@@ -39,7 +40,7 @@ let ac_reasoning_for_m_frame_preserving
        (equiv) { star_associative q p r }
     q `star` (p `star` r);
   };
-  assert (interp (q `star` (p `star` r)) (heap_of_mem m));
+  assert (interp_mem (q `star` (p `star` r)) m);
   affine_star q (p `star` r) (heap_of_mem m)
 
 val mem_evolves : FStar.Preorder.preorder mem
@@ -48,9 +49,9 @@ let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (
   forall (frame:hprop) (m0:hmem (fp `star` frame)).
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
      let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+     interp_mem ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
      mem_evolves m0 m1 /\
-     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+     (forall (f_frame:fp_mprop frame). f_frame m0 <==> f_frame m1))
 
 let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f }

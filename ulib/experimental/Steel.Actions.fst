@@ -64,12 +64,48 @@ let lock_store_unchanged_respects_preorder (m0 m1: mem) : Lemma
 let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hheap fp -> (x:a & hheap (fp' x))
 
+type fp_prop (hp:hprop) = q:(heap -> prop){
+  (forall (h0:heap{interp hp h0}) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+}
+
 let is_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_action fp a fp') =
   forall (frame:hprop) (h0:heap).
     interp (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
      interp (fp' x `star` frame) h1 /\
      (forall (f_frame:fp_prop frame). f_frame h0 <==> f_frame h1))
+
+let test (hp:hprop) (mp:(mem -> prop){mp `depends_only_on_without_affinity` hp}) (m0 m1:mem)
+: Lemma
+  (requires (forall (fp:fp_prop hp). fp (heap_of_mem m0) <==> fp (heap_of_mem m1)))
+  (ensures (mp m0 <==> mp m1))
+= ()
+
+
+
+// (forall m:mem -> Type0. f_frame m0 <==> f_frame m1)
+
+// Given:
+
+// m0 m1:mem
+// (forall hp:heap -> Type0. hp (heap_of_mem m0) <==> hp (heap_of_mem m1))
+// mp:mem -> Type0
+
+// To prove: mp m0 <==> mp m1
+
+// let hp ctr locks (_:squash props) = fun (h:heap) -> mp (mem_of_heap h) in
+
+
+// Try to prove: mp m0 ==> mp m1
+
+// We know (mp m0)
+
+// We know mp (mem_of_heap (heap_of_mem m0)) <==> mp (mem_of_heap (heap_of_mem m1))
+
+
+
+
+
 
 let action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }

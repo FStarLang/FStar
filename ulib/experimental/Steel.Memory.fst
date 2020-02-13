@@ -753,15 +753,16 @@ let rec lock_store_invariant (l:lock_store) : hprop =
   | _ :: tl -> lock_store_invariant tl
 #pop-options
 
+let properties_predicate (ctr:nat) (heap:heap) (locks:lock_store) =
+  (forall i. i >= ctr ==> heap i == None) /\
+  interp (lock_store_invariant locks) heap
+
 noeq
 type mem = {
   ctr: nat;
   heap: heap;
   locks: lock_store;
-  properties: squash (
-    (forall i. i >= ctr ==> heap i == None) /\
-    interp (lock_store_invariant locks) heap
-  )
+  properties: squash (properties_predicate ctr heap locks)
 }
 
 let _ : squash (inversion mem) = allow_inversion mem
@@ -778,3 +779,49 @@ let upd_joined_heap (m:mem) (h:heap{m_disjoint m h}) =
   let h0 = heap_of_mem m in
   let h = join h0 h in
   {m with heap = h}
+
+
+let disjoint_mem (m0 m1:mem) : prop =
+  m0.ctr == m1.ctr /\
+  disjoint m0.heap m1.heap /\
+  m0.locks == m1.locks  /\
+  (properties_predicate m0.ctr m0.heap m0.locks <==>
+   properties_predicate m1.ctr m1.heap m1.locks)
+
+let join_mem (m0:mem) (m1:mem{disjoint_mem m0 m1}) : mem = {
+  ctr = m0.ctr;
+  heap = join m0.heap m1.heap;
+  locks = m0.locks;
+  properties = ()
+}
+
+let disjoint_mem_sym (m0 m1:mem)
+: Lemma (disjoint_mem m0 m1 <==> disjoint_mem m1 m0)
+= ()
+
+let disjoint_join_mem (m0 m1 m2:mem)
+: Lemma
+  (disjoint_mem m1 m2 /\
+   disjoint_mem m0 (join_mem m1 m2) ==>
+   disjoint_mem m0 m1 /\
+   disjoint_mem m0 m2 /\
+   disjoint_mem (join_mem m0 m1) m2 /\
+   disjoint_mem (join_mem m0 m2) m1)
+= ()   
+
+let join_mem_commutative (m0 m1:mem)
+: Lemma (disjoint_mem m0 m1 ==> (join_mem m0 m1 == join_mem m1 m0))
+= ()
+
+let join_mem_associative (m0 m1 m2:mem)
+: Lemma
+  (disjoint_mem m1 m2 /\
+   disjoint_mem m0 (join_mem m1 m2) ==>
+   join_mem m0 (join_mem m1 m2) == join_mem (join_mem m0 m1) m2)
+= ()
+
+let interp_mem_extensionality (hp1 hp2:hprop) (m:mem)
+: Lemma
+  (requires equiv hp1 hp2 /\ interp_mem hp1 m)
+  (ensures interp_mem hp2 m)
+= ()
