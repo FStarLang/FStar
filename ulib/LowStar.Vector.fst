@@ -473,6 +473,49 @@ let insert #a vec v =
     (B.upd vs sz v;
     Vec (sz + 1ul) cap vs)
 
+val shrink:
+  #a:Type -> vec:vector a ->
+  new_size:uint32_t{new_size <= size_of vec} ->
+  HST.ST (r:vector a)
+  (requires (fun h0 -> live h0 vec /\ freeable vec))
+  (ensures (fun h0 r h1 ->
+                live h1 vec /\ live h1 r /\ size_of r = new_size /\
+                frameOf r = frameOf vec /\
+                hmap_dom_eq h0 h1 /\
+                freeable r /\
+                modifies (loc_vector vec) h0 h1 /\
+                loc_vector vec == loc_vector r /\
+                S.equal (S.slice (as_seq h0 vec) 0 (U32.v new_size))
+                        (S.slice (as_seq h1 r) 0 (U32.v new_size))))
+let shrink #a vec new_size =
+  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
+
+private
+let rec shift_down (#a:Type) (vec:vector a) (i:uint32_t{i <= size_of vec}) (d:uint32_t): HST.ST (rvec:vector a)
+  (requires (fun h0 ->
+                 live h0 vec /\ freeable vec /\
+                 UInt.size (U32.v i + U32.v d) 32 /\ i + d < size_of vec /\
+                 HST.is_eternal_region (frameOf vec)))
+  (ensures (fun h0 rvec h1 ->
+                let n_shifted = size_of vec - i in
+                live h1 vec /\ live h1 rvec /\ size_of rvec = size_of vec /\
+                loc_vector vec == loc_vector rvec /\
+                modifies (loc_vector vec) h0 h1 /\
+                frameOf vec = frameOf rvec /\
+                hmap_dom_eq h0 h1 /\
+                freeable rvec))
+  (decreases (U32.v (size_of vec) - U32.v i))
+= let h0 = HST.get() in
+  if i + d >= size_of vec then vec
+  else begin
+    let e = index vec (i + d) in
+    assign vec i e;
+    if (i + d + 1ul = size_of vec) then
+      vec
+    else
+      shift_down vec (i + 1ul) d
+  end
+
 // Flush elements in the vector until the index `i`.
 // It also frees the original allocation and reallocates a smaller space for
 // remaining elements.
@@ -487,27 +530,25 @@ val flush:
       frameOf vec = frameOf fvec /\
       hmap_dom_eq h0 h1 /\
       live h1 fvec /\ freeable fvec /\
-      modifies (loc_union (loc_addr_of_vector vec)
-                          (loc_vector fvec)) h0 h1 /\
+      modifies (loc_vector vec) h0 h1 /\
+      loc_vector vec == loc_vector fvec /\
       size_of fvec = size_of vec - i /\
       S.equal (as_seq h1 fvec)
               (S.slice (as_seq h0 vec) (U32.v i) (U32.v (size_of vec)))))
 let flush #a vec ia i =
-  let fsz = Vec?.sz vec - i in
-  let asz = if Vec?.sz vec = i then 1ul else fsz in
-  let vs = Vec?.vs vec in
-  let fvs = B.malloc (B.frameOf vs) ia asz in
-  B.blit vs i fvs 0ul fsz;
-  B.free vs;
-  Vec fsz asz fvs
-
-val shrink:
-  #a:Type -> vec:vector a ->
-  new_size:uint32_t{new_size <= size_of vec} ->
-  Tot (vector a)
-let shrink #a vec new_size =
-  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
-  
+  let h0 = HST.get() in
+  if i >= size_of vec then
+     shrink vec 0ul
+  else if i = 0ul then
+    vec
+  else begin
+    let n_shifted = size_of vec - i in
+    let shifted = shift_down vec 0ul i in
+    let h1 = HST.get() in
+    assume (S.equal (S.slice (as_seq h1 shifted) 0 (U32.v n_shifted))
+                    (S.slice (as_seq h0 vec) (U32.v i) (U32.v (size_of vec))));
+    shrink shifted n_shifted
+  end
 
 /// Iteration
 
