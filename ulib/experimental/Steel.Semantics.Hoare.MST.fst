@@ -319,11 +319,10 @@ let frame_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a) (lpre:l_p
 
 /// The bind rule bakes in weakening of requires / ensures
 
-let bind_lpre (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a)
-  (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
-  (lpre_b:(x:a -> l_pre (post_a x)))
-: l_pre pre
-= fun h -> lpre_a h /\ (forall (x:a) h1. lpost_a h x h1 ==> lpre_b x h1)
+let bind_glpre (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a)
+  (lpost_a:l_post pre post_a) (x:a)
+: l_pre (post_a x)
+= fun h -> exists h0. lpost_a h0 x h
 
 let bind_lpost (#st:st) (#a:Type) (#pre:st.hprop) (#post_a:post_t st a)
   (lpre_a:l_pre pre) (lpost_a:l_post pre post_a)
@@ -389,12 +388,11 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post_t st a -> l_pre pre -> 
     #lpost_a:l_post pre post_a ->
     #b:Type u#a ->
     #post_b:post_t st b ->
-    #lpre_b:(x:a -> l_pre (post_a x)) ->
     #lpost_b:(x:a -> l_post (post_a x) post_b) ->
     f:m st a pre post_a lpre_a lpost_a ->
-    g:(x:a -> Dv (m st b (post_a x) post_b (lpre_b x) (lpost_b x))) ->
+    g:(x:a -> Dv (m st b (post_a x) post_b (bind_glpre lpost_a x) (lpost_b x))) ->
     m st b pre post_b
-      (bind_lpre lpre_a lpost_a lpre_b)
+      lpre_a
       (bind_lpost lpre_a lpost_a lpost_b)
 
   | Act:
@@ -954,8 +952,8 @@ let step_bind_ret (#st:st) (i:nat)
 
 = MSTATE?.reflect (fun m0 ->
     match f with
-    | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpre_b #lpost_b (Ret p x _) g ->
-      Step (p x) post_b (lpre_b x) (lpost_b x) (g x) i, m0)
+    | Bind #_ #_ #_ #_ #_ #_ #_ #post_b #lpost_b (Ret p x lpost_ret) g ->
+      Step (p x) post_b (bind_glpre lpost_ret x) (lpost_b x) (g x) i, m0)
 
 #push-options "--z3rlimit 40"
 let step_bind (#st:st) (i:nat)
@@ -968,30 +966,21 @@ let step_bind (#st:st) (i:nat)
 = match f with
   | Bind (Ret _ _ _) _ -> step_bind_ret i f
 
-  | Bind #_ #b #_ #post_a #_ #_ #_ #post_b #lpre_b #lpost_b f g ->
+  | Bind #_ #b #_ #post_a #_ #lpost_a #_ #post_b #lpost_b f g ->
     let Step next_pre next_post next_lpre next_lpost f j = step i f in
-
-    let lpre_b : (x:b -> l_pre (next_post x)) =
-      fun x ->
-      depends_only_on_commutes_with_weaker (lpre_b x) (post_a x) (next_post x);
-      lpre_b x in
 
     let lpost_b : (x:b -> l_post (next_post x) post_b) =
       fun x ->
       depends_only_on2_commutes_with_weaker (lpost_b x) (post_a x) (next_post x) post_b;
       lpost_b x in
 
-    let g : (x:b -> Dv (m st _ (next_post x) post_b (lpre_b x) (lpost_b x))) =
+    let g : (x:b -> Dv (m st _ (next_post x) post_b (bind_glpre next_lpost x) (lpost_b x))) =
       fun x ->
-      Weaken (lpre_b x) (lpost_b x) () (g x) in
-
-    let m1 = get () in
-
-    assert ((bind_lpre next_lpre next_lpost lpre_b) (st.heap_of_mem m1))
-      by norm ([delta_only [`%bind_lpre]]);
+      assume (forall h. bind_glpre next_lpost x h ==> bind_glpre lpost_a x h);
+      Weaken (bind_glpre next_lpost x) (lpost_b x) () (g x) in
 
     Step next_pre post_b
-      (bind_lpre next_lpre next_lpost lpre_b)
+      next_lpre
       (bind_lpost next_lpre next_lpost lpost_b)
       (Bind f g)
       j
