@@ -418,5 +418,4 @@ let test_frame1 (_:unit)
   steel_frame_t f1;
   steel_frame_t f123;
   steel_frame_t f1;
-  // Why is there a universe issue if we don't specify an implicit?
-  rassert #(r1 `star` (r2 `star` (r3 `star` emp))) ((r1 `star` r2) `star` r3)
+  rassert ((r1 `star` r2) `star` r3)
