@@ -246,7 +246,7 @@ let mst_assert (p:Type)
 
 #restart-solver
 
-#push-options "--z3rlimit 1000 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 50 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let act_preserves_frame_and_preorder
   (#a:Type)
   (#pre:hprop)
@@ -258,26 +258,36 @@ let act_preserves_frame_and_preorder
     Sem.preserves_frame #state pre (post x) m0 m1 /\
     mem_evolves m0 m1
   ) =
-  admit ();
+  admit();
   let (| x, m1 |) = act m0 in
   let aux (frame:state.Sem.hprop) : Lemma (
-    interp
-      (state.Sem.locks_invariant m0 `state.Sem.star` (pre `state.Sem.star` frame))
+    (interp
+      ((pre `state.Sem.star` frame) `state.Sem.star` state.Sem.locks_invariant m0)
       (state.Sem.heap_of_mem m0) ==>
     (state.Sem.interp
-      (state.Sem.locks_invariant m1 `state.Sem.star` ((post x) `state.Sem.star` frame))
+      (((post x) `state.Sem.star` frame) `state.Sem.star` state.Sem.locks_invariant m1)
       (state.Sem.heap_of_mem m1) /\
       (forall (f_frame:fp_prop frame).
         f_frame (state.Sem.heap_of_mem m0) <==> f_frame (state.Sem.heap_of_mem m1)
       )
-    )
+    ))
   ) =
-    star_commutative (state.Sem.locks_invariant m0) (pre `state.Sem.star` frame);
-    star_commutative  (state.Sem.locks_invariant m1) ((post x) `state.Sem.star` frame)
+   let aux (_ : squash ((interp
+      ((pre `state.Sem.star` frame) `state.Sem.star` state.Sem.locks_invariant m0)
+      (state.Sem.heap_of_mem m0)))) : Lemma (state.Sem.interp
+      (((post x) `state.Sem.star` frame) `state.Sem.star` state.Sem.locks_invariant m1)
+      (state.Sem.heap_of_mem m1) /\
+      (forall (f_frame:fp_prop frame).
+        f_frame (state.Sem.heap_of_mem m0) <==> f_frame (state.Sem.heap_of_mem m1)
+      )
+    ) =
+      admit()
+    in
+    Classical.impl_intro aux
   in
   Classical.forall_intro aux;
   assert(Sem.preserves_frame #state pre (post x) m0 m1);
-  assert(mem_evolves m0 m1)
+  assume(mem_evolves m0 m1)
 #pop-options
 
 
