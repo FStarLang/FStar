@@ -281,6 +281,46 @@ let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
     (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
 
+let preserves_frame_intro (#st:st) (pre post:st.hprop) (m0 m1:st.mem)
+  (interp_ok : (frame: st.hprop) ->
+    Lemma (requires (
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) (ensures (
+      st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1)
+    ))
+  )
+  (frame_prop: (frame: st.hprop) -> (f_frame: fp_prop frame) ->
+    Lemma (requires (
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) (ensures (
+      f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+    ))
+  : Lemma (preserves_frame #st pre post m0 m1)
+=
+  let aux (frame: st.hprop) : Lemma (
+    st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0) ==>
+    (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+  ) =
+    let aux (_ : squash (
+     st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) : Lemma (
+     st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+    ) =
+      interp_ok frame;
+      let aux (f_frame: fp_prop frame)
+        : Lemma (f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+      =
+       frame_prop frame f_frame
+      in
+      Classical.forall_intro aux
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro aux
+
+
 let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) (lpre:l_pre pre) (lpost:l_post pre post) =
   unit ->
   Mst a
