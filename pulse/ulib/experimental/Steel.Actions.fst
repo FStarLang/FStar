@@ -51,7 +51,10 @@ let lock_store_evolves : Preorder.preorder lock_store =
     L.length l2 >= L.length l1 /\
     (forall (i:nat{i < L.length l1}).
        hprop_of_lock_state (lock_i l1 i) ==
-       hprop_of_lock_state (lock_i l2 i))
+       hprop_of_lock_state (lock_i l2 i)) /\
+    (forall (i:nat{i < L.length l1}).
+       Invariant? (lock_i l1 i) <==>
+       Invariant? (lock_i l2 i))
 
 let mem_evolves : Preorder.preorder mem =
   fun m0 m1 -> lock_store_evolves m0.locks m1.locks
@@ -1624,6 +1627,7 @@ val lock_store_invariant_append (l1 l2:lock_store)
 
 let lock_ok (#p:hprop) (l:lock p) (m:mem) =
   l < L.length m.locks /\
+  (Available? (lock_i m.locks l) \/ Locked? (lock_i m.locks l)) /\
   hprop_of_lock_state (lock_i m.locks l) == p
 
 let lock_ok_stable (#p:_) (l:lock p) (m0 m1:mem)
@@ -1693,7 +1697,7 @@ let maybe_acquire #p (l:lock p) (m:hmem emp { lock_ok l m } )
       let mem : hmem (h_or (pure (b==false)) p) = intro_hmem_or (b == false) p mem in
       (| b, mem |)
 
-    | Locked _ | Invariant _ ->
+    | Locked _ ->
       let b = false in
       assert (interp (pure (b == false)) (heap_of_mem m));
       affine_star emp (lock_store_invariant Set.empty m.locks) (heap_of_mem m);
@@ -1752,6 +1756,4 @@ let release #p (l:lock p) (m:hmem p { lock_ok l m } )
       emp_unit_left (lock_store_invariant Set.empty new_lock_store);
       let mem : hmem emp = { m with locks = new_lock_store } in
       (| true, mem |)
-
-    | Invariant _ -> admit()
 #pop-options
