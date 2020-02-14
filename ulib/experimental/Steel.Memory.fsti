@@ -17,6 +17,7 @@ module Steel.Memory
 open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
+module S = FStar.Set
 
 let trivial_preorder (a: Type) : Preorder.preorder a = fun _ _ -> True
 
@@ -353,8 +354,10 @@ val interp_depends_only (p:hprop)
 ////////////////////////////////////////////////////////////////////////////////
 // Memory
 ////////////////////////////////////////////////////////////////////////////////
+val lock_addr: eqtype
+
 val mem : Type u#1
-val locks_invariant : mem -> hprop
+val locks_invariant : S.set lock_addr -> mem -> hprop
 
 val heap_of_mem (x:mem) : heap
 
@@ -362,4 +365,6 @@ val m_disjoint: mem -> heap -> prop
 
 val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
 
-let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
+let hmem' (e:S.set lock_addr) (fp:hprop) =
+  m:mem{interp (fp `star` locks_invariant e m) (heap_of_mem m)}
+let hmem (fp:hprop) = hmem' S.empty fp
