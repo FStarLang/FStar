@@ -46,9 +46,9 @@ val mem_evolves : FStar.Preorder.preorder mem
 
 let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
   forall (frame:hprop) (m0:hmem (fp `star` frame)).
-    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
      let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+     interp ((fp' x `star` frame) `star` locks_invariant Set.empty m1) (heap_of_mem m1) /\
      mem_evolves m0 m1 /\
      (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
 
@@ -277,7 +277,7 @@ let pure (p:prop) : hprop = refine emp (fun _ -> p)
 val maybe_acquire
   (#p: hprop)
   (l:lock p)
-  (m:mem { lock_ok l m } )
+  (m:hmem emp { lock_ok l m } )
   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
 val release
@@ -285,3 +285,7 @@ val release
   (l:lock p)
   (m:hmem p { lock_ok l m } )
   : (b:bool & hmem emp)
+
+///////////////////////////////////////////////////////////////////////////////
+// Invariants
+///////////////////////////////////////////////////////////////////////////////

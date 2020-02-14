@@ -736,21 +736,34 @@ let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
 ////////////////////////////////////////////////////////////////////////////////
 // allocation and locks
 ////////////////////////////////////////////////////////////////////////////////
+let lock_addr = nat
+
+// TODO: Add monotonicity
 noeq
 type lock_state =
   | Available : hprop -> lock_state
   | Locked    : hprop -> lock_state
+  | Invariant : hprop -> lock_state
 
 let _ : squash (inversion lock_state) = allow_inversion lock_state
 
 let lock_store = list lock_state
 
+module S = FStar.Set
+
 #push-options "--max_ifuel 1 --initial_ifuel 1"
-let rec lock_store_invariant (l:lock_store) : hprop =
+let rec lock_store_invariant (e:S.set lock_addr) (l:lock_store) : hprop =
+  let current_addr = List.Tot.length l in
   match l with
   | [] -> emp
-  | Available h :: tl -> h `star` lock_store_invariant tl
-  | _ :: tl -> lock_store_invariant tl
+  | Available p :: tl -> p `star` lock_store_invariant e tl
+  | Locked _ :: tl -> lock_store_invariant e tl
+  | Invariant p :: tl ->
+    if current_addr `S.mem` e then
+      lock_store_invariant e tl
+    else
+      p `star` lock_store_invariant e tl
+
 #pop-options
 
 noeq
@@ -759,14 +772,14 @@ type mem = {
   heap: heap;
   locks: lock_store;
   properties: squash (
-    (forall i. i >= ctr ==> heap i == None) /\
-    interp (lock_store_invariant locks) heap
+    (forall i. i >= ctr ==> heap i == None)
+//    /\ interp (lock_store_invariant invariants locks) heap
   )
 }
 
 let _ : squash (inversion mem) = allow_inversion mem
 
-let locks_invariant (m:mem) : hprop = lock_store_invariant m.locks
+let locks_invariant (e:S.set lock_addr) (m:mem) : hprop = lock_store_invariant e m.locks
 
 let heap_of_mem (x:mem) : heap = x.heap
 
