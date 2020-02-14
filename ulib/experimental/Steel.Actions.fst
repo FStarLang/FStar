@@ -53,10 +53,12 @@ let lock_store_evolves : Preorder.preorder lock_store =
        hprop_of_lock_state (lock_i l2 i))
 
 let mem_evolves : Preorder.preorder mem =
-  fun m0 m1 -> lock_store_evolves m0.locks m1.locks
+  fun m0 m1 ->
+  lock_store_evolves m0.locks m1.locks /\
+  m0.ctr <= m1.ctr
 
 let lock_store_unchanged_respects_preorder (m0 m1: mem) : Lemma
-  (requires (m0.locks == m1.locks))
+  (requires (m0.locks == m1.locks /\ m0.ctr <= m1.ctr))
   (ensures (mem_evolves m0 m1))
   =
   ()
@@ -428,6 +430,68 @@ let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
   assert(U32.v a.array_offset + U32.v a.array_length <= len');
   Seq.init len (fun i -> let x =  select_index seq (U32.v a.array_offset + i) in x.value)
 #pop-options
+
+
+assume val mem_of_heap (h:heap) : (m:mem{m.heap == h})
+
+let core (m:mem) : mem = mem_of_heap (heap_of_mem m)
+
+let properties_predicate (n:nat) (h:heap) (locks:lock_store) =
+  (forall i. i >= n ==> h i == None) /\
+  interp (lock_store_invariant locks) h
+
+let disjoint_mem (m0 m1:mem) : prop =
+  m0.ctr == m1.ctr /\
+  disjoint m0.heap m1.heap /\
+  m0.locks == m1.locks  /\
+  (properties_predicate m0.ctr m0.heap m0.locks <==>
+   properties_predicate m1.ctr m1.heap m1.locks)
+
+assume Mem_of_heap_axiom:
+  forall (h1 h2:heap).
+    let m1 = mem_of_heap h1 in
+    let m2 = mem_of_heap h2 in
+    m1.ctr == m2.ctr /\
+    m1.locks == m2.locks /\
+    (properties_predicate m1.ctr m1.heap m1.locks <==>
+     properties_predicate m2.ctr m2.heap m2.locks)
+
+let join_mem (m0:mem) (m1:mem{disjoint_mem m0 m1}) : mem = {
+  ctr = m0.ctr;
+  heap = join m0.heap m1.heap;
+  locks = m0.locks;
+  properties = ()
+}
+
+let interp_mem (hp:hprop) (m:mem) : prop = interp hp (heap_of_mem m)
+
+let frameable_mprop (hp:hprop) = q:(mem -> prop){
+  (forall (m0:mem{interp_mem hp m0}) (m1:mem{disjoint_mem m0 m1}). q m0 <==> q (join_mem m0 m1)) /\
+  (forall (m:mem). q m <==> q (core m))
+}
+
+let actions_preserve_frameable_mprops (hp:hprop) (m0 m1:mem)
+: Lemma
+  (requires
+    mem_evolves m0 m1 /\
+    (forall (f_frame:fp_prop hp). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+  (ensures
+    (forall (mprop:frameable_mprop hp). mprop m0 <==> mprop m1))
+= let aux (mprop:frameable_mprop hp) : unit
+    = let fprop : heap -> prop = fun h -> mprop (mem_of_heap h) in
+      let aux (h0:hheap hp) (h1:heap{disjoint h0 h1}) : Lemma (fprop h0 <==> fprop (join h0 h1)) =
+        let m0' : (m:mem{interp_mem hp m}) = mem_of_heap h0 in
+        let m1' : (m:mem{disjoint_mem m0' m}) = mem_of_heap h1 in
+        assert (mprop m0' <==> mprop (join_mem m0' m1'))
+      in
+      Classical.forall_intro_2 aux;
+      assert (fprop `depends_only_on_without_affinity` hp);
+      let fprop : (q:(heap -> prop){q `depends_only_on_without_affinity` hp}) = fprop in
+      assert (fprop (heap_of_mem m0) <==> fprop (heap_of_mem m1))
+  in
+  admit ()
+
+
 
 #push-options "--max_fuel 2"
 let as_seq_lemma
