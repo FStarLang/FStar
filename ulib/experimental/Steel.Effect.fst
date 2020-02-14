@@ -244,9 +244,37 @@ let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
 = MST.mst_assert p
 
-#restart-solver
+let is_m_frame_and_preorder_preserving_elim
+  (#a:Type)
+  (#fp:hprop)
+  (#fp':a -> hprop)
+  (f:pre_m_action fp a fp')
+  (frame:hprop) (m0:hmem (fp `star` frame))
+  : Lemma
+    (requires (is_m_frame_and_preorder_preserving f))
+    (ensures (
+      ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
+     let (| x, m1 |) = f m0 in
+     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+     mem_evolves m0 m1 /\
+     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))
+   ))
+  = ()
 
-#push-options "--z3rlimit 1000 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let hmem_emp_extension
+  (#pre:hprop)
+  (m0: hmem pre)
+  : Tot (m0':hmem (pre `star` emp){m0' == m0})
+  =
+  calc (equiv) {
+    (pre `star` (locks_invariant m0));
+       (equiv) { emp_unit pre;
+                 equiv_extensional_on_star pre (pre `star` emp) (locks_invariant m0) }
+    (pre `star` emp) `star` (locks_invariant m0);
+  };
+  m0
+
+#push-options "--z3rlimit 20 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let act_preserves_frame_and_preorder
   (#a:Type)
   (#pre:hprop)
@@ -258,28 +286,17 @@ let act_preserves_frame_and_preorder
     Sem.preserves_frame #state pre (post x) m0 m1 /\
     mem_evolves m0 m1
   ) =
-  admit ();
   let (| x, m1 |) = act m0 in
-  let aux (frame:state.Sem.hprop) : Lemma (
-    interp
-      (state.Sem.locks_invariant m0 `state.Sem.star` (pre `state.Sem.star` frame))
-      (state.Sem.heap_of_mem m0) ==>
-    (state.Sem.interp
-      (state.Sem.locks_invariant m1 `state.Sem.star` ((post x) `state.Sem.star` frame))
-      (state.Sem.heap_of_mem m1) /\
-      (forall (f_frame:fp_prop frame).
-        f_frame (state.Sem.heap_of_mem m0) <==> f_frame (state.Sem.heap_of_mem m1)
-      )
-    )
-  ) =
-    star_commutative (state.Sem.locks_invariant m0) (pre `state.Sem.star` frame);
-    star_commutative  (state.Sem.locks_invariant m1) ((post x) `state.Sem.star` frame)
-  in
-  Classical.forall_intro aux;
+  Sem.preserves_frame_intro #state pre (post x) m0 m1 (fun frame ->
+    is_m_frame_and_preorder_preserving_elim act frame m0
+  ) (fun frame f_frame ->
+     is_m_frame_and_preorder_preserving_elim act frame m0
+  );
   assert(Sem.preserves_frame #state pre (post x) m0 m1);
+  let m0 = hmem_emp_extension m0 in
+  is_m_frame_and_preorder_preserving_elim act emp m0;
   assert(mem_evolves m0 m1)
 #pop-options
-
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
 : SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
