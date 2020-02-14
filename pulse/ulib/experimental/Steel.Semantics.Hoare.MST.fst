@@ -277,18 +277,58 @@ effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem ->
 
 let preserves_frame (#st:st) (pre post:st.hprop) (m0 m1:st.mem) =
   forall (frame:st.hprop).
-    st.interp (st.locks_invariant m0 `st.star` (pre `st.star` frame)) (st.heap_of_mem m0) ==>
-    (st.interp (st.locks_invariant m1 `st.star` (post `st.star` frame)) (st.heap_of_mem m1) /\
+    st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0) ==>
+    (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
      (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+
+let preserves_frame_intro (#st:st) (pre post:st.hprop) (m0 m1:st.mem)
+  (interp_ok : (frame: st.hprop) ->
+    Lemma (requires (
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) (ensures (
+      st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1)
+    ))
+  )
+  (frame_prop: (frame: st.hprop) -> (f_frame: fp_prop frame) ->
+    Lemma (requires (
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) (ensures (
+      f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+    ))
+  : Lemma (preserves_frame #st pre post m0 m1)
+=
+  let aux (frame: st.hprop) : Lemma (
+    st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0) ==>
+    (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1)))
+  ) =
+    let aux (_ : squash (
+     st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) (st.heap_of_mem m0)
+    )) : Lemma (
+     st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) (st.heap_of_mem m1) /\
+     (forall (f_frame:fp_prop frame). f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+    ) =
+      interp_ok frame;
+      let aux (f_frame: fp_prop frame)
+        : Lemma (f_frame (st.heap_of_mem m0) <==> f_frame (st.heap_of_mem m1))
+      =
+       frame_prop frame f_frame
+      in
+      Classical.forall_intro aux
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro aux
+
 
 let action_t (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) (lpre:l_pre pre) (lpost:l_post pre post) =
   unit ->
   Mst a
   (requires fun m0 ->
-    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    st.interp (pre `st.star` st.locks_invariant m0) (st.heap_of_mem m0) /\
     lpre (st.heap_of_mem m0))
   (ensures fun m0 x m1 ->
-    st.interp (st.locks_invariant m1 `st.star` (post x)) (st.heap_of_mem m1) /\
+    st.interp ((post x) `st.star` st.locks_invariant m1) (st.heap_of_mem m1) /\
     lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
     preserves_frame pre (post x) m0 m1)
 
@@ -494,7 +534,7 @@ let step_req (#st:st)
   (f:m st a pre post lpre lpost)
 : st.mem -> Type0
 = fun m0 ->
-  st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+  st.interp (pre `st.star` st.locks_invariant m0) (st.heap_of_mem m0) /\
   lpre (st.heap_of_mem m0)
 
 let weaker_lpre (#st:st)
@@ -519,7 +559,7 @@ let step_ens (#st:st)
 : st.mem -> step_result st a -> st.mem -> Type0
 = fun m0 r m1 ->
   let Step next_pre next_post next_lpre next_lpost _ _ = r in
-  st.interp (st.locks_invariant m1 `st.star` next_pre) (st.heap_of_mem m1) /\
+  st.interp (next_pre `st.star` st.locks_invariant m1) (st.heap_of_mem m1) /\
   stronger_post post next_post /\
   next_lpre (st.heap_of_mem m1) /\
   preserves_frame pre next_pre m0 m1 /\
@@ -786,7 +826,7 @@ let frame_post_for_par_aux (#st:st)
 : Lemma
   (requires
     preserves_frame pre_s post_s m0 m1 /\
-    st.interp (st.locks_invariant m0 `st.star` (pre_s `st.star` pre_f)) (st.heap_of_mem m0))
+    st.interp ((pre_s `st.star` pre_f) `st.star` st.locks_invariant m0) (st.heap_of_mem m0))
   (ensures
     inst_heap_prop_for_par lpost_f m0 (st.heap_of_mem m0) <==>
     inst_heap_prop_for_par lpost_f m0 (st.heap_of_mem m1))
@@ -798,7 +838,7 @@ let frame_post_for_par (#st:st)
 : Lemma
   (requires
     preserves_frame pre_s post_s m0 m1 /\
-    st.interp (st.locks_invariant m0 `st.star` (pre_s `st.star` pre_f)) (st.heap_of_mem m0))
+    st.interp ((pre_s `st.star` pre_f) `st.star` st.locks_invariant m0) (st.heap_of_mem m0))
   (ensures
     (lpre_f (st.heap_of_mem m0) <==> lpre_f (st.heap_of_mem m1)) /\
     (forall (x:a) (final_state:st.heap).
@@ -824,7 +864,7 @@ let par_weaker_lpre_and_stronger_lpost_l (#st:st) (#preL:st.hprop) (lpreL:l_pre 
     preserves_frame preL next_preL state next_state /\
     lpreL (st.heap_of_mem state) /\
     lpreR (st.heap_of_mem state) /\
-    st.interp (st.locks_invariant state `st.star` (preL `st.star` preR)) (st.heap_of_mem state))
+    st.interp ((preL `st.star` preR) `st.star` st.locks_invariant state) (st.heap_of_mem state))
   (ensures
     weaker_lpre
       (par_lpre lpreL lpreR)
@@ -852,9 +892,9 @@ let par_weaker_lpre_and_stronger_lpost_r (#st:st) (#preL:st.hprop) (lpreL:l_pre 
     preserves_frame preR next_preR state next_state /\
     lpreR (st.heap_of_mem state) /\
     lpreL (st.heap_of_mem state) /\
-    st.interp (st.locks_invariant state `st.star` (preL `st.star` preR)) (st.heap_of_mem state))
+    st.interp ((preL `st.star` preR) `st.star` st.locks_invariant state) (st.heap_of_mem state))
   (ensures
-    st.interp (st.locks_invariant next_state `st.star` (preL `st.star` next_preR)) (st.heap_of_mem next_state) /\
+    st.interp ((preL `st.star` next_preR) `st.star` st.locks_invariant next_state) (st.heap_of_mem next_state) /\
     weaker_lpre
       (par_lpre lpreL lpreR)
       (par_lpre lpreL next_lpreR)
@@ -1152,10 +1192,10 @@ let run_ret (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post lpre lpost{Ret? f})
 : Mst a
   (requires fun m0 ->
-    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    st.interp (pre `st.star` st.locks_invariant m0) (st.heap_of_mem m0) /\
     lpre (st.heap_of_mem m0))
   (ensures fun m0 x m1 ->
-    st.interp (st.locks_invariant m1 `st.star` post x) (st.heap_of_mem m1) /\
+    st.interp (post x `st.star` st.locks_invariant m1) (st.heap_of_mem m1) /\
     lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
     preserves_frame pre (post x) m0 m1)
 = MSTATE?.reflect (fun m0 ->
@@ -1167,10 +1207,10 @@ let rec run (#st:st) (i:nat) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post lpre lpost)
 : Mst a
   (requires fun m0 ->
-    st.interp (st.locks_invariant m0 `st.star` pre) (st.heap_of_mem m0) /\
+    st.interp (pre `st.star` st.locks_invariant m0) (st.heap_of_mem m0) /\
     lpre (st.heap_of_mem m0))
   (ensures fun m0 x m1 ->
-    st.interp (st.locks_invariant m1 `st.star` post x) (st.heap_of_mem m1) /\
+    st.interp (post x `st.star` st.locks_invariant m1) (st.heap_of_mem m1) /\
     lpost (st.heap_of_mem m0) x (st.heap_of_mem m1) /\
     preserves_frame pre (post x) m0 m1)
 = match f with
