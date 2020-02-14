@@ -10,7 +10,7 @@ type state0 : S.st0 =
     S.locks_preorder = mem_evolves;
     S.hprop = hprop;
     S.heap_of_mem = heap_of_mem;
-    S.locks_invariant = locks_invariant;
+    S.locks_invariant = locks_invariant Set.empty;
 
     S.disjoint = disjoint;
     S.join = join;
