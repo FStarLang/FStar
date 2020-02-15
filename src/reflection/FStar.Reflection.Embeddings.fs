@@ -533,8 +533,8 @@ let e_comp_view =
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed' w e_term pre) (fun pre ->
             BU.bind_opt (unembed' w e_term post) (fun post ->
-            BU.bind_opt (unembed' w e_term post) (fun pats ->
-            Some <| C_Lemma (pre, post))))
+            BU.bind_opt (unembed' w e_term pats) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unknown.lid ->
             Some <| C_Unknown

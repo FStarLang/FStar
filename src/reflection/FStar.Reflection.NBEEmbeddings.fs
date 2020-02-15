@@ -503,7 +503,7 @@ let e_comp_view =
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
             BU.bind_opt (unembed e_term cb post) (fun post ->
-            BU.bind_opt (unembed e_term cb post) (fun pats ->
+            BU.bind_opt (unembed e_term cb pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_C_Unknown.lid ->
