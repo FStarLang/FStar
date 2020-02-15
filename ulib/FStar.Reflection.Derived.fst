@@ -245,11 +245,16 @@ and compare_comp (c1 c2 : comp) : order =
                                                    | Some _, None -> Gt
                                                    | Some x, Some y -> compare_term x y)
 
-    | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
+    | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
+      lex (compare_term p1 p2)
+          (fun () -> 
+            lex (compare_term q1 q2)
+                (fun () -> compare_term s1 s2)
+          )
 
     | C_Unknown, C_Unknown -> Eq
     | C_Total _ _, _  -> Lt | _, C_Total _ _ -> Gt
-    | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
+    | C_Lemma _ _ _, _  -> Lt | _, C_Lemma _ _ _ -> Gt
     | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 
 let mk_stringlit (s : string) : term =

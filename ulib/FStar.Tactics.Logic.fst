@@ -93,7 +93,7 @@ let pose_lemma (t : term) : Tac binder =
   let c = tcc (cur_env ()) t in
   let pre, post =
     match inspect_comp c with
-    | C_Lemma pre post -> pre, post
+    | C_Lemma pre post _ -> pre, post
     | _ -> fail ""
   in
   (* If the precondition is trivial, do not cut by it *)

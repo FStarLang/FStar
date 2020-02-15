@@ -486,9 +486,9 @@ let e_comp_view =
             mkConstruct ref_C_Total.fv [] [as_arg (embed e_term cb t);
                                     as_arg (embed (e_option e_term) cb md)]
 
-        | C_Lemma (pre, post) ->
+        | C_Lemma (pre, post, pats) ->
             let post = U.unthunk_lemma_post post in
-            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post)]
+            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
 
         | C_Unknown ->
             mkConstruct ref_C_Unknown.fv [] []
@@ -500,10 +500,11 @@ let e_comp_view =
             BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
             Some <| C_Total (t, md)))
 
-        | Construct (fv, _, [(post, _); (pre, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
             BU.bind_opt (unembed e_term cb post) (fun post ->
-            Some <| C_Lemma (pre, post)))
+            BU.bind_opt (unembed e_term cb post) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_C_Unknown.lid ->
             Some <| C_Unknown

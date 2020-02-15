@@ -80,7 +80,7 @@ type term_view =
 noeq
 type comp_view =
   | C_Total     : ret:typ -> decr:(option term) -> comp_view
-  | C_Lemma     : term -> term -> comp_view // pre & post
+  | C_Lemma     : term -> term -> term -> comp_view // pre & post
   | C_Unknown   : comp_view
 
 noeq
@@ -194,8 +194,8 @@ let smaller_comp cv c =
     match cv with
     | C_Total t md ->
         t << c /\ (match md with | Some d -> d << c | None -> True)
-    | C_Lemma pre post ->
-        pre << c /\ post << c
+    | C_Lemma pre post pats ->
+        pre << c /\ post << c /\ pats << c
     | C_Unknown ->
         True
 
