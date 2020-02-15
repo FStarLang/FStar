@@ -1825,3 +1825,95 @@ let new_inv (p:hprop)
   : m_action p (inv p) (fun _ -> emp)
   = new_inv_is_frame_preserving p;
     new_inv_pre_m_action p
+
+let pre_atomic (uses:Set.set lock_addr)
+               (fp:hprop)
+               (a:Type)
+               (fp':a -> hprop) =
+    m:hmem' uses fp -> (x:a & hmem' uses (fp' x))
+
+let is_atomic_frame_and_preorder_preserving
+  (#uses:Set.set lock_addr) (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+  (f:pre_atomic uses fp a fp') =
+  forall (frame:hprop) (m0:hmem' uses (fp `star` frame)).
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+     let (| x, m1 |) = f m0 in
+     interp ((fp' x `star` frame) `star` locks_invariant uses m1) (heap_of_mem m1) /\
+     mem_evolves m0 m1 /\
+     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+
+let atomic (uses:Set.set lock_addr)
+           (fp:hprop)
+           (a:Type)
+           (fp':a -> hprop) =
+    f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
+
+let promote_action_preatomic
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (uses:Set.set lock_addr)
+    (f:action fp a fp')
+    (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
+      (requires (h addr == None))
+      (ensures (let (| _, h'|) = f h in h' addr == None))
+    )
+
+   : pre_atomic uses fp a fp' =
+   fun (m0:hmem' uses fp) ->
+
+       let h0 = heap_of_mem m0 in
+       let (| x, h1 |) = f h0 in
+       Classical.forall_intro (Classical.move_requires (non_alloc h0));
+       let m1 = { m0 with heap = h1 } in
+       (| x, m1 |)
+
+val action_to_atomic_frame_aux
+    (uses:Set.set lock_addr)
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop)
+    (f:action fp a fp')
+    (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
+      (requires (h addr == None))
+      (ensures (let (| _, h'|) = f h in h' addr == None))
+    )
+    (frame:hprop) (m0:hmem' uses (fp `star` frame))
+    : Lemma (
+        ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+        interp (fp `star` locks_invariant uses m0) (heap_of_mem m0) /\
+        (let (| x, m1 |) = (promote_action_preatomic uses f non_alloc) m0 in
+        interp ((fp' x `star` frame) `star` locks_invariant uses m1) (heap_of_mem m1) /\
+        mem_evolves m0 m1 /\
+        (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))))
+
+let action_to_atomic_frame_aux uses #fp #a #fp' f non_alloc frame m0 =
+  ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+  let h0 = heap_of_mem m0 in
+  let (| x, h1 |) = f h0 in
+  Classical.forall_intro (Classical.move_requires (non_alloc h0));
+  let m1 = { m0 with heap = h1 } in
+
+  star_associative fp frame (locks_invariant uses m0);
+  star_associative (fp' x) frame (locks_invariant uses m1)
+
+val action_to_atomic_frame
+    (uses:Set.set lock_addr)
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop)
+    (f:action fp a fp')
+    (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
+      (requires (h addr == None))
+      (ensures (let (| _, h'|) = f h in h' addr == None))
+    )
+    :  Lemma (is_atomic_frame_and_preorder_preserving (promote_action_preatomic uses f non_alloc))
+
+let action_to_atomic_frame uses #fp #a #fp' f non_alloc =
+  Classical.forall_intro_2 (action_to_atomic_frame_aux uses f non_alloc)
+
+let promote_action
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (uses:Set.set lock_addr)
+    (f:action fp a fp')
+    (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
+      (requires (h addr == None))
+      (ensures (let (| _, h'|) = f h in h' addr == None))
+    )
+    : atomic uses fp a fp' =
+    action_to_atomic_frame uses f non_alloc;
+    promote_action_preatomic uses f non_alloc
