@@ -753,7 +753,7 @@ module S = FStar.Set
 
 #push-options "--max_ifuel 1 --initial_ifuel 1"
 let rec lock_store_invariant (e:S.set lock_addr) (l:lock_store) : hprop =
-  let current_addr = List.Tot.length l in
+  let current_addr = List.Tot.length l - 1 in
   match l with
   | [] -> emp
   | Available p :: tl -> p `star` lock_store_invariant e tl
