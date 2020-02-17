@@ -253,9 +253,9 @@ let is_m_frame_and_preorder_preserving_elim
   : Lemma
     (requires (is_m_frame_and_preorder_preserving f))
     (ensures (
-      ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
+      ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
      let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+     interp ((fp' x `star` frame) `star` locks_invariant Set.empty m1) (heap_of_mem m1) /\
      mem_evolves m0 m1 /\
      (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))
    ))
@@ -267,10 +267,10 @@ let hmem_emp_extension
   : Tot (m0':hmem (pre `star` emp){m0' == m0})
   =
   calc (equiv) {
-    (pre `star` (locks_invariant m0));
+    (pre `star` (locks_invariant Set.empty m0));
        (equiv) { emp_unit pre;
-                 equiv_extensional_on_star pre (pre `star` emp) (locks_invariant m0) }
-    (pre `star` emp) `star` (locks_invariant m0);
+                 equiv_extensional_on_star pre (pre `star` emp) (locks_invariant Set.empty m0) }
+    (pre `star` emp) `star` (locks_invariant Set.empty m0);
   };
   m0
 
