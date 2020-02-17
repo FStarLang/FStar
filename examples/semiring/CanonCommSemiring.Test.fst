@@ -29,12 +29,12 @@ let horner (r a0 a1 a2 a3 a4 a5 a6 a7:int) =
   assert (
     (((((((((((((a0 + a1) * r) + a2) * r) + a3) * r) + a4) * r) + a5) * r) + a6) * r) + a7) * r
     ==
-    a7 * r + 
-      a6 * r * r + 
-        a5 * r * r * r + 
+    a7 * r +
+      a6 * r * r +
+        a5 * r * r * r +
           a4 * r * r * r * r +
             a3 * r * r * r * r * r +
-              a2 * r * r * r * r * r * r + 
+              a2 * r * r * r * r * r * r +
                 a1 * r * r * r * r * r * r * r +
                   a0 * r * r * r * r * r * r * r )
    by (int_semiring ())
@@ -57,9 +57,10 @@ let product (x y z:int) =
 /// Ring of integers modulo 2^130 - 5 (the Poly1305 prime)
 ///
 
+/// This must be fully normalized
 let prime: pos =
   normalize_term_spec (pow2 130 - 5);
-  pow2 130 - 5
+  1361129467683753853853498429727072845819
 
 let ring : eqtype = a:nat{a < prime}
 
@@ -67,26 +68,28 @@ let ring : eqtype = a:nat{a < prime}
 let zero : ring = 0
 
 [@canon_attr]
-let one : ring = normalize_term_spec prime; 1
+let one : ring = 1
 
-[@(strict_on_arguments [0;1])]
+// Can't mark this as strict because https://github.com/FStarLang/FStar/issues/1923
+//[@(strict_on_arguments [0;1])]
 let ( +% ) (a b:ring) : ring = (a + b) % prime
 
-[@(strict_on_arguments [0;1])]
+// Can't mark this as strict because https://github.com/FStarLang/FStar/issues/1923
+//[@(strict_on_arguments [0;1])]
 let ( *% ) (a b:ring) : ring = (a * b) % prime
 
-val add_identity: a:ring -> Lemma (zero +% a == a)
-let add_identity a = normalize_term_spec prime
+// We want this only to be unfolded for constants
+[@(strict_on_arguments [0])]
+let ( ~% ) (a:ring) : ring = (-a) % prime
 
-val mul_identity: a:ring -> Lemma (one *% a == a)
-let mul_identity a = normalize_term_spec prime
+val add_identity (a:ring) : Lemma (zero +% a == a)
+let add_identity a = ()
 
-#set-options "--z3cliopt smt.arith.nl=false"
+val mul_identity (a:ring) : Lemma (one *% a == a)
+let mul_identity a = ()
 
-val add_associativity: a:ring -> b:ring -> c:ring
-  -> Lemma (a +% b +% c == a +% (b +% c))
+val add_associativity (a b c:ring) : Lemma (a +% b +% c == a +% (b +% c))
 let add_associativity a b c =
-  normalize_term_spec prime;
   calc (==) {
     a +% b +% c;
     == { }
@@ -99,11 +102,10 @@ let add_associativity a b c =
     a +% (b +% c);
   }
 
-val add_commutativity: a:ring -> b:ring -> Lemma (a +% b == b +% a)
+val add_commutativity (a b:ring) : Lemma (a +% b == b +% a)
 let add_commutativity a b = ()
 
-val mul_associativity: a:ring -> b:ring -> c:ring
-  -> Lemma (a *% b *% c == a *% (b *% c))
+val mul_associativity (a b c:ring) : Lemma (a *% b *% c == a *% (b *% c))
 let mul_associativity a b c =
   calc (==) {
     a *% b *% c;
@@ -119,7 +121,7 @@ let mul_associativity a b c =
     a *% (b *% c);
   }
 
-val mul_commutativity: a:ring -> b:ring -> Lemma (a *% b == b *% a)
+val mul_commutativity (a b:ring) : Lemma (a *% b == b *% a)
 let mul_commutativity a b = ()
 
 [@canon_attr]
@@ -132,7 +134,6 @@ let ring_mul_cm : cm ring =
 
 val mul_add_distr: distribute_left_lemma ring ring_add_cm ring_mul_cm
 let mul_add_distr a b c =
-  normalize_term_spec prime;
   calc (==) {
     a *% (b +% c);
     == { }
@@ -161,19 +162,22 @@ let mul_zero_l a = assert_norm (0 % prime == 0)
 [@canon_attr]
 let ring_cr : cr ring = CR ring_add_cm ring_mul_cm mul_add_distr mul_zero_l
 
-let poly_semiring () : Tac unit = canon_semiring ring_cr
+let poly_semiring () : Tac unit = canon_semiring ring_cr; trefl()
+
+let test (x y:ring) =
+  assert (4 *% x +% 2 *% x == 3 *% x +% 3 *% x) by (poly_semiring ())
 
 let test_poly1 (a b:ring) =
   assert (a +% b == b +% a) by (poly_semiring ())
 
-// Can't be proved using the old tactic
 let test_poly2 (a b c:ring) =
-  assert ((a +% b) *% c == a *% c +% b *% c) by (poly_semiring ())
+  assert (c *% (a +% b) == (a +% b) *% c) by (poly_semiring ())
 
-[@expect_failure "problem with constants: expected type spolynomial ring; got type spolynomial int"]
+let test_poly2b (a b c d:ring) =
+  assert ((a +% b) *% (c +% d) == a *% c +% b *% c +% a *% d +% b *% d) by (poly_semiring ())
+
 let test_poly3 (a b c:ring) =
-  let two:ring = 2 in
-  assert (two *% (a +% b) *% c == two *% b *% c +% two *% a *% c)
+  assert (2 *% (a +% b) *% c == 2 *% b *% c +% 2 *% a *% c)
   by (poly_semiring ())
 
 let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) :
@@ -181,7 +185,6 @@ let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) :
   ( (((a *% (r *% r)) +% c) *% (r *% r)) +% ((b *% (r *% r)) +% d) *% r ==
     (((((a *% (r *% r)) +% b *% r) +% c) *% r) +% d) *% r)
 =
-  normalize_term_spec prime;
   assert (
     (((a *% (r *% r)) +% c) *% (r *% r)) +% ((b *% (r *% r)) +% d) *% r ==
     ((a *% (r *% r) +% b *% r +% c) *% r +% d) *% r)

@@ -231,7 +231,7 @@ let rec monom_insert #a r c1 l1 s2 =
 val varlist_insert: #a:eqtype -> cr a -> varlist -> canonical_sum a -> canonical_sum a
 
 [@canon_attr]
-let rec varlist_insert #a r l1 s2 =
+let varlist_insert #a r l1 s2 =
   let aone = r.cm_mult.unit in
   monom_insert r aone l1 s2
 
@@ -415,7 +415,7 @@ let interp_vl (#a:Type) (r:cr a) (vm:vmap a) (l:varlist) =
   | Cons_var x t -> ivl_aux r vm x t
 
 [@canon_attr]
-let rec interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
+let interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
   let amult = r.cm_mult.mult in
   match l with
   | Nil_var -> c
@@ -1353,8 +1353,6 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     if term_eq (pack (Tv_FVar fv)) add then binop SPplus else
     if term_eq (pack (Tv_FVar fv)) mult then binop SPmult else
     make_fvar t unquotea ts vm
-  // Unquoting constants has issues when a <> int,
-  // sometimes generates an unsolvable SMT goal
   | Tv_Const _, [] -> SPconst (unquotea t), ts, vm
   | _, _ -> make_fvar t unquotea ts vm
 
@@ -1405,20 +1403,20 @@ let reification (#a:Type)
       ([],[], ([], munit)) ts
   in (List.rev es, vm)
 
-let rec quote_spolynomial (#a:Type) (quotea: a -> Tac term) (e:spolynomial a) : Tac term =
+let rec quote_spolynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:spolynomial a) : Tac term =
   match e with
-  | SPconst c -> mk_e_app (`SPconst) [quotea c]
+  | SPconst c -> mk_app (`SPconst) [(ta, Q_Implicit); (quotea c, Q_Explicit)]
   | SPvar x -> mk_e_app (`SPvar) [pack (Tv_Const (C_Int x))]
   | SPplus e1 e2 ->
-    mk_e_app (`SPplus) [quote_spolynomial quotea e1; quote_spolynomial quotea e2]
+    mk_e_app (`SPplus) [quote_spolynomial ta quotea e1; quote_spolynomial ta quotea e2]
   | SPmult e1 e2 ->
-    mk_e_app (`SPmult) [quote_spolynomial quotea e1; quote_spolynomial quotea e2]
+    mk_e_app (`SPmult) [quote_spolynomial ta quotea e1; quote_spolynomial ta quotea e2]
 
 (* Constructs the 3 main goals of the tactic *)
 let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
     (_ : squash (
-      interp_cs r vm (spolynomial_simplify #a r e1) ==
-      interp_cs r vm (spolynomial_simplify #a r e2)))
+      interp_cs r vm (spolynomial_simplify r e1) ==
+      interp_cs r vm (spolynomial_simplify r e2)))
     (_ : squash (a1 == interp_sp #a r vm e1))
     (_ : squash (a2 == interp_sp #a r vm e2)) :
     squash (a1 == a2)
@@ -1456,9 +1454,9 @@ let canon_semiring_aux
               interp_cs r vm (spolynomial_simplify r e2)))));
         *)
         let tvm = quote_vm ta quotea vm in
-        let te1 = quote_spolynomial quotea e1 in
+        let te1 = quote_spolynomial ta quotea e1 in
         //ddump ("te1 = " ^ term_to_string te1);
-        let te2 = quote_spolynomial quotea e2 in
+        let te2 = quote_spolynomial ta quotea e2 in
         //ddump ("te2 = " ^ term_to_string te2);
         mapply (`(semiring_reflect
           #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
