@@ -759,8 +759,7 @@ type mem = {
   heap: heap;
   locks: lock_store;
   properties: squash (
-    (forall i. i >= ctr ==> heap i == None) /\
-    interp (lock_store_invariant locks) heap
+    (forall i. i >= ctr ==> heap i == None)
   )
 }
 
