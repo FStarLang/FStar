@@ -773,7 +773,6 @@ type mem = {
   locks: lock_store;
   properties: squash (
     (forall i. i >= ctr ==> heap i == None)
-//    /\ interp (lock_store_invariant invariants locks) heap
   )
 }
 
@@ -782,12 +781,3 @@ let _ : squash (inversion mem) = allow_inversion mem
 let locks_invariant (e:S.set lock_addr) (m:mem) : hprop = lock_store_invariant e m.locks
 
 let heap_of_mem (x:mem) : heap = x.heap
-
-let m_disjoint (m:mem) (h:heap) =
-  disjoint (heap_of_mem m) h /\
-  (forall i. i >= m.ctr ==> h i == None)
-
-let upd_joined_heap (m:mem) (h:heap{m_disjoint m h}) =
-  let h0 = heap_of_mem m in
-  let h = join h0 h in
-  {m with heap = h}

@@ -604,12 +604,11 @@ let upd_array_action_memory_split_independence
   =
   let (| _, h' |) = upd_array_pre_action a iseq i v h in
   let h0' = upd_array_heap a iseq i v h0 in
+  upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+  assert(disjoint h0' h1);
   let aux (addr: addr) : Lemma (
-    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
-    assert(disjoint h0' h1);
     h' addr == (join h0' h1) addr
   ) =
-    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
     if addr <> a.array_addr then () else
     if not (h1 `contains_addr` addr) then ()
     else match  h' addr, (join h0' h1) addr with
@@ -864,7 +863,7 @@ let free_array
     (free_array_action a)
     (fun h addr -> ())
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 50"
 let share_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -1658,11 +1657,10 @@ let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
     star_associative q p r;
     h
 
-#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let maybe_acquire #p (l:lock p) (m:hmem emp { lock_ok l m } )
-  : (b:bool &
-     m:hmem (h_or (pure (b == false)) p))
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
+let maybe_acquire #p l m
   = let (| prefix, li, suffix |) = get_lock m.locks l in
+    affine_star emp (locks_invariant Set.empty m) (heap_of_mem m);
     match li with
     | Available _ ->
       let h = heap_of_mem m in
@@ -1700,7 +1698,7 @@ let maybe_acquire #p (l:lock p) (m:hmem emp { lock_ok l m } )
     | Locked _ ->
       let b = false in
       assert (interp (pure (b == false)) (heap_of_mem m));
-      affine_star emp (lock_store_invariant Set.empty m.locks) (heap_of_mem m);
+      assert (interp (locks_invariant Set.empty m) (heap_of_mem m));
       let h : hheap (locks_invariant Set.empty m) = heap_of_mem m in
       let h : hheap (pure (b==false) `star` locks_invariant Set.empty m) =
         intro_pure (b==false) (locks_invariant Set.empty m) h in
