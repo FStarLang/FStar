@@ -1917,3 +1917,215 @@ let promote_action
     : atomic uses fp a fp' =
     action_to_atomic_frame uses f non_alloc;
     promote_action_preatomic uses f non_alloc
+
+val atomic_satisfies_mem_evolves
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (f:atomic uses fp a fp')
+  (m0:hmem' uses fp)
+  : Lemma (let (| _, m1 |) = f m0 in mem_evolves m0 m1)
+
+let atomic_satisfies_mem_evolves #a #fp #fp' #uses f m0 =
+  calc (equiv) {
+    fp `star` locks_invariant uses m0;
+    (equiv) { emp_unit fp;
+              star_congruence fp (locks_invariant uses m0) (fp `star` emp) (locks_invariant uses m0)}
+    (fp `star` emp) `star` locks_invariant uses m0;
+  };
+  let m0:hmem' uses (fp `star` emp) = m0 in
+  let (| _, m1 |) = f m0 in
+  ()
+
+#push-options "--ifuel 1 --fuel 1"
+let interp_inv_not_in_uses'
+  (#p:hprop) (i:inv p)
+  (uses:Set.set lock_addr)
+  (m0:mem)
+  : Lemma
+  (requires inv_ok i m0 /\ not (i `Set.mem` uses))
+  (ensures
+    locks_invariant uses m0 `equiv`
+    (p `star` locks_invariant (Set.union (Set.singleton i) uses) m0))
+  = let uses' = Set.union (Set.singleton i) uses in
+    let rec aux_out_of_bounds (l:lock_store) (u:Set.set lock_addr) (i:nat{i >= L.length l})
+      : Lemma (lock_store_invariant u l == lock_store_invariant (Set.union (Set.singleton i) u) l)
+      = match l with
+      | [] -> ()
+      | hd::tl -> aux_out_of_bounds tl u i
+    in
+    let rec aux (l:lock_store) : Lemma
+      (requires i < L.length l /\ Invariant? (lock_i l i) /\ hprop_of_lock_state (lock_i l i) == p)
+      (ensures lock_store_invariant uses l `equiv` (p `star` lock_store_invariant uses' l))
+      (decreases l)
+      =
+      let current_addr = L.length l - 1 in
+      match l with
+      | Invariant p' :: tl ->
+        let (| prefix, li, suffix |) = get_lock l i in
+        if i = current_addr then (
+          L.append_length prefix (li::suffix);
+          assert (p == p');
+          assert (not (current_addr `Set.mem` uses));
+          assert (lock_store_invariant uses l == p `star` lock_store_invariant uses tl);
+          aux_out_of_bounds tl uses i
+        ) else (
+          let (| prefix', li', suffix' |) = get_lock tl i in
+          L.append_length_inv_tail prefix (li::suffix) ((Invariant p')::prefix') (li'::suffix');
+          assert (li == li');
+          aux tl;
+          if current_addr `Set.mem` uses then ()
+          else (
+            calc (equiv) {
+              lock_store_invariant uses l;
+              (equiv) { }
+              p' `star` lock_store_invariant uses tl;
+              (equiv) { star_congruence p' (lock_store_invariant uses tl) p' (p `star` lock_store_invariant uses' tl) }
+              p' `star` (p `star` lock_store_invariant uses' tl);
+              (equiv) { star_associative p' p (lock_store_invariant uses' tl);
+                        star_commutative p p';
+                        star_congruence (p' `star` p) (lock_store_invariant uses' tl)
+                                        (p `star` p') (lock_store_invariant uses' tl);
+                        star_associative p p' (lock_store_invariant uses' tl) }
+              p `star` lock_store_invariant uses' l;
+           }
+          )
+        )
+      | hd::tl ->
+        let (| prefix, li, suffix |) = get_lock l i in
+        if i = current_addr then (
+          L.append_length prefix (li::suffix);
+          assert (prefix == [])
+        ) else (
+          let (| prefix', li', suffix' |) = get_lock tl i in
+          L.append_length_inv_tail prefix (li::suffix) (hd::prefix') (li'::suffix');
+          assert (li == li');
+          aux tl;
+          match hd with
+          | Available p' ->
+            calc (equiv) {
+              lock_store_invariant uses l;
+              (equiv) { }
+              p' `star` lock_store_invariant uses tl;
+              (equiv) { star_congruence p' (lock_store_invariant uses tl) p' (p `star` lock_store_invariant uses' tl) }
+              p' `star` (p `star` lock_store_invariant uses' tl);
+              (equiv) { star_associative p' p (lock_store_invariant uses' tl);
+                        star_commutative p p';
+                        star_congruence (p' `star` p) (lock_store_invariant uses' tl)
+                                        (p `star` p') (lock_store_invariant uses' tl);
+                        star_associative p p' (lock_store_invariant uses' tl) }
+              p `star` lock_store_invariant uses' l;
+           }
+          | Locked _ -> ()
+      )
+    in aux m0.locks
+#pop-options
+
+
+let interp_inv_not_in_uses
+  (#p:hprop) (i:inv p)
+  (uses:Set.set lock_addr)
+  (frame:hprop)
+  (m0:mem)
+  : Lemma
+  (requires inv_ok i m0 /\ not (i `Set.mem` uses))
+  (ensures
+    (frame `star` locks_invariant uses m0) `equiv`
+    ((p `star` frame) `star` locks_invariant (Set.union (Set.singleton i) uses) m0))
+  = let istore' = locks_invariant (Set.union (Set.singleton i) uses) m0 in
+    calc (equiv) {
+         frame `star` locks_invariant uses m0;
+         (equiv) { interp_inv_not_in_uses' i uses m0;
+                   star_congruence frame (locks_invariant uses m0) frame
+                     (p `star` istore') }
+         frame `star` (p `star` istore');
+         (equiv) { star_associative frame p istore';
+                   star_commutative frame p;
+                   star_congruence (frame `star` p) istore' (p `star` frame) istore'}
+         (p `star` frame) `star` istore';
+    }
+
+
+
+val pre_with_invariant
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+  : pre_atomic uses fp a fp'
+
+let pre_with_invariant #a #fp #fp' #uses #p i f =
+  fun (m0:hmem' uses fp) ->
+    assume (inv_ok i m0);
+    let uses' = Set.union (Set.singleton i) uses in
+    interp_inv_not_in_uses i uses fp m0;
+    let (| x, m1 |) = f m0 in
+    atomic_satisfies_mem_evolves f m0;
+    interp_inv_not_in_uses i uses (fp' x) m1;
+    (| x, m1 |)
+
+val with_invariant_frame_aux
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+    (#p:hprop)
+    (i:inv p{not (i `Set.mem` uses)})
+    (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+    (frame:hprop) (m0:hmem' uses (fp `star` frame))
+    : Lemma (
+        ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+        interp (fp `star` locks_invariant uses m0) (heap_of_mem m0) /\
+        (let (| x, m1 |) = (pre_with_invariant i f) m0 in
+        interp ((fp' x `star` frame) `star` locks_invariant uses m1) (heap_of_mem m1) /\
+        mem_evolves m0 m1 /\
+        (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))))
+
+#push-options "--fuel 0 --ifuel 0"
+let with_invariant_frame_aux #fp #a #fp' #uses #p i f frame m0 =
+  assume (inv_ok i m0);
+  ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+  let uses' = Set.union (Set.singleton i) uses in
+  calc (equiv) {
+    ((fp `star` frame) `star` locks_invariant uses m0);
+    (equiv) { interp_inv_not_in_uses i uses (fp `star` frame) m0 }
+    (p `star` (fp `star` frame)) `star` locks_invariant uses' m0;
+    (equiv) { star_associative p fp frame;
+              star_congruence ((p `star` fp) `star` frame) (locks_invariant uses' m0)
+                              (p `star` (fp `star` frame)) (locks_invariant uses' m0)}
+    ((p `star` fp) `star` frame) `star` locks_invariant uses' m0;
+  };
+  calc (equiv) {
+    fp `star` locks_invariant uses m0;
+    (equiv) { interp_inv_not_in_uses i uses fp m0 }
+    (p `star` fp) `star` locks_invariant uses' m0;
+  };
+  let m0:hmem' uses' ((p `star` fp) `star` frame) = m0 in
+  let (| x, m1 |) = f m0 in
+  atomic_satisfies_mem_evolves f m0;
+  calc (equiv) {
+    ((p `star` fp' x) `star` frame) `star` locks_invariant uses' m1;
+    (equiv) { star_associative p (fp' x) frame;
+              star_congruence ((p `star` fp' x) `star` frame) (locks_invariant uses' m1)
+                              (p `star` (fp' x `star` frame)) (locks_invariant uses' m1)}
+    (p `star` (fp' x `star` frame)) `star` locks_invariant uses' m1;
+    (equiv) { interp_inv_not_in_uses i uses (fp' x `star` frame) m1 }
+    (fp' x `star` frame) `star` locks_invariant uses m1;
+  }
+#pop-options
+
+val with_invariant_frame
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+    (#p:hprop)
+    (i:inv p{not (i `Set.mem` uses)})
+    (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+    :  Lemma (is_atomic_frame_and_preorder_preserving (pre_with_invariant i f))
+
+let with_invariant_frame #fp #a #fp' #uses #p i f =
+  Classical.forall_intro_2 (with_invariant_frame_aux i f)
+
+val with_invariant
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+  : atomic uses fp a fp'
+
+let with_invariant #a #fp #fp' #uses #p i f =
+    with_invariant_frame i f;
+    pre_with_invariant i f
