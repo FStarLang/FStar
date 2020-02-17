@@ -277,7 +277,7 @@ let pure (p:prop) : hprop = refine emp (fun _ -> p)
 val maybe_acquire
   (#p: hprop)
   (l:lock p)
-  (m:mem { lock_ok l m } )
+  (m:hmem emp { lock_ok l m } )
   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
 val release

@@ -859,7 +859,7 @@ let free_array
     (free_array_action a)
     (fun h addr -> ())
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 50"
 let share_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -1652,11 +1652,10 @@ let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
     star_associative q p r;
     h
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let maybe_acquire #p (l:lock p) (m:mem { lock_ok l m } )
-  : (b:bool &
-     m:hmem (h_or (pure (b == false)) p))
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
+let maybe_acquire #p l m
   = let (| prefix, li, suffix |) = get_lock m.locks l in
+    affine_star emp (locks_invariant m) (heap_of_mem m);
     match li with
     | Available _ ->
       let h = heap_of_mem m in
@@ -1693,6 +1692,7 @@ let maybe_acquire #p (l:lock p) (m:mem { lock_ok l m } )
     | Locked _ ->
       let b = false in
       assert (interp (pure (b == false)) (heap_of_mem m));
+      assert (interp (locks_invariant m) (heap_of_mem m));
       let h : hheap (locks_invariant m) = heap_of_mem m in
       let h : hheap (pure (b==false) `star` locks_invariant m) =
         intro_pure (b==false) (locks_invariant m) h in
