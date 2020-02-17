@@ -2129,3 +2129,10 @@ val with_invariant
 let with_invariant #a #fp #fp' #uses #p i f =
     with_invariant_frame i f;
     pre_with_invariant i f
+
+val promote_atomic_m_action
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (f:atomic Set.empty fp a fp')
+    : m_action fp a fp'
+
+let promote_atomic_m_action #a #fp #fp' f = f
