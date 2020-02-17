@@ -358,8 +358,4 @@ val locks_invariant : mem -> hprop
 
 val heap_of_mem (x:mem) : heap
 
-val m_disjoint: mem -> heap -> prop
-
-val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
-
 let hmem (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) (heap_of_mem m)}
