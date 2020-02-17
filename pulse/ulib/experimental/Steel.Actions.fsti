@@ -289,9 +289,38 @@ val release
 ///////////////////////////////////////////////////////////////////////////////
 // Invariants
 ///////////////////////////////////////////////////////////////////////////////
-val inv (p:hprop) : Type0
+let inv (p:hprop) = lock_addr
 
 val inv_ok (#p:hprop) (l:inv p) (m:mem) : prop
 
 val new_inv (p:hprop)
   : m_action p (inv p) (fun _ -> emp)
+
+let pre_atomic (uses:Set.set lock_addr)
+               (fp:hprop)
+               (a:Type)
+               (fp':a -> hprop) =
+    m:hmem' uses fp -> (x:a & hmem' uses (fp' x))
+
+let is_atomic_frame_and_preorder_preserving
+  (#uses:Set.set lock_addr) (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+  (f:pre_atomic uses fp a fp') =
+  forall (frame:hprop) (m0:hmem' uses (fp `star` frame)).
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+     let (| x, m1 |) = f m0 in
+     interp ((fp' x `star` frame) `star` locks_invariant uses m1) (heap_of_mem m1) /\
+     mem_evolves m0 m1 /\
+     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+
+let atomic (uses:Set.set lock_addr)
+           (fp:hprop)
+           (a:Type)
+           (fp':a -> hprop) =
+    f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
+
+val with_invariant
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+  : atomic uses fp a fp'
