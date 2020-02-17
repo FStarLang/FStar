@@ -361,10 +361,6 @@ val locks_invariant : S.set lock_addr -> mem -> hprop
 
 val heap_of_mem (x:mem) : heap
 
-val m_disjoint: mem -> heap -> prop
-
-val upd_joined_heap: (m:mem) -> (h:heap{m_disjoint m h}) -> mem
-
 let hmem' (e:S.set lock_addr) (fp:hprop) =
   m:mem{interp (fp `star` locks_invariant e m) (heap_of_mem m)}
 let hmem (fp:hprop) = hmem' S.empty fp
