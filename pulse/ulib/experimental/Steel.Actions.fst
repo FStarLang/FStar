@@ -600,12 +600,11 @@ let upd_array_action_memory_split_independence
   =
   let (| _, h' |) = upd_array_pre_action a iseq i v h in
   let h0' = upd_array_heap a iseq i v h0 in
+  upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
+  assert(disjoint h0' h1);
   let aux (addr: addr) : Lemma (
-    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
-    assert(disjoint h0' h1);
     h' addr == (join h0' h1) addr
   ) =
-    upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
     if addr <> a.array_addr then () else
     if not (h1 `contains_addr` addr) then ()
     else match  h' addr, (join h0' h1) addr with
