@@ -69,7 +69,7 @@ let is_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_action fp
     interp (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
      interp (fp' x `star` frame) h1 /\
-     (forall (f_frame:fp_prop frame). f_frame h0 <==> f_frame h1))
+     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
 
 let action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }
@@ -86,7 +86,7 @@ let is_frame_preserving_intro
   )
   (preserves_frame_prop_intro:
     (frame: hprop) -> (h0: heap) ->
-    (f_frame: fp_prop frame) ->
+    (f_frame: frameable_heap_prop frame) ->
     Lemma (requires (interp (fp `star` frame) h0)) (ensures (
       let (| x, h1 |) = f h0 in f_frame h0 <==> f_frame h1
     ))
@@ -96,18 +96,18 @@ let is_frame_preserving_intro
   let aux (frame: hprop) (h0: heap) : Lemma (interp (fp `star` frame) h0 ==>
      (let (| x, h1 |) = f h0 in
      interp (fp' x `star` frame) h1 /\
-     (forall (f_frame:fp_prop frame). f_frame h0 <==> f_frame h1))
+     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
   ) =
     let aux (pf: (interp (fp `star` frame) h0)) : Lemma (
       interp (fp `star` frame) h0 /\ (
       let h0 : (h0:heap{interp fp h0}) = affine_star fp frame h0; h0 in
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
-      (forall (f_frame:fp_prop frame). f_frame h0 <==> f_frame h1))
+      (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
     ) =
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
-      let aux (f_frame:fp_prop frame)
+      let aux (f_frame:frameable_heap_prop frame)
         : Lemma (f_frame h0 <==> f_frame h1) =
         preserves_frame_prop_intro frame h0 f_frame
       in
@@ -122,7 +122,7 @@ let is_frame_preserving_intro
 let is_frame_preserving_elim
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
   (frame: hprop) (h0: heap)
-  (f_frame:fp_prop frame)
+  (f_frame:frameable_heap_prop frame)
   : Lemma (requires (is_frame_preserving f /\ interp (fp `star` frame) h0)) (ensures (
      let (| x, h1 |) = f h0 in
      interp (fp' x `star` frame) h1 /\
@@ -350,6 +350,49 @@ let alloc_action_to_non_locking_pre_m_action
     (| x, m' |)
 #pop-options
 
+
+let mprop_to_hprop0 (hp:hprop) (mp:mprop hp) : heap -> prop =
+  fun h -> mp (mem_of_heap h)
+
+#push-options "--warn_error -271"
+let mprop_to_hprop_depends_only_on (hp:hprop) (mp:mprop hp)
+: Lemma (mprop_to_hprop0 hp mp `depends_only_on_without_affinity` hp)
+= let aux (h0:hheap hp) (h1:heap{disjoint h0 h1})
+    : Lemma ((mprop_to_hprop0 hp mp) h0 <==> (mprop_to_hprop0 hp mp) (join h0 h1))
+            [SMTPat ()]
+    = assert (join_mem (mem_of_heap h0) (mem_of_heap h1) ==
+              mem_of_heap (join h0 h1));
+      assert (mp (mem_of_heap h0) <==> mp (join_mem (mem_of_heap h0) (mem_of_heap h1)));
+      assert (mp (mem_of_heap h0) <==> mp (mem_of_heap (join h0 h1)))
+  in
+  ()
+
+let mprop_to_hprop (hp:hprop) (mp:mprop hp) : (q:(heap -> prop){q `depends_only_on_without_affinity` hp}) =
+  mprop_to_hprop_depends_only_on hp mp;
+  mprop_to_hprop0 hp mp
+
+open FStar.PropositionalExtensionality
+
+let lift_fp_props_preservation_to_mprops (hp:hprop) (m0 m1:mem)
+: Lemma
+  (requires
+    (forall (f_frame:(q:(heap -> prop){q `depends_only_on_without_affinity` hp})). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+  (ensures
+    (forall (mp:mprop hp). mp (core_mem m0) == mp (core_mem m1)))
+= let aux (mp:mprop hp)
+  : Lemma (mp (core_mem m0) == mp (core_mem m1))
+          [SMTPat ()]
+    = let q : (q:(heap -> prop){q `depends_only_on_without_affinity` hp}) = mprop_to_hprop hp mp in
+      assert (q (heap_of_mem m0) <==> q (heap_of_mem m1));
+      assert ((mprop_to_hprop hp mp) (heap_of_mem m0) <==> (mprop_to_hprop hp mp) (heap_of_mem m1));
+      assert (mp (mem_of_heap (heap_of_mem m0)) <==> mp (mem_of_heap (heap_of_mem m1)));
+      assert (mp (core_mem m0) <==> mp (core_mem m1));
+      FStar.PropositionalExtensionality.apply (mp (core_mem m0)) (mp (core_mem m1))
+  in
+  ()
+#pop-options
+
+
 #push-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let is_m_frame_and_preorder_preserving_intro_aux
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
@@ -362,7 +405,7 @@ let is_m_frame_and_preorder_preserving_intro_aux
     )
   )
   (frame_prop_preserves_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: fp_prop frame) ->
+    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
       f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)
@@ -373,18 +416,23 @@ let is_m_frame_and_preorder_preserving_intro_aux
       let (| x, m1 |) = f m0 in
       interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
       mem_evolves m0 m1 /\
-      (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))))
+      (forall (f_frame:frameable_heap_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)) /\
+      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
   =
    ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
     let (| x, m1 |) = f m0 in
     preserves_framing_intro frame m0;
-    let aux (f_frame: fp_prop frame) : Lemma (
+    let aux (f_frame: frameable_heap_prop frame) : Lemma (
       f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)
     ) =
       frame_prop_preserves_intro frame m0 f_frame
     in
-    Classical.forall_intro aux
+    Classical.forall_intro aux;
+    assert (forall (f_frame:frameable_heap_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1));
+    lift_fp_props_preservation_to_mprops frame m0 m1
 #pop-options
+
+
 
 #push-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let is_m_frame_and_preorder_preserving_intro
@@ -398,7 +446,7 @@ let is_m_frame_and_preorder_preserving_intro
     )
   )
   (frame_prop_preserves_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: fp_prop frame) ->
+    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
       f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)
@@ -412,7 +460,7 @@ let is_m_frame_and_preorder_preserving_intro
     frame_prop_preserves_intro)
 #pop-options
 
-let trivial_fp_prop (hp:hprop) : fp_prop hp = fun _ -> True
+let trivial_fp_prop (hp:hprop) : frameable_heap_prop hp = fun _ -> True
 
 #push-options "--z3rlimit 10 --max_ifuel 1 --initial_ifuel 1 --max_fuel 2 --initial_fuel 2"
 let non_alloc_action_to_non_locking_m_action
@@ -464,6 +512,7 @@ let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
   assert(U32.v a.array_offset + U32.v a.array_length <= len');
   Seq.init len (fun i -> let x =  select_index seq (U32.v a.array_offset + i) in x.value)
 #pop-options
+
 
 #push-options "--max_fuel 2"
 let as_seq_lemma
