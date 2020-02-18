@@ -299,21 +299,24 @@ let act_preserves_frame_and_preorder
 #pop-options
 
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
-: SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
+: SteelT a (ref_perm r p (trivial_preorder a)) (fun x -> pts_to_ref r p x (trivial_preorder a))
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| x, m1 |) = get_ref r p m0 in
-    act_preserves_frame_and_preorder (get_ref r p) m0;
+    let (| x, m1 |) = get_ref r p (trivial_preorder a) m0 in
+    act_preserves_frame_and_preorder (get_ref r p (trivial_preorder a)) m0;
     mst_put m1;
     x)
 
 
 let write (#a:Type0) (r:reference a) (x:a)
-: SteelT unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
+: SteelT unit (ref_perm r full_permission (trivial_preorder a))
+  (fun _ -> pts_to_ref r full_permission x (trivial_preorder a))
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| _, m1 |) = set_ref r x m0 in
-    act_preserves_frame_and_preorder (set_ref r x) m0;
+    let old_x = sel_ref r (trivial_preorder a) (heap_of_mem m0) in
+    assert((trivial_preorder a) old_x x);
+    let (| _, m1 |) = set_ref r old_x x (trivial_preorder a) m0 in
+    act_preserves_frame_and_preorder (set_ref r old_x x (trivial_preorder a)) m0;
     mst_put m1)
 
 

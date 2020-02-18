@@ -355,7 +355,7 @@ let rec interp (p:hprop) (m:heap)
 
 let emp = Emp
 let pts_to_array_with_preorder = Pts_to_array
-let pts_to_ref_with_preorder
+let pts_to_ref
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
