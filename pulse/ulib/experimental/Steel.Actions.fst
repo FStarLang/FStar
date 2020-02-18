@@ -1943,35 +1943,58 @@ let new_inv_pre_m_action (p:hprop)
      let lock_id = List.Tot.length locks' - 1 in
      (| lock_id, mem |)
 
-#push-options "--warn_error -271 --max_fuel 2 --initial_fuel 2 --admit_smt_queries true"
-let new_inv_is_frame_preserving (p:hprop)
-  : Lemma (is_m_frame_and_preorder_preserving (new_inv_pre_m_action p))
-  = let aux (frame:hprop) (m:hmem (p `star` frame))
+#push-options "--warn_error -271 --fuel 1 --ifuel 0 --z3rlimit 10"
+let new_inv_is_frame_preserving_aux (p:hprop) (frame:hprop) (m:hmem (p `star` frame))
       : Lemma
           (ensures (
+            ac_reasoning_for_m_frame_preserving p frame (locks_invariant Set.empty m) m;
+            (
             let (| x, m1 |) = new_inv_pre_m_action p m in
-            interp (emp `star` frame `star` locks_invariant Set.empty m1) (heap_of_mem m1)))
-          [SMTPat ()]
-      = let (| x, m1 |) = new_inv_pre_m_action p m in
+            interp (emp `star` frame `star` locks_invariant Set.empty m1) (heap_of_mem m1) /\
+            mem_evolves m m1 /\
+            (forall (mp:mprop frame). mp (core_mem m) == mp (core_mem m1))
+            )))
+      = ac_reasoning_for_m_frame_preserving p frame (locks_invariant Set.empty m) m;
+        let (| x, m1 |) = new_inv_pre_m_action p m in
+
+        mem_invariant_elim (p `star` frame) m;
         assert (m1.locks == Invariant p :: m.locks);
-        assert (locks_invariant Set.empty m1 == (p `star` locks_invariant Set.empty m));
-        assert (interp ((p `star` frame) `star` locks_invariant Set.empty m) (heap_of_mem m));
-        star_associative p frame (locks_invariant Set.empty m);
-        assert (interp (p `star` (frame `star` locks_invariant Set.empty m)) (heap_of_mem m));
-        star_commutative frame (locks_invariant Set.empty m);
-        equiv_star_left p (frame `star` locks_invariant Set.empty m) (locks_invariant Set.empty m `star` frame);
-        assert (interp (p `star` (locks_invariant Set.empty m `star` frame)) (heap_of_mem m));
-        star_associative p (locks_invariant Set.empty m) frame;
-        assert (interp ((p `star` locks_invariant Set.empty m) `star` frame) (heap_of_mem m));
-        assert (interp ((locks_invariant Set.empty m1) `star` frame) (heap_of_mem m));
+        assert (lock_store_invariant Set.empty m1.locks == (p `star` lock_store_invariant Set.empty m.locks));
+        assert (interp ((p `star` frame) `star` lock_store_invariant Set.empty m.locks) (heap_of_mem m));
+        star_associative p frame (lock_store_invariant Set.empty m.locks);
+        assert (interp (p `star` (frame `star` lock_store_invariant Set.empty m.locks)) (heap_of_mem m));
+        star_commutative frame (lock_store_invariant Set.empty m.locks);
+        equiv_star_left p (frame `star` lock_store_invariant Set.empty m.locks) (lock_store_invariant Set.empty m.locks `star` frame);
+        assert (interp (p `star` (lock_store_invariant Set.empty m.locks `star` frame)) (heap_of_mem m));
+        star_associative p (lock_store_invariant Set.empty m.locks) frame;
+        assert (interp ((p `star` lock_store_invariant Set.empty m.locks) `star` frame) (heap_of_mem m));
+        assert (interp ((lock_store_invariant Set.empty m1.locks) `star` frame) (heap_of_mem m));
         assert (heap_of_mem m == heap_of_mem m1);
-        star_commutative (locks_invariant Set.empty m1) frame;
-        assert (interp (frame `star` (locks_invariant Set.empty m1)) (heap_of_mem m1));
-        emp_unit_left (frame `star` (locks_invariant Set.empty m1));
-        assert (interp (emp `star` (frame `star` (locks_invariant Set.empty m1))) (heap_of_mem m1));
-        star_associative emp frame (locks_invariant Set.empty m1)
-    in
-    ()
+        star_commutative (lock_store_invariant Set.empty m1.locks) frame;
+        assert (interp (frame `star` (lock_store_invariant Set.empty m1.locks)) (heap_of_mem m1));
+        emp_unit_left (frame `star` (lock_store_invariant Set.empty m1.locks));
+        assert (interp (emp `star` (frame `star` (lock_store_invariant Set.empty m1.locks))) (heap_of_mem m1));
+        star_associative emp frame (lock_store_invariant Set.empty m1.locks);
+        mem_invariant_intro (emp `star` frame) m1;
+
+        let aux_lock_i (i:nat{i < L.length m.locks})
+          : Lemma (lock_i m.locks i == lock_i m1.locks i)
+          = let (| prefix, li, suffix |) = get_lock m.locks i in
+            let (| prefix', li', suffix' |) = get_lock m1.locks i in
+            L.append_cons_l (Invariant p) prefix (li::suffix);
+            L.append_length_inv_tail (Invariant p:: prefix) (li::suffix) prefix' (li'::suffix')
+        in
+
+        mem_evolves_intro m m1 aux_lock_i;
+
+        lift_fp_props_preservation_to_mprops frame m m1
+
+#pop-options
+
+#push-options "--fuel 2 --ifuel 2"
+let new_inv_is_frame_preserving (p:hprop)
+  : Lemma (is_m_frame_and_preorder_preserving (new_inv_pre_m_action p))
+  = Classical.forall_intro_2 (new_inv_is_frame_preserving_aux p)
 #pop-options
 
 let new_inv (p:hprop)
