@@ -1986,9 +1986,16 @@ let action_to_atomic_frame_aux uses #fp #a #fp' f non_alloc frame m0 =
   Classical.forall_intro (Classical.move_requires (non_alloc h0));
   let m1 = { m0 with heap = h1 } in
 
-  star_associative fp frame (locks_invariant uses m0);
-  star_associative (fp' x) frame (locks_invariant uses m1);
-  admit()
+  let (| x', m1' |) = (promote_action_preatomic uses f non_alloc) m0 in
+  assert (x == x');
+  assert (m1 == m1');
+  assert (m0.locks == m1.locks);
+  assert (mem_evolves m0 m1);
+
+  star_associative fp frame (lock_store_invariant uses m0.locks);
+  star_associative (fp' x) frame (lock_store_invariant uses m1.locks);
+  lift_fp_props_preservation_to_mprops frame m0 m1;
+  mem_invariant_intro' uses (fp' x `star` frame) m1
 
 val action_to_atomic_frame
     (uses:Set.set lock_addr)
@@ -2140,8 +2147,6 @@ let interp_inv_not_in_uses
          (p `star` frame) `star` istore';
     }
 
-
-
 val pre_with_invariant
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
   (#p:hprop)
@@ -2151,13 +2156,16 @@ val pre_with_invariant
 
 let pre_with_invariant #a #fp #fp' #uses #p i f =
   fun (m0:hmem' uses fp) ->
-    admit();
     assume (inv_ok i m0);
+    mem_invariant_elim' uses fp m0;
     let uses' = Set.union (Set.singleton i) uses in
     interp_inv_not_in_uses i uses fp m0;
+    mem_invariant_intro' uses' (p `star` fp) m0;
     let (| x, m1 |) = f m0 in
+    mem_invariant_elim' uses' (p `star` fp' x) m1;
     atomic_satisfies_mem_evolves f m0;
     interp_inv_not_in_uses i uses (fp' x) m1;
+    mem_invariant_intro' uses (fp' x) m1;
     (| x, m1 |)
 
 val with_invariant_frame_aux
