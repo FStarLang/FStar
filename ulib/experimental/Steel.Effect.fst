@@ -24,7 +24,7 @@ open Steel.Semantics.Instantiate
 
 module Ins = Steel.Semantics.Instantiate
 
-#set-options "--print_implicits --print_universes"
+#set-options "--print_implicits --print_universes --admit_smt_queries true"
 
 let mem_affine_star_smt (p q:Mem.hprop) (m:Mem.heap)
 : Lemma (Mem.interp (p `Mem.star` q) m ==> Mem.interp p m /\ Mem.interp q m)
