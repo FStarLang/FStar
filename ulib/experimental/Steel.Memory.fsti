@@ -364,3 +364,15 @@ val heap_of_mem (x:mem) : heap
 let hmem' (e:S.set lock_addr) (fp:hprop) =
   m:mem{interp (fp `star` locks_invariant e m) (heap_of_mem m)}
 let hmem (fp:hprop) = hmem' S.empty fp
+
+val core_mem (m:mem) : mem
+
+val disjoint_mem (m0 m1:mem) : prop
+
+val join_mem (m0:mem) (m1:mem{disjoint_mem m0 m1}) : mem
+
+val interp_mem (hp:hprop) (m:mem) : prop
+
+let mprop (hp:hprop) = q:(mem -> prop){
+  forall (m0:mem{interp_mem hp m0}) (m1:mem{disjoint_mem m0 m1}). q m0 <==> q (join_mem m0 m1)
+}
