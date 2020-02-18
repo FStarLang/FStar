@@ -22,6 +22,8 @@ module FStar.Tactics.CanonCommSemiring
 ///
 /// - A commutative monoid (a, +, 0) for addition
 ///   That is, + is associative, commutative and has identity element 0
+/// - An additive inverse operator for (a, +, 0), making it an Abelian group
+///   That is, a + -a = 0
 /// - A commutative monoid (a, *, 1) for multiplication
 ///   That is, * is associative, commutative and has identity element 1
 /// - Multipication left-distributes over addition
@@ -30,8 +32,8 @@ module FStar.Tactics.CanonCommSemiring
 ///   That is, 0 * a = 0
 ///
 /// In contrast to the previous version of FStar.Tactics.CanonCommSemiring,
-/// the tactic defined here canonizes products and additions, collects
-/// coefficients in monomials, and eliminates trivial expressions.
+/// the tactic defined here canonizes products, additions and additive inverses,
+/// collects coefficients in monomials, and eliminates trivial expressions.
 ///
 /// This is based on the legacy (second) version of Coq's ring tactic:
 ///  -  https://github.com/coq-contribs/legacy-ring/
@@ -66,12 +68,18 @@ let distribute_right_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
 let mult_zero_l_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   x:a -> Lemma (cm_mult.mult cm_add.unit x == cm_add.unit)
 
+let add_opp_r_lemma (a:Type) (cm_add:cm a) (opp:(a -> a)) =
+  let ( + ) = cm_add.mult in
+  x:a -> Lemma (x + opp x == cm_add.unit)
+
 [@canon_attr]
 unopteq
 type cr (a:Type) =
   | CR :
     cm_add: cm a ->
     cm_mult: cm a ->
+    opp: (a -> a) ->
+    add_opp: add_opp_r_lemma a cm_add opp ->
     distribute: distribute_left_lemma a cm_add cm_mult ->
     mult_zero_l: mult_zero_l_lemma a cm_add cm_mult ->
     cr a
@@ -195,9 +203,8 @@ and csm_aux #a r c1 l1 t1 s2 =
       then Cons_monom c1 l1 (canonical_sum_merge r t1 s2)
       else Cons_varlist l2 (csm_aux r c1 l1 t1 t2)
   | Nil_monom ->
-    if c1 = aone
-    then Cons_varlist l1 t1
-    else Cons_monom c1 l1 t1
+    //if c1 = aone then Cons_varlist l1 t1 else
+    Cons_monom c1 l1 t1
 
 (* Inserts a monomial into the apropriate position in a canonical sum *)
 val monom_insert: #a:eqtype -> r:cr a
@@ -489,6 +496,43 @@ val add_zero_r (#a:Type) (r:cr a) (x:a) :
   [SMTPat (r.cm_add.mult x r.cm_add.unit)]
 let add_zero_r #a r x =
   r.cm_add.commutativity r.cm_add.unit x
+
+val opp_unique (#a:Type) (r:cr a) (x y:a) : Lemma
+  (requires r.cm_add.mult x y == r.cm_add.unit)
+  (ensures  y == r.opp x)
+let opp_unique #a r x y =
+  let ( + ) = r.cm_add.mult in
+  let zero = r.cm_add.unit in
+  calc (==) {
+    y;
+    == { r.add_opp x }
+    y + (x + r.opp x);
+    == { r.cm_add.associativity y x (r.opp x) }
+    (y + x) + r.opp x;
+    == { r.cm_add.commutativity x y }
+    zero + r.opp x;
+    == { }
+    r.opp x;
+  }
+
+val add_mult_opp (#a:Type) (r:cr a) (x:a) : Lemma
+  (r.cm_add.mult x (r.cm_mult.mult (r.opp r.cm_mult.unit) x) == r.cm_add.unit)
+let add_mult_opp #a r x =
+  let ( + ) = r.cm_add.mult in
+  let ( * ) = r.cm_mult.mult in
+  let zero = r.cm_add.unit in
+  let one = r.cm_mult.unit in
+  calc (==) {
+    x + r.opp one * x;
+    == { }
+    one * x + r.opp one * x;
+    == { distribute_right r one (r.opp one) x }
+    (one + r.opp one) * x;
+    == { r.add_opp one }
+    zero * x;
+    == { }
+    zero;
+  }
 
 val ivl_aux_ok (#a:Type) (r:cr a) (vm:vmap a) (v:varlist) (i:index) : Lemma
   (ivl_aux r vm i v == r.cm_mult.mult (interp_var vm i) (interp_vl r vm v))
@@ -1309,6 +1353,141 @@ let spolynomial_simplify_ok #a r vm p =
   canonical_sum_simplify_ok r vm (spolynomial_normalize r p);
   spolynomial_normalize_ok r vm p
 
+
+(**
+ * This is the type where we first reflect expressions,
+ * before eliminating additive inverses
+**)
+type polynomial a =
+  | Pvar   : index -> polynomial a
+  | Pconst : a -> polynomial a
+  | Pplus  : polynomial a -> polynomial a -> polynomial a
+  | Pmult  : polynomial a -> polynomial a -> polynomial a
+  | Popp   : polynomial a -> polynomial a
+
+(** Canonize a reflected expression *)
+val polynomial_normalize: #a:eqtype -> cr a -> polynomial a -> canonical_sum a
+
+[@canon_attr]
+let rec polynomial_normalize #a r p =
+  match p with
+  | Pvar i -> Cons_varlist (Cons_var i Nil_var) Nil_monom
+  | Pconst c -> Cons_monom c Nil_var Nil_monom
+  | Pplus l q ->
+    canonical_sum_merge r (polynomial_normalize r l) (polynomial_normalize r q)
+  | Pmult l q ->
+    canonical_sum_prod r (polynomial_normalize r l) (polynomial_normalize r q)
+  | Popp p ->
+    canonical_sum_scalar3 r (r.opp r.cm_mult.unit) Nil_var (polynomial_normalize r p)
+
+val polynomial_simplify: #a:eqtype -> cr a -> polynomial a -> canonical_sum a
+
+[@canon_attr]
+let polynomial_simplify #a r p =
+  canonical_sum_simplify r
+    (polynomial_normalize r p)
+
+(** Translate to a representation without additive inverses *)
+val spolynomial_of: #a:eqtype -> cr a -> polynomial a -> spolynomial a
+
+[@canon_attr]
+let rec spolynomial_of #a r p =
+  match p with
+  | Pvar i -> SPvar i
+  | Pconst c -> SPconst c
+  | Pplus l q -> SPplus (spolynomial_of r l) (spolynomial_of r q)
+  | Pmult l q -> SPmult (spolynomial_of r l) (spolynomial_of r q)
+  | Popp p -> SPmult (SPconst (r.opp r.cm_mult.unit)) (spolynomial_of r p)
+
+(** Interpretation of a polynomial *)
+[@canon_attr]
+let rec interp_p (#a:Type) (r:cr a) (vm:vmap a) (p:polynomial a) : a =
+  let aplus = r.cm_add.mult in
+  let amult = r.cm_mult.mult in
+  match p with
+  | Pconst c -> c
+  | Pvar i -> interp_var vm i
+  | Pplus p1 p2 -> aplus (interp_p r vm p1) (interp_p r vm p2)
+  | Pmult p1 p2 -> amult (interp_p r vm p1) (interp_p r vm p2)
+  | Popp p -> r.opp (interp_p r vm p)
+
+
+val spolynomial_of_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:polynomial a ->
+  Lemma (interp_p r vm p == interp_sp r vm (spolynomial_of r p))
+let rec spolynomial_of_ok #a r vm p =
+  match p with
+  | Pconst c -> ()
+  | Pvar i -> ()
+  | Pplus p1 p2 ->
+    spolynomial_of_ok r vm p1;
+    spolynomial_of_ok r vm p2
+  | Pmult p1 p2 ->
+    spolynomial_of_ok r vm p1;
+    spolynomial_of_ok r vm p2
+  | Popp p ->
+    spolynomial_of_ok r vm p;
+    let x = interp_sp r vm (spolynomial_of r p) in
+    let y = r.cm_mult.mult (r.opp r.cm_mult.unit) x in
+    add_mult_opp r x;
+    opp_unique r x y
+
+
+val polynomial_normalize_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:polynomial a ->
+  Lemma (interp_cs r vm (polynomial_normalize r p) ==
+         interp_cs r vm (spolynomial_normalize r (spolynomial_of r p)))
+let rec polynomial_normalize_ok #a r vm p =
+  match p with
+  | Pvar _ -> ()
+  | Pconst _ -> ()
+  | Pplus l q ->
+    canonical_sum_merge_ok r vm
+      (polynomial_normalize r l)
+      (polynomial_normalize r q);
+    canonical_sum_merge_ok r vm
+      (spolynomial_normalize r (spolynomial_of r l))
+      (spolynomial_normalize r (spolynomial_of r q));
+    polynomial_normalize_ok r vm l;
+    polynomial_normalize_ok r vm q
+
+  | Pmult l q ->
+    canonical_sum_prod_ok r vm
+      (polynomial_normalize r l)
+      (polynomial_normalize r q);
+    canonical_sum_prod_ok r vm
+      (spolynomial_normalize r (spolynomial_of r l))
+      (spolynomial_normalize r (spolynomial_of r q));
+    polynomial_normalize_ok r vm l;
+    polynomial_normalize_ok r vm q
+
+  | Popp p1 ->
+    let l = SPconst (r.opp r.cm_mult.unit) in
+    polynomial_normalize_ok r vm p1;
+    canonical_sum_prod_ok r vm
+      (spolynomial_normalize r l)
+      (polynomial_normalize r p1);
+    canonical_sum_prod_ok r vm
+      (spolynomial_normalize r l)
+      (spolynomial_normalize r (spolynomial_of r p1))
+
+
+val polynomial_simplify_ok: #a:eqtype -> r:cr a -> vm:vmap a -> p:polynomial a ->
+  Lemma (interp_cs r vm (polynomial_simplify r p) == interp_p r vm p)
+let polynomial_simplify_ok #a r vm p =
+  calc (==) {
+    interp_cs r vm (polynomial_simplify r p);
+    == { }
+    interp_cs r vm (canonical_sum_simplify r (polynomial_normalize r p));
+    == { canonical_sum_simplify_ok r vm (polynomial_normalize r p) }
+    interp_cs r vm (polynomial_normalize r p);
+    == { polynomial_normalize_ok r vm p }
+    interp_cs r vm (spolynomial_normalize r (spolynomial_of r p));
+    == { spolynomial_normalize_ok r vm (spolynomial_of r p) }
+    interp_sp r vm (spolynomial_of r p);
+    == { spolynomial_of_ok r vm p }
+    interp_p r vm p;
+  }
+
+
 ///
 /// Tactic definition
 ///
@@ -1328,16 +1507,16 @@ let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases x
 let find = find_aux 0
 
 let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
-  (vm:vmap a) : Tac (spolynomial a * list term * vmap a) =
+  (vm:vmap a) : Tac (polynomial a * list term * vmap a) =
   match find t ts with
-  | Some v -> (SPvar v, ts, vm)
+  | Some v -> (Pvar v, ts, vm)
   | None ->
     let vfresh = length ts in
     let z = unquotea t in
-    (SPvar vfresh, ts @ [t], update vfresh z vm)
+    (Pvar vfresh, ts @ [t], update vfresh z vm)
 
-(** This expects that add, mult, and t have already been normalized *)
-let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add mult t: term) : Tac (spolynomial a * list term * vmap a) =
+(** This expects that add, opp, mone mult, and t have already been normalized *)
+let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
@@ -1345,15 +1524,22 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
     //ddump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
-    let binop (op:spolynomial a -> spolynomial a -> spolynomial a) : Tac (spolynomial a * list term * vmap a) =
-      let (e1, ts, vm) = reification_aux unquotea ts vm add mult t1 in
-      let (e2, ts, vm) = reification_aux unquotea ts vm add mult t2 in
+    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+      let (e1, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
+      let (e2, ts, vm) = reification_aux unquotea ts vm add opp mone mult t2 in
       (op e1 e2, ts, vm)
       in
-    if term_eq (pack (Tv_FVar fv)) add then binop SPplus else
-    if term_eq (pack (Tv_FVar fv)) mult then binop SPmult else
+    if term_eq (pack (Tv_FVar fv)) add then binop Pplus else
+    if term_eq (pack (Tv_FVar fv)) mult then binop Pmult else
     make_fvar t unquotea ts vm
-  | Tv_Const _, [] -> SPconst (unquotea t), ts, vm
+  | Tv_FVar fv, [(t1, _)] ->
+    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+      let (e, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
+      (op e, ts, vm)
+      in
+    if term_eq (pack (Tv_FVar fv)) opp then monop Popp else
+    make_fvar t unquotea ts vm
+  | Tv_Const _, [] -> Pconst (unquotea t), ts, vm
   | _, _ -> make_fvar t unquotea ts vm
 
 (**
@@ -1373,6 +1559,7 @@ let steps =
       `%FStar.Algebra.CommMonoid.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.__proj__CM__item__unit;
       `%__proj__CR__item__cm_add;
+      `%__proj__CR__item__opp;
       `%__proj__CR__item__cm_mult;
       `%FStar.List.Tot.Base.assoc;
       `%FStar.Pervasives.Native.fst;
@@ -1387,47 +1574,52 @@ let steps =
 let canon_norm () : Tac unit = norm steps
 
 let reification (#a:Type)
-  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd tmult:term) (munit:a) (ts:list term) : Tac (list (spolynomial a) * vmap a) =
+  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) * vmap a) =
   // Be careful not to normalize operations too much
-  // E.g. we don't want to turn ( +% ) into (a + b ) % prime
+  // E.g. we don't want to turn ( +% ) into (a + b) % prime
   // or we won't be able to spot ring operations
   let add  = tadd in
+  let opp  = topp in
+  let mone = tmone in
   let mult = tmult in
   let ts = Tactics.Util.map (norm_term steps) ts in
   //ddump ("add = " ^ term_to_string add ^ "\nmult = " ^ term_to_string mult);
   let (es, _, vm) =
     Tactics.Util.fold_left
       (fun (es, vs, vm) t ->
-        let (e, vs, vm) = reification_aux unquotea vs vm add mult t
+        let (e, vs, vm) = reification_aux unquotea vs vm add opp mone mult t
         in (e::es, vs, vm))
       ([],[], ([], munit)) ts
   in (List.rev es, vm)
 
-let rec quote_spolynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:spolynomial a) : Tac term =
+(* The implicit argument in the application of `Pconst` is crucial *)
+let rec quote_polynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:polynomial a) : Tac term =
   match e with
-  | SPconst c -> mk_app (`SPconst) [(ta, Q_Implicit); (quotea c, Q_Explicit)]
-  | SPvar x -> mk_e_app (`SPvar) [pack (Tv_Const (C_Int x))]
-  | SPplus e1 e2 ->
-    mk_e_app (`SPplus) [quote_spolynomial ta quotea e1; quote_spolynomial ta quotea e2]
-  | SPmult e1 e2 ->
-    mk_e_app (`SPmult) [quote_spolynomial ta quotea e1; quote_spolynomial ta quotea e2]
+  | Pconst c -> mk_app (`Pconst) [(ta, Q_Implicit); (quotea c, Q_Explicit)]
+  | Pvar x -> mk_e_app (`Pvar) [pack (Tv_Const (C_Int x))]
+  | Pplus e1 e2 ->
+    mk_e_app (`Pplus) [quote_polynomial ta quotea e1; quote_polynomial ta quotea e2]
+  | Pmult e1 e2 ->
+    mk_e_app (`Pmult) [quote_polynomial ta quotea e1; quote_polynomial ta quotea e2]
+  | Popp e -> mk_e_app (`Popp) [quote_polynomial ta quotea e]
 
 (* Constructs the 3 main goals of the tactic *)
-let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:spolynomial a) (a1 a2:a)
+let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:polynomial a) (a1 a2:a)
     (_ : squash (
-      interp_cs r vm (spolynomial_simplify r e1) ==
-      interp_cs r vm (spolynomial_simplify r e2)))
-    (_ : squash (a1 == interp_sp #a r vm e1))
-    (_ : squash (a2 == interp_sp #a r vm e2)) :
+      interp_cs r vm (polynomial_simplify r e1) ==
+      interp_cs r vm (polynomial_simplify r e2)))
+    (_ : squash (a1 == interp_p r vm e1))
+    (_ : squash (a2 == interp_p r vm e2)) :
     squash (a1 == a2)
   =
-  spolynomial_simplify_ok r vm e1;
-  spolynomial_simplify_ok r vm e2
+  polynomial_simplify_ok r vm e1;
+  polynomial_simplify_ok r vm e2
 
 [@plugin]
 let canon_semiring_aux
     (a: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
-    (tr tadd tmult: term) (munit: a)
+    (tr tadd topp tmone tmult: term)
+    (munit: a)
   : Tac unit
 =
   focus (fun () ->
@@ -1439,24 +1631,24 @@ let canon_semiring_aux
       //ddump ("t1 = " ^ term_to_string t1 ^ "\nt2 = " ^ term_to_string t2);
       if term_eq t ta then
       begin
-      match reification unquotea quotea tadd tmult munit [t1; t2] with
+      match reification unquotea quotea tadd topp tmone tmult munit [t1; t2] with
       | ([e1; e2], vm) ->
-        (*
+(*
         ddump (term_to_string t1);
         ddump (term_to_string t2);
         let r : cr a = unquote tr in
-        ddump ("vm = " ^ term_to_string (quote vm));
-        ddump ("before = " ^ term_to_string (norm_term [delta; primops]
-            (quote (interp_sp r vm e1 == interp_sp r vm e2))));
-        ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
-            (quote (
-              interp_cs r vm (spolynomial_simplify r e1) ==
-              interp_cs r vm (spolynomial_simplify r e2)))));
-        *)
+        ddump ("vm = " ^ term_to_string (quote vm) ^ "\n" ^
+               "before = " ^ term_to_string (norm_term steps
+                    (quote (interp_p r vm e1 == interp_p r vm e2))));
+        dump ("expected after = " ^ term_to_string (norm_term steps
+          (quote (
+              interp_cs r vm (polynomial_simplify r e1) ==
+              interp_cs r vm (polynomial_simplify r e2)))));
+*)
         let tvm = quote_vm ta quotea vm in
-        let te1 = quote_spolynomial ta quotea e1 in
+        let te1 = quote_polynomial ta quotea e1 in
         //ddump ("te1 = " ^ term_to_string te1);
-        let te2 = quote_spolynomial ta quotea e2 in
+        let te2 = quote_polynomial ta quotea e2 in
         //ddump ("te2 = " ^ term_to_string te2);
         mapply (`(semiring_reflect
           #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
@@ -1482,6 +1674,8 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
   canon_semiring_aux a
     (quote a) (unquote #a) (fun (x:a) -> quote x) (quote r)
     (norm_term steps (quote r.cm_add.mult))
+    (norm_term steps (quote r.opp))
+    (norm_term steps (quote (r.opp r.cm_mult.unit)))
     (norm_term steps (quote r.cm_mult.mult))
     r.cm_add.unit
 
@@ -1489,7 +1683,7 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 
 [@canon_attr]
 let int_cr : cr int =
-  CR int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x -> ())
+  CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 
 let int_semiring () : Tac unit = canon_semiring int_cr
 
@@ -1497,4 +1691,4 @@ let int_semiring () : Tac unit = canon_semiring int_cr
 
 let test (a:int) =
   let open FStar.Mul in
-  assert (a + a == 2 * a) by (int_semiring ())
+  assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())

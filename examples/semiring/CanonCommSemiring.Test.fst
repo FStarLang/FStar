@@ -159,8 +159,11 @@ let mul_add_distr a b c =
 val mul_zero_l: mult_zero_l_lemma ring ring_add_cm ring_mul_cm
 let mul_zero_l a = assert_norm (0 % prime == 0)
 
+val add_opp (a:ring) : Lemma (a +% ~%a == zero)
+let add_opp a = ()
+
 [@canon_attr]
-let ring_cr : cr ring = CR ring_add_cm ring_mul_cm mul_add_distr mul_zero_l
+let ring_cr : cr ring = CR ring_add_cm ring_mul_cm ( ~% ) add_opp mul_add_distr mul_zero_l
 
 let poly_semiring () : Tac unit = canon_semiring ring_cr; trefl()
 
@@ -174,11 +177,17 @@ let test_poly2 (a b c:ring) =
   assert (c *% (a +% b) == (a +% b) *% c) by (poly_semiring ())
 
 let test_poly2b (a b c d:ring) =
-  assert ((a +% b) *% (c +% d) == a *% c +% b *% c +% a *% d +% b *% d) by (poly_semiring ())
+  assert ((a +% b) *% (c +% d) == a *% c +% b *% c +% a *% d +% b *% d) 
+  by (poly_semiring ())
 
 let test_poly3 (a b c:ring) =
-  assert (2 *% (a +% b) *% c == 2 *% b *% c +% 2 *% a *% c)
-  by (poly_semiring ())
+  assert (2 *% (a +% b) *% c == 2 *% b *% c +% 2 *% a *% c) by (poly_semiring ())
+
+let test_poly4 (a b:ring) =
+  assert (~%(a +% a +% b) +% b == ~%a +% ~% a) by (poly_semiring ())
+
+let test_poly5 (a:ring) =
+  assert ((a +% 1) *% (a +% ~%1) == a *% a +% ~%1) by (poly_semiring ())
 
 let poly_update_repeat_blocks_multi_lemma2_simplify (a b c w r d:ring) :
   Lemma
