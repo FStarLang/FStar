@@ -771,13 +771,36 @@ type mem = {
   ctr: nat;
   heap: heap;
   locks: lock_store;
-  properties: squash (
-    (forall i. i >= ctr ==> heap i == None)
-  )
 }
 
 let _ : squash (inversion mem) = allow_inversion mem
 
-let locks_invariant (e:S.set lock_addr) (m:mem) : hprop = lock_store_invariant e m.locks
+let heap_ctr_valid (m:mem) : heap -> prop =
+  fun _ ->
+  forall (i:nat). i >= m.ctr ==> m.heap i == None
+
+let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
+  refine (lock_store_invariant e m.locks) (heap_ctr_valid m)
 
 let heap_of_mem (x:mem) : heap = x.heap
+
+let mem_of_heap (h:heap) : mem = {
+  ctr = 0;
+  heap = h;
+  locks = []
+}
+
+let core_mem m = mem_of_heap (heap_of_mem m)
+
+let disjoint_mem m0 m1 =
+  m0.ctr == m1.ctr /\
+  disjoint m0.heap m1.heap /\
+  m0.locks == m1.locks
+
+let join_mem m0 m1 = {
+  ctr = m0.ctr;
+  heap = join m0.heap m1.heap;
+  locks = m0.locks
+}
+
+let interp_mem hp m = interp hp (heap_of_mem m)
