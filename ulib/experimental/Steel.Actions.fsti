@@ -24,7 +24,7 @@ let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   hmem fp -> (x:a & hmem (fp' x))
 
-let fp_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
+let frameable_heap_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
 
 let ac_reasoning_for_m_frame_preserving
   (p q r:hprop) (m:mem)
@@ -50,7 +50,7 @@ let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (
      let (| x, m1 |) = f m0 in
      interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
      mem_evolves m0 m1 /\
-     (forall (f_frame:fp_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)))
+     (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
 let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f }
