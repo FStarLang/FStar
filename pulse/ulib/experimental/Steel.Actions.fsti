@@ -19,18 +19,14 @@ open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
 
-let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
-  hmem fp -> (x:a & hmem (fp' x))
-
-let frameable_heap_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
+  hmem_with_inv fp -> (x:a & hmem_with_inv (fp' x))
 
 let ac_reasoning_for_m_frame_preserving
   (p q r:hprop) (m:mem)
 : Lemma
-  (requires interp ((p `star` q) `star` r) (heap_of_mem m))
-  (ensures interp (p `star` r) (heap_of_mem m))
+  (requires interp ((p `star` q) `star` r) m)
+  (ensures interp (p `star` r) m)
 = calc (equiv) {
     (p `star` q) `star` r;
        (equiv) { star_commutative p q;
@@ -39,16 +35,16 @@ let ac_reasoning_for_m_frame_preserving
        (equiv) { star_associative q p r }
     q `star` (p `star` r);
   };
-  assert (interp (q `star` (p `star` r)) (heap_of_mem m));
-  affine_star q (p `star` r) (heap_of_mem m)
+  assert (interp (q `star` (p `star` r)) m);
+  affine_star q (p `star` r) m
 
 val mem_evolves : FStar.Preorder.preorder mem
 
 let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
-  forall (frame:hprop) (m0:hmem (fp `star` frame)).
+  forall (frame:hprop) (m0:hmem_with_inv (fp `star` frame)).
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
      let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+     interp ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
      mem_evolves m0 m1 /\
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
@@ -59,7 +55,7 @@ let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
 // Arrays
 ////////////////////////////////////////////////////////////////////////////////
 
-val as_seq (#t:_) (a:array_ref t) (m:hheap (array a))
+val as_seq (#t:_) (a:array_ref t) (m:hmem (array a))
   : (Seq.lseq t (U32.v (length a)))
 
 /// as_seq respect pts_to_array
@@ -68,7 +64,7 @@ val as_seq_lemma
   (a:array_ref t)
   (i:U32.t{U32.v i < U32.v (length a)})
   (p:permission{allows_read p})
-  (m:hheap (array_perm a p))
+  (m:hmem (array_perm a p))
   : Lemma (interp (array a) m /\
            interp (pts_to_array a p (as_seq a m)) m)
 
@@ -192,13 +188,13 @@ val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ ->
 // References
 ///////////////////////////////////////////////////////////////////////////////
 
-val sel_ref (#t: Type0) (r: reference t) (h: hheap (ref r)) : t
+val sel_ref (#t: Type0) (r: reference t) (h: hmem (ref r)) : t
 
 val sel_ref_lemma
   (t: Type0)
   (p: permission{allows_read p})
   (r: reference t)
-  (m: hheap (ref_perm r p))
+  (m: hmem (ref_perm r p))
   : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
 
 val get_ref
@@ -272,16 +268,16 @@ val new_lock (p:hprop)
 
 val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
 
-let pure (p:prop) : hprop = refine emp (fun _ -> p)
+// let pure (p:prop) : hprop = refine emp (fun _ -> p)
 
-val maybe_acquire
-  (#p: hprop)
-  (l:lock p)
-  (m:hmem emp { lock_ok l m } )
-  : (b:bool & m:hmem (h_or (pure (b == false)) p))
+// val maybe_acquire
+//   (#p: hprop)
+//   (l:lock p)
+//   (m:hmem emp { lock_ok l m } )
+//   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
-val release
-  (#p: hprop)
-  (l:lock p)
-  (m:hmem p { lock_ok l m } )
-  : (b:bool & hmem emp)
+// val release
+//   (#p: hprop)
+//   (l:lock p)
+//   (m:hmem p { lock_ok l m } )
+//   : (b:bool & hmem emp)

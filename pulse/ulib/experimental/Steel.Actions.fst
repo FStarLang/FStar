@@ -24,6 +24,13 @@ friend Steel.Memory
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
+type hheap (fp:hprop) = h:heap{interp_heap fp h}
+
+let depends_only_on_without_affinity (q:heap -> prop) (fp:hprop) =
+  (forall (h0:hheap fp) (h1:heap{disjoint_heap h0 h1}). q h0 <==> q (join_heap h0 h1))
+
+let frameable_heap_prop (fp:hprop) = q:(heap -> prop){q `depends_only_on_without_affinity` fp}
+
 let hprop_of_lock_state (l:lock_state) : hprop =
   match l with
   | Available p -> p
@@ -66,9 +73,9 @@ let pre_action (fp:hprop) (a:Type) (fp':a -> hprop) =
 
 let is_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_action fp a fp') =
   forall (frame:hprop) (h0:heap).
-    interp (fp `star` frame) h0 ==>
+    interp_heap (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1 /\
+     interp_heap (fp' x `star` frame) h1 /\
      (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
 
 let action (fp:hprop) (a:Type) (fp':a -> hprop) =
@@ -80,32 +87,32 @@ let is_frame_preserving_intro
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
   (preserves_framing_intro:
     (frame: hprop) -> (h0: heap) ->
-    Lemma (requires (interp (fp `star` frame) h0)) (ensures (
-      let (| x, h1 |) = f h0 in  interp (fp' x `star` frame) h1
+    Lemma (requires (interp_heap (fp `star` frame) h0)) (ensures (
+      let (| x, h1 |) = f h0 in  interp_heap (fp' x `star` frame) h1
     ))
   )
   (preserves_frame_prop_intro:
     (frame: hprop) -> (h0: heap) ->
     (f_frame: frameable_heap_prop frame) ->
-    Lemma (requires (interp (fp `star` frame) h0)) (ensures (
+    Lemma (requires (interp_heap (fp `star` frame) h0)) (ensures (
       let (| x, h1 |) = f h0 in f_frame h0 <==> f_frame h1
     ))
   )
   : Lemma (is_frame_preserving f)
   =
-  let aux (frame: hprop) (h0: heap) : Lemma (interp (fp `star` frame) h0 ==>
+  let aux (frame: hprop) (h0: heap) : Lemma (interp_heap (fp `star` frame) h0 ==>
      (let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1 /\
+     interp_heap (fp' x `star` frame) h1 /\
      (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
   ) =
-    let aux (pf: (interp (fp `star` frame) h0)) : Lemma (
-      interp (fp `star` frame) h0 /\ (
-      let h0 : (h0:heap{interp fp h0}) = affine_star fp frame h0; h0 in
+    let aux (pf: (interp_heap (fp `star` frame) h0)) : Lemma (
+      interp_heap (fp `star` frame) h0 /\ (
+      let h0 : (h0:heap{interp_heap fp h0}) = affine_star_heap fp frame h0; h0 in
       let (| x, h1 |) = f h0 in
-      interp (fp' x `star` frame) h1 /\
+      interp_heap (fp' x `star` frame) h1 /\
       (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
     ) =
-      affine_star fp frame h0;
+      affine_star_heap fp frame h0;
       let (| x, h1 |) = f h0 in
       let aux (f_frame:frameable_heap_prop frame)
         : Lemma (f_frame h0 <==> f_frame h1) =
@@ -123,9 +130,9 @@ let is_frame_preserving_elim
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
   (frame: hprop) (h0: heap)
   (f_frame:frameable_heap_prop frame)
-  : Lemma (requires (is_frame_preserving f /\ interp (fp `star` frame) h0)) (ensures (
+  : Lemma (requires (is_frame_preserving f /\ interp_heap (fp `star` frame) h0)) (ensures (
      let (| x, h1 |) = f h0 in
-     interp (fp' x `star` frame) h1 /\
+     interp_heap (fp' x `star` frame) h1 /\
      f_frame h0 <==> f_frame h1
   ))
   = ()
@@ -133,10 +140,10 @@ let is_frame_preserving_elim
 let depends_only_on_without_affinity_elim
   (q:heap -> prop) (fp:hprop)
   (h0:hheap fp)
-  (h1:heap{disjoint h0 h1})
+  (h1:heap{disjoint_heap h0 h1})
   : Lemma
     (requires (depends_only_on_without_affinity q fp))
-    (ensures (q h0 <==> q (join h0 h1)))
+    (ensures (q h0 <==> q (join_heap h0 h1)))
   = ()
 
 #push-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
@@ -145,7 +152,7 @@ let pre_action_to_action
   (action_preserves_frame_disjointness_addr:
     (frame: hprop) ->
     (h0:hheap fp) ->
-    (h1:hheap frame{disjoint h0 h1}) ->
+    (h1:hheap frame{disjoint_heap h0 h1}) ->
     (addr: addr) ->
     Lemma (
       let (|_, h0'|) = f h0 in
@@ -155,25 +162,25 @@ let pre_action_to_action
   (action_does_not_depend_on_framing_addr:
     (frame: hprop) ->
     (h0:hheap fp) ->
-    (h1:hheap frame{disjoint h0 h1}) ->
+    (h1:hheap frame{disjoint_heap h0 h1}) ->
     (addr: addr) ->
     Lemma (requires (
       let (|_, h0'|) = f h0 in
-      disjoint h0' h1
+      disjoint_heap h0' h1
     ))
     (ensures (
       let (|_, h0'|) = f h0 in
-      let (|_, h'|) = f (join h0 h1) in
-      h' addr == join h0' h1 addr
+      let (|_, h'|) = f (join_heap h0 h1) in
+      h' addr == join_heap h0' h1 addr
     ))
   )
   (action_result_does_not_depend_on_framing:
     (frame: hprop) ->
     (h0:hheap fp) ->
-    (h1:hheap frame{disjoint h0 h1}) ->
+    (h1:hheap frame{disjoint_heap h0 h1}) ->
     Lemma (
       let (|x_alone, h0'|) = f h0 in
-      let (|x_joint, h'|) = f (join h0 h1) in
+      let (|x_joint, h'|) = f (join_heap h0 h1) in
       x_alone == x_joint
     )
   )
@@ -182,56 +189,56 @@ let pre_action_to_action
   is_frame_preserving_intro f (fun frame h ->
     let (| x, h' |) = f h in
     let pf :squash (exists (h0:heap). (exists (h1:heap).
-      disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+      disjoint_heap h0 h1 /\ h == join_heap h0 h1 /\ interp_heap fp h0 /\ interp_heap frame h1
     )) =
-      assert(interp (fp `star` frame) h)
+      assert(interp_heap (fp `star` frame) h)
     in
     Classical.exists_elim
-      (interp (fp' x `star` frame) h') pf
+      (interp_heap (fp' x `star` frame) h') pf
       (fun h0 ->
         let pf: squash (exists (h1: hheap frame).
-          disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+          disjoint_heap h0 h1 /\ h == join_heap h0 h1 /\ interp_heap fp h0 /\ interp_heap frame h1
         ) =
           ()
         in
         Classical.exists_elim
-          (interp (fp' x `star` frame) h') pf
+          (interp_heap (fp' x `star` frame) h') pf
           (fun h1 ->
             let h0 : hheap fp = h0 in
-            let h1 : (h1:hheap frame{disjoint h0 h1 /\ h == join h0 h1}) = h1 in
+            let h1 : (h1:hheap frame{disjoint_heap h0 h1 /\ h == join_heap h0 h1}) = h1 in
             let (|x_alone, h0'|) = f h0 in
-            let (|x_joint, h'|) = f (join h0 h1) in
+            let (|x_joint, h'|) = f (join_heap h0 h1) in
             let aux (addr: addr) : Lemma (disjoint_addr h0' h1 addr) =
               action_preserves_frame_disjointness_addr frame h0 h1 addr
             in
             Classical.forall_intro aux;
-            let aux (addr: addr) : Lemma (h' addr == join h0' h1 addr) =
+            let aux (addr: addr) : Lemma (h' addr == join_heap h0' h1 addr) =
               action_does_not_depend_on_framing_addr frame h0 h1 addr
             in
             Classical.forall_intro aux;
-            mem_equiv_eq h' (join h0' h1);
-            assert(interp (fp' x_alone) h0');
+            mem_equiv_eq h' (join_heap h0' h1);
+            assert(interp_heap (fp' x_alone) h0');
             action_result_does_not_depend_on_framing frame h0 h1;
             assert(x_alone == x_joint);
-            assert(interp frame h1);
-            assert(h' == join h0' h1);
-            assert(disjoint h0' h1);
-            intro_star (fp' x) (frame) h0' h1;
-            assert(interp (fp' x `star` frame) h')
+            assert(interp_heap frame h1);
+            assert(h' == join_heap h0' h1);
+            assert(disjoint_heap h0' h1);
+            intro_star_heap (fp' x) (frame) h0' h1;
+            assert(interp_heap (fp' x `star` frame) h')
         )
     )
   ) (fun frame h f_frame ->
     let (| x, h' |) = f h in
     let pf :squash (exists (h0:heap). (exists (h1:heap).
-      disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+      disjoint_heap h0 h1 /\ h == join_heap h0 h1 /\ interp_heap fp h0 /\ interp_heap frame h1
     )) =
-      assert(interp (fp `star` frame) h)
+      assert(interp_heap (fp `star` frame) h)
     in
     Classical.exists_elim
       (f_frame h <==> f_frame h') pf
       (fun h0 ->
         let pf: squash (exists (h1: hheap frame).
-          disjoint h0 h1 /\ h == join h0 h1 /\ interp fp h0 /\ interp frame h1
+          disjoint_heap h0 h1 /\ h == join_heap h0 h1 /\ interp_heap fp h0 /\ interp_heap frame h1
         ) =
           ()
         in
@@ -239,24 +246,24 @@ let pre_action_to_action
           (f_frame h <==> f_frame h') pf
           (fun h1 ->
            let h0 : hheap fp = h0 in
-            let h1 : (h1:hheap frame{disjoint h0 h1 /\ h == join h0 h1}) = h1 in
+            let h1 : (h1:hheap frame{disjoint_heap h0 h1 /\ h == join_heap h0 h1}) = h1 in
             let (|x_alone, h0'|) = f h0 in
-            let (|x_joint, h'|) = f (join h0 h1) in
+            let (|x_joint, h'|) = f (join_heap h0 h1) in
             let aux (addr: addr) : Lemma (disjoint_addr h0' h1 addr) =
               action_preserves_frame_disjointness_addr frame h0 h1 addr
             in
             Classical.forall_intro aux;
-            let aux (addr: addr) : Lemma (h' addr == join h0' h1 addr) =
+            let aux (addr: addr) : Lemma (h' addr == join_heap h0' h1 addr) =
               action_does_not_depend_on_framing_addr frame h0 h1 addr
             in
             Classical.forall_intro aux;
-            mem_equiv_eq h' (join h0' h1);
+            mem_equiv_eq h' (join_heap h0' h1);
               assert(f_frame `depends_only_on_without_affinity` frame);
               depends_only_on_without_affinity_elim f_frame frame h1 h0;
-              assert(f_frame h1 <==> f_frame (join h1 h0));
-              assert(join h1 h0 == h);
+              assert(f_frame h1 <==> f_frame (join_heap h1 h0));
+              assert(join_heap h1 h0 == h);
               depends_only_on_without_affinity_elim f_frame frame h1 h0';
-              assert(join h1 h0' == h');
+              assert(join_heap h1 h0' == h');
             assert(f_frame h <==> f_frame h')
           )
        )
@@ -266,9 +273,9 @@ let pre_action_to_action
 
 let mem_invariant_elim (hp:hprop) (m:mem)
 : Lemma
-  (requires interp (hp `star` locks_invariant m) m.heap)
+  (requires interp_heap (hp `star` locks_invariant m) m.heap)
   (ensures
-    interp (hp `star` lock_store_invariant m.locks) m.heap /\
+    interp_heap (hp `star` lock_store_invariant m.locks) m.heap /\
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
 = refine_star (lock_store_invariant m.locks) hp (heap_ctr_valid m);
   refine_equiv (lock_store_invariant m.locks `star` hp) (heap_ctr_valid m) m.heap;
@@ -277,9 +284,9 @@ let mem_invariant_elim (hp:hprop) (m:mem)
 let mem_invariant_intro (hp:hprop) (m:mem)
 : Lemma
   (requires
-    interp (hp `star` lock_store_invariant m.locks) m.heap /\
+    interp_heap (hp `star` lock_store_invariant m.locks) m.heap /\
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
-  (ensures interp (hp `star` locks_invariant m) m.heap)
+  (ensures interp_heap (hp `star` locks_invariant m) m.heap)
 = star_commutative hp (lock_store_invariant m.locks);
   refine_equiv (lock_store_invariant m.locks `star` hp) (heap_ctr_valid m) m.heap;
   refine_star (lock_store_invariant m.locks) hp (heap_ctr_valid m);
@@ -301,16 +308,16 @@ let non_alloc_action_to_non_locking_pre_m_action
       = non_alloc m.heap i
     in
     let does_not_perturb_locks (lock_p: hprop) (h:hheap (fp `star` lock_p))
-      : Lemma (let (|_, h'|) = f h in interp lock_p h') [SMTPat ()]
+      : Lemma (let (|_, h'|) = f h in interp_heap lock_p h') [SMTPat ()]
     =
       assert(is_frame_preserving f);
-      assert(interp (fp `star` lock_p) h);
+      assert(interp_heap (fp `star` lock_p) h);
       let (| x, h' |) = f h in
-      assert(interp (fp' x `star` lock_p) h');
-      affine_star (fp' x) lock_p h';
-      assert(interp lock_p h')
+      assert(interp_heap (fp' x `star` lock_p) h');
+      affine_star_heap (fp' x) lock_p h';
+      assert(interp_heap lock_p h')
     in
-    assert (interp (lock_store_invariant m.locks) h');
+    assert (interp_heap (lock_store_invariant m.locks) h');
     let m':mem = {m with heap = h'} in
     mem_invariant_intro (fp' x) m';
     (| x, m' |)
@@ -335,16 +342,16 @@ let alloc_action_to_non_locking_pre_m_action
     in
     Classical.forall_intro (Classical.move_requires aux);
     let does_not_perturb_locks (lock_p: hprop) (h:hheap (fp `star` lock_p))
-      : Lemma (let (|_, h'|) = f h in interp lock_p h') [SMTPat ()]
+      : Lemma (let (|_, h'|) = f h in interp_heap lock_p h') [SMTPat ()]
     =
       assert(is_frame_preserving f);
-      assert(interp (fp `star` lock_p) h);
+      assert(interp_heap (fp `star` lock_p) h);
       let (| x, h' |) = f h in
-      assert(interp (fp' x `star` lock_p) h');
-      affine_star (fp' x) lock_p h';
-      assert(interp lock_p h')
+      assert(interp_heap (fp' x `star` lock_p) h');
+      affine_star_heap (fp' x) lock_p h';
+      assert(interp_heap lock_p h')
     in
-    assert(interp (lock_store_invariant m.locks) h');
+    assert(interp_heap (lock_store_invariant m.locks) h');
     let m':mem = {m with heap = h'; ctr = m.ctr + 1} in
     mem_invariant_intro (fp' x) m';
     (| x, m' |)
@@ -357,13 +364,13 @@ let mprop_to_hprop0 (hp:hprop) (mp:mprop hp) : heap -> prop =
 #push-options "--warn_error -271"
 let mprop_to_hprop_depends_only_on (hp:hprop) (mp:mprop hp)
 : Lemma (mprop_to_hprop0 hp mp `depends_only_on_without_affinity` hp)
-= let aux (h0:hheap hp) (h1:heap{disjoint h0 h1})
-    : Lemma ((mprop_to_hprop0 hp mp) h0 <==> (mprop_to_hprop0 hp mp) (join h0 h1))
+= let aux (h0:hheap hp) (h1:heap{disjoint_heap h0 h1})
+    : Lemma ((mprop_to_hprop0 hp mp) h0 <==> (mprop_to_hprop0 hp mp) (join_heap h0 h1))
             [SMTPat ()]
-    = assert (join_mem (mem_of_heap h0) (mem_of_heap h1) ==
-              mem_of_heap (join h0 h1));
-      assert (mp (mem_of_heap h0) <==> mp (join_mem (mem_of_heap h0) (mem_of_heap h1)));
-      assert (mp (mem_of_heap h0) <==> mp (mem_of_heap (join h0 h1)))
+    = assert (join (mem_of_heap h0) (mem_of_heap h1) ==
+              mem_of_heap (join_heap h0 h1));
+      assert (mp (mem_of_heap h0) <==> mp (join (mem_of_heap h0) (mem_of_heap h1)));
+      assert (mp (mem_of_heap h0) <==> mp (mem_of_heap (join_heap h0 h1)))
   in
   ()
 
@@ -397,24 +404,24 @@ let lift_fp_props_preservation_to_mprops (hp:hprop) (m0 m1:mem)
 let is_m_frame_and_preorder_preserving_intro_aux
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
   (preserves_framing_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) ->
+    (frame: hprop) -> (m0: hmem_with_inv (fp `star` frame)) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
-      interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+      interp ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
       mem_evolves m0 m1
     )
   )
   (frame_prop_preserves_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
+    (frame: hprop) -> (m0: hmem_with_inv (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
       f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)
     )
   )
-  (frame: hprop) (m0: hmem (fp `star` frame))
+  (frame: hprop) (m0: hmem_with_inv (fp `star` frame))
   : Lemma ((ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
-      interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+      interp ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
       mem_evolves m0 m1 /\
       (forall (f_frame:frameable_heap_prop frame). f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)) /\
       (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
@@ -438,15 +445,15 @@ let is_m_frame_and_preorder_preserving_intro_aux
 let is_m_frame_and_preorder_preserving_intro
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_m_action fp a fp')
   (preserves_framing_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) ->
+    (frame: hprop) -> (m0: hmem_with_inv (fp `star` frame)) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
-      interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1) /\
+      interp ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
       mem_evolves m0 m1
     )
   )
   (frame_prop_preserves_intro:
-    (frame: hprop) -> (m0: hmem (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
+    (frame: hprop) -> (m0: hmem_with_inv (fp `star` frame)) -> (f_frame: frameable_heap_prop frame) ->
     Lemma (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
       let (| x, m1 |) = f m0 in
       f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1)
@@ -475,20 +482,20 @@ let non_alloc_action_to_non_locking_m_action
   is_m_frame_and_preorder_preserving_intro f_m (fun frame m0 ->
     let (| x, m1 |) = f_m m0 in
 
-    assert (interp ((fp `star` frame) `star` locks_invariant m0) m0.heap);
+    assert (interp_heap ((fp `star` frame) `star` locks_invariant m0) m0.heap);
     mem_invariant_elim (fp `star` frame) m0;
-    assert (interp ((fp `star` frame) `star` lock_store_invariant m0.locks) m0.heap);
+    assert (interp_heap ((fp `star` frame) `star` lock_store_invariant m0.locks) m0.heap);
     star_associative fp frame (lock_store_invariant m0.locks);
-    assert (interp (fp `star` (frame `star` lock_store_invariant m0.locks)) m0.heap);
+    assert (interp_heap (fp `star` (frame `star` lock_store_invariant m0.locks)) m0.heap);
     is_frame_preserving_elim f (frame `star` (lock_store_invariant m0.locks)) m0.heap
       (trivial_fp_prop (frame `star` (lock_store_invariant m0.locks)));
-    assert (interp (fp' x `star` (frame `star` lock_store_invariant m0.locks)) m1.heap);
+    assert (interp_heap (fp' x `star` (frame `star` lock_store_invariant m0.locks)) m1.heap);
     assert(lock_store_invariant m0.locks == lock_store_invariant m1.locks);
-    assert (interp (fp' x `star` (frame `star` lock_store_invariant m1.locks)) m1.heap);
+    assert (interp_heap (fp' x `star` (frame `star` lock_store_invariant m1.locks)) m1.heap);
     star_associative (fp' x) frame (lock_store_invariant m1.locks);
-    assert (interp ((fp' x `star` frame) `star` lock_store_invariant m1.locks) m1.heap);
+    assert (interp_heap ((fp' x `star` frame) `star` lock_store_invariant m1.locks) m1.heap);
     mem_invariant_intro (fp' x `star` frame) m1;
-    assert (interp ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1));
+    assert (interp_heap ((fp' x `star` frame) `star` locks_invariant m1) (heap_of_mem m1));
 
     lock_store_unchanged_respects_preorder m0 m1;
     assert(mem_evolves m0 m1)
@@ -506,23 +513,18 @@ let non_alloc_action_to_non_locking_m_action
 /////////////////////////////////////////////////////////////////////////////
 
 #push-options "--max_fuel 3"
-let as_seq (#t:_) (a:array_ref t) (m:hheap (array a)) =
+let as_seq_heap (#t:_) (a:array_ref t) (m:hheap (array a)) : Seq.lseq t (U32.v (length a)) =
   let Array t' len' seq = select_addr m a.array_addr in
   let len = U32.v a.array_length in
   assert(U32.v a.array_offset + U32.v a.array_length <= len');
   Seq.init len (fun i -> let x =  select_index seq (U32.v a.array_offset + i) in x.value)
 #pop-options
 
+let as_seq #t a m = as_seq_heap #t a m.heap
+
 
 #push-options "--max_fuel 2"
-let as_seq_lemma
-  (#t:_)
-  (a:array_ref t)
-  (i:U32.t{U32.v i < U32.v (length a)})
-  (p:permission{allows_read p})
-  (m:hheap (array_perm a p))
-  =
-  ()
+let as_seq_lemma #t a i p m = ()
 #pop-options
 
 let read_array_addr
@@ -637,13 +639,13 @@ let upd_array_heap_frame_disjointness_preservation
   (frame:hprop)
   : Lemma
     (requires
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp (pts_to_array a full_permission iseq) h0 /\
-      interp frame h1)
+      disjoint_heap h0 h1 /\
+      h == join_heap h0 h1 /\
+      interp_heap (pts_to_array a full_permission iseq) h0 /\
+      interp_heap frame h1)
     (ensures (
       let h0' = upd_array_heap a iseq i v h0 in
-      disjoint h0' h1))
+      disjoint_heap h0' h1))
   =
   ()
 #pop-options
@@ -673,32 +675,32 @@ let upd_array_action_memory_split_independence
   (frame:hprop)
   : Lemma
     (requires
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp (pts_to_array a full_permission iseq) h0 /\
-      interp frame h1)
+      disjoint_heap h0 h1 /\
+      h == join_heap h0 h1 /\
+      interp_heap (pts_to_array a full_permission iseq) h0 /\
+      interp_heap frame h1)
     (ensures (
       let (| _, h' |) = upd_array_pre_action a iseq i v h in
       let h0' = upd_array_heap a iseq i v h0 in
       upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
-      h' == (join h0' h1)))
+      h' == (join_heap h0' h1)))
   =
   let (| _, h' |) = upd_array_pre_action a iseq i v h in
   let h0' = upd_array_heap a iseq i v h0 in
   upd_array_heap_frame_disjointness_preservation a iseq i v h h0 h1 frame;
-  assert(disjoint h0' h1);
+  assert(disjoint_heap h0' h1);
   let aux (addr: addr) : Lemma (
-    h' addr == (join h0' h1) addr
+    h' addr == (join_heap h0' h1) addr
   ) =
     if addr <> a.array_addr then () else
     if not (h1 `contains_addr` addr) then ()
-    else match  h' addr, (join h0' h1) addr with
+    else match  h' addr, (join_heap h0' h1) addr with
     | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
       assert(seq2 `Seq.equal` seq3)
     | _ -> ()
   in
   Classical.forall_intro aux;
-  mem_equiv_eq h' (join h0' h1)
+  mem_equiv_eq h' (join_heap h0' h1)
 #pop-options
 
 let upd_array_action
@@ -720,14 +722,14 @@ let upd_array_action
     (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
     (upd_array_pre_action a iseq i v)
     (fun frame h0 h1 addr -> (* Disjointness preservation *)
-      upd_array_heap_frame_disjointness_preservation a iseq i v (join h0 h1) h0 h1 frame
+      upd_array_heap_frame_disjointness_preservation a iseq i v (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1 addr -> (* Does not depend on framing *)
-      upd_array_action_memory_split_independence a iseq i v (join h0 h1) h0 h1 frame
+      upd_array_action_memory_split_independence a iseq i v (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1 -> (* Return  *)
       let (| x0, h |) = upd_array_pre_action a iseq i v h0 in
-      let (| x1, h' |) = upd_array_pre_action a iseq i v (join h0 h1) in
+      let (| x1, h' |) = upd_array_pre_action a iseq i v (join_heap h0 h1) in
       assert (x0 == x1)
     )
 
@@ -800,13 +802,13 @@ let alloc_array_pre_m_action
     array_offset = 0ul;
   } in
   let single_h = singleton_heap len init a in
-  let new_h = join (heap_of_mem m) single_h in
+  let new_h = join_heap (heap_of_mem m) single_h in
   assert(forall i. i>= m.ctr + 1 ==> new_h i == None);
-  assert(disjoint m.heap single_h);
-  affine_star emp (lock_store_invariant m.locks) m.heap;
-  assert(interp (lock_store_invariant m.locks) (heap_of_mem m));
-  assert(interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
-  assert(interp ((pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+  assert(disjoint_heap m.heap single_h);
+  affine_star_heap emp (lock_store_invariant m.locks) m.heap;
+  assert(interp_heap (lock_store_invariant m.locks) (heap_of_mem m));
+  assert(interp_heap (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
+  assert(interp_heap ((pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
     `star` (lock_store_invariant m.locks)) new_h);
   let new_m = { m with heap = new_h; ctr = m.ctr +1 } in
   mem_invariant_intro (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) new_m;
@@ -818,15 +820,15 @@ let alloc_array_pre_m_action
 let ac_reasoning_for_m_frame_preserving'
   (p q r:hprop) (m:mem)
 : Lemma
-  (requires interp ((p `star` q) `star` r) (heap_of_mem m))
-  (ensures interp (q `star` r) (heap_of_mem m))
+  (requires interp_heap ((p `star` q) `star` r) (heap_of_mem m))
+  (ensures interp_heap (q `star` r) (heap_of_mem m))
 = calc (equiv) {
     (p `star` q) `star` r;
        (equiv) { star_associative p q r }
     p `star` (q `star` r);
   };
-  assert (interp (p `star` (q `star` r)) (heap_of_mem m));
-  affine_star p (q `star` r) (heap_of_mem m)
+  assert (interp_heap (p `star` (q `star` r)) (heap_of_mem m));
+  affine_star_heap p (q `star` r) (heap_of_mem m)
 
 
 #push-options " --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -851,18 +853,18 @@ let alloc_array_is_m_frame_and_preorder_preserving
     assert (m1.locks == m.locks);
     let h1 = heap_of_mem m1 in
     let single_h = singleton_heap len init a in
-    assert (h1 == join single_h h);
+    assert (h1 == join_heap single_h h);
     intro_pts_to_array_with_preorder
       a full_permission (Seq.Base.create (U32.v len) init) (trivial_preorder t) single_h;
-    assert (interp (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
+    assert (interp_heap (pts_to_array a full_permission (Seq.Base.create (U32.v len) init)) single_h);
     ac_reasoning_for_m_frame_preserving' emp frame (lock_store_invariant m.locks) m;
-    assert (interp (frame `star` lock_store_invariant m.locks) h);
-    intro_star
+    assert (interp_heap (frame `star` lock_store_invariant m.locks) h);
+    intro_star_heap
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
       (frame `star` lock_store_invariant m.locks)
       single_h
       h;
-    assert (interp
+    assert (interp_heap
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init) `star`
       (frame `star` lock_store_invariant m.locks)) h1
     );
@@ -870,7 +872,7 @@ let alloc_array_is_m_frame_and_preorder_preserving
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
       frame
       (lock_store_invariant m.locks);
-    assert (interp
+    assert (interp_heap
       (pts_to_array a full_permission (Seq.Base.create (U32.v len) init) `star`
       frame `star` lock_store_invariant m.locks) h1
     );
@@ -893,13 +895,13 @@ let alloc_array_is_m_frame_and_preorder_preserving
     assert (m1.locks == m.locks);
     let h1 = heap_of_mem m1 in
     let single_h = singleton_heap len init a in
-    assert (h1 == join single_h h);
+    assert (h1 == join_heap single_h h);
     assert(depends_only_on_without_affinity f_frame frame);
-    assert (interp ((emp `star` frame) `star` (locks_invariant m)) h);
-    affine_star (emp `star` frame) (locks_invariant m) h;
-    affine_star emp frame h;
-    assert(interp frame h);
-    assert(f_frame h <==> f_frame (join single_h h))
+    assert (interp_heap ((emp `star` frame) `star` (locks_invariant m)) h);
+    affine_star_heap (emp `star` frame) (locks_invariant m) h;
+    affine_star_heap emp frame h;
+    assert(interp_heap frame h);
+    assert(f_frame h <==> f_frame (join_heap single_h h))
   )
 #pop-options
 
@@ -1003,16 +1005,16 @@ let share_array_pre_action
           Some (Array t len new_seq)
         | _ -> None
       ) in
-      let aux (addr: addr) : Lemma (h addr == (join split_h_1 split_h_2) addr) =
+      let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
         if addr <> a.array_addr then () else
-        match h addr, (join split_h_1 split_h_2) addr with
+        match h addr, (join_heap split_h_1 split_h_2) addr with
         | Some (Array _ _ seq), Some (Array _ _ joint_seq) ->
            assert(seq `Seq.equal` joint_seq)
         | _ -> ()
       in
       Classical.forall_intro aux;
-      mem_equiv_eq h (join split_h_1 split_h_2);
-      assert(h == join split_h_1 split_h_2);
+      mem_equiv_eq h (join_heap split_h_1 split_h_2);
+      assert(h == join_heap split_h_1 split_h_2);
       (| a, h |)
 #pop-options
 
@@ -1047,7 +1049,7 @@ let share_array_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 ->
       let (|x_alone, h0'|) = share_array_pre_action a iseq perm h0 in
-      let (|x_joint, h'|) = share_array_pre_action a iseq perm (join h0 h1) in
+      let (|x_joint, h'|) = share_array_pre_action a iseq perm (join_heap h0 h1) in
       assert(x_alone == x_joint)
     )
 
@@ -1220,16 +1222,16 @@ let split_array_pre_action
       Some (Array t len new_seq)
     | _ -> h addr
   ) in
-  let aux (addr: addr) : Lemma (h addr == (join split_h_1 split_h_2) addr) =
+  let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
     if addr <> a.array_addr then () else
-    match h addr, (join split_h_1 split_h_2) addr with
+    match h addr, (join_heap split_h_1 split_h_2) addr with
     | Some (Array _ _ seq), Some (Array _ _ joint_seq) ->
       assert(seq `Seq.equal` joint_seq)
     | _ -> ()
   in
   Classical.forall_intro aux;
-  mem_equiv_eq h (join split_h_1 split_h_2);
-  assert(h == join split_h_1 split_h_2);
+  mem_equiv_eq h (join_heap split_h_1 split_h_2);
+  assert(h == join_heap split_h_1 split_h_2);
   (| (a1, a2), h  |)
 #pop-options
 
@@ -1395,7 +1397,8 @@ let glue_array
 
 let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
   : pre_action p unit (fun _ -> p')
-  = fun h -> (| (), h |)
+  = equiv_heap_iff_equiv p p';
+    fun h -> (| (), h |)
 
 #push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
@@ -1423,19 +1426,22 @@ let rewrite_hprop p p' =
 ///////////////////////////////////////////////////////////////////////////////
 
 #push-options "--max_fuel 2 --initial_fuel 2"
-let sel_ref (#t: Type0) (r: reference t) (h: hheap (ref r)) : t =
-  Seq.index (as_seq r h) 0
+let sel_ref_heap (#t: Type0) (r: reference t) (h: hheap (ref r)) : t =
+  Seq.index (as_seq_heap r h) 0
 #pop-options
 
+let sel_ref #t r m = sel_ref_heap #t r m.heap
+
 #push-options "--max_fuel 2 --initial_fuel 2"
-let sel_ref_lemma
+let sel_ref_lemma_heap
   (t: Type0)
   (p: permission{allows_read p})
   (r: reference t)
   (m: hheap (ref_perm r p))
-  : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
-  =
-  ()
+  : Lemma (interp_heap (ref r) m /\ interp_heap (pts_to_ref r p (sel_ref_heap r m)) m)
+= ()
+
+let sel_ref_lemma t p r m = ()
 #pop-options
 
 let get_ref_pre_action
@@ -1447,8 +1453,8 @@ let get_ref_pre_action
     (x:t)
     (fun x -> pts_to_ref r p x)
   = fun h ->
-  let contents = sel_ref r h in
-  sel_ref_lemma t p r h;
+  let contents = sel_ref_heap r h in
+  sel_ref_lemma_heap t p r h;
   let (| x, h' |) = index_array_pre_action r (Seq.create 1 contents) 0ul p h in
   (| x, h' |)
 
@@ -1498,8 +1504,8 @@ let set_ref_pre_action
     unit
     (fun _ -> pts_to_ref r full_permission v)
   = fun h ->
-  let contents = sel_ref r h in
-  sel_ref_lemma t full_permission r h;
+  let contents = sel_ref_heap r h in
+  sel_ref_lemma_heap t full_permission r h;
   assert(Seq.upd (Seq.create 1 contents) 0 v `Seq.equal` Seq.create 1 v);
   upd_array_pre_action r (Seq.create 1 contents) 0ul v h
 
@@ -1518,20 +1524,20 @@ let set_ref_action
     (fun _ -> pts_to_ref r full_permission v)
     (set_ref_pre_action r v)
      (fun frame h0 h1 addr -> (* Disjointness preservation *)
-     let iseq = Seq.create 1 (sel_ref r h0) in
-     sel_ref_lemma t full_permission r h0;
-      upd_array_heap_frame_disjointness_preservation r iseq 0ul v (join h0 h1) h0 h1 frame
+     let iseq = Seq.create 1 (sel_ref_heap r h0) in
+     sel_ref_lemma_heap t full_permission r h0;
+      upd_array_heap_frame_disjointness_preservation r iseq 0ul v (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1 addr -> (* Does not depend on framing *)
-      let iseq = Seq.create 1 (sel_ref r h0) in
-      sel_ref_lemma t full_permission r h0;
-      upd_array_action_memory_split_independence r iseq 0ul v (join h0 h1) h0 h1 frame
+      let iseq = Seq.create 1 (sel_ref_heap r h0) in
+      sel_ref_lemma_heap t full_permission r h0;
+      upd_array_action_memory_split_independence r iseq 0ul v (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1  -> (* Return and post *)
-      let iseq = Seq.create 1 (sel_ref r h0) in
-      sel_ref_lemma t full_permission r h0;
+      let iseq = Seq.create 1 (sel_ref_heap r h0) in
+      sel_ref_lemma_heap t full_permission r h0;
       let (| x0, h |) = set_ref_pre_action r v h0 in
-      let (| x1, h' |) = set_ref_pre_action r v (join h0 h1) in
+      let (| x1, h' |) = set_ref_pre_action r v (join_heap h0 h1) in
       assert (x0 == x1)
     )
 
@@ -1650,13 +1656,13 @@ let new_lock_pre_m_action (p:hprop)
      mem_invariant_elim p m;
      let l = Available p in
      let locks' = l :: m.locks in
-     assert (interp (lock_store_invariant locks') (heap_of_mem m));
+     assert (interp_heap (lock_store_invariant locks') (heap_of_mem m));
      let mem :mem = { m with locks = locks' } in
      assert (lock_store_invariant mem.locks == p `star` lock_store_invariant m.locks);
-     assert (interp (lock_store_invariant mem.locks) (heap_of_mem mem));
+     assert (interp_heap (lock_store_invariant mem.locks) (heap_of_mem mem));
      emp_unit (lock_store_invariant mem.locks);
      star_commutative emp (lock_store_invariant mem.locks);
-     assert (interp (emp `star` lock_store_invariant mem.locks) (heap_of_mem mem));
+     assert (interp_heap (emp `star` lock_store_invariant mem.locks) (heap_of_mem mem));
      let lock_id = List.Tot.length locks' - 1 in
      mem_invariant_intro emp mem;
      (| lock_id, mem |)
@@ -1671,34 +1677,34 @@ let equiv_star_left (p q r:hprop)
   : Lemma
     (requires q `equiv` r)
     (ensures (p `star` q) `equiv` (p `star` r))
-  = ()
+  = Classical.forall_intro_2 equiv_heap_iff_equiv 
 
 #push-options "--warn_error -271 --max_fuel 2 --initial_fuel 2 --admit_smt_queries true"
 let new_lock_is_frame_preserving (p:hprop)
   : Lemma (is_m_frame_and_preorder_preserving (new_lock_pre_m_action p))
-  = let aux (frame:hprop) (m:hmem (p `star` frame))
+  = let aux (frame:hprop) (m:hmem_with_inv (p `star` frame))
       : Lemma
           (ensures (
             let (| x, m1 |) = new_lock_pre_m_action p m in
-            interp (emp `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
+            interp_heap (emp `star` frame `star` locks_invariant m1) (heap_of_mem m1)))
           [SMTPat ()]
       = let (| x, m1 |) = new_lock_pre_m_action p m in
         assert (m1.locks == Available p :: m.locks);
         assert (locks_invariant m1 == (p `star` locks_invariant m));
-        assert (interp ((p `star` frame) `star` locks_invariant m) (heap_of_mem m));
+        assert (interp_heap ((p `star` frame) `star` locks_invariant m) (heap_of_mem m));
         star_associative p frame (locks_invariant m);
-        assert (interp (p `star` (frame `star` locks_invariant m)) (heap_of_mem m));
+        assert (interp_heap (p `star` (frame `star` locks_invariant m)) (heap_of_mem m));
         star_commutative frame (locks_invariant m);
         equiv_star_left p (frame `star` locks_invariant m) (locks_invariant m `star` frame);
-        assert (interp (p `star` (locks_invariant m `star` frame)) (heap_of_mem m));
+        assert (interp_heap (p `star` (locks_invariant m `star` frame)) (heap_of_mem m));
         star_associative p (locks_invariant m) frame;
-        assert (interp ((p `star` locks_invariant m) `star` frame) (heap_of_mem m));
-        assert (interp ((locks_invariant m1) `star` frame) (heap_of_mem m));
+        assert (interp_heap ((p `star` locks_invariant m) `star` frame) (heap_of_mem m));
+        assert (interp_heap ((locks_invariant m1) `star` frame) (heap_of_mem m));
         assert (heap_of_mem m == heap_of_mem m1);
         star_commutative (locks_invariant m1) frame;
-        assert (interp (frame `star` (locks_invariant m1)) (heap_of_mem m1));
+        assert (interp_heap (frame `star` (locks_invariant m1)) (heap_of_mem m1));
         emp_unit_left (frame `star` (locks_invariant m1));
-        assert (interp (emp `star` (frame `star` (locks_invariant m1))) (heap_of_mem m1));
+        assert (interp_heap (emp `star` (frame `star` (locks_invariant m1))) (heap_of_mem m1));
         star_associative emp frame (locks_invariant m1)
     in
     ()
@@ -1725,45 +1731,71 @@ let lock_ok_stable (#p:_) (l:lock p) (m0 m1:mem)
            lock_ok l m1)
   = ()
 
+let pure (p:prop) : hprop = refine emp (fun _ -> p)
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
 let intro_pure (p:prop) (q:hprop) (h:hheap q { p })
   : hheap (pure p `star` q)
-  = emp_unit q;
+  = Classical.forall_intro_2 equiv_heap_iff_equiv;
+    emp_unit q;
     star_commutative q emp;
     h
 #pop-options
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let intro_hmem_or (p:prop) (q:hprop) (h:hmem q)
-  : hmem (h_or (pure p) q)
+let intro_hmem_or (p:prop) (q:hprop) (h:hmem_with_inv q)
+  : hmem_with_inv (h_or (pure p) q)
   = h
 #pop-options
 
 let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
   : hheap (q `star` (p `star` r))
-  = star_associative p q r;
-    star_commutative p q;
-    star_associative q p r;
+  = calc (equiv) {
+      p `star` (q `star` r);
+         (equiv) { star_associative p q r }
+      (p `star` q) `star` r;
+         (equiv) { star_commutative p q; equiv_extensional_on_star (p `star` q) (q `star` p) r }
+      (q `star` p) `star` r;
+         (equiv) { star_associative q p r }
+      q `star` (p `star` r);
+    };
+    equiv_heap_iff_equiv (p `star` (q `star` r)) (q `star` (p `star` r));
     h
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 30"
+let intro_or_l_heap (p1 p2:hprop) (m:hheap p1)
+  : Lemma (interp_heap (h_or p1 p2) m)
+= ()
+
+#push-options "--max_fuel 2 --initial_fuel 2"
+let or_star_heap (p1 p2 p:hprop) (m:hheap ((p1 `star` p) `h_or` (p2 `star` p)))
+  : Lemma (interp_heap ((p1 `h_or` p2) `star` p) m)
+= ()
+#pop-options
+
+val maybe_acquire
+  (#p: hprop)
+  (l:lock p)
+  (m:hmem_with_inv emp { lock_ok l m } )
+  : (b:bool & m:hmem_with_inv (h_or (pure (b == false)) p))
+
+#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 100"
 let maybe_acquire #p l m
-  = mem_invariant_elim emp m;
+  = Classical.forall_intro_2 equiv_heap_iff_equiv;
+    mem_invariant_elim emp m;
     let (| prefix, li, suffix |) = get_lock m.locks l in
-    affine_star emp (locks_invariant m) (heap_of_mem m);
+    affine_star_heap emp (locks_invariant m) (heap_of_mem m);
     match li with
     | Available _ ->
       let h = heap_of_mem m in
-      assert (interp (lock_store_invariant m.locks) h);
+      assert (interp_heap (lock_store_invariant m.locks) h);
       lock_store_invariant_append prefix (li::suffix);
       assert (lock_store_invariant m.locks `equiv`
              (lock_store_invariant prefix `star`
                       (p `star` lock_store_invariant suffix)));
-      assert (interp (lock_store_invariant prefix `star`
+      assert (interp_heap (lock_store_invariant prefix `star`
                        (p `star` lock_store_invariant suffix)) h);
       let h = middle_to_head (lock_store_invariant prefix) p (lock_store_invariant suffix) h in
-      assert (interp (p `star`
+      assert (interp_heap (p `star`
                         (lock_store_invariant prefix `star`
                          lock_store_invariant suffix)) h);
       let new_lock_store = prefix @ (Locked p :: suffix) in
@@ -1774,47 +1806,52 @@ let maybe_acquire #p l m
       equiv_star_left p (lock_store_invariant new_lock_store)
                         (lock_store_invariant prefix `star`
                           lock_store_invariant suffix);
-      assert (interp (p `star` lock_store_invariant new_lock_store) h);
+      assert (interp_heap (p `star` lock_store_invariant new_lock_store) h);
       let h : hheap (p `star` lock_store_invariant new_lock_store) = h in
       assert (heap_of_mem m == h);
       star_commutative p (lock_store_invariant new_lock_store);
-      affine_star (lock_store_invariant new_lock_store) p h;
-      assert (interp (lock_store_invariant new_lock_store) h);
+      affine_star_heap (lock_store_invariant new_lock_store) p h;
+      assert (interp_heap (lock_store_invariant new_lock_store) h);
       let mem : mem = { m with locks = new_lock_store } in
       mem_invariant_intro p mem;
-      let mem : hmem p = mem in
+      let mem : hmem_with_inv p = mem in
       let b = true in
-      let mem : hmem (h_or (pure (b==false)) p) = intro_hmem_or (b == false) p mem in
+      let mem : hmem_with_inv (h_or (pure (b==false)) p) = intro_hmem_or (b == false) p mem in
       (| b, mem |)
 
     | Locked _ ->
       let b = false in
-      assert (interp (pure (b == false)) (heap_of_mem m));
-      assert (interp (locks_invariant m) (heap_of_mem m));
+      assert (interp_heap (pure (b == false)) (heap_of_mem m));
+      assert (interp_heap (locks_invariant m) (heap_of_mem m));
       let h : hheap (locks_invariant m) = heap_of_mem m in
       let h : hheap (pure (b==false) `star` locks_invariant m) =
         intro_pure (b==false) (locks_invariant m) h in
-      intro_or_l (pure (b==false) `star` locks_invariant m)
+      intro_or_l_heap (pure (b==false) `star` locks_invariant m)
                  (p `star` locks_invariant m)
                  h;
-      or_star (pure (b==false)) p (locks_invariant m) h;
-      assert (interp (h_or (pure (b==false)) p `star` locks_invariant m) h);
+      or_star_heap (pure (b==false)) p (locks_invariant m) h;
+      assert (interp_heap (h_or (pure (b==false)) p `star` locks_invariant m) h);
       (| false, m |)
 #pop-options
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let hmem_emp (p:hprop) (m:hmem p) : hmem emp = m
+let hmem_emp (p:hprop) (m:hmem_with_inv p) : hmem_with_inv emp = m
 #pop-options
 
+val release
+  (#p: hprop)
+  (l:lock p)
+  (m:hmem_with_inv p { lock_ok l m } )
+  : (b:bool & hmem_with_inv emp)
+
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 60"
-let release #p (l:lock p) (m:hmem p { lock_ok l m } )
-  : (b:bool &
-     hmem emp)
-  = let (| prefix, li, suffix |) = get_lock m.locks l in
+let release #p l m
+  = Classical.forall_intro_2 equiv_heap_iff_equiv;
+    let (| prefix, li, suffix |) = get_lock m.locks l in
     let h = heap_of_mem m in
     lock_store_invariant_append prefix (li::suffix);
     mem_invariant_elim p m;
-    assert (interp (p `star`
+    assert (interp_heap (p `star`
                      (lock_store_invariant prefix `star`
                        (lock_store_invariant (li::suffix)))) h);
     match li with
@@ -1831,11 +1868,11 @@ let release #p (l:lock p) (m:hmem p { lock_ok l m } )
       (| false, hmem_emp p m |)
 
     | Locked _ ->
-      assert (interp (p `star`
+      assert (interp_heap (p `star`
                         (lock_store_invariant prefix `star`
                           (lock_store_invariant suffix))) h);
       let h = middle_to_head p (lock_store_invariant prefix) (lock_store_invariant suffix) h in
-      assert (interp (lock_store_invariant prefix `star`
+      assert (interp_heap (lock_store_invariant prefix `star`
                         (p `star`
                           (lock_store_invariant suffix))) h);
       let new_lock_store = prefix @ (Available p :: suffix) in
@@ -1843,10 +1880,10 @@ let release #p (l:lock p) (m:hmem p { lock_ok l m } )
       assert (lock_store_invariant new_lock_store `equiv`
                 (lock_store_invariant prefix `star`
                  (p `star` lock_store_invariant (suffix))));
-      assert (interp (lock_store_invariant new_lock_store) h);
+      assert (interp_heap (lock_store_invariant new_lock_store) h);
       emp_unit_left (lock_store_invariant new_lock_store);
       let mem : mem = { m with locks = new_lock_store } in
       mem_invariant_intro emp mem;
-      let mem : hmem emp = mem in
+      let mem : hmem_with_inv emp = mem in
       (| true, mem |)
 #pop-options
