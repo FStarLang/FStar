@@ -32,7 +32,6 @@ let hprop_of_lock_state (l:lock_state) : hprop =
 
 module L = FStar.List.Tot
 
-assume
 val get_lock (l:lock_store) (i:nat{i < L.length l})
   : (prefix : lock_store &
      li : lock_state &
@@ -40,6 +39,15 @@ val get_lock (l:lock_store) (i:nat{i < L.length l})
        l == L.(prefix @ (li::suffix)) /\
        L.length (li::suffix) == i + 1
      })
+
+#push-options "--fuel 1 --ifuel 1"
+let rec get_lock l i =
+  if i = L.length l - 1 then (
+    (| [], L.hd l, L.tl l |)
+  ) else
+    let (| pre, li, suf |) = get_lock (L.tl l) i in
+    (| (L.hd l) ::pre, li, suf |)
+#pop-options
 
 let lock_i (l:lock_store) (i:nat{i < L.length l}) : lock_state =
   let (| _, li, _ |) = get_lock l i in
@@ -1769,10 +1777,37 @@ let new_lock (p:hprop)
     new_lock_pre_m_action p
 
 ////////////////////////////////////////////////////////////////////////////////
-assume
 val lock_store_invariant_append (l1 l2:lock_store)
   : Lemma (lock_store_invariant Set.empty (l1 @ l2) `equiv`
            (lock_store_invariant Set.empty l1 `star` lock_store_invariant Set.empty l2))
+
+#push-options "--fuel 1 --ifuel 1"
+let rec lock_store_invariant_append l1 l2 =
+  match l1 with
+  | [] ->
+    emp_unit (lock_store_invariant Set.empty l2);
+    star_commutative emp (lock_store_invariant Set.empty l2)
+  | hd::tl ->
+    lock_store_invariant_append tl l2;
+    assert (lock_store_invariant Set.empty (tl @ l2) `equiv`
+      (lock_store_invariant Set.empty tl `star` lock_store_invariant Set.empty l2));
+    match hd with
+    | Available p | Invariant p ->
+      calc (equiv) {
+        lock_store_invariant Set.empty (l1 @ l2);
+        (equiv) { }
+        p `star` lock_store_invariant Set.empty (tl @ l2);
+        (equiv) { star_congruence p (lock_store_invariant Set.empty (tl @ l2))
+                    p (lock_store_invariant Set.empty tl `star` lock_store_invariant Set.empty l2) }
+        p `star` (lock_store_invariant Set.empty tl `star` lock_store_invariant Set.empty l2);
+        (equiv) {
+          star_associative p (lock_store_invariant Set.empty tl) (lock_store_invariant Set.empty l2);
+          star_congruence (p `star` lock_store_invariant Set.empty tl) (lock_store_invariant Set.empty l2)
+            (lock_store_invariant Set.empty l1) (lock_store_invariant Set.empty l2) }
+        lock_store_invariant Set.empty l1 `star` lock_store_invariant Set.empty l2;
+      }
+    | Locked _ -> ()
+#pop-options
 
 let lock_ok (#p:hprop) (l:lock p) (m:mem) =
   l < L.length m.locks /\
