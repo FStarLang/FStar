@@ -200,7 +200,7 @@ let with_invariant0
 let with_invariant
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
   (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
+  (i:inv p{false})
   ($f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses fp fp'
   = with_invariant0 i (steelatomic_reify f)
