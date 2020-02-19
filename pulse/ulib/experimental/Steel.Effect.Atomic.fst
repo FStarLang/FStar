@@ -58,6 +58,24 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+assume WP_monotonic_pure:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall x. p x ==> q x) ==>
+       (wp p ==> wp q))
+
+let bind_pure_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (uses:Set.set lock_addr)
+  (pre_g:pre_t) (post_g:post_t b)
+  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses pre_g post_g))
+: atomic_repr b uses pre_g post_g
+= admit()
+
+
+polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
+
+
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
   MST.MSTATE a mem mem_evolves req ens
 
@@ -86,6 +104,17 @@ assume val atomic_preserves_preorder
 assume
 val atomic_noop (uses:Set.set lock_addr) : atomic uses emp unit (fun _ -> emp)
 
+val demote_m_action_atomic
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (f : m_action fp a fp')
+    : atomic Set.empty fp a fp'
+
+#push-options "--fuel 0 --ifuel 0"
+let demote_m_action_atomic #a #fp #fp' f = f
+#pop-options
+
+val atomic_new_inv (p:hprop) : atomic Set.empty p (inv p) (fun _ -> emp)
+let atomic_new_inv p = demote_m_action_atomic (new_inv p)
 
 #push-options "--fuel 0 --ifuel 1"
 let noop (uses:Set.set lock_addr) : SteelAtomic unit uses emp (fun _ -> emp)
@@ -95,3 +124,104 @@ let noop (uses:Set.set lock_addr) : SteelAtomic unit uses emp (fun _ -> emp)
       atomic_preserves_preorder (atomic_noop uses) m0;
       mst_put m1)
 #pop-options
+
+#push-options "--fuel 0 --ifuel 1"
+let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty p (fun _ -> emp)
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let (| x, m1 |) = atomic_new_inv p m0 in
+      atomic_preserves_preorder (atomic_new_inv p) m0;
+      mst_put m1;
+      x)
+#pop-options
+
+module U32 = FStar.UInt32
+open Steel.Permissions
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
+let index
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  : SteelAtomic t Set.empty
+      (pts_to_array a full_permission iseq)
+      (fun _ -> pts_to_array a full_permission iseq)
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let at = demote_m_action_atomic (index_array a iseq full_permission i) in
+      let (| x, m1 |) = at m0 in
+      atomic_preserves_preorder at m0;
+      mst_put m1;
+      x)
+#pop-options
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
+let upd
+  (#t:_)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  (v:t)
+  : SteelAtomic unit Set.empty
+      (pts_to_array a full_permission iseq)
+      (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let at = demote_m_action_atomic (upd_array a iseq i v) in
+      let (| x, m1 |) = at m0 in
+      atomic_preserves_preorder at m0;
+      mst_put m1)
+#pop-options
+
+assume val steelatomic_reify (#a:Type) (#uses:Set.set lock_addr) (#pre:pre_t) (#post:post_t a)
+  ($f:unit -> SteelAtomic a uses pre post)
+: atomic_repr a uses pre post
+
+// TODO: This should be implemented using with_invariant in Steel.Actions
+// But for this, we need a with_invariant that takes directly an atomic_t
+// instead of an atomic
+let with_invariant0
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic_repr a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
+  : SteelAtomic a uses fp fp'
+  = SteelAtomic?.reflect (fun _ -> admit())
+
+let with_invariant
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
+  : SteelAtomic a uses fp fp'
+  = with_invariant0 i (steelatomic_reify f)
+
+// TODO: We should expose actions as atomics in Steel.Actions, so that
+// we can implement the uses-parametric version
+let index'
+  (#t:_)
+  (#uses:Set.set lock_addr)
+  (a:array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (i:U32.t{U32.v i < U32.v (length a)})
+  : SteelAtomic t uses
+      (pts_to_array a full_permission iseq)
+      (fun _ -> pts_to_array a full_permission iseq)
+  = SteelAtomic?.reflect (fun _ -> admit())
+
+
+let test
+  (#t:_)
+  (a:array_ref t{U32.v (length a) == 1})
+  (iseq: Ghost.erased (Seq.lseq t 1))
+  : SteelAtomic t Set.empty
+      (pts_to_array a full_permission iseq)
+      (fun _ -> pts_to_array a full_permission iseq)
+  = let i = new_inv  (pts_to_array a full_permission iseq) in
+    // This should not succeed, as index has Set.empty for uses, while with_invariant
+    // should expect Set.singleton i
+    with_invariant i (fun _ -> index a iseq 0ul)
+// This should be the correct version given the signature of with_invariant
+// There might be something fishy with the definition of the polymonadic bind?
+//    with_invariant #_ #_ #_ #(Set.singleton i) i (fun _ -> index' #_ #(Set.singleton i) a iseq 0ul)
