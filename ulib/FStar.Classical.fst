@@ -118,7 +118,7 @@ let move_requires_2 #a #b #p #q f x y =
   move_requires (f x) y
 
 let move_requires_3 #a #b #c #p #q f x y z =
-  Classical.move_requires (f x y) z
+  move_requires (f x y) z
 
 let forall_impl_intro #a #p #q f =
   let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
