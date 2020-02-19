@@ -11,10 +11,10 @@ type state0 : S.st0 =
     S.hprop = hprop;
     S.locks_invariant = locks_invariant Set.empty;
 
-    S.disjoint = disjoint_mem;
-    S.join = join_mem;
+    S.disjoint = disjoint;
+    S.join = join;
 
-    S.interp = interp_mem;
+    S.interp = interp;
 
     S.emp = emp;
     S.star = star;
