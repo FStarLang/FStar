@@ -18,7 +18,7 @@ module FStar.Math.Lemmas
 open FStar.Mul
 open FStar.Math.Lib
 
-#set-options "--fuel 0 --ifuel 0 --z3rlimit 20 --quake 3"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 20"
 
 (* Lemma: definition of Euclidean division *)
 val euclidean_div_axiom: a:int -> b:pos -> Lemma
