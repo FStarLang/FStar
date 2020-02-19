@@ -5,47 +5,47 @@ open Steel.Actions
 open Steel.Memory.Tactics
 open LowStar.Permissions
 
-new_effect GST = STATE_h mem
+// new_effect GST = STATE_h mem
 
-let gst_pre = st_pre_h mem
-let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
-let gst_post (a:Type) = st_post_h mem a
-let gst_wp (a:Type) = st_wp_h mem a
+// let gst_pre = st_pre_h mem
+// let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
+// let gst_post (a:Type) = st_post_h mem a
+// let gst_wp (a:Type) = st_wp_h mem a
 
-unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
-sub_effect DIV ~> GST = lift_div_gst
+// unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+// sub_effect DIV ~> GST = lift_div_gst
 
-effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
-  GST a
-    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1))
+// effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
+//   GST a
+//     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1))
 
-effect Steel
-  (a: Type)
-  (res0: hprop)
-  (res1: a -> hprop)
-  (pre: mem -> prop)
-  (post: mem -> a -> mem -> prop)
-= ST
-  a
-  (fun h0 ->
-    interp res0 (heap_of_mem h0) /\
-    pre h0)
-  (fun h0 x h1 ->
-    interp res0 (heap_of_mem h0) /\
-    pre h0 /\
-    interp (res1 x) (heap_of_mem h1) /\
-    post h0 x h1
-  )
+// effect Steel
+//   (a: Type)
+//   (res0: hprop)
+//   (res1: a -> hprop)
+//   (pre: mem -> prop)
+//   (post: mem -> a -> mem -> prop)
+// = ST
+//   a
+//   (fun h0 ->
+//     interp res0 (heap_of_mem h0) /\
+//     pre h0)
+//   (fun h0 x h1 ->
+//     interp res0 (heap_of_mem h0) /\
+//     pre h0 /\
+//     interp (res1 x) (heap_of_mem h1) /\
+//     post h0 x h1
+//   )
 
-assume val get (r:hprop)
-  :Steel (hmem r) (r) (fun _ -> r)
-             (requires (fun m -> True))
-             (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
+// assume val get (r:hprop)
+//   :Steel (hmem r) (r) (fun _ -> r)
+//              (requires (fun m -> True))
+//              (ensures (fun m0 x m1 -> m0 == x /\ m1 == m0))
 
-assume val put (r_init r_out:hprop) (m:hmem r_out)
-  :Steel unit (r_init) (fun _ -> r_out)
-             (requires fun m -> True)
-             (ensures (fun _ _ m1 -> m1 == m))
+// assume val put (r_init r_out:hprop) (m:hmem r_out)
+//   :Steel unit (r_init) (fun _ -> r_out)
+//              (requires fun m -> True)
+//              (ensures (fun _ _ m1 -> m1 == m))
 
 (*
 let interp_perm_to_ptr (#a:Type) (p:permission) (r:ref a) (h:heap)
