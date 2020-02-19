@@ -324,3 +324,8 @@ val with_invariant
   (i:inv p{not (i `Set.mem` uses)})
   (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
   : atomic uses fp a fp'
+
+val promote_atomic_m_action
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (f:atomic Set.empty fp a fp')
+    : m_action fp a fp'
