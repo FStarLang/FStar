@@ -132,7 +132,7 @@ let is_gcd_plus a b q d =
 val is_gcd_for_euclid (a b q d:int) : Lemma
   (requires is_gcd b (a - q * b) d)
   (ensures  is_gcd a b d)
-//  [SMTPat (is_gcd b (a - q * b) d)]
+  [SMTPat (is_gcd b (a - q * b) d)]
 let is_gcd_for_euclid a b q d =
   add_sub_l a (q * b);
   is_gcd_plus b (a - q * b) q d
