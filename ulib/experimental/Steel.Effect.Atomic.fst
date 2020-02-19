@@ -64,16 +64,23 @@ assume WP_monotonic_pure:
        (forall x. p x ==> q x) ==>
        (wp p ==> wp q))
 
-let bind_pure_steel (a:Type) (b:Type)
-  (wp:pure_wp a)
-  (uses:Set.set lock_addr)
-  (pre_g:pre_t) (post_g:post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses pre_g post_g))
-: atomic_repr b uses pre_g post_g
-= admit()
+inline_for_extraction
+let lift_pure_steel_atomic (a:Type) #uses #p (wp:pure_wp a{as_requires wp}) (f:unit -> PURE a wp)
+ : atomic_repr a uses p (fun _ -> p)
+ = fun _ -> let x = f () in admit(); x
+
+sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
+
+// let bind_pure_steel (a:Type) (b:Type)
+//   (wp:pure_wp a { as_requires wp })
+//   (uses:Set.set lock_addr)
+//   (pre_g:pre_t) (post_g:post_t b)
+//   (f:(unit -> PURE a wp)) (g:(x:a -> atomic_repr b uses pre_g post_g))
+// : atomic_repr b uses pre_g post_g
+// = admit()
 
 
-polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
+// polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
 
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
@@ -144,6 +151,7 @@ let index
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
+  (_:unit)
   : SteelAtomic t Set.empty
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission iseq)
@@ -193,7 +201,7 @@ let with_invariant
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
+  ($f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
@@ -211,17 +219,30 @@ let index'
   = SteelAtomic?.reflect (fun _ -> admit())
 
 
+#push-options "--query_stats --log_queries"
+let test0
+  (#t:_)
+  (a:array_ref t{U32.v (length a) == 1})
+  (iseq: Ghost.erased (Seq.lseq t 1))
+  (i:inv (pts_to_array a full_permission iseq))
+  : SteelAtomic t Set.empty
+      emp (fun _ -> emp) //pts_to_array a full_permission iseq)
+  = // This should not succeed, as index has Set.empty for uses, while with_invariant
+    // should expect Set.singleton i
+    with_invariant #t #emp #(fun _ -> emp) #(Set.empty) #(pts_to_array a full_permission iseq) i (index #t a iseq 0ul)
+
 let test
   (#t:_)
   (a:array_ref t{U32.v (length a) == 1})
   (iseq: Ghost.erased (Seq.lseq t 1))
   : SteelAtomic t Set.empty
       (pts_to_array a full_permission iseq)
-      (fun _ -> pts_to_array a full_permission iseq)
+      (fun _ -> emp) //pts_to_array a full_permission iseq)
   = let i = new_inv  (pts_to_array a full_permission iseq) in
     // This should not succeed, as index has Set.empty for uses, while with_invariant
     // should expect Set.singleton i
-    with_invariant i (fun _ -> index a iseq 0ul)
+    with_invariant #t #_ #_ #(Set.empty) #_ i (index a iseq 0ul)
+
 // This should be the correct version given the signature of with_invariant
 // There might be something fishy with the definition of the polymonadic bind?
 //    with_invariant #_ #_ #_ #(Set.singleton i) i (fun _ -> index' #_ #(Set.singleton i) a iseq 0ul)
