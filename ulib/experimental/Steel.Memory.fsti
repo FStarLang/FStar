@@ -147,10 +147,10 @@ type hmem (p:hprop) = m:mem{interp p m}
 ////////////////////////////////////////////////////////////////////////////////
 
 val equiv_symmetric (p1 p2:hprop)
-  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+  : Lemma (p1 `equiv` p2 ==> p2 `equiv` p1)
 
 val equiv_extensional_on_star (p1 p2 p3:hprop)
-  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+  : Lemma (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_array and abbreviations
@@ -375,3 +375,22 @@ val core_mem (m:mem) : mem
 let mprop (hp:hprop) = q:(mem -> prop){
   forall (m0:mem{interp hp m0}) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
+
+
+(***** Following lemmas are needed in Steel.Effect *****)
+
+val core_mem_interp (hp:hprop) (m:mem)
+: Lemma
+  (requires interp hp m)
+  (ensures interp hp (core_mem m))
+  [SMTPat (interp hp (core_mem m))]
+
+val interp_depends_only_on (hp:hprop)
+  : Lemma
+    (forall (m0:hmem hp) (m1:mem{disjoint m0 m1}).
+       interp hp m0 <==> interp hp (join m0 m1))
+
+let affine_star_smt (p q:hprop) (m:mem)
+: Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
+  [SMTPat (interp (p `star` q) m)]
+= affine_star p q m

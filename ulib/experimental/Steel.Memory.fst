@@ -847,3 +847,7 @@ let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
   refine (lock_store_invariant e m.locks) (heap_ctr_valid m)
 
 let core_mem m = mem_of_heap (heap_of_mem m)
+
+let core_mem_interp hp m = ()
+
+let interp_depends_only_on hp = ()

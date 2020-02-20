@@ -58,20 +58,18 @@ type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
     ens_depends_only_on pre post q
   }
 
-assume val core_mem_interp (hp:hprop) (m:mem)
-: Lemma
-  (requires interp hp m)
-  (ensures interp hp (core_mem m))
-  [SMTPat (interp hp (core_mem m))]
-
-assume val interp_depends_only_on (hp:hprop)
-: Lemma
-  (forall (m0:hmem hp) (m1:mem{disjoint m0 m1}). interp hp m0 <==> interp hp (join m0 m1))
-
-assume val interp_depends_only_on_post (#a:Type) (hp:a -> hprop)
+#push-options "--warn_error -271"
+let interp_depends_only_on_post (#a:Type) (hp:a -> hprop)
 : Lemma
   (forall (x:a).
      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
+= let aux (x:a)
+    : Lemma
+      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
+      [SMTPat ()]
+    = interp_depends_only_on (hp x) in
+  ()
+#pop-options
 
 let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
   interp_depends_only_on pre;
@@ -169,11 +167,6 @@ let polymonadic_bind_steel_pure_pre (#a:Type) (#b:Type)
   admit ();
   fun h -> req_f h /\ (forall x h1. ens_f h x h1 ==> (wp_g x) (fun _ -> True))
 
-let affine_star_smt (p q:hprop) (m:mem)
-: Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
-  [SMTPat (interp (p `star` q) m)]
-= affine_star p q m
-
 // let bind_steel_pure (a:Type) (b:Type)
 //   (pre_f:pre_t) (post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
 //   (wp_g:a -> pure_wp b)
@@ -197,6 +190,9 @@ assume val steel_reify (#a:Type) (#pre:pre_t) (#post:post_t a)
   ($f:unit -> Steel a pre post req ens)
 : repr a pre post req ens
 
+(*
+ * This proof relies on core_mem_interp lemma from Steel.Memory
+ *)
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
@@ -208,6 +204,9 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 = Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
+(*
+ * We need affine_star_smt even to typecheck the signature
+ *)
 let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   ($f:unit -> Steel aL preL postL lpreL lpostL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR) (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
@@ -280,6 +279,14 @@ let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
 = MST.mst_assert p
 
+let intro_emp_left (p1 p2:hprop) (m:mem)
+: Lemma
+  (requires interp (p1 `star` p2) m)
+  (ensures interp ((p1 `star` emp) `star` p2) m)
+= emp_unit p1;
+  equiv_symmetric (p1 `star` emp) p1;
+  equiv_extensional_on_star p1 (p1 `star` emp) p2
+
 let act_preserves_frame_and_preorder
   (#a:Type)
   (#pre:hprop)
@@ -291,11 +298,9 @@ let act_preserves_frame_and_preorder
    Sem.preserves_frame #state pre (post x) m0 m1 /\
    mem_evolves m0 m1)
 = let (| x, m1 |) = act m0 in
-  assert (is_m_frame_and_preorder_preserving act);
   let frame : hprop = emp in
-  assert (interp (pre `star` locks_invariant Set.empty m0) m0);
-  assume (interp ((pre `star` emp) `star` locks_invariant Set.empty m0) m0);
-  let m0 : hmem_with_inv (pre `star` emp) = m0 in
+  intro_emp_left pre (locks_invariant Set.empty m0) m0;
+  let m0 : hmem_with_inv (pre `star` emp) = m0 in  //instantiate the quantifier in is_m_frame_preserving
   ()
 
 module G = FStar.Ghost
