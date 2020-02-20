@@ -9,8 +9,7 @@ type pre_t = hprop
 type post_t (a:Type) = a -> hprop
 
 // TODO: Add pre/postconditions
-// TODO: Add nat index
-let atomic_t (#a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a) =
+let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   unit ->
   Sem.Mst a #state
   (requires fun m0 ->
@@ -19,37 +18,41 @@ let atomic_t (#a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a) =
     interp ((post x) `star` locks_invariant uses m1) m1)
 //    Sem.preserves_frame pre (post x) m0 m1)
 
-type atomic_repr (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a) =
-  atomic_t uses pre post
+type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
+  atomic_t uses is_ghost pre post
 
-let returnc (a:Type u#a) (x:a) : atomic_repr a Set.empty emp (fun _ -> emp)
+let returnc (a:Type u#a) (x:a) : atomic_repr a Set.empty true emp (fun _ -> emp)
   = fun _ -> x
 
+// TODO: Move refinement to Pure once it is supported
 let bind (a:Type) (b:Type) (uses:Set.set lock_addr)
+  (is_ghost1:bool) (is_ghost2:bool{is_ghost1 \/ is_ghost2})
   (pre_f:pre_t) (post_f:post_t a) (post_g:post_t b)
-  (f:atomic_repr a uses pre_f post_f) (g:(x:a -> atomic_repr b uses (post_f x) post_g))
-  : atomic_repr b uses pre_f post_g
+  (f:atomic_repr a uses is_ghost1 pre_f post_f)
+  (g:(x:a -> atomic_repr b uses is_ghost2 (post_f x) post_g))
+  : (atomic_repr b uses (is_ghost1 && is_ghost2) pre_f post_g)
   = fun m0 ->
     let x = f () in
     g x ()
 
-let subcomp (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
-  (f:atomic_repr a uses pre post)
-  : Pure (atomic_repr a uses pre post)
+let subcomp (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a)
+  (f:atomic_repr a uses is_ghost pre post)
+  : Pure (atomic_repr a uses is_ghost pre post)
     (requires True)
     (ensures fun _ -> True)
   = f
 
 let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
-  (f:atomic_repr a uses pre post)
-  (g:atomic_repr a uses pre post)
+  (f:atomic_repr a uses true pre post)
+  (g:atomic_repr a uses true pre post)
   (p:Type0)
   : Type
-  = atomic_repr a uses pre post
+  = atomic_repr a uses true pre post
 
 reflectable
 layered_effect {
-  SteelAtomic : a:Type -> uses:Set.set lock_addr -> pre:pre_t -> post:post_t a -> Effect
+  SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
+    -> Effect
   with
   repr = atomic_repr;
   return = returnc;
@@ -67,9 +70,10 @@ assume WP_monotonic_pure:
 let bind_pure_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (uses:Set.set lock_addr)
+  (is_ghost:bool)
   (pre_g:pre_t) (post_g:post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses pre_g post_g))
-: atomic_repr b uses pre_g post_g
+  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
+: atomic_repr b uses is_ghost pre_g post_g
 = admit()
 
 
@@ -90,9 +94,10 @@ let mst_put (m:mem)
 assume val atomic_preserves_preorder
   (#a:Type)
   (#uses:Set.set lock_addr)
+  (#is_ghost:bool)
   (#pre:hprop)
   (#post:a -> hprop)
-  (act:atomic uses pre a post)
+  (act:atomic uses is_ghost pre a post)
   (m0:hmem_with_inv' uses pre)
   : Lemma (
     let (| x, m1 |) = act m0 in
@@ -102,22 +107,26 @@ assume val atomic_preserves_preorder
 
 
 assume
-val atomic_noop (uses:Set.set lock_addr) : atomic uses emp unit (fun _ -> emp)
+val atomic_noop (uses:Set.set lock_addr) : atomic uses true emp unit (fun _ -> emp)
 
+/// By default, if we demote an m_action, it is not a ghost atomic
+/// If we want a ghost atomic, it should be exposed this way in Steel.Actions
 val demote_m_action_atomic
     (#a:Type) (#fp:hprop) (#fp':a -> hprop)
     (f : m_action fp a fp')
-    : atomic Set.empty fp a fp'
+    : atomic Set.empty false fp a fp'
 
 #push-options "--fuel 0 --ifuel 0"
 let demote_m_action_atomic #a #fp #fp' f = f
 #pop-options
 
-val atomic_new_inv (p:hprop) : atomic Set.empty p (inv p) (fun _ -> emp)
+// TODO: If we expose directly an atomic new_inv, this should probably be considered a ghost action?
+// Or maybe it shouldn't be in SteelAtomic at all?
+val atomic_new_inv (p:hprop) : atomic Set.empty false p (inv p) (fun _ -> emp)
 let atomic_new_inv p = demote_m_action_atomic (new_inv p)
 
 #push-options "--fuel 0 --ifuel 1"
-let noop (uses:Set.set lock_addr) : SteelAtomic unit uses emp (fun _ -> emp)
+let noop (uses:Set.set lock_addr) : SteelAtomic unit uses true emp (fun _ -> emp)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let (| x, m1 |) = atomic_noop uses m0 in
@@ -126,7 +135,7 @@ let noop (uses:Set.set lock_addr) : SteelAtomic unit uses emp (fun _ -> emp)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 1"
-let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty p (fun _ -> emp)
+let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty false p (fun _ -> emp)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let (| x, m1 |) = atomic_new_inv p m0 in
@@ -144,7 +153,7 @@ let index
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
-  : SteelAtomic t Set.empty
+  : SteelAtomic t Set.empty false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission iseq)
   = SteelAtomic?.reflect (fun _ ->
@@ -163,7 +172,7 @@ let upd
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v:t)
-  : SteelAtomic unit Set.empty
+  : SteelAtomic unit Set.empty false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
   = SteelAtomic?.reflect (fun _ ->
@@ -174,27 +183,28 @@ let upd
       mst_put m1)
 #pop-options
 
-assume val steelatomic_reify (#a:Type) (#uses:Set.set lock_addr) (#pre:pre_t) (#post:post_t a)
-  ($f:unit -> SteelAtomic a uses pre post)
-: atomic_repr a uses pre post
+assume val steelatomic_reify
+  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
+  ($f:unit -> SteelAtomic a uses is_ghost pre post)
+: atomic_repr a uses is_ghost pre post
 
 // TODO: This should be implemented using with_invariant in Steel.Actions
 // But for this, we need a with_invariant that takes directly an atomic_t
 // instead of an atomic
 let with_invariant0
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic_repr a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
-  : SteelAtomic a uses fp fp'
+  (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
+  : SteelAtomic a uses is_ghost fp fp'
   = SteelAtomic?.reflect (fun _ -> admit())
 
 let with_invariant
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) (p `star` fp) (fun x -> p `star` fp' x))
-  : SteelAtomic a uses fp fp'
+  (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
+  : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
 // TODO: We should expose actions as atomics in Steel.Actions, so that
@@ -205,7 +215,7 @@ let index'
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
-  : SteelAtomic t uses
+  : SteelAtomic t uses false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission iseq)
   = SteelAtomic?.reflect (fun _ -> admit())
@@ -215,7 +225,7 @@ let test
   (#t:_)
   (a:array_ref t{U32.v (length a) == 1})
   (iseq: Ghost.erased (Seq.lseq t 1))
-  : SteelAtomic t Set.empty
+  : SteelAtomic t Set.empty false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission iseq)
   = let i = new_inv  (pts_to_array a full_permission iseq) in

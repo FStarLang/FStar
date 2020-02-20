@@ -2151,22 +2151,23 @@ let action_to_atomic_frame uses #fp #a #fp' f non_alloc =
 let promote_action
     (#a:Type) (#fp:hprop) (#fp':a -> hprop)
     (uses:Set.set lock_addr)
+    (is_ghost:bool)
     (f:action fp a fp')
     (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
       (requires (h addr == None))
       (ensures (let (| _, h'|) = f h in h' addr == None))
     )
-    : atomic uses fp a fp' =
+    : atomic uses is_ghost fp a fp' =
     action_to_atomic_frame uses f non_alloc;
     promote_action_preatomic uses f non_alloc
 
 val atomic_satisfies_mem_evolves
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
-  (f:atomic uses fp a fp')
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
+  (f:atomic uses is_ghost fp a fp')
   (m0:hmem_with_inv' uses fp)
   : Lemma (let (| _, m1 |) = f m0 in mem_evolves m0 m1)
 
-let atomic_satisfies_mem_evolves #a #fp #fp' #uses f m0 =
+let atomic_satisfies_mem_evolves #a #fp #fp' #uses #is_ghost f m0 =
   calc (equiv) {
     fp `star` locks_invariant uses m0;
     (equiv) { emp_unit fp;
@@ -2286,13 +2287,13 @@ let interp_inv_not_in_uses
     }
 
 val pre_with_invariant
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+  (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
   : pre_atomic uses fp a fp'
 
-let pre_with_invariant #a #fp #fp' #uses #p i f =
+let pre_with_invariant #a #fp #fp' #uses #is_ghost #p i f =
   fun (m0:hmem_with_inv' uses fp) ->
     assume (inv_ok i m0);
     mem_invariant_elim' uses fp m0;
@@ -2307,10 +2308,10 @@ let pre_with_invariant #a #fp #fp' #uses #p i f =
     (| x, m1 |)
 
 val with_invariant_frame_aux
-    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
     (#p:hprop)
     (i:inv p{not (i `Set.mem` uses)})
-    (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+    (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
     (frame:hprop) (m0:hmem_with_inv' uses (fp `star` frame))
     : Lemma (
         ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
@@ -2321,7 +2322,7 @@ val with_invariant_frame_aux
         (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
 
 #push-options "--fuel 0 --ifuel 0"
-let with_invariant_frame_aux #fp #a #fp' #uses #p i f frame m0 =
+let with_invariant_frame_aux #fp #a #fp' #uses #is_ghost #p i f frame m0 =
   mem_invariant_elim' uses (fp `star` frame) m0;
   assume (inv_ok i m0);
   ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
@@ -2360,17 +2361,17 @@ let with_invariant_frame_aux #fp #a #fp' #uses #p i f frame m0 =
 #pop-options
 
 val with_invariant_frame
-    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
     (#p:hprop)
     (i:inv p{not (i `Set.mem` uses)})
-    (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+    (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
     :  Lemma (is_atomic_frame_and_preorder_preserving (pre_with_invariant i f))
 
-let with_invariant_frame #fp #a #fp' #uses #p i f =
+let with_invariant_frame #fp #a #fp' #uses #is_ghost #p i f =
   Classical.forall_intro_2 (with_invariant_frame_aux i f)
 
-let with_invariant #a #fp #fp' #uses #p i f =
+let with_invariant #a #fp #fp' #uses #is_ghost #p i f =
     with_invariant_frame i f;
     pre_with_invariant i f
 
-let promote_atomic_m_action #a #fp #fp' f = f
+let promote_atomic_m_action #a #fp #fp' #is_ghost f = f
