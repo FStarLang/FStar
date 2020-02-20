@@ -311,6 +311,7 @@ let act_preserves_frame_and_preorder
 module G = FStar.Ghost
 module P = FStar.Preorder
 
+#push-options "--z3rlimit 50"
 let read (#a:Type0) (r:reference a) (p:permission{allows_read p}) (pre:G.erased (P.preorder a))
 : Steel a (ref_perm r p pre) (fun x -> pts_to_ref r p x pre)
     (fun _ -> True) (fun _ _ _ -> True)
@@ -319,7 +320,12 @@ let read (#a:Type0) (r:reference a) (p:permission{allows_read p}) (pre:G.erased 
     let (| x, m1 |) = get_ref r p pre m0 in
     act_preserves_frame_and_preorder (get_ref r p pre) m0;
     mst_put m1;
+    mst_assume (interp (ref_perm r p pre) m1);
+    sel_ref_lemma r p pre m1;
+    pts_to_ref_injective r p x (sel_ref r pre m1) pre m1;
+    mst_assert (x == sel_ref r pre m1);
     x)
+#pop-options
 
 let write (#a:Type0) (r:reference a) (curr:G.erased a) (x:a)
   (pre:(G.erased (P.preorder a)){(G.reveal pre) curr x})
