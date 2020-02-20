@@ -150,15 +150,16 @@ open Steel.Permissions
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
 let index
   (#t:_)
+  (#uses:Set.set lock_addr)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
-  : SteelAtomic t Set.empty false
+  : SteelAtomic t uses false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission iseq)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      let at = demote_m_action_atomic (index_array a iseq full_permission i) in
+      let at = (index_array uses a iseq full_permission i) in
       let (| x, m1 |) = at m0 in
       atomic_preserves_preorder at m0;
       mst_put m1;
@@ -168,16 +169,17 @@ let index
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
 let upd
   (#t:_)
+  (#uses:Set.set lock_addr)
   (a:array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v:t)
-  : SteelAtomic unit Set.empty false
+  : SteelAtomic unit uses false
       (pts_to_array a full_permission iseq)
       (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      let at = demote_m_action_atomic (upd_array a iseq i v) in
+      let at = (upd_array uses a iseq i v) in
       let (| x, m1 |) = at m0 in
       atomic_preserves_preorder at m0;
       mst_put m1)
@@ -207,20 +209,6 @@ let with_invariant
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
-// TODO: We should expose actions as atomics in Steel.Actions, so that
-// we can implement the uses-parametric version
-let index'
-  (#t:_)
-  (#uses:Set.set lock_addr)
-  (a:array_ref t)
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (i:U32.t{U32.v i < U32.v (length a)})
-  : SteelAtomic t uses false
-      (pts_to_array a full_permission iseq)
-      (fun _ -> pts_to_array a full_permission iseq)
-  = SteelAtomic?.reflect (fun _ -> admit())
-
-
 let test
   (#t:_)
   (a:array_ref t{U32.v (length a) == 1})
@@ -234,4 +222,4 @@ let test
     with_invariant i (fun _ -> index a iseq 0ul)
 // This should be the correct version given the signature of with_invariant
 // There might be something fishy with the definition of the polymonadic bind?
-//    with_invariant #_ #_ #_ #(Set.singleton i) i (fun _ -> index' #_ #(Set.singleton i) a iseq 0ul)
+//    with_invariant #_ #_ #_ #(Set.singleton i) i (fun _ -> index #_ #(Set.singleton i) a iseq 0ul)
