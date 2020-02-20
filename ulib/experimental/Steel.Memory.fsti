@@ -17,6 +17,7 @@ module Steel.Memory
 open FStar.Real
 open Steel.Permissions
 module U32 = FStar.UInt32
+module S = FStar.Set
 
 let trivial_preorder (a: Type) : Preorder.preorder a = fun _ _ -> True
 
@@ -124,8 +125,7 @@ val pts_to_array_with_preorder
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   (preorder: Ghost.erased (Preorder.preorder t))
   : hprop
-
-val pts_to_ref_with_preorder
+val pts_to_ref
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
@@ -187,19 +187,18 @@ val pts_to_array_injective
 // pts_to_ref and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_ref
+let ref_perm
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
-  (contents: Ghost.erased t)
+  (pre: Ghost.erased (Preorder.preorder t))
   : hprop =
-  pts_to_ref_with_preorder r p contents (Ghost.hide (trivial_preorder t))
+  h_exists (fun (contents: Ghost.erased t) ->
+    pts_to_ref r p contents pre
+  )
 
-let ref_perm (#t: Type0) (r: reference t) (p:permission{allows_read p}) : hprop
-  = h_exists (pts_to_ref r p)
-
-let ref (#t: Type0) (r: reference t) : hprop
-  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)
+let ref (#t: Type0) (r: reference t) (pre: Ghost.erased (Preorder.preorder t)) : hprop
+  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p pre)
 
 val pts_to_ref_injective
   (#t: _)
@@ -210,8 +209,8 @@ val pts_to_ref_injective
   (m:mem)
   : Lemma
     (requires (
-      interp (pts_to_ref_with_preorder a p c0 pre) m /\
-      interp (pts_to_ref_with_preorder a p c1 pre) m))
+      interp (pts_to_ref a p c0 pre) m /\
+      interp (pts_to_ref a p c1 pre) m))
     (ensures (c0 == c1))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,9 +363,12 @@ val emp_unit (p:hprop)
 //   : Lemma (interp p `depends_only_on` p)
 
 
-val locks_invariant : mem -> hprop
+val lock_addr: eqtype
 
-let hmem_with_inv (fp:hprop) = m:mem{interp (fp `star` locks_invariant m) m}
+val locks_invariant : S.set lock_addr -> mem -> hprop
+
+let hmem_with_inv' (e:S.set lock_addr) (fp:hprop) = m:mem{interp (fp `star` locks_invariant e m) m}
+let hmem_with_inv (fp:hprop) = m:mem{interp (fp `star` locks_invariant Set.empty m) m}
 
 val core_mem (m:mem) : mem
 
