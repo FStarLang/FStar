@@ -325,19 +325,20 @@ let is_atomic_frame_and_preorder_preserving
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
 let atomic (uses:Set.set lock_addr)
+           (is_ghost:bool)
            (fp:hprop)
            (a:Type)
            (fp':a -> hprop) =
     f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
 
 val with_invariant
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
-  : atomic uses fp a fp'
+  (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
+  : atomic uses is_ghost fp a fp'
 
 val promote_atomic_m_action
-    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
-    (f:atomic Set.empty fp a fp')
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#is_ghost:bool)
+    (f:atomic Set.empty is_ghost fp a fp')
     : m_action fp a fp'
