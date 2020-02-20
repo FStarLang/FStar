@@ -28,9 +28,6 @@ open Steel.Memory
 
 #set-options "--print_implicits --print_universes"
 
-
-// type hmem (hp:Mem.hprop) = m:Mem.mem{Mem.interp_mem hp m}
-
 let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
@@ -255,11 +252,10 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*
-//  * We are going to work with instiation of MSTATE with mem and mem_evolves
-//  *
-//  * Define abbreviations to ease the implicit inference for them
-//  *)
-
+ * We are going to work with instiation of MSTATE with mem and mem_evolves
+ *
+ * Define abbreviations to ease the implicit inference for them
+*)
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
   MST.MSTATE a mem mem_evolves req ens
@@ -297,48 +293,50 @@ let act_preserves_frame_and_preorder
 = let (| x, m1 |) = act m0 in
   assert (is_m_frame_and_preorder_preserving act);
   let frame : hprop = emp in
-  assert (interp (pre `star` locks_invariant m0) m0);
-  assume (interp ((pre `star` emp) `star` locks_invariant m0) m0);
+  assert (interp (pre `star` locks_invariant Set.empty m0) m0);
+  assume (interp ((pre `star` emp) `star` locks_invariant Set.empty m0) m0);
   let m0 : hmem_with_inv (pre `star` emp) = m0 in
   ()
 
-let read (#a:Type0) (r:reference a) (p:permission{allows_read p})
-: SteelT a (ref_perm r p) (fun x -> pts_to_ref r p x)
+module G = FStar.Ghost
+module P = FStar.Preorder
+
+let read (#a:Type0) (r:reference a) (p:permission{allows_read p}) (pre:G.erased (P.preorder a))
+: SteelT a (ref_perm r p pre) (fun x -> pts_to_ref r p x pre)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| x, m1 |) = get_ref r p m0 in
-    act_preserves_frame_and_preorder (get_ref r p) m0;
+    let (| x, m1 |) = get_ref r p pre m0 in
+    act_preserves_frame_and_preorder (get_ref r p pre) m0;
     mst_put m1;
     x)
 
 
-let write (#a:Type0) (r:reference a) (x:a)
-: SteelT unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
-= Steel?.reflect (fun _ ->
-    let m0 = mst_get () in
-    let (| _, m1 |) = set_ref r x m0 in
-    act_preserves_frame_and_preorder (set_ref r x) m0;
-    mst_put m1)
+// let write (#a:Type0) (r:reference a) (x:a)
+// : SteelT unit (ref_perm r full_permission) (fun _ -> pts_to_ref r full_permission x)
+// = Steel?.reflect (fun _ ->
+//     let m0 = mst_get () in
+//     let (| _, m1 |) = set_ref r x m0 in
+//     act_preserves_frame_and_preorder (set_ref r x) m0;
+//     mst_put m1)
 
 
-let alloc (#a:Type0) (x:a)
-: SteelT (reference a) emp (fun r -> pts_to_ref r full_permission x)
-= Steel?.reflect (fun _ ->
-    let m0 = mst_get () in
-    let (| r, m1 |) = alloc_ref #a x m0 in
-    act_preserves_frame_and_preorder (alloc_ref #a x) m0;
-    mst_put m1;
-    r)
+// let alloc (#a:Type0) (x:a)
+// : SteelT (reference a) emp (fun r -> pts_to_ref r full_permission x)
+// = Steel?.reflect (fun _ ->
+//     let m0 = mst_get () in
+//     let (| r, m1 |) = alloc_ref #a x m0 in
+//     act_preserves_frame_and_preorder (alloc_ref #a x) m0;
+//     mst_put m1;
+//     r)
 
 
-let free (#a:Type0) (r:reference a)
-: SteelT unit (ref_perm r full_permission) (fun _ -> emp)
-= Steel?.reflect (fun _ ->
-    let m0 = mst_get () in
-    let (| _, m1 |) = free_ref r m0 in
-    act_preserves_frame_and_preorder (free_ref r) m0;
-    mst_put m1)
-
+// let free (#a:Type0) (r:reference a)
+// : SteelT unit (ref_perm r full_permission) (fun _ -> emp)
+// = Steel?.reflect (fun _ ->
+//     let m0 = mst_get () in
+//     let (| _, m1 |) = free_ref r m0 in
+//     act_preserves_frame_and_preorder (free_ref r) m0;
+//     mst_put m1)
 
 
 // assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
