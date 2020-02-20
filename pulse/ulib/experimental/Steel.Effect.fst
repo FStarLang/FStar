@@ -155,17 +155,22 @@ let bind_pure_steel (a:Type) (b:Type)
 
 polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel
 
+#push-options "--warn_error -271"
 unfold
 let polymonadic_bind_steel_pure_pre (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
   (wp_g:a -> pure_wp b)
 : req_t pre_f
-= // assert (forall x (h0:Mem.hheap pre_f) h1 (h2:Mem.heap{Mem.disjoint h0 h2}).
-  //           ens_f h0 x h1 <==> ens_f (Mem.join h0 h2) x h1);
-  // assert (forall x h1 (h0:Mem.hheap pre_f) (h2:Mem.heap{Mem.disjoint h0 h2}).
-  //         (ens_f h0 x h1 ==> p) <==> (ens_f (Mem.join h0 h2) x h1 ==> p));
-  admit ();
-  fun h -> req_f h /\ (forall x h1. ens_f h x h1 ==> (wp_g x) (fun _ -> True))
+= let aux (m0:hmem pre_f) (m1:mem{disjoint m0 m1})
+    : Lemma
+      (requires 
+        forall (x:a) (h1:hmem post_f). ens_f (join m0 m1) x h1 ==> (wp_g x) (fun _ -> True))
+      (ensures
+        forall (x:a) (h1:hmem post_f). ens_f m0 x h1 ==> (wp_g x) (fun _ -> True))
+      [SMTPat ()]
+    = assert (forall (x:a) (h1:hmem post_f). ens_f m0 x h1 <==> ens_f (join m0 m1) x h1) in
+  fun h -> req_f h /\ (forall (x:a) (h1:hmem post_f). ens_f h x h1 ==> (wp_g x) (fun _ -> True))
+#pop-options
 
 // let bind_steel_pure (a:Type) (b:Type)
 //   (pre_f:pre_t) (post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
