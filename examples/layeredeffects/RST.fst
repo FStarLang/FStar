@@ -43,7 +43,7 @@ type repr (a:Type) (r_in:resource) (r_out:a -> resource) =
   unit -> STATE a (fun p h -> forall x h1. p x h1)
 
 
-let returnc (a:Type) (r:a -> resource) (x:a)
+let returnc (a:Type) (x:a) (r:a -> resource)
 : repr a (r x) r
 = fun _ -> x
 
@@ -82,7 +82,7 @@ layered_effect {
 
 let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r
-= RSTATE?.reflect (returnc a r x)
+= RSTATE?.reflect (returnc a x r)
 
 
 let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
@@ -103,3 +103,24 @@ let test ()
 : RSTATE array emp array_resource
 = let ptr = alloc () in
   return ptr
+
+
+(*
+ * Following example showcases a bug in checking match terms for layered effects
+ *
+ * When typechecking the pattern `C a x`, we generate a term with projectors and discriminators
+ *   for each of the pattern bvs, a and x in this case, and those terms are then lax checked
+ * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environement,
+ *   earlier it wasn't
+ *)
+
+noeq
+type m : Type -> Type =
+| C : a:Type -> x:a -> m a
+
+
+assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
+
+let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
+= match f with
+  | C a x -> rst_unit ()

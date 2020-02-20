@@ -382,9 +382,9 @@ type layered_eff_combinators = {
 }
 
 type eff_combinators =
-  | Primitive_eff: wp_eff_combinators -> eff_combinators
-  | DM4F_eff: wp_eff_combinators -> eff_combinators
-  | Layered_eff: layered_eff_combinators -> eff_combinators
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
 
 type eff_decl = {
   mname       : lident;
@@ -408,43 +408,46 @@ type sig_metadata = {
 }
 
 type sigelt' =
-  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                       * univ_names                //u1..un
-                       * binders                   //(x1:t1) ... (xn:tn)
-                       * typ                       //t
-                       * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for this type
+  | Sig_inductive_typ     of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                          * univ_names                //u1..un
+                          * binders                   //(x1:t1) ... (xn:tn)
+                          * typ                       //t
+                          * list<lident>              //mutually defined types
+                          * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident                    //name of the datacon
-                       * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ                        //the constructor's type as an arrow
-                       * lident                     //the inductive type of the value this constructs
-                       * int                        //and the number of parameters of the inductive
-                       * list<lident>               //mutually defined types
-  | Sig_declare_typ    of lident
-                       * univ_names
-                       * typ
-  | Sig_let            of letbindings
-                       * list<lident>               //mutually defined
-  | Sig_main           of term
-  | Sig_assume         of lident
-                       * univ_names
-                       * formula
-  | Sig_new_effect     of eff_decl
-  | Sig_sub_effect     of sub_eff
-  | Sig_effect_abbrev  of lident
-                       * univ_names
-                       * binders
-                       * comp
-                       * list<cflag>
-  | Sig_pragma         of pragma
-  | Sig_splice         of list<lident> * term
+  | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
+                          * list<lident>               //all the inductive types and data constructor names in this bundle
+  | Sig_datacon           of lident                    //name of the datacon
+                          * univ_names                 //universe variables of the inductive type it belongs to
+                          * typ                        //the constructor's type as an arrow
+                          * lident                     //the inductive type of the value this constructs
+                          * int                        //and the number of parameters of the inductive
+                          * list<lident>               //mutually defined types
+  | Sig_declare_typ       of lident
+                          * univ_names
+                          * typ
+  | Sig_let               of letbindings
+                          * list<lident>               //mutually defined
+  | Sig_main              of term
+  | Sig_assume            of lident
+                          * univ_names
+                          * formula
+  | Sig_new_effect        of eff_decl
+  | Sig_sub_effect        of sub_eff
+  | Sig_effect_abbrev     of lident
+                          * univ_names
+                          * binders
+                          * comp
+                          * list<cflag>
+  | Sig_pragma            of pragma
+  | Sig_splice            of list<lident> * term
+
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;

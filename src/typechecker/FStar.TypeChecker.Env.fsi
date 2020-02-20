@@ -92,6 +92,12 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+(*
+ * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
+ *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
+ *)
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -108,6 +114,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
 }
 
 and env = {
@@ -290,7 +297,12 @@ val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 //client constructs the mlift and gives it to us
-val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
+
+val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
+
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
+val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env

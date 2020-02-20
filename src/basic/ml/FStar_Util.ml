@@ -418,8 +418,13 @@ let pimap_try_find (map: 'value pimap) (key: Z.t) =
   ZMap.Exceptionless.find key map
 let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 
+(* restore pre-2.11 BatString.nsplit behavior,
+   see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
+let batstring_nsplit s t =
+  if s = "" then [] else BatString.nsplit s t
+                                    
 let format (fmt:string) (args:string list) =
-  let frags = BatString.nsplit fmt "%s" in
+  let frags = batstring_nsplit fmt "%s" in
   if BatList.length frags <> BatList.length args + 1 then
     failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else

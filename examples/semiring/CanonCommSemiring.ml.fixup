@@ -2,8 +2,8 @@ let unembed = FStar_Reflection_Interpreter.unembed
 
 let embed = FStar_Reflection_Interpreter.embed
 
-let extract_8 :
-  'a 'b 'c 'd 'e 'f 'g 'h.
+let extract_10 :
+  'a 'b 'c 'd 'e 'f 'g 'h 'i 'j.
     'a FStar_Syntax_Embeddings.embedding ->
       'b FStar_Syntax_Embeddings.embedding ->
         'c FStar_Syntax_Embeddings.embedding ->
@@ -12,9 +12,11 @@ let extract_8 :
               'f FStar_Syntax_Embeddings.embedding ->
                 'g FStar_Syntax_Embeddings.embedding ->
                   'h FStar_Syntax_Embeddings.embedding ->
+                   'i FStar_Syntax_Embeddings.embedding ->
+                     'j FStar_Syntax_Embeddings.embedding ->
                   FStar_Syntax_Embeddings.norm_cb ->
                     FStar_Syntax_Syntax.args ->
-                      ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h)
+                      ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j)
                         FStar_Pervasives_Native.option
   =
   fun ea  ->
@@ -22,15 +24,17 @@ let extract_8 :
       fun ec  ->
         fun ed  ->
           fun ee  ->
-            fun ef  ->
-              fun eg  ->
-              fun eh  ->
+           fun ef  ->
+            fun eg ->
+             fun eh ->
+              fun ei ->
+               fun ej ->
                 fun ncb  ->
                   fun args  ->
                     match args with
                     | (a,uu____1497)::(b,uu____1499)::(c,uu____1501)::
                         (d,uu____1503)::(e,uu____1505)::(f,uu____1507)::
-                        (g,uu____1509)::(h,uu____2000)::[] ->
+                        (g,uu____1509)::(h,uu____2000)::(i,uu____3000)::(j,uu____4000)::[] ->
                         let uu____1630 = unembed ea a ncb  in
                         FStar_Util.bind_opt uu____1630
                           (fun a1  ->
@@ -61,17 +65,28 @@ let extract_8 :
                                                         unembed eh h ncb  in
                                                       FStar_Util.bind_opt
                                                         uu____2002
-                                                        (fun h1  ->
+                                                    (fun h1 ->
+                                                      let uu____2003 =
+                                                        unembed ei i ncb  in
+                                                      FStar_Util.bind_opt
+                                                        uu____2003
+                                                    (fun i1 ->
+                                                      let uu____2004 =
+                                                        unembed ej j ncb  in
+                                                      FStar_Util.bind_opt
+                                                        uu____2004
+                                                     (fun j1  ->
                                                            FStar_Pervasives_Native.Some
                                                              (a1, b1, c1, d1,
-                                                               e1, f1, g1, h1)))))))))
+                                                               e1, f1, g1, h1,
+                                                                i1, j1)))))))))))
                     | uu____1783 ->
                         failwith "extract_8: wrong number of arguments"
 
 
-let mk_tactic_interpretation_7 :
-  'a 'b 'c 'd 'e 'f 'g 'r .
-    ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'r FStar_Tactics_Basic.tac) ->
+let mk_tactic_interpretation_9 :
+  'a 'b 'c 'd 'e 'f 'g 'h 'i 'r .
+    ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> 'r FStar_Tactics_Basic.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'c FStar_Syntax_Embeddings.embedding ->
@@ -79,6 +94,8 @@ let mk_tactic_interpretation_7 :
               'e FStar_Syntax_Embeddings.embedding ->
                 'f FStar_Syntax_Embeddings.embedding ->
                  'g FStar_Syntax_Embeddings.embedding ->
+                  'h FStar_Syntax_Embeddings.embedding ->
+                   'i FStar_Syntax_Embeddings.embedding ->
                   'r FStar_Syntax_Embeddings.embedding ->
                     FStar_TypeChecker_Cfg.psc ->
                       FStar_Syntax_Embeddings.norm_cb ->
@@ -94,22 +111,24 @@ let mk_tactic_interpretation_7 :
             fun ee  ->
               fun ef  ->
                fun eg ->
+               fun eh ->
+               fun ei ->               
                 fun er  ->
                   fun psc  ->
                     fun ncb  ->
                       fun args  ->
                         let uu____5170 =
-                          extract_8 ea eb ec ed ee ef eg
+                          extract_10 ea eb ec ed ee ef eg eh ei
                             FStar_Tactics_Embedding.e_proofstate ncb args
                            in
                         FStar_Util.bind_opt uu____5170
                           (fun uu____5212  ->
                              match uu____5212 with
-                             | (a,b,c,d,e,f,g,ps) ->
+                             | (a,b,c,d,e,f,g,h,i,ps) ->
                                  let ps1 =
                                    FStar_Tactics_Types.set_ps_psc psc ps  in
                                  let r =
-                                   let uu____5240 = t a b c d e f g in
+                                   let uu____5240 = t a b c d e f g h i in
                                    FStar_Tactics_Basic.run_safe uu____5240
                                      ps1
                                     in
@@ -121,29 +140,31 @@ let mk_tactic_interpretation_7 :
                                    embed uu____5244 uu____5249 r ncb  in
                                  FStar_Pervasives_Native.Some uu____5243)
 
-let from_tactic_7 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> ('h, unit) FStar_Tactics_Effect._dm4f_TAC_repr): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h FStar_Tactics_Basic.tac) =
+let from_tactic_9 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> ('j, unit) FStar_Tactics_Effect._dm4f_TAC_repr): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> 'j FStar_Tactics_Basic.tac) =
     fun (x: 'a) ->
         fun (y: 'b) ->
             fun (z: 'c) ->
                 fun (w: 'd) ->
                     fun (v: 'e) ->
                         fun (u: 'f) ->
-                          fun (a: 'g) ->
+                          fun (u1: 'g) ->
+                          fun (u2: 'h) ->
+                          fun (a: 'i) ->                          
                             (fun (ps:FStar_Tactics_Types.proofstate) ->
-                                FStar_Util.print_string "In compiled code (7)\n";
-                                FStar_Tactics_Native.interpret_tactic ps (t x y z w v u a)) |> FStar_Tactics_Basic.mk_tac
+                                FStar_Util.print_string "In compiled code (9)\n";
+                                FStar_Tactics_Native.interpret_tactic ps (t x y z w v u u1 u2 a)) |> FStar_Tactics_Basic.mk_tac
 
 
 let _ =
   FStar_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
-    (Prims.parse_int "9")
+    (Prims.parse_int "11")
     (fun psc  ->
       fun ncb ->
         fun args  ->
           match args with
           | (tv_0,_)::args_tail ->
-              (mk_tactic_interpretation_7
-                 (from_tactic_7 canon_semiring_aux)
+              (mk_tactic_interpretation_9
+                 (from_tactic_9 canon_semiring_aux)
                  FStar_Reflection_Embeddings.e_term
                  (FStar_Tactics_Interpreter.e_tactic_1_alt
                      FStar_Reflection_Embeddings.e_term
@@ -151,6 +172,8 @@ let _ =
                  (FStar_Tactics_Interpreter.e_tactic_1_alt
                      (FStar_Syntax_Embeddings.mk_any_emb tv_0)
                      FStar_Reflection_Embeddings.e_term)
+                 FStar_Reflection_Embeddings.e_term
+                 FStar_Reflection_Embeddings.e_term
                  FStar_Reflection_Embeddings.e_term
                  FStar_Reflection_Embeddings.e_term
                  FStar_Reflection_Embeddings.e_term

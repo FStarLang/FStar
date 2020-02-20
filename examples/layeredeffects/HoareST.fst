@@ -225,7 +225,6 @@ let rec copy_aux
     upd cpy ctr (index s ctr);
     copy_aux s cpy (ctr + 1)
 
-
 let copy (#a:Type0) (s:array a)
 : HoareST (array a)
   (fun h -> Seq.length (sel h s) > 0)

@@ -211,6 +211,7 @@ type decl' =
   | NewEffect of effect_decl
   | LayeredEffect of effect_decl
   | SubEffect of lift
+  | Polymonadic_bind of lid * lid * lid * term
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term

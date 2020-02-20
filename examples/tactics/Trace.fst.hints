@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b273eb6dc7cb3afe687118f1639065d6"
+      "c57ec0aa12c2778e4ce921ed96cd1fc4"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "cd6238cb2d3b41f3ca8df48e327ec46d"
+      "f9a7dc6de2db7edca80c5a9f2c27aa3a"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8c32a985ec48d1a57ec0e833799d55e9"
+      "89a97d7f4f1f59a08b67965ab7cf2a0f"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f886d8d933fbd20e544d65811def70f0"
+      "679557e8568128243389028945695afc"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "ce733ed64b0862d17c002ae337cc1a20"
+      "731b783a9d23a0df03e07b1fc70c35e3"
     ],
     [
       "Trace.uu___100",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "195462914e08a327d62a9fdf604daf12"
+      "80ecf385402131a8ed1fbaf33fce90e7"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9ef331bd119dd9eed4106a3d35eb8c90"
+      "8bdcfd12c4e0250f5615ee72f8a48d62"
     ],
     [
       "Trace.uu___110",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "2f4f1c98925727dce95957f836d3932c"
+      "22e8d561d7d0fb9e3f9161bedde82d26"
     ],
     [
       "Trace.uu___114",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "f9a52fe73d9a9b73a6bacc813e8704ba"
+      "a5fdb79a11ec11cc8e47a29daff3caf8"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "be76d2d840d9c96dc29055313252d503"
+      "0c750a8edd818936f80a59e529a85aed"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "63fd589aac53dae0157a30e63a6e1b47"
+      "341bbc804d7cae3c50bc8fa33248099a"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ea3e96ae6948722dab611dd0e7a9dcaf"
+      "ff314f1f3e0c8a9b8773b7af910dce9a"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "6dbf2931a4307ca084a8dc3b18abbed7"
+      "116815ef5488d0a5eaabea1f305b3477"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "941863b503acebcae96334d7ed863579"
+      "94d71b9db306f7e9996796acc70555d0"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "0c5ae04f9cb743e2dc56f1e99a749f7a"
+      "3e7fc41617f79d0383158e4e751300ee"
     ],
     [
       "Trace.uu___100",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "f07b980e8ce94551d0ba53c7608099d8"
+      "01f4db12fe7b824b14ff9f93c2cbf393"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7ad44d37857a76ce3d2998581e078f5d"
+      "eb9c0a6b9229441c5dfcd44e6f3da5e1"
     ],
     [
       "Trace.uu___110",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f8c70a1f9e79233b92c0ea90e62b12f2"
+      "e1950c815cf0d7018738a66942b5d26a"
     ],
     [
       "Trace.uu___114",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "685ba65c1287a660ff22af9204cbd880"
+      "35360333cbdbe6f915be885f05268ee3"
     ]
   ]
 ]

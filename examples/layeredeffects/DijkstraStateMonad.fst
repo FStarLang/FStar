@@ -129,7 +129,7 @@ let irepr a s (wp: wp_t s a) =
   unit -> m:m s a { wp_of m `F.feq` wp }
 
 /// The WP of return is the return of the wp
-let ireturn (a:Type) (s:Type) (x:a)
+let ireturn (a:Type) (x:a) (s:Type)
   : irepr a s (wp_return x)
   = fun () -> Ret x
 
