@@ -6,22 +6,10 @@ jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build base image
+    - name: Build local docker
       run: |
         ./build_local.sh
-        docker tag fstar:local franziskus/everest-ci:${GITHUB_SHA:0:12}
-    #- name: Push image (Github)
-    #    This currently fails. Also see:
-    #    https://github.community/t5/GitHub-Actions/Push-large-docker-image-to-Github-Package-failed/td-p/38446
-    #  run: |
-    #    docker login -u franziskuskiefer -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
-    #    docker push docker.pkg.github.com/franziskuskiefer/everest-ci/everest-ci-linux:${GITHUB_SHA:0:12}
-    - name: Push image (Docker Hub)
-      run: |
-        docker login -u franziskus -p ${{ secrets. DOCKERHUB_TOKEN }}
-        docker push franziskus/everest-ci:${GITHUB_SHA:0:12}
-
