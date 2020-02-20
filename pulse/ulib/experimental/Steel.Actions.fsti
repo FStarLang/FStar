@@ -42,9 +42,9 @@ val mem_evolves : FStar.Preorder.preorder mem
 
 let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
   forall (frame:hprop) (m0:hmem_with_inv (fp `star` frame)).
-    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant m0) m0;
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
      let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant m1) m1 /\
+     interp ((fp' x `star` frame) `star` locks_invariant Set.empty m1) m1 /\
      mem_evolves m0 m1 /\
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
@@ -185,49 +185,63 @@ val glue_array
 val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ -> p')
 
 ///////////////////////////////////////////////////////////////////////////////
-// References
+// References with preorders
 ///////////////////////////////////////////////////////////////////////////////
 
-val sel_ref (#t: Type0) (r: reference t) (h: hmem (ref r)) : t
+val sel_ref
+  (#t: Type0)
+  (r: reference t)
+  (pre: Ghost.erased (Preorder.preorder t))
+  (h: hmem (ref r pre))
+  : Tot t
 
 val sel_ref_lemma
-  (t: Type0)
-  (p: permission{allows_read p})
+  (#t: Type0)
   (r: reference t)
-  (m: hmem (ref_perm r p))
-  : Lemma (interp (ref r) m /\ interp (pts_to_ref r p (sel_ref r m)) m)
+  (p: permission{allows_read p})
+  (pre: Preorder.preorder t)
+  (m: hmem (ref_perm r p pre))
+  : Lemma (
+    interp (ref r pre) m /\
+    interp (pts_to_ref r p (sel_ref r pre m) pre) m
+  )
 
 val get_ref
   (#t: Type0)
   (r: reference t)
   (p: permission{allows_read p})
+  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (ref_perm r p)
+    (ref_perm r p pre)
     (x:t)
-    (fun x -> pts_to_ref r p x)
+    (fun x -> pts_to_ref r p x pre)
 
 val set_ref
   (#t: Type0)
   (r: reference t)
+  (old_v: Ghost.erased t)
   (v: t)
+  (pre: (Ghost.erased (Preorder.preorder t)){(Ghost.reveal pre) old_v v})
   : m_action
-    (ref_perm r full_permission)
+    (pts_to_ref r full_permission old_v pre)
     unit
-    (fun _ -> pts_to_ref r full_permission v)
+    (fun _ -> pts_to_ref r full_permission v pre)
 
 val alloc_ref
   (#t: Type0)
   (v: t)
+  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
     emp
     (reference t)
-    (fun r -> pts_to_ref r full_permission v)
+    (fun r -> pts_to_ref r full_permission v pre)
 
 val free_ref
   (#t: Type0)
   (r: reference t)
+  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (ref_perm r full_permission)
+    (ref_perm r full_permission pre)
     unit
     (fun _ -> emp)
 
@@ -236,12 +250,13 @@ val share_ref
   (r: reference t)
   (p: permission{allows_read p})
   (contents: Ghost.erased t)
+  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents)
+    (pts_to_ref r p contents pre)
     (r':reference t{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r' (half_permission p) contents
+      pts_to_ref r (half_permission p) contents pre `star`
+      pts_to_ref r' (half_permission p) contents pre
     )
 
 val gather_ref
@@ -251,11 +266,12 @@ val gather_ref
   (p: permission{allows_read p})
   (p': permission{allows_read p' /\ summable_permissions p p'})
   (contents: Ghost.erased t)
+  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents `star`
-      pts_to_ref r' p' contents)
+    (pts_to_ref r p contents pre `star`
+      pts_to_ref r' p' contents pre)
     unit
-    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
+    (fun _ -> pts_to_ref r (sum_permissions p p') contents pre)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Locks
@@ -276,8 +292,52 @@ val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
 //   (m:hmem emp { lock_ok l m } )
 //   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
-// val release
-//   (#p: hprop)
-//   (l:lock p)
-//   (m:hmem p { lock_ok l m } )
-//   : (b:bool & hmem emp)
+val release
+  (#p: hprop)
+  (l:lock p)
+  (m:hmem_with_inv p { lock_ok l m } )
+  : (b:bool & hmem_with_inv emp)
+
+///////////////////////////////////////////////////////////////////////////////
+// Invariants
+///////////////////////////////////////////////////////////////////////////////
+let inv (p:hprop) = lock_addr
+
+val inv_ok (#p:hprop) (l:inv p) (m:mem) : prop
+
+val new_inv (p:hprop)
+  : m_action p (inv p) (fun _ -> emp)
+
+let pre_atomic (uses:Set.set lock_addr)
+               (fp:hprop)
+               (a:Type)
+               (fp':a -> hprop) =
+    m:hmem_with_inv' uses fp -> (x:a & hmem_with_inv' uses (fp' x))
+
+let is_atomic_frame_and_preorder_preserving
+  (#uses:Set.set lock_addr) (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+  (f:pre_atomic uses fp a fp') =
+  forall (frame:hprop) (m0:hmem_with_inv' uses (fp `star` frame)).
+    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
+     let (| x, m1 |) = f m0 in
+     interp ((fp' x `star` frame) `star` locks_invariant uses m1) m1 /\
+     mem_evolves m0 m1 /\
+     (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+
+let atomic (uses:Set.set lock_addr)
+           (fp:hprop)
+           (a:Type)
+           (fp':a -> hprop) =
+    f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
+
+val with_invariant
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic (Set.union (Set.singleton i) uses) (p `star` fp) a (fun x -> p `star` fp' x))
+  : atomic uses fp a fp'
+
+val promote_atomic_m_action
+    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
+    (f:atomic Set.empty fp a fp')
+    : m_action fp a fp'

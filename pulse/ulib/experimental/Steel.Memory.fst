@@ -314,6 +314,7 @@ noeq
 type lock_state =
   | Available : hprop -> lock_state
   | Locked    : hprop -> lock_state
+  | Invariant : hprop -> lock_state
 
 let lock_store = list lock_state
 
@@ -451,7 +452,7 @@ let equiv_heap_iff_equiv (p1 p2:hprop)
 
 let emp = Emp
 let pts_to_array_with_preorder = Pts_to_array
-let pts_to_ref_with_preorder
+let pts_to_ref
   (#t: Type0)
   (r: reference t)
   (p:permission{allows_read p})
@@ -819,21 +820,30 @@ let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
 // allocation and locks
 ////////////////////////////////////////////////////////////////////////////////
 
+let lock_addr = nat
+
 let _ : squash (inversion lock_state) = allow_inversion lock_state
 
 #push-options "--max_ifuel 1 --initial_ifuel 1"
-let rec lock_store_invariant (l:lock_store) : hprop =
+let rec lock_store_invariant (e:S.set lock_addr) (l:lock_store) : hprop =
+  let current_addr = List.Tot.length l - 1 in
   match l with
   | [] -> emp
-  | Available h :: tl -> h `star` lock_store_invariant tl
-  | _ :: tl -> lock_store_invariant tl
+  | Available p :: tl -> p `star` lock_store_invariant e tl
+  | Locked _ :: tl -> lock_store_invariant e tl
+  | Invariant p :: tl ->
+    if current_addr `S.mem` e then
+      lock_store_invariant e tl
+    else
+      p `star` lock_store_invariant e tl
+
 #pop-options
 
 let heap_ctr_valid (m:mem) : heap -> prop =
   fun _ ->
   forall (i:nat). i >= m.ctr ==> m.heap i == None
 
-let locks_invariant (m:mem) : hprop =
-  refine (lock_store_invariant m.locks) (heap_ctr_valid m)
+let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
+  refine (lock_store_invariant e m.locks) (heap_ctr_valid m)
 
 let core_mem m = mem_of_heap (heap_of_mem m)
