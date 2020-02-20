@@ -39,6 +39,25 @@ Guidelines for the changelog:
     this reduction strategy by passing the `nbe:norm_step` among the
     reduction steps.
 
+  * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds
+
+  * Names in the expressions are now annotated with the types at their binding sites
+    rather than with the expected types at the use sites. This change resulted in
+    a regression in the F* examples:
+    https://github.com/FStarLang/FStar/commit/752d457bda9c0a38eef04e71886cc16899d9c13d
+
+    The workaround is an explicit annotation (see comments in the commit above).
+
+  * An unsoundness was discovered and fixed in the treatment of
+    lexicographic tuples. In particular, we used to allow relating lex
+    tuples of different arity, notably, we had `LexCons _ _ << LexTop`.
+    This was intended for the convenience of writing mutual recursive
+    functions with decreases clauses using lex tuples of different arities.
+    However, this convenience was seldom used and it actually lead to
+    an unsoundness: See examples/bug-reports/BugLexTop.fst. This
+    variable arity lexicographic tuple ordering is no longer supported.
+
+
 ## Libraries
 
    * Two core axioms were discovered by Aseem Rastogi to be formulated

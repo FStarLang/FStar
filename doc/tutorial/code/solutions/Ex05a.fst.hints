@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "25c43593205271cedf25d7f121cac878"
+      "31e7d0be53ac1e943faecae50a017d47"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "db193f4703c8513c099d0463d1a7ccde"
+      "2b5d5f183ddb19d231f73c47058b1bb5"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c31cec309347d801019e37eb9c668ff7"
+      "0f160e69fa3acb5872285cce1ef1cb62"
     ],
     [
       "Ex05a.append_assoc",
@@ -67,7 +67,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex05a.append"
       ],
       0,
-      "b03142829acf8b99e187d37a84c21515"
+      "a4e5de4adff6917ee961149f52f44baf"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -98,7 +98,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex05a.reverse"
       ],
       0,
-      "750790469024f60d3c76b6da62a7b428"
+      "4d0c4f443b5354025dd2a8a33b6b3c75"
     ],
     [
       "Ex05a.append_nil",
@@ -122,7 +122,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5a70116313ec009331884ca844d9b889"
+      "b98aa4ed312f9fc09811bb2294658d89"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "ec7a727d9ed32274c7eeff53e59e5b78"
+      "c3c6b345fb6d7d4d4f9a41c0551704aa"
     ],
     [
       "Ex05a.append",
@@ -145,7 +145,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9dd4c157e712fa863da69f1ee013517a"
+      "c16adda2a42c7031f76b18a1e1a3b83f"
     ],
     [
       "Ex05a.reverse",
@@ -159,7 +159,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "43ba8b00c13598b3e4523372c4c80728"
+      "4f8528fe86de19cbbec381c768f96ac0"
     ],
     [
       "Ex05a.rev",
@@ -174,7 +174,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d656744f706d447b606d357cb0aec671"
+      "8dde2548b1fe10db3131628c24f43fdf"
     ]
   ]
 ]
