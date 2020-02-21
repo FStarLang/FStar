@@ -85,6 +85,24 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
   g_us, t, ty
 
 (*
+ * A small gadget to get a uvar for pure wp with given result type
+ *
+ * (Used in typechecking stronger and lifts of layered effects)
+ *)
+let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
+  let pure_wp_t =
+    let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
+    let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
+    S.mk_Tm_app
+      pure_wp_t
+      [t |> S.as_arg]
+      None r in
+
+  let pure_wp_uvar, _, guard_wp = TcUtil.new_implicit_var reason r env pure_wp_t in
+
+  pure_wp_uvar, guard_wp
+
+(*
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
@@ -332,16 +350,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       S.gen_bv "f" None repr |> S.mk_binder, g in
     let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
 
-    let pure_wp_t =
-      let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
-      let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
-      S.mk_Tm_app
-        pure_wp_t
-        [ret_t |> S.as_arg]
-        None r in
-    let pure_wp_uvar, _, guard_wp =
-      let reason = BU.format1 "implicit for pure_wp in checking stronger for %s" ed.mname.str in
-      TcUtil.new_implicit_var reason r (Env.push_binders env bs) pure_wp_t in
+    let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
+      (BU.format1 "implicit for pure_wp in checking stronger for %s" ed.mname.str)
+      r in
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
       effect_name = PC.effect_PURE_lid;
@@ -1127,7 +1138,17 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   (*
    * Construct the expected lift type k as:
-   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : target_repr a i_1 ... i_m
+   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : PURE (target_repr a i_1 ... i_m) wp
+   *
+   * Note the PURE effect and the wp
+   *   It is a bit unusual, most of the times this is just Tot (target_repr a ...)
+   *
+   * Layered effects may have a logical payload, so when we define a lift from say PURE ~> M,
+   *   we need to stash some preconditions (e.g. satisfiability of the PURE wp) in the lift combinator's definition somewhere
+   *
+   * When layered effects have logical payload, then these preconditiond can be stashed in there
+   *
+   * But when they don't, this PURE wp comes handy
    *)
   let k, g_k =
     let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
@@ -1156,8 +1177,19 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     let repr, g_repr = TcUtil.fresh_effect_repr_en
       (Env.push_binders env bs)
       r sub.target u_a (a |> fst |> S.bv_to_name) in
-    
-    U.arrow bs (mk_Total' repr (new_u_univ () |> Some)), Env.conj_guard g_f_b g_repr in
+
+    let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) repr
+      (BU.format2 "implicit for pure_wp in typechecking lift %s~>%s"
+         (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)) r in
+
+    let c = S.mk_Comp ({
+      comp_univs = [ u_a ];
+      effect_name = PC.effect_PURE_lid;
+      result_typ = repr;
+      effect_args = [ pure_wp_uvar |> S.as_arg ];
+      flags = [] }) in
+
+    U.arrow bs c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
    if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
