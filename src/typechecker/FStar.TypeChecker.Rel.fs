@@ -2951,6 +2951,14 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                         (Print.args_to_string c1_comp.effect_args)
                                         (Print.args_to_string c2_comp.effect_args))) orig
         else
+             let univ_sub_probs, wl =
+               List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
+                 let p, wl = sub_prob wl
+                   (S.mk (S.Tm_type u1) None Range.dummyRange)
+                   EQ
+                   (S.mk (S.Tm_type u2) None Range.dummyRange)
+                   "effect universes" in
+                 (univ_sub_probs@[p]), wl) ([], wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
              let arg_sub_probs, wl =
                  List.fold_right2
@@ -2961,7 +2969,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                         c2_comp.effect_args
                         ([], wl)
              in
-             let sub_probs = ret_sub_prob :: (arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
+             let sub_probs = univ_sub_probs@[ret_sub_prob]@(arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
              let guard =
                let guard = U.mk_conj_l (List.map p_guard sub_probs) in
                match g_lift.guard_f with
