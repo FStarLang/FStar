@@ -2662,7 +2662,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
  * let c = M<u_c> a_c wp_c
  *
  * let lift_M_eff_name = (u, lift_t) where
- *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> repr<u> a i_1 ... i_n)
+ *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> PURE (repr<u> a i_1 ... i_n) wp
  *
  * We first instantiate lift_t with u_c
  *
@@ -2671,6 +2671,8 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
  * let substs = [a/a_c; wp/wp_c; x_i/?u_i]
  *
  * We return M'<u_c> a_c i_i[substs]
+ *
+ * + we add wp (fun _ -> True) to the returned guard
  *)
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
@@ -2692,11 +2694,11 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
       s (Print.term_to_string lift_t) in
 
-  let a_b, (rest_bs, [f_b]), lift_ct =
+  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE a wp)
     match (SS.compress lift_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 2 ->
       let ((a_b::bs), c) = SS.open_comp bs c in
-      a_b, bs |> List.splitAt (List.length bs - 1), U.comp_to_comp_typ c
+      a_b, bs |> List.splitAt (List.length bs - 1), c
     | _ ->
       raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
         "either not an arrow or not enough binders") r in
@@ -2723,20 +2725,41 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
       Env.trivial_guard c_is f_sort_is in
 
+  let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+  
   let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r in
+
+  //compute the formula `lift_c.wp (fun _ -> True)` and add it to the final guard
+  let fml =
+    let u, wp = List.hd lift_ct.comp_univs, fst (List.hd lift_ct.effect_args) in
+    let trivial_post =
+      let ts = Env.lookup_definition [NoDelta] env C.trivial_pure_post_lid |> must in
+      let _, t = Env.inst_tscheme_with ts [u] in
+      S.mk_Tm_app
+        t
+        [lift_ct.result_typ |> S.as_arg]
+        None Range.dummyRange in
+    S.mk_Tm_app
+      wp
+      [trivial_post |> S.as_arg]
+      None Range.dummyRange in
+
+  if Env.debug env <| Options.Other "LayeredEffects" &&
+     Env.debug env <| Options.Extreme
+  then BU.print1 "Guard for lift is: %s" (Print.term_to_string fml);
 
   let c = mk_Comp ({
     comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
     effect_name = tgt;
     result_typ = a;
-    effect_args = is |> List.map (SS.subst substs) |> List.map S.as_arg;
+    effect_args = is |> List.map S.as_arg;
     flags = []  //AR: setting the flags to empty
   }) in
 
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guard g guard_f
+  c, Env.conj_guard (Env.conj_guard g guard_f) (Env.guard_of_guard_formula (TcComm.NonTrivial fml))
 
 (*
  * Creating the Env.mlift.mlift_term function for layered effects
