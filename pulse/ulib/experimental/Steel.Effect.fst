@@ -163,7 +163,7 @@ let polymonadic_bind_steel_pure_pre (#a:Type) (#b:Type)
 : req_t pre_f
 = let aux (m0:hmem pre_f) (m1:mem{disjoint m0 m1})
     : Lemma
-      (requires 
+      (requires
         forall (x:a) (h1:hmem post_f). ens_f (join m0 m1) x h1 ==> (wp_g x) (fun _ -> True))
       (ensures
         forall (x:a) (h1:hmem post_f). ens_f m0 x h1 ==> (wp_g x) (fun _ -> True))
@@ -312,29 +312,28 @@ module G = FStar.Ghost
 module P = FStar.Preorder
 
 #push-options "--z3rlimit 50"
-let read (#a:Type0) (r:reference a) (p:permission{allows_read p}) (pre:G.erased (P.preorder a))
-: Steel a (ref_perm r p pre) (fun x -> pts_to_ref r p x pre)
+let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:permission{allows_read p})
+: Steel a (ref_perm r p) (fun x -> pts_to_ref r p x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| x, m1 |) = get_ref r p pre m0 in
-    act_preserves_frame_and_preorder (get_ref r p pre) m0;
+    let (| x, m1 |) = get_ref r p m0 in
+    act_preserves_frame_and_preorder (get_ref r p) m0;
     mst_put m1;
-    mst_assume (interp (ref_perm r p pre) m1);
-    sel_ref_lemma r p pre m1;
-    pts_to_ref_injective r p x (sel_ref r pre m1) pre m1;
-    mst_assert (x == sel_ref r pre m1);
+    mst_assume (interp (ref_perm r p) m1);
+    sel_ref_lemma r p m1;
+    pts_to_ref_injective r p x (sel_ref r m1) m1;
+    mst_assert (x == sel_ref r m1);
     x)
 #pop-options
 
-let write (#a:Type0) (r:reference a) (curr:G.erased a) (x:a)
-  (pre:(G.erased (P.preorder a)){(G.reveal pre) curr x})
-: Steel unit (pts_to_ref r full_permission curr pre) (fun _ -> pts_to_ref r full_permission x pre)
+let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x:a{pre curr x})
+: Steel unit (pts_to_ref r full_permission curr) (fun _ -> pts_to_ref r full_permission x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| _, m1 |) = set_ref r curr x pre m0 in
-    act_preserves_frame_and_preorder (set_ref r curr x pre) m0;
+    let (| _, m1 |) = set_ref r curr x m0 in
+    act_preserves_frame_and_preorder (set_ref r curr x) m0;
     mst_put m1)
 
 

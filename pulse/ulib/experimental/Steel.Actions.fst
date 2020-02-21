@@ -270,12 +270,12 @@ let pre_action_to_action
             in
             Classical.forall_intro aux;
             mem_equiv_eq h' (join_heap h0' h1);
-              assert(f_frame `depends_only_on_without_affinity` frame);
-              depends_only_on_without_affinity_elim f_frame frame h1 h0;
-              assert(f_frame h1 <==> f_frame (join_heap h1 h0));
-              assert(join_heap h1 h0 == h);
-              depends_only_on_without_affinity_elim f_frame frame h1 h0';
-              assert(join_heap h1 h0' == h');
+            assert(f_frame `depends_only_on_without_affinity` frame);
+            depends_only_on_without_affinity_elim f_frame frame h1 h0;
+            assert(f_frame h1 <==> f_frame (join_heap h1 h0));
+            assert(join_heap h1 h0 == h);
+            depends_only_on_without_affinity_elim f_frame frame h1 h0';
+            assert(join_heap h1 h0' == h');
             assert(f_frame h <==> f_frame h')
           )
        )
@@ -1426,12 +1426,12 @@ let rewrite_hprop p p' =
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
 let sel_ref_heap
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
-  (h: hheap (ref r pre))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (h: hheap (ref r))
   : t =
   assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
-    interp_heap (pts_to_ref r p contents pre) h
+    interp_heap (pts_to_ref r p contents) h
   );
   let Array t' len' seq = select_addr h r.array_addr in
   let x =  select_index seq 0 in
@@ -1441,12 +1441,12 @@ let sel_ref_heap
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
 let sel_ref
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
-  (m: hmem (ref r pre))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m: hmem (ref r))
   : t =
   assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
-    interp (pts_to_ref r p contents pre) m
+    interp (pts_to_ref r p contents) m
   );
   let Array t' len' seq = select_addr (heap_of_mem m) r.array_addr in
   let x =  select_index seq 0 in
@@ -1456,51 +1456,51 @@ let sel_ref
 #push-options "--max_fuel 2 --initial_fuel 2 --initial_fuel 1 --max_fuel 1"
 let sel_ref_lemma
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Preorder.preorder t)
-  (m: hmem (ref_perm r p pre))
+  (m: hmem (ref_perm r p))
   : Lemma (
-    interp (ref r pre) m /\
-    interp (pts_to_ref r p (sel_ref r pre m) pre) m
+    interp (ref r) m /\
+    interp (pts_to_ref r p (sel_ref r m)) m
   )
   =
-  affine_star (ref r pre) (locks_invariant Set.empty m) m;
+  affine_star (ref r) (locks_invariant Set.empty m) m;
   assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
-    interp (pts_to_ref r p contents pre) m
+    interp (pts_to_ref r p contents) m
   )
 #pop-options
 
 #push-options "--max_fuel 2 --initial_fuel 2 --initial_fuel 1 --max_fuel 1"
 let sel_ref_lemma_heap
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Preorder.preorder t)
-  (m: hheap (ref_perm r p pre))
+  (m: hheap (ref_perm r p))
   : Lemma (
-    interp_heap (ref r pre) m /\
-    interp_heap (pts_to_ref r p (sel_ref_heap r pre m) pre) m
+    interp_heap (ref r) m /\
+    interp_heap (pts_to_ref r p (sel_ref_heap r m) ) m
   )
   =
   assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
-    interp_heap (pts_to_ref r p contents pre) m
+    interp_heap (pts_to_ref r p contents) m
   )
 #pop-options
 
 
 let get_ref_pre_action
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Ghost.erased (Preorder.preorder t))
   : pre_action
-    (ref_perm r p pre)
+    (ref_perm r p)
     (x:t)
-    (fun x -> pts_to_ref r p x pre)
+    (fun x -> pts_to_ref r p x)
   = fun h ->
-  let contents = sel_ref_heap r pre h in
-  sel_ref_lemma_heap r p pre h;
+  let contents = sel_ref_heap r h in
+  sel_ref_lemma_heap r p h;
   let (| x, h' |) = index_array_pre_action r (Seq.create 1 contents) 0ul p pre h in
   (| x, h' |)
 
@@ -1508,16 +1508,16 @@ let get_ref_pre_action
 #push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let get_ref_action
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Ghost.erased (Preorder.preorder t))
   : action
-    (ref_perm r p pre)
+    (ref_perm r p)
     (x:t)
-    (fun x -> pts_to_ref r p x pre)
+    (fun x -> pts_to_ref r p x)
   =
   pre_action_to_action
-    (get_ref_pre_action r p pre)
+    (get_ref_pre_action r p)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1  -> ())
@@ -1525,32 +1525,32 @@ let get_ref_action
 
 let get_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (ref_perm r p pre)
+    (ref_perm r p)
     (x:t)
-    (fun x -> pts_to_ref r p x pre)
+    (fun x -> pts_to_ref r p x)
   =
   non_alloc_action_to_non_locking_m_action
-    (get_ref_action r p pre)
+    (get_ref_action r p)
     (fun h0 addr -> ())
 
 #push-options "--max_fuel 2 --initial_fuel 2"
 let set_ref_pre_action
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (old_v: Ghost.erased t)
-  (v: t)
-  (pre: (Ghost.erased (Preorder.preorder t)){(Ghost.reveal pre) old_v v})
+  (v: t{pre old_v v})
   : pre_action
-    (pts_to_ref r full_permission old_v pre)
+    (pts_to_ref r full_permission old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v pre)
+    (fun _ -> pts_to_ref r full_permission v)
   = fun h ->
-  let contents = sel_ref_heap r pre h in
-  sel_ref_lemma_heap r full_permission pre h;
+  let contents = sel_ref_heap r h in
+  sel_ref_lemma_heap r full_permission h;
   assert(Seq.upd (Seq.create 1 contents) 0 v `Seq.equal` Seq.create 1 v);
   upd_array_pre_action r (Seq.create 1 contents) 0ul v pre h
 #pop-options
@@ -1558,49 +1558,49 @@ let set_ref_pre_action
 #push-options "--max_fuel 2 --initial_fuel 2"
 let set_ref_action
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (old_v: Ghost.erased t)
-  (v: t)
-  (pre: (Ghost.erased (Preorder.preorder t)){(Ghost.reveal pre) old_v v})
+  (v: t{pre old_v v})
   : action
-    (pts_to_ref r full_permission old_v pre)
+    (pts_to_ref r full_permission old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v pre)
+    (fun _ -> pts_to_ref r full_permission v)
   =
   pre_action_to_action
-    (set_ref_pre_action r old_v v pre)
+    (set_ref_pre_action r old_v v)
      (fun frame h0 h1 addr -> (* Disjointness preservation *)
-     let iseq = Seq.create 1 (sel_ref_heap r pre h0) in
-     sel_ref_lemma_heap r full_permission pre h0;
+     let iseq = Seq.create 1 (sel_ref_heap r h0) in
+     sel_ref_lemma_heap r full_permission h0;
       upd_array_heap_frame_disjointness_preservation r iseq 0ul v pre (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1 addr -> (* Does not depend on framing *)
-      let iseq = Seq.create 1 (sel_ref_heap r pre h0) in
-      sel_ref_lemma_heap r full_permission pre h0;
+      let iseq = Seq.create 1 (sel_ref_heap r h0) in
+      sel_ref_lemma_heap r full_permission h0;
       upd_array_action_memory_split_independence r iseq 0ul v pre (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1  -> (* Return and post *)
-      let iseq = Seq.create 1 (sel_ref_heap r pre h0) in
-      sel_ref_lemma_heap r full_permission pre h0;
-      let (| x0, h |) = set_ref_pre_action r old_v v pre h0 in
-      let (| x1, h' |) = set_ref_pre_action r old_v v pre (join_heap h0 h1) in
+      let iseq = Seq.create 1 (sel_ref_heap r h0) in
+      sel_ref_lemma_heap r full_permission h0;
+      let (| x0, h |) = set_ref_pre_action r old_v v h0 in
+      let (| x1, h' |) = set_ref_pre_action r old_v v (join_heap h0 h1) in
       assert (x0 == x1)
     )
 #pop-options
 
 let set_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (old_v: Ghost.erased t)
-  (v: t)
-  (pre: (Ghost.erased (Preorder.preorder t)){(Ghost.reveal pre) old_v v})
+  (v: t{pre old_v v})
   : m_action
-    (pts_to_ref r full_permission old_v pre)
+    (pts_to_ref r full_permission old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v pre)
+    (fun _ -> pts_to_ref r full_permission v)
   =
   non_alloc_action_to_non_locking_m_action
-    (set_ref_action r old_v v pre)
+    (set_ref_action r old_v v)
     (fun h0 addr -> ())
 
 let alloc_ref
@@ -1609,33 +1609,33 @@ let alloc_ref
   (pre: Ghost.erased (Preorder.preorder t))
   : m_action
     emp
-    (reference t)
-    (fun r -> pts_to_ref r full_permission v pre)
+    (reference t pre)
+    (fun r -> pts_to_ref r full_permission v)
   =
   alloc_array_is_m_frame_and_preorder_preserving 1ul v pre;
   alloc_array_pre_m_action 1ul v pre
 
 let free_ref_pre_action
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   : pre_action
-    (ref_perm r full_permission pre)
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
   = fun h -> (| (), h |)
 
 let free_ref_action
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   : pre_action
-    (ref_perm r full_permission pre)
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
   =
   pre_action_to_action
-    (free_ref_pre_action r pre)
+    (free_ref_pre_action r)
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
@@ -1644,30 +1644,30 @@ let free_ref_action
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 20"
 let free_ref
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   : m_action
-    (ref_perm r full_permission pre)
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
   =
   non_alloc_action_to_non_locking_m_action
-    (free_ref_action r pre)
+    (free_ref_action r)
     (fun h0 addr -> ())
 #pop-options
 
 let share_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
   (contents: Ghost.erased t)
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents pre)
-    (r':reference t{ref_address r' = ref_address r})
+    (pts_to_ref r p contents)
+    (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents pre `star`
-      pts_to_ref r' (half_permission p) contents pre
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r' (half_permission p) contents
     )
   =
    non_alloc_action_to_non_locking_m_action
@@ -1676,17 +1676,16 @@ let share_ref
 
 let gather_ref
   (#t: Type0)
-  (r: reference t)
-  (r':reference t{ref_address r' = ref_address r})
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (r':reference t pre{ref_address r' = ref_address r})
   (p: permission{allows_read p})
   (p': permission{allows_read p' /\ summable_permissions p p'})
   (contents: Ghost.erased t)
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents pre `star`
-      pts_to_ref r' p' contents pre)
+    (pts_to_ref r p contents `star` pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r (sum_permissions p p') contents pre)
+    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
   =
   non_alloc_action_to_non_locking_m_action
     (gather_array_action r r' (Seq.create 1 (Ghost.reveal contents)) p p' pre)
