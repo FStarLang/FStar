@@ -84,10 +84,19 @@ let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r
 = RSTATE?.reflect (returnc a x r)
 
+assume val wp_monotonic_pure (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a).
+       (forall (p q:pure_post a).
+          (forall (x:a). p x ==> q x) ==>
+          (wp p ==> wp q)))
 
 let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
-: repr a r (fun _ -> r)
-= admit (); fun _ -> f ()  //dropping wp
+: Pure (repr a r (fun _ -> r))
+  (requires wp (fun _ -> True))
+  (ensures fun _ -> True)
+= wp_monotonic_pure ();
+  fun _ -> f ()
 
 sub_effect PURE ~> RSTATE = lift_pure_rst
 
@@ -121,6 +130,11 @@ type m : Type -> Type =
 
 assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
 
-let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
-= match f with
-  | C a x -> rst_unit ()
+// #set-options "--fuel 0 --ifuel 1"
+// #restart-solver
+// #set-options "--log_queries"
+// let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
+// = match f with
+//   | C a x -> rst_unit ()
+
+
