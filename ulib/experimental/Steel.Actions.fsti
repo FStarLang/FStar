@@ -190,42 +190,42 @@ val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ ->
 
 val sel_ref
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
-  (h: hmem (ref r pre))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (h: hmem (ref r))
   : Tot t
 
 val sel_ref_lemma
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Preorder.preorder t)
-  (m: hmem (ref_perm r p pre))
+  (m: hmem (ref_perm r p))
   : Lemma (
-    interp (ref r pre) m /\
-    interp (pts_to_ref r p (sel_ref r pre m) pre) m
+    interp (ref r) m /\
+    interp (pts_to_ref r p (sel_ref r m)) m
   )
 
 val get_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (ref_perm r p pre)
+    (ref_perm r p)
     (x:t)
-    (fun x -> pts_to_ref r p x pre)
+    (fun x -> pts_to_ref r p x)
 
 val set_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (old_v: Ghost.erased t)
-  (v: t)
-  (pre: (Ghost.erased (Preorder.preorder t)){(Ghost.reveal pre) old_v v})
+  (v:t{pre old_v v})
   : m_action
-    (pts_to_ref r full_permission old_v pre)
+    (pts_to_ref r full_permission old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v pre)
+    (fun _ -> pts_to_ref r full_permission v)
 
 val alloc_ref
   (#t: Type0)
@@ -233,45 +233,45 @@ val alloc_ref
   (pre: Ghost.erased (Preorder.preorder t))
   : m_action
     emp
-    (reference t)
-    (fun r -> pts_to_ref r full_permission v pre)
+    (reference t pre)
+    (fun r -> pts_to_ref r full_permission v)
 
 val free_ref
   (#t: Type0)
-  (r: reference t)
-  (pre: Ghost.erased (Preorder.preorder t))
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   : m_action
-    (ref_perm r full_permission pre)
+    (ref_perm r full_permission)
     unit
     (fun _ -> emp)
 
 val share_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p: permission{allows_read p})
   (contents: Ghost.erased t)
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents pre)
-    (r':reference t{ref_address r' = ref_address r})
+    (pts_to_ref r p contents)
+    (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents pre `star`
-      pts_to_ref r' (half_permission p) contents pre
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r' (half_permission p) contents
     )
 
 val gather_ref
   (#t: Type0)
-  (r: reference t)
-  (r':reference t{ref_address r' = ref_address r})
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (r':reference t pre{ref_address r' = ref_address r})
   (p: permission{allows_read p})
   (p': permission{allows_read p' /\ summable_permissions p p'})
   (contents: Ghost.erased t)
-  (pre: Ghost.erased (Preorder.preorder t))
   : m_action
-    (pts_to_ref r p contents pre `star`
-      pts_to_ref r' p' contents pre)
+    (pts_to_ref r p contents `star`
+      pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r (sum_permissions p p') contents pre)
+    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Locks

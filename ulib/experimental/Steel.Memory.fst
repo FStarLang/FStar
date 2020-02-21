@@ -128,11 +128,11 @@ let max_length (#t: Type) (a: array_ref t) = a.array_max_length
 
 let address (#t: Type) (a: array_ref t) = a.array_addr
 
-let reference (t: Type u#0) = a:array_ref t{
+let reference (t: Type u#0) (pre: Preorder.preorder t) = a:array_ref t{
   length a = 1ul /\ offset a = 0ul /\ max_length a = 1ul
 }
 
-let ref_address (#t: Type0) (r: reference t) = r.array_addr
+let ref_address (#t: Type0) (#pre: Preorder.preorder t) (r: reference t pre) = r.array_addr
 
 let disjoint_heap (m0 m1:heap)
   : prop
@@ -452,13 +452,20 @@ let equiv_heap_iff_equiv (p1 p2:hprop)
 
 let emp = Emp
 let pts_to_array_with_preorder = Pts_to_array
+let pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (p:permission{allows_read p})
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  =
+  pts_to_array_with_preorder a p contents (trivial_preorder t)
 let pts_to_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p:permission{allows_read p})
   (contents: Ghost.erased t)
-  (preorder: Ghost.erased (Preorder.preorder t))
-  = pts_to_array_with_preorder r p (Seq.Base.create 1 (Ghost.reveal contents)) preorder
+  = pts_to_array_with_preorder r p (Seq.Base.create 1 (Ghost.reveal contents)) pre
 let h_and = And
 let h_or = Or
 let star = Star
@@ -516,7 +523,38 @@ let intro_pts_to_array_with_preorder
   =
   ()
 
-let pts_to_array_injective #t a p c0 c1 pre m =
+let pts_to_array_with_preorder_injective
+  (#t: _)
+  (a: array_ref t)
+  (p:permission{allows_read p})
+  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (pre:Preorder.preorder t)
+  (m:mem)
+  : Lemma
+    (requires (
+      interp (pts_to_array_with_preorder a p c0 pre) m /\
+      interp (pts_to_array_with_preorder a p c1 pre) m))
+    (ensures (c0 == c1))
+  =
+  match select_addr m.heap a.array_addr with
+  | Array t' len' seq ->
+    let aux (i':nat{i' < U32.v a.array_length})
+      : Lemma (Seq.index c0 i' == Seq.index c1 i')
+    =
+      let i = i' + U32.v a.array_offset in
+      assert(contains_index seq i);
+      let x0 = Seq.index c0 i' in
+      let x1 = Seq.index c1 i' in
+      let x' = select_index seq i in
+      assert(x'.value == x0);
+      assert(x'.value == x1);
+      assert(x0 == x1)
+    in
+    Classical.forall_intro aux;
+    assert(c0 `Seq.equal` c1)
+  | _ -> ()
+
+let pts_to_array_injective #t  a p c0 c1 m =
   match select_addr m.heap a.array_addr with
   | Array t' len' seq ->
     let aux (i':nat{i' < U32.v a.array_length})
@@ -539,10 +577,10 @@ let pts_to_array_injective #t a p c0 c1 pre m =
 // pts_to_ref
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_ref_injective #t a p c0 c1 pre m =
+let pts_to_ref_injective #t #pre a p c0 c1  m =
   let s0 = Seq.create 1 c0 in
   let s1 = Seq.create 1 c1 in
-  pts_to_array_injective a p s0 s1 pre m;
+  pts_to_array_with_preorder_injective a p s0 s1 pre m;
   assert(s0 `Seq.equal` s1);
   assert(c0 == Seq.index s0 0);
   assert(c1 == Seq.index s1 0)
