@@ -102,6 +102,19 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
 
   pure_wp_uvar, guard_wp
 
+
+let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
+         (Print.term_to_string t)
+         (match k with
+          | None -> "None"
+          | Some k -> Print.term_to_string k);
+  match k with
+  | None -> ignore (tc_trivial_guard ({ env with use_eq = true }) t)
+  | Some k -> ignore (tc_check_trivial_guard ({ env with use_eq = true }) t k)
+
+
 (*
  * Typechecking of layered effects
  *)
@@ -266,7 +279,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
-    ret_us, ret_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env) in
+    let k = k |> N.remove_uvar_solutions env in
+    check_no_subtyping_for_layered_combinator env k None;
+    ret_us, ret_t, SS.close_univ_vars us k in
 
   log_combinator "return_repr" return_repr;
 
@@ -309,7 +324,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
-    bind_us, bind_t, SS.close_univ_vars bind_us (k |> N.remove_uvar_solutions env) in
+    let k = k |> N.remove_uvar_solutions env in
+    check_no_subtyping_for_layered_combinator env k None;
+    bind_us, bind_t, SS.close_univ_vars bind_us k in
 
   log_combinator "bind_repr" bind_repr;
 
@@ -368,8 +385,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-    let k = N.remove_uvar_solutions env k in
-    stronger_us, stronger_t, k |> N.normalize [Env.Beta; Env.Eager_unfolding] env |> SS.close_univ_vars stronger_us in
+    let k = k |> N.remove_uvar_solutions env |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
+    check_no_subtyping_for_layered_combinator env k None;
+    stronger_us, stronger_t, SS.close_univ_vars stronger_us k in
 
   log_combinator "stronger_repr" stronger_repr;
 
@@ -402,8 +420,10 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.abs (bs@[f_bs; g_bs; p_b]) t_body None in
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
+    let k = k |> N.remove_uvar_solutions env in
+    check_no_subtyping_for_layered_combinator env k (Some ty);
 
-    if_then_else_us, SS.close_univ_vars if_then_else_us (k |> N.remove_uvar_solutions env), if_then_else_ty in
+    if_then_else_us, SS.close_univ_vars if_then_else_us k, if_then_else_ty in
 
   log_combinator "if_then_else" if_then_else;
 
@@ -1092,8 +1112,8 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
-  let us, lift = sub.lift |> must in
-  let r = lift.pos in
+  let lift_ts = sub.lift |> must in
+  let r = (lift_ts |> snd).pos in
 
   begin
     let src_ed = Env.get_effect_decl env0 sub.source in
@@ -1109,27 +1129,30 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
                      (src_ed.mname |> Ident.string_of_lid) (tgt_ed.mname |> Ident.string_of_lid)) r
   end;
 
+  let us, lift, lift_ty = check_and_gen env0 "" "lift" 1 lift_ts in
 
+  if Env.debug env0 <| Options.Other "LayeredEffects" then
+    BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
+      (Print.tscheme_to_string (us, lift)) (Print.tscheme_to_string ((us, lift_ty)));
 
-  let env, us, lift =
-    if List.length us = 0 then env0, us, lift
-    else
-      let us, lift = SS.open_univ_vars us lift in
-      Env.push_univ_vars env0 us, us, lift in
+  let us, lift_ty = SS.open_univ_vars us lift_ty in
+  let env = Env.push_univ_vars env0 us in
+
+  // let env, us, lift =
+  //   if List.length us = 0 then env0, us, lift
+  //   else
+  //     let us, lift = SS.open_univ_vars us lift in
+  //     Env.push_univ_vars env0 us, us, lift in
 
   (*
    * We typecheck the lift term (without any expected type)
    *   and then unify its type with the expected lift type
    *)
 
-  let lift, lc, g = tc_tot_or_gtot_term env lift in
-  Rel.force_trivial_guard env g;
+  // let lift, lc, g = tc_tot_or_gtot_term env lift in
+  // Rel.force_trivial_guard env g;
 
-  let lift_ty = lc.res_typ |> N.normalize [Beta] env0 in
-
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
-    BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
-      (Print.term_to_string lift) (Print.term_to_string lift_ty);
+  // let lift_ty = lc.res_typ |> N.normalize [Beta] env0 in
 
   let lift_t_shape_error s = BU.format4
     "Unexpected shape of lift %s~>%s, reason:%s (t:%s)"
@@ -1183,7 +1206,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
          (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)) r in
 
     let c = S.mk_Comp ({
-      comp_univs = [ u_a ];
+      comp_univs = [ Env.new_u_univ () ];
       effect_name = PC.effect_PURE_lid;
       result_typ = repr;
       effect_args = [ pure_wp_uvar |> S.as_arg ];
@@ -1191,7 +1214,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     U.arrow bs c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
-   if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
 
   let g = Rel.teq env lift_ty k in
@@ -1200,30 +1223,33 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
 
-  //generalize
-  let us, lift, lift_wp =
-    let inst_us, lift = TcUtil.generalize_universes env0 lift in
-    if List.length inst_us <> 1
-    then raise_error (Errors.Fatal_MismatchUniversePolymorphic, BU.format4
-      "Expected lift %s~>%s to be polymorphic in one universe, found:%s (t:%s)"
-      (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
-      (inst_us |> List.length |> string_of_int) (Print.term_to_string lift)) r;
+  let k = k |> N.remove_uvar_solutions env in
+  check_no_subtyping_for_layered_combinator env k None;
 
-    if List.length us = 0 ||
-       (List.length us = List.length inst_us &&
-        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us inst_us)
-    then inst_us, lift,
-         k |> N.remove_uvar_solutions env |> SS.close_univ_vars inst_us
-    else 
-       raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, BU.format5
-         "Annotated and generalized universes on %s~%s are not same, annotated:%s, generalized:%s (t:%s)"
-         (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
-         (us |> List.length |> string_of_int) (inst_us |> List.length |> string_of_int)
-         (Print.term_to_string lift)) r in
+  //generalize
+  // let us, lift, lift_wp =
+  //   let inst_us, lift = TcUtil.generalize_universes env0 lift in
+  //   if List.length inst_us <> 1
+  //   then raise_error (Errors.Fatal_MismatchUniversePolymorphic, BU.format4
+  //     "Expected lift %s~>%s to be polymorphic in one universe, found:%s (t:%s)"
+  //     (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
+  //     (inst_us |> List.length |> string_of_int) (Print.term_to_string lift)) r;
+
+  //   if List.length us = 0 ||
+  //      (List.length us = List.length inst_us &&
+  //       List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us inst_us)
+  //   then inst_us, lift,
+  //        SS.close_univ_vars inst_us k
+  //   else 
+  //      raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, BU.format5
+  //        "Annotated and generalized universes on %s~%s are not same, annotated:%s, generalized:%s (t:%s)"
+  //        (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
+  //        (us |> List.length |> string_of_int) (inst_us |> List.length |> string_of_int)
+  //        (Print.term_to_string lift)) r in
        
   let sub = { sub with
     lift = Some (us, lift);
-    lift_wp = Some (us, lift_wp) } in
+    lift_wp = Some (us, SS.close_univ_vars us k) } in
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
@@ -1451,4 +1477,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
-  (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
+  let k = k |> N.remove_uvar_solutions env in
+  check_no_subtyping_for_layered_combinator env k None;
+
+  (us, t), (us, SS.close_univ_vars us k)
