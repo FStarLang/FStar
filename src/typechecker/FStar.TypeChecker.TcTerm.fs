@@ -1862,8 +1862,10 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                            (Print.term_to_string targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ env targ in
-            let env = {env with use_eq=is_eq aqual} in
-            if debug env Options.High then  BU.print3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ);
+            let env = {env with use_eq=(env.use_eq || is_eq aqual)} in
+            if debug env Options.High
+            then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
+                   (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ) (string_of_bool env.use_eq);
             let e, c, g_e = tc_term env e in
             let g = Env.conj_guard g_ex <| Env.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
