@@ -50,6 +50,7 @@ val ref_address (#t: Type0) (#pre: Preorder.preorder t) (r: reference t pre) : G
 
 /// The type of mem assertions
 
+[@erasable]
 val hprop : Type u#1
 
 /// Type of mem
