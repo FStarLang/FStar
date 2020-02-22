@@ -132,9 +132,10 @@ assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
 
 // #set-options "--fuel 0 --ifuel 1"
 // #restart-solver
-// #set-options "--log_queries"
+// //#set-options "--log_queries"
 // let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
 // = match f with
 //   | C a x -> rst_unit ()
+//   | _ ->  rst_unit ()
 
 
