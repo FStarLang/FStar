@@ -296,6 +296,7 @@ let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
 
 module W = FStar.WellFounded
 
+[@erasable]
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
