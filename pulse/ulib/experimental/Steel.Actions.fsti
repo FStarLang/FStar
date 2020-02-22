@@ -92,7 +92,7 @@ val upd_array
 
 val alloc_array
   (#t: _)
-  (len:U32.t)
+  (len:U32.t{U32.v len > 0})
   (init: t)
   : m_action
     emp
@@ -146,7 +146,7 @@ val split_array
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
-  (i:U32.t{U32.v i < U32.v (length a)})
+  (i:U32.t{U32.v i > 0 /\ U32.v i < U32.v (length a)})
   : m_action
     (pts_to_array a p iseq)
     (as:(array_ref t & array_ref t){(
