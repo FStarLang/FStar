@@ -149,7 +149,7 @@
         "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
       ],
       0,
-      "10b4782d69b14c6c34d4bf665746a0f6"
+      "0ccd8373ed2850769a73ba3fc92d8fba"
     ],
     [
       "Locals.Effect.LVARS",
@@ -157,14 +157,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
+        "@MaxIFuel_assumption", "@query",
+        "Locals.Effect_interpretation_Tm_arrow_2ce7550d1d20fca8f5d2d88ce9c4119d",
+        "Locals.Effect_interpretation_Tm_arrow_54fe65cdbb44245d3791993016d8bdd2",
+        "Locals.Effect_interpretation_Tm_arrow_bff869a36151607090fce641cbbbda2d",
+        "Locals.Effect_interpretation_Tm_arrow_c3dff4c7525886f6debcb556e56f13f9",
+        "equation_Locals.Effect.locals_t", "equation_Locals.Effect.post_t",
         "equation_Locals.Effect.wp_t",
         "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "interpretation_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72",
         "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
+        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd",
+        "typing_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72"
       ],
       0,
-      "69cfb7377104cdcd38e2c94e3391622e"
+      "067b95ebf196b2e5da93af7c46619542"
     ],
     [
       "Locals.Effect.LVARS",
@@ -179,7 +186,7 @@
         "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
       ],
       0,
-      "03c0a49ff3fa57ca6972329eb4562135"
+      "ec69587e4a433582a9891528bbc8cbd7"
     ],
     [
       "Locals.Effect.LVARS",
@@ -194,7 +201,7 @@
         "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
       ],
       0,
-      "f87848087ed47162c9f4a38e6a6062ec"
+      "9743e6fb47a5391d0fe5ccd7fbe27e80"
     ],
     [
       "Locals.Effect.LVARS",
@@ -209,7 +216,52 @@
         "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
       ],
       0,
-      "640c148b60dd807ef4d23ad08b0bbbda"
+      "50dd6f73ee50e673f164fde53a93f788"
+    ],
+    [
+      "Locals.Effect.LVARS",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
+        "equation_Locals.Effect.wp_t",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
+      ],
+      0,
+      "28bac861a61402ffe8a7519cccaa5f8f"
+    ],
+    [
+      "Locals.Effect.LVARS",
+      7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
+        "equation_Locals.Effect.wp_t",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
+      ],
+      0,
+      "25e7d51664bba303578fd89d19c04347"
+    ],
+    [
+      "Locals.Effect.LVARS",
+      8,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
+        "equation_Locals.Effect.wp_t",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
+      ],
+      0,
+      "0ffe22f733884441b1346a3d8b81b25f"
     ],
     [
       "Locals.Effect.lift_pure_lvars",
@@ -235,7 +287,70 @@
         "typing_Tm_abs_f4e50037218c944d065aa19d84762d0b"
       ],
       0,
-      "623117554cf955199d005a9071dcf0b1"
+      "df3a67db45f49f770ecb595be6f72ca9"
+    ],
+    [
+      "Locals.Effect.20831",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "assumption_Locals.Effect.Pure_wp_monotonicity",
+        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "7023e69c204cd899d744374cf1da1985"
+    ],
+    [
+      "Locals.Effect.20831",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "assumption_Locals.Effect.Pure_wp_monotonicity",
+        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "90009640fa41a46e4c848844dd1c4219"
+    ],
+    [
+      "Locals.Effect.20831",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "assumption_Locals.Effect.Pure_wp_monotonicity",
+        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "fuel_guarded_inversion_Locals.Effect.locals_t_",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "80bdec510b7d5b72ea8721b144f21e7d"
     ],
     [
       "Locals.Effect.LV",
@@ -244,7 +359,7 @@
       1,
       [ "@query" ],
       0,
-      "ce86d8e1aadc72e7469c083fcf86888d"
+      "9a83b24637c6bb66609c44a743a7afb5"
     ],
     [
       "Locals.Effect.create",
@@ -282,7 +397,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "c04511dbea4c7f0606aaab7a6e0d13ab"
+      "e73fcb594fa1f21accf3a87bc686389e"
     ],
     [
       "Locals.Effect.read",
@@ -297,7 +412,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a19bd14f9d3e0e3aa342d633deada960"
+      "f85efeb4788e3e0780f1ca4e654087fe"
     ],
     [
       "Locals.Effect.write",
@@ -332,7 +447,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "bd5846b5966d32c9e7a397d1f9037a5b"
+      "e7a8843322043b8ae8e4b8c7ffebbe51"
     ],
     [
       "Locals.Effect.get",
@@ -349,7 +464,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "52b0d6591c9b9e0a83e2a0f0a8c17ab2"
+      "98fbc605bdbe167a9f39775fb5b9fd7a"
     ],
     [
       "Locals.Effect.test",
@@ -392,7 +507,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "b86e75541fd97664cb8934e89c0d0b86"
+      "0bfa3b37835df86b55cb5a37fc65f68e"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -406,7 +521,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ba31447096b4de1ed976a9a7aab89832"
+      "bd3ab69d1afa0b7ca324519ed6325d64"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -442,7 +557,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "f9b5d678368ab8888da5829b359f605c"
+      "7c670aa155139c5c1732aba39151eae7"
     ],
     [
       "Locals.Effect.sum",
@@ -464,7 +579,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "36083ee7bce937d945eb82fada814d19"
+      "d07b7041773902e3c582343788146835"
     ],
     [
       "Locals.Effect.test1",
@@ -491,7 +606,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "e02a4843edc57ba56abb3d6c7263b583"
+      "aec6d5331eb44d3062ed93cd01c56c8d"
     ]
   ]
 ]
