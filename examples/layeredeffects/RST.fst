@@ -113,6 +113,17 @@ let test ()
 = let ptr = alloc () in
   return ptr
 
+type t =
+  | C : t
+  | D : t
+
+assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
+
+let test_match (x:t) : RSTATE unit emp (fun _ -> emp) =
+  match x with
+  | C -> rst_unit ()
+  | D -> rst_unit ()
+
 
 (*
  * Following example showcases a bug in checking match terms for layered effects
@@ -125,17 +136,17 @@ let test ()
 
 noeq
 type m : Type -> Type =
-| C : a:Type -> x:a -> m a
+| C1 : a:Type -> x:a -> m a
+| D1 : a:Type -> x:a -> m a
+
+let test_match2 (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
+= match f with
+  | C1 a x -> rst_unit ()
+  | D1 a x -> rst_unit ()
 
 
-assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
+assume val false_pre (_:squash False) : RSTATE unit emp (fun _ -> emp)
 
-// #set-options "--fuel 0 --ifuel 1"
-// #restart-solver
-// //#set-options "--log_queries"
-// let test_match (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
-// = match f with
-//   | C a x -> rst_unit ()
-//   | _ ->  rst_unit ()
-
-
+[@expect_failure]
+let test_false_pre () : RSTATE unit emp (fun _ -> emp)
+= false_pre ()
