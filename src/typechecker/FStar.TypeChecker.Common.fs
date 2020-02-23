@@ -284,6 +284,12 @@ let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 let conj_guards gs = List.fold_left conj_guard trivial_guard gs
 
+let weaken_guard_formula g fml =
+  match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f ->
+    { g with guard_f = check_trivial (U.mk_imp fml f) }
+
 
 type lcomp = { //a lazy computation
     eff_name: lident;
