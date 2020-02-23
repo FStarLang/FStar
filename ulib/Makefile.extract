@@ -5,7 +5,7 @@ include gmake/z3.mk
 include gmake/fstar.mk
 
 #AR: 01/03
-NOEXTRACT_FILES=experimental/Steel.Effect.fst
+NOEXTRACT_FILES=$(wildcard experimental/Steel.*.fst experimental/Steel.*.fsti)
 
 FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
