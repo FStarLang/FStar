@@ -7,62 +7,12 @@ open FStar.Ghost
 open Steel.Reference
 
 assume
-val intro_or_l (p q:hprop)
-  : SteelT unit p (fun _ -> h_or p q)
-
-assume
-val intro_or_r (p q:hprop)
-  : SteelT unit q (fun _ -> h_or p q)
-
-assume
-val pure (p:prop) : hprop
-
-assume
-val interp_pure (p:prop)
-  : Lemma (p ==> (forall m. interp (pure p) m))
-
-assume
-val interp_pure_2 (p:prop)
-  : Lemma (~p ==> (forall m. ~(interp (pure p) m)))
-
-assume
-val intro_wand_hyp (p q r:hprop)
-  : Steel.Effect.Steel unit r (fun _ -> p `wand` q)
-    (requires (fun _ -> (forall m. interp (p `star` r) m ==> interp q m)))
-    (ensures (fun _ _ _ -> True))
-
-assume
-val steel_admit (#a:Type) (#p:a -> hprop) (_:unit) : SteelT a emp p
-
-assume
-val intro_wand_trivial (p:prop{~p}) (q:hprop)
-  : SteelT unit emp (fun _ -> pure p `wand` q)
-
-// let intro_wand_trivial (p:prop{~p}) (q:hprop)
-//     SteelT unit emp (fun _ -> pure p `wand` q)
-//   = //interp_pure_2 p;
-//     //assert (forall m. interp (pure p `star` emp) m ==> interp q m);
-//     steel_admit (); return ()
-//     intro_wand_hyp (pure p) emp q
-
-let intro_wand_have (p q:hprop) (_:unit)
-  : SteelT unit q (fun _ -> p `wand` q)
-  = intro_wand_hyp p q q
-
-assume
-val elim_wand (p q:hprop)
-  : SteelT unit (p `star` (p `wand` q)) (fun _ -> q)
-
-assume
 val return (#a:Type) (#p:a -> hprop) (x:a)
   : SteelT a (p x) p
 
 assume
 val intro_h_exists (#a:Type) (x:a) (p:(a -> hprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
-
-// let lock_inv (r:ref bool) (p:hprop) : hprop = (h_or (pts_to r full false) (pts_to r full true `star` p))
-
 
 let frame (#a:Type) (#pre:pre_t) (#post:post_t a)
           ($f:unit -> SteelT a pre post)
@@ -79,7 +29,6 @@ val h_assert (p:hprop)
 assume
 val h_intro_emp_l (p:hprop)
   : SteelT unit p (fun _ -> emp `star` p)
-
 
 assume
 val h_admit (#a:_) (p:hprop) (q:a -> hprop)
@@ -113,7 +62,24 @@ assume
 val h_elim_emp_l (p:hprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
 
-let maybe_p (p:hprop) (v:bool) = pure (v==true) `wand` p
+
+assume
+val cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+         (then_: (unit -> SteelT a (p true) (q true)))
+         (else_: (unit -> SteelT a (p false) (q false)))
+   : SteelT a (p b) (q b)
+//   = if b then (then_ ()) <: SteelT a (p b) (q b) else (else_ () <: SteelT a (p b) (q b))
+
+
+// assume
+// val cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+//          (then_: (unit -> Steel a (p b) (q b) (requires fun _ -> b=true)))
+//          (else_: (unit -> Steel a (p false) (q false) (requires fun _ -> b=false)))
+//    : SteelT a (p b) (q b)
+
+////////////////////////////////////////////////////////////////////////////////
+
+let maybe_p (p:hprop) (v:bool) = if v then p else emp
 
 let lock_inv_pred (r:ref bool) (p:hprop) (v:bool) : hprop =
   pts_to r full v `star` maybe_p p v
@@ -128,14 +94,24 @@ type thread (p:hprop) = {
   l:L.lock (lock_inv r p)
 }
 
+let intro_maybe_p_false (p:hprop)
+  : SteelT unit emp (fun _ -> maybe_p p false)
+  = h_assert (maybe_p p false)
+
+let intro_maybe_p_true (p:hprop)
+  : SteelT unit p (fun _ -> maybe_p p true)
+  = h_assert (maybe_p p true)
+
 let new_thread (p:hprop)
   : SteelT (thread p) emp (fun _ -> emp)
-  = intro_wand_trivial (false == true) p;
-    h_assert (pure (false == true) `wand` p);
-    h_intro_emp_l (pure (false == true) `wand` p);
+  = //h_admit #_ emp (fun _ -> emp) //fails
+    //h_admit #(thread p) emp (fun _ -> emp) //ok
+    intro_maybe_p_false p;
+    h_assert (maybe_p p false);
+    h_intro_emp_l (maybe_p p false);
     let r = frame #(ref bool) #emp #(fun r -> pts_to r full false)
                   (fun () -> alloc false)
-                  (pure (false == true) `wand` p) in
+                  (maybe_p p false) in
     intro_h_exists false (lock_inv_pred r p);
     let l  = L.new_lock (lock_inv r p) in
     let t  =  { r = r ; l = l } in
@@ -146,8 +122,8 @@ let finish (#p:hprop) (t:thread p) (v:bool)
   = frame (fun _ -> write t.r true) p;
     h_assert (pts_to t.r full true `star` p);
     h_commute (pts_to t.r full true) p;
-    frame (intro_wand_have (pure (true==true)) p) (pts_to t.r full true);
-    h_commute (pure (true==true) `wand` p) (pts_to t.r full true);
+    frame (fun _ -> intro_maybe_p_true p) (pts_to t.r full true);
+    h_commute (maybe_p p true) (pts_to t.r full true);
     intro_h_exists true (lock_inv_pred t.r p);
     L.release t.l
 
@@ -181,14 +157,30 @@ let fork (#a:Type) (#p #q #r #s:hprop)
     par (spawn f t) (g t);
     h_elim_emp_l s
 
+let pre (#p:hprop) (t:thread p) (b:bool) : hprop = lock_inv_pred t.r p b
+let post (p:hprop) (b:bool) (_:unit) : hprop = p
+
+let join_case_true (#p:hprop) (t:thread p) (_:unit)
+  : SteelT unit (pre t true) (post p true)
+  = h_commute _ (maybe_p p true);
+    h_assert (maybe_p p true `star` pts_to t.r full true);
+    h_affine (maybe_p p true) (pts_to t.r full true);
+    h_assert (maybe_p p true)
+
+let join_case_false (#p:hprop) (t:thread p) (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
+  : SteelT unit (pre t false) (post p false)
+  = intro_h_exists false (lock_inv_pred t.r p);
+    L.release t.l;
+    loop t
 
 let rec join (#p:hprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
   = L.acquire t.l;
     let b = read_refine (maybe_p p) t.r in
     h_assert (pts_to t.r full b `star` maybe_p p b);
-    h_admit _ _
+    h_assert (pre t b);
+    cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
     // if b
     // then (h_assert (pts_to t.r full true `star` maybe_p p true);
     //       elim_wand (pure (true==true)) p)
-    // else (intro_h_exists false (lock_inv_pred t.r p); L.release t.l; join' t)
+    // else (intro_h_exists false (lock_inv_pred t.r p); L.release t.l; join t)
