@@ -1,5 +1,5 @@
 [
-  "½Ù*É‡q¾E´z\u000b[¿\u001bXÕ",
+  "U‹ÑA,Éé\u0006´<Zê( óÄ",
   [
     [
       "Locals.Effect.locals_t'",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "aa356c8803d2450ee342f19f00e6ca9a"
+      "2122fcdac9472e9374ff301eb8112b6c"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "322379e5875e20c2f9524f60be0b7eb4"
+      "cc50766b62a5ae2e1291cdb5dc4142b2"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0c52a534cbf677ff839992cefd7440bf"
+      "3abf5cdfb18b083288aa385433c93b44"
     ],
     [
       "Locals.Effect.locals_t",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "43ff8e6291ab8b5debadb6ea831a35f7"
+      "88b446f9f58afa58d948e86dae267b3e"
     ],
     [
       "Locals.Effect.return",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "7ec70efb0b518077c20699aefb9da024"
+      "cc512d9f3bd4aed835781a0c30dc10fd"
     ],
     [
       "Locals.Effect.bind",
@@ -77,29 +77,25 @@
         "Locals.Effect_interpretation_Tm_arrow_54fe65cdbb44245d3791993016d8bdd2",
         "Locals.Effect_interpretation_Tm_arrow_bff869a36151607090fce641cbbbda2d",
         "Locals.Effect_interpretation_Tm_arrow_c3dff4c7525886f6debcb556e56f13f9",
-        "eq2-interp", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.post_t", "equation_Locals.Effect.wp_t",
-        "equation_Prims.l_Forall",
+        "assumption_Locals.Effect.WP_t_monotonic", "eq2-interp",
+        "equation_Locals.Effect.locals_t", "equation_Locals.Effect.post_t",
         "fuel_guarded_inversion_Locals.Effect.locals_t_",
         "interpretation_Tm_abs_36e4eb3ff4f410fd6a93877c38ff0c5a",
         "interpretation_Tm_abs_676be96ae4b733dd6a33eb0558e9b005",
         "interpretation_Tm_abs_a91843f347cd6861846be49fa8abc8e0",
-        "interpretation_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72",
         "interpretation_Tm_abs_e8384b68ad10198c6025b7ea0d9e51c2",
         "l_imp-interp", "l_quant_interp_d1b1215dd302d2ab5db4e5baa4545076",
         "l_quant_interp_d5944cfb1b1067c56a134db73b210bd3",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd",
         "typing_Tm_abs_36e4eb3ff4f410fd6a93877c38ff0c5a",
         "typing_Tm_abs_676be96ae4b733dd6a33eb0558e9b005",
         "typing_Tm_abs_a91843f347cd6861846be49fa8abc8e0",
-        "typing_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72",
         "typing_Tm_abs_e8384b68ad10198c6025b7ea0d9e51c2"
       ],
       0,
-      "8bbb6946bcda5b9afa51b27bcbb3e4df"
+      "0900c473befedfeaa517d9b21b3f45fb"
     ],
     [
       "Locals.Effect.subcomp",
@@ -119,149 +115,25 @@
         "typing_Tm_abs_83a87d25257ae4e73048e71a976d1d67"
       ],
       0,
-      "5764e9acefb17935c000fd685cd6be06"
-    ],
-    [
-      "Locals.Effect.if_then_else",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "0c4311fa1ba29be6d6914e05a95d3d41"
+      "5225293c4f0e27ce43a3dc4d8d7c2f38"
     ],
     [
       "Locals.Effect.LVARS",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
+      [ "@query" ],
       0,
-      "0ccd8373ed2850769a73ba3fc92d8fba"
+      "09e23d93ad8bfe50cbd262ebb26fa7cc"
     ],
     [
       "Locals.Effect.LVARS",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Locals.Effect_interpretation_Tm_arrow_2ce7550d1d20fca8f5d2d88ce9c4119d",
-        "Locals.Effect_interpretation_Tm_arrow_54fe65cdbb44245d3791993016d8bdd2",
-        "Locals.Effect_interpretation_Tm_arrow_bff869a36151607090fce641cbbbda2d",
-        "Locals.Effect_interpretation_Tm_arrow_c3dff4c7525886f6debcb556e56f13f9",
-        "equation_Locals.Effect.locals_t", "equation_Locals.Effect.post_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "interpretation_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd",
-        "typing_Tm_abs_ae65ab58b7ba62cd0f0ce0b19cf5de72"
-      ],
+      [ "@query" ],
       0,
-      "067b95ebf196b2e5da93af7c46619542"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "ec69587e4a433582a9891528bbc8cbd7"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "9743e6fb47a5391d0fe5ccd7fbe27e80"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "50dd6f73ee50e673f164fde53a93f788"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      6,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "28bac861a61402ffe8a7519cccaa5f8f"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      7,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "25e7d51664bba303578fd89d19c04347"
-    ],
-    [
-      "Locals.Effect.LVARS",
-      8,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Locals.Effect.locals_t",
-        "equation_Locals.Effect.wp_t",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "refinement_interpretation_Tm_refine_c7d72ef16ca2490baf7d7a6212e630bd"
-      ],
-      0,
-      "0ffe22f733884441b1346a3d8b81b25f"
+      "de7640cf01a069ac772c1cafdb31be95"
     ],
     [
       "Locals.Effect.lift_pure_lvars",
@@ -287,79 +159,7 @@
         "typing_Tm_abs_f4e50037218c944d065aa19d84762d0b"
       ],
       0,
-      "df3a67db45f49f770ecb595be6f72ca9"
-    ],
-    [
-      "Locals.Effect.20831",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "assumption_Locals.Effect.Pure_wp_monotonicity",
-        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
-      ],
-      0,
-      "7023e69c204cd899d744374cf1da1985"
-    ],
-    [
-      "Locals.Effect.20831",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "assumption_Locals.Effect.Pure_wp_monotonicity",
-        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
-      ],
-      0,
-      "90009640fa41a46e4c848844dd1c4219"
-    ],
-    [
-      "Locals.Effect.20831",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "assumption_Locals.Effect.Pure_wp_monotonicity",
-        "equation_Locals.Effect.locals_t", "equation_Prims.l_True",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "fuel_guarded_inversion_Locals.Effect.locals_t_",
-        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_c4e4579510ab3d2bc939c99d71699ab5",
-        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
-      ],
-      0,
-      "80bdec510b7d5b72ea8721b144f21e7d"
-    ],
-    [
-      "Locals.Effect.LV",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9a83b24637c6bb66609c44a743a7afb5"
+      "0b2b69f912e6b2631550c18e040cf964"
     ],
     [
       "Locals.Effect.create",
@@ -397,7 +197,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "e73fcb594fa1f21accf3a87bc686389e"
+      "99e6887a2ccc31dee10c458f29a29c2a"
     ],
     [
       "Locals.Effect.read",
@@ -412,7 +212,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f85efeb4788e3e0780f1ca4e654087fe"
+      "4b0c6f073e0ad14ba7d64ca70c213f9c"
     ],
     [
       "Locals.Effect.write",
@@ -447,7 +247,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "e7a8843322043b8ae8e4b8c7ffebbe51"
+      "09cc4ddef75e452f281ee28146c6353d"
     ],
     [
       "Locals.Effect.get",
@@ -464,7 +264,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "98fbc605bdbe167a9f39775fb5b9fd7a"
+      "50ec5f9268944885cd53d62ab8f8e49a"
     ],
     [
       "Locals.Effect.test",
@@ -507,7 +307,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "0bfa3b37835df86b55cb5a37fc65f68e"
+      "5db41172abf70cdacf697f373a5ae86b"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -521,7 +321,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "bd3ab69d1afa0b7ca324519ed6325d64"
+      "3216546992348028ccf85023b50ba8b1"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -557,7 +357,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "7c670aa155139c5c1732aba39151eae7"
+      "64ee69680c3092ef83cd9fd2a34b46b4"
     ],
     [
       "Locals.Effect.sum",
@@ -579,7 +379,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d07b7041773902e3c582343788146835"
+      "f5954f153eded6b814e5ad64b37289e0"
     ],
     [
       "Locals.Effect.test1",
@@ -606,7 +406,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "aec6d5331eb44d3062ed93cd01c56c8d"
+      "9c210f7614787ef073072aac9169e76a"
     ]
   ]
 ]
