@@ -111,8 +111,8 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
           | None -> "None"
           | Some k -> Print.term_to_string k);
   match k with
-  | None -> ignore (tc_trivial_guard ({ env with use_eq = true }) t)
-  | Some k -> ignore (tc_check_trivial_guard ({ env with use_eq = true }) t k)
+  | None -> ignore (tc_trivial_guard ({ env with use_eq_strict = true }) t)
+  | Some k -> ignore (tc_check_trivial_guard ({ env with use_eq_strict = true }) t k)
 
 
 (*
@@ -265,6 +265,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let us, ty = SS.open_univ_vars ret_us ret_ty in
     let env = Env.push_univ_vars env0 us in
 
+    check_no_subtyping_for_layered_combinator env ty None;
+
     let a, u_a = fresh_a_and_u_a "a" in
     let x_a = fresh_x_a "x" a in
     let rest_bs =
@@ -279,9 +281,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
-    let k = k |> N.remove_uvar_solutions env in
-    check_no_subtyping_for_layered_combinator env k None;
-    ret_us, ret_t, SS.close_univ_vars us k in
+    ret_us, ret_t, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us in
 
   log_combinator "return_repr" return_repr;
 
@@ -302,6 +302,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let us, ty = SS.open_univ_vars bind_us bind_ty in
     let env = Env.push_univ_vars env0 us in
+
+    check_no_subtyping_for_layered_combinator env ty None;
 
     let a, u_a = fresh_a_and_u_a "a" in
     let b, u_b = fresh_a_and_u_a "b" in
@@ -324,9 +326,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow (bs@[f; g]) (S.mk_Total' repr (Some u_b)) in
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; guard_eq];
-    let k = k |> N.remove_uvar_solutions env in
-    check_no_subtyping_for_layered_combinator env k None;
-    bind_us, bind_t, SS.close_univ_vars bind_us k in
+    bind_us, bind_t, k |> N.remove_uvar_solutions env |> SS.close_univ_vars bind_us in
 
   log_combinator "bind_repr" bind_repr;
 
@@ -352,6 +352,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let us, ty = SS.open_univ_vars stronger_us stronger_ty in
     let env = Env.push_univ_vars env0 us in
+
+    check_no_subtyping_for_layered_combinator env ty None;
 
     let a, u = fresh_a_and_u_a "a" in
     let rest_bs =
@@ -385,9 +387,10 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-    let k = k |> N.remove_uvar_solutions env |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
-    check_no_subtyping_for_layered_combinator env k None;
-    stronger_us, stronger_t, SS.close_univ_vars stronger_us k in
+    stronger_us, stronger_t,
+    k |> N.remove_uvar_solutions env
+      |> N.normalize [Env.Beta; Env.Eager_unfolding] env
+      |> SS.close_univ_vars stronger_us in
 
   log_combinator "stronger_repr" stronger_repr;
 
@@ -399,6 +402,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let us, t = SS.open_univ_vars if_then_else_us if_then_else_t in
     let _, ty = SS.open_univ_vars if_then_else_us if_then_else_ty in
     let env = Env.push_univ_vars env0 us in
+
+    check_no_subtyping_for_layered_combinator env t (Some ty);
 
     let a, u_a = fresh_a_and_u_a "a" in
     let rest_bs =
@@ -420,10 +425,10 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.abs (bs@[f_bs; g_bs; p_b]) t_body None in
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
-    let k = k |> N.remove_uvar_solutions env in
-    check_no_subtyping_for_layered_combinator env k (Some ty);
 
-    if_then_else_us, SS.close_univ_vars if_then_else_us k, if_then_else_ty in
+    if_then_else_us,
+    k |> N.remove_uvar_solutions env |> SS.close_univ_vars if_then_else_us,
+    if_then_else_ty in
 
   log_combinator "if_then_else" if_then_else;
 
@@ -1138,6 +1143,8 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   let us, lift_ty = SS.open_univ_vars us lift_ty in
   let env = Env.push_univ_vars env0 us in
 
+  check_no_subtyping_for_layered_combinator env lift_ty None;
+
   // let env, us, lift =
   //   if List.length us = 0 then env0, us, lift
   //   else
@@ -1223,8 +1230,6 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
 
-  let k = k |> N.remove_uvar_solutions env in
-  check_no_subtyping_for_layered_combinator env k None;
 
   //generalize
   // let us, lift, lift_wp =
@@ -1249,7 +1254,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
        
   let sub = { sub with
     lift = Some (us, lift);
-    lift_wp = Some (us, SS.close_univ_vars us k) } in
+    lift_wp = Some (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us) } in
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
@@ -1432,6 +1437,8 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   let us, ty = SS.open_univ_vars us ty in
   let env = Env.push_univ_vars env us in
 
+  check_no_subtyping_for_layered_combinator env ty None;
+
   //construct the expected type k to be:
   //a:Type -> b:Type -> <some binders> -> m_repr a is -> (x:a -> n_repr b js) -> p_repr b ks
 
@@ -1477,7 +1484,4 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
-  let k = k |> N.remove_uvar_solutions env in
-  check_no_subtyping_for_layered_combinator env k None;
-
-  (us, t), (us, SS.close_univ_vars us k)
+  (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
