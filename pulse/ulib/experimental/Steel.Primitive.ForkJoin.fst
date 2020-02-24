@@ -42,13 +42,6 @@ assume
 val h_affine (p q:hprop)
   : SteelT unit (p `star` q) (fun _ -> p)
 
-
-assume
-val read_refine (#a:_) (#perm:_) (q:a -> hprop) (r:ref a)
-  : SteelT a (h_exists (fun (v:a) -> pts_to r perm v `star` q v))
-             (fun v -> pts_to r perm v `star` q v)
-
-
 assume
 val par (#preL:pre_t) (#postL:post_t unit)
         ($f:unit -> SteelT unit preL postL)

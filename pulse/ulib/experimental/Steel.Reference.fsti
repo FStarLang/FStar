@@ -17,6 +17,10 @@ val alloc (#a:Type) (x:a)
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
 
+val read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
+  : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+             (fun v -> pts_to r p v `star` q v)
+
 val write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full v) (fun _ -> pts_to r full x)
 

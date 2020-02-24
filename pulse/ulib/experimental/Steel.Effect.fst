@@ -328,6 +328,23 @@ let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:permission{allows
     x)
 #pop-options
 
+let read_refine
+  (#a:Type0)
+  (#pre:P.preorder a)
+  (q:a -> hprop)
+  (r:reference a pre)
+  (p:permission{allows_read p})
+: Steel a (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
+          (fun v -> pts_to_ref r p v `star` q v)
+          (fun _ -> True) (fun _ _ _ -> True)
+= Steel?.reflect (fun _ ->
+    let m0 = mst_get () in
+    let act = promote_atomic_m_action (get_ref_refine Set.empty r p q) in
+    let (| x, m1 |) = act m0 in
+    act_preserves_frame_and_preorder act m0;
+    mst_put m1;
+    x)
+
 let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x:a{pre curr x})
 : Steel unit (pts_to_ref r full_permission curr) (fun _ -> pts_to_ref r full_permission x)
     (fun _ -> True) (fun _ _ _ -> True)
