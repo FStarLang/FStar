@@ -40,7 +40,9 @@ type c_True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : eqtype
+assume new type unit : Type0
+
+assume HasEq_unit : hasEq unit
 
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
