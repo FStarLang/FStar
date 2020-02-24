@@ -1961,7 +1961,7 @@ let gather_array
       (gather_array_action a a' iseq p p' (trivial_preorder t))
       (fun h addr -> ())
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 150"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 200"
 let split_array_pre_action
   (#t: _)
   (a: array_ref t)
