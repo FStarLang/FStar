@@ -416,3 +416,5 @@ val print_gamma : gamma -> string
  *)
 
 val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ

@@ -1777,6 +1777,21 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
+
+let pure_precondition_for_trivial_post env u t wp r =
+  let trivial_post =
+    let post_ts = lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
+    let _, post = inst_tscheme_with post_ts [u] in
+    S.mk_Tm_app
+      post
+      [t |> S.as_arg]
+      None Range.dummyRange in
+  S.mk_Tm_app
+    wp
+    [trivial_post |> S.as_arg]
+    None Range.dummyRange
+
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
@@ -1791,3 +1806,4 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
+
