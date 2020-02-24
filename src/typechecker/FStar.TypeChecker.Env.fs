@@ -1785,11 +1785,11 @@ let pure_precondition_for_trivial_post env u t wp r =
     S.mk_Tm_app
       post
       [t |> S.as_arg]
-      None Range.dummyRange in
+      None r in
   S.mk_Tm_app
     wp
     [trivial_post |> S.as_arg]
-    None Range.dummyRange
+    None r
 
 
 (* <Move> this out of here *)

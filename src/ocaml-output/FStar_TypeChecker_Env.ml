@@ -6079,8 +6079,7 @@ let (pure_precondition_for_trivial_post :
                         FStar_All.pipe_right t FStar_Syntax_Syntax.as_arg  in
                       [uu____27428]  in
                     FStar_Syntax_Syntax.mk_Tm_app post uu____27427  in
-                  uu____27422 FStar_Pervasives_Native.None
-                    FStar_Range.dummyRange
+                  uu____27422 FStar_Pervasives_Native.None r
                in
             let uu____27461 =
               let uu____27466 =
@@ -6090,7 +6089,7 @@ let (pure_precondition_for_trivial_post :
                    in
                 [uu____27467]  in
               FStar_Syntax_Syntax.mk_Tm_app wp uu____27466  in
-            uu____27461 FStar_Pervasives_Native.None FStar_Range.dummyRange
+            uu____27461 FStar_Pervasives_Native.None r
   
 let (dummy_solver : solver_t) =
   {

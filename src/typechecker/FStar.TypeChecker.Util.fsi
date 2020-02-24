@@ -60,6 +60,7 @@ val should_return: env -> option<term> -> lcomp -> bool
 val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+//the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
 val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
