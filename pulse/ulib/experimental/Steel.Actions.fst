@@ -2469,7 +2469,46 @@ let free_ref
     (fun h0 addr -> ())
 #pop-options
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit 100 --admit_smt_queries true"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit 50"
+let share_ref_pre_action
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : pre_action
+    (pts_to_ref r p contents)
+    (r':reference t pre{ref_address r' = ref_address r})
+    (fun r' ->
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r' (half_permission p) contents
+    )
+  = fun h ->
+      let iseq = Ghost.hide (Seq.create 1 (Ghost.reveal contents)) in
+      let (| x, h' |) = share_array_pre_action r iseq p pre h in
+      (| x, h' |)
+#pop-options
+
+let share_ref_action
+  (#t: _)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (contents: Ghost.erased t)
+  : action
+    (pts_to_ref r p contents)
+    (r':reference t pre{ref_address r' = ref_address r})
+    (fun r' ->
+      pts_to_ref r (half_permission p) contents `star`
+      pts_to_ref r' (half_permission p) contents
+    )
+  =
+  pre_action_to_action
+    (share_ref_pre_action r p contents)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+
 let share_ref
   (#t: Type0)
   (uses:Set.set lock_addr)
@@ -2487,7 +2526,11 @@ let share_ref
       pts_to_ref r' (half_permission p) contents
     )
   =
-  share_array_with_preorder r (Seq.create 1 (Ghost.reveal contents)) p pre
+  promote_action
+    uses
+    false
+    (share_ref_action r p contents)
+    (fun h addr -> ())
 #pop-options
 
 let gather_ref
