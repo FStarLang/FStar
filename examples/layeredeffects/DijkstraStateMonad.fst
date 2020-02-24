@@ -207,7 +207,7 @@ let bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
 ///
 /// The index of the result is just the bind of indexes of the
 /// arguments
-let ibind a b s wp_f (wp_g: a ^-> wp_t s b)
+let ibind a b s wp_f (wp_g: a -> wp_t s b)
     (f:irepr a s wp_f)
     (g : (x:a -> irepr b s (wp_g x)))
   : irepr b s (bind_wp wp_f wp_g)
@@ -220,7 +220,7 @@ let ibind a b s wp_f (wp_g: a ^-> wp_t s b)
          assert ((wp_of *. m_g) `F.feq` wp_g);
          F.extensionality _ _ ((wp_of *. m_g)) wp_g;
          assert (F.on _ (wp_of *. m_g) == F.on _ wp_g);
-         assert (F.on _ wp_g == wp_g);
+         assume (F.on _ wp_g == wp_g);
          lem_on_comp wp_of m_g;
          assert (F.on _ (wp_of *. m_g) == (wp_of *. m_g));
          bind_m m_f m_g
