@@ -41,11 +41,15 @@ let invert_array_seq_member (a: Type0)
 
 let array_seq (a: Type) (len: nat) = Seq.lseq (option (array_seq_member a)) len
 
+let all_full_permission (#a: Type) (#len: nat) (seq: array_seq a len) =
+  forall (i:nat{i < len}). (Some? (Seq.index seq i) /\ (Some?.v (Seq.index seq i)).perm == full_permission)
+
 noeq
 type cell =
   | Array: a:Type u#0 ->
-           len: nat ->
+           len: nat{len > 0} ->
            seq:array_seq a len  ->
+           live: bool{(not live) ==> all_full_permission seq} ->
 	   cell
 
 let _ : squash (inversion cell) = allow_inversion cell
@@ -81,7 +85,7 @@ let update_addr (m:heap) (a:addr) (c:cell)
 let disjoint_addr (m0 m1:heap) (a:addr)
   : prop
   = match m0 a, m1 a with
-    | Some (Array t0 len0 seq0), Some (Array t1 len1 seq1) ->
+    | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
       t0 == t1 /\
       len0 == len1 /\
       (forall (i:nat{i < len0}).
@@ -98,15 +102,12 @@ let disjoint_addr (m0 m1:heap) (a:addr)
     | None, None ->
       True
 
-    | _ ->
-      False
-
 module U32 = FStar.UInt32
 
 noeq type array_ref (a: Type0) : Type0 = {
   array_addr: addr;
   array_max_length: U32.t;
-  array_length: n:U32.t{U32.v n <= U32.v array_max_length};
+  array_length: n:U32.t{U32.v n > 0 /\ U32.v n <= U32.v array_max_length};
   array_offset: n:U32.t{U32.v n + U32.v array_length <= U32.v array_max_length};
 }
 
@@ -128,11 +129,11 @@ let max_length (#t: Type) (a: array_ref t) = a.array_max_length
 
 let address (#t: Type) (a: array_ref t) = a.array_addr
 
-let reference (t: Type u#0) = a:array_ref t{
+let reference (t: Type u#0) (pre: Preorder.preorder t) = a:array_ref t{
   length a = 1ul /\ offset a = 0ul /\ max_length a = 1ul
 }
 
-let ref_address (#t: Type0) (r: reference t) = r.array_addr
+let ref_address (#t: Type0) (#pre: Preorder.preorder t) (r: reference t pre) = r.array_addr
 
 let disjoint_heap (m0 m1:heap)
   : prop
@@ -149,7 +150,7 @@ let join_heap (m0:heap) (m1:heap{disjoint_heap m0 m1})
       | None, None -> None
       | None, Some x -> Some x
       | Some x, None -> Some x
-      | Some (Array a0 len0 seq0), Some (Array a1 len1 seq1) ->
+      | Some (Array a0 len0 seq0 live0), Some (Array a1 len1 seq1 live1) ->
         Some (Array a0 len0 (Seq.init len0 (fun i ->
           match contains_index seq0 i,  contains_index seq1 i with
 	  | true, true ->
@@ -161,7 +162,9 @@ let join_heap (m0:heap) (m1:heap{disjoint_heap m0 m1})
           | true, false -> Seq.index seq0 i
           | false, true -> Seq.index seq1 i
 	  | false, false -> None
-      )))
+        )
+      ) (live0 && live1)
+    )
   )
 
 #push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 200"
@@ -210,7 +213,7 @@ let join_commutative' (m0 m1:heap)
   =
   let aux (a: addr) : Lemma ((join_heap m0 m1) a == (join_heap m1 m0) a) =
     match (join_heap m0 m1) a, (join_heap m1 m0) a with
-    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+    | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 live3) ->
       assert(seq2 `Seq.equal` seq3)
     | _ -> ()
   in Classical.forall_intro aux
@@ -236,7 +239,7 @@ let join_associative' (m0 m1 m2:heap)
   =
   let aux (a: addr) : Lemma ((join_heap m0 (join_heap m1 m2)) a == (join_heap (join_heap m0 m1) m2) a) =
     match  (join_heap m0 (join_heap m1 m2)) a, (join_heap (join_heap m0 m1) m2) a with
-    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+    | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 live3) ->
       assert(seq2 `Seq.equal` seq3)
     | _ -> ()
   in Classical.forall_intro aux
@@ -267,21 +270,21 @@ let join_associative2 (m0 m1 m2:heap)
   =
   let aux (a: addr) : Lemma (disjoint_addr m1 m2 a) =
     match  m1 a, m2 a with
-    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+    | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 live3) ->
       ()
     | _ -> ()
   in Classical.forall_intro aux;
   assert(disjoint_heap m1 m2);
   let aux (a: addr) : Lemma (disjoint_addr m0 (join_heap m1 m2) a) =
     match  m0 a, (join_heap m1 m2) a with
-    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+    | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 live3) ->
       ()
     | _ -> ()
   in Classical.forall_intro aux;
   assert(disjoint_heap m0 (join_heap m1 m2));
   let aux (a: addr) : Lemma ((join_heap m0 (join_heap m1 m2)) a == (join_heap (join_heap m0 m1) m2) a) =
     match  (join_heap m0 (join_heap m1 m2)) a, (join_heap (join_heap m0 m1) m2) a with
-    | Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+    | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 l) ->
       assert(seq2 `Seq.equal` seq3)
     | _ -> ()
   in Classical.forall_intro aux
@@ -296,6 +299,7 @@ let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
 
 module W = FStar.WellFounded
 
+[@erasable]
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
@@ -361,8 +365,8 @@ let rec interp_heap (p:hprop) (m:heap)
     | Pts_to_array #t a perm contents preorder ->
       m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
-        | Array t' len' seq ->
-	  t' == t /\
+        | Array t' len' seq live ->
+	  t' == t /\ live /\ U32.v a.array_max_length = len' /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
@@ -452,13 +456,20 @@ let equiv_heap_iff_equiv (p1 p2:hprop)
 
 let emp = Emp
 let pts_to_array_with_preorder = Pts_to_array
+let pts_to_array
+  (#t: Type0)
+  (a:array_ref t)
+  (p:permission{allows_read p})
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  =
+  pts_to_array_with_preorder a p contents (trivial_preorder t)
 let pts_to_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p:permission{allows_read p})
   (contents: Ghost.erased t)
-  (preorder: Ghost.erased (Preorder.preorder t))
-  = pts_to_array_with_preorder r p (Seq.Base.create 1 (Ghost.reveal contents)) preorder
+  = pts_to_array_with_preorder r p (Seq.Base.create 1 (Ghost.reveal contents)) pre
 let h_and = And
 let h_or = Or
 let star = Star
@@ -493,8 +504,8 @@ let intro_pts_to_array_with_preorder
     (requires (
     m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
-        | Array t' len' seq ->
-	  t' == t /\
+        | Array t' len' seq live ->
+	  t' == t /\ live /\ U32.v a.array_max_length = len' /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
@@ -516,9 +527,40 @@ let intro_pts_to_array_with_preorder
   =
   ()
 
-let pts_to_array_injective #t a p c0 c1 pre m =
+let pts_to_array_with_preorder_injective
+  (#t: _)
+  (a: array_ref t)
+  (p:permission{allows_read p})
+  (c0 c1: Seq.lseq t (U32.v (length a)))
+  (pre:Preorder.preorder t)
+  (m:mem)
+  : Lemma
+    (requires (
+      interp (pts_to_array_with_preorder a p c0 pre) m /\
+      interp (pts_to_array_with_preorder a p c1 pre) m))
+    (ensures (c0 == c1))
+  =
   match select_addr m.heap a.array_addr with
-  | Array t' len' seq ->
+  | Array t' len' seq live ->
+    let aux (i':nat{i' < U32.v a.array_length})
+      : Lemma (Seq.index c0 i' == Seq.index c1 i')
+    =
+      let i = i' + U32.v a.array_offset in
+      assert(contains_index seq i);
+      let x0 = Seq.index c0 i' in
+      let x1 = Seq.index c1 i' in
+      let x' = select_index seq i in
+      assert(x'.value == x0);
+      assert(x'.value == x1);
+      assert(x0 == x1)
+    in
+    Classical.forall_intro aux;
+    assert(c0 `Seq.equal` c1)
+  | _ -> ()
+
+let pts_to_array_injective #t  a p c0 c1 m =
+  match select_addr m.heap a.array_addr with
+  | Array t' len' seq live ->
     let aux (i':nat{i' < U32.v a.array_length})
       : Lemma (Seq.index c0 i' == Seq.index c1 i')
     =
@@ -539,10 +581,10 @@ let pts_to_array_injective #t a p c0 c1 pre m =
 // pts_to_ref
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_ref_injective #t a p c0 c1 pre m =
+let pts_to_ref_injective #t #pre a p c0 c1  m =
   let s0 = Seq.create 1 c0 in
   let s1 = Seq.create 1 c1 in
-  pts_to_array_injective a p s0 s1 pre m;
+  pts_to_array_with_preorder_injective a p s0 s1 pre m;
   assert(s0 `Seq.equal` s1);
   assert(c0 == Seq.index s0 0);
   assert(c1 == Seq.index s1 0)
@@ -570,7 +612,7 @@ let intro_star (p q:hprop) (mp:hmem p) (mq:hmem q)
 
 (* Properties of star *)
 
-#push-options "--z3rlimit 10"
+#push-options "--z3rlimit 30"
 let star_commutative (p1 p2:hprop) = ()
 #pop-options
 
@@ -666,15 +708,45 @@ let elim_forall #a p m = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+#push-options "--z3rlimit 10 --fuel 2 --warn_error -271 --ifuel 1"
+let affine_star_aux_pts_to_array (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
+  : Lemma
+    (requires Pts_to_array? p)
+    (ensures interp_heap p m ==> interp_heap p (join_heap m m'))
+  =
+  let aux (_ :squash (interp_heap p m)) : Lemma (interp_heap p (join_heap m m')) =
+    let Pts_to_array a perm contents pre = p in
+    match m a.array_addr, m' a.array_addr, (join_heap m m') a.array_addr with
+    | Some (Array t len seq live), Some (Array t' len' seq' live'),
+      Some (Array tj lenj seqj livej) ->
+      if live' then () else begin
+        assert(all_full_permission seq');
+        assert(tj == t /\ tj == t');
+        assert(lenj == len /\ lenj == len');
+        assert(not livej /\ live);
+        let aux (i:nat{i < len}) : Lemma (Seq.index seq i == None) =
+          ()
+        in
+        assert(U32.v a.array_offset + U32.v a.array_length <= len);
+        aux (U32.v a.array_offset);
+        assert(Some? (Seq.index seq (U32.v a.array_offset)))
+      end
+    | _-> ()
+  in
+  Classical.impl_intro aux
+#pop-options
+
 #restart-solver
-#push-options "--z3rlimit 300 --initial_fuel 2 --max_fuel 2 --warn_error -271 --initial_ifuel 1 --max_ifuel 1"
+
+#push-options "--z3rlimit 300 --fuel 2 --warn_error -271 --ifuel 1"
 let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
   : Lemma
     (ensures interp_heap p m ==> interp_heap p (join_heap m m'))
     [SMTPat (interp_heap p (join_heap m m'))]
   = match p with
     | Emp -> ()
-    | Pts_to_array _ _ _ _ -> ()
+    | Pts_to_array _ _ _ _ -> affine_star_aux_pts_to_array p m m'
     | Refine p q -> affine_star_aux p m m'
     | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
@@ -697,7 +769,8 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
           // assert (interp p1 (join m1 (join m2 m')));
           join_associative_heap m1 m2 m';
           // assert (disjoint m1 (join m2 m'));
-          intro_star_heap p1 p2 m1 (join_heap m2 m')
+          intro_star_heap p1 p2 m1 (join_heap m2 m');
+          ()
       in
       ()
     | Wand p q ->
@@ -847,3 +920,7 @@ let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
   refine (lock_store_invariant e m.locks) (heap_ctr_valid m)
 
 let core_mem m = mem_of_heap (heap_of_mem m)
+
+let core_mem_interp hp m = ()
+
+let interp_depends_only_on hp = ()
