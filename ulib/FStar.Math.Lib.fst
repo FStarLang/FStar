@@ -42,6 +42,7 @@ private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c)
 
 (* Axiom: definition of the "b divides c" relation *)
 #reset-options "--z3rlimit 20"
+#restart-solver
 val slash_star_axiom: a:nat -> b:pos -> c:nat -> Lemma
   (requires (a * b = c))
   (ensures  (a = c / b))
@@ -50,6 +51,7 @@ let slash_star_axiom a b c =
   lemma_mul_minus_distr_l b a (c/b)
 
 #reset-options
+#restart-solver
 val log_2: x:pos -> Tot nat
 let rec log_2 x =
   if x >= 2 then 1 + log_2 (x / 2) else 0
