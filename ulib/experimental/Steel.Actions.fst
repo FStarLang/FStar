@@ -2668,3 +2668,136 @@ let get_ref_refine
     false
     (get_ref_refine_action r p q)
     (fun h0 addr -> ())
+
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
+let cas_pre_action
+  (#t:eqtype)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  : pre_action
+    (pts_to_ref r full_permission v)
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+  = fun h ->
+      let contents = sel_ref_heap r h in
+      if v_old <> contents then (| false, h |)
+      else (
+        let res = set_ref_pre_action r v v_new h in
+        let h' = dsnd res in
+        (| true, h' |)
+     )
+#pop-options
+
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
+let cas_preserves_frame_disjointness_addr
+  (#t:eqtype)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  (frame: hprop)
+  (h0:hheap (pts_to_ref r full_permission v))
+  (h1:hheap frame{disjoint_heap h0 h1})
+  (addr: addr)
+  : Lemma (
+      let (|_, h0'|) = cas_pre_action r v v_old v_new h0 in
+      disjoint_addr h0' h1 addr
+    )
+  = sel_ref_lemma_heap r full_permission h0;
+    let iseq = Seq.create 1 (sel_ref_heap r h0) in
+    upd_array_heap_frame_disjointness_preservation r iseq 0ul v_new pre (join_heap h0 h1) h0 h1 frame
+#pop-options
+
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 2"
+let cas_does_not_depend_on_framing_addr
+  (#t:eqtype)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  (frame: hprop)
+  (h0:hheap (pts_to_ref r full_permission v))
+  (h1:hheap frame{disjoint_heap h0 h1})
+  (addr: addr)
+  : Lemma (requires (
+      let (|_, h0'|) = cas_pre_action r v v_old v_new h0 in
+      disjoint_heap h0' h1
+    ))
+    (ensures (
+      let (|_, h0'|) = cas_pre_action r v v_old v_new h0 in
+      let (|_, h'|) = cas_pre_action r v v_old v_new (join_heap h0 h1) in
+      h' addr == join_heap h0' h1 addr
+    ))
+  = sel_ref_lemma_heap r full_permission h0;
+    let iseq = Seq.create 1 (sel_ref_heap r h0) in
+    upd_array_action_memory_split_independence r iseq 0ul v_new pre (join_heap h0 h1) h0 h1 frame
+#pop-options
+
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
+let cas_result_does_not_depend_on_framing
+  (#t:eqtype)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  (frame: hprop)
+  (h0:hheap (pts_to_ref r full_permission v))
+  (h1:hheap frame{disjoint_heap h0 h1})
+  : Lemma (
+      let (|x_alone, h0'|) = cas_pre_action r v v_old v_new h0 in
+      let (|x_joint, h'|) = cas_pre_action r v v_old v_new (join_heap h0 h1) in
+      x_alone == x_joint
+    )
+  = sel_ref_lemma_heap r full_permission h0;
+    let iseq = Seq.create 1 (sel_ref_heap r h0) in
+    let (| x0, h |) = set_ref_pre_action r v v_new h0 in
+    let (| x1, h' |) = set_ref_pre_action r v v_new (join_heap h0 h1) in
+    assert (x0 == x1)
+#pop-options
+
+let cas_action
+  (#t:eqtype)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  : action
+    (pts_to_ref r full_permission v)
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+  =
+  pre_action_to_action
+    (cas_pre_action r v v_old v_new)
+    (cas_preserves_frame_disjointness_addr r v v_old v_new)
+    (cas_does_not_depend_on_framing_addr r v v_old v_new)
+    (cas_result_does_not_depend_on_framing r v v_old v_new)
+
+#pop-options
+
+let cas
+  (#t:eqtype)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  : atomic
+    uses
+    false
+    (pts_to_ref r full_permission v)
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+  =
+  promote_action
+    uses
+    false
+    (cas_action r v v_old v_new)
+    (fun h0 addr -> ())

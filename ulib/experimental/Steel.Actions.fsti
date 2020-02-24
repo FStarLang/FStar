@@ -396,3 +396,18 @@ val get_ref_refine
     (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
     (x:t)
     (fun v -> pts_to_ref r p v `star` q v)
+
+val cas
+  (#t:eqtype)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  : atomic
+    uses
+    false
+    (pts_to_ref r full_permission v)
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
