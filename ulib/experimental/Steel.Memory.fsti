@@ -44,12 +44,13 @@ val address (#t: Type) (a: array_ref t) : GTot addr
 let freeable (#t: Type) (a: array_ref t) =
   offset a = 0ul /\ length a = max_length a
 
-val reference (t: Type0) : Type0
+val reference (t: Type0) (pre: Preorder.preorder t) : Type0
 
-val ref_address (#t: Type0) (r: reference t) : GTot addr
+val ref_address (#t: Type0) (#pre: Preorder.preorder t) (r: reference t pre) : GTot addr
 
 /// The type of mem assertions
 
+[@erasable]
 val hprop : Type u#1
 
 /// Type of mem
@@ -118,19 +119,18 @@ let equiv (p1 p2:hprop) : prop =
 
 val emp : hprop
 
-val pts_to_array_with_preorder
+val pts_to_array
   (#t: Type0)
   (a:array_ref t)
   (p:permission{allows_read p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (preorder: Ghost.erased (Preorder.preorder t))
   : hprop
 val pts_to_ref
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p:permission{allows_read p})
   (contents: Ghost.erased t)
-  (preorder: Ghost.erased (Preorder.preorder t))
   : hprop
 
 val h_and (p1 p2:hprop) : hprop
@@ -147,22 +147,14 @@ type hmem (p:hprop) = m:mem{interp p m}
 ////////////////////////////////////////////////////////////////////////////////
 
 val equiv_symmetric (p1 p2:hprop)
-  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+  : Lemma (p1 `equiv` p2 ==> p2 `equiv` p1)
 
 val equiv_extensional_on_star (p1 p2 p3:hprop)
-  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+  : Lemma (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_array and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
-
-let pts_to_array
-  (#t: Type0)
-  (a:array_ref t)
-  (p:permission{allows_read p})
-  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
-  : hprop =
-    pts_to_array_with_preorder a p contents (Ghost.hide (trivial_preorder t))
 
 let array_perm (#t: Type) (a: array_ref t) (p:permission{allows_read p}) =
   h_exists (pts_to_array a p)
@@ -175,12 +167,11 @@ val pts_to_array_injective
   (a: array_ref t)
   (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
-  (pre: Preorder.preorder t)
   (m:mem)
   : Lemma
     (requires (
-      interp (pts_to_array_with_preorder a p c0 pre) m /\
-      interp (pts_to_array_with_preorder a p c1 pre) m))
+      interp (pts_to_array a p c0) m /\
+      interp (pts_to_array a p c1) m))
     (ensures (c0 == c1))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,28 +180,28 @@ val pts_to_array_injective
 
 let ref_perm
   (#t: Type0)
-  (r: reference t)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
   (p:permission{allows_read p})
-  (pre: Ghost.erased (Preorder.preorder t))
   : hprop =
   h_exists (fun (contents: Ghost.erased t) ->
-    pts_to_ref r p contents pre
+    pts_to_ref r p contents
   )
 
-let ref (#t: Type0) (r: reference t) (pre: Ghost.erased (Preorder.preorder t)) : hprop
-  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p pre)
+let ref (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
+  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)
 
 val pts_to_ref_injective
   (#t: _)
-  (a: reference t)
+  (#pre: Preorder.preorder t)
+  (a: reference t pre)
   (p:permission{allows_read p})
   (c0 c1: t)
-  (pre: Preorder.preorder t)
   (m:mem)
   : Lemma
     (requires (
-      interp (pts_to_ref a p c0 pre) m /\
-      interp (pts_to_ref a p c1 pre) m))
+      interp (pts_to_ref a p c0) m /\
+      interp (pts_to_ref a p c1) m))
     (ensures (c0 == c1))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,3 +366,22 @@ val core_mem (m:mem) : mem
 let mprop (hp:hprop) = q:(mem -> prop){
   forall (m0:mem{interp hp m0}) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
+
+
+(***** Following lemmas are needed in Steel.Effect *****)
+
+val core_mem_interp (hp:hprop) (m:mem)
+: Lemma
+  (requires interp hp m)
+  (ensures interp hp (core_mem m))
+  [SMTPat (interp hp (core_mem m))]
+
+val interp_depends_only_on (hp:hprop)
+  : Lemma
+    (forall (m0:hmem hp) (m1:mem{disjoint m0 m1}).
+       interp hp m0 <==> interp hp (join m0 m1))
+
+let affine_star_smt (p q:hprop) (m:mem)
+: Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
+  [SMTPat (interp (p `star` q) m)]
+= affine_star p q m
