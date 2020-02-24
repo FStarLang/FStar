@@ -2565,18 +2565,21 @@ let get_ref_refine_injective_hprop
   : Lemma
   (requires
     interp_heap (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v)) h)
-  (ensures interp_heap (pts_to_ref r p (sel_ref_heap r h) `star` q (sel_ref_heap r h)) h)
+  (ensures
+    interp_heap (ref r) h /\
+    interp_heap (pts_to_ref r p (sel_ref_heap r h) `star` q (sel_ref_heap r h)) h)
   =
   let open FStar.IndefiniteDescription in
   let (|v, _ |) = indefinite_description t
       (fun v -> interp_heap (pts_to_ref r p v `star` q v) h) in
-  let contents = sel_ref_heap r h in
   sel_ref_lemma_heap r p h;
-    affine_star_heap (pts_to_ref r p v) (q v) h;
+  let contents = sel_ref_heap r h in
+  affine_star_heap (pts_to_ref r p v) (q v) h;
   assert (interp_heap (pts_to_ref r p v) h);
   assert (interp_heap (pts_to_ref r p contents) h);
   assert (v == contents)
 
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
 let get_ref_refine_pre_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2595,7 +2598,6 @@ let get_ref_refine_pre_action
     let x = read_array_addr r (Seq.create 1 contents) 0ul p pre h in
     (| x, h |)
 
-#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
 let get_ref_refine_does_not_depend_on_framing
   (#t: Type0)
   (#pre: Preorder.preorder t)
