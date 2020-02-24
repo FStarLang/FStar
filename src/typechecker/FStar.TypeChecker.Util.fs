@@ -245,6 +245,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
+
 let comp_univ_opt c =
     match c.n with
     | Total (_, uopt)
@@ -662,13 +663,13 @@ let mk_indexed_bind env
        "bind %s does not have proper shape (reason:%s)"
        (Print.term_to_string bind_t) s) in
 
-  let a_b, b_b, rest_bs, f_b, g_b, bind_ct =
+  let a_b, b_b, rest_bs, f_b, g_b, bind_c =
     match (SS.compress bind_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 4 ->
       let ((a_b::b_b::bs), c) = SS.open_comp bs c in
       let rest_bs, f_b, g_b =
         List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
-      a_b, b_b, rest_bs, f_b, g_b, U.comp_to_comp_typ c
+      a_b, b_b, rest_bs, f_b, g_b, c
     | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
@@ -713,6 +714,13 @@ let mk_indexed_bind env
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a] in
 
+  let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
+
+  //compute the formula `bind_c.wp (fun _ -> True)` and add it to the final guard
+  let fml =
+    let u, wp = List.hd bind_ct.comp_univs, fst (List.hd bind_ct.effect_args) in
+    Env.pure_precondition_for_trivial_post env u bind_ct.result_typ wp Range.dummyRange in
+
   let is : list<term> =  //indices of the resultant computation
     effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1
     |> List.map (SS.subst subst) in
@@ -728,7 +736,7 @@ let mk_indexed_bind env
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guards [ g_uvars; f_guard; g_guard ]
+  c, Env.conj_guards [ g_uvars; f_guard; g_guard; Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
 
 let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
   : comp =
@@ -2754,17 +2762,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
   //compute the formula `lift_c.wp (fun _ -> True)` and add it to the final guard
   let fml =
     let u, wp = List.hd lift_ct.comp_univs, fst (List.hd lift_ct.effect_args) in
-    let trivial_post =
-      let ts = Env.lookup_definition [NoDelta] env C.trivial_pure_post_lid |> must in
-      let _, t = Env.inst_tscheme_with ts [u] in
-      S.mk_Tm_app
-        t
-        [lift_ct.result_typ |> S.as_arg]
-        None Range.dummyRange in
-    S.mk_Tm_app
-      wp
-      [trivial_post |> S.as_arg]
-      None Range.dummyRange in
+    Env.pure_precondition_for_trivial_post env u lift_ct.result_typ wp Range.dummyRange in
 
   if Env.debug env <| Options.Other "LayeredEffects" &&
      Env.debug env <| Options.Extreme

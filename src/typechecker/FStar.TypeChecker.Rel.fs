@@ -45,6 +45,7 @@ module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module FC = FStar.Const
+module TcComm = FStar.TypeChecker.Common
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -3112,17 +3113,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 
         let fml =
           let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
-          let trivial_post =
-            let ts = Env.lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
-            let _, t = Env.inst_tscheme_with ts [u] in
-            S.mk_Tm_app
-              t
-              [stronger_ct.result_typ |> S.as_arg]
-              None Range.dummyRange in
-          S.mk_Tm_app
-            wp
-            [trivial_post |> S.as_arg]
-            None Range.dummyRange in
+          Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
 
         let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs@(g_lift.deferred |> List.map snd)) in
         let guard =
