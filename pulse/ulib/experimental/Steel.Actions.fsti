@@ -382,3 +382,17 @@ val gather_ref
       pts_to_ref r' p' contents)
     unit
     (fun _ -> pts_to_ref r (sum_permissions p p') contents)
+
+val get_ref_refine
+  (#t:Type0)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (p:permission{allows_read p})
+  (q:t -> hprop)
+  : atomic
+    uses
+    false
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)

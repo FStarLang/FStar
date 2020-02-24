@@ -2511,3 +2511,115 @@ let gather_ref
     false
     (gather_array_action r r' (Seq.create 1 (Ghost.reveal contents)) p p' pre)
     (fun h addr -> ())
+
+let get_ref_refine_injective_hprop
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (q:t -> hprop)
+  (h:heap)
+  : Lemma
+  (requires
+    interp_heap (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v)) h)
+  (ensures interp_heap (pts_to_ref r p (sel_ref_heap r h) `star` q (sel_ref_heap r h)) h)
+  =
+  let open FStar.IndefiniteDescription in
+  let (|v, _ |) = indefinite_description t
+      (fun v -> interp_heap (pts_to_ref r p v `star` q v) h) in
+  let contents = sel_ref_heap r h in
+  sel_ref_lemma_heap r p h;
+    affine_star_heap (pts_to_ref r p v) (q v) h;
+  assert (interp_heap (pts_to_ref r p v) h);
+  assert (interp_heap (pts_to_ref r p contents) h);
+  assert (v == contents)
+
+let get_ref_refine_pre_action
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (q:t -> hprop)
+  : pre_action
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)
+  = fun h ->
+    get_ref_refine_injective_hprop r p q h;
+    let contents = sel_ref_heap r h in
+    sel_ref_lemma_heap r p h;
+    assert (interp_heap (pts_to_ref r p contents `star` q contents) h);
+    let x = read_array_addr r (Seq.create 1 contents) 0ul p pre h in
+    (| x, h |)
+
+#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
+let get_ref_refine_does_not_depend_on_framing
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (q: t -> hprop)
+  (frame: hprop)
+  (h0: hheap (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v)))
+  (h1: hheap frame{disjoint_heap h0 h1})
+  : Lemma (
+      let (|x_alone, h0'|) = (get_ref_refine_pre_action r p q) h0 in
+      let (|x_joint, h'|) = (get_ref_refine_pre_action r p q) (join_heap h0 h1) in
+      x_alone == x_joint
+    )
+  =
+    sel_ref_lemma_heap r p h0;
+    let h' = join_heap h0 h1 in
+    let r = Some?.v r in
+    assert (disjoint_addr h0 h1 r.array_addr);
+    assert (Some? (h0 r.array_addr) /\ Array? (Some?.v (h0 r.array_addr)));
+    assert (Some? (h' r.array_addr) /\ Array? (Some?.v (h' r.array_addr)));
+    let a1 = Some?.v (h0 r.array_addr) in
+    let a2 = Some?.v (h' r.array_addr) in
+    let Array t1 len1 seq1 live1 = a1 in
+    let Array t2 len2 seq2 live2 = a2 in
+    let v1 = Seq.index seq1 (U32.v r.array_offset + U32.v 0ul) in
+    let v2 = Seq.index seq2 (U32.v r.array_offset + U32.v 0ul) in
+    let x1 = Some?.v v1 in
+    let x2 = Some?.v v2 in
+    assert (x1.value == x2.value)
+#pop-options
+
+#push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+let get_ref_refine_action
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p: permission{allows_read p})
+  (q:t -> hprop)
+  : action
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)
+  =
+  pre_action_to_action
+    (get_ref_refine_pre_action r p q)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (get_ref_refine_does_not_depend_on_framing r p q)
+#pop-options
+
+let get_ref_refine
+  (#t:Type0)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (p:permission{allows_read p})
+  (q:t -> hprop)
+  : atomic
+    uses
+    false
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)
+  =
+  promote_action
+    uses
+    false
+    (get_ref_refine_action r p q)
+    (fun h0 addr -> ())
