@@ -270,7 +270,7 @@ let lift_pure_ifst
     (a:Type)
     (s:Type0)
     (wp:pure_wp a)
-    (f:unit -> PURE a wp)
+    (f:pure_repr a wp)
   : irepr a s (lift_wp a s wp)
   = admit();
     let x = f() in

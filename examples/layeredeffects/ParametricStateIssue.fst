@@ -114,7 +114,7 @@ layered_effect {
 
 
 inline_for_extraction
-let lift_div_exn (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
+let lift_div_exn (a:Type) (wp:pure_wp a) (f:div_repr a wp)
 : repr a ()
 = fun _ -> Some (f ())
 
@@ -188,7 +188,7 @@ layered_effect {
 
 
 inline_for_extraction noextract
-let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:unit -> DIV a wp)
+let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:div_repr a wp)
 : mrepr a state
 = fun st -> (f (), st)
 

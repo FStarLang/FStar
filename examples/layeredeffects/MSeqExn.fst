@@ -121,7 +121,7 @@ assume PURE_wp_monotonic:
   forall (a:Type) (wp:pure_wp a).
     (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
-let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:pure_repr a wp)
 : repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
 = fun s0 -> Success (f ()), s0
 

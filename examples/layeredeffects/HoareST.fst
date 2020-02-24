@@ -138,7 +138,7 @@ assume val wp_monotonic_pure (_:unit)
 
 /// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:pure_repr a wp)
 : repr a
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
