@@ -4346,7 +4346,9 @@ let (weaken_result_typ :
                uu____11617 uu____11619 uu____11621
            else ());
           (let use_eq =
-             env.FStar_TypeChecker_Env.use_eq ||
+             (env.FStar_TypeChecker_Env.use_eq_strict ||
+                env.FStar_TypeChecker_Env.use_eq)
+               ||
                (let uu____11631 =
                   FStar_TypeChecker_Env.effect_decl_opt env
                     lc.FStar_TypeChecker_Common.eff_name
@@ -6013,7 +6015,9 @@ let (check_has_type :
           let env1 =
             FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos  in
           let check1 env2 t1 t21 =
-            if env2.FStar_TypeChecker_Env.use_eq
+            if
+              env2.FStar_TypeChecker_Env.use_eq_strict ||
+                env2.FStar_TypeChecker_Env.use_eq
             then FStar_TypeChecker_Rel.try_teq true env2 t1 t21
             else
               (let uu____16495 =

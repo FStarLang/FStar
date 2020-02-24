@@ -1827,6 +1827,8 @@ let run_tactic_on_ps :
                                (uu___198_2420.FStar_TypeChecker_Env.check_uvars);
                              FStar_TypeChecker_Env.use_eq =
                                (uu___198_2420.FStar_TypeChecker_Env.use_eq);
+                             FStar_TypeChecker_Env.use_eq_strict =
+                               (uu___198_2420.FStar_TypeChecker_Env.use_eq_strict);
                              FStar_TypeChecker_Env.is_iface =
                                (uu___198_2420.FStar_TypeChecker_Env.is_iface);
                              FStar_TypeChecker_Env.admit =
