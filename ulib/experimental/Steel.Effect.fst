@@ -317,8 +317,9 @@ let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:permission{allows
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| x, m1 |) = get_ref r p m0 in
-    act_preserves_frame_and_preorder (get_ref r p) m0;
+    let act = promote_atomic_m_action (get_ref Set.empty r p) in
+    let (| x, m1 |) = act m0 in
+    act_preserves_frame_and_preorder act m0;
     mst_put m1;
     mst_assume (interp (ref_perm r p) m1);
     sel_ref_lemma r p m1;
@@ -332,8 +333,9 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
-    let (| _, m1 |) = set_ref r curr x m0 in
-    act_preserves_frame_and_preorder (set_ref r curr x) m0;
+    let act = promote_atomic_m_action (set_ref Set.empty r curr x) in
+    let (| _, m1 |) = act m0 in
+    act_preserves_frame_and_preorder act m0;
     mst_put m1)
 
 

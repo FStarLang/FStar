@@ -151,7 +151,7 @@ open Steel.Permissions
 let index
   (#t:_)
   (#uses:Set.set lock_addr)
-  (a:array_ref t)
+  (a:array_ref t{a =!= null_array t})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   : SteelAtomic t uses false
@@ -170,7 +170,7 @@ let index
 let upd
   (#t:_)
   (#uses:Set.set lock_addr)
-  (a:array_ref t)
+  (a:array_ref t{a =!= null_array t})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v:t)
