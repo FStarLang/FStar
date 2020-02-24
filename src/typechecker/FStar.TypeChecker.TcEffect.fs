@@ -86,8 +86,6 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
 
 (*
  * A small gadget to get a uvar for pure wp with given result type
- *
- * (Used in typechecking stronger and lifts of layered effects)
  *)
 let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
   let pure_wp_t =
@@ -99,10 +97,19 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       None r in
 
   let pure_wp_uvar, _, guard_wp = TcUtil.new_implicit_var reason r env pure_wp_t in
-
   pure_wp_uvar, guard_wp
 
 
+(*
+ * For all the layered effects combinators, we enforce that their types are
+ *   typeable without using subtyping
+ *
+ * This is to guard against unsoundness creeping in because of using Untyped uvars
+ *   when applying these combinators
+ *
+ * Essentially we want to ensure that uvars are not introduces at a type different than
+ *   what they are used at
+ *)
 let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
   if Env.debug env <| Options.Other "LayeredEffects"
   then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
@@ -110,9 +117,11 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
          (match k with
           | None -> "None"
           | Some k -> Print.term_to_string k);
+
+  let env = ({ env with use_eq_strict = true }) in
   match k with
-  | None -> ignore (tc_trivial_guard ({ env with use_eq_strict = true }) t)
-  | Some k -> ignore (tc_check_trivial_guard ({ env with use_eq_strict = true }) t k)
+  | None -> ignore (tc_trivial_guard env t)
+  | Some k -> ignore (tc_check_trivial_guard env t k)
 
 
 (*
@@ -324,6 +333,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
     let repr, guard_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b |> S.bv_to_name) in
 
+    //the computation type of the bind combinator can be a PURE type
     let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
       (BU.format1 "implicit for pure_wp in checking bind for %s" ed.mname.str)
       r in
@@ -1156,22 +1166,6 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   check_no_subtyping_for_layered_combinator env lift_ty None;
 
-  // let env, us, lift =
-  //   if List.length us = 0 then env0, us, lift
-  //   else
-  //     let us, lift = SS.open_univ_vars us lift in
-  //     Env.push_univ_vars env0 us, us, lift in
-
-  (*
-   * We typecheck the lift term (without any expected type)
-   *   and then unify its type with the expected lift type
-   *)
-
-  // let lift, lc, g = tc_tot_or_gtot_term env lift in
-  // Rel.force_trivial_guard env g;
-
-  // let lift_ty = lc.res_typ |> N.normalize [Beta] env0 in
-
   let lift_t_shape_error s = BU.format4
     "Unexpected shape of lift %s~>%s, reason:%s (t:%s)"
     (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
@@ -1240,28 +1234,6 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   if Env.debug env0 <| Options.Other "LayeredEffects" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
-
-
-  //generalize
-  // let us, lift, lift_wp =
-  //   let inst_us, lift = TcUtil.generalize_universes env0 lift in
-  //   if List.length inst_us <> 1
-  //   then raise_error (Errors.Fatal_MismatchUniversePolymorphic, BU.format4
-  //     "Expected lift %s~>%s to be polymorphic in one universe, found:%s (t:%s)"
-  //     (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
-  //     (inst_us |> List.length |> string_of_int) (Print.term_to_string lift)) r;
-
-  //   if List.length us = 0 ||
-  //      (List.length us = List.length inst_us &&
-  //       List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us inst_us)
-  //   then inst_us, lift,
-  //        SS.close_univ_vars inst_us k
-  //   else 
-  //      raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, BU.format5
-  //        "Annotated and generalized universes on %s~%s are not same, annotated:%s, generalized:%s (t:%s)"
-  //        (Ident.string_of_lid sub.source) (Ident.string_of_lid sub.target)
-  //        (us |> List.length |> string_of_int) (inst_us |> List.length |> string_of_int)
-  //        (Print.term_to_string lift)) r in
        
   let sub = { sub with
     lift = Some (us, lift);

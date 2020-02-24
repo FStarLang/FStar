@@ -207,6 +207,21 @@ let bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
 ///
 /// The index of the result is just the bind of indexes of the
 /// arguments
+
+(*
+ * AR: 02/24: this is a bit funky
+ *     the combinator needs wp_g to be an F.restricted_t
+ *
+ *     previously this was added as a refinement to wp_g
+ *     but now that we require the combinator to be typeable with use_eq_strict, that fails
+ *
+ *     now, we can add it to the precondition of ibind (we not support Pure type for binds)
+ *
+ *     and then the bind combinator and the layered effect typecheck
+ *
+ *     but we can't use it, since the typechecker will now require a proof that
+ *       the continuation is a restricted_t, which fails
+ *)
 let ibind a b s wp_f (wp_g: a -> wp_t s b)
     (f:irepr a s wp_f)
     (g : (x:a -> irepr b s (wp_g x)))
