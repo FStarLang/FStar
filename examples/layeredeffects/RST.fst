@@ -39,39 +39,42 @@ module HS = FStar.HyperStack
 assume type resource : Type0
 
 
-type repr (a:Type) (r_in:resource) (r_out:a -> resource) =
+type repr (a:Type) (r_in:resource) (r_out:a -> resource) (b:Type0) =
   unit -> STATE a (fun p h -> forall x h1. p x h1)
 
 
 let returnc (a:Type) (x:a) (r:a -> resource)
-: repr a (r x) r
+: repr a (r x) r True
 = fun _ -> x
 
 let bind (a:Type) (b:Type)
-  (r_in_f:resource) (r_out_f:a -> resource) (r_out_g:b -> resource)
-  (f:repr a r_in_f r_out_f) (g:(x:a -> repr b (r_out_f x) r_out_g))
-: repr b r_in_f r_out_g
+  (r_in_f:resource) (r_out_f:a -> resource) (b_f:Type0)
+  (r_out_g:b -> resource) (b_g:Type0)
+  (f:repr a r_in_f r_out_f b_f) (g:(x:a -> repr b (r_out_f x) r_out_g b_g))
+: Pure (repr b r_in_f r_out_g b_f)
+  (requires b_f /\ b_g)
+  (ensures fun _ -> True)
 = fun _ ->
   let x = f () in
   (g x) ()
 
 let subcomp (a:Type)
-  (r_in:resource) (r_out:a -> resource)
-  (f:repr a r_in r_out)
-: (repr a r_in r_out)
+  (r_in:resource) (r_out:a -> resource) (b:Type0)
+  (f:repr a r_in r_out b)
+: (repr a r_in r_out b)
 = f
 
 let if_then_else (a:Type)
-  (r_in:resource) (r_out:a -> resource)
-  (f:repr a r_in r_out) (g:repr a r_in r_out)
+  (r_in:resource) (r_out:a -> resource) (b:Type0)
+  (f:repr a r_in r_out b) (g:repr a r_in r_out b)
   (p:Type0)
 : Type
-= repr a r_in r_out
+= repr a r_in r_out b
 
 
 reifiable reflectable
 layered_effect {
-  RSTATE : a:Type -> resource -> (a -> resource) -> Effect
+  RSTATE : a:Type -> resource -> (a -> resource) -> Type0 -> Effect
   with
   repr = repr;
   return = returnc;
@@ -81,7 +84,7 @@ layered_effect {
 }
 
 let return (#a:Type) (#r:a -> resource) (x:a)
-: RSTATE a (r x) r
+: RSTATE a (r x) r True
 = RSTATE?.reflect (returnc a x r)
 
 assume val wp_monotonic_pure (_:unit)
@@ -92,7 +95,7 @@ assume val wp_monotonic_pure (_:unit)
           (wp p ==> wp q)))
 
 let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:pure_repr a wp)
-: Pure (repr a r (fun _ -> r))
+: Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
 = wp_monotonic_pure ();
@@ -106,10 +109,10 @@ assume val emp : resource
 assume val array : Type0
 assume val array_resource (a:array) : resource
 
-assume val alloc (_:unit) : RSTATE array emp array_resource
+assume val alloc (_:unit) : RSTATE array emp array_resource True
 
 let test ()
-: RSTATE array emp array_resource
+: RSTATE array emp array_resource True
 = let ptr = alloc () in
   return ptr
 
@@ -117,9 +120,9 @@ type t =
   | C : t
   | D : t
 
-assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp)
+assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp) True
 
-let test_match (x:t) : RSTATE unit emp (fun _ -> emp) =
+let test_match (x:t) : RSTATE unit emp (fun _ -> emp) True =
   match x with
   | C -> rst_unit ()
   | D -> rst_unit ()
@@ -139,14 +142,25 @@ type m : Type -> Type =
 | C1 : a:Type -> x:a -> m a
 | D1 : a:Type -> x:a -> m a
 
-let test_match2 (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp)
+let test_match2 (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp) True
 = match f with
   | C1 a x -> rst_unit ()
   | D1 a x -> rst_unit ()
 
 
-assume val false_pre (_:squash False) : RSTATE unit emp (fun _ -> emp)
+assume val false_pre (_:squash False) : RSTATE unit emp (fun _ -> emp) True
 
 [@expect_failure]
-let test_false_pre () : RSTATE unit emp (fun _ -> emp)
+let test_false_pre () : RSTATE unit emp (fun _ -> emp) True
 = false_pre ()
+
+
+/// Test that bind precondition is checked
+
+assume val f_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) True
+assume val g_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) False
+
+[@expect_failure]
+let test_bind () : RSTATE unit emp (fun _ -> emp) True
+= f_test_bind ();
+  g_test_bind ()

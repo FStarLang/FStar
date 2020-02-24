@@ -6051,24 +6051,65 @@ let (uvars_for_binders :
                  match uu____27340 with
                  | (uu____27357,uvars1,g) -> (uvars1, g))
   
+let (pure_precondition_for_trivial_post :
+  env ->
+    FStar_Syntax_Syntax.universe ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Range.range -> FStar_Syntax_Syntax.typ)
+  =
+  fun env  ->
+    fun u  ->
+      fun t  ->
+        fun wp  ->
+          fun r  ->
+            let trivial_post =
+              let post_ts =
+                let uu____27398 =
+                  lookup_definition [NoDelta] env
+                    FStar_Parser_Const.trivial_pure_post_lid
+                   in
+                FStar_All.pipe_right uu____27398 FStar_Util.must  in
+              let uu____27415 = inst_tscheme_with post_ts [u]  in
+              match uu____27415 with
+              | (uu____27420,post) ->
+                  let uu____27422 =
+                    let uu____27427 =
+                      let uu____27428 =
+                        FStar_All.pipe_right t FStar_Syntax_Syntax.as_arg  in
+                      [uu____27428]  in
+                    FStar_Syntax_Syntax.mk_Tm_app post uu____27427  in
+                  uu____27422 FStar_Pervasives_Native.None
+                    FStar_Range.dummyRange
+               in
+            let uu____27461 =
+              let uu____27466 =
+                let uu____27467 =
+                  FStar_All.pipe_right trivial_post
+                    FStar_Syntax_Syntax.as_arg
+                   in
+                [uu____27467]  in
+              FStar_Syntax_Syntax.mk_Tm_app wp uu____27466  in
+            uu____27461 FStar_Pervasives_Native.None FStar_Range.dummyRange
+  
 let (dummy_solver : solver_t) =
   {
-    init = (fun uu____27373  -> ());
-    push = (fun uu____27375  -> ());
-    pop = (fun uu____27378  -> ());
+    init = (fun uu____27503  -> ());
+    push = (fun uu____27505  -> ());
+    pop = (fun uu____27508  -> ());
     snapshot =
-      (fun uu____27381  ->
+      (fun uu____27511  ->
          ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
-    rollback = (fun uu____27400  -> fun uu____27401  -> ());
-    encode_sig = (fun uu____27416  -> fun uu____27417  -> ());
+    rollback = (fun uu____27530  -> fun uu____27531  -> ());
+    encode_sig = (fun uu____27546  -> fun uu____27547  -> ());
     preprocess =
       (fun e  ->
          fun g  ->
-           let uu____27423 =
-             let uu____27430 = FStar_Options.peek ()  in (e, g, uu____27430)
+           let uu____27553 =
+             let uu____27560 = FStar_Options.peek ()  in (e, g, uu____27560)
               in
-           [uu____27423]);
-    solve = (fun uu____27446  -> fun uu____27447  -> fun uu____27448  -> ());
-    finish = (fun uu____27455  -> ());
-    refresh = (fun uu____27457  -> ())
+           [uu____27553]);
+    solve = (fun uu____27576  -> fun uu____27577  -> fun uu____27578  -> ());
+    finish = (fun uu____27585  -> ());
+    refresh = (fun uu____27587  -> ())
   } 
