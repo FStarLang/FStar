@@ -46,6 +46,12 @@ effect Div (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
 
+unfold
+let pure_repr (a:Type) (wp:pure_wp a) = unit -> PURE a wp
+
+unfold
+let div_repr (a:Type) (wp:pure_wp a) = unit -> DIV a wp
+
 (* We use the EXT effect to underspecify external system calls
    as being impure but having no observable effect on the state *)
 effect EXT (a:Type) = Dv a
