@@ -43,10 +43,11 @@ type chan = {
   chan_lock : lock (chan_inv chan_chan)
 }
 
+let in_state_refinement (p:prot) (vsend:chan_val) : hprop =
+    pure (more vsend.chan_prot /\ p == step vsend.chan_prot vsend.chan_msg)
 let in_state (r:ref chan_val) (p:prot) =
   h_exists (fun (vsend:chan_val) ->
-    pure (more vsend.chan_prot /\ p == step vsend.chan_prot vsend.chan_msg) `star`
-    pts_to r half vsend)
+    pts_to r half vsend `star` in_state_refinement p vsend)
 
 let sender (c:chan) (p:prot) = in_state c.chan_chan.send p
 let receiver (c:chan) (p:prot) = in_state c.chan_chan.recv p
@@ -181,9 +182,59 @@ let send_cond (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val)
       h_assert (send_pre_split p cc vs vr (vs.chan_ctr = vr.chan_ctr));
       cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split p cc vs vr) _ then_ else_
 
-assume
-val send_available(#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val) (_:unit)
-  : SteelT unit (send_pre_available p c.chan_chan vs vr) (fun _ -> sender c (step p x))
+let assoc_l (p q r:hprop)
+  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+  = h_admit #unit _ _
+
+let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
+  : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+             (fun v -> pts_to r p v `star` q v)
+  = let x = read_refine q r in
+    return (Ghost.hide x)
+
+// let id (x:int{0 < x \/ x <= 0}) = if x < 0 then x else x
+
+// assume val p : int -> hprop
+// noeq type box = | Mk : r:int -> box
+// let test (x:box)
+//   : SteelT unit (p x.r `star` emp) (fun _ -> emp)
+//   = let r = x.r in
+//     h_commute (p r) emp;
+//     h_assert emp
+
+let send_available(#p:prot{more p}) (cc:chan) (x:msg_t p) (vs vr:chan_val) (_:unit)
+  : SteelT unit (send_pre_available p cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
+  = let c = cc.chan_chan in
+    h_assert (((pts_to c.send half vs `star`
+                pts_to c.recv half vr) `star`
+                pure (vs == vr)) `star`
+                in_state c.send p);
+    assoc_r _ _ _;
+    h_assert (((pts_to c.send half vs `star`
+                pts_to c.recv half vr) `star`
+                (pure (vs == vr) `star`
+                in_state c.send p)));
+    h_commute _ _;
+    assoc_r _ _ _;
+    let _ = frame (fun _ -> elim_pure #(eq vs vr)) _ in
+    assert (vs == vr);
+    h_assert (emp `star` ( in_state c.send p `star`
+                           (pts_to c.send half vs `star`
+                           pts_to c.recv half vr)));
+    h_elim_emp_l _;
+    assoc_l _ _ _;
+    h_commute _ _;
+    h_assert (pts_to c.recv half vr `star` (in_state c.send p `star` pts_to c.send half vs));
+    rewrite_eq_squash vr vs (fun (v:chan_val) -> (pts_to c.recv half v `star` (in_state c.send p `star` pts_to c.send half vs)));
+    h_assert (pts_to c.recv half vs `star` (in_state c.send p `star` pts_to c.send half vs));
+    h_commute _ _;
+    assoc_r _ _ _;
+    h_assert (in_state c.send p `star` (pts_to c.send half vs `star` pts_to c.recv half vs));
+    let vs' = frame (fun _ -> ghost_read_refine (in_state_refinement p) c.send) _ in
+    h_assert ((pts_to c.send half vs' `star` in_state_refinement p vs') `star`
+              (pts_to c.send half vs `star` pts_to c.recv half vs));
+    h_admit #unit _ _
+
 
 assume
 val send_blocked (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val)
@@ -191,9 +242,6 @@ val send_blocked (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val)
                  (_:unit)
   : SteelT unit (send_pre_blocked p c.chan_chan vs vr) (fun _ -> sender c (step p x))
 
-let assoc_l (p q r:hprop)
-  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-  = h_admit #unit _ _
 
 let rec send (#p:prot{more p}) (cc:chan) (x:msg_t p)
   : SteelT unit (sender cc p) (fun _ -> sender cc (step p x))
@@ -219,14 +267,14 @@ let rec send (#p:prot{more p}) (cc:chan) (x:msg_t p)
     send_cond #p cc x vs vr (send_available #p cc x vs vr)
                             (send_blocked #p cc x vs vr (fun _ -> send cc x))
 
-let rec send (#p:prot{more p}) (c:chan) (x:msg_t p)
- : Steel unit
-   (expects sender c p)
-   (provides fun _ -> sender c (step p x))
- = acquire c.inv;
-   let _, _, n0 = !c.chan.send in
-   let _, _, n1 = !c.chan.recv in
-   if n0 == n1 //last send received
-   then (c.chan.send := (p, x, n0 + 1);
-         release c.inv)
-   else (release c.inv; send c x) //spin
+// let rec send (#p:prot{more p}) (c:chan) (x:msg_t p)
+//  : Steel unit
+//    (expects sender c p)
+//    (provides fun _ -> sender c (step p x))
+//  = acquire c.inv;
+//    let _, _, n0 = !c.chan.send in
+//    let _, _, n1 = !c.chan.recv in
+//    if n0 == n1 //last send received
+//    then (c.chan.send := (p, x, n0 + 1);
+//          release c.inv)
+//    else (release c.inv; send c x) //spin
