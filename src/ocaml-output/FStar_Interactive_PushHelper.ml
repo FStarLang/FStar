@@ -65,6 +65,8 @@ let (set_check_kind :
           (uu___4_71.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___4_71.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___4_71.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___4_71.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (uu___4_71.FStar_TypeChecker_Env.admit);

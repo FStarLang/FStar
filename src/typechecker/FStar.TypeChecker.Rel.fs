@@ -45,6 +45,7 @@ module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module FC = FStar.Const
+module TcComm = FStar.TypeChecker.Common
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -2951,6 +2952,14 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                         (Print.args_to_string c1_comp.effect_args)
                                         (Print.args_to_string c2_comp.effect_args))) orig
         else
+             let univ_sub_probs, wl =
+               List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
+                 let p, wl = sub_prob wl
+                   (S.mk (S.Tm_type u1) None Range.dummyRange)
+                   EQ
+                   (S.mk (S.Tm_type u2) None Range.dummyRange)
+                   "effect universes" in
+                 (univ_sub_probs@[p]), wl) ([], wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
              let arg_sub_probs, wl =
                  List.fold_right2
@@ -2961,7 +2970,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                         c2_comp.effect_args
                         ([], wl)
              in
-             let sub_probs = ret_sub_prob :: (arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
+             let sub_probs = univ_sub_probs@[ret_sub_prob]@(arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
              let guard =
                let guard = U.mk_conj_l (List.map p_guard sub_probs) in
                match g_lift.guard_f with
@@ -3109,17 +3118,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 
         let fml =
           let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
-          let trivial_post =
-            let ts = Env.lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
-            let _, t = Env.inst_tscheme_with ts [u] in
-            S.mk_Tm_app
-              t
-              [stronger_ct.result_typ |> S.as_arg]
-              None Range.dummyRange in
-          S.mk_Tm_app
-            wp
-            [trivial_post |> S.as_arg]
-            None Range.dummyRange in
+          Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
 
         let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs@(g_lift.deferred |> List.map snd)) in
         let guard =
@@ -3402,6 +3401,24 @@ let teq env t1 t2 : guard_t =
                         (Print.term_to_string t2)
                         (guard_to_string env g);
         g
+
+(*
+ * AR: It would be nice to unify it with teq, the way we do it for subtyping
+ *     i.e. write a common function that uses a bound variable,
+ *          and if the caller requires a prop, close over it, else abstract it
+ *     But that may change the existing VCs shape a bit
+ *)
+let get_teq_predicate env t1 t2 =
+     if debug env <| Options.Other "Rel" then
+       BU.print2 "get_teq_predicate of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, x, wl = new_t_prob (empty_worklist env) env t1 EQ t2 in
+     let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
+     if debug env <| Options.Other "Rel" then
+       BU.print1 "} res teq predicate = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
+
+    match g with
+    | None -> None
+    | Some g -> Some (abstract_guard (S.mk_binder x) g)
 
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)

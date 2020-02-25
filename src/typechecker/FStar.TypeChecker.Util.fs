@@ -245,6 +245,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
+
 let comp_univ_opt c =
     match c.n with
     | Total (_, uopt)
@@ -386,8 +387,15 @@ let join_lcomp env c1 c2 =
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
-
-let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool) : lident * comp * comp * guard_t =
+(*
+ * This functions returns the two lifted computations,
+ *   and guards for each of them
+ *
+ * The separate guards are important when it is called from the pattern matching code (bind_cases)
+ *   where the two guards are weakened using different branch conditions
+ *)
+let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
+: lident * comp * comp * guard_t * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
   match Env.join_opt env c1.effect_name c2.effect_name with
@@ -403,7 +411,7 @@ let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool) : lident * comp * comp *
         let env_x = Env.push_binders env [x_a] in
         let c2, g2 = lift_comp env_x c2 lift2 in
         c2, Env.close_guard env [x_a] g2 in
-    m, c1, c2, Env.conj_guard g1 g2
+    m, c1, c2, g1, g2
   | None ->
 
     (*
@@ -454,19 +462,24 @@ let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool) : lident * comp * comp *
              else None
         else None in
   
-      let p, c1, c2, g =
+      let p, c1, c2, g1, g2 =
         match try_lift c1 c2 with
-        | Some (p, c1, c2, g) -> p, c1, c2, g
+        | Some (p, c1, c2, g) -> p, c1, c2, g, Env.trivial_guard
         | None ->
           match try_lift c2 c1 with
-          | Some (p, c2, c1, g) -> p, c1, c2, g
+          | Some (p, c2, c1, g) -> p, c1, c2, Env.trivial_guard, g
           | None -> err () in
 
       if Env.debug env <| Options.Other "LayeredEffects"
       then BU.print3 "} Returning p %s, c1 %s, and c2 %s\n"
              (Ident.string_of_lid p) (Print.comp_to_string c1) (Print.comp_to_string c2);
 
-      p, c1, c2, g
+      p, c1, c2, g1, g2
+
+let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool)
+: lident * comp * comp * guard_t
+= let l, c1, c2, g1, g2 = lift_comps_sep_guards env c1 c2 b for_bind in
+  l, c1, c2, Env.conj_guard g1 g2
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -616,7 +629,7 @@ let return_value env u_t_opt t v =
  *     bind_t = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
  *                           f:M.repr a i_1 ... i_n ->
  *                           g:(x:a -> N.repr b j_1 ... j_n) ->
- *                           P.repr b k_1 ... k_p)
+ *                           PURE (P.repr b k_1 ... k_p) wp)
  *
  * First we instantiate bind_t with [u_c1_a, u_c2_a]
  *
@@ -635,6 +648,8 @@ let return_value env u_t_opt t v =
  *        unify j_i with s_i (where s_i are the indices of c2,
  *                            these are done in an env with b, and the returned guard is closed over b)
  * and return k_i as the output indices
+ *
+ * In addition, we add ((wp[substs]) (fun _ -> True)) to the returned guard
  *)
 let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
@@ -657,13 +672,13 @@ let mk_indexed_bind env
        "bind %s does not have proper shape (reason:%s)"
        (Print.term_to_string bind_t) s) in
 
-  let a_b, b_b, rest_bs, f_b, g_b, bind_ct =
+  let a_b, b_b, rest_bs, f_b, g_b, bind_c =
     match (SS.compress bind_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 4 ->
       let ((a_b::b_b::bs), c) = SS.open_comp bs c in
       let rest_bs, f_b, g_b =
         List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
-      a_b, b_b, rest_bs, f_b, g_b, U.comp_to_comp_typ c
+      a_b, b_b, rest_bs, f_b, g_b, c
     | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
@@ -708,9 +723,15 @@ let mk_indexed_bind env
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a] in
 
+  let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
+
+  //compute the formula `bind_c.wp (fun _ -> True)` and add it to the final guard
+  let fml =
+    let u, wp = List.hd bind_ct.comp_univs, fst (List.hd bind_ct.effect_args) in
+    Env.pure_precondition_for_trivial_post env u bind_ct.result_typ wp Range.dummyRange in
+
   let is : list<term> =  //indices of the resultant computation
-    effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1
-    |> List.map (SS.subst subst) in
+    effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1 in
 
   let c = mk_Comp ({
     comp_univs = ct2.comp_univs;
@@ -723,7 +744,11 @@ let mk_indexed_bind env
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guards [ g_uvars; f_guard; g_guard ]
+  c, Env.conj_guards [
+    g_uvars;
+    f_guard;
+    g_guard;
+    Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
 
 let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
   : comp =
@@ -1384,7 +1409,10 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
     None (Range.union_ranges wp_t.pos wp_e.pos) in
   mk_comp ed u_a a wp [], Env.trivial_guard
 
-let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>) : lcomp =
+let bind_cases env0 (res_t:typ)
+  (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
+  (scrutinee:bv) : lcomp =
+    let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
                              lcases
@@ -1417,20 +1445,55 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (b
                then cthen true //inline each the branch, if eligible
                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
-            let md, comp, g_comp = List.fold_right (fun (g, eff_label, _, cthen) (_, celse, g_comp) ->
+
+            (*
+             * The formula in each of the branches of lcases is the branch condition of *just* that branch,
+             *   e.g. match e with | C -> ... | D -> ...
+             *     the formula in the two branches is is_C e and is_D e
+             *
+             * branch_conditions below builds a list where the formulas are composite
+             *   and include the negation of previous branches, e.g.
+             *   is_C e and (not (is_C e) /\ is_D e)
+             *
+             * these will be used to weaken the lift guards when combining the branches
+             *
+             *   (we need it because the braches are combined using fold_right)
+             *
+             * note that we don't need to build these just to combine cases because the shape of if_then_else
+             *   (p ==> ...) /\ (not p ==> ...) takes care of it
+             *)
+            let branch_conditions, _ =
+              lcases
+              |> List.map (fun (g, _, _, _) -> g)
+              |> List.fold_left (fun (conds, acc) g ->
+                  let cond = U.mk_conj acc (U.mk_neg g) in
+                  (conds@[cond]), cond) ([], U.t_true) in
+
+            let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let md, ct_then, ct_else, g_lift =
-                  let m, cthen, celse, g_lift = lift_comps env cthen celse None false in
+                let md, ct_then, ct_else, g_lift_then, g_lift_else =
+                  let m, cthen, celse, g_lift_then, g_lift_else =
+                    lift_comps_sep_guards env cthen celse None false in
                   let md = Env.get_effect_decl env m in
-                  md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift in
+                  md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift_then, g_lift_else in
                 let fn =
                   if md |> U.is_layered then mk_layered_conjunction
                   else mk_non_layered_conjunction in
+
+                //weaken the lift guards
+                let g_lift_then = TcComm.weaken_guard_formula g_lift_then (U.mk_conj bcond g) in
+                let g_lift_else = TcComm.weaken_guard_formula g_lift_else (U.mk_conj bcond (U.mk_neg g)) in                
+                let g_lift = Env.conj_guard g_lift_then g_lift_else in
+
                 let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
                 Some md,
                 c,
-                Env.conj_guard (Env.conj_guard (Env.conj_guard g_comp gthen) g_lift) g_conjunction
-            ) lcases (None, default_case, Env.trivial_guard) in
+                Env.conj_guards [g_comp; gthen; g_lift; g_conjunction]
+            ) lcases branch_conditions (None, default_case, Env.trivial_guard) in
+
+            //close g_comp with the scrutinee bv
+            let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
+
             match lcases with
             | []
             | [_] -> comp, g_comp
@@ -1685,7 +1748,8 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
             (TcComm.lcomp_to_string lc)
             (Print.term_to_string t);
   let use_eq =
-    env.use_eq ||
+    env.use_eq_strict ||
+    env.use_eq        ||
     (match Env.effect_decl_opt env lc.eff_name with
      // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
@@ -2236,7 +2300,11 @@ let generalize env is_rec lecs =
 let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
-    if env.use_eq
+    if env.use_eq_strict  //AR: note that we can do this even if env has just use_eq
+    then match Rel.get_teq_predicate env t1 t2 with
+         | None -> None
+         | Some f -> apply_guard f e |> Some
+    else if env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
             | None -> None
@@ -2662,7 +2730,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
  * let c = M<u_c> a_c wp_c
  *
  * let lift_M_eff_name = (u, lift_t) where
- *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> repr<u> a i_1 ... i_n)
+ *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> PURE (repr<u> a i_1 ... i_n) wp
  *
  * We first instantiate lift_t with u_c
  *
@@ -2671,6 +2739,8 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
  * let substs = [a/a_c; wp/wp_c; x_i/?u_i]
  *
  * We return M'<u_c> a_c i_i[substs]
+ *
+ * + we add (wp[substs] (fun _ -> True)) to the returned guard
  *)
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * guard_t =
   if Env.debug env <| Options.Other "LayeredEffects" then
@@ -2692,11 +2762,11 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
       s (Print.term_to_string lift_t) in
 
-  let a_b, (rest_bs, [f_b]), lift_ct =
+  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE a wp)
     match (SS.compress lift_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 2 ->
       let ((a_b::bs), c) = SS.open_comp bs c in
-      a_b, bs |> List.splitAt (List.length bs - 1), U.comp_to_comp_typ c
+      a_b, bs |> List.splitAt (List.length bs - 1), c
     | _ ->
       raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
         "either not an arrow or not enough binders") r in
@@ -2723,20 +2793,31 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
       Env.trivial_guard c_is f_sort_is in
 
+  let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+  
   let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r in
+
+  //compute the formula `lift_c.wp (fun _ -> True)` and add it to the final guard
+  let fml =
+    let u, wp = List.hd lift_ct.comp_univs, fst (List.hd lift_ct.effect_args) in
+    Env.pure_precondition_for_trivial_post env u lift_ct.result_typ wp Range.dummyRange in
+
+  if Env.debug env <| Options.Other "LayeredEffects" &&
+     Env.debug env <| Options.Extreme
+  then BU.print1 "Guard for lift is: %s" (Print.term_to_string fml);
 
   let c = mk_Comp ({
     comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
     effect_name = tgt;
     result_typ = a;
-    effect_args = is |> List.map (SS.subst substs) |> List.map S.as_arg;
+    effect_args = is |> List.map S.as_arg;
     flags = []  //AR: setting the flags to empty
   }) in
 
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guard g guard_f
+  c, Env.conj_guard (Env.conj_guard g guard_f) (Env.guard_of_guard_formula (TcComm.NonTrivial fml))
 
 (*
  * Creating the Env.mlift.mlift_term function for layered effects

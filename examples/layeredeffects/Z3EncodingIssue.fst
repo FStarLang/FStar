@@ -122,8 +122,12 @@ layered_effect {
 
 /// Lift from DIV
 
+assume PURE_wp_monotonic:
+  forall (a:Type) (wp:pure_wp a).
+    (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
+
 let lift_div_chacha (a:Type)
-  (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
+  (wp:pure_wp a) (f:unit -> DIV a wp)
 : repr a (fun p s -> wp (fun x -> p x s))
 = fun _ -> f ()
 

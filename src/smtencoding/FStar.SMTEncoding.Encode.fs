@@ -1468,15 +1468,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
                     let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
-                    if lid_equals d Const.lextop_lid
-                    then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
-                         let xtm = mkFreeV x in
-                         Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                                ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
-                                     Some "lextop is top",
-                                     (varops.mk_unique "lextop"))
-                    else (* subterm ordering *)
-                      let prec =
+                    (* subterm ordering *)
+                    let prec =
                         vars
                           |> List.mapi (fun i v ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
@@ -1484,9 +1477,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then []
                                 else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
-                      in
-                      Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                             ([[ty_pred]], add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
+                     in
+                     Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                             ([[ty_pred]],
+                                              add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                              mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
                                     ("subterm_ordering_"^ddconstrsym))
                   in
