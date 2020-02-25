@@ -47,13 +47,6 @@ val h_elim_emp_l (p:hprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
 
 
-assume
-val cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-   : SteelT a (p b) (q b)
-//   = if b then (then_ ()) <: SteelT a (p b) (q b) else (else_ () <: SteelT a (p b) (q b))
-
 let frame (#a:Type) (#pre:pre_t) (#post:post_t a)
           ($f:unit -> SteelT a pre post)
           (frame:hprop)
