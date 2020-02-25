@@ -86,31 +86,71 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
     (req_to_act_req req)
     (ens_to_act_ens ens)
 
+unfold
+let return_req : req_t emp = fun _ -> True
+
+unfold
+let return_ens (#a:Type) (x:a) : ens_t emp a (fun _ -> emp) = fun _ r _ -> r == x
+
 let returnc (a:Type u#a) (x:a)
-: repr a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
+: repr a Mem.emp (fun _ -> Mem.emp) return_req (return_ens x)
 = fun _ -> x
+
+unfold
+let bind_req (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (req_g:(x:a -> req_t (post_f x)))
+: req_t pre_f
+= fun h -> req_f h /\ (forall (x:a) h1. ens_f h x h1 ==> req_g x h1)
+
+unfold
+let bind_ens (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#post_g:post_t b) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+: ens_t pre_f b post_g
+= fun h0 y h2 -> req_f h0 /\ (exists x h1. ens_f h0 x h1 /\ (ens_g x) h1 y h2)
 
 let bind (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
   (f:repr a pre_f post_f req_f ens_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
 : repr b pre_f post_g
-    (fun h -> req_f h /\ (forall (x:a) h1. ens_f h x h1 ==> req_g x h1))
-    (fun h0 y h2 -> req_f h0 /\ (exists x h1. ens_f h0 x h1 /\ (ens_g x) h1 y h2))
+    (bind_req req_f ens_f req_g)
+    (bind_ens req_f ens_f ens_g)
 = fun m0 ->
   let x = f () in
   g x ()
+
+unfold
+let subcomp_pre (#a:Type) (#pre:pre_t) (#post:post_t a)
+  (req_f:req_t pre) (ens_f:ens_t pre a post)
+  (req_g:req_t pre) (ens_g:ens_t pre a post)
+: pure_pre
+= (forall h. req_g h ==> req_f h) /\
+  (forall h0 x h1. (req_g h0 /\ ens_f h0 x h1) ==> ens_g h0 x h1)
 
 let subcomp (a:Type) (pre:pre_t) (post:post_t a)
   (req_f:req_t pre) (ens_f:ens_t pre a post)
   (req_g:req_t pre) (ens_g:ens_t pre a post)
   (f:repr a pre post req_f ens_f)
 : Pure (repr a pre post req_g ens_g)
-  (requires
-    (forall h. req_g h ==> req_f h) /\
-    (forall h0 x h1. (req_g h0 /\ ens_f h0 x h1) ==> ens_g h0 x h1))
+  (requires subcomp_pre req_f ens_f req_g ens_g)
   (ensures fun _ -> True)
 = f
+
+unfold
+let if_then_else_req (#pre:pre_t)
+  (req_then:req_t pre) (req_else:req_t pre)
+  (p:Type0)
+: req_t pre
+= fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
+
+unfold
+let if_then_else_ens (#a:Type) (#pre:pre_t) (#post:post_t a)
+  (ens_then:ens_t pre a post) (ens_else:ens_t pre a post)
+  (p:Type0)
+: ens_t pre a post
+= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
 let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
   (req_then:req_t pre) (ens_then:ens_t pre a post)
@@ -120,8 +160,8 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
   (p:Type0)
 : Type
 = repr a pre post
-    (fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h))
-    (fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1))
+    (if_then_else_req req_then req_else p)
+    (if_then_else_ens ens_then ens_else p)
 
 reflectable
 layered_effect {
@@ -140,14 +180,27 @@ assume WP_monotonic_pure:
        (forall x. p x ==> q x) ==>
        (wp p ==> wp q))
 
+unfold
+let bind_pure_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True)
+
+unfold
+let bind_pure_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
+
 #push-options "--z3rlimit 20"
 let bind_pure_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
   (f:unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
 : repr b pre_g post_g
-    (fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True))
-    (fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1))
+    (bind_pure_steel_req wp req_g)
+    (bind_pure_steel_ens wp ens_g)
 = fun m0 ->
   let x = f () in
   g x m0
@@ -474,3 +527,26 @@ let test_frame1 (_:unit)
   steel_frame_t f123;
   steel_frame_t f1;
   rassert ((r1 `star` r2) `star` r3)
+
+
+(*
+ * A crash testcase
+ *)
+
+#push-options "--admit_smt_queries true"
+assume
+val crash_h_commute (p:hprop)
+  : SteelT unit emp (fun _ -> p)
+
+assume
+val crash_h_assert (_:unit)
+  : SteelT unit emp (fun _ -> emp)
+
+assume val crash_get_prop : int -> hprop
+
+let crash_test (_:unit)
+  : SteelT unit emp (fun _ -> emp)
+  = let r = 0 in
+    crash_h_commute (crash_get_prop r);
+    crash_h_assert ()
+#pop-options
