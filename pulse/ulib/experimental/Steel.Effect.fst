@@ -225,18 +225,28 @@ let polymonadic_bind_steel_pure_pre (#a:Type) (#b:Type)
   fun h -> req_f h /\ (forall (x:a) (h1:hmem post_f). ens_f h x h1 ==> (wp_g x) (fun _ -> True))
 #pop-options
 
-// let bind_steel_pure (a:Type) (b:Type)
-//   (pre_f:pre_t) (post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
-//   (wp_g:a -> pure_wp b)
-//   (f:repr a pre_f (fun _ -> post_f) req_f ens_f) (g:(x:a -> unit -> PURE b (wp_g x)))
-// : repr b pre_f (fun _ -> post_f)
-//     (polymonadic_bind_steel_pure_pre req_f ens_f wp_g)
-//     (fun h0 r h1 -> exists x. ens_f h0 x h1 /\ (~ ((wp_g x) (fun y -> y =!= r))))
-// = fun m0 ->
-//   let x = f () in
-//   g x ()
+unfold
+let polymonadic_bind_steel_pure_post
+  (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:Mem.hprop) (ens_f:ens_t pre_f a (fun _ -> post_f))
+  (wp_g:a -> pure_wp b)
+: ens_t pre_f b (fun _ -> post_f)
+= fun h0 r h1 -> exists x. (ens_f h0 x h1 /\ (~ ((wp_g x) (fun y -> y =!= r))))
 
-// polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
+#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+let bind_steel_pure (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
+  (wp_g:a -> pure_wp b)
+  (f:repr a pre_f (fun _ -> post_f) req_f ens_f) (g:(x:a -> unit -> PURE b (wp_g x)))
+: repr b pre_f (fun _ -> post_f)
+    (polymonadic_bind_steel_pure_pre req_f ens_f wp_g)
+    (polymonadic_bind_steel_pure_post ens_f wp_g)
+= fun _ ->
+  let x = f () in
+  g x ()
+#pop-options
+
+polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 
 
 // let return_emp (#a:Type) (x:a)
