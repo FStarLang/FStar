@@ -2300,7 +2300,11 @@ let generalize env is_rec lecs =
 let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
-    if env.use_eq_strict || env.use_eq
+    if env.use_eq_strict  //AR: note that we can do this even if env has just use_eq
+    then match Rel.get_teq_predicate env t1 t2 with
+         | None -> None
+         | Some f -> apply_guard f e |> Some
+    else if env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
             | None -> None
