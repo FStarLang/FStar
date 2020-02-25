@@ -1032,6 +1032,21 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       else begin
           let c1, g_c1 = TcComm.lcomp_comp lc1 in
           let c2, g_c2 = TcComm.lcomp_comp lc2 in
+
+          (*
+           * AR: we need to be careful about handling g_c2 since it may have x free
+           *     whereever we return/add this, we have to either close it or substitute it
+           *)
+
+          let trivial_guard = Env.conj_guard g_c1 (
+            match b with
+            | Some x ->
+              let b = S.mk_binder x in
+              if S.is_null_binder b
+              then g_c2
+              else Env.close_guard env [b] g_c2
+            | None -> g_c2) in
+
           debug (fun () ->
             BU.print3 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n(1. end bind)\n"
             (Print.comp_to_string c1)
@@ -1055,12 +1070,12 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let try_simplify () : either<(comp * guard_t * string), string> =
             let aux_with_trivial_guard () =
               match aux () with
-              | Inl (c, reason) -> Inl (c, Env.trivial_guard, reason)
+              | Inl (c, reason) -> Inl (c, trivial_guard, reason)
               | Inr reason -> Inr reason in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-                 then Inl (c2, Env.trivial_guard, "Early in prims; we don't have bind yet")
+                 then Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                                    (Env.get_range env)
@@ -1070,34 +1085,42 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   * When c1's return type is of the form _:t{phi}, is is useful to know
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
-                 let close (x:bv) (reason:string) (c:comp) =
+                 let close_with_type_of_x (x:bv) (c:comp) =
                    let x = { x with sort = U.comp_result c1 } in
-                   let c, g_c = maybe_capture_unit_refinement env x.sort x c in
-                   Inl (c, g_c, reason) in
+                   maybe_capture_unit_refinement env x.sort x c in
                  match e1opt, b with
                  | Some e, Some x ->
-                   c2 |> SS.subst_comp [NT (x, e)] |> close x "c1 Tot"
-                 | _, Some x -> c2 |> close x "c1 Tot only close"
+                   let c2, g_close = c2 |> SS.subst_comp [NT (x, e)] |> close_with_type_of_x x in
+                   Inl (c2, Env.conj_guards [
+                     g_c1;
+                     Env.map_guard g_c2 (SS.subst [NT (x, e)]);
+                     g_close ], "c1 Tot")
+                 | _, Some x ->
+                   let c2, g_close = c2 |> close_with_type_of_x x in
+                   Inl (c2, Env.conj_guards [
+                     g_c1;
+                     Env.close_guard env [S.mk_binder x] g_c2;
+                     g_close ], "c1 Tot only close")
                  | _, _ -> aux_with_trivial_guard ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-            then Inl (S.mk_GTotal (U.comp_result c2), Env.trivial_guard, "both GTot")
+            then Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "both GTot")
             else aux_with_trivial_guard ()
           in
           match try_simplify () with
-          | Inl (c, g_c, reason) ->
+          | Inl (c, g, reason) ->
             debug (fun () ->
                 BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
                             reason
                             (Print.comp_to_string c));
-            c, Env.conj_guard g_c (Env.conj_guard g_c1 g_c2)
+            c, g
           | Inr reason ->
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
             
-            let mk_bind c1 b c2 =  (* AR: end code for inlining pure and ghost terms *)
+            let mk_bind c1 b c2 g =  (* AR: end code for inlining pure and ghost terms *)
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
-              c, Env.conj_guard (Env.conj_guard g_c1 g_c2) g_bind in
+              c, Env.conj_guard g g_bind in
 
             let mk_seq c1 b c2 =
                 //c1 is PURE or GHOST
@@ -1200,7 +1223,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
-                      mk_bind c1 b c2
+                      let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
+                      mk_bind c1 b c2 g
                  else if Options.vcgen_optimize_bind_as_seq()
                       && lcomp_has_trivial_postcondition lc1
                       && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
@@ -1220,11 +1244,13 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
-                      let c, g_bind = mk_bind c1 b c2 in
+                      let g = Env.conj_guard g_c1
+                        (Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e)) in
+                      let c, g_bind = mk_bind c1 b c2 g in
                       c, Env.conj_guard g_w g_bind
                 //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
                 //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
-            else mk_bind c1 b c2
+            else mk_bind c1 b c2 trivial_guard
       end
   in TcComm.mk_lcomp joined_eff
                      lc2.res_typ
