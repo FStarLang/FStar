@@ -58,10 +58,13 @@ let grows (#a:Type) : Preorder.preorder (Seq.seq a) =
 
 type pre_t = state -> Type0
 type post_t (a:Type) = result a -> state -> Type0
-type wp_t (a:Type) = wp:(post_t a -> pre_t){
-  forall (p q:post_t a). (forall (r:result a) (s:state). p r s ==> q r s) ==> (forall (s:state). wp p s ==> wp q s)
-}
+type wp_t (a:Type) = post_t a -> pre_t
 
+assume WP_t_monotonic:
+  forall (a:Type) (wp:wp_t a).
+    (forall (p q:post_t a).
+       (forall (r:result a) (s:state). p r s ==> q r s) ==>
+       (forall (s:state). wp p s ==> wp q s))
 
 let repr (a:Type) (wp:wp_t a) =
   s0:state ->
@@ -114,8 +117,11 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+assume PURE_wp_monotonic:
+  forall (a:Type) (wp:pure_wp a).
+    (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
-let lift_pure_mseqexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> PURE a wp)
+let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
 = fun s0 -> Success (f ()), s0
 
