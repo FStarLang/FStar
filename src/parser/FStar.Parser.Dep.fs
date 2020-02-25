@@ -1472,7 +1472,7 @@ let print_full (deps:deps) : unit =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
-    let norm_path s = replace_chars s '\\' "/" in
+    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
@@ -1528,7 +1528,6 @@ let print_full (deps:deps) : unit =
               else files in
 
             let files = List.map norm_path files in
-            let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
