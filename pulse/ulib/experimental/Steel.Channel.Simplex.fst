@@ -53,9 +53,10 @@ let intro_chan_inv_step (c:chan_t) (vs next_vs:chan_val)
   = h_admit _ _
 
 
-let intro_chan_inv_eq (c:chan_t) (vs:chan_val)
+let intro_chan_inv_eq (c:chan_t) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
-                 pts_to c.recv half vs)
+                 pts_to c.recv half vr `star`
+                 pure (vs == vr))
                  (fun _ -> chan_inv c)
   = h_admit _ _
 
@@ -436,13 +437,24 @@ let channel_cases_recv
 
 assume
 val recv_available (#p:prot{more p}) (cc:chan) (vs vr:chan_val) (_:unit)
-  : SteelT (msg_t p) (send_recv_in_sync cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
+  : SteelT (msg_t p) (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
 
-assume
-val recv_blocked (#p:prot{more p}) (cc:chan) (vs vr:chan_val)
+let intro_chan_inv_eq2 (c:chan_t) (vs vr:chan_val)
+  : SteelT unit ((pts_to c.send half vs `star`
+                  pts_to c.recv half vr) `star`
+                  pure (vs == vr))
+                 (fun _ -> chan_inv c)
+  = h_admit _ _
+
+let recv_blocked (#p:prot{more p}) (cc:chan) (vs vr:chan_val)
                  (loop:unit -> SteelT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x)))
                  (_:unit)
-  : SteelT (msg_t p) (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
+  : SteelT (msg_t p) (send_recv_in_sync cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
+  = let c = cc.chan_chan in
+    frame (fun _ -> intro_chan_inv_eq2 c vs vr) _;
+    frame (fun _ -> release cc.chan_lock) _;
+    h_elim_emp_l _;
+    loop ()
 
 let rec recv (#p:prot{more p}) (cc:chan)
   : SteelT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x))
@@ -451,5 +463,5 @@ let rec recv (#p:prot{more p}) (cc:chan)
     let vs = fst vs_vr in
     let vr = snd vs_vr in
     h_assert (send_pre cc.chan_chan.recv p cc.chan_chan vs vr);
-    channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_available #p cc vs vr)
-                                                     (recv_blocked #p cc vs vr (fun _ -> recv cc))
+    channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv cc))
+                                                     (recv_available #p cc vs vr)
