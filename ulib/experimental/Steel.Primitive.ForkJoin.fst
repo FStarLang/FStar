@@ -7,6 +7,8 @@ open FStar.Ghost
 open Steel.Reference
 open Steel.SteelT.Basics
 
+////////////////////////////////////////////////////////////////////////////////
+
 let maybe_p (p:hprop) (v:bool) = if v then p else emp
 
 let lock_inv_pred (r:ref bool) (p:hprop) (v:bool) : hprop =
