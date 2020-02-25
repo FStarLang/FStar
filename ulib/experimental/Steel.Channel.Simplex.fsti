@@ -18,5 +18,5 @@ val new_chan (p:prot)
 val send (#p:prot{more p}) (c:chan) (x:msg_t p)
   : SteelT unit (sender c p) (fun _ -> sender c (step p x))
 
-// val recv (#p:prot{more p}) (c:chan)
-//   : SteelT (msg_t p) (receiver c p) (fun x -> receiver c (step p x))
+val recv (#p:prot{more p}) (c:chan)
+  : SteelT (msg_t p) (receiver c p) (fun x -> receiver c (step p x))
