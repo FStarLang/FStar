@@ -67,17 +67,27 @@ assume WP_monotonic_pure:
        (forall x. p x ==> q x) ==>
        (wp p ==> wp q))
 
-let bind_pure_steel (a:Type) (b:Type)
-  (wp:pure_wp a)
-  (uses:Set.set lock_addr)
-  (is_ghost:bool)
-  (pre_g:pre_t) (post_g:post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
-: atomic_repr b uses is_ghost pre_g post_g
-= admit()
+inline_for_extraction
+let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_wp a) (f:unit -> PURE a wp)
+: Pure (atomic_repr a uses true p (fun _ -> p))
+  (requires wp (fun _ -> True))
+  (ensures fun _ -> True)
+= fun _ -> let x = f () in x
+
+sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 
-polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
+// let bind_pure_steel (a:Type) (b:Type)
+//   (wp:pure_wp a)
+//   (uses:Set.set lock_addr)
+//   (is_ghost:bool)
+//   (pre_g:pre_t) (post_g:post_t b)
+//   (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
+// : atomic_repr b uses is_ghost pre_g post_g
+// = admit()
+
+
+// polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
 
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
@@ -209,6 +219,7 @@ let with_invariant
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
+[@expect_failure]
 let test
   (#t:_)
   (a:array_ref t{U32.v (length a) == 1})
