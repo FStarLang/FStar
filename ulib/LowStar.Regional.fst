@@ -41,21 +41,45 @@ module HST = FStar.HyperStack.ST
 
 /// Regionality
 
-// Motivation: we want to ensure that all stateful operations for a value of
-// type `a` are within the `region_of` the value.
+/// Motivation: we want to ensure that all stateful operations for a value of
+/// type `a` are within the `region_of` the value.
+///
+/// Furthermore, we would like regional to be parameterized over another type class
+/// that elements can have. However, we are also trying to extract to C, meaning
+/// that we can't incur any run-time lookups and indirections. In essence, we'd
+/// like for members of a regional to potentially be partial applications where
+/// the first argument may be an agility parameter, an extra type class for the
+/// elements, etc. etc. except that partial applications are not allowed in C.
+///
+/// We therefore add an "st" type, which is a piece of (pure) state (hence more
+/// like a parameter) that functions are allowed to capture. Currently, only
+/// ``r_alloc`` needs that extra parameter. The parameter is stored within the
+/// type class, so that clients are not required to manage that piece of state
+/// themselves. This is, in effect, closure-conversion for ``r_alloc`` where the
+/// closure state is lifted and stored in the regional itself. As such, the only
+/// piece of state that ``r_alloc`` may receive is the exact value that was
+/// captured.
+///
+/// Several alternative designs exist, e.g. making ``a`` at type ``st -> Type0``
+/// (won't extract); instantiating ``st`` as a singleton type and dropping the
+/// refinement (also works, but doesn't make the intent of closure-conversion
+/// explicit); dropping the refinement and leaving it up to the user to store
+/// the refinement in ``r_inv`` (which would then take ``state`` as an
+/// argument)...
 noeq type regional (st:Type) (a:Type0) =
 | Rgl:
+    // This is not really a piece of state, but more like a parameter.
     state: st ->
-    
+
     // The target type should have a region where it belongs.
     region_of: (a -> GTot HS.rid) ->
 
     //loc_of for the underlying a
     loc_of: (a -> GTot loc) ->
 
-    // A stateless value of type `a`.
+    // A parameterless value of type `a`.
     // It does not have to satisfy the invariant `r_inv` described below.
-    dummy: ((s:st{s == state}) -> d:a) ->
+    dummy: a ->
 
     // An invariant we want to maintain for each operation.
     // For example, it may include `live` and `freeable` properties
@@ -89,7 +113,7 @@ noeq type regional (st:Type) (a:Type0) =
     // An allocation operation. We might have several ways of initializing a
     // given target type `a`; then multiple typeclass instances should be
     // defined, and each of them can be used properly.
-    r_alloc: ((s:st{s == state}) -> r:HST.erid ->
+    r_alloc: ((s:st { s == state }) -> r:HST.erid ->
       HST.ST a
         (requires (fun h0 -> True))
         (ensures (fun h0 v h1 ->
@@ -103,34 +127,36 @@ noeq type regional (st:Type) (a:Type0) =
     // Destruction: note that it allows to `modify` all the regions, including
     // its subregions. It is fair when we want to `free` a vector and its
     // elements as well, assuming the elements belong to subregions.
-    r_free: ((s:st{s == state}) -> v:a ->
+    r_free: (v:a ->
       HST.ST unit
         (requires (fun h0 -> r_inv h0 v))
         (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
-          
+
     regional st a
 
+let rg_inv #a #rst (rg: regional rst a) =
+  Rgl?.r_inv rg
 
 let rg_dummy #a #rst (rg:regional rst a)
-: Tot a 
-= Rgl?.dummy rg (Rgl?.state rg)
+: Tot a
+= Rgl?.dummy rg
 
 let rg_alloc #a #rst (rg:regional rst a) (r:HST.erid)
-: HST.ST a 
+: HST.ST a
   (requires (fun h0 -> True))
   (ensures (fun h0 v h1 ->
            Set.subset (Map.domain (HS.get_hmap h0))
                       (Map.domain (HS.get_hmap h1)) /\
            modifies loc_none h0 h1 /\
            fresh_loc (Rgl?.loc_of rg v) h0 h1 /\
-           (Rgl?.r_alloc_p rg) v /\ (Rgl?.r_inv rg) h1 v /\ (Rgl?.region_of rg) v == r /\
+           (Rgl?.r_alloc_p rg) v /\ rg_inv rg h1 v /\ (Rgl?.region_of rg) v == r /\
            (Rgl?.r_repr rg) h1 v == Ghost.reveal (Rgl?.irepr rg)))
 = Rgl?.r_alloc rg (Rgl?.state rg) r
 
 let rg_free #a #rst (rg:regional rst a) (v:a)
-: HST.ST unit 
- (requires (fun h0 -> Rgl?.r_inv rg h0 v))
+: HST.ST unit
+ (requires (fun h0 -> rg_inv rg h0 v))
  (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from false (Rgl?.region_of rg v)) h0 h1))
-= (Rgl?.r_free rg) (Rgl?.state rg) v
+= (Rgl?.r_free rg) v

@@ -32,25 +32,31 @@ module U32 = FStar.UInt32
 
 /// Utilities
 
-// A `regional` type `a` is also `copyable` when there exists a copy operator
-// that guarantees the same representation between `src` and `dst`.
-// For instance, the `copy` operation for `B.buffer a` is `B.blit`.
+/// A `regional` type `a` is also `copyable` when there exists a copy operator
+/// that guarantees the same representation between `src` and `dst`.
+/// For instance, the `copy` operation for `B.buffer a` is `B.blit`.
+///
+/// Here, no reference at run-time is kept to the state argument of the
+/// regional; conceivably, the caller will already have some reference handy to
+/// the instance of the regional class and can retrieve the parameter from
+/// there.
 inline_for_extraction
 noeq type copyable (#rst:Type) (a:Type0) (rg:regional rst a) =
 | Cpy:
     copy: (s:rst{s==Rgl?.state rg} -> src:a -> dst:a ->
       HST.ST unit
         (requires (fun h0 ->
-          Rgl?.r_inv rg h0 src /\ Rgl?.r_inv rg h0 dst /\
+          rg_inv rg h0 src /\ rg_inv rg h0 dst /\
           HS.disjoint (Rgl?.region_of rg src)
                       (Rgl?.region_of rg dst)))
         (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from
                      false (Rgl?.region_of rg dst)) h0 h1 /\
-          Rgl?.r_inv rg h1 dst /\
+          rg_inv rg h1 dst /\
           Rgl?.r_repr rg h1 dst == Rgl?.r_repr rg h0 src))) ->
     copyable a rg
 
+// rst: regional state
 type rvector (#a:Type0) (#rst:Type) (rg:regional rst a) = V.vector a
 
 val loc_rvector:
@@ -68,7 +74,7 @@ val rs_elems_inv:
   i:nat -> j:nat{i <= j && j <= S.length rs} ->
   GTot Type0
 let rs_elems_inv #a #rst rg h rs i j =
-  V.forall_seq rs i j (Rgl?.r_inv rg h)
+  V.forall_seq rs i j (rg_inv rg h)
 
 val rv_elems_inv:
   #a:Type0 -> #rst:Type -> #rg:regional rst a ->
@@ -468,7 +474,7 @@ val rv_inv_preserved_int:
   Lemma (requires (rv_inv h0 rv /\
                   modifies (loc_all_regions_from false
                              (Rgl?.region_of rg (V.get h0 rv i))) h0 h1 /\
-                  Rgl?.r_inv rg h1 (V.get h1 rv i)))
+                  rg_inv rg h1 (V.get h1 rv i)))
         (ensures (rv_inv h1 rv))
 let rv_inv_preserved_int #a #rst #rg rv i h0 h1 =
   rs_loc_elems_elem_disj
@@ -598,7 +604,7 @@ val as_seq_seq_upd:
     i <= j /\
     j <= S.length rs /\
     rs_elems_inv rg h rs i j} ->
-  k:nat{i <= k && k < j} -> v:a{Rgl?.r_inv rg h v} ->
+  k:nat{i <= k && k < j} -> v:a{rg_inv rg h v} ->
   Lemma (S.equal (as_seq_seq rg h (S.upd rs k v) i j)
                  (S.upd (as_seq_seq rg h rs i j) (k - i)
                         (Rgl?.r_repr rg h v)))
@@ -791,7 +797,7 @@ val insert:
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
     (requires (fun h0 ->
-      rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
+      rv_inv h0 rv /\ rg_inv rg h0 v /\
       HS.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
       V.forall_all h0 rv
         (fun b -> HS.disjoint (Rgl?.region_of rg b)
@@ -839,7 +845,7 @@ val insert_copy:
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
     (requires (fun h0 ->
-      rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
+      rv_inv h0 rv /\ rg_inv rg h0 v /\
       HS.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 irv h1 ->
       V.size_of irv = V.size_of rv + 1ul /\
@@ -883,7 +889,7 @@ val assign:
       V.forall_ h0 rv (i + 1ul) (V.size_of rv)
         (fun b -> HS.disjoint (Rgl?.region_of rg b)
                               (Rgl?.region_of rg v)) /\
-      Rgl?.r_inv rg h0 v /\
+      rg_inv rg h0 v /\
       HS.extends (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 _ h1 ->
       modifies (V.loc_vector_within rv i (i + 1ul)) h0 h1 /\
@@ -925,11 +931,11 @@ let assign #a #rst #rg rv i v =
 private val r_sep_forall:
   #a:Type0 -> #rst:Type -> rg:regional rst a ->
   p:loc -> h0:HS.mem -> h1:HS.mem ->
-  v:a{Rgl?.r_inv rg h0 v} ->
+  v:a{rg_inv rg h0 v} ->
   Lemma (requires (loc_disjoint (loc_all_regions_from
                                   false (Rgl?.region_of rg v)) p /\
                   modifies p h0 h1))
-        (ensures (Rgl?.r_inv rg h1 v /\
+        (ensures (rg_inv rg h1 v /\
                  Rgl?.r_repr rg h0 v == Rgl?.r_repr rg h1 v))
 private let r_sep_forall #a #rst rg p h0 h1 v =
   Rgl?.r_sep rg v p h0 h1
@@ -941,7 +947,7 @@ val assign_copy:
   HST.ST unit
     (requires (fun h0 ->
       rv_inv h0 rv /\
-      Rgl?.r_inv rg h0 v /\
+      rg_inv rg h0 v /\
       HS.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 _ h1 ->
       modifies (loc_all_regions_from
