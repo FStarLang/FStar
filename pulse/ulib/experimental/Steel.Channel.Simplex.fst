@@ -339,13 +339,25 @@ let send_available(#p:sprot) (cc:chan) (x:msg_t p) (vs vr:chan_val) (_:unit)
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _
 
-assume
-val send_blocked (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val)
-                 (loop:(unit ->SteelT unit (sender c p) (fun _ -> sender c (step p x))))
+let rearrange3 (p q r:hprop)
+  : SteelT unit (p `star` q `star` r)
+                (fun _ -> p `star` r `star` q)
+  = h_admit _ _
+
+let send_blocked (#p:prot{more p}) (cc:chan) (x:msg_t p) (vs vr:chan_val)
+                 (loop:(unit ->SteelT unit (sender cc p) (fun _ -> sender cc (step p x))))
                  (_:unit)
-  : SteelT unit (send_pre_blocked p c.chan_chan vs vr) (fun _ -> sender c (step p x))
-
-
+  : SteelT unit (send_pre_blocked p cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
+  = let c = cc.chan_chan in
+    h_assert ((pts_to c.send half vs `star`
+               pts_to c.recv half vr `star`
+               chan_inv_step vr vs) `star`
+               sender cc p);
+    frame (fun _ -> rearrange3 _ _ _) _;
+    frame (fun _ -> intro_chan_inv_step c vr vs) _;
+    frame (fun _ -> release cc.chan_lock) _;
+    h_elim_emp_l _;
+    loop ()
 
 // let rec send (#p:prot{more p}) (c:chan) (x:msg_t p)
 //  : Steel unit
