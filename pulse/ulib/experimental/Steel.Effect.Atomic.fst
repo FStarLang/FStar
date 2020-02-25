@@ -219,6 +219,7 @@ let with_invariant
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
+[@expect_failure]
 let test
   (#t:_)
   (a:array_ref t{U32.v (length a) == 1})
