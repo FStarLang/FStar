@@ -159,6 +159,10 @@ and env = {
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
+                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
+                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
+                                                (* during typechecking *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -271,6 +275,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     top_level=false;
     check_uvars=false;
     use_eq=false;
+    use_eq_strict=false;
     is_iface=false;
     admit=false;
     lax=false;
@@ -1777,6 +1782,21 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
+
+let pure_precondition_for_trivial_post env u t wp r =
+  let trivial_post =
+    let post_ts = lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
+    let _, post = inst_tscheme_with post_ts [u] in
+    S.mk_Tm_app
+      post
+      [t |> S.as_arg]
+      None r in
+  S.mk_Tm_app
+    wp
+    [trivial_post |> S.as_arg]
+    None r
+
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
@@ -1791,3 +1811,4 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
+

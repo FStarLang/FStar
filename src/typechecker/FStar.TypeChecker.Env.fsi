@@ -135,6 +135,10 @@ and env = {
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
+                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
+                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
+                                                (* during typechecking *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -416,3 +420,5 @@ val print_gamma : gamma -> string
  *)
 
 val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
