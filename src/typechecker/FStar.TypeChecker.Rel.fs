@@ -3397,6 +3397,24 @@ let teq env t1 t2 : guard_t =
                         (guard_to_string env g);
         g
 
+(*
+ * AR: It would be nice to unify it with teq, the way we do it for subtyping
+ *     i.e. write a common function that uses a bound variable,
+ *          and if the caller requires a prop, close over it, else abstract it
+ *     But that may change the existing VCs shape a bit
+ *)
+let get_teq_predicate env t1 t2 =
+     if debug env <| Options.Other "Rel" then
+       BU.print2 "get_teq_predicate of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, x, wl = new_t_prob (empty_worklist env) env t1 EQ t2 in
+     let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
+     if debug env <| Options.Other "Rel" then
+       BU.print1 "} res teq predicate = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
+
+    match g with
+    | None -> None
+    | Some g -> Some (abstract_guard (S.mk_binder x) g)
+
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
