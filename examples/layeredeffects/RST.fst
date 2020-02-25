@@ -94,7 +94,7 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:pure_repr a wp)
+let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
 : Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)

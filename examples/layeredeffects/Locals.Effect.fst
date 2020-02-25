@@ -92,7 +92,7 @@ assume Pure_wp_monotonicity:
        (wp p ==> wp q))
 
 let lift_pure_lvars (a:Type)
-  (wp:pure_wp a) (f:pure_repr a wp)
+  (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a (fun p m -> wp (fun x -> p x m))
 = fun m -> f (), m
 

@@ -76,7 +76,7 @@ assume WP_pure_monotonic:
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
 
-let lift_pure_meff (a:Type) (wp:pure_wp a) (f:pure_repr a wp)
+let lift_pure_meff (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a
   (wp (fun _ -> True))
   (fun x -> ~ (wp (fun r -> r =!= x)))

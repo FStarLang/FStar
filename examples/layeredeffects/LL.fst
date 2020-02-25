@@ -121,7 +121,7 @@ assume Pure_wp_monotonic:
              (wp p ==> wp q)))
 
 inline_for_extraction
-let lift_pure_exn (a:Type) (wp:pure_wp a) (f:pure_repr a wp)
+let lift_pure_exn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : erepr a (fun p -> wp (fun x -> p (Some x)))
 = fun _ -> Some (f ())
 
@@ -302,7 +302,7 @@ layered_effect {
 }
 
 inline_for_extraction
-let lift_pure_stexn (a:Type) (wp:pure_wp a) (f:pure_repr a wp)
+let lift_pure_stexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a (fun p n -> wp (fun x -> p (Some (x, n))))
 = fun n -> (f (), n)
 
