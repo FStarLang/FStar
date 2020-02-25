@@ -45,6 +45,20 @@ let chan_inv (c:chan_t) : hprop =
   h_exists (fun (vsend:chan_val) ->
     pts_to c.send half vsend `star` chan_inv_recv c vsend)
 
+let intro_chan_inv_step (c:chan_t) (vs next_vs:chan_val)
+  : SteelT unit (pts_to c.send half next_vs `star`
+                 chan_inv_step vs next_vs `star`
+                 pts_to c.recv half vs)
+                 (fun _ -> chan_inv c)
+  = h_admit _ _
+
+
+let intro_chan_inv_eq (c:chan_t) (vs:chan_val)
+  : SteelT unit (pts_to c.send half vs `star`
+                 pts_to c.recv half vs)
+                 (fun _ -> chan_inv c)
+  = h_admit _ _
+
 noeq
 type chan = {
   chan_chan : chan_t;
@@ -319,7 +333,11 @@ let send_available(#p:sprot) (cc:chan) (x:msg_t p) (vs vr:chan_val) (_:unit)
     h_assert (sender cc (step p x) `star`
                ((pts_to c.send half next_vs `star` chan_inv_step vs next_vs) `star`
                  pts_to c.recv half vs));
-    h_admit _ _
+    h_commute _ _;
+    frame (fun _ -> intro_chan_inv_step c vs next_vs) _;
+    h_assert (chan_inv c `star` sender cc (step p x));
+    frame (fun _ -> release cc.chan_lock) _;
+    h_elim_emp_l _
 
 assume
 val send_blocked (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr:chan_val)
