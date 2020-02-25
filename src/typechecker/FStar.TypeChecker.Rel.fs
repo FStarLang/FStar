@@ -3373,22 +3373,14 @@ let with_guard_no_simp env prob dopt = match dopt with
              univ_ineqs=([], []);
              implicits=implicits})
 
-let try_teq_with_bv smt_ok env t1 t2 =
+let try_teq smt_ok env t1 t2 : option<guard_t> =
      if debug env <| Options.Other "Rel" then
-       BU.print2 "try_teq_bv of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
-     let x = S.new_bv (Some <| Env.get_range env) t1 in
-     let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 (Some x) (Env.get_range env) in
+       BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
      let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
      if debug env <| Options.Other "Rel" then
        BU.print1 "} res = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
-     match g with
-     | None -> None
-     | Some g -> Some (x, g)
-
-let try_teq smt_ok env t1 t2 : option<guard_t> =
-     match try_teq_with_bv smt_ok env t1 t2 with
-     | None -> None
-     | Some (x, g) -> Some (close_guard env [S.mk_binder x] g)
+     g
 
 let teq env t1 t2 : guard_t =
     match try_teq true env t1 t2 with
