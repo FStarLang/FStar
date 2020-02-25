@@ -1,4 +1,4 @@
-name: Build FStar Image
+name: Build FStar Binaries
 
 on: [push]
 
@@ -10,6 +10,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build local docker
+    - name: Build binaries
       run: |
-        ./build_local.sh
+        export OPAMYES=1
+        brew install opam
+        opam init
+        opam switch create 4.05.0
+        opam install depext
+        opam depext -i gmp-conf
+        opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
+        eval $(opam env)
+        make -j -C src/ocaml-output
