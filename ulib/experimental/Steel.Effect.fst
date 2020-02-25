@@ -87,13 +87,13 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
     (ens_to_act_ens ens)
 
 unfold
-let return_req : req_t emp = fun _ -> True
+let return_req (p:hprop) : req_t p = fun _ -> True
 
 unfold
-let return_ens (#a:Type) (x:a) : ens_t emp a (fun _ -> emp) = fun _ r _ -> r == x
+let return_ens (#a:Type) (x:a) (p:a -> hprop) : ens_t (p x) a p = fun _ r _ -> r == x
 
-let returnc (a:Type u#a) (x:a)
-: repr a Mem.emp (fun _ -> Mem.emp) return_req (return_ens x)
+let returnc (a:Type u#a) (x:a) (p:a -> hprop)
+: repr a (p x) p (return_req (p x)) (return_ens x p)
 = fun _ -> x
 
 unfold
@@ -560,3 +560,39 @@ let crash_test (_:unit)
     crash_h_commute (crash_get_prop r);
     crash_h_assert ()
 #pop-options
+
+let cond_aux (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
+  (else_:unit -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
+: SteelT a (p b) (q b)
+= if b then then_ () else else_ ()
+
+
+let aux1 (#a:Type) (b:bool{b == true}) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_: (unit -> SteelT a (p true) (q true)))
+: unit -> SteelT a (p b) (q b)
+= fun _ -> then_ ()
+
+let aux2 (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_: (unit -> SteelT a (p true) (q true)))
+: unit -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
+= fun _ -> (aux1 b p q then_) ()
+
+let aux3 (#a:Type) (b:bool{b == false}) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (else_: (unit -> SteelT a (p false) (q false)))
+: unit -> SteelT a (p b) (q b)
+= fun _ -> else_ ()
+
+let aux4 (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (else_: (unit -> SteelT a (p false) (q false)))
+: unit -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
+= fun _ -> (aux3 b p q else_) ()
+
+
+let cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+         (then_: (unit -> SteelT a (p true) (q true)))
+         (else_: (unit -> SteelT a (p false) (q false)))
+: SteelT a (p b) (q b)
+= let a1 = aux2 b p q then_ in
+  let a2 = aux4 b p q else_ in
+  cond_aux b p q a1 a2
