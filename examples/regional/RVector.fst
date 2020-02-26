@@ -25,7 +25,7 @@ module U32 = FStar.UInt32
 // instance type is allocated, manipulated, and freed within a designated
 // region. Not surprisingly, we have an instance saying that every Low* buffer
 // type is regional.
-val breg: regional unit (B.buffer U32.t)
+val breg: regional (UInt32.t & RVI.nonzero ) (B.buffer U32.t)
 let breg = RVI.buffer_regional 0ul 16ul
 
 // We already know that if the regions of two Low* buffers are disjoint then
@@ -43,7 +43,7 @@ let two_regional_buffers_disjoint b1 b2 = ()
 // We already have a typeclass instance for the vector of buffers, guaranteeing
 // that all pointers, including all the element pointers and the vector itself,
 // are in a certain region and all vector operations preserve this invariant.
-val vreg: regional (regional unit (B.buffer U32.t)) (RV.rvector breg)
+val vreg: regional (regional (U32.t & RVI.nonzero) (B.buffer U32.t)) (RV.rvector breg)
 let vreg = RVI.vector_regional breg
 
 // Now the disjointness between two regional vectors guarantees more than two
