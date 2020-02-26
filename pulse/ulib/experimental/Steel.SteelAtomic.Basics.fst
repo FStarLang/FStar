@@ -34,6 +34,10 @@ val intro_h_exists (#a:Type) (#uses:Set.set lock_addr) (x:a) (p:a -> hprop)
   : SteelAtomic unit uses true (p x) (fun _ -> h_exists p)
 
 assume
+val h_affine (#uses:Set.set lock_addr) (p q:hprop)
+  : SteelAtomic unit uses true (p `star` q) (fun _ -> p)
+
+assume
 val lift_atomic_to_steelT
   (#a:Type) (#is_ghost:bool) (#fp:hprop) (#fp':a -> hprop)
   ($f:unit -> SteelAtomic a Set.empty is_ghost fp fp')
