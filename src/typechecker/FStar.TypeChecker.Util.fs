@@ -785,6 +785,14 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
   match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
   | Some (p, f_bind) -> f_bind env ct1 b ct2 flags r1
   | None ->    
+    (*
+     * AR: g_lift here consists of the guard of lifting c1 and c2
+     *     the guard of c2 could contain the bound variable b
+     *       and when returning this gurd, we must close it
+     *
+     *     however, if you see lift_comps_sep_guards, it is already doing the closing
+     *       so it's fine to return g_return as is
+     *)
     let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
     let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
 
