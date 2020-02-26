@@ -98,7 +98,7 @@ let buffer_r_alloc_p #a v =
 /// restricts the domain of the function to operate on the sole value being
 /// captured.
 val buffer_r_alloc:
-  #a:Type -> #arg':(a & nonzero) -> arg:(a & nonzero) { arg == arg' } -> r:HST.erid ->
+  #a:Type -> #arg':Ghost.erased (a & nonzero) -> arg:(a & nonzero) { arg == Ghost.reveal arg' } -> r:HST.erid ->
   HST.ST (b:B.buffer a)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 ->
@@ -116,7 +116,7 @@ let buffer_r_alloc #a #_ (ia, len) r =
   B.malloc r ia len
 
 val buffer_r_free:
-  #a:Type -> len:UInt32.t{len > 0ul} ->
+  #a:Type -> len:Ghost.erased nonzero ->
   v:B.buffer a ->
   HST.ST unit
     (requires (fun h0 -> buffer_r_inv len h0 v))
@@ -127,8 +127,8 @@ let buffer_r_free #a len v =
 
 val buffer_copy:
   #a:Type ->
-  #arg':(a & nonzero) ->
-  arg:(a & nonzero){ arg == arg' } ->
+  #arg':Ghost.erased (a & nonzero) ->
+  arg:(a & nonzero){ arg == Ghost.reveal arg' } ->
   src:B.buffer a -> dst:B.buffer a ->
   HST.ST unit
     (requires (fun h0 ->
@@ -180,7 +180,7 @@ val vector_region_of:
 let vector_region_of #a #rst rg v = V.frameOf v
 
 val vector_dummy:
-  #a:Type0 -> #rst:Type -> rg:regional rst a -> Tot (rvector rg)
+  #a:Type0 -> #rst:Type -> rg:Ghost.erased (regional rst a) -> Tot (rvector rg)
 let vector_dummy #a #_ _ = V.alloc_empty a
 
 val vector_r_inv:
@@ -246,7 +246,7 @@ let vector_r_alloc #a #rst rg r =
   V.alloc_reserve 1ul (rg_dummy rg) r
 
 val vector_r_free:
-  #a:Type0 -> #rst:Type -> rg:regional rst a -> v:rvector rg ->
+  #a:Type0 -> #rst:Type -> rg:Ghost.erased (regional rst a) -> v:rvector rg ->
   HST.ST unit
     (requires (fun h0 -> vector_r_inv rg h0 v))
     (ensures (fun h0 _ h1 ->
