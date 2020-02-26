@@ -30,8 +30,6 @@ val addr: eqtype
 
 val array_ref (a: Type u#0) : Type u#0
 
-val null_array (t: Type0) : Tot (a:array_ref t)
-
 val length (#t: Type) (a: array_ref t) : GTot (n:U32.t)
 val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{
   U32.v n + U32.v (length a) <= UInt.max_int 32
@@ -41,14 +39,14 @@ val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
   U32.v (offset a) + U32.v (length a) <= U32.v n
 })
 
-val null_array_properties (t: Type) (a: array_ref t) : Lemma (
-  a == null_array t <==> (length a = 0ul /\ max_length a = 0ul /\ offset a = 0ul)
-)
+let is_null_array (#t: Type0) (a:array_ref t) : GTot bool =
+  length a = 0ul
 
-val address (#t: Type) (a: array_ref t{a =!= null_array t}) : GTot addr
+
+val address (#t: Type) (a: array_ref t{not (is_null_array a)}) : GTot addr
 
 let freeable (#t: Type) (a: array_ref t) =
-  a =!= null_array t /\ offset a = 0ul /\ length a = max_length a
+  not (is_null_array a) /\ offset a = 0ul /\ length a = max_length a
 
 val reference (t: Type0) (pre: Preorder.preorder t) : Type0
 
@@ -174,7 +172,7 @@ let array (#t: Type) (a: array_ref t) =
 
 val pts_to_array_injective
   (#t: _)
-  (a: array_ref t{a =!= null_array t})
+  (a: array_ref t{not (is_null_array a)})
   (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m:mem)
