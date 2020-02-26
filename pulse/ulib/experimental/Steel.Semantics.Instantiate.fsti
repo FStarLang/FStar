@@ -18,6 +18,7 @@ type state0 : S.st0 =
 
     S.emp = emp;
     S.star = star;
+    S.or = h_or;
 
     S.equals = equiv
   }

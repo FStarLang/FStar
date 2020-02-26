@@ -87,13 +87,13 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
     (ens_to_act_ens ens)
 
 unfold
-let return_req : req_t emp = fun _ -> True
+let return_req (p:hprop) : req_t p = fun _ -> True
 
 unfold
-let return_ens (#a:Type) (x:a) : ens_t emp a (fun _ -> emp) = fun _ r _ -> r == x
+let return_ens (#a:Type) (x:a) (p:a -> hprop) : ens_t (p x) a p = fun _ r _ -> r == x
 
-let returnc (a:Type u#a) (x:a)
-: repr a Mem.emp (fun _ -> Mem.emp) return_req (return_ens x)
+let returnc (a:Type u#a) (x:a) (p:a -> hprop)
+: repr a (p x) p (return_req (p x)) (return_ens x p)
 = fun _ -> x
 
 unfold
@@ -270,7 +270,7 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-= Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+= Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 (*
  * We need affine_star_smt even to typecheck the signature
@@ -295,7 +295,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
   (fun x -> post x `Mem.star` frame)
   (fun h -> req h /\ f_frame h)
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-= Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
+= Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
 
 let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:unit -> Steel a pre post req ens)
@@ -325,27 +325,27 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 *)
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  MST.MSTATE a mem mem_evolves req ens
+  RMST.RMSTATE a mem mem_evolves req ens
 
 let mst_get ()
 : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-= MST.get ()
+= RMST.get ()
 
 let mst_put (m:mem)
 : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-= MST.put m
+= RMST.put m
 
 let mst_assume (p:Type)
 : Mst unit (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
-= MST.mst_assume p
+= RMST.rmst_assume p
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
-= MST.mst_admit ()
+= RMST.rmst_admit ()
 
 let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
-= MST.mst_assert p
+= RMST.rmst_assert p
 
 let intro_emp_left (p1 p2:hprop) (m:mem)
 : Lemma
@@ -560,3 +560,39 @@ let crash_test (_:unit)
     crash_h_commute (crash_get_prop r);
     crash_h_assert ()
 #pop-options
+
+let cond_aux (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
+  (else_:unit -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
+: SteelT a (p b) (q b)
+= if b then then_ () else else_ ()
+
+
+let aux1 (#a:Type) (b:bool{b == true}) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_: (unit -> SteelT a (p true) (q true)))
+: unit -> SteelT a (p b) (q b)
+= fun _ -> then_ ()
+
+let aux2 (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (then_: (unit -> SteelT a (p true) (q true)))
+: unit -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
+= fun _ -> (aux1 b p q then_) ()
+
+let aux3 (#a:Type) (b:bool{b == false}) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (else_: (unit -> SteelT a (p false) (q false)))
+: unit -> SteelT a (p b) (q b)
+= fun _ -> else_ ()
+
+let aux4 (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+  (else_: (unit -> SteelT a (p false) (q false)))
+: unit -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
+= fun _ -> (aux3 b p q else_) ()
+
+
+let cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
+         (then_: (unit -> SteelT a (p true) (q true)))
+         (else_: (unit -> SteelT a (p false) (q false)))
+: SteelT a (p b) (q b)
+= let a1 = aux2 b p q then_ in
+  let a2 = aux4 b p q else_ in
+  cond_aux b p q a1 a2

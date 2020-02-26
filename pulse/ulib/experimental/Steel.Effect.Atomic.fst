@@ -93,15 +93,15 @@ sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  MST.MSTATE a mem mem_evolves req ens
+  RMST.RMSTATE a mem mem_evolves req ens
 
 let mst_get ()
   : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-  = MST.get ()
+  = RMST.get ()
 
 let mst_put (m:mem)
   : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-  = MST.put m
+  = RMST.put m
 
 assume val atomic_preserves_preorder
   (#a:Type)
