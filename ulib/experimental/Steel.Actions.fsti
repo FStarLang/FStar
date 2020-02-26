@@ -408,3 +408,14 @@ val cas
     (pts_to_ref r full_permission v)
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+
+//////////////////////////////////////////////////////////////////////////
+// Monotonic state
+//////////////////////////////////////////////////////////////////////////
+
+val reference_preorder_stable
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m0 m1:hmem (ref r))
+  : Lemma (requires (mem_evolves m0 m1)) (ensures (pre (sel_ref r m0) (sel_ref r m1)))
