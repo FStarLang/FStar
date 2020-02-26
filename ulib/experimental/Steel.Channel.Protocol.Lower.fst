@@ -12,7 +12,9 @@ let hnf (p:prot 'a) : prot 'a = L.inject (hnf (L.project p))
 let msg (t:Type0) (q:prot 'a) : prot 'a = L.inject (Msg t (fun _ -> L.project q))
 
 module P = Steel.Channel.Protocol
+let trace (p q:prot unit) : Type0 = L.lower (P.trace (L.project p) (L.project q))
 let partial_trace_of (p:prot unit) : Type0 = L.lower (P.partial_trace_of (L.project p))
+let until (#p:prot unit) (t:partial_trace_of p) : prot unit = L.inject ((L.project t).to)
 let next_msg_t (#p:prot unit) (x:partial_trace_of p) = P.next_msg_t (L.project x).to
 let extensible (#p:prot unit) (x:partial_trace_of p) = P.more_msgs (L.project x).to
 

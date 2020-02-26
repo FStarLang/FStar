@@ -36,3 +36,36 @@ val gather (#a:Type) (#p0:perm) (#p1:perm{summable_permissions p0 p1}) (#v0 #v1:
   : SteelT unit
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_permissions p0 p1) v0)
+
+////////////////////////////////////////////////////////////////////////////////
+
+val alloc_monotonic_ref (#a:Type) (p:Preorder.preorder a) (v:a)
+  : SteelT (reference a p) emp (fun r -> pts_to_ref r full v)
+
+val read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> hprop)
+                       (r:reference a p)
+  : SteelT a (h_exists (fun (v:a) -> pts_to_ref r q v `star` frame v))
+             (fun v -> pts_to_ref r q v `star` frame v)
+
+val write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+                       (r:reference a p) (x:a{p v x})
+  : SteelT a (pts_to_ref r full v)
+             (fun v -> pts_to_ref r full x)
+
+val pure (p:prop) : hprop
+
+let property (a:Type) = a -> prop
+
+val witnessed (#a:Type) (#p:Preorder.preorder a) (r:reference a p)
+              (fact:property a) : prop
+
+val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
+            (fact:property a{Preorder.stable fact p})
+            (v:erased a{fact v})
+  : SteelT unit (pts_to_ref r q v)
+                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
+
+val recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
+           (r:reference a p) (v:erased a)
+  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
+                (fun _ -> pts_to_ref r q v `star` pure (fact v))
