@@ -2969,3 +2969,22 @@ let cas
       let (| _ , h1 |) = cas_pre_action r v v_old v_new h0 in
       assert(h1 addr == None)
     )
+
+#push-options "--fuel 3 --ifuel 0"
+let reference_preorder_respected
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m0 m1:hmem (ref r))
+  : Lemma (requires (mem_evolves m0 m1)) (ensures (
+    pre (sel_ref r m0) (sel_ref r m1)
+  ))
+  =
+  assert(heap_evolves m0.heap m1.heap);
+  assert(heap_evolves_addr m0.heap m1.heap (Some?.v r).array_addr);
+  let addr = (Some?.v r).array_addr in
+  match m0.heap addr, m1.heap addr with
+  | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
+    assert(heap_evolves_seq seq0 seq1 0)
+  | _ -> ()
+#pop-options
