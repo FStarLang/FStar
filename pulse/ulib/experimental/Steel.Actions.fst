@@ -601,31 +601,6 @@ let non_alloc_action_to_non_locking_m_action
   f_m
 #pop-options
 
-///////////////////////////////////////////////////////////////////////////////
-// Utilities
-///////////////////////////////////////////////////////////////////////////////
-
-let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
-  : pre_action p unit (fun _ -> p')
-  = equiv_heap_iff_equiv p p';
-    fun h -> (| (), h |)
-
-#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
-let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
-  : action p unit (fun _ -> p') =
-  pre_action_to_action
-    (rewrite_hprop_pre p p')
-    (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 -> ())
-    (fun h0 addr -> ())
-#pop-options
-
-let rewrite_hprop p p' =
-  non_alloc_action_to_non_locking_m_action
-    (rewrite_hprop_action p p')
-    (fun h0 addr -> ())
-
 ////////////////////////////////////////////////////////////////////////////////
 // Locks
 ////////////////////////////////////////////////////////////////////////////////
@@ -1207,6 +1182,57 @@ let with_invariant #a #fp #fp' #uses #is_ghost #p i f =
 
 let promote_atomic_m_action #a #fp #fp' #is_ghost f = f
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Utilities
+///////////////////////////////////////////////////////////////////////////////
+
+let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
+  : pre_action p unit (fun _ -> p')
+  = equiv_heap_iff_equiv p p';
+    fun h -> (| (), h |)
+
+#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
+let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
+  : action p unit (fun _ -> p') =
+  pre_action_to_action
+    (rewrite_hprop_pre p p')
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
+#pop-options
+
+let rewrite_hprop p p' =
+  non_alloc_action_to_non_locking_m_action
+    (rewrite_hprop_action p p')
+    (fun h0 addr -> ())
+
+let weaken_hprop_pre
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : pre_action p unit (fun _ -> q)
+  = fun h -> proof (mem_of_heap h); (| (), h |)
+
+#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
+let weaken_hprop_action
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : action p unit (fun _ -> q) =
+  pre_action_to_action
+    (weaken_hprop_pre p q proof)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
+#pop-options
+
+let weaken_hprop uses p q proof =
+  promote_action
+    uses
+    true
+    (weaken_hprop_action p q proof)
+    (fun h0 addr -> ())
 
 /////////////////////////////////////////////////////////////////////////////
 // Arrays
