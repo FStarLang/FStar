@@ -2069,6 +2069,8 @@ let gather_array
       (gather_array_action a a' iseq p p' (trivial_optional_preorder (trivial_preorder t)))
       (fun h addr -> ())
 
+#restart-solver
+
 #push-options "--fuel 2 --ifuel 1 --z3rlimit 300"
 let split_array_pre_action
   (#t: _)
@@ -2153,10 +2155,12 @@ let split_array_pre_action
         Some (Array t len new_seq live)
       | _ -> h addr
     ) in
+    assert(disjoint_heap split_h_1 split_h_2);
     let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
       if addr <> a'.array_addr then () else
-      match h addr, (join_heap split_h_1 split_h_2) addr with
-      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _) ->
+      match h addr, (join_heap split_h_1 split_h_2) addr, split_h_1 addr, split_h_2 addr with
+      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _),
+        Some (Array _ _ seq1 _), Some (Array _ _ seq2 _) ->
         assert(seq `Seq.equal` joint_seq)
       | _ -> ()
     in
@@ -2166,7 +2170,7 @@ let split_array_pre_action
     (| as, h  |)
 #pop-options
 
-#push-options "--initial_ifuel 1 --max_ifuel 1"
+#push-options "--ifuel 1 --fuel 2 --z3rlimit 30"
 let split_array_action
   (#t: _)
   (a: array_ref t)
