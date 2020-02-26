@@ -6,8 +6,84 @@ open Steel.Memory
 open Steel.Reference
 open Steel.SteelT.Basics
 
+////////////////////////////////////////////////////////////////////////////////
+// Some generic lemmas
+////////////////////////////////////////////////////////////////////////////////
+let rearrange (p q r s:hprop)
+  : SteelT unit ((p `star` q) `star` (r `star` s))
+                (fun _ -> (p `star` r) `star` (q `star` s))
+  = h_admit #unit _ _
+
+
+assume
+val rearrange5 (p q r s t:hprop)
+  : SteelT unit ((p `star` q) `star` ((r `star` s) `star` t))
+         (fun _ -> ((p `star` r) `star` ((q `star` s) `star` t)))
+
+let assoc_r (p q r:hprop)
+  : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
+  = h_admit #unit _ _
+
+
+let assoc_l (p q r:hprop)
+  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+  = h_admit #unit _ _
+
+
+let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> hprop)
+  : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
+                (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
+  = h_admit _ _
+
+
+let rearrange_pqrs_qs_pr (p q r s:hprop)
+  : SteelT unit
+    (p `star` q `star` r `star` s)
+    (fun _ -> (q `star` s) `star` (p `star` r))
+  = h_admit _ _
+
+
+let rearrange_pqr_prq (p q r:hprop)
+  : SteelT unit (p `star` q `star` r)
+                (fun _ -> p `star` r `star` q)
+  = h_admit _ _
+
+let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
+  : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+             (fun v -> pts_to r p v `star` q v)
+  = let x = read_refine q r in
+    return (Ghost.hide x)
+
 assume
 val pure (p:prop) : hprop
+
+assume
+val intro_pure_p (#p:prop) (s:squash p) (h:hprop)
+  : SteelT unit h (fun _ -> pure p `star` h)
+
+assume
+val elim_pure (#p:prop)
+  : SteelT (squash p) (pure p) (fun _ -> emp)
+
+assume
+val intro_pure (#p:prop) (s:squash p)
+  : SteelT unit emp (fun _ -> pure p)
+
+assume
+val h_assume (#p:hprop) (q:hprop)
+  : SteelT unit p (fun _ -> q)
+
+let elim_intro_pure (#p:prop)
+  : SteelT (squash p) (pure p) (fun _ -> pure p)
+  = elim_pure #p;
+    intro_pure #p ()
+
+let rewrite_ext (p q:hprop) (_:squash (p == q))
+  : SteelT unit p (fun _ -> q)
+  = return ()
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 noeq
 type chan_val = {
@@ -35,33 +111,76 @@ let chan_inv_step_p (vrecv vsend:chan_val) : prop =
 let chan_inv_step (vrecv vsend:chan_val) =
   pure (chan_inv_step_p vrecv vsend)
 
-let chan_inv_cond (c:chan_t) (vsend:chan_val) (vrecv:chan_val) =
+let chan_inv_cond (vsend:chan_val) (vrecv:chan_val) =
     if vsend.chan_ctr = vrecv.chan_ctr
     then pure (vsend == vrecv)
     else chan_inv_step vrecv vsend
 
 let chan_inv_recv (c:chan_t) (vsend:chan_val) =
   h_exists (fun (vrecv:chan_val) ->
-      pts_to c.recv half vrecv `star` chan_inv_cond c vsend vrecv)
+      pts_to c.recv half vrecv `star` chan_inv_cond vsend vrecv)
 
 let chan_inv (c:chan_t) : hprop =
   h_exists (fun (vsend:chan_val) ->
     pts_to c.send half vsend `star` chan_inv_recv c vsend)
+
+let rewrite_eq_squash #a (x:a) (y:a{x==y}) (p:a -> hprop)
+  : SteelT unit (p x) (fun _ -> p y)
+  = h_assert (p y)
+
+let intro_chan_inv_cond_eq (vs vr:chan_val)
+  : SteelT unit (pure (vs == vr))
+                (fun _ -> chan_inv_cond vs vr)
+  = elim_pure #(vs==vr);
+    assert (vs == vr);
+    intro_pure #(vs == vs) ();
+    h_assert (chan_inv_cond vs vs);
+    rewrite_eq_squash vs vr (chan_inv_cond vs);
+    h_assert (chan_inv_cond vs vr)
+
+let intro_chan_inv_cond_step (vs vr:chan_val)
+  : SteelT unit (chan_inv_step vr vs)
+                (fun _ -> chan_inv_cond vs vr)
+  = elim_intro_pure #(chan_inv_step_p vr vs);
+    assert (chan_inv_step_p vr vs);
+    h_assert (chan_inv_step vr vs);
+    rewrite_ext (chan_inv_step vr vs) (chan_inv_cond vs vr) ()
+
+let intro_chan_inv_aux (c:chan_t) (vs vr:chan_val)
+  : SteelT unit (pts_to c.send half vs `star`
+                 pts_to c.recv half vr `star`
+                 chan_inv_cond vs vr)
+                 (fun _ -> chan_inv c)
+  = assoc_r _ _ _;
+    h_commute _ _;
+    frame (fun _ -> intro_h_exists vr (fun (vr:chan_val) -> pts_to c.recv half vr `star` chan_inv_cond vs vr)) _;
+    h_commute _ _;
+    intro_h_exists vs _
 
 let intro_chan_inv_step (c:chan_t) (vs next_vs:chan_val)
   : SteelT unit (pts_to c.send half next_vs `star`
                  chan_inv_step vs next_vs `star`
                  pts_to c.recv half vs)
                  (fun _ -> chan_inv c)
-  = h_admit _ _
-
+  = assoc_r _ _ _;
+    h_commute _ _;
+    assoc_r _ _ _;
+    frame (fun _ -> intro_chan_inv_cond_step next_vs vs) _;
+    h_assert (chan_inv_cond next_vs vs `star` (pts_to c.recv half vs `star` pts_to c.send half next_vs));
+    h_commute _ _;
+    frame (fun _ -> h_commute _ _) _;
+    intro_chan_inv_aux c next_vs vs
 
 let intro_chan_inv_eq (c:chan_t) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  pure (vs == vr))
                  (fun _ -> chan_inv c)
-  = h_admit _ _
+  = h_commute _ _;
+    frame (fun _ -> intro_chan_inv_cond_eq vs vr) _;
+    h_commute _ _;
+    intro_chan_inv_aux c vs vr
+
 
 noeq
 type chan = {
@@ -90,15 +209,8 @@ let in_state (r:ref chan_val) (p:prot) =
 
 let sender (c:chan) (p:prot) = in_state c.chan_chan.send p
 let receiver (c:chan) (p:prot) = in_state c.chan_chan.recv p
-let rearrange (p q r s:hprop)
-  : SteelT unit ((p `star` q) `star` (r `star` s))
-                (fun _ -> (p `star` r) `star` (q `star` s))
-  = h_admit #unit _ _
 
 
-assume
-val intro_pure_p (#p:prop) (s:squash p) (h:hprop)
-  : SteelT unit h (fun _ -> pure p `star` h)
 
 let intro_chan_inv (c:chan_t) (v:chan_val)
   : SteelT unit (pts_to c.send half v `star` pts_to c.recv half v)
@@ -107,29 +219,14 @@ let intro_chan_inv (c:chan_t) (v:chan_val)
     h_commute _ _;
     intro_chan_inv_eq c v v
 
-let assoc_r (p q r:hprop)
-  : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-  = h_admit #unit _ _
-
 let intro_in_state (r:ref chan_val) (v:chan_val{more v.chan_prot}) (p:prot{p == step v.chan_prot v.chan_msg})
   : SteelT unit (pts_to r half v) (fun _ -> in_state r p)
   = intro_pure_p #(in_state_prop p v) () _;
     h_commute _ _;
     intro_h_exists v _
 
-assume
-val elim_pure (#p:prop)
-  : SteelT (squash p) (pure p) (fun _ -> emp)
 
 let eq #a (x y : a) :prop = x == y
-
-assume
-val intro_pure (#p:prop) (s:squash p)
-  : SteelT unit emp (fun _ -> pure p)
-
-let rewrite_eq_squash #a (x:a) (y:a{x==y}) (p:a -> hprop)
-  : SteelT unit (p x) (fun _ -> p y)
-  = h_assert (p y)
 
 let rewrite_eq #a (x:a) (y:a) (p:a -> hprop)
   : SteelT unit (pure (eq x y) `star` p x) (fun _ -> p y)
@@ -141,13 +238,6 @@ let rewrite_eq #a (x:a) (y:a) (p:a -> hprop)
     assert (x == y);
     rewrite_eq_squash x y p
 
-assume
-val h_assume (#p:hprop) (q:hprop)
-  : SteelT unit p (fun _ -> q)
-
-//#push-options "--query_stats --debug Steel.Channel.Simplex --debug_level SMTQuery"
-// let alloc_pair (a:Type) (x:a) : SteelT unit emp (fun _ -> emp) =
-//   let r0 = alloc x in
 open Steel.Permissions
 let new_chan (p:prot)
   : SteelT chan emp (fun c -> sender c p `star` receiver c p)
@@ -199,7 +289,7 @@ let new_chan (p:prot)
 let send_pre (r:ref chan_val) (p:prot{more p}) (c:chan_t) (vs vr:chan_val) : hprop =
   (pts_to c.send half vs `star`
    pts_to c.recv half vr `star`
-   chan_inv_cond c vs vr `star`
+   chan_inv_cond vs vr `star`
    in_state r p)
 
 let send_pre_split (r:ref chan_val)  (p:prot{more p}) (c:chan_t) (vs vr:chan_val) (b:bool) : hprop =
@@ -229,30 +319,6 @@ let channel_cases (r:ref chan_val) (#p:prot{more p}) (c:chan) (x:msg_t p) (vs vr
       h_assert (send_pre_split r p cc vs vr (vs.chan_ctr = vr.chan_ctr));
       cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
 
-let assoc_l (p q r:hprop)
-  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-  = h_admit #unit _ _
-
-let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
-  : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-             (fun v -> pts_to r p v `star` q v)
-  = let x = read_refine q r in
-    return (Ghost.hide x)
-
-// let id (x:int{0 < x \/ x <= 0}) = if x < 0 then x else x
-
-// assume val p : int -> hprop
-// noeq type box = | Mk : r:int -> box
-// let test (x:box)
-//   : SteelT unit (p x.r `star` emp) (fun _ -> emp)
-//   = let r = x.r in
-//     h_commute (p r) emp;
-//     h_assert emp
-
-let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> hprop)
-  : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
-                (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = h_admit _ _
 
 let gather (#a:Type) (#v0 #v1:Ghost.erased a) (r:ref a)
   : SteelT unit
@@ -284,11 +350,6 @@ let update_channel (#p:sprot) (c:chan_t) (x:msg_t p) (vs:chan_val) (r:ref chan_v
     assoc_r _ _ _;
     h_assert (pts_to r full vs' `star` (in_state_hprop (step p x) vs' `star` chan_inv_step vs vs'));
     return #chan_val #(fun vs' -> pts_to r full vs' `star` (in_state_hprop (step p x) vs' `star` chan_inv_step vs vs')) vs'
-
-assume
-val rearrange5 (p q r s t:hprop)
-  : SteelT unit ((p `star` q) `star` ((r `star` s) `star` t))
-         (fun _ -> ((p `star` r) `star` ((q `star` s) `star` t)))
 
 let send_pre_available (p:sprot) (c:chan_t)  = send_recv_in_sync c.send p c
 
@@ -359,12 +420,6 @@ let send_available(#p:sprot) (cc:chan) (x:msg_t p) (vs vr:chan_val) (_:unit)
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _
 
-let rearrange_pqrs_qs_pr (p q r s:hprop)
-  : SteelT unit
-    (p `star` q `star` r `star` s)
-    (fun _ -> (q `star` s) `star` (p `star` r))
-  = h_admit _ _
-
 let recv_available (#p:sprot) (cc:chan) (vs vr:chan_val) (_:unit)
   : SteelT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)
@@ -418,11 +473,6 @@ let recv_available (#p:sprot) (cc:chan) (vs vr:chan_val) (_:unit)
     h_elim_emp_l _;
     return #_ #(fun x -> receiver cc (step p x)) vs.chan_msg
 
-let rearrange_pqr_prq (p q r:hprop)
-  : SteelT unit (p `star` q `star` r)
-                (fun _ -> p `star` r `star` q)
-  = h_admit _ _
-
 let send_pre_blocked (p:sprot) (c:chan_t)  = sender_ahead c.send p c
 
 let send_blocked (#p:prot{more p}) (cc:chan) (x:msg_t p) (vs vr:chan_val)
@@ -446,7 +496,7 @@ let send_receive_prelude (cc:chan)
            (fun v ->
              pts_to cc.chan_chan.send half (fst v) `star`
              pts_to cc.chan_chan.recv half (snd v) `star`
-             chan_inv_cond cc.chan_chan (fst v) (snd v))
+             chan_inv_cond (fst v) (snd v))
   = let c : chan_t = cc.chan_chan in
     let l : lock (chan_inv c) = cc.chan_lock in
     let _ = acquire l in
@@ -454,8 +504,8 @@ let send_receive_prelude (cc:chan)
     let vs = read_refine (chan_inv_recv c) c.send in
     h_assert (pts_to c.send half vs `star` chan_inv_recv c vs);
     h_commute _ _;
-    let vr = frame (fun _ -> read_refine (chan_inv_cond c vs) c.recv) _ in
-    h_assert ((pts_to c.recv half vr `star` chan_inv_cond c vs vr) `star` pts_to c.send half vs);
+    let vr = frame (fun _ -> read_refine (chan_inv_cond vs) c.recv) _ in
+    h_assert ((pts_to c.recv half vr `star` chan_inv_cond vs vr) `star` pts_to c.send half vs);
     h_commute _ _;
     assoc_l _ _ _;
     let result : chan_val & chan_val = vs, vr in
@@ -463,7 +513,7 @@ let send_receive_prelude (cc:chan)
            #(fun result ->
               pts_to c.send half (fst result) `star`
               pts_to c.recv half (snd result) `star`
-              chan_inv_cond c (fst result) (snd result))
+              chan_inv_cond (fst result) (snd result))
            result
 
 // let rec send (#p:prot{more p}) (c:chan) (x:msg_t p)
