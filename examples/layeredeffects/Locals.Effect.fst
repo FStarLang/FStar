@@ -35,11 +35,13 @@ type locals_t = m:locals_t'{
 
 type pre_t = locals_t -> Type0
 type post_t (a:Type) = a -> locals_t -> Type0
-type wp_t (a:Type) = wp:(post_t a -> pre_t){
-  forall (p q:post_t a).
-    (forall x m. p x m ==> q x m) ==>
-    (forall m. wp p m ==> wp q m)
-}
+type wp_t (a:Type) = post_t a -> pre_t
+
+assume WP_t_monotonic:
+  forall (a:Type) (wp:wp_t a).
+    (forall (p q:post_t a).
+       (forall x m. p x m ==> q x m) ==>
+       (forall m. wp p m ==> wp q m))
 
 type repr (a:Type) (wp:wp_t a) =
   m:locals_t ->

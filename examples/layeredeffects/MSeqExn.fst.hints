@@ -1,5 +1,5 @@
 [
-  "齖u0012狍$X燶u0013~\u0012R6l詐\u0000",
+  "3^餒\f颸"~g򪻃*",
   [
     [
       "MSeqExn.result",
@@ -69,7 +69,7 @@
         "token_correspondence_MSeqExn.grows"
       ],
       0,
-      "c803c4934c059c4c20aa83b14b261b59"
+      "69441d798bf3eb637a73ddfea17e51cb"
     ],
     [
       "MSeqExn.bind",
@@ -85,36 +85,34 @@
         "MSeqExn_interpretation_Tm_arrow_6ce3436d8ce973a5c1342396862ad12e",
         "MSeqExn_interpretation_Tm_arrow_9b1c273e798ef422e9aacaac3436c4f3",
         "MSeqExn_pretyping_978e6bba207806d14f84dc028a7da380",
-        "constructor_distinct_MSeqExn.Error", "data_elim_MSeqExn.Error",
-        "data_elim_MSeqExn.Success", "data_typing_intro_MSeqExn.Error@tok",
-        "disc_equation_MSeqExn.Error", "disc_equation_MSeqExn.Success",
-        "eq2-interp", "equation_FStar.Preorder.preorder",
+        "assumption_MSeqExn.WP_t_monotonic",
+        "constructor_distinct_MSeqExn.Error", "disc_equation_MSeqExn.Error",
+        "disc_equation_MSeqExn.Success", "eq2-interp",
+        "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.transitive", "equation_MSeqExn.post_t",
-        "equation_MSeqExn.state", "equation_MSeqExn.wp_t",
+        "equation_FStar.Preorder.transitive", "equation_MSeqExn.grows",
+        "equation_MSeqExn.post_t", "equation_MSeqExn.state",
         "fuel_guarded_inversion_MSeqExn.result",
         "function_token_typing_MSeqExn.event",
         "function_token_typing_MSeqExn.grows",
         "interpretation_Tm_abs_2850d1fe0e4161eb0fe15f35a5ddc7f5",
+        "interpretation_Tm_abs_2b34c3921953c0a53b122a0054a0f2bb",
         "interpretation_Tm_abs_5469714f3095d92894a89cb96045029f",
-        "interpretation_Tm_abs_61f0b4e4fc1bf22287ce3037711369a5",
         "interpretation_Tm_abs_651cde982515555a0f75d8db9fe4cbc6",
         "interpretation_Tm_abs_f04a573efaf57e63ad545348f504d878",
         "l_imp-interp", "l_quant_interp_8f126b3aea27d8ea9fb7c4645014a91a",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_MSeqExn.Success__0",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782",
         "refinement_interpretation_Tm_refine_39fc48d179c0612597a9a194407ba9c9",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "token_correspondence_MSeqExn.grows",
         "typing_Tm_abs_2850d1fe0e4161eb0fe15f35a5ddc7f5",
         "typing_Tm_abs_5469714f3095d92894a89cb96045029f",
-        "typing_Tm_abs_61f0b4e4fc1bf22287ce3037711369a5",
         "typing_Tm_abs_f04a573efaf57e63ad545348f504d878"
       ],
       0,
-      "8f5fe85f925c431d61b61f036f9d8f7d"
+      "40b1778ab4c01fa014aa0b5d899ff8fb"
     ],
     [
       "MSeqExn.subcomp",
@@ -131,19 +129,7 @@
         "typing_Tm_abs_ece2254fcdb5de1ab7c7043a8402abb6"
       ],
       0,
-      "5b82b2ab84140da44aa17f89268cedb3"
-    ],
-    [
-      "MSeqExn.if_then_else",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
-      ],
-      0,
-      "9dae2e2e81af6e0fd907cbcf63aa9bf5"
+      "d0d74a7f55e05973d8b519af21803dcd"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -151,11 +137,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
+        "@MaxIFuel_assumption", "@query", "disc_equation_MSeqExn.Error",
+        "disc_equation_MSeqExn.Success",
+        "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "7b43de2b196c928443a636c1811c4020"
+      "4039c07725a8c4de9f3c075d3e2ebdd7"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -163,11 +150,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
+        "@MaxIFuel_assumption", "@query", "disc_equation_MSeqExn.Error",
+        "disc_equation_MSeqExn.Success",
+        "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "4e3797b4964a96ad06f8ef7961fc898d"
+      "5b8b38e14ddc2847009d6533c610e40e"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -175,35 +163,30 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
+        "@MaxIFuel_assumption", "@query", "disc_equation_MSeqExn.Error",
+        "disc_equation_MSeqExn.Success",
+        "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "2c1f0e98cd132245c546ad7f9fd92ea5"
+      "627abe361945609ee1bb5c885fb0d8f6"
     ],
     [
       "MSeqExn.MSeqEXN",
       4,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
-      ],
+      [ "@query" ],
       0,
-      "9bf8038a7ee7853e71b86e2c681f19a4"
+      "bccbd555b982e4addcadc716e1284355"
     ],
     [
       "MSeqExn.MSeqEXN",
       5,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_MSeqExn.wp_t",
-        "refinement_interpretation_Tm_refine_1407fb3e0f0a735bdc74c6af45a3a782"
-      ],
+      [ "@query" ],
       0,
-      "96153083afc16a992afd927699ca8d9c"
+      "5c07d092d9c4f0245eba4cb87ddf887e"
     ],
     [
       "MSeqExn.lift_pure_mseqexn",
@@ -214,10 +197,9 @@
         "@MaxIFuel_assumption", "@query",
         "MSeqExn_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "b2t_def", "data_typing_intro_MSeqExn.Success@tok", "eq2-interp",
+        "assumption_MSeqExn.PURE_wp_monotonic", "b2t_def", "eq2-interp",
         "equation_MSeqExn.grows", "equation_Prims.logical",
         "interpretation_Tm_abs_2b34c3921953c0a53b122a0054a0f2bb",
-        "interpretation_Tm_abs_5a434916a6831db435ec4d0cc4191967",
         "interpretation_Tm_abs_6098629f04d5d887d4f24c1d52ca3172",
         "interpretation_Tm_abs_d85abeda43527ced4d79d6bbe0d33206",
         "l_and-interp", "l_imp-interp",
@@ -225,14 +207,12 @@
         "l_quant_interp_1aa9fad28337daadcd406323200f11cd",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
         "token_correspondence_MSeqExn.grows",
-        "typing_Tm_abs_5a434916a6831db435ec4d0cc4191967",
         "typing_Tm_abs_6098629f04d5d887d4f24c1d52ca3172",
         "typing_Tm_abs_d85abeda43527ced4d79d6bbe0d33206"
       ],
       0,
-      "1e90c51dbe25d1e336da8f21231c0db2"
+      "bfe6db6312a8372037dde83155eb0698"
     ],
     [
       "MSeqExn.MSeqExn",
@@ -241,7 +221,7 @@
       1,
       [ "@query" ],
       0,
-      "12a7447067db1ceb144e7d23d3532520"
+      "0e05281da5f0b5e29125b1f738e4b882"
     ],
     [
       "MSeqExn.get",
@@ -260,7 +240,7 @@
         "token_correspondence_MSeqExn.grows"
       ],
       0,
-      "df96fb19ed4c8094de127ed650aa42ea"
+      "0557c8939a69206598aa68d631fe91e2"
     ],
     [
       "MSeqExn.put",
@@ -273,7 +253,7 @@
         "equation_MSeqExn.state"
       ],
       0,
-      "f0966fae236e57ed8bb6cdc5a7418906"
+      "01d9870d5281d4a5d0aaecae66ea54f2"
     ],
     [
       "MSeqExn.raise",
@@ -291,7 +271,7 @@
         "token_correspondence_MSeqExn.grows"
       ],
       0,
-      "6d51ec5e87381773b685182ae3f931e1"
+      "bf996db25e04d58ebd3e2b05166a79d4"
     ],
     [
       "MSeqExn.size",
@@ -310,7 +290,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "da77dc12dbf52d8720ece7e068f5570f"
+      "5b1a460954fba5b7645bde470a465d6f"
     ],
     [
       "MSeqExn.write_at_end",
@@ -342,7 +322,7 @@
         "token_correspondence_MSeqExn.grows", "typing_FStar.Seq.Base.create"
       ],
       0,
-      "959735e33368f9f836af8de836ba5e42"
+      "55d2da4d6413d78215e2f4e5ed064338"
     ],
     [
       "MSeqExn.index",
@@ -364,7 +344,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6bca7d73ebabf07ca26f419d95ce6b77"
+      "8f7897fea60e232f0d6d8f9b20487238"
     ]
   ]
 ]

@@ -72,6 +72,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___17_118.FStar_TypeChecker_Env.check_uvars);
       FStar_TypeChecker_Env.use_eq =
         (uu___17_118.FStar_TypeChecker_Env.use_eq);
+      FStar_TypeChecker_Env.use_eq_strict =
+        (uu___17_118.FStar_TypeChecker_Env.use_eq_strict);
       FStar_TypeChecker_Env.is_iface =
         (uu___17_118.FStar_TypeChecker_Env.is_iface);
       FStar_TypeChecker_Env.admit = (uu___17_118.FStar_TypeChecker_Env.admit);
