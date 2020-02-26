@@ -98,7 +98,6 @@ let next (#p:protocol unit) : P.relation (partial_trace_of p) =
       t1.n  == t0.n + 1 /\
       t1.tr == extend t0.tr msg)
 
-abstract
 let extended_to (#p:protocol unit) : P.preorder (partial_trace_of p) =
   R.closure (next #p)
 
