@@ -46,6 +46,8 @@ assume
 val h_elim_emp_l (p:hprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
 
+assume
+val noop (#p:hprop) (u:unit) : SteelT unit p (fun _ -> p)
 
 let frame (#a:Type) (#pre:pre_t) (#post:post_t a)
           ($f:unit -> SteelT a pre post)
