@@ -139,8 +139,6 @@ let invert_array_ref_s (a: Type0)
   =
   allow_inversion (array_ref' a)
 
-let null_array (t: Type0) = None
-
 let length (#t: Type) (a: array_ref t) = match a with
   | Some a -> a.array_length
   | None -> 0ul
@@ -154,15 +152,9 @@ let max_length (#t: Type) (a: array_ref t) = match a with
   | Some a -> a.array_max_length
   | None -> 0ul
 
-#push-options "--ifuel 1"
-let null_array_properties (t: Type) (a: array_ref t) : Lemma (
-  a == null_array t <==> (length a = 0ul /\ max_length a = 0ul /\ offset a = 0ul)
-) =
-  ()
-#pop-options
 
 #push-options "--ifuel 1"
-let address (#t: Type) (a: array_ref t{a =!= null_array t}) = (Some?.v a).array_addr
+let address (#t: Type) (a: array_ref t{not (is_null_array a)}) = (Some?.v a).array_addr
 #pop-options
 
 let reference (t: Type u#0) (pre: Preorder.preorder t) = a:array_ref t{
@@ -404,7 +396,7 @@ let rec interp_heap (p:hprop) (m:heap)
   = match p with
     | Emp -> True
     | Pts_to_array #t a perm contents preorder ->
-      a == null_array t \/ (a =!= null_array t /\ begin
+      None? a  \/ (Some? a /\ begin
       let a = Some?.v a in  m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
@@ -557,7 +549,7 @@ let intro_pts_to_array_with_preorder
   (m:heap)
   : Lemma
     (requires (
-      a == null_array t \/ (a =!= null_array t /\ begin
+      None? a \/ (Some? a /\ begin
       let a = Some?.v a in m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
@@ -588,7 +580,7 @@ let intro_pts_to_array_with_preorder
 #push-options "--ifuel 1"
 let pts_to_array_with_preorder_injective
   (#t: _)
-  (a: array_ref t{a =!= null_array t})
+  (a: array_ref t{not (is_null_array a)})
   (p:permission{allows_read p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (pre:Preorder.preorder (option t))

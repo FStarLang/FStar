@@ -270,7 +270,7 @@ let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpost
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-= Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+= Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 (*
  * We need affine_star_smt even to typecheck the signature
@@ -295,7 +295,7 @@ let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t 
   (fun x -> post x `Mem.star` frame)
   (fun h -> req h /\ f_frame h)
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-= Steel?.reflect (fun _ -> Sem.run #state 0 #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
+= Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
 
 let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:unit -> Steel a pre post req ens)
@@ -325,27 +325,27 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 *)
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  MST.MSTATE a mem mem_evolves req ens
+  RMST.RMSTATE a mem mem_evolves req ens
 
 let mst_get ()
 : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-= MST.get ()
+= RMST.get ()
 
 let mst_put (m:mem)
 : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-= MST.put m
+= RMST.put m
 
 let mst_assume (p:Type)
 : Mst unit (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
-= MST.mst_assume p
+= RMST.rmst_assume p
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
-= MST.mst_admit ()
+= RMST.rmst_admit ()
 
 let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
-= MST.mst_assert p
+= RMST.rmst_assert p
 
 let intro_emp_left (p1 p2:hprop) (m:mem)
 : Lemma
