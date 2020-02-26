@@ -71,7 +71,6 @@ let lock_store_evolves : Preorder.preorder lock_store =
        Invariant? (lock_i l1 i) <==>
        Invariant? (lock_i l2 i))
 
-(*
 let heap_evolves_seq
   (#t: Type)
   (#len: nat)
@@ -79,12 +78,14 @@ let heap_evolves_seq
   (seq2: array_seq t len)
   (i:nat{i < len}) =
   select_pre seq1 i == select_pre seq2 i /\ (
-  match (Seq.index seq1 i).v_with_p, (Seq.index seq2 i).v_with_p with
-  | None, None
-  | None, Some
-  | Some _, None -> False
-  | Some v1, Some v2 ->
-    v1.preorder v1.value v2.value
+    let x1 = Seq.index seq1 i in
+    let x2 = Seq.index seq2 i in
+    let pre = select_pre seq1 i in
+    match x1.v_with_p, x2.v_with_p with
+    | None, None -> pre None None
+    | None, Some v2 -> pre None (Some v2.value)
+    | Some v1, None -> pre (Some v1.value) None
+    | Some v1, Some v2 -> pre (Some v1.value) (Some v2.value)
   )
 
 let heap_evolves_addr (h1 h2 :heap) (addr: addr) =
@@ -92,8 +93,10 @@ let heap_evolves_addr (h1 h2 :heap) (addr: addr) =
   | None, None
   | None, Some _ -> True
   | Some _, None -> False
-  | Some (Array t1 len1 seq1), Some (Array t2 len2 seq2) ->
-    t1 == t2 /\ len1 == len2 /\ (forall (i:nat{i < len1}). heap_evolves_seq seq1 seq2 i)
+  | Some (Array t1 len1 seq1 live1), Some (Array t2 len2 seq2 live2) ->
+    ((not live1) ==> (not live2)) /\
+    t1 == t2 /\ len1 == len2 /\
+    (forall (i:nat{i < len1}). heap_evolves_seq seq1 seq2 i)
 
 let heap_evolves' : Preorder.relation heap =
   fun (h1 h2: heap) ->
@@ -113,15 +116,13 @@ let heap_evolves_transitive () : Lemma (Preorder.transitive heap_evolves') =
   =
     let aux (addr: addr) : Lemma (heap_evolves_addr h1 h3 addr) =
       match h1 addr, h2 addr, h3 addr with
-      | Some (Array t1 len1 seq1), Some (Array t2 len2 seq2), Some (Array t3 len3 seq3) ->
+      | Some (Array t1 len1 seq1 live1), Some (Array t2 len2 seq2 live2),
+        Some (Array t3 len3 seq3 live3) ->
         assert(t1 == t3);
         assert(len1 == len3);
         let aux (i:nat{i < len1}) : Lemma(heap_evolves_seq seq1 seq3 i) =
           assert(heap_evolves_seq seq1 seq2 i);
-          assert(heap_evolves_seq seq2 seq3 i);
-          match Seq.index seq1 i, Seq.index seq2 i, Seq.index seq3 i with
-          | Some v1, Some v2, Some v3 -> ()
-          | _ -> ()
+          assert(heap_evolves_seq seq2 seq3 i)
         in
         Classical.forall_intro aux
       | _ -> ()
@@ -135,14 +136,13 @@ let heap_evolves : Preorder.preorder heap =
   heap_evolves_reflexive ();
   heap_evolves_transitive ();
   heap_evolves'
-*)
 
 let mem_evolves : Preorder.preorder mem =
-  fun m0 m1 -> lock_store_evolves m0.locks m1.locks (*/\ heap_evolves m0.heap m1.heap*)
+  fun m0 m1 -> lock_store_evolves m0.locks m1.locks /\ heap_evolves m0.heap m1.heap
 
 let lock_store_unchanged_respects_preorder (m0 m1: mem) : Lemma
   (requires (m0.locks == m1.locks))
-  (ensures (mem_evolves m0 m1))
+  (ensures (lock_store_evolves m0.locks m1.locks))
   =
   ()
 
@@ -154,13 +154,15 @@ let is_frame_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_action fp
     interp_heap (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
      interp_heap (fp' x `star` frame) h1 /\
-     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
+     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1) /\
+     heap_evolves h0 h1
+   )
 
 let action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }
 
 
-#push-options "--max_fuel 2 --initial_ifuel 2"
+#push-options "--fuel 2 --ifuel 1"
 let is_frame_preserving_intro
   (#fp:hprop) (#a:Type) (#fp':a -> hprop) (f:pre_action fp a fp')
   (preserves_framing_intro:
@@ -176,25 +178,37 @@ let is_frame_preserving_intro
       let (| x, h1 |) = f h0 in f_frame h0 <==> f_frame h1
     ))
   )
+  (evolving:
+    (h0: heap) -> (addr: addr) ->
+    Lemma (requires (interp_heap fp h0)) (ensures (
+      let (| x, h1 |) = f h0 in heap_evolves_addr h0 h1 addr
+    ))
+  )
   : Lemma (is_frame_preserving f)
   =
   let aux (frame: hprop) (h0: heap) : Lemma (interp_heap (fp `star` frame) h0 ==>
      (let (| x, h1 |) = f h0 in
      interp_heap (fp' x `star` frame) h1 /\
-     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
+     (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1) /\
+     heap_evolves h0 h1)
   ) =
     let aux (pf: (interp_heap (fp `star` frame) h0)) : Lemma (
       interp_heap (fp `star` frame) h0 /\ (
       let h0 : (h0:heap{interp_heap fp h0}) = affine_star_heap fp frame h0; h0 in
       let (| x, h1 |) = f h0 in
       interp_heap (fp' x `star` frame) h1 /\
-      (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1))
+      (forall (f_frame:frameable_heap_prop frame). f_frame h0 <==> f_frame h1) /\
+      heap_evolves h0 h1)
     ) =
       affine_star_heap fp frame h0;
       let (| x, h1 |) = f h0 in
       let aux (f_frame:frameable_heap_prop frame)
         : Lemma (f_frame h0 <==> f_frame h1) =
         preserves_frame_prop_intro frame h0 f_frame
+      in
+      Classical.forall_intro aux;
+      let aux (addr: addr) : Lemma (heap_evolves_addr h0 h1 addr) =
+        evolving h0 addr
       in
       Classical.forall_intro aux;
       preserves_framing_intro frame h0
@@ -211,7 +225,8 @@ let is_frame_preserving_elim
   : Lemma (requires (is_frame_preserving f /\ interp_heap (fp `star` frame) h0)) (ensures (
      let (| x, h1 |) = f h0 in
      interp_heap (fp' x `star` frame) h1 /\
-     f_frame h0 <==> f_frame h1
+     f_frame h0 <==> f_frame h1 /\
+     heap_evolves h0 h1
   ))
   = ()
 
@@ -224,7 +239,7 @@ let depends_only_on_without_affinity_elim
     (ensures (q h0 <==> q (join_heap h0 h1)))
   = ()
 
-#push-options "--z3rlimit 150 --max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 150 --fuel 1 --ifuel 0"
 let pre_action_to_action
   (#fp:hprop) (#a: Type) (#fp': a -> hprop) (f: pre_action fp a fp')
   (action_preserves_frame_disjointness_addr:
@@ -261,6 +276,12 @@ let pre_action_to_action
       let (|x_joint, h'|) = f (join_heap h0 h1) in
       x_alone == x_joint
     )
+  )
+  (evolving:
+    (h0: heap) -> (addr: addr) ->
+    Lemma (requires (interp_heap fp h0)) (ensures (
+      let (| x, h1 |) = f h0 in heap_evolves_addr h0 h1 addr
+    ))
   )
   : Tot (action fp a fp')
   =
@@ -345,6 +366,8 @@ let pre_action_to_action
             assert(f_frame h <==> f_frame h')
           )
        )
+  ) (fun h0 addr ->
+    evolving h0 addr
   );
   f
 #pop-options
@@ -418,41 +441,6 @@ let non_alloc_action_to_non_locking_pre_m_action
     mem_invariant_intro (fp' x) m';
     (| x, m' |)
 #pop-options
-
-
-#push-options "--warn_error -271 --max_fuel 1 --initial_fuel 1"
-let alloc_action_to_non_locking_pre_m_action
-  (fp:hprop) (a: Type) (fp': a -> hprop) (f: action fp a fp')
-  (alloc_lemma: (h: hheap fp) -> (alloc_addr: addr) -> Lemma
-    (forall (a: addr). let (| _, h'|) = f h in
-      h a == None ==> (if a = alloc_addr then h' a =!= None else h' a == None)
-    )
-  )
-  : Tot (pre_m_action fp a fp')
-  =
-  fun m ->
-    mem_invariant_elim fp m;
-    let (|x, h'|) = f m.heap in
-    let aux (i: addr) : Lemma (requires (i >= m.ctr + 1)) (ensures (h' i == None)) =
-      alloc_lemma m.heap m.ctr
-    in
-    Classical.forall_intro (Classical.move_requires aux);
-    let does_not_perturb_locks (lock_p: hprop) (h:hheap (fp `star` lock_p))
-      : Lemma (let (|_, h'|) = f h in interp_heap lock_p h') [SMTPat ()]
-    =
-      assert(is_frame_preserving f);
-      assert(interp_heap (fp `star` lock_p) h);
-      let (| x, h' |) = f h in
-      assert(interp_heap (fp' x `star` lock_p) h');
-      affine_star_heap (fp' x) lock_p h';
-      assert(interp_heap lock_p h')
-    in
-    assert(interp_heap (lock_store_invariant Set.empty m.locks) h');
-    let m':mem = {m with heap = h'; ctr = m.ctr + 1} in
-    mem_invariant_intro (fp' x) m';
-    (| x, m' |)
-#pop-options
-
 
 let mprop_to_hprop0 (hp:hprop) (mp:mprop hp) : heap -> prop =
   fun h -> mp (mem_of_heap h)
@@ -565,7 +553,9 @@ let is_m_frame_and_preorder_preserving_intro
 
 let trivial_fp_prop (hp:hprop) : frameable_heap_prop hp = fun _ -> True
 
-#push-options "--z3rlimit 10 --max_ifuel 1 --initial_ifuel 1 --max_fuel 2 --initial_fuel 2"
+#restart-solver
+
+#push-options "--z3rlimit 10 --ifuel 1 --fuel 2"
 let non_alloc_action_to_non_locking_m_action
   (#fp:hprop) (#a: Type) (#fp': a -> hprop) (f: action fp a fp')
   (non_alloc: (h: hheap fp) -> (addr: addr) -> Lemma
@@ -582,7 +572,6 @@ let non_alloc_action_to_non_locking_m_action
     )
     =
     let (| x, m1 |) = f_m m0 in
-
     assert (interp_heap ((fp `star` frame) `star` locks_invariant Set.empty m0) m0.heap);
     mem_invariant_elim (fp `star` frame) m0;
     assert (interp_heap ((fp `star` frame) `star` lock_store_invariant Set.empty m0.locks) m0.heap);
@@ -598,6 +587,7 @@ let non_alloc_action_to_non_locking_m_action
     mem_invariant_intro (fp' x `star` frame) m1;
     assert (interp_heap ((fp' x `star` frame) `star` locks_invariant Set.empty m1) (heap_of_mem m1));
     lock_store_unchanged_respects_preorder m0 m1;
+    assert(heap_evolves m0.heap m1.heap);
     assert(mem_evolves m0 m1)
   in
   is_m_frame_and_preorder_preserving_intro f_m
@@ -605,7 +595,6 @@ let non_alloc_action_to_non_locking_m_action
   (fun frame m0 f_frame ->
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
     let (| x, m1 |) = f_m m0 in
-
     is_frame_preserving_elim f frame m0.heap f_frame;
     assert(f_frame (heap_of_mem m0) <==> f_frame (heap_of_mem m1))
   );
@@ -621,7 +610,7 @@ let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
   = equiv_heap_iff_equiv p p';
     fun h -> (| (), h |)
 
-#push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
+#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
 let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
   : action p unit (fun _ -> p') =
   pre_action_to_action
@@ -629,6 +618,7 @@ let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let rewrite_hprop p p' =
@@ -666,11 +656,11 @@ let equiv_star_left (p q r:hprop)
     (ensures (p `star` q) `equiv` (p `star` r))
   = Classical.forall_intro_2 equiv_heap_iff_equiv
 
-let mem_evolves_intro (m:mem) (m1:mem{L.length m1.locks >= L.length m.locks})
+let lock_store_evolves_intro (m:mem) (m1:mem{L.length m1.locks >= L.length m.locks})
   (same_lock_i: (i:nat{i < L.length m.locks}) ->
     Lemma (lock_i m.locks i == lock_i m1.locks i))
   : Lemma (requires L.length m1.locks >= L.length m.locks)
-          (ensures mem_evolves m m1)
+          (ensures lock_store_evolves m.locks m1.locks)
   = Classical.forall_intro same_lock_i
 
 let emp_unit_left (p:hprop)
@@ -720,7 +710,7 @@ let new_lock_is_frame_preserving_aux (p:hprop) (frame:hprop) (m:hmem_with_inv (p
             L.append_cons_l (Available p) prefix (li::suffix);
             L.append_length_inv_tail (Available p:: prefix) (li::suffix) prefix' (li'::suffix')
         in
-        mem_evolves_intro m m1 aux_lock_i
+        lock_store_evolves_intro m m1 aux_lock_i
 
 #push-options "--fuel 2 --ifuel 2"
 let new_lock_is_frame_preserving (p:hprop)
@@ -908,11 +898,8 @@ let new_inv_is_frame_preserving_aux (p:hprop) (frame:hprop) (m:hmem_with_inv (p 
             L.append_cons_l (Invariant p) prefix (li::suffix);
             L.append_length_inv_tail (Invariant p:: prefix) (li::suffix) prefix' (li'::suffix')
         in
-
-        mem_evolves_intro m m1 aux_lock_i;
-
+        lock_store_evolves_intro m m1 aux_lock_i;
         lift_fp_props_preservation_to_mprops frame m m1
-
 #pop-options
 
 #push-options "--fuel 2 --ifuel 2"
@@ -1243,7 +1230,7 @@ let as_seq_lemma #t a i p m = ()
 
 let read_array_addr
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p: permission{allows_read p})
@@ -1262,7 +1249,7 @@ let read_array_addr
 
 let index_array_pre_action
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p:permission{allows_read p})
@@ -1277,7 +1264,7 @@ let index_array_pre_action
 
 let index_array_action
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p:permission{allows_read p})
@@ -1293,11 +1280,12 @@ let index_array_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 
 let index_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
   (i:U32.t{U32.v i < U32.v (length a)}) =
@@ -1309,7 +1297,7 @@ let index_array
 
 let update_array_addr
   (#t:_)
-  (a: array_ref t{a =!= null_array t})
+  (a: array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1338,7 +1326,7 @@ let update_array_addr
 #push-options "--max_fuel 2 --initial_fuel 2"
 let upd_array_heap
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1378,7 +1366,7 @@ let upd_array_heap_frame_disjointness_preservation
 
 let upd_array_pre_action
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1395,7 +1383,7 @@ let upd_array_pre_action
 #push-options "--z3rlimit 300 --fuel 2 --ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1439,7 +1427,7 @@ let upd_array_action_memory_split_independence
 
 let upd_array_action
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1466,11 +1454,12 @@ let upd_array_action
       let (| x1, h' |) = upd_array_pre_action a iseq i v pre (join_heap h0 h1) in
       assert (x0 == x1)
     )
+    (fun h0 addr -> ())
 
 let upd_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1596,7 +1585,7 @@ let ac_reasoning_for_m_frame_preserving'
   assert (interp_heap (p `star` (q `star` r)) (heap_of_mem m));
   affine_star_heap p (q `star` r) (heap_of_mem m)
 
-#push-options "--z3rlimit 30 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 30 --fuel 0 --ifuel 0"
 let alloc_array_is_m_frame_and_preorder_preserving
   (#t: _)
   (len:U32.t)
@@ -1786,6 +1775,7 @@ let free_array_action
       | _ -> ()
     )
     (fun frame h0 h1  -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let free_array
@@ -1811,7 +1801,7 @@ let share_array_pre_action
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-       (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1910,7 +1900,7 @@ let share_array_action
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1926,6 +1916,7 @@ let share_array_action
       let (|x_joint, h'|) = share_array_pre_action a iseq perm pre (join_heap h0 h1) in
       assert(x_alone == x_joint)
     )
+    (fun h0 addr -> ())
 
 let share_array_with_preorder
   (#t: _)
@@ -1937,7 +1928,7 @@ let share_array_with_preorder
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1961,7 +1952,7 @@ let share_array
     (pts_to_array a perm iseq)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array a (half_permission perm) iseq)
@@ -1980,7 +1971,7 @@ let gather_array_pre_action
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -1997,13 +1988,13 @@ let gather_array_pre_action
     (| (), h |)
 #pop-options
 
-#push-options "--max_ifuel 1 --initial_ifuel 1"
+#push-options "--ifuel 1 --z3rlimit 30"
 let gather_array_action
   (#t: _)
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -2022,6 +2013,7 @@ let gather_array_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let gather_array
@@ -2030,7 +2022,7 @@ let gather_array
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -2063,14 +2055,11 @@ let split_array_pre_action
     (pts_to_array_with_preorder a p iseq pre)
     (as:(array_ref t & array_ref t){(
       length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     )})
     (fun (a1, a2) -> star
@@ -2089,14 +2078,11 @@ let split_array_pre_action
   | Some a' ->
     let as : (as:(array_ref t & array_ref t){
       length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     })
     =
@@ -2108,6 +2094,7 @@ let split_array_pre_action
         array_offset = U32.add i a'.array_offset;
         array_length = U32.sub a'.array_length i;
       }) in
+      let as = (a1, a2) in
       (a1, a2)
     in
     let split_h_1 : heap = on _ (fun addr ->
@@ -2164,16 +2151,14 @@ let split_array_action
   : action
     (pts_to_array_with_preorder a p iseq pre)
     (as:(array_ref t & array_ref t){
-     length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
-      )})
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
+      )
+    })
     (fun (a1, a2) -> star
       (pts_to_array_with_preorder a1 p (Seq.slice iseq 0 (U32.v i)) pre)
       (pts_to_array_with_preorder a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))) pre)
@@ -2184,6 +2169,7 @@ let split_array_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let split_array
@@ -2198,15 +2184,12 @@ let split_array
     false
     (pts_to_array a p iseq)
     (as:(array_ref t & array_ref t){
-     length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     })
     (fun (a1, a2) -> star
@@ -2225,7 +2208,7 @@ let glue_array_pre_action
   (#t: _)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2236,9 +2219,9 @@ let glue_array_pre_action
   : pre_action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array_with_preorder new_a p (Seq.Base.append iseq iseq') pre)
   = fun h -> match a with
@@ -2258,7 +2241,7 @@ let glue_array_action
   (#t: _)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2269,9 +2252,9 @@ let glue_array_action
   : action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array_with_preorder new_a p (Seq.Base.append iseq iseq') pre)
   =
@@ -2280,6 +2263,7 @@ let glue_array_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let glue_array
@@ -2287,7 +2271,7 @@ let glue_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2299,9 +2283,9 @@ let glue_array
     false
     (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
   =
@@ -2416,6 +2400,7 @@ let get_ref_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1  -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let get_ref
@@ -2455,7 +2440,7 @@ let set_ref_pre_action
   upd_array_pre_action r (Seq.create 1 contents) 0ul v (trivial_optional_preorder pre) h
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2"
+#push-options "--fuel 2 --z3rlimit 10"
 let set_ref_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2488,6 +2473,7 @@ let set_ref_action
       let (| x1, h' |) = set_ref_pre_action r old_v v (join_heap h0 h1) in
       assert (x0 == x1)
     )
+    (fun h0 addr -> ())
 #pop-options
 
 let set_ref
@@ -2626,6 +2612,7 @@ let free_ref_action
       | _ -> ()
     )
     (fun frame h0 h1  -> ())
+    (fun h0 addr -> ())
 #pop-options
 
 let free_ref
@@ -2680,6 +2667,7 @@ let share_ref_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
 
 let share_ref
   (#t: Type0)
@@ -2821,6 +2809,7 @@ let get_ref_refine_action
     (fun frame h0 h1 addr -> ())
     (fun frame h0 h1 addr -> ())
     (get_ref_refine_does_not_depend_on_framing r p q)
+    (fun h0 addr -> ())
 #pop-options
 
 let get_ref_refine
@@ -2954,6 +2943,7 @@ let cas_action
     (cas_preserves_frame_disjointness_addr r v v_old v_new)
     (cas_does_not_depend_on_framing_addr r v v_old v_new)
     (cas_result_does_not_depend_on_framing r v v_old v_new)
+    (fun h0 addr -> ())
 
 let cas
   (#t:eqtype)

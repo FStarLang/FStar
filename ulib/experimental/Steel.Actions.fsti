@@ -148,7 +148,7 @@ val as_seq_lemma
 val index_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
   (i:U32.t{U32.v i < U32.v (length a)})
@@ -162,7 +162,7 @@ val index_array
 val upd_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -202,7 +202,7 @@ val share_array
     (pts_to_array a p iseq)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array a (half_permission p) iseq)
@@ -215,7 +215,7 @@ val gather_array
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -243,14 +243,11 @@ val split_array
     (pts_to_array a p iseq)
     (as:(array_ref t & array_ref t){
      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     })
     (fun (a1, a2) -> star
@@ -263,7 +260,7 @@ val glue_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -275,9 +272,9 @@ val glue_array
     false
     (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
 
