@@ -1,5 +1,5 @@
 [
-  "˚ƒ©|]@XK5îçªJP∫h",
+  "˙/ö\u0007aˇ\u001eõc«¿.ü%\u0010u",
   [
     [
       "FStar.Math.Lib.lemma_div_def",
@@ -114,13 +114,13 @@
       1,
       [ "@query" ],
       0,
-      "c97a15e0bad5dd3add73fad50330da0c"
+      "923ffcc1f76368ab8b80355af8909aa9"
     ],
     [
       "FStar.Math.Lib.slash_star_axiom",
       2,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
@@ -131,7 +131,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "0e84c11819a3cc56637b7f4273b3e868"
+      "5fd8012d13e9d4f4177a3a3e14cfbf48"
     ],
     [
       "FStar.Math.Lib.log_2",
@@ -460,10 +460,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "564adb2ccfee83ba3e26d75ac28ee8e6"
+      "33734c63ef0e8ea4db9fa135e2923bc7"
     ],
     [
       "FStar.Math.Lib.mul_div_lemma",
@@ -490,7 +490,7 @@
       1,
       [ "@query" ],
       0,
-      "58db30a52c4785a2f644f6d2f61ccd27"
+      "35e08f87c5177be651ef02e3eacadd5b"
     ],
     [
       "FStar.Math.Lib.log_2",
@@ -576,16 +576,20 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_Division",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Modulus",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "dae94d9508d3a3b8d4c977449c23e593"
+      "5582c7b5c83a26e66bddecf14312a1b3"
     ],
     [
       "FStar.Math.Lib.div_non_eucl",
@@ -598,10 +602,10 @@
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "c79b651ca88d9ea0771d0b62838c3605"
+      "dd3405310d599b9a330ac7bb5dfae56d"
     ],
     [
       "FStar.Math.Lib.div_non_eucl",
@@ -610,10 +614,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "7b4a56d4033fc09b3ab4d93022993da6"
+      "9ef57d9578b2fe319a571aa0d7f3ffa6"
     ],
     [
       "FStar.Math.Lib.signed_modulo",
@@ -649,10 +653,10 @@
         "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "3bf33e8bfa62aafc5864336a1da5e80a"
+      "d2d49f908031749e9abc3ae9f3b9dfe4"
     ],
     [
       "FStar.Math.Lib.op_Plus_Percent",
@@ -661,10 +665,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "24dcfd7de44b0852dbffcb4c9372b26f"
+      "db7b17b41c42d6772fce6d7a1870790f"
     ],
     [
       "FStar.Math.Lib.powx_lemma2",

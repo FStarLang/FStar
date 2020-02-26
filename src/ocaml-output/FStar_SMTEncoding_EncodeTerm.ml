@@ -1621,6 +1621,8 @@ and (encode_term :
                                 (uu___733_5388.FStar_TypeChecker_Env.check_uvars);
                               FStar_TypeChecker_Env.use_eq =
                                 (uu___733_5388.FStar_TypeChecker_Env.use_eq);
+                              FStar_TypeChecker_Env.use_eq_strict =
+                                (uu___733_5388.FStar_TypeChecker_Env.use_eq_strict);
                               FStar_TypeChecker_Env.is_iface =
                                 (uu___733_5388.FStar_TypeChecker_Env.is_iface);
                               FStar_TypeChecker_Env.admit =
