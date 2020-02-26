@@ -156,6 +156,20 @@ let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty false p (fun _ -> emp)
       x)
 #pop-options
 
+#push-options "--fuel 0 --ifuel 1"
+let change_hprop
+  (#uses:Set.set lock_addr)
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelAtomic unit uses true p (fun _ -> q)
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let (| x, m1 |) = weaken_hprop uses p q proof m0 in
+      atomic_preserves_preorder (weaken_hprop uses p q proof) m0;
+      mst_put m1;
+      x)
+#pop-options
+
 module U32 = FStar.UInt32
 open Steel.Permissions
 
