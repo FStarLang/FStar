@@ -32,15 +32,15 @@ module FStar.ReflexiveTransitiveClosure
 
 open FStar.Preorder
 
-val closure (#a:Type0) (r:relation a) : preorder a
+val closure (#a:Type u#a) (r:relation a) : preorder a
 
 (** `closure r` includes `r` *)
-val closure_step: #a:Type0 -> r:relation a -> x:a -> y:a
+val closure_step: #a:Type u#a -> r:relation a -> x:a -> y:a
   -> Lemma (requires r x y) (ensures closure r x y)
     [SMTPat (closure r x y)]
 
 (** `closure r` is the smallest preorder that includes `r` *)
-val closure_inversion: #a:Type0 -> r:relation a -> x:a -> y:a
+val closure_inversion: #a:Type u#a -> r:relation a -> x:a -> y:a
   -> Lemma (requires closure r x y)
           (ensures  x == y \/ (exists z. r x z /\ closure r z y))
           [SMTPat (closure r x y)]
@@ -51,6 +51,6 @@ val closure_inversion: #a:Type0 -> r:relation a -> x:a -> y:a
 * This is useful to witness properties of monotonic references where
 * the monotonicity relation is the closure of a step relation.
 *)
-val stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0)
+val stable_on_closure: #a:Type u#a -> r:relation a -> p:(a -> Type0)
   -> p_stable_on_r: (squash (forall x y.{:pattern (p y); (r x y)} p x /\ r x y ==> p y))
   -> Lemma (forall x y.{:pattern (closure r x y)} p x /\ closure r x y ==> p y)
