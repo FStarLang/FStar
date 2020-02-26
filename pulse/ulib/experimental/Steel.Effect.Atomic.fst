@@ -67,12 +67,14 @@ assume WP_monotonic_pure:
        (forall x. p x ==> q x) ==>
        (wp p ==> wp q))
 
+#push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 inline_for_extraction
 let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_wp a) (f:unit -> PURE a wp)
 : Pure (atomic_repr a uses true p (fun _ -> p))
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
 = fun _ -> let x = f () in x
+#pop-options
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
@@ -211,7 +213,7 @@ let with_invariant0
   : SteelAtomic a uses is_ghost fp fp'
   = SteelAtomic?.reflect (fun _ -> admit())
 
-let with_invariant
+let with_invariant_frame
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
@@ -219,18 +221,21 @@ let with_invariant
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
 
-[@expect_failure]
+assume
+val with_invariant
+  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  ($f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost p (fun x -> p))
+  : SteelAtomic a uses is_ghost emp (fun _ -> emp)
+
 let test
   (#t:_)
-  (a:array_ref t{U32.v (length a) == 1})
+  (a:array_ref t{not (is_null_array a) /\ U32.v (length a) == 1})
   (iseq: Ghost.erased (Seq.lseq t 1))
   : SteelAtomic t Set.empty false
       (pts_to_array a full_permission iseq)
-      (fun _ -> pts_to_array a full_permission iseq)
+      (fun _ -> emp)
   = let i = new_inv  (pts_to_array a full_permission iseq) in
-    // This should not succeed, as index has Set.empty for uses, while with_invariant
-    // should expect Set.singleton i
+    // TODO: Add a frame function, and only keep with_invariant_frame
     with_invariant i (fun _ -> index a iseq 0ul)
-// This should be the correct version given the signature of with_invariant
-// There might be something fishy with the definition of the polymonadic bind?
-//    with_invariant #_ #_ #_ #(Set.singleton i) i (fun _ -> index #_ #(Set.singleton i) a iseq 0ul)
