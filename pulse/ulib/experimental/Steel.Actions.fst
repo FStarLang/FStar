@@ -1243,7 +1243,7 @@ let as_seq_lemma #t a i p m = ()
 
 let read_array_addr
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p: permission{allows_read p})
@@ -1262,7 +1262,7 @@ let read_array_addr
 
 let index_array_pre_action
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p:permission{allows_read p})
@@ -1277,7 +1277,7 @@ let index_array_pre_action
 
 let index_array_action
   (#t: _)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
   (p:permission{allows_read p})
@@ -1297,7 +1297,7 @@ let index_array_action
 let index_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
   (i:U32.t{U32.v i < U32.v (length a)}) =
@@ -1309,7 +1309,7 @@ let index_array
 
 let update_array_addr
   (#t:_)
-  (a: array_ref t{a =!= null_array t})
+  (a: array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1338,7 +1338,7 @@ let update_array_addr
 #push-options "--max_fuel 2 --initial_fuel 2"
 let upd_array_heap
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1378,7 +1378,7 @@ let upd_array_heap_frame_disjointness_preservation
 
 let upd_array_pre_action
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1395,7 +1395,7 @@ let upd_array_pre_action
 #push-options "--z3rlimit 300 --fuel 2 --ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1439,7 +1439,7 @@ let upd_array_action_memory_split_independence
 
 let upd_array_action
   (#t:_)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1470,7 +1470,7 @@ let upd_array_action
 let upd_array
   (#t:_)
   (uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
@@ -1596,7 +1596,7 @@ let ac_reasoning_for_m_frame_preserving'
   assert (interp_heap (p `star` (q `star` r)) (heap_of_mem m));
   affine_star_heap p (q `star` r) (heap_of_mem m)
 
-#push-options "--z3rlimit 30 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 30 --fuel 0 --ifuel 0"
 let alloc_array_is_m_frame_and_preorder_preserving
   (#t: _)
   (len:U32.t)
@@ -1811,7 +1811,7 @@ let share_array_pre_action
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-       (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1910,7 +1910,7 @@ let share_array_action
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1937,7 +1937,7 @@ let share_array_with_preorder
     (pts_to_array_with_preorder a perm iseq pre)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array_with_preorder a (half_permission perm) iseq pre)
@@ -1961,7 +1961,7 @@ let share_array
     (pts_to_array a perm iseq)
     (a':array_ref t{
       length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (a =!= null_array t ==> (a' =!= null_array t /\ address a = address a'))
+      (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
       (pts_to_array a (half_permission perm) iseq)
@@ -1980,7 +1980,7 @@ let gather_array_pre_action
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -2003,7 +2003,7 @@ let gather_array_action
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -2030,7 +2030,7 @@ let gather_array
   (a: array_ref t)
   (a':array_ref t{
     length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a')
+    (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (p: permission{allows_read p})
@@ -2063,14 +2063,11 @@ let split_array_pre_action
     (pts_to_array_with_preorder a p iseq pre)
     (as:(array_ref t & array_ref t){(
       length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     )})
     (fun (a1, a2) -> star
@@ -2089,14 +2086,11 @@ let split_array_pre_action
   | Some a' ->
     let as : (as:(array_ref t & array_ref t){
       length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     })
     =
@@ -2108,6 +2102,7 @@ let split_array_pre_action
         array_offset = U32.add i a'.array_offset;
         array_length = U32.sub a'.array_length i;
       }) in
+      let as = (a1, a2) in
       (a1, a2)
     in
     let split_h_1 : heap = on _ (fun addr ->
@@ -2164,16 +2159,14 @@ let split_array_action
   : action
     (pts_to_array_with_preorder a p iseq pre)
     (as:(array_ref t & array_ref t){
-     length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
-      )})
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
+      )
+    })
     (fun (a1, a2) -> star
       (pts_to_array_with_preorder a1 p (Seq.slice iseq 0 (U32.v i)) pre)
       (pts_to_array_with_preorder a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))) pre)
@@ -2198,15 +2191,12 @@ let split_array
     false
     (pts_to_array a p iseq)
     (as:(array_ref t & array_ref t){
-     length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (a =!= null_array t ==>
-        (U32.v i > 0 ==> (fst as) =!= null_array t /\ offset (fst as) = offset a /\
-          address (fst as) = address a /\ max_length (fst as) = max_length a
-        ) /\
-        (U32.v i < U32.v (length a) ==> (snd as) =!= null_array t /\
-          offset (snd as) = U32.add (offset a) i /\
-          address (snd as) = address a /\ max_length (snd as) = max_length a
-        )
+      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
+      (not (is_null_array a) ==>
+        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
+          offset (fst as) = offset a) /\
+        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
+          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
       )
     })
     (fun (a1, a2) -> star
@@ -2225,7 +2215,7 @@ let glue_array_pre_action
   (#t: _)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2236,9 +2226,9 @@ let glue_array_pre_action
   : pre_action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array_with_preorder new_a p (Seq.Base.append iseq iseq') pre)
   = fun h -> match a with
@@ -2258,7 +2248,7 @@ let glue_array_action
   (#t: _)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2269,9 +2259,9 @@ let glue_array_action
   : action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array_with_preorder new_a p (Seq.Base.append iseq iseq') pre)
   =
@@ -2287,7 +2277,7 @@ let glue_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (a': array_ref t{
-    ((a =!= null_array t /\ a' =!= null_array t) ==> address a = address a') /\
+    ((not (is_null_array a) /\ not (is_null_array a')) ==> address a = address a') /\
     max_length a = max_length a' /\
     offset a' = U32.add (offset a) (length a)
   })
@@ -2299,9 +2289,9 @@ let glue_array
     false
     (star (pts_to_array a p iseq) (pts_to_array a' p iseq'))
     (new_a:array_ref t{
-      (a =!= null_array t ==> (new_a =!= null_array t /\ address new_a = address a)) /\
       max_length new_a = max_length a /\
-      offset new_a = offset a /\ length new_a = U32.add (length a) (length a')
+      offset new_a = offset a /\ length new_a = U32.add (length a) (length a') /\
+      (not (is_null_array a) ==> address new_a = address a)
     })
     (fun new_a -> pts_to_array new_a p (Seq.Base.append iseq iseq'))
   =
