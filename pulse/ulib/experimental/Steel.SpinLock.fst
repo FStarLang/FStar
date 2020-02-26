@@ -4,16 +4,23 @@ open Steel.Effect.Atomic
 open Steel.Permissions
 open Steel.Reference
 open Steel.Actions
-open FStar.Ghost
 
 let available = false
 let locked = true
 
 unfold
 let lockinv (p:hprop) (r:ref bool) : hprop =
+  // h_exists (fun b -> pts_to r full_permission b `star` (if b then emp else p))
   h_or (pts_to r full_permission available `star` p) (pts_to r full_permission locked `star` emp)
 
 let lock (p:hprop) = (r:ref bool) & inv (lockinv p r)
+
+assume
+val return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
+  : SteelAtomic a uses true (p x) p
+
+assume
+val noop_t (#p:hprop) (u:unit) : SteelT unit p (fun _ -> p)
 
 assume
 val h_admit (#a:_) (p:hprop) (q:a -> hprop)
@@ -33,12 +40,17 @@ val h_assert_atomic (#uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> p)
 
 assume
-val h_intro_emp_l (p:hprop)
-  : SteelAtomic unit Set.empty true p (fun _ -> emp `star` p)
+val h_intro_emp_l (#uses:Set.set lock_addr) (p:hprop)
+  : SteelAtomic unit uses true p (fun _ -> emp `star` p)
 
 assume
-val h_commute (p q:hprop)
-  : SteelAtomic unit Set.empty true (p `star` q) (fun _ -> q `star` p)
+val h_elim_emp_l (#uses:Set.set lock_addr) (p:hprop)
+  : SteelAtomic unit uses true (emp `star` p) (fun _ -> p)
+
+
+assume
+val h_commute (#uses:Set.set lock_addr) (p q:hprop)
+  : SteelAtomic unit uses true (p `star` q) (fun _ -> q `star` p)
 
 
 assume
@@ -46,21 +58,21 @@ val intro_h_or_left (p:hprop) (q:hprop)
   : SteelT unit p (fun _ -> h_or p q)
 
 assume
-val intro_h_or_right (p:hprop) (q:hprop)
-  : SteelAtomic unit Set.empty true q (fun _ -> h_or p q)
+val intro_h_or_right (#uses:Set.set lock_addr) (p:hprop) (q:hprop)
+  : SteelAtomic unit uses true q (fun _ -> h_or p q)
 
 val intro_lockinv_left (p:hprop) (r:ref bool)
   : SteelT unit (pts_to r full_permission available `star` p) (fun _ -> lockinv p r)
 
-val intro_lockinv_right (p:hprop) (r:ref bool)
-  : SteelAtomic unit Set.empty true (pts_to r full_permission locked) (fun _ -> lockinv p r)
+val intro_lockinv_right (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
+  : SteelAtomic unit uses true (pts_to r full_permission locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_left p r =
   intro_h_or_left
     (pts_to r full_permission available `star` p)
     (pts_to r full_permission locked `star` emp)
 
-let intro_lockinv_right p r =
+let intro_lockinv_right #uses p r =
   h_intro_emp_l (pts_to r full_permission locked);
   h_commute emp (pts_to r full_permission locked);
   intro_h_or_right
@@ -135,29 +147,32 @@ val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
     (pre `star` frame)
     (fun x -> post x `star` frame)
 
-val acquire_core (#p:hprop) (r:ref bool) (i:inv (lockinv p r))
-  : SteelAtomic bool Set.empty false
-    (lockinv p r)
+val acquire_core (#p:hprop) (r:ref bool) (i:inv (lockinv p r)) (u:unit)
+  : SteelAtomic bool (Set.union (Set.singleton i) Set.empty) false
+    (lockinv p r `star` emp)
     (fun b -> lockinv p r `star` (if b then p else emp))
 
-let acquire_core #p r i =
+let acquire_core #p r i u =
+  let s = Set.union (Set.singleton i) Set.empty in
+  h_commute (lockinv p r) emp;
+  h_elim_emp_l (lockinv p r);
   let ghost = ghost_read_or r (fun b -> if b then emp else p) in
+
   let frame = if ghost then emp else p in
 
   let res = cas_frame r ghost available locked frame in
 
   atomic_frame (if ghost then emp else p) (fun _ -> intro_lockinv_right p r);
 
-  h_assert_atomic (lockinv p r `star` (if res then p else emp));
+  return_atomic #_ #_ #(fun b -> lockinv p r `star` (if b then p else emp)) res
 
-  h_admit_atomic
-    (lockinv p r `star` (if res then p else emp))
-    (fun b -> lockinv p r `star` (if b then p else emp))
+let acquire' (#p:hprop) (l:lock p)
+  : SteelAtomic bool Set.empty false emp (fun b -> if b then p else emp)
+  = let r:ref bool = dfst l in
+    let i: inv (lockinv p r) = dsnd l in
+    let b = Steel.Effect.Atomic.with_invariant_frame #_ #_ #_ #Set.empty i (acquire_core r i) in
+    return_atomic #_ #_ #_ b
 
-//TODO : Why is this failing? We have the postresource in the context
-//  res
-
-
-let acquire (#p:hprop) (l:lock p)
-  : SteelT unit emp (fun _ -> p)
-  = h_admit emp (fun _ -> p)
+let rec acquire #p l =
+  let b = lift_atomic_to_steelT (fun _ -> acquire' l) in
+  cond b (fun b -> if b then p else emp) (fun _ _ -> p) (noop_t) (fun _ -> acquire l)
