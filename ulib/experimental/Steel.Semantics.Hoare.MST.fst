@@ -115,6 +115,7 @@ type st0 = {
 
   emp:hprop;
   star: hprop -> hprop -> hprop;
+  or: hprop -> hprop -> hprop;
 
   equals: hprop -> hprop -> prop;
 }
@@ -173,6 +174,23 @@ let lemma_weaken_depends_only_on (#st:st0{affine st})
   = ()
 
 ////////////////////////////////////////////////////////////////////////////////
+
+let intro_or_l (st:st0) =
+  forall (p1 p2:st.hprop) (m:st.mem).{:pattern st.interp (st.or p1 p2) m}
+    st.interp p1 m ==> st.interp (st.or p1 p2) m
+
+let intro_or_r (st:st0) =
+  forall (p1 p2:st.hprop) (m:st.mem).{:pattern st.interp (st.or p1 p2) m}
+    st.interp p2 m ==> st.interp (st.or p1 p2) m
+
+let elim_or (st:st0) =
+  forall (p1 p2 q:st.hprop) (m:st.mem).{:pattern st.interp (st.or p1 p2) m; st.interp q m}
+    st.interp (st.or p1 p2) m ==>
+    (((forall (m:st.mem). st.interp p1 m ==> st.interp q m) /\
+      (forall (m:st.mem). st.interp p2 m ==> st.interp q m)) ==> st.interp q m)
+
+////////////////////////////////////////////////////////////////////////////////
+
 let st_laws (st:st0) =
     (* standard laws about the equality relation *)
     symmetry st.equals /\
@@ -190,10 +208,23 @@ let st_laws (st:st0) =
     disjoint_sym st /\
     disjoint_join st /\
     join_commutative st /\
-    join_associative st
+    join_associative st /\
+
+    intro_or_l st /\
+    intro_or_r st /\
+    elim_or st
+
 
 let st = s:st0 { st_laws s }
 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+let elim_or_frames (st:st) (p1 p2 f1 f2:st.hprop) (m:st.mem)
+: Lemma
+  (requires st.interp (st.or (p1 `st.star` f1) (p2 `st.star` f2)) m)
+  (ensures st.interp (st.or p1 p2) m)
+= ()
 
 (**** End state defn ****)
 
@@ -448,6 +479,18 @@ type m (st:st) : a:Type u#a -> pre:st.hprop -> post:post_t st a -> l_pre pre -> 
     _:squash (weakening_ok lpre lpost wlpre wlpost) ->
     m st a pre post lpre lpost ->
     m st a wpre wpost wlpre wlpost
+
+  | Or:
+    #a:Type u#a ->
+    #pre0:st.hprop ->
+    #pre1:st.hprop ->
+    #post:post_t st a ->
+    #lpre:l_pre (st.or pre0 pre1) ->
+    #lpost:l_post (st.or pre0 pre1) post ->
+    #frame0:st.hprop ->
+    #frame1:st.hprop ->
+    m st a (st.or pre0 pre1) post lpre lpost ->
+    m st a (st.or (pre0 `st.star` frame0) (pre1 `st.star` frame1)) post lpre lpost
 #pop-options
 
 (**** End definition of the computation AST ****)
@@ -913,6 +956,14 @@ let stronger_post_par_r (#st:st) (#aL #aR:Type u#a)
   ()
 #pop-options
 
+
+let step_or_preserves_frame (#st:st) (pre0 pre1 frame0 frame1:st.hprop) (m:st.mem)
+: Lemma
+  (preserves_frame (st.or (pre0 `st.star` frame0) (pre1 `st.star` frame1))
+                   (st.or pre0 pre1) m m)
+= admit ()
+
+
 (**** Begin stepping functions ****)
 
 let step_ret (#st:st) (#a:Type u#a)
@@ -1153,6 +1204,25 @@ let step_weaken (#st:st) (#a:Type u#a)
     Step pre post lpre lpost f, n)
 
 
+let step_or (#st:st) (#a:Type u#a)
+  (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
+  (f:m st a pre post lpre lpost{Or? f})
+
+: Mst (step_result st a) (step_req f) (step_ens f)
+
+= let m0 = get () in
+
+  let Or #_ #_ #pre0 #pre1 #post #lpre #lpost #frame0 #frame1 f0 = f in
+
+  step_or_preserves_frame pre0 pre1 frame0 frame1 m0;
+
+  rmst_assert (st.interp ((st.or pre0 pre1) `st.star` st.locks_invariant m0) m0);
+  rmst_assert (preserves_frame (st.or (pre0 `st.star` frame0) (pre1 `st.star` frame1))
+                               (st.or pre0 pre1) m0 m0);
+
+  Step (st.or pre0 pre1) post lpre lpost f0
+
+
 /// Step function
 
 let rec step (#st:st) (#a:Type u#a)
@@ -1168,6 +1238,7 @@ let rec step (#st:st) (#a:Type u#a)
   | Frame _ _ _ -> step_frame f step
   | Par _ _ -> step_par f step
   | Weaken _ _ _ _ -> step_weaken f
+  | Or _ -> step_or f
 
 
 let run_ret (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
