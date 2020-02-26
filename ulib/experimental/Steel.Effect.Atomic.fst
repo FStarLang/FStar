@@ -163,7 +163,7 @@ open Steel.Permissions
 let index
   (#t:_)
   (#uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   : SteelAtomic t uses false
@@ -182,7 +182,7 @@ let index
 let upd
   (#t:_)
   (#uses:Set.set lock_addr)
-  (a:array_ref t{a =!= null_array t})
+  (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v:t)
@@ -226,12 +226,12 @@ val with_invariant
   (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost p (fun x -> p))
+  ($f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost p (fun x -> p))
   : SteelAtomic a uses is_ghost emp (fun _ -> emp)
 
 let test
   (#t:_)
-  (a:array_ref t{a =!= null_array t /\ U32.v (length a) == 1})
+  (a:array_ref t{not (is_null_array a) /\ U32.v (length a) == 1})
   (iseq: Ghost.erased (Seq.lseq t 1))
   : SteelAtomic t Set.empty false
       (pts_to_array a full_permission iseq)
