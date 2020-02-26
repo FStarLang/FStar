@@ -138,10 +138,12 @@ noeq type regional (st:Type) (a:Type0) =
 let rg_inv #a #rst (rg: regional rst a) =
   Rgl?.r_inv rg
 
+inline_for_extraction
 let rg_dummy #a #rst (rg:regional rst a)
 : Tot a
 = Rgl?.dummy rg
 
+inline_for_extraction
 let rg_alloc #a #rst (rg:regional rst a) (r:HST.erid)
 : HST.ST a
   (requires (fun h0 -> True))
@@ -154,6 +156,7 @@ let rg_alloc #a #rst (rg:regional rst a) (r:HST.erid)
            (Rgl?.r_repr rg) h1 v == Ghost.reveal (Rgl?.irepr rg)))
 = Rgl?.r_alloc rg (Rgl?.state rg) r
 
+inline_for_extraction
 let rg_free #a #rst (rg:regional rst a) (v:a)
 : HST.ST unit
  (requires (fun h0 -> rg_inv rg h0 v))
