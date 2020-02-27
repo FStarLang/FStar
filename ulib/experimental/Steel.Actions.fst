@@ -2071,7 +2071,98 @@ let gather_array
 
 #restart-solver
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 300"
+let split_array_heaps
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Pure (heap & heap) (requires (Some? a)) (ensures (fun _ -> True))
+  =
+   let a' = Some?.v a in
+   let split_h_1 : heap = on _ (fun addr ->
+      if addr <> a'.array_addr then h addr else
+      match h a'.array_addr with
+      | Some (Array t len seq live) ->
+        let new_seq = Seq.init len (fun j ->
+          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
+            Seq.index seq j
+          else if j <  U32.v a'.array_offset + U32.v i then
+            Seq.index seq j
+          else  { preorder = select_pre seq j; v_with_p = None }
+        ) in
+        assert(Seq.length new_seq = len);
+        Some (Array t len new_seq live)
+      | _ -> h addr
+    ) in
+    let split_h_2 : heap = on _ (fun addr ->
+      if addr <> a'.array_addr then None else
+      match h a'.array_addr with
+      | Some (Array t len seq live) ->
+        let new_seq = Seq.init len (fun j ->
+          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
+            { preorder = select_pre seq j; v_with_p = None }
+          else if j <  U32.v a'.array_offset + U32.v i then
+            { preorder = select_pre seq j; v_with_p = None }
+          else Seq.index seq j
+        ) in
+        assert(Seq.length new_seq = len);
+        Some (Array t len new_seq live)
+      | _ -> h addr
+    ) in
+    (split_h_1, split_h_2)
+
+
+#push-options "--fuel 2 --ifuel 1"
+let split_array_heaps_disjoint
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Lemma (requires (Some? a)) (ensures (
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    disjoint_heap split_h_1 split_h_2
+  ))
+  =
+  ()
+#pop-options
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let split_array_heaps_joint_equal
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Lemma (requires (Some? a)) (ensures (
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    split_array_heaps_disjoint a iseq p i pre h;
+    h == join_heap split_h_1 split_h_2
+  ))
+  =
+  let a' = Some?.v a in
+  let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+  split_array_heaps_disjoint a iseq p i pre h;
+  let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
+      if addr <> a'.array_addr then () else
+      match h addr, (join_heap split_h_1 split_h_2) addr, split_h_1 addr, split_h_2 addr with
+      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _),
+        Some (Array _ _ seq1 _), Some (Array _ _ seq2 _) ->
+        assert(seq `Seq.equal` joint_seq)
+      | _ -> ()
+    in
+  Classical.forall_intro aux;
+  mem_equiv_eq h (join_heap split_h_1 split_h_2)
+#pop-options
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 150"
 let split_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -2104,16 +2195,6 @@ let split_array_pre_action
     mem_equiv_eq h (join_heap h (on _ (fun a' -> None)));
     (| (a, a), h |)
   | Some a' ->
-    let as : (as:(array_ref t & array_ref t){
-      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (not (is_null_array a) ==>
-        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
-          offset (fst as) = offset a) /\
-        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
-          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
-      )
-    })
-    =
       let a1: array_ref t = if i = 0ul then None else Some ({ a' with
         array_offset = a'.array_offset;
         array_length = i;
@@ -2122,52 +2203,10 @@ let split_array_pre_action
         array_offset = U32.add i a'.array_offset;
         array_length = U32.sub a'.array_length i;
       }) in
-      let as = (a1, a2) in
-      (a1, a2)
-    in
-    let split_h_1 : heap = on _ (fun addr ->
-      if addr <> a'.array_addr then h addr else
-      match h a'.array_addr with
-      | Some (Array t len seq live) ->
-        let new_seq = Seq.init len (fun j ->
-          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
-            Seq.index seq j
-          else if j <  U32.v a'.array_offset + U32.v i then
-            Seq.index seq j
-          else  { preorder = select_pre seq j; v_with_p = None }
-        ) in
-        assert(Seq.length new_seq = len);
-        Some (Array t len new_seq live)
-      | _ -> h addr
-    ) in
-    let split_h_2 : heap = on _ (fun addr ->
-      if addr <> a'.array_addr then None else
-      match h a'.array_addr with
-      | Some (Array t len seq live) ->
-        let new_seq = Seq.init len (fun j ->
-          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
-            { preorder = select_pre seq j; v_with_p = None }
-          else if j <  U32.v a'.array_offset + U32.v i then
-            { preorder = select_pre seq j; v_with_p = None }
-          else Seq.index seq j
-        ) in
-        assert(Seq.length new_seq = len);
-        Some (Array t len new_seq live)
-      | _ -> h addr
-    ) in
-    assert(disjoint_heap split_h_1 split_h_2);
-    let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
-      if addr <> a'.array_addr then () else
-      match h addr, (join_heap split_h_1 split_h_2) addr, split_h_1 addr, split_h_2 addr with
-      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _),
-        Some (Array _ _ seq1 _), Some (Array _ _ seq2 _) ->
-        assert(seq `Seq.equal` joint_seq)
-      | _ -> ()
-    in
-    Classical.forall_intro aux;
-    mem_equiv_eq h (join_heap split_h_1 split_h_2);
-    assert(h == join_heap split_h_1 split_h_2);
-    (| as, h  |)
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    split_array_heaps_disjoint a iseq p i pre h;
+    split_array_heaps_joint_equal a iseq p i pre h;
+    (| (a1, a2), h  |)
 #pop-options
 
 #push-options "--ifuel 1 --fuel 2 --z3rlimit 30"
