@@ -15,41 +15,39 @@ let pts_to_ref (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:a) = 
 let ref_perm (#a:Type0) (r:reference a) = ref_perm r
 
 let sel_ref (#a:Type0)
-  (r:reference a) (p:permission{allows_read p}) (m:hmem (ref_perm r p)) =
+  (r:reference a) (#p:permission{allows_read p}) (m:hmem (ref_perm r p)) =
   assume (forall (m:mem). interp (ref_perm r p) m ==> interp (ref r) m);
   sel_ref r m
 
-assume val sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:permission{allows_read p}) (m0:mem) (m1:mem)
+assume val sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:permission{allows_read p})
+  (m0:hmem (ref_perm r p)) (m1:mem)
 : Lemma
-  (requires
-    interp (ref_perm r p) m0 /\
-    disjoint m0 m1)
+  (requires disjoint m0 m1)
   (ensures
     interp (ref_perm r p) (join m0 m1) /\
-    sel_ref r p m0 == sel_ref r p (join m0 m1))
-  [SMTPat (sel_ref r p (join m0 m1))]
+    sel_ref r m0 == sel_ref r #p (join m0 m1))
+  [SMTPat (sel_ref r #p (join m0 m1))]
 
 assume val read (#a:Type0) (#p:permission{allows_read p}) (r:reference a)
 : Steel a
     (ref_perm r p)
     (fun _ -> ref_perm r p)
-    (fun _ -> True) (fun m0 x m1 -> sel_ref r p m0 == x /\ sel_ref r p m1 == x)
+    (fun _ -> True) (fun m0 x m1 -> sel_ref r m0 == x /\ sel_ref r m1 == x)
 
 assume val write (#a:Type0) (r:reference a) (x:a)
 : Steel unit
     (ref_perm r writable)
     (fun _ -> ref_perm r writable)
     (fun _ -> True)
-    (fun _ _ m -> sel_ref r writable m == x)
+    (fun _ _ m -> sel_ref r m == x)
 
 let incr (r:reference int)
 : Steel unit
     (ref_perm r writable)
     (fun _ -> ref_perm r writable)
     (fun _ -> True)
-    (fun m0 _ m1 -> sel_ref r writable m1 == sel_ref r writable m0 + 1)
-= let x = read r in
-  write r (x+1)
+    (fun m0 _ m1 -> sel_ref r m1 == sel_ref r m0 + 1)
+= write r (read r + 1)
 
 
 
