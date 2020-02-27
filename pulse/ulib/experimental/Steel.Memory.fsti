@@ -65,6 +65,9 @@ val hprop : Type u#1
 
 val mem : Type u#1
 
+val core_mem (m:mem) : mem
+
+
 
 /// A predicate describing non-overlapping memories
 
@@ -340,23 +343,24 @@ val emp_unit (p:hprop)
 // refinement
 ////////////////////////////////////////////////////////////////////////////////
 
-// let depends_only_on (q:heap -> prop) (fp: hprop) =
-//   (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
-//   (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
+let refine_mprop_depends_only_on (q:mem -> prop) (fp: hprop) =
+  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
+  (forall (h0:hmem fp) (h1:mem{disjoint h0 h1}). q h0 <==> q (join h0 h1)) /\
+  (forall m. q m == q (core_mem m))
 
-// let fp_prop fp = p:(heap -> prop){p `depends_only_on` fp}
+let refine_mprop fp = p:(mem -> prop){p `refine_mprop_depends_only_on` fp}
 
-// val weaken_depends_only_on (q:heap -> prop) (fp fp': hprop)
-//   : Lemma (depends_only_on q fp ==> depends_only_on q (fp `star` fp'))
+val weaken_refine_mprop_depends_only_on (q:mem -> prop) (fp fp': hprop)
+  : Lemma (refine_mprop_depends_only_on q fp ==> refine_mprop_depends_only_on q (fp `star` fp'))
 
-// val refine (p:hprop) (q:fp_prop p) : hprop
+val refine (p:hprop) (q:refine_mprop p) : hprop
 
-// val refine_equiv (p:hprop) (q:fp_prop p) (h:heap)
-//   : Lemma (interp p h /\ q h <==> interp (refine p q) h)
+val refine_equiv (p:hprop) (q:refine_mprop p) (h:mem)
+  : Lemma (interp p h /\ q h <==> interp (refine p q) h)
 
-// val refine_star (p0 p1:hprop) (q:fp_prop p0)
-//   : Lemma (weaken_depends_only_on q p0 p1;
-//            equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
+val refine_star (p0 p1:hprop) (q:refine_mprop p0)
+  : Lemma (weaken_refine_mprop_depends_only_on q p0 p1;
+           equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
 
 // val interp_depends_only (p:hprop)
 //   : Lemma (interp p `depends_only_on` p)
@@ -368,8 +372,6 @@ val locks_invariant : S.set lock_addr -> mem -> hprop
 
 let hmem_with_inv' (e:S.set lock_addr) (fp:hprop) = m:mem{interp (fp `star` locks_invariant e m) m}
 let hmem_with_inv (fp:hprop) = m:mem{interp (fp `star` locks_invariant Set.empty m) m}
-
-val core_mem (m:mem) : mem
 
 let mprop (hp:hprop) = q:(mem -> prop){
   forall (m0:mem{interp hp m0}) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
