@@ -379,8 +379,8 @@ let mem_invariant_elim' (uses:Set.set lock_addr) (hp:hprop) (m:mem)
   (ensures
     interp_heap (hp `star` lock_store_invariant uses m.locks) m.heap /\
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
-= refine_star (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
-  refine_equiv (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
+= refine_star_heap (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
+  refine_equiv_heap (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
   star_commutative hp (lock_store_invariant uses m.locks)
 
 
@@ -399,8 +399,8 @@ let mem_invariant_intro' (uses:Set.set lock_addr) (hp:hprop) (m:mem)
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
   (ensures interp_heap (hp `star` locks_invariant uses m) m.heap)
 = star_commutative hp (lock_store_invariant uses m.locks);
-  refine_equiv (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
-  refine_star (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
+  refine_equiv_heap (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
+  refine_star_heap (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
   star_commutative hp (locks_invariant uses m)
 
 let mem_invariant_intro (hp:hprop) (m:mem)
