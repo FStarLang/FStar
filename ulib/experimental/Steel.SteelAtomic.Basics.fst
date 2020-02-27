@@ -49,6 +49,18 @@ val lift_atomic_to_steelT
   ($f:unit -> SteelAtomic a Set.empty is_ghost fp fp')
   : SteelT a fp fp'
 
+
+assume
+val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
+          (#uses:Set.set lock_addr) (#is_ghost:bool)
+          (frame:hprop)
+          ($f:unit -> SteelAtomic a uses is_ghost pre post)
+  : SteelAtomic a
+    uses is_ghost
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+
+
 assume
 val ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
   : SteelAtomic a uses true
@@ -94,14 +106,3 @@ val cas_frame
     false
     (pts_to r full_permission v `star` frame)
     (fun b -> (if b then pts_to r full_permission v_new else pts_to r full_permission v) `star` frame)
-
-
-assume
-val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
-          (#uses:Set.set lock_addr) (#is_ghost:bool)
-          (frame:hprop)
-          ($f:unit -> SteelAtomic a uses is_ghost pre post)
-  : SteelAtomic a
-    uses is_ghost
-    (pre `star` frame)
-    (fun x -> post x `star` frame)
