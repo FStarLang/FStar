@@ -423,7 +423,7 @@ val cas
 // Monotonic state
 //////////////////////////////////////////////////////////////////////////
 
-val reference_preorder_stable
+val reference_preorder_respected
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
