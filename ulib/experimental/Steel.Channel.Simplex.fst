@@ -267,12 +267,29 @@ let mk_chan_t_val (#p:prot) (send recv:ref chan_val) (tr:trace_ref p)
   = let c = (Mkchan_t send recv tr) in
     return #_ #(fun c -> emp) c
 
-let intro_trace_until #p (c:chan_t p) (v:chan_val{p == step v.chan_prot v.chan_msg})
-  : SteelT unit (pts_to c.recv half v `star` pts_to_ref c.trace full (initial_trace p))
-                (fun _ -> pts_to c.recv half v `star` trace_until c.trace v)
-  = h_admit _ _
-
 let init_chan_val (p:prot) = v:chan_val {v.chan_prot == msg unit p}
+
+let intro_until_eq #p (c:chan_t p) (v:init_chan_val p) //{p == step v.chan_prot v.chan_msg})
+  : SteelT unit emp (fun _ -> pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)))
+  = let s :squash (until (initial_trace p) == (step v.chan_prot v.chan_msg)) = () in
+    intro_pure #_ s
+
+let intro_trace_until #p (c:chan_t p) (v:init_chan_val p)
+  : SteelT unit (pts_to_ref c.trace full (initial_trace p))
+                (fun _ -> trace_until c.trace v)
+  = h_intro_emp_l _;
+    frame (fun _ -> intro_until_eq c v) _;
+    h_assert (pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)) `star`
+              pts_to_ref c.trace full (initial_trace p));
+    h_commute _ _;
+    intro_h_exists
+                (initial_trace p)
+                (fun (tr:partial_trace_of p) ->
+                     pts_to_ref c.trace full tr `star`
+                     pure (until tr == (step v.chan_prot v.chan_msg)))
+
+
+
 
 assume
 val t (n:nat) : Type0
@@ -309,11 +326,11 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c = frame (fun _ -> mk_chan_t_val #p send recv tr) _ in
     h_elim_emp_l _;
     h_assert ((pts_to_ref c.trace full (initial_trace p) `star` (pts_to c.send half v `star` pts_to c.recv half v)));
+    // h_commute _ _;
+    // assoc_r _ _ _;
+    frame (fun _ -> intro_trace_until c v) _;
+    h_assert (trace_until c.trace v `star` (pts_to c.send half v `star` pts_to c.recv half v));
     h_commute _ _;
-    assoc_r _ _ _;
-    frame_l (fun _ -> intro_trace_until c v) _;
-    h_assert (pts_to c.send half v `star` (pts_to c.recv half v `star` trace_until c.trace v));
-    assoc_l _ _ _;
     intro_chan_inv c v;
     let c' : chan_t_sr p send recv = c in
     return #(chan_t_sr p send recv) #(fun c -> chan_inv c) c'
