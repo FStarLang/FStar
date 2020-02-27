@@ -195,9 +195,7 @@ let ref_perm
   (r: reference t pre)
   (p:permission{allows_read p})
   : hprop =
-  h_exists (fun (contents: Ghost.erased t) ->
-    pts_to_ref r p contents
-  )
+  h_exists (pts_to_ref r p)
 
 let ref (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
   = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)

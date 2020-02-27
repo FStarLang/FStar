@@ -43,6 +43,23 @@ let new_lock (p:hprop)
   let l:lock p = (| r, i |) in
   l
 
+val cas_frame
+  (#t:eqtype)
+  (#uses:Set.set lock_addr)
+  (r:ref t)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t)
+  (frame:hprop)
+  : SteelAtomic
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    uses
+    false
+    (pts_to r full_permission v `star` frame)
+    (fun b -> (if b then pts_to r full_permission v_new else pts_to r full_permission v) `star` frame)
+let cas_frame #t #uses r v v_old v_new frame =
+  atomic_frame frame (fun _ -> Steel.Effect.Atomic.cas r v v_old v_new)
+
 val acquire_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u false
     (lockinv p r `star` emp)

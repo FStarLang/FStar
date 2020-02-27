@@ -2,7 +2,6 @@ module Steel.SteelAtomic.Basics
 open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.Memory
-open Steel.Reference
 open Steel.Permissions
 module Sem = Steel.Semantics
 
@@ -76,20 +75,3 @@ val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
     uses is_ghost
     (pre `star` frame)
     (fun x -> post x `star` frame)
-
-val cas_frame
-  (#t:eqtype)
-  (#uses:Set.set lock_addr)
-  (r:ref t)
-  (v:Ghost.erased t)
-  (v_old:t)
-  (v_new:t)
-  (frame:hprop)
-  : SteelAtomic
-    (b:bool{b <==> (Ghost.reveal v == v_old)})
-    uses
-    false
-    (pts_to r full_permission v `star` frame)
-    (fun b -> (if b then pts_to r full_permission v_new else pts_to r full_permission v) `star` frame)
-let cas_frame #t #uses r v v_old v_new frame =
-  atomic_frame frame (fun _ -> cas r v v_old v_new)
