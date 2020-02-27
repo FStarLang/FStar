@@ -23,6 +23,9 @@ let extensible (#p:prot unit) (x:partial_trace_of p) = P.more_msgs (L.project x)
 assume
 val extended_to (#p:prot unit) : FStar.Preorder.preorder (partial_trace_of p)
 
+let initial_trace (p:prot unit)
+  : (q:partial_trace_of p {until q == p})
+  = L.inject ({ to = L.project p; tr=Waiting (L.project p)})
 let extend_partial_trace (#p:prot unit) (t:partial_trace_of p) (msg:next_msg_t t{extensible t})
   : Tot (s:partial_trace_of p { t `extended_to` s })
   = let s = L.inject (P.extend_partial_trace (L.project t) msg) in
