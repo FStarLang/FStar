@@ -520,59 +520,127 @@ let send_available(#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _
 
+let rearrange_pqrst_qt_s_pr (p q r s t:hprop)
+  : SteelT unit
+    (p `star` q `star` r `star` s `star` t)
+    (fun _ -> (q `star` t) `star` (s `star` (p `star` r)))
+  = h_admit _ _
+
+let next_trace #p (vr:chan_val) (vs:chan_val)
+                  (tr:partial_trace_of p)
+                  (s:squash (eq (until tr) (step vr.chan_prot vr.chan_msg)))
+                  (_:squash (chan_inv_step_p vr vs))
+   : (ts:partial_trace_of p { until ts == step vs.chan_prot vs.chan_msg })
+   = let msg : next_msg_t tr = vs.chan_msg in
+     assert (extensible tr);
+     extend_partial_trace tr msg
+
+let squash_and (vr:chan_val) (vs:chan_val{chan_inv_step_p vr vs})
+  : s:squash (chan_inv_step_p vr vs)
+  = ()
+
+let extension_of #p (tr:partial_trace_of p) = ts:partial_trace_of p{tr `extended_to` ts}
+
+let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
+  : SteelT (extension_of tr)
+           (chan_inv_step vr vs `star` pure (until tr == step vr.chan_prot vr.chan_msg))
+           (fun ts -> pure (until ts == step vs.chan_prot vs.chan_msg))
+  = h_admit #(extension_of tr) _ _
+
+let write_trace #p (r:trace_ref p)
+                   (old_tr:partial_trace_of p)
+                   (new_tr:extension_of old_tr)
+  : SteelT unit (pts_to_ref r full old_tr)
+                (fun _ -> pts_to_ref r full new_tr)
+  = let _ = write_monotonic_ref #_ #_ #old_tr r new_tr in
+    return ()
+
+let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_inv_step_p vr vs))
+  : SteelT unit
+           (trace_until r vr) // `star` chan_inv_step vr vs)
+           (fun _ -> trace_until r vs)
+  = intro_pure_p s _;
+    h_commute _ _;
+    h_assert ((h_exists (fun (tr:partial_trace_of p) ->
+                   pts_to_ref r full tr `star`
+                   pure (until tr == step vr.chan_prot vr.chan_msg))) `star`
+               chan_inv_step vr vs);
+    let tr =
+      frame (fun _ ->
+        read_monotonic_ref #(partial_trace_of p) #full #(extended_to)
+           #(fun (tr:partial_trace_of p) -> pure (eq (until tr) (step vr.chan_prot vr.chan_msg)))
+           r) _
+    in
+    h_assert ((pts_to_ref r full tr `star` pure (eq (until tr) (step vr.chan_prot vr.chan_msg))) `star` chan_inv_step vr vs);
+    assoc_r _ _ _;
+    frame_l (fun _ -> h_commute _ _) _;
+    let ts : extension_of tr = frame_l (fun _ -> next_trace_st vr vs tr) _ in
+    h_assert (pts_to_ref r full tr `star` pure (until ts == step vs.chan_prot vs.chan_msg));
+    frame (fun _ -> write_trace r tr ts) _;
+    h_assert (pts_to_ref r full ts `star` pure (until ts == step vs.chan_prot vs.chan_msg));
+    intro_h_exists ts (fun (ts:partial_trace_of p) ->
+                         pts_to_ref r full ts `star`
+                         pure (until ts == step vs.chan_prot vs.chan_msg))
+
 let recv_available (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
   : SteelT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)
     (fun x -> receiver cc (step p x))
-  = h_admit #(msg_t p) _ _
-    // let c = cc.chan_chan in
-    // h_assert (pts_to c.send half vs `star`
-    //           pts_to c.recv half vr `star`
-    //           chan_inv_step vr vs `star`
-    //           in_state c.recv p);
-    // rearrange_pqrs_qs_pr _ _ _ _;
-    // frame (fun _ -> gather_r c.recv vr) _;
-    // h_assert ((pts_to c.recv full vr `star` in_state_hprop p vr) `star` (pts_to c.send half vs `star` chan_inv_step vr vs));
-    // h_commute _ _;
-    // frame (fun _ -> h_commute _ _) _;
-    // assoc_r _ _ _;
-    // h_assert (chan_inv_step vr vs `star` _);
-    // frame (fun _ -> elim_pure #(chan_inv_step_p vr vs)) _;
-    // h_elim_emp_l _;
-    // h_assert (pts_to c.send half vs `star`  (pts_to c.recv full vr `star` in_state_hprop p vr));
-    // assert (chan_inv_step_p vr vs);
-    // assert (vs.chan_prot == step vr.chan_prot vr.chan_msg);
-    // h_commute _ _;
-    // frame (fun _ -> h_commute _ _) _;
-    // assoc_r _ _ _;
-    // frame (fun _ -> elim_pure #(in_state_prop p vr)) _;
-    // h_elim_emp_l _;
-    // assert (vs.chan_prot == p);
-    // let s : squash (in_state_prop (step p vs.chan_msg) vs) = () in
-    // h_assert (pts_to c.recv full vr `star` pts_to c.send half vs);
-    // intro_pure_p s (pts_to c.recv full vr `star` pts_to c.send half vs);
-    // h_assert (in_state_hprop (step p vs.chan_msg) vs `star` (pts_to c.recv full vr `star` pts_to c.send half vs));
-    // h_commute _ _;
-    // assoc_r _ _ _;
-    // frame (fun _ -> write c.recv vs) _;
-    // h_assert (pts_to c.recv full vs `star` (pts_to c.send half vs `star` in_state_hprop (step p vs.chan_msg) vs));
-    // frame (fun _ -> share c.recv) _;
-    // h_assert ((pts_to c.recv half vs `star` pts_to c.recv half vs) `star`
-    //           (pts_to c.send half vs `star` in_state_hprop (step p vs.chan_msg) vs));
-    // rearrange _ _ _ _;
-    // h_assert ((pts_to c.recv half vs `star` pts_to c.send half vs) `star`
-    //           (pts_to c.recv half vs `star` in_state_hprop (step p vs.chan_msg) vs));
-    // h_commute _ _;
-    // let q = step p vs.chan_msg in
-    // h_assert ((pts_to c.recv half vs `star` in_state_hprop q vs) `star` (pts_to c.recv half vs `star` pts_to c.send half vs));
-    // frame (fun _ -> intro_h_exists vs (fun (vs:chan_val) -> (pts_to c.recv half vs `star` in_state_hprop q vs))) _;
-    // h_assert (receiver cc q `star` (pts_to c.recv half vs `star` pts_to c.send half vs));
-    // h_commute _ _;
-    // frame (fun _ -> h_commute _ _) _;
-    // frame (fun _ -> intro_chan_inv c vs) _;
-    // frame (fun _ -> release cc.chan_lock) _;
-    // h_elim_emp_l _;
-    // return #_ #(fun x -> receiver cc (step p x)) vs.chan_msg
+  = let c = cc.chan_chan in
+    h_assert (pts_to c.send half vs `star`
+              pts_to c.recv half vr `star`
+              trace_until c.trace vr `star`
+              chan_inv_step vr vs `star`
+              in_state c.recv p);
+    rearrange_pqrst_qt_s_pr _ _ _ _ _;
+    frame (fun _ -> gather_r c.recv vr) _;
+    h_assert ((pts_to c.recv full vr `star` in_state_hprop p vr) `star`
+               (chan_inv_step vr vs `star` (pts_to c.send half vs `star` trace_until c.trace vr)));
+    h_commute _ _;
+    h_assert (chan_inv_step vr vs `star`
+              (pts_to c.send half vs `star` trace_until c.trace vr) `star`
+              (pts_to c.recv full vr `star` in_state_hprop p vr));
+    assoc_r _ _ _;
+    let tok_chan_inv_step_p : squash (chan_inv_step_p vr vs)
+      = frame (fun _ -> elim_pure #(chan_inv_step_p vr vs)) _ in
+    assert (vs.chan_prot == step vr.chan_prot vr.chan_msg);
+    h_elim_emp_l _;
+    h_assert (((pts_to c.send half vs `star` trace_until c.trace vr) `star` (pts_to c.recv full vr `star` in_state_hprop p vr)));
+    assoc_l _ _ _;
+    frame_l (fun _ -> elim_pure #(in_state_prop p vr)) _;
+    assert (vs.chan_prot == p);
+    let s : squash (in_state_prop (step p vs.chan_msg) vs) = () in
+    h_commute _ _;
+    h_elim_emp_l _;
+    h_assert ((pts_to c.send half vs `star` trace_until c.trace vr) `star` pts_to c.recv full vr);
+    intro_pure_p s _;
+    h_assert (in_state_hprop (step p vs.chan_msg) vs `star`
+              ((pts_to c.send half vs `star` trace_until c.trace vr) `star` pts_to c.recv full vr));
+    frame_l (fun _ -> frame_l (fun _ -> write c.recv vs) _) _;
+    h_assert (in_state_hprop (step p vs.chan_msg) vs `star`
+              ((pts_to c.send half vs `star` trace_until c.trace vr) `star` pts_to c.recv full vs));
+    frame_l (fun _ -> frame_l (fun _ -> share c.recv) _) _;
+    h_assert (in_state_hprop (step p vs.chan_msg) vs `star`
+              ((pts_to c.send half vs `star` trace_until c.trace vr) `star`
+               (pts_to c.recv half vs `star` pts_to c.recv half vs)));
+    frame_l (fun _ -> rearrange _ _ _ _) _;
+    let next_p = step p vs.chan_msg in
+    h_assert (in_state_hprop next_p vs `star`
+              ((pts_to c.send half vs `star` pts_to c.recv half vs) `star`
+               (trace_until c.trace vr `star` pts_to c.recv half vs)));
+    h_assume  ((pts_to c.recv half vs `star` in_state_hprop next_p vs) `star`
+                ((pts_to c.send half vs `star` pts_to c.recv half vs) `star`
+                  trace_until c.trace vr));
+    frame (fun _ -> intro_h_exists vs
+                 (fun (vs:chan_val) -> (pts_to c.recv half vs `star` in_state_hprop next_p vs))) _;
+    h_assert (receiver cc next_p `star` ((pts_to c.send half vs `star` pts_to c.recv half vs) `star` trace_until c.trace vr));
+    frame_l (fun _ -> frame_l (fun _ -> update_trace c.trace vr vs tok_chan_inv_step_p) _) _;
+    h_assert (receiver cc next_p `star` ((pts_to c.send half vs `star` pts_to c.recv half vs) `star` trace_until c.trace vs));
+    h_commute _ _;
+    frame (fun _ -> intro_chan_inv c vs) _;
+    frame (fun _ -> release cc.chan_lock) _;
+    h_elim_emp_l _;
+    return #_ #(fun x -> receiver cc (step p x)) vs.chan_msg
 
 let send_pre_blocked (p:sprot) #q (c:chan_t q)  = sender_ahead c.send p c
 
