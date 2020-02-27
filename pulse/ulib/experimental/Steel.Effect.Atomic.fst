@@ -8,6 +8,8 @@ open Steel.Semantics.Instantiate
 type pre_t = hprop
 type post_t (a:Type) = a -> hprop
 
+let state_uses (uses:Set.set lock_addr) = {state with Sem.locks_invariant = locks_invariant uses}
+
 // TODO: Add pre/postconditions
 let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   unit ->
@@ -16,7 +18,7 @@ let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (pos
     interp (pre `star` locks_invariant uses m0) m0)
   (ensures fun m0 x m1 ->
     interp ((post x) `star` locks_invariant uses m1) m1 /\
-    Sem.preserves_frame pre (post x) m0 m1)
+    Sem.preserves_frame #(state_uses uses) pre (post x) m0 m1)
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   atomic_t uses is_ghost pre post
@@ -117,7 +119,16 @@ let steel_assert (uses:Set.set lock_addr) (p:hprop)
       mst_put m0
     )
 
-assume val atomic_preserves_frame_and_preorder
+let intro_emp_left (p1 p2:hprop) (m:mem)
+: Lemma
+  (requires interp (p1 `star` p2) m)
+  (ensures interp ((p1 `star` emp) `star` p2) m)
+= emp_unit p1;
+  equiv_symmetric (p1 `star` emp) p1;
+  equiv_extensional_on_star p1 (p1 `star` emp) p2
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
+let atomic_preserves_frame_and_preorder
   (#a:Type)
   (#uses:Set.set lock_addr)
   (#is_ghost:bool)
@@ -127,9 +138,15 @@ assume val atomic_preserves_frame_and_preorder
   (m0:hmem_with_inv' uses pre)
   : Lemma (
     let (| x, m1 |) = act m0 in
-    Sem.preserves_frame #state pre (post x) m0 m1 /\
+    Sem.preserves_frame #(state_uses uses) pre (post x) m0 m1 /\
     mem_evolves m0 m1
   )
+= let (| x, m1 |) = act m0 in
+  let frame : hprop = emp in
+  intro_emp_left pre (locks_invariant uses m0) m0;
+  let m0 : hmem_with_inv' uses (pre `star` emp) = m0 in
+  ()
+#pop-options
 
 /// By default, if we demote an m_action, it is not a ghost atomic
 /// If we want a ghost atomic, it should be exposed this way in Steel.Actions
@@ -259,22 +276,3 @@ let with_invariant_frame
   (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
-
-assume
-val with_invariant
-  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool)
-  (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
-  ($f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost p (fun x -> p))
-  : SteelAtomic a uses is_ghost emp (fun _ -> emp)
-
-let test
-  (#t:_)
-  (a:array_ref t{not (is_null_array a) /\ U32.v (length a) == 1})
-  (iseq: Ghost.erased (Seq.lseq t 1))
-  : SteelAtomic t Set.empty false
-      (pts_to_array a full_permission iseq)
-      (fun _ -> emp)
-  = let i = new_inv  (pts_to_array a full_permission iseq) in
-    // TODO: Add a frame function, and only keep with_invariant_frame
-    with_invariant i (fun _ -> index a iseq 0ul)
