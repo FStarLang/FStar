@@ -87,6 +87,31 @@ let rewrite_ext (p q:hprop) (_:squash (p == q))
   : SteelT unit p (fun _ -> q)
   = return ()
 
+
+let h_exists_assoc_r (#a:Type) (p q r: a -> hprop)
+  : SteelT unit (h_exists (fun x -> p x `star` q x `star` r x))
+                (fun _ -> h_exists (fun x -> p x `star` (q x `star` r x)))
+  = h_admit _ _
+
+
+let rotate_4_left (p q r s:hprop)
+  : SteelT unit (p `star` q `star` r `star` s)
+                (fun _ -> q `star` r `star` s `star` p)
+  = h_admit _ _
+
+
+let rearrange_pqrst_r_pqst (p q r s t:hprop)
+  : SteelT unit (p `star` q `star` r `star` s `star` t)
+                (fun _ -> s `star` (p `star` q `star` r `star` t))
+  = h_admit _ _
+
+
+let rearrange_pqrst_qt_s_pr (p q r s t:hprop)
+  : SteelT unit
+    (p `star` q `star` r `star` s `star` t)
+    (fun _ -> (q `star` t) `star` (s `star` (p `star` r)))
+  = h_admit _ _
+
 ////////////////////////////////////////////////////////////////////////////////
 
 let sprot = p:prot { more p }
@@ -166,11 +191,6 @@ let frame_l #a #q #r (f:unit -> SteelT a q r) (p:hprop)
     let x = frame f _ in
     h_commute _ _;
     return x
-
-let rotate_4_left (p q r s:hprop)
-  : SteelT unit (p `star` q `star` r `star` s)
-                (fun _ -> q `star` r `star` s `star` p)
-  = h_admit _ _
 
 let intro_chan_inv_aux #p (c:chan_t p) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
@@ -289,31 +309,6 @@ let intro_trace_until #p (c:chan_t p) (v:init_chan_val p)
                      pure (until tr == (step v.chan_prot v.chan_msg)))
 
 
-
-
-assume
-val t (n:nat) : Type0
-
-noeq
-type s (n:nat) =
-  | MkS : st:t n -> s n
-
-assume val ps (#n:nat) (x:t n) : hprop
-
-let test_ok (n:nat) (x:t n)
-  : SteelT (y:s n{y.st == x}) (ps x) (fun _ -> ps x)
-  = return #_ #(fun _ -> ps x)  (MkS x)
-
-// let test_fails (n:nat) (x:t n)
-//   : SteelT (y:s n{y.st == x}) (ps x) (fun (y:s n{y.st == x}) -> ps y.st)
-//   = h_admit #(y:s n{y.st == x}) (ps x) (fun (y:s n{y.st == x}) -> ps y.st)
-
-let ss #n (x: t n) = y:s n{y.st == x}
-
-let test_ok_also (n:nat) (x:t n)
-  : SteelT (ss x) (ps x) (fun (y:ss x) -> ps y.st)
-  = return #(ss x) #(fun (y:ss x) -> ps y.st) (MkS x)
-
 let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ c.recv == recv})
 let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
   : SteelT (c:chan_t_sr p send recv)
@@ -332,17 +327,6 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     intro_chan_inv c v;
     let c' : chan_t_sr p send recv = c in
     return #(chan_t_sr p send recv) #(fun c -> chan_inv c) c'
-
-assume
-val test_t (n:nat) : Type0
-assume
-val test_hprop (#n:nat) (x:test_t n) : hprop
-
-let test_w (n:nat) (x:test_t n)
-  : SteelT (test_t n) (test_hprop x) (fun y -> test_hprop y)
-  = let m : m:nat{m==n} = n in
-    let y : test_t m = x in
-    return #(test_t n) #(fun y -> test_hprop y) y
 
 open Steel.Permissions
 let new_chan (p:prot)
@@ -474,11 +458,6 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     h_assert (pts_to r half v `star` pts_to r half v `star` in_state_hprop p v);
     frame (fun _ -> gather r) _
 
-let rearrange_pqrst_r_pqst (p q r s t:hprop)
-  : SteelT unit (p `star` q `star` r `star` s `star` t)
-                (fun _ -> s `star` (p `star` q `star` r `star` t))
-  = h_admit _ _
-
 //#push-options "--query_stats"
 let send_available(#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit)
   : SteelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
@@ -534,12 +513,6 @@ let send_available(#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit
     h_assert (chan_inv c `star` sender cc (step p x));
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _
-
-let rearrange_pqrst_qt_s_pr (p q r s t:hprop)
-  : SteelT unit
-    (p `star` q `star` r `star` s `star` t)
-    (fun _ -> (q `star` t) `star` (s `star` (p `star` r)))
-  = h_admit _ _
 
 let next_trace #p (vr:chan_val) (vs:chan_val)
                   (tr:partial_trace_of p)
@@ -683,11 +656,6 @@ let send_blocked (#p:prot{more p}) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val)
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _;
     loop ()
-
-let h_exists_assoc_r (#a:Type) (p q r: a -> hprop)
-  : SteelT unit (h_exists (fun x -> p x `star` q x `star` r x))
-                (fun _ -> h_exists (fun x -> p x `star` (q x `star` r x)))
-  = h_admit _ _
 
 let send_receive_prelude (#p:prot) (cc:chan p)
   : SteelT (chan_val & chan_val)
