@@ -379,8 +379,8 @@ let mem_invariant_elim' (uses:Set.set lock_addr) (hp:hprop) (m:mem)
   (ensures
     interp_heap (hp `star` lock_store_invariant uses m.locks) m.heap /\
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
-= refine_star (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
-  refine_equiv (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
+= refine_star_heap (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
+  refine_equiv_heap (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
   star_commutative hp (lock_store_invariant uses m.locks)
 
 
@@ -399,8 +399,8 @@ let mem_invariant_intro' (uses:Set.set lock_addr) (hp:hprop) (m:mem)
     (forall (i:nat). i >= m.ctr ==> m.heap i == None))
   (ensures interp_heap (hp `star` locks_invariant uses m) m.heap)
 = star_commutative hp (lock_store_invariant uses m.locks);
-  refine_equiv (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
-  refine_star (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
+  refine_equiv_heap (lock_store_invariant uses m.locks `star` hp) (heap_ctr_valid m) m.heap;
+  refine_star_heap (lock_store_invariant uses m.locks) hp (heap_ctr_valid m);
   star_commutative hp (locks_invariant uses m)
 
 let mem_invariant_intro (hp:hprop) (m:mem)
@@ -600,31 +600,6 @@ let non_alloc_action_to_non_locking_m_action
   );
   f_m
 #pop-options
-
-///////////////////////////////////////////////////////////////////////////////
-// Utilities
-///////////////////////////////////////////////////////////////////////////////
-
-let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
-  : pre_action p unit (fun _ -> p')
-  = equiv_heap_iff_equiv p p';
-    fun h -> (| (), h |)
-
-#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
-let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
-  : action p unit (fun _ -> p') =
-  pre_action_to_action
-    (rewrite_hprop_pre p p')
-    (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 addr -> ())
-    (fun frame h0 h1 -> ())
-    (fun h0 addr -> ())
-#pop-options
-
-let rewrite_hprop p p' =
-  non_alloc_action_to_non_locking_m_action
-    (rewrite_hprop_action p p')
-    (fun h0 addr -> ())
 
 ////////////////////////////////////////////////////////////////////////////////
 // Locks
@@ -1207,6 +1182,57 @@ let with_invariant #a #fp #fp' #uses #is_ghost #p i f =
 
 let promote_atomic_m_action #a #fp #fp' #is_ghost f = f
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Utilities
+///////////////////////////////////////////////////////////////////////////////
+
+let rewrite_hprop_pre (p:hprop) (p':hprop{p `equiv` p'})
+  : pre_action p unit (fun _ -> p')
+  = equiv_heap_iff_equiv p p';
+    fun h -> (| (), h |)
+
+#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
+let rewrite_hprop_action (p:hprop) (p':hprop{p `equiv` p'})
+  : action p unit (fun _ -> p') =
+  pre_action_to_action
+    (rewrite_hprop_pre p p')
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
+#pop-options
+
+let rewrite_hprop p p' =
+  non_alloc_action_to_non_locking_m_action
+    (rewrite_hprop_action p p')
+    (fun h0 addr -> ())
+
+let weaken_hprop_pre
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : pre_action p unit (fun _ -> q)
+  = fun h -> proof (mem_of_heap h); (| (), h |)
+
+#push-options "--z3rlimit 15 --fuel 2 --ifuel 1"
+let weaken_hprop_action
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : action p unit (fun _ -> q) =
+  pre_action_to_action
+    (weaken_hprop_pre p q proof)
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 addr -> ())
+    (fun frame h0 h1 -> ())
+    (fun h0 addr -> ())
+#pop-options
+
+let weaken_hprop uses p q proof =
+  promote_action
+    uses
+    true
+    (weaken_hprop_action p q proof)
+    (fun h0 addr -> ())
 
 /////////////////////////////////////////////////////////////////////////////
 // Arrays
@@ -2043,7 +2069,100 @@ let gather_array
       (gather_array_action a a' iseq p p' (trivial_optional_preorder (trivial_preorder t)))
       (fun h addr -> ())
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 300"
+#restart-solver
+
+let split_array_heaps
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Pure (heap & heap) (requires (Some? a)) (ensures (fun _ -> True))
+  =
+   let a' = Some?.v a in
+   let split_h_1 : heap = on _ (fun addr ->
+      if addr <> a'.array_addr then h addr else
+      match h a'.array_addr with
+      | Some (Array t len seq live) ->
+        let new_seq = Seq.init len (fun j ->
+          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
+            Seq.index seq j
+          else if j <  U32.v a'.array_offset + U32.v i then
+            Seq.index seq j
+          else  { preorder = select_pre seq j; v_with_p = None }
+        ) in
+        assert(Seq.length new_seq = len);
+        Some (Array t len new_seq live)
+      | _ -> h addr
+    ) in
+    let split_h_2 : heap = on _ (fun addr ->
+      if addr <> a'.array_addr then None else
+      match h a'.array_addr with
+      | Some (Array t len seq live) ->
+        let new_seq = Seq.init len (fun j ->
+          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
+            { preorder = select_pre seq j; v_with_p = None }
+          else if j <  U32.v a'.array_offset + U32.v i then
+            { preorder = select_pre seq j; v_with_p = None }
+          else Seq.index seq j
+        ) in
+        assert(Seq.length new_seq = len);
+        Some (Array t len new_seq live)
+      | _ -> h addr
+    ) in
+    (split_h_1, split_h_2)
+
+
+#push-options "--fuel 2 --ifuel 1"
+let split_array_heaps_disjoint
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Lemma (requires (Some? a)) (ensures (
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    disjoint_heap split_h_1 split_h_2
+  ))
+  =
+  ()
+#pop-options
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let split_array_heaps_joint_equal
+  (#t: _)
+  (a: array_ref t)
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: permission{allows_read p})
+  (i:U32.t{U32.v i <= U32.v (length a)})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (pts_to_array_with_preorder a p iseq pre))
+  : Lemma (requires (Some? a)) (ensures (
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    split_array_heaps_disjoint a iseq p i pre h;
+    h == join_heap split_h_1 split_h_2
+  ))
+  =
+  let a' = Some?.v a in
+  let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+  split_array_heaps_disjoint a iseq p i pre h;
+  let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
+      if addr <> a'.array_addr then () else
+      match h addr, (join_heap split_h_1 split_h_2) addr, split_h_1 addr, split_h_2 addr with
+      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _),
+        Some (Array _ _ seq1 _), Some (Array _ _ seq2 _) ->
+        assert(seq `Seq.equal` joint_seq)
+      | _ -> ()
+    in
+  Classical.forall_intro aux;
+  mem_equiv_eq h (join_heap split_h_1 split_h_2)
+#pop-options
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 150"
 let split_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -2076,16 +2195,6 @@ let split_array_pre_action
     mem_equiv_eq h (join_heap h (on _ (fun a' -> None)));
     (| (a, a), h |)
   | Some a' ->
-    let as : (as:(array_ref t & array_ref t){
-      length (fst as) = i /\ length (snd as) = U32.sub (length a) i /\
-      (not (is_null_array a) ==>
-        (U32.v i > 0 ==> address (fst as) = address a /\ max_length (fst as) = max_length a /\
-          offset (fst as) = offset a) /\
-        (U32.v i < U32.v (length a) ==> address (snd as) = address a /\
-          max_length (snd as) = max_length a /\ offset (snd as) = U32.add (offset a) i)
-      )
-    })
-    =
       let a1: array_ref t = if i = 0ul then None else Some ({ a' with
         array_offset = a'.array_offset;
         array_length = i;
@@ -2094,53 +2203,13 @@ let split_array_pre_action
         array_offset = U32.add i a'.array_offset;
         array_length = U32.sub a'.array_length i;
       }) in
-      let as = (a1, a2) in
-      (a1, a2)
-    in
-    let split_h_1 : heap = on _ (fun addr ->
-      if addr <> a'.array_addr then h addr else
-      match h a'.array_addr with
-      | Some (Array t len seq live) ->
-        let new_seq = Seq.init len (fun j ->
-          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
-            Seq.index seq j
-          else if j <  U32.v a'.array_offset + U32.v i then
-            Seq.index seq j
-          else  { preorder = select_pre seq j; v_with_p = None }
-        ) in
-        assert(Seq.length new_seq = len);
-        Some (Array t len new_seq live)
-      | _ -> h addr
-    ) in
-    let split_h_2 : heap = on _ (fun addr ->
-      if addr <> a'.array_addr then None else
-      match h a'.array_addr with
-      | Some (Array t len seq live) ->
-        let new_seq = Seq.init len (fun j ->
-          if j < U32.v a'.array_offset || j >= U32.v a'.array_offset + U32.v a'.array_length then
-            { preorder = select_pre seq j; v_with_p = None }
-          else if j <  U32.v a'.array_offset + U32.v i then
-            { preorder = select_pre seq j; v_with_p = None }
-          else Seq.index seq j
-        ) in
-        assert(Seq.length new_seq = len);
-        Some (Array t len new_seq live)
-      | _ -> h addr
-    ) in
-    let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
-      if addr <> a'.array_addr then () else
-      match h addr, (join_heap split_h_1 split_h_2) addr with
-      | Some (Array _ _ seq _), Some (Array _ _ joint_seq _) ->
-        assert(seq `Seq.equal` joint_seq)
-      | _ -> ()
-    in
-    Classical.forall_intro aux;
-    mem_equiv_eq h (join_heap split_h_1 split_h_2);
-    assert(h == join_heap split_h_1 split_h_2);
-    (| as, h  |)
+    let split_h_1, split_h_2 = split_array_heaps a iseq p i pre h in
+    split_array_heaps_disjoint a iseq p i pre h;
+    split_array_heaps_joint_equal a iseq p i pre h;
+    (| (a1, a2), h  |)
 #pop-options
 
-#push-options "--initial_ifuel 1 --max_ifuel 1"
+#push-options "--ifuel 1 --fuel 2 --z3rlimit 30"
 let split_array_action
   (#t: _)
   (a: array_ref t)

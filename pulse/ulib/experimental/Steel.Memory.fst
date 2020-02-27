@@ -371,6 +371,8 @@ let mem_of_heap (h:heap) : mem = {
 
 let _ : squash (inversion hprop) = allow_inversion hprop
 
+let core_mem m = mem_of_heap (heap_of_mem m)
+
 let disjoint m0 m1 =
   m0.ctr == m1.ctr /\
   disjoint_heap m0.heap m1.heap /\
@@ -914,23 +916,62 @@ let weaken_depends_only_on (q:heap -> prop) (fp fp': hprop)
   : Lemma (depends_only_on q fp ==> depends_only_on q (fp `star` fp'))
   = ()
 
-let refine (p:hprop) (q:fp_prop p) : hprop = Refine p q
+let refine_heap (p:hprop) (q:fp_prop p) : hprop = Refine p q
 
-let refine_equiv (p:hprop) (q:fp_prop p) (h:heap)
+let refine_equiv_heap (p:hprop) (q:fp_prop p) (h:heap)
   : Lemma (interp_heap p h /\ q h <==> interp_heap (Refine p q) h)
   = ()
 
 #push-options "--initial_fuel 2 --max_fuel 2"
-let refine_star (p0 p1:hprop) (q:fp_prop p0)
+let refine_star_heap (p0 p1:hprop) (q:fp_prop p0)
   : Lemma (equiv (Refine (p0 `star` p1) q) (Refine p0 q `star` p1))
   = ()
 #pop-options
 
 #push-options "--initial_fuel 2 --max_fuel 2 --z3rlimit 10"
-let refine_star_r (p0 p1:hprop) (q:fp_prop p1)
+let refine_star_r_heap (p0 p1:hprop) (q:fp_prop p1)
   : Lemma (equiv (Refine (p0 `star` p1) q) (p0 `star` Refine p1 q))
   = ()
 #pop-options
+
+
+let weaken_refine_mprop_depends_only_on _ _ _ = ()
+
+unfold
+let mprop_to_hprop (q:mem -> prop) : heap -> prop = fun h -> q (mem_of_heap h)
+
+#push-options "--warn_error -271"
+let refine_mprop_is_refine_fp_prop (q:mem -> prop) (fp:hprop)
+: Lemma
+  (requires refine_mprop_depends_only_on q fp)
+  (ensures depends_only_on (mprop_to_hprop q) fp)
+= let aux0 (h0:heap{interp_heap fp h0}) (h1:heap{disjoint_heap h0 h1})
+    : Lemma (q (mem_of_heap h0) <==> q (mem_of_heap (join_heap h0 h1)))
+      [SMTPat ()]
+    = let m0 : hmem fp = mem_of_heap h0 in
+      let m1 : (m1:mem{disjoint m0 m1}) = mem_of_heap h1 in
+      assert (q m0 <==> q (join m0 m1)) in
+  let aux1 (h0 h1:heap)
+    : Lemma
+      (requires q (mem_of_heap h0) /\ disjoint_heap h0 h1)
+      (ensures q (mem_of_heap (join_heap h0 h1)))
+      [SMTPat ()]
+    = assert (disjoint (mem_of_heap h0) (mem_of_heap h1)) in
+  ()
+#pop-options
+
+let refine p q =
+  refine_mprop_is_refine_fp_prop q p;
+  refine_heap p (mprop_to_hprop q)
+
+let refine_equiv p q h =
+  refine_mprop_is_refine_fp_prop q p;
+  refine_equiv_heap p (mprop_to_hprop q) (heap_of_mem h)
+
+let refine_star p0 p1 q =
+  refine_mprop_is_refine_fp_prop q p0;
+  refine_star_heap p0 p1 (mprop_to_hprop q)
+
 
 let interp_depends_only (p:hprop)
   : Lemma (interp_heap p `depends_only_on` p)
@@ -941,7 +982,7 @@ let refine_elim (p:hprop) (q:fp_prop p) (h:heap)
             interp_heap (Refine p q) h)
           (ensures
             interp_heap p h /\ q h)
-  = refine_equiv p q h
+  = refine_equiv_heap p q h
 
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
@@ -975,9 +1016,7 @@ let heap_ctr_valid (m:mem) : heap -> prop =
   forall (i:nat). i >= m.ctr ==> m.heap i == None
 
 let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
-  refine (lock_store_invariant e m.locks) (heap_ctr_valid m)
-
-let core_mem m = mem_of_heap (heap_of_mem m)
+  refine_heap (lock_store_invariant e m.locks) (heap_ctr_valid m)
 
 let core_mem_interp hp m = ()
 
