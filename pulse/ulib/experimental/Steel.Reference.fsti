@@ -1,5 +1,6 @@
 module Steel.Reference
 open Steel.Effect
+open Steel.Effect.Atomic
 open Steel.Memory
 open Steel.Permissions
 open FStar.Ghost
@@ -36,3 +37,28 @@ val gather (#a:Type) (#p0:perm) (#p1:perm{summable_permissions p0 p1}) (#v0 #v1:
   : SteelT unit
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_permissions p0 p1) v0)
+
+val ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
+  : SteelAtomic a uses true
+    (pts_to r p v)
+    (fun x -> pts_to r p x)
+
+val ghost_read_refine (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
+  (q:a -> hprop)
+  : SteelAtomic a uses true
+    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+    (fun v -> pts_to r p v `star` q v)
+
+val cas
+  (#t:eqtype)
+  (#uses:Set.set lock_addr)
+  (r:ref t)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t)
+  : SteelAtomic
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    uses
+    false
+    (pts_to r full_permission v)
+    (fun b -> if b then pts_to r full_permission v_new else pts_to r full_permission v)

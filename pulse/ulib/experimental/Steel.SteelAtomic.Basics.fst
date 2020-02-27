@@ -4,6 +4,7 @@ open Steel.Effect.Atomic
 open Steel.Memory
 open Steel.Reference
 open Steel.Permissions
+module Sem = Steel.Semantics
 
 assume
 val return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
@@ -33,6 +34,16 @@ val h_commute (#uses:Set.set lock_addr) (p q:hprop)
 let h_commute #uses p q =
    change_hprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
 
+val h_assoc_left (#uses:Set.set lock_addr) (p q r:hprop)
+  : SteelAtomic unit uses true ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
+let h_assoc_left #uses p q r =
+   change_hprop ((p `star` q) `star` r) (p `star` (q `star` r)) (fun m -> star_associative p q r)
+
+val h_assoc_right (#uses:Set.set lock_addr) (p q r:hprop)
+  : SteelAtomic unit uses true (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+let h_assoc_right #uses p q r =
+   change_hprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)
+
 val intro_h_exists (#a:Type) (#uses:Set.set lock_addr) (x:a) (p:a -> hprop)
   : SteelAtomic unit uses true (p x) (fun _ -> h_exists p)
 let intro_h_exists #a #uses x p =
@@ -43,12 +54,18 @@ val h_affine (#uses:Set.set lock_addr) (p q:hprop)
 let h_affine #uses p q =
   change_hprop (p `star` q) p (fun m -> affine_star p q m)
 
-assume
+val lift_atomic_repr_to_steel_repr
+  (#a:Type) (#is_ghost:bool) (#fp:hprop) (#fp':a -> hprop)
+  (f:atomic_repr a Set.empty is_ghost fp fp')
+  : repr a fp fp' (fun _ -> True) (fun _ _ _ -> True)
+let lift_atomic_repr_to_steel_repr #a #is_ghost #fp #fp' f = fun _ -> f ()
+
 val lift_atomic_to_steelT
   (#a:Type) (#is_ghost:bool) (#fp:hprop) (#fp':a -> hprop)
   ($f:unit -> SteelAtomic a Set.empty is_ghost fp fp')
   : SteelT a fp fp'
-
+let lift_atomic_to_steelT #a #is_ghost #fp #fp' f =
+  Steel?.reflect (lift_atomic_repr_to_steel_repr (steelatomic_reify f))
 
 assume
 val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
@@ -60,38 +77,6 @@ val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
     (pre `star` frame)
     (fun x -> post x `star` frame)
 
-
-assume
-val ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
-  : SteelAtomic a uses true
-    (pts_to r p v)
-    (fun x -> pts_to r p x)
-
-
-/// A specialized version of get_ref_refine. It should be derivable from h_exists
-assume
-val ghost_read_refine (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
-  (q:a -> hprop)
-  : SteelAtomic a uses true
-    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-    (fun v -> pts_to r p v `star` q v)
-
-assume
-val cas
-  (#t:eqtype)
-  (#uses:Set.set lock_addr)
-  (r:ref t)
-  (v:Ghost.erased t)
-  (v_old:t)
-  (v_new:t)
-  : SteelAtomic
-    (b:bool{b <==> (Ghost.reveal v == v_old)})
-    uses
-    false
-    (pts_to r full_permission v)
-    (fun b -> if b then pts_to r full_permission v_new else pts_to r full_permission v)
-
-assume
 val cas_frame
   (#t:eqtype)
   (#uses:Set.set lock_addr)
@@ -106,3 +91,5 @@ val cas_frame
     false
     (pts_to r full_permission v `star` frame)
     (fun b -> (if b then pts_to r full_permission v_new else pts_to r full_permission v) `star` frame)
+let cas_frame #t #uses r v v_old v_new frame =
+  atomic_frame frame (fun _ -> cas r v v_old v_new)

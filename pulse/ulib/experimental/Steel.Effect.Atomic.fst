@@ -117,7 +117,6 @@ let steel_assert (uses:Set.set lock_addr) (p:hprop)
       mst_put m0
     )
 
-
 assume val atomic_preserves_frame_and_preorder
   (#a:Type)
   (#uses:Set.set lock_addr)
