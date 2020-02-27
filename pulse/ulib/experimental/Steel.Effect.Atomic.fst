@@ -132,10 +132,6 @@ assume val atomic_preserves_frame_and_preorder
     mem_evolves m0 m1
   )
 
-
-assume
-val atomic_noop (uses:Set.set lock_addr) : atomic uses true emp unit (fun _ -> emp)
-
 /// By default, if we demote an m_action, it is not a ghost atomic
 /// If we want a ghost atomic, it should be exposed this way in Steel.Actions
 val demote_m_action_atomic
@@ -151,15 +147,6 @@ let demote_m_action_atomic #a #fp #fp' f = f
 // Or maybe it shouldn't be in SteelAtomic at all?
 val atomic_new_inv (p:hprop) : atomic Set.empty false p (inv p) (fun _ -> emp)
 let atomic_new_inv p = demote_m_action_atomic (new_inv p)
-
-#push-options "--fuel 0 --ifuel 1"
-let noop (uses:Set.set lock_addr) : SteelAtomic unit uses true emp (fun _ -> emp)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let (| x, m1 |) = atomic_noop uses m0 in
-      atomic_preserves_frame_and_preorder (atomic_noop uses) m0;
-      mst_put m1)
-#pop-options
 
 #push-options "--fuel 0 --ifuel 1"
 let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty false p (fun _ -> emp)
@@ -224,6 +211,30 @@ let upd
       let (| x, m1 |) = at m0 in
       atomic_preserves_frame_and_preorder at m0;
       mst_put m1)
+#pop-options
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
+let cas
+  (#t:eqtype)
+  (#uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (v:Ghost.erased t)
+  (v_old:t)
+  (v_new:t{pre v v_new})
+  : SteelAtomic
+    (b:bool{b <==> (Ghost.reveal v == v_old)})
+    uses
+    false
+    (pts_to_ref r full_permission v)
+    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let at = cas uses r v v_old v_new in
+      let (| x, m1 |) = at m0 in
+      atomic_preserves_frame_and_preorder at m0;
+      mst_put m1;
+      x)
 #pop-options
 
 assume val steelatomic_reify
