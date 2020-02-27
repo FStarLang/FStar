@@ -765,3 +765,39 @@ let rec recv #q (#p:prot{more p}) (cc:chan q)
     h_assert (send_pre cc.chan_chan.recv p cc.chan_chan vs vr);
     channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv cc))
                                                      (recv_available #p cc vs vr)
+
+let history_p (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
+  t `extended_to` s /\ True
+
+let history (#p:prot) (c:chan p) (t:partial_trace_of p) : hprop =
+  pure (witnessed c.chan_chan.trace (history_p t))
+
+let history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
+  : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
+  = dup_pure _
+
+let extension_until #p (previous:partial_trace_of p) (q:prot) =
+  (t:partial_trace_of p{previous `extended_to` t /\ until t == q})
+
+let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
+  : SteelT (extension_of tr)
+           (pts_to c.chan_chan.recv half v `star`
+            trace_until c.chan_chan.trace v `star`
+            history c tr)
+           (fun tr' -> pts_to c.chan_chan.recv half v `star` history c tr')
+  = h_admit #(extension_of tr) _ _
+
+
+let trace' (#q:prot) (#p:prot) (c:chan q) (tr:partial_trace_of q)
+  : SteelT (extension_of tr)
+           (receiver c p `star` history c tr)
+           (fun t -> receiver c p `star` history c t)
+  = h_intro_emp_l _;
+    let vs_vr = frame (fun _ -> send_receive_prelude c) _ in
+    h_admit #(extension_of tr) _ _
+
+let trace = admit()
+// (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
+//   : SteelT (t:partial_trace_of p{previous `extended_to` t /\ until t == next})
+//            (receiver c next `star` history c previous)
+//            (fun t -> receiver c next `star` history c t)
