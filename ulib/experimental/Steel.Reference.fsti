@@ -49,8 +49,8 @@ val read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a ->
 
 val write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
                        (r:reference a p) (x:a{p v x})
-  : SteelT a (pts_to_ref r full v)
-             (fun v -> pts_to_ref r full x)
+  : SteelT unit (pts_to_ref r full v)
+                (fun v -> pts_to_ref r full x)
 
 val pure (p:prop) : hprop
 
