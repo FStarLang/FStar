@@ -9,13 +9,14 @@ assume
 val return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
   : SteelAtomic a uses true (p x) p
 
-assume
 val h_admit_atomic (#a:_) (#uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
+let h_admit_atomic #a #uses p q =
+  steel_admit a uses p q
 
-assume
 val h_assert_atomic (#uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> p)
+let h_assert_atomic #uses p = steel_assert uses p
 
 val h_intro_emp_l (#uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> emp `star` p)

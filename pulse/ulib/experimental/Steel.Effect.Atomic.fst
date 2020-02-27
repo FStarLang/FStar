@@ -15,8 +15,8 @@ let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (pos
   (requires fun m0 ->
     interp (pre `star` locks_invariant uses m0) m0)
   (ensures fun m0 x m1 ->
-    interp ((post x) `star` locks_invariant uses m1) m1)
-//    Sem.preserves_frame pre (post x) m0 m1)
+    interp ((post x) `star` locks_invariant uses m1) m1 /\
+    Sem.preserves_frame pre (post x) m0 m1)
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   atomic_t uses is_ghost pre post
@@ -103,7 +103,22 @@ let mst_put (m:mem)
   : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
   = RMST.put m
 
-assume val atomic_preserves_preorder
+let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
+  : SteelAtomic a uses true p q
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = RMST.rmst_admit() in
+      mst_put m0
+    )
+
+let steel_assert (uses:Set.set lock_addr) (p:hprop)
+  : SteelAtomic unit uses true p (fun _ -> p)
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get() in
+      mst_put m0
+    )
+
+
+assume val atomic_preserves_frame_and_preorder
   (#a:Type)
   (#uses:Set.set lock_addr)
   (#is_ghost:bool)
@@ -113,7 +128,7 @@ assume val atomic_preserves_preorder
   (m0:hmem_with_inv' uses pre)
   : Lemma (
     let (| x, m1 |) = act m0 in
-//    Sem.preserves_frame #state pre (post x) m0 m1 /\
+    Sem.preserves_frame #state pre (post x) m0 m1 /\
     mem_evolves m0 m1
   )
 
@@ -142,7 +157,7 @@ let noop (uses:Set.set lock_addr) : SteelAtomic unit uses true emp (fun _ -> emp
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let (| x, m1 |) = atomic_noop uses m0 in
-      atomic_preserves_preorder (atomic_noop uses) m0;
+      atomic_preserves_frame_and_preorder (atomic_noop uses) m0;
       mst_put m1)
 #pop-options
 
@@ -151,7 +166,7 @@ let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty false p (fun _ -> emp)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let (| x, m1 |) = atomic_new_inv p m0 in
-      atomic_preserves_preorder (atomic_new_inv p) m0;
+      atomic_preserves_frame_and_preorder (atomic_new_inv p) m0;
       mst_put m1;
       x)
 #pop-options
@@ -165,7 +180,7 @@ let change_hprop
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let (| x, m1 |) = weaken_hprop uses p q proof m0 in
-      atomic_preserves_preorder (weaken_hprop uses p q proof) m0;
+      atomic_preserves_frame_and_preorder (weaken_hprop uses p q proof) m0;
       mst_put m1;
       x)
 #pop-options
@@ -187,7 +202,7 @@ let index
       let m0 = mst_get () in
       let at = (index_array uses a iseq full_permission i) in
       let (| x, m1 |) = at m0 in
-      atomic_preserves_preorder at m0;
+      atomic_preserves_frame_and_preorder at m0;
       mst_put m1;
       x)
 #pop-options
@@ -207,7 +222,7 @@ let upd
       let m0 = mst_get () in
       let at = (upd_array uses a iseq i v) in
       let (| x, m1 |) = at m0 in
-      atomic_preserves_preorder at m0;
+      atomic_preserves_frame_and_preorder at m0;
       mst_put m1)
 #pop-options
 
