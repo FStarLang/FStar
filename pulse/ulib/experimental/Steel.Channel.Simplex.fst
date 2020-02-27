@@ -326,8 +326,6 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c = frame (fun _ -> mk_chan_t_val #p send recv tr) _ in
     h_elim_emp_l _;
     h_assert ((pts_to_ref c.trace full (initial_trace p) `star` (pts_to c.send half v `star` pts_to c.recv half v)));
-    // h_commute _ _;
-    // assoc_r _ _ _;
     frame (fun _ -> intro_trace_until c v) _;
     h_assert (trace_until c.trace v `star` (pts_to c.send half v `star` pts_to c.recv half v));
     h_commute _ _;
@@ -562,7 +560,16 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
   : SteelT (extension_of tr)
            (chan_inv_step vr vs `star` pure (until tr == step vr.chan_prot vr.chan_msg))
            (fun ts -> pure (until ts == step vs.chan_prot vs.chan_msg))
-  = h_admit #(extension_of tr) _ _
+  = let s0 : squash (chan_inv_step_p vr vs) =
+       frame (fun _ -> elim_pure #(chan_inv_step_p vr vs)) _ in
+    h_elim_emp_l _;
+    let s1 : squash (until tr == step vr.chan_prot vr.chan_msg) =
+      elim_pure #_ in
+    let ts = next_trace vr vs tr s0 s1 in
+    let s2 : squash (until ts == step vs.chan_prot vs.chan_msg) = () in
+    intro_pure s2;
+    h_assert (pure (until ts == step vs.chan_prot vs.chan_msg));
+    return #(extension_of tr) #(fun ts -> pure (until ts == step vs.chan_prot vs.chan_msg)) ts
 
 let write_trace #p (r:trace_ref p)
                    (old_tr:partial_trace_of p)
