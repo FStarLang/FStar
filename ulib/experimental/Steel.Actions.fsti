@@ -51,13 +51,6 @@ let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (
 let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
   f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Utilities
-///////////////////////////////////////////////////////////////////////////////
-
-val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ -> p')
-
 ///////////////////////////////////////////////////////////////////////////////
 // Locks
 ///////////////////////////////////////////////////////////////////////////////
@@ -127,6 +120,23 @@ val promote_atomic_m_action
     (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#is_ghost:bool)
     (f:atomic Set.empty is_ghost fp a fp')
     : m_action fp a fp'
+
+///////////////////////////////////////////////////////////////////////////////
+// Utilities
+///////////////////////////////////////////////////////////////////////////////
+
+val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ -> p')
+
+val weaken_hprop
+  (uses:Set.set lock_addr)
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : atomic
+    uses
+    true
+    p
+    unit
+    (fun _ -> q)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Arrays
@@ -413,7 +423,7 @@ val cas
 // Monotonic state
 //////////////////////////////////////////////////////////////////////////
 
-val reference_preorder_stable
+val reference_preorder_respected
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
