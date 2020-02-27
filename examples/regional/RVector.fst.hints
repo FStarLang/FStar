@@ -1,5 +1,5 @@
 [
-  "t¬ê¥\"ß\u0012ò_ä)‚o›Eﬁ",
+  "\u001dvÍíÌ√\n{\\T⁄œÄøÑ*",
   [
     [
       "RVector.breg",
@@ -27,7 +27,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "e0b0405f6d87ecd29086ad95258dc76b"
+      "b7de86611858309998f225e397fa42df"
     ],
     [
       "RVector.two_regional_buffers_disjoint",
@@ -70,7 +70,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "cc96a9402e87afb1ed01798a0f8d7a0d"
+      "debc08ff850d8c96fd080458ab7d83d5"
     ],
     [
       "RVector.two_regional_vectors_disjoint",
@@ -79,12 +79,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_eede091701a37973ca651c844473dd7f",
+        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "bool_typing", "equation_FStar.Monotonic.HyperHeap.disjoint",
         "equation_LowStar.Buffer.buffer",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rvector",
+        "equation_LowStar.Regional.Instances.nonzero",
         "equation_LowStar.Regional.Instances.vector_region_of",
         "equation_LowStar.Regional.Instances.vector_regional",
         "equation_LowStar.Vector.vector", "equation_RVector.breg",
@@ -92,6 +93,7 @@
         "fuel_guarded_inversion_LowStar.Vector.vector_str",
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Regional.Instances.vector_region_of",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Monotonic.HyperHeap.lemma_disjoint_includes",
         "lemma_FStar.Set.mem_intersect", "lemma_FStar.Set.mem_singleton",
         "lemma_FStar.Set.mem_subset",
@@ -101,6 +103,7 @@
         "proj_equation_LowStar.Regional.Rgl_region_of",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
+        "refinement_kinding_Tm_refine_e550738ad028c4c938d9a48913da1fe9",
         "token_correspondence_LowStar.Regional.Instances.vector_region_of",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of",
         "typing_FStar.Monotonic.HyperHeap.includes",
@@ -111,7 +114,7 @@
         "typing_RVector.breg"
       ],
       0,
-      "cd108f9b62eab2c73d99083d81117944"
+      "2f8019b6975425dbc4679808e21da191"
     ],
     [
       "RVector.bcpy",
@@ -145,8 +148,9 @@
         "equation_LowStar.Regional.Instances.buffer_region_of",
         "equation_LowStar.Regional.Instances.buffer_regional",
         "equation_LowStar.Regional.Instances.buffer_repr",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_RVector.breg",
+        "equation_LowStar.Regional.Instances.nonzero",
+        "equation_LowStar.Regional.rg_inv", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_RVector.breg",
         "function_token_typing_FStar.Integers.uint_32",
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
@@ -181,9 +185,9 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "refinement_interpretation_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
+        "refinement_interpretation_Tm_refine_32f12fe3454a5d9a710dfcb78b14bea8",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_5d0cd33b6c27c5ff6c0a093792118783",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_a726b9833a009d607b2880b68a42f654",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
@@ -191,10 +195,10 @@
         "token_correspondence_LowStar.Regional.Instances.buffer_r_inv",
         "token_correspondence_LowStar.Regional.Instances.buffer_r_repr",
         "token_correspondence_LowStar.Regional.Instances.buffer_region_of",
-        "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_repr",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of",
-        "true_interp", "typing_FStar.Monotonic.HyperHeap.includes",
+        "token_correspondence_LowStar.Regional.rg_inv", "true_interp",
+        "typing_FStar.Monotonic.HyperHeap.includes",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
         "typing_FStar.Monotonic.HyperHeap.rid", "typing_FStar.Set.singleton",
         "typing_LowStar.Buffer.trivial_preorder",
@@ -207,7 +211,7 @@
         "typing_RVector.breg"
       ],
       0,
-      "f521eadca242bd9a7ed91b1ea9292403"
+      "2fb009a94eda4288c92403bf994218c9"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -216,10 +220,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_a2158c1f0e8ea5195cca969afe103215"
+        "refinement_interpretation_Tm_refine_e51530527a9cd01f1b5240269077f5c6"
       ],
       0,
-      "567ef5a8662d1760bf3f14a722f1447e"
+      "7402e46320935cfc8b41ef8a711b6078"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -228,20 +232,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_281d5dad356e603ad9011ab60765d002",
+        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_4e5174869f9dc1560eca76a12f1a9aec",
         "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_b59d7623ebebd4a291712af8765a17fd",
-        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_eede091701a37973ca651c844473dd7f",
+        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "bool_typing", "equation_FStar.Monotonic.HyperHeap.disjoint",
         "equation_LowStar.Buffer.buffer",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rvector",
         "equation_LowStar.Regional.Instances.buffer_regional",
+        "equation_LowStar.Regional.Instances.nonzero",
         "equation_LowStar.Regional.Instances.vector_r_inv",
         "equation_LowStar.Regional.Instances.vector_r_repr",
         "equation_LowStar.Regional.Instances.vector_region_of",
         "equation_LowStar.Regional.Instances.vector_regional",
         "equation_LowStar.Regional.Instances.vector_repr",
+        "equation_LowStar.Regional.rg_inv",
         "equation_LowStar.Vector.is_full", "equation_LowStar.Vector.vector",
         "equation_RVector.breg", "equation_RVector.vreg",
         "fuel_guarded_inversion_LowStar.Vector.vector_str",
@@ -249,6 +255,7 @@
         "function_token_typing_LowStar.Regional.Instances.buffer_region_of",
         "function_token_typing_LowStar.Regional.Instances.vector_r_repr",
         "function_token_typing_LowStar.Regional.Instances.vector_region_of",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Monotonic.HyperHeap.lemma_disjoint_includes",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Set.mem_intersect", "lemma_FStar.Set.mem_singleton",
@@ -267,10 +274,11 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_repr",
-        "refinement_interpretation_Tm_refine_25a73a9b48e2385006eb2fb36e82fa0d",
-        "refinement_interpretation_Tm_refine_6ba0eef49d712d4e7d15449cb137366b",
-        "refinement_interpretation_Tm_refine_84c78e39362ff86546a47954d054f902",
-        "refinement_interpretation_Tm_refine_a2158c1f0e8ea5195cca969afe103215",
+        "refinement_interpretation_Tm_refine_467f6f51671959f5f28c8da699acb6e9",
+        "refinement_interpretation_Tm_refine_b25492234388c9652016a9926b87feee",
+        "refinement_interpretation_Tm_refine_e51530527a9cd01f1b5240269077f5c6",
+        "refinement_interpretation_Tm_refine_f50dcb1145f4fa3d9cf4e9aaf78f437c",
+        "refinement_kinding_Tm_refine_e550738ad028c4c938d9a48913da1fe9",
         "token_correspondence_LowStar.Regional.Instances.buffer_region_of",
         "token_correspondence_LowStar.Regional.Instances.vector_r_inv",
         "token_correspondence_LowStar.Regional.Instances.vector_r_repr",
@@ -278,6 +286,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_repr",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of",
+        "token_correspondence_LowStar.Regional.rg_inv",
         "typing_FStar.Monotonic.HyperHeap.includes",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
         "typing_FStar.Monotonic.HyperHeap.rid", "typing_FStar.Set.empty",
@@ -288,7 +297,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "b02d634c54d52b3dc09159f73c8aeab5"
+      "22062b3269b2c7d3f11148a74d38638e"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -297,10 +306,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_38d4080156c592f538f5e5ea8a23092c"
+        "refinement_interpretation_Tm_refine_8ce59c6a81b0575f988f9cd5bff75e40"
       ],
       0,
-      "63455e7e331aa8f4ea42e8b7a1b37f6f"
+      "4029a30a8eb72f6b1552b0030d896df0"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -309,14 +318,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_281d5dad356e603ad9011ab60765d002",
-        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_eede091701a37973ca651c844473dd7f",
+        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_4e5174869f9dc1560eca76a12f1a9aec",
+        "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "equation_FStar.Monotonic.HyperHeap.disjoint",
         "equation_LowStar.Buffer.buffer",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rvector",
         "equation_LowStar.Regional.Instances.buffer_regional",
+        "equation_LowStar.Regional.Instances.nonzero",
         "equation_LowStar.Regional.Instances.vector_r_inv",
         "equation_LowStar.Regional.Instances.vector_r_repr",
         "equation_LowStar.Regional.Instances.vector_region_of",
@@ -328,6 +338,7 @@
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Regional.Instances.vector_r_repr",
         "function_token_typing_LowStar.Regional.Instances.vector_region_of",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Monotonic.HyperHeap.lemma_disjoint_includes",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Set.mem_intersect", "lemma_FStar.Set.mem_singleton",
@@ -346,10 +357,11 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_repr",
-        "refinement_interpretation_Tm_refine_23ceac9115e83c3e3ba8101c10ce422d",
-        "refinement_interpretation_Tm_refine_25a73a9b48e2385006eb2fb36e82fa0d",
-        "refinement_interpretation_Tm_refine_38d4080156c592f538f5e5ea8a23092c",
-        "refinement_interpretation_Tm_refine_6ba0eef49d712d4e7d15449cb137366b",
+        "refinement_interpretation_Tm_refine_041dea47dad39ad4db1052981887feea",
+        "refinement_interpretation_Tm_refine_467f6f51671959f5f28c8da699acb6e9",
+        "refinement_interpretation_Tm_refine_8ce59c6a81b0575f988f9cd5bff75e40",
+        "refinement_interpretation_Tm_refine_f50dcb1145f4fa3d9cf4e9aaf78f437c",
+        "refinement_kinding_Tm_refine_e550738ad028c4c938d9a48913da1fe9",
         "token_correspondence_LowStar.Regional.Instances.vector_r_inv",
         "token_correspondence_LowStar.Regional.Instances.vector_r_repr",
         "token_correspondence_LowStar.Regional.Instances.vector_region_of",
@@ -366,7 +378,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "bd6144b33b021643735e4809f5d5b7f5"
+      "8f25059e91021c2551468c495f5f09dc"
     ],
     [
       "RVector.breg",
@@ -394,7 +406,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "cf85c813946e537c0b57649e428659b5"
+      "cd29c84906d0ece56e6aa385e20cfc45"
     ],
     [
       "RVector.bcpy",
@@ -428,8 +440,9 @@
         "equation_LowStar.Regional.Instances.buffer_region_of",
         "equation_LowStar.Regional.Instances.buffer_regional",
         "equation_LowStar.Regional.Instances.buffer_repr",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_RVector.breg",
+        "equation_LowStar.Regional.Instances.nonzero",
+        "equation_LowStar.Regional.rg_inv", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_RVector.breg",
         "function_token_typing_FStar.Integers.uint_32",
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
@@ -464,9 +477,9 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "refinement_interpretation_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
+        "refinement_interpretation_Tm_refine_32f12fe3454a5d9a710dfcb78b14bea8",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_5d0cd33b6c27c5ff6c0a093792118783",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_a726b9833a009d607b2880b68a42f654",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
@@ -474,10 +487,10 @@
         "token_correspondence_LowStar.Regional.Instances.buffer_r_inv",
         "token_correspondence_LowStar.Regional.Instances.buffer_r_repr",
         "token_correspondence_LowStar.Regional.Instances.buffer_region_of",
-        "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_repr",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of",
-        "true_interp", "typing_FStar.Monotonic.HyperHeap.includes",
+        "token_correspondence_LowStar.Regional.rg_inv", "true_interp",
+        "typing_FStar.Monotonic.HyperHeap.includes",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
         "typing_FStar.Monotonic.HyperHeap.rid", "typing_FStar.Set.singleton",
         "typing_LowStar.Buffer.trivial_preorder",
@@ -490,7 +503,7 @@
         "typing_RVector.breg"
       ],
       0,
-      "48103c1bfa00b36a803a638f40919cb1"
+      "a800a152d44bacb056401ba17452d69d"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -499,10 +512,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_a2158c1f0e8ea5195cca969afe103215"
+        "refinement_interpretation_Tm_refine_e51530527a9cd01f1b5240269077f5c6"
       ],
       0,
-      "eb63c1a99d8633c3b1b4f7a7c51f8949"
+      "0acb05ae2b4099001607aa04f7327128"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -511,10 +524,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_38d4080156c592f538f5e5ea8a23092c"
+        "refinement_interpretation_Tm_refine_8ce59c6a81b0575f988f9cd5bff75e40"
       ],
       0,
-      "cf216896cfa99e1119ac10900d5ba1a0"
+      "fde133dd28974b1dfcfb1c7b70aa4e96"
     ]
   ]
 ]
