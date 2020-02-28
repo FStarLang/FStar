@@ -105,8 +105,7 @@ let share_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:
   = change_hprop
       (pts_to r p v)
       (pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-      // TODO: Needs a lemma here. And to unify with Steel.Actions which returns a new ref
-      (fun m -> admit())
+      (fun m -> share_pts_to_ref r p v m)
 
 let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
@@ -125,8 +124,7 @@ let gather_atomic
   = change_hprop
       (pts_to r p0 v0 `star` pts_to r p1 v1)
       (pts_to r (sum_perm p0 p1) v0)
-      // TODO: Needs a lemma here. And to unify with Steel.Actions
-      (fun m -> admit())
+      (fun m -> gather_pts_to_ref r p0 p1 v0 v1 m)
 
 let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT unit
