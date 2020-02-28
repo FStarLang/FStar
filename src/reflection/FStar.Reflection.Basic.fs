@@ -208,8 +208,15 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
+    let get_dec (flags : list<cflag>) : option<term> =
+        match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
+        | None -> None
+        | Some (DECREASES t) -> Some t
+        | _ -> failwith "impossible"
+    in
     match c.n with
     | Total (t, _) -> C_Total (t, None)
+    | GTotal (t, _) -> C_GTotal (t, None)
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -218,21 +225,24 @@ let inspect_comp (c : comp) : comp_view =
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
-            let maybe_dec = List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags in
-            let md = match maybe_dec with
-                     | None -> None
-                     | Some (DECREASES t) -> Some t
-                     | _ -> failwith "impossible"
-            in
+            let md = get_dec ct.flags in
             C_Total (ct.result_typ, md)
+        else if Ident.lid_equals ct.effect_name PC.effect_GTot_lid then
+            let md = get_dec ct.flags in
+            C_GTotal (ct.result_typ, md)
         else
-            C_Unknown
+            let inspect_arg (a, q) = (a, inspect_aqual q) in
+            C_Eff ([], // ct.comp_univs,
+                   Ident.path_of_lid ct.effect_name,
+                   ct.result_typ,
+                   List.map inspect_arg ct.effect_args)
       end
-    | GTotal _ -> C_Unknown
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, _) -> mk_Total t
+    | C_GTotal (t, _) -> mk_GTotal t
+
     | C_Lemma (pre, post) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
@@ -241,7 +251,14 @@ let pack_comp (cv : comp_view) : comp =
                  ; flags       = [] } in
         S.mk_Comp ct
 
-    | _ -> failwith "cannot pack a C_Unknown"
+    | C_Eff (us, ef, res, args) ->
+        let pack_arg (a, q) = (a, pack_aqual q) in
+        let ct = { comp_univs  = [] //us
+                 ; effect_name = Ident.lid_of_path ef Range.dummyRange
+                 ; result_typ  = res
+                 ; effect_args = List.map pack_arg args
+                 ; flags       = [] } in
+        S.mk_Comp ct
 
 let pack_const (c:vconst) : sconst =
     match c with
