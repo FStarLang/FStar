@@ -108,6 +108,35 @@ let rearrange_pqrst_qt_s_pr (p q r s t:hprop)
     (fun _ -> (q `star` t) `star` (s `star` (p `star` r)))
   = h_admit _ _
 
+
+let rearrange_for_get_trace2 (p q r s t : hprop)
+  : SteelT unit ((p `star` q) `star` (r `star` s `star` t))
+                (fun _ -> (r `star` s `star` p `star` t) `star` q)
+  = h_admit _ _
+
+
+let rearrange_for_trace (p q r s t:hprop)
+  : SteelT unit (p `star` q `star` r `star` s `star` t)
+                (fun _ -> (q `star` s `star` r) `star` (p `star` t))
+  = h_admit _ _
+
+
+let rearrange_for_trace_2 (p q r s t u v:hprop)
+  : SteelT unit ((p `star` q `star` r `star` s) `star` (t `star` (u `star` v)))
+                (fun _ -> (p `star` v) `star` (s `star` (q `star` r `star` t `star` u)))
+  = h_admit _ _
+
+
+let rearrange_for_trace_3 (p q r s t u v : hprop)
+  : SteelT unit ((p `star` q) `star` (r `star` (s `star` t `star` u `star` v)))
+                (fun _ -> (u `star` p `star` t `star` v) `star` (q `star` (s `star` r)))
+  = h_admit _ _
+
+let rearrange_for_get_trace (p q r s : hprop)
+  : SteelT unit (p `star` q `star` r `star` s)
+                (fun _ -> r `star` (p `star` q `star` s))
+  = h_admit _ _
+
 ////////////////////////////////////////////////////////////////////////////////
 
 let sprot = p:prot { more p }
@@ -794,7 +823,7 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
 let witness_trace_ref #q (r:trace_ref q) (tr:partial_trace_of q)
   : SteelT unit (pts_to_ref r full tr)
                 (fun _ -> pts_to_ref r full tr `star` pure (witnessed r (history_p tr)))
-  = h_admit _ _
+  = witness #_ #full #extended_to r (history_p tr) tr ()
 
 let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
   : SteelT (extension_of tr)
@@ -845,12 +874,6 @@ let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
                                         trace_until c.chan_chan.trace v `star`
                                         pure (until tr' == step v.chan_prot v.chan_msg)) tr'
 
-
-let rearrange_for_trace (p q r s t:hprop)
-  : SteelT unit (p `star` q `star` r `star` s `star` t)
-                (fun _ -> (q `star` s `star` r) `star` (p `star` t))
-  = h_admit _ _
-
 let prot_equals #q (cc:chan q) #p (vr:chan_val)
   : SteelT (squash (step vr.chan_prot vr.chan_msg == p))
            (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
@@ -868,22 +891,38 @@ let prot_equals #q (cc:chan q) #p (vr:chan_val)
     h_assert (pts_to cc.chan_chan.recv half vr `star` receiver cc p);
     s
 
-let rearrange_for_trace_2 (p q r s t u v:hprop)
-  : SteelT unit ((p `star` q `star` r `star` s) `star` (t `star` (u `star` v)))
-                (fun _ -> (p `star` v) `star` (s `star` (q `star` r `star` t `star` u)))
-  = h_admit _ _
-
 
 let rewrite_eq_squash_tok #a (x:a) (y:a) ($tok:squash (x==y)) (p:a -> hprop)
   : SteelT unit (p x) (fun _ -> p y)
   = h_assert (p y)
 
-let rearrange_for_trace_3 (p q r s t u v : hprop)
-  : SteelT unit ((p `star` q) `star` (r `star` (s `star` t `star` u `star` v)))
-                (fun _ -> (u `star` p `star` t `star` v) `star` (q `star` (s `star` r)))
-  = h_admit _ _
+let witness_trace_until #q (r:trace_ref q) (vr:chan_val)
+  : SteelT (partial_trace_of q)
+           (trace_until r vr)
+           (fun tr -> trace_until r vr `star` pure (witnessed r (history_p tr)))
+  = let tr = read_monotonic_ref r in
+    //need this assert
+    h_assert (pts_to_ref r full tr `star` pure (until tr == step vr.chan_prot vr.chan_msg));
+    frame (fun _ -> witness_trace_ref r tr) _;
+    frame (fun _ -> h_commute _ _) _;
+    assoc_r _ _ _;
+    frame_l (fun _ -> intro_trace_until r tr vr) _;
+    h_commute _ _;
+    h_assert (trace_until r vr `star` pure (witnessed r (history_p tr)));
+    return #(partial_trace_of q) tr
 
-let trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
+let trace #q (cc:chan q)
+  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
+  = let _ = send_receive_prelude cc in
+    rearrange_for_get_trace _ _ _ _;
+    let tr = frame (fun _ -> witness_trace_until cc.chan_chan.trace _) _ in
+    rearrange_for_get_trace2 _ _ _ _ _;
+    frame (fun _ -> intro_chan_inv_aux cc.chan_chan _ _) _;
+    frame (fun _ -> release cc.chan_lock) _;
+    h_elim_emp_l _;
+    return tr
+
+let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
   : SteelT (extension_of tr)
            (receiver cc p `star` history cc tr)
            (fun t -> receiver cc p `star` history cc t `star` pure (until t == p))
