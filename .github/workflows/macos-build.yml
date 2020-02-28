@@ -26,8 +26,13 @@ jobs:
         make -j -C src/ocaml-output
         make -j -C ulib
         make -j -C ulib/ml
+        make -j -C src/ocaml-output package
         zip -r fstar.zip *
     - uses: actions/upload-artifact@v1
       with:
         name: fstar_MacOS_x86_64
         path: fstar.zip
+    - uses: actions/upload-artifact@v1
+      with:
+        name: fstar_package
+        path: src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
