@@ -7,48 +7,78 @@ open Steel.Actions
 open Steel.Effect
 open Steel.SteelT.Basics
 
+module Mem = Steel.Memory
+module Act = Steel.Actions
 
+type reference (a:Type0) = reference a (fun _ _ -> True)
+type readable_perm = p:perm{readable p}
 
-let reference (a:Type0) = reference a (fun _ _ -> True)
-let writable = full_permission
-let pts_to_ref (#a:Type0) (r:reference a) (p:permission{allows_read p}) (x:a) = pts_to_ref r p x
+let pts_to_ref (#a:Type0) (r:reference a) (p:readable_perm) (x:a) = pts_to_ref r p x
 let ref_perm (#a:Type0) (r:reference a) = ref_perm r
 
-let sel_ref (#a:Type0)
-  (r:reference a) (#p:permission{allows_read p}) (m:hmem (ref_perm r p)) =
-  assume (forall (m:mem). interp (ref_perm r p) m ==> interp (ref r) m);
+module T = FStar.Tactics
+
+let ref_perm_implies_ref (#a:Type0) (r:reference a) (p:readable_perm) (m:mem)
+: Lemma
+  (requires interp (ref_perm r p) m)
+  (ensures interp (ref r) m)
+= intro_exists p (fun (p:perm{readable p}) -> Mem.ref_perm r p) m;
+  assert (ref r == h_exists (fun (p:perm{readable p}) -> Mem.ref_perm r p))
+    by (T.norm [delta_only [`%ref]])
+  
+let sel_ref_w (#a:Type0)
+  (r:reference a) (p:readable_perm) (m:hmem (ref_perm r p))
+= ref_perm_implies_ref r p m;
   sel_ref r m
 
-assume val sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:permission{allows_read p})
+let sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:readable_perm)
   (m0:hmem (ref_perm r p)) (m1:mem)
 : Lemma
   (requires disjoint m0 m1)
   (ensures
     interp (ref_perm r p) (join m0 m1) /\
-    sel_ref r m0 == sel_ref r #p (join m0 m1))
-  [SMTPat (sel_ref r #p (join m0 m1))]
+    sel_ref_w r p m0 == sel_ref_w r p (join m0 m1))
+  [SMTPat (sel_ref_w r p (join m0 m1))]
+= Act.sel_ref_depends_only_on r p m0 m1
 
-assume val read (#a:Type0) (#p:permission{allows_read p}) (r:reference a)
+assume val read (#a:Type0) (p:readable_perm) (r:reference a)
 : Steel a
     (ref_perm r p)
     (fun _ -> ref_perm r p)
-    (fun _ -> True) (fun m0 x m1 -> sel_ref r m0 == x /\ sel_ref r m1 == x)
+    (fun _ -> True) (fun m0 x m1 -> sel_ref_w r p m0 == x /\ sel_ref_w r p m1 == x)
 
 assume val write (#a:Type0) (r:reference a) (x:a)
 : Steel unit
-    (ref_perm r writable)
-    (fun _ -> ref_perm r writable)
+    (ref_perm r full_perm)
+    (fun _ -> ref_perm r full_perm)
     (fun _ -> True)
-    (fun _ _ m -> sel_ref r m == x)
+    (fun _ _ m -> sel_ref_w r full_perm m == x)
 
-let incr (r:reference int)
+open FStar.Integers
+
+let writable (#a:Type0) (r:reference a) = ref_perm r full_perm
+
+let sel_ref (#a:Type0) (r:reference a) (m:hmem (ref_perm r full_perm)) =
+  sel_ref_w r full_perm m
+
+let incr (r:reference uint_32)
 : Steel unit
-    (ref_perm r writable)
-    (fun _ -> ref_perm r writable)
-    (fun _ -> True)
-    (fun m0 _ m1 -> sel_ref r m1 == sel_ref r m0 + 1)
-= write r (read r + 1)
+    (writable r)
+    (fun _ -> writable r)
+    (fun m -> ok (+) (sel_ref r m) 1ul /\ True)
+    (fun m0 _ m1 -> v (sel_ref r m1) == v (sel_ref r m0) + 1)
+= let n = read full_perm r in
+  write r (n + 1ul)
 
+let incr_and_frame (r1 r2:reference uint_32)
+: Steel unit
+    (writable r1 `star` writable r2)
+    (fun _ -> writable r1 `star` writable r2)
+    (fun m -> ok (+) (sel_ref r1 m) 1ul /\ v (sel_ref r2 m) > 2)
+    (fun m0 _ m1 ->
+      v (sel_ref r1 m1) == v (sel_ref r1 m0) + 1 /\
+      v (sel_ref r2 m1) > 2)
+= steel_frame (fun _ -> incr r1) (writable r2) (fun m -> interp (ref_perm r2 full_perm) m /\ v (sel_ref r2 m) > 2)
 
 
 // assume val sel_ref_core (#a:Type0) (r:reference a) (p:permission{allows_read p}) (m:mem)
