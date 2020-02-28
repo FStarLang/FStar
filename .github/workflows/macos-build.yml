@@ -13,6 +13,9 @@ jobs:
     - name: Build binaries
       run: |
         export OPAMYES=1
+        curl -O https://raw.githubusercontent.com/FStarLang/binaries/master/z3-tested/z3-4.8.5-x64-osx-10.14.2.zip
+        unzip z3-4.8.5-x64-osx-10.14.2.zip
+        export PATH=$PATH:$PWD/z3-4.8.5-x64-osx-10.14.2/bin
         brew install opam
         opam init
         opam switch create 4.05.0
@@ -21,7 +24,9 @@ jobs:
         opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
         eval $(opam env)
         make -j -C src/ocaml-output
+        make -j -C ulib
+        make -j -C ulib/ml
     - uses: actions/upload-artifact@v1
       with:
         name: fstar_${GITHUB_SHA:0:12}_MacOS_x86_64
-        path: src/ocaml-output/fstar
+        path: .
