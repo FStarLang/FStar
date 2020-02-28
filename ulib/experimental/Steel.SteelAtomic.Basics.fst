@@ -65,13 +65,3 @@ val lift_atomic_to_steelT
   : SteelT a fp fp'
 let lift_atomic_to_steelT #a #is_ghost #fp #fp' f =
   Steel?.reflect (lift_atomic_repr_to_steel_repr (steelatomic_reify f))
-
-assume
-val atomic_frame (#a:Type) (#pre:pre_t) (#post:post_t a)
-          (#uses:Set.set lock_addr) (#is_ghost:bool)
-          (frame:hprop)
-          ($f:unit -> SteelAtomic a uses is_ghost pre post)
-  : SteelAtomic a
-    uses is_ghost
-    (pre `star` frame)
-    (fun x -> post x `star` frame)

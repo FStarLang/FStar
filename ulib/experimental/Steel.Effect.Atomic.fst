@@ -21,7 +21,9 @@ let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (pos
     Sem.preserves_frame #(state_uses uses) pre (post x) m0 m1)
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
-  atomic_t uses is_ghost pre post
+  Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
+
+  // atomic_t uses is_ghost pre post
 
 let returnc (a:Type u#a) (x:a) : atomic_repr a Set.empty true emp (fun _ -> emp)
   = fun _ -> x
@@ -127,6 +129,12 @@ let intro_emp_left (p1 p2:hprop) (m:mem)
   equiv_symmetric (p1 `star` emp) p1;
   equiv_extensional_on_star p1 (p1 `star` emp) p2
 
+assume val steelatomic_reify
+  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
+  ($f:unit -> SteelAtomic a uses is_ghost pre post)
+: atomic_repr a uses is_ghost pre post
+
+
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let atomic_preserves_frame_and_preorder
   (#a:Type)
@@ -147,6 +155,28 @@ let atomic_preserves_frame_and_preorder
   let m0 : hmem_with_inv' uses (pre `star` emp) = m0 in
   ()
 #pop-options
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
+let frame0 (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
+  (f:atomic_repr a uses is_ghost pre post)
+  (frame:hprop)
+: SteelAtomic a
+  uses
+  is_ghost
+  (pre `star` frame)
+  (fun x -> post x `star` frame)
+= SteelAtomic?.reflect (fun _ -> Sem.run #(state_uses uses) #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True)))
+#pop-options
+
+let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
+  (frame:hprop)
+  ($f:unit -> SteelAtomic a uses is_ghost pre post)
+: SteelAtomic a
+  uses
+  is_ghost
+  (pre `star` frame)
+  (fun x -> post x `star` frame)
+= frame0 (steelatomic_reify f) frame
 
 /// By default, if we demote an m_action, it is not a ghost atomic
 /// If we want a ghost atomic, it should be exposed this way in Steel.Actions
@@ -252,11 +282,6 @@ let cas
       mst_put m1;
       x)
 #pop-options
-
-assume val steelatomic_reify
-  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
-  ($f:unit -> SteelAtomic a uses is_ghost pre post)
-: atomic_repr a uses is_ghost pre post
 
 // TODO: This should be implemented using with_invariant in Steel.Actions
 // But for this, we need a with_invariant that takes directly an atomic_t
