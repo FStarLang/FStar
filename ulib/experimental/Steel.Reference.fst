@@ -54,8 +54,10 @@ let read_refine_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (q:a -> hpr
   = change_hprop
       (h_exists (fun (v:a) -> pts_to r p v `star` q v))
       (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
-      // TODO: h_exists extensionality lemma in Memory
-      (fun m -> admit() );
+      (fun m -> h_exists_extensionality
+        (fun (v:a) -> pts_to r p v `star` q v)
+        (fun (v:a) -> pts_to_ref r p v `star` q v)
+      );
     let x = read_refine_core_atomic q r in
     change_hprop (pts_to_ref r p x `star` q x) (pts_to r p x `star` q x) (fun m -> ());
     return_atomic x
@@ -103,8 +105,7 @@ let share_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:
   = change_hprop
       (pts_to r p v)
       (pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-      // TODO: Needs a lemma here. And to unify with Steel.Actions which returns a new ref
-      (fun m -> admit())
+      (fun m -> share_pts_to_ref r p v m)
 
 let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
@@ -123,8 +124,7 @@ let gather_atomic
   = change_hprop
       (pts_to r p0 v0 `star` pts_to r p1 v1)
       (pts_to r (sum_perm p0 p1) v0)
-      // TODO: Needs a lemma here. And to unify with Steel.Actions
-      (fun m -> admit())
+      (fun m -> gather_pts_to_ref r p0 p1 v0 v1 m)
 
 let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT unit
@@ -171,3 +171,11 @@ let cas
       atomic_preserves_frame_and_preorder act m0;
       mst_put m1;
       x)
+
+let alloc_monotonic_ref = admit()
+let read_monotonic_ref = admit()
+let write_monotonic_ref = admit()
+let pure (p:prop) : hprop = admit()
+let witnessed  = admit()
+let witness = admit()
+let recall = admit()

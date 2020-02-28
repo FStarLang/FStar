@@ -203,6 +203,27 @@ val pts_to_array_injective
       interp (pts_to_array a p c1) m))
     (ensures (c0 == c1))
 
+val share_pts_to_array
+  (#t:_)
+  (a: array_ref t{not (is_null_array a)})
+  (p:perm{readable p})
+  (v:Seq.lseq t (U32.v (length a)))
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_array a p v) m)
+    (ensures interp (pts_to_array a (half_perm p) v `star` pts_to_array a (half_perm p) v) m)
+
+val gather_pts_to_array
+  (#t:_)
+  (a: array_ref t{not (is_null_array a)})
+  (p0:perm{readable p0})
+  (p1:perm{readable p1})
+  (v0 v1: Seq.lseq t (U32.v (length a)))
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_array a p0 v0 `star` pts_to_array a p1 v1) m)
+    (ensures interp (pts_to_array a (sum_perm p0 p1) v0) m)
+
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_ref and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,6 +251,29 @@ val pts_to_ref_injective
       interp (pts_to_ref a p c0) m /\
       interp (pts_to_ref a p c1) m))
     (ensures (c0 == c1))
+
+val share_pts_to_ref
+  (#t:_)
+  (#pre:Preorder.preorder t)
+  (r: reference t pre)
+  (p:perm{readable p})
+  (v:t)
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_ref r p v) m)
+    (ensures interp (pts_to_ref r (half_perm p) v `star` pts_to_ref r (half_perm p) v) m)
+
+val gather_pts_to_ref
+  (#t:_)
+  (#pre:Preorder.preorder t)
+  (r: reference t pre)
+  (p0:perm{readable p0})
+  (p1:perm{readable p1})
+  (v0 v1: t)
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_ref r p0 v0 `star` pts_to_ref r p1 v1) m)
+    (ensures interp (pts_to_ref r (sum_perm p0 p1) v0) m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -327,6 +371,9 @@ val elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hmem (h_exists p))
     ((forall (x:a). interp (p x) m ==> interp q m) ==>
      interp q m)
 
+val h_exists_extensionality (#a:_) (p q:a -> hprop)
+  : Lemma (requires forall (x:a). p x `equiv` q x)
+          (ensures h_exists p `equiv` h_exists q)
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall

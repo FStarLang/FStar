@@ -49,42 +49,39 @@ let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg a _ -> a | Return
 let step (p:protocol 'a{more_msgs p}) (x:next_msg_t p) : protocol 'a = Msg?.k (hnf p) x
 
 noeq
-type trace : from:protocol unit -> to:protocol unit -> nat -> Type =
-  | Waiting  : p:protocol unit -> trace p p 0
+type trace : from:protocol unit -> to:protocol unit -> Type =
+  | Waiting  : p:protocol unit -> trace p p
   | Message  : from:protocol unit{more_msgs from} ->
                x:next_msg_t from ->
-               n:nat ->
                to:protocol unit ->
-               trace (step from x) to n ->
-               trace from to (n + 1)
+               trace (step from x) to->
+               trace from to
 
-let rec extend (#from #to:protocol unit) (#n:nat)
-           (t:trace from to n{more_msgs to})
-           (m:next_msg_t to)
-  : Tot (trace from (step to m) (n + 1)) (decreases n)
+let rec extend (#from #to:protocol unit)
+               (t:trace from to{more_msgs to})
+               (m:next_msg_t to)
+  : Tot (trace from (step to m)) (decreases t)
   = match t with
     | Waiting _ ->
-      Message _ _ _ _ (Waiting (step to m))
-    | Message _from x _n _to tail ->
-      Message _ _ _ _  (extend tail m)
+      Message _ _ _ (Waiting (step to m))
+    | Message _from x _to tail ->
+      Message _ _ _ (extend tail m)
 
-
-let rec last_step_of (#from #to:protocol unit) (#n:nat)
-                     (t:trace from to n { ~ (Waiting? t) })
+let rec last_step_of (#from #to:protocol unit)
+                     (t:trace from to { ~ (Waiting? t) })
 
    : Tot (q:protocol unit &
           x:next_msg_t q &
           _:squash (more_msgs q /\to == step q x))
-         (decreases n)
+         (decreases t)
    = match t with
-     | Message _ x _ _ (Waiting _) -> (| from , x, () |)
-     | Message _ _ _ _ tail -> last_step_of tail
+     | Message _ x _ (Waiting _) -> (| from , x, () |)
+     | Message _ _ _ tail -> last_step_of tail
 
 noeq
 type partial_trace_of (p:protocol unit) = {
   to:protocol unit;
-  n:nat;
-  tr:trace p to n
+  tr:trace p to
 }
 
 module P = FStar.Preorder
@@ -95,7 +92,6 @@ let next (#p:protocol unit) : P.relation (partial_trace_of p) =
     more_msgs t0.to /\
     (exists (msg:next_msg_t t0.to).
       t1.to == step t0.to msg /\
-      t1.n  == t0.n + 1 /\
       t1.tr == extend t0.tr msg)
 
 let extended_to (#p:protocol unit) : P.preorder (partial_trace_of p) =
@@ -105,4 +101,4 @@ let extend_partial_trace (#p:protocol unit)
                          (x:partial_trace_of p)
                          (msg:next_msg_t x.to{more_msgs x.to})
   : Tot (y:partial_trace_of p{x `extended_to` y})
-  = { to=_; n=_; tr=extend x.tr msg}
+  = { to=_; tr=extend x.tr msg}

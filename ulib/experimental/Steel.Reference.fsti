@@ -61,3 +61,39 @@ val cas
     false
     (pts_to r full_perm v)
     (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+
+////////////////////////////////////////////////////////////////////////////////
+
+val alloc_monotonic_ref (#a:Type) (p:Preorder.preorder a) (v:a)
+  : SteelT (reference a p) emp (fun r -> pts_to_ref r full v)
+
+val read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> hprop)
+                       (r:reference a p)
+  : SteelT a (h_exists (fun (v:a) -> pts_to_ref r q v `star` frame v))
+             (fun v -> pts_to_ref r q v `star` frame v)
+
+val write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+                       (r:reference a p) (x:a{p v x})
+  : SteelT unit (pts_to_ref r full v)
+                (fun v -> pts_to_ref r full x)
+
+val pure (p:prop) : hprop
+
+let property (a:Type) = a -> prop
+
+val witnessed (#a:Type) (#p:Preorder.preorder a) (r:reference a p)
+              (fact:property a) : prop
+
+let stable_property (#a:Type) (p:Preorder.preorder a) = fact:property a { Preorder.stable fact p }
+
+val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
+            (fact:stable_property p)
+            (v:a)
+            (_:squash (fact v))
+  : SteelT unit (pts_to_ref r q v)
+                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
+
+val recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
+           (r:reference a p) (v:a) //using `erased a` makes it fail
+  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
+                (fun _ -> pts_to_ref r q v `star` pure (fact v))
