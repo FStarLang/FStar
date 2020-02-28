@@ -26,7 +26,8 @@ jobs:
         make -j -C src/ocaml-output
         make -j -C ulib
         make -j -C ulib/ml
+        zip -r fstar.zip *
     - uses: actions/upload-artifact@v1
       with:
         name: fstar_${GITHUB_SHA:0:12}_MacOS_x86_64
-        path: .
+        path: fstar.zip
