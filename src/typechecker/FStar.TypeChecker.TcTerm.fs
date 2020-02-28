@@ -2532,7 +2532,7 @@ and tc_eqn scrutinee env branch
 
           branch_guard
   in
-
+  
   (* 6 (a). Build equality conditions between the pattern and the scrutinee                                    *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 6 (a) and the when condition *)
   (*        For layered effects, we weaken with the branch guard instead                                       *)
@@ -2557,15 +2557,18 @@ and tc_eqn scrutinee env branch
     in
 
     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
-    //g_branch is trivial, its logical content is now incorporated within c
 
+    //g_branch is trivial, its logical content is now incorporated within c
+        
     let branch_has_layered_effect = c.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env in
 
     (* (b) *)
     let c_weak, g_when_weak =
      let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      if branch_has_layered_effect
-     then TcUtil.weaken_precondition env c (NonTrivial branch_guard), Env.trivial_guard  //use branch guard for weakening
+     then
+       let c = TcUtil.weaken_precondition env c (NonTrivial branch_guard) in
+       c, Env.trivial_guard  //use branch guard for weakening
      else
        match eqs, when_condition with
         | _ when not (Env.should_verify env) ->
@@ -2653,8 +2656,20 @@ and tc_eqn scrutinee env branch
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs)
             else () in
+ 
+          let c = c_weak
+            //|> TcComm.apply_lcomp (fun c -> c) (fun g -> TcComm.weaken_guard_formula g branch_guard)
+            |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms in
 
-          TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms c_weak
+       if Env.debug env <| Options.Extreme
+       then
+         let _, g_c = TcComm.lcomp_comp c in
+         BU.print3 "Just after substitution the branch, g_c: %s\n\nand g_branch: %s\n\nand branch_guard:%s\n\n"
+           (Rel.guard_to_string env g_c) (Rel.guard_to_string env g_branch) (Print.term_to_string branch_guard)
+       else ();
+       c
+
+
         else TcUtil.close_wp_lcomp env pat_bvs c_weak
     in
 
