@@ -1090,6 +1090,41 @@ let interp_inv_not_in_uses
          (p `star` frame) `star` istore';
     }
 
+#push-options "--z3rlimit 20"
+let interp_inv_unused #p i uses frame m0 =
+  let s = Set.union (Set.singleton i) uses in
+
+  let aux (m:mem) : Lemma
+    (interp (frame `star` locks_invariant uses m0) m <==>
+      interp ((p `star` frame) `star` locks_invariant s m0) m)
+  = let f (p:hprop) : prop = interp p m in
+
+    calc (<==>) {
+      f (frame `star` locks_invariant uses m0);
+      (<==>) {
+        star_commutative frame (locks_invariant uses m0);
+        refine_star_heap (lock_store_invariant uses m0.locks) frame (heap_ctr_valid m0);
+        refine_equiv_heap (lock_store_invariant uses m0.locks `star` frame) (heap_ctr_valid m0) m0.heap
+      }
+      f (lock_store_invariant uses m0.locks `star` frame) /\ (heap_ctr_valid m0) m0.heap;
+      (<==>) {
+        star_commutative frame (lock_store_invariant uses m0.locks);
+        interp_inv_not_in_uses i uses frame m0 }
+      f ((p `star` frame) `star` lock_store_invariant s m0.locks) /\ (heap_ctr_valid m0) m0.heap;
+      (<==>)
+        { star_commutative (p `star` frame) (lock_store_invariant s m0.locks);
+          refine_equiv_heap (lock_store_invariant s m0.locks `star` (p `star` frame)) (heap_ctr_valid m0) m0.heap
+        }
+      f (locks_invariant s m0 `star` (p `star` frame));
+      (<==>) {star_commutative (p `star` frame) (locks_invariant s m0) }
+      f ((p `star` frame) `star` locks_invariant s m0);
+    }
+
+  in
+
+  Classical.forall_intro aux
+#pop-options
+
 val pre_with_invariant
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)

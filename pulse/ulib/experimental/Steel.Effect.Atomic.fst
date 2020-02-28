@@ -10,20 +10,8 @@ type post_t (a:Type) = a -> hprop
 
 let state_uses (uses:Set.set lock_addr) = {state with Sem.locks_invariant = locks_invariant uses}
 
-// TODO: Add pre/postconditions
-let atomic_t (#a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
-  unit ->
-  Sem.Mst a #state
-  (requires fun m0 ->
-    interp (pre `star` locks_invariant uses m0) m0)
-  (ensures fun m0 x m1 ->
-    interp ((post x) `star` locks_invariant uses m1) m1 /\
-    Sem.preserves_frame #(state_uses uses) pre (post x) m0 m1)
-
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
-
-  // atomic_t uses is_ghost pre post
 
 let returnc (a:Type u#a) (x:a) : atomic_repr a Set.empty true emp (fun _ -> emp)
   = fun _ -> x
@@ -283,16 +271,45 @@ let cas
       x)
 #pop-options
 
-// TODO: This should be implemented using with_invariant in Steel.Actions
-// But for this, we need a with_invariant that takes directly an atomic_t
-// instead of an atomic
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 100"
+let lemma_sem_preserves (#p:hprop) (fp fp':hprop)
+  (m0 m1:mem) (uses:Set.set lock_addr) (i:inv p{not (i `Set.mem` uses)})
+  : Lemma
+   (requires Sem.preserves_frame #(state_uses (Set.union (Set.singleton i) uses))
+     (p `star` fp) (p `star` fp') m0 m1)
+   (ensures Sem.preserves_frame #(state_uses uses) fp fp' m0 m1)
+  = admit()
+#pop-options
+
+#push-options "--fuel 0 --ifuel 1"
+let with_invariant_aux
+  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
+  (#p:hprop)
+  (i:inv p{not (i `Set.mem` uses)})
+  (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
+  : atomic_repr a uses is_ghost fp fp'
+  = fun _ ->
+      let m0 = RMST.get() in
+      assume (inv_ok i m0);
+      let s = Set.union (Set.singleton i) uses in
+      interp_inv_unused i uses fp m0;
+      let x = f () in
+      let m1 = RMST.get() in
+      lemma_sem_preserves fp (fp' x) m0 m1 uses i;
+      // TODO: How do I derive this from the Mst definition?
+      assume (mem_evolves m0 m1);
+      inv_ok_stable i m0 m1;
+      interp_inv_unused i uses (fp' x) m1;
+      x
+#pop-options
+
 let with_invariant0
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
   (i:inv p{not (i `Set.mem` uses)})
   (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses is_ghost fp fp'
-  = SteelAtomic?.reflect (fun _ -> admit())
+  = SteelAtomic?.reflect (with_invariant_aux i f)
 
 let with_invariant_frame
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
