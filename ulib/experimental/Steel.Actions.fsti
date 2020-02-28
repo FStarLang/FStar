@@ -310,6 +310,16 @@ val sel_ref_lemma
     interp (pts_to_ref r p (sel_ref r m)) m
   )
 
+val sel_ref_depends_only_on (#a:Type0) (#pre:Preorder.preorder a)
+  (r:reference a pre) (p:perm{readable p})
+  (m0:hmem (ref_perm r p)) (m1:mem)
+: Lemma
+  (requires disjoint m0 m1)
+  (ensures
+    interp (ref_perm r p) (join m0 m1) /\
+    interp (ref r) m0 /\ interp (ref r) (join m0 m1) /\
+    sel_ref r m0 == sel_ref r (join m0 m1))
+
 val get_ref
   (#t: Type0)
   (uses:Set.set lock_addr)

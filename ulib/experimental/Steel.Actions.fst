@@ -2490,6 +2490,9 @@ let sel_ref_lemma_heap
   )
 #pop-options
 
+#push-options "--z3rlimit 10"
+let sel_ref_depends_only_on #a #pre r p m0 m1 = ()
+#pop-options
 
 let get_ref_pre_action
   (#t: Type0)
