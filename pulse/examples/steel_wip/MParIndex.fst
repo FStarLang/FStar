@@ -68,18 +68,6 @@ type m : nat -> Type u#a -> Type =
  | Act : #a:Type u#a -> #b:Type u#a -> #n:nat -> act:action a -> k:(a -> m n b) -> m (n + 1) b
  | Par : #a0:Type u#a -> #a1:Type u#a -> #a:Type u#a -> #n0:_ -> #n1:_ -> #n:_ -> left:m n0 a0 -> right:m n1 a1 -> k:(a0 & a1 -> m n a) -> m (n0 + n1 + n + 1) a
 
-
-// let tape = nat -> bool
-// let par a = tape & nat & s -> a & nat & s
-// let return #a (x:a) : par a = fun (t, n, s) -> x, n, s
-// let bind #a #b (f:par a) (g: a -> par b) : par b =
-//     fun (t, n, s) ->
-//       let a, n, s = f (t, n, s) in
-//       g a (t, n, s)
-// let rand : par bool = fun (t, n, s) -> t n, n+1, s
-// let get : par s = fun (t, n, s) -> s, n, s
-// let put s : par unit  = fun (t, n, _) -> (), n, s
-
 let nm a = n:nat & m n a
 
 let ( <? ) #a #b (x:nm a) (y:nm b) =
@@ -89,62 +77,26 @@ let ( <? ) #a #b (x:nm a) (y:nm b) =
 
 let reduct #a (redex:nm a) = x:nm a { x <? redex}
 
-let step_ret (#a:Type u#a) (redex:nm a{Return? (dsnd redex)})
-: Eff (reduct redex)
-= redex
-
-// let step_act (#a:Type u#a) (redex:nm a{Act? (dsnd redex)})
-// : Eff (reduct redex)
-// = let node = dsnd redex in
-//   let (act, k) = Act?.act node, Act?.k node in  //AR: TODO: FIXME: match act with | ... doesn' work
-
-// #restart-solver
-#set-options "--log_queries --fuel 4 --ifuel 4 --debug MParIndex --debug_level LayeredEffects --debug_level Extreme --print_implicits --ugly"
 let rec step (#a:Type u#a) (redex:nm a)
   : Eff (reduct #a redex)
-        //(decreases (dsnd redex))
-  = //let ret = returnc #(reduct #a redex) in\
-    let node = dsnd redex in
-
-    match node with
+        (decreases (dsnd redex))
+  = match dsnd redex with
+    | Return _ -> redex
     | Act act k ->
       let s0 = get () in
       let x, s1 = act s0 in
       put s1;
       (| _, k x |)
-    | _ -> admit ()
 
+    | Par #_ #_ #_ #_ #_ #n (Return x) (Return y) k ->
+      (| n, k (x, y) |)
 
-    // | Act _ _ -> step_act redex
-
-
-    // | _ -> admit ()
-
-
-    //   s0 <-- get ;
-    //   let x, s1 = act s0 in
-    //   put s1 ;;
-    //   ret (| _, k x |)
-
-    // | Par (Return x) (Return y) k ->
-    //   ret (| _ ,  k (x, y) |)
-
-    // | Par l r k ->
-    //   b <-- rand;
-    //   if (b || Return? r) && not (Return? l)
-    //   then (l' <-- step (| _, l |); 
-    //         let (| nl', l' |) = l' in
-    //         ret (| _, Par l' r k |))
-    //   else (r' <-- step (| _, r |); 
-    //         let (| nr', r' |) = r' in
-    //         ret (| _, Par l r' k |))
-
-
-// let rec run #a (redex:nm a) 
-//   : Tot (par a) 
-//         (decreases (dfst redex))
-//   = p <-- step redex ;
-//     match dsnd p with
-//     | Return x -> return x
-//     | _ -> run p
-
+    | Par l r k ->
+      let b = sample () in
+      if (b || Return? r) && not (Return? l)
+      then
+        let (| _, l' |) = step (| _, l|) in
+        (| _, Par l' r k |)
+      else
+        let (| _, r' |) = step (| _, r |) in
+        (| _, Par l r' k |)
