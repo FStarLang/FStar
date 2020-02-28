@@ -1,5 +1,5 @@
 [
-  "„R2ÅK§¢FbBÉ∂-~\u000f—",
+  "ø~aP/˘J“ÚU˜1ãl9A",
   [
     [
       "LowStar.Regional.regional",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "54091de87128a8e1b2874fb398751274"
+      "4db47b80787aa8eb679c3f7a404e0cdc"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_inv_reg",
@@ -29,7 +29,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "0445adf7c845702d7c00a342d5084206"
+      "1683aa34349c25ff8e53355297b6ce46"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_repr",
@@ -44,7 +44,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv"
       ],
       0,
-      "8762b312c8aae5fb8669805b2ab31f98"
+      "33d0dec51bde8e4d6671c0b54aac44dc"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_sep",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0c2682d7325cf2fa0a4e151b5b13bc2e"
+      "ed845f5a2422d3dee9761bd44843221f"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_sep",
@@ -79,7 +79,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "efa51cafcab86c69e02bfa3bbc5f447c"
+      "39bc60a8793873e1544499a92ef29eff"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__irepr",
@@ -91,7 +91,7 @@
         "projection_inverse_LowStar.Regional.Rgl_repr"
       ],
       0,
-      "7432798a8f6f139cfa0999c791ad4bd5"
+      "2ce2609a50dc24aa1ba5f1aca3f8f37c"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_alloc",
@@ -100,7 +100,7 @@
       1,
       [ "@query" ],
       0,
-      "73f85833662458a7f541c78b573842fc"
+      "634b732c5c6d2319af444027fb053af8"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_alloc",
@@ -115,6 +115,7 @@
         "proj_equation_LowStar.Regional.Rgl_r_repr",
         "proj_equation_LowStar.Regional.Rgl_region_of",
         "proj_equation_LowStar.Regional.Rgl_repr",
+        "proj_equation_LowStar.Regional.Rgl_state",
         "projection_inverse_LowStar.Regional.Rgl_irepr",
         "projection_inverse_LowStar.Regional.Rgl_loc_of",
         "projection_inverse_LowStar.Regional.Rgl_r_alloc_p",
@@ -122,6 +123,7 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_repr",
+        "projection_inverse_LowStar.Regional.Rgl_state",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__loc_of",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_alloc_p",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
@@ -129,7 +131,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "20504948c0a69c07fbb9080f5990a912"
+      "8b589f80cba39dabf6b7486f0a82477e"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_free",
@@ -142,13 +144,43 @@
         "proj_equation_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_r_inv",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
-        "refinement_interpretation_Tm_refine_30f9faa032ebc0d2b9d35d337cd0135a",
+        "refinement_interpretation_Tm_refine_6eb7ba34a84fdd17fda15c5896d179af",
         "refinement_interpretation_Tm_refine_c58dfb65755d322171c8f4bd78b94bc3",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "c2062f8ae82d5cf4365a3fd33e59e027"
+      "e2dde54250affac1260207333483697e"
+    ],
+    [
+      "LowStar.Regional.rg_alloc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Regional.rg_inv",
+        "fuel_guarded_inversion_LowStar.Regional.regional",
+        "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
+        "token_correspondence_LowStar.Regional.rg_inv"
+      ],
+      0,
+      "86afd84949d13e8b31c72697f85c131e"
+    ],
+    [
+      "LowStar.Regional.rg_free",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Regional.rg_inv",
+        "fuel_guarded_inversion_LowStar.Regional.regional",
+        "function_token_typing_LowStar.Regional.__proj__Rgl__item__r_inv",
+        "refinement_interpretation_Tm_refine_6eb7ba34a84fdd17fda15c5896d179af",
+        "refinement_interpretation_Tm_refine_f64756ebe054bb4965660dab8c42866c",
+        "token_correspondence_LowStar.Regional.rg_inv"
+      ],
+      0,
+      "32f5b83301af86b6cb6b25cec59a5c30"
     ],
     [
       "LowStar.Regional.regional",
@@ -161,7 +193,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "704b33456a57a18c4c9a35e7d94104ee"
+      "30315ba9d724bd06d19d3603c1bbc572"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_inv_reg",
@@ -178,7 +210,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "adcf8be17c594d8a9c4681e3ed748ee4"
+      "5e408d983afc5bcd41b7b7c798a85917"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_repr",
@@ -193,7 +225,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv"
       ],
       0,
-      "66613d37e90877e8b9afed9280ecded3"
+      "3a13728e37ca967d0a1d1c220b5a38fb"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_sep",
@@ -206,7 +238,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1a3b5a9db1f4f1b3037f74da80f93613"
+      "667a08d5ede345f174a0190038a5e3f6"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_sep",
@@ -228,7 +260,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "8b81fe2f2e4740242307a0f352edd3ce"
+      "d3f22a44339a42293e70b05cd9926057"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__irepr",
@@ -240,7 +272,7 @@
         "projection_inverse_LowStar.Regional.Rgl_repr"
       ],
       0,
-      "010dd3caeb8d53ad68afb7f8136c47d8"
+      "d94364d3ba162f0f111a5d55732c2ff4"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_alloc",
@@ -249,7 +281,7 @@
       1,
       [ "@query" ],
       0,
-      "ea43763f01820d6bc53e01d27cf3b74f"
+      "72fb9c4ba9f66b3e7f0ddca1251615d2"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_alloc",
@@ -264,6 +296,7 @@
         "proj_equation_LowStar.Regional.Rgl_r_repr",
         "proj_equation_LowStar.Regional.Rgl_region_of",
         "proj_equation_LowStar.Regional.Rgl_repr",
+        "proj_equation_LowStar.Regional.Rgl_state",
         "projection_inverse_LowStar.Regional.Rgl_irepr",
         "projection_inverse_LowStar.Regional.Rgl_loc_of",
         "projection_inverse_LowStar.Regional.Rgl_r_alloc_p",
@@ -271,6 +304,7 @@
         "projection_inverse_LowStar.Regional.Rgl_r_repr",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_repr",
+        "projection_inverse_LowStar.Regional.Rgl_state",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__loc_of",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_alloc_p",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
@@ -278,7 +312,7 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "bed29238c32016b1b536be6748acf877"
+      "43d4e79d2aa0c019f9e692bb9078fc6d"
     ],
     [
       "LowStar.Regional.__proj__Rgl__item__r_free",
@@ -291,13 +325,26 @@
         "proj_equation_LowStar.Regional.Rgl_region_of",
         "projection_inverse_LowStar.Regional.Rgl_r_inv",
         "projection_inverse_LowStar.Regional.Rgl_region_of",
-        "refinement_interpretation_Tm_refine_30f9faa032ebc0d2b9d35d337cd0135a",
+        "refinement_interpretation_Tm_refine_6eb7ba34a84fdd17fda15c5896d179af",
         "refinement_interpretation_Tm_refine_c58dfb65755d322171c8f4bd78b94bc3",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of"
       ],
       0,
-      "c3e83d261c71352f6304c201c5551e39"
+      "da9ff133e660c5c3b61c74d4085865a4"
+    ],
+    [
+      "LowStar.Regional.rg_alloc",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_LowStar.Regional.rg_inv",
+        "token_correspondence_LowStar.Regional.__proj__Rgl__item__r_inv",
+        "token_correspondence_LowStar.Regional.rg_inv"
+      ],
+      0,
+      "77a05cab60a1207cd1823beebdfdeb36"
     ]
   ]
 ]

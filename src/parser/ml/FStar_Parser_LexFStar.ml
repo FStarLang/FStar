@@ -522,13 +522,18 @@ let rec token = lexer
  | op_infix0d symbolchar* -> OPINFIX0d (L.lexeme lexbuf)
  | op_infix1  symbolchar* -> OPINFIX1 (L.lexeme lexbuf)
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
+ | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
+
+ (* Unicode Operators *)
+ | uoperator -> let id = L.lexeme lexbuf in
+   Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
+
  | op_infix3  symbolchar* -> 
      let l = L.lexeme lexbuf in
      if String.length l >= 2 && String.sub l 0 2 = "//" then
        one_line_comment l lexbuf
      else
         OPINFIX3 l
- | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
  | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
@@ -537,10 +542,6 @@ let rec token = lexer
  | ".()"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
  | ".(||)"                 -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
  | ".[||]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
-
- (* Unicode Operators *)
- | uoperator -> let id = L.lexeme lexbuf in
-   Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
  | eof -> EOF
  | _ -> fail lexbuf (E.Fatal_SyntaxError, "unexpected char")

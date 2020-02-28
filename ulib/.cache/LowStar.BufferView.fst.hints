@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "538b016831b6e90fe2bf3bf3b70b9814"
+      "08e4e7c627e1253850275c5b4c7e073e"
     ],
     [
       "LowStar.BufferView.__proj__View__item__get",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "74a1f23b5d1b0967fd1d05486c48cfd2"
+      "f4e45afe167c4941321d90b9d518c0fb"
     ],
     [
       "LowStar.BufferView.__proj__View__item__get",
@@ -34,7 +34,7 @@
         "projection_inverse_LowStar.BufferView.View_n"
       ],
       0,
-      "3bfe26a8fc55632f687dc1632737b5c7"
+      "41263c1beebbc2b250a3304f50048649"
     ],
     [
       "LowStar.BufferView.__proj__View__item__put",
@@ -43,7 +43,7 @@
       1,
       [ "@query" ],
       0,
-      "a514976fc88a6e10e53de138045cc82d"
+      "23f4cb78ae37ef0f7cc3d3d467c6713c"
     ],
     [
       "LowStar.BufferView.__proj__View__item__put",
@@ -62,7 +62,7 @@
         "refinement_interpretation_Tm_refine_8acb8fd8ca66227a7de04600f1aa9b0a"
       ],
       0,
-      "a7d85f3443f45e0d5fe5935b0ed41741"
+      "2adcae2e368b5d116756a543a2c691d7"
     ],
     [
       "LowStar.BufferView.buffer_view",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "177fb34f662b260ed3b97febb18a1330"
+      "9f53fce4ff2f71fd97d49b28299852e4"
     ],
     [
       "LowStar.BufferView.__proj__BufferView__item__v",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "46f373076ff1157ef6c072f99bda3579"
+      "16e3ad5e05239e2139923a7e9256a770"
     ],
     [
       "LowStar.BufferView.__proj__BufferView__item__v",
@@ -96,7 +96,7 @@
         "refinement_interpretation_Tm_refine_f2ee369a11791d606a8b2bbf30d7d30e"
       ],
       0,
-      "15e61c023a094c34b9df6464cd892e49"
+      "f7882cc4648c4e3569760bf4d3e1a672"
     ],
     [
       "LowStar.BufferView.mk_buffer_view",
@@ -105,7 +105,7 @@
       1,
       [ "@query" ],
       0,
-      "03fd6707c57ef3dbad21302a40b89161"
+      "6b2e97ba1b0b146eca8d18131eb71e9f"
     ],
     [
       "LowStar.BufferView.mk_buffer_view",
@@ -114,7 +114,7 @@
       1,
       [ "@query" ],
       0,
-      "3f1f3badc5280636f590ec5401661ce2"
+      "faba0355de1966c3a389a86c31cfa76e"
     ],
     [
       "LowStar.BufferView.as_buffer_mk_buffer_view",
@@ -123,7 +123,7 @@
       1,
       [ "@query" ],
       0,
-      "7f59c8848e17a1f34f83a9e5f0331898"
+      "f979cc69145c6abc096c43d16767ac1c"
     ],
     [
       "LowStar.BufferView.as_buffer_mk_buffer_view",
@@ -132,7 +132,7 @@
       1,
       [ "@query" ],
       0,
-      "648a59ba171fb0803d92d394f846241b"
+      "756a7713a31a201a4df0f291656a8f57"
     ],
     [
       "LowStar.BufferView.as_buffer_mk_buffer_view",
@@ -157,7 +157,7 @@
         "refinement_interpretation_Tm_refine_f2ee369a11791d606a8b2bbf30d7d30e"
       ],
       0,
-      "4d7d1df78f4fe97cd2ed2c246f4367e8"
+      "91aed87d8e6deabfea2d187f08a842f4"
     ],
     [
       "LowStar.BufferView.get_view_mk_buffer_view",
@@ -166,7 +166,7 @@
       1,
       [ "@query" ],
       0,
-      "b1dd9d103b6166750eca0061fc4fb71c"
+      "98cf2e7ae8eb547f7b77bea97dde588e"
     ],
     [
       "LowStar.BufferView.get_view_mk_buffer_view",
@@ -175,7 +175,7 @@
       1,
       [ "@query" ],
       0,
-      "fa106ee4efa77949b8f3435747634185"
+      "bcdf968d80368261377b6dc4b1d789bf"
     ],
     [
       "LowStar.BufferView.get_view_mk_buffer_view",
@@ -196,7 +196,7 @@
         "refinement_interpretation_Tm_refine_f2ee369a11791d606a8b2bbf30d7d30e"
       ],
       0,
-      "0e94f9841b869b635906fab5505c6f69"
+      "2c06dafecc8d9fad3da325a520e2940b"
     ],
     [
       "LowStar.BufferView.length",
@@ -239,7 +239,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "d43545e8eb493b397bc0ee83bb713fb7"
+      "1d1126ef58f0127ec325d919e1bfde33"
     ],
     [
       "LowStar.BufferView.length_eq",
@@ -248,7 +248,7 @@
       1,
       [ "@query" ],
       0,
-      "7294e0a9f2935740f9f7dca1a3da5fa2"
+      "2859d6f82c15c0f7bd164a7e67b2ce9e"
     ],
     [
       "LowStar.BufferView.length_eq",
@@ -257,7 +257,7 @@
       1,
       [ "@query", "equation_LowStar.BufferView.length" ],
       0,
-      "dec55c055a5676a4c15250de98534f8d"
+      "d90bdaa5fb5b115692acd36d667e1786"
     ],
     [
       "LowStar.BufferView.view_indexing",
@@ -283,7 +283,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "e761f28486317e35c508e89a46988c25"
+      "3703894f6a843eb482ba0567d31998ea"
     ],
     [
       "LowStar.BufferView.split_at_i",
@@ -357,7 +357,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "4741c30eb69a1a387697f60c80d883f2"
+      "47525312e7be98e52694235ae51b0a1a"
     ],
     [
       "LowStar.BufferView.sel",
@@ -378,7 +378,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "f6a7cf7f0721646b48084701482b403b"
+      "12408f80a16afac71748f14e402ff869"
     ],
     [
       "LowStar.BufferView.upd",
@@ -420,7 +420,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "986758316ee47269c183392fd54ed07a"
+      "7d66b5c1ce3d6b51d56fe1648813b567"
     ],
     [
       "LowStar.BufferView.sel_upd1",
@@ -430,7 +430,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "bool_inversion", "data_elim_FStar.Pervasives.Mkdtuple4",
+        "b2t_def", "bool_inversion", "data_elim_FStar.Pervasives.Mkdtuple4",
         "data_elim_FStar.Pervasives.Native.Mktuple3",
         "data_elim_LowStar.BufferView.View",
         "equation_FStar.Monotonic.HyperHeap.hmap",
@@ -438,7 +438,9 @@
         "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Seq.Properties.lseq",
-        "equation_FStar.Seq.Properties.split", "equation_FStar.UInt.max_int",
+        "equation_FStar.Seq.Properties.split", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
         "equation_LowStar.BufferView.as_buffer",
         "equation_LowStar.BufferView.as_buffer_t",
         "equation_LowStar.BufferView.buffer",
@@ -447,7 +449,8 @@
         "equation_LowStar.BufferView.length",
         "equation_LowStar.BufferView.sel",
         "equation_LowStar.BufferView.split_at_i",
-        "equation_LowStar.BufferView.upd", "equation_Prims.logical",
+        "equation_LowStar.BufferView.upd",
+        "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.logical",
         "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_FStar.Pervasives.dtuple4",
         "fuel_guarded_inversion_LowStar.BufferView.view",
@@ -464,6 +467,7 @@
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_FStar.UInt.pow2_values",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Division", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
@@ -474,6 +478,7 @@
         "proj_equation_LowStar.BufferView.View_get",
         "proj_equation_LowStar.BufferView.View_n",
         "proj_equation_LowStar.BufferView.View_put",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
@@ -490,16 +495,18 @@
         "refinement_interpretation_Tm_refine_d1e860561cb285683e38dc83e83caadd",
         "refinement_interpretation_Tm_refine_d88f55d519e24baa891585a690bcfcfc",
         "refinement_interpretation_Tm_refine_e868304d22002dcb6abc5eb4206665d3",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "token_correspondence_LowStar.BufferView.__proj__View__item__put",
         "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Pervasives.__proj__Mkdtuple4__item___4",
-        "typing_FStar.Seq.Base.append",
+        "typing_FStar.Seq.Base.append", "typing_FStar.UInt32.v",
         "typing_LowStar.BufferView.__proj__BufferView__item__v",
         "typing_LowStar.BufferView.as_buffer",
         "typing_LowStar.BufferView.get_view",
-        "typing_LowStar.BufferView.split_at_i"
+        "typing_LowStar.BufferView.split_at_i",
+        "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
       "f6810a6f4b55226e83bb8ad661a2c4e8"
@@ -517,7 +524,7 @@
         "refinement_interpretation_Tm_refine_8233d76b57e95451540fc312b717fa79"
       ],
       0,
-      "337e0f3fa03a49130e145811809feb13"
+      "9482a61be4faa971855cb0e40600b0f6"
     ],
     [
       "LowStar.BufferView.sel_upd2",
@@ -531,7 +538,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b37430e0a1836bb0e038161a1b474fcf"
+      "a1d1eb4df8ecc0c4f3ac9d6b4a6666eb"
     ],
     [
       "LowStar.BufferView.sel_upd2",
@@ -624,7 +631,7 @@
         "typing_LowStar.BufferView.split_at_i"
       ],
       0,
-      "fdc4c385415237e74f655558909537e1"
+      "9b90a923639b55038f973f45a0eacea9"
     ],
     [
       "LowStar.BufferView.sel_upd",
@@ -639,7 +646,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "21cb4dc56f8d2e2f6a057b8d8e18f297"
+      "67804e0536714bc350646992ea176453"
     ],
     [
       "LowStar.BufferView.sel_upd",
@@ -667,7 +674,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "4d03b2131dc6c7201e3ac72f7889b804"
+      "59b5b5da4524fc70b61954cc09e30e34"
     ],
     [
       "LowStar.BufferView.lemma_upd_with_sel",
@@ -679,7 +686,7 @@
         "refinement_interpretation_Tm_refine_155f92e3c25ca20d3a5794c7425bd632"
       ],
       0,
-      "815b5ba544e58bd83e4b335bdbce3262"
+      "b00f5751eb774146739c9b93d36fce19"
     ],
     [
       "LowStar.BufferView.lemma_upd_with_sel",
@@ -716,7 +723,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "8e9a79fe5f63d87646c06466f877a842"
+      "2a4eec6d90b9c206ca05e683d7476efb"
     ],
     [
       "LowStar.BufferView.upd_modifies",
@@ -821,7 +828,7 @@
         "refinement_interpretation_Tm_refine_722faa84d246035d4629445d62de88e8"
       ],
       0,
-      "305583d5754b082aba4bb52446a112a6"
+      "8c37b00add2df06d7224fdec5fdf9cce"
     ],
     [
       "LowStar.BufferView.as_seq'",
@@ -874,7 +881,7 @@
         "typing_LowStar.BufferView.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "f5522d4ff7f6f85cff240eda5fe7fa3c"
+      "da323a02908201c296773eb3266f5fe0"
     ],
     [
       "LowStar.BufferView.as_seq",
@@ -896,7 +903,7 @@
         "typing_LowStar.BufferView.length"
       ],
       0,
-      "dff6fb19e4a7889889d9eb2c498c4018"
+      "8f857b0b7385c0167c19904778c91a1e"
     ],
     [
       "LowStar.BufferView.as_seq_sel",
@@ -911,7 +918,7 @@
         "typing_LowStar.BufferView.as_seq"
       ],
       0,
-      "9037d313aa57676362c1982a5880c4e2"
+      "f84986fb471de20c01a8dc85dbbf7a75"
     ],
     [
       "LowStar.BufferView.as_seq_sel",
@@ -982,7 +989,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a441015247817f7af0db50330e47cd7b"
+      "04c8d05d4037ea5407c072dc3da5542f"
     ],
     [
       "LowStar.BufferView.get_sel",
@@ -1059,7 +1066,7 @@
         "typing_LowStar.BufferView.split_at_i"
       ],
       0,
-      "1beda9f24053824be3a1e5a6d17c8701"
+      "c98a6946f5a9e24669b9e087d3583b2f"
     ],
     [
       "LowStar.BufferView.get_sel",
@@ -1144,7 +1151,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "ced98797339f72ee1309d3753e3934a9"
+      "2206cc5e9a5506c8fea97a3f2b32afe4"
     ],
     [
       "LowStar.BufferView.put_sel",
@@ -1194,7 +1201,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "48f86fa691689c89aa8533fef69a7bd3"
+      "0f839ab566a756e604f4ba5efe891cbd"
     ],
     [
       "LowStar.BufferView.put_sel",
@@ -1281,7 +1288,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "73d2cba12ef15ef4dabc8429c4f72946"
+      "95d324e8ece8e523dfa6bf56bee0391b"
     ]
   ]
 ]

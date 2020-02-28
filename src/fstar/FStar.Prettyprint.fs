@@ -34,13 +34,17 @@ let temp_file_name f = format1 "%s.print_.fst" f
 
 let generate (m: printing_mode) filenames =
     let parse_and_prettyprint (m: printing_mode) filename =
-        let inf, outf =
+        let modul, comments = D.parse_file filename in
+        let outf =
           match m with
-          | ToTempFile -> filename, Some (open_file_for_writing (temp_file_name filename))
-          | FromTempToFile -> (temp_file_name filename), Some (open_file_for_writing filename)
-          | FromTempToStdout -> (temp_file_name filename), None
+          | FromTempToStdout -> None
+          | FromTempToFile ->
+            let outf = open_file_for_writing filename in
+            Some outf
+          | ToTempFile ->
+            let outf = open_file_for_writing (temp_file_name filename) in
+            Some outf
         in
-        let modul, comments = D.parse_file inf in
         let leftover_comments =
             let comments = List.rev comments in
             let doc, comments = modul_with_comments_to_document modul comments in
@@ -48,7 +52,7 @@ let generate (m: printing_mode) filenames =
             (match outf with
              | Some f -> append_to_file f <| P.pretty_string (float_of_string "1.0") 100 doc
              | None -> P.pretty_out_channel (float_of_string "1.0") 100 doc stdout);
-            comments
+           comments
         in
         let left_over_doc =
           if not (FStar.List.isEmpty leftover_comments) then
@@ -60,15 +64,11 @@ let generate (m: printing_mode) filenames =
             P.empty
         in
         match outf with
-        | Some f ->
-            begin
-            append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc;
-            close_file f
-            end
-        | None -> P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
+        | None ->
+          P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
+
+        | Some outf ->
+          append_to_file outf <| P.pretty_string (float_of_string "1.0") 100 left_over_doc;
+          close_file outf
     in
-    List.iter (parse_and_prettyprint m) filenames;
-    match m with
-    | FromTempToFile
-    | FromTempToStdout -> List.iter (fun f -> delete_file (temp_file_name f)) filenames
-    | ToTempFile -> ()
+    List.iter (parse_and_prettyprint m) filenames
