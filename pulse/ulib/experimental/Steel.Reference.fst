@@ -54,8 +54,10 @@ let read_refine_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (q:a -> hpr
   = change_hprop
       (h_exists (fun (v:a) -> pts_to r p v `star` q v))
       (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
-      // TODO: h_exists extensionality lemma in Memory
-      (fun m -> admit() );
+      (fun m -> h_exists_extensionality
+        (fun (v:a) -> pts_to r p v `star` q v)
+        (fun (v:a) -> pts_to_ref r p v `star` q v)
+      );
     let x = read_refine_core_atomic q r in
     change_hprop (pts_to_ref r p x `star` q x) (pts_to r p x `star` q x) (fun m -> ());
     return_atomic x

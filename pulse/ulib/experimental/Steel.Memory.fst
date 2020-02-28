@@ -766,6 +766,7 @@ let intro_exists #a x p m = ()
 
 let elim_exists #a p q m = ()
 
+let h_exists_extensionality #a p q = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall

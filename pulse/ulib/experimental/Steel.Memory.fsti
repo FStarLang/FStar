@@ -327,6 +327,9 @@ val elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hmem (h_exists p))
     ((forall (x:a). interp (p x) m ==> interp q m) ==>
      interp q m)
 
+val h_exists_extensionality (#a:_) (p q:a -> hprop)
+  : Lemma (requires forall (x:a). p x `equiv` q x)
+          (ensures h_exists p `equiv` h_exists q)
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall
