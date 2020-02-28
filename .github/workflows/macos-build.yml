@@ -29,5 +29,5 @@ jobs:
         zip -r fstar.zip *
     - uses: actions/upload-artifact@v1
       with:
-        name: fstar_${GITHUB_SHA:0:12}_MacOS_x86_64
+        name: fstar_MacOS_x86_64
         path: fstar.zip
