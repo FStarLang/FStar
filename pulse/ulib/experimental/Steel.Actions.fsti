@@ -16,7 +16,6 @@
 module Steel.Actions
 open Steel.Memory
 open FStar.Real
-open Steel.Permissions
 module U32 = FStar.UInt32
 
 let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
@@ -150,7 +149,7 @@ val as_seq_lemma
   (#t:_)
   (a:array_ref t)
   (i:U32.t{U32.v i < U32.v (length a)})
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (m:hmem (array_perm a p))
   : Lemma (interp (array a) m /\
            interp (pts_to_array a p (as_seq a m)) m)
@@ -160,7 +159,7 @@ val index_array
   (uses:Set.set lock_addr)
   (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p:perm{readable p})
   (i:U32.t{U32.v i < U32.v (length a)})
   : atomic
     uses
@@ -179,9 +178,9 @@ val upd_array
   : atomic
     uses
     false
-    (pts_to_array a full_permission iseq)
+    (pts_to_array a full_perm iseq)
     unit
-    (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+    (fun _ -> pts_to_array a full_perm (Seq.upd iseq (U32.v i) v))
 
 val alloc_array
   (#t: _)
@@ -190,13 +189,13 @@ val alloc_array
   : m_action
     emp
     (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
-    (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+    (fun a -> pts_to_array a full_perm (Seq.Base.create (U32.v len) init))
 
 val free_array
   (#t: _)
   (a: array_ref t{freeable a})
   : m_action
-    (array_perm a full_permission)
+    (array_perm a full_perm)
     unit
     (fun _ -> emp)
 
@@ -205,7 +204,7 @@ val share_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : atomic
     uses
     false
@@ -215,8 +214,8 @@ val share_array
       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
-      (pts_to_array a (half_permission p) iseq)
-      (pts_to_array a' (half_permission p) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a (half_perm p) iseq)
+      (pts_to_array a' (half_perm p) (Ghost.hide (Ghost.reveal iseq)))
     )
 
 val gather_array
@@ -228,8 +227,8 @@ val gather_array
     (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   : atomic
     uses
     false
@@ -238,14 +237,14 @@ val gather_array
       (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
+    (fun _ -> pts_to_array a (sum_perm p p') iseq)
 
 val split_array
   (#t: _)
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i < U32.v (length a)})
   : atomic
     uses
@@ -276,7 +275,7 @@ val glue_array
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : atomic
     uses
     false
@@ -304,19 +303,29 @@ val sel_ref_lemma
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (m: hmem (ref_perm r p))
   : Lemma (
     interp (ref r) m /\
     interp (pts_to_ref r p (sel_ref r m)) m
   )
 
+val sel_ref_depends_only_on (#a:Type0) (#pre:Preorder.preorder a)
+  (r:reference a pre) (p:perm{readable p})
+  (m0:hmem (ref_perm r p)) (m1:mem)
+: Lemma
+  (requires disjoint m0 m1)
+  (ensures
+    interp (ref_perm r p) (join m0 m1) /\
+    interp (ref r) m0 /\ interp (ref r) (join m0 m1) /\
+    sel_ref r m0 == sel_ref r (join m0 m1))
+
 val get_ref
   (#t: Type0)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : atomic
     uses
     false
@@ -334,9 +343,9 @@ val set_ref
   : atomic
     uses
     false
-    (pts_to_ref r full_permission old_v)
+    (pts_to_ref r full_perm old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v)
+    (fun _ -> pts_to_ref r full_perm v)
 
 val alloc_ref
   (#t: Type0)
@@ -345,14 +354,14 @@ val alloc_ref
   : m_action
     emp
     (reference t pre)
-    (fun r -> pts_to_ref r full_permission v)
+    (fun r -> pts_to_ref r full_perm v)
 
 val free_ref
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   : m_action
-    (ref_perm r full_permission)
+    (ref_perm r full_perm)
     unit
     (fun _ -> emp)
 
@@ -361,7 +370,7 @@ val share_ref
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (contents: Ghost.erased t)
   : atomic
     uses
@@ -369,8 +378,8 @@ val share_ref
     (pts_to_ref r p contents)
     (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r' (half_permission p) contents
+      pts_to_ref r (half_perm p) contents `star`
+      pts_to_ref r' (half_perm p) contents
     )
 
 val gather_ref
@@ -379,8 +388,8 @@ val gather_ref
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (r':reference t pre{ref_address r' = ref_address r})
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   (contents: Ghost.erased t)
   : atomic
     uses
@@ -388,14 +397,14 @@ val gather_ref
     (pts_to_ref r p contents `star`
       pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
+    (fun _ -> pts_to_ref r (sum_perm p p') contents)
 
 val get_ref_refine
   (#t:Type0)
   (uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
   (r:reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (q:t -> hprop)
   : atomic
     uses
@@ -415,9 +424,9 @@ val cas
   : atomic
     uses
     false
-    (pts_to_ref r full_permission v)
+    (pts_to_ref r full_perm v)
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
 
 //////////////////////////////////////////////////////////////////////////
 // Monotonic state
