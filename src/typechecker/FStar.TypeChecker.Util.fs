@@ -1438,6 +1438,7 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
   (scrutinee:bv) : lcomp =
+
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
@@ -1497,6 +1498,7 @@ let bind_cases env0 (res_t:typ)
 
             let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
+                let gthen = TcComm.weaken_guard_formula gthen (U.mk_conj bcond g) in
                 let md, ct_then, ct_else, g_lift_then, g_lift_else =
                   let m, cthen, celse, g_lift_then, g_lift_else =
                     lift_comps_sep_guards env cthen celse None false in

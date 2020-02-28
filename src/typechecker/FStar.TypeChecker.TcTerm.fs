@@ -2657,26 +2657,15 @@ and tc_eqn scrutinee env branch
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs)
             else () in
  
-          let c = c_weak
-            //|> TcComm.apply_lcomp (fun c -> c) (fun g -> TcComm.weaken_guard_formula g branch_guard)
-            |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms in
-
-       if Env.debug env <| Options.Extreme
-       then
-         let _, g_c = TcComm.lcomp_comp c in
-         BU.print3 "Just after substitution the branch, g_c: %s\n\nand g_branch: %s\n\nand branch_guard:%s\n\n"
-           (Rel.guard_to_string env g_c) (Rel.guard_to_string env g_branch) (Print.term_to_string branch_guard)
-       else ();
-       c
-
+          c_weak
+            |> TcComm.apply_lcomp (fun c -> c) (fun g ->
+                match eqs with
+                | None -> g
+                | Some eqs -> TcComm.weaken_guard_formula g eqs)
+            |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
 
         else TcUtil.close_wp_lcomp env pat_bvs c_weak
     in
-
-    if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) &&
-       Env.debug env <| Options.Other "LayeredEffects" then
-      BU.print1 "tc_eqn: c_weak applied to false: %s\n"
-        (TcComm.lcomp_to_string (maybe_return_c_weak false));
 
     c_weak.eff_name,
     c_weak.cflags,
