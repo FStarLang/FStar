@@ -78,7 +78,7 @@ let ( <? ) #a #b (x:nm a) (y:nm b) =
 let reduct #a (redex:nm a) = x:nm a { x <? redex}
 
 let rec step (#a:Type u#a) (redex:nm a)
-  : Eff (reduct #a redex)
+  : Eff (reduct redex)
         (decreases (dsnd redex))
   = match dsnd redex with
     | Return _ -> redex
