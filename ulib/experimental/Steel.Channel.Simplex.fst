@@ -157,7 +157,7 @@ type chan_t (p:prot) = {
   trace: trace_ref p;
 }
 
-let half : perm = Steel.Permissions.(half_permission full)
+let half : perm = half_perm full
 
 let step (s:sprot) (x:msg_t s) = step s x
 

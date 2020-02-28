@@ -15,7 +15,6 @@
 *)
 module Steel.Actions
 open FStar.Real
-open Steel.Permissions
 open Steel.Memory
 module U32 = FStar.UInt32
 open FStar.FunctionalExtensionality
@@ -1259,7 +1258,7 @@ let read_array_addr
   (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   (m: hheap (pts_to_array_with_preorder a p iseq pre))
   : Tot (x:t{x == Seq.index iseq (U32.v i)})
@@ -1278,7 +1277,7 @@ let index_array_pre_action
   (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : Tot (pre_action
     (pts_to_array_with_preorder a p iseq pre)
@@ -1293,7 +1292,7 @@ let index_array_action
   (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i: U32.t{U32.v i < U32.v (length a)})
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : Tot (pre_action
     (pts_to_array_with_preorder a p iseq pre)
@@ -1313,7 +1312,7 @@ let index_array
   (uses:Set.set lock_addr)
   (a:array_ref t{not (is_null_array a)})
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i < U32.v (length a)}) =
   promote_action
     uses
@@ -1327,7 +1326,7 @@ let update_array_addr
   (iseq:  Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   (v: t)
-  (perm:permission{allows_read perm})
+  (perm:perm{readable perm})
   (pre: (Ghost.erased (Preorder.preorder (option t))){
     (Ghost.reveal pre) (Some (Seq.index iseq (U32.v i))) (Some v)
   })
@@ -1359,10 +1358,10 @@ let upd_array_heap
   (pre: (Ghost.erased (Preorder.preorder (option t))){
     (Ghost.reveal pre) (Some (Seq.index iseq (U32.v i))) (Some v)
   })
-  (h: hheap (pts_to_array_with_preorder a full_permission iseq pre)) : heap =
+  (h: hheap (pts_to_array_with_preorder a full_perm iseq pre)) : heap =
   let a' = Some?.v a in
   let Array _ len v_orig _ = select_addr h a'.array_addr in
-  update_array_addr a iseq i v full_permission pre h
+  update_array_addr a iseq i v full_perm pre h
 #pop-options
 
 #push-options "--z3rlimit 15 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
@@ -1381,7 +1380,7 @@ let upd_array_heap_frame_disjointness_preservation
     (requires
       disjoint_heap h0 h1 /\
       h == join_heap h0 h1 /\
-      interp_heap (pts_to_array_with_preorder a full_permission iseq pre) h0 /\
+      interp_heap (pts_to_array_with_preorder a full_perm iseq pre) h0 /\
       interp_heap frame h1)
     (ensures (
       let h0' = upd_array_heap a iseq i v pre h0 in
@@ -1400,9 +1399,9 @@ let upd_array_pre_action
     (Ghost.reveal pre) (Some (Seq.index iseq (U32.v i))) (Some v)
   })
   : pre_action
-    (pts_to_array_with_preorder a full_permission iseq pre)
+    (pts_to_array_with_preorder a full_perm iseq pre)
     unit
-    (fun _ -> pts_to_array_with_preorder a full_permission (Seq.upd iseq (U32.v i) v) pre)
+    (fun _ -> pts_to_array_with_preorder a full_perm (Seq.upd iseq (U32.v i) v) pre)
   = fun h ->
     (| (), upd_array_heap a iseq i v pre h |)
 
@@ -1422,7 +1421,7 @@ let upd_array_action_memory_split_independence
     (requires
       disjoint_heap h0 h1 /\
       h == join_heap h0 h1 /\
-      interp_heap (pts_to_array_with_preorder a full_permission iseq pre) h0 /\
+      interp_heap (pts_to_array_with_preorder a full_perm iseq pre) h0 /\
       interp_heap frame h1)
     (ensures (
       let (| _, h' |) = upd_array_pre_action a iseq i v pre h in
@@ -1462,9 +1461,9 @@ let upd_array_action
   })
   : Tot (
     action
-      (pts_to_array_with_preorder a full_permission iseq pre)
+      (pts_to_array_with_preorder a full_perm iseq pre)
       unit
-      (fun _ -> pts_to_array_with_preorder a full_permission (Seq.upd iseq (U32.v i) v) pre)
+      (fun _ -> pts_to_array_with_preorder a full_perm (Seq.upd iseq (U32.v i) v) pre)
     )
   =
   pre_action_to_action
@@ -1492,9 +1491,9 @@ let upd_array
   : atomic
     uses
     false
-    (pts_to_array a full_permission iseq)
+    (pts_to_array a full_perm iseq)
     unit
-    (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+    (fun _ -> pts_to_array a full_perm (Seq.upd iseq (U32.v i) v))
   =
   promote_action
     uses
@@ -1512,7 +1511,7 @@ let singleton_heap
     U32.v len = U32.v (max_length a) /\
     0 = U32.v (offset a)
   })
-  : hheap (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+  : hheap (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
   =
   match a with None -> on _ (fun a' -> None) | Some a ->
   let h = on _ (fun a' ->
@@ -1521,7 +1520,7 @@ let singleton_heap
       { preorder = pre;
         v_with_p = Some ({
           value = init;
-          perm = (full_permission <: (perm:permission{allows_read perm}));
+          perm = full_perm;
         })
       }
     )) true)
@@ -1553,7 +1552,7 @@ let alloc_array_pre_m_action
   : pre_m_action
     emp
     (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
-    (fun a -> pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+    (fun a -> pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
   =  fun m ->
   mem_invariant_elim emp m;
   let a = if len = 0ul then None else Some ({
@@ -1568,30 +1567,30 @@ let alloc_array_pre_m_action
   affine_star emp (lock_store_invariant Set.empty m.locks) m;
   assert(interp_heap (lock_store_invariant Set.empty m.locks) m.heap);
   assert(interp_heap (
-    pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+    pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
     single_h
   );
   intro_star_heap
     (lock_store_invariant Set.empty m.locks)
-    (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+    (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
     (heap_of_mem m)
     single_h;
   assert(interp_heap (
       (lock_store_invariant Set.empty m.locks) `star`
-      (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+      (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
     ) (join_heap (heap_of_mem m) single_h)
   );
   star_commutative_heap
     (lock_store_invariant Set.empty m.locks)
-    (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre);
+    (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre);
   assert(interp_heap (
-    (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+    (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
     `star` (lock_store_invariant Set.empty m.locks)) new_h
   );
   let new_m = { m with heap = new_h; ctr = m.ctr +1 } in
   assert(forall i. i>= m.ctr + 1 ==> new_h i == None);
   mem_invariant_intro
-    (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+    (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
     new_m;
   (| a, new_m |)
 #pop-options
@@ -1638,31 +1637,31 @@ let alloc_array_is_m_frame_and_preorder_preserving
     let single_h = singleton_heap len init pre a in
     assert (h1 == join_heap single_h h);
     intro_pts_to_array_with_preorder
-      a full_permission (Seq.Base.create (U32.v len) init) pre single_h;
+      a full_perm (Seq.Base.create (U32.v len) init) pre single_h;
     assert (interp_heap (
-      pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre) single_h
+      pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre) single_h
     );
     ac_reasoning_for_m_frame_preserving' emp frame (lock_store_invariant Set.empty m.locks) m;
     assert (interp_heap (frame `star` lock_store_invariant Set.empty m.locks) h);
     intro_star_heap
-      (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+      (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
       (frame `star` lock_store_invariant Set.empty m.locks)
       single_h
       h;
     assert (interp_heap
-      (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre
+      (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre
       `star` (frame `star` lock_store_invariant Set.empty m.locks)) h1
     );
     star_associative
-      (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre)
+      (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre)
       frame
       (lock_store_invariant Set.empty m.locks);
     assert (interp_heap
-      ((pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre
+      ((pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre
       `star` frame) `star` lock_store_invariant Set.empty m.locks) h1
     );
     mem_invariant_intro
-      (pts_to_array_with_preorder a full_permission (Seq.Base.create (U32.v len) init) pre
+      (pts_to_array_with_preorder a full_perm (Seq.Base.create (U32.v len) init) pre
       `star` frame)
       m1;
     assert(mem_evolves m m1)
@@ -1698,7 +1697,7 @@ let alloc_array
   : m_action
     emp
     (a:array_ref t{length a = len /\ offset a = 0ul /\ max_length a = len})
-    (fun a -> pts_to_array a full_permission (Seq.Base.create (U32.v len) init))
+    (fun a -> pts_to_array a full_perm (Seq.Base.create (U32.v len) init))
   =
   alloc_array_is_m_frame_and_preorder_preserving len init
     (trivial_optional_preorder (trivial_preorder t));
@@ -1709,7 +1708,7 @@ let free_array_pre_action
   (#t: _)
   (a: array_ref t{freeable a})
   : pre_action
-    (array_perm a full_permission)
+    (array_perm a full_perm)
     unit
     (fun _ -> emp)
   = fun h -> (| (), on _ (fun a' ->
@@ -1719,32 +1718,32 @@ let free_array_pre_action
       assert(t' == t');
       let aux (i:nat{i < len}) : Lemma (
         Some? (Seq.index seq i).v_with_p /\
-        (Some?.v (Seq.index seq i).v_with_p).perm == full_permission
+        (Some?.v (Seq.index seq i).v_with_p).perm == full_perm
       ) =
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
           )
         ) = () in
         Classical.exists_elim
           (Some? (Seq.index seq i).v_with_p /\
-            (Some?.v (Seq.index seq i).v_with_p).perm == full_permission)
+            (Some?.v (Seq.index seq i).v_with_p).perm == full_perm)
           pf (fun contents ->
             let pf : squash (exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
             ) = () in
             Classical.exists_elim
               (Some? (Seq.index seq i).v_with_p /\
-                (Some?.v (Seq.index seq i).v_with_p).perm == full_permission)
+                (Some?.v (Seq.index seq i).v_with_p).perm == full_perm)
               pf (fun pre ->
-                assert(interp_heap (pts_to_array_with_preorder a full_permission contents pre) h);
+                assert(interp_heap (pts_to_array_with_preorder a full_perm contents pre) h);
                 assert(contains_index seq i);
                 let x = select_index seq i in
-                assert(full_permission `lesser_equal_permission` x.perm)
+                assert(full_perm `lesser_equal_perm` x.perm)
               )
         )
       in
@@ -1779,18 +1778,18 @@ let free_array_action
         Some (Array t1 len1 seq1 live1), Some (Array tj lenj seqj livej) ->
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
           )
         ) = () in
         Classical.exists_elim
           (h' addr == (join_heap h0' h1) addr)
           pf (fun contents ->
             let pf : squash (exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
             ) = () in
             Classical.exists_elim
               (h' addr == (join_heap h0' h1) addr)
@@ -1808,7 +1807,7 @@ let free_array
   (#t: _)
   (a: array_ref t{freeable a})
   : m_action
-    (array_perm a full_permission)
+    (array_perm a full_perm)
     unit
     (fun _ -> emp)
   =
@@ -1821,7 +1820,7 @@ let share_array_pre_action
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (perm: permission{allows_read perm})
+  (perm: perm{readable perm})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : pre_action
     (pts_to_array_with_preorder a perm iseq pre)
@@ -1830,16 +1829,16 @@ let share_array_pre_action
        (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
-      (pts_to_array_with_preorder a (half_permission perm) iseq pre)
-      (pts_to_array_with_preorder a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)) pre)
+      (pts_to_array_with_preorder a (half_perm perm) iseq pre)
+      (pts_to_array_with_preorder a' (half_perm perm) (Ghost.hide (Ghost.reveal iseq)) pre)
     )
     = fun h -> match a with
     | None ->
       let a' = a in
       intro_star_heap
-        (pts_to_array_with_preorder a (half_permission perm) iseq pre)
+        (pts_to_array_with_preorder a (half_perm perm) iseq pre)
         (pts_to_array_with_preorder a'
-          (half_permission perm)
+          (half_perm perm)
           (Ghost.hide (Ghost.reveal iseq)) pre)
         h
         (on _ (fun a' -> None));
@@ -1856,10 +1855,10 @@ let share_array_pre_action
             else match (Seq.index seq i).v_with_p with
             | None -> { preorder = select_pre seq i; v_with_p = None }
             | Some x ->
-              assert(perm `lesser_equal_permission` x.perm);
-              let new_p = sub_permissions x.perm (half_permission perm) in
+              assert(perm `lesser_equal_perm` x.perm);
+              let new_p = sub_permissions x.perm (half_perm perm) in
               { preorder = select_pre seq i;
-                v_with_p = Some ({x with perm = (new_p <: (perm:permission{allows_read perm}))})
+                v_with_p = Some ({x with perm = new_p})
               }
           ) in
           assert(Seq.length new_seq = len);
@@ -1877,8 +1876,7 @@ let share_array_pre_action
             | None -> { preorder = select_pre seq i; v_with_p = None }
             | Some x ->
               { preorder = select_pre seq i; v_with_p =
-                Some ({x with perm =
-                  (half_permission perm <: (perm:permission{allows_read perm}))})
+                Some ({x with perm = half_perm perm})
               }
           ) in
           assert(Seq.length new_seq = len);
@@ -1920,7 +1918,7 @@ let share_array_action
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (perm: permission{allows_read perm})
+  (perm: perm{readable perm})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : action
     (pts_to_array_with_preorder a perm iseq pre)
@@ -1929,8 +1927,8 @@ let share_array_action
       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
-      (pts_to_array_with_preorder a (half_permission perm) iseq pre)
-      (pts_to_array_with_preorder a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)) pre)
+      (pts_to_array_with_preorder a (half_perm perm) iseq pre)
+      (pts_to_array_with_preorder a' (half_perm perm) (Ghost.hide (Ghost.reveal iseq)) pre)
     )
   =
   pre_action_to_action
@@ -1948,7 +1946,7 @@ let share_array_with_preorder
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (perm: permission{allows_read perm})
+  (perm: perm{readable perm})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : m_action
     (pts_to_array_with_preorder a perm iseq pre)
@@ -1957,8 +1955,8 @@ let share_array_with_preorder
       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
-      (pts_to_array_with_preorder a (half_permission perm) iseq pre)
-      (pts_to_array_with_preorder a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)) pre)
+      (pts_to_array_with_preorder a (half_perm perm) iseq pre)
+      (pts_to_array_with_preorder a' (half_perm perm) (Ghost.hide (Ghost.reveal iseq)) pre)
     )
     =
     non_alloc_action_to_non_locking_m_action
@@ -1971,7 +1969,7 @@ let share_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (perm: permission{allows_read perm})
+  (perm: perm{readable perm})
   : atomic
     uses
     false
@@ -1981,8 +1979,8 @@ let share_array
       (not (is_null_array a) ==> address a = address a')
     })
     (fun a' -> star
-      (pts_to_array a (half_permission perm) iseq)
-      (pts_to_array a' (half_permission perm) (Ghost.hide (Ghost.reveal iseq)))
+      (pts_to_array a (half_perm perm) iseq)
+      (pts_to_array a' (half_perm perm) (Ghost.hide (Ghost.reveal iseq)))
     )
     =
     promote_action
@@ -1991,7 +1989,59 @@ let share_array
       (share_array_action a iseq perm (trivial_optional_preorder (trivial_preorder t)))
       (fun h addr -> ())
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 40"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let starred_permissions_summable
+  (#t: _)
+  (a: array_ref t{not (is_null_array a)})
+  (a':array_ref t{
+    length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
+    address a = address a'
+  })
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: perm{readable p})
+  (p': perm{readable p'})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (star
+      (pts_to_array_with_preorder a p iseq pre)
+      (pts_to_array_with_preorder a' p' (Ghost.hide (Ghost.reveal iseq)) pre)
+    )
+  )
+  : Lemma (summable_permissions p p')
+  =
+  let pf : squash (exists (h0: heap). exists (h1: heap{disjoint_heap h0 h1}).
+    interp_heap (pts_to_array_with_preorder a p iseq pre) h0 /\
+    interp_heap (pts_to_array_with_preorder a' p' (Ghost.hide (Ghost.reveal iseq)) pre) h1 /\
+    h == join_heap h0 h1
+  ) =
+    ()
+  in
+  Classical.exists_elim (summable_permissions p p') pf (fun h0 ->
+    let pf : squash (exists (h1: heap{disjoint_heap h0 h1}).
+      interp_heap (pts_to_array_with_preorder a p iseq pre) h0 /\
+      interp_heap (pts_to_array_with_preorder a' p' (Ghost.hide (Ghost.reveal iseq)) pre) h1 /\
+      h == join_heap h0 h1
+    ) =
+      ()
+    in
+    Classical.exists_elim (summable_permissions p p') pf (fun h1 ->
+      match a, a' with
+      | Some _, Some _ -> begin
+        match h0 (address a), h1 (address a') with
+        | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
+          assert(disjoint_addr h0 h1 (address a));
+          assert(contains_index seq0 (U32.v (offset a)));
+          assert(contains_index seq1 (U32.v (offset a')));
+          let x0 = select_index seq0 (U32.v (offset a)) in
+	  let x1 = select_index seq1 (U32.v (offset a')) in
+          assert(summable_permissions x0.perm x1.perm)
+        | _ -> ()
+      end
+      | _ -> ()
+    )
+  )
+#pop-options
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 30"
 let gather_array_pre_action
   (#t: _)
   (a: array_ref t)
@@ -2000,8 +2050,8 @@ let gather_array_pre_action
     (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : pre_action
     (star
@@ -2009,9 +2059,15 @@ let gather_array_pre_action
       (pts_to_array_with_preorder a' p' (Ghost.hide (Ghost.reveal iseq)) pre)
     )
     unit
-    (fun _ -> pts_to_array_with_preorder a (sum_permissions p p') iseq pre)
+    (fun _ -> pts_to_array_with_preorder a (sum_perm p p') iseq pre)
   = fun h ->
-    (| (), h |)
+    match a with
+    | None ->
+      intro_pts_to_array_with_preorder a (sum_perm p p') iseq pre h;
+      (| (), h |)
+    | Some _ ->
+      starred_permissions_summable a a' iseq p p' pre h;
+      (| (), h |)
 #pop-options
 
 #push-options "--ifuel 1 --z3rlimit 30"
@@ -2023,8 +2079,8 @@ let gather_array_action
     (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : action
     (star
@@ -2032,7 +2088,7 @@ let gather_array_action
       (pts_to_array_with_preorder a' p' (Ghost.hide (Ghost.reveal iseq)) pre)
     )
     unit
-    (fun _ -> pts_to_array_with_preorder a (sum_permissions p p') iseq pre)
+    (fun _ -> pts_to_array_with_preorder a (sum_perm p p') iseq pre)
   =
   pre_action_to_action
     (gather_array_pre_action a a' iseq p p' pre)
@@ -2051,8 +2107,8 @@ let gather_array
     (not (is_null_array a) ==> address a = address a')
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   : atomic
     uses
     false
@@ -2061,7 +2117,7 @@ let gather_array
       (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
     )
     unit
-    (fun _ -> pts_to_array a (sum_permissions p p') iseq)
+    (fun _ -> pts_to_array a (sum_perm p p') iseq)
     =
     promote_action
       uses
@@ -2075,7 +2131,7 @@ let split_array_heaps
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i <= U32.v (length a)})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   (h: hheap (pts_to_array_with_preorder a p iseq pre))
@@ -2120,7 +2176,7 @@ let split_array_heaps_disjoint
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i <= U32.v (length a)})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   (h: hheap (pts_to_array_with_preorder a p iseq pre))
@@ -2137,7 +2193,7 @@ let split_array_heaps_joint_equal
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i <= U32.v (length a)})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   (h: hheap (pts_to_array_with_preorder a p iseq pre))
@@ -2167,7 +2223,7 @@ let split_array_pre_action
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i <= U32.v (length a)})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : pre_action
@@ -2214,7 +2270,7 @@ let split_array_action
   (#t: _)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i < U32.v (length a)})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : action
@@ -2246,7 +2302,7 @@ let split_array
   (uses:Set.set lock_addr)
   (a: array_ref t)
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (i:U32.t{U32.v i < U32.v (length a)})
   : atomic
     uses
@@ -2283,7 +2339,7 @@ let glue_array_pre_action
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : pre_action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
@@ -2316,7 +2372,7 @@ let glue_array_action
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (pre: Ghost.erased (Preorder.preorder (option t)))
   : action
     (star (pts_to_array_with_preorder a p iseq pre) (pts_to_array_with_preorder a' p iseq' pre))
@@ -2346,7 +2402,7 @@ let glue_array
   })
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (iseq': Ghost.erased (Seq.lseq t (U32.v (length a'))))
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : atomic
     uses
     false
@@ -2376,7 +2432,7 @@ let sel_ref_heap
   (r: reference t pre)
   (h: hheap (ref r))
   : t =
-  assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
+  assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
     interp_heap (pts_to_ref r p contents) h
   );
   let Array t' len' seq live = select_addr h (Some?.v r).array_addr in
@@ -2391,7 +2447,7 @@ let sel_ref
   (r: reference t pre)
   (m: hmem (ref r))
   : t =
-  assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
+  assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
     interp (pts_to_ref r p contents) m
   );
   let Array t' len' seq live = select_addr (heap_of_mem m) (Some?.v r).array_addr in
@@ -2404,7 +2460,7 @@ let sel_ref_lemma
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (m: hmem (ref_perm r p))
   : Lemma (
     interp (ref r) m /\
@@ -2412,7 +2468,7 @@ let sel_ref_lemma
   )
   =
   affine_star (ref r) (locks_invariant Set.empty m) m;
-  assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
+  assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
     interp (pts_to_ref r p contents) m
   )
 #pop-options
@@ -2422,24 +2478,27 @@ let sel_ref_lemma_heap
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (m: hheap (ref_perm r p))
   : Lemma (
     interp_heap (ref r) m /\
     interp_heap (pts_to_ref r p (sel_ref_heap r m) ) m
   )
   =
-  assert(exists (p:permission{allows_read p}) (contents: Ghost.erased t).
+  assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
     interp_heap (pts_to_ref r p contents) m
   )
 #pop-options
 
+#push-options "--z3rlimit 10"
+let sel_ref_depends_only_on #a #pre r p m0 m1 = ()
+#pop-options
 
 let get_ref_pre_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : pre_action
     (ref_perm r p)
     (x:t)
@@ -2458,7 +2517,7 @@ let get_ref_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : action
     (ref_perm r p)
     (x:t)
@@ -2477,7 +2536,7 @@ let get_ref
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   : atomic
     uses
     false
@@ -2499,17 +2558,17 @@ let set_ref_pre_action
   (old_v: Ghost.erased t)
   (v: t{pre old_v v})
   : pre_action
-    (pts_to_ref r full_permission old_v)
+    (pts_to_ref r full_perm old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v)
+    (fun _ -> pts_to_ref r full_perm v)
   = fun h ->
   let contents = sel_ref_heap r h in
-  sel_ref_lemma_heap r full_permission h;
+  sel_ref_lemma_heap r full_perm h;
   assert(Seq.upd (Seq.create 1 contents) 0 v `Seq.equal` Seq.create 1 v);
   upd_array_pre_action r (Seq.create 1 contents) 0ul v (trivial_optional_preorder pre) h
 #pop-options
 
-#push-options "--fuel 2 --z3rlimit 10"
+#push-options "--fuel 2 --z3rlimit 30"
 let set_ref_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2517,27 +2576,27 @@ let set_ref_action
   (old_v: Ghost.erased t)
   (v: t{pre old_v v})
   : action
-    (pts_to_ref r full_permission old_v)
+    (pts_to_ref r full_perm old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v)
+    (fun _ -> pts_to_ref r full_perm v)
   =
   pre_action_to_action
     (set_ref_pre_action r old_v v)
      (fun frame h0 h1 addr -> (* Disjointness preservation *)
-     sel_ref_lemma_heap r full_permission h0;
+     sel_ref_lemma_heap r full_perm h0;
      let iseq = Seq.create 1 (sel_ref_heap r h0) in
       upd_array_heap_frame_disjointness_preservation r iseq 0ul v (trivial_optional_preorder pre)
         (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1 addr -> (* Does not depend on framing *)
-      sel_ref_lemma_heap r full_permission h0;
+      sel_ref_lemma_heap r full_perm h0;
       let iseq = Seq.create 1 (sel_ref_heap r h0) in
       upd_array_action_memory_split_independence r iseq 0ul v (trivial_optional_preorder pre)
         (join_heap h0 h1) h0 h1 frame
     )
     (fun frame h0 h1  -> (* Return and post *)
       let iseq = Seq.create 1 (sel_ref_heap r h0) in
-      sel_ref_lemma_heap r full_permission h0;
+      sel_ref_lemma_heap r full_perm h0;
       let (| x0, h |) = set_ref_pre_action r old_v v h0 in
       let (| x1, h' |) = set_ref_pre_action r old_v v (join_heap h0 h1) in
       assert (x0 == x1)
@@ -2555,9 +2614,9 @@ let set_ref
   : atomic
     uses
     false
-    (pts_to_ref r full_permission old_v)
+    (pts_to_ref r full_perm old_v)
     unit
-    (fun _ -> pts_to_ref r full_permission v)
+    (fun _ -> pts_to_ref r full_perm v)
   =
   promote_action
     uses
@@ -2572,7 +2631,7 @@ let alloc_ref
   : m_action
     emp
     (reference t pre)
-    (fun r -> pts_to_ref r full_permission v)
+    (fun r -> pts_to_ref r full_perm v)
   =
   alloc_array_is_m_frame_and_preorder_preserving 1ul v (trivial_optional_preorder pre);
   alloc_array_pre_m_action 1ul v (trivial_optional_preorder pre)
@@ -2583,7 +2642,7 @@ let free_ref_pre_action
   (#pre: Preorder.preorder t)
   (a: reference t pre)
   : pre_action
-    (ref_perm a full_permission)
+    (ref_perm a full_perm)
     unit
     (fun _ -> emp)
   =
@@ -2594,32 +2653,32 @@ let free_ref_pre_action
       assert(t' == t');
       let aux (i:nat{i < len}) : Lemma (
         Some? (Seq.index seq i).v_with_p /\
-        (Some?.v (Seq.index seq i).v_with_p).perm == full_permission
+        (Some?.v (Seq.index seq i).v_with_p).perm == full_perm
       ) =
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
           )
         ) = () in
         Classical.exists_elim
           (Some? (Seq.index seq i).v_with_p /\
-            (Some?.v (Seq.index seq i).v_with_p).perm == full_permission)
+            (Some?.v (Seq.index seq i).v_with_p).perm == full_perm)
           pf (fun contents ->
             let pf : squash (exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
             ) = () in
             Classical.exists_elim
               (Some? (Seq.index seq i).v_with_p /\
-                (Some?.v (Seq.index seq i).v_with_p).perm == full_permission)
+                (Some?.v (Seq.index seq i).v_with_p).perm == full_perm)
               pf (fun pre ->
-                assert(interp_heap (pts_to_array_with_preorder a full_permission contents pre) h);
+                assert(interp_heap (pts_to_array_with_preorder a full_perm contents pre) h);
                 assert(contains_index seq i);
                 let x = select_index seq i in
-                assert(full_permission `lesser_equal_permission` x.perm)
+                assert(full_perm `lesser_equal_perm` x.perm)
               )
         )
       in
@@ -2636,7 +2695,7 @@ let free_ref_action
   (#pre: Preorder.preorder t)
   (a: reference t pre)
   : action
-    (ref_perm a full_permission)
+    (ref_perm a full_perm)
     unit
     (fun _ -> emp)
   =
@@ -2659,18 +2718,18 @@ let free_ref_action
         Some (Array t1 len1 seq1 live1), Some (Array tj lenj seqj livej) ->
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
           )
         ) = () in
         Classical.exists_elim
           (h' addr == (join_heap h0' h1) addr)
           pf (fun contents ->
             let pf : squash (exists (pre: Preorder.preorder (option t)).
-            interp_heap (pts_to_array_with_preorder a full_permission contents pre) h0
+            interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
             ) = () in
             Classical.exists_elim
               (h' addr == (join_heap h0' h1) addr)
@@ -2689,7 +2748,7 @@ let free_ref
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   : m_action
-    (ref_perm r full_permission)
+    (ref_perm r full_perm)
     unit
     (fun _ -> emp)
   =
@@ -2702,14 +2761,14 @@ let share_ref_pre_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (contents: Ghost.erased t)
   : pre_action
     (pts_to_ref r p contents)
     (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r' (half_permission p) contents
+      pts_to_ref r (half_perm p) contents `star`
+      pts_to_ref r' (half_perm p) contents
     )
   = fun h ->
       let iseq = Ghost.hide (Seq.create 1 (Ghost.reveal contents)) in
@@ -2721,14 +2780,14 @@ let share_ref_action
   (#t: _)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (contents: Ghost.erased t)
   : action
     (pts_to_ref r p contents)
     (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r' (half_permission p) contents
+      pts_to_ref r (half_perm p) contents `star`
+      pts_to_ref r' (half_perm p) contents
     )
   =
   pre_action_to_action
@@ -2743,7 +2802,7 @@ let share_ref
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (contents: Ghost.erased t)
   : atomic
     uses
@@ -2751,8 +2810,8 @@ let share_ref
     (pts_to_ref r p contents)
     (r':reference t pre{ref_address r' = ref_address r})
     (fun r' ->
-      pts_to_ref r (half_permission p) contents `star`
-      pts_to_ref r' (half_permission p) contents
+      pts_to_ref r (half_perm p) contents `star`
+      pts_to_ref r' (half_perm p) contents
     )
   =
   promote_action
@@ -2768,15 +2827,15 @@ let gather_ref
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (r':reference t pre{ref_address r' = ref_address r})
-  (p: permission{allows_read p})
-  (p': permission{allows_read p' /\ summable_permissions p p'})
+  (p: perm{readable p})
+  (p': perm{readable p'})
   (contents: Ghost.erased t)
   : atomic
     uses
     false
     (pts_to_ref r p contents `star` pts_to_ref r' p' contents)
     unit
-    (fun _ -> pts_to_ref r (sum_permissions p p') contents)
+    (fun _ -> pts_to_ref r (sum_perm p p') contents)
   =
   promote_action
     uses
@@ -2788,7 +2847,7 @@ let get_ref_refine_injective_hprop
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (q:t -> hprop)
   (h:heap)
   : Lemma
@@ -2813,7 +2872,7 @@ let get_ref_refine_pre_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (q:t -> hprop)
   : pre_action
     (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
@@ -2833,7 +2892,7 @@ let get_ref_refine_does_not_depend_on_framing
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (q: t -> hprop)
   (frame: hprop)
   (h0: hheap (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v)))
@@ -2866,7 +2925,7 @@ let get_ref_refine_action
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p: permission{allows_read p})
+  (p: perm{readable p})
   (q:t -> hprop)
   : action
     (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
@@ -2886,7 +2945,7 @@ let get_ref_refine
   (uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
   (r:reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (q:t -> hprop)
   : atomic
     uses
@@ -2910,9 +2969,9 @@ let cas_pre_action
   (v_old:t)
   (v_new:t{pre v v_new})
   : pre_action
-    (pts_to_ref r full_permission v)
+    (pts_to_ref r full_perm v)
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
   = fun h ->
       let contents = sel_ref_heap r h in
       if v_old <> contents then (| false, h |)
@@ -2932,14 +2991,14 @@ let cas_preserves_frame_disjointness_addr
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_permission v))
+  (h0:hheap (pts_to_ref r full_perm v))
   (h1:hheap frame{disjoint_heap h0 h1})
   (addr: addr)
   : Lemma (
       let (|_, h0'|) = cas_pre_action r v v_old v_new h0 in
       disjoint_addr h0' h1 addr
     )
-  = sel_ref_lemma_heap r full_permission h0;
+  = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
     upd_array_heap_frame_disjointness_preservation r iseq 0ul v_new (trivial_optional_preorder pre)
       (join_heap h0 h1) h0 h1 frame
@@ -2954,7 +3013,7 @@ let cas_does_not_depend_on_framing_addr
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_permission v))
+  (h0:hheap (pts_to_ref r full_perm v))
   (h1:hheap frame{disjoint_heap h0 h1})
   (addr: addr)
   : Lemma (requires (
@@ -2966,7 +3025,7 @@ let cas_does_not_depend_on_framing_addr
       let (|_, h'|) = cas_pre_action r v v_old v_new (join_heap h0 h1) in
       h' addr == join_heap h0' h1 addr
     ))
-  = sel_ref_lemma_heap r full_permission h0;
+  = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
     upd_array_action_memory_split_independence r iseq 0ul v_new (trivial_optional_preorder pre)
       (join_heap h0 h1) h0 h1 frame
@@ -2981,14 +3040,14 @@ let cas_result_does_not_depend_on_framing
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_permission v))
+  (h0:hheap (pts_to_ref r full_perm v))
   (h1:hheap frame{disjoint_heap h0 h1})
   : Lemma (
       let (|x_alone, h0'|) = cas_pre_action r v v_old v_new h0 in
       let (|x_joint, h'|) = cas_pre_action r v v_old v_new (join_heap h0 h1) in
       x_alone == x_joint
     )
-  = sel_ref_lemma_heap r full_permission h0;
+  = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
     let (| x0, h |) = set_ref_pre_action r v v_new h0 in
     let (| x1, h' |) = set_ref_pre_action r v v_new (join_heap h0 h1) in
@@ -3003,9 +3062,9 @@ let cas_action
   (v_old:t)
   (v_new:t{pre v v_new})
   : action
-    (pts_to_ref r full_permission v)
+    (pts_to_ref r full_perm v)
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
   =
   pre_action_to_action
     (cas_pre_action r v v_old v_new)
@@ -3025,9 +3084,9 @@ let cas
   : atomic
     uses
     false
-    (pts_to_ref r full_permission v)
+    (pts_to_ref r full_perm v)
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
   =
   promote_action
     uses
