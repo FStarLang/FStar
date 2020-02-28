@@ -4,19 +4,34 @@ open Steel.Effect
 open Steel.Memory
 
 /// Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret unit))
+///
+/// DoWhile (Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret bool)))
 let prot = prot unit
 
-val chan : Type0
+val chan (p:prot) : Type0
 
-val sender (c:chan) (p:prot) : hprop
+val sender (#p:prot) (c:chan p) (next_action:prot) : hprop
 
-val receiver (c:chan) (p:prot) : hprop
+val receiver (#p:prot) (c:chan p) (next_action:prot) : hprop
 
 val new_chan (p:prot)
-  : SteelT chan emp (fun c -> sender c p `star` receiver c p)
+  : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
 
-val send (#p:prot{more p}) (c:chan) (x:msg_t p)
-  : SteelT unit (sender c p) (fun _ -> sender c (step p x))
+val send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
+  : SteelT unit (sender c next) (fun _ -> sender c (step next x))
 
-val recv (#p:prot{more p}) (c:chan)
-  : SteelT (msg_t p) (receiver c p) (fun x -> receiver c (step p x))
+val recv (#p:prot) (#next:prot{more next}) (c:chan p)
+  : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
+
+val history (#p:prot) (c:chan p) (t:partial_trace_of p) : hprop
+
+val history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
+  : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
+
+val trace (#q:prot) (cc:chan q)
+  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
+
+val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
+  : SteelT (t:extension_of previous)
+           (receiver c next `star` history c previous)
+           (fun t -> receiver c next `star` history c t `star` Steel.Reference.pure (until t == next))
