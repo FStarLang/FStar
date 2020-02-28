@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "95e3146e9758e6ac8380ed3b25393157"
+      "afc122068308c7e1c6e2d71d4d4a5490"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "70664649cfb669fad5324201f22e7702"
+      "2b3d42aa797c6ff49227e8fa11d723e1"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3873277f212cbf2f518869564bd4ff23"
+      "48eb74d4c18b12cc7a55a2824296e366"
     ],
     [
       "Locals.Effect.locals_t",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "85b7266307670d320d4f47bcfde61f8c"
+      "85db32e79e5245fbddccfbc5922face5"
     ],
     [
       "Locals.Effect.return",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "0db2e3ee003a72416fa30ca0608535e6"
+      "cac29a549729775ba080fe1ddfb57bb2"
     ],
     [
       "Locals.Effect.bind",
@@ -95,7 +95,7 @@
         "typing_Tm_abs_e8384b68ad10198c6025b7ea0d9e51c2"
       ],
       0,
-      "f82b711b57dfab671d6d1bd0361d0004"
+      "f503eae84d70cf29c7b37bc78c65eb7d"
     ],
     [
       "Locals.Effect.subcomp",
@@ -115,7 +115,7 @@
         "typing_Tm_abs_83a87d25257ae4e73048e71a976d1d67"
       ],
       0,
-      "442840d96bef90909556b9db9cc599c9"
+      "c119d9c8d7fd56f05542ea2a95d11f3b"
     ],
     [
       "Locals.Effect.LVARS",
@@ -124,7 +124,7 @@
       1,
       [ "@query" ],
       0,
-      "94e11e36f53d7da47912245fc030c24d"
+      "911e2244d521fcabb4b19532a9e8611b"
     ],
     [
       "Locals.Effect.LVARS",
@@ -133,7 +133,7 @@
       1,
       [ "@query" ],
       0,
-      "01bce20c76f29f6d97dd55ea88e92a6c"
+      "ade49e2e1292e32601d70ce1c22ed3c6"
     ],
     [
       "Locals.Effect.lift_pure_lvars",
@@ -159,7 +159,7 @@
         "typing_Tm_abs_f4e50037218c944d065aa19d84762d0b"
       ],
       0,
-      "809cb2c38691375a2d051fcc3c353cbb"
+      "e336222ef93d3859de48b55c6cf0ef67"
     ],
     [
       "Locals.Effect.create",
@@ -197,7 +197,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "1fe85dae0ed030aa13487f902ce35bab"
+      "d1758b282afbf4b6d593ebb5f256d394"
     ],
     [
       "Locals.Effect.read",
@@ -212,7 +212,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e40441e16e27a1de9d421beb3350a8b2"
+      "331a5560ebd358b19a88cd34b34de585"
     ],
     [
       "Locals.Effect.write",
@@ -247,7 +247,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "fa5a0d7e0bb202a1ef39cdfe3f112741"
+      "e56a9eeb0e55ba23e22da807bc3c17ac"
     ],
     [
       "Locals.Effect.get",
@@ -264,7 +264,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "d170dec89b81bf548a333bd66a60ab8b"
+      "d3577ca49ef47a28313b334e8a5a70e7"
     ],
     [
       "Locals.Effect.test",
@@ -307,7 +307,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "1b2c2aebe57afb83c098e9b45a9fac83"
+      "20f0aca462eddcb2756e4e266113600c"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -321,7 +321,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "379ac0c20e4bfcb49a9dc95fe2d96bbd"
+      "d5b317a1ac26c0970d08e19a31a5427a"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -357,7 +357,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "fd09adafbeb2df8dbebf42d0b3b023f8"
+      "e6233ce617ff6e5338922bdfb5d50769"
     ],
     [
       "Locals.Effect.sum",
@@ -379,7 +379,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d014b5ca25b86664ed33b8d4b1f6f805"
+      "e40f30a85a371d233fb9a63cdf015b82"
     ],
     [
       "Locals.Effect.test1",
@@ -406,7 +406,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "214190ae3d166cec583e7d981dc61c3c"
+      "e7aebae25681d1db11c9c9b60c99a4f2"
     ]
   ]
 ]
