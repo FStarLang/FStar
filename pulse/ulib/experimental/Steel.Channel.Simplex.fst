@@ -98,7 +98,7 @@ type chan_t = {
   recv: ref chan_val;
 }
 
-let half : perm = Steel.Permissions.(half_permission full)
+let half : perm = half_perm full
 
 let sprot = p:prot { more p }
 let step (s:sprot) (x:msg_t s) = step s x
@@ -238,7 +238,6 @@ let rewrite_eq #a (x:a) (y:a) (p:a -> hprop)
     assert (x == y);
     rewrite_eq_squash x y p
 
-open Steel.Permissions
 let new_chan (p:prot)
   : SteelT chan emp (fun c -> sender c p `star` receiver c p)
   = let q = msg unit p in
@@ -285,6 +284,7 @@ let new_chan (p:prot)
     rewrite_eq_squash recv ch.chan_chan.recv (fun r -> in_state ch.chan_chan.send p `star` in_state r p);
     h_assert (sender ch p `star` receiver ch p);
     return #chan #(fun ch -> (sender ch p `star` receiver ch p)) ch
+
 
 let send_pre (r:ref chan_val) (p:prot{more p}) (c:chan_t) (vs vr:chan_val) : hprop =
   (pts_to c.send half vs `star`

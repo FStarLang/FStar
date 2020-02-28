@@ -16,18 +16,25 @@
 *)
 module Steel.Memory
 open FStar.Real
-open Steel.Permissions
 module U32 = FStar.UInt32
 open FStar.FunctionalExtensionality
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+let summable_permissions (p1: perm) (p2: perm)
+  : GTot bool =
+   MkPerm?.v p1 +. MkPerm?.v p2 <=. 1.0R
+
+let sub_permissions (p1: perm) (p2: perm)
+  : GTot perm =
+   MkPerm (MkPerm?.v p1 -. MkPerm?.v p2)
 
 // In the future, we may have other cases of cells
 // for arrays and structs
 
 noeq type array_seq_member' (a: Type) = {
    value: a;
-   perm: (p:permission{allows_read p});
+   perm: (p:perm{readable p /\ MkPerm?.v p <=. 1.0R});
 }
 
 let invert_array_seq_member' (a: Type0)
@@ -56,7 +63,7 @@ let array_seq (a: Type) (len: nat) = Seq.lseq (array_seq_member a) len
 
 let all_full_permission (#a: Type) (#len: nat) (seq: array_seq a len) =
   forall (i:nat{i < len}). (Some? (Seq.index seq i).v_with_p /\
-    (Some?.v ((Seq.index seq i).v_with_p)).perm == full_permission)
+    (Some?.v ((Seq.index seq i).v_with_p)).perm == full_perm)
 
 noeq
 type cell =
@@ -189,7 +196,7 @@ let join_heap (m0:heap) (m1:heap{disjoint_heap m0 m1})
             let x1 = select_index seq1 i in
             let x0 = select_index seq0 i in
 	    { preorder = pre; v_with_p = Some ({x0 with
-              perm = (sum_permissions x0.perm x1.perm <: (perm:permission{allows_read perm}))
+              perm = sum_perm x0.perm x1.perm
             }) }
           | true, false -> Seq.index seq0 i
           | false, true -> Seq.index seq1 i
@@ -335,7 +342,7 @@ module W = FStar.WellFounded
 noeq
 type hprop : Type u#1 =
   | Emp : hprop
-  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:permission{allows_read perm} ->
+  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:perm{readable perm} ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
                   preorder: Ghost.erased (Preorder.preorder (option t)) -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
@@ -398,7 +405,7 @@ let rec interp_heap (p:hprop) (m:heap)
   = match p with
     | Emp -> True
     | Pts_to_array #t a perm contents preorder ->
-      None? a  \/ (Some? a /\ begin
+      None? a  \/ (Some? a /\ MkPerm?.v perm <=. 1.0R /\ begin
       let a = Some?.v a in  m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
@@ -414,7 +421,7 @@ let rec interp_heap (p:hprop) (m:heap)
 	      let x' = select_index seq i in
 	      x == x'.value /\
               select_pre seq i == Ghost.reveal preorder /\
-	      perm `lesser_equal_permission` x'.perm
+	      perm `lesser_equal_perm` x'.perm
             else (* In the range, does not contain anything *) False
           )
 	| _ -> False
@@ -505,15 +512,19 @@ let pts_to_array_with_preorder = Pts_to_array
 let pts_to_array
   (#t: Type0)
   (a:array_ref t)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   =
-  pts_to_array_with_preorder a p contents (trivial_optional_preorder (trivial_preorder t))
+  pts_to_array_with_preorder
+    a
+    p
+    contents
+    (trivial_optional_preorder (trivial_preorder t))
 let pts_to_ref
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (contents: Ghost.erased t)
   = pts_to_array_with_preorder r p
     (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal contents))
@@ -545,13 +556,13 @@ let equiv_extensional_on_star p1 p2 p3 =
 let intro_pts_to_array_with_preorder
   (#t: Type0)
   (a:array_ref t)
-  (perm:permission{allows_read perm})
+  (perm:perm{readable perm})
   (contents:Seq.lseq t (U32.v (length a)))
   (preorder: Preorder.preorder (option t))
   (m:heap)
   : Lemma
     (requires (
-      None? a \/ (Some? a /\ begin
+      None? a \/ (Some? a /\ MkPerm?.v perm <=. 1.0R /\ begin
       let a = Some?.v a in m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
@@ -567,7 +578,7 @@ let intro_pts_to_array_with_preorder
 	      let x' = select_index seq i in
 	      x == x'.value /\
               select_pre seq i == Ghost.reveal preorder /\
-	      perm `lesser_equal_permission` x'.perm
+	      perm `lesser_equal_perm` x'.perm
             else (* In the range, does not contain anything *) False
           )
 	| _ -> False
@@ -583,7 +594,7 @@ let intro_pts_to_array_with_preorder
 let pts_to_array_with_preorder_injective
   (#t: _)
   (a: array_ref t{not (is_null_array a)})
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (pre:Preorder.preorder (option t))
   (m:mem)

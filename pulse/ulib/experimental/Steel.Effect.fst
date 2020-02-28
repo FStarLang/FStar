@@ -233,7 +233,7 @@ let polymonadic_bind_steel_pure_post
 : ens_t pre_f b (fun _ -> post_f)
 = fun h0 r h1 -> exists x. (ens_f h0 x h1 /\ (~ ((wp_g x) (fun y -> y =!= r))))
 
-#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let bind_steel_pure (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:Mem.hprop) (req_f:req_t pre_f) (ens_f:ens_t pre_f a (fun _ -> post_f))
   (wp_g:a -> pure_wp b)
@@ -310,7 +310,6 @@ let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:e
 
 (*** Lifting actions to MST and then to Steel ***)
 
-open Steel.Permissions
 open Steel.Actions
 
 (**** Specialize to trivial req and ens ****)
@@ -375,7 +374,7 @@ module G = FStar.Ghost
 module P = FStar.Preorder
 
 #push-options "--z3rlimit 50"
-let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:permission{allows_read p})
+let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
 : Steel a (ref_perm r p) (fun x -> pts_to_ref r p x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
@@ -396,7 +395,7 @@ let read_refine
   (#pre:P.preorder a)
   (q:a -> hprop)
   (r:reference a pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
 : Steel a (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
           (fun v -> pts_to_ref r p v `star` q v)
           (fun _ -> True) (fun _ _ _ -> True)
@@ -409,7 +408,7 @@ let read_refine
     x)
 
 let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x:a{pre curr x})
-: Steel unit (pts_to_ref r full_permission curr) (fun _ -> pts_to_ref r full_permission x)
+: Steel unit (pts_to_ref r full_perm curr) (fun _ -> pts_to_ref r full_perm x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
     let m0 = mst_get () in
@@ -420,7 +419,7 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
 
 
 // let alloc (#a:Type0) (x:a)
-// : SteelT (reference a) emp (fun r -> pts_to_ref r full_permission x)
+// : SteelT (reference a) emp (fun r -> pts_to_ref r full_perm x)
 // = Steel?.reflect (fun _ ->
 //     let m0 = mst_get () in
 //     let (| r, m1 |) = alloc_ref #a x m0 in
@@ -430,7 +429,7 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
 
 
 // let free (#a:Type0) (r:reference a)
-// : SteelT unit (ref_perm r full_permission) (fun _ -> emp)
+// : SteelT unit (ref_perm r full_perm) (fun _ -> emp)
 // = Steel?.reflect (fun _ ->
 //     let m0 = mst_get () in
 //     let (| _, m1 |) = free_ref r m0 in
@@ -439,11 +438,11 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
 
 
 // assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
-// : Steel unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission v)
+// : Steel unit (pts_to r full_perm prev) (fun _ -> pts_to r full_perm v)
 //     (fun _ -> True) (fun _ _ _ -> True)
 
 // assume val alloc (#a:Type) (v:a)
-// : Steel (ref a) emp (fun x -> pts_to x full_permission v)
+// : Steel (ref a) emp (fun x -> pts_to x full_perm v)
 //     (fun _ -> True) (fun _ _ _ -> True)
 
 // assume val return (#a:Type) (#hp:a -> hprop) (x:a)
@@ -451,7 +450,7 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
 
 
 // let alloc_and_upd (n:int)
-// : Steel (ref int) emp (fun x -> pts_to x full_permission (n+1))
+// : Steel (ref int) emp (fun x -> pts_to x full_perm (n+1))
 //     (fun _ -> True) (fun _ _ _ -> True)
 // = let r = alloc n in
 //   upd r n (n+1);
@@ -468,13 +467,13 @@ let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (
 // = par f g
 
 // let incr (r:ref int) (prev:int) ()
-// : SteelT unit (pts_to r full_permission prev) (fun _ -> pts_to r full_permission (prev+1))
+// : SteelT unit (pts_to r full_perm prev) (fun _ -> pts_to r full_perm (prev+1))
 // = upd r prev (prev+1)
 
 // let incr2 (r1 r2:ref int) (prev1 prev2:int)
 // : SteelT (unit & unit)
-//   (pts_to r1 full_permission prev1 `star` pts_to r2 full_permission prev2)
-//   (fun _ -> pts_to r1 full_permission (prev1+1) `star` pts_to r2 full_permission (prev2+1))
+//   (pts_to r1 full_perm prev1 `star` pts_to r2 full_perm prev2)
+//   (fun _ -> pts_to r1 full_perm (prev1+1) `star` pts_to r2 full_perm (prev2+1))
 // = incr r1 prev1 || incr r2 prev2
 
 
