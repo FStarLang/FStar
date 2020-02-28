@@ -31,3 +31,4 @@ let extend_partial_trace (#p:prot unit) (t:partial_trace_of p) (msg:next_msg_t t
   = let s = L.inject (P.extend_partial_trace (L.project t) msg) in
     assume (t `extended_to` s);
     s
+let extension_of #p (tr:partial_trace_of p) = ts:partial_trace_of p{tr `extended_to` ts}
