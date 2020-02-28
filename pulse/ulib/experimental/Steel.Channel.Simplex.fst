@@ -294,7 +294,15 @@ let intro_until_eq #p (c:chan_t p) (v:init_chan_val p) //{p == step v.chan_prot 
   = let s :squash (until (initial_trace p) == (step v.chan_prot v.chan_msg)) = () in
     intro_pure #_ s
 
-let intro_trace_until #p (c:chan_t p) (v:init_chan_val p)
+let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
+  : SteelT unit (pts_to_ref r full tr `star` pure (until tr == step v.chan_prot v.chan_msg))
+                (fun _ -> trace_until r v)
+  = intro_h_exists tr
+                (fun (tr:partial_trace_of q) ->
+                     pts_to_ref r full tr `star`
+                     pure (until tr == (step v.chan_prot v.chan_msg)))
+
+let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
   : SteelT unit (pts_to_ref c.trace full (initial_trace p))
                 (fun _ -> trace_until c.trace v)
   = h_intro_emp_l _;
@@ -302,12 +310,7 @@ let intro_trace_until #p (c:chan_t p) (v:init_chan_val p)
     h_assert (pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)) `star`
               pts_to_ref c.trace full (initial_trace p));
     h_commute _ _;
-    intro_h_exists
-                (initial_trace p)
-                (fun (tr:partial_trace_of p) ->
-                     pts_to_ref c.trace full tr `star`
-                     pure (until tr == (step v.chan_prot v.chan_msg)))
-
+    intro_trace_until c.trace (initial_trace p) v
 
 let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ c.recv == recv})
 let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
@@ -321,7 +324,7 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c = frame (fun _ -> mk_chan_t_val #p send recv tr) _ in
     h_elim_emp_l _;
     h_assert ((pts_to_ref c.trace full (initial_trace p) `star` (pts_to c.send half v `star` pts_to c.recv half v)));
-    frame (fun _ -> intro_trace_until c v) _;
+    frame (fun _ -> intro_trace_until_init c v) _;
     h_assert (trace_until c.trace v `star` (pts_to c.send half v `star` pts_to c.recv half v));
     h_commute _ _;
     intro_chan_inv c v;
@@ -766,11 +769,17 @@ let rec recv #q (#p:prot{more p}) (cc:chan q)
     channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv cc))
                                                      (recv_available #p cc vs vr)
 
-let history_p (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
+let stable_property (#a:Type) (p:Preorder.preorder a) = fact:property a { Preorder.stable fact p }
+
+let history_p' (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
   t `extended_to` s /\ True
+
+let history_p (#p:prot) (t:partial_trace_of p) : stable_property extended_to =
+  history_p' t
 
 let history (#p:prot) (c:chan p) (t:partial_trace_of p) : hprop =
   pure (witnessed c.chan_chan.trace (history_p t))
+
 
 let history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
   : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
@@ -779,14 +788,75 @@ let history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
 let extension_until #p (previous:partial_trace_of p) (q:prot) =
   (t:partial_trace_of p{previous `extended_to` t /\ until t == q})
 
+assume
+val recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
+           (r:reference a p) (v:a) //using `erased a` makes it fail
+  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
+                (fun _ -> pts_to_ref r q v `star` pure (fact v))
+
+assume
+val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
+            (fact:stable_property p)
+            (v:a)
+            (_:squash (fact v))
+  : SteelT unit (pts_to_ref r q v)
+                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
+
+let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
+  : SteelT (squash (history_p tr tr'))
+           (pts_to_ref r full tr'  `star` pure (witnessed r (history_p tr)))
+           (fun _ -> pts_to_ref r full tr')
+  = recall #(partial_trace_of q) #full #extended_to #(history_p tr) r tr';
+    h_assert (pts_to_ref r full tr' `star` pure (history_p tr tr'));
+    let s : squash (history_p tr tr') = frame_l (fun _ -> elim_pure #(history_p tr tr')) _ in
+    h_commute _ _;
+    h_elim_emp_l _;
+    s
+
+let witness_trace_ref #q (r:trace_ref q) (tr:partial_trace_of q)
+  : SteelT unit (pts_to_ref r full tr)
+                (fun _ -> pts_to_ref r full tr `star` pure (witnessed r (history_p tr)))
+  = h_admit _ _
+
 let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
   : SteelT (extension_of tr)
            (pts_to c.chan_chan.recv half v `star`
-            trace_until c.chan_chan.trace v `star`
-            history c tr)
-           (fun tr' -> pts_to c.chan_chan.recv half v `star` history c tr')
-  = h_admit #(extension_of tr) _ _
-
+            history c tr `star`
+            trace_until c.chan_chan.trace v)
+           (fun tr' -> pts_to c.chan_chan.recv half v `star`
+                    history c tr' `star`
+                    trace_until c.chan_chan.trace v)
+  = let tr' = frame_l (fun _ -> read_monotonic_ref c.chan_chan.trace) _ in
+    h_assert ((pts_to c.chan_chan.recv half v `star` history c tr) `star`
+              (pts_to_ref c.chan_chan.trace full tr' `star`
+               pure (until tr' == step v.chan_prot v.chan_msg)));
+    frame_l (fun _ -> h_commute _ _) _;
+    rearrange _ _ _ _;
+    frame_l (fun _ -> h_commute _ _) _;
+    h_assert ((pts_to c.chan_chan.recv half v `star` pure (until tr' == step v.chan_prot v.chan_msg)) `star`
+              (pts_to_ref c.chan_chan.trace full tr'  `star` history c tr));
+    h_assert ((pts_to c.chan_chan.recv half v `star` pure (until tr' == step v.chan_prot v.chan_msg)) `star`
+              (pts_to_ref c.chan_chan.trace full tr'  `star` pure (witnessed c.chan_chan.trace (history_p tr))));
+    let trref : trace_ref q = c.chan_chan.trace in
+    h_assert ((pts_to c.chan_chan.recv half v `star` pure (until tr' == step v.chan_prot v.chan_msg)) `star`
+              (pts_to_ref trref full tr'  `star` pure (witnessed trref (history_p tr))));
+    let tr_extension = frame_l (fun _ -> recall_trace_ref trref tr tr') _ in
+    h_assert ((pts_to c.chan_chan.recv half v `star` pure (until tr' == step v.chan_prot v.chan_msg)) `star`
+              pts_to_ref trref full tr');
+    frame_l (fun _ -> witness_trace_ref trref tr') _;
+    h_assert ((pts_to c.chan_chan.recv half v `star` pure (until tr' == step v.chan_prot v.chan_msg)) `star`
+              (pts_to_ref trref full tr' `star` history c tr'));
+    frame_l (fun _ -> h_commute _ _) _;
+    rearrange _ _ _ _;
+    frame_l (fun _ -> h_commute _ _) _;
+    h_assert ((pts_to c.chan_chan.recv half v `star` history c tr') `star`
+              (pts_to_ref trref full tr' `star` pure (until tr' == step v.chan_prot v.chan_msg)));
+    frame_l (fun _ -> intro_trace_until trref tr' v) _;
+    h_assert ((pts_to c.chan_chan.recv half v `star` history c tr') `star`
+              trace_until c.chan_chan.trace v);
+    return #(extension_of tr) #(fun tr' -> pts_to c.chan_chan.recv half v `star`
+                                        history c tr' `star`
+                                        trace_until c.chan_chan.trace v) tr'
 
 let trace' (#q:prot) (#p:prot) (c:chan q) (tr:partial_trace_of q)
   : SteelT (extension_of tr)
