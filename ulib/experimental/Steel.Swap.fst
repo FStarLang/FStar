@@ -78,7 +78,10 @@ let incr_and_frame (r1 r2:reference uint_32)
     (fun m0 _ m1 ->
       v (sel_ref r1 m1) == v (sel_ref r1 m0) + 1 /\
       v (sel_ref r2 m1) > 2)
-= steel_frame (fun _ -> incr r1) (writable r2) (fun m -> interp (ref_perm r2 full_perm) m /\ v (sel_ref r2 m) > 2)
+= steel_frame
+    (fun _ -> incr r1)
+    (writable r2)
+    (fun m -> interp (ref_perm r2 full_perm) m /\ v (sel_ref r2 m) > 2)
 
 
 // assume val sel_ref_core (#a:Type0) (r:reference a) (p:permission{allows_read p}) (m:mem)
