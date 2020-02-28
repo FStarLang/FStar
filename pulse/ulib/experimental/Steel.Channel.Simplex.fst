@@ -14,7 +14,6 @@ let rearrange (p q r s:hprop)
                 (fun _ -> (p `star` r) `star` (q `star` s))
   = h_admit #unit _ _
 
-
 assume
 val rearrange5 (p q r s t:hprop)
   : SteelT unit ((p `star` q) `star` ((r `star` s) `star` t))
@@ -53,9 +52,6 @@ let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
              (fun v -> pts_to r p v `star` q v)
   = let x = read_refine q r in
     return (Ghost.hide x)
-
-assume
-val pure (p:prop) : hprop
 
 assume
 val intro_pure_p (#p:prop) (s:squash p) (h:hprop)
@@ -530,8 +526,6 @@ let squash_and (vr:chan_val) (vs:chan_val{chan_inv_step_p vr vs})
   : s:squash (chan_inv_step_p vr vs)
   = ()
 
-let extension_of #p (tr:partial_trace_of p) = ts:partial_trace_of p{tr `extended_to` ts}
-
 let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
   : SteelT (extension_of tr)
            (chan_inv_step vr vs `star` pure (until tr == step vr.chan_prot vr.chan_msg))
@@ -769,8 +763,6 @@ let rec recv #q (#p:prot{more p}) (cc:chan q)
     channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv cc))
                                                      (recv_available #p cc vs vr)
 
-let stable_property (#a:Type) (p:Preorder.preorder a) = fact:property a { Preorder.stable fact p }
-
 let history_p' (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
   t `extended_to` s /\ True
 
@@ -787,20 +779,6 @@ let history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
 
 let extension_until #p (previous:partial_trace_of p) (q:prot) =
   (t:partial_trace_of p{previous `extended_to` t /\ until t == q})
-
-assume
-val recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-           (r:reference a p) (v:a) //using `erased a` makes it fail
-  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
-                (fun _ -> pts_to_ref r q v `star` pure (fact v))
-
-assume
-val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
-            (fact:stable_property p)
-            (v:a)
-            (_:squash (fact v))
-  : SteelT unit (pts_to_ref r q v)
-                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
 
 let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
   : SteelT (squash (history_p tr tr'))
@@ -905,7 +883,7 @@ let rearrange_for_trace_3 (p q r s t u v : hprop)
                 (fun _ -> (u `star` p `star` t `star` v) `star` (q `star` (s `star` r)))
   = h_admit _ _
 
-let trace' (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
+let trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
   : SteelT (extension_of tr)
            (receiver cc p `star` history cc tr)
            (fun t -> receiver cc p `star` history cc t `star` pure (until t == p))

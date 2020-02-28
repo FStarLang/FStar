@@ -29,6 +29,6 @@ val history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
   : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
 
 val trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
-  : SteelT (t:partial_trace_of p{previous `extended_to` t /\ until t == next})
+  : SteelT (t:extension_of previous)
            (receiver c next `star` history c previous)
-           (fun t -> receiver c next `star` history c t)
+           (fun t -> receiver c next `star` history c t `star` Steel.Reference.pure (until t == next))

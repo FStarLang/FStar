@@ -59,13 +59,16 @@ let property (a:Type) = a -> prop
 val witnessed (#a:Type) (#p:Preorder.preorder a) (r:reference a p)
               (fact:property a) : prop
 
+let stable_property (#a:Type) (p:Preorder.preorder a) = fact:property a { Preorder.stable fact p }
+
 val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
-            (fact:property a{Preorder.stable fact p})
-            (v:erased a{fact v})
+            (fact:stable_property p)
+            (v:a)
+            (_:squash (fact v))
   : SteelT unit (pts_to_ref r q v)
                 (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
 
 val recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-           (r:reference a p) (v:erased a)
+           (r:reference a p) (v:a) //using `erased a` makes it fail
   : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
                 (fun _ -> pts_to_ref r q v `star` pure (fact v))
