@@ -646,6 +646,48 @@ let pts_to_array_injective #t  a p c0 c1 m =
   | _ -> ()
 #pop-options
 
+val share_pts_to_array_with_preorder
+  (#t: _)
+  (pre:_)
+  (a: array_ref t{not (is_null_array a)})
+  (p:perm{readable p})
+  (v:Seq.lseq t (U32.v (length a)))
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_array_with_preorder a p v pre) m)
+    (ensures interp (pts_to_array_with_preorder a (half_perm p) v pre `star`
+                     pts_to_array_with_preorder a (half_perm p) v pre) m)
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let share_pts_to_array_with_preorder #t pre a p v m = admit()
+#pop-options
+
+let share_pts_to_array #t a p v m = share_pts_to_array_with_preorder
+    (trivial_optional_preorder (trivial_preorder t))
+    a p v m
+
+val gather_pts_to_array_with_preorder
+  (#t:_)
+  (pre:_)
+  (a: array_ref t{not (is_null_array a)})
+  (p0:perm{readable p0})
+  (p1:perm{readable p1})
+  (v0 v1: Seq.lseq t (U32.v (length a)))
+  (m:mem)
+  : Lemma
+    (requires interp (pts_to_array_with_preorder a p0 v0 pre `star`
+                      pts_to_array_with_preorder a p1 v1 pre) m)
+    (ensures interp (pts_to_array_with_preorder a (sum_perm p0 p1) v0 pre) m)
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let gather_pts_to_array_with_preorder #t pre a p v m = admit()
+#pop-options
+
+let gather_pts_to_array #t a p0 p1 v0 v1 m =
+  gather_pts_to_array_with_preorder
+    (trivial_optional_preorder (trivial_preorder t))
+    a p0 p1 v0 v1 m
+
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_ref
 ////////////////////////////////////////////////////////////////////////////////
@@ -657,6 +699,19 @@ let pts_to_ref_injective #t #pre a p c0 c1  m =
   assert(s0 `Seq.equal` s1);
   assert(c0 == Seq.index s0 0);
   assert(c1 == Seq.index s1 0)
+
+let share_pts_to_ref #t #pre r p c m = share_pts_to_array_with_preorder
+    (trivial_optional_preorder pre)
+    r p
+    (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal c))
+    m
+
+let gather_pts_to_ref #t #pre r p0 p1 v0 v1 m = gather_pts_to_array_with_preorder
+    (trivial_optional_preorder pre)
+    r p0 p1
+    (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal v0))
+    (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal v1))
+    m
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
