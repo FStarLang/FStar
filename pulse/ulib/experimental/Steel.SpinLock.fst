@@ -11,25 +11,25 @@ let available = false
 let locked = true
 
 let lockinv (p:hprop) (r:ref bool) : hprop =
-  h_exists (fun b -> pts_to r full_permission (Ghost.hide b) `star` (if b then emp else p))
+  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
 let lock (p:hprop) = (r:ref bool) & inv (lockinv p r)
 
 val intro_lockinv_available (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
-  : SteelAtomic unit uses true (pts_to r full_permission available `star` p) (fun _ -> lockinv p r)
+  : SteelAtomic unit uses true (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
 
 val intro_lockinv_locked (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
-  : SteelAtomic unit uses true (pts_to r full_permission locked) (fun _ -> lockinv p r)
+  : SteelAtomic unit uses true (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
   intro_h_exists false
-    (fun b -> pts_to r full_permission (Ghost.hide b) `star` (if b then emp else p))
+    (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
 let intro_lockinv_locked #uses p r =
-  h_intro_emp_l (pts_to r full_permission locked);
-  h_commute emp (pts_to r full_permission locked);
+  h_intro_emp_l (pts_to r full_perm locked);
+  h_commute emp (pts_to r full_perm locked);
   intro_h_exists true
-    (fun b -> pts_to r full_permission (Ghost.hide b) `star` (if b then emp else p))
+    (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
 val new_inv (p:hprop) : SteelT (inv p) p (fun _ -> emp)
 let new_inv p = lift_atomic_to_steelT (fun _ -> Steel.Effect.Atomic.new_inv p)
@@ -55,8 +55,8 @@ val cas_frame
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
     false
-    (pts_to r full_permission v `star` frame)
-    (fun b -> (if b then pts_to r full_permission v_new else pts_to r full_permission v) `star` frame)
+    (pts_to r full_perm v `star` frame)
+    (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
   atomic_frame frame (fun _ -> Steel.Effect.Atomic.cas r v v_old v_new)
 
@@ -95,17 +95,17 @@ val release_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:inv (lockinv 
     (fun b -> lockinv p r `star` (if b then emp else p))
 
 let release_core #p #u r i =
-  h_assert_atomic (h_exists (fun b -> pts_to r full_permission (Ghost.hide b) `star` (if b then emp else p))
+  h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
     `star` p);
   let v:bool = atomic_frame p (fun _ ->  ghost_read_refine r (fun b -> if b then emp else p)) in
-  h_assert_atomic ((pts_to r full_permission (Ghost.hide v) `star` (if v then emp else p)) `star` p);
-  h_assoc_left (pts_to r full_permission (Ghost.hide v)) (if v then emp else p) p;
+  h_assert_atomic ((pts_to r full_perm (Ghost.hide v) `star` (if v then emp else p)) `star` p);
+  h_assoc_left (pts_to r full_perm (Ghost.hide v)) (if v then emp else p) p;
   let res = cas_frame r v locked available ((if v then emp else p) `star` p) in
-  h_assert_atomic (pts_to r full_permission available `star` ((if res then emp else p) `star` p));
-  h_commute (pts_to r full_permission available) ((if res then emp else p) `star` p);
-  atomic_frame (pts_to r full_permission available) (fun _ -> h_commute (if res then emp else p) p);
-  h_commute (p `star` (if res then emp else p)) (pts_to r full_permission available);
-  h_assoc_right (pts_to r full_permission available) p (if res then emp else p);
+  h_assert_atomic (pts_to r full_perm available `star` ((if res then emp else p) `star` p));
+  h_commute (pts_to r full_perm available) ((if res then emp else p) `star` p);
+  atomic_frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
+  h_commute (p `star` (if res then emp else p)) (pts_to r full_perm available);
+  h_assoc_right (pts_to r full_perm available) p (if res then emp else p);
   atomic_frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
   return_atomic #_ #_ #_ res
 

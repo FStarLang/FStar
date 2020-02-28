@@ -15,12 +15,32 @@
 *)
 module Steel.Memory
 open FStar.Real
-open Steel.Permissions
 module U32 = FStar.UInt32
 module S = FStar.Set
 
 let trivial_preorder (a: Type) : Preorder.preorder a = fun _ _ -> True
 
+[@erasable]
+noeq type perm =
+  | MkPerm: v:real -> perm
+
+let readable (p: perm) : GTot bool =
+  MkPerm?.v p >. 0.0R
+
+let writeable (p: perm) : GTot bool =
+  MkPerm?.v p = 1.0R
+
+let half_perm (p: perm) : GTot (perm) =
+  MkPerm ((MkPerm?.v p) /. two)
+
+let sum_perm (p1: perm) (p2: perm)
+  : GTot (perm) =
+  MkPerm (MkPerm?.v p1 +.  MkPerm?.v p2)
+
+let lesser_equal_perm (p1 p2:perm) : GTot bool =
+  (MkPerm?.v p1 <=.  MkPerm?.v p2)
+
+let full_perm : perm = MkPerm 1.0R
 
 /// Abstract type of addresses
 
@@ -66,8 +86,6 @@ val hprop : Type u#1
 val mem : Type u#1
 
 val core_mem (m:mem) : mem
-
-
 
 /// A predicate describing non-overlapping memories
 
@@ -133,14 +151,14 @@ val emp : hprop
 val pts_to_array
   (#t: Type0)
   (a:array_ref t)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
 val pts_to_ref
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (contents: Ghost.erased t)
   : hprop
 
@@ -167,16 +185,16 @@ val equiv_extensional_on_star (p1 p2 p3:hprop)
 // pts_to_array and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
-let array_perm (#t: Type) (a: array_ref t) (p:permission{allows_read p}) =
+let array_perm (#t: Type) (a: array_ref t) (p:perm{readable p}) =
   h_exists (pts_to_array a p)
 
 let array (#t: Type) (a: array_ref t) =
-  h_exists (fun (p:permission{allows_read p}) -> array_perm a p)
+  h_exists (fun (p:perm{readable p}) -> array_perm a p)
 
 val pts_to_array_injective
   (#t: _)
   (a: array_ref t{not (is_null_array a)})
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m:mem)
   : Lemma
@@ -193,18 +211,18 @@ let ref_perm
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   : hprop =
   h_exists (pts_to_ref r p)
 
 let ref (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
-  = h_exists (fun (p:permission{allows_read p}) -> ref_perm r p)
+  = h_exists (fun (p:perm{readable p}) -> ref_perm r p)
 
 val pts_to_ref_injective
   (#t: _)
   (#pre: Preorder.preorder t)
   (a: reference t pre)
-  (p:permission{allows_read p})
+  (p:perm{readable p})
   (c0 c1: t)
   (m:mem)
   : Lemma
