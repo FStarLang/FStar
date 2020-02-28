@@ -199,11 +199,11 @@ let index
   (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
   (i:U32.t{U32.v i < U32.v (length a)})
   : SteelAtomic t uses false
-      (pts_to_array a full_permission iseq)
-      (fun _ -> pts_to_array a full_permission iseq)
+      (pts_to_array a full_perm iseq)
+      (fun _ -> pts_to_array a full_perm iseq)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      let at = (index_array uses a iseq full_permission i) in
+      let at = (index_array uses a iseq full_perm i) in
       let (| x, m1 |) = at m0 in
       atomic_preserves_frame_and_preorder at m0;
       mst_put m1;
@@ -219,8 +219,8 @@ let upd
   (i:U32.t{U32.v i < U32.v (length a)})
   (v:t)
   : SteelAtomic unit uses false
-      (pts_to_array a full_permission iseq)
-      (fun _ -> pts_to_array a full_permission (Seq.upd iseq (U32.v i) v))
+      (pts_to_array a full_perm iseq)
+      (fun _ -> pts_to_array a full_perm (Seq.upd iseq (U32.v i) v))
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let at = (upd_array uses a iseq i v) in
@@ -242,8 +242,8 @@ let cas
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
     false
-    (pts_to_ref r full_permission v)
-    (fun b -> if b then pts_to_ref r full_permission v_new else pts_to_ref r full_permission v)
+    (pts_to_ref r full_perm v)
+    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let at = cas uses r v v_old v_new in

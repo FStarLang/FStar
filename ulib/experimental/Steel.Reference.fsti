@@ -2,11 +2,10 @@ module Steel.Reference
 open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.Memory
-open Steel.Permissions
 open FStar.Ghost
 
-let perm = p:permission{allows_read p}
-let full : perm = full_permission
+let perm = p:perm{readable p}
+let full : perm = full_perm
 let trivial_preorder #a : Preorder.preorder a = fun _ _ -> True
 let ref (a:Type0) = reference a trivial_preorder
 let is_ref (#a:Type0) (r:ref a) (p:perm) = ref_perm r p
@@ -31,12 +30,12 @@ val free (#a:Type) (#v:erased a) (r:ref a)
 val share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p v)
-    (fun _ -> pts_to r (half_permission p) v `star` pts_to r (half_permission p) v)
+    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
-val gather (#a:Type) (#p0:perm) (#p1:perm{summable_permissions p0 p1}) (#v0 #v1:erased a) (r:ref a)
+val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_permissions p0 p1) v0)
+    (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
 val ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
   : SteelAtomic a uses true
@@ -60,5 +59,5 @@ val cas
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
     false
-    (pts_to r full_permission v)
-    (fun b -> if b then pts_to r full_permission v_new else pts_to r full_permission v)
+    (pts_to r full_perm v)
+    (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)

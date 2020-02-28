@@ -99,37 +99,37 @@ let share_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:
     uses
     true
     (pts_to r p v)
-    (fun _ -> pts_to r (half_permission p) v `star` pts_to r (half_permission p) v)
+    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = change_hprop
       (pts_to r p v)
-      (pts_to r (half_permission p) v `star` pts_to r (half_permission p) v)
+      (pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
       // TODO: Needs a lemma here. And to unify with Steel.Actions which returns a new ref
       (fun m -> admit())
 
 let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p v)
-    (fun _ -> pts_to r (half_permission p) v `star` pts_to r (half_permission p) v)
+    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = lift_atomic_to_steelT (fun _ -> share_atomic r)
 
 let gather_atomic
   (#a:Type) (#uses:Set.set lock_addr)
-  (#p0:perm) (#p1:perm{summable_permissions p0 p1}) (#v0 #v1:erased a) (r:ref a)
+  (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelAtomic unit
     uses
     true
     (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_permissions p0 p1) v0)
+    (fun _ -> pts_to r (sum_perm p0 p1) v0)
   = change_hprop
       (pts_to r p0 v0 `star` pts_to r p1 v1)
-      (pts_to r (sum_permissions p0 p1) v0)
+      (pts_to r (sum_perm p0 p1) v0)
       // TODO: Needs a lemma here. And to unify with Steel.Actions
       (fun m -> admit())
 
-let gather (#a:Type) (#p0:perm) (#p1:perm{summable_permissions p0 p1}) (#v0 #v1:erased a) (r:ref a)
+let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_permissions p0 p1) v0)
+    (fun _ -> pts_to r (sum_perm p0 p1) v0)
   = lift_atomic_to_steelT (fun _ -> gather_atomic r)
 
 let ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
@@ -162,8 +162,8 @@ let cas
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
     false
-    (pts_to r full_permission v)
-    (fun b -> if b then pts_to r full_permission v_new else pts_to r full_permission v)
+    (pts_to r full_perm v)
+    (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let act = cas uses r v v_old v_new in
