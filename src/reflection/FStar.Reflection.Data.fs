@@ -90,9 +90,10 @@ type bv_view = {
 type binder_view = bv * aqualv
 
 type comp_view =
-    | C_Total of typ * option<term> //optional decreases clause
+    | C_Total of typ * option<term>  //optional decreases clause
+    | C_GTotal of typ * option<term> //idem
     | C_Lemma of term * term
-    | C_Unknown
+    | C_Eff of list<unit> * name * term * list<argv>
 
 type sigelt_view =
     | Sg_Let of bool * fv * list<univ_name> * typ * term
@@ -253,8 +254,9 @@ let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
 
 (* comp_view *)
 let ref_C_Total   = fstar_refl_data_const "C_Total"
+let ref_C_GTotal  = fstar_refl_data_const "C_GTotal"
 let ref_C_Lemma   = fstar_refl_data_const "C_Lemma"
-let ref_C_Unknown = fstar_refl_data_const "C_Unknown"
+let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"

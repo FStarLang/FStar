@@ -194,6 +194,11 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     set_goals (gsl @ gsr); set_smt_goals (sgs @ sgsl @ sgsr);
     (x, y)
 
+let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
+    match ts with
+    | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
+    | []    -> ()
+
 (** [focus t] runs [t ()] on the current active goal, hiding all others
 and restoring them at the end. *)
 let focus (t : unit -> Tac 'a) : Tac 'a =
@@ -506,10 +511,13 @@ let grewrite (t1 t2 : term) : Tac unit =
     let e = pack_ln (Tv_Var (bv_of_binder e)) in
     pointwise (fun () -> try exact e with | _ -> trefl ())
 
-let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
-    match ts with
-    | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
-    | []    -> ()
+(** A wrapper to [grewrite] which takes a binder of an equality type *)
+let grewrite_eq (b:binder) : Tac unit =
+  match term_as_formula (type_of_binder b) with
+  | Comp (Eq _) l r ->
+    grewrite l r;
+    iseq [idtac; (fun () -> exact (binder_to_term b))]
+  | _ -> fail "failed in grewrite_eq"
 
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->
@@ -756,11 +764,22 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
             | Some d -> Some (visit_tm ff d)
         in
         C_Total ret decr
+    | C_GTotal ret decr ->
+        let ret = visit_tm ff ret in
+        let decr =
+            match decr with
+            | None -> None
+            | Some d -> Some (visit_tm ff d)
+        in
+        C_GTotal ret decr
     | C_Lemma pre post ->
         let pre = visit_tm ff pre in
         let post = visit_tm ff post in
         C_Lemma pre post
-    | C_Unknown -> C_Unknown
+    | C_Eff us eff res args ->
+        let res = visit_tm ff res in
+        let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
+        C_Eff us eff res args
   in
   pack_comp cv'
 
@@ -780,3 +799,30 @@ let rec destruct_list (t : term) : Tac (list term) =
       else raise NotAListLiteral
     | _ ->
       raise NotAListLiteral
+
+private let get_match_body () : Tac term =
+  match FStar.Reflection.Formula.unsquash (cur_goal ()) with
+  | None -> fail ""
+  | Some t -> match inspect t with
+             | Tv_Match sc _ -> sc
+             | _ -> fail "Goal is not a match"
+
+private let rec last (x : list 'a) : Tac 'a =
+    match x with
+    | [] -> fail "last: empty list"
+    | [x] -> x
+    | _::xs -> last xs
+
+(** When the goal is [match e with | p1 -> e1 ... | pn -> en],
+destruct it into [n] goals for each possible case, including an
+hypothesis for [e] matching the correposnding pattern. *)
+let branch_on_match () : Tac unit =
+    focus (fun () ->
+      let x = get_match_body () in
+      let _ = t_destruct x in
+      iterAll (fun () ->
+        let bs = repeat intro in
+        let b = last bs in (* this one is the equality *)
+        grewrite_eq b;
+        norm [iota])
+    )
