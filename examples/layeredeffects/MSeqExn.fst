@@ -16,6 +16,8 @@
 
 module MSeqExn
 
+module W = FStar.Monotonic.Witnessed
+
 /// This module provides a monotonic state + exception layered effect,
 /// where state is a monotonic sequence of events
 
@@ -47,8 +49,8 @@ type result (a:Type) =
 
 /// The state grows monotonically
 
-let grows (#a:Type) : Preorder.preorder (Seq.seq a) =
-  fun (s1:Seq.seq a) (s2:Seq.seq a) ->
+let grows : Preorder.preorder state =
+  fun s1 s2 ->
   Seq.length s1 <= Seq.length s2 /\
   (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)}
             i < Seq.length s1 ==> Seq.index s1 i == Seq.index s2 i)
@@ -139,7 +141,7 @@ type s_pred = state -> Type0
 let stable (p:s_pred) =
   forall s0 s1. (p s0 /\ grows s0 s1) ==> p s1
 
-assume val witnessed (p:s_pred) : Type0
+let witnessed (p:s_pred) = W.witnessed grows p
 
 assume val witness (p:s_pred)
 : MSeqExn unit
@@ -150,6 +152,37 @@ assume val recall (p:s_pred)
 : MSeqExn unit
   (fun _ -> witnessed p)
   (fun s0 r s1 -> r == Success () /\ s0 == s1 /\ p s0)
+
+let witnessed_constant (p:Type0)
+: Lemma (witnessed (fun _ -> p) <==> p)
+= W.lemma_witnessed_constant grows p
+
+let witnessed_nested (p:s_pred)
+: Lemma (witnessed (fun s -> witnessed p) <==> witnessed p)
+= assert_norm (witnessed (fun _ -> witnessed p) ==
+               W.witnessed grows (fun _ -> W.witnessed grows p));
+  assert_norm (witnessed p == W.witnessed grows p);
+  W.lemma_witnessed_nested grows p
+
+let witnessed_and (p q:s_pred)
+: Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
+= W.lemma_witnessed_and grows p q
+
+let witnessed_or (p q:s_pred)
+: Lemma ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s))
+= W.lemma_witnessed_or grows p q
+
+let witnessed_impl (p q:s_pred)
+: Lemma ((witnessed (fun s -> p s ==> q s) /\ witnessed p) ==> witnessed q)
+= W.lemma_witnessed_impl grows p q
+
+let witnessed_forall (#t:Type) (p:(t -> s_pred))
+: Lemma ((witnessed (fun s -> forall x. p x s)) <==> (forall x. witnessed (p x)))
+= W.lemma_witnessed_forall grows p
+
+let witnessed_exists (#t:Type) (p:(t -> s_pred))
+: Lemma ((exists x. witnessed (p x)) ==> witnessed (fun s -> exists x. p x s))
+= W.lemma_witnessed_exists grows p
 
 
 /// Some actions
