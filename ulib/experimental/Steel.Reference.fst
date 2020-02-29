@@ -175,7 +175,140 @@ let cas
 let alloc_monotonic_ref = admit()
 let read_monotonic_ref = admit()
 let write_monotonic_ref = admit()
-let pure (p:prop) : hprop = admit()
-let witnessed  = admit()
-let witness = admit()
+
+let pure (p:prop) : hprop =
+ refine emp (fun _ -> p)
+
+let witnessed #a #p r fact =
+  RMST.witnessed mem mem_evolves (fun m ->
+    interp (Steel.Memory.ref r) m ==> fact (sel_ref r m)
+  )
+
+#restart-solver
+
+let ac_reasoning_for_witness_atomic (p q: hprop) (f: prop) : Lemma
+  (requires f)
+  (ensures ((p `star` q) `equiv` ((p `star` pure f) `star` q)))
+  =
+  calc (equiv) {
+    p;
+    (equiv) {emp_unit p}
+    (p `star` emp);
+    (equiv) {star_commutative p emp}
+    (emp `star` p);
+    (equiv) {
+      let aux (h: mem) : Lemma (
+        (interp (emp `star` p) h /\ f) <==>
+        (interp (refine (emp `star` p) (fun _ -> f)) h)
+      ) =
+        refine_equiv (emp `star` p) (fun _ -> f) h
+      in
+      Classical.forall_intro aux
+    }
+    (refine (emp `star` p) (fun _ -> f));
+    (equiv) { refine_star emp p (fun _ -> f)}
+    (refine emp (fun _ -> f) `star` p);
+    (equiv) { () }
+    (pure f `star` p);
+    (equiv) { star_commutative (pure f) p }
+    (p `star` pure f);
+  };
+  equiv_extensional_on_star p (p `star` pure f) q
+
+let ac_reasoning_for_frame_on_noop
+  (#st: Sem.st)
+  (p q r s: st.Sem.hprop)
+  (m :st.Sem.mem)
+  : Lemma
+    (requires ((st.Sem.interp p m ==> st.Sem.interp q m) /\
+      st.Sem.interp ((p `st.Sem.star` r) `st.Sem.star` s) m
+    ))
+    (ensures (st.Sem.interp ((q `st.Sem.star` r) `st.Sem.star` s)) m)
+  =
+  admit()
+
+#push-options "--fuel 2 --ifuel 1"
+let preserves_frame_on_noop
+  (#st: Sem.st)
+  (pre post: st.Sem.hprop)
+  (m: st.Sem.mem)
+  : Lemma
+    (requires (st.Sem.interp pre m ==> st.Sem.interp post m))
+    (ensures (Sem.preserves_frame pre post m m))
+  =
+   let aux (frame:st.Sem.hprop) : Lemma (
+    st.Sem.interp ((pre `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m ==>
+    (st.Sem.interp ((post `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m /\
+     (forall (f_frame:Sem.fp_prop frame). f_frame (st.Sem.core m) == f_frame (st.Sem.core m))))
+   =
+     let aux (_ :squash (
+       st.Sem.interp ((pre `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m
+     )) : Lemma (
+       (st.Sem.interp ((post `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m /\
+       (forall (f_frame:Sem.fp_prop frame). f_frame (st.Sem.core m) == f_frame (st.Sem.core m)))
+     ) =
+       ac_reasoning_for_frame_on_noop pre post frame (st.Sem.locks_invariant m) m
+     in
+     Classical.impl_intro aux
+   in
+   Classical.forall_intro aux
+#pop-options
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
+let witness_atomic
+  (#a:Type)
+  (#uses:Set.set lock_addr)
+  (#q:perm)
+  (#p:Preorder.preorder a)
+  (r:reference a p)
+  (fact:stable_property p)
+  (v:a)
+  (_:squash (fact v))
+  : SteelAtomic unit uses true
+    (pts_to_ref r q v)
+    (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
+  =
+  SteelAtomic?.reflect (fun _ ->
+   let m0 = mst_get () in
+   intro_exists (Ghost.hide v) (pts_to_ref r q) m0;
+   sel_ref_lemma r q m0;
+   pts_to_ref_injective r q v (sel_ref r m0) m0;
+   let fact_mem : RMST.s_predicate mem = (fun m ->
+    interp (Steel.Memory.ref r) m ==> fact (sel_ref r m)
+   ) in
+   let aux (m0 m1: mem) : Lemma ((fact_mem m0 /\ mem_evolves m0 m1) ==> fact_mem m1) =
+     let aux (_ :squash (fact_mem m0 /\ mem_evolves m0 m1)) : Lemma (fact_mem m1) =
+       Classical.or_elim
+         #(interp (Steel.Memory.ref r) m0)
+         #(~ (interp (Steel.Memory.ref r) m0))
+         #(fun _ -> fact_mem m1)
+         (fun _ ->
+           Classical.or_elim
+             #(interp (Steel.Memory.ref r) m1)
+             #(~ (interp (Steel.Memory.ref r) m1))
+             #(fun _ -> fact_mem m1)
+             (fun _ -> reference_preorder_respected r m0 m1)
+             (fun _ -> ())
+         )
+         (fun _ -> reference_stays_dead r m0 m1)
+     in
+     Classical.impl_intro aux
+   in
+   Classical.forall_intro_2 aux;
+   assert(RMST.stable mem mem_evolves fact_mem);
+   RMST.witness mem mem_evolves fact_mem;
+   let m1 = mst_get () in
+   assert(m0 == m1);
+   ac_reasoning_for_witness_atomic
+     (pts_to_ref r q v)
+     (locks_invariant uses m1)
+     (witnessed r fact);
+   preserves_frame_on_noop
+     #(state_uses uses)
+     (pts_to_ref r q v)
+     (pts_to_ref r q v `star` pure (witnessed r fact))
+     m0
+  )
+#pop-options
+
 let recall = admit()
