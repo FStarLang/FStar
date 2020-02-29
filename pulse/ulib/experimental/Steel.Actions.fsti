@@ -436,5 +436,16 @@ val reference_preorder_respected
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (m0 m1:hmem (ref r))
-  : Lemma (requires (mem_evolves m0 m1)) (ensures (pre (sel_ref r m0) (sel_ref r m1)))
+  (m0 m1:mem)
+  : Lemma
+    (requires (interp (ref r) m0 /\ interp (ref r) m1 /\ mem_evolves m0 m1))
+    (ensures (pre (sel_ref r m0) (sel_ref r m1)))
+
+val reference_stays_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m0 m1:mem)
+  : Lemma
+    (requires ((~ (interp (ref r) m0)) /\ mem_evolves m0 m1))
+    (ensures (~ (interp (ref r) m1)))
