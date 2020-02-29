@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e84fd4081e7a168720509f52cb8aee15"
+      "c53af7072e9bfa8b0e527c1f9ac875c6"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "479cb714405f865e045cebcef838738c"
+      "70cefbffbaf724bd43d9bcf2fc546bc0"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9b4ed0a51722f4bc1579d36bfc417d01"
+      "ba62193c96d775b6aed52a3f3da5a112"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f841040a80cfb48c88c18ab618169185"
+      "4b9b1c85d6b793812286bef52cb3a921"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "2a6f8f8b6838ba1e27a17368a9a8095b"
+      "9b04f78e08a0d1fbd0c222644a5b338a"
     ],
     [
       "Trace.uu___100",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "7a1100b30217782aa2d78409cf718405"
+      "c9dc555ddc22eb83ee9ba9337954acce"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "baef9e68c45e6dbda38619e37a87b59f"
+      "61c72e50384c05ebc6a26f4c71575418"
     ],
     [
       "Trace.uu___110",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ed04b415015b879da9b49930eefe6ef4"
+      "0bfa15d0707043f856710b834e92804e"
     ],
     [
       "Trace.uu___114",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "bdc1bd8f6ec5153c65cf33ed01f7a4d6"
+      "4d6e3c64d3fe403aab97ab8a58c3a922"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "5d2d51b4f424a40e0b47890b45abbcc9"
+      "b0cb92a0f68549322cc65fbd0d072c67"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "1e64bd9d122c02eca1883a830790d9c6"
+      "afdf53227c3de5b100ad6dad780b92fb"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "94ac9e03d53839c10bf016f94952d985"
+      "114e4b3855e7d4b12c0ca3684a9e4e46"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "0a3930d86ecc49f0f6eb7b6ea8944d58"
+      "41df07834548b115c7adeb002a08b085"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5cfe95a60b00acd47ef6c7651ef67957"
+      "4c3de69b8107f99a44be7c61a225bceb"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "ce5a152c099d7c7ae6d35a5cf7fd6628"
+      "ea6e425e70c1380125861882038a68e0"
     ],
     [
       "Trace.uu___100",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "3a49369f95e05760512f8a3dc7582780"
+      "0e0f14852c7a3e9bbc5e0e3f89454d2f"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f13cbd1956a01c6f8ac787c4aedc4fff"
+      "7802d24a9940dad957d9800b0d4251b6"
     ],
     [
       "Trace.uu___110",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "7bf38d4363fe90fe7bea95d6b23d6771"
+      "18545122bf13cc1a12e101da759c66b9"
     ],
     [
       "Trace.uu___114",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "c47371bfe8dca97efbd91633c24d4dd4"
+      "37f36f4d0856126416f80e391b36f196"
     ]
   ]
 ]
