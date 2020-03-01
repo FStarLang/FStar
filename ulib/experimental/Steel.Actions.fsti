@@ -82,6 +82,11 @@ let inv (p:hprop) = lock_addr
 
 val inv_ok (#p:hprop) (l:inv p) (m:mem) : prop
 
+val inv_ok_stable (#p:_) (l:inv p) (m0 m1:mem)
+  : Lemma (inv_ok l m0 /\
+           m0 `mem_evolves` m1 ==>
+           inv_ok l m1)
+
 val new_inv (p:hprop)
   : m_action p (inv p) (fun _ -> emp)
 
@@ -107,6 +112,17 @@ let atomic (uses:Set.set lock_addr)
            (a:Type)
            (fp':a -> hprop) =
     f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
+
+val interp_inv_unused
+  (#p:hprop) (i:inv p)
+  (uses:Set.set lock_addr)
+  (frame:hprop)
+  (m0:mem)
+  : Lemma
+  (requires inv_ok i m0 /\ not (i `Set.mem` uses))
+  (ensures
+    (frame `star` locks_invariant uses m0) `equiv`
+    ((p `star` frame) `star` locks_invariant (Set.union (Set.singleton i) uses) m0))
 
 val with_invariant
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
