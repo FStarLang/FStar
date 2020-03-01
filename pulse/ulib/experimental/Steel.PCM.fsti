@@ -47,5 +47,5 @@ let compatible_refl #a (pcm:pcm a) (x:a{defined pcm x})
     assert (pcm.op pcm.one x == x)
 
 let frame_preserving #a (pcm:pcm a) (x y: a) =
-  forall frame. defined pcm (pcm.op x frame) ==>
-           defined pcm (pcm.op y frame)
+    (forall frame. combinable pcm frame x ==> combinable pcm frame y) /\
+    (forall frame.{:pattern (combinable pcm frame x)} combinable pcm frame x ==> pcm.op frame y == y)
