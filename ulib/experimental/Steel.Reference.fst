@@ -265,7 +265,7 @@ let witness_atomic
   (#p:Preorder.preorder a)
   (r:reference a p)
   (fact:stable_property p)
-  (v:a)
+  (v:(Ghost.erased a))
   (_:squash (fact v))
   : SteelAtomic unit uses true
     (pts_to_ref r q v)
@@ -273,7 +273,7 @@ let witness_atomic
   =
   SteelAtomic?.reflect (fun _ ->
    let m0 = mst_get () in
-   intro_exists (Ghost.hide v) (pts_to_ref r q) m0;
+   intro_exists v (pts_to_ref r q) m0;
    sel_ref_lemma r q m0;
    pts_to_ref_injective r q v (sel_ref r m0) m0;
    let fact_mem : RMST.s_predicate mem = (fun m ->
@@ -327,11 +327,82 @@ let witness_atomic
 
 let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
             (fact:stable_property p)
-            (v:a)
+            (v:(Ghost.erased a))
             (pf:squash (fact v))
   : SteelT unit (pts_to_ref r q v)
                 (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
   =
   lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
 
-let recall = admit()
+let ac_reasoning_for_recall_atomic (p: hprop) (f: prop) (m: mem) : Lemma
+  (requires (interp (p `star` pure f)) m)
+  (ensures (f))
+  =
+  affine_star p (pure f) m;
+  refine_equiv emp (fun _ -> f) m
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 20"
+let recall_atomic
+  (#a:Type)
+  (#uses:Set.set lock_addr)
+  (#q:perm)
+  (#p:Preorder.preorder a)
+  (#fact:property a)
+  (r:reference a p)
+  (v:(Ghost.erased a))
+  : SteelAtomic unit uses true
+    (pts_to_ref r q v `star` pure (witnessed r fact))
+    (fun _ -> pts_to_ref r q v `star` pure (fact v))
+  = SteelAtomic?.reflect (fun _ ->
+   let m0 = mst_get () in
+   intro_exists v (pts_to_ref r q) m0;
+   sel_ref_lemma r q m0;
+   pts_to_ref_injective r q v (sel_ref r m0) m0;
+   ac_reasoning_for_recall_atomic (pts_to_ref r q v) (witnessed r fact) m0;
+   let fact_mem : RMST.s_predicate mem = (fun m ->
+    interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
+   ) in
+   RMST.recall mem mem_evolves fact_mem;
+   let m1 = mst_get () in
+   assert(m0 == m1);
+   sel_ref_or_dead_lemma r m1;
+   assert(Ghost.reveal v == sel_ref r m1);
+   assert(Ghost.reveal v == sel_ref_or_dead r m1);
+   assert(fact (Ghost.reveal v));
+   let aux (m: mem) : Lemma(
+     interp (pts_to_ref r q v `star` pure (witnessed r fact)) m <==>
+     interp (pts_to_ref r q v `star` pure (fact v)) m
+   ) =
+     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (fact v)) m)) : Lemma (
+       interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
+     ) =
+       affine_star (pts_to_ref r q v) (pure (fact v)) m1;
+       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (witnessed r fact)
+     in
+     Classical.impl_intro aux;
+     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
+       interp (pts_to_ref r q v `star` pure (fact v)) m
+     ) =
+       affine_star (pts_to_ref r q v) (pure (witnessed r fact)) m;
+       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (fact v)
+     in
+     Classical.impl_intro aux
+   in
+   Classical.forall_intro aux;
+   preserves_frame_on_noop
+     uses
+     #(state_uses uses)
+     (pts_to_ref r q v `star` pure (witnessed r fact))
+     (pts_to_ref r q v `star` pure (fact v))
+     m0
+ )
+#pop-options
+
+
+let recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
+           (r:reference a p) (v:(Ghost.erased a))
+  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
+                (fun _ -> pts_to_ref r q v `star` pure (fact v))
+
+  =
+  lift_atomic_to_steelT (fun _ -> recall_atomic r v)
