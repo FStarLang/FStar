@@ -181,7 +181,7 @@ let pure (p:prop) : hprop =
 
 let witnessed #a #p r fact =
   RMST.witnessed mem mem_evolves (fun m ->
-    interp (Steel.Memory.ref r) m ==> fact (sel_ref r m)
+    (interp (Steel.Memory.ref r) m /\ fact (sel_ref r m)) \/ (dead r /\ fact (sel_dead_ref r m))
   )
 
 #restart-solver
@@ -290,7 +290,14 @@ let witness_atomic
              (fun _ -> reference_preorder_respected r m0 m1)
              (fun _ -> ())
          )
-         (fun _ -> reference_stays_dead r m0 m1)
+         (fun _ ->
+           Classical.or_elim
+             #(interp (Steel.Memory.ref r) m1)
+             #(~ (interp (Steel.Memory.ref r) m1))
+             #(fun _ -> fact_mem m1)
+             (fun _ -> admit())
+             (fun _ -> ())
+         )
      in
      Classical.impl_intro aux
    in
