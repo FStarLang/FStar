@@ -179,16 +179,16 @@ let write_monotonic_ref = admit()
 let pure (p:prop) : hprop =
  refine emp (fun _ -> p)
 
-let witnessed #a #p r fact =
+let witnessed #t #p r fact =
   RMST.witnessed mem mem_evolves (fun m ->
-    (interp (Steel.Memory.ref r) m /\ fact (sel_ref r m)) \/ (dead r /\ fact (sel_dead_ref r m))
+    (interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m))
   )
 
 #restart-solver
 
 let ac_reasoning_for_witness_atomic (p q: hprop) (f: prop) : Lemma
   (requires f)
-  (ensures ((p `star` q) `equiv` ((p `star` pure f) `star` q)))
+  (ensures (p `equiv` (p `star` pure f)))
   =
   calc (equiv) {
     p;
@@ -212,28 +212,31 @@ let ac_reasoning_for_witness_atomic (p q: hprop) (f: prop) : Lemma
     (pure f `star` p);
     (equiv) { star_commutative (pure f) p }
     (p `star` pure f);
-  };
-  equiv_extensional_on_star p (p `star` pure f) q
+  }
+
 
 let ac_reasoning_for_frame_on_noop
-  (#st: Sem.st)
-  (p q r s: st.Sem.hprop)
-  (m :st.Sem.mem)
+  (p q r s: hprop)
+  (m :mem)
   : Lemma
-    (requires ((st.Sem.interp p m ==> st.Sem.interp q m) /\
-      st.Sem.interp ((p `st.Sem.star` r) `st.Sem.star` s) m
+    (requires ((p `equiv` q) /\
+      interp ((p `star` r) `star` s) m
     ))
-    (ensures (st.Sem.interp ((q `st.Sem.star` r) `st.Sem.star` s)) m)
+    (ensures (interp ((q `star` r) `star` s)) m)
   =
-  admit()
+  star_associative p r s;
+  equiv_extensional_on_star p q (r `star` s);
+  assert(interp (q `star` (r `star` s)) m);
+  star_associative q r s
 
 #push-options "--fuel 2 --ifuel 1"
 let preserves_frame_on_noop
-  (#st: Sem.st)
+  (uses:Set.set lock_addr)
+  (#st: Sem.st{st == state_uses uses})
   (pre post: st.Sem.hprop)
   (m: st.Sem.mem)
   : Lemma
-    (requires (st.Sem.interp pre m ==> st.Sem.interp post m))
+    (requires (forall (m: st.Sem.mem). st.Sem.interp pre m <==> st.Sem.interp post m))
     (ensures (Sem.preserves_frame pre post m m))
   =
    let aux (frame:st.Sem.hprop) : Lemma (
@@ -274,35 +277,17 @@ let witness_atomic
    sel_ref_lemma r q m0;
    pts_to_ref_injective r q v (sel_ref r m0) m0;
    let fact_mem : RMST.s_predicate mem = (fun m ->
-    interp (Steel.Memory.ref r) m ==> fact (sel_ref r m)
+    interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
    ) in
    let aux (m0 m1: mem) : Lemma ((fact_mem m0 /\ mem_evolves m0 m1) ==> fact_mem m1) =
      let aux (_ :squash (fact_mem m0 /\ mem_evolves m0 m1)) : Lemma (fact_mem m1) =
-       Classical.or_elim
-         #(interp (Steel.Memory.ref r) m0)
-         #(~ (interp (Steel.Memory.ref r) m0))
-         #(fun _ -> fact_mem m1)
-         (fun _ ->
-           Classical.or_elim
-             #(interp (Steel.Memory.ref r) m1)
-             #(~ (interp (Steel.Memory.ref r) m1))
-             #(fun _ -> fact_mem m1)
-             (fun _ -> reference_preorder_respected r m0 m1)
-             (fun _ -> ())
-         )
-         (fun _ ->
-           Classical.or_elim
-             #(interp (Steel.Memory.ref r) m1)
-             #(~ (interp (Steel.Memory.ref r) m1))
-             #(fun _ -> fact_mem m1)
-             (fun _ -> admit())
-             (fun _ -> ())
-         )
+       reference_preorder_respected r m0 m1
      in
      Classical.impl_intro aux
    in
    Classical.forall_intro_2 aux;
    assert(RMST.stable mem mem_evolves fact_mem);
+   sel_ref_or_dead_lemma r m0;
    RMST.witness mem mem_evolves fact_mem;
    let m1 = mst_get () in
    assert(m0 == m1);
@@ -310,12 +295,43 @@ let witness_atomic
      (pts_to_ref r q v)
      (locks_invariant uses m1)
      (witnessed r fact);
+   equiv_extensional_on_star
+     (pts_to_ref r q v)
+     ((pts_to_ref r q v) `star` pure (witnessed r fact))
+     (locks_invariant uses m1);
+   let aux (m: mem) : Lemma(
+     interp (pts_to_ref r q v) m <==> interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
+   ) =
+     let aux (_ : squash (interp (pts_to_ref r q v) m)) : Lemma (
+       interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
+     ) =
+       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (witnessed r fact)
+     in
+     Classical.impl_intro aux;
+     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
+       interp (pts_to_ref r q v) m
+     ) =
+       affine_star (pts_to_ref r q v) (pure (witnessed r fact)) m
+     in
+     Classical.impl_intro aux
+   in
+   Classical.forall_intro aux;
    preserves_frame_on_noop
+     uses
      #(state_uses uses)
      (pts_to_ref r q v)
      (pts_to_ref r q v `star` pure (witnessed r fact))
      m0
   )
 #pop-options
+
+let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
+            (fact:stable_property p)
+            (v:a)
+            (pf:squash (fact v))
+  : SteelT unit (pts_to_ref r q v)
+                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
+  =
+  lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
 
 let recall = admit()

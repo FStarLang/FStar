@@ -75,12 +75,15 @@ let heap_evolves_seq
   (#len: nat)
   (seq1: array_seq t len)
   (seq2: array_seq t len)
-  (i:nat{i < len}) =
+  (i:nat{i < len})
+  (live1 live2: bool) =
   select_pre seq1 i == select_pre seq2 i /\ (
     let x1 = Seq.index seq1 i in
     let x2 = Seq.index seq2 i in
     let pre = select_pre seq1 i in
-    match x1.v_with_p, x2.v_with_p with
+    if (not live1) && (not live2) then
+      x1 == x2
+    else match x1.v_with_p, x2.v_with_p with
     | None, None -> pre None None
     | None, Some v2 -> pre None (Some v2.value)
     | Some v1, None -> pre (Some v1.value) None
@@ -95,7 +98,7 @@ let heap_evolves_addr (h1 h2 :heap) (addr: addr) =
   | Some (Array t1 len1 seq1 live1), Some (Array t2 len2 seq2 live2) ->
     ((not live1) ==> (not live2)) /\
     t1 == t2 /\ len1 == len2 /\
-    (forall (i:nat{i < len1}). heap_evolves_seq seq1 seq2 i)
+    (forall (i:nat{i < len1}). heap_evolves_seq seq1 seq2 i live1 live2)
 
 let heap_evolves' : Preorder.relation heap =
   fun (h1 h2: heap) ->
@@ -119,9 +122,9 @@ let heap_evolves_transitive () : Lemma (Preorder.transitive heap_evolves') =
         Some (Array t3 len3 seq3 live3) ->
         assert(t1 == t3);
         assert(len1 == len3);
-        let aux (i:nat{i < len1}) : Lemma(heap_evolves_seq seq1 seq3 i) =
-          assert(heap_evolves_seq seq1 seq2 i);
-          assert(heap_evolves_seq seq2 seq3 i)
+        let aux (i:nat{i < len1}) : Lemma(heap_evolves_seq seq1 seq3 i live1 live3) =
+          assert(heap_evolves_seq seq1 seq2 i live1 live2);
+          assert(heap_evolves_seq seq2 seq3 i live2 live3)
         in
         Classical.forall_intro aux
       | _ -> ()
@@ -2460,7 +2463,7 @@ let glue_array
 // References
 ///////////////////////////////////////////////////////////////////////////////
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
+#push-options "--fuel 2 --ifuel 1"
 let sel_ref_heap
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2475,7 +2478,7 @@ let sel_ref_heap
   x.value
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
+#push-options "--fuel 2 --ifuel 1"
 let sel_ref
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2486,11 +2489,11 @@ let sel_ref
     interp (pts_to_ref r p contents) m
   );
   let Array t' len' seq live = select_addr (heap_of_mem m) (Some?.v r).array_addr in
-  let x =  select_index seq 0 in
+  let x = select_index seq 0 in
   x.value
 #pop-options
 
-#push-options "--max_fuel 2 --initial_fuel 2 --initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 2 --fuel 1"
 let sel_ref_lemma
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -2502,9 +2505,58 @@ let sel_ref_lemma
     interp (pts_to_ref r p (sel_ref r m)) m
   )
   =
-  affine_star (ref r) (locks_invariant Set.empty m) m;
   assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
     interp (pts_to_ref r p contents) m
+  )
+#pop-options
+
+let sel_ref_or_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m: hmem (ref_or_dead r))
+  : t =
+  assert(exists (p:perm{readable p}) (contents: Ghost.erased t).
+    interp (pts_to_ref_or_dead r p contents) m
+  );
+  let Array t' len' seq live = select_addr (heap_of_mem m) (Some?.v r).array_addr in
+  let x = select_index seq 0 in
+  x.value
+
+let sel_ref_or_dead_lemma
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m: hmem (ref r))
+  : Lemma (
+    interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m
+  )
+  =
+  assert(interp (ref r) m);
+  assert(exists (p:perm{readable p}).
+    interp (ref_perm r p) m
+  );
+  assert(exists (p:perm{readable p}) (v: Ghost.erased t).
+    interp (pts_to_ref_with_liveness r p v true) m
+  );
+  let pf: squash (exists (p:perm{readable p}). (exists (v: Ghost.erased t).
+    interp (pts_to_ref_with_liveness r p v true) m
+  )) = ()
+  in
+  Classical.exists_elim (interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m) pf (fun p ->
+    let pf: squash (exists (v: Ghost.erased t).
+      interp (pts_to_ref_with_liveness r p v true) m
+    ) = ()
+    in
+    Classical.exists_elim (interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m)
+      pf (fun v ->
+        assert(interp (pts_to_ref_with_liveness r p v true) m);
+        intro_exists true (pts_to_ref_with_liveness r p v) m;
+        intro_exists v (pts_to_ref_or_dead r p) m;
+        intro_exists p (ref_perm_or_dead r) m;
+        assert(interp (ref_or_dead r) m);
+        assert(sel_ref r m == sel_ref_or_dead r m)
+      )
   )
 #pop-options
 
@@ -2525,7 +2577,7 @@ let sel_ref_lemma_heap
   )
 #pop-options
 
-#push-options "--z3rlimit 10"
+#push-options "--z3rlimit 30 --fuel 2 --ifuel 1"
 let sel_ref_depends_only_on #a #pre r p m0 m1 = ()
 #pop-options
 
@@ -2692,7 +2744,7 @@ let free_ref_pre_action
       ) =
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h
+          interp_heap (Pts_to_array a full_perm contents pre true) h
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
@@ -2753,7 +2805,7 @@ let free_ref_action
         Some (Array t1 len1 seq1 live1), Some (Array tj lenj seqj livej) ->
         assert(exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a))))
           (pre: Preorder.preorder (option t)).
-          interp_heap (pts_to_array_with_preorder a full_perm contents pre) h0
+          interp_heap (Pts_to_array a full_perm contents pre true) h0
         );
         let pf: squash (exists (contents: Ghost.erased (Seq.lseq t (U32.v (length a)))). (
           exists (pre: Preorder.preorder (option t)).
@@ -3089,6 +3141,7 @@ let cas_result_does_not_depend_on_framing
     assert (x0 == x1)
 #pop-options
 
+#push-options "--fuel 2 --ifuel 1"
 let cas_action
   (#t:eqtype)
   (#pre:Preorder.preorder t)
@@ -3107,6 +3160,7 @@ let cas_action
     (cas_does_not_depend_on_framing_addr r v v_old v_new)
     (cas_result_does_not_depend_on_framing r v v_old v_new)
     (fun h0 addr -> ())
+#pop-options
 
 let cas
   (#t:eqtype)
@@ -3133,47 +3187,45 @@ let cas
       assert(h1 addr == None)
     )
 
-#push-options "--fuel 3 --ifuel 0"
+#push-options "--fuel 3 --ifuel 0 --z3rlimit 40"
 let reference_preorder_respected
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m0 m1:mem)
   : Lemma
-    (requires (interp (ref r) m0 /\ interp (ref r) m1 /\ mem_evolves m0 m1))
-    (ensures (pre (sel_ref r m0) (sel_ref r m1)))
+    (requires (
+      interp (ref_or_dead r) m0 /\
+      mem_evolves m0 m1
+    ))
+    (ensures (interp (ref_or_dead r) m1 /\ pre (sel_ref_or_dead r m0) (sel_ref_or_dead r m1)))
   =
+  assert(exists (p0: perm{readable p0}) (v0: Ghost.erased t).
+    interp (pts_to_ref_or_dead r p0 v0) m0
+  );
+  assert(exists (p0: perm{readable p0}) (v0: Ghost.erased t) (live0: bool).
+    interp (pts_to_ref_with_liveness r p0 v0 live0) m0
+  );
   assert(heap_evolves m0.heap m1.heap);
   assert(heap_evolves_addr m0.heap m1.heap (Some?.v r).array_addr);
   let addr = (Some?.v r).array_addr in
   match m0.heap addr, m1.heap addr with
   | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
-    assert(heap_evolves_seq seq0 seq1 0)
-  | _ -> ()
-#pop-options
-
-#push-options "--fuel 3 --ifuel 1 --z3rlimit 30"
-let reference_stays_dead
-  (#t: Type0)
-  (#pre: Preorder.preorder t)
-  (r: reference t pre)
-  (m0 m1:mem)
-  : Lemma
-    (requires ((~ (interp (ref r) m0)) /\ mem_evolves m0 m1))
-    (ensures (~ (interp (ref r) m1)))
-  =
-  let aux (_: squash (interp (ref r) m1)) : Lemma (False) =
-    match r with
-    | None -> ()
-    | Some r -> begin match select_addr m1.heap r.array_addr with
-      | Array t1 len1 seq1 live1 -> begin
-        assert(heap_evolves_addr m0.heap m1.heap r.array_addr);
-        match m0.heap r.array_addr with
-        | None -> admit()
-        | Some (Array t0 len0 seq0 live0) ->
-          admit()
-      end
+    assert(heap_evolves_seq seq0 seq1 0 live0 live1);
+    if live1 then begin
+      let p, v = match (Seq.index seq1 0).v_with_p with
+        | Some x -> x.perm, x.value
+      in
+      assert(interp (pts_to_ref_with_liveness r p (Ghost.hide v) true) m1);
+      assert(interp (ref_or_dead r) m1)
+    end else begin
+      let v = match (Seq.index seq1 0).v_with_p with
+        | Some x ->
+          assert(x.perm == full_perm);
+          x.value
+      in
+      assert(interp (pts_to_ref_with_liveness r full_perm (Ghost.hide v) false) m1);
+      assert(interp (ref_or_dead r) m1)
     end
-  in
-  Classical.impl_intro aux
+  | _ -> ()
 #pop-options
