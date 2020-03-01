@@ -139,7 +139,6 @@ val star_congruence (p1 p2 p3 p4:slprop)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
-// sel, split, update
 ////////////////////////////////////////////////////////////////////////////////
 let pre_action (fp:slprop) (a:Type) (fp':a -> slprop) =
   hheap fp -> (x:a & hheap (fp' x))
@@ -149,22 +148,6 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
     interp (fp `star` frame) h0 ==>
     (let (| x, h1 |) = f h0 in
      interp (fp' x `star` frame) h1)
-
-let depends_only_on (q:heap -> prop) (fp: slprop) =
-  (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
-  (forall (h0:hheap fp) (h1:heap{disjoint h0 h1}). q h0 <==> q (join h0 h1))
-
-let fp_prop fp = p:(heap -> prop){p `depends_only_on` fp}
-
-let action_depends_only_on_fp (#pre:_) (#a:_) (#post:_) (f:pre_action pre a post)
-  = forall (h0:hheap pre)
-      (h1:heap {disjoint h0 h1})
-      (post: (x:a -> fp_prop (post x))).
-      (interp pre (join h0 h1) /\ (
-       let (| x0, h |) = f h0 in
-       let (| x1, h' |) = f (join h0 h1) in
-       x0 == x1 /\
-       (post x0 h <==> post x1 h')))
 
 let action (fp:slprop) (a:Type) (fp':a -> slprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }
