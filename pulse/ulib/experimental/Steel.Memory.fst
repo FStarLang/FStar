@@ -344,7 +344,8 @@ type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:perm{readable perm} ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
-                  preorder: Ghost.erased (Preorder.preorder (option t)) -> hprop
+                  preorder: Ghost.erased (Preorder.preorder (option t)) ->
+                  liveness: bool -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -404,12 +405,12 @@ let rec interp_heap (p:hprop) (m:heap)
   : Tot prop (decreases p)
   = match p with
     | Emp -> True
-    | Pts_to_array #t a perm contents preorder ->
+    | Pts_to_array #t a perm contents preorder liveness ->
       None? a  \/ (Some? a /\ MkPerm?.v perm <=. 1.0R /\ begin
       let a = Some?.v a in  m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
-	  t' == t /\ live /\ U32.v a.array_max_length = len' /\
+	  t' == t /\ liveness = live /\ U32.v a.array_max_length = len' /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
@@ -520,15 +521,18 @@ let pts_to_array
     p
     contents
     (trivial_optional_preorder (trivial_preorder t))
-let pts_to_ref
+    true
+let pts_to_ref_with_liveness
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p:perm{readable p})
   (contents: Ghost.erased t)
+  (live: bool)
   = pts_to_array_with_preorder r p
     (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal contents))
     (trivial_optional_preorder pre)
+    live
 let h_and = And
 let h_or = Or
 let star = Star
@@ -559,6 +563,7 @@ let intro_pts_to_array_with_preorder
   (perm:perm{readable perm})
   (contents:Seq.lseq t (U32.v (length a)))
   (preorder: Preorder.preorder (option t))
+  (liveness: bool)
   (m:heap)
   : Lemma
     (requires (
@@ -566,7 +571,7 @@ let intro_pts_to_array_with_preorder
       let a = Some?.v a in m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
-	  t' == t /\ live /\ U32.v a.array_max_length = len' /\
+	  t' == t /\ liveness = live /\ U32.v a.array_max_length = len' /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
@@ -585,7 +590,7 @@ let intro_pts_to_array_with_preorder
       )
       end)
     ))
-    (ensures (interp_heap (pts_to_array_with_preorder a perm contents preorder) m))
+    (ensures (interp_heap (pts_to_array_with_preorder a perm contents preorder liveness) m))
   =
   ()
 #pop-options
@@ -597,11 +602,12 @@ let pts_to_array_with_preorder_injective
   (p:perm{readable p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (pre:Preorder.preorder (option t))
+  (live: bool)
   (m:mem)
   : Lemma
     (requires (
-      interp (pts_to_array_with_preorder a p c0 pre) m /\
-      interp (pts_to_array_with_preorder a p c1 pre) m))
+      interp (pts_to_array_with_preorder a p c0 pre live) m /\
+      interp (pts_to_array_with_preorder a p c1 pre live) m))
     (ensures (c0 == c1))
   =
   let a = Some?.v a in

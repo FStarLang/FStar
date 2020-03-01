@@ -3116,3 +3116,29 @@ let reference_preorder_respected
     assert(heap_evolves_seq seq0 seq1 0)
   | _ -> ()
 #pop-options
+
+#push-options "--fuel 3 --ifuel 1 --z3rlimit 30"
+let reference_stays_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m0 m1:mem)
+  : Lemma
+    (requires ((~ (interp (ref r) m0)) /\ mem_evolves m0 m1))
+    (ensures (~ (interp (ref r) m1)))
+  =
+  let aux (_: squash (interp (ref r) m1)) : Lemma (False) =
+    match r with
+    | None -> ()
+    | Some r -> begin match select_addr m1.heap r.array_addr with
+      | Array t1 len1 seq1 live1 -> begin
+        assert(heap_evolves_addr m0.heap m1.heap r.array_addr);
+        match m0.heap r.array_addr with
+        | None -> admit()
+        | Some (Array t0 len0 seq0 live0) ->
+          admit()
+      end
+    end
+  in
+  Classical.impl_intro aux
+#pop-options

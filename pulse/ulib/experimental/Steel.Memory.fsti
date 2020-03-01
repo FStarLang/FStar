@@ -154,12 +154,13 @@ val pts_to_array
   (p:perm{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
-val pts_to_ref
+val pts_to_ref_with_liveness
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p:perm{readable p})
   (contents: Ghost.erased t)
+  (live: bool)
   : hprop
 
 val h_and (p1 p2:hprop) : hprop
@@ -227,6 +228,15 @@ val gather_pts_to_array
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_ref and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
+
+let pts_to_ref
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p:perm{readable p})
+  (contents: Ghost.erased t)
+  : hprop
+  = pts_to_ref_with_liveness r p contents true
 
 let ref_perm
   (#t: Type0)
