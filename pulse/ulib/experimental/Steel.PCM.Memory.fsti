@@ -111,8 +111,8 @@ val pts_to_compatible (#a:Type u#a)
     (requires
       interp (pts_to x v0 `star` pts_to x v1) m)
     (ensures
-      combinable pcm v0 v1 /\
-      interp (pts_to x (pcm.op v0 v1)) m)
+      composable pcm v0 v1 /\
+      interp (pts_to x (op pcm v0 v1)) m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
