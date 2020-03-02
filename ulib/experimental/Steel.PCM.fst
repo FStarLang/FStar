@@ -21,13 +21,24 @@ let lem_commutative #a (p:pcm' a) =
   y:a{p.composable x y} ->
   Lemma (p.op x y == p.op y x)
 
-let lem_associative #a (p:pcm' a) =
+let lem_assoc_l #a (p:pcm' a) =
   x:a ->
   y:a ->
   z:a{p.composable y z /\ p.composable x (p.op y z)} ->
   Lemma (p.composable x y /\
          p.composable (p.op x y) z /\
          p.op x (p.op y z) == p.op (p.op x y) z)
+
+let lem_assoc_r #a (p:pcm' a) =
+  x:a ->
+  y:a ->
+  z:a {p.composable x y /\
+       p.composable (p.op x y) z} ->
+  Lemma
+      (p.composable y z /\
+       p.composable x (p.op y z) /\
+       p.op x (p.op y z) == p.op (p.op x y) z)
+
 
 let lem_is_unit #a (p:pcm' a) =
   x:a ->
@@ -38,7 +49,8 @@ noeq
 type pcm (a:Type) = {
   p:pcm' a;
   comm:lem_commutative p;
-  assoc: lem_associative p;
+  assoc: lem_assoc_l p;
+  assoc_r: lem_assoc_r p;
   is_unit: lem_is_unit p
 }
 
