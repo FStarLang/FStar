@@ -18,6 +18,11 @@ open FStar.Math.Euclid
 ///
 ///   binomial n k + binomial n (k - 1) = binomial (n + 1) k
 ///
+///
+/// See
+///  https://github.com/coqtail/coqtail/blob/master/src/Hierarchy/Commutative_ring_binomial.v
+///  https://github.com/coq-contribs/rsa/blob/master/Binomials.v
+///
 
 #set-options "--fuel 1 --ifuel 0 --z3rlimit 20"
 
@@ -60,7 +65,7 @@ let rec pow_plus a k m =
 val pow_mod (p:pos) (a:int) (k:nat) : Lemma (pow a k % p == pow (a % p) k % p)
 let rec pow_mod p a k =
   if k = 0 then ()
-  else 
+  else
     calc (==) {
       pow a k % p;
       == { }
@@ -81,6 +86,33 @@ let rec pow_mod p a k =
 /// Binomial theorem
 ///
 
+val binomial (n k:nat) : nat
+let rec binomial n k =
+  match n, k with
+  | _, 0 -> 1
+  | 0, _ -> 0
+  | _, _ -> binomial (n - 1) k + binomial (n - 1) (k - 1)
+
+val binomial_0 (n:nat) : Lemma (binomial n 0 == 1)
+let binomial_0 n = ()
+
+val binomial_lt (n:nat) (k:nat{n < k}) : Lemma (binomial n k = 0)
+let rec binomial_lt n k =
+  match n, k with
+  | _, 0 -> ()
+  | 0, _ -> ()
+  | _ -> binomial_lt (n - 1) k; binomial_lt (n - 1) (k - 1)
+
+val binomial_n (n:nat) : Lemma (binomial n n == 1)
+let rec binomial_n n =
+  match n with
+  | 0 -> ()
+  | _ -> binomial_lt n (n + 1); binomial_n (n - 1)
+
+val pascal (n:nat) (k:pos{k <= n}) : Lemma
+  (binomial n k + binomial n (k - 1) = binomial (n + 1) k)
+let pascal n k = ()
+
 val factorial: nat -> pos
 let rec factorial = function
   | 0 -> 1
@@ -88,21 +120,60 @@ let rec factorial = function
 
 let ( ! ) n = factorial n
 
-let binomial (n:nat) (k:nat{k <= n}) = !n / (!k * !(n - k))
 
-val binomial_n (n:nat) : Lemma (binomial n n == 1)
-let binomial_n n = ()
+val binomial_factorial (m n:nat) : Lemma (binomial (n + m) n * (!n * !m) == !(n + m))
+let rec binomial_factorial m n =
+  match n, m with
+  | _, 0 -> binomial_n n
+  | 0, _ -> ()
+  | _, _ ->
+    let open FStar.Math.Lemmas in
+    let reorder1 (a b c d:int) : Lemma (a * (b * (c * d)) == c * (a * (b * d))) =
+      assert (a * (b * (c * d)) == c * (a * (b * d))) by (FStar.Tactics.CanonCommSemiring.int_semiring())
+    in
+    let reorder2 (a b c d:int) : Lemma (a * ((b * c) * d) == b * (a * (c * d))) =
+      assert (a * ((b * c) * d) == b * (a * (c * d))) by (FStar.Tactics.CanonCommSemiring.int_semiring())
+    in
+    calc (==) {
+      binomial (n + m) n * (!n * !m);
+      == { pascal (n + m - 1) n }
+      (binomial (n + m - 1) n + binomial (n + m - 1) (n - 1)) * (!n * !m);
+      == { addition_is_associative n m (-1) }
+      (binomial (n + (m - 1)) n + binomial (n + (m - 1)) (n - 1)) * (!n * !m);
+      == { distributivity_add_left (binomial (n + (m - 1)) n)
+                                   (binomial (n + (m - 1)) (n - 1))
+                                   (!n * !m)
+         }
+      binomial (n + (m - 1)) n * (!n * !m) +
+      binomial (n + (m - 1)) (n - 1) * (!n * !m);
+      == { }
+      binomial (n + (m - 1)) n * (!n * (m * !(m - 1))) +
+      binomial ((n - 1) + m) (n - 1) * ((n * !(n - 1)) * !m);
+      == { reorder1 (binomial (n + (m - 1)) n) (!n) m (!(m - 1));
+           reorder2 (binomial ((n - 1) + m) (n - 1)) n (!(n - 1)) (!m)
+      }
+      m * (binomial (n + (m - 1)) n * (!n * !(m - 1))) +
+      n * (binomial ((n - 1) + m) (n - 1) * (!(n - 1) * !m));
+      == { binomial_factorial (m - 1) n; binomial_factorial m (n - 1) }
+      m * !(n + (m - 1)) + n * !((n - 1) + m);
+      == { }
+      m * !(n + m - 1) + n * !(n + m - 1);
+      == { }
+      n * !(n + m - 1) + m * !(n + m - 1);
+      == { distributivity_add_left m n (!(n + m - 1)) }
+      (n + m) * !(n + m - 1);
+      == { }
+      !(n + m);
+    }
 
-val binomial_0 (n:nat) : Lemma (binomial n 0 == 1)
-let binomial_0 n = ()
 
-val sum: a:nat -> b:nat{a <= b} 
+val sum: a:nat -> b:nat{a <= b}
   -> f:((i:nat{a <= i /\ i <= b}) -> int) -> Tot int (decreases (b - a))
 let rec sum a b f =
   if a = b then f a else f a + sum (a + 1) b f
 
-val sum_extensionality (a:nat) (b:nat{a <= b}) 
-  (f:(i:nat{a <= i /\ i <= b}) -> int) 
+val sum_extensionality (a:nat) (b:nat{a <= b})
+  (f:(i:nat{a <= i /\ i <= b}) -> int)
   (g:(i:nat{a <= i /\ i <= b}) -> int) : Lemma
   (requires forall (i:nat{a <= i /\ i <= b}). f i == g i)
   (ensures  sum a b f == sum a b g)
@@ -121,17 +192,17 @@ val sum_last (a:nat) (b:nat{a < b}) (f:(i:nat{a <= i /\ i <= b}) -> int) : Lemma
   (decreases (b - a))
 let rec sum_last a b f =
   if a + 1 = b then sum_first a b f
-  else sum_last (a + 1) b f 
+  else sum_last (a + 1) b f
 
 val sum_const (a:nat) (b:nat{a <= b}) (k:int) : Lemma
   (ensures sum a b (fun i -> k) == k * (b - a + 1))
   (decreases (b - a))
 let rec sum_const a b k =
   if a = b then ()
-  else 
+  else
     begin
     sum_const (a + 1) b k;
-    sum_extensionality (a + 1) b 
+    sum_extensionality (a + 1) b
       (fun (i:nat{a <= i /\ i <= b}) -> k) (fun (i:nat{a + 1 <= i /\ i <= b}) -> k)
     end
 
@@ -140,20 +211,46 @@ val sum_scale (a:nat) (b:nat{a <= b}) (f:(i:nat{a <= i /\ i <= b}) -> int) (k:in
   (decreases (b - a))
 let rec sum_scale a b f k =
   if a = b then ()
-  else 
+  else
     begin
     sum_scale (a + 1) b f k;
-    sum_extensionality (a + 1) b 
-      (fun (i:nat{a <= i /\ i <= b}) -> k * f i) 
+    sum_extensionality (a + 1) b
+      (fun (i:nat{a <= i /\ i <= b}) -> k * f i)
       (fun (i:nat{a + 1 <= i /\ i <= b}) -> k * f i)
     end
 
-val sum_mod (a:nat) (b:nat{a <= b}) 
+val sum_add (a:nat) (b:nat{a <= b}) (f:(i:nat{a <= i /\ i <= b}) -> int) (g:(i:nat{a <= i /\ i <= b}) -> int) : Lemma
+  (ensures sum a b f + sum a b g == sum a b (fun i -> f i + g i))
+  (decreases (b - a))
+let rec sum_add a b f g =
+  if a = b then ()
+  else 
+    begin
+    sum_add (a + 1) b f g;
+    sum_extensionality (a + 1) b
+      (fun (i:nat{a <= i /\ i <= b}) -> f i + g i)
+      (fun (i:nat{a + 1 <= i /\ i <= b}) -> f i + g i)
+    end
+
+val sum_shift (a:nat) (b:nat{a <= b}) (f:(i:nat{a <= i /\ i <= b}) -> int) : Lemma
+  (ensures sum a b f == sum (a + 1) (b + 1) (fun (i:nat{a + 1 <= i /\ i <= b + 1}) -> f (i - 1)))
+  (decreases (b - a))
+let rec sum_shift a b f =
+  if a = b then ()
+  else 
+    begin
+    sum_shift (a + 1) b f;
+    sum_extensionality (a + 2) (b + 1) 
+      (fun (i:nat{a + 1 <= i /\ i <= b + 1}) -> f (i - 1))
+      (fun (i:nat{a + 1 + 1 <= i /\ i <= b + 1}) -> f (i - 1))
+    end
+
+val sum_mod (a:nat) (b:nat{a <= b})
   (f:(i:nat{a <= i /\ i <= b}) -> int) (n:pos) : Lemma
   (ensures sum a b f % n == sum a b (fun i -> f i % n) % n)
   (decreases (b - a))
 let rec sum_mod a b f n =
-  if a = b then () 
+  if a = b then ()
   else
     let g = fun (i:nat{a <= i /\ i <= b}) -> f i % n in
     let f' = fun (i:nat{a + 1 <= i /\ i <= b}) -> f i % n in
@@ -162,7 +259,7 @@ let rec sum_mod a b f n =
       == { sum_first a b f }
       (f a + sum (a + 1) b f) % n;
       == { lemma_mod_plus_distr_r (f a) (sum (a + 1) b f) n }
-      (f a + (sum (a + 1) b f) % n) % n;    
+      (f a + (sum (a + 1) b f) % n) % n;
       == { sum_mod (a + 1) b f n; sum_extensionality (a + 1) b f' g  }
       (f a + sum (a + 1) b g % n) % n;
       == { lemma_mod_plus_distr_r (f a) (sum (a + 1) b g) n }
@@ -173,15 +270,42 @@ let rec sum_mod a b f n =
       sum a b g % n;
     }
 
-assume
-val pascal (n:nat) (k:pos{k <= n}) : Lemma
-  (binomial n k + binomial n (k - 1) = binomial (n + 1) k)
+val binomial_theorem_aux (a b:int) (n:nat) (i:nat{1 <= i /\ i <= n - 1}) : Lemma
+  (a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i) +
+   b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1)) ==
+   binomial n i * pow a (n - i) * pow b i)
+let binomial_theorem_aux a b n i =
+  let open FStar.Math.Lemmas in
+  calc (==) {
+    a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i) +
+    b * (binomial (n - 1) (i - 1) * pow a (n - i) * pow b (i - 1));
+    == { _ by (FStar.Tactics.CanonCommSemiring.int_semiring()) }
+    binomial (n - 1) i * ((a * pow a (n - 1 - i)) * pow b i) +
+    binomial (n - 1) (i - 1) * (pow a (n - i) * (b * pow b (i - 1)));
+    == { }
+    binomial (n - 1) i * (pow a (n - i) * pow b i) +
+    binomial (n - 1) (i - 1) * (pow a (n - i) * pow b i);
+    == { distributivity_add_left (binomial (n - 1) i) (binomial (n - 1) (i - 1)) (pow a (n - 1) * pow b i) }
+    (binomial (n - 1) i + binomial (n - 1) (i - 1)) * (pow a (n - i) * pow b i);
+    == { pascal (n - 1) i }
+    binomial n i * (pow a (n - i) * pow b i);
+    == { paren_mul_right (binomial n i) (pow a (n - i)) (pow b i) }
+    binomial n i * pow a (n - i) * pow b i;
+  }
+
+#push-options "--fuel 2"
 
 val binomial_theorem (a b:int) (n:nat) : Lemma
   (pow (a + b) n == sum 0 n (fun i -> binomial n i * pow a (n - i) * pow b i))
 let rec binomial_theorem a b n =
   if n = 0 then ()
-  else 
+  else
+    if n = 1 then
+      (binomial_n 1; binomial_0 1)
+    else    
+    let reorder (a b c d:int) : Lemma (a + b + (c + d) == a + d + (b + c)) =
+      assert (a + b + (c + d) == a + d + (b + c)) by (FStar.Tactics.CanonCommSemiring.int_semiring())
+    in
     calc (==) {
       pow (a + b) n;
       == { }
@@ -191,13 +315,78 @@ let rec binomial_theorem a b n =
       == { binomial_theorem a b (n - 1) }
       a * sum 0 (n - 1) (fun i -> binomial (n - 1) i * pow a (n - 1 - i) * pow b i) +
       b * sum 0 (n - 1) (fun i -> binomial (n - 1) i * pow a (n - 1 - i) * pow b i);
-      == { admit() }
+      == { sum_scale 0 (n - 1) (fun i -> binomial (n - 1) i * pow a (n - 1 - i) * pow b i) a;
+           sum_scale 0 (n - 1) (fun i -> binomial (n - 1) i * pow a (n - 1 - i) * pow b i) b
+         }
+      sum 0 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) +
+      sum 0 (n - 1) (fun i -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i));
+      == { sum_first 0 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i));
+           sum_last  0 (n - 1) (fun i -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i));
+           sum_extensionality 1 (n - 1)
+             (fun (i:nat{1 <= i /\ i <= n - 1}) -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i))
+             (fun (i:nat{0 <= i /\ i <= n - 1}) -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i));
+           sum_extensionality 0 (n - 2)
+             (fun (i:nat{0 <= i /\ i <= n - 2}) -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i))
+             (fun (i:nat{0 <= i /\ i <= n - 1}) -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i))}
+      (a * (binomial (n - 0) 0 * pow a (n - 1 - 0) * pow b 0)) + sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) +
+      (sum 0 (n - 2) (fun i -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) + b * (binomial (n - 1) (n - 1) * pow a (n - 1 - (n - 1)) * pow b (n - 1)));
+      == { binomial_0 n; binomial_n (n - 1) }
+      pow a n + sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) +
+      (sum 0 (n - 2) (fun i -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) + pow b n);
+      == { sum_shift 0 (n - 2) (fun i -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i));
+           sum_extensionality 1 (n - 1)
+             (fun (i:nat{1 <= i /\ i <= n - 1}) -> (fun (i:nat{0 <= i /\ i <= n - 2}) -> b * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) (i - 1))             
+             (fun (i:nat{1 <= i /\ i <= n - 2 + 1}) -> b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1)))
+           }
+      pow a n + sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) +
+      (sum 1 (n - 1) (fun i -> b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1))) + pow b n);      
+      == { reorder (pow a n) 
+                   (sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i))) 
+                   (sum 1 (n - 2 + 1) (fun i -> b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1))))
+                   (pow b n)
+         }         
+      a * pow a (n - 1) + b * pow b (n - 1) +
+      (sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i)) +
+       sum 1 (n - 1) (fun i -> b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1))));
+      == { sum_add 1 (n - 1) 
+                   (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i))
+                   (fun i -> b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1)))
+         }
+      pow a n + pow b n +
+      (sum 1 (n - 1) (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i) +
+                            b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1))));
+                         
+      == { Classical.forall_intro (binomial_theorem_aux a b n);
+           sum_extensionality 1 (n - 1)
+             (fun i -> a * (binomial (n - 1) i * pow a (n - 1 - i) * pow b i) +
+                    b * (binomial (n - 1) (i - 1) * pow a (n - 1 - (i - 1)) * pow b (i - 1)))
+             (fun i -> binomial n i * pow a (n - i) * pow b i)
+      }
+      pow a n + pow b n + sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i);
+      == { }
+      pow a n + (sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i) + pow b n);
+      == { binomial_0 n; binomial_n n }
+      binomial n 0 * pow a (n - 0) * pow b 0 +
+      (sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i) +
+      binomial n n * pow a (n - n) * pow b n);
+      == { sum_first 0 n (fun i -> binomial n i * pow a (n - i) * pow b i);
+           sum_last  1 n (fun i -> binomial n i * pow a (n - i) * pow b i);
+           sum_extensionality 1 n
+             (fun (i:nat{0 <= i /\ i <= n}) -> binomial n i * pow a (n - i) * pow b i)
+             (fun (i:nat{1 <= i /\ i <= n}) -> binomial n i * pow a (n - i) * pow b i);
+           sum_extensionality 1 (n - 1)
+             (fun (i:nat{1 <= i /\ i <= n}) -> binomial n i * pow a (n - i) * pow b i)
+             (fun (i:nat{1 <= i /\ i <= n - 1}) -> binomial n i * pow a (n - i) * pow b i)
+         }
       sum 0 n (fun i -> binomial n i * pow a (n - i) * pow b i);
     }
 
+#pop-options
+
 assume
-val binomial_prime (p:pos{1 < p /\ is_prime p}) (i:pos{i < p}) : Lemma
-  (binomial p i % p == 0)
+val binomial_prime (p:pos{1 < p /\ is_prime p}) (k:pos{k < p}) : Lemma
+  (binomial p k % p == 0)
+
 
 val freshman_aux (p:pos{1 < p /\ is_prime p}) (a b:int) (i:pos{i < p}): Lemma
   ((binomial p i * pow a (p - i) * pow b i) % p == 0)
@@ -212,11 +401,11 @@ let freshman_aux p a b i =
     0;
   }
 
-val freshman (p:pos{1 < p /\ is_prime p}) (a b:int) : Lemma 
+val freshman (p:pos{1 < p /\ is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
 let freshman p a b =
   let f (i:nat{0 <= i /\ i <= p}) = binomial p i * pow a (p - i) * pow b i % p in
-  Classical.forall_intro (freshman_aux p a b); 
+  Classical.forall_intro (freshman_aux p a b);
   calc (==) {
     pow (a + b) p % p;
     == { binomial_theorem a b p }
@@ -239,7 +428,7 @@ let freshman p a b =
     (pow a p + pow b p) % p;
   }
 
-val fermat_aux (p:pos{1 < p /\ is_prime p}) (a:pos{a < p}) : Lemma 
+val fermat_aux (p:pos{1 < p /\ is_prime p}) (a:pos{a < p}) : Lemma
   (ensures pow a p % p == a % p)
   (decreases a)
 let rec fermat_aux p a =
@@ -271,17 +460,13 @@ let fermat p a =
     pow_mod p a p;
     pow_zero p
     end
-  else
+  else  
     calc (==) {
       pow a p % p;
       == { pow_mod p a p }
       pow (a % p) p % p;
-      == { }
-      (a % p) * pow (a % p) (p - 1) % p;
-      == { lemma_mod_mul_distr_r (a % p) (pow (a % p) (p - 1)) p }
-      (a % p) * (pow (a % p) (p - 1) % p) % p;
-      == { fermat_aux p (a % p) }
-      (a % p) * (1 % p) % p;
-      == { small_mod 1 p; lemma_mod_twice a p }
+      == { fermat_aux p (a % p)  }
+      (a % p) % p;
+      == { lemma_mod_twice a p }
       a % p;
     }
