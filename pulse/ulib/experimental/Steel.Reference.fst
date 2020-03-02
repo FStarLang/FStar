@@ -399,8 +399,15 @@ let recall_atomic
      (pts_to_ref r q v `star` pure (witnessed r fact))
      (pts_to_ref r q v `star` pure (fact v))
      m0;
-   assert (interp (pts_to_ref r q v `star` pure (fact v)) m1);  //from aux
-   assume (interp ((pts_to_ref r q v `star` pure (fact v)) `star` (locks_invariant uses m1)) m1)
+
+   assert (interp ((pts_to_ref r q v `star` pure (witnessed r fact)) `star` (locks_invariant uses m1)) m1);
+   assert (equiv (pts_to_ref r q v `star` pure (witnessed r fact))
+                 (pts_to_ref r q v `star` pure (fact v)));
+
+   equiv_extensional_on_star (pts_to_ref r q v `star` pure (witnessed r fact))
+                             (pts_to_ref r q v `star` pure (fact v))
+                             (locks_invariant uses m1);
+   assert (interp ((pts_to_ref r q v `star` pure (fact v)) `star` (locks_invariant uses m1)) m1)
  )
 #pop-options
 
