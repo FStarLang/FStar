@@ -154,12 +154,13 @@ val pts_to_array
   (p:perm{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop
-val pts_to_ref
+val pts_to_ref_with_liveness
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p:perm{readable p})
   (contents: Ghost.erased t)
+  (live: bool)
   : hprop
 
 val h_and (p1 p2:hprop) : hprop
@@ -228,6 +229,25 @@ val gather_pts_to_array
 // pts_to_ref and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
+let pts_to_ref
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p:perm{readable p})
+  (contents: Ghost.erased t)
+  : hprop
+  = pts_to_ref_with_liveness r p contents true
+
+let pts_to_ref_or_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p:perm{readable p})
+  (contents: Ghost.erased t)
+  : hprop
+  =
+  h_exists (pts_to_ref_with_liveness r p contents)
+
 let ref_perm
   (#t: Type0)
   (#pre: Preorder.preorder t)
@@ -236,8 +256,19 @@ let ref_perm
   : hprop =
   h_exists (pts_to_ref r p)
 
+let ref_perm_or_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (p:perm{readable p})
+  : hprop =
+  h_exists (pts_to_ref_or_dead r p)
+
 let ref (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
   = h_exists (fun (p:perm{readable p}) -> ref_perm r p)
+
+let ref_or_dead (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
+  = h_exists (fun (p:perm{readable p}) -> ref_perm_or_dead r p)
 
 val pts_to_ref_injective
   (#t: _)

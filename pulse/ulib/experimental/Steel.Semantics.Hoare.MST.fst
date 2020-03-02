@@ -1191,7 +1191,6 @@ let step_par (#st:st)
         (Par mL mR)
     end
 
-
 let step_weaken (#st:st) (#a:Type u#a)
   (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Weaken? f})
@@ -1204,6 +1203,7 @@ let step_weaken (#st:st) (#a:Type u#a)
     Step pre post lpre lpost f, n)
 
 
+#push-options "--z3rlimit 50"
 let step_or (#st:st) (#a:Type u#a)
   (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost{Or? f})
@@ -1221,7 +1221,7 @@ let step_or (#st:st) (#a:Type u#a)
                                (st.or pre0 pre1) m0 m0);
 
   Step (st.or pre0 pre1) post lpre lpost f0
-
+#pop-options
 
 /// Step function
 

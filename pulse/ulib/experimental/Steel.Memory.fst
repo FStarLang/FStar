@@ -344,7 +344,8 @@ type hprop : Type u#1 =
   | Emp : hprop
   | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:perm{readable perm} ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
-                  preorder: Ghost.erased (Preorder.preorder (option t)) -> hprop
+                  preorder: Ghost.erased (Preorder.preorder (option t)) ->
+                  liveness: bool -> hprop
   | Refine : hprop -> a_heap_prop -> hprop
   | And  : hprop -> hprop -> hprop
   | Or   : hprop -> hprop -> hprop
@@ -404,12 +405,12 @@ let rec interp_heap (p:hprop) (m:heap)
   : Tot prop (decreases p)
   = match p with
     | Emp -> True
-    | Pts_to_array #t a perm contents preorder ->
+    | Pts_to_array #t a perm contents preorder liveness ->
       None? a  \/ (Some? a /\ MkPerm?.v perm <=. 1.0R /\ begin
       let a = Some?.v a in  m `contains_addr` a.array_addr /\
       (match select_addr m a.array_addr with
         | Array t' len' seq live ->
-	  t' == t /\ live /\ U32.v a.array_max_length = len' /\
+	  t' == t /\ liveness = live /\ U32.v a.array_max_length = len' /\
 	  U32.v a.array_offset + U32.v a.array_length <= len' /\
           (forall (i:nat{i < len'}).
             if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
@@ -508,7 +509,13 @@ let trivial_optional_preorder (#a: Type) (pre: Preorder.preorder a) : Preorder.p
 #pop-options
 
 let emp = Emp
-let pts_to_array_with_preorder = Pts_to_array
+let pts_to_array_with_preorder
+  (#t: Type0)
+  (a:array_ref t)
+  (p:perm{readable p})
+  (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  = Pts_to_array a p contents pre true
 let pts_to_array
   (#t: Type0)
   (a:array_ref t)
@@ -520,15 +527,17 @@ let pts_to_array
     p
     contents
     (trivial_optional_preorder (trivial_preorder t))
-let pts_to_ref
+let pts_to_ref_with_liveness
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p:perm{readable p})
   (contents: Ghost.erased t)
-  = pts_to_array_with_preorder r p
+  (live: bool)
+  = Pts_to_array r p
     (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal contents))
     (trivial_optional_preorder pre)
+    live
 let h_and = And
 let h_or = Or
 let star = Star
@@ -841,7 +850,7 @@ let affine_star_aux_pts_to_array (p:hprop) (m:heap) (m':heap { disjoint_heap m m
     (ensures interp_heap p m ==> interp_heap p (join_heap m m'))
   =
   let aux (_ :squash (interp_heap p m)) : Lemma (interp_heap p (join_heap m m')) =
-    let Pts_to_array a perm contents pre = p in
+    let Pts_to_array a perm contents pre _ = p in
     match a with None -> () | Some a -> begin
     match m a.array_addr, m' a.array_addr, (join_heap m m') a.array_addr with
     | Some (Array t len seq live), Some (Array t' len' seq' live'),
@@ -850,7 +859,6 @@ let affine_star_aux_pts_to_array (p:hprop) (m:heap) (m':heap { disjoint_heap m m
         assert(all_full_permission seq');
         assert(tj == t /\ tj == t');
         assert(lenj == len /\ lenj == len');
-        assert(not livej /\ live);
         let aux (i:nat{i < len}) : Lemma ((Seq.index seq i).v_with_p == None) =
           ()
         in
@@ -873,7 +881,7 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
     [SMTPat (interp_heap p (join_heap m m'))]
   = match p with
     | Emp -> ()
-    | Pts_to_array _ _ _ _ -> affine_star_aux_pts_to_array p m m'
+    | Pts_to_array _ _ _ _ _ -> affine_star_aux_pts_to_array p m m'
     | Refine p q -> affine_star_aux p m m'
     | And p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
     | Or p1 p2 -> affine_star_aux p1 m m'; affine_star_aux p2 m m'
