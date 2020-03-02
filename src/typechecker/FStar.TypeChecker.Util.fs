@@ -1489,12 +1489,17 @@ let bind_cases env0 (res_t:typ)
              * note that we don't need to build these just to combine cases because the shape of if_then_else
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
-            let branch_conditions, _ =
+            let branch_conditions =
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
                   let cond = U.mk_conj acc (U.mk_neg g) in
-                  (conds@[cond]), cond) ([], U.t_true) in
+                  (conds@[cond]), cond) ([U.t_true], U.t_true)
+              |> fst
+              |> List.splitAt (List.length lcases)
+              |> fst in
+
+            //let default_case, g_comp = weaken_comp env default_case default_branch_condition in
 
             let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
