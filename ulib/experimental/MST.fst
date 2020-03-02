@@ -101,7 +101,7 @@ type s_predicate (state:Type u#1) = state -> Type0
 let stable (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
   forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
 
-assume val witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) : Type0
+assume val witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) : prop
 
 assume val witness (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
 : MSTATE unit state rel
@@ -152,7 +152,7 @@ let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a
   (fun s0 -> wp (fun _ -> True))
   (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
 = wp_monotonic_pure ();
-  fun s0 -> 
+  fun s0 ->
   let x = f () in
   x, s0
 

@@ -326,6 +326,22 @@ val sel_ref_lemma
     interp (pts_to_ref r p (sel_ref r m)) m
   )
 
+val sel_ref_or_dead
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (h: hmem (ref_or_dead r))
+  : Tot t
+
+val sel_ref_or_dead_lemma
+  (#t: Type0)
+  (#pre: Preorder.preorder t)
+  (r: reference t pre)
+  (m: hmem (ref r))
+  : Lemma (
+    interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m
+  )
+
 val sel_ref_depends_only_on (#a:Type0) (#pre:Preorder.preorder a)
   (r:reference a pre) (p:perm{readable p})
   (m0:hmem (ref_perm r p)) (m1:mem)
@@ -452,5 +468,10 @@ val reference_preorder_respected
   (#t: Type0)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (m0 m1:hmem (ref r))
-  : Lemma (requires (mem_evolves m0 m1)) (ensures (pre (sel_ref r m0) (sel_ref r m1)))
+  (m0 m1:mem)
+  : Lemma
+    (requires (
+      interp (ref_or_dead r) m0 /\
+      mem_evolves m0 m1
+    ))
+    (ensures (interp (ref_or_dead r) m1 /\ pre (sel_ref_or_dead r m0) (sel_ref_or_dead r m1)))
