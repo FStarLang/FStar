@@ -8,7 +8,7 @@ open Steel.Semantics.Instantiate
 type pre_t = hprop
 type post_t (a:Type) = a -> hprop
 
-let state_uses (uses:Set.set lock_addr) = {state with Sem.locks_invariant = locks_invariant uses}
+let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; state0 uses
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
