@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e97c199dc15b74b7873e0a83e0c3ac32"
+      "cda70f03517ebcdab58f51e6e52f8422"
     ],
     [
       "DoNotation.uu___23",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "15110a4ddb756d2086c19e18974f8fc6"
+      "c54cb166799ee588018f3bd4fdaacab7"
     ],
     [
       "DoNotation.add",
@@ -50,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e6c14accce18a5b98fe21d992c436435"
+      "98d2ecd9a341f641cee00537d49e3ea5"
     ],
     [
       "DoNotation.uu___23",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ad21e81484d2a877a4a055fa72e912be"
+      "533e2e6eeec789cdce0ff7f6e736ab8e"
     ]
   ]
 ]

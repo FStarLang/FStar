@@ -111,7 +111,7 @@ let pose_lemma (t : term) : Tac binder =
 let explode () : Tac unit =
     ignore (
     repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
-                               (fun () -> ignore (split ()))]))
+                                (fun () -> ignore (split ()))]))
 
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->
@@ -289,3 +289,18 @@ let sk_binder b = sk_binder' [] b
 let skolem () =
   let bs = binders_of_env (cur_env ()) in
   map sk_binder bs
+
+private
+val lemma_from_squash : #a:Type -> #b:(a -> Type) -> (x:a -> squash (b x)) -> x:a -> Lemma (b x)
+private
+let lemma_from_squash #a #b f x = let _ = f x in assert (b x)
+
+private
+let easy_fill () =
+    let _ = repeat intro in
+    (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
+    let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
+    smt ()
+
+val easy : #a:Type -> (#[easy_fill ()] _ : a) -> a
+let easy #a #x = x

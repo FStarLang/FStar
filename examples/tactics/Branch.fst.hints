@@ -1,0 +1,49 @@
+[
+  "Töc)é`\u001aO\u001fUûÄC¨\u0006å",
+  [
+    [
+      "Branch.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Branch.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9919183acc09ab1e33301cdf8ea273cd"
+      ],
+      0,
+      "4a89d6a2bbea2694b1c83edeae399bc6"
+    ],
+    [
+      "Branch.test0",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "9a57af68b54d0ef41c7b0a788b49f381"
+    ],
+    [
+      "Branch.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Branch.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9919183acc09ab1e33301cdf8ea273cd"
+      ],
+      0,
+      "5312f389aab3dabbfd223379fe652638"
+    ],
+    [
+      "Branch.test0",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "da78e9acc96b582cea837836c7dea511"
+    ]
+  ]
+]

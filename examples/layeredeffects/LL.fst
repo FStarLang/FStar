@@ -31,10 +31,12 @@ type epost_t (a:Type) = option a -> Type0
 
 /// wp has a refinement for monotonicity -- we should handle it more uniformly in the typechecker
 
-type ewp_t (a:Type) = wp:(epost_t a -> epre_t){
-  forall p q.
-    (forall r. p r ==> q r) ==>
-    (wp p ==> wp q)}
+type ewp_t (a:Type) = wp:(epost_t a -> epre_t)
+
+assume EWP_monotonicity_axiom:
+  forall (a:Type) (wp:ewp_t a).
+    (forall p q. (forall x. p x ==> q x) ==>
+            (wp p ==> wp q))
 
 
 /// Now the underlying representation of the layered effect
@@ -55,13 +57,15 @@ let ereturn (a:Type) (x:a)
 = fun _ -> Some x
 
 
+assume val pred (#a:Type) (wp:ewp_t a) : Type0
+
 inline_for_extraction
 let ebind (a:Type) (b:Type)
   (wp_f:ewp_t a) (wp_g:a -> ewp_t b)
   (f:erepr a wp_f) (g:(x:a -> erepr b (wp_g x)))
 : erepr b
-  (fun p ->
-    wp_f (fun r ->
+  (fun (p:epost_t b) ->
+    wp_f (fun (r:option a) ->
       match r with
       | None -> p None
       | Some x -> wp_g x p))
@@ -110,10 +114,17 @@ layered_effect {
 
 /// Lift from PURE to EXN
 
+
+assume Pure_wp_monotonic:
+  (forall (a:Type) (wp:pure_wp a).
+     (forall p q. (forall x. p x ==> q x) ==>
+             (wp p ==> wp q)))
+
 inline_for_extraction
-let lift_pure_exn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> PURE a wp)
+let lift_pure_exn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : erepr a (fun p -> wp (fun x -> p (Some x)))
 = fun _ -> Some (f ())
+
 
 sub_effect PURE ~> EXN = lift_pure_exn
 
@@ -208,16 +219,12 @@ let get_flt_exn (n:nat)
 
 type pre_t = nat -> Type0
 type post_t (a:Type) = option (a & nat) -> Type0
-type wp_t0 (a:Type) = post_t a -> pre_t
+type wp_t (a:Type) = post_t a -> pre_t
 
-unfold
-let monotonic_wp (#a:Type) (wp:wp_t0 a) : Type0 =
-  forall p q.
-    (forall r. p r ==> q r) ==>
-    (forall n. wp p n ==> wp q n)
-
-type wp_t (a:Type) =
-  wp:wp_t0 a{monotonic_wp wp}
+assume WP_t_monotonic:
+  forall (a:Type) (wp:wp_t a).
+    (forall p q. (forall r. p r ==> q r) ==>
+            (forall n. wp p n ==> wp q n))
 
 type repr (a:Type) (wp:wp_t a) =
   n:nat -> EXN (a & nat) (fun p -> wp p n)
@@ -251,21 +258,7 @@ open FStar.Tactics
 
 unfold
 let bind_wp (a:Type) (b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t b
-= assert (monotonic_wp (bind_wp0 a b wp_f wp_g)) by
-    (norm [delta_only [`%monotonic_wp]];
-     let p_binder = forall_intro () in
-     let q_binder = forall_intro () in
-     ignore (implies_intro ());
-     ignore (forall_intro ());
-     norm [delta_only [`%bind_wp0]];
-     let wp_f_binder, wp_g_binder =
-       match (cur_binders ()) with
-       | _::_::wp_f::wp_g::_ -> wp_f, wp_g
-       | _ -> fail "" in
-     apply_lemma (`(lemma_monotonic2 (`#(binder_to_term wp_f_binder)) (`#(binder_to_term wp_g_binder)) (`#(binder_to_term p_binder)) (`#(binder_to_term q_binder))));
-     norm [delta_only [`%post_a]];
-     ignore (forall_intro ()));
-  bind_wp0 a b wp_f wp_g
+= bind_wp0 a b wp_f wp_g
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
@@ -309,7 +302,7 @@ layered_effect {
 }
 
 inline_for_extraction
-let lift_pure_stexn (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> PURE a wp)
+let lift_pure_stexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a (fun p n -> wp (fun x -> p (Some (x, n))))
 = fun n -> (f (), n)
 
