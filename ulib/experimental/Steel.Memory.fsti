@@ -18,10 +18,10 @@ open FStar.Real
 module U32 = FStar.UInt32
 module S = FStar.Set
 
-let trivial_preorder (a: Type) : Preorder.preorder a = fun _ _ -> True
+let trivial_preorder (a: Type u#a) : Preorder.preorder a = fun _ _ -> True
 
 [@erasable]
-noeq type perm =
+noeq type perm : Type u#a =
   | MkPerm: v:real -> perm
 
 let readable (p: perm) : GTot bool =
@@ -33,11 +33,11 @@ let writeable (p: perm) : GTot bool =
 let half_perm (p: perm) : GTot (perm) =
   MkPerm ((MkPerm?.v p) /. two)
 
-let sum_perm (p1: perm) (p2: perm)
-  : GTot (perm) =
+let sum_perm (p1 p2: perm u#a)
+  : GTot (perm u#a) =
   MkPerm (MkPerm?.v p1 +.  MkPerm?.v p2)
 
-let lesser_equal_perm (p1 p2:perm) : GTot bool =
+let lesser_equal_perm (p1 p2:perm u#a) : GTot bool =
   (MkPerm?.v p1 <=.  MkPerm?.v p2)
 
 let full_perm : perm = MkPerm 1.0R
@@ -48,7 +48,7 @@ val addr: eqtype
 
 /// A memory maps a reference to its associated value
 
-val array_ref (a: Type u#0) : Type u#0
+val array_ref (a: Type u#a) : Type u#0
 
 val length (#t: Type) (a: array_ref t) : GTot (n:U32.t)
 val offset (#t: Type) (a: array_ref t) : GTot (n:U32.t{
@@ -59,7 +59,7 @@ val max_length (#t: Type) (a: array_ref t) : GTot (n: U32.t{
   U32.v (offset a) + U32.v (length a) <= U32.v n
 })
 
-let is_null_array (#t: Type0) (a:array_ref t) : GTot bool =
+let is_null_array (#t: Type) (a:array_ref t) : GTot bool =
   length a = 0ul
 
 
@@ -68,10 +68,10 @@ val address (#t: Type) (a: array_ref t{not (is_null_array a)}) : GTot addr
 let freeable (#t: Type) (a: array_ref t) =
   not (is_null_array a) /\ offset a = 0ul /\ length a = max_length a
 
-val reference (t: Type0) (pre: Preorder.preorder t) : Type0
+val reference (t: Type) (pre: Preorder.preorder t) : Type0
 
 val ref_address
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   : GTot addr
@@ -79,30 +79,30 @@ val ref_address
 /// The type of mem assertions
 
 [@erasable]
-val hprop : Type u#1
+val hprop : Type u#(a + 1)
 
 /// Type of mem
 
-val mem : Type u#1
+val mem : Type u#(a + 1)
 
-val core_mem (m:mem) : mem
+val core_mem (m:mem u#a) : mem u#a
 
 /// A predicate describing non-overlapping memories
 
-val disjoint (m0 m1:mem) : prop
+val disjoint (m0 m1:mem u#a) : prop
 
 /// disjointness is symmetric
 
-val disjoint_sym (m0 m1:mem)
+val disjoint_sym (m0 m1:mem u#a)
 : Lemma (disjoint m0 m1 <==> disjoint m1 m0)
 
 /// disjoint memories can be combined
 
-val join (m0:mem) (m1:mem{disjoint m0 m1}) : mem
+val join (m0:mem u#a) (m1:mem u#a{disjoint m0 m1}) : mem u#a
 
 /// disjointness distributes over join
 
-val disjoint_join (m0 m1 m2:mem)
+val disjoint_join (m0 m1 m2:mem u#a)
   : Lemma (disjoint m1 m2 /\
            disjoint m0 (join m1 m2) ==>
            disjoint m0 m1 /\
@@ -110,7 +110,7 @@ val disjoint_join (m0 m1 m2:mem)
            disjoint (join m0 m1) m2 /\
            disjoint (join m0 m2) m1)
 
-val join_commutative (m0 m1:mem)
+val join_commutative (m0 m1:mem u#a)
   : Lemma
     (requires
       disjoint m0 m1)
@@ -118,7 +118,7 @@ val join_commutative (m0 m1:mem)
       (disjoint_sym m0 m1;
        join m0 m1 == join m1 m0))
 
-val join_associative (m0 m1 m2:mem)
+val join_associative (m0 m1 m2:mem u#a)
   : Lemma
     (requires
       disjoint m1 m2 /\
@@ -134,70 +134,71 @@ val join_associative (m0 m1 m2:mem)
 
 /// interpreting mem assertions as memory predicates
 
-val interp (p:hprop) (m:mem) : prop
+val interp (p:hprop u#a) (m:mem u#a) : prop
 
 
 /// Equivalence relation on hprops is just
 /// equivalence of their interpretations
 
-let equiv (p1 p2:hprop) : prop =
+let equiv (p1 p2:hprop u#a) : prop =
   forall m. interp p1 m <==> interp p2 m
 
 
 /// All the standard connectives of separation logic
 
-val emp : hprop
+val emp : hprop u#a
 
 val pts_to_array
-  (#t: Type0)
+  (#t: Type u#a)
   (a:array_ref t)
   (p:perm{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
-  : hprop
+  : hprop u#a
 val pts_to_ref_with_liveness
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p:perm{readable p})
   (contents: Ghost.erased t)
   (live: bool)
-  : hprop
+  : hprop u#a
 
-val h_and (p1 p2:hprop) : hprop
-val h_or  (p1 p2:hprop) : hprop
-val star  (p1 p2:hprop) : hprop
-val wand  (p1 p2:hprop) : hprop
-val h_exists (#a:Type0) (f: (a -> hprop)) : hprop
-val h_forall (#a:Type0) (f: (a -> hprop)) : hprop
+val h_and (p1 p2:hprop u#a) : hprop u#a
+val h_or  (p1 p2:hprop u#a) : hprop u#a
+val star  (p1 p2:hprop u#a) : hprop u#a
+val wand  (p1 p2:hprop u#a) : hprop u#a
+val h_exists (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
+val h_forall (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
 
-type hmem (p:hprop) = m:mem{interp p m}
+type hmem (p:hprop u#a) = m:mem{interp p m}
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
 
-val equiv_symmetric (p1 p2:hprop)
+val equiv_symmetric (p1 p2:hprop u#a)
   : Lemma (p1 `equiv` p2 ==> p2 `equiv` p1)
 
-val equiv_extensional_on_star (p1 p2 p3:hprop)
+val equiv_extensional_on_star (p1 p2 p3:hprop u#a)
   : Lemma (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to_array and abbreviations
 ////////////////////////////////////////////////////////////////////////////////
 
-let array_perm (#t: Type) (a: array_ref t) (p:perm{readable p}) =
-  h_exists (pts_to_array a p)
+let array_perm (#t: Type u#a) (a: array_ref t) (p:perm u#a{readable p}) =
+  h_exists u#a (pts_to_array a p)
 
-let array (#t: Type) (a: array_ref t) =
-  h_exists (fun (p:perm{readable p}) -> array_perm a p)
+#push-options "--print_universes"
+let array (#t: Type u#a) (a: array_ref t) =
+  h_exists u#a #perm (fun (p:perm u#a{readable p}) -> array_perm u#a a p)
 
 val pts_to_array_injective
-  (#t: _)
+  (#t: Type u#a)
   (a: array_ref t{not (is_null_array a)})
   (p:perm{readable p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires (
       interp (pts_to_array a p c0) m /\
