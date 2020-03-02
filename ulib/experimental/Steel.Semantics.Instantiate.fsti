@@ -4,12 +4,12 @@ module S = Steel.Semantics.Hoare.MST
 open Steel.Memory
 open Steel.Actions
 
-type state0 : S.st0 =
+let state0 (uses:Set.set lock_addr) : S.st0 =
   { S.mem = mem;
     S.core = core_mem;
     S.locks_preorder = mem_evolves;
     S.hprop = hprop;
-    S.locks_invariant = locks_invariant Set.empty;
+    S.locks_invariant = locks_invariant uses;
 
     S.disjoint = disjoint;
     S.join = join;
@@ -18,11 +18,10 @@ type state0 : S.st0 =
 
     S.emp = emp;
     S.star = star;
-    S.or = h_or;
 
     S.equals = equiv
   }
 
-val state_obeys_st_laws (_:unit) : Lemma (S.st_laws state0)
+val state_obeys_st_laws (uses:Set.set lock_addr) : Lemma (S.st_laws (state0 uses))
 
-let state : S.st = state_obeys_st_laws (); state0
+let state : S.st = state_obeys_st_laws Set.empty; state0 Set.empty

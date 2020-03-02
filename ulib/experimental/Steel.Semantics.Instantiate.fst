@@ -19,7 +19,7 @@ let is_unit () : Lemma (S.is_unit emp equiv star)
   Classical.forall_intro aux
 
 #push-options "--warn_error -271"
-let state_obeys_st_laws () =
+let state_obeys_st_laws _ =
   associative (); commutative (); is_unit ();
   let aux (p1 p2 p3:hprop)
     : Lemma (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
