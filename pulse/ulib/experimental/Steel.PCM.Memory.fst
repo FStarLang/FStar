@@ -334,17 +334,6 @@ let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
   = ()
 
 
-let lem_assoc_r #a (p:pcm a) (x y z:a) :
-  Lemma
-    (requires
-       composable p x y /\
-       composable p (op p x y) z)
-    (ensures
-       composable p y z /\
-       composable p x (op p y z) /\
-       op p x (op p y z) == op p (op p x y) z)
-  = admit()
-
 let pts_to_compatible (#a:Type u#a)
                       (#pcm:_)
                       (x:ref a pcm)
@@ -395,9 +384,9 @@ let pts_to_compatible (#a:Type u#a)
              assert (op pcm (op pcm (op pcm frame0 v0) frame1) v1 == v);
              pcm.comm  (op pcm frame0 v0) frame1;
              assert (op pcm (op pcm frame1 (op pcm frame0 v0)) v1 == v);
-             lem_assoc_r pcm frame1 (op pcm frame0 v0) v1;
+             pcm.assoc_r frame1 (op pcm frame0 v0) v1;
              assert (op pcm frame1 (op pcm (op pcm frame0 v0) v1) == v);
-             lem_assoc_r pcm frame0 v0 v1;
+             pcm.assoc_r frame0 v0 v1;
              assert (op pcm frame1 (op pcm frame0 (op pcm v0 v1)) == v);
              pcm.assoc frame1 frame0 (op pcm v0 v1);
              pcm.comm frame1 frame0
@@ -537,7 +526,7 @@ let definedness #a #pcm (v0:a) (v0_val:a) (v1:a) (vf:a)
         = assert (composable pcm (op pcm vf' v0) vf);
           pcm.comm vf' v0;
           assert (composable pcm (op pcm v0 vf') vf);
-          lem_assoc_r pcm v0 vf' vf;
+          pcm.assoc_r v0 vf' vf;
           assert (composable pcm v0 (op pcm vf' vf));
           pcm.comm vf vf';
           assert (composable pcm v0 (op pcm vf vf'));
@@ -558,7 +547,7 @@ let composable_compatible #a pcm (x y z:a)
                composable pcm z x)
               [SMTPat (op pcm f x)]
       = assert (composable pcm (op pcm f x) z);
-        lem_assoc_r pcm f x z;
+        pcm.assoc_r f x z;
         assert (composable pcm f (op pcm x z));
         pcm.comm x z
     in
