@@ -341,7 +341,11 @@ let ac_reasoning_for_recall_atomic (p: hprop) (f: prop) (m: mem) : Lemma
   affine_star p (pure f) m;
   refine_equiv emp (fun _ -> f) m
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit 20"
+let mst_admit (#a:Type) ()
+: Mst a (fun _ -> True) (fun _ _ _ -> False)
+= RMST.rmst_admit ()
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let recall_atomic
   (#a:Type)
   (#uses:Set.set lock_addr)
@@ -394,7 +398,9 @@ let recall_atomic
      #(state_uses uses)
      (pts_to_ref r q v `star` pure (witnessed r fact))
      (pts_to_ref r q v `star` pure (fact v))
-     m0
+     m0;
+   assert (interp (pts_to_ref r q v `star` pure (fact v)) m1);  //from aux
+   assume (interp ((pts_to_ref r q v `star` pure (fact v)) `star` (locks_invariant uses m1)) m1)
  )
 #pop-options
 
