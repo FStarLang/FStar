@@ -70,16 +70,14 @@ type m : nat -> Type u#a -> Type =
 
 let nm a = n:nat & m n a
 
-let ( <? ) #a #b (x:nm a) (y:nm b) =
-  let (| n, p  |) = x in
-  let (| n', _ |) = y in 
+let ( <? ) #a #b ((| n, p |) : nm a) ((| n', _ |) :nm b) =
   n < n' \/ Return? p
 
 let reduct #a (redex:nm a) = x:nm a { x <? redex}
 
 let rec step (#a:Type u#a) (redex:nm a)
-  : Eff (reduct redex)
-        (decreases (dsnd redex))
+  : Eff (nm a)
+        (decreases (dfst redex))
   = match dsnd redex with
     | Return _ -> redex
     | Act act k ->
@@ -87,16 +85,51 @@ let rec step (#a:Type u#a) (redex:nm a)
       let x, s1 = act s0 in
       put s1;
       (| _, k x |)
-
-    | Par #_ #_ #_ #_ #_ #n (Return x) (Return y) k ->
-      (| n, k (x, y) |)
-
+    | Par (Return x) (Return y) k ->
+      (| _, k (x, y) |)
+    | Par l (Return y) k ->
+      let (| _, l' |) = step (| _, l |) in
+      (| _, Par l' (Return y) k |)
+    | Par (Return x) r k ->
+      let (| _, r' |) = step (| _, r |) in
+      (| _, Par (Return x) r' k |)
     | Par l r k ->
-      let b = sample () in
-      if (b || Return? r) && not (Return? l)
-      then
-        let (| _, l' |) = step (| _, l|) in
+      if sample () then
+        let (| _, l' |) = step (| _, l |) in
         (| _, Par l' r k |)
       else
         let (| _, r' |) = step (| _, r |) in
         (| _, Par l r' k |)
+
+let rec step_redex (#a:Type u#a) (redex:nm a)
+  : Eff (reduct redex)
+        (decreases (dfst redex))
+  = match dsnd redex with
+    | Return _ -> redex
+    | Act act k ->
+      let s0 = get () in
+      let x, s1 = act s0 in
+      put s1;
+      (| _, k x |)
+    | Par #_ #_ #_ #_ #_ #n (Return x) (Return y) k ->
+      (| n, k (x, y) |)
+    | Par l (Return y) k ->
+      let (| _, l' |) = step_redex (| _, l |) in
+      (| _, Par l' (Return y) k |)
+    | Par (Return x) r k ->
+      let (| _, r' |) = step_redex (| _, r |) in
+      (| _, Par (Return x) r' k |)
+    | Par l r k ->
+      let b = sample () in
+      if b then
+        let (| _, l' |) = step_redex (| _, l |) in
+        (| _, Par l' r k |)
+      else
+        let (| _, r' |) = step_redex (| _, r |) in
+        (| _, Par l r' k |)
+
+let rec run #a (p:nm a) : Eff (nm a) (decreases (dfst p)) =
+  match dsnd p with
+  | Return _ -> p
+  | _ ->
+    let p = step_redex p in run p
