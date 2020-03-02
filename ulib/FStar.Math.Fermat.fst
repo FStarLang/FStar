@@ -383,10 +383,42 @@ let rec binomial_theorem a b n =
 
 #pop-options
 
-assume
+val factorial_mod_prime (p:pos{1 < p /\ is_prime p}) (k:pos{k < p}) : Lemma 
+  (requires !k % p = 0)
+  (ensures False)
+  (decreases k)
+let rec factorial_mod_prime p k =
+  if k = 0 then ()
+  else
+    begin
+    euclid_prime p k !(k - 1);
+    factorial_mod_prime p (k - 1)
+    end
+
 val binomial_prime (p:pos{1 < p /\ is_prime p}) (k:pos{k < p}) : Lemma
   (binomial p k % p == 0)
-
+let binomial_prime p k =
+  calc (==) {
+    (p * !(p -1)) % p;
+    == { FStar.Math.Lemmas.lemma_mod_mul_distr_l p (!(p - 1)) p }
+    (p % p * !(p - 1)) % p;
+    == { }
+    (0 * !(p - 1)) % p;
+    == { }
+    0;
+  };
+  binomial_factorial (p - k) k;
+  assert (binomial p k * (!k * !(p - k)) == p * !(p - 1));
+  euclid_prime p (binomial p k) (!k * !(p - k));
+  if (binomial p k % p <> 0) then
+    begin
+    euclid_prime p !k !(p - k);
+    assert (!k % p = 0 \/ !(p - k) % p = 0);
+    if !k % p = 0 then
+      factorial_mod_prime p k
+    else
+      factorial_mod_prime p (p - k)
+    end
 
 val freshman_aux (p:pos{1 < p /\ is_prime p}) (a b:int) (i:pos{i < p}): Lemma
   ((binomial p i * pow a (p - i) * pow b i) % p == 0)

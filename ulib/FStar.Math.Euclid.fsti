@@ -123,6 +123,6 @@ val euclid (n:pos) (a b r s:int) : Lemma
   (requires (a * b) % n = 0 /\ r * n + s * a = 1)
   (ensures  b % n = 0)
 
-val euclid_prime (p:pos{is_prime p}) (a b r s:int) : Lemma
+val euclid_prime (p:pos{is_prime p}) (a b:int) : Lemma
   (requires (a * b) % p = 0)
   (ensures  a % p = 0 \/ b % p = 0)

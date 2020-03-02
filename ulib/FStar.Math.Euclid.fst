@@ -235,7 +235,7 @@ let euclid n a b r s =
     0;
   }
 
-let euclid_prime p a b r s =
+let euclid_prime p a b =
   let ra, sa, da = euclid_gcd p a in
   let rb, sb, db = euclid_gcd p b in
   assert (is_gcd p a da);
