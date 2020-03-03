@@ -3060,11 +3060,10 @@ let intro_exists_heap (#t: Type u#a) (x:t) (p : t -> hprop u#a) (m:hheap (p x))
 #push-options "--z3rlimit 50 --fuel 3 --ifuel 1"
 let cas_pre_action
   (#t:eqtype)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : pre_action
     (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
@@ -3087,11 +3086,10 @@ let cas_pre_action
 #push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
 let cas_preserves_frame_disjointness_addr
   (#t:eqtype)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   (frame: hprop)
   (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
@@ -3104,18 +3102,17 @@ let cas_preserves_frame_disjointness_addr
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
     upd_array_heap_frame_disjointness_preservation
       r iseq 0ul (U.raise_val v_new)
-      (trivial_optional_preorder (fun x y -> pre (U.downgrade_val x) (U.downgrade_val y)))
+      (trivial_optional_preorder (trivial_preorder (U.raise_t u#0 u#a t)))
       (join_heap h0 h1) h0 h1 frame
 #pop-options
 
 #push-options "--z3rlimit 50 --fuel 2 --ifuel 2"
 let cas_does_not_depend_on_framing_addr
   (#t:eqtype)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   (frame: hprop)
   (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
@@ -3133,18 +3130,17 @@ let cas_does_not_depend_on_framing_addr
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
     upd_array_action_memory_split_independence
       r iseq 0ul (U.raise_val v_new)
-      (trivial_optional_preorder (raise_preorder pre))
+      (trivial_optional_preorder (trivial_preorder (U.raise_t u#0 u#a t)))
       (join_heap h0 h1) h0 h1 frame
 #pop-options
 
 #push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
 let cas_result_does_not_depend_on_framing
   (#t:eqtype)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   (frame: hprop)
   (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
@@ -3165,11 +3161,10 @@ let cas_result_does_not_depend_on_framing
 #push-options "--fuel 2 --ifuel 1"
 let cas_action
   (#t:eqtype)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : action
     (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
@@ -3192,11 +3187,10 @@ let cas_action
 let cas
   (#t:eqtype)
   (uses:Set.set lock_addr)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : atomic
     uses
     false

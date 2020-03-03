@@ -64,7 +64,7 @@ let ghost_read (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a
   AB.return_atomic (U.downgrade_val x)
 
 let ghost_read_refine (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
-  (q:a -> hprop)
+    (q:a -> hprop)
   : SteelAtomic a uses true
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
@@ -73,17 +73,6 @@ let ghost_read_refine (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
   AB.return_atomic (U.downgrade_val x)
 
 module U = FStar.Universe
-
-let preorder_lifting_lemma (t: Type0) : Lemma (
-  trivial_preorder #(U.raise_t t) == A.raise_preorder (trivial_preorder #t)
-) =
-  let aux (x y: U.raise_t t) : Lemma (
-    trivial_preorder #(U.raise_t t) x y == A.raise_preorder (trivial_preorder #t) x y
-  ) =
-  ()
-  in
-  Classical.forall_intro_2 aux;
-  admit() // Here we are missing functional extensionality on preorders!
 
 let cas
   (#t:eqtype)
@@ -100,10 +89,8 @@ let cas
     (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      preorder_lifting_lemma t;
-      let act = A.cas u#1 uses
-        (r <: reference (U.raise_t t) (A.raise_preorder (trivial_preorder #t)))
-        v v_old v_new in
+      //preorder_lifting_lemma t;
+      let act = A.cas u#1 uses r v v_old v_new in
       let (| x, m1 |) = act m0 in
       atomic_preserves_frame_and_preorder act m0;
       mst_put m1;

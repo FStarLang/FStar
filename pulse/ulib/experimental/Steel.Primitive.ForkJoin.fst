@@ -7,6 +7,8 @@ open FStar.Ghost
 open Steel.Reference
 open Steel.SteelT.Basics
 
+module U = FStar.Universe
+
 ////////////////////////////////////////////////////////////////////////////////
 
 let maybe_p (p:hprop) (v:bool) = if v then p else emp
@@ -18,8 +20,10 @@ let lock_inv (r:ref bool) (p:hprop)
   : hprop
   = h_exists (lock_inv_pred r p)
 
+#set-options "--print_universes --print_implicits"
+
 noeq
-type thread (p:hprop) = {
+type thread (p:hprop u#1) = {
   r:ref bool;
   l:L.lock (lock_inv r p)
 }
@@ -40,7 +44,7 @@ let new_thread (p:hprop)
     let r = frame #(ref bool) #emp #(fun r -> pts_to r full false)
                   (fun () -> alloc false)
                   (maybe_p p false) in
-    intro_h_exists false (lock_inv_pred r p);
+    intro_h_exists (U.raise_val false) (fun b -> lock_inv_pred r p (U.downgrade_val b));
     let l  = L.new_lock (lock_inv r p) in
     let t  =  { r = r ; l = l } in
     return t
@@ -52,7 +56,7 @@ let finish (#p:hprop) (t:thread p) (v:bool)
     h_commute (pts_to t.r full true) p;
     frame (fun _ -> intro_maybe_p_true p) (pts_to t.r full true);
     h_commute (maybe_p p true) (pts_to t.r full true);
-    intro_h_exists true (lock_inv_pred t.r p);
+    intro_h_exists (U.raise_val true) (fun b -> lock_inv_pred t.r p (U.downgrade_val b));
     L.release t.l
 
 let acquire (#p:hprop) (t:thread p)
@@ -97,7 +101,7 @@ let join_case_true (#p:hprop) (t:thread p) (_:unit)
 
 let join_case_false (#p:hprop) (t:thread p) (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
   : SteelT unit (pre t false) (post p false)
-  = intro_h_exists false (lock_inv_pred t.r p);
+  = intro_h_exists (U.raise_val false) (fun b -> lock_inv_pred t.r p (U.downgrade_val b));
     L.release t.l;
     loop t
 

@@ -41,6 +41,7 @@ let sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:readable_perm)
   [SMTPat (sel_ref_w r p (join m0 m1))]
 = Act.sel_ref_depends_only_on r p m0 m1
 
+(*
 assume val read (#a:Type0) (p:readable_perm) (r:reference a)
 : Steel a
     (ref_perm r p)
@@ -82,7 +83,7 @@ let incr_and_frame (r1 r2:reference uint_32)
     (fun _ -> incr r1)
     (writable r2)
     (fun m -> interp (ref_perm r2 full_perm) m /\ v (sel_ref r2 m) > 2)
-
+*)
 
 // assume val sel_ref_core (#a:Type0) (r:reference a) (p:permission{allows_read p}) (m:mem)
 // : Lemma

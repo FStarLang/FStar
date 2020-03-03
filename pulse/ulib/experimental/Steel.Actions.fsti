@@ -463,11 +463,10 @@ let raise_preorder (#t: Type0) (pre: Preorder.preorder t) : Preorder.preorder (U
 val cas
   (#t:eqtype)
   (uses:Set.set lock_addr)
-  (#pre:Preorder.preorder t)
-  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : atomic
     uses
     false
