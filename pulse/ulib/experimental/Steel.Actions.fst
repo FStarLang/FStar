@@ -3053,6 +3053,26 @@ let get_ref_refine
     (get_ref_refine_action r p q)
     (fun h0 addr -> ())
 
+let get_ref_refine_ghost
+  (#t:Type)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (p:perm{readable p})
+  (q:t -> hprop)
+  : atomic
+    uses
+    true
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)
+  =
+  promote_action
+    uses
+    true
+    (get_ref_refine_action r p q)
+    (fun h0 addr -> ())
+
 let intro_exists_heap (#t: Type u#a) (x:t) (p : t -> hprop u#a) (m:hheap (p x))
   : Lemma (interp_heap (h_exists p) m)
   = ()
