@@ -743,7 +743,7 @@ let rec lock_store_invariant_append l1 l2 =
     | Locked _ -> ()
 
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1"
-let hmem_emp (p:hprop) (m:hmem_with_inv p) : hmem_with_inv emp = m
+let hmem_emp (p:hprop u#a) (m:hmem_with_inv u#a p) : hmem_with_inv u#a emp = m
 #pop-options
 
 let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
@@ -760,8 +760,14 @@ let middle_to_head (p q r:hprop) (h:hheap (p `star` (q `star` r)))
     equiv_heap_iff_equiv (p `star` (q `star` r)) (q `star` (p `star` r));
     h
 
+#set-options "--print_universes"
+
 #push-options "--max_fuel 2 --initial_fuel 2 --max_ifuel 1 --initial_ifuel 1 --z3rlimit 60"
-let release #p l m
+let release
+  (#p: hprop u#a)
+  (l:lock p)
+  (m:hmem_with_inv u#a p { lock_ok l m } )
+  : (b:bool & hmem_with_inv u#a emp)
   = Classical.forall_intro_2 equiv_heap_iff_equiv;
     let (| prefix, li, suffix |) = get_lock m.locks l in
     let h = heap_of_mem m in
@@ -1443,7 +1449,7 @@ let upd_array_pre_action
   = fun h ->
     (| (), upd_array_heap a iseq i v pre h |)
 
-#push-options "--z3rlimit 300 --fuel 2 --ifuel 1"
+#push-options "--z3rlimit 150 --fuel 1 --ifuel 1"
 let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t{not (is_null_array a)})
@@ -1650,7 +1656,7 @@ let ac_reasoning_for_m_frame_preserving'
 
 #push-options "--z3rlimit 30 --fuel 0 --ifuel 0"
 let alloc_array_is_m_frame_and_preorder_preserving
-  (#t: _)
+  (#t: Type u#a)
   (len:U32.t)
   (init: t)
   (pre: Preorder.preorder (option t))
@@ -2399,7 +2405,7 @@ let glue_array_pre_action
   end
 #pop-options
 
-#push-options "--initial_ifuel 1 --max_ifuel 1"
+#push-options "--ifuel 1 --z3rlimit 30"
 let glue_array_action
   (#t: _)
   (a: array_ref t)
@@ -2465,7 +2471,7 @@ let glue_array
 
 #push-options "--fuel 2 --ifuel 1"
 let sel_ref_heap
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (h: hheap (ref r))
@@ -2480,7 +2486,7 @@ let sel_ref_heap
 
 #push-options "--fuel 2 --ifuel 1"
 let sel_ref
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m: hmem (ref r))
@@ -2495,7 +2501,7 @@ let sel_ref
 
 #push-options "--fuel 2 --fuel 1"
 let sel_ref_lemma
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -2511,7 +2517,7 @@ let sel_ref_lemma
 #pop-options
 
 let sel_ref_or_dead
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m: hmem (ref_or_dead r))
@@ -2524,7 +2530,7 @@ let sel_ref_or_dead
   x.value
 
 let sel_ref_or_dead_lemma
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m: hmem (ref r))
@@ -2537,21 +2543,21 @@ let sel_ref_or_dead_lemma
     interp (ref_perm r p) m
   );
   assert(exists (p:perm{readable p}) (v: Ghost.erased t).
-    interp (pts_to_ref_with_liveness r p v true) m
+    interp (pts_to_ref_with_liveness r p v (U.raise_val u#0 u#a true)) m
   );
   let pf: squash (exists (p:perm{readable p}). (exists (v: Ghost.erased t).
-    interp (pts_to_ref_with_liveness r p v true) m
+    interp (pts_to_ref_with_liveness r p v (U.raise_val u#0 u#a true)) m
   )) = ()
   in
   Classical.exists_elim (interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m) pf (fun p ->
     let pf: squash (exists (v: Ghost.erased t).
-      interp (pts_to_ref_with_liveness r p v true) m
+      interp (pts_to_ref_with_liveness r p v (U.raise_val u#0 u#a true)) m
     ) = ()
     in
     Classical.exists_elim (interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m)
       pf (fun v ->
-        assert(interp (pts_to_ref_with_liveness r p v true) m);
-        intro_exists true (pts_to_ref_with_liveness r p v) m;
+        assert(interp (pts_to_ref_with_liveness r p v (U.raise_val u#0 u#a true)) m);
+        intro_exists (U.raise_val u#0 u#a true) (pts_to_ref_with_liveness r p v) m;
         intro_exists v (pts_to_ref_or_dead r p) m;
         intro_exists p (ref_perm_or_dead r) m;
         assert(interp (ref_or_dead r) m);
@@ -2562,7 +2568,7 @@ let sel_ref_or_dead_lemma
 
 #push-options "--max_fuel 2 --initial_fuel 2 --initial_fuel 1 --max_fuel 1"
 let sel_ref_lemma_heap
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -2582,9 +2588,9 @@ let sel_ref_depends_only_on #a #pre r p m0 m1 = ()
 #pop-options
 
 let get_ref_pre_action
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
-  (r: reference t pre)
+  (r: reference u#a t pre)
   (p: perm{readable p})
   : pre_action
     (ref_perm r p)
@@ -2601,9 +2607,9 @@ let get_ref_pre_action
 
 #push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let get_ref_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
-  (r: reference t pre)
+  (r: reference u#a t pre)
   (p: perm{readable p})
   : action
     (ref_perm r p)
@@ -2619,7 +2625,7 @@ let get_ref_action
 #pop-options
 
 let get_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -2639,7 +2645,7 @@ let get_ref
 
 #push-options "--max_fuel 2 --initial_fuel 2"
 let set_ref_pre_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (old_v: Ghost.erased t)
@@ -2657,7 +2663,7 @@ let set_ref_pre_action
 
 #push-options "--fuel 2 --z3rlimit 30"
 let set_ref_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (old_v: Ghost.erased t)
@@ -2692,7 +2698,7 @@ let set_ref_action
 #pop-options
 
 let set_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -2712,7 +2718,7 @@ let set_ref
     (fun h0 addr -> ())
 
 let alloc_ref
-  (#t: Type0)
+  (#t: Type)
   (v: t)
   (pre: Ghost.erased (Preorder.preorder t))
   : m_action
@@ -2725,7 +2731,7 @@ let alloc_ref
 
 #push-options "--ifuel 1 --fuel 2 --z3rlimit 30"
 let free_ref_pre_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (a: reference t pre)
   : pre_action
@@ -2778,7 +2784,7 @@ let free_ref_pre_action
 
 #push-options "--ifuel 1 --fuel 2 --z3rlimit 50"
 let free_ref_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (a: reference t pre)
   : action
@@ -2831,7 +2837,7 @@ let free_ref_action
 #pop-options
 
 let free_ref
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   : m_action
@@ -2845,7 +2851,7 @@ let free_ref
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit 50"
 let share_ref_pre_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -2885,7 +2891,7 @@ let share_ref_action
     (fun h0 addr -> ())
 
 let share_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -2909,7 +2915,7 @@ let share_ref
 #pop-options
 
 let gather_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -2931,7 +2937,7 @@ let gather_ref
     (fun h addr -> ())
 
 let get_ref_refine_injective_hprop
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -2956,7 +2962,7 @@ let get_ref_refine_injective_hprop
 
 #push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
 let get_ref_refine_pre_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -2976,7 +2982,7 @@ let get_ref_refine_pre_action
 #restart-solver
 
 let get_ref_refine_does_not_depend_on_framing
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -3009,7 +3015,7 @@ let get_ref_refine_does_not_depend_on_framing
 
 #push-options "--z3rlimit 50 --max_fuel 2 --initial_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let get_ref_refine_action
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -3028,7 +3034,7 @@ let get_ref_refine_action
 #pop-options
 
 let get_ref_refine
-  (#t:Type0)
+  (#t:Type)
   (uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
   (r:reference t pre)
@@ -3047,23 +3053,32 @@ let get_ref_refine
     (get_ref_refine_action r p q)
     (fun h0 addr -> ())
 
-#push-options "--z3rlimit 50 --fuel 2 --ifuel 1"
+let intro_exists_heap (#t: Type u#a) (x:t) (p : t -> hprop u#a) (m:hheap (p x))
+  : Lemma (interp_heap (h_exists p) m)
+  = ()
+
+#push-options "--z3rlimit 50 --fuel 3 --ifuel 1"
 let cas_pre_action
   (#t:eqtype)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   : pre_action
-    (pts_to_ref r full_perm v)
+    (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
+    (fun b -> if b then
+      pts_to_ref r full_perm (U.raise_val v_new)
+    else
+      pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))
+    )
   = fun h ->
+      intro_exists_heap (Ghost.hide (U.raise_val (Ghost.reveal v))) (pts_to_ref r full_perm) h;
       let contents = sel_ref_heap r h in
-      if v_old <> contents then (| false, h |)
+      if v_old <> U.downgrade_val contents then (| false, h |)
       else (
-        let res = set_ref_pre_action r v v_new h in
+        let res = set_ref_pre_action r (U.raise_val (Ghost.reveal v)) (U.raise_val v_new) h in
         let h' = dsnd res in
         (| true, h' |)
      )
@@ -3073,12 +3088,12 @@ let cas_pre_action
 let cas_preserves_frame_disjointness_addr
   (#t:eqtype)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_perm v))
+  (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
   (addr: addr)
   : Lemma (
@@ -3087,7 +3102,9 @@ let cas_preserves_frame_disjointness_addr
     )
   = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
-    upd_array_heap_frame_disjointness_preservation r iseq 0ul v_new (trivial_optional_preorder pre)
+    upd_array_heap_frame_disjointness_preservation
+      r iseq 0ul (U.raise_val v_new)
+      (trivial_optional_preorder (fun x y -> pre (U.downgrade_val x) (U.downgrade_val y)))
       (join_heap h0 h1) h0 h1 frame
 #pop-options
 
@@ -3095,12 +3112,12 @@ let cas_preserves_frame_disjointness_addr
 let cas_does_not_depend_on_framing_addr
   (#t:eqtype)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_perm v))
+  (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
   (addr: addr)
   : Lemma (requires (
@@ -3114,7 +3131,9 @@ let cas_does_not_depend_on_framing_addr
     ))
   = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
-    upd_array_action_memory_split_independence r iseq 0ul v_new (trivial_optional_preorder pre)
+    upd_array_action_memory_split_independence
+      r iseq 0ul (U.raise_val v_new)
+      (trivial_optional_preorder (raise_preorder pre))
       (join_heap h0 h1) h0 h1 frame
 #pop-options
 
@@ -3122,12 +3141,12 @@ let cas_does_not_depend_on_framing_addr
 let cas_result_does_not_depend_on_framing
   (#t:eqtype)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   (frame: hprop)
-  (h0:hheap (pts_to_ref r full_perm v))
+  (h0:hheap (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))))
   (h1:hheap frame{disjoint_heap h0 h1})
   : Lemma (
       let (|x_alone, h0'|) = cas_pre_action r v v_old v_new h0 in
@@ -3136,8 +3155,10 @@ let cas_result_does_not_depend_on_framing
     )
   = sel_ref_lemma_heap r full_perm h0;
     let iseq = Seq.create 1 (sel_ref_heap r h0) in
-    let (| x0, h |) = set_ref_pre_action r v v_new h0 in
-    let (| x1, h' |) = set_ref_pre_action r v v_new (join_heap h0 h1) in
+    let (| x0, h |) = set_ref_pre_action r (U.raise_val (Ghost.reveal v)) (U.raise_val v_new) h0 in
+    let (| x1, h' |) =
+      set_ref_pre_action r (U.raise_val (Ghost.reveal v)) (U.raise_val v_new) (join_heap h0 h1)
+    in
     assert (x0 == x1)
 #pop-options
 
@@ -3145,14 +3166,18 @@ let cas_result_does_not_depend_on_framing
 let cas_action
   (#t:eqtype)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   : action
-    (pts_to_ref r full_perm v)
+    (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
+    (fun b -> if b then
+      pts_to_ref r full_perm (U.raise_val v_new)
+    else
+      pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))
+    )
   =
   pre_action_to_action
     (cas_pre_action r v v_old v_new)
@@ -3162,20 +3187,26 @@ let cas_action
     (fun h0 addr -> ())
 #pop-options
 
+#set-options "--print_universes"
+
 let cas
   (#t:eqtype)
   (uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (raise_preorder pre))
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
   : atomic
     uses
     false
-    (pts_to_ref r full_perm v)
+    (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
+    (fun b -> if b then
+      pts_to_ref r full_perm (U.raise_val v_new)
+    else
+      pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))
+    )
   =
   promote_action
     uses
@@ -3189,7 +3220,7 @@ let cas
 
 #push-options "--fuel 3 --ifuel 0 --z3rlimit 40"
 let reference_preorder_respected
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m0 m1:mem)
@@ -3203,7 +3234,7 @@ let reference_preorder_respected
   assert(exists (p0: perm{readable p0}) (v0: Ghost.erased t).
     interp (pts_to_ref_or_dead r p0 v0) m0
   );
-  assert(exists (p0: perm{readable p0}) (v0: Ghost.erased t) (live0: bool).
+  assert(exists (p0: perm{readable p0}) (v0: Ghost.erased t) (live0: U.raise_t u#0 u#a bool).
     interp (pts_to_ref_with_liveness r p0 v0 live0) m0
   );
   assert(heap_evolves m0.heap m1.heap);
@@ -3216,7 +3247,7 @@ let reference_preorder_respected
       let p, v = match (Seq.index seq1 0).v_with_p with
         | Some x -> x.perm, x.value
       in
-      assert(interp (pts_to_ref_with_liveness r p (Ghost.hide v) true) m1);
+      assert(interp (pts_to_ref_with_liveness r p (Ghost.hide v) (U.raise_val u#0 u#a true)) m1);
       assert(interp (ref_or_dead r) m1)
     end else begin
       let v = match (Seq.index seq1 0).v_with_p with
@@ -3224,7 +3255,10 @@ let reference_preorder_respected
           assert(x.perm == full_perm);
           x.value
       in
-      assert(interp (pts_to_ref_with_liveness r full_perm (Ghost.hide v) false) m1);
+      assert(interp
+        (pts_to_ref_with_liveness r full_perm (Ghost.hide v) (U.raise_val u#0 u#a false))
+        m1
+      );
       assert(interp (ref_or_dead r) m1)
     end
   | _ -> ()

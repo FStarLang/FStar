@@ -345,25 +345,19 @@ module W = FStar.WellFounded
 
 [@erasable]
 noeq
-type hprop : Type u#(max (a + 1) b) =
-  | Emp : hprop u#a u#b
-  | Pts_to_array: #t:Type u#a->
-                  // a:array_ref t ->
-                  // perm:perm u#a{readable perm} ->
-		  //contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
-                  //preorder: Ghost.erased (Preorder.preorder u#a (option t)) ->
-                  liveness: bool -> hprop u#a u#b
-
-
-  | Refine : hprop u#a u#b -> a_heap_prop u#a -> hprop
-
-
-  | And  : hprop u#a u#b -> hprop u#a u#b -> hprop
-  | Or   : hprop u#a u#b -> hprop u#a u#b -> hprop
-  | Star : hprop u#a u#b -> hprop u#a u#b -> hprop
-  | Wand : hprop u#a u#b -> hprop u#a u#b -> hprop
-  | Ex   : #t: Type u#a -> (t -> hprop u#a u#b) -> hprop
-  | All  : #t: Type u#a -> (t -> hprop u#a u#b) -> hprop
+type hprop : Type u#(a + 1) =
+  | Emp : hprop
+  | Pts_to_array: #t:Type u#a -> a:array_ref t -> perm:perm u#a{readable perm} ->
+		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
+                  preorder: Ghost.erased (Preorder.preorder (option t)) ->
+                  liveness: bool -> hprop
+  | Refine : hprop u#a -> a_heap_prop u#a -> hprop
+  | And  : hprop u#a -> hprop u#a -> hprop
+  | Or   : hprop u#a -> hprop u#a -> hprop
+  | Star : hprop u#a -> hprop u#a -> hprop
+  | Wand : hprop u#a -> hprop u#a -> hprop
+  | Ex   : #t: Type u#a -> (t -> hprop u#a) -> hprop
+  | All  : #t: Type u#a -> (t -> hprop u#a) -> hprop
 
 noeq
   type lock_state : Type u#(a + 1) =
@@ -546,20 +540,17 @@ let pts_to_ref_with_liveness
   (r: reference t pre)
   (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  (live: bool)
+  (live: U.raise_t u#0 u#a bool)
   = Pts_to_array r p
     (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal contents))
     (trivial_optional_preorder pre)
-    live
+    (U.downgrade_val u#0 u#a live)
 
 let h_and = And
 let h_or = Or
 let star = Star
 let wand = Wand
-
-let h_exists (#t:Type u#a) (f: (t -> hprop u#(max a b))) : hprop u#(max a b) =
-  Ex #(U.raise_t u#a u#b t) (fun (x: U.raise_t u#a u#b t) -> f (U.downgrade_val u#a u#b x))
-
+let h_exists = Ex
 let h_forall = All
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -580,7 +571,7 @@ let equiv_extensional_on_star p1 p2 p3 =
 
 #push-options "--ifuel 1"
 let intro_pts_to_array_with_preorder
-  (#t: Type0)
+  (#t: Type)
   (a:array_ref t)
   (perm:perm{readable perm})
   (contents:Seq.lseq t (U32.v (length a)))

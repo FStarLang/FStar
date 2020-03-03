@@ -25,7 +25,7 @@ let ref_perm_implies_ref (#a:Type0) (r:reference a) (p:readable_perm) (m:mem)
 = intro_exists p (fun (p:perm{readable p}) -> Mem.ref_perm r p) m;
   assert (ref r == h_exists (fun (p:perm{readable p}) -> Mem.ref_perm r p))
     by (T.norm [delta_only [`%ref]])
-  
+
 let sel_ref_w (#a:Type0)
   (r:reference a) (p:readable_perm) (m:hmem (ref_perm r p))
 = ref_perm_implies_ref r p m;
@@ -157,7 +157,7 @@ let incr_and_frame (r1 r2:reference uint_32)
 //     (fun _ -> refine p0 q `star` p1)
 //     (fun m -> q m)
 //     (fun _ _ _ -> True)
-    
+
 
 // assume val steel_assert (#pre:pre_t) (p:mprop pre)
 // : Steel unit pre (fun _ -> emp)
@@ -203,4 +203,3 @@ let incr_and_frame (r1 r2:reference uint_32)
 
 
 //   steel_admit ()
-

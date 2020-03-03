@@ -22,17 +22,17 @@ module M = MST
 
 type tape = nat -> bool
 
-type repr (a:Type) (state:Type u#1) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a) =
+type repr (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a) =
   (tape & nat) ->
   M.MSTATE (a & nat) state rel req
   (fun s0 (x, _) s1 -> ens s0 x s1)
 
 
-let return (a:Type) (x:a) (state:Type u#1) (rel:P.preorder state)
+let return (a:Type) (x:a) (state:Type u#2) (rel:P.preorder state)
 : repr a state rel (fun _ -> True) (fun s0 r s1 -> r == x /\ s0 == s1)
 = fun (_, n) -> x, n
 
-let bind (a:Type) (b:Type) (state:Type u#1) (rel:P.preorder state)
+let bind (a:Type) (b:Type) (state:Type u#2) (rel:P.preorder state)
   (req_f:M.pre_t state) (ens_f:M.post_t state a)
   (req_g:a -> M.pre_t state) (ens_g:a -> M.post_t state b)
   (f:repr a state rel req_f ens_f)
@@ -44,7 +44,7 @@ let bind (a:Type) (b:Type) (state:Type u#1) (rel:P.preorder state)
   let x, n1 = f (t, n) in
   (g x) (t, n1)
 
-let subcomp (a:Type) (state:Type u#1) (rel:P.preorder state)
+let subcomp (a:Type) (state:Type u#2) (rel:P.preorder state)
   (req_f:M.pre_t state) (ens_f:M.post_t state a)
   (req_g:M.pre_t state) (ens_g:M.post_t state a)
   (f:repr a state rel req_f ens_f)
@@ -55,7 +55,7 @@ let subcomp (a:Type) (state:Type u#1) (rel:P.preorder state)
   (ensures fun _ -> True)
 = f
 
-let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
+let if_then_else (a:Type) (state:Type u#2) (rel:P.preorder state)
   (req_then:M.pre_t state) (ens_then:M.post_t state a)
   (req_else:M.pre_t state) (ens_else:M.post_t state a)
   (f:repr a state rel req_then ens_then)
@@ -68,7 +68,7 @@ let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
 
 reifiable reflectable
 layered_effect {
-  RMSTATE : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:M.pre_t state -> ens:M.post_t state a -> Effect
+  RMSTATE : a:Type -> state:Type u#2 -> rel:P.preorder state -> req:M.pre_t state -> ens:M.post_t state a -> Effect
   with
   repr = repr;
   return = return;
@@ -77,40 +77,40 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get (#state:Type u#1) (#rel:P.preorder state) ()
+let get (#state:Type u#2) (#rel:P.preorder state) ()
 : RMSTATE state state rel
   (fun _ -> True)
   (fun s0 s s1 -> s0 == s /\ s == s1)
 = RMSTATE?.reflect (fun (_, n) -> MST.get (), n)
 
-let put (#state:Type u#1) (#rel:P.preorder state) (s:state)
+let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
 : RMSTATE unit state rel
   (fun s0 -> rel s0 s)
   (fun _ _ s1 -> s1 == s)
 = RMSTATE?.reflect (fun (_, n) -> MST.put s, n)
 
-type s_predicate (state:Type u#1) = state -> Type0
+type s_predicate (state:Type u#2) = state -> Type0
 
-let stable (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
+let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
 
-let witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
+let witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   M.witnessed state rel p
 
-let witness (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
+let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
 : RMSTATE unit state rel
   (fun s0 -> p s0 /\ stable state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
 = RMSTATE?.reflect (fun (_, n) -> M.witness state rel p, n)
 
-let recall (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
+let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
 : RMSTATE unit state rel
   (fun _ -> witnessed state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ p s1)
 = RMSTATE?.reflect (fun (_, n) -> M.recall state rel p, n)
 
 
-let sample (#state:Type u#1) (#rel:P.preorder state) ()
+let sample (#state:Type u#2) (#rel:P.preorder state) ()
 : RMSTATE bool state rel
   (fun _ -> True)
   (fun s0 _ s1 -> s0 == s1)
@@ -123,24 +123,24 @@ assume WP_monotonic_pure:
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
 
-let lift_pure_rmst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_rmst (a:Type) (state:Type u#2) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a state rel
   (fun s0 -> wp (fun _ -> True))
   (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
-= fun (_, n) -> 
+= fun (_, n) ->
   let x = f () in
   x, n
 
 sub_effect PURE ~> RMSTATE = lift_pure_rmst
 
-let rmst_assume (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+let rmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
 : RMSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
 = assume p
 
-let rmst_admit (#state:Type u#1) (#rel:P.preorder state) (#a:Type) ()
+let rmst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
 : RMSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
 = admit ()
 
-let rmst_assert (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+let rmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
 : RMSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
 = assert p
