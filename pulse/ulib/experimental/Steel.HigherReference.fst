@@ -35,7 +35,7 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
   = lift_atomic_to_steelT (fun _ -> read_atomic r)
 
-let read_refine_core_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (q:a -> hprop) (r:ref a)
+let read_refine_core_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
   : SteelAtomic a uses false
     (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
     (fun x -> pts_to_ref r p x `star` q x)
@@ -132,30 +132,58 @@ let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
   = lift_atomic_to_steelT (fun _ -> gather_atomic r)
 
-let ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
+#push-options "--print_universes"
+
+let read_refine_core_atomic_ghost (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
   : SteelAtomic a uses true
-    (pts_to r p v)
-    (fun x -> pts_to r p x)
+    (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
+    (fun x -> pts_to_ref r p x `star` q x)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      // TODO: Needs to expose such an action. The ref should probably be to Ghost.erased a
-      admit())
+      let act = get_ref_refine_ghost uses r p q in
+      let (| x, m1 |) = act m0 in
+      atomic_preserves_frame_and_preorder act m0;
+      mst_put m1;
+      x)
 
 let ghost_read_refine (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
   (q:a -> hprop)
   : SteelAtomic a uses true
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
+  = read_refine_core_atomic_ghost q r
+
+let alloc_monotonic_ref (#a:Type) (p:Preorder.preorder a) (x:a)
+  : SteelT (reference a p) emp (fun r -> pts_to_ref r full x)
+  = Steel?.reflect (fun _ ->
+      let m0 = mst_get () in
+      let act = alloc_ref x p in
+      let (| x, m1 |) = act m0 in
+      act_preserves_frame_and_preorder act m0;
+      mst_put m1;
+      x)
+
+let read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> hprop)
+                       (r:reference a p)
+  : SteelT a (h_exists (fun (v:a) -> pts_to_ref r q v `star` frame v))
+             (fun v -> pts_to_ref r q v `star` frame v)
+  = lift_atomic_to_steelT (fun _ -> read_refine_core_atomic frame r)
+
+let write_monotonic_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:Preorder.preorder a) (#v:erased a) (r:reference a p) (x:a{p v x})
+  : SteelAtomic unit uses false (pts_to_ref r full v) (fun _ -> pts_to_ref r full x)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      // TODO: Needs to expose such an action. The ref should probably be to Ghost.erased a
-      admit())
+      let act = set_ref uses r v x in
+      let (| x, m1 |) = act m0 in
+      atomic_preserves_frame_and_preorder act m0;
+      mst_put m1;
+      x)
 
-
-
-let alloc_monotonic_ref = admit()
-let read_monotonic_ref = admit()
-let write_monotonic_ref = admit()
+let write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+                       (r:reference a p) (x:a{p v x})
+  : SteelT unit (pts_to_ref r full v)
+                (fun v -> pts_to_ref r full x)
+  = lift_atomic_to_steelT (fun _ -> write_monotonic_atomic r x)
 
 let pure (p:prop) : hprop =
  refine emp (fun _ -> p)

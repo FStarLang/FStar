@@ -382,6 +382,20 @@ val get_ref_refine
     (x:t)
     (fun v -> pts_to_ref r p v `star` q v)
 
+val get_ref_refine_ghost
+  (#t:Type)
+  (uses:Set.set lock_addr)
+  (#pre:Preorder.preorder t)
+  (r:reference t pre)
+  (p:perm{readable p})
+  (q:t -> hprop)
+  : atomic
+    uses
+    true
+    (h_exists (fun (v:t) -> pts_to_ref r p v `star` q v))
+    (x:t)
+    (fun v -> pts_to_ref r p v `star` q v)
+
 
 let raise_preorder (#t: Type0) (pre: Preorder.preorder t) : Preorder.preorder (U.raise_t u#0 u#a t)
   =

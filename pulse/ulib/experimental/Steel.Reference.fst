@@ -55,14 +55,6 @@ let gather (#a:Type0) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   =
   R.gather r
 
-let ghost_read (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
-  : SteelAtomic a uses true
-    (pts_to r p v)
-    (fun x -> pts_to r p x)
-  =
-  let x = R.ghost_read r in
-  AB.return_atomic (U.downgrade_val x)
-
 let ghost_read_refine (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
     (q:a -> hprop)
   : SteelAtomic a uses true
