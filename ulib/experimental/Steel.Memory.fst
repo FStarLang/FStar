@@ -882,8 +882,14 @@ let affine_star_aux_pts_to_array (p:hprop) (m:heap) (m':heap { disjoint_heap m m
 
 #restart-solver
 
-#push-options "--z3rlimit 300 --fuel 2 --warn_error -271 --ifuel 1"
-let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
+let disjoint_join_heap_specialized (m0 m1 m2: heap)
+  : Lemma (disjoint_heap m1 m2 /\
+           disjoint_heap m0 (join_heap m1 m2) ==>
+           disjoint_heap m0 m2)
+   = disjoint_join_heap m0 m1 m2
+
+#push-options "--z3rlimit 500 --fuel 2 --warn_error -271 --ifuel 1"
+let rec  affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
   : Lemma
     (ensures interp_heap p m ==> interp_heap p (join_heap m m'))
     [SMTPat (interp_heap p (join_heap m m'))]
@@ -905,8 +911,9 @@ let rec affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
           [SMTPat (interp_heap (Star p1 p2) (join_heap (join_heap m1 m2) m'))]
         =
           disjoint_join_heap m' m1 m2;
-          assume (disjoint_heap m2 m');
-          affine_star_aux p2 m2 m';  //AR: this is the problematic line (disjointness of m2 and m')?
+          disjoint_join_heap_specialized m' m1 m2;
+          assert (disjoint_heap m2 m');
+          affine_star_aux p2 m2 m';
           // assert (interp p2 (join m2 m'));
           affine_star_aux p1 m1 (join_heap m2 m');
           // assert (interp p1 (join m1 (join m2 m')));

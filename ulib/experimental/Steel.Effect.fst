@@ -545,7 +545,6 @@ let test_frame1 (_:unit)
  * A crash testcase
  *)
 
-#push-options "--admit_smt_queries true"
 assume
 val crash_h_commute (p:hprop)
   : SteelT unit emp (fun _ -> p)
@@ -556,12 +555,12 @@ val crash_h_assert (_:unit)
 
 assume val crash_get_prop : int -> hprop
 
+[@expect_failure]
 let crash_test (_:unit)
   : SteelT unit emp (fun _ -> emp)
   = let r = 0 in
     crash_h_commute (crash_get_prop r);
     crash_h_assert ()
-#pop-options
 
 let cond_aux (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
   (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
