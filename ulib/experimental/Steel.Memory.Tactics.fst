@@ -94,3 +94,12 @@ inline_for_extraction noextract let reprove_frame () : Tac unit =
   split();
   canon();
   trivial()
+
+val shuffled (p : M.hprop)
+             (q : M.hprop{with_tactic canon (squash (p `M.equiv` q))})
+    : Lemma (p `M.equiv` q)
+
+#push-options "--no_tactics" (* GM: This should not be needed *)
+let shuffled p q =
+  by_tactic_seman canon (squash (p `M.equiv` q))
+#pop-options
