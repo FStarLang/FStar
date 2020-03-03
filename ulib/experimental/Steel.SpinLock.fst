@@ -7,13 +7,15 @@ open Steel.Actions
 open Steel.SteelT.Basics
 open Steel.SteelAtomic.Basics
 
+module U = FStar.Universe
+
 let available = false
 let locked = true
 
 let lockinv (p:hprop) (r:ref bool) : hprop =
   h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
-let lock (p:hprop) = (r:ref bool) & inv (lockinv p r)
+let lock (p:hprop u#1) = (r:ref bool) & inv (lockinv p r)
 
 val intro_lockinv_available (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
   : SteelAtomic unit uses true (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
@@ -22,27 +24,36 @@ val intro_lockinv_locked (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
   : SteelAtomic unit uses true (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
-  intro_h_exists false
-    (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+  intro_h_exists (U.raise_val false)
+    (fun (b: U.raise_t bool) ->
+      pts_to r full_perm (Ghost.hide (U.downgrade_val  b)) `star`
+        (if (U.downgrade_val b) then emp else p)
+    )
 
 let intro_lockinv_locked #uses p r =
   h_intro_emp_l (pts_to r full_perm locked);
   h_commute emp (pts_to r full_perm locked);
-  intro_h_exists true
-    (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+  intro_h_exists (U.raise_val true)
+    (fun b -> pts_to r full_perm (Ghost.hide (U.downgrade_val b)) `star`
+      (if (U.downgrade_val b) then emp else p))
 
 val new_inv (p:hprop) : SteelT (inv p) p (fun _ -> emp)
 let new_inv p = lift_atomic_to_steelT (fun _ -> Steel.Effect.Atomic.new_inv p)
 
+#set-options "--fuel 0 --ifuel 0"
+
 let new_lock (p:hprop)
   : SteelT (lock p) p (fun _ -> emp) =
+  h_admit p (fun _ -> emp `star` p); // How to prove that ?
   let r:ref bool =
-    steel_frame_t (fun _ -> alloc available) in
+    frame (fun _ -> alloc available) p
+  in
   lift_atomic_to_steelT (fun _ -> intro_lockinv_available p r);
   let i:inv (lockinv p r) = new_inv (lockinv p r) in
   let l:lock p = (| r, i |) in
   l
 
+#set-options "--fuel 0 --ifuel 0"
 val cas_frame
   (#t:eqtype)
   (#uses:Set.set lock_addr)
@@ -58,7 +69,10 @@ val cas_frame
     (pts_to r full_perm v `star` frame)
     (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
-  atomic_frame frame (fun _ -> Steel.Effect.Atomic.cas r v v_old v_new)
+  atomic_frame frame (fun _ ->
+    let x = Steel.Effect.Atomic.cas r v v_old v_new in
+    return_atomic x
+  )
 
 val acquire_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u false

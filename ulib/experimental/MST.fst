@@ -18,10 +18,10 @@ module MST
 
 module P = FStar.Preorder
 
-type pre_t (state:Type u#1) = state -> Type0
-type post_t (state:Type u#1) (a:Type u#a) = state -> a -> state -> Type0
+type pre_t (state:Type u#2) = state -> Type0
+type post_t (state:Type u#2) (a:Type u#a) = state -> a -> state -> Type0
 
-type repr (a:Type) (state:Type u#1) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) =
+type repr (a:Type) (state:Type u#2) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) =
   s0:state ->
   DIV (a & state)
   (fun p ->
@@ -33,13 +33,13 @@ type repr (a:Type) (state:Type u#1) (rel:P.preorder state) (req:pre_t state) (en
   //   // rel s0 s1)
 
 
-let return (a:Type) (x:a) (state:Type u#1) (rel:P.preorder state)
+let return (a:Type) (x:a) (state:Type u#2) (rel:P.preorder state)
 : repr a state rel
   (fun _ -> True)
   (fun s0 r s1 -> r == x /\ s0 == s1)
 = fun s0 -> x, s0
 
-let bind (a:Type) (b:Type) (state:Type u#1) (rel:P.preorder state)
+let bind (a:Type) (b:Type) (state:Type u#2) (rel:P.preorder state)
   (req_f:pre_t state) (ens_f:post_t state a)
   (req_g:a -> pre_t state) (ens_g:a -> post_t state b)
   (f:repr a state rel req_f ens_f) (g:(x:a -> repr b state rel (req_g x) (ens_g x)))
@@ -50,7 +50,7 @@ let bind (a:Type) (b:Type) (state:Type u#1) (rel:P.preorder state)
   let x, s1 = f s0 in
   (g x) s1
 
-let subcomp (a:Type) (state:Type u#1) (rel:P.preorder state)
+let subcomp (a:Type) (state:Type u#2) (rel:P.preorder state)
   (req_f:pre_t state) (ens_f:post_t state a)
   (req_g:pre_t state) (ens_g:post_t state a)
   (f:repr a state rel req_f ens_f)
@@ -61,7 +61,7 @@ let subcomp (a:Type) (state:Type u#1) (rel:P.preorder state)
   (ensures fun _ -> True)
 = f
 
-let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
+let if_then_else (a:Type) (state:Type u#2) (rel:P.preorder state)
   (req_then:pre_t state) (ens_then:post_t state a)
   (req_else:pre_t state) (ens_else:post_t state a)
   (f:repr a state rel req_then ens_then)
@@ -74,7 +74,7 @@ let if_then_else (a:Type) (state:Type u#1) (rel:P.preorder state)
 
 reifiable reflectable
 layered_effect {
-  MSTATE : a:Type -> state:Type u#1 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
+  MSTATE : a:Type -> state:Type u#2 -> rel:P.preorder state -> req:pre_t state -> ens:post_t state a -> Effect
   with
   repr = repr;
   return = return;
@@ -83,32 +83,32 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get (#state:Type u#1) (#rel:P.preorder state) ()
+let get (#state:Type u#2) (#rel:P.preorder state) ()
 : MSTATE state state rel
   (fun _ -> True)
   (fun s0 r s1 -> s0 == r /\ r == s1)
 = MSTATE?.reflect (fun s0 -> s0, s0)
 
-let put (#state:Type u#1) (#rel:P.preorder state) (s:state)
+let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
 : MSTATE unit state rel
   (fun s0 -> rel s0 s)
   (fun _ _ s1 -> s1 == s)
 = MSTATE?.reflect (fun _ -> (), s)
 
 
-type s_predicate (state:Type u#1) = state -> Type0
+type s_predicate (state:Type u#2) = state -> Type0
 
-let stable (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) =
+let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
 
-assume val witnessed (state:Type u#1) (rel:P.preorder state) (p:s_predicate state) : prop
+assume val witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) : prop
 
-assume val witness (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
+assume val witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
 : MSTATE unit state rel
   (fun s0 -> p s0 /\ stable state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
 
-assume val recall (state:Type u#1) (rel:P.preorder state) (p:s_predicate state)
+assume val recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
 : MSTATE unit state rel
   (fun _ -> witnessed state rel p)
   (fun s0 _ s1 -> s0 == s1 /\ p s1)
@@ -147,7 +147,7 @@ assume val wp_monotonic_pure (_:unit)
  *     the wp (fun _ -> True) below helps add that assumption to the second conjunct
  *)
 
-let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mst (a:Type) (state:Type u#2) (rel:P.preorder state) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a state rel
   (fun s0 -> wp (fun _ -> True))
   (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
@@ -159,14 +159,14 @@ let lift_pure_mst (a:Type) (state:Type u#1) (rel:P.preorder state) (wp:pure_wp a
 sub_effect PURE ~> MSTATE = lift_pure_mst
 
 
-let mst_assume (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+let mst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
 : MSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
 = assume p
 
-let mst_admit (#state:Type u#1) (#rel:P.preorder state) (#a:Type) ()
+let mst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
 : MSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
 = admit ()
 
-let mst_assert (#state:Type u#1) (#rel:P.preorder state) (p:Type)
+let mst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
 : MSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
 = assert p

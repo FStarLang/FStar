@@ -25,7 +25,7 @@ let ref_perm_implies_ref (#a:Type0) (r:reference a) (p:readable_perm) (m:mem)
 = intro_exists p (fun (p:perm{readable p}) -> Mem.ref_perm r p) m;
   assert (ref r == h_exists (fun (p:perm{readable p}) -> Mem.ref_perm r p))
     by (T.norm [delta_only [`%ref]])
-  
+
 let sel_ref_w (#a:Type0)
   (r:reference a) (p:readable_perm) (m:hmem (ref_perm r p))
 = ref_perm_implies_ref r p m;
@@ -41,6 +41,7 @@ let sel_ref_depends_only_on (#a:Type0) (r:reference a) (p:readable_perm)
   [SMTPat (sel_ref_w r p (join m0 m1))]
 = Act.sel_ref_depends_only_on r p m0 m1
 
+(*
 assume val read (#a:Type0) (p:readable_perm) (r:reference a)
 : Steel a
     (ref_perm r p)
@@ -82,7 +83,7 @@ let incr_and_frame (r1 r2:reference uint_32)
     (fun _ -> incr r1)
     (writable r2)
     (fun m -> interp (ref_perm r2 full_perm) m /\ v (sel_ref r2 m) > 2)
-
+*)
 
 // assume val sel_ref_core (#a:Type0) (r:reference a) (p:permission{allows_read p}) (m:mem)
 // : Lemma
@@ -157,7 +158,7 @@ let incr_and_frame (r1 r2:reference uint_32)
 //     (fun _ -> refine p0 q `star` p1)
 //     (fun m -> q m)
 //     (fun _ _ _ -> True)
-    
+
 
 // assume val steel_assert (#pre:pre_t) (p:mprop pre)
 // : Steel unit pre (fun _ -> emp)
@@ -203,4 +204,3 @@ let incr_and_frame (r1 r2:reference uint_32)
 
 
 //   steel_admit ()
-

@@ -18,6 +18,7 @@ module Steel.Memory
 open FStar.Real
 module U32 = FStar.UInt32
 open FStar.FunctionalExtensionality
+module U = FStar.Universe
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
@@ -31,13 +32,15 @@ let sub_permissions (p1: perm) (p2: perm)
 
 // In the future, we may have other cases of cells
 // for arrays and structs
+#set-options "--print_universes"
 
-noeq type array_seq_member' (a: Type) = {
-   value: a;
-   perm: (p:perm{readable p /\ MkPerm?.v p <=. 1.0R});
+
+noeq type array_seq_member' (t: Type u#a ) : Type u#a = {
+   value: t;
+   perm: (p:perm u#a{readable p /\ MkPerm?.v p <=. 1.0R});
 }
 
-let invert_array_seq_member' (a: Type0)
+let invert_array_seq_member' (a: Type)
   : Lemma
     (requires True)
     (ensures (inversion (array_seq_member' a)))
@@ -45,12 +48,12 @@ let invert_array_seq_member' (a: Type0)
   =
   allow_inversion (array_seq_member' a)
 
-noeq type array_seq_member (a: Type) = {
+noeq type array_seq_member (a: Type u#a) : Type u#(a + 1) = {
   preorder: Preorder.preorder (option a);
-  v_with_p: option (array_seq_member' a)
+  v_with_p: option (array_seq_member' u#a a)
 }
 
-let invert_array_seq_member (a: Type0)
+let invert_array_seq_member (a: Type)
   : Lemma
     (requires True)
     (ensures (inversion (array_seq_member a)))
@@ -59,17 +62,17 @@ let invert_array_seq_member (a: Type0)
   allow_inversion (array_seq_member a)
 
 
-let array_seq (a: Type) (len: nat) = Seq.lseq (array_seq_member a) len
+let array_seq (a: Type u#a) (len: nat)  : Type u#(a + 1) = Seq.lseq (array_seq_member a) len
 
 let all_full_permission (#a: Type) (#len: nat) (seq: array_seq a len) =
   forall (i:nat{i < len}). (Some? (Seq.index seq i).v_with_p /\
     (Some?.v ((Seq.index seq i).v_with_p)).perm == full_perm)
 
 noeq
-type cell =
-  | Array: a:Type u#0 ->
+type cell : Type u#(a + 1) =
+  | Array: a:Type u#a ->
            len: nat{len > 0} ->
-           seq:array_seq a len  ->
+           seq:array_seq u#a a len  ->
            live: bool{(not live) ==> all_full_permission seq} ->
 	   cell
 
@@ -81,7 +84,7 @@ let addr = nat
 /// assertions. At one level above, we'll encapsulate this memory
 /// with a freshness counter, a lock store etc.
 
-let heap = addr ^-> option cell
+let heap : Type u#(a + 1) = addr ^-> option cell
 
 let contains_addr (m:heap) (a:addr)
   : bool
@@ -107,7 +110,7 @@ let update_addr (m:heap) (a:addr) (c:cell)
   : heap
   = on _ (fun a' -> if a = a' then Some c else m a')
 
-let disjoint_addr (m0 m1:heap) (a:addr)
+let disjoint_addr (m0 m1:heap u#a) (a:addr)
   : prop
   = match m0 a, m1 a with
     | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
@@ -129,16 +132,16 @@ let disjoint_addr (m0 m1:heap) (a:addr)
 
 module U32 = FStar.UInt32
 
-noeq type array_ref' (a: Type0) : Type0 = {
+noeq type array_ref' (a: Type u#a) : Type0 = {
   array_addr: addr;
   array_max_length: U32.t;
   array_length: n:U32.t{U32.v n > 0 /\ U32.v n <= U32.v array_max_length};
   array_offset: n:U32.t{U32.v n + U32.v array_length <= U32.v array_max_length};
 }
 
-let array_ref (a: Type0) = option (array_ref' a)
+let array_ref (a: Type u#a) = option (array_ref' a)
 
-let invert_array_ref_s (a: Type0)
+let invert_array_ref_s (a: Type u#a)
   : Lemma
     (requires True)
     (ensures (inversion (array_ref' a)))
@@ -164,12 +167,12 @@ let max_length (#t: Type) (a: array_ref t) = match a with
 let address (#t: Type) (a: array_ref t{not (is_null_array a)}) = (Some?.v a).array_addr
 #pop-options
 
-let reference (t: Type u#0) (pre: Preorder.preorder t) = a:array_ref t{
+let reference (t: Type u#a) (pre: Preorder.preorder t) = a:array_ref t{
   (length a = 1ul /\ offset a = 0ul /\ max_length a = 1ul)
 }
 
 let ref_address
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre) = (Some?.v r).array_addr
 
@@ -181,7 +184,7 @@ let disjoint_sym_heap (m0 m1:heap)
   : Lemma (disjoint_heap m0 m1 <==> disjoint_heap m1 m0)
   = ()
 
-let join_heap (m0:heap) (m1:heap{disjoint_heap m0 m1})
+let join_heap (m0:heap u#a) (m1:heap u#a{disjoint_heap m0 m1})
   : heap
   = on _ (fun a ->
       match m0 a, m1 a with
@@ -207,7 +210,7 @@ let join_heap (m0:heap) (m1:heap{disjoint_heap m0 m1})
   )
 
 #push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 200"
-let disjoint_join_addr' (m0 m1 m2:heap) (a: addr) : Lemma (disjoint_heap m1 m2 /\
+let disjoint_join_addr' (m0 m1 m2:heap u#a) (a: addr) : Lemma (disjoint_heap m1 m2 /\
            disjoint_heap m0 (join_heap m1 m2) ==>
 	   disjoint_heap m0 m1 /\
            disjoint_heap m0 m2 /\
@@ -217,7 +220,7 @@ let disjoint_join_addr' (m0 m1 m2:heap) (a: addr) : Lemma (disjoint_heap m1 m2 /
   ()
 #pop-options
 
-let disjoint_join' (m0 m1 m2:heap)
+let disjoint_join' (m0 m1 m2:heap u#a)
   : Lemma (disjoint_heap m1 m2 /\
            disjoint_heap m0 (join_heap m1 m2) ==>
            disjoint_heap m0 m1 /\
@@ -230,10 +233,10 @@ let disjoint_join' (m0 m1 m2:heap)
 
 let disjoint_join_heap m0 m1 m2 = disjoint_join' m0 m1 m2
 
-let mem_equiv (m0 m1:heap) =
+let mem_equiv (m0 m1:heap u#a) =
   forall a. m0 a == m1 a
 
-let mem_equiv_eq (m0 m1:heap)
+let mem_equiv_eq (m0 m1:heap u#a)
   : Lemma
     (requires
       m0 `mem_equiv` m1)
@@ -242,7 +245,7 @@ let mem_equiv_eq (m0 m1:heap)
     [SMTPat (m0 `mem_equiv` m1)]
   = extensionality _ _ m0 m1
 
-let join_commutative' (m0 m1:heap)
+let join_commutative' (m0 m1:heap u#a)
   : Lemma
     (requires
       disjoint_heap m0 m1)
@@ -257,14 +260,14 @@ let join_commutative' (m0 m1:heap)
     | _ -> ()
   in Classical.forall_intro aux
 
-let join_commutative_heap (m0 m1:heap)
+let join_commutative_heap (m0 m1:heap u#a)
 : Lemma
   (requires disjoint_heap m0 m1)
   (ensures (disjoint_sym_heap m0 m1; join_heap m0 m1 == join_heap m1 m0))
 = ()
 
 #push-options "--z3rlimit 50"
-let join_associative' (m0 m1 m2:heap)
+let join_associative' (m0 m1 m2:heap u#a)
   : Lemma
     (requires
       disjoint_heap m1 m2 /\
@@ -284,7 +287,7 @@ let join_associative' (m0 m1 m2:heap)
   in Classical.forall_intro aux
 #pop-options
 
-let join_associative_heap (m0 m1 m2:heap)
+let join_associative_heap (m0 m1 m2:heap u#a)
   : Lemma
     (requires
       disjoint_heap m1 m2 /\
@@ -296,7 +299,7 @@ let join_associative_heap (m0 m1 m2:heap)
 = join_associative' m0 m1 m2
 
 #push-options "--initial_ifuel 1 --max_ifuel 1 --z3rlimit 30"
-let join_associative2 (m0 m1 m2:heap)
+let join_associative2 (m0 m1 m2:heap u#a)
   : Lemma
     (requires
       disjoint_heap m0 m1 /\
@@ -331,8 +334,10 @@ let join_associative2 (m0 m1 m2:heap)
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-let heap_prop_is_affine (p:heap -> prop) = forall m0 m1. p m0 /\ disjoint_heap m0 m1 ==> p (join_heap m0 m1)
-let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
+let heap_prop_is_affine (p:heap u#a -> prop) : prop =
+  forall (m0 m1: heap u#a). p m0 /\ disjoint_heap m0 m1 ==> p (join_heap m0 m1)
+
+let a_heap_prop : Type u#(a + 1) = p:(heap u#a -> prop) { heap_prop_is_affine p }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -340,33 +345,33 @@ module W = FStar.WellFounded
 
 [@erasable]
 noeq
-type hprop : Type u#1 =
+type hprop : Type u#(a + 1) =
   | Emp : hprop
-  | Pts_to_array: #t:Type0 -> a:array_ref t -> perm:perm{readable perm} ->
+  | Pts_to_array: #t:Type u#a -> a:array_ref t -> perm:perm u#a{readable perm} ->
 		  contents:Ghost.erased (Seq.lseq t (U32.v (length a))) ->
                   preorder: Ghost.erased (Preorder.preorder (option t)) ->
                   liveness: bool -> hprop
-  | Refine : hprop -> a_heap_prop -> hprop
-  | And  : hprop -> hprop -> hprop
-  | Or   : hprop -> hprop -> hprop
-  | Star : hprop -> hprop -> hprop
-  | Wand : hprop -> hprop -> hprop
-  | Ex   : #a:Type0 -> (a -> hprop) -> hprop
-  | All  : #a:Type0 -> (a -> hprop) -> hprop
+  | Refine : hprop u#a -> a_heap_prop u#a -> hprop
+  | And  : hprop u#a -> hprop u#a -> hprop
+  | Or   : hprop u#a -> hprop u#a -> hprop
+  | Star : hprop u#a -> hprop u#a -> hprop
+  | Wand : hprop u#a -> hprop u#a -> hprop
+  | Ex   : #t: Type u#a -> (t -> hprop u#a) -> hprop
+  | All  : #t: Type u#a -> (t -> hprop u#a) -> hprop
 
 noeq
-type lock_state =
-  | Available : hprop -> lock_state
-  | Locked    : hprop -> lock_state
-  | Invariant : hprop -> lock_state
+  type lock_state : Type u#(a + 1) =
+  | Available : hprop u#a -> lock_state
+  | Locked    : hprop u#a -> lock_state
+  | Invariant : hprop u#a -> lock_state
 
-let lock_store = list lock_state
+let lock_store : Type u#(a+1) = list (lock_state u#a)
 
 noeq
-type mem = {
+type mem : Type u#(a + 1)= {
   ctr: nat;
-  heap: heap;
-  locks: lock_store;
+  heap: heap u#a;
+  locks: lock_store u#a;
 }
 
 let heap_of_mem (x:mem) : heap = x.heap
@@ -401,7 +406,7 @@ let join_commutative m0 m1 = ()
 let join_associative m0 m1 m2 = ()
 
 #push-options "--ifuel 1"
-let rec interp_heap (p:hprop) (m:heap)
+let rec interp_heap (p:hprop u#a) (m:heap u#a)
   : Tot prop (decreases p)
   = match p with
     | Emp -> True
@@ -510,16 +515,17 @@ let trivial_optional_preorder (#a: Type) (pre: Preorder.preorder a) : Preorder.p
 
 let emp = Emp
 let pts_to_array_with_preorder
-  (#t: Type0)
+  (#t: Type u#a)
   (a:array_ref t)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   (pre: Ghost.erased (Preorder.preorder (option t)))
   = Pts_to_array a p contents pre true
+
 let pts_to_array
-  (#t: Type0)
+  (#t: Type u#a)
   (a:array_ref t)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   =
   pts_to_array_with_preorder
@@ -527,17 +533,19 @@ let pts_to_array
     p
     contents
     (trivial_optional_preorder (trivial_preorder t))
+
 let pts_to_ref_with_liveness
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  (live: bool)
+  (live: U.raise_t u#0 u#a bool)
   = Pts_to_array r p
     (Seq.Base.create (match r with None -> 0 | Some _ -> 1) (Ghost.reveal contents))
     (trivial_optional_preorder pre)
-    live
+    (U.downgrade_val u#0 u#a live)
+
 let h_and = And
 let h_or = Or
 let star = Star
@@ -563,7 +571,7 @@ let equiv_extensional_on_star p1 p2 p3 =
 
 #push-options "--ifuel 1"
 let intro_pts_to_array_with_preorder
-  (#t: Type0)
+  (#t: Type)
   (a:array_ref t)
   (perm:perm{readable perm})
   (contents:Seq.lseq t (U32.v (length a)))

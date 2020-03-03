@@ -48,12 +48,13 @@ let ens_depends_only_on (#a:Type) (pre:Mem.hprop) (post:a -> Mem.hprop)
   (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
      q h_pre x h_post <==> q h_pre x (join h_post h))
 
-type pre_t = hprop
-type post_t (a:Type) = a -> hprop
+type pre_t = hprop u#1
+type post_t (a:Type) = a -> hprop u#1
 type req_t (pre:pre_t) = q:(hmem pre -> prop){
   forall (m0:hmem pre) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
-type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
+
+type ens_t (pre:pre_t) (a:Type u#a) (post:post_t u#a a) : Type u#(max 2 a) =
   q:(hmem pre -> x:a -> hmem (post x) -> prop){
     ens_depends_only_on pre post q
   }
@@ -81,7 +82,7 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
   interp_depends_only_on_post post;
   fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+type repr (a:Type u#a) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post
     (req_to_act_req req)
     (ens_to_act_ens ens)
@@ -193,7 +194,7 @@ let bind_pure_steel_ens (#a:Type) (#b:Type)
 : ens_t pre_g b post_g
 = fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
 let bind_pure_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
@@ -374,7 +375,7 @@ module G = FStar.Ghost
 module P = FStar.Preorder
 
 #push-options "--z3rlimit 50"
-let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
+let read (#a:Type) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
 : Steel a (ref_perm r p) (fun x -> pts_to_ref r p x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
@@ -391,7 +392,7 @@ let read (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
 #pop-options
 
 let read_refine
-  (#a:Type0)
+  (#a:Type)
   (#pre:P.preorder a)
   (q:a -> hprop)
   (r:reference a pre)
@@ -407,7 +408,7 @@ let read_refine
     mst_put m1;
     x)
 
-let write (#a:Type0) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x:a{pre curr x})
+let write (#a:Type) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x:a{pre curr x})
 : Steel unit (pts_to_ref r full_perm curr) (fun _ -> pts_to_ref r full_perm x)
     (fun _ -> True) (fun _ _ _ -> True)
 = Steel?.reflect (fun _ ->
@@ -497,6 +498,7 @@ let rassert
       act_preserves_frame_and_preorder (rewrite_hprop h_in h_out) m0;
       mst_put m1)
 
+(*
 let steel_frame_t
   (#outer:hprop)
   (#a:Type) (#pre:pre_t) (#post:post_t a)
@@ -516,7 +518,7 @@ let steel_frame_t
     (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
   rassert (pre `Mem.star` frame);
   steel_frame f frame (fun _ -> True)
-
+*)
 #pop-options
 
 assume val r1 : hprop
@@ -529,6 +531,7 @@ assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 
 
 module T = FStar.Tactics
 
+(*
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 = steel_frame_t f12;
@@ -536,7 +539,7 @@ let test_frame1 (_:unit)
   steel_frame_t f123;
   steel_frame_t f1;
   rassert ((r1 `star` r2) `star` r3)
-
+*)
 
 (*
  * A crash testcase

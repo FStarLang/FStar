@@ -1,7 +1,7 @@
 module Steel.SteelT.Basics
 open Steel.Effect
 open Steel.Memory
-open Steel.Reference
+open Steel.HigherReference
 module AB = Steel.SteelAtomic.Basics
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 20"
@@ -33,14 +33,23 @@ let h_affine (p q:hprop)
   : SteelT unit (p `star` q) (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_affine p q)
 
+let par' (#preL:pre_t) (#postL:post_t unit)
+        ($f:unit -> SteelT unit preL postL)
+        (#preR:pre_t) (#postR:post_t unit)
+        ($g:unit -> SteelT unit preR postR)
+  : SteelT (unit & unit)
+    (preL `star` preR)
+    (fun x -> postL (fst x) `star` postR (snd x))
+  = par f g
+
 let par (#preL:pre_t) (#postL:post_t unit)
         ($f:unit -> SteelT unit preL postL)
         (#preR:pre_t) (#postR:post_t unit)
         ($g:unit -> SteelT unit preR postR)
   : SteelT unit
     (preL `star` preR)
-    (fun _ -> postL () `star` postR ())
-  = h_admit _ _
+    (fun x -> postL () `star` postR ())
+  = let x = par' f g in return ()
 
 let h_elim_emp_l (p:hprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
