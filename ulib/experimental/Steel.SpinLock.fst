@@ -53,18 +53,7 @@ let new_lock (p:hprop)
   let l:lock p = (| r, i |) in
   l
 
-let preorder_lifting_lemma (t: Type0) : Lemma (
-  trivial_preorder #(U.raise_t t) == raise_preorder (trivial_preorder #t)
-) =
-  let aux (x y: U.raise_t t) : Lemma (
-    trivial_preorder #(U.raise_t t) x y == raise_preorder (trivial_preorder #t) x y
-  ) =
-  ()
-  in
-  Classical.forall_intro_2 aux;
-  admit() // Here we are missing functional extensionality on preorders!
-
-
+#set-options "--fuel 0 --ifuel 0"
 val cas_frame
   (#t:eqtype)
   (#uses:Set.set lock_addr)
@@ -81,9 +70,8 @@ val cas_frame
     (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
   atomic_frame frame (fun _ ->
-    preorder_lifting_lemma t;
     let x = Steel.Effect.Atomic.cas r v v_old v_new in
-    x
+    return_atomic x
   )
 
 val acquire_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:inv (lockinv p r))
