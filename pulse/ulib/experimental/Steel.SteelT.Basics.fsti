@@ -1,7 +1,7 @@
 module Steel.SteelT.Basics
 open Steel.Effect
 open Steel.Memory
-open Steel.Reference
+open Steel.HigherReference
 
 val return (#a:Type) (#p:a -> hprop) (x:a)
   : SteelT a (p x) p

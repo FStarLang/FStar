@@ -17,6 +17,7 @@ module Steel.Memory
 open FStar.Real
 module U32 = FStar.UInt32
 module S = FStar.Set
+module U = FStar.Universe
 
 let trivial_preorder (a: Type u#a) : Preorder.preorder a = fun _ _ -> True
 
@@ -151,16 +152,16 @@ val emp : hprop u#a
 val pts_to_array
   (#t: Type u#a)
   (a:array_ref t)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents:Ghost.erased (Seq.lseq t (U32.v (length a))))
   : hprop u#a
 val pts_to_ref_with_liveness
   (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  (live: bool)
+  (live: U.raise_t u#0 u#a bool)
   : hprop u#a
 
 val h_and (p1 p2:hprop u#a) : hprop u#a
@@ -170,7 +171,7 @@ val wand  (p1 p2:hprop u#a) : hprop u#a
 val h_exists (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
 val h_forall (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
 
-type hmem (p:hprop u#a) = m:mem{interp p m}
+type hmem (p:hprop u#a) = m:mem u#a{interp p m}
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
@@ -189,14 +190,13 @@ val equiv_extensional_on_star (p1 p2 p3:hprop u#a)
 let array_perm (#t: Type u#a) (a: array_ref t) (p:perm u#a{readable p}) =
   h_exists u#a (pts_to_array a p)
 
-#push-options "--print_universes"
 let array (#t: Type u#a) (a: array_ref t) =
-  h_exists u#a #perm (fun (p:perm u#a{readable p}) -> array_perm u#a a p)
+  h_exists u#a (fun (p:perm u#a{readable p}) -> array_perm u#a a p)
 
 val pts_to_array_injective
   (#t: Type u#a)
   (a: array_ref t{not (is_null_array a)})
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (m:mem u#a)
   : Lemma
@@ -206,22 +206,22 @@ val pts_to_array_injective
     (ensures (c0 == c1))
 
 val share_pts_to_array
-  (#t:_)
+  (#t: Type u#a)
   (a: array_ref t{not (is_null_array a)})
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (v:Seq.lseq t (U32.v (length a)))
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires interp (pts_to_array a p v) m)
     (ensures interp (pts_to_array a (half_perm p) v `star` pts_to_array a (half_perm p) v) m)
 
 val gather_pts_to_array
-  (#t:_)
+  (#t: Type u#a)
   (a: array_ref t{not (is_null_array a)})
-  (p0:perm{readable p0})
-  (p1:perm{readable p1})
+  (p0:perm u#a{readable p0})
+  (p1:perm u#a{readable p1})
   (v0 v1: Seq.lseq t (U32.v (length a)))
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires interp (pts_to_array a p0 v0 `star` pts_to_array a p1 v1) m)
     (ensures interp (pts_to_array a (sum_perm p0 p1) v0) m)
@@ -231,53 +231,53 @@ val gather_pts_to_array
 ////////////////////////////////////////////////////////////////////////////////
 
 let pts_to_ref
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  : hprop
-  = pts_to_ref_with_liveness r p contents true
+  : hprop u#a
+  = pts_to_ref_with_liveness r p contents (U.raise_val u#0 u#a true)
 
 let pts_to_ref_or_dead
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  : hprop
+  : hprop u#a
   =
   h_exists (pts_to_ref_with_liveness r p contents)
 
 let ref_perm
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
-  : hprop =
+  (p:perm u#a{readable p})
+  : hprop u#a =
   h_exists (pts_to_ref r p)
 
 let ref_perm_or_dead
-  (#t: Type0)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
-  : hprop =
+  (p:perm u#a{readable p})
+  : hprop u#a =
   h_exists (pts_to_ref_or_dead r p)
 
-let ref (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
-  = h_exists (fun (p:perm{readable p}) -> ref_perm r p)
+let ref (#t: Type) (#pre: Preorder.preorder t)(r: reference t pre) : hprop u#a
+  = h_exists (fun (p:perm u#a{readable p}) -> ref_perm r p)
 
-let ref_or_dead (#t: Type0) (#pre: Preorder.preorder t)(r: reference t pre) : hprop
-  = h_exists (fun (p:perm{readable p}) -> ref_perm_or_dead r p)
+let ref_or_dead (#t: Type u#a) (#pre: Preorder.preorder t)(r: reference t pre) : hprop u#a
+  = h_exists (fun (p:perm u#a{readable p}) -> ref_perm_or_dead r p)
 
 val pts_to_ref_injective
-  (#t: _)
+  (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (a: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (c0 c1: t)
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires (
       interp (pts_to_ref a p c0) m /\
@@ -285,24 +285,24 @@ val pts_to_ref_injective
     (ensures (c0 == c1))
 
 val share_pts_to_ref
-  (#t:_)
+  (#t: Type u#a)
   (#pre:Preorder.preorder t)
   (r: reference t pre)
-  (p:perm{readable p})
+  (p:perm u#a{readable p})
   (v:t)
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires interp (pts_to_ref r p v) m)
     (ensures interp (pts_to_ref r (half_perm p) v `star` pts_to_ref r (half_perm p) v) m)
 
 val gather_pts_to_ref
-  (#t:_)
+  (#t: Type u#a)
   (#pre:Preorder.preorder t)
   (r: reference t pre)
-  (p0:perm{readable p0})
-  (p1:perm{readable p1})
+  (p0:perm u#a{readable p0})
+  (p1:perm u#a{readable p1})
   (v0 v1: t)
-  (m:mem)
+  (m:mem u#a)
   : Lemma
     (requires interp (pts_to_ref r p0 v0 `star` pts_to_ref r p1 v1) m)
     (ensures interp (pts_to_ref r (sum_perm p0 p1) v0) m)
@@ -311,22 +311,22 @@ val gather_pts_to_ref
 // star
 ////////////////////////////////////////////////////////////////////////////////
 
-val intro_star (p q:hprop) (mp:hmem p) (mq:hmem q)
+val intro_star (p q:hprop u#a) (mp:hmem p) (mq:hmem q)
   : Lemma
     (requires
       disjoint mp mq)
     (ensures
       interp (p `star` q) (join mp mq))
 
-val star_commutative (p1 p2:hprop)
+val star_commutative (p1 p2:hprop u#a)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
 
-val star_associative (p1 p2 p3:hprop)
+val star_associative (p1 p2 p3:hprop u#a)
   : Lemma ((p1 `star` (p2 `star` p3))
            `equiv`
            ((p1 `star` p2) `star` p3))
 
-val star_congruence (p1 p2 p3 p4:hprop)
+val star_congruence (p1 p2 p3 p4:hprop u#a)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
@@ -335,7 +335,7 @@ val star_congruence (p1 p2 p3 p4:hprop)
 ////////////////////////////////////////////////////////////////////////////////
 
 /// A low-level introduction form for wand in terms of disjoint
-val intro_wand_alt (p1 p2:hprop) (m:mem)
+val intro_wand_alt (p1 p2:hprop u#a) (m:mem u#a)
   : Lemma
     (requires
       (forall (m0:hmem p1).
@@ -344,8 +344,9 @@ val intro_wand_alt (p1 p2:hprop) (m:mem)
     (ensures
       interp (wand p1 p2) m)
 
+
 /// A higher-level introduction for wand as a cut
-val intro_wand (p q r:hprop) (m:hmem q)
+val intro_wand (p q r:hprop u#a) (m:hmem q)
   : Lemma
     (requires
       (forall (m:hmem (p `star` q)). interp r m))
@@ -353,7 +354,7 @@ val intro_wand (p q r:hprop) (m:hmem q)
       interp (p `wand` r) m)
 
 /// Standard wand elimination
-val elim_wand (p1 p2:hprop) (m:mem)
+val elim_wand (p1 p2:hprop u#a) (m:mem u#a)
   : Lemma
     (requires
       (interp ((p1 `wand` p2) `star` p1) m))
@@ -363,18 +364,18 @@ val elim_wand (p1 p2:hprop) (m:mem)
 ////////////////////////////////////////////////////////////////////////////////
 // or
 ////////////////////////////////////////////////////////////////////////////////
-val intro_or_l (p1 p2:hprop) (m:hmem p1)
+val intro_or_l (p1 p2:hprop u#æ) (m:hmem p1)
   : Lemma (interp (h_or p1 p2) m)
 
-val intro_or_r (p1 p2:hprop) (m:hmem p2)
+val intro_or_r (p1 p2:hprop u#a) (m:hmem p2)
   : Lemma (interp (h_or p1 p2) m)
 
 /// star can be factored out of or
-val or_star (p1 p2 p:hprop) (m:hmem ((p1 `star` p) `h_or` (p2 `star` p)))
+val or_star (p1 p2 p:hprop u#a) (m:hmem ((p1 `star` p) `h_or` (p2 `star` p)))
   : Lemma (interp ((p1 `h_or` p2) `star` p) m)
 
 /// A standard or eliminator
-val elim_or (p1 p2 q:hprop) (m:hmem (p1 `h_or` p2))
+val elim_or (p1 p2 q:hprop u#a) (m:hmem (p1 `h_or` p2))
   : Lemma (((forall (m:hmem p1). interp q m) /\
             (forall (m:hmem p2). interp q m)) ==> interp q m)
 
@@ -382,12 +383,12 @@ val elim_or (p1 p2 q:hprop) (m:hmem (p1 `h_or` p2))
 ////////////////////////////////////////////////////////////////////////////////
 // and
 ////////////////////////////////////////////////////////////////////////////////
-val intro_and (p1 p2:hprop) (m:mem)
+val intro_and (p1 p2:hprop u#a) (m:mem u#a)
   : Lemma (interp p1 m /\
            interp p2 m ==>
            interp (p1 `h_and` p2) m)
 
-val elim_and (p1 p2:hprop) (m:hmem (p1 `h_and` p2))
+val elim_and (p1 p2:hprop u#a) (m:hmem (p1 `h_and` p2))
   : Lemma (interp p1 m /\
            interp p2 m)
 
@@ -395,65 +396,65 @@ val elim_and (p1 p2:hprop) (m:hmem (p1 `h_and` p2))
 // h_exists
 ////////////////////////////////////////////////////////////////////////////////
 
-val intro_exists (#a:_) (x:a) (p : a -> hprop) (m:hmem (p x))
+val intro_exists (#t: Type u#a) (x:t) (p : t -> hprop u#a) (m:hmem (p x))
   : Lemma (interp (h_exists p) m)
 
-val elim_exists (#a:_) (p:a -> hprop) (q:hprop) (m:hmem (h_exists p))
+val elim_exists (#t: Type u#a) (p:t -> hprop u#a) (q:hprop u#a) (m:hmem (h_exists u#a p))
   : Lemma
-    ((forall (x:a). interp (p x) m ==> interp q m) ==>
+    ((forall (x:t). interp (p x) m ==> interp q m) ==>
      interp q m)
 
-val h_exists_extensionality (#a:_) (p q:a -> hprop)
-  : Lemma (requires forall (x:a). p x `equiv` q x)
+val h_exists_extensionality (#t:Type u#a) (p q:t -> hprop u#a)
+  : Lemma (requires forall (x:t). p x `equiv` q x)
           (ensures h_exists p `equiv` h_exists q)
 
 ////////////////////////////////////////////////////////////////////////////////
 // h_forall
 ////////////////////////////////////////////////////////////////////////////////
 
-val intro_forall (#a:_) (p : a -> hprop) (m:mem)
+val intro_forall (#t:Type u#a) (p : t -> hprop u#a) (m:mem u#a)
   : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
 
-val elim_forall (#a:_) (p : a -> hprop) (m:hmem (h_forall p))
+val elim_forall (#t: Type u#a) (p : t -> hprop u#a) (m:hmem (h_forall u#a p))
   : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
 
-val affine_star (p q:hprop) (m:mem)
+val affine_star (p q:hprop u#a) (m:mem u#a)
   : Lemma
     (ensures (interp (p `star` q) m ==> interp p m /\ interp q m))
 
 ////////////////////////////////////////////////////////////////////////////////
 // emp
 ////////////////////////////////////////////////////////////////////////////////
-val intro_emp (m:mem)
+val intro_emp (m:mem u#a)
   : Lemma (interp emp m)
 
-val emp_unit (p:hprop)
+val emp_unit (p:hprop u#a)
   : Lemma ((p `star` emp) `equiv` p)
 
 ////////////////////////////////////////////////////////////////////////////////
 // refinement
 ////////////////////////////////////////////////////////////////////////////////
 
-let refine_mprop_depends_only_on (q:mem -> prop) (fp: hprop) =
+let refine_mprop_depends_only_on (q:mem u#a -> prop) (fp: hprop u#a) =
   (forall h0 h1. q h0 /\ disjoint h0 h1 ==> q (join h0 h1)) /\
-  (forall (h0:hmem fp) (h1:mem{disjoint h0 h1}). q h0 <==> q (join h0 h1)) /\
+  (forall (h0:hmem fp) (h1:mem u#a{disjoint h0 h1}). q h0 <==> q (join h0 h1)) /\
   (forall m. q m == q (core_mem m))
 
-let refine_mprop fp = p:(mem -> prop){p `refine_mprop_depends_only_on` fp}
+let refine_mprop (fp: hprop u#a) = p:(mem u#a -> prop){p `refine_mprop_depends_only_on` fp}
 
-val weaken_refine_mprop_depends_only_on (q:mem -> prop) (fp fp': hprop)
+val weaken_refine_mprop_depends_only_on (q:mem u#a -> prop) (fp fp': hprop u#a)
   : Lemma (refine_mprop_depends_only_on q fp ==> refine_mprop_depends_only_on q (fp `star` fp'))
 
-val refine (p:hprop) (q:refine_mprop p) : hprop
+val refine (p:hprop u#a) (q:refine_mprop p) : hprop u#a
 
-val refine_equiv (p:hprop) (q:refine_mprop p) (h:mem)
+val refine_equiv (p:hprop u#a) (q:refine_mprop p) (h:mem u#a)
   : Lemma (interp p h /\ q h <==> interp (refine p q) h)
 
-val refine_star (p0 p1:hprop) (q:refine_mprop p0)
+val refine_star (p0 p1:hprop u#a) (q:refine_mprop p0)
   : Lemma (weaken_refine_mprop_depends_only_on q p0 p1;
            equiv (refine (p0 `star` p1) q) (refine p0 q `star` p1))
 
@@ -463,30 +464,30 @@ val refine_star (p0 p1:hprop) (q:refine_mprop p0)
 
 val lock_addr: eqtype
 
-val locks_invariant : S.set lock_addr -> mem -> hprop
+val locks_invariant : S.set lock_addr -> mem u#a -> hprop u#a
 
-let hmem_with_inv' (e:S.set lock_addr) (fp:hprop) = m:mem{interp (fp `star` locks_invariant e m) m}
-let hmem_with_inv (fp:hprop) = m:mem{interp (fp `star` locks_invariant Set.empty m) m}
+let hmem_with_inv' (e:S.set lock_addr) (fp:hprop u#a) = m:mem{interp (fp `star` locks_invariant e m) m}
+let hmem_with_inv (fp:hprop u#a) = m:mem u#a{interp (fp `star` locks_invariant Set.empty m) m}
 
-let mprop (hp:hprop) = q:(mem -> prop){
+let mprop (hp:hprop u#a) = q:(mem u#a -> prop){
   forall (m0:mem{interp hp m0}) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
 
 
 (***** Following lemmas are needed in Steel.Effect *****)
 
-val core_mem_interp (hp:hprop) (m:mem)
+val core_mem_interp (hp:hprop u#a) (m:mem u#a)
 : Lemma
   (requires interp hp m)
   (ensures interp hp (core_mem m))
   [SMTPat (interp hp (core_mem m))]
 
-val interp_depends_only_on (hp:hprop)
+val interp_depends_only_on (hp:hprop u#a)
   : Lemma
-    (forall (m0:hmem hp) (m1:mem{disjoint m0 m1}).
+    (forall (m0:hmem hp) (m1:mem u#a{disjoint m0 m1}).
        interp hp m0 <==> interp hp (join m0 m1))
 
-let affine_star_smt (p q:hprop) (m:mem)
+let affine_star_smt (p q:hprop u#a) (m:mem u#a)
 : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
   [SMTPat (interp (p `star` q) m)]
 = affine_star p q m

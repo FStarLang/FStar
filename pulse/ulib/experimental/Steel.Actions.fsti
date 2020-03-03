@@ -17,12 +17,13 @@ module Steel.Actions
 open Steel.Memory
 open FStar.Real
 module U32 = FStar.UInt32
+module U = FStar.Universe
 
-let pre_m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+let pre_m_action (fp:hprop u#a) (a:Type u#b) (fp':a -> hprop u#a) =
   hmem_with_inv fp -> (x:a & hmem_with_inv (fp' x))
 
 let ac_reasoning_for_m_frame_preserving
-  (p q r:hprop) (m:mem)
+  (p q r:hprop u#a) (m:mem u#a)
 : Lemma
   (requires interp ((p `star` q) `star` r) m)
   (ensures interp (p `star` r) m)
@@ -37,29 +38,33 @@ let ac_reasoning_for_m_frame_preserving
   assert (interp (q `star` (p `star` r)) m);
   affine_star q (p `star` r) m
 
-val mem_evolves : FStar.Preorder.preorder mem
+val mem_evolves : FStar.Preorder.preorder (mem u#a)
 
-let is_m_frame_and_preorder_preserving (#a:Type) (#fp:hprop) (#fp':a -> hprop) (f:pre_m_action fp a fp') =
-  forall (frame:hprop) (m0:hmem_with_inv (fp `star` frame)).
+let is_m_frame_and_preorder_preserving
+  (#a:Type u#b)
+  (#fp:hprop u#a)
+  (#fp':a -> hprop u#a)
+  (f:pre_m_action u#a u#b fp a fp') =
+  forall (frame:hprop u#a) (m0:hmem_with_inv (fp `star` frame)).
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
      let (| x, m1 |) = f m0 in
      interp ((fp' x `star` frame) `star` locks_invariant Set.empty m1) m1 /\
      mem_evolves m0 m1 /\
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
-let m_action (fp:hprop) (a:Type) (fp':a -> hprop) =
+let m_action (fp:hprop u#a) (a:Type u#b) (fp':a -> hprop u#a) =
   f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Locks
 ///////////////////////////////////////////////////////////////////////////////
 
-val lock (p:hprop) : Type0
+val lock (p:hprop u#a) : Type0
 
-val new_lock (p:hprop)
-  : m_action p (lock p) (fun _ -> emp)
+val new_lock (p:hprop u#a)
+  : m_action u#a u#0 p (lock p) (fun _ -> emp)
 
-val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
+val lock_ok (#p:hprop u#a) (l:lock p) (m:mem u#a) : prop
 
 // let pure (p:prop) : hprop = refine emp (fun _ -> p)
 
@@ -70,24 +75,24 @@ val lock_ok (#p:hprop) (l:lock p) (m:mem) : prop
 //   : (b:bool & m:hmem (h_or (pure (b == false)) p))
 
 val release
-  (#p: hprop)
+  (#p: hprop u#a)
   (l:lock p)
   (m:hmem_with_inv p { lock_ok l m } )
-  : (b:bool & hmem_with_inv emp)
+  : (b:bool & hmem_with_inv u#a emp)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Invariants
 ///////////////////////////////////////////////////////////////////////////////
-let inv (p:hprop) = lock_addr
+let inv (p:hprop u#a) : Type0 = lock_addr
 
-val inv_ok (#p:hprop) (l:inv p) (m:mem) : prop
+val inv_ok (#p:hprop u#a) (l:inv p) (m:mem u#a) : prop
 
-val inv_ok_stable (#p:_) (l:inv p) (m0 m1:mem)
+val inv_ok_stable (#p: hprop u#a) (l:inv p) (m0 m1:mem u#a)
   : Lemma (inv_ok l m0 /\
            m0 `mem_evolves` m1 ==>
            inv_ok l m1)
 
-val new_inv (p:hprop)
+val new_inv (p:hprop u#a)
   : m_action p (inv p) (fun _ -> emp)
 
 let pre_atomic (uses:Set.set lock_addr)
@@ -114,7 +119,7 @@ let atomic (uses:Set.set lock_addr)
     f:pre_atomic uses fp a fp'{ is_atomic_frame_and_preorder_preserving f}
 
 val interp_inv_unused
-  (#p:hprop) (i:inv p)
+  (#p:hprop u#a) (i:inv p)
   (uses:Set.set lock_addr)
   (frame:hprop)
   (m0:mem)
@@ -122,17 +127,22 @@ val interp_inv_unused
   (requires inv_ok i m0 /\ not (i `Set.mem` uses))
   (ensures
     (frame `star` locks_invariant uses m0) `equiv`
-    ((p `star` frame) `star` locks_invariant (Set.union (Set.singleton i) uses) m0))
+    ((p `star` frame) `star` locks_invariant (
+      Set.union (Set.singleton i) uses) m0
+    ))
 
 val with_invariant
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
-  (#p:hprop)
+  (#t:Type u#a) (#fp:hprop u#a) (#fp':t -> hprop u#a) (#uses:Set.set lock_addr) (#is_ghost:bool)
+  (#p:hprop u#a)
   (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
-  : atomic uses is_ghost fp a fp'
+  (f:atomic
+    (Set.union (Set.singleton i) uses)
+    is_ghost (p `star` fp) t (fun x -> p `star` fp' x)
+  )
+  : atomic uses is_ghost fp t fp'
 
 val promote_atomic_m_action
-    (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#is_ghost:bool)
+    (#a:Type u#b) (#fp:hprop u#a) (#fp':a -> hprop u#a) (#is_ghost:bool)
     (f:atomic Set.empty is_ghost fp a fp')
     : m_action fp a fp'
 
@@ -140,12 +150,12 @@ val promote_atomic_m_action
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
 
-val rewrite_hprop (p:hprop) (p':hprop{p `equiv` p'}) : m_action p unit (fun _ -> p')
+val rewrite_hprop (p:hprop u#a) (p':hprop u#a{p `equiv` p'}) : m_action p unit (fun _ -> p')
 
 val weaken_hprop
   (uses:Set.set lock_addr)
-  (p q:hprop)
-  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  (p q:hprop u#a)
+  (proof: (m:mem u#a) -> Lemma (requires interp p m) (ensures interp q m))
   : atomic
     uses
     true
@@ -199,7 +209,7 @@ val upd_array
     (fun _ -> pts_to_array a full_perm (Seq.upd iseq (U32.v i) v))
 
 val alloc_array
-  (#t: _)
+  (#t: Type u#a)
   (len:U32.t)
   (init: t)
   : m_action
@@ -309,14 +319,14 @@ val glue_array
 ///////////////////////////////////////////////////////////////////////////////
 
 val sel_ref
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (h: hmem (ref r))
   : Tot t
 
 val sel_ref_lemma
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (p: perm{readable p})
@@ -327,14 +337,14 @@ val sel_ref_lemma
   )
 
 val sel_ref_or_dead
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (h: hmem (ref_or_dead r))
   : Tot t
 
 val sel_ref_or_dead_lemma
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m: hmem (ref r))
@@ -342,7 +352,7 @@ val sel_ref_or_dead_lemma
     interp (ref_or_dead r) m /\ sel_ref r m == sel_ref_or_dead r m
   )
 
-val sel_ref_depends_only_on (#a:Type0) (#pre:Preorder.preorder a)
+val sel_ref_depends_only_on (#a:Type) (#pre:Preorder.preorder a)
   (r:reference a pre) (p:perm{readable p})
   (m0:hmem (ref_perm r p)) (m1:mem)
 : Lemma
@@ -353,7 +363,7 @@ val sel_ref_depends_only_on (#a:Type0) (#pre:Preorder.preorder a)
     sel_ref r m0 == sel_ref r (join m0 m1))
 
 val get_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -366,7 +376,7 @@ val get_ref
     (fun x -> pts_to_ref r p x)
 
 val set_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -380,7 +390,7 @@ val set_ref
     (fun _ -> pts_to_ref r full_perm v)
 
 val alloc_ref
-  (#t: Type0)
+  (#t: Type)
   (v: t)
   (pre: Ghost.erased (Preorder.preorder t))
   : m_action
@@ -389,7 +399,7 @@ val alloc_ref
     (fun r -> pts_to_ref r full_perm v)
 
 val free_ref
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   : m_action
@@ -398,7 +408,7 @@ val free_ref
     (fun _ -> emp)
 
 val share_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -415,7 +425,7 @@ val share_ref
     )
 
 val gather_ref
-  (#t: Type0)
+  (#t: Type)
   (uses:Set.set lock_addr)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
@@ -432,7 +442,7 @@ val gather_ref
     (fun _ -> pts_to_ref r (sum_perm p p') contents)
 
 val get_ref_refine
-  (#t:Type0)
+  (#t:Type)
   (uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
   (r:reference t pre)
@@ -445,27 +455,35 @@ val get_ref_refine
     (x:t)
     (fun v -> pts_to_ref r p v `star` q v)
 
+
+let raise_preorder (#t: Type0) (pre: Preorder.preorder t) : Preorder.preorder (U.raise_t u#0 u#a t)
+  =
+  (fun x y -> pre (U.downgrade_val x) (U.downgrade_val y))
+
 val cas
   (#t:eqtype)
   (uses:Set.set lock_addr)
-  (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference (U.raise_t u#0 u#a t) (trivial_preorder (U.raise_t u#0 u#a t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : atomic
     uses
     false
-    (pts_to_ref r full_perm v)
+    (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
     (b:bool{b <==> (Ghost.reveal v == v_old)})
-    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
+    (fun b -> if b then
+      pts_to_ref r full_perm (U.raise_val v_new)
+    else
+      pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))
+    )
 
 //////////////////////////////////////////////////////////////////////////
 // Monotonic state
 //////////////////////////////////////////////////////////////////////////
 
 val reference_preorder_respected
-  (#t: Type0)
+  (#t: Type)
   (#pre: Preorder.preorder t)
   (r: reference t pre)
   (m0 m1:mem)

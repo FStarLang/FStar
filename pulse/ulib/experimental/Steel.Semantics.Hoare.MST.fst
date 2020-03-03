@@ -101,11 +101,11 @@ let fp_prop_0 (#heap:Type) (#hprop:Type)
 
 noeq
 type st0 = {
-  mem:Type u#1;
+  mem:Type u#2;
   core:mem -> mem;
 
   locks_preorder:P.preorder mem;
-  hprop:Type u#1;
+  hprop:Type u#2;
   locks_invariant: mem -> hprop;
 
   disjoint: mem -> mem -> prop;
