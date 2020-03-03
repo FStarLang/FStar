@@ -60,6 +60,14 @@ val write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
 
 val pure (p:prop) : hprop
 
+val lem_star_pure (p : hprop) (f: prop)
+  : Lemma (requires f)
+          (ensures (p `equiv` (p `star` pure f)))
+
+val lem_interp_star_pure (p: hprop) (f: prop) (m: mem)
+  : Lemma (requires (interp (p `star` pure f)) m)
+          (ensures f)
+
 let property (a:Type) = a -> prop
 
 val witnessed (#a:Type u#1) (#p:Preorder.preorder a) (r:reference a p)
@@ -78,11 +86,3 @@ val recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
            (r:reference a p) (v:(Ghost.erased a))
   : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
                 (fun _ -> pts_to_ref r q v `star` pure (fact v))
-
-val lem_star_pure (p : hprop) (f: prop)
-  : Lemma (requires f)
-          (ensures (p `equiv` (p `star` pure f)))
-
-val lem_interp_star_pure (p: hprop) (f: prop) (m: mem)
-  : Lemma (requires (interp (p `star` pure f)) m)
-          (ensures f)

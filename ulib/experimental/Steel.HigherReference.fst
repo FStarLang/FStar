@@ -188,20 +188,6 @@ let write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
 let pure (p:prop) : hprop =
  refine emp (fun _ -> p)
 
-#set-options "--print_universes --print_implicits"
-
-let witnessed
-  (#t:Type u#1)
-  (#p:Preorder.preorder t)
-  (r:reference t p)
-  (fact:property t)
-              =
-  RMST.witnessed mem mem_evolves (fun (m: mem) ->
-    (interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m))
-  )
-
-#restart-solver
-
 let lem_star_pure p f =
   calc (equiv) {
     p;
@@ -227,6 +213,23 @@ let lem_star_pure p f =
     (p `star` pure f);
   }
 
+let lem_interp_star_pure p f m =
+  affine_star p (pure f) m;
+  refine_equiv emp (fun _ -> f) m
+
+#set-options "--print_universes --print_implicits"
+
+let witnessed
+  (#t:Type u#1)
+  (#p:Preorder.preorder t)
+  (r:reference t p)
+  (fact:property t)
+              =
+  RMST.witnessed mem mem_evolves (fun (m: mem) ->
+    (interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m))
+  )
+
+#restart-solver
 
 let ac_reasoning_for_frame_on_noop
   (p q r s: hprop)
@@ -345,10 +348,6 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
                 (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
   =
   lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
-
-let lem_interp_star_pure p f m =
-  affine_star p (pure f) m;
-  refine_equiv emp (fun _ -> f) m
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
