@@ -251,18 +251,14 @@ let upd
 
 module U = FStar.Universe
 
-let reference0 (t: Type0) (pre: Preorder.preorder t) =
-  reference (U.raise_t u#0 u#1 t) (raise_preorder pre)
-
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 30"
 let cas
   (#t:eqtype)
   (#uses:Set.set lock_addr)
-  (#pre:Preorder.preorder t)
-  (r:reference0 t pre)
+  (r:reference (U.raise_t u#0 u#1 t) (trivial_preorder (U.raise_t u#0 u#1 t)))
   (v:Ghost.erased t)
   (v_old:t)
-  (v_new:t{pre v v_new})
+  (v_new:t)
   : SteelAtomic
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
