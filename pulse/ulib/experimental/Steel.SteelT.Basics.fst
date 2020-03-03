@@ -1,7 +1,7 @@
 module Steel.SteelT.Basics
 open Steel.Effect
 open Steel.Memory
-open Steel.Reference
+open Steel.HigherReference
 module AB = Steel.SteelAtomic.Basics
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 20"

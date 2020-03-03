@@ -5,8 +5,8 @@ open Steel.Actions
 module Sem = Steel.Semantics.Hoare.MST
 open Steel.Semantics.Instantiate
 
-type pre_t = hprop
-type post_t (a:Type) = a -> hprop
+type pre_t = hprop u#1
+type post_t (a:Type) = a -> hprop u#1
 
 let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; state0 uses
 
@@ -40,6 +40,8 @@ let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
   (p:Type0)
   : Type
   = atomic_repr a uses true pre post
+
+#set-options "--print_universes --print_implicits"
 
 reflectable
 layered_effect {
@@ -247,12 +249,17 @@ let upd
       mst_put m1)
 #pop-options
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit 10"
+module U = FStar.Universe
+
+let reference0 (t: Type0) (pre: Preorder.preorder t) =
+  reference (U.raise_t u#0 u#1 t) (raise_preorder pre)
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 30"
 let cas
   (#t:eqtype)
   (#uses:Set.set lock_addr)
   (#pre:Preorder.preorder t)
-  (r:reference t pre)
+  (r:reference0 t pre)
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t{pre v v_new})
@@ -260,8 +267,12 @@ let cas
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
     false
-    (pts_to_ref r full_perm v)
-    (fun b -> if b then pts_to_ref r full_perm v_new else pts_to_ref r full_perm v)
+    (pts_to_ref r full_perm (U.raise_val (Ghost.reveal v)))
+    (fun b -> if b then
+      pts_to_ref r full_perm (U.raise_val v_new)
+    else
+      pts_to_ref r full_perm (U.raise_val (Ghost.reveal v))
+    )
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
       let at = cas uses r v v_old v_new in

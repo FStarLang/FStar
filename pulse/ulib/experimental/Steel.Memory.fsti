@@ -161,15 +161,15 @@ val pts_to_ref_with_liveness
   (r: reference t pre)
   (p:perm u#a{readable p})
   (contents: Ghost.erased t)
-  (live: bool)
+  (live: U.raise_t u#0 u#a bool)
   : hprop u#a
 
 val h_and (p1 p2:hprop u#a) : hprop u#a
 val h_or  (p1 p2:hprop u#a) : hprop u#a
 val star  (p1 p2:hprop u#a) : hprop u#a
 val wand  (p1 p2:hprop u#a) : hprop u#a
-val h_exists (#a:Type u#a) (f: (a -> hprop u#b)) : hprop u#b
-val h_forall (#a:Type u#a) (f: (a -> hprop u#b)) : hprop u#b
+val h_exists (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
+val h_forall (#a:Type u#a) (f: (a -> hprop u#a)) : hprop u#a
 
 type hmem (p:hprop u#a) = m:mem u#a{interp p m}
 
@@ -188,10 +188,10 @@ val equiv_extensional_on_star (p1 p2 p3:hprop u#a)
 ////////////////////////////////////////////////////////////////////////////////
 
 let array_perm (#t: Type u#a) (a: array_ref t) (p:perm u#a{readable p}) =
-  h_exists u#a u#a (pts_to_array a p)
+  h_exists u#a (pts_to_array a p)
 
 let array (#t: Type u#a) (a: array_ref t) =
-  h_exists u#a u#a (fun (p:perm u#a{readable p}) -> array_perm u#a a p)
+  h_exists u#a (fun (p:perm u#a{readable p}) -> array_perm u#a a p)
 
 val pts_to_array_injective
   (#t: Type u#a)
@@ -237,7 +237,7 @@ let pts_to_ref
   (p:perm u#a{readable p})
   (contents: Ghost.erased t)
   : hprop u#a
-  = pts_to_ref_with_liveness r p contents true
+  = pts_to_ref_with_liveness r p contents (U.raise_val u#0 u#a true)
 
 let pts_to_ref_or_dead
   (#t: Type u#a)
@@ -344,6 +344,7 @@ val intro_wand_alt (p1 p2:hprop u#a) (m:mem u#a)
     (ensures
       interp (wand p1 p2) m)
 
+
 /// A higher-level introduction for wand as a cut
 val intro_wand (p q r:hprop u#a) (m:hmem q)
   : Lemma
@@ -398,12 +399,12 @@ val elim_and (p1 p2:hprop u#a) (m:hmem (p1 `h_and` p2))
 val intro_exists (#t: Type u#a) (x:t) (p : t -> hprop u#a) (m:hmem (p x))
   : Lemma (interp (h_exists p) m)
 
-val elim_exists (#t: Type u#a) (p:t -> hprop u#b) (q:hprop u#b) (m:hmem (h_exists u#a u#b p))
+val elim_exists (#t: Type u#a) (p:t -> hprop u#a) (q:hprop u#a) (m:hmem (h_exists u#a p))
   : Lemma
     ((forall (x:t). interp (p x) m ==> interp q m) ==>
      interp q m)
 
-val h_exists_extensionality (#t:Type u#a) (p q:t -> hprop u#b)
+val h_exists_extensionality (#t:Type u#a) (p q:t -> hprop u#a)
   : Lemma (requires forall (x:t). p x `equiv` q x)
           (ensures h_exists p `equiv` h_exists q)
 
@@ -411,10 +412,10 @@ val h_exists_extensionality (#t:Type u#a) (p q:t -> hprop u#b)
 // h_forall
 ////////////////////////////////////////////////////////////////////////////////
 
-val intro_forall (#t:Type u#a) (p : t -> hprop u#b) (m:mem u#b)
+val intro_forall (#t:Type u#a) (p : t -> hprop u#a) (m:mem u#a)
   : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
 
-val elim_forall (#t: Type u#a) (p : t -> hprop u#b) (m:hmem (h_forall u#a u#b p))
+val elim_forall (#t: Type u#a) (p : t -> hprop u#a) (m:hmem (h_forall u#a p))
   : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
 
 ////////////////////////////////////////////////////////////////////////////////
