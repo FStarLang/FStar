@@ -202,10 +202,7 @@ let witnessed
 
 #restart-solver
 
-let ac_reasoning_for_witness_atomic (p q: hprop) (f: prop) : Lemma
-  (requires f)
-  (ensures (p `equiv` (p `star` pure f)))
-  =
+let lem_star_pure p f =
   calc (equiv) {
     p;
     (equiv) {emp_unit p}
@@ -307,9 +304,8 @@ let witness_atomic
    RMST.witness mem mem_evolves fact_mem;
    let m1 = mst_get () in
    assert(m0 == m1);
-   ac_reasoning_for_witness_atomic
+   lem_star_pure
      (pts_to_ref r q v)
-     (locks_invariant uses m1)
      (witnessed r fact);
    equiv_extensional_on_star
      (pts_to_ref r q v)
@@ -321,7 +317,7 @@ let witness_atomic
      let aux (_ : squash (interp (pts_to_ref r q v) m)) : Lemma (
        interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
      ) =
-       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (witnessed r fact)
+       lem_star_pure (pts_to_ref r q v) (witnessed r fact)
      in
      Classical.impl_intro aux;
      let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
@@ -350,10 +346,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
   =
   lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
 
-let ac_reasoning_for_recall_atomic (p: hprop) (f: prop) (m: mem) : Lemma
-  (requires (interp (p `star` pure f)) m)
-  (ensures (f))
-  =
+let lem_interp_star_pure p f m =
   affine_star p (pure f) m;
   refine_equiv emp (fun _ -> f) m
 
@@ -378,7 +371,7 @@ let recall_atomic
    intro_exists v (pts_to_ref r q) m0;
    sel_ref_lemma r q m0;
    pts_to_ref_injective r q q v (sel_ref r m0) m0;
-   ac_reasoning_for_recall_atomic (pts_to_ref r q v) (witnessed r fact) m0;
+   lem_interp_star_pure (pts_to_ref r q v) (witnessed r fact) m0;
    let fact_mem : RMST.s_predicate mem = (fun m ->
     interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
    ) in
@@ -397,14 +390,14 @@ let recall_atomic
        interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
      ) =
        affine_star (pts_to_ref r q v) (pure (fact v)) m1;
-       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (witnessed r fact)
+       lem_star_pure (pts_to_ref r q v) (witnessed r fact)
      in
      Classical.impl_intro aux;
      let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
        interp (pts_to_ref r q v `star` pure (fact v)) m
      ) =
        affine_star (pts_to_ref r q v) (pure (witnessed r fact)) m;
-       ac_reasoning_for_witness_atomic (pts_to_ref r q v) emp (fact v)
+       lem_star_pure (pts_to_ref r q v) (fact v)
      in
      Classical.impl_intro aux
    in
