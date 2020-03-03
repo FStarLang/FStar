@@ -5,7 +5,7 @@ open Steel.Memory
 open FStar.Ghost
 
 let perm = p:perm{readable p}
-let full : perm = full_perm
+let full : perm u#1 = full_perm
 let trivial_preorder #a : Preorder.preorder a = fun _ _ -> True
 let ref (a:Type u#1) = reference a trivial_preorder
 let is_ref (#a:Type u#1) (r:ref a) (p:perm) = ref_perm r p
