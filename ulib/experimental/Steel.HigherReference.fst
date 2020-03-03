@@ -291,7 +291,7 @@ let witness_atomic
    let m0 = mst_get () in
    intro_exists v (pts_to_ref r q) m0;
    sel_ref_lemma r q m0;
-   pts_to_ref_injective r q v (sel_ref r m0) m0;
+   pts_to_ref_injective r q q v (sel_ref r m0) m0;
    let fact_mem : RMST.s_predicate mem = (fun m ->
     interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
    ) in
@@ -377,7 +377,7 @@ let recall_atomic
    let m0 = mst_get () in
    intro_exists v (pts_to_ref r q) m0;
    sel_ref_lemma r q m0;
-   pts_to_ref_injective r q v (sel_ref r m0) m0;
+   pts_to_ref_injective r q q v (sel_ref r m0) m0;
    ac_reasoning_for_recall_atomic (pts_to_ref r q v) (witnessed r fact) m0;
    let fact_mem : RMST.s_predicate mem = (fun m ->
     interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)

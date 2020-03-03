@@ -59,7 +59,10 @@ let assoc_l (p q r:hprop)
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> hprop)
   : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = h_admit _ _
+  = Steel.SteelAtomic.Basics.lift_atomic_to_steelT
+      (fun () -> Steel.Effect.Atomic.change_hprop _ _
+                (fun m -> pts_to_ref_injective r p q v0 v1 m;
+                       assert (v0 == v1)))
 
 let rearrange_pqrs_qs_pr (p q r s:hprop)
   : SteelT unit

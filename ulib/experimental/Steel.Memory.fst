@@ -615,14 +615,15 @@ let intro_pts_to_array_with_preorder
 let pts_to_array_with_preorder_injective
   (#t: _)
   (a: array_ref t{not (is_null_array a)})
-  (p:perm{readable p})
+  (p0:perm{readable p0})
+  (p1:perm{readable p1})
   (c0 c1: Seq.lseq t (U32.v (length a)))
   (pre:Preorder.preorder (option t))
   (m:mem)
   : Lemma
     (requires (
-      interp (pts_to_array_with_preorder a p c0 pre) m /\
-      interp (pts_to_array_with_preorder a p c1 pre) m))
+      interp (pts_to_array_with_preorder a p0 c0 pre) m /\
+      interp (pts_to_array_with_preorder a p1 c1 pre) m))
     (ensures (c0 == c1))
   =
   let a = Some?.v a in
@@ -679,7 +680,7 @@ val share_pts_to_array_with_preorder
     (ensures interp (pts_to_array_with_preorder a (half_perm p) v pre `star`
                      pts_to_array_with_preorder a (half_perm p) v pre) m)
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 100"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 200"
 let share_pts_to_array_with_preorder #t pre a perm v m =
   let h = m.heap in
   match a with
@@ -840,10 +841,10 @@ let gather_pts_to_array #t a p0 p1 v0 v1 m =
 // pts_to_ref
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_ref_injective #t #pre a p c0 c1  m =
+let pts_to_ref_injective #t #pre a p0 p1 c0 c1  m =
   let s0 = Seq.create 1 c0 in
   let s1 = Seq.create 1 c1 in
-  pts_to_array_with_preorder_injective a p s0 s1 (trivial_optional_preorder pre) m;
+  pts_to_array_with_preorder_injective a p0 p1 s0 s1 (trivial_optional_preorder pre) m;
   assert(s0 `Seq.equal` s1);
   assert(c0 == Seq.index s0 0);
   assert(c1 == Seq.index s1 0)
