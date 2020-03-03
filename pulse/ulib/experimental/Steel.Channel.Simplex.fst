@@ -5,6 +5,46 @@ open Steel.Effect
 open Steel.Memory
 open Steel.HigherReference
 open Steel.SteelT.Basics
+open Steel.SteelAtomic.Basics
+open Steel.Effect.Atomic
+
+open FStar.Tactics
+
+(* Some helpers *)
+private
+val shuffled (p : hprop)
+             (q : hprop{with_tactic Steel.Memory.Tactics.canon (squash (p `equiv` q))})
+    : Lemma (p `equiv` q)
+
+#push-options "--no_tactics" (* GM: This should not be needed *)
+private
+let shuffled p q =
+  by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q))
+#pop-options
+
+private
+val reshuffle0 (#p #q : hprop)
+              (_ : squash (p `equiv` q))
+   : SteelT unit p (fun _ -> q)
+
+private
+let reshuffle0 #p #q peq =
+  lift_atomic_to_steelT (fun () -> change_hprop p q (fun m -> ()))
+
+private
+val reshuffle (#p #q : hprop)
+              (_ : squash (with_tactic Steel.Memory.Tactics.canon
+                                       (squash (p `equiv` q))))
+   : SteelT unit p (fun _ -> q)
+
+#push-options "--no_tactics" (* GM: This should not be needed *)
+
+private
+let reshuffle #p #q peq =
+  by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q));
+  reshuffle0 ()
+
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // Some generic lemmas
@@ -12,40 +52,36 @@ open Steel.SteelT.Basics
 let rearrange (p q r s:hprop)
   : SteelT unit ((p `star` q) `star` (r `star` s))
                 (fun _ -> (p `star` r) `star` (q `star` s))
-  = h_admit #unit _ _
+  = reshuffle ()
 
-assume
-val rearrange5 (p q r s t:hprop)
+let rearrange5 (p q r s t:hprop)
   : SteelT unit ((p `star` q) `star` ((r `star` s) `star` t))
          (fun _ -> ((p `star` r) `star` ((q `star` s) `star` t)))
+  = reshuffle ()
 
 let assoc_r (p q r:hprop)
   : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-  = h_admit #unit _ _
-
+  = reshuffle ()
 
 let assoc_l (p q r:hprop)
   : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-  = h_admit #unit _ _
-
+  = reshuffle ()
 
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> hprop)
   : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
   = h_admit _ _
 
-
 let rearrange_pqrs_qs_pr (p q r s:hprop)
   : SteelT unit
     (p `star` q `star` r `star` s)
     (fun _ -> (q `star` s) `star` (p `star` r))
-  = h_admit _ _
-
+  = reshuffle ()
 
 let rearrange_pqr_prq (p q r:hprop)
   : SteelT unit (p `star` q `star` r)
                 (fun _ -> p `star` r `star` q)
-  = h_admit _ _
+  = reshuffle ()
 
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
   : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
@@ -83,59 +119,65 @@ let rewrite_ext (p q:hprop) (_:squash (p == q))
   : SteelT unit p (fun _ -> q)
   = return ()
 
-
 let h_exists_assoc_r (#a:Type) (p q r: a -> hprop)
   : SteelT unit (h_exists (fun x -> p x `star` q x `star` r x))
                 (fun _ -> h_exists (fun x -> p x `star` (q x `star` r x)))
-  = h_admit _ _
-
+  = let aux (x:a) : Lemma ((p x `star` q x `star` r x) `equiv` (p x `star` (q x `star` r x)))
+        = shuffled (p x `star` q x `star` r x) (p x `star` (q x `star` r x))
+    in
+    let peq : squash ((h_exists (fun x -> p x `star` q x `star` r x))
+                      `equiv`
+                      (h_exists (fun x -> p x `star` (q x `star` r x))))
+      = FStar.Classical.forall_intro aux;
+        Steel.Memory.h_exists_cong (fun x -> p x `star` q x `star` r x) (fun x -> p x `star` (q x `star` r x))
+    in
+    reshuffle0 peq
 
 let rotate_4_left (p q r s:hprop)
   : SteelT unit (p `star` q `star` r `star` s)
                 (fun _ -> q `star` r `star` s `star` p)
-  = h_admit _ _
-
+  = reshuffle ()
 
 let rearrange_pqrst_r_pqst (p q r s t:hprop)
   : SteelT unit (p `star` q `star` r `star` s `star` t)
                 (fun _ -> s `star` (p `star` q `star` r `star` t))
-  = h_admit _ _
+  = reshuffle ()
 
 
 let rearrange_pqrst_qt_s_pr (p q r s t:hprop)
   : SteelT unit
     (p `star` q `star` r `star` s `star` t)
     (fun _ -> (q `star` t) `star` (s `star` (p `star` r)))
-  = h_admit _ _
+  = reshuffle ()
 
 
 let rearrange_for_get_trace2 (p q r s t : hprop)
   : SteelT unit ((p `star` q) `star` (r `star` s `star` t))
                 (fun _ -> (r `star` s `star` p `star` t) `star` q)
-  = h_admit _ _
+  = reshuffle ()
 
 
 let rearrange_for_trace (p q r s t:hprop)
   : SteelT unit (p `star` q `star` r `star` s `star` t)
                 (fun _ -> (q `star` s `star` r) `star` (p `star` t))
-  = h_admit _ _
+  = reshuffle ()
 
 
 let rearrange_for_trace_2 (p q r s t u v:hprop)
   : SteelT unit ((p `star` q `star` r `star` s) `star` (t `star` (u `star` v)))
                 (fun _ -> (p `star` v) `star` (s `star` (q `star` r `star` t `star` u)))
-  = h_admit _ _
+  = reshuffle ()
 
 
 let rearrange_for_trace_3 (p q r s t u v : hprop)
   : SteelT unit ((p `star` q) `star` (r `star` (s `star` t `star` u `star` v)))
                 (fun _ -> (u `star` p `star` t `star` v) `star` (q `star` (s `star` r)))
-  = h_admit _ _
+  = reshuffle ()
 
 let rearrange_for_get_trace (p q r s : hprop)
   : SteelT unit (p `star` q `star` r `star` s)
                 (fun _ -> r `star` (p `star` q `star` s))
-  = h_admit _ _
+  = reshuffle ()
 
 ////////////////////////////////////////////////////////////////////////////////
 

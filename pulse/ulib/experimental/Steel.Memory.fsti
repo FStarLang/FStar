@@ -491,3 +491,7 @@ let affine_star_smt (p q:hprop u#a) (m:mem u#a)
 : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
   [SMTPat (interp (p `star` q) m)]
 = affine_star p q m
+
+val h_exists_cong (#a:Type) (p q : a -> hprop)
+  : Lemma (requires (forall x. p x `equiv` q x))
+          (ensures (h_exists p `equiv` h_exists q))
