@@ -73,14 +73,13 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 
-// let bind_pure_steel (a:Type) (b:Type)
+// val bind_pure_steel (a:Type) (b:Type)
 //   (wp:pure_wp a)
 //   (uses:Set.set lock_addr)
 //   (is_ghost:bool)
 //   (pre_g:pre_t) (post_g:post_t b)
 //   (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
 // : atomic_repr b uses is_ghost pre_g post_g
-// = admit()
 
 
 // polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
@@ -278,14 +277,40 @@ let cas
       x)
 #pop-options
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit 100"
+
+#push-options "--fuel 0 --ifuel 1"
 let lemma_sem_preserves (#p:hprop) (fp fp':hprop)
-  (m0 m1:mem) (uses:Set.set lock_addr) (i:inv p{not (i `Set.mem` uses)})
+  (m0 m1:mem) (uses:Set.set lock_addr)
+  (i:inv p{not (i `Set.mem` uses) /\ inv_ok i m0 /\ inv_ok i m1})
   : Lemma
    (requires Sem.preserves_frame #(state_uses (Set.union (Set.singleton i) uses))
      (p `star` fp) (p `star` fp') m0 m1)
    (ensures Sem.preserves_frame #(state_uses uses) fp fp' m0 m1)
-  = admit()
+  = let s = Set.union (Set.singleton i) uses in
+    let aux (frame:hprop) : Lemma
+      (requires interp ((fp `star` frame) `star` locks_invariant uses m0) m0)
+      (ensures interp ((fp' `star` frame) `star` locks_invariant uses m1) m1 /\
+               (forall (f_frame:Sem.fp_prop #(state_uses uses) frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+      = interp_inv_unused i uses (fp `star` frame) m0;
+        assert (interp ((p `star` (fp `star` frame)) `star` locks_invariant s m0) m0);
+        let rewrite_4 (p1 p2 p3 p4:hprop) : Lemma
+          (((p1 `star` (p2 `star` p3)) `star` p4) `equiv` (((p1 `star` p2) `star` p3) `star` p4))
+          = star_associative p1 p2 p3;
+            star_congruence (p1 `star` (p2 `star` p3)) p4 ((p1 `star` p2) `star` p3) p4
+        in rewrite_4 p fp frame (locks_invariant s m0);
+        assert (interp (((p `star` fp) `star` frame) `star` locks_invariant s m0) m0);
+        assert (interp (((p `star` fp') `star` frame) `star` locks_invariant s m1) m1);
+        rewrite_4 p fp' frame (locks_invariant s m1);
+        interp_inv_unused i uses (fp' `star` frame) m1;
+        assert (interp ((fp' `star` frame) `star` locks_invariant uses m1) m1);
+        let aux' (f_frame:Sem.fp_prop #(state_uses uses) frame)
+          : Lemma (f_frame (core_mem m0) == f_frame (core_mem m1))
+          = let f':Sem.fp_prop #(state_uses s) frame = f_frame in
+            assert (forall (f_frame':Sem.fp_prop #(state_uses s) frame).
+              f_frame' (core_mem m0) == f_frame' (core_mem m1));
+            assert (f' (core_mem m0) == f' (core_mem m1))
+        in Classical.forall_intro aux'
+    in Classical.forall_intro (Classical.move_requires aux)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 1"
@@ -302,11 +327,9 @@ let with_invariant_aux
       interp_inv_unused i uses fp m0;
       let x = f () in
       let m1 = RMST.get() in
-      lemma_sem_preserves fp (fp' x) m0 m1 uses i;
-      // TODO: How do I derive this from the Mst definition?
-      assume (mem_evolves m0 m1);
-      inv_ok_stable i m0 m1;
+      assume (inv_ok i m1);
       interp_inv_unused i uses (fp' x) m1;
+      lemma_sem_preserves fp (fp' x) m0 m1 uses i;
       x
 #pop-options
 

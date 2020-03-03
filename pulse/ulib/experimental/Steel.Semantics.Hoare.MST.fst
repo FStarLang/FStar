@@ -1164,21 +1164,6 @@ let rec step (#st:st) (#a:Type u#a)
   | Weaken _ _ _ _ -> step_weaken f
 
 
-let run_ret (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
-  (#lpre:l_pre pre) (#lpost:l_post pre post)
-  (f:m st a pre post lpre lpost{Ret? f})
-: Mst a
-  (requires fun m0 ->
-    st.interp (pre `st.star` st.locks_invariant m0) m0 /\
-    lpre (st.core m0))
-  (ensures fun m0 x m1 ->
-    st.interp (post x `st.star` st.locks_invariant m1) m1 /\
-    lpost (st.core m0) x (st.core m1) /\
-    preserves_frame pre (post x) m0 m1)
-= RMSTATE?.reflect (fun (_, n) ->
-    let Ret _ x _ = f in
-    x, n)
-
 let rec run (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (#lpre:l_pre pre) (#lpost:l_post pre post)
   (f:m st a pre post lpre lpost)
@@ -1191,7 +1176,7 @@ let rec run (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
     lpost (st.core m0) x (st.core m1) /\
     preserves_frame pre (post x) m0 m1)
 = match f with
-  | Ret _ x _ -> run_ret f
+  | Ret _ x _ -> x
 
   | _ ->
     let m0 = get () in
