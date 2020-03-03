@@ -498,7 +498,6 @@ let rassert
       act_preserves_frame_and_preorder (rewrite_hprop h_in h_out) m0;
       mst_put m1)
 
-(*
 let steel_frame_t
   (#outer:hprop)
   (#a:Type) (#pre:pre_t) (#post:post_t a)
@@ -518,7 +517,6 @@ let steel_frame_t
     (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
   rassert (pre `Mem.star` frame);
   steel_frame f frame (fun _ -> True)
-*)
 #pop-options
 
 assume val r1 : hprop
@@ -531,7 +529,6 @@ assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 
 
 module T = FStar.Tactics
 
-(*
 let test_frame1 (_:unit)
 : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 = steel_frame_t f12;
@@ -539,7 +536,6 @@ let test_frame1 (_:unit)
   steel_frame_t f123;
   steel_frame_t f1;
   rassert ((r1 `star` r2) `star` r3)
-*)
 
 (*
  * A crash testcase
