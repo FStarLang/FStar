@@ -71,14 +71,13 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 
-// let bind_pure_steel (a:Type) (b:Type)
+// val bind_pure_steel (a:Type) (b:Type)
 //   (wp:pure_wp a)
 //   (uses:Set.set lock_addr)
 //   (is_ghost:bool)
 //   (pre_g:pre_t) (post_g:post_t b)
 //   (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
 // : atomic_repr b uses is_ghost pre_g post_g
-// = admit()
 
 
 // polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
