@@ -66,7 +66,7 @@ let select (#a:Type) (x:atom) (am:amap a) : Tot a =
 let update (#a:Type) (x:atom) (xa:a) (am:amap a) : amap a =
   (x, xa)::fst am, snd am
 
-let rec mdenote (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e:exp) : a =
+let rec mdenote (#a:Type u#aa) (eq:equiv a) (m:cm a eq) (am:amap a) (e:exp) : a =
   match e with
   | Unit -> CM?.unit m
   | Atom x -> select x am
@@ -331,9 +331,6 @@ let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
   or_else (fun _ -> apply_lemma (`right_identity))
-                    // WARNING: right_identity is currently fixed to types at u#1
-                    // because otherwise Meta-F* picks up a universe level u#0 for
-                    // types that are in u#1, such as, LowStar.Resource.resource
           (fun _ -> apply_lemma (`CM?.congruence (`#m));
                     split ();
                     apply_lemma (`EQ?.reflexivity (`#eq));

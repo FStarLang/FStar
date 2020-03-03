@@ -44,7 +44,7 @@ type cm (a:Type) (eq:equiv a) =
 // temporarily fixing the universe of this lemma to u#1 because 
 // otherwise tactics for LowStar.Resource canonicalization fails
 // by picking up an incorrect universe u#0 for resource type
-let right_identity (#a:Type u#1) (eq:equiv a) (m:cm a eq) (x:a) 
+let right_identity (#a:Type u#aa) (eq:equiv a) (m:cm a eq) (x:a)
   : Lemma (x `CM?.mult m` (CM?.unit m) `EQ?.eq eq` x) = 
   CM?.commutativity m x (CM?.unit m); 
   CM?.identity m x;
@@ -55,4 +55,3 @@ let int_plus_cm : cm int (equality_equiv int) =
 
 let int_multiply_cm : cm int (equality_equiv int) =
   CM 1 ( * ) (fun _ -> ()) (fun _ _ _ -> ()) (fun _ _ -> ()) (fun _ _ _ _ -> ())
-
