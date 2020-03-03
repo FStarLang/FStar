@@ -225,46 +225,6 @@ val free_array
     unit
     (fun _ -> emp)
 
-val share_array
-  (#t: _)
-  (uses:Set.set lock_addr)
-  (a: array_ref t)
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: perm{readable p})
-  : atomic
-    uses
-    false
-    (pts_to_array a p iseq)
-    (a':array_ref t{
-      length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-      (not (is_null_array a) ==> address a = address a')
-    })
-    (fun a' -> star
-      (pts_to_array a (half_perm p) iseq)
-      (pts_to_array a' (half_perm p) (Ghost.hide (Ghost.reveal iseq)))
-    )
-
-val gather_array
-  (#t: _)
-  (uses:Set.set lock_addr)
-  (a: array_ref t)
-  (a':array_ref t{
-    length a' = length a /\ offset a' = offset a /\ max_length a' = max_length a /\
-    (not (is_null_array a) ==> address a = address a')
-  })
-  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
-  (p: perm{readable p})
-  (p': perm{readable p'})
-  : atomic
-    uses
-    false
-    (star
-      (pts_to_array a p iseq)
-      (pts_to_array a' p' (Ghost.hide (Ghost.reveal iseq)))
-    )
-    unit
-    (fun _ -> pts_to_array a (sum_perm p p') iseq)
-
 val split_array
   (#t: _)
   (uses:Set.set lock_addr)
@@ -289,6 +249,7 @@ val split_array
       (pts_to_array a1 p (Seq.slice iseq 0 (U32.v i)))
       (pts_to_array a2 p (Seq.slice iseq (U32.v i) (U32.v (length a))))
     )
+
 
 val glue_array
   (#t: _)
@@ -406,40 +367,6 @@ val free_ref
     (ref_perm r full_perm)
     unit
     (fun _ -> emp)
-
-val share_ref
-  (#t: Type)
-  (uses:Set.set lock_addr)
-  (#pre: Preorder.preorder t)
-  (r: reference t pre)
-  (p: perm{readable p})
-  (contents: Ghost.erased t)
-  : atomic
-    uses
-    false
-    (pts_to_ref r p contents)
-    (r':reference t pre{ref_address r' = ref_address r})
-    (fun r' ->
-      pts_to_ref r (half_perm p) contents `star`
-      pts_to_ref r' (half_perm p) contents
-    )
-
-val gather_ref
-  (#t: Type)
-  (uses:Set.set lock_addr)
-  (#pre: Preorder.preorder t)
-  (r: reference t pre)
-  (r':reference t pre{ref_address r' = ref_address r})
-  (p: perm{readable p})
-  (p': perm{readable p'})
-  (contents: Ghost.erased t)
-  : atomic
-    uses
-    false
-    (pts_to_ref r p contents `star`
-      pts_to_ref r' p' contents)
-    unit
-    (fun _ -> pts_to_ref r (sum_perm p p') contents)
 
 val get_ref_refine
   (#t:Type)

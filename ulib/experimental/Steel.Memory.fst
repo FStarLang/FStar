@@ -553,6 +553,10 @@ let wand = Wand
 let h_exists = Ex
 let h_forall = All
 
+
+type hheap (fp:hprop) = h:heap{interp_heap fp h}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
@@ -675,13 +679,135 @@ val share_pts_to_array_with_preorder
     (ensures interp (pts_to_array_with_preorder a (half_perm p) v pre `star`
                      pts_to_array_with_preorder a (half_perm p) v pre) m)
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
-let share_pts_to_array_with_preorder #t pre a p v m = admit()
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 100"
+let share_pts_to_array_with_preorder #t pre a perm v m =
+  let h = m.heap in
+  match a with
+    | None ->
+      let a' = a in
+      mem_equiv_eq h (join_heap h (on _ (fun a' -> None)))
+    | Some a ->
+      let split_h_1 : heap = on _ (fun addr ->
+        if addr <> a.array_addr then h addr else
+        match h a.array_addr with
+        | Some (Array t len seq live) ->
+          let new_seq = Seq.init len (fun i ->
+            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+              Seq.index seq i
+            else match (Seq.index seq i).v_with_p with
+            | None -> { preorder = select_pre seq i; v_with_p = None }
+            | Some x ->
+              assert(perm `lesser_equal_perm` x.perm);
+              let new_p = sub_permissions x.perm (half_perm perm) in
+              assert(readable new_p);
+              assert(MkPerm?.v new_p <=. 1.0R);
+              { preorder = select_pre seq i;
+                v_with_p = Some ({x with perm = new_p})
+              }
+          ) in
+          assert(Seq.length new_seq = len);
+          Some (Array t len new_seq live)
+        | _ -> h addr
+      ) in
+      let split_h_2 : heap = on _ (fun addr ->
+        if addr <> a.array_addr then None else
+        match h a.array_addr with
+        | Some (Array t len seq live) ->
+          let new_seq = Seq.init len (fun i ->
+            if i < U32.v a.array_offset || i >= U32.v a.array_offset + U32.v a.array_length then
+              { preorder = select_pre seq i; v_with_p = None }
+            else match (Seq.index seq i).v_with_p with
+            | None -> { preorder = select_pre seq i; v_with_p = None }
+            | Some x ->
+              { preorder = select_pre seq i; v_with_p =
+                Some ({x with perm = half_perm perm})
+              }
+          ) in
+          assert(Seq.length new_seq = len);
+          Some (Array t len new_seq live)
+        | _ -> None
+      ) in
+      let aux (addr: addr) : Lemma (disjoint_addr split_h_1 split_h_2 addr) =
+         if addr <> a.array_addr then () else match split_h_1 addr, split_h_2 addr with
+         | Some (Array t1 len1 seq1 live1), Some (Array t2 len2 seq2 live2) ->
+           let aux (i:nat{i < len1}) : Lemma (
+             select_pre seq1 i == select_pre seq2 i /\ (
+             match contains_index seq1 i, contains_index seq2 i with
+              | true, true ->
+                let x1 = select_index seq1 i in
+	        let x2 = select_index seq2 i in
+                x1.value == x2.value /\ summable_permissions x1.perm x2.perm
+             | _ -> True
+           )) =
+             ()
+           in
+           Classical.forall_intro aux
+      in
+      Classical.forall_intro aux;
+      assert(disjoint_heap split_h_1 split_h_2);
+      let aux (addr: addr) : Lemma (h addr == (join_heap split_h_1 split_h_2) addr) =
+        if addr <> a.array_addr then () else
+        match h addr, (join_heap split_h_1 split_h_2) addr with
+        | Some (Array _ _ seq _), Some (Array _ _ joint_seq _) ->
+           assert(seq `Seq.equal` joint_seq)
+        | _ -> ()
+      in
+      Classical.forall_intro aux;
+      mem_equiv_eq h (join_heap split_h_1 split_h_2);
+      assert(h == join_heap split_h_1 split_h_2)
 #pop-options
 
 let share_pts_to_array #t a p v m = share_pts_to_array_with_preorder
     (trivial_optional_preorder (trivial_preorder t))
     a p v m
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
+let starred_permissions_summable
+  (#t: _)
+  (a: array_ref t{not (is_null_array a)})
+  (iseq: Ghost.erased (Seq.lseq t (U32.v (length a))))
+  (p: perm{readable p})
+  (p': perm{readable p'})
+  (pre: Ghost.erased (Preorder.preorder (option t)))
+  (h: hheap (star
+      (pts_to_array_with_preorder a p iseq pre)
+      (pts_to_array_with_preorder a p' (Ghost.hide (Ghost.reveal iseq)) pre)
+    )
+  )
+  : Lemma (summable_permissions p p')
+  =
+  let pf : squash (exists (h0: heap). exists (h1: heap{disjoint_heap h0 h1}).
+    interp_heap (pts_to_array_with_preorder a p iseq pre) h0 /\
+    interp_heap (pts_to_array_with_preorder a p' (Ghost.hide (Ghost.reveal iseq)) pre) h1 /\
+    h == join_heap h0 h1
+  ) =
+    ()
+  in
+  Classical.exists_elim (summable_permissions p p') pf (fun h0 ->
+    let pf : squash (exists (h1: heap{disjoint_heap h0 h1}).
+      interp_heap (pts_to_array_with_preorder a p iseq pre) h0 /\
+      interp_heap (pts_to_array_with_preorder a p' (Ghost.hide (Ghost.reveal iseq)) pre) h1 /\
+      h == join_heap h0 h1
+    ) =
+      ()
+    in
+    Classical.exists_elim (summable_permissions p p') pf (fun h1 ->
+      match a with
+      | Some _ -> begin
+        match h0 (address a), h1 (address a) with
+        | Some (Array t0 len0 seq0 live0), Some (Array t1 len1 seq1 live1) ->
+          assert(disjoint_addr h0 h1 (address a));
+          assert(contains_index seq0 (U32.v (offset a)));
+          assert(contains_index seq1 (U32.v (offset a)));
+          let x0 = select_index seq0 (U32.v (offset a)) in
+	  let x1 = select_index seq1 (U32.v (offset a)) in
+          assert(summable_permissions x0.perm x1.perm)
+        | _ -> ()
+      end
+      | _ -> ()
+    )
+  )
+#pop-options
 
 val gather_pts_to_array_with_preorder
   (#t:_)
@@ -696,8 +822,13 @@ val gather_pts_to_array_with_preorder
                       pts_to_array_with_preorder a p1 v1 pre) m)
     (ensures interp (pts_to_array_with_preorder a (sum_perm p0 p1) v0 pre) m)
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 20"
-let gather_pts_to_array_with_preorder #t pre a p v m = admit()
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 60"
+let gather_pts_to_array_with_preorder #t pre a p0 p1 v0 v1 m =
+  match a with
+  | None ->
+    intro_pts_to_array_with_preorder a (sum_perm p0 p1) v0 pre m.heap
+  | Some _ ->
+    starred_permissions_summable a v0 p0 p1 pre m.heap
 #pop-options
 
 let gather_pts_to_array #t a p0 p1 v0 v1 m =
