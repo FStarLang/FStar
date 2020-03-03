@@ -23,7 +23,7 @@ let reshuffle0 #p #q peq =
 private
 val reshuffle (#p #q : hprop)
               (_ : squash (T.with_tactic ST.canon
-                                       (squash (p `equiv` q))))
+                                         (squash (p `equiv` q))))
    : SteelT unit p (fun _ -> q)
 
 #push-options "--no_tactics" (* GM: This should not be needed *)
@@ -81,21 +81,30 @@ let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
   = let x = read_refine q r in
     return (Ghost.hide x)
 
-assume
+
 val intro_pure_p (#p:prop) (s:squash p) (h:hprop)
   : SteelT unit h (fun _ -> pure p `star` h)
+let intro_pure_p #p s h =
+  let s : squash (h `equiv` (pure p `star` h)) =
+    lem_star_pure h p;
+    star_commutative h (pure p)
+  in
+  reshuffle0 s
 
-assume
 val elim_pure (#p:prop)
   : SteelT (squash p) (pure p) (fun _ -> emp)
+let elim_pure #p =
+  assert (exists m. interp (pure p) m);
+  FStar.Classical.forall_intro (FStar.Classical.move_requires (lem_interp_star_pure emp p));
+  reshuffle ();
+  h_affine emp (pure p);
+  ()
 
-assume
 val intro_pure (#p:prop) (s:squash p)
   : SteelT unit emp (fun _ -> pure p)
-
-assume
-val h_assume (#p:hprop) (q:hprop)
-  : SteelT unit p (fun _ -> q)
+let intro_pure #p s =
+  intro_pure_p #p s emp;
+  reshuffle ()
 
 let elim_intro_pure (#p:prop)
   : SteelT (squash p) (pure p) (fun _ -> pure p)
@@ -692,7 +701,8 @@ let recv_available (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
     h_assert (in_state_hprop next_p vs `star`
               ((pts_to c.send half vs `star` pts_to c.recv half vs) `star`
                (trace_until c.trace vr `star` pts_to c.recv half vs)));
-    h_assume  ((pts_to c.recv half vs `star` in_state_hprop next_p vs) `star`
+    reshuffle ();
+    h_assert  ((pts_to c.recv half vs `star` in_state_hprop next_p vs) `star`
                 ((pts_to c.send half vs `star` pts_to c.recv half vs) `star`
                   trace_until c.trace vr));
     frame (fun _ -> intro_h_exists vs
