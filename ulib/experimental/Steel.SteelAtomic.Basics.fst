@@ -5,9 +5,9 @@ open Steel.Memory
 open Steel.Permissions
 module Sem = Steel.Semantics
 
-assume
-val return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
-  : SteelAtomic a uses true (p x) p
+let return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
+: SteelAtomic a uses true (p x) p
+= SteelAtomic?.reflect (return a x uses p)
 
 val h_admit_atomic (#a:_) (#uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
