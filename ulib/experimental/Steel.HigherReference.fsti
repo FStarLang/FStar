@@ -37,11 +37,6 @@ val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
-val ghost_read (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:Ghost.erased a) (r:ref a)
-  : SteelAtomic a uses true
-    (pts_to r p v)
-    (fun x -> pts_to r p x)
-
 val ghost_read_refine (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
   (q:a -> hprop)
   : SteelAtomic a uses true
