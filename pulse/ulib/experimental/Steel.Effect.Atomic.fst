@@ -13,8 +13,9 @@ let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; sta
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
   Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
 
-let returnc (a:Type u#a) (x:a) : atomic_repr a Set.empty true emp (fun _ -> emp)
-  = fun _ -> x
+let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
+: atomic_repr a uses true (p x) p
+= fun _ -> x
 
 // TODO: Move refinement to Pure once it is supported
 let bind (a:Type) (b:Type) (uses:Set.set lock_addr)
@@ -49,7 +50,7 @@ layered_effect {
     -> Effect
   with
   repr = atomic_repr;
-  return = returnc;
+  return = return;
   bind = bind;
   subcomp = subcomp;
   if_then_else = if_then_else
