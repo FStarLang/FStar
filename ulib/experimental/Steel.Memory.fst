@@ -1111,3 +1111,5 @@ let locks_invariant (e:S.set lock_addr) (m:mem) : hprop =
 let core_mem_interp hp m = ()
 
 let interp_depends_only_on hp = ()
+
+let h_exists_cong #a p q = ()
