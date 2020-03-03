@@ -275,13 +275,14 @@ val pts_to_ref_injective
   (#t: Type u#a)
   (#pre: Preorder.preorder t)
   (a: reference t pre)
-  (p:perm u#a{readable p})
+  (p0:perm u#a{readable p0})
+  (p1:perm u#a{readable p1})
   (c0 c1: t)
   (m:mem u#a)
   : Lemma
     (requires (
-      interp (pts_to_ref a p c0) m /\
-      interp (pts_to_ref a p c1) m))
+      interp (pts_to_ref a p0 c0) m /\
+      interp (pts_to_ref a p1 c1) m))
     (ensures (c0 == c1))
 
 val share_pts_to_ref

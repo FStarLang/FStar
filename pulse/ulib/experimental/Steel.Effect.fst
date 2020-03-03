@@ -386,7 +386,7 @@ let read (#a:Type) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
     mst_put m1;
     mst_assume (interp (ref_perm r p) m1);
     sel_ref_lemma r p m1;
-    pts_to_ref_injective r p x (sel_ref r m1) m1;
+    pts_to_ref_injective r p p x (sel_ref r m1) m1;
     mst_assert (x == sel_ref r m1);
     x)
 #pop-options
