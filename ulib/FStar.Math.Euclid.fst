@@ -182,12 +182,12 @@ let euclid_gcd a b =
     egcd a b 1 0 a 0 (-1) (-b)
     end
 
-val is_gcd_prime_aux (p:pos) (a:pos{a < p}) (d:int) : Lemma
+val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma
   (requires is_prime p /\ d `divides` p /\ d `divides` a)
   (ensures  d = 1 \/ d = -1)
 let is_gcd_prime_aux p a d = ()
 
-val is_gcd_prime (p:pos{is_prime p}) (a:pos{a < p}) : Lemma (is_gcd p a 1)
+val is_gcd_prime (p:int{is_prime p}) (a:pos{a < p}) : Lemma (is_gcd p a 1)
 let is_gcd_prime p a =
   Classical.forall_intro_2 (Classical.move_requires_2 divides_minus);
   Classical.forall_intro (Classical.move_requires (is_gcd_prime_aux p a));

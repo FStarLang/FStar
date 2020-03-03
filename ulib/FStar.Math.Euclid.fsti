@@ -104,11 +104,12 @@ val euclid_gcd (a b:int) : Pure (int & int & int)
 /// A definition of primality based on the divides relation
 ///
 
-let is_prime (p:pos) =
-  forall (d:int).{:pattern (d `divides` p)}
-    (d `divides` p ==> (d = 1 \/ d = -1 \/ d = p \/ d = -p))
+let is_prime (p:int) =
+  1 < p /\
+  (forall (d:int).{:pattern (d `divides` p)}
+     (d `divides` p ==> (d = 1 \/ d = -1 \/ d = p \/ d = -p)))
 
-val bezout_prime (p:pos) (a:pos{a < p}) : Pure (int & int)
+val bezout_prime (p:int) (a:pos{a < p}) : Pure (int & int)
   (requires is_prime p)
   (ensures  fun (r, s) -> r * p + s * a = 1)
 
@@ -123,6 +124,6 @@ val euclid (n:pos) (a b r s:int) : Lemma
   (requires (a * b) % n = 0 /\ r * n + s * a = 1)
   (ensures  b % n = 0)
 
-val euclid_prime (p:pos{is_prime p}) (a b:int) : Lemma
+val euclid_prime (p:int{is_prime p}) (a b:int) : Lemma
   (requires (a * b) % p = 0)
   (ensures  a % p = 0 \/ b % p = 0)

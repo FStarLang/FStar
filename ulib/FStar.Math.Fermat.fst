@@ -355,7 +355,7 @@ let rec binomial_theorem a b n =
 
 #pop-options
 
-val factorial_mod_prime (p:pos{1 < p /\ is_prime p}) (k:pos{k < p}) : Lemma
+val factorial_mod_prime (p:int{is_prime p}) (k:pos{k < p}) : Lemma
   (requires !k % p = 0)
   (ensures False)
   (decreases k)
@@ -367,7 +367,7 @@ let rec factorial_mod_prime p k =
     factorial_mod_prime p (k - 1)
     end
 
-val binomial_prime (p:pos{1 < p /\ is_prime p}) (k:pos{k < p}) : Lemma
+val binomial_prime (p:int{is_prime p}) (k:pos{k < p}) : Lemma
   (binomial p k % p == 0)
 let binomial_prime p k =
   calc (==) {
@@ -392,7 +392,7 @@ let binomial_prime p k =
       factorial_mod_prime p (p - k)
     end
 
-val freshman_aux (p:pos{1 < p /\ is_prime p}) (a b:int) (i:pos{i < p}): Lemma
+val freshman_aux (p:int{is_prime p}) (a b:int) (i:pos{i < p}): Lemma
   ((binomial p i * pow a (p - i) * pow b i) % p == 0)
 let freshman_aux p a b i =
   calc (==) {
@@ -405,7 +405,7 @@ let freshman_aux p a b i =
     0;
   }
 
-val freshman (p:pos{1 < p /\ is_prime p}) (a b:int) : Lemma
+val freshman (p:int{is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
 let freshman p a b =
   let f (i:nat{0 <= i /\ i <= p}) = binomial p i * pow a (p - i) * pow b i % p in
@@ -432,7 +432,7 @@ let freshman p a b =
     (pow a p + pow b p) % p;
   }
 
-val fermat_aux (p:pos{1 < p /\ is_prime p}) (a:pos{a < p}) : Lemma
+val fermat_aux (p:int{is_prime p}) (a:pos{a < p}) : Lemma
   (ensures pow a p % p == a % p)
   (decreases a)
 let rec fermat_aux p a =
@@ -474,7 +474,7 @@ let fermat p a =
       a % p;
     }
 
-val mod_mult_congr_aux (p:pos{1 < p /\ is_prime p}) (a b c:int) : Lemma
+val mod_mult_congr_aux (p:int{is_prime p}) (a b c:int) : Lemma
   (requires (a * c) % p = (b * c) % p /\ 0 <= b /\ b <= a /\ a < p /\ c % p <> 0)
   (ensures  a = b)
 let mod_mult_congr_aux p a b c =
