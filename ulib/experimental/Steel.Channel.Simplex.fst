@@ -1,9 +1,9 @@
 module Steel.Channel.Simplex
-module P = Steel.Channel.Protocol.Lower
+module P = Steel.Channel.Protocol
 open Steel.SpinLock
 open Steel.Effect
 open Steel.Memory
-open Steel.Reference
+open Steel.HigherReference
 open Steel.SteelT.Basics
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ type chan_t (p:prot) = {
   trace: trace_ref p;
 }
 
-let half : perm = half_perm full
+let half : perm u#1 = half_perm full
 
 let step (s:sprot) (x:msg_t s) = step s x
 
@@ -312,7 +312,11 @@ let mk_chan_t_val (#p:prot) (send recv:ref chan_val) (tr:trace_ref p)
   = let c = (Mkchan_t send recv tr) in
     return #_ #(fun c -> emp) c
 
+let msg t p = Msg unit (fun _ -> p)
 let init_chan_val (p:prot) = v:chan_val {v.chan_prot == msg unit p}
+
+let initial_trace (p:prot) : (q:partial_trace_of p {until q == p})
+  = { to = p; tr=Waiting p}
 
 let intro_until_eq #p (c:chan_t p) (v:init_chan_val p) //{p == step v.chan_prot v.chan_msg})
   : SteelT unit emp (fun _ -> pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)))
@@ -541,6 +545,9 @@ let send_available(#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit
     h_assert (chan_inv c `star` sender cc (step p x));
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _
+
+let extensible (#p:prot) (x:partial_trace_of p) = P.more x.to
+let next_msg_t (#p:prot) (x:partial_trace_of p) = P.next_msg_t x.to
 
 let next_trace #p (vr:chan_val) (vs:chan_val)
                   (tr:partial_trace_of p)
