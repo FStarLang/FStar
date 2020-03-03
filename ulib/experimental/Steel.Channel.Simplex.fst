@@ -5,21 +5,19 @@ open Steel.Effect
 open Steel.Memory
 open Steel.HigherReference
 open Steel.SteelT.Basics
-open Steel.SteelAtomic.Basics
-open Steel.Effect.Atomic
 
-open FStar.Tactics
+module T = FStar.Tactics
 
 (* Some helpers *)
 private
 val shuffled (p : hprop)
-             (q : hprop{with_tactic Steel.Memory.Tactics.canon (squash (p `equiv` q))})
+             (q : hprop{T.with_tactic Steel.Memory.Tactics.canon (squash (p `equiv` q))})
     : Lemma (p `equiv` q)
 
 #push-options "--no_tactics" (* GM: This should not be needed *)
 private
 let shuffled p q =
-  by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q))
+  T.by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q))
 #pop-options
 
 private
@@ -29,11 +27,12 @@ val reshuffle0 (#p #q : hprop)
 
 private
 let reshuffle0 #p #q peq =
-  lift_atomic_to_steelT (fun () -> change_hprop p q (fun m -> ()))
+  Steel.SteelAtomic.Basics.lift_atomic_to_steelT
+    (fun () -> Steel.Effect.Atomic.change_hprop p q (fun m -> ()))
 
 private
 val reshuffle (#p #q : hprop)
-              (_ : squash (with_tactic Steel.Memory.Tactics.canon
+              (_ : squash (T.with_tactic Steel.Memory.Tactics.canon
                                        (squash (p `equiv` q))))
    : SteelT unit p (fun _ -> q)
 
@@ -41,7 +40,7 @@ val reshuffle (#p #q : hprop)
 
 private
 let reshuffle #p #q peq =
-  by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q));
+  T.by_tactic_seman Steel.Memory.Tactics.canon (squash (p `equiv` q));
   reshuffle0 ()
 
 #pop-options
