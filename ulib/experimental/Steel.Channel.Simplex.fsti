@@ -1,18 +1,18 @@
 module Steel.Channel.Simplex
-open Steel.Channel.Protocol.Lower
+open Steel.Channel.Protocol
 open Steel.Effect
 open Steel.Memory
 
 /// Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret unit))
 ///
 /// DoWhile (Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret bool)))
-let prot = prot unit
+let prot : Type u#1 = protocol unit
 
 val chan (p:prot) : Type0
 
-val sender (#p:prot) (c:chan p) (next_action:prot) : hprop
+val sender (#p:prot) (c:chan p) (next_action:prot) : hprop u#1
 
-val receiver (#p:prot) (c:chan p) (next_action:prot) : hprop
+val receiver (#p:prot) (c:chan p) (next_action:prot) : hprop u#1
 
 val new_chan (p:prot)
   : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
@@ -34,4 +34,4 @@ val trace (#q:prot) (cc:chan q)
 val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
   : SteelT (t:extension_of previous)
            (receiver c next `star` history c previous)
-           (fun t -> receiver c next `star` history c t `star` Steel.Reference.pure (until t == next))
+           (fun t -> receiver c next `star` history c t `star` Steel.HigherReference.pure (until t == next))
