@@ -680,7 +680,8 @@ val share_pts_to_array_with_preorder
     (ensures interp (pts_to_array_with_preorder a (half_perm p) v pre `star`
                      pts_to_array_with_preorder a (half_perm p) v pre) m)
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 200"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 400"
+#restart-solver
 let share_pts_to_array_with_preorder #t pre a perm v m =
   let h = m.heap in
   match a with
