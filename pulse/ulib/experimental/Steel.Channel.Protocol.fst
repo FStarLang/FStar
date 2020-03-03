@@ -102,3 +102,9 @@ let extend_partial_trace (#p:protocol unit)
                          (msg:next_msg_t x.to{more_msgs x.to})
   : Tot (y:partial_trace_of p{x `extended_to` y})
   = { to=_; tr=extend x.tr msg}
+
+
+let more (p:protocol unit) = more_msgs p
+let msg_t (p:protocol unit) = next_msg_t p
+let extension_of #p (tr:partial_trace_of p) = ts:partial_trace_of p{tr `extended_to` ts}
+let until #p (tr:partial_trace_of p) = tr.to
