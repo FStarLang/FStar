@@ -1,3 +1,20 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+
 module Steel.Effect.Atomic
 
 open Steel.Memory
@@ -17,7 +34,6 @@ let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
 : atomic_repr a uses true (p x) p
 = fun _ -> x
 
-// TODO: Move refinement to Pure once it is supported
 let bind (a:Type) (b:Type) (uses:Set.set lock_addr)
   (is_ghost1:bool) (is_ghost2:bool{is_ghost1 \/ is_ghost2})
   (pre_f:pre_t) (post_f:post_t a) (post_g:post_t b)
@@ -41,8 +57,6 @@ let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
   (p:Type0)
   : Type
   = atomic_repr a uses true pre post
-
-#set-options "--print_universes --print_implicits"
 
 reifiable reflectable
 layered_effect {
@@ -259,7 +273,8 @@ let lemma_sem_preserves (#p:hprop) (fp fp':hprop)
     let aux (frame:hprop) : Lemma
       (requires interp ((fp `star` frame) `star` locks_invariant uses m0) m0)
       (ensures interp ((fp' `star` frame) `star` locks_invariant uses m1) m1 /\
-               (forall (f_frame:Sem.fp_prop #(state_uses uses) frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+        (forall (f_frame:Sem.fp_prop #(state_uses uses) frame).
+          f_frame (core_mem m0) == f_frame (core_mem m1)))
       = interp_inv_unused i uses (fp `star` frame) m0;
         assert (interp ((p `star` (fp `star` frame)) `star` locks_invariant s m0) m0);
         let rewrite_4 (p1 p2 p3 p4:hprop) : Lemma

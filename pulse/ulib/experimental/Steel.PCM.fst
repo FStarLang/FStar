@@ -1,11 +1,20 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Steel.PCM
-
-// let commutative #a (op:a -> a -> a) = forall x y. op x y == op y x
-// let associative #a (op:a -> a -> a) = forall x y z. (op x (op y z) == op (op x y) z)
-
-// let is_unit #a (op:a -> a -> a) (u:a) = forall x. op x u == x
-// let is_undef #a (op:a -> a -> a) (z:a) = forall x. op x z == z
-// let undef_inv #a (op:a -> a -> a) (z:a) = forall x y. op x y =!= z ==> x =!= z /\ y =!= z
 
 let symrel a = c:(a -> a -> prop) { (forall x y. c x y <==> c y x) }
 

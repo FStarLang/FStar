@@ -1,5 +1,5 @@
 (*
-   Copyright 2019 Microsoft Research
+   Copyright 2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ open Steel.Semantics.Instantiate
 module Ins = Steel.Semantics.Instantiate
 
 open Steel.Memory
-
-#set-options "--print_implicits --print_universes"
 
 let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
