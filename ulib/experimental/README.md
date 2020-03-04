@@ -40,8 +40,8 @@ addresses to heap cells. `Steel.Actions` defines our stored invariants, as well 
 of standard actions.
 
 `Steel.Semantics.Instantiate` then builds upon them to instantiate the State Typeclass
-presented in section 3.0. `Steel.Memory.Tactics` defines a set of tactics used to automate
-the frame resolution.
+presented in section 3.0. `Steel.Memory.Tactics` instantiates the F* canonical monoid tactic
+with our separation logic terms to automate frame resolution.
 
 `Steel.Effect` and `Steel.Effect.Atomic` build upon the SteelCore program logic defined in
 `Steel.Memory` and `Steel.Actions` to define two monadic effects, encapsulating respectively
@@ -60,13 +60,3 @@ Using these libraries, we present the implementation of the examples from sectio
 * `Steel.SpinLock` is the spinlock using CAS of 5.1;
 * `Steel.Primitive.ForkJoin` is the fork/join parallelism structure of 5.2;
 * `Steel.Channel.*` is the implementation of the simplex channels protocols of 5.3.
-
-## Additional explanations
-
-You can quickly check the absence of assumed hypothesis (other than the witness/recall justified
-by Ahman et al.) in our development by running
-
-	grep -nrE "assume|admit" *.{fst,fsti}
-
-We do however rely on a number of modules from the F* standard library such as `FStar.Preorder`
-that can be inspected in the `ulib/` folder of the F* repository.
