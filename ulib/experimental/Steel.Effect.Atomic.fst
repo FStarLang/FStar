@@ -44,7 +44,7 @@ let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
 
 #set-options "--print_universes --print_implicits"
 
-reflectable
+reifiable reflectable
 layered_effect {
   SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
     -> Effect
@@ -56,19 +56,14 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-assume WP_monotonic_pure:
-  forall (a:Type) (wp:pure_wp a).
-    (forall (p q:pure_post a).
-       (forall x. p x ==> q x) ==>
-       (wp p ==> wp q))
-
 #push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 inline_for_extraction
 let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_wp a) (f:unit -> PURE a wp)
 : Pure (atomic_repr a uses true p (fun _ -> p))
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= fun _ -> let x = f () in x
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun _ -> let x = f () in x
 #pop-options
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
@@ -105,12 +100,6 @@ let intro_emp_left (p1 p2:hprop) (m:mem)
 = emp_unit p1;
   equiv_symmetric (p1 `star` emp) p1;
   equiv_extensional_on_star p1 (p1 `star` emp) p2
-
-assume val steelatomic_reify
-  (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
-  ($f:unit -> SteelAtomic a uses is_ghost pre post)
-: atomic_repr a uses is_ghost pre post
-
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let atomic_preserves_frame_and_preorder
@@ -153,7 +142,7 @@ let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_
   is_ghost
   (pre `star` frame)
   (fun x -> post x `star` frame)
-= frame0 (steelatomic_reify f) frame
+= frame0 (reify (f ())) frame
 
 let inv_witnessed (#p:hprop) (i:inv p) =
   NMST.witnessed mem mem_evolves (inv_ok i)
@@ -327,4 +316,4 @@ let with_invariant_frame
   (i:ival p{not (i `Set.mem` uses)})
   (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses is_ghost fp fp'
-  = with_invariant0 i (steelatomic_reify f)
+  = with_invariant0 i (reify (f ()))

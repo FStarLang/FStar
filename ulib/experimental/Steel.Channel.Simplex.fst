@@ -87,13 +87,14 @@ let intro_pure #p s =
 
 let elim_intro_pure (#p:prop)
   : SteelT (squash p) (pure p) (fun _ -> pure p)
-  = elim_pure #p;
-    intro_pure #p ()
+  = let s = elim_pure #p in
+    intro_pure #p s;
+    s
 
 let dup_pure (p:prop)
   : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
-  = elim_intro_pure #p;
-    intro_pure_p () _
+  = let s = elim_intro_pure #p in
+    intro_pure_p s _
 
 let rewrite_ext (p q:hprop) (_:squash (p == q))
   : SteelT unit p (fun _ -> q)

@@ -164,7 +164,7 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
     (if_then_else_req req_then req_else p)
     (if_then_else_ens ens_then ens_else p)
 
-reflectable
+reifiable reflectable
 layered_effect {
   Steel : a:Type -> pre:pre_t -> post:post_t a -> req:req_t pre -> ens:ens_t pre a post -> Effect
   with
@@ -175,17 +175,12 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-assume WP_monotonic_pure:
-  forall (a:Type) (wp:pure_wp a).
-    (forall (p q:pure_post a).
-       (forall x. p x ==> q x) ==>
-       (wp p ==> wp q))
-
 unfold
 let bind_pure_steel_req (#a:Type) (wp:pure_wp a)
   (#pre_g:pre_t) (req_g:a -> req_t pre_g)
 : req_t pre_g
-= fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True)
 
 unfold
 let bind_pure_steel_ens (#a:Type) (#b:Type)
@@ -202,7 +197,8 @@ let bind_pure_steel (a:Type) (b:Type)
 : repr b pre_g post_g
     (bind_pure_steel_req wp req_g)
     (bind_pure_steel_ens wp ens_g)
-= fun m0 ->
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun m0 ->
   let x = f () in
   g x m0
 #pop-options
@@ -242,7 +238,8 @@ let bind_steel_pure (a:Type) (b:Type)
 : repr b pre_f (fun _ -> post_f)
     (polymonadic_bind_steel_pure_pre req_f ens_f wp_g)
     (polymonadic_bind_steel_pure_post ens_f wp_g)
-= fun _ ->
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun _ ->
   let x = f () in
   g x ()
 #pop-options
@@ -253,11 +250,6 @@ polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 // let return_emp (#a:Type) (x:a)
 // : Steel a Mem.emp (fun _ -> Mem.emp) (fun _ -> True) (fun _ r _ -> r == x)
 // = Steel?.reflect (returnc a x)
-
-assume val steel_reify (#a:Type) (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> Steel a pre post req ens)
-: repr a pre post req ens
 
 (*
  * This proof relies on core_mem_interp lemma from Steel.Memory
@@ -285,7 +277,7 @@ let par (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL
   (fun (xL, xR) -> postL xL `Mem.star` postR xR)
   (fun h -> lpreL h /\ lpreR h)
   (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-= par0 (steel_reify f) (steel_reify g)
+= par0 (reify (f ())) (reify (g ()))
 
 let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   (f:repr a pre post req ens)
@@ -307,7 +299,7 @@ let steel_frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:e
   (fun x -> post x `Mem.star` frame)
   (fun h -> req h /\ f_frame h)
   (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-= frame0 (steel_reify f) frame f_frame
+= frame0 (reify (f ())) frame f_frame
 
 (*** Lifting actions to MST and then to Steel ***)
 
@@ -384,10 +376,6 @@ let read (#a:Type) (#pre:P.preorder a) (r:reference a pre) (p:perm{readable p})
     let (| x, m1 |) = act m0 in
     act_preserves_frame_and_preorder act m0;
     mst_put m1;
-    mst_assume (interp (ref_perm r p) m1);
-    sel_ref_lemma r p m1;
-    pts_to_ref_injective r p p x (sel_ref r m1) m1;
-    mst_assert (x == sel_ref r m1);
     x)
 #pop-options
 
@@ -436,18 +424,6 @@ let write (#a:Type) (#pre:P.preorder a) (r:reference a pre) (curr:G.erased a) (x
 //     let (| _, m1 |) = free_ref r m0 in
 //     act_preserves_frame_and_preorder (free_ref r) m0;
 //     mst_put m1)
-
-
-// assume val upd (#a:Type) (r:ref a) (prev:a) (v:a)
-// : Steel unit (pts_to r full_perm prev) (fun _ -> pts_to r full_perm v)
-//     (fun _ -> True) (fun _ _ _ -> True)
-
-// assume val alloc (#a:Type) (v:a)
-// : Steel (ref a) emp (fun x -> pts_to x full_perm v)
-//     (fun _ -> True) (fun _ _ _ -> True)
-
-// assume val return (#a:Type) (#hp:a -> hprop) (x:a)
-// : Steel a (hp x) hp (fun _ -> True) (fun _ r _ -> r == x)
 
 
 // let alloc_and_upd (n:int)
@@ -518,45 +494,6 @@ let steel_frame_t
   rassert (pre `Mem.star` frame);
   steel_frame f frame (fun _ -> True)
 #pop-options
-
-assume val r1 : hprop
-assume val r2 : hprop
-assume val r3 : hprop
-
-assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
-assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
-assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-
-module T = FStar.Tactics
-
-let test_frame1 (_:unit)
-: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
-= steel_frame_t f12;
-  steel_frame_t f1;
-  steel_frame_t f123;
-  steel_frame_t f1;
-  rassert ((r1 `star` r2) `star` r3)
-
-(*
- * A crash testcase
- *)
-
-assume
-val crash_h_commute (p:hprop)
-  : SteelT unit emp (fun _ -> p)
-
-assume
-val crash_h_assert (_:unit)
-  : SteelT unit emp (fun _ -> emp)
-
-assume val crash_get_prop : int -> hprop
-
-[@expect_failure]
-let crash_test (_:unit)
-  : SteelT unit emp (fun _ -> emp)
-  = let r = 0 in
-    crash_h_commute (crash_get_prop r);
-    crash_h_assert ()
 
 let cond_aux (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
   (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
