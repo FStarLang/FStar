@@ -490,14 +490,6 @@ let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
     f
 
 
-// let update_defined #a pcm (v0:a) (v1:a{frame_preserving pcm v0 v1})
-//   : Lemma (defined pcm v1)
-//   = pcm.is_unit v0; pcm.is_unit v1;
-//     assert (defined pcm (pcm.op v0 pcm.one));
-//     pcm.comm v0 pcm.one;
-//     pcm.comm v1 pcm.one;
-//     assert (defined pcm v1)
-
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
   = fun h ->
