@@ -361,8 +361,6 @@ type hprop : Type u#(a + 1) =
 
 noeq
   type lock_state : Type u#(a + 1) =
-  | Available : hprop u#a -> lock_state
-  | Locked    : hprop u#a -> lock_state
   | Invariant : hprop u#a -> lock_state
 
 let lock_store : Type u#(a+1) = list (lock_state u#a)
@@ -1224,8 +1222,6 @@ let rec lock_store_invariant (e:S.set lock_addr) (l:lock_store) : hprop =
   let current_addr = List.Tot.length l - 1 in
   match l with
   | [] -> emp
-  | Available p :: tl -> p `star` lock_store_invariant e tl
-  | Locked _ :: tl -> lock_store_invariant e tl
   | Invariant p :: tl ->
     if current_addr `S.mem` e then
       lock_store_invariant e tl
