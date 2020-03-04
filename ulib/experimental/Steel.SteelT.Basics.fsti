@@ -15,9 +15,6 @@ val h_assert (p:hprop)
 val h_intro_emp_l (p:hprop)
   : SteelT unit p (fun _ -> emp `star` p)
 
-val h_admit (#a:_) (p:hprop) (q:a -> hprop)
-  : SteelT a p q
-
 val h_commute (p q:hprop)
   : SteelT unit (p `star` q) (fun _ -> q `star` p)
 
