@@ -7,7 +7,7 @@ All the development is done within the F* proof assistant, which relies on the Z
 for semi-automated proofs. In order to verify the code, you will need to typecheck the source files
 using a development version of F* that can be obtained on
 [the project repository](https://github.com/FStarLang/FStar). Please use the snapshot corresponding
-to the commit ??? and follow the "Building F* from sources" section of `INSTALL.md` to build the
+to the commit ef5bb54 and follow the "Building F* from sources" section of `INSTALL.md` to build the
 typechecker.
 
 Please refer to the Figure 1. of the paper for the dependency between module. F*, similarly to OCaml,
