@@ -10,9 +10,9 @@ using a development version of F* that can be obtained on
 to the commit ef5bb54 and follow the "Building F* from sources" section of `INSTALL.md` to build the
 typechecker.
 
-Please refer to the Figure 1. of the paper for the dependency between module. F*, similarly to OCaml,
-distinguishes between interfaces files (`.fsti`) and implementation files (`.fst`). For each module
-name mentionned later, you can look to the corresponding implementation and/or interface file.
+Please refer to the Figure 1. of the paper for the dependency between modules. F*, similarly to OCaml,
+distinguishes between interface files (`.fsti`) and implementation files (`.fst`). For each module
+name mentioned later, you can look at the corresponding implementation and/or interface file.
 
 The various pragmas introduced by `#` are used to pass certain options controlling the SMT encoding
 and the behavior of Z3.
@@ -24,7 +24,7 @@ that the proofs typecheck without any additional annotations.
 
 ## Organization of the main SteelCore developement
 
-The core semantics using indexed effectful action trees presented in Section 3, toghether with
+The core semantics using indexed effectful action trees presented in Section 3, together with
 their soundess proof, are available in `Steel.Semantics.Hoare.MST`. They build upon the `MST`
 and `NMST` modules, which provide a model of monotonic state as described by Ahman et al.
 
