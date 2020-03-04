@@ -65,8 +65,12 @@ let action a = state -> a & state
 noeq
 type m : nat -> Type u#a -> Type =
  | Return : #a:Type u#a -> x:a -> m 0 a
- | Act : #a:Type u#a -> #b:Type u#a -> #n:nat -> act:action a -> k:(a -> m n b) -> m (n + 1) b
- | Par : #a0:Type u#a -> #a1:Type u#a -> #a:Type u#a -> #n0:_ -> #n1:_ -> #n:_ -> left:m n0 a0 -> right:m n1 a1 -> k:(a0 & a1 -> m n a) -> m (n0 + n1 + n + 1) a
+ | Act : #a:Type u#a -> action a -> m 1 a
+ | Par : #a0:Type u#a -> #a1:Type u#a ->
+          #n0:_ -> #n1:_ ->
+          left:m n0 a0 -> right:m n1 a1 -> m (n0 + n1 + 1) (a0 & a1)
+ | Bind : #a:_ -> #b:_ -> #n1:_ -> #n2:_ ->
+          f:m n1 a -> g:(x:a -> m n2 b) -> m (n1 + n2 + 1) b
 
 let nm a = n:nat & m n a
 
@@ -80,56 +84,65 @@ let rec step (#a:Type u#a) (redex:nm a)
         (decreases (dfst redex))
   = match dsnd redex with
     | Return _ -> redex
-    | Act act k ->
+    | Act act ->
       let s0 = get () in
       let x, s1 = act s0 in
       put s1;
-      (| _, k x |)
-    | Par (Return x) (Return y) k ->
-      (| _, k (x, y) |)
-    | Par l (Return y) k ->
+      (| _, Return x |)
+
+    | Bind (Return x) k -> (| _, k x |)
+
+    | Bind m k -> let (| _, m' |) = step (| _,  m |) in (| _, Bind m' k |)
+
+    | Par (Return x) (Return y) ->
+      (| _, Return (x, y) |)
+
+    | Par l (Return y) ->
       let (| _, l' |) = step (| _, l |) in
-      (| _, Par l' (Return y) k |)
-    | Par (Return x) r k ->
+      (| _, Par l' (Return y) |)
+
+    | Par (Return x) r ->
       let (| _, r' |) = step (| _, r |) in
-      (| _, Par (Return x) r' k |)
-    | Par l r k ->
+      (| _, Par (Return x) r' |)
+
+    | Par l r ->
       if sample () then
         let (| _, l' |) = step (| _, l |) in
-        (| _, Par l' r k |)
+        (| _, Par l' r |)
       else
         let (| _, r' |) = step (| _, r |) in
-        (| _, Par l r' k |)
+        (| _, Par l r' |)
 
-let rec step_redex (#a:Type u#a) (redex:nm a)
-  : Eff (reduct redex)
-        (decreases (dfst redex))
-  = match dsnd redex with
-    | Return _ -> redex
-    | Act act k ->
-      let s0 = get () in
-      let x, s1 = act s0 in
-      put s1;
-      (| _, k x |)
-    | Par #_ #_ #_ #_ #_ #n (Return x) (Return y) k ->
-      (| n, k (x, y) |)
-    | Par l (Return y) k ->
-      let (| _, l' |) = step_redex (| _, l |) in
-      (| _, Par l' (Return y) k |)
-    | Par (Return x) r k ->
-      let (| _, r' |) = step_redex (| _, r |) in
-      (| _, Par (Return x) r' k |)
-    | Par l r k ->
-      let b = sample () in
-      if b then
-        let (| _, l' |) = step_redex (| _, l |) in
-        (| _, Par l' r k |)
-      else
-        let (| _, r' |) = step_redex (| _, r |) in
-        (| _, Par l r' k |)
+// let rec step_redex (#a:Type u#a) (redex:nm a)
+//   : Eff (reduct redex)
+//         (decreases (dfst redex))
+//   = match dsnd redex with
+//     | Return _ -> redex
+//     | Act act ->
+//       let s0 = get () in
+//       let x, s1 = act s0 in
+//       put s1;
+//       (| _, Return x |)
+//     | Par #_ #_ #_ #n (Return x) (Return y) ->
+//       (| n, Return (x, y) |)
+//     | Par l (Return y) ->
+//       let (| _, l' |) = step_redex (| _, l |) in
+//       (| _, Par l' (Return y) |)
+//     | Par (Return x) r ->
+//       let (| _, r' |) = step_redex (| _, r |) in
+//       (| _, Par (Return x) r' |)
+//     | Par l r ->
+//       let b = sample () in
+//       if b then
+//         let (| _, l' |) = step_redex (| _, l |) in
+//         (| _, Par l' r |)
+//       else
+//         let (| _, r' |) = step_redex (| _, r |) in
+//         (| _, Par l r' |)
+//      | _ -> admit()
 
-let rec run #a (p:nm a) : Eff (nm a) (decreases (dfst p)) =
-  match dsnd p with
-  | Return _ -> p
-  | _ ->
-    let p = step_redex p in run p
+// let rec run #a (p:nm a) : Eff (nm a) (decreases (dfst p)) =
+//   match dsnd p with
+//   | Return _ -> p
+//   | _ ->
+//     let p = step_redex p in run p
