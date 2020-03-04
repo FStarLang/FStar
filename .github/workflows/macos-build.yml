@@ -9,7 +9,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout everest repo
+    - name: Checkout everest
       uses: actions/checkout@v2
       with:
         repository: project-everest/everest
@@ -22,7 +22,7 @@ jobs:
       run: |
         cd everest
         export OPAMYES=1
-        brew install opam
+        brew install opam bash
         opam init
         opam switch create 4.05.0
         eval $(opam env)
