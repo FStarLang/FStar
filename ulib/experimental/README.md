@@ -10,11 +10,16 @@ using a development version of F* that can be obtained on
 to the commit ??? and follow the "Building F* from sources" section of `INSTALL.md` to build the
 typechecker.
 
-## Organization
-
 Please refer to the Figure 1. of the paper for the dependency between module. F*, similarly to OCaml,
 distinguishes between interfaces files (`.fsti`) and implementation files (`.fst`). For each module
 name mentionned later, you can look to the corresponding implementation and/or interface file.
+
+## Auxiliary proofs shown in the paper
+
+You can find all the code presented in section 2 of the paper in the `MParIndex` module and check
+that the proofs typecheck without any additional annotations.
+
+## Organization of the main SteelCore developement
 
 The core semantics using indexed effectful action trees presented in Section 3, toghether with
 their soundess proof, are available in `Steel.Semantics.Hoare.MST`. They build upon the `MST`
