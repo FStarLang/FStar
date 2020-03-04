@@ -28,7 +28,7 @@ The core semantics using indexed effectful action trees presented in Section 3, 
 their soundess proof, are available in `Steel.Semantics.Hoare.MST`. They build upon the `MST`
 and `NMST` modules, which provide a model of monotonic state as described by Ahman et al.
 
-`Steel.PCM` encodes partially commutative monoïds into F*, and is used by `Steel.PCM.Memory`
+`Steel.PCM` encodes partially commutative monoids into F*, and is used by `Steel.PCM.Memory`
 whose goal is to show a proof of concept of a generic memory model depending on an abstract PCM.
 As stated by the paper, the rest of our implementation currently relies on a different memory
 model that is specialized for the fractional permission PCM.

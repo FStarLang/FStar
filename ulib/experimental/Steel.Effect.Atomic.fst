@@ -96,7 +96,7 @@ let mst_put (m:mem)
 let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
   = SteelAtomic?.reflect (fun _ ->
-      let m0 = NMST.rmst_admit() in
+      let m0 = NMST.nmst_admit() in
       mst_put m0
     )
 

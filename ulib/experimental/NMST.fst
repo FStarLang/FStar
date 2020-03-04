@@ -151,7 +151,7 @@ let sample (#state:Type u#2) (#rel:P.preorder state) ()
     =
   NMSTATE?.reflect (fun (t, n) -> t n, n+1)
 
-let lift_pure_rmst
+let lift_pure_nmst
       (a:Type)
       (state:Type u#2)
       (rel:P.preorder state)
@@ -166,19 +166,19 @@ let lift_pure_rmst
     let x = f () in
     x, n
 
-sub_effect PURE ~> NMSTATE = lift_pure_rmst
+sub_effect PURE ~> NMSTATE = lift_pure_nmst
 
-let rmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+let nmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assume p
 
-let rmst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
+let nmst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
     : NMSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
     =
   admit ()
 
-let rmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+let nmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
