@@ -325,27 +325,27 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 *)
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  RMST.RMSTATE a mem mem_evolves req ens
+  NMST.NMSTATE a mem mem_evolves req ens
 
 let mst_get ()
 : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-= RMST.get ()
+= NMST.get ()
 
 let mst_put (m:mem)
 : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-= RMST.put m
+= NMST.put m
 
 let mst_assume (p:Type)
 : Mst unit (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
-= RMST.rmst_assume p
+= NMST.rmst_assume p
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
-= RMST.rmst_admit ()
+= NMST.rmst_admit ()
 
 let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
-= RMST.rmst_assert p
+= NMST.rmst_assert p
 
 let intro_emp_left (p1 p2:hprop) (m:mem)
 : Lemma

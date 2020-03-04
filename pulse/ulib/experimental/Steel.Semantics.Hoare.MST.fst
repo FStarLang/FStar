@@ -20,7 +20,7 @@ module P = FStar.Preorder
 
 open FStar.Tactics
 
-open RMST
+open NMST
 
 
 (*
@@ -262,7 +262,7 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) = fp_prop2 pre p
 (**** End expects, provides, requires, and ensures defns ****)
 
 effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
-  RMSTATE a st.mem st.locks_preorder req ens
+  NMSTATE a st.mem st.locks_preorder req ens
 
 
 (**** Begin interface of actions ****)
@@ -917,7 +917,7 @@ let step_ret (#st:st) (#a:Type u#a)
 
 : Mst (step_result st a) (step_req f) (step_ens f)
 
-= RMSTATE?.reflect (fun (_, n) ->
+= NMSTATE?.reflect (fun (_, n) ->
     let Ret p x lp = f in
     Step (p x) p lpre lpost f, n)
 
@@ -963,7 +963,7 @@ let step_bind_ret (#st:st)
 
 : Mst (step_result st a) (step_req f) (step_ens f)
 
-= RMSTATE?.reflect (fun (_, n) -> step_bind_ret_aux f, n)
+= NMSTATE?.reflect (fun (_, n) -> step_bind_ret_aux f, n)
 
 
 #push-options "--z3rlimit 40"
@@ -1025,7 +1025,7 @@ let step_frame_ret (#st:st)
 
 : Mst (step_result st a) (step_req f) (step_ens f)
 
-= RMSTATE?.reflect (fun (_, n) -> step_frame_ret_aux f, n)
+= NMSTATE?.reflect (fun (_, n) -> step_frame_ret_aux f, n)
 
 
 let step_frame (#st:st)
@@ -1081,7 +1081,7 @@ let step_par_ret (#st:st)
 
 : Mst (step_result st a) (step_req f) (step_ens f)
 
-= RMSTATE?.reflect (fun (_, n) -> step_par_ret_aux f, n)
+= NMSTATE?.reflect (fun (_, n) -> step_par_ret_aux f, n)
 
 let step_par (#st:st)
   (#a:Type) (#pre:st.hprop) (#post:post_t st a) (#lpre:l_pre pre) (#lpost:l_post pre post)
@@ -1142,7 +1142,7 @@ let step_weaken (#st:st) (#a:Type u#a)
 
 : Mst (step_result st a) (step_req f) (step_ens f)
 
-= RMSTATE?.reflect (fun (_, n) ->
+= NMSTATE?.reflect (fun (_, n) ->
     let Weaken #_ #_ #pre #post #lpre #lpost #_ #_ #_ #_ #_ f = f in
 
     Step pre post lpre lpost f, n)

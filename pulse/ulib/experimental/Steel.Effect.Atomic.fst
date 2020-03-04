@@ -74,20 +74,20 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  RMST.RMSTATE a mem mem_evolves req ens
+  NMST.NMSTATE a mem mem_evolves req ens
 
 let mst_get ()
   : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-  = RMST.get ()
+  = NMST.get ()
 
 let mst_put (m:mem)
   : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-  = RMST.put m
+  = NMST.put m
 
 let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
   = SteelAtomic?.reflect (fun _ ->
-      let m0 = RMST.rmst_admit() in
+      let m0 = NMST.rmst_admit() in
       mst_put m0
     )
 
@@ -156,7 +156,7 @@ let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_
 = frame0 (steelatomic_reify f) frame
 
 let inv_witnessed (#p:hprop) (i:inv p) =
-  RMST.witnessed mem mem_evolves (inv_ok i)
+  NMST.witnessed mem mem_evolves (inv_ok i)
 
 let ival (p:hprop) = i:inv p{inv_witnessed i}
 
@@ -169,7 +169,7 @@ let new_inv (p:hprop) : SteelAtomic (ival p) Set.empty false p (fun _ -> emp)
       Classical.forall_intro (Classical.move_requires (new_inv_preserves_frame p m0));
       mst_put m1;
       Classical.forall_intro_2 (inv_ok_stable i);
-      RMST.witness mem mem_evolves (inv_ok i);
+      NMST.witness mem mem_evolves (inv_ok i);
       i)
 #pop-options
 
@@ -301,13 +301,13 @@ let with_invariant_aux
   (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : atomic_repr a uses is_ghost fp fp'
   = fun _ ->
-      RMST.recall mem mem_evolves (inv_ok i);
-      let m0 = RMST.get() in
+      NMST.recall mem mem_evolves (inv_ok i);
+      let m0 = NMST.get() in
       let s = Set.union (Set.singleton i) uses in
       interp_inv_unused i uses fp m0;
       let x = f () in
-      let m1 = RMST.get() in
-      RMST.recall mem mem_evolves (inv_ok i);
+      let m1 = NMST.get() in
+      NMST.recall mem mem_evolves (inv_ok i);
       interp_inv_unused i uses (fp' x) m1;
       lemma_sem_preserves fp (fp' x) m0 m1 uses i;
       x

@@ -225,7 +225,7 @@ let witnessed
   (r:reference t p)
   (fact:property t)
               =
-  RMST.witnessed mem mem_evolves (fun (m: mem) ->
+  NMST.witnessed mem mem_evolves (fun (m: mem) ->
     (interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m))
   )
 
@@ -292,7 +292,7 @@ let witness_atomic
    intro_exists v (pts_to_ref r q) m0;
    sel_ref_lemma r q m0;
    pts_to_ref_injective r q q v (sel_ref r m0) m0;
-   let fact_mem : RMST.s_predicate mem = (fun m ->
+   let fact_mem : NMST.s_predicate mem = (fun m ->
     interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
    ) in
    let aux (m0 m1: mem) : Lemma ((fact_mem m0 /\ mem_evolves m0 m1) ==> fact_mem m1) =
@@ -302,9 +302,9 @@ let witness_atomic
      Classical.impl_intro aux
    in
    Classical.forall_intro_2 aux;
-   assert(RMST.stable mem mem_evolves fact_mem);
+   assert(NMST.stable mem mem_evolves fact_mem);
    sel_ref_or_dead_lemma r m0;
-   RMST.witness mem mem_evolves fact_mem;
+   NMST.witness mem mem_evolves fact_mem;
    let m1 = mst_get () in
    assert(m0 == m1);
    lem_star_pure
@@ -351,7 +351,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
-= RMST.rmst_admit ()
+= NMST.rmst_admit ()
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let recall_atomic
@@ -371,10 +371,10 @@ let recall_atomic
    sel_ref_lemma r q m0;
    pts_to_ref_injective r q q v (sel_ref r m0) m0;
    lem_interp_star_pure (pts_to_ref r q v) (witnessed r fact) m0;
-   let fact_mem : RMST.s_predicate mem = (fun m ->
+   let fact_mem : NMST.s_predicate mem = (fun m ->
     interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
    ) in
-   RMST.recall mem mem_evolves fact_mem;
+   NMST.recall mem mem_evolves fact_mem;
    let m1 = mst_get () in
    assert(m0 == m1);
    sel_ref_or_dead_lemma r m1;
