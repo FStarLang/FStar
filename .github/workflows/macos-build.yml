@@ -22,7 +22,7 @@ jobs:
       run: |
         cd everest
         export OPAMYES=1
-        brew install opam bash
+        brew install opam bash gnu-getopt
         opam init
         opam switch create 4.05.0
         eval $(opam env)
