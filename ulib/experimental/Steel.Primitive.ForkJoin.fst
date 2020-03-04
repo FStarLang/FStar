@@ -128,7 +128,3 @@ let rec join (#p:hprop) (t:thread p)
     h_assert (pts_to t.r full b `star` maybe_p p b);
     h_assert (pre t b);
     cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
-    // if b
-    // then (h_assert (pts_to t.r full true `star` maybe_p p true);
-    //       elim_wand (pure (true==true)) p)
-    // else (intro_h_exists false (lock_inv_pred t.r p); L.release t.l; join t)

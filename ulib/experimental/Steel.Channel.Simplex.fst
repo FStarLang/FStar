@@ -712,17 +712,6 @@ let send_receive_prelude (#p:prot) (cc:chan p)
               chan_inv_cond (fst result) (snd result))
            result
 
-// let rec send (#p:prot{more p}) (c:chan) (x:msg_t p)
-//  : Steel unit
-//    (expects sender c p)
-//    (provides fun _ -> sender c (step p x))
-//  = acquire c.inv;
-//    let _, _, n0 = !c.chan.send in
-//    let _, _, n1 = !c.chan.recv in
-//    if n0 == n1 //last send received
-//    then (c.chan.send := (p, x, n0 + 1);
-//          release c.inv)
-//    else (release c.inv; send c x) //spin
 let rec send (#q:prot) (cc:chan q) (#p:prot{more p}) (x:msg_t p)
   : SteelT unit (sender cc p) (fun _ -> sender cc (step p x))
   = h_assert (in_state cc.chan_chan.send p);
@@ -739,20 +728,6 @@ let rec send (#q:prot) (cc:chan q) (#p:prot{more p}) (x:msg_t p)
     channel_cases cc.chan_chan.send #p cc x vs vr
                   (send_available #p cc x vs vr)
                   (send_blocked #p cc x vs vr (fun _ -> send cc x))
-
-
-// let rec recv (#p:prot{more_msgs p}) (c:chan)
-//   : Steel (msg_t p)
-//     (expects receiver c p)
-//     (provides fun x -> receiver v (step p x))
-//   = acquire c.inv;
-//     let qs, x, n0 = !i.chan.send in
-//     let qr, y, n1 = !i.chan.recv in
-//     if n0==n1 //last send already received
-//     then (release i.inv; recv c)
-//     else (c.chan.recv := (qs, x, n0);
-//           release c.inv; x)
-
 
 let channel_cases_recv
                   (r:ref chan_val) (#p:prot{more p}) #q (c:chan q) (vs vr:chan_val)
