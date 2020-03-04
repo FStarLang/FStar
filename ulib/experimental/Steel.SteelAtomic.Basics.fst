@@ -3,7 +3,7 @@ open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.Memory
 open Steel.Permissions
-module Sem = Steel.Semantics
+module Sem = Steel.Semantics.Hoare.MST
 
 let return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
 : SteelAtomic a uses true (p x) p
