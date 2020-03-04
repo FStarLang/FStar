@@ -27,17 +27,14 @@ jobs:
         opam switch create 4.05.0
         eval $(opam env)
         ./everest --yes z3 opam
+        opam install menhir
         cd -
     - name: Build FStar
       run: |
-        cd FStar
-        make -j all
-        cd -
+        make -j -C FStar all
     - name: Package FStar
       run: |
-        cd FStar
-        make -j package
-        cd -
+        make -j -C FStar package
     - name: Upload artifact
       uses: actions/upload-artifact@v1
       with:
