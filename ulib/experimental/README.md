@@ -1,19 +1,56 @@
-# Steel ICFP Artifact
+# SteelCore Supplementary Material
 
+This material contains the mechanized proofs for the model presented in the SteelCore paper.
+More precisely, we implement here a version of our effectul CSL semantics complete with monotonic state, non-determinism and pre- and post-conditions.
 
+All the development is done within the F* proof assistant, which relies on the Z3 theorem prover
+for semi-automated proofs. In order to verify the code, you will need to typecheck the source files
+using a development version of F* that can be obtained on
+[the project repository](https://github.com/FStarLang/FStar). Please use the snapshot corresponding
+to the commit ??? and follow the "Building F* from sources" section of `INSTALL.md` to build the
+typechecker.
 
 ## Organization
 
-The core semantics presented in Section 3 are available in `Steel.Semantics.Hoare.MST.fst`. 
-They build upon the `MST.fst` and `NMST.fst` modules, which provide a model of monotonic
-state as described by Ahman et al.
+Please refer to the Figure 1. of the paper for the dependency between module. F*, similarly to OCaml,
+distinguishes between interfaces files (`.fsti`) and implementation files (`.fst`). For each module
+name mentionned later, you can look to the corresponding implementation and/or interface file.
 
-`Steel.Memory` and `Steel.Actions` define the SteelCore program logic presented in Section 4.
-`Steel.Memory` provides the definition of our separation logic and its connectives, as well
-as our model of memory as a map from abstract addresses to heap cells.
-`Steel.Actions` defines our stored invariants, as well as a variety of standard actions.
-`Steel.Semantics.Instantiate` then builds upon them to instantiate the State Typeclass presented in section 3.0
+The core semantics using indexed effectful action trees presented in Section 3, toghether with
+their soundess proof, are available in `Steel.Semantics.Hoare.MST`. They build upon the `MST`
+and `NMST` modules, which provide a model of monotonic state as described by Ahman et al.
 
-TODO: What to do about Steel.PCM.*?
+`Steel.PCM` encodes partially commutative monoïds into F*, and is used by `Steel.PCM.Memory`
+whose goal is to show a proof of concept of a generic memory model depending on an abstract PCM.
+As stated by the paper, the rest of our implementation currently relies on a different memory
+model that is specialized for the fractional permission PCM.
+
+`Steel.Memory` and `Steel.Actions` define the SteelCore program logic presented in Section 4,
+but specialized for the fractional permission PCM. `Steel.Memory` provides the definition of
+our separation logic and its connectives, as well as our model of memory as a map from abstract
+addresses to heap cells. `Steel.Actions` defines our stored invariants, as well as a variety
+of standard actions.
+
+`Steel.Semantics.Instantiate` then builds upon them to instantiate the State Typeclass
+presented in section 3.0. `Steel.Memory.Tactics` defines a set of tactics used to automate
+the frame resolution.
+
+`Steel.Effect` and `Steel.Effect.Atomic` build upon the SteelCore program logic defined in
+`Steel.Memory` and `Steel.Actions` to define two monadic effects, encapsulating respectively
+non-atomic and atomic computations.
+
+These effects are then used to define the interface of the SteelCore Program Logic, in the form of a
+set of libraries:
+* `Steel.HigherReference` and `Steel.Reference` deal with memory references, storing respectively
+  values of types contained in universe 1 and 0;
+* `Steel.SteelAtomic.Basics` contains helper functions for programming in the
+  `SteelAtomic` effect;
+* `Steel.SteelT.Basics` contains helper functions for programming in a simplified version of the
+   `Steel` effect where pre- and post- conditions are trivial.
+
+Using these libraries, we present the implementation of the examples from section 5:
+* `Steel.SpinLock` is the spinlock using CAS of 5.1;
+* `Steel.Primitive.ForkJoin` is the fork/join parallelism structure of 5.2;
+* `Steel.Channel.*` is the implementation of the simplex channels protocols of 5.3.
 
 ## Additional explanations
