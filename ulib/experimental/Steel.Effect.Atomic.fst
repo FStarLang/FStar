@@ -84,20 +84,6 @@ let mst_put (m:mem)
   : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
   = NMST.put m
 
-let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
-  : SteelAtomic a uses true p q
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = NMST.rmst_admit() in
-      mst_put m0
-    )
-
-let steel_assert (uses:Set.set lock_addr) (p:hprop)
-  : SteelAtomic unit uses true p (fun _ -> p)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get() in
-      mst_put m0
-    )
-
 let intro_emp_left (p1 p2:hprop) (m:mem)
 : Lemma
   (requires interp (p1 `star` p2) m)

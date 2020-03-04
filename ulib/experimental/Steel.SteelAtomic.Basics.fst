@@ -9,14 +9,24 @@ let return_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:a -> hprop) (x:a)
 : SteelAtomic a uses true (p x) p
 = SteelAtomic?.reflect (return a x uses p)
 
-val h_admit_atomic (#a:_) (#uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
-  : SteelAtomic a uses true p q
-let h_admit_atomic #a #uses p q =
-  steel_admit a uses p q
-
+(* GM: FIXME: When using val/let, we need to add an ascription to the
+              reflect. It would be nice if it was inferred from the
+              `val` instead. *)
 val h_assert_atomic (#uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> p)
-let h_assert_atomic #uses p = steel_assert uses p
+let h_assert_atomic #uses p
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 = mst_get() in
+      mst_put m0
+    ) <: SteelAtomic unit uses true p (fun _ -> p)
+
+val h_admit_atomic (#a:_) (#uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
+  : SteelAtomic a uses true p q
+let h_admit_atomic #a #uses p q
+  = SteelAtomic?.reflect (fun _ ->
+      let m0 : mem = NMST.rmst_admit () in
+      mst_put m0
+    ) <: SteelAtomic a uses true p q
 
 val h_intro_emp_l (#uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> emp `star` p)
