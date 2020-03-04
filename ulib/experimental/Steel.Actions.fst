@@ -824,8 +824,7 @@ let inv_ok_stable (#p:_) (l:inv p) (m0 m1:mem)
            inv_ok l m1)
   = ()
 
-let new_inv_pre_m_action (p:hprop)
-  : pre_m_action p (inv p) (fun _ -> emp)
+let new_inv (p:hprop)
   = fun m ->
      let l = Invariant p in
      let locks' = l :: m.locks in
@@ -846,13 +845,13 @@ let new_inv_is_frame_preserving_aux (p:hprop) (frame:hprop) (m:hmem_with_inv (p 
           (ensures (
             ac_reasoning_for_m_frame_preserving p frame (locks_invariant Set.empty m) m;
             (
-            let (| x, m1 |) = new_inv_pre_m_action p m in
+            let (| x, m1 |) = new_inv p m in
             interp (emp `star` frame `star` locks_invariant Set.empty m1) m1 /\
             mem_evolves m m1 /\
             (forall (mp:mprop frame). mp (core_mem m) == mp (core_mem m1))
             )))
       = ac_reasoning_for_m_frame_preserving p frame (locks_invariant Set.empty m) m;
-        let (| x, m1 |) = new_inv_pre_m_action p m in
+        let (| x, m1 |) = new_inv p m in
         mem_invariant_elim (p `star` frame) m;
         assert (m1.locks == Invariant p :: m.locks);
         assert (lock_store_invariant Set.empty m1.locks == (p `star` lock_store_invariant Set.empty m.locks));
@@ -885,14 +884,8 @@ let new_inv_is_frame_preserving_aux (p:hprop) (frame:hprop) (m:hmem_with_inv (p 
 #pop-options
 
 #push-options "--fuel 2 --ifuel 2"
-let new_inv_is_frame_preserving (p:hprop)
-  : Lemma (is_m_frame_and_preorder_preserving (new_inv_pre_m_action p))
-  = Classical.forall_intro_2 (new_inv_is_frame_preserving_aux p)
-
-let new_inv (p:hprop)
-  : m_action p (inv p) (fun _ -> emp)
-  = new_inv_is_frame_preserving p;
-    new_inv_pre_m_action p
+let new_inv_mem_evolves p m0 = Classical.forall_intro_2 (new_inv_is_frame_preserving_aux p)
+let new_inv_preserves_frame p m0 frame = new_inv_is_frame_preserving_aux p frame m0
 
 let promote_action_preatomic
     (#a:Type) (#fp:hprop) (#fp':a -> hprop)
@@ -1133,97 +1126,7 @@ let interp_inv_unused #p i uses frame m0 =
   Classical.forall_intro aux
 #pop-options
 
-val pre_with_invariant
-  (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
-  (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
-  : pre_atomic uses fp a fp'
-
-let pre_with_invariant #a #fp #fp' #uses #is_ghost #p i f =
-  fun (m0:hmem_with_inv' uses fp) ->
-    assume (inv_ok i m0);
-    mem_invariant_elim' uses fp m0;
-    let uses' = Set.union (Set.singleton i) uses in
-    interp_inv_not_in_uses i uses fp m0;
-    mem_invariant_intro' uses' (p `star` fp) m0;
-    let (| x, m1 |) = f m0 in
-    mem_invariant_elim' uses' (p `star` fp' x) m1;
-    atomic_satisfies_mem_evolves f m0;
-    interp_inv_not_in_uses i uses (fp' x) m1;
-    mem_invariant_intro' uses (fp' x) m1;
-    (| x, m1 |)
-
-
-val with_invariant_frame_aux
-    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
-    (#p:hprop)
-    (i:inv p{not (i `Set.mem` uses)})
-    (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
-    (frame:hprop) (m0:hmem_with_inv' uses (fp `star` frame))
-    : Lemma (
-        ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
-        interp (fp `star` locks_invariant uses m0) m0 /\
-        (let (| x, m1 |) = (pre_with_invariant i f) m0 in
-        interp ((fp' x `star` frame) `star` locks_invariant uses m1) m1 /\
-        mem_evolves m0 m1 /\
-        (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
-
-#push-options "--fuel 0 --ifuel 0"
-let with_invariant_frame_aux #fp #a #fp' #uses #is_ghost #p i f frame m0 =
-  mem_invariant_elim' uses (fp `star` frame) m0;
-  assume (inv_ok i m0);
-  ac_reasoning_for_m_frame_preserving fp frame (locks_invariant uses m0) m0;
-  mem_invariant_elim' uses fp m0;
-  let uses' = Set.union (Set.singleton i) uses in
-  calc (equiv) {
-    ((fp `star` frame) `star` lock_store_invariant uses m0.locks);
-    (equiv) { interp_inv_not_in_uses i uses (fp `star` frame) m0 }
-    (p `star` (fp `star` frame)) `star` lock_store_invariant uses' m0.locks;
-    (equiv) { star_associative p fp frame;
-              star_congruence ((p `star` fp) `star` frame) (lock_store_invariant uses' m0.locks)
-                              (p `star` (fp `star` frame)) (lock_store_invariant uses' m0.locks)}
-    ((p `star` fp) `star` frame) `star` lock_store_invariant uses' m0.locks;
-  };
-  calc (equiv) {
-    fp `star` lock_store_invariant uses m0.locks;
-    (equiv) { interp_inv_not_in_uses i uses fp m0 }
-    (p `star` fp) `star` lock_store_invariant uses' m0.locks;
-  };
-  mem_invariant_intro' uses' ((p `star` fp) `star` frame) m0;
-  mem_invariant_intro' uses' ((p `star` fp)) m0;
-  let m0:hmem_with_inv' uses' ((p `star` fp) `star` frame) = m0 in
-  let (| x, m1 |) = f m0 in
-  mem_invariant_elim' uses' ((p `star` fp' x) `star` frame) m1;
-  atomic_satisfies_mem_evolves f m0;
-  calc (equiv) {
-    ((p `star` fp' x) `star` frame) `star` lock_store_invariant uses' m1.locks;
-    (equiv) { star_associative p (fp' x) frame;
-              star_congruence ((p `star` fp' x) `star` frame) (lock_store_invariant uses' m1.locks)
-                              (p `star` (fp' x `star` frame)) (lock_store_invariant uses' m1.locks)}
-    (p `star` (fp' x `star` frame)) `star` lock_store_invariant uses' m1.locks;
-    (equiv) { interp_inv_not_in_uses i uses (fp' x `star` frame) m1 }
-    (fp' x `star` frame) `star` lock_store_invariant uses m1.locks;
-  };
-  mem_invariant_intro' uses (fp' x `star` frame) m1
-#pop-options
-
-val with_invariant_frame
-    (#fp:hprop) (#a:Type) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
-    (#p:hprop)
-    (i:inv p{not (i `Set.mem` uses)})
-    (f:atomic (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) a (fun x -> p `star` fp' x))
-    :  Lemma (is_atomic_frame_and_preorder_preserving (pre_with_invariant i f))
-
-let with_invariant_frame #fp #a #fp' #uses #is_ghost #p i f =
-  Classical.forall_intro_2 (with_invariant_frame_aux i f)
-
-let with_invariant #a #fp #fp' #uses #is_ghost #p i f =
-    with_invariant_frame i f;
-    pre_with_invariant i f
-
 let promote_atomic_m_action #a #fp #fp' #is_ghost f = f
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utilities

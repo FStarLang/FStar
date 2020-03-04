@@ -73,19 +73,6 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
-
-// val bind_pure_steel (a:Type) (b:Type)
-//   (wp:pure_wp a)
-//   (uses:Set.set lock_addr)
-//   (is_ghost:bool)
-//   (pre_g:pre_t) (post_g:post_t b)
-//   (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b uses is_ghost pre_g post_g))
-// : atomic_repr b uses is_ghost pre_g post_g
-
-
-// polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
-
-
 effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
   RMST.RMSTATE a mem mem_evolves req ens
 
@@ -168,30 +155,22 @@ let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_
   (fun x -> post x `star` frame)
 = frame0 (steelatomic_reify f) frame
 
-/// By default, if we demote an m_action, it is not a ghost atomic
-/// If we want a ghost atomic, it should be exposed this way in Steel.Actions
-val demote_m_action_atomic
-    (#a:Type) (#fp:hprop) (#fp':a -> hprop)
-    (f : m_action fp a fp')
-    : atomic Set.empty false fp a fp'
+let inv_witnessed (#p:hprop) (i:inv p) =
+  RMST.witnessed mem mem_evolves (inv_ok i)
 
-#push-options "--fuel 0 --ifuel 0"
-let demote_m_action_atomic #a #fp #fp' f = f
-#pop-options
-
-// TODO: If we expose directly an atomic new_inv, this should probably be considered a ghost action?
-// Or maybe it shouldn't be in SteelAtomic at all?
-val atomic_new_inv (p:hprop) : atomic Set.empty false p (inv p) (fun _ -> emp)
-let atomic_new_inv p = demote_m_action_atomic (new_inv p)
+let ival (p:hprop) = i:inv p{inv_witnessed i}
 
 #push-options "--fuel 0 --ifuel 1"
-let new_inv (p:hprop) : SteelAtomic (inv p) Set.empty false p (fun _ -> emp)
+let new_inv (p:hprop) : SteelAtomic (ival p) Set.empty false p (fun _ -> emp)
   = SteelAtomic?.reflect (fun _ ->
       let m0 = mst_get () in
-      let (| x, m1 |) = atomic_new_inv p m0 in
-      atomic_preserves_frame_and_preorder (atomic_new_inv p) m0;
+      let (| i, m1 |) = new_inv p m0 in
+      new_inv_mem_evolves p m0;
+      Classical.forall_intro (Classical.move_requires (new_inv_preserves_frame p m0));
       mst_put m1;
-      x)
+      Classical.forall_intro_2 (inv_ok_stable i);
+      RMST.witness mem mem_evolves (inv_ok i);
+      i)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 1"
@@ -318,17 +297,17 @@ let lemma_sem_preserves (#p:hprop) (fp fp':hprop)
 let with_invariant_aux
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
+  (i:ival p{not (i `Set.mem` uses)})
   (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : atomic_repr a uses is_ghost fp fp'
   = fun _ ->
+      RMST.recall mem mem_evolves (inv_ok i);
       let m0 = RMST.get() in
-      assume (inv_ok i m0);
       let s = Set.union (Set.singleton i) uses in
       interp_inv_unused i uses fp m0;
       let x = f () in
       let m1 = RMST.get() in
-      assume (inv_ok i m1);
+      RMST.recall mem mem_evolves (inv_ok i);
       interp_inv_unused i uses (fp' x) m1;
       lemma_sem_preserves fp (fp' x) m0 m1 uses i;
       x
@@ -337,7 +316,7 @@ let with_invariant_aux
 let with_invariant0
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
+  (i:ival p{not (i `Set.mem` uses)})
   (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses is_ghost fp fp'
   = SteelAtomic?.reflect (with_invariant_aux i f)
@@ -345,7 +324,7 @@ let with_invariant0
 let with_invariant_frame
   (#a:Type) (#fp:hprop) (#fp':a -> hprop) (#uses:Set.set lock_addr) (#is_ghost:bool)
   (#p:hprop)
-  (i:inv p{not (i `Set.mem` uses)})
+  (i:ival p{not (i `Set.mem` uses)})
   (f:unit -> SteelAtomic a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a uses is_ghost fp fp'
   = with_invariant0 i (steelatomic_reify f)
