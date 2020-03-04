@@ -113,36 +113,42 @@ let rec step (#a:Type u#a) (redex:nm a)
         let (| _, r' |) = step (| _, r |) in
         (| _, Par l r' |)
 
-// let rec step_redex (#a:Type u#a) (redex:nm a)
-//   : Eff (reduct redex)
-//         (decreases (dfst redex))
-//   = match dsnd redex with
-//     | Return _ -> redex
-//     | Act act ->
-//       let s0 = get () in
-//       let x, s1 = act s0 in
-//       put s1;
-//       (| _, Return x |)
-//     | Par #_ #_ #_ #n (Return x) (Return y) ->
-//       (| n, Return (x, y) |)
-//     | Par l (Return y) ->
-//       let (| _, l' |) = step_redex (| _, l |) in
-//       (| _, Par l' (Return y) |)
-//     | Par (Return x) r ->
-//       let (| _, r' |) = step_redex (| _, r |) in
-//       (| _, Par (Return x) r' |)
-//     | Par l r ->
-//       let b = sample () in
-//       if b then
-//         let (| _, l' |) = step_redex (| _, l |) in
-//         (| _, Par l' r |)
-//       else
-//         let (| _, r' |) = step_redex (| _, r |) in
-//         (| _, Par l r' |)
-//      | _ -> admit()
+let rec step_redex (#a:Type u#a) (redex:nm a)
+  : Eff (reduct redex)
+        (decreases (dfst redex))
+  = match dsnd redex with
+    | Return _ -> redex
+    | Act act ->
+      let s0 = get () in
+      let x, s1 = act s0 in
+      put s1;
+      (| _, Return x |)
+    | Par #a0 #a1 #n0 #n1 (Return x) (Return y) ->
+      (| 0, Return #(a0 & a1) (x, y) |)
+    | Par l (Return y) ->
+      let (| _, l' |) = step_redex (| _, l |) in
+      (| _, Par l' (Return y) |)
 
-// let rec run #a (p:nm a) : Eff (nm a) (decreases (dfst p)) =
-//   match dsnd p with
-//   | Return _ -> p
-//   | _ ->
-//     let p = step_redex p in run p
+    | Par (Return x) r ->
+      let (| _, r' |) = step_redex (| _, r |) in
+      (| _, Par (Return x) r' |)
+    | Par l r ->
+      let b = sample () in
+      if b then
+        let (| _, l' |) = step_redex (| _, l |) in
+        (| _, Par l' r |)
+      else
+        let (| _, r' |) = step_redex (| _, r |) in
+        (| _, Par l r' |)
+
+     | Bind #a #b #n1 #n2 (Return x) g -> (| n2, (g x <: m n2 b) |)
+
+     | Bind #_ #_ #_ #_ f g ->
+       let (| _, f' |) = step_redex (| _, f |) in
+       (| _, Bind f' g |)
+
+let rec run #a (p:nm a) : Eff (nm a) (decreases (dfst p)) =
+  match dsnd p with
+  | Return _ -> p
+  | _ ->
+    let p = step_redex p in run p
