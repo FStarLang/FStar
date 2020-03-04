@@ -37,10 +37,6 @@ let h_intro_emp_l (p:hprop)
   : SteelT unit p (fun _ -> emp `star` p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_intro_emp_l p)
 
-let h_admit (#a:_) (p:hprop) (q:a -> hprop)
-  : SteelT a p q
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_admit_atomic p q)
-
 let h_commute (p q:hprop)
   : SteelT unit (p `star` q) (fun _ -> q `star` p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_commute p q)
