@@ -54,3 +54,10 @@ Using these libraries, we present the implementation of the examples from sectio
 * `Steel.Channel.*` is the implementation of the simplex channels protocols of 5.3.
 
 ## Additional explanations
+
+You can quickly check the absence of assumed hypothesis in our development by running
+
+	grep -nrE "assume|admit" *.{fst,fsti}
+
+We do however rely on a number of modules from the F* standard library such as `FStar.Preorder`
+that can be inspected in the `ulib/` folder of the F* repository.
