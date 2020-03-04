@@ -9,30 +9,37 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build binaries
+    - name: Checkout everest repo
+      uses: actions/checkout@v2
+      with:
+        repository: project-everest/everest
+        path: everest
+    - name: Checkout FStar
+      uses: actions/checkout@v2
+      with:
+        path: FStar
+    - name: Setup dependencies
       run: |
+        cd everest
         export OPAMYES=1
-        curl -O https://raw.githubusercontent.com/FStarLang/binaries/master/z3-tested/z3-4.8.5-x64-osx-10.14.2.zip
-        unzip z3-4.8.5-x64-osx-10.14.2.zip
-        export PATH=$PATH:$PWD/z3-4.8.5-x64-osx-10.14.2/bin
         brew install opam
         opam init
         opam switch create 4.05.0
-        opam install depext
-        opam depext -i conf-gmp
-        opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
         eval $(opam env)
-        make -j -C src/ocaml-output
-        make -j -C ulib
-        make -j -C ulib/ml
-        make -j -C src/ocaml-output package
-        zip -r fstar.zip *
-    - uses: actions/upload-artifact@v1
-      with:
-        name: fstar_MacOS_x86_64
-        path: fstar.zip
-    - uses: actions/upload-artifact@v1
+        ./everest --yes z3 opam
+        cd -
+    - name: Build FStar
+      run: |
+        cd FStar
+        make -j all
+        cd -
+    - name: Package FStar
+      run: |
+        cd FStar
+        make -j package
+        cd -
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
       with:
         name: fstar_package
-        path: src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
+        path: FStar/src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
