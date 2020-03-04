@@ -361,10 +361,6 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
   =
   lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
 
-let mst_admit (#a:Type) ()
-: Mst a (fun _ -> True) (fun _ _ _ -> False)
-= NMST.rmst_admit ()
-
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let recall_atomic
   (#a:Type)
