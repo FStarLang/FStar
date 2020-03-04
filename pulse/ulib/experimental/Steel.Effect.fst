@@ -322,15 +322,15 @@ let mst_put (m:mem)
 
 let mst_assume (p:Type)
 : Mst unit (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
-= NMST.rmst_assume p
+= NMST.nmst_assume p
 
 let mst_admit (#a:Type) ()
 : Mst a (fun _ -> True) (fun _ _ _ -> False)
-= NMST.rmst_admit ()
+= NMST.nmst_admit ()
 
 let mst_assert (p:Type)
 : Mst unit (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
-= NMST.rmst_assert p
+= NMST.nmst_assert p
 
 let intro_emp_left (p1 p2:hprop) (m:mem)
 : Lemma
