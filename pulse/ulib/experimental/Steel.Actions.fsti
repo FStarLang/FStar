@@ -93,7 +93,20 @@ val inv_ok_stable (#p: hprop u#a) (l:inv p) (m0 m1:mem u#a)
            inv_ok l m1)
 
 val new_inv (p:hprop u#a)
-  : m_action p (inv p) (fun _ -> emp)
+  : f:( m:hmem_with_inv p -> (i:inv p & (m':hmem_with_inv emp{inv_ok i m'})))
+
+val new_inv_mem_evolves (p:hprop u#a) (m0:hmem_with_inv p)
+  : Lemma (
+      let (| i, m1 |) = new_inv p m0 in
+      mem_evolves m0 m1)
+
+val new_inv_preserves_frame (p:hprop u#a) (m0:hmem_with_inv p) (frame:hprop)
+  : Lemma
+    (requires interp ((p `star` frame) `star` locks_invariant Set.empty m0) m0)
+    (ensures (
+      let (| i, m1 |) = new_inv p m0 in
+      interp ((emp `star` frame) `star` locks_invariant Set.empty m1) m1 /\
+           (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
 
 let pre_atomic (uses:Set.set lock_addr)
                (fp:hprop)
@@ -130,16 +143,6 @@ val interp_inv_unused
     ((p `star` frame) `star` locks_invariant (
       Set.union (Set.singleton i) uses) m0
     ))
-
-val with_invariant
-  (#t:Type u#a) (#fp:hprop u#a) (#fp':t -> hprop u#a) (#uses:Set.set lock_addr) (#is_ghost:bool)
-  (#p:hprop u#a)
-  (i:inv p{not (i `Set.mem` uses)})
-  (f:atomic
-    (Set.union (Set.singleton i) uses)
-    is_ghost (p `star` fp) t (fun x -> p `star` fp' x)
-  )
-  : atomic uses is_ghost fp t fp'
 
 val promote_atomic_m_action
     (#a:Type u#b) (#fp:hprop u#a) (#fp':a -> hprop u#a) (#is_ghost:bool)
