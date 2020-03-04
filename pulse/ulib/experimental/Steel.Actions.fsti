@@ -56,31 +56,6 @@ let m_action (fp:hprop u#a) (a:Type u#b) (fp':a -> hprop u#a) =
   f:pre_m_action fp a fp'{ is_m_frame_and_preorder_preserving f }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Locks
-///////////////////////////////////////////////////////////////////////////////
-
-val lock (p:hprop u#a) : Type0
-
-val new_lock (p:hprop u#a)
-  : m_action u#a u#0 p (lock p) (fun _ -> emp)
-
-val lock_ok (#p:hprop u#a) (l:lock p) (m:mem u#a) : prop
-
-// let pure (p:prop) : hprop = refine emp (fun _ -> p)
-
-// val maybe_acquire
-//   (#p: hprop)
-//   (l:lock p)
-//   (m:hmem emp { lock_ok l m } )
-//   : (b:bool & m:hmem (h_or (pure (b == false)) p))
-
-val release
-  (#p: hprop u#a)
-  (l:lock p)
-  (m:hmem_with_inv p { lock_ok l m } )
-  : (b:bool & hmem_with_inv u#a emp)
-
-///////////////////////////////////////////////////////////////////////////////
 // Invariants
 ///////////////////////////////////////////////////////////////////////////////
 let inv (p:hprop u#a) : Type0 = lock_addr

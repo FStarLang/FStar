@@ -64,4 +64,4 @@ val lift_atomic_to_steelT
   ($f:unit -> SteelAtomic a Set.empty is_ghost fp fp')
   : SteelT a fp fp'
 let lift_atomic_to_steelT #a #is_ghost #fp #fp' f =
-  Steel?.reflect (lift_atomic_repr_to_steel_repr (steelatomic_reify f))
+  Steel?.reflect (lift_atomic_repr_to_steel_repr (reify (f ())))
