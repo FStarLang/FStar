@@ -14,6 +14,9 @@ Please refer to the Figure 1. of the paper for the dependency between module. F*
 distinguishes between interfaces files (`.fsti`) and implementation files (`.fst`). For each module
 name mentionned later, you can look to the corresponding implementation and/or interface file.
 
+The various pragmas introduced by `#` are used to pass certain options controlling the SMT encoding
+and the behavior of Z3.
+
 ## Auxiliary proofs shown in the paper
 
 You can find all the code presented in section 2 of the paper in the `MParIndex` module and check
@@ -60,7 +63,8 @@ Using these libraries, we present the implementation of the examples from sectio
 
 ## Additional explanations
 
-You can quickly check the absence of assumed hypothesis in our development by running
+You can quickly check the absence of assumed hypothesis (other than the witness/recall justified
+by Ahman et al.) in our development by running
 
 	grep -nrE "assume|admit" *.{fst,fsti}
 

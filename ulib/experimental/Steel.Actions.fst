@@ -1,5 +1,5 @@
 (*
-   Copyright 2019 Microsoft Research
+   Copyright 2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -2479,8 +2479,6 @@ let cas_action
     (cas_result_does_not_depend_on_framing r v v_old v_new)
     (fun h0 addr -> ())
 #pop-options
-
-#set-options "--print_universes"
 
 let cas
   (#t:eqtype)

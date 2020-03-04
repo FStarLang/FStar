@@ -1,3 +1,19 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Steel.HigherReference
 
 open Steel.Actions
@@ -132,8 +148,6 @@ let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
   = lift_atomic_to_steelT (fun _ -> gather_atomic r)
 
-#push-options "--print_universes"
-
 let read_refine_core_atomic_ghost (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
   : SteelAtomic a uses true
     (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
@@ -216,8 +230,6 @@ let lem_star_pure p f =
 let lem_interp_star_pure p f m =
   affine_star p (pure f) m;
   refine_equiv emp (fun _ -> f) m
-
-#set-options "--print_universes --print_implicits"
 
 let witnessed
   (#t:Type u#1)
