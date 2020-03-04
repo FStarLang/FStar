@@ -123,7 +123,7 @@ let rec step_redex (#a:Type u#a) (redex:nm a)
       let x, s1 = act s0 in
       put s1;
       (| _, Return x |)
-    | Par #a0 #a1 #n0 #n1 (Return x) (Return y) ->
+    | Par #a0 #a1 #_ #_ (Return x) (Return y) ->
       (| 0, Return #(a0 & a1) (x, y) |)
     | Par l (Return y) ->
       let (| _, l' |) = step_redex (| _, l |) in
@@ -141,9 +141,9 @@ let rec step_redex (#a:Type u#a) (redex:nm a)
         let (| _, r' |) = step_redex (| _, r |) in
         (| _, Par l r' |)
 
-     | Bind #a #b #n1 #n2 (Return x) g -> (| n2, (g x <: m n2 b) |)
+     | Bind #_ #b #_ #n2 (Return x) g -> (| n2, (g x <: m n2 b) |)
 
-     | Bind #_ #_ #_ #_ f g ->
+     | Bind f g ->
        let (| _, f' |) = step_redex (| _, f |) in
        (| _, Bind f' g |)
 
