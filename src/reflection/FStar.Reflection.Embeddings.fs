@@ -537,7 +537,6 @@ let e_comp_view =
                         None rng
 
         | C_Lemma (pre, post, pats) ->
-            let post = U.unthunk_lemma_post post in
             S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post); S.as_arg (embed e_term rng pats)]
                         None rng
 

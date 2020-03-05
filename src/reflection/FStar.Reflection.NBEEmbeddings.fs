@@ -491,7 +491,6 @@ let e_comp_view =
                                     as_arg (embed (e_option e_term) cb md)]
 
         | C_Lemma (pre, post, pats) ->
-            let post = U.unthunk_lemma_post post in
             mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
 
         | C_Eff (us, eff, res, args) ->

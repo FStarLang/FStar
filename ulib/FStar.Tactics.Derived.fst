@@ -550,6 +550,7 @@ let rec apply_squash_or_lem d t =
     match inspect_comp c with
     | C_Lemma pre post _ ->
        begin
+       let post = `((`#post) ()) in (* unthunk *)
        let post = norm_term [] post in
        (* Is the lemma an implication? We can try to intro *)
        match term_as_formula' post with

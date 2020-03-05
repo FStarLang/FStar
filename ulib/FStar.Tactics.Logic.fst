@@ -96,6 +96,8 @@ let pose_lemma (t : term) : Tac binder =
     | C_Lemma pre post _ -> pre, post
     | _ -> fail ""
   in
+  let post = `((`#post) ()) in (* unthunk *)
+  let post = norm_term [] post in
   (* If the precondition is trivial, do not cut by it *)
   match term_as_formula' pre with
   | True_ ->
