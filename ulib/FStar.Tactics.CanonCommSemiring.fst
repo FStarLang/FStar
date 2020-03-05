@@ -1685,7 +1685,18 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 let int_cr : cr int =
   CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 
-let int_semiring () : Tac unit = canon_semiring int_cr
+private
+let eq_nat_via_int (a b : nat) (eq : squash (eq2 #int a b)) : Lemma (eq2 #nat a b) = ()
+
+let int_semiring () : Tac unit =
+    (* Check to see if goal is a `nat` equality, change the equality to `int` beforehand *)
+    match term_as_formula (cur_goal ()) with
+    | Comp (Eq (Some t)) _ _ ->
+        if term_eq t (`Prims.nat)
+        then (apply_lemma (`eq_nat_via_int); canon_semiring int_cr)
+        else canon_semiring int_cr
+    | _ ->
+        canon_semiring int_cr
 
 #set-options "--tactic_trace_d 0 --no_smt"
 
