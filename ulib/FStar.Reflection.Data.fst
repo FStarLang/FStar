@@ -81,7 +81,7 @@ noeq
 type comp_view =
   | C_Total     : ret:typ -> decr:(option term) -> comp_view
   | C_GTotal    : ret:typ -> decr:(option term) -> comp_view
-  | C_Lemma     : term -> term -> comp_view // pre & post
+  | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:(list unit) -> (* TODO: expose universes properly,
                                              pass them back as obtained for now, or [] *)
                     eff_name:name ->
@@ -202,8 +202,8 @@ let smaller_comp cv c =
         t << c /\ (match md with | Some d -> d << c | None -> True)
     | C_GTotal t md ->
         t << c /\ (match md with | Some d -> d << c | None -> True)
-    | C_Lemma pre post ->
-        pre << c /\ post << c
+    | C_Lemma pre post pats ->
+        pre << c /\ post << c /\ pats << c
     | C_Eff us eff res args ->
         res << c
 

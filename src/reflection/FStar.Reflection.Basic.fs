@@ -220,8 +220,8 @@ let inspect_comp (c : comp) : comp_view =
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
-            | (pre,_)::(post,_)::_ ->
-                C_Lemma (pre, post)
+            | (pre,_)::(post,_)::(pats,_)::_ ->
+                C_Lemma (pre, post, pats)
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
@@ -260,11 +260,11 @@ let pack_comp (cv : comp_view) : comp =
         in
         S.mk_Comp ct
 
-    | C_Lemma (pre, post) ->
+    | C_Lemma (pre, post, pats) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
                  ; result_typ  = S.t_unit
-                 ; effect_args = [S.as_arg pre; S.as_arg post]
+                 ; effect_args = [S.as_arg pre; S.as_arg post; S.as_arg pats]
                  ; flags       = [] } in
         S.mk_Comp ct
 

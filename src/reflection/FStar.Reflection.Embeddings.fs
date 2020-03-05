@@ -536,9 +536,9 @@ let e_comp_view =
                                        S.as_arg (embed (e_option e_term) rng md)]
                         None rng
 
-        | C_Lemma (pre, post) ->
+        | C_Lemma (pre, post, pats) ->
             let post = U.unthunk_lemma_post post in
-            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post)]
+            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post); S.as_arg (embed e_term rng pats)]
                         None rng
 
         | C_Eff (us, eff, res, args) ->
@@ -564,10 +564,11 @@ let e_comp_view =
             BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
             Some <| C_GTotal (t, md)))
 
-        | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed' w e_term pre) (fun pre ->
             BU.bind_opt (unembed' w e_term post) (fun post ->
-            Some <| C_Lemma (pre, post)))
+            BU.bind_opt (unembed' w e_term pats) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
         | Tm_fvar fv, [(us, _); (eff, _); (res, _); (args, _)]
                 when S.fv_eq_lid fv ref_C_Eff.lid ->

@@ -548,7 +548,7 @@ let rec apply_squash_or_lem d t =
     let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
-    | C_Lemma pre post ->
+    | C_Lemma pre post _ ->
        begin
        let post = norm_term [] post in
        (* Is the lemma an implication? We can try to intro *)
@@ -764,6 +764,7 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
             | Some d -> Some (visit_tm ff d)
         in
         C_Total ret decr
+
     | C_GTotal ret decr ->
         let ret = visit_tm ff ret in
         let decr =
@@ -772,10 +773,13 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
             | Some d -> Some (visit_tm ff d)
         in
         C_GTotal ret decr
-    | C_Lemma pre post ->
+
+    | C_Lemma pre post pats ->
         let pre = visit_tm ff pre in
         let post = visit_tm ff post in
-        C_Lemma pre post
+        let pats = visit_tm ff pats in
+        C_Lemma pre post pats
+
     | C_Eff us eff res args ->
         let res = visit_tm ff res in
         let args = map (fun (a, q) -> (visit_tm ff a, q)) args in

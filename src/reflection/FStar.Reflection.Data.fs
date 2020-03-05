@@ -92,7 +92,7 @@ type binder_view = bv * aqualv
 type comp_view =
     | C_Total of typ * option<term>  //optional decreases clause
     | C_GTotal of typ * option<term> //idem
-    | C_Lemma of term * term
+    | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
 type sigelt_view =
