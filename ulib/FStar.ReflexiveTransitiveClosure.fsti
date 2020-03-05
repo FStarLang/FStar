@@ -43,7 +43,6 @@ val closure_step: #a:Type u#a -> r:relation a -> x:a -> y:a
 val closure_inversion: #a:Type u#a -> r:relation a -> x:a -> y:a
   -> Lemma (requires closure r x y)
           (ensures  x == y \/ (exists z. r x z /\ closure r z y))
-          [SMTPat (closure r x y)]
 
 (**
 * A predicate that is stable on `r` is stable on `closure r`
