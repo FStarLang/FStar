@@ -245,8 +245,8 @@ type m (st:st) :
 noeq
 type step_result (st:st) (a:Type u#a) =
   | Step:
-    next_pre:st.hprop ->
-    next_post:post_t st a ->
+    #next_pre:st.hprop ->
+    #next_post:post_t st a ->
     m st a next_pre next_post ->
     step_result st a
 
@@ -269,7 +269,7 @@ let step_ens (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post)
 : st.mem -> step_result st a -> st.mem -> Type0
 = fun m0 r m1 ->
-  let Step next_pre next_post  _ = r in
+  let Step #_ #_ #next_pre #next_post  _ = r in
   st.interp (next_pre `st.star` st.invariant m1) m1 /\
   stronger_post post next_post /\
   preserves_frame pre next_pre m0 m1
@@ -514,14 +514,14 @@ let step_ret (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Ret? f})
 : Mst (step_result st a) (step_req f) (step_ens f)
 = let Ret p x = f in
-  Step (p x) p f
+  Step f
 
 let step_act (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post {Act? f})
 : Mst (step_result st a) (step_req f) (step_ens f)
 = let Act f = f in
   let x = f () in
-  Step (post x) post (Ret post x)
+  Step (Ret post x)
 
 module M = MST
 
@@ -530,8 +530,7 @@ let step_bind_ret_aux (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
 : M.MSTATE (step_result st a) st.mem st.evolves (step_req f) (step_ens f)
 = M.MSTATE?.reflect (fun m0 ->
     match f with
-    | Bind #_ #_ #_ #_ #_ #post_b (Ret p x) g ->
-      Step (p x) post_b (g x), m0)
+    | Bind (Ret p x) g -> Step (g x), m0)
 
 let step_bind_ret (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Bind? f /\ Ret? (Bind?.f f)})
@@ -546,16 +545,16 @@ let step_bind (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   | Bind (Ret _ _) _ -> step_bind_ret f
 
   | Bind #_ #_ #_ #_ #_ #post_b f g ->
-    let Step next_pre next_post f = step f in
+    let Step #_ #_ #next_pre #next_post f = step f in
 
-    Step next_pre post_b
+    Step #_ #_ #next_pre #post_b
       (Bind f (fun x -> Weaken (next_post x) _ () (g x)))
 
 let step_frame_ret (#st:st) (#a:Type) (#pre:st.hprop) (#p:post_t st a)
   (f:m st a pre p{Frame? f /\ Ret? (Frame?.f f)})
 : Mst (step_result st a) (step_req f) (step_ens f)
 = let Frame (Ret p x) frame = f in
-  Step (p x `st.star` frame) (fun x -> p x `st.star` frame) (Ret (fun x -> p x `st.star` frame) x)
+  Step (Ret (fun x -> p x `st.star` frame) x)
 
 let step_frame (#st:st) (#a:Type) (#pre:st.hprop) (#p:post_t st a)
   (f:m st a pre p{Frame? f})
@@ -567,22 +566,20 @@ let step_frame (#st:st) (#a:Type) (#pre:st.hprop) (#p:post_t st a)
   | Frame #_ #_ #f_pre #_ f frame ->
     let m0 = get () in
 
-    let Step next_fpre next_fpost f = step f in
+    let Step #_ #_ #next_fpre #next_fpost f = step f in
 
     let m1 = get () in
 
     preserves_frame_star f_pre next_fpre m0 m1 frame;
 
-    Step (next_fpre `st.star` frame) (fun x -> next_fpost x `st.star` frame)
-      (Frame f frame)
+    Step (Frame f frame)
 
 let step_par_ret_aux (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f)})
 : M.MSTATE (step_result st a) st.mem st.evolves (step_req f) (step_ens f)
 = M.MSTATE?.reflect (fun m0 ->
     let Par (Ret pL xL) (Ret pR xR) = f in
-    Step (pL xL `st.star` pR xR) (fun (xL, xR) -> pL xL `st.star` pR xR)
-      (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR)), m0)
+    Step (Ret (fun (xL, xR) -> pL xL `st.star` pR xR) (xL, xR)), m0)
 
 let step_par_ret (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f)})
@@ -601,7 +598,7 @@ let step_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
     if b then begin
       let m0 = get () in
 
-      let Step next_preL next_postL mL = step mL in
+      let Step #_ #_ #next_preL #next_postL mL = step mL in
 
       let m1 = get () in
 
@@ -611,12 +608,12 @@ let step_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
 
       assert (stronger_post post next_post) by (norm [delta_only [`%stronger_post]]);
 
-      Step (next_preL `st.star` preR) next_post (Par mL mR)
+      Step (Par mL mR)
     end
     else begin
       let m0 = get () in
 
-      let Step next_preR next_postR mR = step mR in
+      let Step #_ #_ #next_preR #next_postR mR = step mR in
 
       let m1 = get () in
 
@@ -627,14 +624,14 @@ let step_par (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
 
       stronger_post_par_r postL postR next_postR;
 
-      Step (preL `st.star` next_preR) next_post (Par mL mR)
+      Step (Par mL mR)
     end
 
 let step_weaken (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Weaken? f})
 : Mst (step_result st a) (step_req f) (step_ens f)
-= let Weaken #_ #_ #pre #post _ _ _ f = f in
-  Step pre post f
+= let Weaken _ _ _ f = f in
+  Step f
 
 
 /// Step function
@@ -660,5 +657,5 @@ let rec run (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
 = match f with
   | Ret _ x -> x
   | _ ->
-    let Step _ _ f = step f in
+    let Step f = step f in
     run f
