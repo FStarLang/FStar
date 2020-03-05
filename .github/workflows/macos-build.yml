@@ -31,6 +31,7 @@ jobs:
     - name: Build FStar
       run: |
         eval $(opam env)
+        source ~/.bash_profile # get z3 path
         make -j -C FStar all
     - name: Package FStar
       run: |
