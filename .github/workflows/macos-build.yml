@@ -23,7 +23,6 @@ jobs:
         cd everest
         export OPAMYES=1
         brew install opam bash gnu-getopt
-        npm install -g madoko
         opam init
         opam switch create 4.05.0
         eval $(opam env)
@@ -37,7 +36,7 @@ jobs:
     - name: Package FStar
       run: |
         eval $(opam env)
-        make -j -C FStar package
+        PACKAGE_DOCS=0 make -j -C FStar package
     - name: Upload artifact
       uses: actions/upload-artifact@v1
       with:
