@@ -1,9 +1,6 @@
 name: Build FStar Binaries
 
-on:
-  push
-  schedule:
-    - cron:  '0 0 * * 0' # Run every Sunday 00:00
+on: [push, pull_request]
 
 jobs:
 
