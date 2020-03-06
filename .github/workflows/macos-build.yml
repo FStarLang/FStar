@@ -36,6 +36,7 @@ jobs:
     - name: Package FStar
       run: |
         eval $(opam env)
+        source ~/.bash_profile # get z3 path
         PACKAGE_DOCS=0 make -j -C FStar package
     - name: Upload artifact
       uses: actions/upload-artifact@v1
