@@ -1,6 +1,9 @@
 name: Build FStar Binaries
 
-on: [push]
+on:
+  push
+  schedule:
+    - cron:  '0 0 * * 0' # Run every Sunday 00:00
 
 jobs:
 
@@ -19,27 +22,17 @@ jobs:
       with:
         path: FStar
     - name: Setup dependencies
-      run: |
-        cd everest
-        export OPAMYES=1
-        brew install opam bash gnu-getopt
-        opam init
-        opam switch create 4.05.0
-        eval $(opam env)
-        ./everest --yes z3 opam
-        cd -
+      run: ./FStar/.github/setup.sh
     - name: Build FStar
       run: |
-        eval $(opam env)
-        source ~/.bash_profile # get z3 path
+        source FStar/.github/env.sh
         make -j -C FStar all
     - name: Package FStar
       run: |
-        eval $(opam env)
-        source ~/.bash_profile # get z3 path
+        source FStar/.github/env.sh
         PACKAGE_DOCS=0 make -j -C FStar package
     - name: Upload artifact
       uses: actions/upload-artifact@v1
       with:
         name: fstar_package
-        path: FStar/src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
+        path: FStar/src/ocaml-output/fstar_*_Darwin_x86_64.tar.gz
