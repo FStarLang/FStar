@@ -1566,7 +1566,7 @@ let _trefl (l : term) (r : term) : tac<unit> =
 
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
-    match destruct_eq (goal_type g) with
+    match destruct_eq (bnorm (goal_env g) (goal_type g)) with
     | Some (l, r) ->
         _trefl l r
     | None ->
