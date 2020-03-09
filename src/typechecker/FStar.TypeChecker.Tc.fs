@@ -170,7 +170,7 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
-let tc_inductive' env ses quals lids =
+let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then
         BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
 
@@ -181,7 +181,7 @@ let tc_inductive' env ses quals lids =
        *)
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
+    let data_ops_ses = List.map (TcInductive.mk_data_operations quals attrs env tcs) datas |> List.flatten in
 
     //strict positivity check
     if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
@@ -256,10 +256,10 @@ let tc_inductive' env ses quals lids =
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
     res
 
-let tc_inductive env ses quals lids =
+let tc_inductive env ses quals attrs lids =
   let env = Env.push env "tc_inductive" in
   let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
-  try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
+  try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
@@ -422,7 +422,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses =
-          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids
+          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
           |> fst
           |> N.elim_uvars env
           |> U.ses_of_sigbundle in
@@ -432,7 +432,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       end
       else ses
     in
-    let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    let sigbndle, projectors_ses = tc_inductive env ses se.sigquals se.sigattrs lids in
     let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
     [ sigbndle ], projectors_ses, env0
 
