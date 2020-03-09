@@ -14,7 +14,7 @@ Example of full benchmarks
 --------------------------
 
 The `make_bench_results.sh` script is an example which:
- - places all the results into the directory `./bench_results/YYYY_HHMMSS`
+ - places all the results into the directory `./bench_results/YYYYMMDD_HHMMSS`
  - cleans the fstar tree to start from a known state
  - builds the fstar compiler
  - builds a fresh ulib
