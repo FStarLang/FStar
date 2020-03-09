@@ -181,7 +181,8 @@ let tc_inductive' env ses quals attrs lids =
        *)
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcInductive.mk_data_operations quals attrs env tcs) datas |> List.flatten in
+    let attrs' = U.remove_attr PC.erasable_attr attrs in
+    let data_ops_ses = List.map (TcInductive.mk_data_operations quals attrs' env tcs) datas |> List.flatten in
 
     //strict positivity check
     if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
