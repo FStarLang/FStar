@@ -31,6 +31,7 @@ open FStar.Dyn
 module U = FStar.Util
 module List = FStar.List
 module PC = FStar.Parser.Const
+
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -717,7 +718,8 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ -> []
+  | Sig_main _ 
+  | Sig_polymonadic_bind _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -1098,6 +1100,7 @@ let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
 let inline_let_attr = fvar_const PC.inline_let_attr
+let rename_let_attr = fvar_const PC.rename_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 

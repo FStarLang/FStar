@@ -525,7 +525,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_as_app e args
 
         (* These have implicits, don't do the fancy printing when --print_implicits is on *)
-        | Some (op, _) when (op = "=" || op = "==" || op = "===" || op = "@" || op = ":=" || op = "|>")
+        | Some (op, _) when (op = "="
+                          || op = "=="
+                          || op = "==="
+                          || op = "@"
+                          || op = ":="
+                          || op = "|>"
+                          || op = "<<")
             && Options.print_implicits () ->
           resugar_as_app e args
 
@@ -739,8 +745,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
-      | Meta_monadic (name, t)
-      | Meta_monadic_lift (name, _, t) ->
+      | Meta_monadic (_, t)
+      | Meta_monadic_lift (_, _, t) ->
         resugar_term' env e
       end
 
@@ -1226,6 +1232,9 @@ let resugar_sigelt' env se : option<A.decl> =
   | Sig_inductive_typ _
   | Sig_datacon _
   | Sig_main _ -> None
+
+  | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
+    Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
 (* Old interface: no envs *)
 

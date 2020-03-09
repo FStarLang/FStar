@@ -486,12 +486,19 @@ let e_comp_view =
             mkConstruct ref_C_Total.fv [] [as_arg (embed e_term cb t);
                                     as_arg (embed (e_option e_term) cb md)]
 
-        | C_Lemma (pre, post) ->
-            let post = U.unthunk_lemma_post post in
-            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post)]
+        | C_GTotal (t, md) ->
+            mkConstruct ref_C_GTotal.fv [] [as_arg (embed e_term cb t);
+                                    as_arg (embed (e_option e_term) cb md)]
 
-        | C_Unknown ->
-            mkConstruct ref_C_Unknown.fv [] []
+        | C_Lemma (pre, post, pats) ->
+            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
+
+        | C_Eff (us, eff, res, args) ->
+            mkConstruct ref_C_Eff.fv []
+                [ as_arg (embed (e_list e_unit) cb us)
+                ; as_arg (embed e_string_list cb eff)
+                ; as_arg (embed e_term cb res)
+                ; as_arg (embed (e_list e_argv) cb args)]
     in
     let unembed_comp_view cb (t : t) : option<comp_view> =
         match t with
@@ -500,13 +507,24 @@ let e_comp_view =
             BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
             Some <| C_Total (t, md)))
 
-        | Construct (fv, _, [(post, _); (pre, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_GTotal.lid ->
+            BU.bind_opt (unembed e_term cb t) (fun t ->
+            BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
+            Some <| C_GTotal (t, md)))
+
+        | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
             BU.bind_opt (unembed e_term cb post) (fun post ->
-            Some <| C_Lemma (pre, post)))
+            BU.bind_opt (unembed e_term cb pats) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
-        | Construct (fv, _, []) when S.fv_eq_lid fv ref_C_Unknown.lid ->
-            Some <| C_Unknown
+        | Construct (fv, _, [(args, _); (res, _); (eff, _); (us, _)])
+                when S.fv_eq_lid fv ref_C_Eff.lid ->
+            BU.bind_opt (unembed (e_list e_unit) cb us) (fun us ->
+            BU.bind_opt (unembed e_string_list cb eff) (fun eff ->
+            BU.bind_opt (unembed e_term cb res) (fun res->
+            BU.bind_opt (unembed (e_list e_argv) cb args) (fun args ->
+            Some <| C_Eff (us, eff, res, args)))))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp_view: %s" (t_to_string t)));

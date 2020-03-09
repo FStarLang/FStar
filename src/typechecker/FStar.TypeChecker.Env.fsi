@@ -92,6 +92,12 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+(*
+ * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
+ *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
+ *)
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -108,6 +114,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
 }
 
 and env = {
@@ -128,6 +135,10 @@ and env = {
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
+                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
+                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
+                                                (* during typechecking *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -290,7 +301,12 @@ val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 //client constructs the mlift and gives it to us
-val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
+
+val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
+
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
+val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
@@ -403,3 +419,5 @@ val print_gamma : gamma -> string
  *)
 
 val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ

@@ -60,7 +60,8 @@ val should_return: env -> option<term> -> lcomp -> bool
 val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> lcomp
+//the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
+val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
@@ -77,7 +78,7 @@ val universe_of_comp: env -> universe -> comp -> universe
 val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
-val check_and_ascribe : env -> term -> lcomp -> typ -> term * lcomp * guard_t
+val check_has_type : env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
@@ -127,6 +128,9 @@ val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> te
  *)
 val layered_effect_indices_as_binders:env -> Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
 
-val get_mlift_for_subeff : env -> sub_eff -> Env.mlift
-
 val get_field_projector_name : env -> datacon:lident -> index:int -> lident
+
+
+(* update the env functions *)
+val update_env_sub_eff : env -> sub_eff -> env
+val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env

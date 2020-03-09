@@ -1,0 +1,6 @@
+FSTAR_HOME=../..
+VALIDITY_AXIOMS=
+FSTAR_FILES=OPLSS.AE.fst
+
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
+include $(FSTAR_HOME)/ulib/gmake/Makefile.tmpl

@@ -317,6 +317,8 @@ let e_pattern = e_pattern' ()
 let e_branch = e_tuple2 e_pattern e_term
 let e_argv   = e_tuple2 e_term    e_aqualv
 
+let e_args   = e_list e_argv
+
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
@@ -481,6 +483,22 @@ let e_term_view_aq aq =
 
 let e_term_view = e_term_view_aq []
 
+
+(* embeds as a string list *)
+let e_lid : embedding<I.lid> =
+    let embed rng lid : term =
+        embed e_string_list rng (I.path_of_lid lid)
+    in
+    let unembed w t : option<I.lid> =
+        BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
+    in
+    EMB.mk_emb_full (fun x r _ _ -> embed r x)
+               (fun x w _ -> unembed w x)
+               (t_list_of t_string)
+               I.string_of_lid
+               ET_abstract
+
+
 let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed e_string rng bvv.bv_ppname);
@@ -513,13 +531,23 @@ let e_comp_view =
                                        S.as_arg (embed (e_option e_term) rng md)]
                         None rng
 
-        | C_Lemma (pre, post) ->
-            let post = U.unthunk_lemma_post post in
-            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post)]
+        | C_GTotal (t, md) ->
+            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t);
+                                       S.as_arg (embed (e_option e_term) rng md)]
                         None rng
 
-        | C_Unknown ->
-            { ref_C_Unknown.t with pos = rng }
+        | C_Lemma (pre, post, pats) ->
+            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post); S.as_arg (embed e_term rng pats)]
+                        None rng
+
+        | C_Eff (us, eff, res, args) ->
+            S.mk_Tm_app ref_C_Eff.t
+                [ S.as_arg (embed e_unit rng ()) (* TODO *)
+                ; S.as_arg (embed e_string_list rng eff)
+                ; S.as_arg (embed e_term rng res)
+                ; S.as_arg (embed (e_list e_argv) rng args)] None rng
+
+
     in
     let unembed_comp_view w (t : term) : option<comp_view> =
         let t = U.unascribe t in
@@ -530,13 +558,24 @@ let e_comp_view =
             BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
             Some <| C_Total (t, md)))
 
-        | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_GTotal.lid ->
+            BU.bind_opt (unembed' w e_term t) (fun t ->
+            BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
+            Some <| C_GTotal (t, md)))
+
+        | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed' w e_term pre) (fun pre ->
             BU.bind_opt (unembed' w e_term post) (fun post ->
-            Some <| C_Lemma (pre, post)))
+            BU.bind_opt (unembed' w e_term pats) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unknown.lid ->
-            Some <| C_Unknown
+        | Tm_fvar fv, [(us, _); (eff, _); (res, _); (args, _)]
+                when S.fv_eq_lid fv ref_C_Eff.lid ->
+            BU.bind_opt (unembed' w e_unit us)    (fun us -> (* TODO *)
+            BU.bind_opt (unembed' w e_string_list eff)    (fun eff ->
+            BU.bind_opt (unembed' w e_term res)   (fun res->
+            BU.bind_opt (unembed' w (e_list e_argv) args)  (fun args ->
+            Some <| C_Eff ([], eff, res, args)))))
 
         | _ ->
             if w then
@@ -711,20 +750,6 @@ let e_binder_view = e_tuple2 e_bv e_aqualv
 
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
-
-(* embeds as a string list *)
-let e_lid : embedding<I.lid> =
-    let embed rng lid : term =
-        embed e_string_list rng (I.path_of_lid lid)
-    in
-    let unembed w t : option<I.lid> =
-        BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
-    in
-    EMB.mk_emb_full (fun x r _ _ -> embed r x)
-               (fun x w _ -> unembed w x)
-               (t_list_of t_string)
-               I.string_of_lid
-               ET_abstract
 
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =

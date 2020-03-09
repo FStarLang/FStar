@@ -142,7 +142,7 @@ val check_trivial : term -> guard_formula
 val imp_guard     : guard_t -> guard_t -> guard_t
 val conj_guards   : list<guard_t> -> guard_t
 
-
+val weaken_guard_formula: guard_t -> typ -> guard_t
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
@@ -168,3 +168,4 @@ val is_pure_or_ghost_lcomp : lcomp -> bool
 val set_result_typ_lc : lcomp -> typ -> lcomp
 val residual_comp_of_lcomp : lcomp -> residual_comp
 val lcomp_of_comp : comp -> lcomp
+val simplify : debug:bool -> term -> term

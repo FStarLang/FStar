@@ -284,6 +284,12 @@ let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 let conj_guards gs = List.fold_left conj_guard trivial_guard gs
 
+let weaken_guard_formula g fml =
+  match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f ->
+    { g with guard_f = check_trivial (U.mk_imp fml f) }
+
 
 type lcomp = { //a lazy computation
     eff_name: lident;
@@ -365,3 +371,274 @@ let lcomp_of_comp c0 =
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
     mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, trivial_guard)
+
+////////////////////////////////////////////////////////////////////////////////
+// Core logical simplification of terms
+////////////////////////////////////////////////////////////////////////////////
+module SS = FStar.Syntax.Subst
+open FStar.Syntax.Util
+open FStar.Const
+let simplify (debug:bool) (tm:term) : term =
+    let w t = {t with pos=tm.pos} in
+    let simp_t t =
+        // catch annotated subformulae too
+        match (U.unmeta t).n with
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
+        | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
+        | _ -> None
+    in
+    let rec args_are_binders args bs =
+        match args, bs with
+        | (t, _)::args, (bv, _)::bs ->
+            begin match (SS.compress t).n with
+            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
+            | _ -> false
+            end
+        | [], [] -> true
+        | _, _ -> false
+    in
+    let is_applied (bs:binders) (t : term) : option<bv> =
+        if debug then
+            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+        let hd, args = U.head_and_args' t in
+        match (SS.compress hd).n with
+        | Tm_name bv when args_are_binders args bs ->
+            if debug then
+                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                            (Print.term_to_string t)
+                            (Print.bv_to_string bv)
+                            (Print.term_to_string hd);
+            Some bv
+        | _ -> None
+    in
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+        if debug then
+            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+        match is_squash t with
+        | Some (_, t') -> is_applied bs t'
+        | _ -> begin match is_auto_squash t with
+               | Some (_, t') -> is_applied bs t'
+               | _ -> is_applied bs t
+               end
+    in
+    let is_const_match (phi : term) : option<bool> =
+        match (SS.compress phi).n with
+        (* Trying to be efficient, but just checking if they all agree *)
+        (* Note, if we wanted to do this for any term instead of just True/False
+         * we need to open the terms *)
+        | Tm_match (_, br::brs) ->
+            let (_, _, e) = br in
+            let r = begin match simp_t e with
+            | None -> None
+            | Some b -> if List.for_all (fun (_, _, e') -> simp_t e' = Some b) brs
+                        then Some b
+                        else None
+            end
+            in
+            r
+        | _ -> None
+    in
+    let maybe_auto_squash t =
+        if U.is_sub_singleton t
+        then t
+        else U.mk_auto_squash U_zero t
+    in
+    let squashed_head_un_auto_squash_args t =
+        //The head of t is already a squashed operator, e.g. /\ etc.
+        //no point also squashing its arguments if they're already in U_zero
+        let maybe_un_auto_squash_arg (t,q) =
+            match U.is_auto_squash t with
+            | Some (U_zero, t) ->
+             //if we're squashing from U_zero to U_zero
+             // then just remove it
+              t, q
+            | _ ->
+              t,q
+        in
+        let head, args = U.head_and_args t in
+        let args = List.map maybe_un_auto_squash_arg args in
+        S.mk_Tm_app head args None t.pos
+    in
+    let rec clearly_inhabited (ty : typ) : bool =
+        match (U.unmeta ty).n with
+        | Tm_uinst (t, _) -> clearly_inhabited t
+        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+               (Ident.lid_equals l PC.int_lid)
+            || (Ident.lid_equals l PC.bool_lid)
+            || (Ident.lid_equals l PC.string_lid)
+            || (Ident.lid_equals l PC.exn_lid)
+        | _ -> false
+    in
+    let simplify arg = (simp_t (fst arg), arg) in
+    match (SS.compress tm).n with
+    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
+    | Tm_app({n=Tm_fvar fv}, args) ->
+      if S.fv_eq_lid fv PC.and_lid
+      then match args |> List.map simplify with
+           | [(Some true, _); (_, (arg, _))]
+           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
+           | [(Some false, _); _]
+           | [_; (Some false, _)] -> w U.t_false
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.or_lid
+      then match args |> List.map simplify with
+           | [(Some true, _); _]
+           | [_; (Some true, _)] -> w U.t_true
+           | [(Some false, _); (_, (arg, _))]
+           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.imp_lid
+      then match args |> List.map simplify with
+           | [_; (Some true, _)]
+           | [(Some false, _); _] -> w U.t_true
+           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
+           | [(_, (p, _)); (_, (q, _))] ->
+             if U.term_eq p q
+             then w U.t_true
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.iff_lid
+      then match args |> List.map simplify with
+           | [(Some true, _)  ; (Some true, _)]
+           | [(Some false, _) ; (Some false, _)] -> w U.t_true
+           | [(Some true, _)  ; (Some false, _)]
+           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
+           | [(_, (arg, _))   ; (Some true, _)]
+           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(_, (arg, _))   ; (Some false, _)]
+           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
+           | [(_, (p, _)); (_, (q, _))] ->
+             if U.term_eq p q
+             then w U.t_true
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.not_lid
+      then match args |> List.map simplify with
+           | [(Some true, _)] ->  w U.t_false
+           | [(Some false, _)] -> w U.t_true
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.forall_lid
+      then match args with
+           (* Simplify ∀x. True to True *)
+           | [(t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some true -> w U.t_true
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some true -> w U.t_true
+                     | Some false when clearly_inhabited ty -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           | _ -> tm
+      else if S.fv_eq_lid fv PC.exists_lid
+      then match args with
+           (* Simplify ∃x. False to False *)
+           | [(t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some false -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some false -> w U.t_false
+                     | Some true when clearly_inhabited ty -> w U.t_true
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           | _ -> tm
+      else if S.fv_eq_lid fv PC.b2t_lid
+      then match args with
+           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+           | _ -> tm //its arg is a bool, can't unsquash
+      else if S.fv_eq_lid fv PC.haseq_lid
+      then begin
+        (*
+         * AR: We try to mimic the hasEq related axioms in Prims
+         *       and the axiom related to refinements
+         *     For other types, such as lists, whose hasEq is derived by the typechecker,
+         *       we leave them as is
+         *)
+        let t_has_eq_for_sure (t:S.term) :bool =
+          //Axioms from prims
+          let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
+          match (SS.compress t).n with
+          | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
+          | _ -> false
+        in
+        if List.length args = 1 then
+          let t = args |> List.hd |> fst in
+          if t |> t_has_eq_for_sure then w U.t_true
+          else
+            match (SS.compress t).n with
+            | Tm_refine _ ->
+              let t = U.unrefine t in
+              if t |> t_has_eq_for_sure then w U.t_true
+              else
+                //get the hasEq term itself
+                let haseq_tm =
+                  match (SS.compress tm).n with
+                  | Tm_app (hd, _) -> hd
+                  | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
+                in
+                //and apply it to the unrefined type
+                mk_app (haseq_tm) [t |> as_arg]
+            | _ -> tm
+        else tm
+      end
+      else if S.fv_eq_lid fv PC.eq2_lid
+      then match args with
+           | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
+             (match U.eq_tm a1 a2 with
+              | U.Equal -> w U.t_true
+              | U.NotEqual -> w U.t_false
+              | _ -> tm)
+           | _ -> tm
+      else if S.fv_eq_lid fv PC.eq3_lid
+      then match args with
+           | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3
+            (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
+            | U.Equal -> w U.t_true
+            | U.NotEqual -> w U.t_false
+            | _ -> tm)
+           | _ -> tm
+      else
+      begin
+        match U.is_auto_squash tm with
+        | Some (U_zero, t)
+             when U.is_sub_singleton t ->
+             //remove redundant auto_squashes
+             t
+        | _ ->
+             tm
+      end
+    | Tm_refine (bv, t) ->
+        begin match simp_t t with
+        | Some true -> bv.sort
+        | Some false -> tm
+        | None -> tm
+        end
+    | Tm_match _ ->
+        begin match is_const_match tm with
+        | Some true -> w U.t_true
+        | Some false -> w U.t_false
+        | None -> tm
+        end
+    | _ -> tm

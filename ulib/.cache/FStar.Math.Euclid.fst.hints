@@ -1,0 +1,585 @@
+[
+  "~¾ª¥÷ž7ð‡]—­\u001c\u0018ºá",
+  [
+    [
+      "FStar.Math.Euclid.divides",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "a43b8c20c7b06a59fa06c8a567815ccc"
+    ],
+    [
+      "FStar.Math.Euclid.eq_mult_left",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e1183a875a298f2419500d17deecbd89"
+    ],
+    [
+      "FStar.Math.Euclid.eq_mult_one",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "21fc51ae2d26b929da1842ab12dca992"
+    ],
+    [
+      "FStar.Math.Euclid.opp_idempotent",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "8117eb1e24687008be47ceff895311b3"
+    ],
+    [
+      "FStar.Math.Euclid.add_sub_l",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "6c5656c536aeac0942e2428c6a2459db"
+    ],
+    [
+      "FStar.Math.Euclid.add_sub_r",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e4526df538d9d0503d18e8c96faaa010"
+    ],
+    [
+      "FStar.Math.Euclid.divides_reflexive",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ed75b8bc06a4110dc8bf26fba7f209a3"
+    ],
+    [
+      "FStar.Math.Euclid.divides_transitive",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Math.Euclid.divides",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "bd961998ff8d8dd34173f73a77254034"
+    ],
+    [
+      "FStar.Math.Euclid.divide_antisym",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Math.Euclid.divides",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "fc00098156c32dc5979e03ce3181d7f4"
+    ],
+    [
+      "FStar.Math.Euclid.divides_0",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "466106394149ce2d4ad24b291137c6b9"
+    ],
+    [
+      "FStar.Math.Euclid.divides_1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ccd70e210976136e7210c4667b66c6fe"
+    ],
+    [
+      "FStar.Math.Euclid.divides_minus",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "5dd1fc36823d4af5e113f4e4079dc208"
+    ],
+    [
+      "FStar.Math.Euclid.divides_opp",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "2d1a0371485e0fcbc2a7764aa22552bb"
+    ],
+    [
+      "FStar.Math.Euclid.divides_plus",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "3049bc79dd29917ab1089cb7418ae387"
+    ],
+    [
+      "FStar.Math.Euclid.divides_sub",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "820213adfa5b61fc8da5bb645222ea77"
+    ],
+    [
+      "FStar.Math.Euclid.divides_mult_right",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "int_inversion", "int_typing",
+        "primitive_Prims.op_Multiply",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "aa7325052611a275c5abe467c514f9cb"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "58529274a7f9a93aa5c34946cf753369"
+    ],
+    [
+      "FStar.Math.Euclid.mod_divides",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "equation_Prims.nonzero",
+        "int_inversion", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f"
+      ],
+      0,
+      "173d33dd18118d660f382ee8dbe060c7"
+    ],
+    [
+      "FStar.Math.Euclid.divides_mod",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides", "equation_Prims.nonzero",
+        "int_inversion", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f",
+        "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
+      ],
+      0,
+      "a3825924c9610b72712d2860caa12761"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_unique",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
+      0,
+      "4c2599bed1ec57eea7ebd6c5c2e67af3"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_reflexive",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion",
+        "lemma_FStar.Math.Euclid.divides_reflexive"
+      ],
+      0,
+      "2eb25bf2df8a6574512bbd363b0c90d2"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_symmetric",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
+      0,
+      "1f941363d8a129c9f9ef22b1951607ea"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_0",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion", "int_typing",
+        "lemma_FStar.Math.Euclid.divides_reflexive",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "8d34c5c38a61316165e9494cf0792d67"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion", "int_typing",
+        "lemma_FStar.Math.Euclid.divides_reflexive",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "3bce8dce41840ebf4ec216835e81b250"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_minus",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion", "int_typing",
+        "primitive_Prims.op_Minus"
+      ],
+      0,
+      "ee2e74644b229eeea42b458f3fa8627e"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_opp",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion",
+        "primitive_Prims.op_Minus"
+      ],
+      0,
+      "fc9fbbd87d37ae1e6d809355293fbffd"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_plus",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply"
+      ],
+      0,
+      "cf5fe2d6e78a6422f7c28308fdd69327"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_for_euclid",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
+      0,
+      "8f644e53e3038a9b2bb980df878b940d"
+    ],
+    [
+      "FStar.Math.Euclid.egcd",
+      1,
+      0,
+      0,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0,
+      "1c5adb5355916aa2ad473fd5092432d0"
+    ],
+    [
+      "FStar.Math.Euclid.egcd",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_ae567c2fb75be05905677af440075565_2",
+        "binder_x_ae567c2fb75be05905677af440075565_3",
+        "binder_x_ae567c2fb75be05905677af440075565_4",
+        "binder_x_ae567c2fb75be05905677af440075565_5",
+        "binder_x_ae567c2fb75be05905677af440075565_6",
+        "binder_x_ae567c2fb75be05905677af440075565_7",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.Math.Euclid.is_gcd",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "lemma_FStar.Math.Euclid.divides_reflexive",
+        "lemma_FStar.Math.Euclid.is_gcd_for_euclid",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "77f552be564c61dc14ada51db70e7604"
+    ],
+    [
+      "FStar.Math.Euclid.euclid_gcd",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_gcd", "int_inversion",
+        "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "1966723fba98b1a51a8a2209b8654eae"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_prime_aux",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_prime", "equation_Prims.pos",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_dd319c5462eccabc540582a4c9a72d35"
+      ],
+      0,
+      "ce0779227e5a5606bdc122e2678aa12d"
+    ],
+    [
+      "FStar.Math.Euclid.is_gcd_prime",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_gcd", "equation_Prims.pos",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Math.Euclid.divides_reflexive",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e",
+        "refinement_interpretation_Tm_refine_dd319c5462eccabc540582a4c9a72d35"
+      ],
+      0,
+      "86427bd9188db4535c2546fb59bfd385"
+    ],
+    [
+      "FStar.Math.Euclid.bezout_prime",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_gcd", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Minus", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_dd319c5462eccabc540582a4c9a72d35",
+        "true_interp"
+      ],
+      0,
+      "70b63001ddb3723e1513696ad170a679"
+    ],
+    [
+      "FStar.Math.Euclid.bezout_prime",
+      2,
+      0,
+      0,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0,
+      "ba56cd463b871a009225634562250d4e"
+    ],
+    [
+      "FStar.Math.Euclid.euclid",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "cc45211933aab862daf39e1332006184"
+    ],
+    [
+      "FStar.Math.Euclid.euclid",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "520660664f03130fe1b7c5019fe063bd"
+    ],
+    [
+      "FStar.Math.Euclid.euclid_prime",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_prime",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
+      ],
+      0,
+      "9cc5f4341dce9d682f9b2efaa44a6ae4"
+    ],
+    [
+      "FStar.Math.Euclid.euclid_prime",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.divides",
+        "equation_FStar.Math.Euclid.is_gcd",
+        "equation_FStar.Math.Euclid.is_prime", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Minus",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e",
+        "true_interp", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "a2703fad4de95df1577e74d23bd787b4"
+    ],
+    [
+      "FStar.Math.Euclid.euclid_prime",
+      3,
+      0,
+      0,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0,
+      "be1d593c633ee6160c8c2465146b57bc"
+    ]
+  ]
+]

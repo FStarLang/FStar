@@ -776,12 +776,35 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     check_must_erase_attribute env0 se;
 
+    [se], [], env0
+
+  | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
+    let t =
+      if Options.use_two_phase_tc () && Env.should_verify env then
+        let t, ty =
+          TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
+          |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
+          |> N.elim_uvars env
+          |> (fun se ->
+             match se.sigel with
+             | Sig_polymonadic_bind (_, _, _, t, ty) -> t, ty
+             | _ -> failwith "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
+        if Env.debug env <| Options.Other "TwoPhases"
+          then BU.print1 "Polymonadic bind after phase 1: %s\n"
+                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }));
+        t
+      else t in
+    let t, ty = TcEff.tc_polymonadic_bind env m n p t in
+    let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }) in
     [se], [], env0)
+
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   let env = set_hint_correlator env se in
+  if Options.debug_any()
+  then BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with
@@ -909,7 +932,8 @@ let for_export env hidden se : list<sigelt> * list<lident> =
 
   | Sig_new_effect     _
   | Sig_sub_effect     _
-  | Sig_effect_abbrev  _ -> [se], hidden
+  | Sig_effect_abbrev  _
+  | Sig_polymonadic_bind _ -> [se], hidden
 
   | Sig_let((false, [lb]), _)
         when se.sigquals |> BU.for_some is_hidden_proj_or_disc ->
@@ -977,8 +1001,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       let env = Env.push_new_effect env (ne, se.sigquals) in
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
 
-    | Sig_sub_effect sub ->
-      Env.update_effect_lattice env sub.source sub.target (TcUtil.get_mlift_for_subeff env sub)
+    | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub
+
+    | Sig_polymonadic_bind (m, n, p, _, ty) -> TcUtil.update_env_polymonadic_bind env m n p ty
 
     | _ -> env
 
@@ -1116,7 +1141,8 @@ let check_exports env (modul:modul) exports =
         | Sig_new_effect _
         | Sig_sub_effect _
         | Sig_splice _
-        | Sig_pragma _ -> ()
+        | Sig_pragma _
+        | Sig_polymonadic_bind _ -> ()
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1253,8 +1279,9 @@ let extract_interface (en:env) (m:modul) :modul =
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_sub_effect _
-    | Sig_effect_abbrev _ -> [s]
-    | Sig_pragma _ -> [s]
+    | Sig_effect_abbrev _
+    | Sig_pragma _
+    | Sig_polymonadic_bind _ -> [s]
   in
 
   { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }

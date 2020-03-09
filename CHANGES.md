@@ -30,9 +30,33 @@ Guidelines for the changelog:
     This is a breaking change, see this commit for how we fixed the F* examples:
     https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
 
-
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
+
+  * NBE: A call-by-value reduction strategy for F* terms is
+    implemented using "normalization by evaluation". Specific calls to
+    the normalizer (e.g., via `Pervasives.norm`) can request to use
+    this reduction strategy by passing the `nbe:norm_step` among the
+    reduction steps.
+
+  * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds
+
+  * Names in the expressions are now annotated with the types at their binding sites
+    rather than with the expected types at the use sites. This change resulted in
+    a regression in the F* examples:
+    https://github.com/FStarLang/FStar/commit/752d457bda9c0a38eef04e71886cc16899d9c13d
+
+    The workaround is an explicit annotation (see comments in the commit above).
+
+  * An unsoundness was discovered and fixed in the treatment of
+    lexicographic tuples. In particular, we used to allow relating lex
+    tuples of different arity, notably, we had `LexCons _ _ << LexTop`.
+    This was intended for the convenience of writing mutual recursive
+    functions with decreases clauses using lex tuples of different arities.
+    However, this convenience was seldom used and it actually lead to
+    an unsoundness: See examples/bug-reports/BugLexTop.fst. This
+    variable arity lexicographic tuple ordering is no longer supported.
+
 
 ## Libraries
 
@@ -77,6 +101,10 @@ Guidelines for the changelog:
      soon be the default behavior. Also see:
      https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
      and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+   * `--use_nbe_for_extraction`: A new option that enables the use of
+     the call-by-value normalization-by-evaluation reduction strategy
+     for normalizing code prior to extraction.
 
 ## SMT Encoding
 

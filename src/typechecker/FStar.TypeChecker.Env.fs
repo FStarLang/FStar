@@ -121,6 +121,8 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -136,6 +138,7 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
 }
 
 and env = {
@@ -156,6 +159,10 @@ and env = {
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
+                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
+                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
+                                                (* during typechecking *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -261,12 +268,13 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]};
+    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
     check_uvars=false;
     use_eq=false;
+    use_eq_strict=false;
     is_iface=false;
     admit=false;
     lax=false;
@@ -806,7 +814,8 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_new_effect _
       | Sig_sub_effect _
       | Sig_effect_abbrev _ (* None? *)
-      | Sig_pragma  _ -> None
+      | Sig_pragma  _
+      | Sig_polymonadic_bind _ -> None
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
@@ -1102,15 +1111,23 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join env l1 l2 : (lident * mlift * mlift) =
+let join_opt env (l1:lident) (l2:lident) : option<(lident * mlift * mlift)> =
   if lid_equals l1 l2
-  then l1, identity_mlift, identity_mlift
+  then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, identity_mlift, identity_mlift
+  then Some (Const.effect_GTot_lid, identity_mlift, identity_mlift)
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise_error (Errors.Fatal_EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
-        | Some (_, _, m3, j1, j2) -> m3, j1, j2
+        | None -> None
+        | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
+
+let join env l1 l2 : (lident * mlift * mlift) =
+  match join_opt env l1 l2 with
+  | None ->
+    raise_error (Errors.Fatal_EffectsCannotBeComposed,
+      (BU.format2 "Effects %s and %s cannot be composed" 
+        (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+  | Some t -> t
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
@@ -1237,7 +1254,6 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
-
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
@@ -1272,6 +1288,11 @@ let push_sigelt env s =
 let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=(ed, quals)::env.effects.decls} in
   {env with effects=effects}
+
+let exists_polymonadic_bind env m n =
+  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, p, t) -> Some (p, t)
+  | _ -> None
 
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
@@ -1383,7 +1404,15 @@ let update_effect_lattice env src tgt st_mlift =
     in
     match join_opt with
     | None -> []
-    | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)]))
+    | Some (k, e1, e2) ->
+      if exists_polymonadic_bind env i j |> is_some
+      then raise_error (Errors.Fatal_PolymonadicBind_conflict,
+             BU.format4 "Updating effect lattice with a lift between %s and %s \
+               induces a path from %s and %s in the effect lattice, and this \
+               conflicts with a polymonadic bind between them"
+               (Ident.string_of_lid src) (Ident.string_of_lid tgt)
+               (Ident.string_of_lid i) (Ident.string_of_lid j)) env.range
+      else [(i, j, k, e1.mlift, e2.mlift)]))
   in
 
   let effects = {env.effects with order=order; joins=joins} in
@@ -1391,6 +1420,21 @@ let update_effect_lattice env src tgt st_mlift =
 //    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
   {env with effects=effects}
 
+let add_polymonadic_bind env m n p ty =
+  let err_msg (poly:bool) =
+    BU.format4 "Polymonadic bind ((%s, %s) |> %s) conflicts with \
+      an already existing %s"
+      (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
+      (if poly then "polymonadic bind"
+       else "path in the effect lattice") in
+
+  if exists_polymonadic_bind env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
+  else if join_opt env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
+  else { env with
+         effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
+  
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
 
@@ -1736,6 +1780,21 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
+
+let pure_precondition_for_trivial_post env u t wp r =
+  let trivial_post =
+    let post_ts = lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
+    let _, post = inst_tscheme_with post_ts [u] in
+    S.mk_Tm_app
+      post
+      [t |> S.as_arg]
+      None r in
+  S.mk_Tm_app
+    wp
+    [trivial_post |> S.as_arg]
+    None r
+
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
@@ -1750,3 +1809,4 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
+

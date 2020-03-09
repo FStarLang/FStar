@@ -589,7 +589,7 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps =
+let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -599,6 +599,14 @@ let extraction_norm_steps =
      Env.Unascribe;
      Env.ForExtraction]
 
+let extraction_norm_steps_nbe =
+  Env.NBE::extraction_norm_steps_core
+
+let extraction_norm_steps () = 
+  if Options.use_nbe_for_extraction()
+  then extraction_norm_steps_nbe
+  else extraction_norm_steps_core
+  
 let comp_no_args c =
     match c.n with
     | Total _
@@ -761,7 +769,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize extraction_norm_steps g.env_tcenv t0 in
+    let t = N.normalize (extraction_norm_steps()) g.env_tcenv t0 in
     translate_term_to_mlty g t
 
 
@@ -1005,7 +1013,7 @@ let maybe_promote_effect ml_e tag t =
 
 
 let extract_lb_sig (g:uenv) (lbs:letbindings) =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef}
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
             : lbname //just lbname returned back
             * e_tag  //the ML version of the effect label lbeff
             * (typ   //just the source type lbtyp=t, after compression
@@ -1014,6 +1022,20 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
             * bool   //whether or not to add a unit argument
             * term   //the term e, maybe after some type binders have been erased
             =
+              // begin match lbattrs with
+              // | [] -> ()
+              // | _ ->
+              //   // BU.print1 "Testing whether term has any rename_let %s..." "";
+              //   begin match U.get_attribute PC.rename_let_attr lbattrs with
+              //   | Some ((arg, _) :: _) ->
+              //     begin match arg.n with
+              //     | Tm_constant (Const_string (arg, _)) ->
+              //       BU.print1 "Term has rename_let %s\n" arg
+              //     | _ -> BU.print1 "Term has some rename_let %s\n" ""
+              //     end
+              //   | _ -> BU.print1 "no rename_let found %s\n" ""
+              //   end
+              // end;
               let f_e = effect_as_etag g lbeff in
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
@@ -1529,6 +1551,54 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let e, t = check_term_as_mlexpr g e0 f t in
           e, f, t
 
+        | Tm_let((false, [lb]), e') 
+          when not (is_top_level [lb])
+          && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
+          let b = BU.left lb.lbname, None in
+          let ((x, _)::_), body = SS.open_term [b] e' in
+          // BU.print_string "Reached let with rename_let attribute\n";
+          let suggested_name = 
+              let attr = U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs in
+              match attr with
+              | Some ([(str, _)]) -> 
+                begin
+                match (SS.compress str).n with
+                | Tm_constant (Const_string (s, _)) -> 
+                  // BU.print1 "Found suggested name %s\n" s;
+                  let id = Ident.mk_ident (s, range_of_bv x) in
+                  let bv = { ppname = id; index = 0; sort = x.sort } in
+                  let bv = freshen_bv bv in
+                  Some bv
+                | _ -> 
+                  None
+                end
+              | None -> 
+                None
+          in
+          let remove_attr attrs =
+            let _, other_attrs =
+              List.partition 
+                (fun attr -> BU.is_some (U.get_attribute PC.rename_let_attr [attr]))
+                lb.lbattrs          
+            in
+            other_attrs
+          in
+          let maybe_rewritten_let = 
+            match suggested_name with
+            | None ->
+              let other_attrs = remove_attr lb.lbattrs in
+              Tm_let ((false, [{lb with lbattrs=other_attrs}]), e')
+
+            | Some y -> 
+              let other_attrs = remove_attr lb.lbattrs in
+              let rename = [NT(x, S.bv_to_name y)] in
+              let body = SS.close ([y, None]) (SS.subst rename body) in 
+              let lb = { lb with lbname=Inl y; lbattrs=other_attrs } in
+              Tm_let ((false, [lb]), body)
+           in
+           let top = {top with n = maybe_rewritten_let } in
+           term_as_mlexpr' g top
+          
         | Tm_let((is_rec, lbs), e') ->
           let top_level = is_top_level lbs in
           let lbs, e' =
@@ -1543,30 +1613,34 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                       [lb], e' in
           let lbs =
             if top_level
-            then lbs |> List.map (fun lb ->
-                    let tcenv = TcEnv.set_current_module g.env_tcenv
+            then 
+            let tcenv = TcEnv.set_current_module g.env_tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-                    // debug g (fun () ->
+            lbs |> List.map (fun lb ->
+                    // let tcenv = TcEnv.set_current_module g.env_tcenv
+                    //             (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
+                    // debug g (fun () -> 
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::extraction_norm_steps) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::(extraction_norm_steps())) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s)\n\tlbdef=%s"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.term_to_string lb.lbdef) in
+                             then let _ = BU.print1 "Starting to normalize top-level let %s\n"
+                                            (Print.lbname_to_string lb.lbname) in
+//                                            (Print.univ_names_to_string lb.lbunivs)
+//                                           (Print.term_to_string lb.lbdef) in
                                   // Options.set_option "debug_level"
                                   //   (Options.List [Options.String "Norm"; Options.String "Extraction"]);
                                   let a = FStar.Util.measure_execution_time
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in
