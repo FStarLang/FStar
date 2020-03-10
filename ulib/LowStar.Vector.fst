@@ -631,7 +631,7 @@ private val get_preserved_within:
         [SMTPat (live h0 vec);
         SMTPat (modifies (loc_vector_within vec i j) h0 h1);
         SMTPat (get h0 vec k)]
-let rec get_preserved_within #a vec i j k h0 h1 =
+let get_preserved_within #a vec i j k h0 h1 =
   if k < i then begin
     loc_vector_within_disjoint vec k (k + 1ul) i j;
     get_preserved vec k (loc_vector_within vec i j) h0 h1

@@ -52,6 +52,8 @@ let with_dsenv_of_tcenv :
                  (uu___8_51.FStar_TypeChecker_Env.check_uvars);
                FStar_TypeChecker_Env.use_eq =
                  (uu___8_51.FStar_TypeChecker_Env.use_eq);
+               FStar_TypeChecker_Env.use_eq_strict =
+                 (uu___8_51.FStar_TypeChecker_Env.use_eq_strict);
                FStar_TypeChecker_Env.is_iface =
                  (uu___8_51.FStar_TypeChecker_Env.is_iface);
                FStar_TypeChecker_Env.admit =
@@ -318,6 +320,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___72_410.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___72_410.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___72_410.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___72_410.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
@@ -410,6 +414,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___75_412.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___75_412.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___75_412.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___75_412.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
@@ -501,6 +507,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___78_414.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___78_414.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___78_414.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___78_414.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
@@ -593,6 +601,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___81_416.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___81_416.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___81_416.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___81_416.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
@@ -685,6 +695,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___84_418.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
           (uu___84_418.FStar_TypeChecker_Env.use_eq);
+        FStar_TypeChecker_Env.use_eq_strict =
+          (uu___84_418.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
           (uu___84_418.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
@@ -1212,8 +1224,7 @@ let (tc_one_file :
                            if uu____1648
                            then
                              (FStar_SMTEncoding_Encode.encode_modul_from_cache
-                                env1 tcmod1.FStar_Syntax_Syntax.name
-                                smt_decls;
+                                env1 tcmod1 smt_decls;
                               post_smt_encoding ())
                            else ());
                           ((), env1))

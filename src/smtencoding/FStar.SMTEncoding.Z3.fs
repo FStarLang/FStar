@@ -423,11 +423,6 @@ let z3_options = BU.mk_ref
 let set_z3_options opts =
     z3_options := opts
 
-type job_t<'a> = {
-    job:unit -> 'a;
-    callback: 'a -> unit
-}
-
 type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
@@ -435,10 +430,6 @@ type z3result = {
       z3result_query_hash  : option<string>;
       z3result_log_file    : option<string>
 }
-
-type z3job = job_t<z3result>
-
-let run_job j = j.callback <| j.job ()
 
 let init () =
     (* A no-op now that there's no concurrency *)
@@ -568,13 +559,10 @@ let mk_input fresh theory =
     in
     r, hash, log_file_name
 
-type cb = z3result -> unit
-
 let cache_hit
     (log_file:option<string>)
     (cache:option<string>)
-    (qhash:option<string>)
-    (cb:cb) =
+    (qhash:option<string>) : option<z3result> =
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
@@ -587,12 +575,11 @@ let cache_hit
               z3result_query_hash = qhash;
               z3result_log_file = log_file
             } in
-            cb result;
-            true
+            Some result
         | _ ->
-            false
+            None
     else
-        false
+        None
 
 let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   //This code is a little ugly:
@@ -611,7 +598,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
       (Some (query_logging.get_module_name()))
-      "FStar.SMTEncoding.Z3"
+      "FStar.SMTEncoding.Z3 (aggregate query time)"
   in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
@@ -626,8 +613,7 @@ let ask
     (label_messages:error_labels)
     (qry:list<decl>)
     (_scope : option<scope_t>) // GM: This was only used in ask_n_cores
-    (cb:cb)
-    (fresh:bool)
+    (fresh:bool) : z3result
   = let theory =
         if fresh
         then flatten_fresh_scope()
@@ -638,5 +624,11 @@ let ask
     let theory = theory @[Push]@qry@[Pop] in
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
-    if not (fresh && cache_hit log_file_name cache qhash cb) then
-        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
+
+    let just_ask () = z3_job log_file_name r fresh label_messages input qhash () in
+    if fresh then
+        match cache_hit log_file_name cache qhash with
+        | Some z3r -> z3r
+        | None -> just_ask ()
+    else
+        just_ask ()

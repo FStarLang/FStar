@@ -11,6 +11,7 @@ open FStar.Errors
 module O = FStar.Options
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+module Thunk = FStar.Thunk
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
@@ -24,6 +25,7 @@ open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 module PC = FStar.Parser.Const
 module NBETerm = FStar.TypeChecker.NBETerm
 open FStar.TypeChecker.NBETerm
+module RD = FStar.Reflection.Data
 
 
 open FStar.Dyn
@@ -57,7 +59,7 @@ let mk_lazy cb obj ty kind =
         ; rng = Range.dummyRange
     }
     in
-    let thunk = FStar.Common.mk_thunk (fun () -> translate_cb cb (U.unfold_lazy li)) in
+    let thunk = Thunk.mk (fun () -> translate_cb cb (U.unfold_lazy li)) in
     Lazy (BU.Inl li, thunk)
 
 let e_bv =
@@ -306,7 +308,7 @@ let e_argv   = e_tuple2 e_term    e_aqualv
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
-let rec unlazy_as_t k t =
+let unlazy_as_t k t =
     match t with
     | Lazy (BU.Inl {lkind=k'; blob=v}, _)
         when U.eq_lazy_kind k k' ->
@@ -484,12 +486,19 @@ let e_comp_view =
             mkConstruct ref_C_Total.fv [] [as_arg (embed e_term cb t);
                                     as_arg (embed (e_option e_term) cb md)]
 
-        | C_Lemma (pre, post) ->
-            let post = U.unthunk_lemma_post post in
-            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post)]
+        | C_GTotal (t, md) ->
+            mkConstruct ref_C_GTotal.fv [] [as_arg (embed e_term cb t);
+                                    as_arg (embed (e_option e_term) cb md)]
 
-        | C_Unknown ->
-            mkConstruct ref_C_Unknown.fv [] []
+        | C_Lemma (pre, post, pats) ->
+            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
+
+        | C_Eff (us, eff, res, args) ->
+            mkConstruct ref_C_Eff.fv []
+                [ as_arg (embed (e_list e_unit) cb us)
+                ; as_arg (embed e_string_list cb eff)
+                ; as_arg (embed e_term cb res)
+                ; as_arg (embed (e_list e_argv) cb args)]
     in
     let unembed_comp_view cb (t : t) : option<comp_view> =
         match t with
@@ -498,13 +507,24 @@ let e_comp_view =
             BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
             Some <| C_Total (t, md)))
 
-        | Construct (fv, _, [(post, _); (pre, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_GTotal.lid ->
+            BU.bind_opt (unembed e_term cb t) (fun t ->
+            BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
+            Some <| C_GTotal (t, md)))
+
+        | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
             BU.bind_opt (unembed e_term cb post) (fun post ->
-            Some <| C_Lemma (pre, post)))
+            BU.bind_opt (unembed e_term cb pats) (fun pats ->
+            Some <| C_Lemma (pre, post, pats))))
 
-        | Construct (fv, _, []) when S.fv_eq_lid fv ref_C_Unknown.lid ->
-            Some <| C_Unknown
+        | Construct (fv, _, [(args, _); (res, _); (eff, _); (us, _)])
+                when S.fv_eq_lid fv ref_C_Eff.lid ->
+            BU.bind_opt (unembed (e_list e_unit) cb us) (fun us ->
+            BU.bind_opt (unembed e_string_list cb eff) (fun eff ->
+            BU.bind_opt (unembed e_term cb res) (fun res->
+            BU.bind_opt (unembed (e_list e_argv) cb args) (fun args ->
+            Some <| C_Eff (us, eff, res, args)))))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp_view: %s" (t_to_string t)));
@@ -677,93 +697,93 @@ let e_lid : embedding<I.lid> =
         (fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_qualifier =
-    let embed cb (q:qualifier) : t =
+    let embed cb (q:RD.qualifier) : t =
         match q with
-        | Assumption                       -> mkConstruct ref_qual_Assumption.fv [] []
-        | New                              -> mkConstruct ref_qual_New.fv [] []
-        | Private                          -> mkConstruct ref_qual_Private.fv [] []
-        | Unfold_for_unification_and_vcgen -> mkConstruct ref_qual_Unfold_for_unification_and_vcgen.fv [] []
-        | Visible_default                  -> mkConstruct ref_qual_Visible_default.fv [] []
-        | Irreducible                      -> mkConstruct ref_qual_Irreducible.fv [] []
-        | Abstract                         -> mkConstruct ref_qual_Abstract.fv [] []
-        | Inline_for_extraction            -> mkConstruct ref_qual_Inline_for_extraction.fv [] []
-        | NoExtract                        -> mkConstruct ref_qual_NoExtract.fv [] []
-        | Noeq                             -> mkConstruct ref_qual_Noeq.fv [] []
-        | Unopteq                          -> mkConstruct ref_qual_Unopteq.fv [] []
-        | TotalEffect                      -> mkConstruct ref_qual_TotalEffect.fv [] []
-        | Logic                            -> mkConstruct ref_qual_Logic.fv [] []
-        | Reifiable                        -> mkConstruct ref_qual_Reifiable.fv [] []
-        | ExceptionConstructor             -> mkConstruct ref_qual_ExceptionConstructor.fv [] []
-        | HasMaskedEffect                  -> mkConstruct ref_qual_HasMaskedEffect.fv [] []
-        | Effect                           -> mkConstruct ref_qual_Effect.fv [] []
-        | OnlyName                         -> mkConstruct ref_qual_OnlyName.fv [] []
-        | Reflectable l ->
+        | RD.Assumption                       -> mkConstruct ref_qual_Assumption.fv [] []
+        | RD.New                              -> mkConstruct ref_qual_New.fv [] []
+        | RD.Private                          -> mkConstruct ref_qual_Private.fv [] []
+        | RD.Unfold_for_unification_and_vcgen -> mkConstruct ref_qual_Unfold_for_unification_and_vcgen.fv [] []
+        | RD.Visible_default                  -> mkConstruct ref_qual_Visible_default.fv [] []
+        | RD.Irreducible                      -> mkConstruct ref_qual_Irreducible.fv [] []
+        | RD.Abstract                         -> mkConstruct ref_qual_Abstract.fv [] []
+        | RD.Inline_for_extraction            -> mkConstruct ref_qual_Inline_for_extraction.fv [] []
+        | RD.NoExtract                        -> mkConstruct ref_qual_NoExtract.fv [] []
+        | RD.Noeq                             -> mkConstruct ref_qual_Noeq.fv [] []
+        | RD.Unopteq                          -> mkConstruct ref_qual_Unopteq.fv [] []
+        | RD.TotalEffect                      -> mkConstruct ref_qual_TotalEffect.fv [] []
+        | RD.Logic                            -> mkConstruct ref_qual_Logic.fv [] []
+        | RD.Reifiable                        -> mkConstruct ref_qual_Reifiable.fv [] []
+        | RD.ExceptionConstructor             -> mkConstruct ref_qual_ExceptionConstructor.fv [] []
+        | RD.HasMaskedEffect                  -> mkConstruct ref_qual_HasMaskedEffect.fv [] []
+        | RD.Effect                           -> mkConstruct ref_qual_Effect.fv [] []
+        | RD.OnlyName                         -> mkConstruct ref_qual_OnlyName.fv [] []
+        | RD.Reflectable l ->
             mkConstruct ref_qual_Reflectable.fv [] [as_arg (embed e_lid cb l)]
 
-        | Discriminator l ->
+        | RD.Discriminator l ->
             mkConstruct ref_qual_Discriminator.fv [] [as_arg (embed e_lid cb l)]
 
-        | Action l ->
+        | RD.Action l ->
             mkConstruct ref_qual_Action.fv [] [as_arg (embed e_lid cb l)]
 
-        | Projector (l, i) ->
+        | RD.Projector (l, i) ->
             mkConstruct ref_qual_Projector.fv [] [as_arg (embed e_lid cb l); as_arg (embed e_ident cb i)]
 
-        | RecordType (ids1, ids2) ->
+        | RD.RecordType (ids1, ids2) ->
             mkConstruct ref_qual_RecordType.fv [] [as_arg (embed (e_list e_ident) cb ids1);
                                                    as_arg (embed (e_list e_ident) cb ids2)]
 
-        | RecordConstructor (ids1, ids2) ->
+        | RD.RecordConstructor (ids1, ids2) ->
             mkConstruct ref_qual_RecordConstructor.fv [] [as_arg (embed (e_list e_ident) cb ids1);
                                                           as_arg (embed (e_list e_ident) cb ids2)]
     in
-    let unembed cb (t:t) : option<qualifier> =
+    let unembed cb (t:t) : option<RD.qualifier> =
         match t with
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Assumption.lid -> Some Assumption
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_New.lid -> Some New
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Private.lid -> Some Private
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Unfold_for_unification_and_vcgen.lid -> Some Unfold_for_unification_and_vcgen
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Visible_default.lid -> Some Visible_default
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Irreducible.lid -> Some Irreducible
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Abstract.lid -> Some Abstract
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Inline_for_extraction.lid -> Some Inline_for_extraction
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_NoExtract.lid -> Some NoExtract
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Noeq.lid -> Some Noeq
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Unopteq.lid -> Some Unopteq
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_TotalEffect.lid -> Some TotalEffect
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Logic.lid -> Some Logic
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Reifiable.lid -> Some Reifiable
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_ExceptionConstructor.lid -> Some ExceptionConstructor
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_HasMaskedEffect.lid -> Some HasMaskedEffect
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Effect.lid -> Some S.Effect
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_OnlyName.lid -> Some OnlyName
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Assumption.lid -> Some RD.Assumption
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_New.lid -> Some RD.New
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Private.lid -> Some RD.Private
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Unfold_for_unification_and_vcgen.lid -> Some RD.Unfold_for_unification_and_vcgen
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Visible_default.lid -> Some RD.Visible_default
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Irreducible.lid -> Some RD.Irreducible
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Abstract.lid -> Some RD.Abstract
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Inline_for_extraction.lid -> Some RD.Inline_for_extraction
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_NoExtract.lid -> Some RD.NoExtract
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Noeq.lid -> Some RD.Noeq
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Unopteq.lid -> Some RD.Unopteq
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_TotalEffect.lid -> Some RD.TotalEffect
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Logic.lid -> Some RD.Logic
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Reifiable.lid -> Some RD.Reifiable
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_ExceptionConstructor.lid -> Some RD.ExceptionConstructor
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_HasMaskedEffect.lid -> Some RD.HasMaskedEffect
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Effect.lid -> Some RD.Effect
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_OnlyName.lid -> Some RD.OnlyName
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
             BU.bind_opt (unembed e_lid cb l) (fun l ->
-            Some (S.Reflectable l))
+            Some (RD.Reflectable l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
             BU.bind_opt (unembed e_lid cb l) (fun l ->
-            Some (Discriminator l))
+            Some (RD.Discriminator l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Action.lid ->
             BU.bind_opt (unembed e_lid cb l) (fun l ->
-            Some (Action l))
+            Some (RD.Action l))
 
         | Construct (fv, [], [(i, _); (l, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
             BU.bind_opt (unembed e_ident cb i) (fun i ->
             BU.bind_opt (unembed e_lid cb l) (fun l ->
-            Some (Projector (l, i))))
+            Some (RD.Projector (l, i))))
 
         | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->
             BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
             BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
-            Some (RecordType (ids1, ids2))))
+            Some (RD.RecordType (ids1, ids2))))
 
         | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
             BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
             BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
-            Some (RecordConstructor (ids1, ids2))))
+            Some (RD.RecordConstructor (ids1, ids2))))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded qualifier: %s" (t_to_string t)));

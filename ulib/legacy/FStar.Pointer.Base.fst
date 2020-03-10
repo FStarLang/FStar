@@ -31,7 +31,6 @@ module HST = FStar.HyperStack.ST
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
 *)
 
-(* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
 #set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
 
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
@@ -524,7 +523,7 @@ let ovalue_is_readable_struct_intro
 = List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
   ovalue_is_readable_struct_intro' l v
 
-let rec ovalue_is_readable_struct_elim
+let ovalue_is_readable_struct_elim
   (l: struct_typ)
   (v: otype_of_typ (TStruct l))
   (fd: struct_field l)
@@ -1579,7 +1578,7 @@ let path_disjoint_includes_l
   ]]
 = path_disjoint_includes p1 p2 p1' p2
 
-let rec path_disjoint_sym
+let path_disjoint_sym
   (#from: typ)
   (#value1: typ)
   (#value2: typ)

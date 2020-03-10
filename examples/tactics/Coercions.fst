@@ -3,30 +3,30 @@ module Coercions
 open FStar.Tactics
 
 
-let tm : term = Tv_App (Tv_App (`op_Addition) (`1, Q_Explicit)) (`2, Q_Explicit)
+let tm () : Tac term = Tv_App (Tv_App (`op_Addition) (`1, Q_Explicit)) (`2, Q_Explicit)
 
-let basic : int =
-  match tm with
+let basic () : Tac int =
+  match tm () with
   | Tv_App l _ -> 1
   | _ -> 2
 
-let one : option term =
-  match tm with
+let one () : Tac term =
+  match tm () with
   | Tv_App l _ -> begin match l with
-                  | Tv_App _ (x, _) -> Some x
-                  | _ -> None
+                  | Tv_App _ (x, _) -> x
+                  | _ -> fail ""
                   end
-  | _ -> None
+  | _ -> fail ""
 
-let two : option term =
-  match tm with
-  | Tv_App _ (x, _) -> Some x
-  | _ -> None
+let two () : Tac term =
+  match tm () with
+  | Tv_App _ (x, _) -> x
+  | _ -> fail ""
 
 let _ = assert True by
-        (print ("tm = "  ^ term_to_string tm);
-         print ("one = " ^ (match one with | Some x -> term_to_string x | None -> "NONE?"));
-         print ("two = " ^ (match two with | Some x -> term_to_string x | None -> "NONE?"));
+        (print ("tm = "  ^ term_to_string (tm ()));
+         print ("one = " ^ term_to_string (one ()));
+         print ("two = " ^ term_to_string (two ()));
          ())
 
 let test_binder_to_term (b : binder) : Tac term = b

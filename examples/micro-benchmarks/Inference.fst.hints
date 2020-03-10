@@ -1,0 +1,48 @@
+[
+  "¨R\u0016’öå@ÌÑó¨§½™¶»",
+  [
+    [
+      "Inference.alloc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.erid",
+        "equation_FStar.HyperStack.ST.m_rref",
+        "equation_FStar.HyperStack.ST.mref",
+        "equation_FStar.Monotonic.DependentMap.imap",
+        "equation_FStar.Monotonic.DependentMap.t",
+        "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_6fbd4d82bb3e7e5b2939e88df41fcbe3",
+        "refinement_interpretation_Tm_refine_8e1a63f5f0eda9c61cb76c338f52ad38",
+        "refinement_interpretation_Tm_refine_d17e5cc72481ba65d7fc920fac08f000",
+        "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
+        "typing_FStar.Monotonic.DependentMap.empty"
+      ],
+      0,
+      "093445558cd07b6232e66d6cec4ff366"
+    ],
+    [
+      "Inference.alloc",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.erid",
+        "equation_FStar.HyperStack.ST.m_rref",
+        "equation_FStar.HyperStack.ST.mref",
+        "equation_FStar.Monotonic.DependentMap.imap",
+        "equation_FStar.Monotonic.DependentMap.t",
+        "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_d17e5cc72481ba65d7fc920fac08f000",
+        "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
+      ],
+      0,
+      "2e8a0d255b1b99ff5b4146ef387b75b3"
+    ]
+  ]
+]

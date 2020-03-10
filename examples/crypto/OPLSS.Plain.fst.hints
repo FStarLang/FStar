@@ -1,0 +1,75 @@
+[
+  "üû¬Œæýx»ØP%åÌÎyÆ",
+  [
+    [
+      "OPLSS.Plain.plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "assumption_FStar.UInt8.t__uu___haseq", "equation_OPLSS.AES.plain",
+        "equation_OPLSS.bytes", "equation_OPLSS.lbytes",
+        "function_token_typing_FStar.UInt8.t",
+        "haseqTm_refine_defbf19c7608fb05f460f9836bab2a7f"
+      ],
+      0,
+      "359c37ec9201d79d6d5266a7d866ab1a"
+    ],
+    [
+      "OPLSS.Plain.reveal_hide",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.Plain.hide", "equation_OPLSS.Plain.reveal"
+      ],
+      0,
+      "6f72562a4d54839c0aa16e28a53347f7"
+    ],
+    [
+      "OPLSS.Plain.hide_reveal",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.Plain.hide", "equation_OPLSS.Plain.reveal"
+      ],
+      0,
+      "f8cc175d91ea206f9ee4058687f12722"
+    ],
+    [
+      "OPLSS.Plain.repr",
+      1,
+      2,
+      1,
+      [ "@query", "equation_OPLSS.Plain.reveal" ],
+      0,
+      "a65ba849806c9faaca36d2d5a2052fb6"
+    ],
+    [
+      "OPLSS.Plain.coerce",
+      1,
+      2,
+      1,
+      [ "@query", "equation_OPLSS.Plain.hide" ],
+      0,
+      "46048f8694e22b9deda7fc644adcab61"
+    ],
+    [
+      "OPLSS.Plain.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_OPLSS.Plain.reveal",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "c0dc8076a14397fbd40ad8013c3eb463"
+    ]
+  ]
+]

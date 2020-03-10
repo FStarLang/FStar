@@ -55,6 +55,7 @@ type token =
   | PRAGMA_PUSH_OPTIONS
   | PRAGMA_POP_OPTIONS
   | PRAGMALIGHT
+  | POLYMONADIC_BIND
   | PIPE_RIGHT
   | PERCENT_LBRACK
   | OP_MIXFIX_ASSIGNMENT of (string)
@@ -91,6 +92,7 @@ type token =
   | LBRACK
   | LBRACE_COLON_PATTERN
   | LBRACE
+  | LAYERED_EFFECT
   | LARROW
   | IRREDUCIBLE
   | INT8 of (string * bool)
@@ -208,6 +210,7 @@ type tokenId =
     | TOKEN_PRAGMA_PUSH_OPTIONS
     | TOKEN_PRAGMA_POP_OPTIONS
     | TOKEN_PRAGMALIGHT
+    | TOKEN_POLYMONADIC_BIND
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
     | TOKEN_OP_MIXFIX_ASSIGNMENT
@@ -244,6 +247,7 @@ type tokenId =
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE
+    | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
     | TOKEN_IRREDUCIBLE
     | TOKEN_INT8
@@ -380,6 +384,7 @@ type nonTerminalId =
     | NONTERM_effectDefinition
     | NONTERM_effectDecl
     | NONTERM_subEffect
+    | NONTERM_polymonadic_bind
     | NONTERM_qualifier
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
@@ -436,6 +441,7 @@ type nonTerminalId =
     | NONTERM_tmEqWith_tmRefinement_
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_binop_name
     | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq

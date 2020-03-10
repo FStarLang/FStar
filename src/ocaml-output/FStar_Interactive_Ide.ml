@@ -1095,7 +1095,7 @@ let rec (kind_of_fstar_option_type : FStar_Options.opt_type -> Prims.string)
     | FStar_Options.WithSideEffect (uu____2799,typ) ->
         kind_of_fstar_option_type typ
   
-let rec (snippets_of_fstar_option :
+let (snippets_of_fstar_option :
   Prims.string -> FStar_Options.opt_type -> Prims.string Prims.list) =
   fun name  ->
     fun typ  ->
@@ -1703,6 +1703,8 @@ let run_push_without_deps :
                  (uu___573_4546.FStar_TypeChecker_Env.check_uvars);
                FStar_TypeChecker_Env.use_eq =
                  (uu___573_4546.FStar_TypeChecker_Env.use_eq);
+               FStar_TypeChecker_Env.use_eq_strict =
+                 (uu___573_4546.FStar_TypeChecker_Env.use_eq_strict);
                FStar_TypeChecker_Env.is_iface =
                  (uu___573_4546.FStar_TypeChecker_Env.is_iface);
                FStar_TypeChecker_Env.admit =

@@ -24,6 +24,8 @@ module Err = FStar.Errors
 module Z = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
 module O = FStar.Options
+module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
 
 open FStar.Dyn
 
@@ -155,7 +157,7 @@ let rec inspect_ln (t:term) : term_view =
         failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
-        begin match U.arrow_one t with
+        begin match U.arrow_one_ln t with
         | Some (b, c) -> Tv_Arrow (b, c)
         | None -> failwith "impossible"
         end
@@ -206,40 +208,74 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
+    let get_dec (flags : list<cflag>) : option<term> =
+        match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
+        | None -> None
+        | Some (DECREASES t) -> Some t
+        | _ -> failwith "impossible"
+    in
     match c.n with
     | Total (t, _) -> C_Total (t, None)
+    | GTotal (t, _) -> C_GTotal (t, None)
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
-            | (pre,_)::(post,_)::_ ->
-                C_Lemma (pre, post)
+            | (pre,_)::(post,_)::(pats,_)::_ ->
+                C_Lemma (pre, post, pats)
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
-            let maybe_dec = List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags in
-            let md = match maybe_dec with
-                     | None -> None
-                     | Some (DECREASES t) -> Some t
-                     | _ -> failwith "impossible"
-            in
+            let md = get_dec ct.flags in
             C_Total (ct.result_typ, md)
+        else if Ident.lid_equals ct.effect_name PC.effect_GTot_lid then
+            let md = get_dec ct.flags in
+            C_GTotal (ct.result_typ, md)
         else
-            C_Unknown
+            let inspect_arg (a, q) = (a, inspect_aqual q) in
+            C_Eff ([], // ct.comp_univs,
+                   Ident.path_of_lid ct.effect_name,
+                   ct.result_typ,
+                   List.map inspect_arg ct.effect_args)
       end
-    | GTotal _ -> C_Unknown
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, _) -> mk_Total t
-    | C_Lemma (pre, post) ->
+    | C_Total (t, None) -> mk_Total t
+    | C_Total (t, Some d) ->
+        let ct = { comp_univs=[U_zero]
+                 ; effect_name=PC.effect_Tot_lid
+                 ; result_typ = t
+                 ; effect_args = []
+                 ; flags = [DECREASES d] }
+        in
+        S.mk_Comp ct
+
+    | C_GTotal (t, None) -> mk_GTotal t
+    | C_GTotal (t, Some d) ->
+        let ct = { comp_univs=[U_zero]
+                 ; effect_name=PC.effect_GTot_lid
+                 ; result_typ = t
+                 ; effect_args = []
+                 ; flags = [DECREASES d] }
+        in
+        S.mk_Comp ct
+
+    | C_Lemma (pre, post, pats) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
                  ; result_typ  = S.t_unit
-                 ; effect_args = [S.as_arg pre; S.as_arg post]
+                 ; effect_args = [S.as_arg pre; S.as_arg post; S.as_arg pats]
                  ; flags       = [] } in
         S.mk_Comp ct
 
-    | _ -> failwith "cannot pack a C_Unknown"
+    | C_Eff (us, ef, res, args) ->
+        let pack_arg (a, q) = (a, pack_aqual q) in
+        let ct = { comp_univs  = [] //us
+                 ; effect_name = Ident.lid_of_path ef Range.dummyRange
+                 ; result_typ  = res
+                 ; effect_args = List.map pack_arg args
+                 ; flags       = [] } in
+        S.mk_Comp ct
 
 let pack_const (c:vconst) : sconst =
     match c with
@@ -358,14 +394,73 @@ let sigelt_attrs (se : sigelt) : list<attribute> =
 let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
-let sigelt_quals (se : sigelt) : list<qualifier> =
-    se.sigquals
+(* PRIVATE, and hacky :-( *)
+let rd_to_syntax_qual : RD.qualifier -> qualifier = function
+  | RD.Assumption -> Assumption
+  | RD.New -> New
+  | RD.Private -> Private
+  | RD.Unfold_for_unification_and_vcgen -> Unfold_for_unification_and_vcgen
+  | RD.Visible_default -> Visible_default
+  | RD.Irreducible -> Irreducible
+  | RD.Abstract -> Abstract
+  | RD.Inline_for_extraction -> Inline_for_extraction
+  | RD.NoExtract -> NoExtract
+  | RD.Noeq -> Noeq
+  | RD.Unopteq -> Unopteq
+  | RD.TotalEffect -> TotalEffect
+  | RD.Logic -> Logic
+  | RD.Reifiable -> Reifiable
+  | RD.Reflectable l -> Reflectable l
+  | RD.Discriminator l -> Discriminator l
+  | RD.Projector (l, i) -> Projector (l, i)
+  | RD.RecordType (l1, l2) -> RecordType (l1, l2)
+  | RD.RecordConstructor (l1, l2) -> RecordConstructor (l1, l2)
+  | RD.Action l -> Action l
+  | RD.ExceptionConstructor -> ExceptionConstructor
+  | RD.HasMaskedEffect -> HasMaskedEffect
+  | RD.Effect -> S.Effect
+  | RD.OnlyName -> OnlyName
 
-let set_sigelt_quals (quals : list<qualifier>) (se : sigelt) : sigelt =
-    { se with sigquals = quals }
+let syntax_to_rd_qual = function
+  | Assumption -> RD.Assumption
+  | New -> RD.New
+  | Private -> RD.Private
+  | Unfold_for_unification_and_vcgen -> RD.Unfold_for_unification_and_vcgen
+  | Visible_default -> RD.Visible_default
+  | Irreducible -> RD.Irreducible
+  | Abstract -> RD.Abstract
+  | Inline_for_extraction -> RD.Inline_for_extraction
+  | NoExtract -> RD.NoExtract
+  | Noeq -> RD.Noeq
+  | Unopteq -> RD.Unopteq
+  | TotalEffect -> RD.TotalEffect
+  | Logic -> RD.Logic
+  | Reifiable -> RD.Reifiable
+  | Reflectable l -> RD.Reflectable l
+  | Discriminator l -> RD.Discriminator l
+  | Projector (l, i) -> RD.Projector (l, i)
+  | RecordType (l1, l2) -> RD.RecordType (l1, l2)
+  | RecordConstructor (l1, l2) -> RD.RecordConstructor (l1, l2)
+  | Action l -> RD.Action l
+  | ExceptionConstructor -> RD.ExceptionConstructor
+  | HasMaskedEffect -> RD.HasMaskedEffect
+  | S.Effect -> RD.Effect
+  | OnlyName -> RD.OnlyName
 
-let sigelt_opts (se : sigelt) : option<O.optionstate> =
-    se.sigopts
+
+let sigelt_quals (se : sigelt) : list<RD.qualifier> =
+    se.sigquals |> List.map syntax_to_rd_qual
+
+let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
+    { se with sigquals = List.map rd_to_syntax_qual quals }
+
+let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+
+let sigelt_opts (se : sigelt) : option<term> =
+    match se.sigopts with
+    | None -> None
+    | Some o -> Some (EMB.embed (!e_optionstate_hook |> BU.must) o
+                        Range.dummyRange None EMB.id_norm_cb)
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

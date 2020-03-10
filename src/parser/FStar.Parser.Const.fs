@@ -117,19 +117,22 @@ let c_eq2_lid  = pconst "equals"
 let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
-let cons_lid            = pconst  "Cons"
-let nil_lid             = pconst  "Nil"
-let some_lid            = psnconst  "Some"
-let none_lid            = psnconst  "None"
-let assume_lid          = pconst  "_assume"
-let assert_lid          = pconst  "_assert"
-let pure_assert_wp_lid  = pconst "pure_assert_wp"
-let pure_assume_wp_lid  = pconst "pure_assume_wp"
-let assert_norm_lid     = p2l ["FStar"; "Pervasives"; "assert_norm"]
+let cons_lid              = pconst  "Cons"
+let nil_lid               = pconst  "Nil"
+let some_lid              = psnconst  "Some"
+let none_lid              = psnconst  "None"
+let assume_lid            = pconst  "_assume"
+let assert_lid            = pconst  "_assert"
+let pure_wp_lid           = pconst "pure_wp"
+let trivial_pure_post_lid = psconst "trivial_pure_post"
+let pure_assert_wp_lid    = pconst "pure_assert_wp"
+let pure_assume_wp_lid    = pconst "pure_assume_wp"
+let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
-let list_append_lid     = p2l ["FStar"; "List"; "append"]
+let list_append_lid       = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
-let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
+let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
+let id_lid                = psconst "id"
 
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
@@ -253,8 +256,8 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
-let inspect        = p2l ["FStar"; "Reflection"; "Basic"; "inspect_ln"]
-let pack           = p2l ["FStar"; "Reflection"; "Basic"; "pack_ln"]
+let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
+let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
 let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
 
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
@@ -298,6 +301,7 @@ let steps_nbe           = psconst "nbe"
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
+let rename_let_attr = p2l ["FStar"; "Pervasives"; "rename_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]

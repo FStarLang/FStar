@@ -83,17 +83,6 @@ let string_of_option f = function
   | None -> "None"
   | Some x -> "Some " ^ f x
 
-open FStar.Util
-type thunk<'a> = ref<(Util.either<(unit -> 'a), 'a>)>
-let mk_thunk (f:unit -> 'a) : thunk<'a> = Util.mk_ref (Util.Inl f)
-let force_thunk (t:thunk<'a>) =
-    match !t with
-    | Inr a -> a
-    | Inl f ->
-      let a = f () in
-      t := Inr a;
-      a
-
 (* Was List.init, but F* doesn't have this in ulib *)
 let tabulate (n:int) (f : int -> 'a) : list<'a> =
   let rec aux i =

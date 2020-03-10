@@ -169,23 +169,25 @@ let print_ifamily i =
             ^ Print.term_to_string d.dtyp)
         |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals attrs
+let bundle_as_inductive_families env ses quals
     : UEnv.uenv
     * list<inductive_family> =
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
-            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
+            | Sig_inductive_typ(l, us, bs, t, _mut_i, datas) ->
+                let _us, t = SS.open_univ_vars us t in
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
-                    | Sig_datacon(d, _, t, l', nparams, _) when Ident.lid_equals l l' ->
+                    | Sig_datacon(d, us, t, l', nparams, _) when Ident.lid_equals l l' ->
+                        let _us, t = SS.open_univ_vars us t in
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
                         let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
+                let metadata = extract_metadata se.sigattrs @ List.choose flag_of_qual quals in
                 let fv = S.lid_as_fv l delta_constant None in
                 let env = UEnv.extend_type_name env fv in
                 env, [{   ifv = fv
@@ -413,7 +415,7 @@ let extract_bundle_iface env se
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, empty_iface
         else begin
-          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, ifams = bundle_as_inductive_families env ses quals in
           let env, td = BU.fold_map extract_one_family env ifams in
           env,
           iface_union
@@ -505,13 +507,13 @@ let extract_reifiable_effect g ed
     in
 
     let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
+        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> must |> snd) in
         let return_nm, return_lid = monad_op_name ed "return" in
         extend_env g return_lid return_nm return_tm ty_sc
     in
 
     let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
+        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> must |> snd) in
         let bind_nm, bind_lid = monad_op_name ed "bind" in
         extend_env g bind_lid bind_nm bind_tm ty_sc
     in
@@ -595,10 +597,10 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       g, iface_of_bindings bindings
 
     | Sig_main _
-    | Sig_new_effect_for_free _
     | Sig_assume _
     | Sig_sub_effect  _
-    | Sig_effect_abbrev _ ->
+    | Sig_effect_abbrev _
+    | Sig_polymonadic_bind _ ->
       g, empty_iface
 
     | Sig_pragma (p) ->
@@ -706,7 +708,7 @@ let extract_bundle env se =
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, []
         else begin
-          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+          let env, ifams = bundle_as_inductive_families env ses quals in
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
         end
@@ -925,12 +927,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          let ml_main, _, _ = Term.term_as_mlexpr g e in
          g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
 
-       | Sig_new_effect_for_free _ ->
-           failwith "impossible -- removed by tc.fs"
-
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
-       | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_polymonadic_bind _ ->
          g, []
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;

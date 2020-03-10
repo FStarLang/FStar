@@ -741,8 +741,10 @@ let collect_one
             end
         | Exception (_, t) ->
             iter_opt t collect_term
-        | NewEffect ed ->
-            collect_effect_decl ed
+        | NewEffect ed
+        | LayeredEffect ed ->
+             collect_effect_decl ed
+        | Polymonadic_bind (_, _, _, bind) -> collect_term bind  //collect deps from the effect lids?
         | Fsdoc _
         | Pragma _ ->
             ()

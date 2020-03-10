@@ -36,6 +36,7 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Syntax
 
+open FStar.Common
 module BU = FStar.Util //basic util
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
@@ -44,9 +45,12 @@ module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module FC = FStar.Const
+module TcComm = FStar.TypeChecker.Common
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
+(* lazy string, for error reporting *)
+type lstring = Thunk.t<string>
 
 (* Instantiation of unification variables *)
 type uvi =
@@ -56,7 +60,7 @@ type uvi =
 (* The set of problems currently being addressed *)
 type worklist = {
     attempting:   probs;
-    wl_deferred:  list<(int * string * prob)>;  //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
+    wl_deferred:  list<(int * lstring * prob)>; //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
     ctr:          int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
     defer_ok:     bool;                         //whether or not carrying constraints is ok---at the top-level, this flag is false
     smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
@@ -101,7 +105,7 @@ let copy_uvar u (bs:binders) t wl =
 (* Types used in the output of the solver *)
 type solution =
   | Success of deferred * implicits
-  | Failed  of prob * string
+  | Failed  of prob * lstring
 
 type variance =
     | COVARIANT
@@ -182,10 +186,15 @@ let empty_worklist env = {
     umax_heuristic_ok=true;
     wl_implicits=[]
 }
-let giveup env reason prob =
-    if debug env <| Options.Other "Rel"
-    then BU.print2 "Failed %s:\n%s\n" reason (prob_to_string env prob);
-    Failed(prob, reason)
+
+let giveup env (reason : lstring) prob =
+    if debug env <| Options.Other "Rel" then
+        BU.print2 "Failed %s:\n%s\n" (Thunk.force reason) (prob_to_string env prob);
+    Failed (prob, reason)
+
+let giveup_lit env (reason : string) prob =
+    giveup env (Thunk.mk (fun () -> reason)) prob
+
 (* ------------------------------------------------*)
 (* </worklist ops>                                 *)
 (* ------------------------------------------------*)
@@ -280,6 +289,7 @@ let def_check_prob msg prob =
 let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
 let wl_of_guard env g            = {empty_worklist env with attempting=List.map snd g}
 let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
+let defer_lit reason prob wl     = defer (Thunk.mkv reason) prob wl
 let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
@@ -410,14 +420,14 @@ let guard_on_element wl problem x phi =
           let u = wl.tcenv.universe_of wl.tcenv x.sort in
           U.mk_forall u x phi
         | Some e -> Subst.subst [NT(x,S.bv_to_name e)] phi
-let explain env d s =
+let explain env d (s : lstring) =
     if Env.debug env <| Options.Other "ExplainRel"
     ||  Env.debug env <| Options.Other "Rel"
     then BU.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string env d)
                        (p_reason d |> String.concat "\n\t>")
-                       s
+                       (Thunk.force s)
     else let d = maybe_invert_p d in
          let rel = match p_rel d with
             | EQ -> "equal to"
@@ -465,7 +475,20 @@ let find_univ_uvar u s = BU.find_map s (function
 (* <normalization>                                *)
 (* ------------------------------------------------*)
 let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
-let sn env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
+let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
+let sn env t = 
+  Profiling.profile
+    (fun () ->
+      sn' env t)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    "FStar.TypeChecker.Rel.sn"
+let norm_with_steps profiling_tag steps env t =
+  Profiling.profile
+    (fun () ->
+      N.normalize steps env t)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    profiling_tag
+
 
 let should_strongly_reduce t =
     let h, _ = U.head_and_args t in
@@ -474,9 +497,13 @@ let should_strongly_reduce t =
     | _ -> false
 
 let whnf env t =
-    if should_strongly_reduce t
-    then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
-    else whnf' env t
+  Profiling.profile
+    (fun () ->
+      if should_strongly_reduce t
+      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
+      else whnf' env t)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    "FStar.TypeChecker.Rel.whnf"
 
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
@@ -499,13 +526,19 @@ let norm_univ wl u =
             | _ -> u in
     N.normalize_universe wl.tcenv (aux u)
 
+let normalize_refinement steps env t0 : term =
+  Profiling.profile
+    (fun () -> N.normalize_refinement steps env t0)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    "FStar.TypeChecker.Rel.normalize_refinement"    
+
 let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
        let steps =
          if should_delta
          then [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
          else [Env.Weak; Env.HNF] in
-       N.normalize_refinement steps env t
+       normalize_refinement steps env t
    in
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
@@ -553,9 +586,6 @@ let base_and_refinement_maybe_delta should_delta env t1 =
 
 let base_and_refinement env t : term * option<(bv * term)> =
     base_and_refinement_maybe_delta false env t
-
-let normalize_refinement steps env t0 : term =
-    N.normalize_refinement steps env t0
 
 let unrefine env t : term =
     base_and_refinement env t |> fst
@@ -974,7 +1004,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                    //see bug606.fst
                    //should we always disable Zeta here?
             in
-            let t' = N.normalize steps env t in
+            let t' = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.1" steps env t in
             if U.eq_tm t t' = U.Equal //if we didn't inline anything
             then None
             else let _ = if Env.debug env <| Options.Other "RelDelta"
@@ -1191,7 +1221,13 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
 type univ_eq_sol =
   | UDeferred of worklist
   | USolved   of worklist
-  | UFailed   of string
+  | UFailed   of lstring
+
+let ufailed_simple (s:string) : univ_eq_sol =
+  UFailed (Thunk.mkv s)
+
+let ufailed_thunk (s: unit -> string) : univ_eq_sol =
+  UFailed (Thunk.mk s)
 
 let rec really_solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
@@ -1212,9 +1248,12 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
     in
 
     let try_umax_components u1 u2 msg =
-        if not wl.umax_heuristic_ok then UFailed ("Unable to unify universe terms with umax") else
+        if not wl.umax_heuristic_ok
+        then ufailed_simple "Unable to unify universe terms with umax"
+        else
         match u1, u2 with
             | U_max us1, U_max us2 ->
+              begin
               //filter out common universes in us1 and us2
               //this allows more cases to unify, e.g. us1 = [uvar; un] and us2=[un; un']
               //with just structural comparison, this would fail to unify, but after filtering away un, we can unify uvar with un'
@@ -1229,8 +1268,11 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                           end
                         | _ -> USolved wl in
                     aux wl us1 us2
-              else UFailed (BU.format2 "Unable to unify universes: %s and %s" (Print.univ_to_string u1) (Print.univ_to_string u2))
-
+              else ufailed_thunk
+                             (fun () -> BU.format2 "Unable to unify universes: %s and %s"
+                                                   (Print.univ_to_string u1)
+                                                   (Print.univ_to_string u2))
+              end
             | U_max us, u'
             | u', U_max us ->
                 let rec aux wl us = match us with
@@ -1243,7 +1285,11 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                     end
                 in aux wl us
 
-            | _ -> UFailed (BU.format3 "Unable to unify universes: %s and %s (%s)" (Print.univ_to_string u1) (Print.univ_to_string u2) msg) in
+            | _ ->
+              ufailed_thunk (fun () ->
+                            BU.format3 "Unable to unify universes: %s and %s (%s)"
+                                       (Print.univ_to_string u1)
+                                       (Print.univ_to_string u2) msg) in
 
     match u1, u2 with
         | U_bvar _, _
@@ -1256,7 +1302,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
         | U_name x, U_name y ->
           if x.idText = y.idText
           then USolved wl
-          else UFailed "Incompatible universes"
+          else ufailed_simple "Incompatible universes"
 
         | U_zero, U_zero ->
           USolved wl
@@ -1294,7 +1340,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
         | U_zero,   U_name _
         | U_name _, U_succ _
         | U_name _, U_zero ->
-          UFailed "Incompatible universes"
+          ufailed_simple "Incompatible universes"
 
 let solve_universe_eq orig wl u1 u2 =
     if wl.tcenv.lax_universes
@@ -1415,7 +1461,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t env tp probs
         else if probs.defer_ok
-        then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
+        then solve env (defer_lit "deferring flex_rigid or flex_flex subtyping" hd probs)
         else if rank=Flex_flex
         then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
@@ -1431,7 +1477,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
            let attempt, rest = probs.wl_deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
            match attempt with
             | [] -> //can't solve yet; defer the rest
-              Success(List.map (fun (_, x, y) -> (x, y)) probs.wl_deferred, probs.wl_implicits)
+              Success(List.map (fun (_, x, y) -> (Thunk.force x, y)) probs.wl_deferred, probs.wl_implicits)
 
             | _ ->
               solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
@@ -1446,7 +1492,7 @@ and solve_one_universe_eq (env:Env.env) (orig:prob) (u1:universe) (u2:universe) 
       giveup env msg orig
 
     | UDeferred wl ->
-      solve env (defer "" orig wl)
+      solve env (defer_lit "" orig wl)
 
 and solve_maybe_uinsts (env:Env.env) (orig:prob) (t1:term) (t2:term) (wl:worklist) : univ_eq_sol =
     let rec aux wl us1 us2 = match us1, us2 with
@@ -1460,7 +1506,7 @@ and solve_maybe_uinsts (env:Env.env) (orig:prob) (t1:term) (t2:term) (wl:worklis
             | failed_or_deferred -> failed_or_deferred
           end
 
-        | _ -> UFailed "Unequal number of universes" in
+        | _ -> ufailed_simple "Unequal number of universes" in
 
     let t1 = whnf env t1 in
     let t2 = whnf env t2 in
@@ -1477,11 +1523,11 @@ and solve_maybe_uinsts (env:Env.env) (orig:prob) (t1:term) (t2:term) (wl:worklis
         | _ ->
             USolved wl
 
-and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solution =
+and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:lstring) : solution =
     if wl.defer_ok
     then begin
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) msg;
+        if Env.debug env <| Options.Other "Rel" then
+            BU.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) (Thunk.force msg);
         solve env (defer msg orig wl)
     end
     else giveup env msg orig
@@ -1637,7 +1683,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         then let flex, wl = destruct_flex_t this_flex wl in
              begin
              match quasi_pattern env flex with
-             | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
+             | None -> giveup_lit env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
              | Some (flex_bs, flex_t) ->
                if Env.debug env <| Options.Other "Rel"
                then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
@@ -1758,7 +1804,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             solve env (attempt [TProb eq_prob] wl)
 
           | _ ->
-            giveup env ("failed to solve sub-problems: " ^msg) p)
+            giveup env (Thunk.map (fun s -> "failed to solve the sub-problems: " ^ s) msg) p)
       end
 
     | _ when flip ->
@@ -1831,7 +1877,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in
          if not occurs_ok
-         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
+         then giveup_or_defer env orig wl (Thunk.mk (fun () -> "occurs-check failed: " ^ (Option.get msg)))
          else aux [] [] formals wl
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
@@ -1843,14 +1889,26 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
-   let rec aux wl scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> * worklist =
+   (*
+    * AR: adding env to the return type
+    *
+    *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
+    *       so that subsequent binders are solved in the right env
+    *     when all the binders are solved, it creates the rhs problem and returns it
+    *     the problem was that this rhs problem was getting solved in the original env,
+    *       since `aux` never returned the env with all the binders
+    *     so far it was fine, but with layered effects, we have to be really careful about the env
+    *     so now we return the updated env, and the rhs is solved in that final env
+    *     (see how `aux` is called after its definition below)
+    *)
+   let rec aux wl scope env subst (xs:binders) (ys:binders) : Env.env * either<(probs * formula), string> * worklist =
         match xs, ys with
         | [], [] ->
           let rhs_prob, wl = rhs wl scope env subst in
           if debug env <| Options.Other "Rel"
           then BU.print1 "rhs_prob = %s\n" (prob_to_string env rhs_prob);
           let formula = p_guard rhs_prob in
-          Inl ([rhs_prob], formula), wl
+          env, Inl ([rhs_prob], formula), wl
 
         | (hd1, imp)::xs, (hd2, imp')::ys when (U.eq_aqual imp imp' = U.Equal) ->
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -1861,29 +1919,29 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
            let env = Env.push_bv env hd1 in
            begin
            match aux wl (scope @ [(hd1, imp)]) env subst xs ys with
-           | Inl (sub_probs, phi), wl ->
+           | env, Inl (sub_probs, phi), wl ->
              let phi =
                  U.mk_conj (p_guard prob)
                            (close_forall env [(hd1,imp)] phi) in
              if debug env <| Options.Other "Rel"
              then BU.print2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
-             Inl (prob::sub_probs, phi), wl
+             env, Inl (prob::sub_probs, phi), wl
 
            | fail -> fail
            end
 
-        | _ -> Inr "arity or argument-qualifier mismatch", wl in
+        | _ -> env, Inr "arity or argument-qualifier mismatch", wl in
 
    match aux wl [] env [] bs1 bs2 with
-   | Inr msg, wl -> giveup env msg orig
-   | Inl (sub_probs, phi), wl ->
+   | env, Inr msg, wl -> giveup_lit env msg orig
+   | env, Inl (sub_probs, phi), wl ->
      let wl = solve_prob orig (Some phi) [] wl in
      solve env (attempt sub_probs wl)
 
 and try_solve_without_smt_or_else
         (env:Env.env) (wl:worklist)
         (try_solve: (Env.env -> worklist -> solution))
-        (else_solve: Env.env -> worklist -> (prob * string) -> solution)
+        (else_solve: Env.env -> worklist -> (prob * lstring) -> solution)
     : solution =
     let wl' = {wl with defer_ok=false;
                        smt_ok=false;
@@ -1897,7 +1955,7 @@ and try_solve_without_smt_or_else
       UF.commit tx;
       let wl = {wl with wl_implicits=wl.wl_implicits@imps} in
       solve env wl
-    | Failed (p,s) ->
+    | Failed (p, s) ->
       UF.rollback tx;
       else_solve env wl (p,s)
 
@@ -2001,26 +2059,28 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         in
         match quasi_pattern env lhs with
         | None ->
-           giveup_or_defer env orig wl
-              (BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
-                          (prob_to_string env orig))
+           let msg = Thunk.mk (fun () ->
+                        BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
+                          (prob_to_string env orig)) in
+           giveup_or_defer env orig wl msg
 
         | Some (bs_lhs, t_res_lhs) ->
           if is_app rhs
           then imitate_app orig env wl lhs bs_lhs t_res_lhs rhs
           else if is_arrow rhs
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
-          else giveup_or_defer env orig wl
-                               (BU.format1 "first_order heuristic cannot solve %s; \
-                                            rhs not an app or arrow"
-                                            (prob_to_string env orig))
+          else
+            let msg = Thunk.mk (fun () ->
+                                  BU.format1 "first_order heuristic cannot solve %s; rhs not an app or arrow"
+                                  (prob_to_string env orig)) in
+            giveup_or_defer env orig wl msg
     in
 
     match p_rel orig with
     | SUB
     | SUBINV ->
       if wl.defer_ok
-      then giveup_or_defer env orig wl "flex-rigid subtyping"
+      then giveup_or_defer env orig wl (Thunk.mkv "flex-rigid subtyping")
       else solve_t_flex_rigid_eq env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
@@ -2035,23 +2095,25 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let fvs2 = Free.names rhs in
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
-        then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
+        then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars ctx_uv uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
-        then giveup_or_defer env orig wl
-                             (BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
-                                              (names_to_string fvs2)
-                                              (names_to_string fvs1)
-                                              (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders)))
+        then
+          let msg = Thunk.mk (fun () ->
+                                BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
+                                           (names_to_string fvs2)
+                                           (names_to_string fvs1)
+                                           (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
+          giveup_or_defer env orig wl msg
         else first_order orig env wl lhs rhs
 
 
       | _ -> //Not a pattern
         if wl.defer_ok
-        then giveup_or_defer env orig wl "Not a pattern"
+        then giveup_or_defer env orig wl (Thunk.mkv "Not a pattern")
         else match try_quasi_pattern orig env wl lhs rhs with
             | Inr sol, wl ->
               solve env (solve_prob orig None sol wl)
@@ -2067,13 +2129,13 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     | SUB
     | SUBINV ->
       if wl.defer_ok
-      then giveup_or_defer env orig wl "flex-flex subtyping"
+      then giveup_or_defer env orig wl (Thunk.mkv "flex-flex subtyping")
       else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
       if wl.defer_ok
       && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
-      then giveup_or_defer env orig wl "flex-flex non-pattern"
+      then giveup_or_defer env orig wl (Thunk.mkv "flex-flex non-pattern")
       else
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
@@ -2137,7 +2199,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                  solve env (solve_prob orig None sol wl)
 
           | _ ->
-            giveup_or_defer env orig wl "flex-flex: non-patterns"
+            giveup_or_defer env orig wl (Thunk.mkv "flex-flex: non-patterns")
 
 and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t'.1" (TProb problem);
@@ -2157,15 +2219,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             else match solve_maybe_uinsts env orig head1 head2 wl with
             | USolved wl -> k true wl //(solve_prob orig None [] wl)
             | UFailed msg -> giveup env msg orig
-            | UDeferred wl -> k false (defer "universe constraints" orig wl)
+            | UDeferred wl -> k false (defer_lit "universe constraints" orig wl)
         in
         let nargs = List.length args1 in
         if nargs <> List.length args2
-        then giveup env (BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
-                    (Print.term_to_string head1)
-                    (args_to_string args1)
-                    (Print.term_to_string head2)
-                    (args_to_string args2))
+        then giveup env
+                    (Thunk.mk
+                      (fun () -> BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
+                                     (Print.term_to_string head1)
+                                     (args_to_string args1)
+                                     (Print.term_to_string head2)
+                                     (args_to_string args2)))
                     orig
         else
         if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
@@ -2230,7 +2294,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    then BU.print3 "Failed to solve %s because sub-problem %s is not solvable without SMT because %s"
                                 (prob_to_string env orig)
                                 (prob_to_string env prob)
-                                reason;
+                                (Thunk.force reason);
                    match N.unfold_head_once env t1,
                          N.unfold_head_once env t2
                    with
@@ -2446,7 +2510,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             begin
             match try_match_heuristic env orig wl t1 t2 o with
             | Inl _defer_ok ->
-              giveup_or_defer orig "delaying match heuristic"
+              giveup_or_defer orig (Thunk.mkv "delaying match heuristic")
 
             | Inr (Some wl) ->
               solve env wl
@@ -2455,7 +2519,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
-                else giveup env (BU.format4 "head mismatch (%s (%s) vs %s (%s))"
+                else giveup env (Thunk.mk (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (Print.term_to_string head1)
                                                   (BU.dflt ""
                                                     (BU.bind_opt (delta_depth_of_term env head1)
@@ -2464,7 +2528,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                                   (BU.dflt ""
                                                     (BU.bind_opt (delta_depth_of_term env head2)
                                                                 (fun x -> Some (Print.delta_depth_to_string x))))
-                                                  ) orig
+                                                  )) orig
             end
 
         | (HeadMatch true, _) when problem.relation <> EQ ->
@@ -2474,9 +2538,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             if wl.smt_ok
             then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
-            else giveup env (BU.format2 "head mismatch for subtyping (%s vs %s)"
+            else giveup env (Thunk.mk (fun () -> BU.format2 "head mismatch for subtyping (%s vs %s)"
                                         (Print.term_to_string t1)
-                                        (Print.term_to_string t2))
+                                        (Print.term_to_string t2)))
                                 orig
 
         | (_, Some (t1, t2)) -> //heads match after some delta steps
@@ -2620,7 +2684,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    let t2 = force_eta t2 in
                    if is_abs t1 && is_abs t2
                    then solve_t env ({problem with lhs=t1; rhs=t2}) wl
-                   else giveup env "head tag mismatch: RHS is an abstraction" orig
+                   else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
@@ -2793,7 +2857,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         | None ->
             if wl.smt_ok
             then by_smt ()
-            else giveup env "Tm_match branches don't match" orig
+            else giveup env (Thunk.mkv "Tm_match branches don't match") orig
         | Some (sub_probs, wl) ->
             let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
             let sub_probs = ([], sc_prob)::sub_probs in
@@ -2832,8 +2896,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
          let equal t1 t2 =
-            let t1 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
-            let t2 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
+            let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
+            let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
             U.eq_tm t1 t2 = U.Equal
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
@@ -2857,7 +2921,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          // For now, just unify if they syntactically match
          if U.term_eq t1 t2
          then solve env (solve_prob orig None [] wl)
-         else giveup env "Tm_let mismatch (%s-%s vs %s-%s)" orig
+         else giveup env (Thunk.mkv "Tm_let mismatch") orig
 
       | Tm_let _, _
       | _, Tm_let _ ->
@@ -2865,7 +2929,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.tag_of_term t1) (Print.tag_of_term t2)
                             (Print.term_to_string t1) (Print.term_to_string t2)) t1.pos
 
-      | _ -> giveup env "head tag mismatch" orig
+      | _ -> giveup env (Thunk.mkv "head tag mismatch") orig
 
 and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let c1 = problem.lhs in
@@ -2874,20 +2938,28 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let sub_prob : worklist -> term -> rel -> term -> string -> prob * worklist =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
-    let solve_eq c1_comp c2_comp =
+    let solve_eq c1_comp c2_comp g_lift =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print2 "solve_c is using an equality constraint (%s vs %s)\n"
                             (Print.comp_to_string (mk_Comp c1_comp))
                             (Print.comp_to_string (mk_Comp c2_comp)) in
         if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
-        then giveup env (BU.format2 "incompatible effects: %s <> %s"
+        then giveup env (Thunk.mk (fun () -> BU.format2 "incompatible effects: %s <> %s"
                                         (Print.lid_to_string c1_comp.effect_name)
-                                        (Print.lid_to_string c2_comp.effect_name)) orig
+                                        (Print.lid_to_string c2_comp.effect_name))) orig
         else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
-        then giveup env (BU.format2 "incompatible effect arguments: %s <> %s"
-                          (Print.args_to_string c1_comp.effect_args)
-                          (Print.args_to_string c2_comp.effect_args)) orig
+        then giveup env (Thunk.mk (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
+                                        (Print.args_to_string c1_comp.effect_args)
+                                        (Print.args_to_string c2_comp.effect_args))) orig
         else
+             let univ_sub_probs, wl =
+               List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
+                 let p, wl = sub_prob wl
+                   (S.mk (S.Tm_type u1) None Range.dummyRange)
+                   EQ
+                   (S.mk (S.Tm_type u2) None Range.dummyRange)
+                   "effect universes" in
+                 (univ_sub_probs@[p]), wl) ([], wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
              let arg_sub_probs, wl =
                  List.fold_right2
@@ -2898,32 +2970,182 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                         c2_comp.effect_args
                         ([], wl)
              in
-             let sub_probs = ret_sub_prob :: arg_sub_probs in
-             let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+             let sub_probs = univ_sub_probs@[ret_sub_prob]@(arg_sub_probs @ (g_lift.deferred |> List.map snd)) in
+             let guard =
+               let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+               match g_lift.guard_f with
+               | Trivial -> guard
+               | NonTrivial f -> U.mk_conj guard f in
+             let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
              let wl = solve_prob orig (Some guard) [] wl in
              solve env (attempt sub_probs wl)
     in
 
+    let solve_layered_sub c1 (edge:edge) c2 =
+      if Env.debug env <| Options.Other "LayeredEffects" then
+        BU.print2 "solve_layered_sub c1: %s and c2: %s\n"
+          (c1 |> S.mk_Comp |> Print.comp_to_string)
+          (c2 |> S.mk_Comp |> Print.comp_to_string);
+
+      let c1, g_lift = 
+        c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
+           |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+
+      if Env.debug env <| Options.Other "LayeredEffects" then
+        BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
+          (c1 |> S.mk_Comp |> Print.comp_to_string)
+          (c2 |> S.mk_Comp |> Print.comp_to_string);
+
+      (*
+       * M t1 i_1 ... i_n <: M t2 j_1 ... j_n (equality is simple, just unify the indices, as before)
+       * We solve it using following sub-problems and guards:
+       *
+       * --> sub_probs_is: first, if any of the indices i_1 ... i_n are uvars,
+       *                   we simply unify them with corresponding indices on the R.H.S
+       *
+       * Then we solve t1 <: t2 as a sub-problem
+       *
+       * Next, we lookup M.stronger_wp
+       * let M.stronger_wp =
+       *   (u, a:Type u -> (x_i:t_i) -> f:repr<u> a f_i_1 ... f_i_n -> PURE (repr<u> a g_i_1 ... g_i_n) wp)
+       *
+       * We first instantiate it with c2.comp_univs
+       *
+       * Next, we create uvars ?u_i for each binder x_i
+       *   with subtitutions [a/c2.result_typ]@[x_j/?u_j] (forall j < i)
+       *
+       * let substs = [a/c2.result_typ]@[x_i/?u_i]
+       *
+       * --> f_sub_probs: unify f_i_i[substs] with indices of c1
+       * --> g_sub_probs: unify g_i_i[substs] with indices of c2
+       *
+       * --> Add (wp[substs] (fun _ -> True)) to the guard
+       *)
+
+      if problem.relation = EQ
+      then solve_eq c1 c2 g_lift
+      else
+        let r = Env.get_range env in
+        let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
+
+        //sub problems for uvar indices in c1
+        let is_sub_probs, wl =
+          let rec is_uvar t =
+            match (SS.compress t).n with
+            | Tm_uvar _ -> true
+            | Tm_uinst (t, _) -> is_uvar t
+            | Tm_app (t, _) -> is_uvar t
+            | _ -> false in
+          List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
+            if is_uvar a1
+            then begin
+                   if Env.debug env <| Options.Other "LayeredEffects" then
+                   BU.print2 "solve_layered_sub: adding index equality for %s and %s (since a1 uvar)\n"
+                     (Print.term_to_string a1) (Print.term_to_string a2);
+                   let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
+                   p::is_sub_probs, wl
+                 end
+            else is_sub_probs, wl
+          ) c1.effect_args c2.effect_args ([], wl) in
+
+        //return type sub problem
+        let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
+
+        let _, stronger_t =
+          c2.effect_name
+          |> Env.get_effect_decl env
+          |> U.get_stronger_vc_combinator
+          |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs) in
+
+        let stronger_t_shape_error s = BU.format3
+          "Unexpected shape of stronger for %s, reason: %s (t:%s)"
+          (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
+
+        let a_b, rest_bs, f_b, stronger_c =
+          match (SS.compress stronger_t).n with
+          | Tm_arrow (bs, c) when List.length bs >= 2 ->
+            let ((a::bs), c) = SS.open_comp bs c in
+            let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
+              |> (fun (l1, l2) -> l1, List.hd l2) in
+            a, rest_bs, f_b, c
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedExpressionType,
+              stronger_t_shape_error "not an arrow or not enough binders") r in
+
+        let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
+          [NT (a_b |> fst, c2.result_typ)]
+          (fun b -> BU.format3 "implicit for binder %s in stronger of %s at %s"
+            (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
+
+        let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
+
+        let substs = List.map2
+          (fun b t -> NT (b |> fst, t))
+          (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
+
+        let f_sub_probs, wl =
+          let f_sort_is =
+            match (SS.compress (f_b |> fst).sort).n with
+            | Tm_app (_, _::is) -> is |> List.map fst |> List.map (SS.subst substs)
+            | _ ->
+              raise_error (Errors.Fatal_UnexpectedExpressionType,
+                stronger_t_shape_error "type of f is not a repr type") r in
+
+          List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+            let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
+            ps@[p], wl
+          ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
+
+        let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+
+        let g_sub_probs, wl =
+          let g_sort_is =
+            match (SS.compress stronger_ct.result_typ).n with
+            | Tm_app (_, _::is) -> is |> List.map fst
+            | _ ->
+              raise_error (Errors.Fatal_UnexpectedExpressionType,
+                stronger_t_shape_error "return type is not a repr type") r in
+
+          List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
+            let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
+            ps@[p], wl
+          ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
+
+        let fml =
+          let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
+          Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
+
+        let sub_probs = ret_sub_prob::(is_sub_probs@f_sub_probs@g_sub_probs@(g_lift.deferred |> List.map snd)) in
+        let guard =
+          let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+          match g_lift.guard_f with
+          | Trivial -> guard
+          | NonTrivial f -> U.mk_conj guard f in
+        let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
+        solve env (attempt sub_probs wl) in
+
     let solve_sub c1 edge c2 =
         let r = Env.get_range env in
         let lift_c1 () =
-             let wp = match c1.effect_args with
-                      | [(wp1,_)] -> wp1
-                      | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let univs =
                match c1.comp_univs with
                | [] -> [env.universe_of env c1.result_typ]
                | x -> x in
-             {
-                comp_univs=univs;
-                effect_name=c2.effect_name;
-                result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd univs) c1.result_typ wp)];
-                flags=c1.flags
-             }
+             let c1 = { c1 with comp_univs = univs } in
+             ({ c1 with comp_univs = univs })
+             |> S.mk_Comp
+             |> edge.mlift.mlift_wp env
+             |> (fun (c, g) ->
+                 if not (Env.is_trivial g)
+                 then raise_error (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
+                     (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
+                 else U.comp_to_comp_typ c)
         in
-        if problem.relation = EQ
-        then solve_eq (lift_c1 ()) c2
+        if Env.is_layered_effect env c2.effect_name
+        then solve_layered_sub c1 edge c2
+        else if problem.relation = EQ
+        then solve_eq (lift_c1 ()) c2 Env.trivial_guard
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
@@ -2937,12 +3159,14 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
-                           N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
-                                       (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
+                           norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.4"
+                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
+                                           (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
-                           N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
-                                       (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
+                           norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.5"
+                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
+                                           (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob, wl =
                            sub_prob wl c1_repr problem.relation c2_repr
@@ -2956,22 +3180,24 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                       let g =
                          if env.lax then
                             U.t_true
-                         else if is_null_wp_2
-                         then let _ = if debug env <| Options.Other "Rel"
-                                      then BU.print_string "Using trivial wp ... \n" in
-                              let c1_univ = env.universe_of env c1.result_typ in
-                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl c2_decl.trivial,
-                                        [as_arg c1.result_typ;
-                                         as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
-                                 None r
-                         else let c1_univ = env.universe_of env c1.result_typ in
-                              let c2_univ = env.universe_of env c2.result_typ in
-                               mk (Tm_app(inst_effect_fun_with
-                                                [c2_univ] env c2_decl c2_decl.stronger,
-                                          [as_arg c2.result_typ;
-                                           as_arg wpc2;
-                                           as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
-                                   None r in
+                         else let wpc1_2 = lift_c1 () |> (fun ct -> List.hd ct.effect_args) in
+                              if is_null_wp_2
+                              then let _ = if debug env <| Options.Other "Rel"
+                                           then BU.print_string "Using trivial wp ... \n" in
+                                   let c1_univ = env.universe_of env c1.result_typ in
+                                   let trivial =
+                                     match c2_decl |> U.get_wp_trivial_combinator with
+                                     | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
+                                     | Some t -> t in
+                                   mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
+                                               [as_arg c1.result_typ;
+                                                wpc1_2])) None r
+                              else let c2_univ = env.universe_of env c2.result_typ in
+                                   let stronger = c2_decl |> U.get_stronger_vc_combinator in
+                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
+                                              [as_arg c2.result_typ;
+                                               as_arg wpc2;
+                                               wpc1_2])) None r in
                       if debug env <| Options.Other "Rel" then
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
@@ -2988,20 +3214,21 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-         | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
+         | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | GTotal _, Total _ ->
-            giveup env "incompatible monad ordering: GTot </: Tot"  orig
+            giveup env (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
 
          | Total  (t1, _), Total  (t2, _)
          | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
+         | Total  (t1, _), GTotal (t2, _) when problem.relation = SUB ->
+            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+
          | Total  (t1, _), GTotal (t2, _) ->
-            if problem.relation = SUB
-            then solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
-            else giveup env "GTot =/= Tot" orig
+            giveup env (Thunk.mkv "GTot =/= Tot") orig
 
          | GTotal _, Comp _
          | Total _,  Comp _ ->
@@ -3024,16 +3251,16 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                             then c1_comp, c2_comp
                             else Env.unfold_effect_abbrev env c1,
                                  Env.unfold_effect_abbrev env c2 in
-                      solve_eq c1_comp c2_comp
+                      solve_eq c1_comp c2_comp Env.trivial_guard
                  else begin
                     let c1 = Env.unfold_effect_abbrev env c1 in
                     let c2 = Env.unfold_effect_abbrev env c2 in
                     if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                     match Env.monad_leq env c1.effect_name c2.effect_name with
                     | None ->
-                       giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
+                       giveup env (Thunk.mk (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
                                               (Print.lid_to_string c1.effect_name)
-                                              (Print.lid_to_string c2.effect_name)) orig
+                                              (Print.lid_to_string c2.effect_name))) orig
                     | Some edge ->
                         solve_sub c1 edge c2
                  end
@@ -3120,7 +3347,8 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
+              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -3139,8 +3367,11 @@ let with_guard env prob dopt =
 
 let with_guard_no_simp env prob dopt = match dopt with
     | None -> None
-    | Some d ->
-      Some ({guard_f=(p_guard prob |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
+    | Some (deferred, implicits) ->
+      Some ({guard_f=(p_guard prob |> NonTrivial);
+             deferred=deferred;
+             univ_ineqs=([], []);
+             implicits=implicits})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
      if debug env <| Options.Other "Rel" then
@@ -3165,6 +3396,24 @@ let teq env t1 t2 : guard_t =
                         (Print.term_to_string t2)
                         (guard_to_string env g);
         g
+
+(*
+ * AR: It would be nice to unify it with teq, the way we do it for subtyping
+ *     i.e. write a common function that uses a bound variable,
+ *          and if the caller requires a prop, close over it, else abstract it
+ *     But that may change the existing VCs shape a bit
+ *)
+let get_teq_predicate env t1 t2 =
+     if debug env <| Options.Other "Rel" then
+       BU.print2 "get_teq_predicate of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, x, wl = new_t_prob (empty_worklist env) env t1 EQ t2 in
+     let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
+     if debug env <| Options.Other "Rel" then
+       BU.print1 "} res teq predicate = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
+
+    match g with
+    | None -> None
+    | Some g -> Some (abstract_guard (S.mk_binder x) g)
 
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
@@ -3313,7 +3562,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc in
+      let vc = 
+        Profiling.profile
+          (fun () -> N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc)
+          (Some (Ident.string_of_lid (Env.current_module env)))
+          "FStar.TypeChecker.Rel.vc_normalization"
+      in
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
@@ -3338,7 +3592,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                         ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
                         vcs |> List.map (fun (env, goal, opts) ->
-                        env, N.normalize [Env.Simplify; Env.Primops] env goal, opts)
+                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts)
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
@@ -3432,7 +3686,7 @@ let resolve_implicits' env must_total forcelax g =
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
-               let tm = N.normalize [Env.Beta] env tm in
+               let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "Rel"
                then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
@@ -3478,6 +3732,9 @@ let force_trivial_guard env g =
                                     (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                     (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                     imp.imp_reason) imp.imp_range
+
+let teq_force (env:env) (t1:typ) (t2:typ) : unit =
+    force_trivial_guard env (teq env t1 t2)
 
 let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
     match teq_nosmt env t1 t2 with

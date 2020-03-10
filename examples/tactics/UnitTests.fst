@@ -143,3 +143,12 @@ type tt =
 let pwtest x =
     assert (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
         by (pointwise trefl)
+
+let rec frec (x:nat) : nat = x
+
+let _ =
+    assert True
+        by (let t = (`frec) in
+            let t' = norm_term [delta] t in (* no zeta, should not unfold *)
+            if not (term_eq t t') then
+              fail ("t' unfolded: " ^ term_to_string t'))

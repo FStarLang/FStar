@@ -1,5 +1,5 @@
 [
-  "9çsLgf*„JË¶m¹´Ñ\u0012",
+  "¦\u0001à÷£â¸ç}wàå\u0019Wf¬",
   [
     [
       "FStar.Classical.impl_intro_gen",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "88596aa88558ed6021234c5ff48ce93c"
+      "7e18d6654f7ef0a91749c2ff17d78c7f"
     ],
     [
       "FStar.Classical.or_elim",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b41f869eb960cba852d9a5bfd3893256"
+      "b003d8db870e1fae29caf3ac5314172c"
     ]
   ]
 ]

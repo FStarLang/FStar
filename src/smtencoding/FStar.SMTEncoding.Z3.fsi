@@ -43,17 +43,16 @@ type z3result = {
       z3result_query_hash  : option<string>;
       z3result_log_file    : option<string>
 }
-type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
+
 val ask: r:Range.range
        -> filter:(list<decl> -> list<decl> * bool)
        -> cache:(option<string>) // hash
        -> label_messages:error_labels
        -> qry:list<decl>
        -> scope:option<scope_t>
-       -> cb:cb
        -> fresh:bool
-       -> unit
+       -> z3result
 
 val refresh: unit -> unit
 val finish: unit -> unit

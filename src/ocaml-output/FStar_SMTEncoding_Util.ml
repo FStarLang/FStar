@@ -222,3 +222,49 @@ let (mk_LexCons :
     FStar_SMTEncoding_Term.term ->
       FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng3 FStar_SMTEncoding_Term.mk_LexCons 
+let (is_smt_reifiable_effect :
+  FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
+  fun en  ->
+    fun l  ->
+      (FStar_TypeChecker_Env.is_reifiable_effect en l) &&
+        (let uu____851 =
+           let uu____853 =
+             let uu____854 =
+               FStar_All.pipe_right l
+                 (FStar_TypeChecker_Env.norm_eff_name en)
+                in
+             FStar_All.pipe_right uu____854
+               (FStar_TypeChecker_Env.get_effect_decl en)
+              in
+           FStar_All.pipe_right uu____853 FStar_Syntax_Util.is_layered  in
+         Prims.op_Negation uu____851)
+  
+let (is_smt_reifiable_comp :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
+  fun en  ->
+    fun c  ->
+      match c.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Comp ct ->
+          is_smt_reifiable_effect en ct.FStar_Syntax_Syntax.effect_name
+      | uu____870 -> false
+  
+let (is_smt_reifiable_rc :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.residual_comp -> Prims.bool)
+  =
+  fun en  ->
+    fun rc  ->
+      is_smt_reifiable_effect en rc.FStar_Syntax_Syntax.residual_effect
+  
+let (is_smt_reifiable_function :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun en  ->
+    fun t  ->
+      let uu____898 =
+        let uu____899 = FStar_Syntax_Subst.compress t  in
+        uu____899.FStar_Syntax_Syntax.n  in
+      match uu____898 with
+      | FStar_Syntax_Syntax.Tm_arrow (uu____903,c) ->
+          is_smt_reifiable_comp en c
+      | uu____925 -> false
+  

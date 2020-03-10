@@ -268,7 +268,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
@@ -280,13 +280,6 @@ and arg_qualifier =
   | Meta of term
   | Equality
 and aqual = option<arg_qualifier>
-
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
 val lookup_aq : bv -> antiquotations -> option<term>
@@ -358,35 +351,87 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
-type eff_decl = {
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
-    stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr        :tscheme;
-    //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+
+(*
+ * Effect combinators for wp-based effects
+ *
+ * This includes both primitive effects (such as PURE, DIV)
+ *   as well as user-defined DM4F effects
+ *
+ * repr, return_repr, and bind_repr are optional, and are set only for reifiable effects
+ *
+ * For DM4F effects, ret_wp, bind_wp, and other wp combinators are derived and populated by the typechecker
+ *   These fields are dummy ts ([], Tm_unknown) after desugaring
+ *
+ * We could add another boolean, elaborated somewhere
+ *)
+
+type wp_eff_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+  trivial      : tscheme;
+
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
 }
+
+
+(*
+ * Layered effects combinators
+ * 
+ * All of these are pairs of type schemes,
+ *   where the first component is the term ts and the second component is the type ts
+ *
+ * Before typechecking the effect declaration, the second component is a dummy ts
+ *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
+ *
+ * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
+ *)
+type layered_eff_combinators = {
+  l_base_effect  : lident;
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
+  l_bind         : (tscheme * tscheme);
+  l_subcomp      : (tscheme * tscheme);
+  l_if_then_else : (tscheme * tscheme);
+
+}
+
+
+type eff_combinators =
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
+
+
+type eff_decl = {
+  mname       : lident;      //STATE_h
+
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;  //u#heap
+  binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+
+  signature   : tscheme;     //result:Type -> st_wp_h heap -> result -> Effect
+
+  combinators : eff_combinators;
+
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
+}
+
 
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
 }
+
 
 // JP/NS:
 //    the n-tuples hinder readability, make it difficult to maintain code (see
@@ -399,45 +444,51 @@ type sig_metadata = {
 //    But, given F*'s poor syntax for record arguments, this would require writing
 //    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
 //    the extra parentheses would not be caught by the F# parser during development.
+
+(*
+ * AR: we no longer have Sig_new_effect_for_free
+ *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
+ *)
 type sigelt' =
-  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                       * univ_names                //u1..un
-                       * binders                   //(x1:t1) ... (xn:tn)
-                       * typ                       //t
-                       * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for this type
+  | Sig_inductive_typ     of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                          * univ_names                //u1..un
+                          * binders                   //(x1:t1) ... (xn:tn)
+                          * typ                       //t
+                          * list<lident>              //mutually defined types
+                          * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident                    //name of the datacon
-                       * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ                        //the constructor's type as an arrow
-                       * lident                     //the inductive type of the value this constructs
-                       * int                        //and the number of parameters of the inductive
-                       * list<lident>               //mutually defined types
-  | Sig_declare_typ    of lident
-                       * univ_names
-                       * typ
-  | Sig_let            of letbindings
-                       * list<lident>               //mutually defined
-  | Sig_main           of term
-  | Sig_assume         of lident
-                       * univ_names
-                       * formula
-  | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
-  | Sig_sub_effect     of sub_eff
-  | Sig_effect_abbrev  of lident
-                       * univ_names
-                       * binders
-                       * comp
-                       * list<cflag>
-  | Sig_pragma         of pragma
-  | Sig_splice         of list<lident> * term
+  | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
+                          * list<lident>               //all the inductive types and data constructor names in this bundle
+  | Sig_datacon           of lident                    //name of the datacon
+                          * univ_names                 //universe variables of the inductive type it belongs to
+                          * typ                        //the constructor's type as an arrow
+                          * lident                     //the inductive type of the value this constructs
+                          * int                        //and the number of parameters of the inductive
+                          * list<lident>               //mutually defined types
+  | Sig_declare_typ       of lident
+                          * univ_names
+                          * typ
+  | Sig_let               of letbindings
+                          * list<lident>               //mutually defined
+  | Sig_main              of term
+  | Sig_assume            of lident
+                          * univ_names
+                          * formula
+  | Sig_new_effect        of eff_decl
+  | Sig_sub_effect        of sub_eff
+  | Sig_effect_abbrev     of lident
+                          * univ_names
+                          * binders
+                          * comp
+                          * list<cflag>
+  | Sig_pragma            of pragma
+  | Sig_splice            of list<lident> * term
+
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
 
 and sigelt = {
     sigel:    sigelt';
@@ -483,13 +534,8 @@ val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
+val mk_Tac :        typ -> comp
 val mk_Comp:        comp_typ -> comp
-val mk_lcomp:
-    eff_name: lident ->
-    res_typ: typ ->
-    cflags: list<cflag> ->
-    comp_thunk: (unit -> comp) -> lcomp
-val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>

@@ -115,7 +115,10 @@ let e_proofstate =
             Some <| FStar.Dyn.undyn b
         | _ ->
             if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
+                Err.log_issue t.pos
+                  (Err.Warning_NotEmbedded,
+                   BU.format1 "Not an embedded proofstate: %s\n"
+                     (Print.term_to_string t));
             None
     in
     mk_emb embed_proofstate unembed_proofstate t_proofstate
@@ -139,7 +142,7 @@ let e_proofstate_nbe =
                  ; ltyp = t_proofstate
                  ; rng = Range.dummyRange }
         in
-        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
+        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
         NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
@@ -147,7 +150,11 @@ let e_proofstate_nbe =
         | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
+          if !Options.debug_embedding then
+            Err.log_issue Range.dummyRange
+              (Err.Warning_NotEmbedded,
+               BU.format1 "Not an embedded NBE proofstate: %s\n"
+                 (NBETerm.t_to_string t));
             None
     in
     { NBETerm.em = embed_proofstate
@@ -180,7 +187,7 @@ let e_goal_nbe =
                  ; ltyp = t_goal
                  ; rng = Range.dummyRange }
         in
-        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
+        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
         NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =
@@ -188,7 +195,8 @@ let e_goal_nbe =
         | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));
+            if !Options.debug_embedding then
+              Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));
             None
     in
     { NBETerm.em = embed_goal
@@ -358,8 +366,9 @@ let e_direction_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
         | _ ->
+          if !Options.debug_embedding then
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t)));
-            None
+          None
     in
     { NBETerm.em = embed_direction
     ; NBETerm.un = unembed_direction

@@ -39,6 +39,10 @@ module BU = FStar.Util
 (* - Printing F# style type application [should_print_fs_typ_app] *)
 (* - Printing the comments [comment_stack] *)
 
+let maybe_unthunk t =
+    match t.tm with
+    | Abs ([_], body) -> body
+    | _ -> t
 
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
@@ -52,7 +56,7 @@ let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
   in
   aux l []
 
-let rec map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
+let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
   let rec aux l acc =
     match l with
     | [] -> acc
@@ -874,7 +878,7 @@ and p_letlhs kw (pat, _) inner_let =
     // if it was written in binders style then they will be in pat
     match pat.pat with
     | PatAscribed (pat, (t, None)) -> pat, Some (t, empty)
-    | PatAscribed (pat, (t, Some tac)) -> pat, Some (t, group (space ^^ str "by" ^^ space ^^ p_atomicTerm tac))
+    | PatAscribed (pat, (t, Some tac)) -> pat, Some (t, group (space ^^ str "by" ^^ space ^^ p_atomicTerm (maybe_unthunk tac)))
     | _ -> pat, None
   in
   match pat.pat with
@@ -1262,7 +1266,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ascribed (e, t, None) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ ps pb t)
   | Ascribed (e, t, Some tac) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb tac)
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb (maybe_unthunk tac))
   | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false false e2)

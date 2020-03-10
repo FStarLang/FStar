@@ -285,7 +285,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * Thunk.t<term>
 
 and binding =
   | Binding_var      of bv
@@ -299,28 +299,8 @@ and arg_qualifier =
   | Equality
 and aqual = option<arg_qualifier>
 
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
-
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
-
-let mk_lcomp eff_name res_typ cflags comp_thunk =
-    { eff_name = eff_name;
-      res_typ = res_typ;
-      cflags = cflags;
-      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
-let lcomp_comp lc =
-    match !(lc.comp_thunk) with
-    | Inl thunk ->
-      let c = thunk () in
-      lc.comp_thunk := Inr c;
-      c
-    | Inr c -> c
 
 type freenames_l = list<bv>
 type formula = typ
@@ -354,11 +334,13 @@ type qualifier =
                                            //is present only for name resolution and will be elaborated at typechecking
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
+
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
   def:typ
   }
+
 type sub_eff = {
   source:lident;
   target:lident;
@@ -374,29 +356,50 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+
+type wp_eff_combinators = {
+  ret_wp       : tscheme;
+  bind_wp      : tscheme;
+  stronger     : tscheme;
+  if_then_else : tscheme;
+  ite_wp       : tscheme;
+  close_wp     : tscheme;
+  trivial      : tscheme;
+
+  repr         : option<tscheme>;
+  return_repr  : option<tscheme>;
+  bind_repr    : option<tscheme>
+}
+
+type layered_eff_combinators = {
+  l_base_effect  : lident;
+  l_repr         : (tscheme * tscheme);
+  l_return       : (tscheme * tscheme);
+  l_bind         : (tscheme * tscheme);
+  l_subcomp      : (tscheme * tscheme);
+  l_if_then_else : (tscheme * tscheme);
+
+}
+
+type eff_combinators =
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
+
 type eff_decl = {
-    cattributes :list<cflag>;      //default cflags
-    mname       :lident;           //STATE_h
-    univs       :univ_names;       //initially empty; but after type-checking and generalization, free universes in the binders (u#heap in this STATE_h example)
-    binders     :binders;          //heap:Type u#heap
-                                   //univs and binders are in scope for rest of the fields
-    signature   :tscheme;          //result:Type ... -> Effect, polymorphic in one universe (the universe of the result)
-    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
-    bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
-    stronger    :tscheme;
-    close_wp    :tscheme;
-    trivial     :tscheme;
-    //NEW FIELDS
-    //representation of the effect as pure type
-    repr        :tscheme;
-    //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
-    //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+  mname       : lident;
+
+  cattributes : list<cflag>;
+  
+  univs       : univ_names;
+  binders     : binders;
+
+  signature   : tscheme;
+  combinators : eff_combinators;
+
+  actions     : list<action>;
+
+  eff_attrs   : list<attribute>
 }
 
 type sig_metadata = {
@@ -405,44 +408,46 @@ type sig_metadata = {
 }
 
 type sigelt' =
-  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                       * univ_names                //u1..un
-                       * binders                   //(x1:t1) ... (xn:tn)
-                       * typ                       //t
-                       * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for this type
+  | Sig_inductive_typ     of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                          * univ_names                //u1..un
+                          * binders                   //(x1:t1) ... (xn:tn)
+                          * typ                       //t
+                          * list<lident>              //mutually defined types
+                          * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident                    //name of the datacon
-                       * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ                        //the constructor's type as an arrow
-                       * lident                     //the inductive type of the value this constructs
-                       * int                        //and the number of parameters of the inductive
-                       * list<lident>               //mutually defined types
-  | Sig_declare_typ    of lident
-                       * univ_names
-                       * typ
-  | Sig_let            of letbindings
-                       * list<lident>               //mutually defined
-  | Sig_main           of term
-  | Sig_assume         of lident
-                       * univ_names
-                       * formula
-  | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
-  | Sig_sub_effect     of sub_eff
-  | Sig_effect_abbrev  of lident
-                       * univ_names
-                       * binders
-                       * comp
-                       * list<cflag>
-  | Sig_pragma         of pragma
-  | Sig_splice         of list<lident> * term
+  | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
+                          * list<lident>               //all the inductive types and data constructor names in this bundle
+  | Sig_datacon           of lident                    //name of the datacon
+                          * univ_names                 //universe variables of the inductive type it belongs to
+                          * typ                        //the constructor's type as an arrow
+                          * lident                     //the inductive type of the value this constructs
+                          * int                        //and the number of parameters of the inductive
+                          * list<lident>               //mutually defined types
+  | Sig_declare_typ       of lident
+                          * univ_names
+                          * typ
+  | Sig_let               of letbindings
+                          * list<lident>               //mutually defined
+  | Sig_main              of term
+  | Sig_assume            of lident
+                          * univ_names
+                          * formula
+  | Sig_new_effect        of eff_decl
+  | Sig_sub_effect        of sub_eff
+  | Sig_effect_abbrev     of lident
+                          * univ_names
+                          * binders
+                          * comp
+                          * list<cflag>
+  | Sig_pragma            of pragma
+  | Sig_splice            of list<lident> * term
+
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -572,6 +577,14 @@ let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbattrs=attrs;
     lbpos=pos;
   }
+
+let mk_Tac t =
+    mk_Comp ({ comp_univs = [U_zero];
+               effect_name = PC.effect_Tac_lid;
+               result_typ = t;
+               effect_args = [];
+               flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+            })
 
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }

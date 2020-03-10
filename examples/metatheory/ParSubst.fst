@@ -91,9 +91,9 @@ let rec subst_extensional e s1 s2 =
   | EVar _ -> ()
   | EAbs t e1 ->
     assert (subst (EAbs t e1) s1 == EAbs t (subst e1 (subst_eabs s1)))
-      by norm [delta_only [`%subst]];
+      by norm [zeta; iota; delta_only [`%subst]];
     assert (subst (EAbs t e1) s2 == EAbs t (subst e1 (subst_eabs s2)))
-      by norm [delta_only [`%subst]];
+      by norm [zeta; iota; delta_only [`%subst]];
     subst_extensional e1 (subst_eabs s1) (subst_eabs s2)
   | EApp e1 e2 -> subst_extensional e1 s1 s2; subst_extensional e2 s1 s2
 

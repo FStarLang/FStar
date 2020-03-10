@@ -907,6 +907,7 @@ let mul_wide_high (x y: U64.t) =
     (phl x y + pll_h x y) / pow2 32 +
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
 
+inline_for_extraction noextract
 let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
   (requires True)
   (ensures (fun r -> let (u1, w3, x', t') = r in
@@ -936,6 +937,7 @@ let u32_combine' (hi lo: U64.t) : Pure U64.t
   U64.add lo (U64.shift_left hi u32_32)
 
 #set-options "--z3rlimit 20"
+inline_for_extraction noextract
 let mul_wide_impl (x: U64.t) (y: U64.t) :
     Tot (r:t{U64.v r.low == mul_wide_low x y /\
              U64.v r.high == mul_wide_high x y % pow2 64}) =

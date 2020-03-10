@@ -1,0 +1,67 @@
+[
+  "¸Hò7\u0013,—Ú»^Ïé`\u001f\u000e2",
+  [
+    [
+      "FStar.Math.Fermat.pow",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_ae567c2fb75be05905677af440075565_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "5f49421fffb64dddea01ade3449f9119"
+    ],
+    [
+      "FStar.Math.Fermat.fermat",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_prime",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
+      ],
+      0,
+      "449cbf240372d15a5ec373a3a37ebd6d"
+    ],
+    [
+      "FStar.Math.Fermat.mod_mult_congr",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_prime",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
+      ],
+      0,
+      "d616f50ed131f34abf04a1d477379e73"
+    ],
+    [
+      "FStar.Math.Fermat.fermat_alt",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Math.Euclid.is_prime", "int_inversion",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
+      ],
+      0,
+      "1db92461476c9ad16f4c9248aa109676"
+    ]
+  ]
+]

@@ -135,7 +135,7 @@ let instrument (f : 'a) : Tac unit =
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
-    let t = norm_term [delta] (mk_e_app t ii.args) in
+    let t = norm_term [delta; zeta] (mk_e_app t ii.args) in
     dup ();
     let t = instrument_body ii t in
     (* dump ""; *)

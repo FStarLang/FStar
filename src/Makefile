@@ -49,8 +49,6 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fst		\
 			          Tactics.Interpreter.fsti \
-			          TypeChecker.NBETerm.fst \
-			          TypeChecker.NBETerm.fsti \
 			          Tests.Test.fst \
 			          StringBuffer.fsti)
 
@@ -71,17 +69,6 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
 	touch -r $^ $@
-
-#fix up by adding an annotation to suppress universe polymorphism in a mutually recursive type
-boot/FStar.TypeChecker.NBETerm.fst: typechecker/boot/FStar.TypeChecker.NBETerm.fs | boot_dir
-	cp $^ $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
-
-boot/FStar.TypeChecker.NBETerm.fsti: typechecker/boot/FStar.TypeChecker.NBETerm.fsi | boot_dir
-	cp $^ $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	cp $^ $@
@@ -170,7 +157,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 # Adding the F# build and F# tests also here
 #   since in the uregressions target it may not be a good idea to override the fstar.exe binary?
-utest-prelude: fsharp-build-and-test
+utest-prelude: #fsharp-build-and-test
 	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result

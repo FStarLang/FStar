@@ -74,11 +74,12 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec mk_tot_arr (bs: list binder) (cod : term) : Tot term (decreases bs) =
+let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) None)))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) None)))
 
+private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ ->
@@ -91,25 +92,26 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
     | _ -> (bs, c)
     end
 
-val collect_arr_bs : typ -> list binder * comp
-let collect_arr_bs t =
+val collect_arr_ln_bs : typ -> list binder * comp
+let collect_arr_ln_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
     (List.Tot.rev bs, c)
 
-val collect_arr : typ -> list typ * comp
-let collect_arr t =
+val collect_arr_ln : typ -> list typ * comp
+let collect_arr_ln t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
     let ts = List.Tot.map type_of_binder bs in
     (List.Tot.rev ts, c)
 
+private
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
     match inspect_ln t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> list binder * term
-let collect_abs t =
+val collect_abs_ln : term -> list binder * term
+let collect_abs_ln t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
@@ -124,7 +126,7 @@ let compare_name (n1 n2 : name) : order =
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
 
-let rec compare_const (c1 c2 : vconst) : order =
+let compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
     | C_Int i, C_Int j -> order_from_int (i - j)
@@ -243,12 +245,29 @@ and compare_comp (c1 c2 : comp) : order =
                                                    | Some _, None -> Gt
                                                    | Some x, Some y -> compare_term x y)
 
-    | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
+    | C_GTotal t1 md1, C_GTotal t2 md2 -> lex (compare_term t1 t2)
+                                        (fun () -> match md1, md2 with
+                                                   | None, None -> Eq
+                                                   | None, Some _ -> Lt
+                                                   | Some _, None -> Gt
+                                                   | Some x, Some y -> compare_term x y)
 
-    | C_Unknown, C_Unknown -> Eq
-    | C_Total _ _, _  -> Lt | _, C_Total _ _ -> Gt
-    | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
-    | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
+    | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
+      lex (compare_term p1 p2)
+          (fun () -> 
+            lex (compare_term q1 q2)
+                (fun () -> compare_term s1 s2)
+          )
+
+    | C_Eff _us1 eff1 res1 args1,
+      C_Eff _us2 eff2 res2 args2 ->
+        (* This could be more complex, not sure it is worth it *)
+        lex (compare_name eff1 eff2) (fun () -> compare_term res1 res2)
+
+    | C_Total _ _, _  -> Lt     | _, C_Total _ _ -> Gt
+    | C_GTotal _ _, _  -> Lt    | _, C_GTotal _ _ -> Gt
+    | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
+    | C_Eff _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ -> Gt
 
 let mk_stringlit (s : string) : term =
     pack_ln (Tv_Const (C_String s))

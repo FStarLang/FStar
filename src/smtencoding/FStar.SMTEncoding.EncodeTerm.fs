@@ -94,12 +94,24 @@ let head_redex env t =
 
     | _ -> false
 
+let norm_with_steps steps env t =
+  Profiling.profile
+    (fun () -> N.normalize steps env t)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    "FStar.TypeChecker.SMTEncoding.EncodeTerm.norm_with_steps"
+
+let normalize_refinement steps env t =
+  Profiling.profile
+    (fun () -> N.normalize_refinement steps env t)
+    (Some (Ident.string_of_lid (Env.current_module env)))
+    "FStar.TypeChecker.SMTEncoding.EncodeTerm.normalize_refinement"
+
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [Env.Beta; Env.Weak; Env.HNF; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                      Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
-let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                              Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+    else norm_with_steps [Env.Beta; Env.Weak; Env.HNF; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
+                          Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+let norm env t = norm_with_steps [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
+                                  Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
 
 (* `maybe_whnf env t` attempts to reduce t to weak-head normal form.
  *  It is called when `t` is a head redex, e.g., if its head symbol is marked for unfolding.
@@ -126,7 +138,9 @@ let mk_Apply e (vars:fvs) =
     vars |> List.fold_left (fun out var ->
             match fv_sort var with
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
-            | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
+            | s ->
+              // let _ = if s <> Term_sort then (printfn "Expected Term_sort; got %A" s; failwith "DIE!") in
+              mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
 let raise_arity_mismatch head arity n_args rng =
     Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,
@@ -251,7 +265,7 @@ let is_an_eta_expansion env vars body =
 let check_pattern_vars env vars pats =
     let pats =
         pats |> List.map (fun (x, _) ->
-        N.normalize [Env.Beta;Env.AllowUnboundUniverses;Env.EraseUniverses] env.tcenv x)
+        norm_with_steps [Env.Beta;Env.AllowUnboundUniverses;Env.EraseUniverses] env.tcenv x)
     in
     match pats with
     | [] -> ()
@@ -840,7 +854,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             Env.HNF;
             Env.EraseUniverses
           ] in
-          match N.normalize_refinement steps env.tcenv t0 with
+          match normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine(x, f)} ->
             let b, f = SS.open_term [x, None] f in
             fst (List.hd b), f
@@ -973,7 +987,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-            let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
+            let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
@@ -1086,12 +1100,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | None -> encode_partial_app None
             | Some head_type ->
                 let head_type, formals, c =
-                  let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   if List.length formals < List.length args
                   then let head_type =
                            U.unrefine
-                           <| N.normalize_refinement
+                           <| normalize_refinement
                                     [Env.Weak; Env.HNF; Env.EraseUniverses; Env.UnfoldUntil delta_constant]
                                     env.tcenv
                                     head_type
@@ -1174,12 +1188,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some rc ->
-              if is_impure rc && not (is_reifiable_rc env.tcenv rc)
+              if is_impure rc && not (is_smt_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable_rc env.tcenv rc
-                           then TcUtil.reify_body env.tcenv body
+                let body = if is_smt_reifiable_rc env.tcenv rc
+                           then TcUtil.reify_body env.tcenv [] body
                            else body
                 in
                 let body, decls' = encode_term body envbody in

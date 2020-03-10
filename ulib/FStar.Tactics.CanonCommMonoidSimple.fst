@@ -173,7 +173,7 @@ let permute_via_swaps (p:permute) =
   (#a:Type) -> (am:amap a) -> xs:list atom ->
     Lemma (exists ss. p xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
+let permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
                                (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (p xs)) =
   pvs am xs;
@@ -202,7 +202,7 @@ let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom) :
   // this should just work from the type of ss,
   // but ss gets substituted by its definition in the WP
 
-let rec sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
+let sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (sort xs)) =
   permute_via_swaps_correct sort (fun #a am -> sort_via_swaps am) m am xs
 
@@ -260,9 +260,9 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
 
 let reification (#a:Type) (m:cm a) (ts:list term) (am:amap a) (t:term) :
     Tac (exp * list term * amap a) =
-  let mult = norm_term [delta] (quote (CM?.mult m)) in
-  let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let t    = norm_term [delta] t in
+  let mult = norm_term [delta;zeta;iota] (quote (CM?.mult m)) in
+  let unit = norm_term [delta;zeta;iota] (quote (CM?.unit m)) in
+  let t    = norm_term [delta;zeta;iota] t in
   reification_aux ts am mult unit t
 
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =

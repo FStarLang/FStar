@@ -162,8 +162,13 @@ let go _ =
         (* --print: Emit files in canonical source syntax *)
         else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
-          then FStar.Prettyprint.generate FStar.Prettyprint.ToTempFile filenames
-          else failwith "You seem to be using the F#-generated version ofthe compiler ; \
+          then let printing_mode =
+                   if Options.print ()
+                   then FStar.Prettyprint.FromTempToStdout
+                   else FStar.Prettyprint.FromTempToFile
+               in
+               FStar.Prettyprint.generate printing_mode filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
                          reindenting is not known to work yet with this version"
 
         (* Normal, batch mode compiler *)
@@ -196,7 +201,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
     | FStar.Syntax.Syntax.Lazy_goal       -> FStar.Tactics.Embedding.unfold_lazy_goal i
     | FStar.Syntax.Syntax.Lazy_uvar       -> FStar.Syntax.Util.exp_string "((uvar))"
-    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> FStar.Common.force_thunk t
+    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
@@ -221,17 +226,6 @@ let main () =
   try
     setup_hooks ();
     let _, time = Util.record_time go in
-    if Options.print () || Options.print_in_place () then
-      match !fstar_files with
-      | Some filenames ->
-          let printing_mode =
-            if Options.print () then
-              FStar.Prettyprint.FromTempToStdout
-            else
-              FStar.Prettyprint.FromTempToFile
-          in
-          FStar.Prettyprint.generate printing_mode filenames
-      | None -> Util.print_error "Internal error: List of source files not properly set";
     if FStar.Options.query_stats()
     then Util.print2 "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
