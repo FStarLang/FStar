@@ -25,6 +25,73 @@ let id (#a:Type) (x:a) : a = x
 unfold
 let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
 
+unfold
+let weaken_pure_wp (a:Type) (wp:pure_wp a) (p:Type0) =
+  fun post -> p ==> wp post
+
+unfold
+let strengthen_pure_wp (a:Type) (wp:pure_wp a) (p:Type0) =
+  fun post -> p /\ wp post
+
+
+
+unfold
+let as_requires_weaken (a:Type) (wp:pure_wp a) (p:Type0) : pure_pre
+= p ==> as_requires wp
+
+unfold
+let as_ensures_weaken (a:Type) (wp:pure_wp a) (_:Type0) : pure_post a
+= as_ensures wp
+
+unfold
+let as_requires_strengthen (a:Type) (wp:pure_wp a) (p:Type0) : pure_pre
+= p /\ as_requires wp
+
+unfold
+let as_ensures_strengthen (a:Type) (wp:pure_wp a) (_:Type0) : pure_post a
+= as_ensures wp
+
+unfold
+let as_requires_bind (a:Type) (b:Type) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
+: pure_pre
+= as_requires wp1 /\ (forall (x:a). (as_ensures wp1) x ==> as_requires (wp2 x))
+
+unfold
+let as_ensures_bind (a:Type) (b:Type) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
+: pure_post b
+= fun (y:b) -> exists (x:a). (as_ensures wp1) x /\ (as_ensures (wp2 x)) y
+
+unfold
+let as_requires_if_then_else (a:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (p:Type0)
+: pure_pre
+= (p ==> as_requires wp_then) /\ ((~ p) ==> as_requires wp_else)
+
+unfold
+let as_ensures_if_then_else (a:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (p:Type0)
+: pure_post a
+= fun (x:a) -> (p ==> (as_ensures wp_then) x) /\ ((~ p) ==> (as_ensures wp_else) x)
+
+unfold
+let as_requires_ite (a:Type) (wp:pure_wp a) : pure_pre = as_requires wp
+
+unfold
+let as_ensures_ite (a:Type) (wp:pure_wp a) : pure_post a = as_ensures wp
+
+unfold
+let as_requires_close (a:Type) (b:Type) (wp:b -> GTot (pure_wp a)) : pure_pre
+= forall (b:b). as_requires (wp b)
+
+unfold
+let as_ensures_close (a:Type) (b:Type) (wp:b -> GTot (pure_wp a)) : pure_post a
+= fun (x:a) -> forall (b:b). as_ensures (wp b) x
+
+unfold
+let as_requires_null (a:Type) (_:pure_wp a) : pure_pre = True
+
+unfold
+let as_ensures_null (a:Type) (_:pure_wp a) : pure_post a = fun _ -> True
+
+
 (* Sometimes it is convenient to explicit introduce nullary symbols
  * into the ambient context, so that SMT can appeal to their definitions
  * even when they are no mentioned explicitly in the program, e.g., when
