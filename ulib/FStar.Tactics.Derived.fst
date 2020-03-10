@@ -831,3 +831,18 @@ let branch_on_match () : Tac unit =
         grewrite_eq b;
         norm [iota])
     )
+
+(** When the argument [i] is non-negative, [nth_binder] grabs the nth
+binder in the current goal. When it is negative, it grabs the (-i-1)th
+binder counting from the end of the goal. That is, [nth_binder (-1)]
+will return the last binder, [nth_binder (-2)] the second to last, and
+so on. *)
+let nth_binder (i:int) : Tac binder =
+  let bs = cur_binders () in
+  let k : int = if i >= 0 then i else List.length bs + i in
+  let k : nat = if k < 0 then fail "not enough binders" else k in
+  dump ("len = " ^ string_of_int (List.length bs));
+  dump ("k = " ^ string_of_int k);
+  match List.Tot.nth bs k with
+  | None -> fail "not enough binders"
+  | Some b -> b
