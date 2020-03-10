@@ -25,6 +25,11 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+(* we could do something more sophisticated here, e.g., retaining only some of the docs, parsing them further etc. *)
+let docs_as_fsdocs docs =
+    let docs = filter_map (fun (x, _) -> if starts_with x "(**" then Some x else None) docs |> String.concat " " in
+    docs, []
+
 %}
 %start inputFragment
 %start term
@@ -72,8 +77,6 @@ let logic_qualifier_deprecation_warning =
 %token FALSE
 %token FORALL
 %token FRIEND
-%token <fsdoc> FSDOC
-%token <fsdoc> FSDOC_STANDALONE
 %token FUN
 %token FUNCTION
 %token HASH
@@ -207,13 +210,6 @@ let logic_qualifier_deprecation_warning =
 %type <(flag * string) list> warn_error_list
 %%
 
-option_FSDOC_:
-  
-    {    ( None )}
-| FSDOC
-    {let x = $1 in
-    ( Some x )}
-
 option___anonymous_1_:
   
     {    ( None )}
@@ -227,7 +223,7 @@ option___anonymous_2_:
     {    ( None )}
 | OF typ
     {let (_1, t) = ((), $2) in
-let x =                                                         (t) in
+let x =                                          (t) in
     ( Some x )}
 
 option___anonymous_5_:
@@ -512,14 +508,12 @@ separated_nonempty_list_AND_letbinding_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__:
-  option_FSDOC_ typeDecl
-    {let (x, y) = ($1, $2) in
-let x =     ( (x, y) ) in
+separated_nonempty_list_AND_typeDecl_:
+  typeDecl
+    {let x = $1 in
     ( [ x ] )}
-| option_FSDOC_ typeDecl AND separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
-    {let (x, y, _2, xs) = ($1, $2, (), $4) in
-let x =     ( (x, y) ) in
+| typeDecl AND separated_nonempty_list_AND_typeDecl_
+    {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
 separated_nonempty_list_BAR_tuplePattern_:
@@ -641,10 +635,7 @@ attribute:
       ( x )}
 
 decoration:
-  FSDOC
-    {let x = $1 in
-      ( Doc x )}
-| attribute
+  attribute
     {let x = $1 in
       ( DeclAttributes x )}
 | qualifier
@@ -667,16 +658,13 @@ let phi =                 ( {e with level=Formula} ) in
       )}
 
 typeclassDecl:
-  CLASS option_FSDOC_ typeDecl
-    {let (_1, x, y) = ((), $2, $3) in
-let tcdef =     ( (x, y) ) in
+  CLASS typeDecl
+    {let (_1, tcdef) = ((), $2) in
       (
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let flip (a,b) = (b,a) in
-        let tcdef = flip tcdef in
-        let d = Tycon (false, true, [tcdef]) in
+        let d = Tycon (false, true, [tcdef, None]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
         (d, [])
@@ -714,9 +702,9 @@ rawDecl:
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
-| TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+| TYPE separated_nonempty_list_AND_typeDecl_
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (false, false, List.map (fun f -> f, None) tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
       ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
@@ -756,9 +744,6 @@ let ids =     ( xs ) in
 | POLYMONADIC_BIND polymonadic_bind
     {let (_1, b) = ((), $2) in
       ( Polymonadic_bind b )}
-| FSDOC_STANDALONE
-    {let doc = $1 in
-      ( Fsdoc doc )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition
@@ -793,21 +778,16 @@ typeDefinition:
 
 recordFieldDecl:
   lident COLON typ
-    {let (lid, _3, t) = ($1, (), $3) in
-let doc_opt =     ( None ) in
-      ( (lid, t, doc_opt) )}
-| FSDOC lident COLON typ
-    {let (x, lid, _3, t) = ($1, $2, (), $4) in
-let doc_opt =     ( Some x ) in
-      ( (lid, t, doc_opt) )}
+    {let (lid, _2, t) = ($1, (), $3) in
+      ( (lid, t, None) )}
 
 constructorDecl:
-  BAR option_FSDOC_ uident COLON typ
-    {let (_1, doc_opt, uid, _4, t) = ((), $2, $3, (), $5) in
-                                                             ( (uid, Some t, doc_opt, false) )}
-| BAR option_FSDOC_ uident option___anonymous_2_
-    {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
-                                                             ( (uid, t_opt, doc_opt, true) )}
+  BAR uident COLON typ
+    {let (_1, uid, _3, t) = ((), $2, (), $4) in
+                                              ( (uid, Some t, None, false) )}
+| BAR uident option___anonymous_2_
+    {let (_1, uid, t_opt) = ((), $2, $3) in
+                                              ( (uid, t_opt, None, true) )}
 
 attr_letbinding:
   AND letbinding
