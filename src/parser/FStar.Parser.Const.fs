@@ -127,6 +127,10 @@ let pure_wp_lid           = pconst "pure_wp"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
 let pure_assert_wp_lid    = pconst "pure_assert_wp"
 let pure_assume_wp_lid    = pconst "pure_assume_wp"
+
+let pure_weaken_wp_lid     = psconst "weaken_pure_wp"
+let pure_strengthen_wp_lid = psconst "strengthen_pure_wp"
+
 let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid       = p2l ["FStar"; "List"; "append"]
@@ -252,6 +256,7 @@ let pipe_right_lid   = p2l ["FStar"; "All"; "pipe_right"]
 let pipe_left_lid    = p2l ["FStar"; "All"; "pipe_left"]
 let try_with_lid     = p2l ["FStar"; "All"; "try_with"]
 
+let as_wp          = pconst "as_wp"
 let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
