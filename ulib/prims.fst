@@ -220,7 +220,7 @@ new_effect { (* The definition of the PURE effect is fixed; no user should ever 
 }
 
 unfold
-let as_wp (a:Type) (pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
+let as_wp (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
   fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)
 
 // Note the type of post, which allows to assume the precondition
