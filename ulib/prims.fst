@@ -219,10 +219,13 @@ new_effect { (* The definition of the PURE effect is fixed; no user should ever 
      ; trivial      = pure_trivial
 }
 
+unfold
+let as_wp (a:Type) (pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
+  fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)
+
 // Note the type of post, which allows to assume the precondition
 // for the well-formedness of the postcondition. c.f. #57
-effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        PURE a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
+effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) = PURE a (as_wp a pre post)
 
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
