@@ -1003,6 +1003,87 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+let rec is_wp_req_ens_commutation cfg (t:term) : option<term> =
+  let is_fv (t:term) lid =
+    match (SS.compress t).n with
+    | Tm_uinst (t, _) ->
+      (match (SS.compress t).n with
+       | Tm_fvar fv -> fv_eq_lid fv lid
+       | _ -> false)
+    | _ -> false in
+
+  let us_of (t:term) : universes =
+    match (SS.compress t).n with
+    | Tm_uinst (_, us) -> us
+    | _ -> failwith "Impossible" in
+
+  let mk_app lid (us:universes) (args:args) (r:Range.range) : term =
+    (S.lid_as_fv lid (Delta_constant_at_level 1) None)
+    |> S.fv_to_tm
+    |> (fun t -> S.mk_Tm_uinst t us)
+    |> (fun f -> S.mk_Tm_app f args None r) in
+
+  let reduce_as_requires (args:args) (r:Range.range) : option<term> =
+    let [_; (wp, _)] = args in
+    match (SS.compress wp).n with
+    | Tm_app (head, args) when is_fv head PC.as_wp ->
+      let [_; (req, _); _] = args in
+      Some req
+    | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
+      Some <| mk_app PC.as_req_weaken (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
+      Some <| mk_app PC.as_req_strengthen (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
+      Some <| mk_app PC.as_req_bind (us_of head) (args |> List.tl) r
+    | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
+      Some <| mk_app PC.as_req_if_then_else (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
+      Some <| mk_app PC.as_req_ite (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
+      Some <| mk_app PC.as_req_close (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
+      Some <| mk_app PC.as_req_null (us_of head) args r
+    | _ -> None in
+
+  let reduce_as_ensures (args:args) (r:Range.range) : option<term> =
+    let wp =
+      if List.length args = 2
+      then let [_; (wp, _)] = args in wp
+      else let [_; (wp, _); _] = args in wp in
+    match (SS.compress wp).n with
+    | Tm_app (head, args) when is_fv head PC.as_wp ->
+      let [_; _; (ens, _)] = args in
+      Some ens
+    | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
+      Some <| mk_app PC.as_ens_weaken (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
+      Some <| mk_app PC.as_ens_strengthen (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
+      Some <| mk_app PC.as_ens_bind (us_of head) (args |> List.tl) r
+    | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
+      Some <| mk_app PC.as_ens_if_then_else (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
+      Some <| mk_app PC.as_ens_ite (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
+      Some <| mk_app PC.as_ens_close (us_of head) args r
+    | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
+      Some <| mk_app PC.as_ens_null (us_of head) args r
+    | _ -> None in
+
+  let t0 = t in
+  if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
+  then begin
+    BU.print1 "Trying to check commutation for: %s\n\n" (Print.term_to_string t);
+    match (SS.compress t).n with
+    | Tm_app (head, args) when is_fv head PC.as_requires ->
+      reduce_as_requires args t.pos
+    | Tm_app (head, args) when is_fv head PC.as_ensures ->
+      reduce_as_ensures args t.pos
+    | _ -> None
+  end
+  else None
+    
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug_level NormTop is given, which makes it a
@@ -1026,6 +1107,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
         log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+
+        let t_opt = is_wp_req_ens_commutation cfg t in
+        if t_opt |> is_some
+        then begin
+          if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
+          then BU.print2 "Norm request identified as wp_req_ens commutation, reduced %s to %s\n"
+                 (Print.term_to_string t) (t_opt |> must |> Print.term_to_string);
+          let cfg0 = cfg in
+          // let cfg = { cfg with delta_level = [] } in
+          // let steps = { cfg.steps with unfold_attr = (match cfg.steps.unfold_attr with
+          //   | None -> Some [PC.wp_req_ens_attr]
+          //   | Some l -> Some (l@[PC.wp_req_ens_attr])) } in
+          // let cfg = { cfg with steps = steps } in
+          let t = norm (Cfg.config' [] [UnfoldAttr [PC.wp_req_ens_attr]; Beta] cfg.tcenv) env [] (t_opt |> must) in
+          if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
+          then BU.print1 "After restricted normalization, t : %s\n" (Print.term_to_string t);
+          norm cfg0 env stack t
+        end
+        else
+
         match t.n with
           | Tm_unknown
           | Tm_constant _
