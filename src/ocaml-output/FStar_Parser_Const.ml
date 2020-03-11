@@ -216,6 +216,10 @@ let (as_req_return : FStar_Ident.lident) = pconst "as_requires_return"
 let (as_ens_return : FStar_Ident.lident) = pconst "as_ensures_return" 
 let (as_req_bind : FStar_Ident.lident) = pconst "as_requires_bind" 
 let (as_ens_bind : FStar_Ident.lident) = pconst "as_ensures_bind" 
+let (as_req_assume : FStar_Ident.lident) = pconst "as_requires_assume" 
+let (as_ens_assume : FStar_Ident.lident) = pconst "as_ensures_assume" 
+let (as_req_assert : FStar_Ident.lident) = pconst "as_requires_assert" 
+let (as_ens_assert : FStar_Ident.lident) = pconst "as_ensures_assert" 
 let (as_req_weaken : FStar_Ident.lident) = pconst "as_requires_weaken" 
 let (as_ens_weaken : FStar_Ident.lident) = pconst "as_ensures_weaken" 
 let (as_req_strengthen : FStar_Ident.lident) =
@@ -309,13 +313,13 @@ let (check_with_lid : FStar_Ident.lident) =
   
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero  in
-  let gen1 uu____1051 = FStar_Util.incr x; FStar_Util.read x  in
-  let reset uu____1059 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
+  let gen1 uu____1059 = FStar_Util.incr x; FStar_Util.read x  in
+  let reset uu____1067 = FStar_Util.write x Prims.int_zero  in (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l  ->
-    let uu____1090 = FStar_Options.print_real_names ()  in
-    if uu____1090
+    let uu____1098 = FStar_Options.print_real_names ()  in
+    if uu____1098
     then l.FStar_Ident.str
     else (l.FStar_Ident.ident).FStar_Ident.idText
   
@@ -327,29 +331,29 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_real r -> FStar_String.op_Hat r "R"
     | FStar_Const.Const_float x1 -> FStar_Util.string_of_float x1
-    | FStar_Const.Const_string (s,uu____1119) ->
+    | FStar_Const.Const_string (s,uu____1127) ->
         FStar_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu____1123 -> "<bytearray>"
-    | FStar_Const.Const_int (x1,uu____1132) -> x1
+    | FStar_Const.Const_bytearray uu____1131 -> "<bytearray>"
+    | FStar_Const.Const_int (x1,uu____1140) -> x1
     | FStar_Const.Const_char c ->
-        let uu____1149 =
+        let uu____1157 =
           FStar_String.op_Hat (FStar_Util.string_of_char c) "'"  in
-        FStar_String.op_Hat "'" uu____1149
+        FStar_String.op_Hat "'" uu____1157
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
     | FStar_Const.Const_range_of  -> "range_of"
     | FStar_Const.Const_set_range_of  -> "set_range_of"
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
-        let uu____1158 = sli l  in
-        FStar_Util.format1 "[[%s.reflect]]" uu____1158
+        let uu____1166 = sli l  in
+        FStar_Util.format1 "[[%s.reflect]]" uu____1166
   
 let (mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1176 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "tuple%s" uu____1176  in
-      let uu____1179 = psnconst t  in FStar_Ident.set_lid_range uu____1179 r
+        let uu____1184 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "tuple%s" uu____1184  in
+      let uu____1187 = psnconst t  in FStar_Ident.set_lid_range uu____1187 r
   
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -357,22 +361,22 @@ let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
   fun id1  ->
-    let uu____1200 = FStar_Ident.text_of_id id1  in
-    is_tuple_constructor_string uu____1200
+    let uu____1208 = FStar_Ident.text_of_id id1  in
+    is_tuple_constructor_string uu____1208
   
 let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
-    let uu____1209 = FStar_Ident.text_of_lid lid  in
-    is_tuple_constructor_string uu____1209
+    let uu____1217 = FStar_Ident.text_of_lid lid  in
+    is_tuple_constructor_string uu____1217
   
 let (mk_tuple_data_lid :
   Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1226 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mktuple%s" uu____1226  in
-      let uu____1229 = psnconst t  in FStar_Ident.set_lid_range uu____1229 r
+        let uu____1234 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mktuple%s" uu____1234  in
+      let uu____1237 = psnconst t  in FStar_Ident.set_lid_range uu____1237 r
   
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Range.dummyRange 
@@ -380,19 +384,19 @@ let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.Mktuple" 
 let (is_tuple_datacon_id : FStar_Ident.ident -> Prims.bool) =
   fun id1  ->
-    let uu____1250 = FStar_Ident.text_of_id id1  in
-    is_tuple_datacon_string uu____1250
+    let uu____1258 = FStar_Ident.text_of_id id1  in
+    is_tuple_datacon_string uu____1258
   
 let (is_tuple_datacon_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
-    let uu____1259 = FStar_Ident.text_of_lid lid  in
-    is_tuple_datacon_string uu____1259
+    let uu____1267 = FStar_Ident.text_of_lid lid  in
+    is_tuple_datacon_string uu____1267
   
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1275 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1275
+      let uu____1283 = mk_tuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1283
   
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str 
@@ -402,11 +406,11 @@ let (mk_dtuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident) =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1323 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "dtuple%s" uu____1323  in
-      let uu____1326 = let uu____1327 = mod_prefix_dtuple n1  in uu____1327 t
+        let uu____1331 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "dtuple%s" uu____1331  in
+      let uu____1334 = let uu____1335 = mod_prefix_dtuple n1  in uu____1335 t
          in
-      FStar_Ident.set_lid_range uu____1326 r
+      FStar_Ident.set_lid_range uu____1334 r
   
 let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -420,11 +424,11 @@ let (mk_dtuple_data_lid :
   fun n1  ->
     fun r  ->
       let t =
-        let uu____1368 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mkdtuple%s" uu____1368  in
-      let uu____1371 = let uu____1372 = mod_prefix_dtuple n1  in uu____1372 t
+        let uu____1376 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mkdtuple%s" uu____1376  in
+      let uu____1379 = let uu____1380 = mod_prefix_dtuple n1  in uu____1380 t
          in
-      FStar_Ident.set_lid_range uu____1371 r
+      FStar_Ident.set_lid_range uu____1379 r
   
 let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  ->
@@ -434,13 +438,13 @@ let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f  ->
     fun n1  ->
-      let uu____1405 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
-      FStar_Ident.lid_equals f uu____1405
+      let uu____1413 = mk_dtuple_data_lid n1 FStar_Range.dummyRange  in
+      FStar_Ident.lid_equals f uu____1413
   
 let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f  ->
-    let uu____1413 = FStar_Ident.text_of_lid f  in
-    is_dtuple_datacon_string uu____1413
+    let uu____1421 = FStar_Ident.text_of_lid f  in
+    is_dtuple_datacon_string uu____1421
   
 let (is_name : FStar_Ident.lident -> Prims.bool) =
   fun lid  ->
