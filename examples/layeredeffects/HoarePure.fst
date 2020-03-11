@@ -29,7 +29,7 @@ let bind (a:Type) (b:Type)
   (f:repr a req_f ens_f) (g:(x:a -> repr b (req_g x) (ens_g x)))
 : repr b
     (req_f /\ (forall (x:a). ens_f x ==> req_g x))
-    (fun y -> exists (x:a). ens_f x /\ (ens_g x) y)
+    (fun y -> req_f /\ (exists (x:a). ens_f x /\ req_g x /\ (ens_g x) y))
 = fun _ -> g (f ()) ()
 
 let subcomp (a:Type)
@@ -83,9 +83,8 @@ assume val p : Type0
 assume val f : unit -> Pure unit True (fun _ -> True)
 assume val g : squash p -> HoarePure int True (fun n -> n > 2)
 
-// #set-options "--debug Test --debug_level WPReqEns --print_universes --print_implicits --print_full_names --debug_level NormTop"
-#restart-solver
-#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives'"
+//#restart-solver
+//#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives'"
 let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   f ();
@@ -93,3 +92,20 @@ let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   f ();
   x
+
+
+assume val f1 : unit -> Pure int (requires True) (ensures fun n -> n > 1)
+assume val g1 : unit -> HoarePure int True (fun n -> n > 2)
+
+// #set-options "--debug HoarePure --debug_level WPReqEns --print_universes --print_implicits --print_full_names --debug_level Extreme --ugly --debug_level Rel --print_effect_args --debug_level TwoPhases"
+
+//#restart-solver
+//#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives' --print_full_names" //--debug HoarePure --debug_level WPReqEns"
+let test1 () : HoarePure int True (fun n -> n > 0) =
+  let x1 = f1 () in
+  let x2 = g1 () in
+  let x3 = f1 () in
+  x3 + 1000
+
+  // let x4 = f1 () in
+  // x1 + x2 + x3 + x4
