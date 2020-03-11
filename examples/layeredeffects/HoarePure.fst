@@ -91,4 +91,5 @@ let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   let x = g () in
   f ();
+  f ();
   x
