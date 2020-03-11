@@ -1,30 +1,12 @@
 open Prims
 let id : 'Aa . 'Aa -> 'Aa = fun x  -> x 
-type ('Aa,'Auu____45) trivial_pure_post = unit
-type ('Aa,'Awp,'Ap,'Apost) weaken_pure_wp = unit
-type ('Aa,'Awp,'Ap,'Apost) strengthen_pure_wp = unit
-type wp_req_ens_attr = unit
-type ('Aa,'Awp,'Ap) as_requires_weaken = unit
-type ('Aa,'Awp,'Auu____120,'Auu___0_121) as_ensures_weaken = unit
-type ('Aa,'Awp,'Ap) as_requires_strengthen = unit
-type ('Aa,'Awp,'Auu____163,'Auu___0_164) as_ensures_strengthen = unit
-type ('Aa,'Ab,'Awp1,'Awp2) as_requires_bind = unit
-type ('Aa,'Ab,'Awp1,'Awp2,'Ay) as_ensures_bind = unit
-type ('Aa,'Ap,'Awp_then,'Awp_else) as_requires_if_then_else = unit
-type ('Aa,'Ap,'Awp_then,'Awp_else,'Ax) as_ensures_if_then_else = unit
-type ('Aa,'Awp) as_requires_ite = ('Aa,'Awp) Prims.as_requires
-type ('Aa,'Awp,'Auu___0_308) as_ensures_ite = unit
-type ('Aa,'Ab,'Awp) as_requires_close = unit
-type ('Aa,'Ab,'Awp,'Ax) as_ensures_close = unit
-type 'Aa as_requires_null = unit
-type ('Aa,'Auu____369) as_ensures_null = unit
 type ('Aa,'Ax) ambient = unit
 
 type 'Aheap st_pre_h = unit
 type ('Aheap,'Aa,'Apre) st_post_h' = unit
 type ('Aheap,'Aa) st_post_h = unit
 type ('Aheap,'Aa) st_wp_h = unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___0_438) st_return = 'Ap
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___0_105) st_return = 'Ap
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) st_if_then_else = unit
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) st_ite_wp = unit
@@ -36,16 +18,16 @@ type 'Aa result =
   | E of Prims.exn 
   | Err of Prims.string 
 let uu___is_V : 'Aa . 'Aa result -> Prims.bool =
-  fun projectee  -> match projectee with | V v -> true | uu____684 -> false 
+  fun projectee  -> match projectee with | V v -> true | uu____351 -> false 
 let __proj__V__item__v : 'Aa . 'Aa result -> 'Aa =
   fun projectee  -> match projectee with | V v -> v 
 let uu___is_E : 'Aa . 'Aa result -> Prims.bool =
-  fun projectee  -> match projectee with | E e -> true | uu____722 -> false 
+  fun projectee  -> match projectee with | E e -> true | uu____389 -> false 
 let __proj__E__item__e : 'Aa . 'Aa result -> Prims.exn =
   fun projectee  -> match projectee with | E e -> e 
 let uu___is_Err : 'Aa . 'Aa result -> Prims.bool =
   fun projectee  ->
-    match projectee with | Err msg -> true | uu____761 -> false
+    match projectee with | Err msg -> true | uu____428 -> false
   
 let __proj__Err__item__msg : 'Aa . 'Aa result -> Prims.string =
   fun projectee  -> match projectee with | Err msg -> msg 
@@ -66,7 +48,7 @@ type ('Ah,'Aa,'Apre) all_post_h' = unit
 type ('Ah,'Aa) all_post_h = unit
 type ('Ah,'Aa) all_wp_h = unit
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___3_1065) all_return = 'Ap
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___3_732) all_return = 'Ap
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else = unit
 type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = unit
@@ -79,14 +61,12 @@ type ('a,'b) either =
   | Inl of 'a 
   | Inr of 'b 
 let uu___is_Inl : 'a 'b . ('a,'b) either -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Inl v -> true | uu____1294 -> false
-  
+  fun projectee  -> match projectee with | Inl v -> true | uu____961 -> false 
 let __proj__Inl__item__v : 'a 'b . ('a,'b) either -> 'a =
   fun projectee  -> match projectee with | Inl v -> v 
 let uu___is_Inr : 'a 'b . ('a,'b) either -> Prims.bool =
   fun projectee  ->
-    match projectee with | Inr v -> true | uu____1348 -> false
+    match projectee with | Inr v -> true | uu____1015 -> false
   
 let __proj__Inr__item__v : 'a 'b . ('a,'b) either -> 'b =
   fun projectee  -> match projectee with | Inr v -> v 
@@ -140,75 +120,75 @@ type __internal_ocaml_attributes =
   | CMacro 
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____1964 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____1631 -> false
   
 let (uu___is_PpxDerivingShowConstant :
   __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____1977 -> false
+    | uu____1644 -> false
   
 let (__proj__PpxDerivingShowConstant__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0 
 let (uu___is_PpxDerivingYoJson : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingYoJson  -> true | uu____1998 -> false
+    match projectee with | PpxDerivingYoJson  -> true | uu____1665 -> false
   
 let (uu___is_CInline : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____2009 -> false
+    match projectee with | CInline  -> true | uu____1676 -> false
   
 let (uu___is_Substitute : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____2020 -> false
+    match projectee with | Substitute  -> true | uu____1687 -> false
   
 let (uu___is_Gc : __internal_ocaml_attributes -> Prims.bool) =
-  fun projectee  -> match projectee with | Gc  -> true | uu____2031 -> false 
+  fun projectee  -> match projectee with | Gc  -> true | uu____1698 -> false 
 let (uu___is_Comment : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____2044 -> false
+    match projectee with | Comment _0 -> true | uu____1711 -> false
   
 let (__proj__Comment__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | Comment _0 -> _0 
 let (uu___is_CPrologue : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CPrologue _0 -> true | uu____2067 -> false
+    match projectee with | CPrologue _0 -> true | uu____1734 -> false
   
 let (__proj__CPrologue__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | CPrologue _0 -> _0 
 let (uu___is_CEpilogue : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CEpilogue _0 -> true | uu____2090 -> false
+    match projectee with | CEpilogue _0 -> true | uu____1757 -> false
   
 let (__proj__CEpilogue__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | CEpilogue _0 -> _0 
 let (uu___is_CConst : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CConst _0 -> true | uu____2113 -> false
+    match projectee with | CConst _0 -> true | uu____1780 -> false
   
 let (__proj__CConst__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | CConst _0 -> _0 
 let (uu___is_CCConv : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CCConv _0 -> true | uu____2136 -> false
+    match projectee with | CCConv _0 -> true | uu____1803 -> false
   
 let (__proj__CCConv__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | CCConv _0 -> _0 
 let (uu___is_CAbstractStruct : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CAbstractStruct  -> true | uu____2157 -> false
+    match projectee with | CAbstractStruct  -> true | uu____1824 -> false
   
 let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CIfDef  -> true | uu____2168 -> false
+    match projectee with | CIfDef  -> true | uu____1835 -> false
   
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CMacro  -> true | uu____2179 -> false
+    match projectee with | CMacro  -> true | uu____1846 -> false
   
 
 
@@ -240,51 +220,51 @@ type norm_step =
   | UnfoldAttr of Prims.string Prims.list 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Simpl  -> true | uu____2242 -> false
+    match projectee with | Simpl  -> true | uu____1909 -> false
   
 let (uu___is_Weak : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Weak  -> true | uu____2253 -> false
+    match projectee with | Weak  -> true | uu____1920 -> false
   
 let (uu___is_HNF : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | HNF  -> true | uu____2264 -> false 
+  fun projectee  -> match projectee with | HNF  -> true | uu____1931 -> false 
 let (uu___is_Primops : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____2275 -> false
+    match projectee with | Primops  -> true | uu____1942 -> false
   
 let (uu___is_Delta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Delta  -> true | uu____2286 -> false
+    match projectee with | Delta  -> true | uu____1953 -> false
   
 let (uu___is_Zeta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Zeta  -> true | uu____2297 -> false
+    match projectee with | Zeta  -> true | uu____1964 -> false
   
 let (uu___is_Iota : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Iota  -> true | uu____2308 -> false
+    match projectee with | Iota  -> true | uu____1975 -> false
   
 let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | NBE  -> true | uu____2319 -> false 
+  fun projectee  -> match projectee with | NBE  -> true | uu____1986 -> false 
 let (uu___is_Reify : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reify  -> true | uu____2330 -> false
+    match projectee with | Reify  -> true | uu____1997 -> false
   
 let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____2345 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____2012 -> false
   
 let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
 let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldFully _0 -> true | uu____2376 -> false
+    match projectee with | UnfoldFully _0 -> true | uu____2043 -> false
   
 let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
 let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldAttr _0 -> true | uu____2407 -> false
+    match projectee with | UnfoldAttr _0 -> true | uu____2074 -> false
   
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
