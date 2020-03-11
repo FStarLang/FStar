@@ -29,7 +29,7 @@ let bind (a:Type) (b:Type)
   (f:repr a req_f ens_f) (g:(x:a -> repr b (req_g x) (ens_g x)))
 : repr b
     (req_f /\ (forall (x:a). ens_f x ==> req_g x))
-    (fun y -> req_f /\ (exists (x:a). ens_f x /\ req_g x /\ (ens_g x) y))
+    (fun y -> exists (x:a). ens_f x /\ (ens_g x) y)
 = fun _ -> g (f ()) ()
 
 let subcomp (a:Type)
@@ -79,12 +79,11 @@ by (T.norm [delta_only [`%as_requires_opaque; `%as_ensures_opaque]])
 sub_effect PURE ~> HoarePure = lift_pure_hoarepure
 
 assume val p : Type0
-
 assume val f : unit -> Pure unit True (fun _ -> True)
 assume val g : squash p -> HoarePure int True (fun n -> n > 2)
 
-//#restart-solver
-//#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives'"
+#restart-solver
+#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives' --print_full_names"
 let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   f ();

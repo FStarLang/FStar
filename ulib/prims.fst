@@ -514,7 +514,7 @@ private let as_requires_bind (a:Type) (b:Type) (wp1:pure_wp a) (wp2:a -> GTot (p
 [@wp_req_ens_attr "opaque_to_smt"]
 private let as_ensures_bind (a:Type) (b:Type) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
 : pure_post b
-= fun (y:b) -> as_requires_opaque wp1 /\ (exists (x:a). (as_ensures_opaque wp1) x /\ (as_ensures_opaque (wp2 x)) y)
+= fun (y:b) -> exists (x:a). (as_ensures_opaque wp1) x /\ (as_ensures_opaque (wp2 x)) y
 
 [@wp_req_ens_attr "opaque_to_smt"]
 private let as_requires_assume (p:Type0) : pure_pre = True
