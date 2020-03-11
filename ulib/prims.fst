@@ -177,7 +177,7 @@ type l_or (p q:logical) :logical = squash (c_or p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than
-    [/\] and [\/]/ *)
+    [/\] and [\/] *)
 [@ "tac_opaque" smt_theory_symbol]
 type l_imp (p q:logical) :logical = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
@@ -648,10 +648,10 @@ type pos = i:int{i > 0}
 (** The type of non-zero integers *)
 type nonzero = i:int{i<>0}
 
-(*** Arbitrary precision ints are compiled to zarith (big_ints) in
-     OCaml and to .NET BigInteger in F#. Both the modulus and division
-     operations are Euclidean and are mapped to the corresponding
-     theory symbols in the SMT encoding *)
+/// Arbitrary precision ints are compiled to zarith (big_ints) in
+/// OCaml and to .NET BigInteger in F#. Both the modulus and division
+/// operations are Euclidean and are mapped to the corresponding
+/// theory symbols in the SMT encoding
 
 (** Euclidean modulus *)
 [@smt_theory_symbol]
