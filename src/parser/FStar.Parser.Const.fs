@@ -130,6 +130,13 @@ let pure_assume_wp_lid    = pconst "pure_assume_wp"
 
 let pure_weaken_wp_lid     = psconst "weaken_pure_wp"
 let pure_strengthen_wp_lid = psconst "strengthen_pure_wp"
+let pure_bind_lid          = pconst "pure_bind_wp"
+let pure_if_then_else_lid  = pconst "pure_if_then_else"
+let pure_ite_lid           = pconst "pure_ite_wp"
+let pure_close_lid         = pconst "pure_close_wp"
+let pure_null_lid          = pconst "pure_null_wp"
+
+let wp_req_ens_attr        = psconst "wp_req_ens_attr"
 
 let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
@@ -259,6 +266,22 @@ let try_with_lid     = p2l ["FStar"; "All"; "try_with"]
 let as_wp          = pconst "as_wp"
 let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
+
+let as_req_weaken       = psconst "as_requires_weaken"
+let as_ens_weaken       = psconst "as_ensures_weaken"
+let as_req_strengthen   = psconst "as_requires_strengthen"
+let as_ens_strengthen   = psconst "as_ensures_strengthen"
+let as_req_bind         = psconst "as_requires_bind"
+let as_ens_bind         = psconst "as_ensures_bind"
+let as_req_if_then_else = psconst "as_requires_if_then_else"
+let as_ens_if_then_else = psconst "as_ensures_if_then_else"
+let as_req_ite          = psconst "as_requires_ite"
+let as_ens_ite          = psconst "as_ensures_ite"
+let as_req_close        = psconst "as_requires_close"
+let as_ens_close        = psconst "as_ensures_close"
+let as_req_null         = psconst "as_requires_null"
+let as_ens_null         = psconst "as_ensures_null"
+
 let decreases_lid  = pconst "decreases"
 
 let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
