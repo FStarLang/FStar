@@ -1017,6 +1017,7 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
       (match (SS.compress t).n with
        | Tm_fvar fv -> fv_eq_lid fv lid
        | _ -> false)
+    | Tm_fvar fv -> fv_eq_lid fv lid
     | _ -> false in
 
   //get the universes of this term
@@ -1024,6 +1025,7 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
   let us_of (t:term) : universes =
     match (SS.compress t).n with
     | Tm_uinst (_, us) -> us
+    | Tm_fvar _ -> []
     | _ -> failwith "Impossible! us_of called with a non Tm_uinst term" in
 
   //instantiate the fv with us, and apply it to args
@@ -1048,6 +1050,12 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
 
       | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
         Some <| mk_app PC.as_req_bind (us_of head) (args |> List.tl) r
+
+      | Tm_app (head, args) when is_fv head PC.pure_assume_wp_lid ->
+        Some <| mk_app PC.as_req_assume (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_assert_wp_lid ->
+        Some <| mk_app PC.as_req_assert (us_of head) args r
 
       | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
         Some <| mk_app PC.as_req_weaken (us_of head) args r
@@ -1087,6 +1095,12 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
 
       | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
         Some <| mk_app PC.as_ens_bind (us_of head) (args |> List.tl) r
+
+      | Tm_app (head, args) when is_fv head PC.pure_assume_wp_lid ->
+        Some <| mk_app PC.as_ens_assume (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_assert_wp_lid ->
+        Some <| mk_app PC.as_ens_assert (us_of head) args r
 
       | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
         Some <| mk_app PC.as_ens_weaken (us_of head) args r
