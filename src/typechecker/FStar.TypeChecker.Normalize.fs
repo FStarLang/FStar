@@ -1003,7 +1003,14 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
-let rec is_wp_req_ens_commutation cfg (t:term) : option<term> =
+(*
+ * See if this term can be simplified using wp-req-ens commutation rules
+ *
+ * Return Some (simplified term) else None
+ *)
+let is_wp_req_ens_commutation cfg (t:term) : option<term> =
+
+  //if t is an instantiated fv with the given lid
   let is_fv (t:term) lid =
     match (SS.compress t).n with
     | Tm_uinst (t, _) ->
@@ -1012,76 +1019,101 @@ let rec is_wp_req_ens_commutation cfg (t:term) : option<term> =
        | _ -> false)
     | _ -> false in
 
+  //get the universes of this term
+  //caller must have checked that it is a Tm_uinst
   let us_of (t:term) : universes =
     match (SS.compress t).n with
     | Tm_uinst (_, us) -> us
-    | _ -> failwith "Impossible" in
+    | _ -> failwith "Impossible! us_of called with a non Tm_uinst term" in
 
+  //instantiate the fv with us, and apply it to args
   let mk_app lid (us:universes) (args:args) (r:Range.range) : term =
     (S.lid_as_fv lid (Delta_constant_at_level 1) None)
     |> S.fv_to_tm
     |> (fun t -> S.mk_Tm_uinst t us)
     |> (fun f -> S.mk_Tm_app f args None r) in
 
+  //see if we can reduce as_requires applied to these arguments
   let reduce_as_requires (args:args) (r:Range.range) : option<term> =
-    let [_; (wp, _)] = args in
-    match (SS.compress wp).n with
-    | Tm_app (head, args) when is_fv head PC.as_wp ->
-      let [_; (req, _); _] = args in
-      Some req
-    | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
-      Some <| mk_app PC.as_req_weaken (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
-      Some <| mk_app PC.as_req_strengthen (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
-      Some <| mk_app PC.as_req_bind (us_of head) (args |> List.tl) r
-    | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
-      Some <| mk_app PC.as_req_if_then_else (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
-      Some <| mk_app PC.as_req_ite (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
-      Some <| mk_app PC.as_req_close (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
-      Some <| mk_app PC.as_req_null (us_of head) args r
-    | _ -> None in
+    if List.length args <> 2 then None  //not fully applied, can't simplify
+    else
+      let [_; (wp, _)] = args in
+      match (SS.compress wp).n with
+      | Tm_app (head, args) when is_fv head PC.as_wp ->
+        let [_; (req, _); _] = args in
+        Some req
 
+      | Tm_app (head, args) when is_fv head PC.pure_return_lid ->
+        Some <| mk_app PC.as_req_return (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
+        Some <| mk_app PC.as_req_bind (us_of head) (args |> List.tl) r
+
+      | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
+        Some <| mk_app PC.as_req_weaken (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
+        Some <| mk_app PC.as_req_strengthen (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
+        Some <| mk_app PC.as_req_if_then_else (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
+        Some <| mk_app PC.as_req_ite (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
+        Some <| mk_app PC.as_req_close (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
+        Some <| mk_app PC.as_req_null (us_of head) args r
+
+      | _ -> None in
+
+  //try to reduce as_ensures applied to args
   let reduce_as_ensures (args:args) (r:Range.range) : option<term> =
-    let wp =
-      if List.length args = 2
-      then let [_; (wp, _)] = args in wp
-      else let [_; (wp, _); _] = args in wp in
-    match (SS.compress wp).n with
-    | Tm_app (head, args) when is_fv head PC.as_wp ->
-      let [_; _; (ens, _)] = args in
-      Some ens
-    | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
-      Some <| mk_app PC.as_ens_weaken (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
-      Some <| mk_app PC.as_ens_strengthen (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
-      Some <| mk_app PC.as_ens_bind (us_of head) (args |> List.tl) r
-    | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
-      Some <| mk_app PC.as_ens_if_then_else (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
-      Some <| mk_app PC.as_ens_ite (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
-      Some <| mk_app PC.as_ens_close (us_of head) args r
-    | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
-      Some <| mk_app PC.as_ens_null (us_of head) args r
-    | _ -> None in
+    if List.length args <> 2 && List.length args <> 3 then None //not applied enough
+    else
+      let wp =
+        if List.length args = 2
+        then let [_; (wp, _)] = args in wp
+        else let [_; (wp, _); _] = args in wp in
+      match (SS.compress wp).n with
+      | Tm_app (head, args) when is_fv head PC.as_wp ->
+        let [_; _; (ens, _)] = args in
+        Some ens
 
-  let t0 = t in
-  if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
-  then begin
-    BU.print1 "Trying to check commutation for: %s\n\n" (Print.term_to_string t);
-    match (SS.compress t).n with
-    | Tm_app (head, args) when is_fv head PC.as_requires ->
-      reduce_as_requires args t.pos
-    | Tm_app (head, args) when is_fv head PC.as_ensures ->
-      reduce_as_ensures args t.pos
-    | _ -> None
-  end
-  else None
+      | Tm_app (head, args) when is_fv head PC.pure_return_lid ->
+        Some <| mk_app PC.as_ens_return (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
+        Some <| mk_app PC.as_ens_bind (us_of head) (args |> List.tl) r
+
+      | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
+        Some <| mk_app PC.as_ens_weaken (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
+        Some <| mk_app PC.as_ens_strengthen (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
+        Some <| mk_app PC.as_ens_if_then_else (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_ite_lid ->
+        Some <| mk_app PC.as_ens_ite (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_close_lid ->
+        Some <| mk_app PC.as_ens_close (us_of head) args r
+
+      | Tm_app (head, args) when is_fv head PC.pure_null_lid ->
+        Some <| mk_app PC.as_ens_null (us_of head) args r
+
+      | _ -> None in
+
+  match (SS.compress t).n with
+  | Tm_app (head, args) when is_fv head PC.as_requires_opaque ->
+    reduce_as_requires args t.pos
+  | Tm_app (head, args) when is_fv head PC.as_ensures_opaque ->
+    reduce_as_ensures args t.pos
+  | _ -> None
     
 
 (* GM: Please consider this function private outside of this recursive
@@ -1112,18 +1144,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
         if t_opt |> is_some
         then begin
           if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
-          then BU.print2 "Norm request identified as wp_req_ens commutation, reduced %s to %s\n"
+          then BU.print2 "Norm request identified as wp_req_ens commutation{, \n\nreduced %s \n\nto\n\n %s\n"
                  (Print.term_to_string t) (t_opt |> must |> Print.term_to_string);
-          let cfg0 = cfg in
-          // let cfg = { cfg with delta_level = [] } in
-          // let steps = { cfg.steps with unfold_attr = (match cfg.steps.unfold_attr with
-          //   | None -> Some [PC.wp_req_ens_attr]
-          //   | Some l -> Some (l@[PC.wp_req_ens_attr])) } in
-          // let cfg = { cfg with steps = steps } in
-          let t = norm (Cfg.config' [] [UnfoldAttr [PC.wp_req_ens_attr]; Beta] cfg.tcenv) env [] (t_opt |> must) in
+          let t = t_opt |> must in
+
+          //reduce t in a restricted cfg
+          let cfg_restricted = Cfg.config' []
+            [UnfoldAttr [PC.wp_req_ens_attr]]  //no eager unfolding
+            cfg.tcenv in
+
+          let t = norm cfg_restricted env [] t in
+
           if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
-          then BU.print1 "After restricted normalization, t : %s\n" (Print.term_to_string t);
-          norm cfg0 env stack t
+          then BU.print1 "After norm in a restricted environment, t : %s\n}" (Print.term_to_string t);
+
+          norm cfg env stack t  //normalize in the original cfg now
         end
         else
 
@@ -2369,6 +2404,14 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> must |> norm cfg env stack
   else
+    let t_opt = is_wp_req_ens_commutation cfg t in
+    if t_opt |> is_some then begin
+      if Env.debug cfg.tcenv <| Options.Other "WPReqEns"
+      then BU.print2 "In rebuild: reduced a wp req ens commutation from \n%s\n to \n%s"
+             (Print.term_to_string t) (t_opt |> must |> Print.term_to_string);      
+      t_opt |> must |> norm cfg env stack
+    end
+    else
       let t = maybe_simplify cfg env stack t in
       match stack with
       | [] -> t
