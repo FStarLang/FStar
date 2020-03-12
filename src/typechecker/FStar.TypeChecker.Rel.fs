@@ -749,10 +749,6 @@ let extend_solution pid sol wl =
 let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
-    let conj_guard t g = match t, g with
-        | _, Trivial -> t
-        | None, NonTrivial f -> Some f
-        | Some t, NonTrivial f -> Some (U.mk_conj t f) in
     if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
     solve_prob' false prob logical_guard uvis wl
