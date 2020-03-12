@@ -2871,7 +2871,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 Success (ds, imp)
             | Failed _ ->
                 UF.rollback tx;
-                by_smt ()
+                if wl.smt_ok
+                then by_smt ()
+                else giveup env (Thunk.mkv "Could not unify matches without SMT") orig
             end
         end
 
