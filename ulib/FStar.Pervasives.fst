@@ -320,6 +320,9 @@ irreducible
 let inline_let : unit = ()
 
 irreducible
+let rename_let (new_name: string) : unit = ()
+
+irreducible
 let plugin (x:int) : unit = ()
 
 (* An attribute to mark things that the typechecker should *first*

@@ -245,12 +245,29 @@ and compare_comp (c1 c2 : comp) : order =
                                                    | Some _, None -> Gt
                                                    | Some x, Some y -> compare_term x y)
 
-    | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
+    | C_GTotal t1 md1, C_GTotal t2 md2 -> lex (compare_term t1 t2)
+                                        (fun () -> match md1, md2 with
+                                                   | None, None -> Eq
+                                                   | None, Some _ -> Lt
+                                                   | Some _, None -> Gt
+                                                   | Some x, Some y -> compare_term x y)
 
-    | C_Unknown, C_Unknown -> Eq
-    | C_Total _ _, _  -> Lt | _, C_Total _ _ -> Gt
-    | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
-    | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
+    | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
+      lex (compare_term p1 p2)
+          (fun () -> 
+            lex (compare_term q1 q2)
+                (fun () -> compare_term s1 s2)
+          )
+
+    | C_Eff _us1 eff1 res1 args1,
+      C_Eff _us2 eff2 res2 args2 ->
+        (* This could be more complex, not sure it is worth it *)
+        lex (compare_name eff1 eff2) (fun () -> compare_term res1 res2)
+
+    | C_Total _ _, _  -> Lt     | _, C_Total _ _ -> Gt
+    | C_GTotal _ _, _  -> Lt    | _, C_GTotal _ _ -> Gt
+    | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
+    | C_Eff _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ -> Gt
 
 let mk_stringlit (s : string) : term =
     pack_ln (Tv_Const (C_String s))

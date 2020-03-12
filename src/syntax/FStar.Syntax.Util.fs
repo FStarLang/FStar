@@ -1100,6 +1100,7 @@ let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
 let inline_let_attr = fvar_const PC.inline_let_attr
+let rename_let_attr = fvar_const PC.rename_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
@@ -1761,6 +1762,9 @@ let get_attribute (attr : lident) (attrs:list<Syntax.attribute>) : option<args> 
         match (Subst.compress head).n with
         | Tm_fvar fv when fv_eq_lid fv attr -> Some args
         | _ -> None) attrs
+
+let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
+    List.filter (fun a -> not (is_fvar attr a)) attrs
 
 ///////////////////////////////////////////
 // Setting pragmas

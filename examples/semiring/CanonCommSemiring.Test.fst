@@ -52,6 +52,13 @@ let product (x y z:int) =
 
 #pop-options
 
+(* Need SMT for chain-compatibility of calc *)
+let test1_calc (a:int) =
+  calc (==) {
+    a + a + a;
+    == { _ by (int_semiring ()) }
+    3 * a;
+  }
 
 ///
 /// Ring of integers modulo 2^130 - 5 (the Poly1305 prime)

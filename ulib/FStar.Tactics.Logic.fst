@@ -93,9 +93,11 @@ let pose_lemma (t : term) : Tac binder =
   let c = tcc (cur_env ()) t in
   let pre, post =
     match inspect_comp c with
-    | C_Lemma pre post -> pre, post
+    | C_Lemma pre post _ -> pre, post
     | _ -> fail ""
   in
+  let post = `((`#post) ()) in (* unthunk *)
+  let post = norm_term [] post in
   (* If the precondition is trivial, do not cut by it *)
   match term_as_formula' pre with
   | True_ ->
@@ -111,7 +113,7 @@ let pose_lemma (t : term) : Tac binder =
 let explode () : Tac unit =
     ignore (
     repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
-                               (fun () -> ignore (split ()))]))
+                                (fun () -> ignore (split ()))]))
 
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->

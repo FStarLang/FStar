@@ -749,10 +749,6 @@ let extend_solution pid sol wl =
 let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
-    let conj_guard t g = match t, g with
-        | _, Trivial -> t
-        | None, NonTrivial f -> Some f
-        | Some t, NonTrivial f -> Some (U.mk_conj t f) in
     if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
     solve_prob' false prob logical_guard uvis wl
@@ -2286,7 +2282,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   solve_head_then wl (fun ok wl ->
                       assert ok; //defer not allowed
                       let subprobs, wl = mk_sub_probs wl in
-                      let wl = solve_prob orig None [] wl in
+                      let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
+                      let wl = solve_prob orig (Some formula) [] wl in
                       solve env (attempt subprobs wl))
               in
               let unfold_and_retry d env wl (prob, reason) =
@@ -2870,7 +2867,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 Success (ds, imp)
             | Failed _ ->
                 UF.rollback tx;
-                by_smt ()
+                if wl.smt_ok
+                then by_smt ()
+                else giveup env (Thunk.mkv "Could not unify matches without SMT") orig
             end
         end
 
