@@ -659,7 +659,7 @@ typeclassDecl:
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let d = Tycon (false, true, [tcdef, None]) in
+        let d = Tycon (false, true, [tcdef]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
         (d, [])
@@ -699,10 +699,10 @@ rawDecl:
       (  TopLevelModule uid )}
 | TYPE separated_nonempty_list_AND_typeDecl_
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, false, List.map (fun f -> f, None) tcdefs) )}
+      ( Tycon (false, false, tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
-      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) )}
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
@@ -774,15 +774,15 @@ typeDefinition:
 recordFieldDecl:
   lident COLON typ
     {let (lid, _2, t) = ($1, (), $3) in
-      ( (lid, t, None) )}
+      ( (lid, t) )}
 
 constructorDecl:
   BAR uident COLON typ
     {let (_1, uid, _3, t) = ((), $2, (), $4) in
-                                              ( (uid, Some t, None, false) )}
+                                              ( (uid, Some t, false) )}
 | BAR uident option___anonymous_2_
     {let (_1, uid, t_opt) = ((), $2, $3) in
-                                              ( (uid, t_opt, None, true) )}
+                                              ( (uid, t_opt, true) )}
 
 attr_letbinding:
   AND letbinding
@@ -833,7 +833,7 @@ effectDefinition:
 effectDecl:
   lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
