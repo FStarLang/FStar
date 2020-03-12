@@ -106,5 +106,11 @@ let test1 () : HoarePure int True (fun n -> n > 0) =
   let x3 = f1 () in
   x3 + 1000
 
+let test2 (b:bool) : HoarePure int True (fun n -> n > 0) =
+  if b then f1 () + 2
+  else g1 ()
+
+
+
   // let x4 = f1 () in
   // x1 + x2 + x3 + x4
