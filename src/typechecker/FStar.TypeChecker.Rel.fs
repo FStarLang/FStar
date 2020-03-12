@@ -2286,7 +2286,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   solve_head_then wl (fun ok wl ->
                       assert ok; //defer not allowed
                       let subprobs, wl = mk_sub_probs wl in
-                      let wl = solve_prob orig None [] wl in
+                      let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
+                      let wl = solve_prob orig (Some formula) [] wl in
                       solve env (attempt subprobs wl))
               in
               let unfold_and_retry d env wl (prob, reason) =
