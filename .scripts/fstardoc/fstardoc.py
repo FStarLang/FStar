@@ -89,12 +89,15 @@ class fst_parsed:
 
     def _get_code_name(self):
         code = ' '.join(self.current_code)
-        if 'val ' in code:
-            r = code[code.index('val ') + len('val '):].split(' ')[0]
-        elif 'let ' in code:
-            r = code[code.index('let ') + len('let '):].split(' ')[0]
-        else:
-            r = None
+        splitters = ('val', 'let', 'type', 'effect', 'new_effect', 'layered_effect')
+        r = None
+        for s in splitters:
+            if s in code.split():
+                s = s + ' '
+                r = [x for x in code[code.index(s) + len(s):].split(' ')
+                     if x not in ('','{')][0]
+                r = r.rstrip(':')
+                break
         if r is not None:
             if r in self.symbols:
                 self.error("Found same symbol (%s) twice. What gives?!" % r)
@@ -114,7 +117,7 @@ class fst_parsed:
             if name is not None:
                 self.output.extend(['#### ' + name, ''])
             cmt1, cmt2 = split_array_at_empty(self.current_comment)
-            self.output.extend(fsdoc_code_conv(cmt1))
+            self.output.extend(fsdoc_code_conv([cmt1[0]] + cleanup_array(cmt1[1:])))
             if len(cmt2) > 0:
                 self.output.append('')
                 self._flush_code()
@@ -125,15 +128,15 @@ class fst_parsed:
         elif self.current_comment_type == 'h1':
             self.output.extend(
                 '# ' + x for x in
-                self.current_comment)
+                fsdoc_code_conv(self.current_comment))
         elif self.current_comment_type == 'h2':
             self.output.extend(
                 '## ' + x for x in
-                self.current_comment)
+                fsdoc_code_conv(self.current_comment))
         elif self.current_comment_type == 'h3':
             self.output.extend(
                 '### ' + x for x in
-                self.current_comment)
+                fsdoc_code_conv(self.current_comment))
         elif self.current_comment_type == 'normal':
             self.output.extend(self.current_comment)
         else:
@@ -259,8 +262,18 @@ class fst_parsed:
         self.error("Impossible to reach", line)
 
     def create_hyperlinks(self):
+        in_code = False
         for k in self.symbols:
             for i, l in enumerate(self.output):
+                if '```' in l:
+                    if l == '```fstar':
+                        in_code = True
+                    elif l == '```':
+                        in_code = False
+                    else:
+                        pass
+                if in_code:
+                    continue
                 if l.startswith('#'):
                     continue
                 self.output[i] = l.replace('`' + k + '`',
@@ -268,7 +281,7 @@ class fst_parsed:
 
     def whitespace_cleanup(self):
         for i, l in enumerate(self.output):
-            self.output[i] = l.rstrip()
+            self.output[i] = l.rstrip().replace('\t', ' ' * 4)
 
     def generate_output(self):
         self.flush()
