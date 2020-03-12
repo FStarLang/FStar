@@ -830,38 +830,25 @@ let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
   then c, Env.trivial_guard
   else let r = Env.get_range env in
        let ct = Env.unfold_effect_abbrev env c in
-       if lid_equals ct.effect_name C.effect_PURE_lid
-       then
-         let weakened_wp =
-           (S.lid_as_fv C.pure_weaken_wp_lid (Delta_constant_at_level 1) None)
-           |> S.fv_to_tm
-           |> (fun t -> S.mk_Tm_uinst t ct.comp_univs)
-           |> (fun f ->
-               S.mk_Tm_app f
-                 [ ct.result_typ |> S.as_arg; ct.effect_args |> List.hd; formula |> S.as_arg ]
-                 None r) in
-         S.mk_Comp ({ ct with effect_args = [ weakened_wp |> S.as_arg ]; flags = weaken_flags ct.flags }),
-         Env.trivial_guard
-       else
-         (*
-          * The following code does:
-          *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
-          *)
+       (*
+        * The following code does:
+        *   M.bind_wp (lift_pure_M (Prims.pure_assume_wp f)) (fun _ -> wp)
+        *)
 
-         (*
-          * lookup the pure_assume_wp from prims
-          * its type is p:Type -> pure_wp unit
-          *  and it is not universe polymorphic
-          *)
-         let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
+       (*
+        * lookup the pure_assume_wp from prims
+        * its type is p:Type -> pure_wp unit
+        *  and it is not universe polymorphic
+        *)
+       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
   
-         (* apply it to f, after decorating f with the reason *)
-         let pure_assume_wp = mk_Tm_app
-           pure_assume_wp
-           [ S.as_arg <| formula ]
-           None r in
+       (* apply it to f, after decorating f with the reason *)
+       let pure_assume_wp = mk_Tm_app
+         pure_assume_wp
+         [ S.as_arg <| formula ]
+         None r in
            
-         bind_pure_wp_with env pure_assume_wp c (weaken_flags ct.flags)
+       bind_pure_wp_with env pure_assume_wp c (weaken_flags ct.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
@@ -882,39 +869,25 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
     if env.lax
     then c, Env.trivial_guard
     else let r = Env.get_range env in
-         let ct = Env.unfold_effect_abbrev env c in
-         if lid_equals ct.effect_name C.effect_PURE_lid
-         then
-           let strengthened_wp =
-             (S.lid_as_fv C.pure_strengthen_wp_lid (Delta_constant_at_level 1) None)
-             |> S.fv_to_tm
-             |> (fun t -> S.mk_Tm_uinst t ct.comp_univs)
-             |> (fun head ->
-                 S.mk_Tm_app head
-                   [ ct.result_typ |> S.as_arg; ct.effect_args |> List.hd; f |> S.as_arg ]
-                   None r) in
-           S.mk_Comp ({ ct with effect_args = [ strengthened_wp |> S.as_arg ]; flags = flags }),
-           Env.trivial_guard
-         else
-           (*
-            * The following code does:
-            *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
-            *)
+         (*
+          * The following code does:
+          *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
+          *)
   
-           (*
-            * lookup the pure_assert_wp from prims
-            * its type is p:Type -> pure_wp unit
-            *  and it is not universe polymorphic
-            *)
-           let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
+         (*
+          * lookup the pure_assert_wp from prims
+          * its type is p:Type -> pure_wp unit
+          *  and it is not universe polymorphic
+          *)
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
   
-           (* apply it to f, after decorating f with the reason *)
-           let pure_assert_wp = mk_Tm_app
-             pure_assert_wp
-             [ S.as_arg <| label_opt env reason r f ]
-             None r in
+         (* apply it to f, after decorating f with the reason *)
+         let pure_assert_wp = mk_Tm_app
+           pure_assert_wp
+           [ S.as_arg <| label_opt env reason r f ]
+           None r in
 
-         bind_pure_wp_with env pure_assert_wp c flags
+       bind_pure_wp_with env pure_assert_wp c flags
 
 let record_simplify = 
   let x = BU.mk_ref 0 in

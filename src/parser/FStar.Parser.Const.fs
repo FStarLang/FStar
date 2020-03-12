@@ -130,8 +130,6 @@ let pure_assume_wp_lid    = pconst "pure_assume_wp"
 
 let pure_return_lid        = pconst "pure_return"
 let pure_bind_lid          = pconst "pure_bind_wp"
-let pure_weaken_wp_lid     = pconst "weaken_pure_wp"
-let pure_strengthen_wp_lid = pconst "strengthen_pure_wp"
 let pure_if_then_else_lid  = pconst "pure_if_then_else"
 let pure_ite_lid           = pconst "pure_ite_wp"
 let pure_close_lid         = pconst "pure_close_wp"

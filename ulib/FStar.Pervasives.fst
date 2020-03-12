@@ -542,22 +542,6 @@ private let as_requires_assert (p:Type0) : pure_pre = p
 private let as_ensures_assert (p:Type0) : pure_post unit = fun _ -> True
 
 [@wp_req_ens_attr "opaque_to_smt"]
-private let as_requires_weaken (a:Type) (wp:pure_wp a) (p:Type0) : pure_pre
-= p ==> as_requires_opaque wp
-
-[@wp_req_ens_attr "opaque_to_smt"]
-private let as_ensures_weaken (a:Type) (wp:pure_wp a) (p:Type0) : pure_post a
-= fun x -> p /\ (as_ensures_opaque wp) x
-
-[@wp_req_ens_attr "opaque_to_smt"]
-private let as_requires_strengthen (a:Type) (wp:pure_wp a) (p:Type0) : pure_pre
-= p /\ as_requires_opaque wp
-
-[@wp_req_ens_attr "opaque_to_smt"]
-private let as_ensures_strengthen (a:Type) (wp:pure_wp a) (_:Type0) : pure_post a
-= as_ensures_opaque wp
-
-[@wp_req_ens_attr "opaque_to_smt"]
 private let as_requires_if_then_else (a:Type) (p:Type0) (wp_then:pure_wp a) (wp_else:pure_wp a)
 : pure_pre
 = (p ==> as_requires_opaque wp_then) /\ ((~ p) ==> as_requires_opaque wp_else)

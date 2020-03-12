@@ -1057,12 +1057,6 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
       | Tm_app (head, args) when is_fv head PC.pure_assert_wp_lid ->
         Some <| mk_app PC.as_req_assert (us_of head) args r
 
-      | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
-        Some <| mk_app PC.as_req_weaken (us_of head) args r
-
-      | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
-        Some <| mk_app PC.as_req_strengthen (us_of head) args r
-
       | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
         Some <| mk_app PC.as_req_if_then_else (us_of head) args r
 
@@ -1101,12 +1095,6 @@ let is_wp_req_ens_commutation cfg (t:term) : option<term> =
 
       | Tm_app (head, args) when is_fv head PC.pure_assert_wp_lid ->
         Some <| mk_app PC.as_ens_assert (us_of head) args r
-
-      | Tm_app (head, args) when is_fv head PC.pure_weaken_wp_lid ->
-        Some <| mk_app PC.as_ens_weaken (us_of head) args r
-
-      | Tm_app (head, args) when is_fv head PC.pure_strengthen_wp_lid ->
-        Some <| mk_app PC.as_ens_strengthen (us_of head) args r
 
       | Tm_app (head, args) when is_fv head PC.pure_if_then_else_lid ->
         Some <| mk_app PC.as_ens_if_then_else (us_of head) args r

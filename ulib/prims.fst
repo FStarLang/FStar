@@ -250,14 +250,6 @@ unfold
 let purewp_id (a:Type) (wp:pure_wp a) = wp
 
 unfold
-let weaken_pure_wp (a:Type) (wp:pure_wp a) (p:Type0) =
-  fun post -> p ==> wp post
-
-unfold
-let strengthen_pure_wp (a:Type) (wp:pure_wp a) (p:Type0) =
-  fun post -> p /\ wp post
-
-unfold
 let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
 
 sub_effect PURE ~> GHOST = purewp_id
