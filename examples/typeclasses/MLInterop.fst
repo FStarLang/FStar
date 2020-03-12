@@ -149,6 +149,8 @@ instance exportable_refinement t [| d:exportable t |] (p : t -> Type0)  : export
 = mk_exportable (d.etype) export // TODO: Eta expanding causes type error
 
 class decidable (t:Type) (p : t -> Type0) = { dec : (x:t -> b:bool{b <==> p x}) }
+// could move to something weaker here
+class checkable (t:Type) (p : t -> Type0) = { check : (x:t -> b:bool{b ==> p x}) }
 
 instance importable_refinement t [| d:importable t |] (p : t -> Type0) [| decidable t p |] : importable (x:t{p x}) 
 = mk_importable (d.itype)
