@@ -76,7 +76,7 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-reifiable reflectable
+reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
   with repr         = repr;
@@ -136,16 +136,48 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-/// lift from PURE
+module T = FStar.Tactics
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-: repr a
-  (fun _ -> wp (fun _ -> True))
-  (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+let bind_pure_hoarest (a:Type) (b:Type)
+  (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
+  (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
+: repr b
+    (fun h -> wp (fun x -> (req x) h))
+    (fun h0 r h1 -> exists (x:a). (as_ensures_opaque wp) x /\ (ens x) h0 r h1)
+by (T.norm [delta_only [`%as_requires_opaque; `%as_ensures_opaque]])
 = wp_monotonic_pure ();
-  fun _ -> f ()
+  fun _ ->
+  let x = f () in
+  (g x) ()
 
-sub_effect PURE ~> HoareST = lift_pure_hoarest
+polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
+
+
+let bind_hoarest_pure (a:Type) (b:Type)
+  (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
+  (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
+: repr b
+    (fun h0 -> req h0 /\ (forall x h1. ens h0 x h1 ==> as_requires_opaque (wp x)))
+    (fun h0 r h1 -> exists (x:a). ens h0 x h1 /\ as_ensures_opaque (wp x) r)
+by (T.norm [delta_only [`%as_requires_opaque; `%as_ensures_opaque]])
+= wp_monotonic_pure ();
+  fun _ ->
+  let x = f () in
+  (g x) ()
+
+polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
+
+// /// lift from PURE
+
+
+// let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+// : repr a
+//   (fun _ -> wp (fun _ -> True))
+//   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
+// = wp_monotonic_pure ();
+//   fun _ -> f ()
+
+// sub_effect PURE ~> HoareST = lift_pure_hoarest
 
 
 /// Implementing the array library using the layered effect
@@ -166,6 +198,9 @@ let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
   let s2 = !s2 in
   alloc (Seq.append s1 s2)
 
+// #restart-solver
+// #set-options "--fuel 0 --ifuel 0 --log_queries"
+// #set-options "--debug HoareST --debug_level WPReqEns --print_implicits --print_universes --debug_level Extreme --debug_level TwoPhases --print_effect_args"
 let index (#a:Type0) (x:array a) (i:nat)
 : HoareST a
   (fun h -> i < Seq.length (sel h x))
