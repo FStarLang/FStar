@@ -24,11 +24,6 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-(* we could do something more sophisticated here, e.g., retaining only some of the docs, parsing them further etc. *)
-let docs_as_fsdocs docs =
-    let docs = filter_map (fun (x, _) -> if starts_with x "(**" then Some x else None) docs |> String.concat " " in
-    docs, []
-
 %}
 
 %token <bytes> BYTEARRAY
@@ -168,7 +163,7 @@ typeclassDecl:
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let d = Tycon (false, true, [tcdef, None]) in
+        let d = Tycon (false, true, [tcdef]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
         (d, [])
@@ -201,9 +196,9 @@ rawDecl:
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
-      { Tycon (false, false, List.map (fun f -> f, None) tcdefs) }
+      { Tycon (false, false, tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let r = rhs2 parseState 1 3 in
@@ -260,11 +255,11 @@ typeDefinition:
 
 recordFieldDecl:
   |  lid=lident COLON t=typ
-      { (lid, t, None) }
+      { (lid, t) }
 
 constructorDecl:
-  | BAR uid=uident COLON t=typ                { (uid, Some t, None, false) }
-  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, None, true) }
+  | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
+  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
@@ -306,7 +301,7 @@ effectDefinition:
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm

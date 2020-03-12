@@ -57,8 +57,7 @@ let symlookup tcenv symbol pos_opt requested_info =
     let lid = U.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
     try_lookup_lid tcenv lid |> U.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
 
-  let docs_of_lid lid =
-    DsEnv.try_lookup_doc tcenv.dsenv lid |> U.map_option fst in
+  let docs_of_lid lid = None in
 
   let def_of_lid lid =
     U.bind_opt (TcEnv.lookup_qname tcenv lid) (function

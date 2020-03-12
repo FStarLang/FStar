@@ -43,20 +43,20 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                   comments1
                  in
               match uu____130 with
-              | (doc1,comments2) ->
+              | (doc,comments2) ->
                   ((match outf with
                     | FStar_Pervasives_Native.Some f ->
                         let uu____167 =
                           FStar_Pprint.pretty_string
                             (FStar_Util.float_of_string "1.0")
-                            (Prims.of_int (100)) doc1
+                            (Prims.of_int (100)) doc
                            in
                         FStar_All.pipe_left (FStar_Util.append_to_file f)
                           uu____167
                     | FStar_Pervasives_Native.None  ->
                         FStar_Pprint.pretty_out_channel
                           (FStar_Util.float_of_string "1.0")
-                          (Prims.of_int (100)) doc1 FStar_Util.stdout);
+                          (Prims.of_int (100)) doc FStar_Util.stdout);
                    comments2)
                in
             let left_over_doc =

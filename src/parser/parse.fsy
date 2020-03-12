@@ -25,11 +25,6 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-(* we could do something more sophisticated here, e.g., retaining only some of the docs, parsing them further etc. *)
-let docs_as_fsdocs docs =
-    let docs = filter_map (fun (x, _) -> if starts_with x "(**" then Some x else None) docs |> String.concat " " in
-    docs, []
-
 %}
 %start inputFragment
 %start term
