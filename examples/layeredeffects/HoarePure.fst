@@ -82,8 +82,8 @@ assume val p : Type0
 assume val f : unit -> Pure unit True (fun _ -> True)
 assume val g : squash p -> HoarePure int True (fun n -> n > 2)
 
-#restart-solver
-#set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives' --print_full_names"
+// #restart-solver
+// #set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives' --print_full_names"
 let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   f ();
