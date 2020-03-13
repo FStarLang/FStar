@@ -1,5 +1,6 @@
 FSTAR_HOME=../..
-EXCLUDED_FSTAR_FILES=
+EXCLUDED_FSTAR_FILES=ParDivWP.fst Semantics.WP.fst
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel NMST MST'
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
 all: verify-all

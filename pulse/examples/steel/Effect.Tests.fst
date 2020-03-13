@@ -1,7 +1,9 @@
-module Steel.Effect.Tests
+module Effect.Tests
 
 open Steel.Effect
 open Steel.Memory
+
+open Frame
 
 assume val r1 : hprop
 assume val r2 : hprop

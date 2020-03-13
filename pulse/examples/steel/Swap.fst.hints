@@ -1,0 +1,206 @@
+[
+  "º1\\y:š–\u0010ÔØ\"\u001dE³ûÑ",
+  [
+    [
+      "Swap.reference",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "b38a707de80204de30dfefd5697a5867"
+    ],
+    [
+      "Swap.pts_to_ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "2be19113c3d88a43b5f126ad6e50995a"
+    ],
+    [
+      "Swap.ref_perm",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "41f5e0ec942bccd0a97c0b82ff3aa6b2"
+    ],
+    [
+      "Swap.ref_perm_implies_ref",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Swap.readable_perm",
+        "equation_Swap.ref_perm", "fuel_guarded_inversion_Steel.Memory.perm",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a",
+        "token_correspondence_Steel.Memory.ref_perm",
+        "token_correspondence_Swap.ref_perm", "true_interp"
+      ],
+      0,
+      "4443b7e31f0b405d45b21aac261c5c52"
+    ],
+    [
+      "Swap.ref_perm_implies_ref",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8836bb685fe634539dfc4a6765c2e81e"
+    ],
+    [
+      "Swap.sel_ref_w",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Steel.Memory.hmem",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "true_interp"
+      ],
+      0,
+      "492486fe618f3605e1380a58cceb24a5"
+    ],
+    [
+      "Swap.sel_ref_depends_only_on",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.squash",
+        "equation_Swap.readable_perm", "equation_Swap.ref_perm",
+        "equation_Swap.sel_ref_w",
+        "fuel_guarded_inversion_Steel.Memory.perm",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a",
+        "token_correspondence_Steel.Memory.ref_perm",
+        "token_correspondence_Swap.ref_perm", "true_interp"
+      ],
+      0,
+      "dbc34c108cb84b3693ae26da959829e9"
+    ],
+    [
+      "Swap.reference",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "8b87aa08410606eff0fa0c3220d6ece8"
+    ],
+    [
+      "Swap.pts_to_ref",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "b1a72fcab9fc2699c3d36f80d04b70d3"
+    ],
+    [
+      "Swap.ref_perm",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "1570a9c2a3a6b995ca2b31bf9740ce06"
+    ],
+    [
+      "Swap.ref_perm_implies_ref",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "976fd98825df2fb5130ebdb885eb2d5f"
+    ],
+    [
+      "Swap.sel_ref_w",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Steel.Memory.hmem",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "true_interp"
+      ],
+      0,
+      "dce9a0b0329529d48449307a23b9ac23"
+    ],
+    [
+      "Swap.sel_ref_depends_only_on",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "b1d43ae0bafbb450fb4a23716a9ed799"
+    ]
+  ]
+]
