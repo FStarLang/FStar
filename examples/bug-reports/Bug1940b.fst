@@ -1,4 +1,4 @@
-module Bug1940
+module Bug1940b
 
 (* Minimization by Santiago *)
 
@@ -20,6 +20,8 @@ let v (a:t) = lseq nat (g a)
 [@expect_failure]
 let foo (a:t) (x:u a) : v a = x
 
+(*
 let test (s:u C) : Lemma False =
   let s' = foo C s in
   assert (Seq.length s == 1 /\ Seq.length s' == 2)
+*)

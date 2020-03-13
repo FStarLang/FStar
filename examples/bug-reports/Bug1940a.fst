@@ -1,4 +1,4 @@
-module Bug1940
+module Bug1940a
 
 (* Original example from Aymeric *)
 
@@ -23,9 +23,11 @@ let repr (a:alg) = lbytes (repr_length a)
 [@expect_failure]
 let point_decompress (a:alg) (pk:compressed a) : Tot (repr a) = pk
 
+(*
 let test (s:compressed B) : Lemma False =
   assert (Seq.length s == 64);
   let s' = point_decompress B s in
   assert (Seq.length s' == 65);
   assert (s == s');
   assert (False)
+*)
