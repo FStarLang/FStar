@@ -84,8 +84,6 @@ assume val g : squash p -> HoarePure int True (fun n -> n > 2)
 
 // #restart-solver
 // #set-options "--log_queries --fuel 0 --ifuel 0 --using_facts_from 'Prims FStar.Pervasives' --print_full_names"
-
-// #set-options "--debug HoarePure --debug_level WPReqEns --debug_level Extreme --debug_level TwoPhases --print_implicits --print_universes --ugly --print_effect_args"
 let test () : HoarePure int p (fun n -> n > 0) =
   f ();
   f ();
