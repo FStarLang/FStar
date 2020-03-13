@@ -2279,7 +2279,7 @@ and is_wp_req_ens_commutation cfg env (t:term) : option<term> =
     match (SS.compress t).n with
     | Tm_uinst (_, us) -> us
     | Tm_fvar _ -> []
-    | _ -> failwith "Impossible! us_of called with a non Tm_uinst term" in
+    | _ -> failwith "Impossible! us_of called with a non Tm_uinst/Tm_fvar term" in
 
   //instantiate the fv with us, and apply it to args
   let mk_app lid (us:universes) (args:args) (r:Range.range) : term =
@@ -2294,10 +2294,10 @@ and is_wp_req_ens_commutation cfg env (t:term) : option<term> =
     else
       let [_; (wp, _)] = args in
 
-      let wp = norm
-        (Cfg.config' []
-          [Weak; HNF; Beta]  //no eager unfolding
-        cfg.tcenv) env [] wp in
+      //the wp may be an app or something
+      //in which case get it into WHNF
+      //specifically, no unfoldings
+      let wp = norm (Cfg.config' [] [Weak; HNF; Beta] cfg.tcenv) env [] wp in
 
       match (SS.compress wp).n with
       | Tm_app (head, args) when is_fv head PC.as_wp ->
@@ -2308,6 +2308,7 @@ and is_wp_req_ens_commutation cfg env (t:term) : option<term> =
         Some <| mk_app PC.as_req_return (us_of head) args r
 
       | Tm_app (head, args) when is_fv head PC.pure_bind_lid ->
+        //remove the range argument from pure_bind args
         Some <| mk_app PC.as_req_bind (us_of head) (args |> List.tl) r
 
       | Tm_app (head, args) when is_fv head PC.pure_assume_wp_lid ->
@@ -2334,15 +2335,15 @@ and is_wp_req_ens_commutation cfg env (t:term) : option<term> =
   let reduce_as_ensures (args:args) (r:Range.range) : option<term> =
     if List.length args <> 2 && List.length args <> 3 then None //not applied enough
     else
+      //if (as_ensures wp) is applied to an argument,
+      //we need to remember it to reconstruct the app node
       let wp, remaining_arg =
         if List.length args = 2
         then let [_; (wp, _)] = args in wp, None
         else let [_; (wp, _); arg] = args in wp, Some arg in
 
-      let wp = norm
-        (Cfg.config' []
-          [Weak; HNF; Beta]  //no eager unfolding
-        cfg.tcenv) env [] wp in
+      //as in as_requires case, get the wp into WHNF
+      let wp = norm (Cfg.config' [] [Weak; HNF; Beta] cfg.tcenv) env [] wp in
 
       let ens_opt =
         match (SS.compress wp).n with
@@ -2378,22 +2379,26 @@ and is_wp_req_ens_commutation cfg env (t:term) : option<term> =
 
       match ens_opt, remaining_arg with
       | Some ens, None -> Some ens
-      | Some ens, Some arg -> Some <| S.mk_Tm_app ens [arg] None Range.dummyRange
+      | Some ens, Some arg -> Some <| S.mk_Tm_app ens [arg] None r
       | _, _ -> None in
 
-  let cfg_restricted () = Cfg.config' []
-    [UnfoldAttr [PC.wp_req_ens_attr]]  //no eager unfolding
-    cfg.tcenv in
+  if cfg.steps.simplify then
+    let cfg_restricted () = Cfg.config' []
+      [Simplify; UnfoldAttr [PC.wp_req_ens_attr]]  //no eager unfolding
+      cfg.tcenv in
 
-  let topt =
-    match (SS.compress t).n with
-    | Tm_app (head, args) when is_fv head PC.as_requires_opaque ->
-      reduce_as_requires args t.pos
-    | Tm_app (head, args) when is_fv head PC.as_ensures_opaque ->
-      reduce_as_ensures args t.pos
-    | _ -> None in
+    let topt =
+      match (SS.compress t).n with
+      | Tm_app (head, args) when is_fv head PC.as_requires_opaque ->
+        reduce_as_requires args t.pos
+      | Tm_app (head, args) when is_fv head PC.as_ensures_opaque ->
+        reduce_as_ensures args t.pos
+      | _ -> None in
 
-  BU.map_option (norm (cfg_restricted ()) env []) topt
+    //if topt is Some, then normalize it in the restricted cfg,
+    //to unfold the `wp_req_ens_attr` functions, and apply more rewriting rules
+    BU.map_option (norm (cfg_restricted ()) env []) topt
+  else None
 
 and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on *)
