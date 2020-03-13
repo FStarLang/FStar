@@ -59,7 +59,21 @@ let is_eq = function
     | _ -> false
 let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
-let norm_c env c = N.normalize_comp (steps env) env c
+let norm_c env c =
+  (*
+   * AR: in the case of layered effects, we may want to do
+   *     as_requires and as_ensures rewritings
+   *     but those are enabled only when Simplify is on
+   *
+   *     we could add Simplify unconditionally (and may be we should)
+   *     but for now doing only if c is a layered effect
+   *)
+  let steps =
+    let s = steps env in
+    if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+    then Env.Simplify::s
+    else s in
+  N.normalize_comp steps env c
 let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
     let rec aux try_norm t = match fvs with
         | [] -> t, Env.trivial_guard
