@@ -66,11 +66,12 @@ let norm_c env c =
    *     but those are enabled only when Simplify is on
    *
    *     we could add Simplify unconditionally (and may be we should)
-   *     but for now doing only if c is a layered effect
+   *     but for now adding only if c is a layered effect
    *)
   let steps =
     let s = steps env in
-    if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+    if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) &&
+       c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
     then Env.Simplify::s
     else s in
   N.normalize_comp steps env c
