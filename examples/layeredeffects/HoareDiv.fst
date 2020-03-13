@@ -76,10 +76,12 @@ assume WP_pure_monotonic:
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
 
+
+module T = FStar.Tactics
+
 let lift_pure_meff (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-: repr a
-  (wp (fun _ -> True))
-  (fun x -> ~ (wp (fun r -> r =!= x)))
+: repr a (as_requires_opaque wp) (as_ensures_opaque wp)
+by (T.norm [delta_only [`%as_requires_opaque; `%as_ensures_opaque]])
 = fun _ -> f ()
 
 sub_effect PURE ~> HoareDiv = lift_pure_meff

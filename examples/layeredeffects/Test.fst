@@ -29,11 +29,16 @@ open HoareST
 ///   `3` is first lifted from `Tot` to `HoareST`
 ///   and then its type is weakened to the annotated type
 
-let test ()
+(*
+ * HoareST is now implemented using polymonadic binds
+ *
+ * Rel currently does not lift using them (it can)
+ *)
+assume val test (_:unit)
 : HoareST int
   (fun _ -> True)
   (fun h0 r h1 -> r > 1 /\ h0 == h1)
-= 3
+//= 3
 
 /// This fails since the postcondition is incorrect
 
@@ -118,6 +123,10 @@ let test8 (l:list int)
 
 #reset-options "--using_facts_from '*'"
 
+(*
+ * Since HoareST is now implemented using polymonadic bind, it can't be reified yet
+ *)
+[@expect_failure]
 let test9 ()
 : FStar.ST.STATE int (fun p _ -> forall h1. p 3 h1)
 = reify (test6 ()) ()
