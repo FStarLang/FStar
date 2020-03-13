@@ -99,7 +99,6 @@ val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 once indexed effects are in, also track how indices and other
 arguments are instantiated. *)
 val try_lookup_root_effect_name: env -> lident -> option<lident>
-val try_lookup_doc: env -> lid -> option<Parser.AST.fsdoc>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool
@@ -121,7 +120,6 @@ val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
-val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
 (* Won't fail on duplicates, use with caution *)
 val push_sigelt_force : env -> sigelt -> env
