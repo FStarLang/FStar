@@ -1,0 +1,79 @@
+[
+  "Q@ÂC'‡•CÏPm•’\u0015€Á",
+  [
+    [
+      "Steel.HigherReference.full",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Memory.full_perm",
+        "equation_Steel.Memory.readable",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v"
+      ],
+      0,
+      "2d668e47da42e63961877aae39ba1d2d"
+    ],
+    [
+      "Steel.HigherReference.trivial_preorder",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_ff00b8fd22c394615f2004a5a0b8e8e4",
+        "true_interp"
+      ],
+      0,
+      "2bdbcb7437296805cf51bcb37d33d4a1"
+    ],
+    [
+      "Steel.HigherReference.share",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
+        "equation_Steel.HigherReference.perm",
+        "equation_Steel.Memory.half_perm", "equation_Steel.Memory.readable",
+        "fuel_guarded_inversion_Steel.Memory.perm",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
+        "primitive_FStar.Real.op_Slash_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v",
+        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a"
+      ],
+      0,
+      "3b0b5fa30e44ea03e03d9c29bfcaf10f"
+    ],
+    [
+      "Steel.HigherReference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.HigherReference.perm",
+        "equation_Steel.Memory.readable", "equation_Steel.Memory.sum_perm",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "primitive_FStar.Real.op_Plus_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v",
+        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a"
+      ],
+      0,
+      "13330806c2885d0aaecbda7ca25f961b"
+    ]
+  ]
+]

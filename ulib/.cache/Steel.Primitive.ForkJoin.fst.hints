@@ -1,0 +1,62 @@
+[
+  "¾2DÊù¨×ýh\u0004úÐOu”Ž",
+  [
+    [
+      "Steel.Primitive.ForkJoin.__proj__Mkthread__item__l",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.Primitive.ForkJoin.Mkthread_r",
+        "projection_inverse_Steel.Primitive.ForkJoin.Mkthread_r"
+      ],
+      0,
+      "96c6ed1d2e73c792afb99407f2ca8bda"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.new_thread",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "271517507a4d7404e635baf34c2db3f2"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.finish",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "equation_Prims.eqtype", "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
+        "function_token_typing_Prims.bool",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ee28d702e36b9378ab871575259babb2"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.join_case_false",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "803a046f2a8b1b743b7e084edd909c23"
+    ]
+  ]
+]
