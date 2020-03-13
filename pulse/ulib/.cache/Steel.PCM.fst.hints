@@ -1,0 +1,320 @@
+[
+  "t-Î&}.ò^§–ð™Z\u0018ñ.",
+  [
+    [
+      "Steel.PCM.__proj__Mkpcm'__item__op",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm__composable",
+        "projection_inverse_Steel.PCM.Mkpcm__composable",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "706f21cd0d70096d129d519c5dae8dca"
+    ],
+    [
+      "Steel.PCM.lem_commutative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Steel.PCM.Mkpcm_",
+        "equation_Steel.PCM.symrel", "fuel_guarded_inversion_Steel.PCM.pcm_",
+        "proj_equation_Steel.PCM.Mkpcm__composable",
+        "refinement_interpretation_Tm_refine_b720434acb60056498260d5af0b88045",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "bbb2bff43f12ed6f5a66ac3139b8582d"
+    ],
+    [
+      "Steel.PCM.lem_assoc_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ba27657a3797a0c52b7042dfee04ab07"
+      ],
+      0,
+      "64ebd8dab28c586cccc51802a8a877f8"
+    ],
+    [
+      "Steel.PCM.lem_assoc_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5c68ab2e73b9ee66047720ed29245470"
+      ],
+      0,
+      "12872afbccf1365f2df9657f8dbb4ffb"
+    ],
+    [
+      "Steel.PCM.lem_is_unit",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9e03ad88aa124928825edf7c23a8e0d8"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__comm",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "9ece325d30aeb3feeab52826fdb397a6"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "3948fad6df95fa548cb95c343c246f76"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__assoc_r",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "1239ff21b337c68259b2b8b90489ae01"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__is_unit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "4be89122653301a13e68dc778c33f902"
+    ],
+    [
+      "Steel.PCM.op",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.PCM.composable" ],
+      0,
+      "84e9d20921c85504409665ee2470803c"
+    ],
+    [
+      "Steel.PCM.compatible",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.PCM.composable",
+        "equation_Steel.PCM.symrel", "fuel_guarded_inversion_Steel.PCM.pcm",
+        "proj_equation_Steel.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable",
+        "typing_Steel.PCM.__proj__Mkpcm___item__composable",
+        "typing_Steel.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "cddd507b0defe534a4335b0a960c1b0f"
+    ],
+    [
+      "Steel.PCM.compatible_refl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Steel.PCM.Mkpcm_",
+        "equation_Steel.PCM.compatible", "equation_Steel.PCM.composable",
+        "equation_Steel.PCM.op", "equation_Steel.PCM.symrel",
+        "fuel_guarded_inversion_Steel.PCM.pcm",
+        "fuel_guarded_inversion_Steel.PCM.pcm_",
+        "proj_equation_Steel.PCM.Mkpcm__composable",
+        "proj_equation_Steel.PCM.Mkpcm__one",
+        "proj_equation_Steel.PCM.Mkpcm__op",
+        "proj_equation_Steel.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable",
+        "typing_Steel.PCM.__proj__Mkpcm___item__one",
+        "typing_Steel.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "cc6e4c8ab80db71f851ca84217a5c5be"
+    ],
+    [
+      "Steel.PCM.frame_preserving",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4f885c263eaaaeba102d6d6d0ed8270f"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm'__item__op",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm__composable",
+        "projection_inverse_Steel.PCM.Mkpcm__composable",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "8d6ec225a5121041fb9bd3edbd8f5575"
+    ],
+    [
+      "Steel.PCM.lem_commutative",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Steel.PCM.Mkpcm_",
+        "equation_Steel.PCM.symrel", "fuel_guarded_inversion_Steel.PCM.pcm_",
+        "proj_equation_Steel.PCM.Mkpcm__composable",
+        "refinement_interpretation_Tm_refine_b720434acb60056498260d5af0b88045",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "98e59958c60012796cad7b21386122ed"
+    ],
+    [
+      "Steel.PCM.lem_assoc_l",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ba27657a3797a0c52b7042dfee04ab07"
+      ],
+      0,
+      "3f97a6c61abeaa72cad26b68753db36d"
+    ],
+    [
+      "Steel.PCM.lem_assoc_r",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5c68ab2e73b9ee66047720ed29245470"
+      ],
+      0,
+      "01f9a3eac95d1420295a12444f1e3e8b"
+    ],
+    [
+      "Steel.PCM.lem_is_unit",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8206308ee6c38075189351599c040b23"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__comm",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "5b5ad90fb3cba1ab9903793d3da3b740"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__assoc",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "963ecbb3170aaa9dd21afb86b6aaa293"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__assoc_r",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p"
+      ],
+      0,
+      "92c1b43f0a8ae3d59c48d9e06d8c6aec"
+    ],
+    [
+      "Steel.PCM.__proj__Mkpcm__item__is_unit",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "proj_equation_Steel.PCM.Mkpcm_p",
+        "projection_inverse_Steel.PCM.Mkpcm_p", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "7b7de8f6ca1f2d200a39a5024851a62a"
+    ],
+    [
+      "Steel.PCM.op",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Steel.PCM.composable" ],
+      0,
+      "081fd95213d73990832e35006f3e9669"
+    ],
+    [
+      "Steel.PCM.compatible",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.PCM.composable",
+        "equation_Steel.PCM.symrel", "fuel_guarded_inversion_Steel.PCM.pcm",
+        "proj_equation_Steel.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable",
+        "typing_Steel.PCM.__proj__Mkpcm___item__composable",
+        "typing_Steel.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "4e0173fff8d088201dbdabffede40b91"
+    ],
+    [
+      "Steel.PCM.frame_preserving",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8ba662c4ac022d59bd43edac6b945665"
+    ]
+  ]
+]
