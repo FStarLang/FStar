@@ -3466,7 +3466,7 @@ and (term_as_mlexpr' :
                   | FStar_Pervasives_Native.None  ->
                       FStar_Pervasives_Native.None
                    in
-                let remove_attr attrs =
+                let remove_attr1 attrs =
                   let uu____12456 =
                     FStar_List.partition
                       (fun attr  ->
@@ -3483,7 +3483,7 @@ and (term_as_mlexpr' :
                   match suggested_name with
                   | FStar_Pervasives_Native.None  ->
                       let other_attrs =
-                        remove_attr lb.FStar_Syntax_Syntax.lbattrs  in
+                        remove_attr1 lb.FStar_Syntax_Syntax.lbattrs  in
                       FStar_Syntax_Syntax.Tm_let
                         ((false,
                            [(let uu___1769_12501 = lb  in
@@ -3504,7 +3504,7 @@ and (term_as_mlexpr' :
                              })]), e')
                   | FStar_Pervasives_Native.Some y ->
                       let other_attrs =
-                        remove_attr lb.FStar_Syntax_Syntax.lbattrs  in
+                        remove_attr1 lb.FStar_Syntax_Syntax.lbattrs  in
                       let rename =
                         let uu____12509 =
                           let uu____12510 =
