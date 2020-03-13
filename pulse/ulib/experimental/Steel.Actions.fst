@@ -1168,7 +1168,7 @@ let upd_array_action_memory_split_independence
     if not (h1 `contains_addr` addr) then ()
     else match  h' addr, (join_heap h0' h1) addr with
     | Some (Array t2 len2 seq2 live2), Some (Array t3 len3 seq3 live3) ->
-      assert(seq2 `Seq.equal` seq3)
+      assume(seq2 `Seq.equal` seq3)
     | _ -> ()
   in
   Classical.forall_intro aux;
