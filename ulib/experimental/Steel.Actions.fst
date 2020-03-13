@@ -1130,7 +1130,7 @@ let upd_array_pre_action
   = fun h ->
     (| (), upd_array_heap a iseq i v pre h |)
 
-#push-options "--z3rlimit 150 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 150 --fuel 1 --ifuel 0"
 let upd_array_action_memory_split_independence
   (#t:_)
   (a:array_ref t{not (is_null_array a)})
