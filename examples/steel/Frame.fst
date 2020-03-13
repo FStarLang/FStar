@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.Frame
+module Frame
 
 
 (*** Small examples for frame inference ***)

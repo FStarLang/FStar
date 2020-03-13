@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Steel.Semantics
+module Semantics.WP
 module T = FStar.Tactics
 
 (**
@@ -633,7 +633,7 @@ let refine_middle_left (#st:st) (p q r:st.hprop) (fp:fp_prop p) (state:st.mem)
   =   commute3_1_2 p q r;
       refine_middle q p r fp state
 
-#push-options "--query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
 let strengthen_post (#st:st) #a (#p:post st a) (post':post st a) (frame:st.hprop) (f:fp_prop frame) (k:wp_post a p)
   : wp_post a post'
