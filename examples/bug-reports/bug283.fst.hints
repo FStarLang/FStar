@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Bug283.HasEq_block" ],
       0,
-      "f469aeb6c4eafd3dece32abd1c1343cb"
+      "17885c5e1801218afacc0ac68b373618"
     ],
     [
       "Bug283.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Bug283.HasEq_block" ],
       0,
-      "ca27209983f1024139a78db8d7866f01"
+      "b3f80f65edea2754d64a67d297e8bc0d"
     ],
     [
       "Bug283.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Bug283.XOR_Laws", "typing_Bug283.xor" ],
       0,
-      "a303c665672a93217495ca1c46dfc2e7"
+      "190fe9219e6c5f77c9bdcef4b97283c3"
     ]
   ]
 ]
