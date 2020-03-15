@@ -1025,6 +1025,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
 let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or" ]
 
 let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
+                                            (attrs:list<attribute>)  (* Attributes of the envelopping bundle    *)
                                             (fvq:fv_qual)            (*                                         *)
                                             (refine_domain:bool)     (* If true, discriminates the projectee    *)
                                             env                      (*                                         *)
@@ -1102,7 +1103,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                          sigquals = quals;
                          sigrng = range_of_lid discriminator_name;
                          sigmeta = default_sigmeta;
-                         sigattrs = [];
+                         sigattrs = attrs;
                          sigopts = None; } in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
@@ -1146,7 +1147,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                              sigquals = quals;
                              sigrng = p;
                              sigmeta = default_sigmeta;
-                             sigattrs = [];
+                             sigattrs = attrs;
                              sigopts = None; } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
@@ -1201,7 +1202,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let attrs = if only_decl then [] else [ U.attr_substitute ] in
+          let attrs = (if only_decl then [] else [ U.attr_substitute ])@attrs in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
@@ -1252,7 +1253,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
     discriminator_ses @ projectors_ses
 
-let mk_data_operations iquals env tcs se =
+let mk_data_operations iquals attrs env tcs se =
   match se.sigel with
   | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, _) when not (lid_equals constr_lid C.lexcons_lid) ->
 
@@ -1310,7 +1311,7 @@ let mk_data_operations iquals env tcs se =
     in
     let erasable = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
     mk_discriminator_and_indexed_projectors
-      iquals fv_qual refine_domain
+      iquals attrs fv_qual refine_domain
       env typ_lid constr_lid uvs
       inductive_tps indices fields erasable
 
