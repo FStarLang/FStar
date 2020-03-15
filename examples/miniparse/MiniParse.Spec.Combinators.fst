@@ -727,6 +727,6 @@ let serialize_filter
 
 (* Helpers to define `if` combinators *)
 
-let cond_true (cond: bool) : Tot Type0 = (u: squash (cond == true))
+let cond_true (cond: bool) : Tot Type0 = squash (cond == true)
 
-let cond_false (cond: bool) : Tot Type0 = (u: squash (cond == false))
+let cond_false (cond: bool) : Tot Type0 = squash (cond == false)

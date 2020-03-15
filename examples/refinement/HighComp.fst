@@ -109,7 +109,7 @@ unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
 
 unfold
-let bind_wp #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : (wp:hwp_mon b) =
+let bind_wp #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : hwp_mon b =
   HIGH?.bind_wp range_0 a b wp1 fwp2
 
 unfold
