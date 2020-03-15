@@ -1489,7 +1489,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                    [as_arg e]), s
 
     | NamedTyp(_, e) ->
-        desugar_term_aq env e
+      raise_error (Fatal_SyntaxError, "Syntax error") top.range
 
     | Paren e -> failwith "impossible"
 
