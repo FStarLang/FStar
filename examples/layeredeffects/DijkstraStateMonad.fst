@@ -155,7 +155,7 @@ let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = ()
 
 /// Now, here's the main lemma of property (b).
 ///   stating at first using extensional equality
-let rec bind_wp_lem' (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
+let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m s b))
   : Lemma (wp_of (bind_m f g) `F.feq` bind_wp (wp_of f) (wp_of *. g))
   = match f with
     | Ret x ->
@@ -167,7 +167,10 @@ let rec bind_wp_lem' (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
                T.dump "B";
                let x = T.forall_intro () in
                T.dump "C";
-               T.mapply (`eta);
+               // This should just be T.mapply (`eta), but the unifier
+               // will eagerly solve universe constraints and compute a
+               // wrong for the first universe level.
+               T.mapply (quote (eta u#(max bb 1) u#1));
                T.dump "D")
 
     | Put s k ->
