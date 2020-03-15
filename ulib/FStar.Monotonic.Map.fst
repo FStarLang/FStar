@@ -24,7 +24,7 @@ module HST = FStar.HyperStack.ST
 
 (* Partial, dependent maps *)
 type map' (a:Type) (b:a -> Type) =
-  f:(x:a -> Tot (option (b x)))
+  (x:a -> Tot (option (b x)))
 
 (* Partial, dependent maps, with a whole-map invariant *)
 type map (a:Type) (b:a -> Type) (inv:map' a b -> Type0) =
