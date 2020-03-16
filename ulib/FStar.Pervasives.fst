@@ -13,12 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module FStar.Pervasives
 
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
 include FStar.Pervasives.Native
-
 
 /// This module is implicitly opened in the scope of all other
 /// modules.
@@ -42,11 +42,11 @@ include FStar.Pervasives.Native
 
 (** The polymorphic identity function *)
 unfold
-let id (#a:Type) (x:a) : a = x
+let id (#a: Type) (x: a) : a = x
 
 (** Trivial postconditions for the [PURE] effect *)
 unfold
-let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
+let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
 
 (** Sometimes it is convenient to explicit introduce nullary symbols
     into the ambient context, so that SMT can appeal to their definitions
@@ -56,11 +56,11 @@ let trivial_pure_post (a:Type) : pure_post a = fun _ -> True
     Use [intro_ambient t] for that.
     See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none *)
 abstract
-let ambient (#a:Type) (x:a) = True
+let ambient (#a: Type) (x: a) = True
 
 (** cf. [ambient], above *)
 abstract
-let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
+let intro_ambient (#a: Type) (x: a) : squash (ambient x) = ()
 
 /// The [DIV] effect for divergent computations
 
@@ -71,19 +71,18 @@ let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
 new_effect DIV = PURE
 
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
-sub_effect PURE ~> DIV  = purewp_id
+sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
-effect Div (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-       DIV a (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a))
+effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
+  DIV a (fun (p: pure_post a) -> pre /\ (forall a. post a ==> p a))
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a:Type) =
-     DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
+effect Dv (a: Type) = DIV a (fun (p: pure_post a) -> (forall (x: a). p x))
 
 (** We use the [EXT] effect to underspecify external system calls
     as being impure but having no observable effect on the state *)
-effect EXT (a:Type) = Dv a
+effect EXT (a: Type) = Dv a
 
 /// The [STATE_h] effect template for stateful computations, generic
 /// in the type of the state.
@@ -99,77 +98,76 @@ effect EXT (a:Type) = Dv a
 /// [heap:Type] variable.
 
 (** Preconditions are predicates on the [heap] *)
-let st_pre_h   (heap:Type) = heap -> GTot Type0
+let st_pre_h (heap: Type) = heap -> GTot Type0
 
 (** Postconditions relate [a]-typed results to the final [heap], here
     refined by some pure proposition [pre], typically instantiated to
     the precondition applied to the initial [heap] *)
-let st_post_h' (heap:Type) (a:Type) (pre:Type) = a -> (_:heap{pre}) -> GTot Type0
+let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
 
 (** Postconditions without refinements *)
-let st_post_h  (heap:Type) (a:Type) = st_post_h' heap a True
+let st_post_h (heap a: Type) = st_post_h' heap a True
 
 (** The type of the main WP-transformer for stateful comptuations *)
-let st_wp_h    (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
+let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 (** Returning a value does not transform the state *)
 unfold
-let st_return        (heap:Type) (a:Type)
-                     (x:a) (p:st_post_h heap a) =
-    p x
+let st_return (heap a: Type) (x: a) (p: st_post_h heap a) = p x
 
 (** Sequential composition of stateful WPs *)
-unfold let st_bind_wp       (heap:Type)
-                            (r1:range)
-                            (a:Type) (b:Type)
-                            (wp1:st_wp_h heap a)
-                            (wp2:(a -> GTot (st_wp_h heap b)))
-                            (p:st_post_h heap b) (h0:heap) =
-  wp1 (fun a h1 -> wp2 a p h1) h0
+unfold
+let st_bind_wp
+      (heap: Type)
+      (r1: range)
+      (a b: Type)
+      (wp1: st_wp_h heap a)
+      (wp2: (a -> GTot (st_wp_h heap b)))
+      (p: st_post_h heap b)
+      (h0: heap)
+     = wp1 (fun a h1 -> wp2 a p h1) h0
 
 (** Branching for stateful WPs *)
-unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
-                             (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
-                             (post:st_post_h heap a) (h0:heap) =
-     l_ITE p
-        (wp_then post h0)
-        (wp_else post h0)
+unfold
+let st_if_then_else
+      (heap a p: Type)
+      (wp_then wp_else: st_wp_h heap a)
+      (post: st_post_h heap a)
+      (h0: heap)
+     = l_ITE p (wp_then post h0) (wp_else post h0)
 
 (** As with [PURE] the [ite_wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
-unfold let st_ite_wp        (heap:Type) (a:Type)
-                            (wp:st_wp_h heap a)
-                            (post:st_post_h heap a) (h0:heap) =
-     forall (k:st_post_h heap a).
-         (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
-         ==> wp k h0
+unfold
+let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
+  forall (k: st_post_h heap a).
+    (forall (x: a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
 (** Subsumption for stateful WPs *)
-unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
-                        (wp2:st_wp_h heap a) =
-     (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
+unfold
+let st_stronger (heap a: Type) (wp1 wp2: st_wp_h heap a) =
+  (forall (p: st_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
 
 (** Closing the scope of a binder within a stateful WP *)
-unfold let st_close_wp      (heap:Type) (a:Type) (b:Type)
-                             (wp:(b -> GTot (st_wp_h heap a)))
-                             (p:st_post_h heap a) (h:heap) =
-     (forall (b:b). wp b p h)
+unfold
+let st_close_wp (heap a b: Type) (wp: (b -> GTot (st_wp_h heap a))) (p: st_post_h heap a) (h: heap) =
+  (forall (b: b). wp b p h)
 
 (** Applying a stateful WP to a trivial postcondition *)
-unfold let st_trivial       (heap:Type) (a:Type)
-                             (wp:st_wp_h heap a) =
-     (forall h0. wp (fun r h1 -> True) h0)
+unfold
+let st_trivial (heap a: Type) (wp: st_wp_h heap a) = (forall h0. wp (fun r h1 -> True) h0)
 
 (** Introducing a new effect template [STATE_h] *)
 new_effect {
-  STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-  with return_wp    = st_return heap
-     ; bind_wp      = st_bind_wp heap
-     ; if_then_else = st_if_then_else heap
-     ; ite_wp       = st_ite_wp heap
-     ; stronger     = st_stronger heap
-     ; close_wp     = st_close_wp heap
-     ; trivial      = st_trivial heap
+  STATE_h (heap: Type) : result: Type -> wp: st_wp_h heap result -> Effect
+  with
+    return_wp = st_return heap
+  ; bind_wp = st_bind_wp heap
+  ; if_then_else = st_if_then_else heap
+  ; ite_wp = st_ite_wp heap
+  ; stronger = st_stronger heap
+  ; close_wp = st_close_wp heap
+  ; trivial = st_trivial heap
 }
 
 /// The [EXN] effect for computations that may raise exceptions or
@@ -182,89 +180,91 @@ new_effect {
 (** Normal results are represented using [V x].
     Handleable exceptions are represented [E e].
     Fatal errors are [Err msg]. *)
-noeq type result (a:Type) =
-  | V   : v:a -> result a
-  | E   : e:exn -> result a
-  | Err : msg:string -> result a
+noeq
+type result (a: Type) =
+  | V : v: a -> result a
+  | E : e: exn -> result a
+  | Err : msg: string -> result a
 
 (** Exceptional preconditions are just propositions *)
-let ex_pre  = Type0
+let ex_pre = Type0
 
 (** Postconditions on results refined by a precondition *)
-let ex_post' (a:Type) (pre:Type) = (_:result a{pre}) -> GTot Type0
+let ex_post' (a pre: Type) = _: result a {pre} -> GTot Type0
 
 (** Postconditions on results *)
-let ex_post  (a:Type) = ex_post' a True
+let ex_post (a: Type) = ex_post' a True
 
 (** Exceptions WP-predicate transformers *)
-let ex_wp    (a:Type) = ex_post a -> GTot ex_pre
+let ex_wp (a: Type) = ex_post a -> GTot ex_pre
 
 (** Returning a value [x] normally promotes it to the [V x] result *)
-unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
+unfold
+let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
 
 (** Sequential composition of exception-raising code requires case analysing
     the result of the first computation before "running" the second one *)
-unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
-                       (wp1:ex_wp a)
-                       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
-         : GTot Type0 =
-  forall (k:ex_post b).
-     (forall (rb:result b).{:pattern (guard_free (k rb))} p rb ==> k rb)
-     ==> (wp1 (function
-               | V ra1 -> wp2 ra1 k
-               | E e -> k (E e)
-               | Err m -> k (Err m)))
+unfold
+let ex_bind_wp (r1: range) (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
+    : GTot Type0 =
+  forall (k: ex_post b).
+    (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
+    (wp1 (function
+          | V ra1 -> wp2 ra1 k
+          | E e -> k (E e)
+          | Err m -> k (Err m)))
 
 (** As for other effects, branching in [ex_wp] appears in two forms.
     First, a simple case analysis on [p] *)
-unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
-   l_ITE p
-       (wp_then post)
-       (wp_else post)
+unfold
+let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
+  l_ITE p (wp_then post) (wp_else post)
 
 (** Naming continuations for use with branching *)
-unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
-  forall (k:ex_post a).
-     (forall (rb:result a).{:pattern (guard_free (k rb))} post rb ==> k rb)
-     ==> wp k
+unfold
+let ex_ite_wp (a: Type) (wp: ex_wp a) (post: ex_post a) =
+  forall (k: ex_post a).
+    (forall (rb: result a). {:pattern (guard_free (k rb))} post rb ==> k rb) ==> wp k
 
 (** Subsumption for exceptional WPs *)
-unfold let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
-        (forall (p:ex_post a). wp1 p ==> wp2 p)
+unfold
+let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==> wp2 p)
 
 (** Closing the scope of a binder for exceptional WPs *)
-unfold let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (p:ex_post a) = (forall (b:b). wp b p)
+unfold
+let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
 
 (** Applying a computation with a trivial poscondition *)
-unfold let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
+unfold
+let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
 
 (** Introduce a new effect for [EXN] *)
 new_effect {
-  EXN : result:Type -> wp:ex_wp result -> Effect
+  EXN : result: Type -> wp: ex_wp result -> Effect
   with
-    return_wp    = ex_return
-  ; bind_wp      = ex_bind_wp
+    return_wp = ex_return
+  ; bind_wp = ex_bind_wp
   ; if_then_else = ex_if_then_else
-  ; ite_wp       = ex_ite_wp
-  ; stronger     = ex_stronger
-  ; close_wp     = ex_close_wp
-  ; trivial      = ex_trivial
+  ; ite_wp = ex_ite_wp
+  ; stronger = ex_stronger
+  ; close_wp = ex_close_wp
+  ; trivial = ex_trivial
 }
 
 (** A Hoare-style abbreviation for EXN *)
-effect Exn (a:Type) (pre:ex_pre) (post:ex_post' a pre) =
-       EXN a (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r))
+effect Exn (a: Type) (pre: ex_pre) (post: ex_post' a pre) =
+  EXN a (fun (p: ex_post a) -> pre /\ (forall (r: result a). post r ==> p r))
 
 (** We include divergence in exceptions.
 
     NOTE: BE WARNED, CODE IN THE [EXN] EFFECT IS ONLY CHECKED FOR
     PARTIAL CORRECTNESS *)
-unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
-sub_effect DIV ~> EXN = lift_div_exn
+unfold
+let lift_div_exn (a: Type) (wp: pure_wp a) (p: ex_post a) = wp (fun a -> p (V a))
+sub_effect DIV ~> EXN { lift_wp = lift_div_exn }
 
 (** A variant of [Exn] with trivial pre- and postconditions *)
-effect Ex (a:Type) = Exn a True (fun v -> True)
-
+effect Ex (a: Type) = Exn a True (fun v -> True)
 
 /// The [ALL_h] effect template for computations that may diverge,
 /// raise exceptions or fatal errors, and uses a generic state.
@@ -282,74 +282,85 @@ effect Ex (a:Type) = Exn a True (fun v -> True)
 /// instantiation with a specific type of [heap] (in FStar.All) is.
 
 (** [all_pre_h] is a predicate on the initial state *)
-let all_pre_h   (h:Type)           = h -> GTot Type0
+let all_pre_h (h: Type) = h -> GTot Type0
 
 (** Postconditions relate [result]s to final [heap]s refined by a precondition *)
-let all_post_h' (h:Type) (a:Type) (pre:Type)  = result a -> (_:h{pre}) -> GTot Type0
+let all_post_h' (h a pre: Type) = result a -> _: h{pre} -> GTot Type0
 
 (** A variant of [all_post_h'] without the precondition refinement *)
-let all_post_h  (h:Type) (a:Type)  = all_post_h' h a True
+let all_post_h (h a: Type) = all_post_h' h a True
 
 (** WP predicate transformers for the [All_h] effect template *)
-let all_wp_h    (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
+let all_wp_h (h a: Type) = all_post_h h a -> Tot (all_pre_h h)
 
 (** Returning a value [x] normally promotes it to the [V x] result
     without touching the [heap] *)
-unfold let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
+unfold
+let all_return (heap a: Type) (x: a) (p: all_post_h heap a) = p (V x)
 
 (** Sequential composition for [ALL_h] is like [EXN]: case analysis of
     the exceptional result before "running" the continuation *)
-unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
-                       (wp1:all_wp_h heap a)
-                       (wp2:(a -> GTot (all_wp_h heap b)))
-                       (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (match ra with
-                  | V v     -> wp2 v p h1
-                  | E e     -> p (E e) h1
-                  | Err msg -> p (Err msg) h1)) h0
+unfold
+let all_bind_wp
+      (heap: Type)
+      (r1: range)
+      (a b: Type)
+      (wp1: all_wp_h heap a)
+      (wp2: (a -> GTot (all_wp_h heap b)))
+      (p: all_post_h heap b)
+      (h0: heap)
+    : GTot Type0 =
+  wp1 (fun ra h1 ->
+        (match ra with
+          | V v -> wp2 v p h1
+          | E e -> p (E e) h1
+          | Err msg -> p (Err msg) h1))
+    h0
 
 (** Case analysis in [ALL_h] *)
-unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
-                             (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
-                             (post:all_post_h heap a) (h0:heap) =
-   l_ITE p
-       (wp_then post h0)
-       (wp_else post h0)
+unfold
+let all_if_then_else
+      (heap a p: Type)
+      (wp_then wp_else: all_wp_h heap a)
+      (post: all_post_h heap a)
+      (h0: heap)
+     = l_ITE p (wp_then post h0) (wp_else post h0)
 
 (** Naming postcondition for better sharing in [ALL_h] *)
-unfold let all_ite_wp (heap:Type) (a:Type)
-                      (wp:all_wp_h heap a)
-                      (post:all_post_h heap a) (h0:heap) =
-    forall (k:all_post_h heap a).
-       (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
-       ==> wp k h0
+unfold
+let all_ite_wp (heap a: Type) (wp: all_wp_h heap a) (post: all_post_h heap a) (h0: heap) =
+  forall (k: all_post_h heap a).
+    (forall (x: result a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
 (** Subsumption in [ALL_h] *)
-unfold let all_stronger (heap:Type) (a:Type) (wp1:all_wp_h heap a)
-                        (wp2:all_wp_h heap a) =
-    (forall (p:all_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
+unfold
+let all_stronger (heap a: Type) (wp1 wp2: all_wp_h heap a) =
+  (forall (p: all_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
 
 (** Closing a binder in the scope of an [ALL_h] wp *)
-unfold let all_close_wp (heap:Type) (a:Type) (b:Type)
-                         (wp:(b -> GTot (all_wp_h heap a)))
-                         (p:all_post_h heap a) (h:heap) =
-    (forall (b:b). wp b p h)
+unfold
+let all_close_wp
+      (heap a b: Type)
+      (wp: (b -> GTot (all_wp_h heap a)))
+      (p: all_post_h heap a)
+      (h: heap)
+     = (forall (b: b). wp b p h)
 
 (** Applying an [ALL_h] wp to a trivial postcondition *)
-unfold let all_trivial (heap:Type) (a:Type) (wp:all_wp_h heap a) =
-    (forall (h0:heap). wp (fun r h1 -> True) h0)
+unfold
+let all_trivial (heap a: Type) (wp: all_wp_h heap a) = (forall (h0: heap). wp (fun r h1 -> True) h0)
 
 (** Introducing the [ALL_h] effect template *)
 new_effect {
-  ALL_h (heap:Type) : a:Type -> wp:all_wp_h heap a -> Effect
+  ALL_h (heap: Type) : a: Type -> wp: all_wp_h heap a -> Effect
   with
-    return_wp    = all_return       heap
-  ; bind_wp      = all_bind_wp      heap
+    return_wp = all_return heap
+  ; bind_wp = all_bind_wp heap
   ; if_then_else = all_if_then_else heap
-  ; ite_wp       = all_ite_wp       heap
-  ; stronger     = all_stronger     heap
-  ; close_wp     = all_close_wp     heap
-  ; trivial      = all_trivial      heap
+  ; ite_wp = all_ite_wp heap
+  ; stronger = all_stronger heap
+  ; close_wp = all_close_wp heap
+  ; trivial = all_trivial heap
 }
 
 (**
@@ -369,58 +380,44 @@ new_effect {
  Be careful using this, since it explicitly subverts the [ifuel]
  setting. If used unwisely, this can lead to very poor SMT solver
  performance.  *)
-let inversion (a:Type) = True
+let inversion (a: Type) = True
 
 (** To introduce [inversion t] in the SMT solver's context, call
     [allow_inverson t]. *)
-let allow_inversion (a:Type)
-  : Pure unit (requires True) (ensures (fun x -> inversion a))
-  = ()
+let allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a)) = ()
 
 (** Since the [option] type is so common, we always allow inverting
     options, regardless of [ifuel] *)
-let invertOption (a:Type)
-  : Lemma
-    (requires True)
-    (ensures (forall (x:option a). None? x \/ Some? x))
-    [SMTPat (option a)]
-  = allow_inversion (option a)
+let invertOption (a: Type)
+    : Lemma (requires True) (ensures (forall (x: option a). None? x \/ Some? x)) [SMTPat (option a)] =
+  allow_inversion (option a)
 
 (** Values of type [a] or type [b] *)
 type either a b =
-  | Inl : v:a -> either a b
-  | Inr : v:b -> either a b
+  | Inl : v: a -> either a b
+  | Inr : v: b -> either a b
 
 (** Projections for the components of a dependent pair *)
-val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
+val dfst: #a: Type -> #b: (a -> GTot Type) -> dtuple2 a b -> Tot a
 let dfst #a #b t = Mkdtuple2?._1 t
 
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
+val dsnd (#a: Type) (#b: (a -> GTot Type)) (t: dtuple2 a b) : Tot (b (Mkdtuple2?._1 t))
 let dsnd #a #b t = Mkdtuple2?._2 t
 
 (** Dependent triples, with sugar [x:a & y:b x & c x y] *)
-unopteq type dtuple3 (a:Type)
-                     (b:(a -> GTot Type))
-                     (c:(x:a -> b x -> GTot Type)) =
-  | Mkdtuple3:_1:a
-             -> _2:b _1
-             -> _3:c _1 _2
-             -> dtuple3 a b c
-
+unopteq
+type dtuple3 (a: Type) (b: (a -> GTot Type)) (c: (x: a -> b x -> GTot Type)) =
+  | Mkdtuple3 : _1: a -> _2: b _1 -> _3: c _1 _2 -> dtuple3 a b c
 
 (** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
-unopteq type dtuple4 (a:Type)
-             (b:(x:a -> GTot Type))
-             (c:(x:a -> b x -> GTot Type))
-             (d:(x:a -> y:b x -> z:c x y -> GTot Type)) =
- | Mkdtuple4:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> dtuple4 a b c d
+unopteq
+type dtuple4
+  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
+  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
+  = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
 
 (** Explicitly discarding a value *)
-let ignore (#a:Type) (x:a) : Tot unit = ()
+let ignore (#a: Type) (x: a) : Tot unit = ()
 
 (** In a context where [false] is provable, you can prove that any
     type [a] is inhabited.
@@ -429,7 +426,7 @@ let ignore (#a:Type) (x:a) : Tot unit = ()
     infinitely looping function, since the termination check succeeds
     in a [False] context. *)
 irreducible
-let rec false_elim (#a:Type) (u:unit{False}) : Tot a = false_elim ()
+let rec false_elim (#a: Type) (u: unit{False}) : Tot a = false_elim ()
 
 /// Attributes:
 ///
@@ -440,7 +437,6 @@ let rec false_elim (#a:Type) (u:unit{False}) : Tot a = false_elim ()
 ///
 /// It is associated with a definition using the [[@attribute]]
 /// notation, just preceding the definition.
-
 
 (** We collect several internal ocaml attributes into a single
     inductive type.
@@ -459,47 +455,41 @@ let rec false_elim (#a:Type) (u:unit{False}) : Tot a = false_elim ()
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
-    (* Generate [@@ deriving show ] on the resulting OCaml type *)
-  | PpxDerivingShowConstant of string
-    (* Similar, but for constant printers. *)
-  | PpxDerivingYoJson
-    (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
-  | CInline
-    (* KreMLin-only: generates a C "inline" attribute on the resulting
+  | PpxDerivingShowConstant of string (* Generate [@@ deriving show ] on the resulting OCaml type *)
+  | PpxDerivingYoJson (* Similar, but for constant printers. *)
+  | CInline (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
+  (* KreMLin-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
-    (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+  (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s
      * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
-    (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+  (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
      * data-type; this requires running with a conservative GC as the
      * allocations are not freed. *)
   | Comment of string
-    (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+  (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
      * syntax automatically fills in this attribute. *)
   | CPrologue of string
-    (* KreMLin-only: verbatim C code to be prepended to the declaration.
+  (* KreMLin-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
   | CEpilogue of string
-    (* Ibid. *)
-  | CConst of string
-    (* KreMLin-only: indicates that the parameter with that name is to be marked
+  | CConst of string (* Ibid. *)
+  (* KreMLin-only: indicates that the parameter with that name is to be marked
      * as C const.  This will be checked by the C compiler, not by KreMLin or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
   | CCConv of string
-    (* A calling convention for C, one of stdcall, cdecl, fastcall *)
-  | CAbstractStruct
-    (* KreMLin-only: for types that compile to struct types (records and
+  | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  (* KreMLin-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
   | CIfDef
-    (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
-  | CMacro
-    (* KreMLin-only: for a top-level `let v = e`, compile as a macro *)
+  | CMacro (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
+(* KreMLin-only: for a top-level `let v = e`, compile as a macro *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -508,7 +498,7 @@ type __internal_ocaml_attributes =
     inlining all lets can lead to an exponential blowup in code
     size. *)
 irreducible
-let inline_let : unit = ()
+let inline_let:unit = ()
 
 (** The [rename_let] attribute support a form of metaprogramming for
     the names of let-bound variables used in extracted code.
@@ -526,12 +516,12 @@ let rename_let (new_name: string) : unit = ()
 
     See examples/native_tactics for several examples. *)
 irreducible
-let plugin (x:int) : unit = ()
+let plugin (x: int) : unit = ()
 
 (** An attribute to mark things that the typechecker should *first*
     elaborate and typecheck, but unfold before verification. *)
 irreducible
-let tcnorm : unit = ()
+let tcnorm:unit = ()
 
 (** We erase all ghost functions and unit-returning pure functions to
     [()] at extraction. This creates a small issue with abstract
@@ -546,11 +536,12 @@ let tcnorm : unit = ()
     Note, since the use of cross-module inlining (the [--cmi] option),
     this attribute is no longer necessary. We retain it for legacy,
     but will remove it in the future. *)
-irreducible let must_erase_for_extraction :unit = ()
+irreducible
+let must_erase_for_extraction:unit = ()
 
 (** This attribute is used with the Dijkstra Monads for Free
     construction to track position information in generated VCs *)
-let dm4f_bind_range : unit = ()
+let dm4f_bind_range:unit = ()
 
 (** When attached a top-level definition, the typechecker will succeed
     if and only if checking the definition results in an error. The
@@ -558,18 +549,19 @@ let dm4f_bind_range : unit = ()
     checked that the definition raises exactly those errors in the
     specified multiplicity, but order does not matter. *)
 irreducible
-let expect_failure (errs : list int) : unit = ()
+let expect_failure (errs: list int) : unit = ()
 
 (** When --lax is present, with the previous attribute since some
   definitions only fail when verification is turned on. With this
   attribute, one can ensure that a definition fails while lax-checking
   too. Same semantics as above, but lax mode will be turned on for the
   definition.  *)
-irreducible let expect_lax_failure (errs : list int) : unit = ()
+irreducible
+let expect_lax_failure (errs: list int) : unit = ()
 
 (** Print the time it took to typecheck a top-level definition *)
 irreducible
-let tcdecltime : unit = ()
+let tcdecltime:unit = ()
 
 (** **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
 
@@ -585,7 +577,7 @@ let tcdecltime : unit = ()
     across abstraction boundaries and will eventually remove this
     attribute.  *)
 irreducible
-let assume_strictly_positive : unit = ()
+let assume_strictly_positive:unit = ()
 
 (** This attribute is to be used as a hint for the unifier.  A
     function-typed symbol `t` marked with this attribute will be treated
@@ -594,7 +586,7 @@ let assume_strictly_positive : unit = ()
     proving `ai =?= bi` for all `i`, without trying to unfold the
     definition of `t`. *)
 irreducible
-let unifier_hint_injective : unit = ()
+let unifier_hint_injective:unit = ()
 
 (**
  This attribute is used to control the evaluation order
@@ -622,7 +614,7 @@ let unifier_hint_injective : unit = ()
       Otherwise, `f` is not unfolded and the term is `f e0 e1 e2`
       reduces to `f v0 v1 v2`. *)
 irreducible
-let strict_on_arguments (x:list int) : unit = ()
+let strict_on_arguments (x: list int) : unit = ()
 
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.
@@ -634,61 +626,74 @@ let strict_on_arguments (x:list int) : unit = ()
     See examples/micro-benchmarks/Erasable.fst, for examples.  Also
     see https://github.com/FStarLang/FStar/issues/1844 *)
 irreducible
-let erasable : unit = ()
+let erasable:unit = ()
 
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of
     [normalize_term e] is reduced to the full normal for of [e]. *)
-abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract
+let normalize_term (#a: Type) (x: a) : a = x
 
 (** In any invocation of the F* normalizer, every occurrence of
     [normalize e] is reduced to the full normal for of [e]. *)
-abstract let normalize (a:Type0) :Type0 = a
+abstract
+let normalize (a: Type0) : Type0 = a
 
 (** Value of [norm_step] are used to enable specific normalization
     steps, controlling how the normalizer reduces terms.
 
     We wrap the inductive type with helpers (below), so we don't
     expose the actual inductive *)
-abstract
-noeq type norm_step =
-  | Simpl   // Logical simplification, e.g., [P /\ True ~> P]
-  | Weak    // Weak reduction: Do not reduce under binders
-  | HNF     // Head normal form
+abstract noeq
+type norm_step =
+  | Simpl // Logical simplification, e.g., [P /\ True ~> P]
+  | Weak // Weak reduction: Do not reduce under binders
+  | HNF // Head normal form
   | Primops // Reduce primitive operators, e.g., [1 + 1 ~> 2]
-  | Delta   // Unfold all non-recursive definitions
-  | Zeta    // Unroll recursive calls
-  | Iota    // Reduce case analysis (i.e., match)
-  | NBE     // Use normalization-by-evaluation, instead of interpretation (experimental)
-  | Reify   // Reify effectful definitions into their representations
-  | UnfoldOnly  : list string -> norm_step // Unlike Delta, unfold definitions for only the given
-                                          // names, each string is a fully qualified name
-                                          // like `A.M.f`
-  | UnfoldFully : list string -> norm_step // idem
-  | UnfoldAttr  : list string -> norm_step // Unfold definitions marked with the given attributes
+  | Delta // Unfold all non-recursive definitions
+  | Zeta // Unroll recursive calls
+  | Iota // Reduce case analysis (i.e., match)
+  | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
+  | Reify // Reify effectful definitions into their representations
+  | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
+  // names, each string is a fully qualified name
+  // like `A.M.f`
+  // idem
+  | UnfoldFully : list string -> norm_step
+  | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
 
 (** Logical simplification, e.g., [P /\ True ~> P] *)
-abstract let simplify : norm_step = Simpl
+abstract
+let simplify:norm_step = Simpl
 (** Weak reduction: Do not reduce under binders *)
-abstract let weak     : norm_step = Weak
+abstract
+let weak:norm_step = Weak
 (** Head normal form *)
-abstract let hnf      : norm_step = HNF
+abstract
+let hnf:norm_step = HNF
 (** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
-abstract let primops  : norm_step = Primops
+abstract
+let primops:norm_step = Primops
 (** Unfold all non-recursive definitions *)
-abstract let delta    : norm_step = Delta
+abstract
+let delta:norm_step = Delta
 (** Unroll recursive calls *)
-abstract let zeta     : norm_step = Zeta
+abstract
+let zeta:norm_step = Zeta
 (** Reduce case analysis (i.e., match) *)
-abstract let iota     : norm_step = Iota
+abstract
+let iota:norm_step = Iota
 (** Use normalization-by-evaluation, instead of interpretation (experimental) *)
-abstract let nbe      : norm_step = NBE
+abstract
+let nbe:norm_step = NBE
 (** Reify effectful definitions into their representations *)
-abstract let reify_   : norm_step = Reify
+abstract
+let reify_:norm_step = Reify
 (** Unlike [delta], unfold definitions for only the names in the given
     list. Each string is a fully qualified name like [A.M.f] *)
-abstract let delta_only  (s : list string) : norm_step = UnfoldOnly s
+abstract
+let delta_only (s: list string) : norm_step = UnfoldOnly s
 
 (** Unfold definitions for only the names in the given list, but
     unfold each definition encountered after unfolding as well.
@@ -705,7 +710,8 @@ abstract let delta_only  (s : list string) : norm_step = UnfoldOnly s
 
     Each string is a fully qualified name like [A.M.f], typically
     constructed using a quotation, as in the example above. *)
-abstract let delta_fully (s : list string) : norm_step = UnfoldFully s
+abstract
+let delta_fully (s: list string) : norm_step = UnfoldFully s
 
 (** Rather than mention a symbol to unfold by name, it can be
     convenient to tag a collection of related symbols with a common
@@ -726,20 +732,23 @@ abstract let delta_fully (s : list string) : norm_step = UnfoldFully s
    [norm [delta_attr [`%my_attr]] f1] will reduce to [0 + 1].
 
   *)
-abstract let delta_attr  (s : list string) : norm_step = UnfoldAttr s
+abstract
+let delta_attr (s: list string) : norm_step = UnfoldAttr s
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
-abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
+abstract
+let norm (s: list norm_step) (#a: Type) (x: a) : a = x
 
 (** [assert_norm p] reduces [p] as much as possible and then asks the
     SMT solver to prove the reduct, concluding [p] *)
-abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+abstract
+val assert_norm (p: Type) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
 (** Sometimes it is convenient to introduce an equation between a term
     and its normal form in the context. *)
-let normalize_term_spec (#a:Type) (x: a) : Lemma (normalize_term #a x == x) = ()
+let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
 
 (** Like [normalize_term_spec], but specialized to [Type0] *)
 let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
@@ -749,7 +758,7 @@ let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) =
 
 (** Use the following to expose an ["opaque_to_smt"] definition to the
     solver as: [reveal_opaque (`%defn) defn] *)
-let reveal_opaque (s:string) = norm_spec [delta_only [s]]
+let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head
@@ -757,10 +766,12 @@ let reveal_opaque (s:string) = norm_spec [delta_only [s]]
 
     To circumvent this behavior, singleton can be used.
     See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
-irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
+irreducible
+let singleton (#a: Type) (x: a) : (y: a{y == x}) = x
 
 (** [with_type t e] is just an identity function, but it receives
     special treatment in the SMT encoding, where in addition to being
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
-let with_type (#t:Type) (e:t) = e
+let with_type (#t: Type) (e: t) = e
+
