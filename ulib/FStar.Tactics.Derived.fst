@@ -511,13 +511,24 @@ let grewrite (t1 t2 : term) : Tac unit =
     let e = pack_ln (Tv_Var (bv_of_binder e)) in
     pointwise (fun () -> try exact e with | _ -> trefl ())
 
+private
+let __join_sq_eq (#a:Type) (x y : a) (_ : squash (x == y)) : Lemma (x == y) = ()
+
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
 let grewrite_eq (b:binder) : Tac unit =
   match term_as_formula (type_of_binder b) with
   | Comp (Eq _) l r ->
     grewrite l r;
     iseq [idtac; (fun () -> exact (binder_to_term b))]
-  | _ -> fail "failed in grewrite_eq"
+  | _ ->
+    begin match term_as_formula' (type_of_binder b) with
+    | Comp (Eq _) l r ->
+      grewrite l r;
+      iseq [idtac; (fun () -> apply_lemma (`__join_sq_eq);
+                              exact (binder_to_term b))]
+    | _ ->
+      fail "grewrite_eq: binder type is not an equality"
+    end
 
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->
