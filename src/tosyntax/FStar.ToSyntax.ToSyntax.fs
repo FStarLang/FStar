@@ -1488,8 +1488,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
                    [as_arg e]), s
 
-    | NamedTyp(_, e) ->
-      raise_error (Fatal_SyntaxError, "Syntax error") top.range
+    | NamedTyp(n, _) ->
+      raise_error (Fatal_SyntaxError, "Syntax error") (range_of_id n)
 
     | Paren e -> failwith "impossible"
 
