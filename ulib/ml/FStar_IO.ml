@@ -28,7 +28,7 @@ let print_uint8_dec s =
   flush stdout
 
 let print_uint32 s =
-  pr "%x" (FStar_UInt32.to_int s);
+  pr "%s" (FStar_UInt32.to_string_hex s);
   flush stdout
 
 let print_uint32_dec s =
