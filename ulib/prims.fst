@@ -15,7 +15,9 @@
 *)
 module Prims
 
-/// This module provides the very basic primitives on which F* is
+/// This module is implicitly opened in the scope of all other modules.
+///
+/// It provides the very basic primitives on which F* is
 /// built, including the definition of total functions, the basic
 /// logical connectives, the PURE and GHOST effects and the like.
 ///
@@ -41,7 +43,7 @@ type eqtype = a:Type0{hasEq a}
 (** [bool] is a two element type with elements [true] and [false]. We
     assume it is primitive, for convenient interop with other
     languages, although it could easily be defined as an inductive type
-    with two cases, [BTrue | BFalse] **)
+    with two cases, [BTrue | BFalse] *)
 assume new type bool : eqtype
 
 (** [c_False] is the empty inductive type. The type with no
@@ -56,7 +58,7 @@ type c_False =
 type c_True = | T
 
 (** [unit]: another singleton type, with its only inhabitant written [()]
-    we assume it is primitive, for convenient interop with other languages **)
+    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : eqtype
 
 (** [squash p] is a central type in F*---[squash p] is the proof
@@ -235,7 +237,16 @@ type l_Forall (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a -> GTot (p x)
     of [p2]. *)
 let subtype_of (p1:Type) (p2:Type) = forall (x:p1). has_type x p2
 
-(** The type of squashed types *)
+(** The type of squashed types.
+
+    Note, the [prop] type is a work in progress in F*. In particular,
+    we would like in the future to more systematically use [prop] for
+    proof-irrelevant propositions throughout the libraries. However,
+    we still use [Type0] in many places. 
+
+    See https://github.com/FStarLang/FStar/issues/1048 for more
+    details and the current status of the work.
+    *)
 type prop = a:Type0{ a `subtype_of` unit }
 
 (** [range] is a type for the internal representations of source
