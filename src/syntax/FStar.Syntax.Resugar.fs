@@ -537,13 +537,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
-          let rec uncurry xs pat (t:A.term) = match t.tm with
-            | A.QExists(x, (_, p) , body)
-            | A.QForall(x, (_, p), body)
-              -> uncurry (x@xs) (p@pat) body
-            | _ -> xs, pat, t
+          let rec uncurry xs pats (t:A.term) = match t.tm with
+            | A.QExists(xs', (_, pats'), body)
+            | A.QForall(xs', (_, pats'), body) ->
+                uncurry (xs@xs') (pats@pats') body
+            | _ ->
+                xs, pats, t
           in
-          let resugar body = match (SS.compress body).n with
+          let resugar_forall_body body = match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
@@ -564,23 +565,22 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   | _ -> [], resugar_term' env body
                 in
                 let xs, pats, body = uncurry xs pats body in
-                let xs = xs |> List.rev in
                 if op = "forall"
                 then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
                 else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
 
             | _ ->
-            (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
-            (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
-            else mk (A.QExists([], ([], []), resugar_term' env body))
+              (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
+              (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
+              if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
+              else mk (A.QExists([], ([], []), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           if List.length args > 0 then
             let args = last args in
             begin match args with
-              | [(b, _)] -> resugar b
+              | [(b, _)] -> resugar_forall_body b
               | _ -> failwith "wrong args format to QForall"
             end
           else

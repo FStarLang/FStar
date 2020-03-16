@@ -27,6 +27,7 @@ PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
+PACKAGE_DOCS?=1
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -254,7 +255,9 @@ ifeq ($(MADOKO),Madoko)
 	$(MAKE) -C fstar/doc/tutorial
 else
 	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
+ifeq ($(PACKAGE_DOCS),1)
 	false
+endif
 endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)

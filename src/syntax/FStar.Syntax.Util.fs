@@ -1763,6 +1763,9 @@ let get_attribute (attr : lident) (attrs:list<Syntax.attribute>) : option<args> 
         | Tm_fvar fv when fv_eq_lid fv attr -> Some args
         | _ -> None) attrs
 
+let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
+    List.filter (fun a -> not (is_fvar attr a)) attrs
+
 ///////////////////////////////////////////
 // Setting pragmas
 ///////////////////////////////////////////
