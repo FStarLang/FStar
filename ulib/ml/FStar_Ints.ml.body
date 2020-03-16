@@ -42,8 +42,14 @@ let logxor        = M.logxor
 let logor         = M.logor
 let lognot        = M.lognot
 let to_string     = M.to_string
-let to_string_hex = M.to_string_hex
 let of_string     = M.of_string
+
+let to_string_hex i =
+    let s0 = M.to_string_hex i in
+    let len = (String.length s0 - 2) in
+    let s1 = String.sub s0 2 len in (* Remove leading "0x" *)
+    let zeroes = String.make ((Z.to_int n / 4) - len) '0' in
+    zeroes ^ s1
 
 (* The shifts take a uint32 argument, so we need to convert *)
 let shift_right n i  = M.shift_right n (Stdint.Uint32.to_int i)
