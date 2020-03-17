@@ -605,7 +605,6 @@ let pp_lowercase s =
 let abort_counter : ref<int> =
     mk_ref 0
 
-private
 let interp_quake_arg (s:string)
             : int * int * bool =
            (* min,  max,  keep_going *)
