@@ -41,6 +41,7 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
+machine_integers \
 calc \
 layeredeffects
 

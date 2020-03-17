@@ -157,7 +157,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 # Adding the F# build and F# tests also here
 #   since in the uregressions target it may not be a good idea to override the fstar.exe binary?
-utest-prelude: #fsharp-build-and-test
+utest-prelude: fsharp-build-and-test
 	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
