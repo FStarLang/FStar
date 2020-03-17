@@ -852,8 +852,6 @@ let nth_binder (i:int) : Tac binder =
   let bs = cur_binders () in
   let k : int = if i >= 0 then i else List.length bs + i in
   let k : nat = if k < 0 then fail "not enough binders" else k in
-  dump ("len = " ^ string_of_int (List.length bs));
-  dump ("k = " ^ string_of_int k);
   match List.Tot.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
