@@ -512,7 +512,7 @@ let grewrite (t1 t2 : term) : Tac unit =
     pointwise (fun () -> try exact e with | _ -> trefl ())
 
 private
-let __join_sq_eq (#a:Type) (x y : a) (_ : squash (x == y)) : Lemma (x == y) = ()
+let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
 
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
 let grewrite_eq (b:binder) : Tac unit =
@@ -524,7 +524,7 @@ let grewrite_eq (b:binder) : Tac unit =
     begin match term_as_formula' (type_of_binder b) with
     | Comp (Eq _) l r ->
       grewrite l r;
-      iseq [idtac; (fun () -> apply_lemma (`__join_sq_eq);
+      iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
                               exact (binder_to_term b))]
     | _ ->
       fail "grewrite_eq: binder type is not an equality"
