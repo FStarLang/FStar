@@ -1262,7 +1262,7 @@ let rec (specs_with_types :
                         String s))
               | uu____6718 -> failwith "impos")),
            (SimpleStr "positive integer or pair of positive integers"))),
-      "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query M times and checks that it succeeds at least N times.\n\t\t--quake N is an alias for --quake N/N.");
+      "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t--quake N/M/k works as above, except it will unconditionally run M times\n\t\t--quake N is an alias for --quake N/N\n\t\t--quake N/k is an alias for --quake N/N/k\n\tUsing --quake disables --retry.");
     (FStar_Getopt.noshort, "query_stats", (Const (Bool true)),
       "Print SMT query statistics");
     (FStar_Getopt.noshort, "record_hints", (Const (Bool true)),
@@ -1281,7 +1281,7 @@ let rec (specs_with_types :
                    Bool true)
               | uu____6812 -> failwith "impos")),
            (IntStr "positive integer"))),
-      "Retry each SMT query N times and succeed on the first try.\n\tThis is equivalent to --quake N/N.");
+      "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
     (FStar_Getopt.noshort, "reuse_hint_for", (SimpleStr "toplevel_name"),
       "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
     (FStar_Getopt.noshort, "silent", (Const (Bool true)),
