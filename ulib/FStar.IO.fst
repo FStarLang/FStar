@@ -41,7 +41,7 @@ assume val print_uint64_dec : FStar.UInt64.t -> ML unit
 
 (* Print as hex in fixed width, no leading 0x *)
 assume val print_uint8_hex_pad : FStar.UInt8.t -> ML unit
-assume val print_uint16_hex_pad : FStar.UInt32.t -> ML unit
+assume val print_uint16_hex_pad : FStar.UInt16.t -> ML unit
 assume val print_uint32_hex_pad : FStar.UInt32.t -> ML unit
 assume val print_uint64_hex_pad : FStar.UInt64.t -> ML unit
 

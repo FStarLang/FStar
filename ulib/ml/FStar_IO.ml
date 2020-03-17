@@ -21,15 +21,15 @@ let print_via (f:'a -> string) (x:'a) : unit =
     pr "%s" (f x);
     flush stdout
 
-let print_uint8      = print_via FStar_UInt8.to_string_hex
-let print_uint16     = print_via FStar_UInt16.to_string_hex
-let print_uint32     = print_via FStar_UInt32.to_string_hex
-let print_uint64     = print_via FStar_UInt64.to_string_hex
+let print_uint8          = print_via FStar_UInt8.to_string_hex
+let print_uint16         = print_via FStar_UInt16.to_string_hex
+let print_uint32         = print_via FStar_UInt32.to_string_hex
+let print_uint64         = print_via FStar_UInt64.to_string_hex
 
-let print_uint8_dec  = print_via FStar_UInt8.to_string
-let print_uint16_dec = print_via FStar_UInt16.to_string
-let print_uint32_dec = print_via FStar_UInt32.to_string
-let print_uint64_dec = print_via FStar_UInt64.to_string
+let print_uint8_dec      = print_via FStar_UInt8.to_string
+let print_uint16_dec     = print_via FStar_UInt16.to_string
+let print_uint32_dec     = print_via FStar_UInt32.to_string
+let print_uint64_dec     = print_via FStar_UInt64.to_string
 
 let print_uint8_hex_pad  = print_via FStar_UInt8.to_string_hex_pad
 let print_uint16_hex_pad = print_via FStar_UInt16.to_string_hex_pad
