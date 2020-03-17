@@ -18,7 +18,7 @@ COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
 		FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
-GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
+GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml intfiles
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -27,6 +27,7 @@ PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
+PACKAGE_DOCS?=1
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -254,7 +255,9 @@ ifeq ($(MADOKO),Madoko)
 	$(MAKE) -C fstar/doc/tutorial
 else
 	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
+ifeq ($(PACKAGE_DOCS),1)
 	false
+endif
 endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
@@ -289,3 +292,6 @@ purge: clean
 	rm -f *.ml || true
 
 -include .depend
+
+intfiles:
+	make -C ../../ulib/ml/ intfiles
