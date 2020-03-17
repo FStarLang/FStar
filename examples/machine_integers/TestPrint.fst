@@ -1,4 +1,4 @@
-module Test04
+module TestPrint
 
 open FStar.All
 open FStar.IO
