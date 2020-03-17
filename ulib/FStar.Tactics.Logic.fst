@@ -76,6 +76,14 @@ let implies_intros () : Tac binders = repeat1 implies_intro
 let l_intro () = forall_intro `or_else` implies_intro
 let l_intros () = repeat l_intro
 
+(* This should be next to mapply... bring mapply here?
+ * Or make a separate module? *)
+let mintro () : Tac binder =
+    first [intro; implies_intro; forall_intro; (fun () -> fail "cannot intro")]
+
+let mintros () : Tac (list binder) =
+    repeat mintro
+
 let squash_intro () : Tac unit =
     apply (`FStar.Squash.return_squash)
 
