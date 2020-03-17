@@ -467,7 +467,13 @@ let lemma_mod_spec a p =
 val lemma_mod_spec2: a:int -> p:pos -> Lemma
   (let q:int = (a - (a % p)) / p in a = (a % p) + q * p)
 let lemma_mod_spec2 a p =
-  lemma_mod_spec a p
+  calc (==) {
+    (a % p) + ((a - (a % p)) / p) * p;
+    == { lemma_mod_spec a p }
+    (a % p) + (a / p) * p;
+    == { lemma_div_mod a p }
+    a;
+  }
 
 val lemma_mod_plus_distr_l: a:int -> b:int -> p:pos -> Lemma
   ((a + b) % p = ((a % p) + b) % p)
