@@ -13,41 +13,76 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module FStar.Squash
 
-(* Interface for squash types; somehow inspired by:
-Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
-http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
-*)
+/// The module provides an interface to work with [squash] types, F*'s
+/// representation for classical, proof-irrelevant propositions.
+///
+/// This is inspired in part by:
+/// Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
+/// http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
+///
+/// Broadly, [squash] is a monad, support the usual [return] and
+/// [bind] operations.
+///
+/// Additionally, it supports a [push_squash] operation that relates
+/// arrow types and [squash].
 
-(* This is a monad *)
-val return_squash : #a:Type -> a -> Tot (squash a)
+(** A proof of [a] can be forgotten to create a squashed proof of [a]
+    *)
+val return_squash (#a: Type) (x: a) : Tot (squash a)
 
-val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->
-  Tot (squash b)
+(** Sequential composition of squashed proofs *)
+val bind_squash (#a #b: Type) (x: squash a) (f: (a -> GTot (squash b))) : Tot (squash b)
 
-(* With a special ``push'' operation *)
-val push_squash   : #a:Type -> #b:(a -> Type) -> (x:a -> Tot (squash (b x))) -> Tot (squash (x:a -> GTot (b x)))
+(** The [push] operation, together with [bind_squash], allow deriving
+    some of the other operations, notably [squash_double_arrow]. We
+    rarely use the [push_squash] operation directly.
 
-val get_proof : p:Type ->
-  Pure (squash p) (requires p) (ensures (fun _ -> True))
+    One reading of [push f] is that for a function [f] that builds a
+    proof-irrelevant prooof of [b x] for all [x:a], there exists a
+    proof-irrelevant proof of [forall (x:a). b x].
 
-val give_proof : #p:Type -> squash p ->
-  Pure unit (requires True) (ensures (fun _ -> p))
+    Note: since [f] is not itself squashed, [push_squash f] is not
+    equal to [f].  *)
+val push_squash (#a: Type) (#b: (a -> Type)) (f: (x: a -> Tot (squash (b x))))
+    : Tot (squash (x: a -> GTot (b x)))
 
-val proof_irrelevance : p:Type -> x:squash p ->
-                                 y:squash p -> Tot (squash (x == y))
+/// The pre- and postconditions of of [Pure] are equivalent to
+/// squashed arguments and results.
 
-val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
-  $f:(squash (x:a -> GTot (squash (p x)))) -> GTot (squash (x:a -> GTot (p x)))
+(** [get_proof p], in a context requiring [p] is equivalent to a proof
+    of [squash p] *)
+val get_proof (p: Type) : Pure (squash p) (requires p) (ensures (fun _ -> True))
 
-val push_sum : #a:Type -> #b:(a -> Type) ->
-  $p:(dtuple2 a (fun (x:a) -> squash (b x))) -> Tot (squash (dtuple2 a b))
+(** [give_proof x], for [x:squash p] is a equivalent to ensuring
+    [p]. *)
+val give_proof (#p: Type) (x: squash p) : Pure unit (requires True) (ensures (fun _ -> p))
 
-val squash_double_sum:  #a:Type -> #b:(a -> Type) ->
-  $p:(squash (dtuple2 a (fun (x:a) -> squash (b x)))) -> Tot (squash (dtuple2 a b))
+(** All proofs of [squash p] are equal  *)
+val proof_irrelevance (p: Type) (x y: squash p) : Tot (squash (x == y))
 
-val map_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot b) ->
-  Tot (squash b)
+(** Squashing the proof of the co-domain of squashed universal
+    quantifier is redundant---[squash_double_arrow] allows removing
+    it. *)
+val squash_double_arrow (#a: Type) (#p: (a -> Type)) ($f: (squash (x: a -> GTot (squash (p x)))))
+    : GTot (squash (x: a -> GTot (p x)))
 
-val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
+(** The analog of [push_squash] for sums (existential quantification *)
+val push_sum (#a: Type) (#b: (a -> Type)) ($p: (dtuple2 a (fun (x: a) -> squash (b x))))
+    : Tot (squash (dtuple2 a b))
+
+(** The analog of [squash_double_arrow] for sums (existential quantification) *)
+val squash_double_sum
+      (#a: Type)
+      (#b: (a -> Type))
+      ($p: (squash (dtuple2 a (fun (x: a) -> squash (b x)))))
+    : Tot (squash (dtuple2 a b))
+
+(** [squash] is functorial; a ghost function can be mapped over a squash *)
+val map_squash (#a #b: Type) (x: squash a) (f: (a -> GTot b)) : Tot (squash b)
+
+(** [squash] is a monad: double squashing is redundant and can be removed. *)
+val join_squash (#a: Type) (x: squash (squash a)) : Tot (squash a)
+
