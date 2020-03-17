@@ -82,7 +82,6 @@ val push_binder: env -> binder -> env
 //  *)
 (** TODO: we need dependent functional extensionality *)
 
-
 [@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
@@ -231,7 +230,6 @@ let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
               (us.b_offset - ul.b_offset)
               (us.b_offset - ul.b_offset + length smaller)))
 #pop-options
-
 
 (** Style guide examples *)
 

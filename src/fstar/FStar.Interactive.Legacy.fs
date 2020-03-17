@@ -389,7 +389,7 @@ let rec go (line_col:(int*int))
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
-         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc env.dsenv lid |> Util.map_option fst) in
+         | Inr lid -> Ident.string_of_lid lid, None in
        Util.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->

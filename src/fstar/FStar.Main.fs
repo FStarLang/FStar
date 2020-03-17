@@ -155,10 +155,6 @@ let go _ =
               FStar.Interactive.Ide.interactive_mode filename
           end
 
-        (* --fsdoc: Generate Markdown documentation files *)
-        else if Options.doc() then
-          FStar.Fsdoc.Generator.generate filenames
-
         (* --print: Emit files in canonical source syntax *)
         else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml

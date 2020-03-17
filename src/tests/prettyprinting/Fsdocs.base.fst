@@ -15,6 +15,7 @@
 *)
 
 (** Propositional sets (on any types): membership is a predicate *)
+
 module Fh
 
 let ne e1 e2 = CompProp e1 C_Ne e2
@@ -34,13 +35,11 @@ let ne e1 e2 = CompProp e1 C_Ne e2
 let gt e1 e2 = CompProp e1 C_Gt e2
 let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
-
 (** Interpretation of type codes.
 
    Defines functions mapping from type codes (`typ`) to their interpretation as
    FStar types. For example, `type_of_typ (TBase TUInt8)` is `FStar.UInt8.t`.
 *)
-
 
 (** Interpretation of base types. *)
 let type_of_base_typ (t: base_typ) : Tot Type0 = match t with | TUInt -> nat
@@ -85,6 +84,7 @@ and tm = 3
  beforehand
 //  *)
 (** TODO: we need dependent functional extensionality *)
+
 [@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
@@ -102,6 +102,7 @@ let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h 
  beforehand
 //  *)
 (** TODO: we need dependent functional extensionality *)
+
 [@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)

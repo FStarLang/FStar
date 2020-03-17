@@ -44,3 +44,9 @@ let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexin
 let ulexeme lexbuf = lexeme lexbuf
 
 let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p
+
+let comments : (string * FStar.Range.range) list ref = ref []
+let add_comment x = comments := x :: !comments
+let flush_comments () =
+  let lexed_comments = !comments in
+  comments := []; lexed_comments

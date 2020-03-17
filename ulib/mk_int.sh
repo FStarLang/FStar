@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-for i in 8 16 31 32 63 64 128; do
+for i in 8 16 32 64 128; do
   f=FStar.Int$i.fst
   cat > $f <<EOF
 (*
@@ -39,7 +39,7 @@ EOF
   fi
 done
 
-for i in 8 16 31 32 63 64; do
+for i in 8 16 32 64; do
   f=FStar.UInt$i.fst
   cat > $f <<EOF
 (*

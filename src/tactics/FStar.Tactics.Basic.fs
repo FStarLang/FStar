@@ -585,7 +585,7 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
 
 let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     bind get (fun ps ->
-    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
+    mlog (fun () -> BU.print1 "Tac> __tc_lax(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
@@ -1566,7 +1566,7 @@ let _trefl (l : term) (r : term) : tac<unit> =
 
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
-    match destruct_eq (goal_type g) with
+    match destruct_eq (bnorm (goal_env g) (goal_type g)) with
     | Some (l, r) ->
         _trefl l r
     | None ->
