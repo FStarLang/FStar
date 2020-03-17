@@ -957,7 +957,9 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                          String s
                        | _ -> failwith "impos"),
             SimpleStr "non-negative integer or pair of non-negative integers"),
-        "N/M repeats each query M times and checks that it succeeds at least N times");
+        "Repeats SMT queries to check for robustness\n\t\t\
+         --quake N/M repeats each query M times and checks that it succeeds at least N times.\n\t\t\
+         --quake N is an alias for --quake N/N.");
 
        ( noshort,
         "query_stats",
