@@ -598,30 +598,11 @@ let division_sub_lemma (a:int) (n:pos) (b:nat) =
 val modulo_distributivity: a:int -> b:int -> c:pos -> Lemma ((a + b) % c == (a % c + b % c) % c)
 let modulo_distributivity a b c =
   calc (==) {
-    (a % c + b % c) % c;
-    == { lemma_div_mod (a % c + b % c) c }
-    a % c + b % c - c * ((a % c + b % c) / c);
-    == { lemma_div_mod a c; lemma_div_mod b c }
-    a % c + b % c - c * ((a - c*(a/c) + b - c*(b/c)) / c);
-    == { distributivity_add_right c (a/c) (b/c) }
-    a % c + b % c - c * ((a + b - c*(a/c + b/c)) / c);
-    == { neg_mul_right c (a/c + b/c) }
-    a % c + b % c - c * (((a + b) + c*(- (a/c) - (b/c))) / c);
-    == { division_addition_lemma (a+b) c (-a/c - b/c) }
-    a % c + b % c - c * ((a + b)/c - a/c - b/c);
-    == { distributivity_sub_right c ((a+b)/c - a/c) (b/c);
-         distributivity_sub_right c ((a+b)/c) (a/c) }
-    a % c + b % c - (c * ((a + b)/c) - c*(a/c) - c*(b/c));
-    == { (* reordering *) }
-      a % c + c * (a/c)
-    + b % c + c * (b/c)
-    - c * ((a+b) / c);
-    == { lemma_div_mod a c; lemma_div_mod b c }
-      a
-    + b
-    - c * ((a+b) / c);
-    == { lemma_div_mod (a+b) c }
     (a + b) % c;
+    == { lemma_mod_plus_distr_l a b c }
+    ((a % c) + b) % c;
+    == { lemma_mod_plus_distr_r (a % c) b c }
+    ((a % c) + (b % c)) % c;
   }
 
 val lemma_mod_plus_mul_distr: a:int -> b:int -> c:int -> p:pos -> Lemma
