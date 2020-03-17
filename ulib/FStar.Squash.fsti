@@ -17,10 +17,16 @@
 module FStar.Squash
 
 /// The module provides an interface to work with [squash] types, F*'s
-/// representation for classical, proof-irrelevant propositions.
+/// representation for proof-irrelevant propositions.
 ///
-/// This is inspired in part by:
-/// Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
+/// The type [squash p] is defined in [Prims] as [_:unit{p}]. As such,
+/// the [squash] type captures the classical logic used in F*'s
+/// refinement types, although the interface in this module isn't
+/// specifically classical. The module [FStar.Classical] provides
+/// further derived forms to manipulate [squash] types.
+///
+/// This is inspired in part by: Quotient Types: A Modular
+/// Approach. Aleksey Nogin, TPHOLs 2002.
 /// http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
 ///
 /// Broadly, [squash] is a monad, support the usual [return] and
