@@ -92,8 +92,38 @@ let test_hex_pad () : ML unit =
       print_line (to_string_hex_pad (uint_to_t (pow2 64 - 1)))
     )
 
+let test_dec_pad () : ML unit =
+    FStar.IO.print_uint8_dec_pad (U8.uint_to_t 0);
+    print_newline ();
+    FStar.IO.print_uint8_dec_pad (U8.uint_to_t 15);
+    print_newline ();
+    FStar.IO.print_uint8_dec_pad (U8.uint_to_t (pow2 8 - 1));
+    print_newline ();
+
+    FStar.IO.print_uint16_dec_pad (U16.uint_to_t 0);
+    print_newline ();
+    FStar.IO.print_uint16_dec_pad (U16.uint_to_t 15);
+    print_newline ();
+    FStar.IO.print_uint16_dec_pad (U16.uint_to_t (pow2 16 - 1));
+    print_newline ();
+
+    FStar.IO.print_uint32_dec_pad (U32.uint_to_t 0);
+    print_newline ();
+    FStar.IO.print_uint32_dec_pad (U32.uint_to_t 15);
+    print_newline ();
+    FStar.IO.print_uint32_dec_pad (U32.uint_to_t (pow2 32 - 1));
+    print_newline ();
+
+    FStar.IO.print_uint64_dec_pad (U64.uint_to_t 0);
+    print_newline ();
+    FStar.IO.print_uint64_dec_pad (U64.uint_to_t 15);
+    print_newline ();
+    FStar.IO.print_uint64_dec_pad (U64.uint_to_t (pow2 64 - 1));
+    print_newline ()
+
 let main () =
     test_hex ();
     test_dec ();
     test_hex_pad ();
+    test_dec_pad ();
     ()
