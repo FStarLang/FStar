@@ -338,40 +338,6 @@ let cancel_mul_mod (a:int) (n:pos) =
   small_mod 0 n;
   lemma_mod_plus 0 a n
 
-val mod_add_both (a:int) (b:int) (x:int) (n:pos) : Lemma
-  (requires a % n == b % n)
-  (ensures (a + x) % n == (b + x) % n)
-
-let mod_add_both (a:int) (b:int) (x:int) (n:pos) =
-  calc (==) {
-    (a + x) % n - (b + x) % n;
-    == {lemma_div_mod (a + x) n; lemma_div_mod (b + x) n }
-    ((a+x) - n*((a+x)/n)) - ((b+x) - n*((b+x)/n));
-    == {}
-    a - n*((a+x)/n) - b + n*((b+x)/n);
-    == { distributivity_sub_right n ((b+x)/n) ((a+x)/n) }
-    a - b + n * ((b+x)/n - (a+x)/n);
-    == { lemma_div_mod a n; lemma_div_mod b n }
-    n*(a/n) + a%n - n*(b/n) - b%n + n * ((b+x)/n - (a+x)/n);
-    == { (* a%n == b%n *) }
-    n*(a/n) - n*(b/n) + n * ((b+x)/n - (a+x)/n);
-    == { distributivity_sub_right n ((b+x)/n) ((a+x)/n) }
-    n*(a/n) - n*(b/n) + n * ((b+x)/n) - n * ((a+x)/n);
-    == { lemma_div_mod a n;
-         lemma_div_plus (a%n + x) (a/n) n;
-         swap_mul n (a/n) }
-    n*(a/n) - n*(b/n) + n * ((b+x)/n) - n * ((a%n + x)/n + a/n);
-    == { lemma_div_mod b n;
-         lemma_div_plus (b%n + x) (b/n) n;
-         swap_mul n (b/n) }
-    n*(a/n) - n*(b/n) + n * ((b%n + x)/n + b/n) - n * ((a%n + x)/n + a/n);
-    == { distributivity_add_right n (((a%n) + x)/n) (a/n);
-         distributivity_add_right n (((b%n) + x)/n) (b/n) }
-    n * ((b%n + x)/n) - n * ((a%n + x)/n);
-    == { (* a%n == b%n *) }
-    0;
-  }
-
 val lemma_mod_add_distr (a:int) (b:int) (n:pos) : Lemma ((a + b % n) % n = (a + b) % n)
 let lemma_mod_add_distr (a:int) (b:int) (n:pos) =
   calc (==) {
@@ -886,6 +852,20 @@ val modulo_sub : p:pos -> a:int -> b:int -> c:int -> Lemma
 
 let modulo_sub p a b c =
   modulo_add p (-a) (a + b) (a + c)
+
+val mod_add_both (a:int) (b:int) (x:int) (n:pos) : Lemma
+  (requires a % n == b % n)
+  (ensures (a + x) % n == (b + x) % n)
+let mod_add_both (a:int) (b:int) (x:int) (n:pos) =
+  calc (==) {
+    (a + x) % n;
+    == { modulo_distributivity a x n }
+    ((a % n) + (x % n)) % n;
+    == { (* hyp *) }
+    ((b % n) + (x % n)) % n;
+    == { modulo_distributivity b x n }
+    (b + x) % n;
+  }
 
 val lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) : Lemma
   (requires b < n /\ c < n /\ (a + b) % n = (a + c) % n)
