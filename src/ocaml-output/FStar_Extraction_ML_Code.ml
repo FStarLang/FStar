@@ -338,7 +338,7 @@ let (maybe_paren :
   ((Prims.int * fixity) * assoc) -> (Prims.int * fixity) -> doc -> doc) =
   fun uu____1741  ->
     fun inner  ->
-      fun doc1  ->
+      fun doc  ->
         match uu____1741 with
         | (outer,side) ->
             let noparens _inner _outer side1 =
@@ -363,7 +363,7 @@ let (maybe_paren :
                            | (uu____1836,NonAssoc ) -> (pi = po) && (fi = fo)
                            | (uu____1838,uu____1839) -> false)))
                in
-            if noparens inner outer side then doc1 else parens doc1
+            if noparens inner outer side then doc else parens doc
   
 let (escape_byte_hex : FStar_BaseTypes.byte -> Prims.string) =
   fun x  -> Prims.op_Hat "\\x" (FStar_Util.hex_string_of_byte x) 
@@ -473,16 +473,16 @@ let rec (doc_of_mltype' :
               else s  in
             text (escape_tyvar x)
         | FStar_Extraction_ML_Syntax.MLTY_Tuple tys ->
-            let doc1 =
+            let doc =
               FStar_List.map (doc_of_mltype currentModule (t_prio_tpl, Left))
                 tys
                in
-            let doc2 =
+            let doc1 =
               let uu____2086 =
-                let uu____2087 = combine (text " * ") doc1  in
-                hbox uu____2087  in
+                let uu____2087 = combine (text " * ") doc  in hbox uu____2087
+                 in
               parens uu____2086  in
-            doc2
+            doc1
         | FStar_Extraction_ML_Syntax.MLTY_Named (args,name) ->
             let args1 =
               match args with
@@ -533,15 +533,15 @@ let rec (doc_of_expr :
       fun e  ->
         match e.FStar_Extraction_ML_Syntax.expr with
         | FStar_Extraction_ML_Syntax.MLE_Coerce (e1,t,t') ->
-            let doc1 = doc_of_expr currentModule (min_op_prec, NonAssoc) e1
+            let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e1
                in
             let uu____2222 = FStar_Extraction_ML_Util.codegen_fsharp ()  in
             if uu____2222
             then
-              let uu____2225 = reduce [text "Prims.unsafe_coerce "; doc1]  in
+              let uu____2225 = reduce [text "Prims.unsafe_coerce "; doc]  in
               parens uu____2225
             else
-              (let uu____2229 = reduce [text "Obj.magic "; parens doc1]  in
+              (let uu____2229 = reduce [text "Obj.magic "; parens doc]  in
                parens uu____2229)
         | FStar_Extraction_ML_Syntax.MLE_Seq es ->
             let docs =
@@ -561,13 +561,13 @@ let rec (doc_of_expr :
             let for1 uu____2284 =
               match uu____2284 with
               | (name,e1) ->
-                  let doc1 =
+                  let doc =
                     doc_of_expr currentModule (min_op_prec, NonAssoc) e1  in
                   let uu____2295 =
                     let uu____2298 =
                       let uu____2299 = ptsym currentModule (path, name)  in
                       text uu____2299  in
-                    [uu____2298; text "="; doc1]  in
+                    [uu____2298; text "="; doc]  in
                   reduce1 uu____2295
                in
             let uu____2306 =
@@ -599,7 +599,7 @@ let rec (doc_of_expr :
               FStar_List.map
                 (doc_of_expr currentModule (min_op_prec, NonAssoc)) args
                in
-            let doc1 =
+            let doc =
               match (name, args1) with
               | ("::",x::xs::[]) -> reduce [parens x; text "::"; xs]
               | (uu____2403,uu____2404) ->
@@ -612,7 +612,7 @@ let rec (doc_of_expr :
                     (text name) :: uu____2414  in
                   reduce1 uu____2411
                in
-            maybe_paren outer e_app_prio doc1
+            maybe_paren outer e_app_prio doc
         | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
             let docs =
               FStar_List.map
@@ -639,7 +639,7 @@ let rec (doc_of_expr :
                   hardline :: uu____2451  in
                 reduce uu____2448
               else empty  in
-            let doc1 = doc_of_lets currentModule (rec_, false, lets)  in
+            let doc = doc_of_lets currentModule (rec_, false, lets)  in
             let body1 =
               doc_of_expr currentModule (min_op_prec, NonAssoc) body  in
             let uu____2463 =
@@ -648,7 +648,7 @@ let rec (doc_of_expr :
                   let uu____2470 =
                     let uu____2473 = reduce1 [text "in"; body1]  in
                     [uu____2473]  in
-                  doc1 :: uu____2470  in
+                  doc :: uu____2470  in
                 pre :: uu____2467  in
               combine hardline uu____2464  in
             parens uu____2463
@@ -736,7 +736,7 @@ let rec (doc_of_expr :
                  let uu____2657 = reduce1 (e2 :: args1)  in parens uu____2657)
         | FStar_Extraction_ML_Syntax.MLE_Proj (e1,f) ->
             let e2 = doc_of_expr currentModule (min_op_prec, NonAssoc) e1  in
-            let doc1 =
+            let doc =
               let uu____2662 = FStar_Extraction_ML_Util.codegen_fsharp ()  in
               if uu____2662
               then
@@ -753,7 +753,7 @@ let rec (doc_of_expr :
                    e2 :: uu____2675  in
                  reduce uu____2672)
                in
-            doc1
+            doc
         | FStar_Extraction_ML_Syntax.MLE_Fun (ids,body) ->
             let bvar_annot x xt =
               let uu____2718 = FStar_Extraction_ML_Util.codegen_fsharp ()  in
@@ -787,19 +787,19 @@ let rec (doc_of_expr :
                in
             let body1 =
               doc_of_expr currentModule (min_op_prec, NonAssoc) body  in
-            let doc1 =
+            let doc =
               let uu____2771 =
                 let uu____2774 =
                   let uu____2777 = reduce1 ids1  in
                   [uu____2777; text "->"; body1]  in
                 (text "fun") :: uu____2774  in
               reduce1 uu____2771  in
-            parens doc1
+            parens doc
         | FStar_Extraction_ML_Syntax.MLE_If
             (cond,e1,FStar_Pervasives_Native.None ) ->
             let cond1 =
               doc_of_expr currentModule (min_op_prec, NonAssoc) cond  in
-            let doc1 =
+            let doc =
               let uu____2786 =
                 let uu____2789 =
                   reduce1 [text "if"; cond1; text "then"; text "begin"]  in
@@ -809,12 +809,12 @@ let rec (doc_of_expr :
                   [uu____2796; text "end"]  in
                 uu____2789 :: uu____2793  in
               combine hardline uu____2786  in
-            maybe_paren outer e_bin_prio_if doc1
+            maybe_paren outer e_bin_prio_if doc
         | FStar_Extraction_ML_Syntax.MLE_If
             (cond,e1,FStar_Pervasives_Native.Some e2) ->
             let cond1 =
               doc_of_expr currentModule (min_op_prec, NonAssoc) cond  in
-            let doc1 =
+            let doc =
               let uu____2805 =
                 let uu____2808 =
                   reduce1 [text "if"; cond1; text "then"; text "begin"]  in
@@ -833,16 +833,16 @@ let rec (doc_of_expr :
                   uu____2815 :: uu____2816  in
                 uu____2808 :: uu____2812  in
               combine hardline uu____2805  in
-            maybe_paren outer e_bin_prio_if doc1
+            maybe_paren outer e_bin_prio_if doc
         | FStar_Extraction_ML_Syntax.MLE_Match (cond,pats) ->
             let cond1 =
               doc_of_expr currentModule (min_op_prec, NonAssoc) cond  in
             let pats1 = FStar_List.map (doc_of_branch currentModule) pats  in
-            let doc1 =
+            let doc =
               let uu____2865 =
                 reduce1 [text "match"; parens cond1; text "with"]  in
               uu____2865 :: pats1  in
-            let doc2 = combine hardline doc1  in parens doc2
+            let doc1 = combine hardline doc  in parens doc1
         | FStar_Extraction_ML_Syntax.MLE_Raise (exn,[]) ->
             let uu____2872 =
               let uu____2875 =
@@ -905,7 +905,7 @@ and (doc_of_binop :
           | (uu____3010,prio,txt) ->
               let e11 = doc_of_expr currentModule (prio, Left) e1  in
               let e21 = doc_of_expr currentModule (prio, Right) e2  in
-              let doc1 = reduce1 [e11; text txt; e21]  in parens doc1
+              let doc = reduce1 [e11; text txt; e21]  in parens doc
 
 and (doc_of_uniop :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -921,7 +921,7 @@ and (doc_of_uniop :
         | (uu____3056,txt) ->
             let e11 = doc_of_expr currentModule (min_op_prec, NonAssoc) e1
                in
-            let doc1 = reduce1 [text txt; parens e11]  in parens doc1
+            let doc = reduce1 [text txt; parens e11]  in parens doc
 
 and (doc_of_pattern :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -975,7 +975,7 @@ and (doc_of_pattern :
                 FStar_Option.get uu____3197  in
               FStar_Pervasives_Native.snd uu____3190
             else ptctor currentModule ctor  in
-          let doc1 =
+          let doc =
             match (name, pats) with
             | ("::",x::xs::[]) ->
                 let uu____3226 =
@@ -1013,7 +1013,7 @@ and (doc_of_pattern :
                   (text name) :: uu____3266  in
                 reduce1 uu____3263
              in
-          maybe_paren (min_op_prec, NonAssoc) e_app_prio doc1
+          maybe_paren (min_op_prec, NonAssoc) e_app_prio doc
       | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
           let ps1 = FStar_List.map (doc_of_pattern currentModule) ps  in
           let uu____3286 = combine (text ", ") ps1  in parens uu____3286
@@ -1143,10 +1143,10 @@ and (doc_of_lets :
           let lets2 =
             FStar_List.mapi
               (fun i  ->
-                 fun doc1  ->
+                 fun doc  ->
                    reduce1
-                     [if i = Prims.int_zero then letdoc else text "and";
-                     doc1]) lets1
+                     [if i = Prims.int_zero then letdoc else text "and"; doc])
+              lets1
              in
           combine hardline lets2
 
@@ -1189,8 +1189,8 @@ let (doc_of_mltydecl :
               | [] -> empty
               | x2::[] -> text x2
               | uu____3594 ->
-                  let doc1 = FStar_List.map (fun x2  -> text x2) tparams  in
-                  let uu____3605 = combine (text ", ") doc1  in
+                  let doc = FStar_List.map (fun x2  -> text x2) tparams  in
+                  let uu____3605 = combine (text ", ") doc  in
                   parens uu____3605
                in
             let forbody body1 =
@@ -1236,7 +1236,7 @@ let (doc_of_mltydecl :
                      in
                   combine hardline ctors2
                in
-            let doc1 =
+            let doc =
               let uu____3772 =
                 let uu____3775 =
                   let uu____3778 =
@@ -1246,26 +1246,26 @@ let (doc_of_mltydecl :
                 tparams1 :: uu____3775  in
               reduce1 uu____3772  in
             (match body with
-             | FStar_Pervasives_Native.None  -> doc1
+             | FStar_Pervasives_Native.None  -> doc
              | FStar_Pervasives_Native.Some body1 ->
                  let body2 = forbody body1  in
                  let uu____3788 =
-                   let uu____3791 = reduce1 [doc1; text "="]  in
+                   let uu____3791 = reduce1 [doc; text "="]  in
                    [uu____3791; body2]  in
                  combine hardline uu____3788)
          in
-      let doc1 = FStar_List.map for1 decls  in
-      let doc2 =
-        if (FStar_List.length doc1) > Prims.int_zero
+      let doc = FStar_List.map for1 decls  in
+      let doc1 =
+        if (FStar_List.length doc) > Prims.int_zero
         then
           let uu____3799 =
             let uu____3802 =
-              let uu____3805 = combine (text " \n and ") doc1  in
-              [uu____3805]  in
+              let uu____3805 = combine (text " \n and ") doc  in [uu____3805]
+               in
             (text "type") :: uu____3802  in
           reduce1 uu____3799
         else text ""  in
-      doc2
+      doc1
   
 let rec (doc_of_sig1 :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -1359,8 +1359,8 @@ let (doc_of_mod :
       let docs =
         FStar_List.map
           (fun x  ->
-             let doc1 = doc_of_mod1 currentModule x  in
-             [doc1;
+             let doc = doc_of_mod1 currentModule x  in
+             [doc;
              (match x with
               | FStar_Extraction_ML_Syntax.MLM_Loc uu____4016 -> empty
               | uu____4017 -> hardline);
@@ -1380,7 +1380,7 @@ let (doc_of_mllib_r :
               let head1 =
                 reduce1 [text "module"; text x1; text ":"; text "sig"]  in
               let tail1 = reduce1 [text "end"]  in
-              let doc1 =
+              let doc =
                 FStar_Option.map
                   (fun uu____4160  ->
                      match uu____4160 with
@@ -1396,7 +1396,7 @@ let (doc_of_mllib_r :
                   let uu____4193 =
                     let uu____4196 = reduce sub3  in
                     [uu____4196; cat tail1 hardline]  in
-                  (match doc1 with
+                  (match doc with
                    | FStar_Pervasives_Native.None  -> empty
                    | FStar_Pervasives_Native.Some s -> cat s hardline) ::
                     uu____4193
@@ -1439,7 +1439,7 @@ let (doc_of_mllib_r :
                 if Prims.op_Negation istop
                 then reduce1 [text "end"]
                 else reduce1 []  in
-              let doc1 =
+              let doc =
                 FStar_Option.map
                   (fun uu____4336  ->
                      match uu____4336 with
@@ -1464,7 +1464,7 @@ let (doc_of_mllib_r :
                         let uu____4390 =
                           let uu____4393 = reduce sub3  in
                           [uu____4393; cat tail1 hardline]  in
-                        (match doc1 with
+                        (match doc with
                          | FStar_Pervasives_Native.None  -> empty
                          | FStar_Pervasives_Native.Some s -> cat s hardline)
                           :: uu____4390
@@ -1490,7 +1490,7 @@ let (doc_of_mllib_r :
         docs
   
 let (pretty : Prims.int -> doc -> Prims.string) =
-  fun sz  -> fun uu____4525  -> match uu____4525 with | Doc doc1 -> doc1 
+  fun sz  -> fun uu____4525  -> match uu____4525 with | Doc doc -> doc 
 let (doc_of_mllib :
   FStar_Extraction_ML_Syntax.mllib -> (Prims.string * doc) Prims.list) =
   fun mllib  -> doc_of_mllib_r mllib 
@@ -1500,10 +1500,10 @@ let (string_of_mlexpr :
   =
   fun cmod  ->
     fun e  ->
-      let doc1 =
+      let doc =
         let uu____4556 = FStar_Extraction_ML_Util.flatten_mlpath cmod  in
         doc_of_expr uu____4556 (min_op_prec, NonAssoc) e  in
-      pretty Prims.int_zero doc1
+      pretty Prims.int_zero doc
   
 let (string_of_mlty :
   FStar_Extraction_ML_Syntax.mlpath ->
@@ -1511,8 +1511,8 @@ let (string_of_mlty :
   =
   fun cmod  ->
     fun e  ->
-      let doc1 =
+      let doc =
         let uu____4572 = FStar_Extraction_ML_Util.flatten_mlpath cmod  in
         doc_of_mltype uu____4572 (min_op_prec, NonAssoc) e  in
-      pretty Prims.int_zero doc1
+      pretty Prims.int_zero doc
   

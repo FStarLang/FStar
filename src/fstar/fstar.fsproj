@@ -96,11 +96,6 @@
       <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\fsdoc\fsdoc.fsproj">
-      <Name>fsdoc</Name>
-      <Project>{a2300238-cc63-4651-922e-88e7c0201bc9}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\smtencoding\smtencoding.fsproj">
       <Name>smtencoding</Name>
       <Project>{f6879027-a97f-4857-8f52-cc5641455652}</Project>
