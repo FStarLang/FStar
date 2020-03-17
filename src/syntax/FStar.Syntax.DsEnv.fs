@@ -95,7 +95,6 @@ type env = {
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
@@ -172,7 +171,6 @@ let empty_env deps = {curmodule=None;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false;
-                    docs=new_sigmap();
                     remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
@@ -725,9 +723,6 @@ let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * list<
 
 let try_lookup_lid_no_resolve (env: env) l :option<term> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
-let try_lookup_doc (env: env) (l:lid) =
-  BU.smap_try_find env.docs l.str
-
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid se =
       match se with
@@ -1032,19 +1027,6 @@ let push_module_abbrev env x l =
        push_scope_mod env (Module_abbrev (x,l))
   else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
 
-let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
-  match doc_opt with
-  | None -> env
-  | Some doc ->
-    (match BU.smap_try_find env.docs l.str with
-     | None -> ()
-     | Some old_doc -> FStar.Errors.log_issue (range_of_lid l)
-                        (Errors.Warning_DocOverwrite, (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
-                           (Ident.string_of_lid l) (Parser.AST.string_of_fsdoc old_doc)
-                           (Parser.AST.string_of_fsdoc doc))));
-    BU.smap_add env.docs l.str doc;
-    env
-
 let check_admits env m =
   let admitted_sig_lids =
     env.sigaccum |> List.fold_left (fun lids se ->
@@ -1140,8 +1122,7 @@ let push env = BU.atomically (fun () ->
   {env with exported_ids = BU.smap_copy env.exported_ids;
             trans_exported_ids = BU.smap_copy env.trans_exported_ids;
             includes = BU.smap_copy env.includes;
-            sigmap = BU.smap_copy env.sigmap;
-            docs = BU.smap_copy env.docs})
+            sigmap = BU.smap_copy env.sigmap })
 
 let pop () = BU.atomically (fun () ->
   match !stack with

@@ -1928,7 +1928,6 @@ let binder_ident (b:binder) : option<ident> =
 let binder_idents (bs:list<binder>) : list<ident> =
   List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
 
-// FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
         | S.NoExtract
@@ -1944,7 +1943,7 @@ let mk_data_discriminators quals env datas =
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
         { sigel = Sig_declare_typ(disc_name, [], Syntax.tun);
-          sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong? // FIXME: Doc?
+          sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong?
           sigquals =  quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d];
           sigmeta = default_sigmeta;
           sigattrs = [];
@@ -1981,7 +1980,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                      sigrng = range_of_lid field_name;
                      sigmeta = default_sigmeta ;
                      sigattrs = [];
-                     sigopts = None; } in // FIXME: Doc?
+                     sigopts = None; } in
         if only_decl
         then [decl] //only the signature
         else
@@ -2004,10 +2003,9 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                          sigrng = p;
                          sigmeta = default_sigmeta;
                          sigattrs = [];
-                         sigopts = None; } in // FIXME: Doc?
+                         sigopts = None; } in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-// FIXME: Would be nice to add auto-generated docs to these
 let mk_data_projector_names iquals env se =
   match se.sigel with
   | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
@@ -2084,20 +2082,19 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(x,t)) x.idRange Expr None) fields in
+      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
 
       let names = id :: binder_idents parms in
-      List.iter (fun (f, _, _) ->
+      List.iter (fun (f, _) ->
           if BU.for_some (fun i -> ident_equals f i) names then
               raise_error (Errors.Error_FieldShadow,
                               BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_ident f)) f.idRange)
           fields;
 
-      // FIXME: docs of individual fields are dropped
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map fst
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2148,7 +2145,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                        sigquals = quals }
            | _ -> failwith "Impossible" in
         let env = push_sigelt env se in
-        let env = Env.push_doc env (qualify env id) d.doc in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
         env, [se]
 
@@ -2201,7 +2197,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  mk_typ_abbrev env d qlid [] typars kopt t [qlid] quals rng in
 
         let env = push_sigelt env se in
-        let env = push_doc env qlid d.doc in
         env, [se]
 
     | [TyconRecord _] ->
@@ -2228,7 +2223,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           | _ -> raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) rng in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
-      let docs_tps_sigelts = tcs |> List.collect (function
+      let tps_sigelts = tcs |> List.collect (function
         | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, k, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
               let t =
                   let env, tpars = typars_of_binders env binders in
@@ -2237,7 +2232,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                   let tpars = Subst.close_binders tpars in
                   Subst.close tpars t
           in
-          [((id, d.doc), [], mk_typ_abbrev env d id uvs tpars (Some k) t [id] quals rng)]
+          [([], mk_typ_abbrev env d id uvs tpars (Some k) t [id] quals rng)]
 
         | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _); sigquals = tname_quals }, constrs, tconstr, quals) ->
           let mk_tot t =
@@ -2250,7 +2245,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, doc, of_notation) ->
+              (constrs |> List.map (fun (id, topt, of_notation) ->
                 let t =
                   if of_notation
                   then match topt with
@@ -2265,7 +2260,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
                 let ntps = List.length data_tpars in
-                (name, ((name, doc), tps, { sigel = Sig_datacon(name, univs, U.arrow data_tpars (mk_Total (t |> U.name_function_binders)),
+                (name, (tps, { sigel = Sig_datacon(name, univs, U.arrow data_tpars (mk_Total (t |> U.name_function_binders)),
                                                                 tname, ntps, mutuals);
                                             sigquals = quals;
                                             sigrng = rng;
@@ -2273,7 +2268,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigattrs = val_attrs @ attrs;
                                             sigopts = None; }))))
           in
-          ((tname, d.doc), [], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);
+          ([], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
@@ -2281,13 +2276,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                  sigopts = None; })::constrs
         | _ -> failwith "impossible")
       in
-      let name_docs = docs_tps_sigelts |> List.map (fun (name_doc, _, _) -> name_doc) in
-      let sigelts = docs_tps_sigelts |> List.map (fun (_, _, se) -> se) in
+      let sigelts = tps_sigelts |> List.map (fun (_, se) -> se) in
       let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
-      let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
+      let data_ops = tps_sigelts |> List.collect (fun (tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
@@ -2305,7 +2299,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
-      let env = List.fold_left (fun acc (lid, doc) -> push_doc env lid doc) env name_docs in
       env, [bundle]@abbrevs@ops
 
     | [] -> failwith "impossible"
@@ -2421,7 +2414,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
 
     let name_of_eff_decl decl =
       match decl.d with
-      | Tycon(_, _, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
+      | Tycon(_, _, [TyconAbbrev(name, _, _, _)]) -> Ident.text_of_id name
       | _ -> failwith "Malformed effect member declaration."
     in
 
@@ -2435,9 +2428,9 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       (env, [])
     in
     let binders = Subst.close_binders binders in
-    let actions_docs = actions |> List.map (fun d ->
+    let actions = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
+        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
             let env, action_params = desugar_binders env action_params in
@@ -2449,8 +2442,8 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
               action_params = action_params;
               action_defn=Subst.close (binders @ action_params) (desugar_term env def);
               action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
-            }, doc
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free || is_layered ->
+            }
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn)]) when for_free || is_layered ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
             // For layered effects also, user just provides the definition
@@ -2463,7 +2456,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
               action_params = action_params;
               action_defn=Subst.close (binders@action_params) (desugar_term env defn);
               action_typ=S.tun
-            }, doc
+            }
         | _ ->
             raise_error (Errors.Fatal_MalformedActionDeclaration, ("Malformed action declaration; if this is an \"effect \
               for free\", just provide the direct-style declaration. If this is \
@@ -2471,7 +2464,6 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
               and its cps-type with arrows inserted in the right place (see \
               examples).")) d.drange
     ) in
-    let actions = List.map fst actions_docs in
     let eff_t = Subst.close binders eff_t in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
@@ -2542,14 +2534,11 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     }) in
 
     let env = push_sigelt env0 se in
-    let env = push_doc env mname d.doc in
-    let env = actions_docs |> List.fold_left (fun env (a, doc) ->
+    let env = actions |> List.fold_left (fun env a ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
-        push_doc env a.action_name doc) env
+        push_sigelt env (U.action_as_lb mname a a.action_defn.pos)) env
     in
     let env = push_reflect_effect env qualifiers mname d.drange in
-    let env = push_doc env mname d.doc in
     env, [se]
 
 and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
@@ -2619,12 +2608,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     in
     let monad_env = env in
     let env = push_sigelt env0 se in
-    let env = push_doc env ed_lid d.doc in // FIXME: Docs of actions?
-    let env = ed.actions |> List.fold_left (fun env a ->
-        let doc = Env.try_lookup_doc env a.action_name in
-        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
-        push_doc env a.action_name doc
-    ) env in
+    let env = 
+      ed.actions |> List.fold_left 
+        (fun env a -> push_sigelt env (U.action_as_lb mname a a.action_defn.pos))
+        env
+    in
     let env =
         if quals |> List.contains Reflectable
         then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
@@ -2635,37 +2623,10 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                                sigmeta = default_sigmeta  ;
                                sigattrs = [];
                                sigopts = None; } in
-             push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
+             push_sigelt env refl_decl
         else env in
-    let env = push_doc env mname d.doc in
     env, [se]
 
-// JP: crappy formatting, use PPrint
-and mk_comment_attr (d: decl) =
-  let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
-  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "  " ^ s ^ "\n" in
-  let pp =
-    match List.assoc "type" kv with
-    | Some _ ->
-        "\n  " ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
-    | _ ->
-        ""
-  in
-  let other = List.filter_map (fun (k, v) ->
-    if k <> "summary" && k <> "type" then
-      Some (k ^ ": " ^ v)
-    else
-      None
-  ) kv
-  in
-  let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
-  let str = summary ^ pp ^ other ^ text in
-  (* Building a fake term *)
-  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in //NS delta: ok
-  if str = "" then []
-  else
-    let arg = U.exp_string str in
-    [U.mk_app fv [S.as_arg arg]]
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
@@ -2685,7 +2646,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
       List.filter (fun t -> Option.isNone (get_fail_attr false t)) //don't forward fail attributes
     | _ -> []
   in
-  let attrs = mk_comment_attr d @ attrs @ val_attrs in
+  let attrs = attrs @ val_attrs in
   env,
   List.mapi
     (fun i sigelt ->
@@ -2711,8 +2672,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [];
                sigopts = None; } in
     env, [se]
-
-  | Fsdoc _ -> env, []
 
   | TopLevelModule id -> env, []
 
@@ -2748,11 +2707,10 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let quals =
         if typeclass then
             match tcs with
-            | [(TyconRecord _, _)] -> Noeq :: quals
+            | [(TyconRecord _)] -> Noeq :: quals
             | _ -> raise_error (Errors.Error_BadClassDecl, "Ill-formed `class` declaration: definition must be a record type") d.drange
         else quals
     in
-    let tcs = List.map (fun (x,_) -> x) tcs in
     let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
 
     (* Handling typeclasses: we typecheck the tcs as usual, and then need to add
@@ -2853,7 +2811,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     else lbs in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
           (*
-           * AR: we first deguar the term with no attributes and then add attributes in the end, see desugar_decl above
+           * AR: we first desugar the term with no attributes and then add attributes in the end, see desugar_decl above
            *     this used to be fine, because subsequent typechecker then works on terms that have attributes
            *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
            *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
@@ -2867,12 +2825,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigattrs = val_attrs @ attrs;
                     sigopts = None; } in
           let env = push_sigelt env s in
-          // FIXME all bindings in let get the same docs?
-          let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
-          // BU.print2 "Desugaring %s, se attrs are %s\n"
-          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
-          //   (List.map Print.term_to_string s.sigattrs |> String.concat ", ");
-           env, [s]
+          env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
@@ -2927,7 +2880,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | Assume(id, t) ->
     let f = desugar_formula env t in
     let lid = qualify env id in
-    let env = push_doc env lid d.doc in
     env, [{ sigel = Sig_assume(lid, [], f);
             sigquals = [S.Assumption];
             sigrng = d.drange;
@@ -2952,7 +2904,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = attrs;
                sigopts = None; } in
     let env = push_sigelt env se in
-    let env = push_doc env lid d.doc in
     env, [se]
 
   | Exception(id, t_opt) ->
@@ -2978,7 +2929,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                 sigattrs = [];
                 sigopts = None; } in
     let env = push_sigelt env se' in
-    let env = push_doc env l d.doc in
     let data_ops = mk_data_projector_names [] env se in
     let discs = mk_data_discriminators [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in

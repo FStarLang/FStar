@@ -130,7 +130,6 @@ val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
-val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
