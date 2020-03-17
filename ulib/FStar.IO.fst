@@ -45,6 +45,12 @@ assume val print_uint16_hex_pad : FStar.UInt16.t -> ML unit
 assume val print_uint32_hex_pad : FStar.UInt32.t -> ML unit
 assume val print_uint64_hex_pad : FStar.UInt64.t -> ML unit
 
+(* Print as decimal, zero padded to maximum possible length *)
+assume val print_uint8_dec_pad : FStar.UInt8.t -> ML unit
+assume val print_uint16_dec_pad : FStar.UInt16.t -> ML unit
+assume val print_uint32_dec_pad : FStar.UInt32.t -> ML unit
+assume val print_uint64_dec_pad : FStar.UInt64.t -> ML unit
+
 assume val print_any : 'a -> ML unit
 assume val input_line : unit -> ML string
 assume val input_int : unit -> ML int
