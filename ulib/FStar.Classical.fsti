@@ -296,7 +296,6 @@ val forall_intro_4
       ($_: (x: a -> y: b x -> z: c x y -> w: d x y z -> Lemma (p x y z w)))
     : Lemma (forall (x: a) (y: b x) (z: c x y) (w: d x y z). p x y z w)
 
-
 (** This combines th use of [arrow_to_impl] with [forall_intro].
 
     TODO: Seems overly specific; could be removed?  *)
