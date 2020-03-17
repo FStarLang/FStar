@@ -1241,7 +1241,7 @@ let rec (specs_with_types :
                         String s))
               | uu____6576 -> failwith "impos")),
            (SimpleStr "non-negative integer or pair of non-negative integers"))),
-      "N/M repeats each query M times and checks that it succeeds at least N times");
+      "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query M times and checks that it succeeds at least N times.\n\t\t--quake N is an alias for --quake N/N.");
     (FStar_Getopt.noshort, "query_stats", (Const (Bool true)),
       "Print SMT query statistics");
     (FStar_Getopt.noshort, "record_hints", (Const (Bool true)),
