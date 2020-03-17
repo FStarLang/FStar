@@ -447,9 +447,9 @@ let rec false_elim (#a: Type) (u: unit{False}) : Tot a = false_elim ()
 
     An example:
 
-      [{
+     {[
         [@ CInline ] let f x = UInt32.(x +%^ 1)
-      }]
+      ]}
 
     is extracted to C by KReMLin to a C definition tagged with the
     [inline] qualifier. *)
@@ -593,10 +593,10 @@ let unifier_hint_injective:unit = ()
  and unfolding strategy for certain definitions.
 
   In particular, given
-     [{
+     {[
         [@(strict_on_arguments [1;2])]
         let f x0 (x1:list x0) (x1:option x0) = e
-     }]
+     ]}
 
  An application [f e0 e1 e2] is reduced by the normalizer by:
 
@@ -666,30 +666,39 @@ type norm_step =
 (** Logical simplification, e.g., [P /\ True ~> P] *)
 abstract
 let simplify:norm_step = Simpl
+
 (** Weak reduction: Do not reduce under binders *)
 abstract
 let weak:norm_step = Weak
+
 (** Head normal form *)
 abstract
 let hnf:norm_step = HNF
+
 (** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
 abstract
 let primops:norm_step = Primops
+
 (** Unfold all non-recursive definitions *)
 abstract
 let delta:norm_step = Delta
+
 (** Unroll recursive calls *)
 abstract
 let zeta:norm_step = Zeta
+
 (** Reduce case analysis (i.e., match) *)
 abstract
 let iota:norm_step = Iota
+
 (** Use normalization-by-evaluation, instead of interpretation (experimental) *)
 abstract
 let nbe:norm_step = NBE
+
 (** Reify effectful definitions into their representations *)
 abstract
 let reify_:norm_step = Reify
+
 (** Unlike [delta], unfold definitions for only the names in the given
     list. Each string is a fully qualified name like [A.M.f] *)
 abstract
@@ -700,10 +709,10 @@ let delta_only (s: list string) : norm_step = UnfoldOnly s
 
     For example, given
 
-      [{
+      {[
         let f0 = 0
         let f1 = f0 + 1
-      }]
+      ]}
 
     [norm [delta_only [`%f1]] f1] will reduce to [f0 + 1].
     [norm [delta_fully [`%f1]] f1] will reduce to [0 + 1].
@@ -717,9 +726,9 @@ let delta_fully (s: list string) : norm_step = UnfoldFully s
     convenient to tag a collection of related symbols with a common
     attribute and then to ask the normalizer to reduce them all.
 
-    For example
+    For example, given:
 
-      [{
+      {[
         irreducible let my_attr = ()
 
         [@my_attr]
@@ -727,9 +736,11 @@ let delta_fully (s: list string) : norm_step = UnfoldFully s
 
         [@my_attr]
         let f1 = f0 + 1
-      }]
+      ]}
 
-   [norm [delta_attr [`%my_attr]] f1] will reduce to [0 + 1].
+   {[norm [delta_attr [`%my_attr]] f1]}
+   
+   will reduce to [0 + 1].
 
   *)
 abstract

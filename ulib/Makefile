@@ -138,3 +138,17 @@ clean_ocaml:
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 rebuild: clean_ocaml install-fstarlib install-fstar-tactics
+
+DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
+	  FStar.Squash.fsti
+
+DOC_DIR=./doc
+
+fstardoc: $(DOC_DIR) $(addprefix $(DOC_DIR)/, $(addsuffix .md, $(DOC_FILES)))
+
+$(DOC_DIR):
+	mkdir -p $@
+
+$(DOC_DIR)/%.md: %
+	../bin/fstar --print_in_place $^
+	python3 ../.scripts/fstardoc/fstardoc.py $^ > $@
