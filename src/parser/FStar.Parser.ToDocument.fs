@@ -217,14 +217,6 @@ let soft_surround_map_or_flow n b void_ opening sep closing f xs =
   else soft_surround n b opening (separate_map_or_flow sep f xs) closing
 
 
-let doc_of_fsdoc (comment,keywords) =
-  group (concat [
-    str comment; space;
-    separate_map comma (fun (k,v) ->
-      concat [str k; rarrow; str v]
-    ) keywords
-  ])
-
 // Really specific functions to retro-engineer the desugaring
 let is_unit e =
     match e.tm with
@@ -507,9 +499,8 @@ type decl_meta =
     {r: range;
      has_qs: bool; //has quantifiers
      has_attrs: bool; //has attributes
-     has_fsdoc: bool;
-     is_fsdoc: bool} //is a standalone fsdoc
-let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
+     }
+let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false}
 
 // TODO: rewrite in terms of with_comment_sep (some tricky issues with spacing)
 let with_comment printer tm tmrange =
@@ -588,7 +579,7 @@ let rec place_comments_until_pos (k: int) (lbegin: int) pos meta_decl doc (r: bo
     else
       // lnum is initially (approximately) the number of newlines between the end of the previous declaration
       // and the beginning of the one currently being printed, in the original source file (which may change
-      // during prettypriting), not accounting for fsdocs, qualifiers and attributes; as a consequence,
+      // during prettyprinting), not accounting for qualifiers and attributes; as a consequence,
       // we have to massage this number in the following steps in order to achieve some sensible spacing and
       // to keep prettyprinting idempotent
       let lnum = line_of_pos pos - lbegin in
@@ -607,14 +598,6 @@ let rec place_comments_until_pos (k: int) (lbegin: int) pos meta_decl doc (r: bo
       // force exactly 2 spaces; this compromise will mean that the following declaration is always
       // separated by exactly 1 empty line
       let lnum = if meta_decl.has_qs && meta_decl.has_attrs then 2 else lnum in
-
-      // since fsdocs are not accounted for in the range information (the range of the decl preceeding
-      // the one which has an fsdoc will extend all the way to the beginning of the latter declaration)
-      // we need to make sure we don't insert unecessary spaces
-      let lnum = if (not r) && meta_decl.has_fsdoc then (min 2 lnum) else lnum in
-
-      // if a comment is placed before an fsdoc, force exactly 1 newline between the comment and the fsdoc
-      let lnum = if r && (meta_decl.is_fsdoc || meta_decl.has_fsdoc) then 1 else lnum in
 
       // if the module begins with a comment, force exactly 2 newlines between it and the following declaration
       let lnum = if init then 2 else lnum in
@@ -690,7 +673,6 @@ let rec p_decl (d: decl): document =
         p_qualifiers d.quals
     | _ -> p_qualifiers d.quals
   in
-  optional (fun d -> p_fsdoc d) d.doc ^^
   p_attributes d.attrs ^^
   qualifiers ^^
   p_rawDecl d
@@ -700,18 +682,6 @@ and p_attributes attrs =
     | [] -> empty
     | _ -> lbracket ^^ str "@ " ^^
              align ((flow break1 (List.map p_atomicTerm attrs)) ^^ rbracket) ^^ hardline
-
-and p_fsdoc (doc, kwd_args) =
-  let kwd_args_doc =
-    match kwd_args with
-      | [] -> empty
-      | kwd_args ->
-        let process_kwd_arg (kwd, arg) =
-          str "@" ^^ str kwd ^^ space ^^ str arg
-        in
-        separate_map hardline process_kwd_arg kwd_args ^^ hardline
-  in
-  lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
@@ -740,22 +710,20 @@ and p_rawDecl d = match d.d with
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  | Tycon(true, _, [TyconAbbrev(uid, tpars, None, t), None]) ->
+  | Tycon(true, _, [TyconAbbrev(uid, tpars, None, t)]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ false false t
   | Tycon(false, tc, tcdefs) ->
     let s = if tc then str "class" else str "type" in
-    (p_fsdocTypeDeclPairs s (List.hd tcdefs)) ^^
-      (concat_map (fun x -> break1 ^^ p_fsdocTypeDeclPairs (str "and") x) <| List.tl tcdefs)
+    (p_typeDeclWithKw s (List.hd tcdefs)) ^^
+      (concat_map (fun x -> break1 ^^ p_typeDeclWithKw (str "and") x) <| List.tl tcdefs)
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q in
     separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs
       (fun (p, t) ->
         { r = Range.union_ranges p.prange t.range;
           has_qs = false;
-          has_fsdoc = BU.is_some d.doc;
-          has_attrs = false;
-          is_fsdoc = false })
+          has_attrs = false; })
   | Val(lid, t) ->
     group <| str "val" ^^ space ^^ p_lident lid ^^ (sig_as_binders_if_possible t false)
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
@@ -774,8 +742,6 @@ and p_rawDecl d = match d.d with
     str "sub_effect" ^^ space ^^ p_subEffect se
   | Pragma p ->
     p_pragma p
-  | Fsdoc doc ->
-    p_fsdoc doc
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _, _) ->
@@ -797,8 +763,8 @@ and p_pragma = function
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars (bs: list<binder>): document = p_binders true bs
 
-and p_fsdocTypeDeclPairs kw (typedecl, fsdoc_opt) =
-  let comm, decl, body, pre = p_typeDecl (kw, fsdoc_opt) typedecl in
+and p_typeDeclWithKw kw typedecl =
+  let comm, decl, body, pre = p_typeDecl kw typedecl in
   if comm = empty then
     decl ^^ pre body
   else
@@ -817,19 +783,21 @@ and p_typeDecl pre = function
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordFieldAndComments (ps: bool) (lid, t, doc_opt) =
-      let comm, field = with_comment_sep (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) in
+    let p_recordField (ps: bool) (lid, t) =
+      let comm, field =
+        with_comment_sep (p_recordFieldDecl ps) (lid, t)
+                         (extend_to_end_of_line t.range) in
       let sep = if ps then semi else empty in
       inline_comment_or_above comm field sep
     in
     let p_fields = braces_with_nesting (
-        separate_map_last hardline p_recordFieldAndComments record_field_decls)
+        separate_map_last hardline p_recordField record_field_decls)
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
+    let p_constructorBranchAndComments (uid, t_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, doc_opt, use_of) range in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of) range in
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
@@ -838,15 +806,11 @@ and p_typeDecl pre = function
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, datacon_doc, jump2
 
-and p_typeDeclPrefix (kw, fsdoc_opt) eq lid bs typ_opt =
-  let maybe_with_fsdoc cont =
-    (* If an fsdoc exists, insert it between the keyword (type/and) and the lid,
-      separating them with a newline *)
+and p_typeDeclPrefix kw eq lid bs typ_opt =
+  let with_kw cont =
     let lid_doc = p_ident lid in
     let kw_lid = group (kw ^/^ lid_doc) in
-    match fsdoc_opt with
-    | None -> cont kw_lid
-    | Some fsdoc -> separate hardline [kw; p_fsdoc fsdoc; cont lid_doc]
+    cont kw_lid
   in
   let typ =
     let maybe_eq = if eq then equals else empty in
@@ -856,20 +820,18 @@ and p_typeDeclPrefix (kw, fsdoc_opt) eq lid bs typ_opt =
   in
   if bs = []
   then
-    maybe_with_fsdoc (fun n -> prefix2 n typ)
+    with_kw (fun n -> prefix2 n typ)
   else
     let binders = p_binders_list true bs in
-    maybe_with_fsdoc (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
+    with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
-and p_recordFieldDecl ps (lid, t, doc_opt) =
-  (* TODO : Should we allow tagging individual field with a comment ? *)
-  group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
+and p_recordFieldDecl ps (lid, t) =
+  group (p_lident lid ^^ colon ^^ p_typ ps false t)
 
-and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
+and p_constructorBranch (uid, t_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = group (bar ^^ space ^^ p_uident uid) in
-  (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
+  default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
 
 and p_letlhs kw (pat, _) inner_let =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -936,7 +898,7 @@ and p_effectDefinition uid bs t eff_decls =
     (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
 
 and p_effectDecl ps d = match d.d with
-  | Tycon(false, _, [TyconAbbrev(lid, [], None, e), None]) ->
+  | Tycon(false, _, [TyconAbbrev(lid, [], None, e)]) ->
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
@@ -2023,9 +1985,7 @@ let extract_decl_range (d: decl): decl_meta =
   in
   { r = d.drange;
     has_qs = has_qs;
-    has_fsdoc = BU.is_some d.doc;
-    has_attrs = not (List.isEmpty d.attrs);
-    is_fsdoc = match d.d with | Fsdoc _ -> true | _ -> false }
+    has_attrs = not (List.isEmpty d.attrs); }
 
 (* [modul_with_comments_to_document m comments] prints the module [m] trying *)
 (* to insert the comments from [comments]. The list comments is composed of *)

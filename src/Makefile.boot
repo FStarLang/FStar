@@ -14,7 +14,7 @@ FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
 # were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
+EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
 		   FStar.TypeChecker FStar.Profiling

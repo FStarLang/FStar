@@ -736,7 +736,6 @@ let collect_one
             begin
             if tc then
                 add_to_parsing_data (P_lid Const.mk_class_lid);
-            let ts = List.map (fun (x,docnik) -> x) ts in
             List.iter collect_tycon ts
             end
         | Exception (_, t) ->
@@ -745,7 +744,6 @@ let collect_one
         | LayeredEffect ed ->
              collect_effect_decl ed
         | Polymonadic_bind (_, _, _, bind) -> collect_term bind  //collect deps from the effect lids?
-        | Fsdoc _
         | Pragma _ ->
             ()
         | TopLevelModule lid ->
@@ -764,11 +762,11 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t, _) -> collect_term t) identterms
+            List.iter (fun (_, t) -> collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
+            List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
 
       and collect_effect_decl = function
         | DefineEffect (_, binders, t, decls) ->

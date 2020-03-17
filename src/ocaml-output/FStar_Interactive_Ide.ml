@@ -1268,7 +1268,7 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
       (FStar_List.filter_map
          (fun uu____3405  ->
             match uu____3405 with
-            | (_shortname,name,typ,doc1) ->
+            | (_shortname,name,typ,doc) ->
                 let uu____3429 = FStar_Util.smap_try_find defaults1 name  in
                 FStar_All.pipe_right uu____3429
                   (FStar_Util.map_option
@@ -1287,9 +1287,9 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
                           opt_type = typ;
                           opt_snippets = uu____3443;
                           opt_documentation =
-                            (if doc1 = ""
+                            (if doc = ""
                              then FStar_Pervasives_Native.None
-                             else FStar_Pervasives_Native.Some doc1);
+                             else FStar_Pervasives_Native.Some doc);
                           opt_permission_level = uu____3447
                         }))))
      in
