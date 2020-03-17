@@ -143,6 +143,24 @@ let ghost_lemma #a #p #q f =
 (*** Existential quantification *)
 let exists_intro #a p witness = ()
 
+#push-options "--warn_error -271" //local SMT pattern misses variables
+let exists_intro_not_all_not (#a:Type) (#p:a -> Type)
+                             ($f: (x:a -> Lemma (~(p x))) -> Lemma False)
+  : Lemma (exists x. p x)
+  = let open FStar.Squash in 
+    let aux ()
+        : Lemma (requires (forall x. ~(p x)))
+                (ensures False)
+                [SMTPat ()]
+        = bind_squash 
+           (get_proof (forall x. ~ (p x)))
+           (fun (g: (forall x. ~ (p x))) ->
+             bind_squash #(x:a -> GTot (~(p x))) #c_False g 
+             (fun (h:(x:a -> GTot (~(p x)))) -> f h))
+    in
+    ()
+#pop-options
+
 let forall_to_exists #a #p #r f = forall_intro f
 
 let forall_to_exists_2 #a #p #b #q #r f = forall_intro_2 f

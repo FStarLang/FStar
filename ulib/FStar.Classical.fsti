@@ -333,6 +333,13 @@ val ghost_lemma
 val exists_intro (#a: Type) (p: (a -> Type)) (witness: a)
     : Lemma (requires (p witness)) (ensures (exists (x: a). p x))
 
+(** Introducing an exists via its classical correspondence with a negated universal quantifier *)
+val exists_intro_not_all_not
+      (#a: Type)
+      (#p: (a -> Type))
+      ($f: ((x: a -> Lemma (~(p x))) -> Lemma False))
+    : Lemma (exists x. p x)
+
 (** If [r] is true for all [x:a{p x}], then one can use
     [forall_to_exists] to establish [(exists x. p x) ==> r]. *)
 val forall_to_exists (#a: Type) (#p: (a -> Type)) (#r: Type) ($_: (x: a -> Lemma (p x ==> r)))
