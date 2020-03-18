@@ -321,10 +321,20 @@ let lemma_div_plus (a:int) (k:int) (n:pos) =
   };
   lemma_cancel_mul ((a+k*n)/n - a/n) k n
 
+let lemma_div_mod_plus (a:int) (k:int) (n:pos) : Lemma ((a + k * n) / n = a / n + k /\
+                                                        (a + k * n) % n = a % n) =
+    lemma_div_plus a k n;
+    lemma_mod_plus a k n
+
 val add_div_mod_1 (a:int) (n:pos) : Lemma ((a + n) % n == a % n /\ (a + n) / n == a / n + 1)
 let add_div_mod_1 a n =
     lemma_mod_plus a 1 n;
     lemma_div_plus a 1 n
+
+val sub_div_mod_1 (a:int) (n:pos) : Lemma ((a - n) % n == a % n /\ (a - n) / n == a / n - 1)
+let sub_div_mod_1 a n =
+    lemma_mod_plus a (-1) n;
+    lemma_div_plus a (-1) n
 
 #push-options "--smtencoding.elim_box true --smtencoding.nl_arith_repr native"
 
