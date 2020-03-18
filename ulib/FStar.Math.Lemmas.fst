@@ -152,7 +152,7 @@ let distributivity_sub_left a b c =
     a * c - b * c;
   }
 
-(* Lemma: multiplication is left distributive over substraction *)
+(* Lemma: multiplication is right distributive over substraction *)
 val distributivity_sub_right: a:int -> b:int -> c:int ->
   Lemma ((a * (b - c) = a * b - a * c))
 let distributivity_sub_right a b c =
