@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "1b4f1632565a40904496f156fb0d8cb1"
+      "7e9d09a3dd62013dec511b1632dd9298"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "0df07d6da04987c4d1e0802af84255c1"
+      "72ef918a2f639b8afdbd87050ad8935f"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0411bdf41f7c46c4d61c38f298120d98"
+      "dd10b281d055aa87b94899c82fab2a51"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4cd2bce6e4dc549035c493b2f77333e4"
+      "74bbef40331b5b811f7b5cd4975869af"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -76,7 +76,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9f0db1c639102c468f16e6ffafa60825"
+      "018e1258905fbf3fd35728328f6e4c84"
     ]
   ]
 ]

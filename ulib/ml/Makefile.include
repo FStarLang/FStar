@@ -4,9 +4,9 @@
 # This Makefile assumes that $(FSTAR_HOME) is properly defined.
 
 FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
-	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int63 Int64 Int8 Int.Cast IO \
+	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
-	UInt16 UInt32 UInt63 UInt64 UInt8 \
+	UInt16 UInt32 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \
 	Pointer.Derived3 \
 	BufferNG Tactics.Builtins \

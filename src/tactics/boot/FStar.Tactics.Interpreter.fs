@@ -755,6 +755,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  let gt' = TcUtil.label label  goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
+    let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', FStar.Options.peek ()) :: gs
 

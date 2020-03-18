@@ -37,9 +37,7 @@ open FStar.IndefiniteDescription
 open FStar.Int
 open FStar.Int128
 open FStar.Int16
-open FStar.Int31
 open FStar.Int32
-open FStar.Int63
 open FStar.Int64
 open FStar.Int8
 open FStar.Int.Cast
@@ -85,9 +83,7 @@ open FStar.ST
 open FStar.UInt
 open FStar.UInt128
 open FStar.UInt16
-open FStar.UInt31
 open FStar.UInt32
-open FStar.UInt63
 open FStar.UInt64
 open FStar.UInt8
 open FStar.Universe

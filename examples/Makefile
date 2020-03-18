@@ -40,6 +40,7 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
+machine_integers \
 calc \
 steel \
 layeredeffects

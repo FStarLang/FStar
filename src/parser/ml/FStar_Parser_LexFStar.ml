@@ -1,4 +1,5 @@
 open FStar_Parser_Parse
+open FStar_Parser_Util
 
 module Option  = BatOption
 module String  = BatString
@@ -262,11 +263,6 @@ let rec mknewline n lexbuf =
   else (L.new_line lexbuf; mknewline (n-1) lexbuf)
 
 let clean_number x = String.strip ~chars:"uzyslLUnIN" x
-let comments : (string * FStar_Range.range) list ref = ref []
-
-let flush_comments () =
-  let lexed_comments = !comments in
-  comments := []; lexed_comments
 
 (* Try to trim each line of [comment] by the ammount of space
     on the first line of the comment if possible *)
@@ -294,12 +290,12 @@ let terminate_comment buffer startpos lexbuf =
   let comment = Buffer.contents buffer in
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
-  comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+  add_comment (comment, FStar_Parser_Util.mksyn_range startpos endpos)
 
 let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
   assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
-  comments := (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
+  add_comment (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos)
 
 (** Unicode class definitions
   Auto-generated from http:/ /www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -492,9 +488,6 @@ let rec token = lexer
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
    fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
- | "(*" '*'* "*)" -> token lexbuf (* avoid confusion with fsdoc *)
- | "(**" -> fsdoc (1,"",[]) lexbuf
-
  | "(*" ->
    let inner, buffer, startpos = start_comment lexbuf in
    comment inner buffer startpos lexbuf
@@ -584,31 +577,6 @@ and comment inner buffer startpos = lexer
    comment inner buffer startpos lexbuf
  | eof ->
    terminate_comment buffer startpos lexbuf; EOF
-
-(* Initially called with (1, "", []), i.e. comment nesting depth, accumulated
-   unstructured text, and list of key-value pairs parsed so far.
-   JP: this is a parser encoded within a lexer using regexps. This is
-   suboptimal. *)
-and fsdoc (n, doc, kw) = lexer
- | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf
- | "*)" newline newline ->
-   mknewline 2 lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC_STANDALONE(doc, kw)
- | "*)" newline ->
-   L.new_line lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC(doc, kw)
- | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
-     fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
- | newline -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
- | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
-
-and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
- | newline ->
-   L.new_line lexbuf;
-   fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
- | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf
