@@ -141,7 +141,8 @@ rebuild: clean_ocaml install-fstarlib install-fstar-tactics
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \
-	  FStar.BaseTypes.fsti FStar.BitVector.fst FStar.BV.fsti
+	  FStar.BaseTypes.fsti FStar.BitVector.fst FStar.BV.fsti \
+	  FStar.Char.fsti
 
 DOC_DIR=./doc
 
