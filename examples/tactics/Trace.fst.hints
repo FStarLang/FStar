@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9749d7c1fd7b9fdda5c4dbb46a029a8a"
+      "ee7567897385b1ceec8bd96874611719"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "7cecd35600bed0999f4b9ec3316a2d77"
+      "2bd22f03f6b6cef73d5d726dd5130573"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5b1c6ddad5c63a1d296da599d1665f47"
+      "639be2c46bf6f151b3f25399a882f2a5"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6c0d3d880754adcd0da33b5c87ffdc3c"
+      "1edc686075f09ecbb78ff5cacc23d01f"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "f5396050a2bc495dfe494ec09a457be1"
+      "1ab26876abdafb80f94d5bfb5ceed603"
     ],
     [
       "Trace.uu___100",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "cad1b9b4370bc603db8f69a9802530ad"
+      "c2e697f56e29d6541ceb8668261645b5"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "14ec09188cc70fb159d6a3398791362c"
+      "0e76dbcff17859860ac4cb85d86d9d28"
     ],
     [
       "Trace.uu___110",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c295275468a00c1e2428a2309778ce6d"
+      "376fecf7be37728ea8d5c8efa2403590"
     ],
     [
       "Trace.uu___114",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "efd1d2da2d8f362b8c7b29d8701bb163"
+      "8fa437bf297e295be262e93643d27cc5"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "fdccf590acfa00eb17492524e184cec1"
+      "45b80fde5e46cb6430fbb86dfac6af96"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "fc27404b7d7b715f91c145d40fe81239"
+      "04dbb005390e2fe5c28324affcb6c8dc"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "540e4d37dde5b16b00d277226a17ed79"
+      "3f59301995142dce982ef210e32542d9"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "3751a137ac05e64f001d6792aff28b35"
+      "239581d1cce3a11eaf6d947e6afe9bb0"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f01a5d66fbb1258c706144c13fad6c85"
+      "eba0df30bcc65be6eae0eb4752c02cab"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "82c07d478cd4dbd4ea53727a6922e340"
+      "5779af01ecb19fa7126e0bca17145242"
     ],
     [
       "Trace.uu___100",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "2e12713a6b14f04e9a2afdadc6748770"
+      "4e296ee7058d61822a0931acc87913de"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "38d9035f2458f5d0ecd91e7f20f562b7"
+      "314c1ed27831f71e2b97c5882b4deb82"
     ],
     [
       "Trace.uu___110",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "733f6ab3a5a26ee97c2822f3973b9460"
+      "dd82defb8f427b97568ddff14779f7bb"
     ],
     [
       "Trace.uu___114",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "bf929768b4e8a413e84f23fa51ec2bcf"
+      "329634196d3ed0e23ef323189d961e23"
     ]
   ]
 ]
