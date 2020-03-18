@@ -365,9 +365,17 @@ let lemma_mod_sub_0 a = ()
 
 val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
 let lemma_mod_sub_1 a b =
-  small_mod a b;
-  assert ((a%b) == a);
-  assert ((-a)%b == b - a)
+  calc (==) {
+    (-a) % b;
+    == { lemma_mod_plus (-a) 1 b }
+    ((-a) + 1*b) % b;
+    == {}
+    (b - a) % b;
+    == { small_mod (b-a) b }
+    b - a;
+    == { small_mod a b }
+    b - a%b;
+  }
 
 val lemma_mod_mul_distr_l (a:int) (b:int) (n:pos) : Lemma
   (requires True)
