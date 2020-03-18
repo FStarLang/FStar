@@ -270,9 +270,16 @@ unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt
 unfold let op_Less_Equals_Hat = lte
 
-(* To input / output constants *)
+(* To input / output integers *)
+(* .. in decimal representation *)
 assume val to_string: t -> Tot string
+
+(* .. in hex representation (with leading 0x) *)
 assume val to_string_hex: t -> Tot string
+
+(* .. in fixed-width hex representation (left-padded with zeroes, no leading 0x) *)
+assume val to_string_hex_pad: t -> Tot string
+
 assume val of_string: string -> Tot t
 
 #set-options "--lax"

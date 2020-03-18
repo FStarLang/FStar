@@ -1,12 +1,16 @@
 .PHONY: %.run clean
-.PRECIOUS: %.exe
+.PRECIOUS: %.exe %.out
 
 FSTAR_HOME=../..
 
 include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-all: $(patsubst %.fst,%.run, $(wildcard Test*.fst))
+MODULES=$(wildcard Test*.fst)
+
+all: $(patsubst %.fst,%.run,$(MODULES))
+
+accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 
 %.exe: %.fst | out
 	$(eval B := $(patsubst %.exe,%,$@))
@@ -14,8 +18,14 @@ all: $(patsubst %.fst,%.run, $(wildcard Test*.fst))
 	/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
 	$(OCAMLOPT) out/${B}.ml -o $@
 
-%.run: %.exe
-	./$< | grep correct
+%.out: %.exe
+	./$< > $@
+
+%.run: %.out
+	diff $< $<.expected
+
+%.run-accept: %.out
+	cp $< $<.expected
 
 out:
 	mkdir -p out

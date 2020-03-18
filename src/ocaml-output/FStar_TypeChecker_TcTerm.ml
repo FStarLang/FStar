@@ -11124,14 +11124,14 @@ let (level_of_type :
   fun env  ->
     fun e  ->
       fun t  ->
-        let rec aux retry t1 =
+        let rec aux retry1 t1 =
           let uu____27920 =
             let uu____27921 = FStar_Syntax_Util.unrefine t1  in
             uu____27921.FStar_Syntax_Syntax.n  in
           match uu____27920 with
           | FStar_Syntax_Syntax.Tm_type u -> u
           | uu____27925 ->
-              if retry
+              if retry1
               then
                 let t2 =
                   FStar_TypeChecker_Normalize.normalize
@@ -11355,7 +11355,7 @@ let rec (universe_of_aux :
                FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
                  FStar_Pervasives_Native.None e.FStar_Syntax_Syntax.pos)
       | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
-          let rec type_of_head retry hd2 args1 =
+          let rec type_of_head retry1 hd2 args1 =
             let hd3 = FStar_Syntax_Subst.compress hd2  in
             match hd3.FStar_Syntax_Syntax.n with
             | FStar_Syntax_Syntax.Tm_unknown  -> failwith "Impossible"
@@ -11400,8 +11400,8 @@ let rec (universe_of_aux :
                      let uu____28769 = FStar_Syntax_Util.head_and_args hd5
                         in
                      (match uu____28769 with
-                      | (hd6,args2) -> type_of_head retry hd6 args2))
-            | uu____28826 when retry ->
+                      | (hd6,args2) -> type_of_head retry1 hd6 args2))
+            | uu____28826 when retry1 ->
                 let e1 =
                   FStar_TypeChecker_Normalize.normalize
                     [FStar_TypeChecker_Env.Beta;

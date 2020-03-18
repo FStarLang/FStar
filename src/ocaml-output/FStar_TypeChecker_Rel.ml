@@ -2674,7 +2674,7 @@ let (head_matches_delta :
                then FStar_Pervasives_Native.Some (t11, t21)
                else FStar_Pervasives_Native.None))
              in
-          let rec aux retry n_delta t11 t21 =
+          let rec aux retry1 n_delta t11 t21 =
             let r = head_matches env t11 t21  in
             (let uu____8113 =
                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -2711,7 +2711,8 @@ let (head_matches_delta :
                     (t11, t2'))
                   in
                match uu____8150 with
-               | (t12,t22) -> aux retry (n_delta + Prims.int_one) t12 t22  in
+               | (t12,t22) -> aux retry1 (n_delta + Prims.int_one) t12 t22
+                in
              let reduce_both_and_try_again d r1 =
                let uu____8198 = FStar_TypeChecker_Common.decr_delta_depth d
                   in
@@ -2730,7 +2731,7 @@ let (head_matches_delta :
                        FStar_TypeChecker_Env.Weak;
                        FStar_TypeChecker_Env.HNF] env t21
                       in
-                   aux retry (n_delta + Prims.int_one) t12 t22
+                   aux retry1 (n_delta + Prims.int_one) t12 t22
                 in
              match r with
              | MisMatch
@@ -2749,7 +2750,7 @@ let (head_matches_delta :
                   (FStar_Syntax_Syntax.Delta_equational_at_level
                   uu____8236),uu____8237)
                  ->
-                 if Prims.op_Negation retry
+                 if Prims.op_Negation retry1
                  then fail1 n_delta r t11 t21
                  else
                    (let uu____8258 =
@@ -2773,7 +2774,7 @@ let (head_matches_delta :
                  (uu____8313,FStar_Pervasives_Native.Some
                   (FStar_Syntax_Syntax.Delta_equational_at_level uu____8314))
                  ->
-                 if Prims.op_Negation retry
+                 if Prims.op_Negation retry1
                  then fail1 n_delta r t11 t21
                  else
                    (let uu____8335 =
