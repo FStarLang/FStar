@@ -131,6 +131,57 @@ open FStar.Tactics.Typeclasses
 
 exception Contract_failure
 
+(* Foundations of Dependent Interop (Above):
+   - internalizes everything (e.g. not relying on extraction, but can't internalize Obj.magic)
+   - bundle export and import
+   - the have laws, and nice theory
+   - compositional: e.g. type_equiv t1 t2 with partial_connection t2 t3 to get partial_connection t1 t3
+   - no formalization of things that extracts well (they still try to end with something that extracts well)
+   - one t can be connected to many us
+*)
+
+(* t is equivalent to u *)
+class type_equiv (t u : Type) = {
+  fexport : t -> u;
+  fimport : u -> t;
+  fexport_fimport : x:u -> Lemma (fexport (fimport x) == x);
+  fimport_fexport : x:t -> Lemma (fimport (fexport x) == x);
+}
+
+(* t is more precise type than u; e.g. t = x:int{x>=0} and u = int *)
+class partial_connection (t u : Type) = {
+  pexport : t -> u; // erasure, should always succeed
+  pimport : u -> option t; // for base types requires cast
+  (* pexport_pimport : x:u -> Lemma (bind_option (pimport x) (fun x => Some (pexport x)) == Some x \/ *)
+  (*                               bind_option (pimport x) (fun x => Some (pexport x)) == None); *)
+  pexport_pimport : x:u -> Lemma (match pimport x with | Some y -> pexport y == x | None -> True);
+  pimport_pexport : x:t -> Lemma (pimport (pexport x) == Some x)
+}
+
+(* Below:
+   - internalizes everything that can be internalized (but could also build on public/private)
+   - separate export and import
+     + there can be ts for which one can write one but not the other (sealing?)
+     + might export to a different type than importing
+       (can always export to unit and import from empty)
+   - no laws or nice theory
+   - less compositional:
+     + could compose but only at one end:
+       coercible t1 t2 and exportable t2 => exportable t1
+       pcoercible t1 t2 and importable t1 => importable t2
+   - one t mapped to a single u (but sealing might give us an instance for any type)
+
+Note:
+   ml u and partial_connection t u => exportable t and importable t
+
+Different factoring:
+class coercible (t u: Type) = { coerce : t -> u }
+class pcoercible (t u: Type) = { pcoerce : t -> Ex u }
+
+class exportable (t : Type) = { etype : Type; t_to_etype : coercible t etype; ml_etype : ml etype }
+class importable (t : Type) = { itype : Type; itype_to_t : pcoercible itype t; ml_itype : ml itype }
+*)
+
 class exportable (t : Type) = { etype : Type; export : t -> etype; ml_etype : ml etype }
 class importable (t : Type) = { itype : Type; import : itype -> Ex t; ml_itype : ml itype }
 
@@ -148,14 +199,16 @@ instance importable_ml t [| ml t|] : importable t = mk_importable t (fun x -> x)
 instance exportable_refinement t [| d:exportable t |] (p : t -> Type0)  : exportable (x:t{p x})
 = mk_exportable (d.etype) export // TODO: Eta expanding causes type error
 
-class decidable (t:Type) (p : t -> Type0) = { dec : (x:t -> b:bool{b <==> p x}) }
-// could move to something weaker here
-class checkable (t:Type) (p : t -> Type0) = { check : (x:t -> b:bool{b ==> p x}) }
+class decidable (#t:Type) (p : t -> Type0) = { dec : (x:t -> b:bool{b <==> p x}) }
+class checkable (#t:Type) (p : t -> Type0) = { check : (x:t -> b:bool{b ==> p x}) }
 
-instance importable_refinement t [| d:importable t |] (p : t -> Type0) [| decidable t p |] : importable (x:t{p x}) 
+instance checkable_decidable (#t:Type) (p : (t -> Type0)) [| decidable p|] : checkable p =
+  { check = fun (x:t) -> dec #t #p x }
+
+instance importable_refinement t [| d:importable t |] (p : t -> Type0) [| checkable p |] : importable (x:t{p x}) 
 = mk_importable (d.itype)
     (fun (x:d.itype) -> let x : t = import x in
-                        if dec #t #p x then x <: Ex (x:t{p x}) else raise Contract_failure)
+                        if check #t #p x then x <: Ex (x:t{p x}) else raise Contract_failure)
     (* TODO: quite a few type annotations needed above *)
 
 instance exportable_pair t1 t2 [| d1:exportable t1 |] [| d2:exportable t2 |] : exportable (t1 * t2) =
@@ -180,6 +233,14 @@ instance exportable_mlarrow t1 t2 [| d1:importable t1 |] [| d2:exportable t2 |] 
 instance importable_mlarrow t1 t2 [| d1:exportable t1 |] [| d2:importable t2 |] : importable (t1 -> ML t2)  =
   mk_importable (d1.etype -> ML d2.itype)
     (fun (f:(d1.etype -> ML d2.itype)) -> (fun (x:t1) -> import (f (export x)) <: ML t2))
+
+class checkable2 (#t1 #t2:Type) (p : t1 -> t2 -> Type0) = { check2 : (x1:t1 -> x2:t2 -> b:bool{b ==> p x1 x2}) }
+
+instance importable_darrow_refined t1 t2 (p:t1->t2->Type0)
+    [| d1:exportable t1 |] [| d2:importable t2 |] [| d3:checkable2 p |] : importable (x:t1 -> ML (y:t2{p x y}))  =
+  mk_importable (d1.etype -> ML d2.itype)
+    (fun (f:(d1.etype -> ML d2.itype)) -> (fun (x:t1) -> let y = import (f (export x)) in
+                                 if check2 #t1 #t2 #p x y then y else raise Contract_failure <: ML (z:t2{p x z})))
 
 (* Dependent pairs are neither importable not exportable?
 
