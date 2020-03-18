@@ -21,6 +21,7 @@ open Steel.Effect
 open Steel.Memory
 open Steel.HigherReference
 open Steel.SteelT.Basics
+open Steel.Memory.Tactics
 
 module T = FStar.Tactics
 module ST = Steel.Memory.Tactics
@@ -216,10 +217,12 @@ let intro_chan_inv_cond_step (vs vr:chan_val)
 
 let frame_l #a #q #r (f:unit -> SteelT a q r) (p:hprop)
   : SteelT a (p `star` q) (fun x -> p `star` r x)
-  = h_commute _ _;
-    let x = frame f _ in
+  = //h_commute _ _;
+    let x = steel_frame_t f in // _ in
     h_commute _ _;
     return x
+
+assume val h_admit (#a:Type) (#p:hprop) (q:a -> hprop) : SteelT a p q
 
 let intro_chan_inv_aux #p (c:chan_t p) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
@@ -227,10 +230,11 @@ let intro_chan_inv_aux #p (c:chan_t p) (vs vr:chan_val)
                  trace_until c.trace vr `star`
                  chan_inv_cond vs vr)
                  (fun _ -> chan_inv c)
-  = reshuffle ();
-    frame (fun _ -> intro_h_exists vr (fun (vr:chan_val) -> pts_to c.recv half vr `star` trace_until c.trace vr `star` chan_inv_cond vs vr)) (pts_to c.send half vs);
-    h_commute _ _;
-    intro_h_exists vs _
+  = // reshuffle ();
+    steel_frame_t (fun _ -> intro_h_exists vr (fun (vr:chan_val) -> pts_to c.recv half vr `star` trace_until c.trace vr `star` chan_inv_cond vs vr)); // (pts_to c.send half vs);
+//    h_commute _ _;
+    steel_frame_t (fun _ -> intro_h_exists vs (fun (vs:chan_val) -> pts_to c.send half vs `star` chan_inv_recv c vs));
+    rassert (chan_inv c)
 
 let intro_chan_inv_step #p (c:chan_t p) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
@@ -238,8 +242,14 @@ let intro_chan_inv_step #p (c:chan_t p) (vs vr:chan_val)
                  trace_until c.trace vr `star`
                  chan_inv_step vr vs)
                  (fun _ -> chan_inv c)
-  = frame_l (fun _ -> intro_chan_inv_cond_step vs vr) _;
-    intro_chan_inv_aux c vs vr
+  = steel_frame_t (fun _ -> intro_chan_inv_cond_step vs vr);
+    // AF: Unclear why this assert is needed
+    h_assert (chan_inv_cond vs vr `star` (
+                pts_to c.send half vs `star`
+                 pts_to c.recv half vr `star`
+                 trace_until c.trace vr ));
+    steel_frame_t (fun _ -> intro_chan_inv_aux c vs vr);
+    rassert (chan_inv c)
 
 let intro_chan_inv_eq #p (c:chan_t p) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
@@ -247,9 +257,14 @@ let intro_chan_inv_eq #p (c:chan_t p) (vs vr:chan_val)
                  trace_until c.trace vr `star`
                  pure (vs == vr))
                  (fun _ -> chan_inv c)
-  = frame_l (fun _ -> intro_chan_inv_cond_eq vs vr) _;
-    intro_chan_inv_aux c vs vr
-
+  = steel_frame_t (fun _ -> intro_chan_inv_cond_eq vs vr); // _;
+    // AF: Unclear why this assert is needed
+    h_assert (chan_inv_cond vs vr `star` (
+                 pts_to c.send half vs `star`
+                 pts_to c.recv half vr `star`
+                 trace_until c.trace vr ));
+    steel_frame_t (fun _ -> intro_chan_inv_aux c vs vr);
+    rassert (chan_inv c)
 
 noeq
 type chan p = {
@@ -299,12 +314,13 @@ let eq #a (x y : a) :prop = x == y
 
 let rewrite_eq #a (x:a) (y:a) (p:a -> hprop)
   : SteelT unit (pure (eq x y) `star` p x) (fun _ -> p y)
-  = let _ = frame (fun _ -> elim_pure #(eq x y)) (p x) in
-    h_assert (emp `star` p x);
-    h_commute _ _;
-    h_affine _ _;
-    h_assert (p x);
-    assert (x == y);
+  = let _ = steel_frame_t (fun _ -> elim_pure #(eq x y)) in //(p x) in
+    // h_assert (emp `star` p x);
+    // h_commute _ _;
+    // h_affine _ _;
+    // h_assert (p x);
+    // assert (x == y);
+    rassert (p x);
     rewrite_eq_squash x y p
 
 #push-options "--print_universes"
@@ -338,20 +354,21 @@ let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
 let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
   : SteelT unit (pts_to_ref c.trace full (initial_trace p))
                 (fun _ -> trace_until c.trace v)
-  = h_intro_emp_l _;
-    frame (fun _ -> intro_until_eq c v) _;
-    h_assert (pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)) `star`
-              pts_to_ref c.trace full (initial_trace p));
-    reshuffle ();
-    intro_trace_until c.trace (initial_trace p) v
+  = // h_intro_emp_l _;
+    steel_frame_t (fun _ -> intro_until_eq c v);
+    // h_assert (pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)) `star`
+    //           pts_to_ref c.trace full (initial_trace p));
+//    reshuffle ();
+    steel_frame_t (fun _ -> intro_trace_until c.trace (initial_trace p) v);
+    rassert (trace_until c.trace v)
 
 let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ c.recv == recv})
 let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
   : SteelT (c:chan_t_sr p send recv)
            (pts_to send half v `star` pts_to recv half v)
            (fun c -> chan_inv c)
-  = h_intro_emp_l _;
-    let tr : trace_ref p = frame (fun _ -> alloc_monotonic_ref (extended_to #p) (initial_trace p)) _ in
+  = // h_intro_emp_l _;
+    let tr : trace_ref p = steel_frame_t (fun _ -> alloc_monotonic_ref (extended_to #p) (initial_trace p)) in// _ in
     h_assert (pts_to_ref tr full (initial_trace p) `star` (pts_to send half v `star` pts_to recv half v));
     h_intro_emp_l _;
     let c = frame (fun _ -> mk_chan_t_val #p send recv tr) _ in
