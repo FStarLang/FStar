@@ -23,7 +23,8 @@ module FStar.Char
 /// between 1 and 4 bytes, with a maximum of 21 bits used to represent
 /// a code.
 ///
-/// See https://en.wikipedia.org/wiki/UTF-8
+/// See https://en.wikipedia.org/wiki/UTF-8 and
+/// https://erratique.ch/software/uucp/doc/unicode.html
 
 module U32 = FStar.UInt32
 

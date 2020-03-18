@@ -15,9 +15,12 @@
 *)
 module FStar.Date
 
+/// A module providing primitives for dates and times
+
 new val dateTime : Type0
 new val timeSpan : Type0
 
+(** EXT marks an external function *)
 val now: unit -> EXT dateTime
 val secondsFromDawn: unit -> EXT (n:nat{n < pow2 32})
 val newTimeSpan: int -> int -> int -> int -> Tot timeSpan
