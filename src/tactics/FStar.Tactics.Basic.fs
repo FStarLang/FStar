@@ -1383,10 +1383,18 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
-    let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    (* It's important to keep the original term if we want to do
+     * nothing, (hence the underscore below) since after the call to
+     * the typechecker, t can be elaborated and have more structure. In
+     * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
+     * Which would cause an infinite loop between this function and
+     * tac_fold_env. *)
+    let _, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
+
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then begin
+        BU.print1 "not pure: %s\n" (Print.term_to_string t);
         ret t // Don't do anything for possibly impure terms
-    else
+    end else
         let rewrite_eq =
           let typ = lcomp.res_typ in
           bind (new_uvar "pointwise_rec" env typ) (fun (ut, uvar_ut) -> //NS: FIXME uvar_ut dropped?
@@ -1402,14 +1410,13 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
                 // Try to get rid  of all the unification lambdas
                 let ut = N.reduce_uvar_solutions env ut in
                 log ps (fun () ->
-                    BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                    BU.print2 "pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                                 (Print.term_to_string t)
                                 (Print.term_to_string ut));
                 ret ut))
           ))
        in
-       bind (catch rewrite_eq) (fun x ->
-       match x with
+       bind (catch rewrite_eq) (function
        // TODO: Share a `Skip` exception to userspace
        | Inl (TacticFailure "SKIP") -> ret t
        | Inl e -> traise e
