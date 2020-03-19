@@ -143,7 +143,7 @@ DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \
 	  FStar.BaseTypes.fsti FStar.BitVector.fst FStar.BV.fsti \
 	  FStar.Char.fsti FStar.Date.fsti FStar.DependentMap.fsti \
-	  FStar.Dyn.fsti FStar.Exn.fst
+	  FStar.Dyn.fsti FStar.Exn.fst FStar.Fin.fst
 
 DOC_DIR=./doc
 

@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module FStar.Dyn
 open FStar.All
 
@@ -20,12 +21,13 @@ open FStar.All
 ///
 ///  NOTE: THIS PROVIDES CASTS BETWEEN ARBITRARY TYPES
 ///  BUT ONLY IN [False] CONTEXTS. USE WISELY.
-
-assume new type dyn
+assume new
+type dyn 
 
 (** Promoting a value of type ['a] to [dyn] *)
-val mkdyn : 'a -> EXT dyn
+val mkdyn: 'a -> EXT dyn
 
 (** This coerces a value of type [dyn] to any type ['a],
     but only with [False] precondition *)
-val undyn : d:dyn{false} -> EXT 'a
+val undyn (d: dyn{false}) : EXT 'a
+
