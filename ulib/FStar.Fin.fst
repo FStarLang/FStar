@@ -15,12 +15,18 @@
 *)
 module FStar.Fin
 
-(* This module is supposed to contain various lemmas about finiteness : *)
-(* pigeonhole principle, cardinality, relation with injections and surjections... *)
+/// This module is supposed to contain various lemmas about
+/// finiteness. For now, it mainly provides a basic pigeonhole
+/// principle
+///
+/// TODO: We might generalize this to also support general utilities
+/// for reasoning about cardinality, relation with injections and
+/// surjections, etc.
 
 module L = FStar.List.Tot
 module S = FStar.Seq
 
+///
 let fin (n:nat) = k:int{ 0 <= k /\ k < n }
 
 let vect (n:nat) (a:Type) = l:list a{L.length l = n}

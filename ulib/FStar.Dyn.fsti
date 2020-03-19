@@ -16,9 +16,16 @@
 module FStar.Dyn
 open FStar.All
 
-(* Dynamic casts, realized by OCaml's Obj.
-   This is type unsafe. *)
+///  Dynamic casts, realized by OCaml's [Obj]
+///
+///  NOTE: THIS PROVIDES CASTS BETWEEN ARBITRARY TYPES
+///  BUT ONLY IN [False] CONTEXTS. USE WISELY.
 
 assume new type dyn
+
+(** Promoting a value of type ['a] to [dyn] *)
 val mkdyn : 'a -> EXT dyn
+
+(** This coerces a value of type [dyn] to any type ['a],
+    but only with [False] precondition *)
 val undyn : d:dyn{false} -> EXT 'a
