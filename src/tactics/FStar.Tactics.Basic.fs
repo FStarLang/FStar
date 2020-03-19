@@ -1534,7 +1534,7 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     log ps (fun () ->
         BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 
 let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointwise" <|
@@ -1551,7 +1551,7 @@ let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointw
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 let _trefl (l : term) (r : term) : tac<unit> =
    bind (cur_goal ()) (fun g ->
