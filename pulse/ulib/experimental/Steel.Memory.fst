@@ -1046,6 +1046,9 @@ let rec  affine_star_aux (p:hprop) (m:heap) (m':heap { disjoint_heap m m' })
           assert (disjoint_heap m2 m');
           affine_star_aux p2 m2 m';
           // assert (interp p2 (join m2 m'));
+          assert (disjoint_heap (join_heap m' m2) m1);  //from disjoint_join_heap'
+          disjoint_sym_heap (join_heap m' m2) m1;
+          join_commutative_heap m' m2;
           assert (disjoint_heap m1 (join_heap m2 m'));
           affine_star_aux p1 m1 (join_heap m2 m');
           // assert (interp p1 (join m1 (join m2 m')));
