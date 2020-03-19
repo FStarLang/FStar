@@ -226,7 +226,9 @@ let ps_to_json (msg, ps) =
 let do_dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
-        print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
+        print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
+        BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
+    )
 
 let dump (msg:string) : tac<unit> =
     mk_tac (fun ps ->
