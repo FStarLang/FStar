@@ -1537,7 +1537,7 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     add_goals [goal_with_type g gt']))))
 
 
-let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise" <|
+let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointwise" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
