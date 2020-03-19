@@ -357,3 +357,9 @@ assume val lemma_bind_test_p (_:unit) :Tot (squash bind_test_p)
 let bind_test1 () :Lemma bind_test_p = lemma_bind_test_p ()
 let bind_test2 () :Lemma bind_test_p = let _ = lemma_bind_test_p () in ()
 let bind_test3 () :Lemma bind_test_p = let x = lemma_bind_test_p () in x
+
+(* Some tests for the b2t coercion *)
+
+let p0 : Type     = 1 = 1
+let p1 : Type0    = 1 = 1
+let p2 : prop     = 1 = 1
