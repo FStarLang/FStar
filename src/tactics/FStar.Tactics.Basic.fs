@@ -1835,6 +1835,20 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         (* Deconstruct its type, separating the parameters from the
                          * actual arguments (indices do not matter here). *)
                         let bs, comp = U.arrow_formals_comp c_ty in
+
+                        (* More friendly names: 'a_i' instead of '_i' *)
+                        let bs, comp =
+                          let rename_bv bv =
+                              let ppname = bv.ppname in
+                              let ppname = { ppname with idText = "a" ^ ppname.idText } in
+                              // freshen just to be extra safe.. probably not needed
+                              freshen_bv ({ bv with ppname = ppname })
+                          in
+                          let bs' = List.map (fun (bv, aq) -> (rename_bv bv, aq)) bs in
+                          let subst = List.map2 (fun (bv, _) (bv', _) -> NT (bv, bv_to_name bv')) bs bs' in
+                          SS.subst_binders subst bs', SS.subst_comp subst comp
+                        in
+
                         (* BU.print1 "bs = (%s)\n" (Print.binders_to_string ", " bs); *)
                         let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->
