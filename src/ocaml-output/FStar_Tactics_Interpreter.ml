@@ -902,11 +902,11 @@ and (primitive_steps :
                                                                     FStar_Tactics_InterpFuns.mktac2
                                                                     Prims.int_zero
                                                                     "t_pointwise"
-                                                                    FStar_Tactics_Basic.pointwise
+                                                                    FStar_Tactics_Basic.t_pointwise
                                                                     FStar_Tactics_Embedding.e_direction
                                                                     uu____1296
                                                                     FStar_Syntax_Embeddings.e_unit
-                                                                    FStar_Tactics_Basic.pointwise
+                                                                    FStar_Tactics_Basic.t_pointwise
                                                                     FStar_Tactics_Embedding.e_direction_nbe
                                                                     uu____1301
                                                                     FStar_TypeChecker_NBETerm.e_unit
