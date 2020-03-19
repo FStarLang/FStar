@@ -17,7 +17,7 @@
 module FStar.DependentMap
 
 /// This module provides an abstract type of maps whose co-domain
-/// dependends on the value of each key. i.e., it is an encapsulation
+/// depends on the value of each key. i.e., it is an encapsulation
 /// of [x:key -> value x], where [key] supports decidable equality.
 ///
 /// The main constructors of the type are:
