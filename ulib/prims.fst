@@ -54,7 +54,7 @@ type squash (p:Type) : Type0 = x:unit{p}
 
    It's marked `private` so that users cannot write it themselves.
 *)
-//private : AR: TODO: MAKE IT PRIVATE AGAIN AFTER FIXING BIND FOR DOUBLE LAYERING
+private
 let auto_squash (p:Type) = squash p
 
 (*
