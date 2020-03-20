@@ -223,7 +223,7 @@ let main () =
     setup_hooks ();
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
-    then Util.print2 "TOTAL TIME %s ms: %s\n"
+    then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
