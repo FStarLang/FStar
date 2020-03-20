@@ -145,7 +145,7 @@ DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Char.fsti FStar.Date.fsti FStar.DependentMap.fsti \
 	  FStar.Dyn.fsti FStar.Exn.fst FStar.Fin.fst FStar.Float.fsti \
 	  FStar.FunctionalExtensionality.fsti FStar.Float.fsti \
-	  FStar.Ghost.fsti
+	  FStar.Ghost.fsti FStar.IFC.fsti
 
 DOC_DIR=./doc
 
