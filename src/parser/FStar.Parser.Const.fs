@@ -439,3 +439,4 @@ let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Range.dummyRange
 let calc_init_lid   = calc_lid "calc_init"
 let calc_step_lid   = calc_lid "calc_step"
 let calc_finish_lid = calc_lid "calc_finish"
+let calc_push_impl_lid = calc_lid "calc_push_impl"

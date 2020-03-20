@@ -1523,6 +1523,35 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | CalcProof (rel, init_expr, steps) ->
       (* We elaborate it into surface syntax and recursively desugar it *)
 
+      let is_impl (rel:term) : bool =
+        let is_impl_t (t:S.term) : bool =
+          match t.n with
+          | Tm_fvar fv -> S.fv_eq_lid fv C.imp_lid
+          | _ -> false
+        in
+        match (unparen rel).tm with
+        | Op (id, _) ->
+            begin match op_as_term env 2 Range.dummyRange id with
+            | Some t -> is_impl_t t
+            | None -> false
+            end
+
+        | Var lid ->
+            begin match desugar_name' (fun x->x) env true lid with
+            | Some t -> is_impl_t t
+            | None -> false
+            end
+        | Tvar id ->
+        (* GM: This case does not seem exercised even if the user writes "l_imp"
+         * as the relation... I thought those are meant to be Tvar nodes but
+         * it ends up as a Var. Bug? *)
+            begin match try_lookup_id env id with
+            | Some t -> is_impl_t t
+            | None -> false
+            end
+        | _ -> false
+      in
+
       (* Annoying: (<) is not a preorder since it has type
        * `int -> int -> Tot bool`, and it's not subtyped to
        * `int -> int -> Tot Type0`, so we eta-expand and annotate
@@ -1543,6 +1572,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
       let wild r = mk_term Wild r Expr in
       let init   = mk_term (Var C.calc_init_lid) Range.dummyRange Expr in
+      let push_impl r = mk_term (Var C.calc_push_impl_lid) r Expr in
       let last_expr = match List.last steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
                       | _ -> failwith "impossible: no last_expr on calc"
@@ -1552,6 +1582,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
       let e = mkApp init [(init_expr, Nothing)] Range.dummyRange in
       let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
+                          let just =
+                            if is_impl rel
+                            then mkApp (push_impl just.range) [(thunk just, Nothing)] just.range
+                            else just
+                          in
                           let pf = mkApp (step rel.range)
                                           [(wild rel.range, Hash);
                                            (init_expr, Hash);
