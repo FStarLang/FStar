@@ -6,9 +6,13 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "l_and-interp", "l_or-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "495e9ecd63266e6929dd92924f85be95"
+      "bb884c331d6882cc607ecb1946fd0181"
     ],
     [
       "Bug1799.test'",
@@ -20,7 +24,7 @@
         "l_or-interp"
       ],
       0,
-      "86e02964644922882e5698f74bc6295a"
+      "17c9308133ca88da676121fb7dd27e67"
     ]
   ]
 ]
