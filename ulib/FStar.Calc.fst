@@ -80,3 +80,6 @@ let calc_finish (#t:Type) (p : relation t) (#x #y : t) (pf : unit -> GTot (calc_
           (ensures (p x y))
   = let pk = pf () in
     elim_calc_proof pk.rels pk.proof
+
+val calc_push_impl (#p #q : Type) (f : squash p -> GTot (squash q)) : GTot (squash (p ==> q))
+let calc_push_impl #p #q f = Classical.arrow_to_impl f

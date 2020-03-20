@@ -1712,6 +1712,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
     in
     let is_type t =
         let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
         match (SS.compress t).n with
         | Tm_type _ -> true
         | _ -> false
