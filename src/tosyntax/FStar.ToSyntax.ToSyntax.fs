@@ -1528,8 +1528,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
        * `int -> int -> Tot Type0`, so we eta-expand and annotate
        * to make it kick in. *)
       let eta_and_annot rel =
-        let x = Ident.gen rel.range in
-        let y = Ident.gen rel.range in
+        let x = Ident.gen' "x" rel.range in
+        let y = Ident.gen' "y" rel.range in
         let xt = mk_term (Tvar x) rel.range Expr in
         let yt = mk_term (Tvar y) rel.range Expr in
         let pats = [mk_pattern (PatVar (x, None)) rel.range; mk_pattern (PatVar (y, None)) rel.range] in
