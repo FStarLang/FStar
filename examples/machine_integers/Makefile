@@ -22,7 +22,7 @@ accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 	./$< > $@
 
 %.run: %.out
-	diff $< $<.expected
+	diff $<.expected $<
 
 %.run-accept: %.out
 	cp $< $<.expected
