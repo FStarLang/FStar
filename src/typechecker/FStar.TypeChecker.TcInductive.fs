@@ -137,8 +137,9 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
-                  (* check that c is a Tot computation, reject it otherwise *)
-                  if is_total_comp c
+                  (* check that c is a Tot computation, reject it otherwise
+                   * (unless --MLish, which will mark all of them with ML effect) *)
+                  if Options.ml_ish () || is_total_comp c
                   then bs, comp_result c
                   else raise_error (Errors.Fatal_UnexpectedConstructorType,
                                      "Constructors cannot have effects")
