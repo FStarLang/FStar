@@ -302,7 +302,8 @@ let eq_mask (a:t) (b:t)
     end;
     c
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4"
+#restart-solver
 (** A constant-time way to compute the [>=] inequality of
     two machine integers.
 

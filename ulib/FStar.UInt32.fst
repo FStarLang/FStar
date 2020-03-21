@@ -278,7 +278,8 @@ let eq_mask (a b: t)
       assert (v c = zero n));
   c
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4"
+#restart-solver
 (** A constant-time way to compute the [>=] inequality of
     two machine integers.
 
