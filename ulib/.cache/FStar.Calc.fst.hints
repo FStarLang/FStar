@@ -209,7 +209,7 @@
       1,
       [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
       0,
-      "39023836fbeedc8c7844ef1bb113e09b"
+      "fc38438bed3c5b8088a8110a9ce79e2a"
     ],
     [
       "FStar.Calc.__proj__CalcRefl__item__x",
@@ -370,7 +370,7 @@
       1,
       [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
       0,
-      "7616d4f05739c990282d08466756f9f5"
+      "923f7f3ae9e9f23eeb33ff44cccce083"
     ]
   ]
 ]

@@ -1501,7 +1501,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "ba56c90c5857217d4b07db47b28ccb1d"
+      "4456aee48bede4fb1c25e0c745d9b887"
     ],
     [
       "FStar.Int.pow2_from_vec_lemma",
@@ -1560,7 +1560,7 @@
         "typing_FStar.UInt.from_vec"
       ],
       0,
-      "0b88e50c0d02d55fc656129c950efbe4"
+      "61193e041dab61f0d8d33325f5e71717"
     ],
     [
       "FStar.Int.ones_to_vec_lemma",
