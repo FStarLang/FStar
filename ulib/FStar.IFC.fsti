@@ -60,7 +60,7 @@ type semilattice : Type u#(c + 1) =
 
 (** For most of the rest of this development, we'll use an erased
     counterpart of a semilattice *)
-let sl : Type u#(c + 1) = FStar.Ghost.erased semilattice
+let sl:Type u#(c + 1) = FStar.Ghost.erased semilattice
 
 (** A lattice element is just an element of the carrier type *)
 let lattice_element (sl: sl) = Ghost.erased (SemiLattice?.carrier (Ghost.reveal sl))
