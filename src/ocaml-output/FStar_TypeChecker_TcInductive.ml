@@ -374,8 +374,9 @@ let (tc_data :
                                       (match uu____960 with
                                        | (bs1,c1) ->
                                            let uu____998 =
-                                             FStar_Syntax_Util.is_total_comp
-                                               c1
+                                             (FStar_Options.ml_ish ()) ||
+                                               (FStar_Syntax_Util.is_total_comp
+                                                  c1)
                                               in
                                            if uu____998
                                            then
