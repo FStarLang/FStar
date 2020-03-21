@@ -51,16 +51,16 @@ let idempotent #a (f: (a -> a -> a)) = forall x. f x x == x
     program explicitly with semilattice, rather than use typeclass
     instantiation.  *)
 noeq
-type semilattice =
+type semilattice : Type u#(c + 1) =
   | SemiLattice : 
-      #carrier: Type ->
+      #carrier: Type u#c ->
       top: carrier ->
       lub: (f: (carrier -> carrier -> carrier){associative f /\ commutative f /\ idempotent f})
     -> semilattice
 
 (** For most of the rest of this development, we'll use an erased
     counterpart of a semilattice *)
-let sl = FStar.Ghost.erased semilattice
+let sl : Type u#(c + 1) = FStar.Ghost.erased semilattice
 
 (** A lattice element is just an element of the carrier type *)
 let lattice_element (sl: sl) = Ghost.erased (SemiLattice?.carrier (Ghost.reveal sl))
@@ -75,7 +75,7 @@ let lub #sl (x: lattice_element sl) (y: lattice_element sl) : Tot (lattice_eleme
 
     [protected b l] is in a bijection with [b], as shown by [reveal]
     and [hide] below *)
-val protected (#sl: sl) (l: lattice_element sl) (b: Type u#b) : Type u#b
+val protected (#sl: sl u#c) (l: lattice_element sl) (b: Type u#b) : Type u#b
 
 (** [reveal] projects a [b] from a [protected b l], but incurs a ghost effect *)
 val reveal (#sl: _) (#l: lattice_element sl) (#b: _) (x: protected l b) : GTot b

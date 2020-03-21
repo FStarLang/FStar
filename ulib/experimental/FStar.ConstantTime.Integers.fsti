@@ -34,7 +34,7 @@ let sw = s:signed_width{width_of_sw s <> Winfinite
 
 (** A `secret_int l s` is a machine-integer at secrecy level `l` and
     signedness/width `s`. *)
-val secret_int (#sl:sl)
+val secret_int (#sl:sl u#c)
                (l:lattice_element sl)
                (s:sw) : Type0
 
