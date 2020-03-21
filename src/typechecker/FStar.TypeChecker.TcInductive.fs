@@ -119,13 +119,13 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                         Some (Env.push_binders env tps, tps, u_tc)
                      | _ -> failwith "Impossible"
                 else None) in
-           match tps_u_opt with
-            | Some x -> x
-            | None ->
-              if lid_equals tc_lid FStar.Parser.Const.exn_lid
-              then env, [], U_zero
-              else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng in
-
+            match tps_u_opt with
+             | Some x -> x
+             | None ->
+               if lid_equals tc_lid FStar.Parser.Const.exn_lid
+               then env, [], U_zero
+               else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng
+         in
 
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
@@ -136,8 +136,16 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   let _, bs' = BU.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
-(*open*)          U.arrow_formals (SS.subst subst t)
-                | _ -> [], t in
+(*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
+                  (* check that c is a Tot computation, reject it otherwise *)
+                  if is_total_comp c
+                  then bs, comp_result c
+                  else raise_error (Errors.Fatal_UnexpectedConstructorType,
+                                     "Constructors cannot have effects")
+                                   (range_of_lid (U.comp_effect_name c))
+
+                | _ -> [], t
+         in
 
          if Env.debug env Options.Low then BU.print3 "Checking datacon  %s : %s -> %s \n"
                 (Print.lid_to_string c)
