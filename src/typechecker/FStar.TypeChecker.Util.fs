@@ -1993,8 +1993,8 @@ let maybe_instantiate (env:Env.env) e t =
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
         * of arrow_formals{,_comp}?*)
-       let unfolded_arrow_formals (t:term) : list binder =
-         let rec aux (bs:list binder) (t:term) : list binder =
+       let unfolded_arrow_formals (t:term) : list<binder> =
+         let rec aux (bs:list<binder>) (t:term) : list<binder> =
            let t = N.unfold_whnf env t in
            let bs', t = U.arrow_formals t in
            match bs' with
