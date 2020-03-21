@@ -282,8 +282,13 @@ let eq_mask (a b: t)
       assert (v c = zero n));
   c
 
-#push-options "--z3rlimit_factor 4"
-#restart-solver
+private
+let lemma_sub_msbs (a b: t)
+    : Lemma ((msb (v a) = msb (v b)) ==> (v a < v b <==> msb (v (sub_mod a b)))) =
+  from_vec_propriety (to_vec (v a)) 1;
+  from_vec_propriety (to_vec (v b)) 1;
+  from_vec_propriety (to_vec (v (sub_mod a b))) 1
+
 (** A constant-time way to compute the [>=] inequality of
     two machine integers.
 
@@ -293,12 +298,6 @@ let gte_mask (a b: t)
     : Pure t
       (requires True)
       (ensures (fun c -> (v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0))) =
-  let lemma_sub_msbs (a b: t)
-      : Lemma ((msb (v a) = msb (v b)) ==> (v a < v b <==> msb (v (sub_mod a b)))) =
-    from_vec_propriety (to_vec (v a)) 1;
-    from_vec_propriety (to_vec (v b)) 1;
-    from_vec_propriety (to_vec (v (sub_mod a b))) 1
-  in
   let x = a in
   let y = b in
   let x_xor_y = logxor x y in
