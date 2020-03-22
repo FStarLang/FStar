@@ -1449,7 +1449,7 @@ let pbs =    ( List.rev xs ) in
 calcRel:
   binop_name
     {let i = $1 in
-                 ( mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+                 ( mk_term (Op (i, [])) (rhs parseState 1) Expr )}
 | BACKTICK qlident BACKTICK
     {let (_1, id, _3) = ((), $2, ()) in
                                  ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
