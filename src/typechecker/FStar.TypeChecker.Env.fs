@@ -810,7 +810,11 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
               if fv_eq_lid fv lid
               then Some fv.fv_delta
               else None)
-      | Sig_splice  _ -> Some (Delta_constant_at_level 1) //TODO: see try_lookup_name in dsenv: both are wrong
+
+      | Sig_fail _
+      | Sig_splice  _ ->
+        failwith "impossible: delta_depth_of_qninfo"
+
       | Sig_main   _
       | Sig_assume _
       | Sig_new_effect _

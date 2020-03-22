@@ -443,7 +443,7 @@ let mk_ref_assign t1 t2 pos =
 (*
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
-let generalize_annotated_univs (s:sigelt) :sigelt =
+let rec generalize_annotated_univs (s:sigelt) :sigelt =
   let bs_univnames (bs:binders) :BU.set<univ_name> =
     bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
   in
@@ -502,7 +502,17 @@ let generalize_annotated_univs (s:sigelt) :sigelt =
     let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
     let usubst = Subst.univ_var_closing uvs in
     { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
-  | _ -> s
+
+  | Sig_fail (errs, lax, ses) ->
+    { s with sigel = Sig_fail (errs, lax, List.map generalize_annotated_univs ses) }
+
+  | Sig_new_effect _
+  | Sig_sub_effect _
+  | Sig_main _
+  | Sig_polymonadic_bind _
+  | Sig_splice _
+  | Sig_pragma _ ->
+    s
 
 let is_special_effect_combinator = function
   | "lift1"

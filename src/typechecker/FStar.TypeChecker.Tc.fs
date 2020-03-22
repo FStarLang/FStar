@@ -390,6 +390,10 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "huh?"
 
+(* Alternative to making a huge let rec... knot is set below in this file *)
+let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * list<sigelt> * Env.env)>> =
+  BU.mk_ref None
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
@@ -404,6 +408,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
+
+  | Sig_fail _ ->
+    [], [], env
 
   | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
@@ -885,6 +892,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
    match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
+  | Sig_fail _
   | Sig_splice _
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible (Already handled)"
@@ -1052,13 +1060,6 @@ let tc_decls env ses =
         in
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
-
-    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
-    // be present in ses' is the typechecked se (or none). I'm taking it out
-    // so I can make `postprocess_with` remove itself during typechecking
-    // (otherwise, it would run twice with extracted interfaces)
-    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
-
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
   // A wrapper to (maybe) print the time taken for each sigelt
@@ -1084,6 +1085,9 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
+let _ =
+    tc_decls_knot := Some tc_decls
+
 (* Consider the module:
         module Test
         abstract type t = nat
@@ -1098,7 +1102,7 @@ let tc_decls env ses =
    perspective.
 *)
 open FStar.TypeChecker.Err
-let check_exports env (modul:modul) exports =
+let check_exports env (modul:modul) exports : unit =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t =
         let univs, t = SS.open_univ_vars univs t in
@@ -1143,9 +1147,11 @@ let check_exports env (modul:modul) exports =
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
-        | Sig_splice _
         | Sig_pragma _
         | Sig_polymonadic_bind _ -> ()
+
+        | Sig_fail _
+        | Sig_splice _ -> failwith "Impossible (Already handled)"
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1235,6 +1241,8 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
     | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
+
+    | Sig_fail _ -> failwith "Impossible! extract_interface: trying to extract Sig_fail"
 
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
