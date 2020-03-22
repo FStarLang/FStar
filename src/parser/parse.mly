@@ -663,7 +663,7 @@ noSeqTerm:
      }
 
 calcRel:
-  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
   | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
   | t=atomicTerm { t }
 
