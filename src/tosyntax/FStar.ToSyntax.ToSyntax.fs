@@ -685,13 +685,6 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
                 | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns cannot be associated with a tactic") orig.prange
         in
         let loc, env', binder, p, annots, imp = aux loc env p in
-        let annot_pat_var p t =
-            match p.v with
-            | Pat_var x -> {p with v=Pat_var({x with sort=t})}
-            | Pat_wild x -> {p with v=Pat_wild({x with sort=t})}
-            | _ when top -> p
-            | _  -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns are only allowed on variables") orig.prange
-        in
         let annots', binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
