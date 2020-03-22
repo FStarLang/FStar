@@ -115,12 +115,6 @@ let mul_mod (a:t) (b:t) : Pure t
   (ensures (fun c -> FStar.UInt.mul_mod (v a) (v b) = v c))
   = Mk (mul_mod (v a) (v b))
 
-abstract
-let mul_div (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.mul_div (v a) (v b) = v c))
-  = Mk (mul_div (v a) (v b))
-
 (* Division primitives *)
 abstract
 let div (a:t) (b:t{v b <> 0}) : Pure t
@@ -256,7 +250,6 @@ unfold let op_Subtraction_Percent_Hat = sub_mod
 unfold let op_Star_Hat = mul
 unfold let op_Star_Question_Hat = mul_underspec
 unfold let op_Star_Percent_Hat = mul_mod
-unfold let op_Star_Slash_Hat = mul_div
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
 unfold let op_Hat_Hat = logxor
