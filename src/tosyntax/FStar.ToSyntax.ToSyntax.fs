@@ -2903,11 +2903,11 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       let build_projection (env, ses) id =
         (* We build a new toplevel definition as follow and then desugar it *)
         (* let id = match fresh_toplevel_name with | pat -> id              *)
-        let main = mk_term (Var (lid_of_ids [fresh_toplevel_name])) Range.dummyRange Expr in
+        let main = mk_term (Var (lid_of_ids [fresh_toplevel_name])) pat.prange Expr in
         let lid = lid_of_ids [id] in
-        let projectee = mk_term (Var lid) Range.dummyRange Expr in
-        let body = mk_term (Match (main, [pat, None, projectee])) Range.dummyRange Expr in
-        let bv_pat = mk_pattern (PatVar (id, None)) Range.dummyRange in
+        let projectee = mk_term (Var lid) (range_of_lid lid) Expr in
+        let body = mk_term (Match (main, [pat, None, projectee])) main.range Expr in
+        let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
         (* TODO : do we need to put some attributes for this declaration ? *)
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
         let env, ses' = desugar_decl env id_decl in
