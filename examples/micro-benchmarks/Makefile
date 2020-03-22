@@ -33,7 +33,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 PatAnnot.uver TupleSyntax.uver Test.FunctionalExtensionality.uver ArgsAndQuals.uver Test.Printf.uver \
 	 MustEraseForExtraction.uver UnifyReify.uver NestedLemma.uver NormTypesForSMT.uver \
 	 StrictUnfolding.uver GhostImplicits.uver Erasable.ml Coercions.uver Coercions1Phase.uver \
-	 Inference.uver
+	 Inference.uver PatternMatch.uver
 
 Coercions1Phase.uver: OTHERFLAGS += --use_two_phase_tc false
 Coercions1Phase.fst: Coercions.fst
