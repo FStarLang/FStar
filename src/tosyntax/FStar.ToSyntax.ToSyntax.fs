@@ -667,16 +667,23 @@ let check_linear_pattern_variables pats r =
 
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
-let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
+let rec desugar_data_pat
+    (top_level_ascr_allowed : bool)
+    env
+    p : (env_t * bnd * list<annotated_pat>) =
   let resolvex (l:lenv_t) e x =
-    match l |> BU.find_opt (fun y -> y.ppname.idText=x.idText) with
-      | Some y -> l, e, y
-      | _ ->
-        let e, x = push_bv e x in
-        (x::l), e, x
+    (* This resolution function will be shared across
+     * the cases of a PatOr, so different ocurrences of
+     * a same (surface) variable are mapped to exactly the
+     * same internal variable. *)
+    match BU.find_opt (fun y -> y.ppname.idText=x.idText) l with
+    | Some y -> l, e, y
+    | _ ->
+      let e, x = push_bv e x in
+      (x::l), e, x
   in
 
-  let rec aux (loc:lenv_t) (env:env_t) (p:pattern)
+  let rec aux' (top:bool) (loc:lenv_t) (env:env_t) (p:pattern)
     : lenv_t                         (* list of all BVs mentioned *)
     * env_t                          (* env updated with the BVs pushed in *)
     * bnd                            (* a binder for the pattern *)
@@ -687,16 +694,23 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
     let pos_r r q = Syntax.withinfo q r in
     let orig = p in
     match p.pat with
-      | PatOr _ -> failwith "impossible"
+      | PatOr _ -> failwith "impossible: PatOr handled below"
 
       | PatOp op ->
-        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText op.idRange, op.idRange), None); prange = p.prange })
+        (* Turn into a PatVar and recurse *)
+        let id_op = mk_ident (compile_op 0 op.idText op.idRange, op.idRange) in
+        let p = { p with pat = PatVar (id_op, None) } in
+        aux loc env p
 
       | PatAscribed(p, (t, tacopt)) ->
-        let _ = match tacopt with
-                | None -> ()
-                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns cannot be associated with a tactic") orig.prange
-        in
+        (* Check that there's no tactic *)
+        begin match tacopt with
+          | None -> ()
+          | Some _ ->
+            raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
+                         "Type ascriptions within patterns cannot be associated with a tactic")
+                        orig.prange
+        end;
         let loc, env', binder, p, annots = aux loc env p in
         let annots', binder = match binder with
             | LetBinder _ -> failwith "impossible"
@@ -705,6 +719,16 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
               let x = { x with sort = t } in
               [(x, t)], LocalBinder(x, aq)
         in
+        (* Check that the ascription is over a variable, and not something else *)
+        begin match p.v with
+          | Pat_var _
+          | Pat_wild _ -> ()
+          | _ when top && top_level_ascr_allowed -> ()
+          | _ ->
+            raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
+                         "Type ascriptions within patterns are only allowed on variables")
+                        orig.prange
+        end;
         loc, env', binder, p, annots'@annots
 
       | PatWild aq ->
@@ -780,23 +804,26 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, annots
+  and aux loc env p = aux' false loc env p
   in
 
+  (* Explode PatOr's and call aux *)
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, ans = aux loc env p in
+        let loc, env, var, p, ans = aux' true loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, ans = aux loc env p in
+          let loc, env, _, p, ans = aux' true loc env p in
           loc, env, (p,ans)::ps) (loc, env, []) ps in
         let pats = ((p,ans)::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, ans = aux loc env p in
+        let loc, env, vars, pat, ans = aux' true loc env p in
         env, vars, [(pat, ans)]
   in
+
   let env, b, pats = aux_maybe_or env p in
   check_linear_pattern_variables (List.map fst pats) p.prange;
   env, b, pats
@@ -828,7 +855,7 @@ and desugar_binding_pat_maybe_top top env p
     | _ ->
         raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
-    let (env, binder, p) = desugar_data_pat env p in
+    let (env, binder, p) = desugar_data_pat true env p in
     let p = match p with
       | [{v=Pat_var _}, _]
       | [{v=Pat_wild _}, _] -> []
@@ -838,7 +865,7 @@ and desugar_binding_pat_maybe_top top env p
 and desugar_binding_pat env p = desugar_binding_pat_maybe_top false env p
 
 and desugar_match_pat_maybe_top _ env pat =
-  let (env, _, pat) = desugar_data_pat env pat in
+  let (env, _, pat) = desugar_data_pat false env pat in
   (env, pat)
 
 and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
@@ -1163,8 +1190,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
          fun y1 y2 y3 -> match (y1, y2, y3) with
                 | (P1 x1, P2 x2, P3 x3) -> [[e]]
       *)
-      let rec aux env bs sc_pat_opt =
-        function
+      let rec aux env bs sc_pat_opt pats : S.term * antiquotations =
+        match pats with
         | [] ->
             let body, aq = desugar_term_aq env body in
             let body = match sc_pat_opt with
