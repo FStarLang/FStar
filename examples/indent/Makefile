@@ -15,7 +15,7 @@ accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --print $< > $@
 
 %.run: %.fst-indented
-	diff $<.expected $<
+	diff --strip-trailing-cr $<.expected $<
 
 %.run-accept: %.fst-indented
 	cp $< $<.expected
