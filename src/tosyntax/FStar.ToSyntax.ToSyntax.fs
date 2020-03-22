@@ -404,6 +404,12 @@ let gather_pattern_bound_vars (fail_on_patconst : bool) (p : pattern) : set<Iden
 type bnd =
   | LocalBinder of bv     * S.aqual
   | LetBinder   of lident * (S.term * option<S.term>)
+
+let is_implicit (b:bnd) : bool =
+  match b with
+  | LocalBinder (_, Some (S.Implicit _)) -> true
+  | _ -> false
+
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
@@ -643,6 +649,7 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
         in
         List.fold_left aux S.no_names pats
     in
+
     // check that the same variables are bound in each pattern
     match pats with
     | [] -> ()
@@ -660,7 +667,7 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
                     r
       in
       List.iter aux ps
-  in
+  in // /check_linear_pattern_variables pats
 
   let resolvex (l:lenv_t) e x =
     match l |> BU.find_opt (fun y -> y.ppname.idText=x.idText) with
@@ -669,7 +676,14 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
         let e, x = push_bv e x in
         (x::l), e, x
   in
-  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern) : lenv_t * env_t * bnd * pat * list<(bv * Syntax.typ)> * bool =
+
+  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern)
+    : lenv_t                         (* list of all BVs mentioned *)
+    * env_t                          (* env updated with the BVs pushed in *)
+    * bnd                            (* a binder for the pattern *)
+    * pat                            (* elaborated pattern *)
+    * list<(bv * Syntax.typ)>        (* ascripted pattern variables (collected) *)
+    =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
     let orig = p in
@@ -684,7 +698,7 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
                 | None -> ()
                 | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns cannot be associated with a tactic") orig.prange
         in
-        let loc, env', binder, p, annots, imp = aux loc env p in
+        let loc, env', binder, p, annots = aux loc env p in
         let annots', binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
@@ -692,54 +706,53 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
               let x = { x with sort = t } in
               [(x, t)], LocalBinder(x, aq)
         in
-        loc, env', binder, p, annots'@annots, imp
+        loc, env', binder, p, annots'@annots
 
       | PatWild aq ->
-        let imp = (aq=Some Implicit) in
         let aq = trans_aqual env aq in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, aq), pos <| Pat_wild x, [], imp
+        loc, env, LocalBinder(x, aq), pos <| Pat_wild x, []
 
       | PatConst c ->
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, None), pos <| Pat_constant c, [], false
+        loc, env, LocalBinder(x, None), pos <| Pat_constant c, []
 
       | PatTvar(x, aq)
       | PatVar (x, aq) ->
-        let imp = (aq=Some Implicit) in
         let aq = trans_aqual env aq in
         let loc, env, xbv = resolvex loc env x in
-        loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, [], imp
+        loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, []
 
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x,  None), pos <| Pat_cons(l, []), [], false
+        loc, env, LocalBinder(x,  None), pos <| Pat_cons(l, []), []
 
       | PatApp({pat=PatName l}, args) ->
         let loc, env, annots, args = List.fold_right (fun arg (loc,env, annots, args) ->
-          let loc, env, _, arg, ans, imp = aux loc env arg in
+          let loc, env, b, arg, ans = aux loc env arg in
+          let imp = is_implicit b in
           (loc, env, ans@annots, (arg, imp)::args)) args (loc, env, [], []) in
         let l = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots, false
+        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots
 
       | PatApp _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
 
       | PatList pats ->
         let loc, env, annots, pats = List.fold_right (fun pat (loc, env, annots, pats) ->
-          let loc,env,_,pat, ans, _ = aux loc env pat in
+          let loc,env,_,pat, ans = aux loc env pat in
           loc, env, ans@annots, pat::pats) pats (loc, env, [], []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
             pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid delta_constant (Some Data_ctor), [(hd, false);(tl, false)])) pats
                         (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid delta_constant (Some Data_ctor), [])) in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, None), pat, annots, false
+        loc, env, LocalBinder(x, None), pat, annots
 
       | PatTuple(args, dep) ->
         let loc, env, annots, args = List.fold_left (fun (loc, env, annots, pats) p ->
-          let loc, env, _, pat, ans, _ = aux loc env p in
+          let loc, env, _, pat, ans = aux loc env p in
           loc, env, ans@annots, (pat, false)::pats) (loc,env,[], []) args in
         let args = List.rev args in
         let l = if dep then C.mk_dtuple_data_lid (List.length args) p.prange
@@ -749,12 +762,13 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
           | Tm_fvar fv -> fv
           | _ -> failwith "impossible" in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots, false
+        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots
 
       | PatRecord ([]) ->
         raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
 
       | PatRecord (fields) ->
+        (* elaborate into an application and recurse *)
         let record = check_fields env fields p.prange in
         let fields = fields |> List.map (fun (f, p) -> (f.ident, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
@@ -762,11 +776,12 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
             | None -> mk_pattern (PatWild None) p.prange
             | Some (_, p) -> p) in
         let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (record.typename.ns @ [record.constrname]))) p.prange, args)) p.prange in
-        let env, e, b, p, annots, _ = aux loc env app in
+        let env, e, b, p, annots = aux loc env app in
         let p = match p.v with
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
-        env, e, b, p, annots, false
+        env, e, b, p, annots
+
   and aux loc env p = aux' false loc env p
   in
   let aux_maybe_or env (p:pattern) =
@@ -774,14 +789,14 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, ans, _ = aux' true loc env p in
+        let loc, env, var, p, ans = aux' true loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, ans, _ = aux' true loc env p in
+          let loc, env, _, p, ans = aux' true loc env p in
           loc, env, (p,ans)::ps) (loc, env, []) ps in
         let pats = ((p,ans)::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, ans, b = aux' true loc env p in
+        let loc, env, vars, pat, ans = aux' true loc env p in
         env, vars, [(pat, ans)]
   in
   let env, b, pats = aux_maybe_or env p in
@@ -1121,8 +1136,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       | Some id ->
           raise_error (Errors.Fatal_NonLinearPatternNotPermitted,
                        BU.format1
-                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition."
-                          (id.idText)) (range_of_id id)
+                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition." id.idText)
+                      (range_of_id id)
       end;
 
       let binders = binders |> List.map replace_unit_pattern in
