@@ -1023,6 +1023,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     match se.sigel with
      | Sig_splice _ ->
          failwith "impossible -- splice should have been removed by Tc.fs"
+     | Sig_group _ ->
+         failwith "impossible -- Sig_groups should have been removed by Tc.fs"
      | Sig_pragma _
      | Sig_main _
      | Sig_effect_abbrev _

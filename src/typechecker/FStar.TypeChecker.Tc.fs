@@ -390,6 +390,9 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "huh?"
 
+let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * list<sigelt> * Env.env)>> =
+  BU.mk_ref None
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
@@ -404,6 +407,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
+
+  | Sig_group ses ->
+    BU.must (!tc_decls_knot) env ses
 
   | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
@@ -885,6 +891,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
    match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
+  | Sig_group _
   | Sig_splice _
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible (Already handled)"
@@ -1082,6 +1089,9 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
+let _ =
+    tc_decls_knot := Some tc_decls
+
 (* Consider the module:
         module Test
         abstract type t = nat
@@ -1096,7 +1106,7 @@ let tc_decls env ses =
    perspective.
 *)
 open FStar.TypeChecker.Err
-let check_exports env (modul:modul) exports =
+let check_exports env (modul:modul) exports : unit =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t =
         let univs, t = SS.open_univ_vars univs t in
@@ -1141,9 +1151,13 @@ let check_exports env (modul:modul) exports =
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
-        | Sig_splice _
         | Sig_pragma _
         | Sig_polymonadic_bind _ -> ()
+
+        | Sig_group ses ->
+            ses |> List.iter check_sigelt
+
+        | Sig_splice _ -> failwith "Impossible (Already handled)"
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1233,6 +1247,8 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
     | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
+
+    | Sig_group _ -> failwith "Impossible! extract_interface: trying to extract group"
 
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then

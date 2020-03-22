@@ -706,10 +706,11 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let lids_of_sigelt (se: sigelt) = match se.sigel with
+let rec lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
+  | Sig_group ses -> List.concatMap lids_of_sigelt ses
   | Sig_inductive_typ (lid, _,  _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _)

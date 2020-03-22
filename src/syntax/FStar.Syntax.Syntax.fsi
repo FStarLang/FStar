@@ -461,6 +461,7 @@ type sigelt' =
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
+  | Sig_group             of list<sigelt>
   | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
