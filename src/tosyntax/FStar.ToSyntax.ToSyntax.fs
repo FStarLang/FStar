@@ -623,52 +623,51 @@ let check_fields env fields rg =
     in
     record
 
+let check_linear_pattern_variables pats r =
+  // returns the set of pattern variables
+  let rec pat_vars p = match p.v with
+    | Pat_dot_term _
+    | Pat_wild _
+    | Pat_constant _ -> S.no_names
+    | Pat_var x -> BU.set_add x S.no_names
+    | Pat_cons(_, pats) ->
+      let aux out (p, _) =
+          let intersection = BU.set_intersect (pat_vars p) out in
+          if BU.set_is_empty intersection
+          then BU.set_union out (pat_vars p)
+          else
+            let duplicate_bv = List.hd (BU.set_elements intersection) in
+            raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
+                          BU.format1
+                            "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
+                             (duplicate_bv.ppname.idText) )
+
+                        r
+      in
+      List.fold_left aux S.no_names pats
+  in
+
+  // check that the same variables are bound in each pattern
+  match pats with
+  | [] -> ()
+  | [p] -> pat_vars p |> ignore
+  | p::ps ->
+    let pvars = pat_vars p in
+    let aux p =
+      if BU.set_eq pvars (pat_vars p) then () else
+      let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
+      let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
+      raise_error ( Errors.Fatal_IncoherentPatterns,
+                    BU.format1
+                      "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
+                       (first_nonlinear_var.ppname.idText) )
+                  r
+    in
+    List.iter aux ps
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
-  let check_linear_pattern_variables pats r =
-    // returns the set of pattern variables
-    let rec pat_vars p = match p.v with
-      | Pat_dot_term _
-      | Pat_wild _
-      | Pat_constant _ -> S.no_names
-      | Pat_var x -> BU.set_add x S.no_names
-      | Pat_cons(_, pats) ->
-        let aux out (p, _) =
-            let intersection = BU.set_intersect (pat_vars p) out in
-            if BU.set_is_empty intersection
-            then BU.set_union out (pat_vars p)
-            else
-              let duplicate_bv = List.hd (BU.set_elements intersection) in
-              raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
-                            BU.format1
-                              "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
-                               (duplicate_bv.ppname.idText) )
-
-                          r
-        in
-        List.fold_left aux S.no_names pats
-    in
-
-    // check that the same variables are bound in each pattern
-    match pats with
-    | [] -> ()
-    | [p] -> pat_vars p |> ignore
-    | p::ps ->
-      let pvars = pat_vars p in
-      let aux p =
-        if BU.set_eq pvars (pat_vars p) then () else
-        let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
-        let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
-        raise_error ( Errors.Fatal_IncoherentPatterns,
-                      BU.format1
-                        "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
-                         (first_nonlinear_var.ppname.idText) )
-                    r
-      in
-      List.iter aux ps
-  in // /check_linear_pattern_variables pats
-
   let resolvex (l:lenv_t) e x =
     match l |> BU.find_opt (fun y -> y.ppname.idText=x.idText) with
       | Some y -> l, e, y
@@ -677,7 +676,7 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
         (x::l), e, x
   in
 
-  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern)
+  let rec aux (loc:lenv_t) (env:env_t) (p:pattern)
     : lenv_t                         (* list of all BVs mentioned *)
     * env_t                          (* env updated with the BVs pushed in *)
     * bnd                            (* a binder for the pattern *)
@@ -781,36 +780,41 @@ let rec desugar_data_pat env p : (env_t * bnd * list<annotated_pat>) =
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, annots
-
-  and aux loc env p = aux' false loc env p
   in
+
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, ans = aux' true loc env p in
+        let loc, env, var, p, ans = aux loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, ans = aux' true loc env p in
+          let loc, env, _, p, ans = aux loc env p in
           loc, env, (p,ans)::ps) (loc, env, []) ps in
         let pats = ((p,ans)::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, ans = aux' true loc env p in
+        let loc, env, vars, pat, ans = aux loc env p in
         env, vars, [(pat, ans)]
   in
   let env, b, pats = aux_maybe_or env p in
   check_linear_pattern_variables (List.map fst pats) p.prange;
   env, b, pats
 
-and desugar_binding_pat_maybe_top top env p : (env_t * bnd * list<annotated_pat>) =
-  // GM: I seem to need the annotation here, or F* gets confused between tuple2 and tuple3
-  let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>)=
-    env, LetBinder(qualify env x, (ty, tacopt)), []
-  in
-  let op_to_ident x = mk_ident (compile_op 0 x.idText x.idRange, x.idRange) in
-  if top
-  then match p.pat with
+and desugar_binding_pat_maybe_top top env p
+  : env_t                   (* environment with patterns variables pushed in *)
+  * bnd                     (* a binder for the pattern *)
+  * list<annotated_pat>     (* elaborated patterns with their variable annotations *)
+  =
+
+  if top then
+    let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>) =
+    // GM: ^ I seem to need the type annotation here,
+    //     or F* gets confused between tuple2 and tuple3 apparently?
+        env, LetBinder(qualify env x, (ty, tacopt)), []
+    in
+    let op_to_ident x = mk_ident (compile_op 0 x.idText x.idRange, x.idRange) in
+    match p.pat with
     | PatOp x ->
         mklet (op_to_ident x) tun None
     | PatVar (x, _) ->
@@ -821,7 +825,8 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * list<annotated_pat>
     | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
         let tacopt = BU.map_opt tacopt (desugar_term env) in
         mklet x (desugar_term env t) tacopt
-    | _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
+    | _ ->
+        raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
     let (env, binder, p) = desugar_data_pat env p in
     let p = match p with
@@ -1375,21 +1380,22 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let t1, aq0 = desugar_term_aq env t1 in
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat in
         let tm, aq1 =
-            match binder with
-            | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
-              let body, aq = desugar_term_aq env t2 in
-              let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
-              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body), aq
+         match binder with
+         | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
+           let body, aq = desugar_term_aq env t2 in
+           let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
+           mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body), aq
 
-            | LocalBinder (x,_) ->
-                // TODO GGGGG unsure if keep _ or [] on second comp below
-              let body, aq = desugar_term_aq env t2 in
-              let body = match pat with
-                | []
-                | [{v=Pat_wild _}, _] -> body
-                | _ ->
-                  S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
-              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
+         | LocalBinder (x,_) ->
+           // TODO unsure if keep _ or [] on second comp below
+           let body, aq = desugar_term_aq env t2 in
+           let body = match pat with
+             | []
+             | [{v=Pat_wild _}, _] -> body
+             | _ ->
+               S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range
+           in
+           mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
         in
         tm, aq0 @ aq1
       in
