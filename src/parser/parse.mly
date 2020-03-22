@@ -207,6 +207,11 @@ rawDecl:
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
       }
+  | VAL c=constant
+      {
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
+      }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
