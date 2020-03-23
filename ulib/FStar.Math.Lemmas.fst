@@ -212,7 +212,7 @@ let modulo_lemma a b = ()
 val lemma_div_mod: a:int -> p:nonzero -> Lemma (a = p * (a / p) + a % p)
 let lemma_div_mod a p = ()
 
-val lemma_mod_lt: a:int -> p:pos -> Lemma (0 <= a % p /\ a % p < p)
+val lemma_mod_lt: a:int -> p:pos -> Lemma (0 <= a % p /\ a % p < p /\ (a >= 0 ==> a % p <= a))
 let lemma_mod_lt a p = ()
 
 val lemma_div_lt_nat: a:int -> n:nat -> m:nat{m <= n} ->

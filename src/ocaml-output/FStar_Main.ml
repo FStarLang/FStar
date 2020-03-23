@@ -341,8 +341,8 @@ let main : 'Auu____803 . unit -> 'Auu____803 =
                        let uu____834 =
                          let uu____836 = FStar_Getopt.cmdline ()  in
                          FStar_String.concat " " uu____836  in
-                       FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____832
-                         uu____834
+                       FStar_Util.print2_error "TOTAL TIME %s ms: %s\n"
+                         uu____832 uu____834
                      else ());
                     cleanup ();
                     FStar_All.exit Prims.int_zero)))) ()

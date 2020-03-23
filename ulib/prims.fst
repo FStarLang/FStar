@@ -254,6 +254,9 @@ effect GTot (a:Type) = GHOST a (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
+unfold
+let id (#a:Type) (x:a) : a = x
+
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 unopteq
 type dtuple2 (a:Type)
@@ -475,4 +478,4 @@ let labeled (r:range) (msg:string) (b:Type) :Type = b
    Incrementing this forces all .checked files to be invalidated *)
 private
 abstract
-let __cache_version_number__ = 16
+let __cache_version_number__ = 17

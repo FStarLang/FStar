@@ -147,8 +147,9 @@ let compare_b (n1, t1) (n2, t2) : int =
 let compare_v #a (vm : vmap a bdata) (v1 v2 : var) =
     compare_b (select_extra v1 vm) (select_extra v2 vm)
 
-let sort_sl (a:Type) (vm:vmap a bdata) (xs:list var) : Tot (list var) =
-  List.Tot.sortWith #var (compare_v vm) xs
+(* `a` will be instantiated with `memory`, which is a `Type u#1` *)
+let sort_sl : permute bdata =
+    fun (a:Type u#1) (vm:vmap a bdata) (xs:list var) -> List.Tot.sortWith #var (compare_v vm) xs
 
 let sort_sl_correct : permute_correct sort_sl =
   fun #a m vm xs -> sortWith_correct (compare_v vm) #a m vm xs

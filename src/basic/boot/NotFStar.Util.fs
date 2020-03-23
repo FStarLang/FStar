@@ -389,6 +389,8 @@ let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
+let flush_stdout () = stdout.Flush()
+
 let stdout_isatty () = None:option<bool>
 
 // These functions have no effect in F#
