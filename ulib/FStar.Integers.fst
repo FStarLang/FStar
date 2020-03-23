@@ -141,7 +141,7 @@ unfold
 let ( + ) #sw
           (x:int_t sw)
           (y:int_t sw{within_bounds sw (v x + v y)})
-  : Tot   (z:int_t sw)
+  : Tot   (int_t sw)
   = match sw with
     | Signed Winfinite -> x + y
     | Unsigned W8   -> FStar.UInt8.(x +^ y)
@@ -160,7 +160,7 @@ unfold
 let ( +? ) (#w:fixed_width)
            (x:int_t (Unsigned w))
            (y:int_t (Unsigned w))
-  : Tot    (z:int_t (Unsigned w))
+  : Tot    (int_t (Unsigned w))
   = match w with
     | W8 -> FStar.UInt8.(x +?^ y)
     | W16 -> FStar.UInt16.(x +?^ y)
@@ -179,7 +179,7 @@ unfold
 let ( +% ) (#sw:_{Unsigned? sw})
            (x:int_t sw)
            (y:int_t sw)
-  : Tot    (z:int_t sw)
+  : Tot    (int_t sw)
   = let Unsigned w = sw in
     match w with
     | W8 -> FStar.UInt8.(x +%^ y)
@@ -193,7 +193,7 @@ unfold
 let op_Subtraction #sw
                    (x:int_t sw)
                    (y:int_t sw{within_bounds sw (v x - v y)})
-    : Tot          (z:int_t sw)
+    : Tot          (int_t sw)
   = match sw with
     | Signed Winfinite -> x - y
     | Unsigned W8 -> FStar.UInt8.(x -^ y)
@@ -213,7 +213,7 @@ let op_Subtraction_Question
         (#sw:_{Unsigned? sw})
         (x:int_t sw)
         (y:int_t sw)
-  : Tot (z:int_t sw)
+  : Tot (int_t sw)
   = let Unsigned w = sw in
     match w with
     | W8 -> FStar.UInt8.(x -?^ y)
@@ -228,7 +228,7 @@ let op_Subtraction_Percent
          (#sw:_{Unsigned? sw})
          (x:int_t sw)
          (y:int_t sw)
-  : Tot  (z:int_t sw)
+  : Tot  (int_t sw)
   = let Unsigned w = sw in
     match w with
     | W8 -> FStar.UInt8.(x -%^ y)
@@ -242,7 +242,7 @@ unfold
 let op_Minus
          (#sw:_{Signed? sw})
          (x:int_t sw{within_bounds sw (0 - v x)})
-  : Tot  (z:int_t sw)
+  : Tot  (int_t sw)
   = let Signed w = sw in
     match w with
     | Winfinite -> 0 - x
@@ -258,7 +258,7 @@ unfold
 let ( * ) (#sw:signed_width{width_of_sw sw <> W128})
           (x:int_t sw)
           (y:int_t sw{within_bounds sw (v x * v y)})
-  : Tot   (z:int_t sw)
+  : Tot   (int_t sw)
   = match sw with
     | Signed Winfinite -> x * y
     | Unsigned W8 -> FStar.UInt8.(x *^ y)
@@ -276,7 +276,7 @@ unfold
 let ( *? ) (#sw:_{Unsigned? sw /\ width_of_sw sw <> W128})
            (x:int_t sw)
            (y:int_t sw)
-  : Tot    (z:int_t sw)
+  : Tot    (int_t sw)
   = let Unsigned w = sw in
     match w with
     | W8 -> FStar.UInt8.(x *?^ y)
@@ -289,7 +289,7 @@ unfold
 let ( *% ) (#sw:_{Unsigned? sw /\ width_of_sw sw <> W128})
            (x:int_t sw)
            (y:int_t sw)
-  : Tot    (z:int_t sw)
+  : Tot    (int_t sw)
   = let Unsigned w = sw in
     match w with
     | W8 -> FStar.UInt8.(x *%^ y)
