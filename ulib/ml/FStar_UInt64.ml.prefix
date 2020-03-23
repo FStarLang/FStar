@@ -6,11 +6,3 @@ let n = Prims.of_int 64
 
 let uint_to_t x = M.of_string (Z.to_string x)
 let __uint_to_t = uint_to_t
-
-(* Leverage Uint128 for this one *)
-let mul_div a b =
-  let a = Stdint.Uint128.of_uint64 a in
-  let b = Stdint.Uint128.of_uint64 b in
-  let r = Stdint.Uint128.mul a b in
-  let r = Stdint.Uint128.shift_right r 64 in
-  M.of_uint128 r

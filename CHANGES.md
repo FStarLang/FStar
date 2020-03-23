@@ -83,6 +83,10 @@ Guidelines for the changelog:
      staging ground, and a .cache directory in which .checked and
      .hints files are maintained.
 
+   * FStar.UInt[N].mul_div has been removed. This operation was not
+     supported uniformly, with only an implementation for UInt64
+     provided (using UInt128).
+
 ## Syntax
 
    * We now overload `&` to construct both dependent and non-dependent
