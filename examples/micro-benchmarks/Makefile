@@ -32,7 +32,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.uver TestHasEq.uver \
 	 PatAnnot.uver TupleSyntax.uver Test.FunctionalExtensionality.uver ArgsAndQuals.uver Test.Printf.uver \
 	 MustEraseForExtraction.uver UnifyReify.uver NestedLemma.uver NormTypesForSMT.uver \
-	 StrictUnfolding.uver GhostImplicits.uver Erasable.ml Coercions.uver Coercions1Phase.uver \
+	 StrictUnfolding.uver GhostImplicits.uver Erasable.ml-cmp Coercions.uver Coercions1Phase.uver \
 	 Inference.uver
 
 Coercions1Phase.uver: OTHERFLAGS += --use_two_phase_tc false
@@ -53,4 +53,6 @@ testghost:
 
 Erasable.ml: Erasable.fst
 	$(FSTAR) --codegen OCaml --extract Erasable $^
-	cmp $@ $@.expected
+
+Erasable.ml-cmp: Erasable.ml Erasable.ml.expected
+	diff --strip-trailing-cr $< $<.expected
