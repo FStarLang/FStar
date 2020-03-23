@@ -752,7 +752,7 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format2 "val %s : %s" lid.str (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
-      | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
+      | Sig_bundle(ses, _) -> "(* Sig_bundle *)\n" ^ (List.map sigelt_to_string ses |> String.concat "\n") ^ "\n(* / Sig_bundle *)"
       | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
