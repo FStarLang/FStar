@@ -3027,8 +3027,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
 
       let bvs = gather_pattern_bound_vars pat |> set_elements in
 
-      (* If there are no variables in the pattern, we should still
-       * check to see that it is complete, otherwise things like:
+      (* If there are no variables in the pattern (and it is not a
+       * wildcard), we should still check to see that it is complete,
+       * otherwise things like:
        *   let false = true
        *   let Some 42 = None
        * would be accepted. To do so, we generate a declaration
@@ -3037,7 +3038,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
        * which will trigger a check for completeness of pat
        * wrt the body. (See issues #829 and #1903)
        *)
-      if List.isEmpty bvs
+      if List.isEmpty bvs && not (is_var_pattern pat)
       then build_coverage_check main_let
       else List.fold_left build_projection main_let bvs
 
