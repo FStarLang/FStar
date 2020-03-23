@@ -92,8 +92,10 @@ FSTARLIB_OBJECTS=fstarlib.a fstarlib.cma fstarlib.cmxs fstarlib.cmxa
 TACLIB_OBJECTS=fstartaclib.cma fstartaclib.cmxs fstartaclib.cmxa
 
 _fstarlib: ml/fstarlib.mllib
+	$(MAKE) -C ml/ intfiles
 	$(FSTARLIB_OCAMLBUILD) $(FSTARLIB_OBJECTS)
 _fstartaclib: tactics_ml/fstartaclib.mllib
+	$(MAKE) -C ml/ intfiles
 	$(TACLIB_OCAMLBUILD) $(TACLIB_OBJECTS)
 
 $(FSTARLIB_OBJECTS): _fstarlib

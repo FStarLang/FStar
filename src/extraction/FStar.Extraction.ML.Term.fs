@@ -74,7 +74,7 @@ of field names has changed, but we cannot change the definition in
 FStar.Extraction.ML.Util for now because it is used by legacy
 extraction, which is still used in the bootstrapping process *)
 
-let record_fields fs vs = List.map2 (fun (f:ident) e -> f.idText, e) fs vs
+let record_fields fs vs = List.map2 (fun (f:ident) e -> avoid_keyword f.idText, e) fs vs
 
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
