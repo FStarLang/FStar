@@ -40,6 +40,10 @@ let test_promotion (x:t) : Tot t =
 ]
 let e_nat = nat
 
+(* GM: Note: e_nat_2 and e_nat_3 will appear
+ * in Erasable.ml (as unit) since the definitions are erased
+ * by the expect_failure, and we are left only with the vals *)
+
 //erasable is permitted on type declarations
 [@erasable ]
 val e_nat_2 : Type0
