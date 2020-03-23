@@ -298,13 +298,13 @@ let encode_OneNum n = encode_u32 n
 val encode_TwoNums : n:U32.t -> m:U32.t -> b:bytes{length b == 8}
 let encode_TwoNums n m = encode_u32 n `append` encode_u32 m
 
-val encode_numbers_data: numbers -> b:bytes
+val encode_numbers_data: numbers -> bytes
 let encode_numbers_data ns = match ns with
     | Nothing -> encode_Nothing
     | OneNum n -> encode_OneNum n
     | TwoNums n m -> encode_TwoNums n m
 
-val encode_numbers: numbers -> b:bytes
+val encode_numbers: numbers -> bytes
 let encode_numbers ns =
   encode_numbers_tag (numbers_tag_val ns) `append`
   encode_numbers_data ns

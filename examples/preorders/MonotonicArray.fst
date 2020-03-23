@@ -149,7 +149,7 @@ type index (#a:Type0) (#n:nat) (arr:t a n) = i:nat{i < n}
  * Ghost view of an array as a sequence of options
  *)
 abstract let as_seq (#a:Type0) (#n:nat) (arr:t a n) (h:heap)
-  :GTot (s:Seq.seq (option a))
+  :GTot (Seq.seq (option a))
   = let A #_ #_ #_ s_ref off = arr in
     let s = fst (sel h s_ref) in
     Seq.slice s off (off + n)
@@ -209,7 +209,7 @@ abstract type frozen_with (#a:Type0) (#n:nat) (arr:t a n) (s:erased (Seq.seq a))
  * freeze an array
  *)
 abstract let freeze (#a:Type0) (#n:nat) (arr:farray a n)
-  :ST (s:erased (Seq.seq a))
+  :ST (erased (Seq.seq a))
       (requires (fun h0       -> is_full_array arr /\  //can only freeze full arrays
                               (forall (i:nat). i < n ==> init_at_arr arr i h0)))  //all elements must be init_at
       (ensures  (fun h0 es h1 -> some_equivalent_seqs (as_seq arr h0) (reveal es) /\  //the returned ghost sequence is the current view of array in the heap

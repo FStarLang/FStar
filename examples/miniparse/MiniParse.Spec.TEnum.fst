@@ -166,7 +166,7 @@ val synth_inverse_forall_bounded_u16_intro
   (f1: (bounded_u16 b -> GTot t))
   (f2: (t -> GTot (bounded_u16 b)))
   (u: squash (synth_inverse_forall_bounded_u16' b t f1 f2))
-: Tot (u' : squash (synth_inverse f2 f1))
+: Tot (squash (synth_inverse f2 f1))
 
 let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
 = Classical.forall_intro (Classical.move_requires (forall_bounded_u16_elim b (synth_inverse_forall_bounded_u16_pred b t f1 f2)))

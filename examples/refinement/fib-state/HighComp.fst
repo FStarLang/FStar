@@ -105,11 +105,9 @@ effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
 unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
 
-assume val range0: range
-
 unfold
-let bind_wp #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : (wp:hwp_mon b) =
-  HIGH?.bind_wp range0 a b wp1 fwp2
+let bind_wp #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : hwp_mon b =
+  HIGH?.bind_wp range_0 a b wp1 fwp2
 
 unfold
 let read_wp (i:nat) : hwp_mon mint =

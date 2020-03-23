@@ -47,7 +47,7 @@ let do_while_sz_continue
 let do_while_sz_inv
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (x0: tin)
   (continue: bool)
   (x: do_while_sz_interm tin tout)
@@ -70,7 +70,7 @@ inline_for_extraction
 let do_while_sz_body
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x0: tin)
   (x: do_while_sz_interm tin tout)
@@ -101,7 +101,7 @@ inline_for_extraction
 let do_while_sz
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x: tin)
  : Tot (m_sz (do_while tin tout decrease body x))
@@ -135,7 +135,7 @@ inline_for_extraction
 let do_while_st_inv
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (h0: G.erased HS.mem)
   (x0: tin)
   (blog: B.buffer U8.t)
@@ -178,7 +178,7 @@ inline_for_extraction
 let do_while_st_body
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (h0: G.erased HS.mem)
   (x0: tin)
@@ -254,7 +254,7 @@ inline_for_extraction
 let do_while_st
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (x: tin)
 : Tot (m_st (do_while tin tout decrease body x))
