@@ -1502,8 +1502,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
                    [as_arg e]), s
 
-    | NamedTyp(n, _) ->
-      raise_error (Fatal_SyntaxError, "Syntax error") (range_of_id n)
+    | NamedTyp(n, e) ->
+      (* See issue #1905 *)
+      log_issue (range_of_id n) (Warning_IgnoredBinding, "This name is being ignored");
+      desugar_term_aq env e
+
 
     | Paren e -> failwith "impossible"
 
