@@ -20,11 +20,10 @@ include FStar.DM4F.Heap.IntStoreFixed
 include FStar.DM4F.IntStoreFixed
 
 type reified_raw_computation =
-  (f: (
-    nat ->
-    heap ->
-    GTot (bool * heap)
-  ))
+  (nat ->
+   heap ->
+   GTot (bool * heap)
+  )
 
 let fuel_monotonic
   (f: reified_raw_computation)
@@ -40,7 +39,7 @@ type reified_computation =
   (f: reified_raw_computation { fuel_monotonic f } )
 
 type raw_computation =
-  (f: ((fuel: nat) -> ISNull bool))
+  (fuel: nat) -> ISNull bool
 
 let reify_raw_computation (f : raw_computation) : reified_raw_computation =
   fun n h -> reify (f n) h
@@ -234,7 +233,7 @@ let interpolable_elim
   (ensures (exists x2 . holds f x1 x2 /\ holds f x2 x3))
 = Classical.forall_intro_2 (holds_equiv f)
 
-type sttype = (f: rel heap)
+type sttype = rel heap
 
 (* 3.1.3. Judgements *)
 

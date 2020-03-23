@@ -79,7 +79,7 @@ let append #a s1 s2 = MkSeq (List.append (MkSeq?.l s1) (MkSeq?.l s2))
 
 let op_At_Bar (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
 
-abstract val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (r:seq a) (decreases (length s))
+abstract val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a) (decreases (length s))
 let rec slice #a s i j =
   if i > 0 then slice #a (tl s) (i - 1) (j - 1)
   else
