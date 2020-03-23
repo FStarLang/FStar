@@ -5,6 +5,8 @@ module PatternMatch
  * Error 178: Type ascriptions within patterns are only allowed on variables [2 times]
  *)
 
+let _ = (=)
+
 let pair_on_arg ((x,y) : int & int) : int = x + y
 
 type ab = | A | B
