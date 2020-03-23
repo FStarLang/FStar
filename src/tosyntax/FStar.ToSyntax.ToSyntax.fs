@@ -2997,23 +2997,25 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
          *
          * Otherwise, generate a "coverage check" of the shape
          *
-         * let uu___X = match fresh_toplevel_name with | pat -> ()
+         * let uu___X : unit = match fresh_toplevel_name with | pat -> ()
          *
          *)
-        let top_id, branch =
+        let bv_pat, branch =
           match id_opt with
           | Some id ->
             let lid = lid_of_ids [id] in
             let branch = mk_term (Var lid) (range_of_lid lid) Expr in
-            id, branch
+            let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
+            bv_pat, branch
 
           | None ->
             let id = Ident.gen Range.dummyRange in
             let branch = mk_term (Const FStar.Const.Const_unit) Range.dummyRange Expr in
-            id, branch
+            let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
+            let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty, None))) (range_of_id id) in
+            bv_pat, branch
         in
         let body = mk_term (Match (main, [pat, None, branch])) main.range Expr in
-        let bv_pat = mk_pattern (PatVar (top_id, None)) (range_of_id top_id) in
         (* TODO : do we need to put some attributes for this declaration ? *)
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
         let env, ses' = desugar_decl env id_decl in
@@ -3031,7 +3033,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
        *   let Some 42 = None
        * would be accepted. To do so, we generate a declaration
        * of shape
-       *   let uu___X = match body with | pat -> ()
+       *   let uu___X : unit = match body with | pat -> ()
        * which will trigger a check for completeness of pat
        * wrt the body. (See issues #829 and #1903)
        *)
