@@ -15,10 +15,11 @@
 *)
 module NegativeTests.Neg
 
-irreducible val x:nat
+val x:nat
 [@(expect_failure [19])]
 let x = -1 //should fail reporting 1 error
-irreducible val y:nat
+
+val y:nat
 [@(expect_failure [19])]
 let y = -1 //should also fail reporting only 1 error
 
