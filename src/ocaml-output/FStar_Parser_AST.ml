@@ -2068,7 +2068,7 @@ let (id_of_tycon : tycon -> Prims.string) =
     | TyconVariant (i,uu____8954,uu____8955,uu____8956) ->
         i.FStar_Ident.idText
   
-let (decl_to_string : decl -> Prims.string) =
+let rec (decl_to_string : decl -> Prims.string) =
   fun d  ->
     match d.d with
     | TopLevelModule l -> Prims.op_Hat "module " l.FStar_Ident.str
@@ -2117,25 +2117,35 @@ let (decl_to_string : decl -> Prims.string) =
         Prims.op_Hat "splice[" uu____9114
     | SubEffect uu____9139 -> "sub_effect"
     | Pragma uu____9141 -> "pragma"
+    | Fail (errs,lax1,se) ->
+        let uu____9154 =
+          match errs with
+          | [] -> ""
+          | errs1 ->
+              FStar_Common.string_of_list FStar_Util.string_of_int errs1
+           in
+        let uu____9164 = decl_to_string se  in
+        FStar_Util.format3 "%Fail%s%s (%s)" (if lax1 then "Lax" else "")
+          uu____9154 uu____9164
   
 let (modul_to_string : modul -> Prims.string) =
   fun m  ->
     match m with
-    | Module (uu____9151,decls) ->
-        let uu____9157 =
+    | Module (uu____9181,decls) ->
+        let uu____9187 =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string)  in
-        FStar_All.pipe_right uu____9157 (FStar_String.concat "\n")
-    | Interface (uu____9172,decls,uu____9174) ->
-        let uu____9181 =
+        FStar_All.pipe_right uu____9187 (FStar_String.concat "\n")
+    | Interface (uu____9202,decls,uu____9204) ->
+        let uu____9211 =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string)  in
-        FStar_All.pipe_right uu____9181 (FStar_String.concat "\n")
+        FStar_All.pipe_right uu____9211 (FStar_String.concat "\n")
   
 let (decl_is_val : FStar_Ident.ident -> decl -> Prims.bool) =
   fun id1  ->
     fun decl  ->
       match decl.d with
-      | Val (id',uu____9210) -> FStar_Ident.ident_equals id1 id'
-      | uu____9211 -> false
+      | Val (id',uu____9240) -> FStar_Ident.ident_equals id1 id'
+      | uu____9241 -> false
   
 let (thunk : term -> term) =
   fun ens  ->
@@ -2153,9 +2163,9 @@ let (idents_of_binders :
               match b.b with
               | Variable i -> i
               | TVariable i -> i
-              | Annotated (i,uu____9249) -> i
-              | TAnnotated (i,uu____9251) -> i
-              | NoName uu____9252 ->
+              | Annotated (i,uu____9279) -> i
+              | TAnnotated (i,uu____9281) -> i
+              | NoName uu____9282 ->
                   FStar_Errors.raise_error
                     (FStar_Errors.Fatal_MissingQuantifierBinder,
                       "Wildcard binders in quantifiers are not allowed") r))
