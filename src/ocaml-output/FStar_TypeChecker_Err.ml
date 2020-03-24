@@ -84,14 +84,14 @@ let print_discrepancy :
                set_bool_option "print_effect_args" pea;
                set_bool_option "print_full_names " pf)
            in
-        let base = get1 ()  in
+        let bas = get1 ()  in
         let rec go cur =
           match () with
           | () when full cur ->
               let uu____506 = print7 ()  in
               (match uu____506 with | (xs,ys,uu____524) -> (xs, ys))
           | () when
-              let uu____533 = blist_leq base cur  in
+              let uu____533 = blist_leq bas cur  in
               Prims.op_Negation uu____533 ->
               let uu____535 = succ cur  in go uu____535
           | () ->
@@ -101,7 +101,7 @@ let print_discrepancy :
                 | (xs,ys,true ) -> (xs, ys)
                 | uu____566 -> let uu____576 = succ cur  in go uu____576))
            in
-        FStar_Options.with_saved_options (fun uu____587  -> go base)
+        FStar_Options.with_saved_options (fun uu____587  -> go bas)
   
 let errors_smt_detail :
   'Auu____597 .
