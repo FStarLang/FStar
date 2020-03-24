@@ -243,11 +243,6 @@ let intro_chan_inv_step #p (c:chan_t p) (vs vr:chan_val)
                  chan_inv_step vr vs)
                  (fun _ -> chan_inv c)
   = steel_frame_t (fun _ -> intro_chan_inv_cond_step vs vr);
-    // AF: Unclear why this assert is needed
-    h_assert (chan_inv_cond vs vr `star` (
-                pts_to c.send half vs `star`
-                 pts_to c.recv half vr `star`
-                 trace_until c.trace vr ));
     steel_frame_t (fun _ -> intro_chan_inv_aux c vs vr);
     rassert (chan_inv c)
 
@@ -258,11 +253,6 @@ let intro_chan_inv_eq #p (c:chan_t p) (vs vr:chan_val)
                  pure (vs == vr))
                  (fun _ -> chan_inv c)
   = steel_frame_t (fun _ -> intro_chan_inv_cond_eq vs vr); // _;
-    // AF: Unclear why this assert is needed
-    h_assert (chan_inv_cond vs vr `star` (
-                 pts_to c.send half vs `star`
-                 pts_to c.recv half vr `star`
-                 trace_until c.trace vr ));
     steel_frame_t (fun _ -> intro_chan_inv_aux c vs vr);
     rassert (chan_inv c)
 
