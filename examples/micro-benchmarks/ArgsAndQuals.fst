@@ -21,5 +21,5 @@ module ArgsAndQuals
  * https://github.com/FStarLang/FStar/issues/1486#issuecomment-408958279 *)
 
 val test1 : #a:Type -> #wp1:pure_wp a -> $t1:(unit -> PURE a wp1) -> PURE a wp1
-[@(expect_failure [91])]
+%Fail [91]
 let test1 #_ #_ #_ t1 = t1 ()

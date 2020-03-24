@@ -15,7 +15,7 @@
 *)
 module Bug540
 
-[@expect_failure]
+%Fail
 let test (a b:Type) =
   let _ =  a = b in
   ()

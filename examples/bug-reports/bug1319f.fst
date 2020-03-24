@@ -31,7 +31,7 @@ noeq type operand 'val 'op = {
   eval_operand   : 'op -> regmap -> 'val
 }
 
-[@(expect_failure [54])]
+%Fail [54]
 let operandReg64 : operand int (regtyp 0) = {
   eval_operand  = (fun op regs -> regs op ) // types don't really match here
 }

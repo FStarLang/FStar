@@ -3,7 +3,7 @@ module Bug1954
 (* disable warning about needless let rec *)
 #set-options "--warn_error -328"
 
-[@(expect_failure [178])]
+%Fail [178]
 let blah = match None with | (None : option int) -> ()
 
 let         addp ((x, y) : int & int) : int = x + y
@@ -20,7 +20,7 @@ let unbox' (Box x : box int) : int = x
 
 let unbox'' (Box (x : int) : box int) : int = x
 
-[@(expect_failure [178])]
+%Fail [178]
 let g b =
     match b with
     | (Box x : box int) -> x

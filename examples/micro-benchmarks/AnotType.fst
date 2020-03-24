@@ -15,7 +15,7 @@
 *)
 module AnotType
 
-[@(expect_failure [309])]
+%Fail [309]
 type tc : int = | C
 
 type ta : Type = | A
@@ -23,7 +23,7 @@ type ta : Type = | A
 type tb : Type u#42 = | B
 
 (* Fails, Type0 != Type42 *)
-[@(expect_failure [189])]
+%Fail [189]
 let _ = ta == tb
 
 type td : eqtype = | D

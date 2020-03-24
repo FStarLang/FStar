@@ -21,6 +21,6 @@ type test (a : unit) =
 val f : #x:unit -> test x
 let f #x = (Test #x)
 
-[@(expect_failure [66])]
+%Fail [66]
 let g () : unit = match f with
   | Test -> ()

@@ -9,7 +9,7 @@ let sp1 = assert (List.length [1] == 1)
 #pop-options
 
 (* Fails without fuel *)
-[@expect_failure]
+%Fail
 let sp2 = assert (List.length [1] == 1)
 
 val add_check_with : term -> sigelt -> Tac sigelt
@@ -34,5 +34,5 @@ let tau () : Tac decls =
 %splice[blah] (tau ())
 
 (* Outside, still with max_fuel = 0 *)
-[@expect_failure]
+%Fail
 let sp3 = assert (List.length [1] == 1)

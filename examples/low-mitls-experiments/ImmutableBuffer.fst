@@ -86,7 +86,7 @@ let test (l:list int{List.Tot.length l == 10}) :HST.St unit =
 (***** Tests for uninitialized buffers *****)
 module UB = LowStar.UninitializedBuffer
 
-[@expect_failure]
+%Fail
 let test_index_ub (b:UB.ubuffer int) :HST.ST unit (requires (fun h0 -> UB.live h0 b /\ UB.length b == 10)) (ensures (fun _ _ _ -> True))
   = ignore (UB.uindex b 0)
 

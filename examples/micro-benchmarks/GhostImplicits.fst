@@ -21,7 +21,7 @@ let g (#x:nat) (y:t x) : nat = 0
 
 //But, leave it implicit and although F* infers the same elaboration
 //as the term above it rejects it
-[@(expect_failure [34])]
+%Fail [34]
 let test3 (x:G.erased nat) (y:t (G.reveal x)) : nat = g y
 
 

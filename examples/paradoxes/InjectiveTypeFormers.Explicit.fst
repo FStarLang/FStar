@@ -6,7 +6,7 @@ let lemma_of_squash (x:squash 'a) : Lemma 'a = ()
 type i (f : Type u#1 -> Type u#0) : Type u#1 =
   | Mkinj : i f
 
-[@(expect_failure [19])]
+%Fail [19]
 let isInj (x:_) (y:_) (w:i x)
   : Lemma (i x == i y ==> x == y)
   = ()

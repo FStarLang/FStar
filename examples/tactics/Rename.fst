@@ -44,7 +44,7 @@ let l2 (x : bool) (y : int) (z : unit) =
             exact (quote p))
 
 // this error should show pretty binders too
-[@expect_failure]
+%Fail
 let _ =
     assert (False ==> True)
         by (let h0 = implies_intro () in

@@ -21,5 +21,5 @@ let tau () : Tac unit =
     let w = cur_witness () in
     exact w
 
-[@(expect_failure [217])]
+%Fail [217]
 let _ = assert False by tau ()

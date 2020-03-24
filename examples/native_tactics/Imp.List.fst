@@ -152,12 +152,12 @@ let x_times_42 x : prog = [
 
 
 // (* Without normalizing, they require fuel, or else fail *)
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
+// %Fail let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
+// %Fail let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
+// %Fail let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
+// %Fail let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
+// %Fail let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
+// %Fail let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 
 // (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
 
@@ -225,7 +225,7 @@ let x_times_42 x : prog = [
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 
-// // [@expect_failure]
+// // %Fail
 // // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 
 // // #set-options "--z3rlimit 10"

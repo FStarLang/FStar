@@ -15,7 +15,7 @@ module MDM = FStar.Monotonic.DependentMap
  *              succeed in inferring eqtype, so always better to annotate explicitly
  *)
 
-[@expect_failure]
+%Fail
 let alloc_fails #a #b #inv (r: erid):
   ST (MDM.t r a b inv)
     (requires (fun h ->

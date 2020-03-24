@@ -15,10 +15,10 @@
 *)
 module Bug1370b
 
-[@(expect_failure [316])]
+%Fail [316]
 effect Ouch1 (a:Type) = Tot False
 
-[@(expect_failure [316])]
+%Fail [316]
 effect Ouch2 (x:int) (a:Type) = Tot a
 
 effect Good3 (a:Type) (x:int) = Tot a

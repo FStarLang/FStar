@@ -87,7 +87,7 @@ let test_gt () =
     0;
   }
 
-[@(expect_failure [19])]
+%Fail [19]
 let test_gt_lt () =
   calc (>=) {
     10;
@@ -97,7 +97,7 @@ let test_gt_lt () =
     11;
   }
 
-[@(expect_failure [19])]
+%Fail [19]
 let fail1 () =
   calc (==) {
     1;
@@ -109,7 +109,7 @@ let fail1 () =
     4;
   }
 
-[@(expect_failure [19])]
+%Fail [19]
 let fail2 () =
   calc (==) {
     1;
@@ -121,7 +121,7 @@ let fail2 () =
     4;
   }
 
-[@(expect_failure [19])]
+%Fail [19]
 let fail3 () =
   calc (==) {
     1;

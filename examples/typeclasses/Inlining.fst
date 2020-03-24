@@ -47,7 +47,7 @@ let f (u:unit) =
 
 #push-options "--tcnorm false"
 
-[@expect_failure]
+%Fail
 let f_fail (u:unit) =
   let t = elem' #unit () in
   assert (forall y. y == 1)

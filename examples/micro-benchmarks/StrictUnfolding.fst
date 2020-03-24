@@ -45,7 +45,7 @@ let test_integer_generic #sw (x:int_t sw) (y:int_t sw{ok (+) x y}) : unit =
 
 //generic integer operations do not reduce, so you cannot prove
 //properties about them without also having FStar.Integers in scope
-[@(expect_failure [19])]
+%Fail [19]
 let test_integer_generic_wo_fstar_integers sw =
   assert (forall (x y:int_t sw). ok (+) x y ==> v (x + y) == (v x + v y))
       by (norm [delta; iota]; smt())

@@ -14,7 +14,7 @@ let used_to_fails (x: (f:foo & bar f)) =
   let (| MkFoo i, _ |) = x in
   i
 
-[@(expect_failure [54])]
+%Fail [54]
 let fails_but_thats_ok (x: (f:foo & bar f)) =
   let (| MkFoo i, j |) = x in
   j

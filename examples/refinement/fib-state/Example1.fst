@@ -72,8 +72,8 @@ let test3 (#a:Type0) (#b:Type0)
         by (apply_lemma (`L.morph_bind))
 
 //Needs a use of fext, rightfully so
-[@(expect_failure)
-  (postprocess_with (rewrite_morph (`L.morph_bind)))]
+%Fail
+[@(postprocess_with (rewrite_morph (`L.morph_bind)))]
 let test3' (#a:Type0) (#b:Type0)
            (#wpa:H.hwp_mon a) (#wpb: (a -> H.hwp_mon b))
            (c1:H.comp_wp a wpa) (c2: (x:a -> H.comp_wp b (wpb x))) =
@@ -87,7 +87,7 @@ let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x
 let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
 
 //TODO: But uses of fext fail on this occurrence below (some unification trouble?)
-[@(expect_failure)]
+%Fail
 let test_feq
           (#a:Type0)
           (#b:Type0)

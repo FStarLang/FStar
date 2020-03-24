@@ -9,7 +9,7 @@ let rec n_lexcons n =
   if n = 0 then LexTop else LexCons LexTop (n_lexcons (n-1))
 
 /// Previously, this used to go through, because we had `LexCons _ _ << LexTop`
-[@(expect_failure [19])]
+%Fail [19]
 let rec decrease_lexcons (n:nat)
  : Lemma (n_lexcons (n+1) << n_lexcons n)
  = if n = 0 then () else decrease_lexcons (n-1)
@@ -25,7 +25,7 @@ let rec infinite_fun n x =
   infinite_fun (n+1) (n_lexcons (n+1))
 
 /// You can no longer meaningfully relate lex tuples of different length
-[@(expect_failure [19])]
+%Fail [19]
 let rec f (x:nat) (y:nat)
   : Tot nat
     (decreases (LexCons x LexTop))

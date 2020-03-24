@@ -8,7 +8,7 @@ let return_u a x = ()
 val bind_u : (a:Type) -> (b:Type) -> (f:u a) -> (g: a -> u b) -> u b
 let bind_u a b f g = ()
 
-[@expect_failure]
+%Fail
 total reifiable reflectable new_effect {
   U : (a:Type) -> Effect
   with repr = u

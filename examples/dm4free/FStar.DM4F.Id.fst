@@ -34,7 +34,7 @@ total reifiable reflectable new_effect {
   }
 
 // Paranoid check that dm4f didn't mess up something
-[@expect_failure]
+%Fail
 let _ = assert False
 
 // Checking that we can access the generated combinators

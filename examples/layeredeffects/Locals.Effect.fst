@@ -183,6 +183,6 @@ let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length 
 
 /// Termination check failure
 
-[@expect_failure]
+%Fail
 let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
 = test2 l

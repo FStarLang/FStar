@@ -12,7 +12,7 @@ let bar (n:nat) = True
 val foo : nat -> Type0
 let foo j = let _ = () in j == 0 \/ bar (log j)  //force a deep embedding of foo
 
-[@expect_failure [19]]
+%Fail [19]
 let test (j:nat) : unit =
   assert (foo j);
   assert (j > 0)  //this would succeed earlier, effectively proving (forall (j:nat). j > 0), and hence False

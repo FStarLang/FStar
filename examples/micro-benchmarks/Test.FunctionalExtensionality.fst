@@ -32,7 +32,7 @@ let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
      And the interpretation of `a ^-> b` is an arrow whose **maximal
      domain** is a.
 *)
-[@(expect_failure [19])]
+%Fail [19]
 let sub_fails (f: int ^-> int) : (nat ^-> int) = f
 //this fails because `f`'s maximal domain is `int`,
 //but we are trying to return it at a type that claims
@@ -65,7 +65,7 @@ let on_dom_transitivity_of_equality =
 
 assume val f1 : int -> int
 assume val g1 : nat ^-> int
-[@expect_failure]
+%Fail
 let unable_to_extend_equality_to_larger_domains_1 =
   assume (on nat f1 == on nat g1); //H0: f1 restricted to nat is equal to g1
   //But, trying to show that f1 is equal to g1 on int fails
@@ -79,7 +79,7 @@ let unable_to_extend_equality_to_larger_domains_1 =
   //   equated with `g1` on incompatibile domains.
   assert (eq2 #(nat -> int) (on int f1) g1)
 
-[@expect_failure]
+%Fail
 let unable_to_extend_equality_to_larger_domains_2 =
   //Same example as before, now failing in a different way
   assume (on nat f1 == on nat g1); //H0: f1 restricted to nat is equal to g1
@@ -138,7 +138,7 @@ let on_2_interp (#a #b #c:Type) (f: (a -> b -> Tot c)) (x:a) (y:b)
 
 // One might expect that `^->` would be covariant in the co-domain of
 // the function, but this doesn't work currently since `on_domain` is abstract
-[@(expect_failure [19])]
+%Fail [19]
 let sub_currently_not (f: int ^-> nat) : (int ^-> int) = f
 
 // We can get this to work using an explicit `on_domain` coercion

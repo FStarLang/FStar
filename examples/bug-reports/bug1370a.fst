@@ -37,7 +37,7 @@ let u i = if i > 10
 
 val u' : nat -> Raises nat Bad
 
-[@expect_failure]
+%Fail
 let u' i = if i > 10
     then i
     else raise ReallyBad         // expected to fail type checking

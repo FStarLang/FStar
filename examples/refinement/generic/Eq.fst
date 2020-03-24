@@ -124,7 +124,7 @@ let morph_return' #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate 
           (return_wp x) (return_elab x) (lreturn x)) = () 
 
 (* This formulation does not seem provable *)
-[@expect_failure]
+%Fail
 let morph_return_fail #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a
   (wp : hwp_mon #hstate a) (c:high a wp) (x:a) :
   Lemma

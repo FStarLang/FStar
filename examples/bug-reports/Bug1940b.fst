@@ -17,7 +17,7 @@ let g (a:t) =
 let u (a:t) = lseq nat (f a)
 let v (a:t) = lseq nat (g a)
 
-[@expect_failure]
+%Fail
 let foo (a:t) (x:u a) : v a = x
 
 (*

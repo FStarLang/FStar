@@ -1,13 +1,13 @@
 module Bug1953
 
-[@(expect_failure [185])]
+%Fail [185]
 type t1 =
     | A1 : int -> Dv t1
     
 type t2 =
     | A2 : int -> Tot t2
 
-[@(expect_failure [185])]
+%Fail [185]
 type t3 =
     | A3 : int -> GTot t3
 

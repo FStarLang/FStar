@@ -22,7 +22,7 @@ type validity : n:pnat -> Type =
   | VSucc : n:pnat -> Tot (validity (S n))
 val bad : t:pnat -> Tot (validity (S (S t)))
 
-[@(expect_failure [19])]
+%Fail [19]
 let bad t = VSucc t
 
 

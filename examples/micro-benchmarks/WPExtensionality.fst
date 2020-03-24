@@ -113,6 +113,6 @@ let neg_indirect_2 ()
           else fail "failed")
 
 // Bug reported by Jay
-[@expect_failure]
+%Fail
 let bug () : Lemma False =
    ((if true then () else ()); ())

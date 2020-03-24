@@ -20,7 +20,7 @@ let compressed (a:alg) = lbytes (length a)
 
 let repr (a:alg) = lbytes (repr_length a)
 
-[@expect_failure]
+%Fail
 let point_decompress (a:alg) (pk:compressed a) : Tot (repr a) = pk
 
 (*

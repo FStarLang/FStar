@@ -21,10 +21,10 @@ open FStar.Classical
 let id x = x
 
 (* Sanity checks that we're properly tracking implicits *)
-[@(expect_failure [217])] let _ = assert False by (exact (quote (id _)))
-[@(expect_failure [217])] let _ = assert True  by (exact (quote (id _)))
-[@(expect_failure [217])] let _ = assert False by (exact (quote _))
-[@(expect_failure [217])] let _ = assert True  by (exact (quote _))
+%Fail [217] let _ = assert False by (exact (quote (id _)))
+%Fail [217] let _ = assert True  by (exact (quote (id _)))
+%Fail [217] let _ = assert False by (exact (quote _))
+%Fail [217] let _ = assert True  by (exact (quote _))
 
 (* A more elaborate test *)
 
@@ -43,7 +43,7 @@ let q x = False
 
 val fact: (h:squash (exists x. p x)) -> Lemma (exists x. q x)
 
-[@(expect_failure [217])]
+%Fail [217]
 let fact h =
    assert (exists x. q x)
        by (apply_lemma (`exists_elim);

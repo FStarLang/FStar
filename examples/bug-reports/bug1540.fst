@@ -8,7 +8,7 @@ instance eq_string : deq string = magic ()
 instance eq_list (_ : deq 'a) : deq (list 'a) =
   magic ()
 
-[@(expect_failure [228])]
+%Fail [228]
 let b1 = eq
 
 // Bug.f1 :
@@ -23,7 +23,7 @@ let b1 = eq
 instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) =
   Mkdeq (fun (a,b) (c,d) -> eq a c && eq b d)
 
-[@(expect_failure [228])]
+%Fail [228]
 let b2 = eq
 
 val f2 : string -> string -> bool

@@ -198,7 +198,7 @@ let write2 (#b1 #b2:B.buffer u8) (i:u32) (x:u8)
 ///
 /// Naive attempt:
 
-[@expect_failure]
+%Fail
 noextract
 let copy_naive (b1 b2:B.buffer u8)
 : ST unit

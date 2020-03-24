@@ -4,5 +4,5 @@ module Bug1614e
 #set-options "--using_facts_from 'Prims'"
 #set-options "--using_facts_from '-*'"
 
-[@(expect_failure [19])]
+%Fail [19]
 let test x = assert (x + 1 == 1 + x)

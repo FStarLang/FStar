@@ -26,7 +26,7 @@ let test1_f (_:unit{false}) : ML unit = ()
 (*
  * Fails since it has a non-trivial precondition (false)
  *)
-[@expect_failure]
+%Fail
 let test1_g () = test1_f (); assert false
 
 (*
@@ -42,19 +42,19 @@ let test2_canWrite (f:test2_filename) = false
 let test2_write (f:test2_filename{test2_canWrite f}) (s: string) : ML unit =
   FStar.IO.print_string "A"
 
-[@expect_failure]
+%Fail
 let test2_dynamicChecking () =
   test2_write "demo/password" "junk"
 
-[@expect_failure]
+%Fail
 let test2_dynamicChecking2 () =
   assert False;
   test2_write "demo/password" "junk"
 
-[@expect_failure]
+%Fail
 let test3_write (#a:Type) (r:ref a) = r := 42
 
-[@expect_failure]
+%Fail
 let test4_append_to2 (#a:Type) (xs:list a) = ignore(alloc 5); 2 :: xs
 
 
@@ -82,5 +82,5 @@ let test6_g = test6_f  //the inferred type of test6_g is same as test6_f
 
 let test6_h (x:ref int) = test6_f x  //the inferred type of test6_h is also as expected (application of x to test6_f)
 
-[@expect_failure]
+%Fail
 let test6_i (x:ref int) (y:int) = test6_f x y  //this fails since non-trivial precondition

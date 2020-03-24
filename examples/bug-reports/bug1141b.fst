@@ -17,7 +17,7 @@ module Bug1141b
 
 effect MyTot (a:Type) = PURE a (fun p -> forall x. p x)
 
-[@expect_failure]
+%Fail
 noeq
 type np (a : Type) = | Mk : (np a -> MyTot a) -> np a
 

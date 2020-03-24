@@ -150,7 +150,7 @@ let test_match2 (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp) True
 
 assume val false_pre (_:squash False) : RSTATE unit emp (fun _ -> emp) True
 
-[@expect_failure]
+%Fail
 let test_false_pre () : RSTATE unit emp (fun _ -> emp) True
 = false_pre ()
 
@@ -160,7 +160,7 @@ let test_false_pre () : RSTATE unit emp (fun _ -> emp) True
 assume val f_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) True
 assume val g_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) False
 
-[@expect_failure]
+%Fail
 let test_bind () : RSTATE unit emp (fun _ -> emp) True
 = f_test_bind ();
   g_test_bind ()

@@ -173,7 +173,7 @@ let hi a : erel a = fun x y -> (True <: prop)
 let f : (lo int ^--> lo int) = fun x -> x + 45
 let f' : (hi int ^--> hi int) = fun x -> x + 45
 let f'' : (lo int ^--> hi int) = fun x -> x + 45
-[@(expect_failure [19])]
+%Fail [19]
 let f''' : (hi int ^--> lo int) = fun x -> x + 45
 let f'''' : (hi int ^--> lo int) = fun x -> x - x
 let f''''' : int -> int = fun x -> x - x

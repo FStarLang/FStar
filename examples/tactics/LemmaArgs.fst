@@ -26,6 +26,6 @@ let lemma_example1 (a:int) (b:int{b <> a})
 let example0 x : Lemma (requires (x <> 5)) (ensures True) =
   assert (x <> 5) by (apply_lemma (quote lemma_example1))
 
-[@(expect_failure [19])]
+%Fail [19]
 let example1 x : Lemma (requires (x == 5)) (ensures False) =
   assert (x <> 5) by (apply_lemma (quote lemma_example1))

@@ -32,7 +32,7 @@ let elim3' (a b:Type0) (x:a) (y:b) : Lemma (requires (eq3 #a #b x y)) (ensures (
 
 let coerce #a (#b:Type{b == a}) (x:a) : y:b{y === x} = x
 
-[@expect_failure]
+%Fail
 let _ =
   elim3' nat int 1 1;
   assert (nat == int);

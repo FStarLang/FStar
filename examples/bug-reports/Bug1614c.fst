@@ -4,5 +4,5 @@ module Bug1614c
 #set-options "--using_facts_from '-* Fake1  Fake2'"
 
 (* This should fail if Prims is not in the set of facts *)
-[@expect_failure]
+%Fail
 let test x = assert (x + 1 == 1 + x)

@@ -15,5 +15,5 @@ let test3 () = assert_norm (calc_chain_compatible [(<); (<)] (<))
 let test4 () = assert_norm (calc_chain_compatible [(<)] (<))
 let test5 () = assert_norm (calc_chain_compatible [(<); (==); (<=)] (<))
 
-[@expect_failure] let test6 () = assert_norm (not (calc_chain_compatible [(<)] (==)))
-[@expect_failure] let test7 () = assert_norm (calc_chain_compatible [(<=)] (<))
+%Fail let test6 () = assert_norm (not (calc_chain_compatible [(<)] (==)))
+%Fail let test7 () = assert_norm (calc_chain_compatible [(<=)] (<))

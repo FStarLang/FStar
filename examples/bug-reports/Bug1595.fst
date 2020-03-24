@@ -25,7 +25,7 @@ let step (#t:Type) (#rs : list (relation t)) (#x #y : t)
 let r1 : preorder int = fun x y -> (>=) x y <: Type
 let r2 : preorder int = fun x y -> (<=) x y <: Type
 
-[@(expect_failure [19])]
+%Fail [19]
 let test_gt_lt_desugared () : Lemma False =
   let p : calc_proof #int [r2; r1] 10 11 = (
     step #int #[r1] #10 #9 r2 11 (fun () ->

@@ -45,7 +45,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              ddump "D";
              exact (pack (Tv_Var (bv_of_binder h))) )
 
-[@expect_failure]
+%Fail
 let test2 (post:(unit -> Type0))
    = assert ((post ==  (fun x -> post ())) ==>
              aug post ==>

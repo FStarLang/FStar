@@ -33,7 +33,7 @@ let test5 _ = assert (nat == zat)
 //for the unfolding of nullary constants
 //But, not anymore, since the fix to bug #1750
 //Instead of SMT, this fact can be proven by normalization
-[@(expect_failure [19])]
+%Fail [19]
 let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:zat -> Tot (vector b y)))
 

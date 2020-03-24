@@ -2,7 +2,7 @@ module Coercions
 
 open FStar.Ghost
 
-[@(expect_failure [34])]
+%Fail [34]
 let test0 (x: erased int) : Tot int = x
 
 let test1 (x: erased int) : GTot int = x
@@ -15,7 +15,7 @@ let test4 (x:erased int) : GTot (erased int) = x
 
 let test5 (x:int) : GTot (erased int) = x
 
-[@(expect_failure [34])]
+%Fail [34]
 let test0' (x: erased 'a) : Tot 'a = x
 
 let test1' (x: erased 'a) : GTot _ = x
@@ -65,18 +65,18 @@ let test_literal () =
   let f (n:erased nat) = n in
   f 0
 
-[@expect_failure]
+%Fail
 let test_literal_bad () =
   let f (n:erased nat) = n in
   f (-1)
 
-[@expect_failure]
+%Fail
 let test_int_nat_1 (x : erased int) : GTot nat = reveal x
-[@expect_failure]
+%Fail
 let test_int_nat_2 (x : int) : Tot (erased nat) = hide x
-[@expect_failure]
+%Fail
 let test_int_nat_1' (x : erased int) : GTot nat = x
-[@expect_failure]
+%Fail
 let test_int_nat_2' (x : int) : Tot (erased nat) = x
 
 

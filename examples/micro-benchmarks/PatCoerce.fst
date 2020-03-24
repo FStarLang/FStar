@@ -19,7 +19,7 @@ assume val test: u:unit -> Type0
 
 val bla: unit -> nat
 
-[@ (expect_failure [114])]
+%Fail [114]
 let bla u =
   match test u with
   | true -> 0

@@ -14,6 +14,6 @@
    limitations under the License.
 *)
 module OccursCheckOnArrows
-[@ (expect_failure [54])]
+%Fail [54]
 let oops f = f f
 

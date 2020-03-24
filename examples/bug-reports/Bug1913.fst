@@ -1,9 +1,9 @@
 module Bug1913
 
-[@expect_failure]
+%Fail
 let _ = assert (False /\ True)
 
-[@expect_failure]
+%Fail
 let _ = assert ((/\) False True)
 
 let _ = assert (False \/ True)

@@ -100,7 +100,7 @@ let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
                     addns "Prims";
                     smt ())
 
-[@expect_failure]
+%Fail
 let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
             by (prune "";
                 FStar.Tactics.split ();
@@ -111,7 +111,7 @@ let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
                     addns "Prims";
                     smt ())
 
-[@expect_failure]
+%Fail
 let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
             by (prune "";
                 FStar.Tactics.split ();
@@ -122,7 +122,7 @@ let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
                     addns "Prims";
                     smt ())
 
-[@expect_failure]
+%Fail
 let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
             by (prune "";
                 FStar.Tactics.split ();

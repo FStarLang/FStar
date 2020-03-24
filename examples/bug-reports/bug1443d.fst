@@ -29,7 +29,7 @@ assume val eval_add64 : add64 't1 't2 ->  unit
 
 assume val add64_to_string : add64 't1 't2 -> string
 
-[@(expect_failure [66])]
+%Fail [66]
 let add64_ins (#t1:Type)(#t2:Type) : ins (add64 t1 t2) = {
   eval_ins = eval_add64;
   ins_to_string = add64_to_string

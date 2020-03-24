@@ -22,6 +22,6 @@ total reifiable reflectable new_effect {
      ; get    = get r
 }
 
-[@expect_failure [147]]
+%Fail [147]
 effect Reader (r:Type) (a:Type) (pre:READER?.pre r) (post:r -> a -> GTot Type0) =
   READER r a (fun (l0:r) (p:a -> Type0) -> pre l0 /\ (forall x. pre l0 /\ post l0 x ==> p x))

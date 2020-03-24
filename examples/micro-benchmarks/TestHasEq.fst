@@ -53,7 +53,7 @@ type t2 (t:Type0{tp t}) =
 (*
  * hasEq (t3 a) depends on hasEq a, so the eqtype annotation fails
  *)
-[@expect_failure]
+%Fail
 type t3 (a:Type0) :eqtype =
   | C3: x:a -> t3 a
 
@@ -80,10 +80,11 @@ type erasable_t =
   | C_erasable_t : erasable_t
   | D_erasable_t : erasable_t
 
-[@expect_failure]
+%Fail
 let test (x:erasable_t{C_erasable_t? x}) (y:erasable_t{D_erasable_t? y}) : Tot (n:int{n == 1}) =
   if x = y then 0 else 1  //this would extract to if () = () then 0 else 1 if we allowed equality on erasable_t
 
-[@erasable expect_failure]
+%Fail
+[@erasable]
 unopteq type erasable_t2 =
   | C_erasable_2 : erasable_t2

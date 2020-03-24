@@ -27,7 +27,7 @@ let u : unit = synth_by_tactic (fun () -> assume_safe (fun () -> tau 42))
 
 let foo (x:int) : Tac unit = exact (`())
 
-[@expect_failure]
+%Fail
 let test1 (a:Type) (x:a) : unit = _ by (foo x)
 
 let test2 (a:Type) (x:a) : unit = _ by (assume_safe (fun () -> foo x))

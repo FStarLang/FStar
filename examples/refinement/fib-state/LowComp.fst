@@ -240,7 +240,7 @@ let lreturn (#a:Type) (x:a) : lcomp_wp a (return_wp x) (return_elab x) =
 (* TODO prove this spec *)
 val upd : b:pointer mint -> v:mint ->
            Stack unit (requires (fun h0 -> live h0 b)) (ensures (fun h0 _ h1 -> live h0 b /\ h1 == g_upd b 0 v h0))
-[@expect_failure]
+%Fail
 let upd b v = b.(0ul) <- v
 
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (hwrite_elab i v)

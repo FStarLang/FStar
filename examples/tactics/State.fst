@@ -24,7 +24,7 @@ let x : int = synth (fun () -> lset "myint" 1;
 let _ = assert (x == 1)
 
 // Can't type 1 as a bool
-[@expect_lax_failure]
+%FailLax
 let y : int = synth (fun () -> lset "myint" 1;
                                let y : bool = lget "myint" in
                                exact (quote y))

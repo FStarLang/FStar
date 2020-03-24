@@ -37,7 +37,7 @@ let test ()
 
 /// This fails since the postcondition is incorrect
 
-[@expect_failure]
+%Fail
 let test_fail ()
 : HoareST int
   (fun _ -> True)

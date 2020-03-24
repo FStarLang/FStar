@@ -9,20 +9,20 @@ let _ = f ()
 
 #push-options "--using_facts_from '-*'"
 
- [@(expect_failure [19])] let _ = f ()
+ %Fail [19] let _ = f ()
 
  #push-options "--using_facts_from '*'"
   let _ = f ()
 
   #set-options "--using_facts_from '-*'"
-  [@(expect_failure [19])] let _ = f ()
+  %Fail [19] let _ = f ()
 
   #reset-options ""
   let _ = f ()
 
  #pop-options
 
- [@(expect_failure [19])] let _ = f ()
+ %Fail [19] let _ = f ()
 
  #reset-options
 
@@ -34,7 +34,7 @@ let _ = f ()
 
 #set-options "--using_facts_from '-*'"
 
-[@(expect_failure [19])] let _ = f ()
+%Fail [19] let _ = f ()
 
 #set-options "--using_facts_from '*'"
 
@@ -42,7 +42,7 @@ let _ = f ()
 
 #set-options "--using_facts_from '-*'"
 
-[@(expect_failure [19])] let _ = f ()
+%Fail [19] let _ = f ()
 
 #reset-options
 

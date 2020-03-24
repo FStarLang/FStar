@@ -33,7 +33,7 @@ total reifiable reflectable new_effect {
 
 effect ID (a:Type) = IDN a (fun () p -> forall x. p x)
 
-[@expect_failure]
+%Fail
 noeq
 type np (a : Type) =
     | Mk : (np a -> ID a) -> np a

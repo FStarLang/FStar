@@ -15,7 +15,7 @@
 *)
 module Bug1443a
 
-[@(expect_failure [66])]
+%Fail [66]
 let rec test ps = match ps with
   | [] -> 0
   | a::q ->

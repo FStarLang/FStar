@@ -1,10 +1,10 @@
 module Bug1802
 
-[@(expect_failure [67])]
+%Fail [67]
 noeq type test2 (a:Type) : Type0 =
   | Cons2: a -> test2 a
 
-[@(expect_failure [67])]
+%Fail [67]
 noeq type test1 (a:Type u#a) : Type0 =
   | Cons1: b:Type u#b -> x:a -> test1 a
 

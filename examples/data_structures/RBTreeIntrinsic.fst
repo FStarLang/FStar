@@ -487,7 +487,7 @@ let sanity_check1 : rbtree =
   assert_norm (sorted t);
   RBTree t
 
-[@expect_failure]
+%Fail
 let sanity_check2 : rbtree =
   let t = B (B Leaf 8 Leaf) 5 (B Leaf 2 Leaf) in
   assert_norm (~(sorted t));
