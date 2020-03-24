@@ -1,5 +1,5 @@
 [
-  "eÒÛ\u0002\u000f(Ú˛T¥\u0015\u0003±N®E",
+  "ÜlaÇ›ÆFú.\u0012”‡ùÕﬁ+",
   [
     [
       "Bug606.f",
@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a240d7da2389b3fe2b915fbf2c50a853"
+      "0dec87c3e2080674ea5d70638278aded"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "33da1f19a1a05bd37c86da7f483b88e6"
+      "65018e03a56184c1189be47be109ccc0"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "efb11b281ba604e686426d6bb311d09d"
+      "7c92e5cb3b0b285149221e437f880003"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "0f42c95665047e02555ecf59db188044"
+      "b33dbc4db19e3643faee45c1b81d6548"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "af9f85aae8c31a5e81e1c6628401599a"
+      "6952846fc9851c66651aea4103422cbd"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "8ab44f69a7eeb2423feca065e3e80305"
+      "1de99ba39308d91b11386b4641f815ab"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -110,7 +110,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "c971ac78b9ab8754f1b26d552baa7c48"
+      "193ab9fe4711f5ab158a5c43aacc547a"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -119,7 +119,7 @@
       1,
       [ "@query" ],
       0,
-      "5b0dfa20124fb464498d379e5efd9a71"
+      "02a147d2f278744534d7cd098bf5fa15"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "9919f862745de0a255de6a761e403dd7"
+      "207b30d87dbf1b793b4784d74135546f"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_9723ee2ab2be8767c46351843c3d3f1a"
       ],
       0,
-      "6722692440d2572e2e7d13c59223c87a"
+      "f04cc890738582c6c4a18ce4ec584799"
     ]
   ]
 ]
