@@ -611,10 +611,8 @@ let check_no_aq (aq : antiquotations) : unit =
    so, then return the record found by field name resolution. *)
 let check_fields env fields rg =
     let (f, _) = List.hd fields in
-    let _ = Env.fail_if_qualified_by_curmodule env f in
     let record = fail_or env (try_lookup_record_by_field_name env) f in
     let check_field (f', _) =
-        let _ = Env.fail_if_qualified_by_curmodule env f' in
         if Env.belongs_to_record env f' record
         then ()
         else let msg = BU.format3
@@ -1027,7 +1025,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                               noaqs
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
-      let _ = Env.fail_if_qualified_by_curmodule env eff_name in
       (* TODO : would it be possible to normalize the effect name at that point so that *)
       (* we get back the original effect definition instead of an effect abbreviation *)
       begin match try_lookup_effect_defn env eff_name with
@@ -1043,11 +1040,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Var l
     | Name l ->
-      let _ = Env.fail_if_qualified_by_curmodule env l in
       desugar_name mk setpos env true l, noaqs
 
     | Projector (l, i) ->
-      let _ = Env.fail_if_qualified_by_curmodule env l in
       let name =
         match Env.try_lookup_datacon env l with
         | Some _ -> Some (true, l)
@@ -1064,7 +1059,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Discrim lid ->
-      let _ = Env.fail_if_qualified_by_curmodule env lid in
       begin match Env.try_lookup_datacon env lid with
       | None ->
         raise_error (Errors.Fatal_DataContructorNotFound, (BU.format1 "Data constructor %s not found" lid.str)) top.range
@@ -1074,7 +1068,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Construct(l, args) ->
-        let _ = Env.fail_if_qualified_by_curmodule env l in
         begin match Env.try_lookup_datacon env l with
         | Some head ->
             let head = mk (Tm_fvar head) in
@@ -1527,7 +1520,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Project(e, f) ->
-      let _ = Env.fail_if_qualified_by_curmodule env f in
       let constrname, is_rec = fail_or env  (try_lookup_dc_by_field_name env) f in
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in

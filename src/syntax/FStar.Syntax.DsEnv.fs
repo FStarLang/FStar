@@ -410,26 +410,6 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
     in
     aux env.scope_mods
 
-(** Forbid self-references to current module (#451) *)
-
-let fail_if_curmodule env ns_original ns_resolved =
-  if lid_equals ns_resolved (current_module env)
-  then
-    if lid_equals ns_resolved Const.prims_lid
-    then () // disable this check for Prims, because of Prims.unit, etc.
-    else raise_error (Errors.Fatal_ForbiddenReferenceToCurrentModule, (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str)) (range_of_lid ns_original)
-  else ()
-
-let fail_if_qualified_by_curmodule env lid =
-  match lid.ns with
-  | [] -> ()
-  | _ ->
-    let modul_orig = lid_of_ids lid.ns in
-    begin match resolve_module_name env modul_orig true with
-    | Some modul_res -> fail_if_curmodule env modul_orig modul_res
-    | _ -> ()
-    end
-
 let is_open env lid open_kind =
   List.existsb (function
                 | Open_module_or_namespace (ns, k) -> k = open_kind && lid_equals lid ns
@@ -971,7 +951,6 @@ let push_namespace env ns =
      then (ns, Open_namespace)
      else raise_error (Errors.Fatal_NameSpaceNotFound, (BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns))) ( Ident.range_of_lid ns)
   | Some ns' ->
-     let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
      env.ds_hooks.ds_push_open_hook env (ns', kd);
@@ -984,7 +963,6 @@ let push_include env ns =
     match resolve_module_name env ns false with
     | Some ns ->
       env.ds_hooks.ds_push_include_hook env ns;
-      let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
       (* update the list of includes *)
@@ -1022,10 +1000,10 @@ let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
-  then let _ = fail_if_curmodule env l l in
+  then begin
        env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
-  else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
+  end else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
 
 let check_admits env m =
   let admitted_sig_lids =
