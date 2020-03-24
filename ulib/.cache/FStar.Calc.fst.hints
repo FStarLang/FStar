@@ -1,5 +1,5 @@
 [
-  "#Ω]H’ë\u001c\f\u0010\u001eä\u0004’+\u0012…",
+  "60≠>:*Kı¡Ω3Á–Œ\u001bD",
   [
     [
       "FStar.Calc.__proj__CalcRefl__item__x",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_3b368c069648e8b27d83e18e9c122613"
       ],
       0,
-      "966ba80b423bf888a9f10eb598fb9345"
+      "418814392771fb3c42096edb9b5bb98e"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__rs",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "9722b1822eece8acc170a6924d29d714"
+      "955ac75ae1a0149afad5b4be90a80df3"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__p",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "1dc89ebd425355987ee85b481f93869d"
+      "0542eb09322270650d1d0266ce93f918"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__x",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "7bdc076474d42e88fc385c92db27bed9"
+      "d15516bacacde5f1cf8b6e3e456c4a0a"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__y",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "46b4e2c3c6c70d57178570df9386cdb8"
+      "6102a576374a1dd845f08176c90bba7f"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__z",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "562109cf9cd3a758f42155ca766992b5"
+      "b7fa84524852a0fb0bd8dfe8db358430"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___5",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "2f6fd0b6e0b328ee2af0fedbf6dd29f6"
+      "8c2ee883a401942356698523e3bb1958"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___6",
@@ -124,7 +124,7 @@
         "token_correspondence_FStar.Calc.__proj__CalcStep__item__p"
       ],
       0,
-      "ee5f625bf9ad8cc50a499e8e9b35ea56"
+      "305e36ddaf775acfa884ebb205436305"
     ],
     [
       "FStar.Calc.__proj__Mkcalc_pack__item__proof",
@@ -136,7 +136,7 @@
         "projection_inverse_FStar.Calc.Mkcalc_pack_rels"
       ],
       0,
-      "ac3fc6966a0761a14d3fa8fff41757a3"
+      "ac3ba25c5d0670720c647c6ea2c26b5d"
     ],
     [
       "FStar.Calc.calc_chain_related",
@@ -151,7 +151,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "59cce856cc019045dcd34b9811789a6f"
+      "f3c50a3d1345dfd0c58eb574cafd04f1"
     ],
     [
       "FStar.Calc.elim_calc_proof",
@@ -181,7 +181,7 @@
         "subterm_ordering_FStar.Calc.CalcStep"
       ],
       0,
-      "dbbf4ae910bd0b1fcd9be87892193818"
+      "00fecb6a0e72cc1662b2600d7b019345"
     ],
     [
       "FStar.Calc.calc_finish",
@@ -200,7 +200,16 @@
         "proj_equation_FStar.Calc.Mkcalc_pack_rels"
       ],
       0,
-      "45b535518b2699ca4959cc3ca3f88b76"
+      "89442a6c80915052aef0cde13d4b0ba6"
+    ],
+    [
+      "FStar.Calc.calc_push_impl",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
+      0,
+      "6fbb0284354e5c38b0b1ccc4a41b5279"
     ],
     [
       "FStar.Calc.__proj__CalcRefl__item__x",
@@ -214,7 +223,7 @@
         "refinement_interpretation_Tm_refine_3b368c069648e8b27d83e18e9c122613"
       ],
       0,
-      "2d659ad108048e1d48729694b444b1d7"
+      "cc30a385aae39dd2d1b47deffe8dbd2a"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__rs",
@@ -228,7 +237,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "7e23704ef8dfd8e81f8cc9e052cc258f"
+      "ae8835c7744fc2d782bc2fdeb0cac1cc"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__p",
@@ -242,7 +251,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "9f31536fe9c927748f22a28e9ca51236"
+      "4a6d8d4517539893b34f6b9403ce7cf1"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__x",
@@ -256,7 +265,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "aefa3cbea2ce1259a992f490c0b1f492"
+      "2dd30732c0219626769ccd5a79430253"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__y",
@@ -270,7 +279,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "dcdbf420c99ae138e901205f5913b576"
+      "9c6b328074320186fad514c1c22aa63a"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__z",
@@ -284,7 +293,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "3144b7fcad63118aac6aa0edac5e3fd6"
+      "b94c0675d032e6edbb19158cb3ccf724"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___5",
@@ -304,7 +313,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "b4b8daa1e63b43afa24a3f6ca7e445e9"
+      "463aced8670e79d28885fa86c3f0ed89"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___6",
@@ -325,7 +334,7 @@
         "token_correspondence_FStar.Calc.__proj__CalcStep__item__p"
       ],
       0,
-      "c22895640156eee20c1b921775408c0c"
+      "0ad35e4cc7ad7ca1f4b840be0df28fa3"
     ],
     [
       "FStar.Calc.__proj__Mkcalc_pack__item__proof",
@@ -337,7 +346,7 @@
         "projection_inverse_FStar.Calc.Mkcalc_pack_rels"
       ],
       0,
-      "2a879b64554ae12cf4c7c359194a451b"
+      "b56876a8bc22daad96f7db1e38029760"
     ],
     [
       "FStar.Calc.calc_chain_related",
@@ -352,7 +361,16 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ff8d46088f8a5d7b25e393c764fb75e7"
+      "115af5fcf33892f3d88dfbe960ebec50"
+    ],
+    [
+      "FStar.Calc.calc_push_impl",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
+      0,
+      "478ac0fc8d59a38b3abfc4e12798cd06"
     ]
   ]
 ]

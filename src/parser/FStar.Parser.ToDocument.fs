@@ -75,7 +75,8 @@ let rec all (f: 'a -> bool) (l: list<'a>): bool =
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all_explicit (args:list<(term*imp)>) : bool =
+let all1_explicit (args:list<(term*imp)>) : bool =
+    not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
@@ -1612,7 +1613,7 @@ and p_tmConjunction e = match e.tm with
 and p_tmTuple e = with_comment p_tmTuple' e e.range
 
 and p_tmTuple' e = match e.tm with
-  | Construct (lid, args) when is_tuple_constructor lid && all_explicit args ->
+  | Construct (lid, args) when is_tuple_constructor lid && all1_explicit args ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
 
@@ -1730,8 +1731,9 @@ and p_appTerm e = match e.tm with
         group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
       )
 
-  (* dependent tuples are handled below *)
-  | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
+  (* (explicit) dependent tuples are handled below *)
+  | Construct (lid, args) when is_general_construction e
+        && not (is_dtuple_constructor lid && all1_explicit args) ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
@@ -1799,19 +1801,10 @@ and p_atomicTermNotQUident e = match e.tm with
     str (Ident.text_of_id op) ^^ p_atomicTermNotQUident e
   | Op(op, []) ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
-  | Construct (lid, args) when is_dtuple_constructor lid ->
-    if all_explicit args
-    then surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
-    else
-    begin match args with
-      | [] -> p_quident lid
-      | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
-      | hd::tl ->
-          group (
-              group (prefix2 (p_quident lid) (p_argTerm hd)) ^^
-                    jump2 (separate_map break1 p_argTerm tl))
-    end
-
+  | Construct (lid, args) when is_dtuple_constructor lid && all1_explicit args ->
+      surround 2 1 (lparen ^^ bar)
+        (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
+                   (bar ^^ rparen)
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->

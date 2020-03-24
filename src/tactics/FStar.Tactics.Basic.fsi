@@ -82,7 +82,7 @@ val launch_process : string -> list<string> -> string -> tac<string>
 
 val fresh_bv_named : string -> typ -> tac<bv>
 
-val pointwise : direction -> tac<unit> -> tac<unit>
+val t_pointwise : direction -> tac<unit> -> tac<unit>
 val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<unit>
 val trefl : unit -> tac<unit>
 
@@ -107,3 +107,4 @@ val goal_of_goal_ty : env -> typ -> goal * guard_t
 val proofstate_of_goals : Range.range -> env -> list<goal> -> list<implicit> -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
+val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate * term

@@ -26,7 +26,7 @@ module F = FStar.FunctionalExtensionality
  *)
 [@must_erase_for_extraction]
 abstract type set (a:Type) =
-  f:F.restricted_t a (fun _ -> prop)
+  F.restricted_t a (fun _ -> prop)
 
 abstract type equal (#a:Type) (s1:set a) (s2:set a) = forall x. s1 x <==> s2 x
 

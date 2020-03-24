@@ -2532,7 +2532,7 @@ and tc_eqn scrutinee env branch
 
           branch_guard
   in
-
+  
   (* 6 (a). Build equality conditions between the pattern and the scrutinee                                    *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 6 (a) and the when condition *)
   (*        For layered effects, we weaken with the branch guard instead                                       *)
@@ -2557,15 +2557,18 @@ and tc_eqn scrutinee env branch
     in
 
     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
-    //g_branch is trivial, its logical content is now incorporated within c
 
+    //g_branch is trivial, its logical content is now incorporated within c
+        
     let branch_has_layered_effect = c.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env in
 
     (* (b) *)
     let c_weak, g_when_weak =
      let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      if branch_has_layered_effect
-     then TcUtil.weaken_precondition env c (NonTrivial branch_guard), Env.trivial_guard  //use branch guard for weakening
+     then
+       let c = TcUtil.weaken_precondition env c (NonTrivial branch_guard) in
+       c, Env.trivial_guard  //use branch guard for weakening
      else
        match eqs, when_condition with
         | _ when not (Env.should_verify env) ->
@@ -2653,15 +2656,16 @@ and tc_eqn scrutinee env branch
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
                 (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs)
             else () in
+ 
+          c_weak
+            |> TcComm.apply_lcomp (fun c -> c) (fun g ->
+                match eqs with
+                | None -> g
+                | Some eqs -> TcComm.weaken_guard_formula g eqs)
+            |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
 
-          TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms c_weak
         else TcUtil.close_wp_lcomp env pat_bvs c_weak
     in
-
-    if Option.isSome (Env.try_lookup_effect_lid env Const.effect_GTot_lid) &&
-       Env.debug env <| Options.Other "LayeredEffects" then
-      BU.print1 "tc_eqn: c_weak applied to false: %s\n"
-        (TcComm.lcomp_to_string (maybe_return_c_weak false));
 
     c_weak.eff_name,
     c_weak.cflags,

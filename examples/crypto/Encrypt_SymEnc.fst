@@ -25,7 +25,11 @@ noeq type key (p:Type) (r:Type) =
   | Ideal    : plain: (r -> p) -> repr: (p -> r) -> AES.key -> i:int -> key p r (* maybe no need to keep plain/repr around *)
   | Concrete : plain: (r -> p) -> repr: (p -> r) -> AES.key -> i:int -> key p r  
 
-assume HasEq_key: hasEq (key (p:Type) (r:Type))
+// GM: This was (before fixing #1905) being parsed as
+//     `hasEq Type Type`, which is most definitely not
+//      what was intended. I've commented it out since
+//      it appears to not be needed.
+//assume HasEq_key: hasEq (key (p:Type) (r:Type))
 
 
 // type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be kept implicit *)

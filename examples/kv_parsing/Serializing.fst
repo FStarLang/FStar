@@ -104,7 +104,7 @@ inline_for_extraction
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
-  Stack (option (off:offset_into buf))
+  Stack (option (offset_into buf))
      (requires (fun h0 -> live h0 buf /\
                        disjoint_from h0 (reveal inputs) buf))
      (ensures (fun h0 r h1 ->

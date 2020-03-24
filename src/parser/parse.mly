@@ -207,6 +207,11 @@ rawDecl:
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
       }
+  | VAL c=constant
+      {
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
+      }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
@@ -662,8 +667,13 @@ noSeqTerm:
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
      }
 
+calcRel:
+  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
+  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
+  | t=atomicTerm { t }
+
 calcStep:
-   | rel=binop LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
+   | rel=calcRel LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
      {
          let justif =
              match justif with
@@ -869,11 +879,6 @@ binop_name:
   | o=COLON_COLON            { mk_ident ("::", rhs parseState 1) }
   | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rhs parseState 1) }
   | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
-
-binop:
-  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
-  | t=atomicTerm { t }
 
 tmEqNoRefinement:
   | e=tmEqWith(appTerm) { e }

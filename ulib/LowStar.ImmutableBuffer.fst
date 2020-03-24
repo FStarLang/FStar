@@ -156,7 +156,7 @@ let ialloca (#a:Type0) (init:a) (len:U32.t)
 
 let ialloca_and_blit (#a:Type0)
   (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
-  : HST.StackInline (b:lmbuffer a (immutable_preorder a) (immutable_preorder a) (U32.v len))
+  : HST.StackInline (lmbuffer a (immutable_preorder a) (immutable_preorder a) (U32.v len))
     (requires fun h0 ->
       alloca_pre len /\
       live h0 src /\ U32.v id_src + U32.v len <= length src)
@@ -171,7 +171,7 @@ let ialloca_and_blit (#a:Type0)
     b
 
 let ialloca_of_list (#a:Type0) (init: list a)
-  :HST.StackInline (b:libuffer a (normalize_term (List.Tot.length init)) (Seq.seq_of_list init))
+  :HST.StackInline (libuffer a (normalize_term (List.Tot.length init)) (Seq.seq_of_list init))
                    (requires (fun _      -> alloca_of_list_pre init))
                    (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
 		                         frameOf b == HS.get_tip h0))

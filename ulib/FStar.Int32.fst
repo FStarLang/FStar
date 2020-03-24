@@ -179,7 +179,9 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   (a ^^ mask) -^ mask
 
 (* To input / output constants *)
+(* .. in decimal representation *)
 assume val to_string: t -> Tot string
+
 assume val of_string: string -> Tot t
 
 #set-options "--lax"

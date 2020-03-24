@@ -1,5 +1,5 @@
 [
-  "Jœ¨ÄÛJÔ∆PÁ»ÆDIÏ\u0012",
+  "‚\u0000=¿\u0005\u000f\u007fw[f\u001eyÊŸß∏",
   [
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Refl__item__x",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_565f37515590049580c96eef602ba10e"
       ],
       0,
-      "eddb6615fbea5651c475793150798e1b"
+      "4c25011b0703e56eadb644467250c18b"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__x",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "86c528d25c63715d980a5d485feadc6b"
+      "7309f24f7e4ba463beafc5a042c24a8e"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__y",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "aea742e1ef9b0c654db35f6a6ae841ef"
+      "8ce3598ad8d3c0389606172b8e42df29"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item___2",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "939da9c9635abb41ca0dc86cf45409d9"
+      "1eed122a9f5145ba039d52d855dfbfc9"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__x",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "228c42c130fb8840067b6d15c56d733b"
+      "eebb7a3d85151c6f43ddc2537c831dcd"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__y",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "e78eec34e84333310632f25d0725c566"
+      "52249ec96b29f5aae89b6165e6b593cb"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__z",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "9f6268ba604d01924384dbf27f73c3d9"
+      "72d74931c346b160954c3d57a9366ee0"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___3",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "ac0d4d5288cb60921270154a33efa779"
+      "3edf934e2811d4d8ed086763cd4f38a5"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___4",
@@ -137,7 +137,33 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "d97cdf93a4e4645a3d0d50f807d7db81"
+      "5615e1c196805e6c640d939d0e43a586"
+    ],
+    [
+      "FStar.ReflexiveTransitiveClosure._closure0",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fb365008e467a1267da95f7efe62585e"
+    ],
+    [
+      "FStar.ReflexiveTransitiveClosure.get_squash",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a6c63e0f25f76613bb266e2eb47b9c58"
+      ],
+      0,
+      "c4163a945a65806194467e3ac2c0e0a2"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_reflexive",
@@ -146,20 +172,28 @@
       1,
       [
         "@query", "equation_FStar.Preorder.reflexive",
-        "token_correspondence_FStar.ReflexiveTransitiveClosure._closure@tok",
+        "token_correspondence_FStar.ReflexiveTransitiveClosure._closure0",
         "true_interp"
       ],
       0,
-      "a6dc99f7afa0b932449881c51ea6babe"
+      "74139810a8e6c405c643cc006295b713"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_transitive",
       1,
       0,
       1,
-      [ "@query", "true_interp" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.transitive",
+        "equation_FStar.ReflexiveTransitiveClosure._closure0",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "token_correspondence_FStar.ReflexiveTransitiveClosure._closure0",
+        "unit_inversion"
+      ],
       0,
-      "256a8321412c76302e7645885206898f"
+      "9201b912917020d8c9d7fd0b414283ed"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure",
@@ -168,7 +202,7 @@
       1,
       [ "@query", "equation_FStar.Preorder.preorder_rel" ],
       0,
-      "0dc67eb5f1a35ef051da80cf56baeb83"
+      "b6c50101cf74703d8a89f0fa491ac233"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_step",
@@ -177,42 +211,51 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "0a88f29f5a8338ea0cd91a53caea7349"
+      "d32a03ac5a9fcd96625801db1f7b3766"
     ],
     [
-      "FStar.ReflexiveTransitiveClosure.closure_one",
+      "FStar.ReflexiveTransitiveClosure.closure_one_aux",
       1,
       0,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.ReflexiveTransitiveClosure_interpretation_Tm_arrow_dfcaecfab74a119da94f11714336372d",
-        "binder_x_6a0456eef2aeb83b990092f272fb9720_4",
-        "binder_x_6dff76e3ecc09336a3301c8d8294c969_1",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "binder_x_b03bdd97cb7c5bbfd6544ef247d7061f_5",
         "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "data_elim_FStar.ReflexiveTransitiveClosure.Refl",
         "data_elim_FStar.ReflexiveTransitiveClosure.Step",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Refl",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Step", "eq2-interp",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "equation_FStar.ReflexiveTransitiveClosure.closure",
-        "equation_Prims.l_or", "equation_Prims.squash",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
         "fuel_guarded_inversion_FStar.ReflexiveTransitiveClosure._closure",
-        "function_token_typing_FStar.ReflexiveTransitiveClosure.closure",
-        "l_or-interp", "l_quant_interp_0c5809001e2b868a9027a6f87b66d9ed",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
-        "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure",
-        "token_correspondence_FStar.ReflexiveTransitiveClosure._closure@tok",
-        "token_correspondence_FStar.ReflexiveTransitiveClosure.closure"
+        "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "fb3e4d3aff0421c47c8d11b66413a3f0"
+      "449ff1710acd951b8f24ef2ea5cdbc11"
+    ],
+    [
+      "FStar.ReflexiveTransitiveClosure.closure_one_aux'",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.ReflexiveTransitiveClosure.closure_one_aux.fuel_instrumented",
+        "@query", "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "eq2-interp",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_FStar.ReflexiveTransitiveClosure.closure_one_aux"
+      ],
+      0,
+      "2378a23471b9a9256f914a78cffda092"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_inversion",
@@ -220,13 +263,13 @@
       0,
       1,
       [
-        "@query", "equation_FStar.ReflexiveTransitiveClosure.closure",
-        "token_correspondence_FStar.ReflexiveTransitiveClosure._closure@tok",
-        "token_correspondence_FStar.ReflexiveTransitiveClosure.closure",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
+        "equation_Prims.l_or", "equation_Prims.squash", "l_or-interp",
+        "l_quant_interp_961fef7a3af6eca02e4655636527d707",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2a9813723b18b7d5ca79a7c628d81170"
+      "4731d14f1fd9f4a25d3adc0ee1261984"
     ],
     [
       "FStar.ReflexiveTransitiveClosure._stable_on_closure",
@@ -235,9 +278,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_699aefb9c6dd9e33d17fe1a65023a1e4_6",
-        "binder_x_776ed1257354776f4512a6d31bbc952d_7",
-        "binder_x_7f9032daa18d059cda84701503f8208b_3",
+        "binder_x_29b7d9bf718d3e6dd0deac59ece245f8_7",
+        "binder_x_30b2fec920cb6b97ce4366e6674b0de4_8",
+        "binder_x_a108461aefff9b3838771cc51d076281_4",
         "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "data_elim_FStar.ReflexiveTransitiveClosure.Refl",
         "data_elim_FStar.ReflexiveTransitiveClosure.Step",
@@ -247,12 +290,21 @@
         "equality_tok_Prims.LexTop@tok", "equation_Prims.l_Forall",
         "equation_Prims.squash",
         "fuel_guarded_inversion_FStar.ReflexiveTransitiveClosure._closure",
-        "l_quant_interp_c6609940959931a186d19215c1b13d9b",
+        "l_quant_interp_ca26188549525b859a685fdf1de7a661",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "9b4af53283e56ead66a0bb1576a6e5eb"
+      "1f9e91a02ffe8cad7e741a544d55c6e4"
+    ],
+    [
+      "FStar.ReflexiveTransitiveClosure.squash_implies_to_arrow",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "0adda8c2c11350b1a2c9727dac912a59"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -261,7 +313,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "eadc12de660c67aca60f6b1f9f551a80"
+      "722c223cb5c34d80519a06aecf4ed1d0"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -270,7 +322,7 @@
       1,
       [ "@query" ],
       0,
-      "584b998c3c0c2440b0de42d8d64777cd"
+      "000626cb52addac993c5b165d75b9655"
     ]
   ]
 ]

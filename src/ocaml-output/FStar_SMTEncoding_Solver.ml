@@ -1280,7 +1280,12 @@ let (ask_and_report_errors :
                    let hi = FStar_Options.quake_hi ()  in
                    let seed = FStar_Options.z3_seed ()  in
                    let name = full_query_id default_settings  in
-                   let quaking = hi > Prims.int_one  in
+                   let quaking =
+                     (hi > Prims.int_one) &&
+                       (let uu____3899 = FStar_Options.retry ()  in
+                        Prims.op_Negation uu____3899)
+                      in
+                   let quaking_or_retrying = hi > Prims.int_one  in
                    let hi1 = if hi < Prims.int_one then Prims.int_one else hi
                       in
                    let lo1 =
@@ -1288,11 +1293,11 @@ let (ask_and_report_errors :
                      then Prims.int_one
                      else if lo > hi1 then hi1 else lo  in
                    let run_one seed1 =
-                     let uu____3932 = FStar_Options.z3_refresh ()  in
-                     if uu____3932
+                     let uu____3938 = FStar_Options.z3_refresh ()  in
+                     if uu____3938
                      then
                        FStar_Options.with_saved_options
-                         (fun uu____3949  ->
+                         (fun uu____3955  ->
                             FStar_Options.set_option "z3seed"
                               (FStar_Options.Int seed1);
                             check_all_configs configs)
@@ -1301,16 +1306,16 @@ let (ask_and_report_errors :
                      if lo2 > hi2
                      then acc
                      else
-                       (let uu____4005 = f acc lo2  in
-                        fold_nat' f uu____4005 (lo2 + Prims.int_one) hi2)
+                       (let uu____4011 = f acc lo2  in
+                        fold_nat' f uu____4011 (lo2 + Prims.int_one) hi2)
                       in
                    let best_fuel =
                      FStar_Util.mk_ref FStar_Pervasives_Native.None  in
                    let best_ifuel =
                      FStar_Util.mk_ref FStar_Pervasives_Native.None  in
                    let maybe_improve r n1 =
-                     let uu____4128 = FStar_ST.op_Bang r  in
-                     match uu____4128 with
+                     let uu____4134 = FStar_ST.op_Bang r  in
+                     match uu____4134 with
                      | FStar_Pervasives_Native.None  ->
                          FStar_ST.op_Colon_Equals r
                            (FStar_Pervasives_Native.Some n1)
@@ -1321,140 +1326,173 @@ let (ask_and_report_errors :
                              (FStar_Pervasives_Native.Some n1)
                          else ()
                       in
-                   let uu____4216 =
+                   let uu____4222 =
                      fold_nat'
-                       (fun uu____4250  ->
+                       (fun uu____4261  ->
                           fun n1  ->
-                            match uu____4250 with
-                            | (nsucc,rs) ->
-                                let r = run_one (seed + n1)  in
-                                let nsucc1 =
-                                  match r with
-                                  | FStar_Util.Inr cfg ->
-                                      (maybe_improve best_fuel cfg.query_fuel;
-                                       maybe_improve best_ifuel
-                                         cfg.query_ifuel;
-                                       nsucc + Prims.int_one)
-                                  | uu____4315 -> nsucc  in
-                                ((let uu____4323 =
-                                    (quaking &&
-                                       ((FStar_Options.interactive ()) ||
-                                          (FStar_Options.debug_any ())))
-                                      && (n1 < (hi1 - Prims.int_one))
-                                     in
-                                  if uu____4323
-                                  then
-                                    let uu____4327 =
-                                      FStar_Util.string_of_int nsucc1  in
-                                    let uu____4329 =
-                                      FStar_Util.string_of_int
-                                        ((n1 + Prims.int_one) - nsucc1)
+                            match uu____4261 with
+                            | (nsucc,nfail,rs) ->
+                                let uu____4319 =
+                                  (let uu____4323 =
+                                     FStar_Options.quake_keep ()  in
+                                   Prims.op_Negation uu____4323) &&
+                                    ((nsucc >= lo1) || (nfail > (hi1 - lo1)))
+                                   in
+                                if uu____4319
+                                then (nsucc, nfail, rs)
+                                else
+                                  ((let uu____4355 =
+                                      (quaking_or_retrying &&
+                                         ((FStar_Options.interactive ()) ||
+                                            (FStar_Options.debug_any ())))
+                                        && (n1 > Prims.int_zero)
                                        in
-                                    let uu____4332 =
-                                      FStar_Util.string_of_int
-                                        ((hi1 - Prims.int_one) - n1)
+                                    if uu____4355
+                                    then
+                                      let uu____4359 =
+                                        if quaking
+                                        then
+                                          let uu____4363 =
+                                            FStar_Util.string_of_int nsucc
+                                             in
+                                          FStar_Util.format1
+                                            "succeeded %s times and "
+                                            uu____4363
+                                        else ""  in
+                                      let uu____4369 =
+                                        if quaking
+                                        then FStar_Util.string_of_int nfail
+                                        else
+                                          (let uu____4375 =
+                                             FStar_Util.string_of_int nfail
+                                              in
+                                           Prims.op_Hat uu____4375 " times")
+                                         in
+                                      let uu____4378 =
+                                        FStar_Util.string_of_int (hi1 - n1)
+                                         in
+                                      FStar_Util.print5
+                                        "%s: so far query %s %sfailed %s (%s runs remain)\n"
+                                        (if quaking then "Quake" else "Retry")
+                                        name uu____4359 uu____4369 uu____4378
+                                    else ());
+                                   (let r = run_one (seed + n1)  in
+                                    let uu____4396 =
+                                      match r with
+                                      | FStar_Util.Inr cfg ->
+                                          (maybe_improve best_fuel
+                                             cfg.query_fuel;
+                                           maybe_improve best_ifuel
+                                             cfg.query_ifuel;
+                                           ((nsucc + Prims.int_one), nfail))
+                                      | uu____4417 ->
+                                          (nsucc, (nfail + Prims.int_one))
                                        in
-                                    FStar_Util.print4
-                                      "Quake: so far query %s succeeded %s times and failed %s (%s runs remain)\n"
-                                      name uu____4327 uu____4329 uu____4332
-                                  else ());
-                                 (nsucc1, (r :: rs)))) (Prims.int_zero, [])
-                       Prims.int_zero (hi1 - Prims.int_one)
+                                    match uu____4396 with
+                                    | (nsucc1,nfail1) ->
+                                        (nsucc1, nfail1, (r :: rs)))))
+                       (Prims.int_zero, Prims.int_zero, []) Prims.int_zero
+                       (hi1 - Prims.int_one)
                       in
-                   match uu____4216 with
-                   | (nsuccess,rs) ->
+                   match uu____4222 with
+                   | (nsuccess,nfailures,rs) ->
+                       let total_ran = nsuccess + nfailures  in
                        (if quaking
                         then
                           (let fuel_msg =
-                             let uu____4395 =
-                               let uu____4406 = FStar_ST.op_Bang best_fuel
+                             let uu____4514 =
+                               let uu____4525 = FStar_ST.op_Bang best_fuel
                                   in
-                               let uu____4435 = FStar_ST.op_Bang best_ifuel
+                               let uu____4554 = FStar_ST.op_Bang best_ifuel
                                   in
-                               (uu____4406, uu____4435)  in
-                             match uu____4395 with
+                               (uu____4525, uu____4554)  in
+                             match uu____4514 with
                              | (FStar_Pervasives_Native.Some
                                 f,FStar_Pervasives_Native.Some i) ->
-                                 let uu____4483 = FStar_Util.string_of_int f
+                                 let uu____4602 = FStar_Util.string_of_int f
                                     in
-                                 let uu____4485 = FStar_Util.string_of_int i
+                                 let uu____4604 = FStar_Util.string_of_int i
                                     in
                                  FStar_Util.format2
                                    " (best fuel=%s, best ifuel=%s)"
-                                   uu____4483 uu____4485
-                             | (uu____4488,uu____4489) -> ""  in
-                           let uu____4503 = FStar_Util.string_of_int nsuccess
+                                   uu____4602 uu____4604
+                             | (uu____4607,uu____4608) -> ""  in
+                           let uu____4622 = FStar_Util.string_of_int nsuccess
                               in
-                           let uu____4505 = FStar_Util.string_of_int hi1  in
-                           FStar_Util.print4
-                             "Quake: query %s succeeded %s/%s times%s\n" name
-                             uu____4503 uu____4505 fuel_msg)
+                           let uu____4624 =
+                             FStar_Util.string_of_int total_ran  in
+                           FStar_Util.print5
+                             "Quake: query %s succeeded %s/%s times%s%s\n"
+                             name uu____4622 uu____4624
+                             (if total_ran < hi1
+                              then " (early finish)"
+                              else "") fuel_msg)
                         else ();
                         if nsuccess < lo1
                         then
                           (let all_errs =
                              FStar_List.concatMap
-                               (fun uu___4_4526  ->
-                                  match uu___4_4526 with
-                                  | FStar_Util.Inr uu____4537 -> []
+                               (fun uu___4_4651  ->
+                                  match uu___4_4651 with
+                                  | FStar_Util.Inr uu____4662 -> []
                                   | FStar_Util.Inl es -> [es]) rs
                               in
-                           let uu____4551 =
-                             quaking &&
-                               (let uu____4554 = FStar_Options.query_stats ()
+                           let uu____4676 =
+                             quaking_or_retrying &&
+                               (let uu____4679 = FStar_Options.query_stats ()
                                    in
-                                Prims.op_Negation uu____4554)
+                                Prims.op_Negation uu____4679)
                               in
-                           if uu____4551
+                           if uu____4676
                            then
                              let errors_to_report1 errs =
                                errors_to_report
-                                 (let uu___544_4571 = default_settings  in
+                                 (let uu___555_4696 = default_settings  in
                                   {
-                                    query_env = (uu___544_4571.query_env);
-                                    query_decl = (uu___544_4571.query_decl);
-                                    query_name = (uu___544_4571.query_name);
-                                    query_index = (uu___544_4571.query_index);
-                                    query_range = (uu___544_4571.query_range);
-                                    query_fuel = (uu___544_4571.query_fuel);
-                                    query_ifuel = (uu___544_4571.query_ifuel);
+                                    query_env = (uu___555_4696.query_env);
+                                    query_decl = (uu___555_4696.query_decl);
+                                    query_name = (uu___555_4696.query_name);
+                                    query_index = (uu___555_4696.query_index);
+                                    query_range = (uu___555_4696.query_range);
+                                    query_fuel = (uu___555_4696.query_fuel);
+                                    query_ifuel = (uu___555_4696.query_ifuel);
                                     query_rlimit =
-                                      (uu___544_4571.query_rlimit);
-                                    query_hint = (uu___544_4571.query_hint);
+                                      (uu___555_4696.query_rlimit);
+                                    query_hint = (uu___555_4696.query_hint);
                                     query_errors = errs;
                                     query_all_labels =
-                                      (uu___544_4571.query_all_labels);
+                                      (uu___555_4696.query_all_labels);
                                     query_suffix =
-                                      (uu___544_4571.query_suffix);
-                                    query_hash = (uu___544_4571.query_hash)
+                                      (uu___555_4696.query_suffix);
+                                    query_hash = (uu___555_4696.query_hash)
                                   })
                                 in
                              let errs =
                                FStar_List.map errors_to_report1 all_errs  in
                              let errs1 =
-                               let uu____4596 =
+                               let uu____4721 =
                                  FStar_All.pipe_right errs FStar_List.flatten
                                   in
-                               FStar_All.pipe_right uu____4596 collect  in
+                               FStar_All.pipe_right uu____4721 collect  in
                              let errs2 =
                                FStar_All.pipe_right errs1
                                  (FStar_List.map
-                                    (fun uu____4679  ->
-                                       match uu____4679 with
+                                    (fun uu____4804  ->
+                                       match uu____4804 with
                                        | ((e,m,r),n1) ->
                                            if n1 > Prims.int_one
                                            then
-                                             let uu____4723 =
-                                               let uu____4725 =
-                                                 let uu____4727 =
+                                             let uu____4848 =
+                                               let uu____4850 =
+                                                 let uu____4852 =
                                                    FStar_Util.string_of_int
                                                      n1
                                                     in
                                                  FStar_Util.format1
-                                                   " (%s times)" uu____4727
+                                                   " (%s times)" uu____4852
                                                   in
-                                               Prims.op_Hat m uu____4725  in
-                                             (e, uu____4723, r)
+                                               Prims.op_Hat m uu____4850  in
+                                             (e, uu____4848, r)
                                            else (e, m, r)))
                                 in
                              (FStar_Errors.add_errors errs2;
@@ -1463,52 +1501,63 @@ let (ask_and_report_errors :
                                          env.FStar_TypeChecker_Env.qtbl_name_and_index
                                  with
                                  | FStar_Pervasives_Native.Some
-                                     (l,uu____4747) ->
+                                     (l,uu____4872) ->
                                      FStar_Ident.range_of_lid l
-                                 | uu____4755 -> FStar_Range.dummyRange  in
-                               let uu____4763 =
-                                 let uu____4773 =
-                                   let uu____4781 =
-                                     let uu____4783 =
-                                       FStar_Util.string_of_int nsuccess  in
-                                     let uu____4785 =
-                                       FStar_Util.string_of_int hi1  in
-                                     let uu____4787 =
-                                       FStar_Util.string_of_int lo1  in
-                                     FStar_Util.format4
-                                       "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s"
-                                       name uu____4783 uu____4785 uu____4787
+                                 | uu____4880 -> FStar_Range.dummyRange  in
+                               if quaking
+                               then
+                                 let uu____4889 =
+                                   let uu____4899 =
+                                     let uu____4907 =
+                                       let uu____4909 =
+                                         FStar_Util.string_of_int nsuccess
+                                          in
+                                       let uu____4911 =
+                                         FStar_Util.string_of_int total_ran
+                                          in
+                                       let uu____4913 =
+                                         FStar_Util.string_of_int lo1  in
+                                       let uu____4915 =
+                                         FStar_Util.string_of_int hi1  in
+                                       FStar_Util.format6
+                                         "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                                         name uu____4909 uu____4911
+                                         uu____4913 uu____4915
+                                         (if total_ran < hi1
+                                          then " (early abort)"
+                                          else "")
+                                        in
+                                     (FStar_Errors.Error_QuakeFailed,
+                                       uu____4907, rng)
                                       in
-                                   (FStar_Errors.Error_QuakeFailed,
-                                     uu____4781, rng)
-                                    in
-                                 [uu____4773]  in
-                               FStar_TypeChecker_Err.add_errors env
-                                 uu____4763))
+                                   [uu____4899]  in
+                                 FStar_TypeChecker_Err.add_errors env
+                                   uu____4889
+                               else ()))
                            else
                              (let report1 errs =
                                 report_errors
-                                  (let uu___565_4819 = default_settings  in
+                                  (let uu___578_4955 = default_settings  in
                                    {
-                                     query_env = (uu___565_4819.query_env);
-                                     query_decl = (uu___565_4819.query_decl);
-                                     query_name = (uu___565_4819.query_name);
+                                     query_env = (uu___578_4955.query_env);
+                                     query_decl = (uu___578_4955.query_decl);
+                                     query_name = (uu___578_4955.query_name);
                                      query_index =
-                                       (uu___565_4819.query_index);
+                                       (uu___578_4955.query_index);
                                      query_range =
-                                       (uu___565_4819.query_range);
-                                     query_fuel = (uu___565_4819.query_fuel);
+                                       (uu___578_4955.query_range);
+                                     query_fuel = (uu___578_4955.query_fuel);
                                      query_ifuel =
-                                       (uu___565_4819.query_ifuel);
+                                       (uu___578_4955.query_ifuel);
                                      query_rlimit =
-                                       (uu___565_4819.query_rlimit);
-                                     query_hint = (uu___565_4819.query_hint);
+                                       (uu___578_4955.query_rlimit);
+                                     query_hint = (uu___578_4955.query_hint);
                                      query_errors = errs;
                                      query_all_labels =
-                                       (uu___565_4819.query_all_labels);
+                                       (uu___578_4955.query_all_labels);
                                      query_suffix =
-                                       (uu___565_4819.query_suffix);
-                                     query_hash = (uu___565_4819.query_hash)
+                                       (uu___578_4955.query_suffix);
+                                     query_hash = (uu___578_4955.query_hash)
                                    })
                                  in
                               FStar_List.iter report1 all_errs))
@@ -1516,28 +1565,28 @@ let (ask_and_report_errors :
                     in
                  let skip =
                    (FStar_Options.admit_smt_queries ()) ||
-                     (let uu____4829 = FStar_Options.admit_except ()  in
-                      match uu____4829 with
+                     (let uu____4965 = FStar_Options.admit_except ()  in
+                      match uu____4965 with
                       | FStar_Pervasives_Native.Some id1 ->
                           if FStar_Util.starts_with id1 "("
                           then
-                            let uu____4840 = full_query_id default_settings
+                            let uu____4976 = full_query_id default_settings
                                in
-                            uu____4840 <> id1
+                            uu____4976 <> id1
                           else default_settings.query_name <> id1
                       | FStar_Pervasives_Native.None  -> false)
                     in
                  if skip
                  then
-                   let uu____4849 =
+                   let uu____4985 =
                      (FStar_Options.record_hints ()) &&
                        (FStar_All.pipe_right next_hint FStar_Util.is_some)
                       in
-                   (if uu____4849
+                   (if uu____4985
                     then
-                      let uu____4855 =
+                      let uu____4991 =
                         FStar_All.pipe_right next_hint FStar_Util.must  in
-                      FStar_All.pipe_right uu____4855 store_hint
+                      FStar_All.pipe_right uu____4991 store_hint
                     else ())
                  else quake_and_check_all_configs all_configs)
   
@@ -1579,34 +1628,34 @@ let (_last_cfg : solver_cfg FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
   fun env  ->
-    let uu____5083 = FStar_Options.z3_seed ()  in
-    let uu____5085 = FStar_Options.z3_cliopt ()  in
-    let uu____5089 = FStar_Options.smtencoding_valid_intro ()  in
-    let uu____5091 = FStar_Options.smtencoding_valid_elim ()  in
+    let uu____5219 = FStar_Options.z3_seed ()  in
+    let uu____5221 = FStar_Options.z3_cliopt ()  in
+    let uu____5225 = FStar_Options.smtencoding_valid_intro ()  in
+    let uu____5227 = FStar_Options.smtencoding_valid_elim ()  in
     {
-      seed = uu____5083;
-      cliopt = uu____5085;
+      seed = uu____5219;
+      cliopt = uu____5221;
       facts = (env.FStar_TypeChecker_Env.proof_ns);
-      valid_intro = uu____5089;
-      valid_elim = uu____5091
+      valid_intro = uu____5225;
+      valid_elim = uu____5227
     }
   
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env  ->
-    let uu____5099 =
-      let uu____5102 = get_cfg env  in
-      FStar_Pervasives_Native.Some uu____5102  in
-    FStar_ST.op_Colon_Equals _last_cfg uu____5099
+    let uu____5235 =
+      let uu____5238 = get_cfg env  in
+      FStar_Pervasives_Native.Some uu____5238  in
+    FStar_ST.op_Colon_Equals _last_cfg uu____5235
   
 let (should_refresh : FStar_TypeChecker_Env.env -> Prims.bool) =
   fun env  ->
-    let uu____5133 = FStar_ST.op_Bang _last_cfg  in
-    match uu____5133 with
+    let uu____5269 = FStar_ST.op_Bang _last_cfg  in
+    match uu____5269 with
     | FStar_Pervasives_Native.None  -> (save_cfg env; false)
     | FStar_Pervasives_Native.Some cfg ->
-        let uu____5163 = let uu____5165 = get_cfg env  in cfg = uu____5165
+        let uu____5299 = let uu____5301 = get_cfg env  in cfg = uu____5301
            in
-        Prims.op_Negation uu____5163
+        Prims.op_Negation uu____5299
   
 let (do_solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1615,31 +1664,31 @@ let (do_solve :
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
-        (let uu____5194 = should_refresh tcenv  in
-         if uu____5194
+        (let uu____5330 = should_refresh tcenv  in
+         if uu____5330
          then (save_cfg tcenv; FStar_SMTEncoding_Z3.refresh ())
          else ());
-        (let uu____5201 =
-           let uu____5203 =
-             let uu____5205 = FStar_TypeChecker_Env.get_range tcenv  in
-             FStar_All.pipe_left FStar_Range.string_of_range uu____5205  in
-           FStar_Util.format1 "Starting query at %s" uu____5203  in
-         FStar_SMTEncoding_Encode.push uu____5201);
-        (let pop1 uu____5213 =
-           let uu____5214 =
-             let uu____5216 =
-               let uu____5218 = FStar_TypeChecker_Env.get_range tcenv  in
-               FStar_All.pipe_left FStar_Range.string_of_range uu____5218  in
-             FStar_Util.format1 "Ending query at %s" uu____5216  in
-           FStar_SMTEncoding_Encode.pop uu____5214  in
+        (let uu____5337 =
+           let uu____5339 =
+             let uu____5341 = FStar_TypeChecker_Env.get_range tcenv  in
+             FStar_All.pipe_left FStar_Range.string_of_range uu____5341  in
+           FStar_Util.format1 "Starting query at %s" uu____5339  in
+         FStar_SMTEncoding_Encode.push uu____5337);
+        (let pop1 uu____5349 =
+           let uu____5350 =
+             let uu____5352 =
+               let uu____5354 = FStar_TypeChecker_Env.get_range tcenv  in
+               FStar_All.pipe_left FStar_Range.string_of_range uu____5354  in
+             FStar_Util.format1 "Ending query at %s" uu____5352  in
+           FStar_SMTEncoding_Encode.pop uu____5350  in
          try
-           (fun uu___606_5234  ->
+           (fun uu___619_5370  ->
               match () with
               | () ->
-                  let uu____5235 =
+                  let uu____5371 =
                     FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv q
                      in
-                  (match uu____5235 with
+                  (match uu____5371 with
                    | (prefix1,labels,qry,suffix) ->
                        let tcenv1 =
                          FStar_TypeChecker_Env.incr_query_index tcenv  in
@@ -1651,44 +1700,44 @@ let (do_solve :
                                   FStar_SMTEncoding_Term.tm =
                                     FStar_SMTEncoding_Term.App
                                     (FStar_SMTEncoding_Term.FalseOp
-                                     ,uu____5267);
+                                     ,uu____5403);
                                   FStar_SMTEncoding_Term.freevars =
-                                    uu____5268;
-                                  FStar_SMTEncoding_Term.rng = uu____5269;_};
+                                    uu____5404;
+                                  FStar_SMTEncoding_Term.rng = uu____5405;_};
                               FStar_SMTEncoding_Term.assumption_caption =
-                                uu____5270;
+                                uu____5406;
                               FStar_SMTEncoding_Term.assumption_name =
-                                uu____5271;
+                                uu____5407;
                               FStar_SMTEncoding_Term.assumption_fact_ids =
-                                uu____5272;_}
+                                uu____5408;_}
                             -> pop1 ()
-                        | uu____5292 when tcenv1.FStar_TypeChecker_Env.admit
+                        | uu____5428 when tcenv1.FStar_TypeChecker_Env.admit
                             -> pop1 ()
-                        | FStar_SMTEncoding_Term.Assume uu____5293 ->
+                        | FStar_SMTEncoding_Term.Assume uu____5429 ->
                             (ask_and_report_errors tcenv1 labels prefix1 qry
                                suffix;
                              pop1 ())
-                        | uu____5295 -> failwith "Impossible"))) ()
+                        | uu____5431 -> failwith "Impossible"))) ()
          with
          | FStar_SMTEncoding_Env.Inner_let_rec names1 ->
              (pop1 ();
-              (let uu____5311 =
-                 let uu____5321 =
-                   let uu____5329 =
-                     let uu____5331 =
-                       let uu____5333 =
+              (let uu____5447 =
+                 let uu____5457 =
+                   let uu____5465 =
+                     let uu____5467 =
+                       let uu____5469 =
                          FStar_List.map FStar_Pervasives_Native.fst names1
                           in
-                       FStar_String.concat "," uu____5333  in
+                       FStar_String.concat "," uu____5469  in
                      FStar_Util.format1
                        "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                       uu____5331
+                       uu____5467
                       in
                    (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
-                     uu____5329, (tcenv.FStar_TypeChecker_Env.range))
+                     uu____5465, (tcenv.FStar_TypeChecker_Env.range))
                     in
-                 [uu____5321]  in
-               FStar_TypeChecker_Err.add_errors tcenv uu____5311)))
+                 [uu____5457]  in
+               FStar_TypeChecker_Err.add_errors tcenv uu____5447)))
   
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1697,31 +1746,31 @@ let (solve :
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
-        let uu____5388 = FStar_Options.no_smt ()  in
-        if uu____5388
+        let uu____5524 = FStar_Options.no_smt ()  in
+        if uu____5524
         then
-          let uu____5391 =
-            let uu____5401 =
-              let uu____5409 =
-                let uu____5411 = FStar_Syntax_Print.term_to_string q  in
+          let uu____5527 =
+            let uu____5537 =
+              let uu____5545 =
+                let uu____5547 = FStar_Syntax_Print.term_to_string q  in
                 FStar_Util.format1
                   "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                  uu____5411
+                  uu____5547
                  in
-              (FStar_Errors.Error_NoSMTButNeeded, uu____5409,
+              (FStar_Errors.Error_NoSMTButNeeded, uu____5545,
                 (tcenv.FStar_TypeChecker_Env.range))
                in
-            [uu____5401]  in
-          FStar_TypeChecker_Err.add_errors tcenv uu____5391
+            [uu____5537]  in
+          FStar_TypeChecker_Err.add_errors tcenv uu____5527
         else
-          (let uu____5431 =
-             let uu____5435 =
-               let uu____5437 = FStar_TypeChecker_Env.current_module tcenv
+          (let uu____5567 =
+             let uu____5571 =
+               let uu____5573 = FStar_TypeChecker_Env.current_module tcenv
                   in
-               FStar_Ident.string_of_lid uu____5437  in
-             FStar_Pervasives_Native.Some uu____5435  in
+               FStar_Ident.string_of_lid uu____5573  in
+             FStar_Pervasives_Native.Some uu____5571  in
            FStar_Profiling.profile
-             (fun uu____5440  -> do_solve use_env_msg tcenv q) uu____5431
+             (fun uu____5576  -> do_solve use_env_msg tcenv q) uu____5567
              "FStar.TypeChecker.SMTEncoding.solve_top_level")
   
 let (solver : FStar_TypeChecker_Env.solver_t) =
@@ -1736,35 +1785,35 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____5454 =
-             let uu____5461 = FStar_Options.peek ()  in (e, g, uu____5461)
+           let uu____5590 =
+             let uu____5597 = FStar_Options.peek ()  in (e, g, uu____5597)
               in
-           [uu____5454]);
+           [uu____5590]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   } 
 let (dummy : FStar_TypeChecker_Env.solver_t) =
   {
-    FStar_TypeChecker_Env.init = (fun uu____5477  -> ());
-    FStar_TypeChecker_Env.push = (fun uu____5479  -> ());
-    FStar_TypeChecker_Env.pop = (fun uu____5482  -> ());
+    FStar_TypeChecker_Env.init = (fun uu____5613  -> ());
+    FStar_TypeChecker_Env.push = (fun uu____5615  -> ());
+    FStar_TypeChecker_Env.pop = (fun uu____5618  -> ());
     FStar_TypeChecker_Env.snapshot =
-      (fun uu____5485  ->
+      (fun uu____5621  ->
          ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
     FStar_TypeChecker_Env.rollback =
-      (fun uu____5504  -> fun uu____5505  -> ());
+      (fun uu____5640  -> fun uu____5641  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____5520  -> fun uu____5521  -> ());
+      (fun uu____5656  -> fun uu____5657  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____5527 =
-             let uu____5534 = FStar_Options.peek ()  in (e, g, uu____5534)
+           let uu____5663 =
+             let uu____5670 = FStar_Options.peek ()  in (e, g, uu____5670)
               in
-           [uu____5527]);
+           [uu____5663]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____5550  -> fun uu____5551  -> fun uu____5552  -> ());
-    FStar_TypeChecker_Env.finish = (fun uu____5559  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____5561  -> ())
+      (fun uu____5686  -> fun uu____5687  -> fun uu____5688  -> ());
+    FStar_TypeChecker_Env.finish = (fun uu____5695  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____5697  -> ())
   } 

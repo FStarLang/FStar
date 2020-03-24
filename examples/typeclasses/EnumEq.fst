@@ -25,5 +25,5 @@ instance enum_eq (#a:Type) (d : enum a) : deq a = {
     eq_ok = (fun (x y : a) -> inv1 x; inv1 y);
 }
 
-let test #a [|enum a|] (x y : a) : bool =
+let test (#a:Type0) [|enum a|] (x y : a) : bool =
   eq x y

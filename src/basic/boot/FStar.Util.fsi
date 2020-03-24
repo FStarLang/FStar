@@ -150,6 +150,8 @@ val print1_warning: string -> string -> unit
 val print2_warning: string -> string -> string -> unit
 val print3_warning: string -> string -> string -> string -> unit
 
+val flush_stdout: unit -> unit
+
 val stdout_isatty: unit -> option<bool>
 
 // These functions have no effect

@@ -226,7 +226,9 @@ let ps_to_json (msg, ps) =
 let do_dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
-        print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
+        print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
+        BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
+    )
 
 let dump (msg:string) : tac<unit> =
     mk_tac (fun ps ->
@@ -1381,10 +1383,18 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
-    let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    (* It's important to keep the original term if we want to do
+     * nothing, (hence the underscore below) since after the call to
+     * the typechecker, t can be elaborated and have more structure. In
+     * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
+     * Which would cause an infinite loop between this function and
+     * tac_fold_env. *)
+    let _, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
+
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then begin
+        BU.print1 "not pure: %s\n" (Print.term_to_string t);
         ret t // Don't do anything for possibly impure terms
-    else
+    end else
         let rewrite_eq =
           let typ = lcomp.res_typ in
           bind (new_uvar "pointwise_rec" env typ) (fun (ut, uvar_ut) -> //NS: FIXME uvar_ut dropped?
@@ -1400,14 +1410,13 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
                 // Try to get rid  of all the unification lambdas
                 let ut = N.reduce_uvar_solutions env ut in
                 log ps (fun () ->
-                    BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                    BU.print2 "pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                                 (Print.term_to_string t)
                                 (Print.term_to_string ut));
                 ret ut))
           ))
        in
-       bind (catch rewrite_eq) (fun x ->
-       match x with
+       bind (catch rewrite_eq) (function
        // TODO: Share a `Skip` exception to userspace
        | Inl (TacticFailure "SKIP") -> ret t
        | Inl e -> traise e
@@ -1534,10 +1543,10 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     log ps (fun () ->
         BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 
-let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise" <|
+let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointwise" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
@@ -1551,7 +1560,7 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise"
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 let _trefl (l : term) (r : term) : tac<unit> =
    bind (cur_goal ()) (fun g ->
@@ -1835,6 +1844,20 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         (* Deconstruct its type, separating the parameters from the
                          * actual arguments (indices do not matter here). *)
                         let bs, comp = U.arrow_formals_comp c_ty in
+
+                        (* More friendly names: 'a_i' instead of '_i' *)
+                        let bs, comp =
+                          let rename_bv bv =
+                              let ppname = bv.ppname in
+                              let ppname = { ppname with idText = "a" ^ ppname.idText } in
+                              // freshen just to be extra safe.. probably not needed
+                              freshen_bv ({ bv with ppname = ppname })
+                          in
+                          let bs' = List.map (fun (bv, aq) -> (rename_bv bv, aq)) bs in
+                          let subst = List.map2 (fun (bv, _) (bv', _) -> NT (bv, bv_to_name bv')) bs bs' in
+                          SS.subst_binders subst bs', SS.subst_comp subst comp
+                        in
+
                         (* BU.print1 "bs = (%s)\n" (Print.binders_to_string ", " bs); *)
                         let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->
@@ -2103,8 +2126,6 @@ let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let env = { env with failhard = true } in
-    (* TODO: We do not faithfully expose universes to metaprograms *)
-    let env = { env with Env.lax_universes = true } in
     env
 
 let proofstate_of_goals rng env goals imps =
@@ -2131,3 +2152,26 @@ let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = proofstate_of_goals rng env [g] g_u.implicits in
     (ps, goal_witness g)
+
+let goal_of_implicit env (i:Env.implicit) : goal =
+  mk_goal env i.imp_uvar (FStar.Options.peek()) false ""
+
+let proofstate_of_all_implicits rng env imps =
+    let goals = List.map (goal_of_implicit env) imps in
+    let w = goal_witness (List.hd goals) in
+    let ps = {
+        main_context = env;
+        all_implicits = imps;
+        goals = goals;
+        smt_goals = [];
+        depth = 0;
+        __dump = (fun ps msg -> do_dump_proofstate ps msg);
+        psc = Cfg.null_psc;
+        entry_range = rng;
+        guard_policy = SMT;
+        freshness = 0;
+        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        local_state = BU.psmap_empty ();
+    }
+    in
+    (ps, w)

@@ -438,6 +438,8 @@ let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
+let flush_stdout () = flush stdout
+
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
 let colorize s colors =

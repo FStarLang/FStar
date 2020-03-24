@@ -185,9 +185,11 @@ val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
 val quake_lo                    : unit    -> int
 val quake_hi                    : unit    -> int
+val quake_keep                  : unit    -> bool
 val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
+val retry                       : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res

@@ -35,7 +35,7 @@
 {"query-id":"35","query":"peek","args":{"kind":"lax","code":"\nlet b: b = a + a","line":4,"column":0}}
 {"query-id":"36","query":"peek","args":{"kind":"lax","code":"\nlet b: b = a + a","line":4,"column":0}}
 {"query-id":"37","query":"autocomplete","args":{"partial-symbol":"nat","context":"code"}}
-{"query-id":"38","query":"peek","args":{"kind":"lax","code":"\nlet b: b:nat = a + a","line":4,"column":0}}
+{"query-id":"38","query":"peek","args":{"kind":"lax","code":"\nlet b: nat = a + a","line":4,"column":0}}
 {"query-id":"39","query":"peek","args":{"kind":"lax","code":"\nlet b: b:nat{ = a + a","line":4,"column":0}}
 {"query-id":"40","query":"peek","args":{"kind":"lax","code":"\nlet b: b:nat{b >  = a + a","line":4,"column":0}}
 {"query-id":"41","query":"peek","args":{"kind":"lax","code":"\nlet b: b:nat{b > 1 = a + a","line":4,"column":0}}

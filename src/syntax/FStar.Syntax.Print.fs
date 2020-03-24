@@ -752,7 +752,7 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format2 "val %s : %s" lid.str (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
-      | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
+      | Sig_bundle(ses, _) -> "(* Sig_bundle *)\n" ^ (List.map sigelt_to_string ses |> String.concat "\n") ^ "\n(* / Sig_bundle *)"
       | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
@@ -783,6 +783,22 @@ let sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ ->
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+
+let tag_of_sigelt (se:sigelt) : string =
+  match se.sigel with
+  | Sig_inductive_typ _    -> "Sig_inductive_typ"
+  | Sig_bundle _           -> "Sig_bundle"
+  | Sig_datacon _          -> "Sig_datacon"
+  | Sig_declare_typ _      -> "Sig_declare_typ"
+  | Sig_let _              -> "Sig_let"
+  | Sig_main _             -> "Sig_main"
+  | Sig_assume _           -> "Sig_assume"
+  | Sig_new_effect _       -> "Sig_new_effect"
+  | Sig_sub_effect _       -> "Sig_sub_effect"
+  | Sig_effect_abbrev _    -> "Sig_effect_abbrev"
+  | Sig_pragma _           -> "Sig_pragma"
+  | Sig_splice _           -> "Sig_splice"
+  | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
 
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
