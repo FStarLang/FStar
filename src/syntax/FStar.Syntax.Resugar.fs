@@ -1160,6 +1160,9 @@ let resugar_sigelt' env se : option<A.decl> =
         failwith "Should not happen hopefully"
     end
 
+  | Sig_fail _ ->
+    None
+
   | Sig_let (lbs, _) ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None

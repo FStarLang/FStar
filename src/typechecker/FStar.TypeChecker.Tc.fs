@@ -263,63 +263,6 @@ let tc_inductive env ses quals attrs lids =
   try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
-let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
-    let comb f1 f2 =
-        match f1, f2 with
-        | Some (e1, l1), Some (e2, l2) ->
-            Some (e1@e2, l1 || l2)
-        | Some (e, l), None
-        | None, Some (e, l) ->
-            Some (e, l)
-        | _ -> None
-    in
-    List.fold_right (fun at acc -> comb (ToSyntax.get_fail_attr true at) acc) se.sigattrs None
-
-let list_of_option = function
-    | None -> []
-    | Some x -> [x]
-
-(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
-(* Precondition: lists are sorted *)
-let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
-    let rec collect (l : list<'a>) : list<('a * int)> =
-        match l with
-        | [] -> []
-        | hd :: tl ->
-            begin match collect tl with
-            | [] -> [(hd, 1)]
-            | (h, n) :: t ->
-                if h = hd
-                then (h, n+1) :: t
-                else (hd, 1) :: (h, n) :: t
-            end
-    in
-    let summ l =
-        collect l
-    in
-    let l1 = summ l1 in
-    let l2 = summ l2 in
-    let rec aux l1 l2 =
-        match l1, l2 with
-        | [], [] -> None
-
-        | (e, n) :: _, [] ->
-            Some (e, n, 0)
-
-        | [], (e, n) :: _ ->
-            Some (e, 0, n)
-
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 ->
-            if hd1 < hd2 then
-                Some (hd1, n1, 0)
-            else if hd1 > hd2 then
-                Some (hd2, 0, n2)
-            else if n1 <> n2 then
-                Some (hd1, n1, n2)
-            else aux tl1 tl2
-    in
-    aux l1 l2
-
 (*
  *  Given `val t : Type` in an interface
  *  and   `let t = e`    in the corresponding implementation
@@ -390,6 +333,10 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "huh?"
 
+(* Alternative to making a huge let rec... knot is set below in this file *)
+let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * list<sigelt> * Env.env)>> =
+  BU.mk_ref None
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
@@ -404,6 +351,57 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
+
+  (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
+  | Sig_fail (_, false, _) when not (Env.should_verify env) || Options.admit_smt_queries () ->
+    [], [], env
+
+  | Sig_fail (expected_errors, lax, ses) ->
+    let env' = if lax then { env with lax = true } else env in
+    let env' = Env.push env' "expect_failure" in
+    (* We need to call push since tc_decls will encode the sigelts that
+     * succeed to SMT, which may be relevant in checking the ones that
+     * follow it. See #1956 for an example of what goes wrong if we
+     * don't pop the context (spoiler: we prove false). *)
+
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int expected_errors);
+
+    let errs, _ = Errors.catch_errors (fun () ->
+                    Options.with_saved_options (fun () ->
+                      BU.must (!tc_decls_knot) env' ses)) in
+
+    if Env.debug env Options.Low then begin
+        BU.print_string ">> Got issues: [\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">>]\n"
+    end;
+
+    (* Pop environment, reset SMT context *)
+    let _ = Env.pop env' "expect_failure" in
+
+    let actual_errors = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
+
+    begin match errs with
+    | [] ->
+        List.iter Errors.print_issue errs;
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
+    | _ ->
+        if expected_errors <> [] then
+          match Errors.find_multiset_discrepancy expected_errors actual_errors with
+          | None -> ()
+          | Some (e, n1, n2) ->
+            List.iter Errors.print_issue errs;
+            Errors.log_issue
+                     se.sigrng
+                     (Errors.Error_DidNotFail,
+                      BU.format5 "This top-level definition was expected to raise error codes %s, \
+                                  but it raised %s. Error #%s was raised %s times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int expected_errors)
+                                    (FStar.Common.string_of_list string_of_int actual_errors)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+    end;
+    [], [], env
 
   | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
@@ -808,49 +806,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   then BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
   if Env.debug env Options.Low
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-  match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) || Options.admit_smt_queries () ->
-    (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
-    [], [], env
-
-  | Some (errnos, lax) ->
-    let env' = if lax then { env with lax = true } else env in
-    if Env.debug env Options.Low then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs, _ = Errors.catch_errors (fun () -> Options.with_saved_options (fun () -> tc_decl' env' se)) in
-    if Env.debug env Options.Low then begin
-        BU.print_string ">> Got issues: [\n";
-        List.iter Errors.print_issue errs;
-        BU.print_string ">>]\n"
-    end;
-    let sort = List.sortWith (fun x y -> x - y) in
-    let errnos = sort errnos in
-    let actual = sort (List.concatMap (fun i -> list_of_option i.issue_number) errs) in
-    begin match errs with
-    | [] ->
-        List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
-    | _ ->
-        if errnos <> [] && errnos <> actual then
-            let (e, n1, n2) = match check_multi_eq errnos actual with
-                              | Some r -> r
-                              | None -> (-1, -1, -1) // should be impossible
-            in
-            List.iter Errors.print_issue errs;
-            Errors.log_issue
-                     se.sigrng
-                     (Errors.Error_DidNotFail,
-                      BU.format5 "This top-level definition was expected to raise error codes %s, \
-                                  but it raised %s. Error #%s was raised %s times, instead of %s."
-                                    (FStar.Common.string_of_list string_of_int errnos)
-                                    (FStar.Common.string_of_list string_of_int actual)
-                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
-        else ()
-    end;
-    [], [], env
-
-  | None ->
-    tc_decl' env se
+  tc_decl' env se
 
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
@@ -885,6 +841,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
    match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
+  | Sig_fail _
   | Sig_splice _
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible (Already handled)"
@@ -1052,13 +1009,6 @@ let tc_decls env ses =
         in
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
-
-    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
-    // be present in ses' is the typechecked se (or none). I'm taking it out
-    // so I can make `postprocess_with` remove itself during typechecking
-    // (otherwise, it would run twice with extracted interfaces)
-    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
-
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
   // A wrapper to (maybe) print the time taken for each sigelt
@@ -1084,6 +1034,9 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
+let _ =
+    tc_decls_knot := Some tc_decls
+
 (* Consider the module:
         module Test
         abstract type t = nat
@@ -1098,7 +1051,7 @@ let tc_decls env ses =
    perspective.
 *)
 open FStar.TypeChecker.Err
-let check_exports env (modul:modul) exports =
+let check_exports env (modul:modul) exports : unit =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t =
         let univs, t = SS.open_univ_vars univs t in
@@ -1143,9 +1096,11 @@ let check_exports env (modul:modul) exports =
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
-        | Sig_splice _
         | Sig_pragma _
         | Sig_polymonadic_bind _ -> ()
+
+        | Sig_fail _
+        | Sig_splice _ -> failwith "Impossible (Already handled)"
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1235,6 +1190,8 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
     | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
+
+    | Sig_fail _ -> failwith "Impossible! extract_interface: trying to extract Sig_fail"
 
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
