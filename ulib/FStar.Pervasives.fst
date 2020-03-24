@@ -345,22 +345,6 @@ let must_erase_for_extraction :unit = ()
 
 let dm4f_bind_range : unit = ()
 
-(** When attached a top-level definition, the typechecker will succeed
- * if and only if checking the definition results in an error. The
- * error number list is actually OPTIONAL. If present, it will be
- * checked that the definition raises exactly those errors in the
- * specified multiplicity, but order does not matter. *)
-irreducible
-let expect_failure (errs : list int) : unit = ()
-
-(** When --lax is present, we the previous attribute since some definitions
- * only fail when verification is turned on. With this attribute, one can ensure
- * that a definition fails while lax-checking too. Same semantics as above,
- * but lax mode will be turned on for the definition.
- *)
-irreducible
-let expect_lax_failure (errs : list int) : unit = ()
-
 (** Print the time it took to typecheck a top-level definition *)
 irreducible
 let tcdecltime : unit = ()

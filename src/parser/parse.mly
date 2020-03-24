@@ -58,7 +58,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL FAIL FAILLAX
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -144,9 +144,21 @@ decoration:
   | x=qualifier
       { Qualifier x }
 
+errList:
+  | lopt=option(LBRACK errs=separated_list(SEMICOLON, INT) RBRACK {errs})
+    { let l = match lopt with | None -> [] | Some l -> List.map (fun (s, _) -> int_of_string s) l in l }
+
 decl:
   | ASSUME lid=uident COLON phi=formula
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
+
+  | FAIL errs=errList ds=list(decoration) decl=rawDecl
+      { let d0 = mk_decl decl (rhs parseState 2) ds in
+        mk_decl (Fail (errs, false, d0)) (rhs parseState 2) [] }
+
+  | FAILLAX errs=errList ds=list(decoration) decl=rawDecl
+      { let d0 = mk_decl decl (rhs parseState 2) ds in
+        mk_decl (Fail (errs, true, d0)) (rhs parseState 2) [] }
 
   | ds=list(decoration) decl=rawDecl
       { mk_decl decl (rhs parseState 2) ds }

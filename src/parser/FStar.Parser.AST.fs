@@ -207,6 +207,7 @@ type decl' =
   | Pragma of pragma
   | Assume of ident * term
   | Splice of list<ident> * term
+  | Fail of list<int> * bool * decl (* list of errors, plus whether if lax or not *)
 
 and decl = {
   d:decl';

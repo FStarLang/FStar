@@ -448,6 +448,8 @@ let rec token = lexer
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "%Fail" -> FAIL
+ | "%FailLax" -> FAILLAX
 
  | anywhite+ -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf

@@ -2444,34 +2444,6 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * 
    | _ ->
      None, false
 
-
-// If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
-let get_fail_attr1 warn (at : S.term) : option<(list<int> * bool)> =
-    let rebind res b =
-      match res with
-      | None -> None
-      | Some l -> Some (l, b)
-    in
-    let res, matched = parse_attr_with_list warn at C.fail_attr in
-    if matched then rebind res false
-    else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
-         rebind res true
-
-// Traverse a list of attributes to find all expect_failures and combine them
-let get_fail_attr warn (ats : list<S.term>) : option<(list<int> * bool)> =
-    let comb f1 f2 =
-      match f1, f2 with
-      | Some (e1, l1), Some (e2, l2) ->
-        Some (e1@e2, l1 || l2)
-
-      | Some (e, l), None
-      | None, Some (e, l) ->
-        Some (e, l)
-
-      | _ -> None
-    in
-    List.fold_right (fun at acc -> comb (get_fail_attr1 warn at) acc) ats None
-
 let lookup_effect_lid env (l:lident) r : S.eff_decl =
   match Env.try_lookup_effect_defn env l with
   | None ->
@@ -2729,10 +2701,6 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
-  let no_fail_attrs (ats : list<S.term>) : list<S.term> =
-      List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
-  in
-
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
@@ -2741,53 +2709,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
                                          * will shadow a previous val *)
   let attrs = List.map (desugar_term env) d.attrs in
 
-  (* If this is an expect_failure, check to see if it fails.
-   * If it does, check that the errors match as we normally do.
-   * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
-  let env, sigelts =
-    match get_fail_attr false attrs with
-    | Some (expected_errs, lax) ->
-      let d = { d with attrs = [] } in
-      let errs, r = Errors.catch_errors (fun () ->
-                      Options.with_saved_options (fun () ->
-                        desugar_decl_noattrs env d)) in
-      begin match errs, r with
-      | [], Some (env, ses) ->
-        (* Succeeded desugaring, carry on, but make a Sig_fail *)
-        (* Restore attributes, except for fail *)
-        let ses = List.map (fun se -> { se with sigattrs = no_fail_attrs attrs }) ses in
-        let se = { sigel = Sig_fail (expected_errs, lax, ses);
-                   sigquals = [];
-                   sigrng = d.drange;
-                   sigmeta = default_sigmeta;
-                   sigattrs = [];
-                   sigopts = None; } in
-        env0, [se]
-
-      | errs, ropt -> (* failed! check that it failed as expected *)
-        let errnos = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
-        if expected_errs = [] then
-          env0, []
-        else begin
-          match Errors.find_multiset_discrepancy expected_errs errnos with
-          | None -> env0, []
-          | Some (e, n1, n2) ->
-            List.iter Errors.print_issue errs;
-            Errors.log_issue
-                     d.drange
-                     (Errors.Error_DidNotFail,
-                      BU.format5 "This top-level definition was expected to raise error codes %s, \
-                                  but it raised %s (at desugaring time). Error #%s was raised %s \
-                                  times, instead of %s."
-                                    (FStar.Common.string_of_list string_of_int expected_errs)
-                                    (FStar.Common.string_of_list string_of_int errnos)
-                                    (string_of_int e) (string_of_int n2) (string_of_int n1));
-            env0, []
-        end
-      end
-    | None ->
-      desugar_decl_noattrs env d
-  in
+  let env, sigelts = desugar_decl_noattrs env d in
 
   let rec val_attrs (ses:list<sigelt>) : list<S.term> =
     match ses with
@@ -3193,6 +3115,48 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigopts = None; } in
     let env = push_sigelt env se in
     env, [se]
+
+  | Fail (expected_errs, lax, d) ->
+    let env0 = Env.snapshot env |> snd in
+    (* Check to see if desugaring `d` fails.
+     * If it does, check that the errors match as we normally do.
+     * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
+    let errs, r = Errors.catch_errors (fun () ->
+                    Options.with_saved_options (fun () ->
+                      desugar_decl_noattrs env d)) in
+    begin match errs, r with
+    | [], Some (_, ses) ->
+      (* Succeeded desugaring, carry on, but make a Sig_fail *)
+      (* Restore attributes, except for fail *)
+      let se = { sigel = Sig_fail (expected_errs, lax, ses);
+                 sigquals = [];
+                 sigrng = d.drange;
+                 sigmeta = default_sigmeta;
+                 sigattrs = [];
+                 sigopts = None; } in
+      env0, [se]
+
+    | errs, _ -> (* failed! check that it failed as expected *)
+      if expected_errs = [] then
+        env0, []
+      else begin
+        let actual_errs = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
+        match Errors.find_multiset_discrepancy expected_errs actual_errs with
+        | None -> env0, []
+        | Some (e, n1, n2) ->
+          List.iter Errors.print_issue errs;
+          Errors.log_issue
+                   d.drange
+                   (Errors.Error_DidNotFail,
+                    BU.format5 "This top-level definition was expected to raise error codes %s, \
+                                but it raised %s (at desugaring time). Error #%s was raised %s \
+                                times, instead of %s."
+                                  (FStar.Common.string_of_list string_of_int expected_errs)
+                                  (FStar.Common.string_of_list string_of_int actual_errs)
+                                  (string_of_int e) (string_of_int n2) (string_of_int n1));
+          env0, []
+      end
+    end
 
 let desugar_decls env decls =
   let env, sigelts =

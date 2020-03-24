@@ -352,7 +352,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
 
-  (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
+  (* If we're --laxing, and this is not a %FailLax, then just ignore the definition *)
   | Sig_fail (_, false, _) when not (Env.should_verify env) || Options.admit_smt_queries () ->
     [], [], env
 

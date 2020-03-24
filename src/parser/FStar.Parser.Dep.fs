@@ -744,6 +744,8 @@ let collect_one
         | LayeredEffect ed ->
              collect_effect_decl ed
         | Polymonadic_bind (_, _, _, bind) -> collect_term bind  //collect deps from the effect lids?
+        | Fail (_, _, d) ->
+            collect_decl d.d
         | Pragma _ ->
             ()
         | TopLevelModule lid ->

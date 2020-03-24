@@ -48,6 +48,3 @@ val add_modul_to_env: Syntax.modul
                     -> withenv<unit>
 
 val parse_attr_with_list : bool -> S.term -> lident -> option<(list<int>)> * bool
-
-val get_fail_attr1 : bool -> S.term       -> option<(list<int> * bool)>
-val get_fail_attr  : bool -> list<S.term> -> option<(list<int> * bool)>
