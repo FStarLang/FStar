@@ -710,7 +710,7 @@ let id_of_tycon = function
   | TyconRecord(i, _, _, _)
   | TyconVariant(i, _, _, _) -> i.idText
 
-let decl_to_string (d:decl) = match d.d with
+let rec decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
   | Open l -> "open " ^ l.str
   | Friend l -> "friend " ^ l.str
@@ -727,6 +727,13 @@ let decl_to_string (d:decl) = match d.d with
   | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
+  | Fail (errs, lax, se) ->
+    Util.format3 "%Fail%s%s (%s)"
+                  (if lax then "Lax" else "")
+                  (match errs with
+                   | [] -> ""
+                   | errs -> FStar.Common.string_of_list string_of_int errs)
+                  (decl_to_string se)
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

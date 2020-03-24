@@ -657,6 +657,14 @@ let separate_map_with_comments_kw prefix sep f xs extract_meta =
   in
   snd (List.fold_left fold_fun init xs)
 
+let rec p_list f sep l =
+    let rec p_list' = function
+        | [] -> empty
+        | [x] -> f x
+        | x::xs -> f x ^^ sep ^^ p_list' xs
+    in
+    str "[" ^^ p_list' l ^^ str "]"
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -691,14 +699,6 @@ and p_justSig d = match d.d with
       separate_map hardline (fun lb -> group (p_letlhs (str "let") lb false)) lbs
   | _ ->
       empty
-
-and p_list f sep l =
-    let rec p_list' = function
-        | [] -> empty
-        | [x] -> f x
-        | x::xs -> f x ^^ sep ^^ p_list' xs
-    in
-    str "[" ^^ p_list' l ^^ str "]"
 
 and p_rawDecl d = match d.d with
   | Open uid ->
@@ -749,6 +749,12 @@ and p_rawDecl d = match d.d with
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
   | Splice (ids, t) ->
     str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | Fail (errs, lax, se) ->
+    let p_int (i:int) : document = str (string_of_int i) in
+    str (if lax then "%FailLax" else "%Fail") ^^
+        p_list p_int (str ";") errs ^^
+        break1 ^^ p_rawDecl se
+
 
 (* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
