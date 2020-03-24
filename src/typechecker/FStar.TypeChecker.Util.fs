@@ -2627,6 +2627,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                     r
           | Sig_declare_typ _ ->
             ()
+          | Sig_fail _ ->
+            () (* just ignore it, the member ses have the attribute too *)
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,
