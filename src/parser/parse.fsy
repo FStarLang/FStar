@@ -694,6 +694,9 @@ rawDecl:
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
       ( ModuleAbbrev(uid1, uid2) )}
+| MODULE qlident
+    {let (_1, _2) = ((), $2) in
+      ( raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
