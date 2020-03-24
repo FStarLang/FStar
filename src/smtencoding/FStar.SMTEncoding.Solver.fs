@@ -53,25 +53,28 @@ let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
 (****************************************************************************)
 let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
-    if Options.use_hints()
-    then let norm_src_filename = BU.normalize_file_path src_filename in
-         let val_filename = Options.hint_file_for_src norm_src_filename in
-         begin match BU.read_hints val_filename with
-            | Some hints ->
-                let expected_digest = BU.digest_of_file norm_src_filename in
-                if Options.hint_info()
-                then begin
+    let norm_src_filename = BU.normalize_file_path src_filename in
+    (*
+     * Read the hints file into replaying_hints
+     * But it will only be used when use_hints is on
+     *)
+    let val_filename = Options.hint_file_for_src norm_src_filename in
+    begin match BU.read_hints val_filename (Options.use_hints ())  with
+          | Some hints ->
+            let expected_digest = BU.digest_of_file norm_src_filename in
+            if Options.hint_info()
+            then begin
                     BU.print3 "(%s) digest is %s from %s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
                          val_filename
-                end;
-                replaying_hints := Some hints.hints
-            | None ->
-                if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
-         end
+                 end;
+                 replaying_hints := Some hints.hints
+          | None ->
+            if Options.hint_info()
+            then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
+    end
 
 let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
@@ -515,6 +518,12 @@ let query_info settings z3result =
             FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
+//caller must ensure that the recorded_hints is already initiailized
+let store_hint hint =
+  match !recorded_hints with
+  | Some l -> recorded_hints := Some (l@[Some hint])
+  | _ -> assert false; ()
+
 let record_hint settings z3result =
     if not (Options.record_hints()) then () else
     begin
@@ -529,11 +538,6 @@ let record_hint settings z3result =
                         | UNSAT core -> z3result.z3result_query_hash
                         | _ -> None)
           }
-      in
-      let store_hint hint =
-          match !recorded_hints with
-          | Some l -> recorded_hints := Some (l@[Some hint])
-          | _ -> assert false; ()
       in
       match z3result.z3result_status with
       | UNSAT None ->
@@ -630,13 +634,13 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
     in
 
     let use_hints_setting =
-        match next_hint with
-        | Some ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) ->
-          [{default_settings with query_hint=Some core;
-                                  query_fuel=i;
-                                  query_ifuel=j}]
-        | _ ->
-          []
+        if Options.use_hints () && next_hint |> is_some
+        then
+            let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+            [{default_settings with query_hint=Some core;
+                                    query_fuel=i;
+                                    query_ifuel=j}]
+        else []
     in
 
     let initial_fuel_max_ifuel =
@@ -842,17 +846,21 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         end
     in
 
-    match Options.admit_smt_queries(), Options.admit_except() with
-    | true, _ -> ()
-    | false, None -> quake_and_check_all_configs all_configs
-    | false, Some id ->
-      let skip =
-        if BU.starts_with id "("
-        then full_query_id default_settings <> id
-        else default_settings.query_name <> id
-      in
-      if not skip
-      then quake_and_check_all_configs all_configs
+    let skip =
+        Options.admit_smt_queries () ||
+        (match Options.admit_except () with
+         | Some id ->
+           if BU.starts_with id "("
+           then full_query_id default_settings <> id
+           else default_settings.query_name <> id
+         | None -> false) in
+
+    if skip
+    then if Options.record_hints () && next_hint |> is_some
+         //restore the hint as is, cf. #1651
+         then next_hint |> must |> store_hint
+         else ()
+    else quake_and_check_all_configs all_configs
 
 type solver_cfg = {
   seed             : int;

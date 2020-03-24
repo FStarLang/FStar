@@ -49,19 +49,42 @@ let rec lt l =
     | [] -> 0
     | hd :: tl -> ld hd + lt tl
 
-val finish : rights : list (dList 't) -> xs : 'a -> f : ('a -> 't -> Tot 'a) 
--> Tot 'a  (decreases %[lt rights; 1])
-val walk : rights : list (dList 't)  -> l : dList 't -> xs : 'a -> f : ('a -> 't -> Tot 'a) 
--> Tot 'a (decreases %[ld l + lt rights; 0])
-let rec walk rights l xs f =
+val finish : #a:Type0 -> #t:Type0 -> rights : list (dList t) -> xs : a -> f : (a -> t -> a)
+-> Tot a  (decreases %[lt rights; 1])
+val walk : #a:Type0 -> #t:Type0 -> rights : list (dList t)  -> l : dList t -> xs : a -> f : (a -> t -> Tot a) 
+-> Tot a (decreases %[ld l + lt rights; 0])
+
+let rec walk #a #t rights l xs f =
     match l with
-    | Nil         -> finish rights xs f
+    | Nil         -> finish #a #t rights xs f
     | Unit x      -> finish rights (f xs x) f
     | Join x y _  -> walk (y::rights) x xs f
-and finish rights xs f =
+and finish #a #t rights xs f =
     match rights with
     | []     -> xs
     | hd::tl -> walk tl hd xs f
 
-val fold : f : ('a -> 't -> Tot 'a) -> st : 'a -> l : dList 't -> Tot (v : 'a)
-let fold f state l = walk [] l state f
+
+
+val walk_alt : #a:Type u#a -> #t:Type u#t -> rights : list (dList t)  -> l : dList t -> xs : a -> f : (a -> t -> Tot a) 
+-> Tot a (decreases %[ld l + lt rights; 0])
+
+
+val fold : #a:Type0 -> #t:Type0 -> (a -> t -> Tot a) -> st : a -> l : dList t -> Tot (v : a)
+let fold #a #t f state l = walk [] l state f
+
+(**** A universe-polymorphic version *)
+
+let rec walk_alt #a #t rights l xs f =
+  let finish (rights':list (dList t){rights' == rights \/ Cons? rights' /\ Cons?.tl rights' == rights}) (xs:a) (f:a -> t -> a) 
+    = match rights with
+      | []     -> xs
+      | hd::tl -> walk_alt tl hd xs f
+  in      
+  match l with
+  | Nil         -> finish rights xs f
+  | Unit x      -> finish rights (f xs x) f
+  | Join x y _  -> walk_alt (y::rights) x xs f
+
+val fold_alt : #a:Type u#a -> #t:Type u#t -> (a -> t -> Tot a) -> st : a -> l : dList t -> Tot (v : a)
+let fold_alt #a #t f state l = walk_alt [] l state f

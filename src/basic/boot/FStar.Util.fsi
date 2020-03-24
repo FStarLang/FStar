@@ -449,7 +449,7 @@ type hints_db = {
 }
 
 val write_hints: string -> hints_db -> unit
-val read_hints: string -> option<hints_db>
+val read_hints: string -> bool -> option<hints_db>
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string
