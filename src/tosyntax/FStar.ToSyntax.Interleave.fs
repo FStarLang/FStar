@@ -40,7 +40,7 @@ let is_type x d = match d.d with
     | _ -> false
 
 //is d of of the form 'let x = ...' or 'type x = ...'
-let definition_lids d =
+let rec definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->
         lids_of_let defs
@@ -51,6 +51,7 @@ let definition_lids d =
                 | TyconVariant(id, _, _, _) ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
+    | Fail (_, _, se) -> definition_lids se
     | _ -> []
 
 let is_definition_of x d =
