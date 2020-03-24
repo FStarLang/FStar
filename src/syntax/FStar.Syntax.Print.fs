@@ -784,6 +784,22 @@ let sigelt_to_string_short (x: sigelt) = match x.sigel with
   | _ ->
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
+let tag_of_sigelt (se:sigelt) : string =
+  match se.sigel with
+  | Sig_inductive_typ _    -> "Sig_inductive_typ"
+  | Sig_bundle _           -> "Sig_bundle"
+  | Sig_datacon _          -> "Sig_datacon"
+  | Sig_declare_typ _      -> "Sig_declare_typ"
+  | Sig_let _              -> "Sig_let"
+  | Sig_main _             -> "Sig_main"
+  | Sig_assume _           -> "Sig_assume"
+  | Sig_new_effect _       -> "Sig_new_effect"
+  | Sig_sub_effect _       -> "Sig_sub_effect"
+  | Sig_effect_abbrev _    -> "Sig_effect_abbrev"
+  | Sig_pragma _           -> "Sig_pragma"
+  | Sig_splice _           -> "Sig_splice"
+  | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
+
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
                                                                      (List.map sigelt_to_string m.declarations |> String.concat "\n")

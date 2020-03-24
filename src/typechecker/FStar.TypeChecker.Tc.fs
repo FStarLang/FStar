@@ -1011,7 +1011,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
-    then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
+    then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
+                        (Print.tag_of_sigelt se)
+                        (Print.sigelt_to_string se);
 
     let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
@@ -1020,7 +1022,7 @@ let tc_decls env ses =
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
-        then BU.print1 "About to elim vars from (elaborated) %s\m" (Print.sigelt_to_string se);
+        then BU.print1 "About to elim vars from (elaborated) %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
