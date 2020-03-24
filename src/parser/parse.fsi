@@ -116,6 +116,8 @@ type token =
   | FRIEND
   | FORALL
   | FALSE
+  | FAILLAX
+  | FAIL
   | EXISTS
   | EXCEPTION
   | EQUALS
@@ -271,6 +273,8 @@ type tokenId =
     | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
+    | TOKEN_FAILLAX
+    | TOKEN_FAIL
     | TOKEN_EXISTS
     | TOKEN_EXCEPTION
     | TOKEN_EQUALS
@@ -318,10 +322,11 @@ type nonTerminalId =
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option___anonymous_1_
+    | NONTERM_option___anonymous_10_
     | NONTERM_option___anonymous_2_
-    | NONTERM_option___anonymous_5_
+    | NONTERM_option___anonymous_3_
     | NONTERM_option___anonymous_6_
-    | NONTERM_option___anonymous_8_
+    | NONTERM_option___anonymous_7_
     | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
@@ -332,10 +337,11 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_INT__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
-    | NONTERM_list___anonymous_10_
-    | NONTERM_list___anonymous_4_
+    | NONTERM_list___anonymous_11_
+    | NONTERM_list___anonymous_5_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
@@ -360,6 +366,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_COMMA_tmEq_
     | NONTERM_separated_nonempty_list_COMMA_tvar_
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
+    | NONTERM_separated_nonempty_list_SEMICOLON_INT_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
     | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
@@ -368,6 +375,7 @@ type nonTerminalId =
     | NONTERM_pragma
     | NONTERM_attribute
     | NONTERM_decoration
+    | NONTERM_errList
     | NONTERM_decl
     | NONTERM_typeclassDecl
     | NONTERM_rawDecl
@@ -420,6 +428,7 @@ type nonTerminalId =
     | NONTERM_kind
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_calcRel
     | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
@@ -442,7 +451,6 @@ type nonTerminalId =
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
     | NONTERM_binop_name
-    | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq
@@ -479,7 +487,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_7_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_8_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

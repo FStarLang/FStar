@@ -69,6 +69,8 @@ let logic_qualifier_deprecation_warning =
 %token EQUALS
 %token EXCEPTION
 %token EXISTS
+%token FAIL
+%token FAILLAX
 %token FALSE
 %token FORALL
 %token FRIEND
@@ -208,44 +210,15 @@ let logic_qualifier_deprecation_warning =
 option___anonymous_1_:
   
     {    ( None )}
-| OF typ
-    {let (_1, t) = ((), $2) in
-let x =                                                (t) in
+| LBRACK loption_separated_nonempty_list_SEMICOLON_INT__ RBRACK
+    {let (_1, xs, _3) = ((), $2, ()) in
+let x =
+  let errs =     ( xs ) in
+                                                                    (errs)
+in
     ( Some x )}
 
-option___anonymous_2_:
-  
-    {    ( None )}
-| OF typ
-    {let (_1, t) = ((), $2) in
-let x =                                          (t) in
-    ( Some x )}
-
-option___anonymous_5_:
-  
-    {    ( None )}
-| BY thunk_atomicTerm_
-    {let (_1, tactic) = ((), $2) in
-let x =                                                                       (tactic) in
-    ( Some x )}
-
-option___anonymous_6_:
-  
-    {    ( None )}
-| BY thunk_typ_
-    {let (_1, tactic) = ((), $2) in
-let x =                                                                    (tactic) in
-    ( Some x )}
-
-option___anonymous_8_:
-  
-    {    ( None )}
-| BY thunk2_typ_
-    {let (_1, tactic) = ((), $2) in
-let x =                                                                 (tactic) in
-    ( Some x )}
-
-option___anonymous_9_:
+option___anonymous_10_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
@@ -254,6 +227,46 @@ let x =
   let phi =                 ( {e with level=Formula} ) in
                                                (phi)
 in
+    ( Some x )}
+
+option___anonymous_2_:
+  
+    {    ( None )}
+| OF typ
+    {let (_1, t) = ((), $2) in
+let x =                                                (t) in
+    ( Some x )}
+
+option___anonymous_3_:
+  
+    {    ( None )}
+| OF typ
+    {let (_1, t) = ((), $2) in
+let x =                                          (t) in
+    ( Some x )}
+
+option___anonymous_6_:
+  
+    {    ( None )}
+| BY thunk_atomicTerm_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                       (tactic) in
+    ( Some x )}
+
+option___anonymous_7_:
+  
+    {    ( None )}
+| BY thunk_typ_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                    (tactic) in
+    ( Some x )}
+
+option___anonymous_9_:
+  
+    {    ( None )}
+| BY thunk2_typ_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                 (tactic) in
     ( Some x )}
 
 option_ascribeKind_:
@@ -322,6 +335,13 @@ loption_separated_nonempty_list_COMMA_appTerm__:
     {let x = $1 in
     ( x )}
 
+loption_separated_nonempty_list_SEMICOLON_INT__:
+  
+    {    ( [] )}
+| separated_nonempty_list_SEMICOLON_INT_
+    {let x = $1 in
+    ( x )}
+
 loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__:
   
     {    ( [] )}
@@ -336,22 +356,22 @@ loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
     {let x = $1 in
     ( x )}
 
-list___anonymous_10_:
+list___anonymous_11_:
   
     {    ( [] )}
-| DOT qlident list___anonymous_10_
+| DOT qlident list___anonymous_11_
     {let (_1, id, xs) = ((), $2, $3) in
 let x =                                                     (id) in
     ( x :: xs )}
 
-list___anonymous_4_:
+list___anonymous_5_:
   
     {    ( [] )}
-| binder list___anonymous_4_
+| binder list___anonymous_5_
     {let (b, xs) = ($1, $2) in
 let x =                            ([b]) in
     ( x :: xs )}
-| multiBinder list___anonymous_4_
+| multiBinder list___anonymous_5_
     {let (bs, xs) = ($1, $2) in
 let x =                                                   (bs) in
     ( x :: xs )}
@@ -567,6 +587,14 @@ separated_nonempty_list_DISJUNCTION_conjunctivePat_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
+separated_nonempty_list_SEMICOLON_INT_:
+  INT
+    {let x = $1 in
+    ( [ x ] )}
+| INT SEMICOLON separated_nonempty_list_SEMICOLON_INT_
+    {let (x, _2, xs) = ($1, (), $3) in
+    ( x :: xs )}
+
 separated_nonempty_list_SEMICOLON_appTerm_:
   appTerm
     {let x = $1 in
@@ -637,11 +665,24 @@ decoration:
     {let x = $1 in
       ( Qualifier x )}
 
+errList:
+  option___anonymous_1_
+    {let lopt = $1 in
+    ( let l = match lopt with | None -> [] | Some l -> List.map (fun (s, _) -> int_of_string s) l in l )}
+
 decl:
   ASSUME uident COLON noSeqTerm
     {let (_1, lid, _3, e) = ((), $2, (), $4) in
 let phi =                 ( {e with level=Formula} ) in
       ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
+| FAIL errList list_decoration_ rawDecl
+    {let (_1, errs, ds, decl) = ((), $2, $3, $4) in
+      ( let d0 = mk_decl decl (rhs parseState 2) ds in
+        mk_decl (Fail (errs, false, d0)) (rhs parseState 2) [] )}
+| FAILLAX errList list_decoration_ rawDecl
+    {let (_1, errs, ds, decl) = ((), $2, $3, $4) in
+      ( let d0 = mk_decl decl (rhs parseState 2) ds in
+        mk_decl (Fail (errs, true, d0)) (rhs parseState 2) [] )}
 | list_decoration_ rawDecl
     {let (ds, decl) = ($1, $2) in
       ( mk_decl decl (rhs parseState 2) ds )}
@@ -730,7 +771,7 @@ rawDecl:
     {let (_1, _2, xs, _4, t) = ((), (), $3, (), $5) in
 let ids =     ( xs ) in
       ( Splice (ids, t) )}
-| EXCEPTION uident option___anonymous_1_
+| EXCEPTION uident option___anonymous_2_
     {let (_1, lid, t_opt) = ((), $2, $3) in
       ( Exception(lid, t_opt) )}
 | NEW_EFFECT newEffect
@@ -786,7 +827,7 @@ constructorDecl:
   BAR uident COLON typ
     {let (_1, uid, _3, t) = ((), $2, (), $4) in
                                               ( (uid, Some t, false) )}
-| BAR uident option___anonymous_2_
+| BAR uident option___anonymous_3_
     {let (_1, uid, t_opt) = ((), $2, $3) in
                                               ( (uid, t_opt, true) )}
 
@@ -1152,7 +1193,7 @@ multiBinder:
      )}
 
 binders:
-  list___anonymous_4_
+  list___anonymous_5_
     {let bss = $1 in
                                                         ( flatten bss )}
 
@@ -1285,7 +1326,7 @@ thunk2_typ_:
        mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 ascribeTyp:
-  COLON tmArrow_tmNoEq_ option___anonymous_5_
+  COLON tmArrow_tmNoEq_ option___anonymous_6_
     {let (_1, t, tacopt) = ((), $2, $3) in
                                                                                 ( t, tacopt )}
 
@@ -1317,7 +1358,7 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE tmIff option___anonymous_6_
+| tmIff SUBTYPE tmIff option___anonymous_7_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
       ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
@@ -1385,7 +1426,7 @@ let pbs =    ( List.rev xs ) in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_7_
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_8_
     {let (_1, e, _3, xs) = ((), $2, (), $4) in
 let pbs =    ( List.rev xs ) in
       (
@@ -1423,7 +1464,7 @@ let pbs =    ( List.rev xs ) in
       ( let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
       )}
-| ASSERT atomicTerm option___anonymous_8_
+| ASSERT atomicTerm option___anonymous_9_
     {let (_1, e, tactic_opt) = ((), $2, $3) in
       (
         match tactic_opt with
@@ -2003,7 +2044,7 @@ tmRefinement:
                ( e )}
 
 refineOpt:
-  option___anonymous_9_
+  option___anonymous_10_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2113,7 +2154,7 @@ let op =     ( mk_ident (op, rhs parseState 1) ) in
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_10_
+| projectionLHS list___anonymous_11_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2440,14 +2481,14 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
-reverse_left_flexible_list_BAR___anonymous_7_:
+reverse_left_flexible_list_BAR___anonymous_8_:
   
     {   ( [] )}
 | patternBranch
     {let pb = $1 in
 let x =                                                                    (pb) in
    ( [x] )}
-| reverse_left_flexible_list_BAR___anonymous_7_ BAR patternBranch
+| reverse_left_flexible_list_BAR___anonymous_8_ BAR patternBranch
     {let (xs, _2, pb) = ($1, (), $3) in
 let x =                                                                    (pb) in
    ( x :: xs )}
@@ -2469,5 +2510,4 @@ in
    ( x :: xs )}
 
 %%
-
 

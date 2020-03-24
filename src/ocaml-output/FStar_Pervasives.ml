@@ -203,8 +203,6 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 
 
-
-
 let normalize_term : 'Aa . 'Aa -> 'Aa = fun x  -> x 
 type 'Aa normalize = 'Aa
 type norm_step =
@@ -222,51 +220,51 @@ type norm_step =
   | UnfoldAttr of Prims.string Prims.list 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Simpl  -> true | uu____1919 -> false
+    match projectee with | Simpl  -> true | uu____1917 -> false
   
 let (uu___is_Weak : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Weak  -> true | uu____1930 -> false
+    match projectee with | Weak  -> true | uu____1928 -> false
   
 let (uu___is_HNF : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | HNF  -> true | uu____1941 -> false 
+  fun projectee  -> match projectee with | HNF  -> true | uu____1939 -> false 
 let (uu___is_Primops : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____1952 -> false
+    match projectee with | Primops  -> true | uu____1950 -> false
   
 let (uu___is_Delta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Delta  -> true | uu____1963 -> false
+    match projectee with | Delta  -> true | uu____1961 -> false
   
 let (uu___is_Zeta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Zeta  -> true | uu____1974 -> false
+    match projectee with | Zeta  -> true | uu____1972 -> false
   
 let (uu___is_Iota : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Iota  -> true | uu____1985 -> false
+    match projectee with | Iota  -> true | uu____1983 -> false
   
 let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | NBE  -> true | uu____1996 -> false 
+  fun projectee  -> match projectee with | NBE  -> true | uu____1994 -> false 
 let (uu___is_Reify : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reify  -> true | uu____2007 -> false
+    match projectee with | Reify  -> true | uu____2005 -> false
   
 let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____2022 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____2020 -> false
   
 let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
 let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldFully _0 -> true | uu____2053 -> false
+    match projectee with | UnfoldFully _0 -> true | uu____2051 -> false
   
 let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
 let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldAttr _0 -> true | uu____2084 -> false
+    match projectee with | UnfoldAttr _0 -> true | uu____2082 -> false
   
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
