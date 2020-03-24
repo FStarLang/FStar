@@ -254,7 +254,7 @@ let sort_via_swaps (#a:Type) (am:amap a)  (xs:list atom)
   // (the same already in FStar.Tactics.CanonCommMonoidSimple.fst)
 
 let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
-  : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (sort xs)) =
+  : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am(sort xs)) =
   permute_via_swaps_correct sort (fun #a am -> sort_via_swaps am) eq m am xs
 
 let sort_correct : permute_correct sort = (fun #a -> sort_correct_aux #a)
@@ -324,9 +324,11 @@ let rec reification_aux (ts:list term) (am:amap term)
 
 let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
     Tac (exp * list term * amap term) =
+  dump (term_to_string t);
   let mult = norm_term [iota; zeta; delta] (`CM?.mult (`#m)) in
   let unit = norm_term [iota; zeta; delta] (`CM?.unit (`#m)) in
   let t    = norm_term [iota; zeta] t in
+  dump (term_to_string t);
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
@@ -365,7 +367,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let am = const m_unit in (* empty map *)
   let (r1, ts, am) = reification eq m [] am lhs in
   let (r2,  _, am) = reification eq m ts am rhs in
-  //dump ("am = " ^ term_to_string (quote am));
+  dump ("am = " ^ term_to_string (quote am));
   //dump ("r1 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r1))));
   //dump ("r2 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r2))));
   //dump ("before = " ^ term_to_string (norm_term [hnf;delta;primops]
@@ -381,7 +383,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   (*    (quote (xsdenote eq m am (canon r1) `EQ?.eq eq` *)
   (*            xsdenote eq m am (canon r2))))); *)
   apply (`monoid_reflect);
-  //dump ("after apply monoid_reflect");
+  dump "post reflect";
   norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
                     `%(@); `%append; `%List.Tot.Base.sortWith;
@@ -389,8 +391,8 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
                     `%compare_of_bool;
        ]; primops];
   //dump "before refl";
-  or_else (fun _ -> apply_lemma (`(EQ?.reflexivity (`#eq))))
-          (fun _ -> repeat_cong_right_identity eq m)
+  or_else (fun _ -> dump "pre refl"; apply_lemma (`(EQ?.reflexivity (`#eq))); dump "post refl")
+          (fun _ -> dump "pre repeat"; repeat_cong_right_identity eq m; dump "post repeat")
 
 [@plugin]
 let canon_monoid (eq: term) (m: term) : Tac unit =

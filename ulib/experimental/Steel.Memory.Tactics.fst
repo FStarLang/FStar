@@ -80,6 +80,7 @@ let squash_and p q (x:squash (p /\ q)) : (p /\ q) =
 
 
 inline_for_extraction noextract let resolve_frame () : Tac unit =
+  dump "entering resolve";
   norm [delta_attr [`%__reduce__];
        delta;
         delta_only [
@@ -94,9 +95,11 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
   split();
   norm [delta_only [`%can_be_split_into]];
   canon();
-  trivial()
+  trivial();
+  dump "exit resolve"
 
 inline_for_extraction noextract let reprove_frame () : Tac unit =
+  dump "enter reprove";
   norm [delta_attr [`%__reduce__];
        delta;
         delta_only [
@@ -109,7 +112,8 @@ inline_for_extraction noextract let reprove_frame () : Tac unit =
   norm [delta_only [`%can_be_split_into]];
   split();
   canon();
-  trivial()
+  trivial();
+  dump "exit reprove"
 
 val shuffled (p : M.hprop)
              (q : M.hprop{with_tactic canon (squash (p `M.equiv` q))})

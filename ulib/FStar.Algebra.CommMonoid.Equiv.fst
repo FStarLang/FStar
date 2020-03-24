@@ -20,7 +20,7 @@ open FStar.Mul
 unopteq
 type equiv (a:Type) =
   | EQ :
-    eq:(a -> a -> Type0) -> 
+    eq:(a -> a -> Type0) ->
     reflexivity:(x:a -> Lemma (x `eq` x)) ->
     symmetry:(x:a -> y:a -> Lemma (requires (x `eq` y)) (ensures (y `eq` x))) ->
     transitivity:(x:a -> y:a -> z:a -> Lemma (requires (x `eq` y /\ y `eq` z)) (ensures (x `eq` z))) ->
@@ -41,12 +41,12 @@ type cm (a:Type) (eq:equiv a) =
     congruence:(x:a -> y:a -> z:a -> w:a -> Lemma (requires (x `EQ?.eq eq` z /\ y `EQ?.eq eq` w)) (ensures ((mult x y) `EQ?.eq eq` (mult z w)))) ->
     cm a eq
 
-// temporarily fixing the universe of this lemma to u#1 because 
+// temporarily fixing the universe of this lemma to u#1 because
 // otherwise tactics for LowStar.Resource canonicalization fails
 // by picking up an incorrect universe u#0 for resource type
-let right_identity (#a:Type u#aa) (eq:equiv a) (m:cm a eq) (x:a)
-  : Lemma (x `CM?.mult m` (CM?.unit m) `EQ?.eq eq` x) = 
-  CM?.commutativity m x (CM?.unit m); 
+let right_identity (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
+  : Lemma (x `CM?.mult m` (CM?.unit m) `EQ?.eq eq` x) =
+  CM?.commutativity m x (CM?.unit m);
   CM?.identity m x;
   EQ?.transitivity eq (x `CM?.mult m` (CM?.unit m)) ((CM?.unit m) `CM?.mult m` x) x
 

@@ -381,21 +381,28 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c' : chan_t_sr p send recv = c in
     return #(chan_t_sr p send recv) #(fun c -> chan_inv c) c'
 
+#reset-options "--print_universes --print_implicits --debug_level TwoPhases"
+
 open Steel.Permissions
 let new_chan (p:prot)
   : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
   = let q = msg unit p in
     let v : chan_val = { chan_prot = q; chan_msg = (); chan_ctr = 0 } in
     let vp : init_chan_val p = v in
-    let send = alloc v in
-    h_assert (pts_to send full v);
-    h_intro_emp_l (pts_to send full v);
-    let recv = frame (fun _ -> alloc v) _ in //(pts_to send full v) in
-    h_assert (pts_to recv full v `star` pts_to send full v);
-    let _  = frame (fun _ -> share recv) _ in //(pts_to send full v) in
-    h_assert ((pts_to recv half v `star` pts_to recv half v) `star` pts_to send full v);
-    h_commute _ _;
-    let _  = frame (fun _ -> share send) _ in
+    let send = steel_frame_t (fun _ -> alloc v) in
+
+//    h_assert (pts_to send full v `star` emp);
+//    h_intro_emp_l (pts_to send full v);
+//    h_admit (fun c -> sender c p `star` receiver c p)
+    let recv = steel_frame_t #(pts_to send full v `star` emp) #_ #_ #_  (fun _ -> alloc #_ v) in //(pts_to send full v) in
+    h_admit (fun c -> sender c p `star` receiver c p)
+(*
+
+//    h_assert (pts_to recv full v `star` pts_to send full v);
+    let _  = steel_frame_t (fun _ -> share recv) in //_ in //(pts_to send full v) in
+//    h_assert ((pts_to recv half v `star` pts_to recv half v) `star` pts_to send full v);
+//    h_commute _ _;
+    let _  = steel_frame_t (fun _ -> share send) in //_ in
     h_assert ((pts_to send half v `star` pts_to send half v) `star`
               (pts_to recv half v `star` pts_to recv half v));
     reshuffle ();
@@ -420,6 +427,7 @@ let new_chan (p:prot)
     rewrite_eq_squash recv ch.chan_chan.recv (fun r -> in_state ch.chan_chan.send p `star` in_state r p);
     h_assert (sender ch p `star` receiver ch p);
     return #(chan p) #(fun ch -> (sender ch p `star` receiver ch p)) ch
+*)
 
 let send_pre (r:ref chan_val) (p:prot{more p}) #q (c:chan_t q) (vs vr:chan_val) : hprop =
   (pts_to c.send half vs `star`

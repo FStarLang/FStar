@@ -59,7 +59,7 @@ let new_thread (p:hprop)
   : SteelT (thread p) emp (fun _ -> emp)
   = intro_maybe_p_false p;
     h_assert (maybe_p p false);
-    h_intro_emp_l (maybe_p p false);
+//    h_intro_emp_l (maybe_p p false);
 
     let r = steel_frame_t // #(ref bool) #emp #(fun r -> pts_to r full false)
                   (fun () -> alloc false) in
