@@ -12,7 +12,7 @@ type byte = u8
 type bytes = string
 type cbytes = string (* not in FStar.Bytes *)
 
-let len (b:bytes) = String.length b
+let len (b:bytes) = U32.of_native_int (String.length b)
 let length (b:bytes) = Z.of_int (String.length b)
 
 let reveal (b:bytes) = ()
