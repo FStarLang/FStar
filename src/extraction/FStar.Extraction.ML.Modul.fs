@@ -274,8 +274,8 @@ let iface_to_string iface =
         (List.map (print_tydef cm) iface.iface_tydefs |> String.concat "\n")
         (List.map print_type_name iface.iface_type_names |> String.concat "\n")
 let gamma_to_string env =
-    let cm = env.currentModule in
-    let gamma = List.collect (function Fv (b, e) -> [b, e] | _ -> []) env.env_bindings in
+    let cm = current_module_of_uenv env in
+    let gamma = List.collect (function Fv (b, e) -> [b, e] | _ -> []) (bindings_of_uenv env) in
     BU.format1 "Gamma = {\n %s }"
         (List.map (print_binding cm) gamma |> String.concat "\n")
 
@@ -300,7 +300,7 @@ let extract_typ_abbrev env quals attrs lb
     * list<mlmodule1> =
     let tcenv, (lbdef, lbtyp) =
         let tcenv, _, def_typ =
-          FStar.TypeChecker.Env.open_universes_in env.env_tcenv lb.lbunivs [lb.lbdef; lb.lbtyp]
+          FStar.TypeChecker.Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
         in
         tcenv, as_pair def_typ
     in
@@ -352,7 +352,7 @@ let extract_let_rec_type env quals attrs lb
          Env.AllowUnboundUniverses;
          Env.EraseUniverses;
          Env.UnfoldUntil delta_constant]
-        env.env_tcenv
+        (tcenv_of_uenv env)
         lb.lbtyp
     in
     let bs, _ = U.arrow_formals lbtyp in
@@ -451,7 +451,7 @@ let extract_reifiable_effect g ed
     let extend_env g lid ml_name tm tysc =
         let fv = (S.lid_as_fv lid delta_equational None) in
         let g, mangled_name, exp_binding = extend_fv' g fv ml_name tysc false false in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
         BU.print1 "Mangled name: %s\n" mangled_name;
         let lb = {
             mllb_name=mangled_name;
@@ -466,7 +466,7 @@ let extract_reifiable_effect g ed
     in
 
     let rec extract_fv tm =
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
             BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
         match (SS.compress tm).n with
         | Tm_uinst (tm, _) -> extract_fv tm
@@ -481,7 +481,7 @@ let extract_reifiable_effect g ed
 
     let extract_action g (a:S.action) =
         assert (match a.action_params with | [] -> true | _ -> false);
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
             BU.print2 "Action type %s and term %s\n"
             (Print.term_to_string a.action_typ)
             (Print.term_to_string a.action_defn);
@@ -491,7 +491,7 @@ let extract_reifiable_effect g ed
         let lbs = (false, [lb]) in
         let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
         let a_let, _, ty = Term.term_as_mlexpr g action_lb in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
             BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
         let exp, tysc = match a_let.expr with
             | MLE_Let((_, [mllb]), _) ->
@@ -499,7 +499,7 @@ let extract_reifiable_effect g ed
                 | Some(tysc) -> mllb.mllb_def, tysc
                 | None -> failwith "No type scheme")
             | _ -> failwith "Impossible" in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then begin
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then begin
             BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
             List.iter (fun x -> BU.print1 "and binders: %s\n" x) (fst tysc) end;
         let env, iface, impl = extend_env g a_lid a_nm exp tysc in
@@ -586,7 +586,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_declare_typ(lid, _univs, t) ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
-      && not (TcUtil.must_erase_for_extraction g.env_tcenv t)
+      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let g, bindings = Term.extract_lb_iface g (false, [always_fail lid t]) in
            g, iface_of_bindings bindings
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
@@ -611,7 +611,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       failwith "impossible: trying to extract splice"
 
     | Sig_new_effect ed ->
-      if Env.is_reifiable_effect g.env_tcenv ed.mname
+      if Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname
       && List.isEmpty ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface
@@ -621,7 +621,7 @@ let extract_iface' (g:env_t) modul =
     if Options.interactive() then g, empty_iface else
     let _ = Options.restore_cmd_line_options true in
     let decls = modul.declarations in
-    let iface = {empty_iface with iface_module_name=g.currentModule} in
+    let iface = {empty_iface with iface_module_name=(current_module_of_uenv g)} in
     let res =
         List.fold_left (fun (g, iface) se ->
             let g, iface' = extract_sigelt_iface g se in
@@ -640,13 +640,7 @@ let extract_iface (g:env_t) modul =
     else extract_iface' g modul
 
 let extend_with_iface (g:env_t) (iface:iface) =
-     let mlident_map = List.fold_left
-        (fun acc (_,x) -> BU.psmap_add acc x.exp_b_name "") g.env_mlident_map iface.iface_bindings in
-     { g with
-         env_bindings=List.map Fv iface.iface_bindings@g.env_bindings;
-         env_mlident_map = mlident_map;
-         tydefs=iface.iface_tydefs@g.tydefs;
-         type_names=iface.iface_type_names@g.type_names}
+    UEnv.extend_with_iface g iface.iface_module_name iface.iface_bindings iface.iface_tydefs iface.iface_type_names
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -661,7 +655,7 @@ let extract_bundle env se =
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
-        let names = match (SS.compress (N.normalize steps env_iparams.env_tcenv ctor.dtyp)).n with
+        let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
           | _ ->
@@ -749,7 +743,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
                   let fv_lid = fv.fv_name.v in
                   let fv_t = lb.lbtyp in
                   let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
-                  match Util.interpret_plugin_as_term_fun g.env_tcenv fv fv_t arity_opt ml_name_str with
+                  match Util.interpret_plugin_as_term_fun (tcenv_of_uenv g) fv fv_t arity_opt ml_name_str with
                   | Some (interp, nbe_interp, arity, plugin) ->
                       let register, args =
                         if plugin
@@ -776,7 +770,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect ed when Env.is_reifiable_effect g.env_tcenv ed.mname ->
+        | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
           let env, _iface, impl =
               extract_reifiable_effect g ed in
           env, impl
@@ -822,7 +816,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   attrs, None
           in
           let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-              let lbdef = Env.postprocess g.env_tcenv tau lb.lbtyp lb.lbdef in
+              let lbdef = Env.postprocess (tcenv_of_uenv g) tau lb.lbtyp lb.lbdef in
               { lb with lbdef = lbdef }
           in
           let lbs = (fst lbs,
@@ -898,13 +892,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             @ maybe_register_plugin g se
 
         | _ ->
-          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr (current_module_of_uenv g) ml_let))
         end
 
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
-         && not (TcUtil.must_erase_for_extraction g.env_tcenv t)
+         && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
          then let always_fail =
                   { se with sigel = Sig_let((false, [always_fail lid t]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
@@ -939,8 +933,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
-  let g = {g with env_tcenv=FStar.TypeChecker.Env.set_current_module g.env_tcenv m.name;
-                  currentModule = name} in
+  let g = set_tcenv g (FStar.TypeChecker.Env.set_current_module (tcenv_of_uenv g) m.name) in
+  let g = set_current_module g name in
   let g, sigs =
     BU.fold_map
         (fun g se ->

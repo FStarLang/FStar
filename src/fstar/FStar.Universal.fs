@@ -59,16 +59,16 @@ let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env
     a, ({tcenv with dsenv = dsenv})
 
 let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
-     let a, t' = f e.env_tcenv in
-     a, ({e with env_tcenv=t'})
+     let a, t' = f (tcenv_of_uenv e) in
+     a, (set_tcenv e t')
 
 let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv<'a>) : 'a * uenv =
-     let a, tcenv = with_dsenv_of_tcenv e.env_tcenv f in
-     a, ({e with env_tcenv=tcenv})
+     let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
+     a, (set_tcenv e tcenv)
 
 let push_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
-            (), FStar.TypeChecker.Env.push env.env_tcenv "top-level: push_env"))
+            (), FStar.TypeChecker.Env.push (tcenv_of_uenv env) "top-level: push_env"))
 
 let pop_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
@@ -298,7 +298,7 @@ let tc_one_file
   in
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
-      let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
+      let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
               with_tcenv_of_env env (fun tcenv ->
@@ -432,7 +432,7 @@ let tc_one_file_for_ide
     =
     let env = env_of_tcenv env in
     let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in
-    tc_result, env.env_tcenv
+    tc_result, (tcenv_of_uenv env)
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

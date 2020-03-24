@@ -24,7 +24,6 @@ open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
-
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
 module Const = FStar.Parser.Const
@@ -70,6 +69,14 @@ type uenv = {
     type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
+
+let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv
+let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
+
+let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
+let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
+
+let bindings_of_uenv u = u.env_bindings
 
 let debug g f =
     let c = string_of_mlpath g.currentModule in
@@ -364,3 +371,13 @@ let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
     let module_name = ed.mname.ns in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
     (mlpath_of_lident lid), lid
+
+
+let extend_with_iface g (m:mlpath) bs tds tns =
+     let mlident_map = List.fold_left
+        (fun acc (_,x) -> BU.psmap_add acc x.exp_b_name "") g.env_mlident_map bs in
+     { g with
+         env_bindings=List.map Fv bs@g.env_bindings;
+         env_mlident_map = mlident_map;
+         tydefs=tds@g.tydefs;
+         type_names=tns@g.type_names}
