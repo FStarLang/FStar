@@ -503,8 +503,8 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     let usubst = Subst.univ_var_closing uvs in
     { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
 
-  | Sig_fail (errs, lax, ses) ->
-    { s with sigel = Sig_fail (errs, lax, List.map generalize_annotated_univs ses) }
+  (* underlying sigelts will have been generalized previously already *)
+  | Sig_fail _ -> s
 
   | Sig_new_effect _
   | Sig_sub_effect _
