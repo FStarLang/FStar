@@ -2703,25 +2703,26 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
-  // Not for the `fail` attribute though! We only keep that one on the first
-  // new decl.
   let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
                                          * will shadow a previous val *)
   let attrs = List.map (desugar_term env) d.attrs in
 
+  (* BU.print1 "About to desugar decl %s\n" (decl_to_string d); *)
+
   let env, sigelts = desugar_decl_noattrs env d in
 
-  let rec val_attrs (ses:list<sigelt>) : list<S.term> =
-    match ses with
+  let val_attrs : list<S.term> =
+    match sigelts with
     | [{ sigel = Sig_let _}]
     |  { sigel = Sig_inductive_typ _ } :: _ ->
       lids_of_sigelt (List.hd sigelts) |>
       List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm))
-    | [{ sigel = Sig_fail (_errs, _lax, ses) }] ->
-      List.collect (fun se -> val_attrs [se]) ses
     | _ -> []
   in
-  let attrs = attrs @ val_attrs sigelts in
+  let attrs = attrs @ val_attrs in
+
+  (* BU.print1 "Setting attrs [%s]\n" (Print.attrs_to_string attrs); *)
+
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
@@ -3123,7 +3124,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
      * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
     let errs, r = Errors.catch_errors (fun () ->
                     Options.with_saved_options (fun () ->
-                      desugar_decl_noattrs env d)) in
+                      desugar_decl env d)) in
     begin match errs, r with
     | [], Some (_, ses) ->
       (* Succeeded desugaring, carry on, but make a Sig_fail *)
