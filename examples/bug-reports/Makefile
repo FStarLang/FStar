@@ -39,7 +39,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
   Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst bug442.fst Bug1954.fst \
-  Bug1903.fst Bug1121.fst Bug1956.fst Bug1228.fst Bug829.fst
+  Bug1903.fst Bug1121.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
