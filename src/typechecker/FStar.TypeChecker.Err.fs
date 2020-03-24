@@ -49,13 +49,13 @@ let info_at_pos env file row col =
  * It will also prioritize them in that order, prefering to show
  * a discrepancy of implicits before one of universes, etc.
  *)
-let print_discrepancy (f : 'a -> string) (x y : 'a) : string * string =
+let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
     let print () : string * string * bool =
         let xs = f x in
         let ys = f y in
         xs, ys, xs <> ys
     in
-    let rec blist_leq (l1 l2 : list<bool>) =
+    let rec blist_leq (l1 : list<bool>) (l2 : list<bool>) =
         match l1, l2 with
         | h1::t1, h2::t2 ->
             (not h1 || h2) && blist_leq t1 t2
@@ -95,7 +95,7 @@ let print_discrepancy (f : 'a -> string) (x y : 'a) : string * string =
         set_bool_option "print_effect_args" pea;
         set_bool_option "print_full_names " pf
     in
-    let base = get () in
+    let bas = get () in
     let rec go (cur : list<bool>) =
         match () with
         (* give up, nothing more we can do *)
@@ -105,7 +105,7 @@ let print_discrepancy (f : 'a -> string) (x y : 'a) : string * string =
 
         (* skip this configuration, we do not want to disable any flag
          * given by the user *)
-        | () when not (blist_leq base cur) ->
+        | () when not (blist_leq bas cur) ->
             go (succ cur)
 
         | () ->
@@ -119,7 +119,7 @@ let print_discrepancy (f : 'a -> string) (x y : 'a) : string * string =
             | _ ->
                 go (succ cur)
     in
-    Options.with_saved_options (fun () -> go base)
+    Options.with_saved_options (fun () -> go bas)
 
 (*
  * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
