@@ -328,7 +328,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
              let uu____334 =
                let uu____335 =
                  FStar_All.pipe_left
-                   (fun _336  -> FStar_Parser_ParseIt.Fragment _336)
+                   (fun uu____336  -> FStar_Parser_ParseIt.Fragment uu____336)
                    (frag_of_text s)
                   in
                FStar_Parser_ParseIt.parse uu____335  in
@@ -577,23 +577,23 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____470 =
        let uu____471 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____471 (fun a1  -> ())  in
+       FStar_All.pipe_right uu____471 (fun uu____476  -> ())  in
      try
-       (fun uu___116_479  ->
+       (fun uu___116_480  ->
           match () with
           | () ->
               let tcenv = init ()  in
               let frag = frag_of_text s  in
               (try
-                 (fun uu___124_491  ->
+                 (fun uu___124_492  ->
                     match () with
                     | () ->
-                        let uu____492 =
-                          let uu____499 = FStar_ST.op_Bang test_mod_ref  in
-                          FStar_Universal.tc_one_fragment uu____499 tcenv
+                        let uu____493 =
+                          let uu____500 = FStar_ST.op_Bang test_mod_ref  in
+                          FStar_Universal.tc_one_fragment uu____500 tcenv
                             frag
                            in
-                        (match uu____492 with
+                        (match uu____493 with
                          | (test_mod',tcenv') ->
                              (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
                               FStar_ST.op_Colon_Equals tcenv_ref
@@ -602,29 +602,29 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                if n1 <> Prims.int_zero
                                then
                                  (report ();
-                                  (let uu____585 =
-                                     let uu____591 =
-                                       let uu____593 =
+                                  (let uu____586 =
+                                     let uu____592 =
+                                       let uu____594 =
                                          FStar_Util.string_of_int n1  in
                                        FStar_Util.format1
-                                         "%s errors were reported" uu____593
+                                         "%s errors were reported" uu____594
                                         in
                                      (FStar_Errors.Fatal_ErrorsReported,
-                                       uu____591)
+                                       uu____592)
                                       in
-                                   FStar_Errors.raise_err uu____585))
+                                   FStar_Errors.raise_err uu____586))
                                else ())))) ()
                with
-               | uu___123_601 ->
+               | uu___123_602 ->
                    (report ();
                     FStar_Errors.raise_err
                       (FStar_Errors.Fatal_TcOneFragmentFailed,
                         (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
      with
-     | uu___115_606 ->
+     | uu___115_607 ->
          if
-           let uu____607 = FStar_Options.trace_error ()  in
-           Prims.op_Negation uu____607
-         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_606))
+           let uu____608 = FStar_Options.trace_error ()  in
+           Prims.op_Negation uu____608
+         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_607))
          else Obj.magic (Obj.repr (failwith "unreachable")))
   
