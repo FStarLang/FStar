@@ -759,15 +759,16 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
             if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
-                    let b = fst b in
-                    let env = extend_ty env b (Some MLTY_Top) in
-                    let ml_b = (bv_as_ml_termvar b (*name of the binder*),
-                                ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
-                    ml_b::ml_bs, env
+                 let b = fst b in
+                 let env = extend_ty env b true in
+                 let ml_b = (lookup_ty env b).ty_b_name in
+                 let ml_b = (ml_b (*name of the binder*),
+                             ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
+                 ml_b::ml_bs, env
             else let b = fst b in
                  let t = translate_term_to_mlty env b.sort in
                  let env, b, _ = extend_bv env b ([], t) false false false in
-                 let ml_b = (removeTick b, t) in
+                 let ml_b = b, t in
                  ml_b::ml_bs, env)
     ([], g) in
     List.rev ml_bs,
@@ -1073,9 +1074,9 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let expected_source_ty =
                                 let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
                                 SS.subst s tbody in
-                             let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
+                             let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
+                             let polytype = targs |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                              let add_unit =
                                 match rest_args with
                                 | [] ->
@@ -1100,9 +1101,9 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                      | Tm_uinst _
                      | Tm_fvar _
                      | Tm_name _ ->
-                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g tbinders in
+                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) g tbinders in
                        let expected_t = term_as_mlty env tbody in
-                       let polytype = tbinders |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
+                       let polytype = tbinders |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
@@ -1653,7 +1654,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           in
 
           let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
-              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
+              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
               let e, f = maybe_promote_effect e f expected_t in

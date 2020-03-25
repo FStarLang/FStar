@@ -133,9 +133,16 @@ let extract_metadata metas =
   List.choose extract_meta metas
 
 let binders_as_mlty_binders (env:UEnv.uenv) bs =
-    BU.fold_map (fun env (bv, _) ->
-        UEnv.extend_ty env bv (Some (MLTY_Var (bv_as_ml_tyvar bv))), bv_as_ml_tyvar bv)
-    env bs
+    BU.fold_map
+      (fun env (bv, _) ->
+        let env = UEnv.extend_ty env bv false in
+        let name =
+          match lookup_bv env bv with
+          | Inl ty -> ty.ty_b_name
+          | _ -> failwith "Impossible"
+        in
+        env, name)
+      env bs
 
 (*******************************************************************************)
 (* A more convenient representation of inductive types for extraction purposes *)

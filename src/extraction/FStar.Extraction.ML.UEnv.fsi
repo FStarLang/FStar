@@ -79,12 +79,7 @@ val erasableTypeNoDelta: t:mlty -> bool
 
 val unknownType:mlty
 
-val removeTick: string -> string
-
 val convIdent: id:ident -> mlident
-
-val bv_as_ml_tyvar: x:bv -> string
-val bv_as_ml_termvar: x:bv -> string
 
 val lookup_ty_const: env: uenv -> mlpath -> option<mltyscheme>
 
@@ -98,7 +93,9 @@ val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
 val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
 
-val extend_ty: g:uenv -> a:bv -> mapped_to: option<mlty> -> uenv
+val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
+
+val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
 val extend_bv:
     uenv ->

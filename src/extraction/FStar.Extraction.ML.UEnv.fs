@@ -101,10 +101,6 @@ let erasableTypeNoDelta (t:mlty) =
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
 
-(*copied from ocaml-strtrans.fs*)
-let prependTick x = if BU.starts_with x "'" then x else "'A"^x ///the addition of the space is intentional; it's apparently valid syntax of tvars
-let removeTick x = if BU.starts_with x "'" then BU.substring_from x 1 else x
-
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = id.idText
 
@@ -123,9 +119,6 @@ let convIdent (id:ident) : mlident = id.idText
 
    Coq seems to add a space after the tick in such cases. Always adding a space for now
   *)
-
-let bv_as_ml_tyvar x = prependTick (bv_as_mlident x)
-let bv_as_ml_termvar x =  removeTick (bv_as_mlident x)
 
 let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
     match gamma with
@@ -209,30 +202,22 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
     {g with tcenv=tcenv}
 *)
 
-let extend_ty (g:uenv) (a:bv) (mapped_to:option<mlty>) : uenv =
-    let ml_a =  bv_as_ml_tyvar a in
-    let mapped_to = match mapped_to with
-        | None -> MLTY_Var ml_a
-        | Some t -> t in
-    let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.env_bindings in
-    let mlident_map = BU.psmap_add g.env_mlident_map ml_a "" in
-    let tcenv = TypeChecker.Env.push_bv g.env_tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
-    {g with env_bindings=gamma; env_mlident_map=mlident_map; env_tcenv=tcenv}
 
-let sanitize (s:string) : string =
+let sanitize (s:string) (is_type:bool) : string =
   let cs = FStar.String.list_of_string s in
   let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
   let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
   let cs' = match cs' with
-            | (c::cs) when BU.is_digit c || c = '\'' ->
-                  '_'::c::cs
+            | (c::cs) when BU.is_digit c
+                       || (not is_type && c = '\'') ->
+              '_'::c::cs
             | _ -> cs in
   FStar.String.string_of_list cs'
 
 
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
-let find_uniq ml_ident_map mlident =
-  let mlident = sanitize mlident in
+let find_uniq ml_ident_map mlident is_type =
+  let mlident = sanitize mlident is_type in
 
   let rec aux sm mlident i =
     let target_mlident = if i = 0 then mlident else mlident ^ (string_of_int i) in
@@ -242,6 +227,41 @@ let find_uniq ml_ident_map mlident =
   in
   aux ml_ident_map mlident 0
 
+let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
+    let is_type = not map_to_top in
+    let ml_a = bv_as_mlident a in
+    let ml_a =
+      if map_to_top
+      then ml_a //this is not really a type binding in ML; don't add a '
+      else
+        //it's a type variable, so add a preceding "'"
+        let ml_a =
+          if BU.starts_with ml_a "'"
+          then ml_a
+          else "'"^ml_a
+        in
+        //the addition of the A is intentional;
+        //"'_" in ocaml denotes a weak type variable and cannot be written in source programs
+        if BU.starts_with ml_a "'_"
+        then "'A" ^ BU.substring_from ml_a 2
+        else ml_a
+    in
+    let ml_a = find_uniq g.env_mlident_map ml_a is_type in
+    let mlident_map = BU.psmap_add g.env_mlident_map ml_a "" in
+    let mapped_to =
+      if map_to_top
+      then MLTY_Top
+      else MLTY_Var ml_a
+    in
+    let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.env_bindings in
+    let tcenv = TypeChecker.Env.push_bv g.env_tcenv a in
+    {g with env_bindings=gamma; env_mlident_map=mlident_map; env_tcenv=tcenv}
+
+let lookup_ty (g:uenv) (x:bv) : ty_binding =
+  match lookup_bv g x with
+  | Inl ty -> ty
+  | _ -> failwith "Expected a type name"
+
 let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               (mk_unit:bool (*some pattern terms become unit while extracting*))
     : uenv
@@ -250,7 +270,7 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlident = find_uniq g.env_mlident_map (bv_as_mlident x) in
+    let mlident = find_uniq g.env_mlident_map (bv_as_mlident x) false in
     let mlx = MLE_Var mlident in
     let mlx = if mk_unit
               then ml_unit
