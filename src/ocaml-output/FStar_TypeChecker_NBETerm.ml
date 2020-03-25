@@ -841,8 +841,8 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
             Lazy ((FStar_Util.Inr li), thunk1)))
   
 let lazy_unembed :
-  'Auu____4433 'a .
-    'Auu____4433 ->
+  'uu____4433 'a .
+    'uu____4433 ->
       FStar_Syntax_Syntax.emb_typ ->
         t ->
           (t -> 'a FStar_Pervasives_Native.option) ->

@@ -582,7 +582,7 @@ let (set_ds_hooks : env -> dsenv_hooks -> env) =
         dep_graph = (uu___195_2511.dep_graph)
       }
   
-let new_sigmap : 'Auu____2517 . unit -> 'Auu____2517 FStar_Util.smap =
+let new_sigmap : 'uu____2517 . unit -> 'uu____2517 FStar_Util.smap =
   fun uu____2524  -> FStar_Util.smap_create (Prims.of_int (100)) 
 let (empty_env : FStar_Parser_Dep.deps -> env) =
   fun deps  ->
@@ -724,11 +724,11 @@ let option_of_cont :
       | Cont_ignore  -> k_ignore ()
   
 let find_in_record :
-  'Auu____2928 .
+  'uu____2928 .
     FStar_Ident.ident Prims.list ->
       FStar_Ident.ident ->
         record_or_dc ->
-          (record_or_dc -> 'Auu____2928 cont_t) -> 'Auu____2928 cont_t
+          (record_or_dc -> 'uu____2928 cont_t) -> 'uu____2928 cont_t
   =
   fun ns  ->
     fun id1  ->
@@ -907,9 +907,9 @@ let try_lookup_id'' :
                   aux env.scope_mods
   
 let found_local_binding :
-  'Auu____3578 'Auu____3579 .
+  'uu____3578 'uu____3579 .
     FStar_Range.range ->
-      ('Auu____3578 * FStar_Syntax_Syntax.bv * 'Auu____3579) ->
+      ('uu____3578 * FStar_Syntax_Syntax.bv * 'uu____3579) ->
         FStar_Syntax_Syntax.term
   =
   fun r  ->
@@ -917,12 +917,12 @@ let found_local_binding :
       match uu____3595 with | (id',x,uu____3604) -> bv_to_name x r
   
 let find_in_module :
-  'Auu____3616 .
+  'uu____3616 .
     env ->
       FStar_Ident.lident ->
         (FStar_Ident.lident ->
-           (FStar_Syntax_Syntax.sigelt * Prims.bool) -> 'Auu____3616)
-          -> 'Auu____3616 -> 'Auu____3616
+           (FStar_Syntax_Syntax.sigelt * Prims.bool) -> 'uu____3616)
+          -> 'uu____3616 -> 'uu____3616
   =
   fun env  ->
     fun lid  ->
@@ -3259,9 +3259,9 @@ let (default_mii : module_inclusion_info) =
     mii_includes = FStar_Pervasives_Native.None
   } 
 let as_includes :
-  'Auu____12693 .
-    'Auu____12693 Prims.list FStar_Pervasives_Native.option ->
-      'Auu____12693 Prims.list FStar_ST.ref
+  'uu____12693 .
+    'uu____12693 Prims.list FStar_Pervasives_Native.option ->
+      'uu____12693 Prims.list FStar_ST.ref
   =
   fun uu___31_12706  ->
     match uu___31_12706 with

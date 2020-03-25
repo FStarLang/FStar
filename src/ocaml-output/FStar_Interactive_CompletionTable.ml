@@ -15,9 +15,9 @@ let uu___is_Heap : 'a . 'a heap -> Prims.bool =
 let __proj__Heap__item___0 : 'a . 'a heap -> ('a * 'a heap Prims.list) =
   fun projectee  -> match projectee with | Heap _0 -> _0 
 let heap_merge :
-  'Auu____144 .
-    ('Auu____144 -> 'Auu____144 -> Prims.int) ->
-      'Auu____144 heap -> 'Auu____144 heap -> 'Auu____144 heap
+  'uu____144 .
+    ('uu____144 -> 'uu____144 -> Prims.int) ->
+      'uu____144 heap -> 'uu____144 heap -> 'uu____144 heap
   =
   fun cmp  ->
     fun h1  ->
@@ -33,14 +33,14 @@ let heap_merge :
             else Heap (v2, (h1 :: hh2))
   
 let heap_insert :
-  'Auu____255 .
-    ('Auu____255 -> 'Auu____255 -> Prims.int) ->
-      'Auu____255 heap -> 'Auu____255 -> 'Auu____255 heap
+  'uu____255 .
+    ('uu____255 -> 'uu____255 -> Prims.int) ->
+      'uu____255 heap -> 'uu____255 -> 'uu____255 heap
   = fun cmp  -> fun h  -> fun v1  -> heap_merge cmp (Heap (v1, [])) h 
 let rec heap_merge_pairs :
-  'Auu____302 .
-    ('Auu____302 -> 'Auu____302 -> Prims.int) ->
-      'Auu____302 heap Prims.list -> 'Auu____302 heap
+  'uu____302 .
+    ('uu____302 -> 'uu____302 -> Prims.int) ->
+      'uu____302 heap Prims.list -> 'uu____302 heap
   =
   fun cmp  ->
     fun uu___0_325  ->
@@ -53,19 +53,17 @@ let rec heap_merge_pairs :
           heap_merge cmp uu____359 uu____362
   
 let heap_peek :
-  'Auu____370 .
-    'Auu____370 heap -> 'Auu____370 FStar_Pervasives_Native.option
-  =
+  'uu____370 . 'uu____370 heap -> 'uu____370 FStar_Pervasives_Native.option =
   fun uu___1_379  ->
     match uu___1_379 with
     | EmptyHeap  -> FStar_Pervasives_Native.None
     | Heap (v1,uu____383) -> FStar_Pervasives_Native.Some v1
   
 let heap_pop :
-  'Auu____399 .
-    ('Auu____399 -> 'Auu____399 -> Prims.int) ->
-      'Auu____399 heap ->
-        ('Auu____399 * 'Auu____399 heap) FStar_Pervasives_Native.option
+  'uu____399 .
+    ('uu____399 -> 'uu____399 -> Prims.int) ->
+      'uu____399 heap ->
+        ('uu____399 * 'uu____399 heap) FStar_Pervasives_Native.option
   =
   fun cmp  ->
     fun uu___2_426  ->
@@ -77,17 +75,17 @@ let heap_pop :
           FStar_Pervasives_Native.Some uu____450
   
 let heap_from_list :
-  'Auu____475 .
-    ('Auu____475 -> 'Auu____475 -> Prims.int) ->
-      'Auu____475 Prims.list -> 'Auu____475 heap
+  'uu____475 .
+    ('uu____475 -> 'uu____475 -> Prims.int) ->
+      'uu____475 Prims.list -> 'uu____475 heap
   =
   fun cmp  ->
     fun values  -> FStar_List.fold_left (heap_insert cmp) EmptyHeap values
   
 let push_nodup :
-  'Auu____515 .
-    ('Auu____515 -> Prims.string) ->
-      'Auu____515 -> 'Auu____515 Prims.list -> 'Auu____515 Prims.list
+  'uu____515 .
+    ('uu____515 -> Prims.string) ->
+      'uu____515 -> 'uu____515 Prims.list -> 'uu____515 Prims.list
   =
   fun key_fn  ->
     fun x  ->
@@ -104,10 +102,10 @@ let push_nodup :
             if uu____548 then h :: t else x :: h :: t
   
 let rec add_priorities :
-  'Auu____572 .
+  'uu____572 .
     Prims.int ->
-      (Prims.int * 'Auu____572) Prims.list ->
-        'Auu____572 Prims.list -> (Prims.int * 'Auu____572) Prims.list
+      (Prims.int * 'uu____572) Prims.list ->
+        'uu____572 Prims.list -> (Prims.int * 'uu____572) Prims.list
   =
   fun n1  ->
     fun acc  ->
@@ -168,10 +166,10 @@ let __proj__StrBranch__item___0 :
   'a . 'a btree -> (Prims.string * 'a * 'a btree * 'a btree) =
   fun projectee  -> match projectee with | StrBranch _0 -> _0 
 let rec btree_to_list_rev :
-  'Auu____1288 .
-    'Auu____1288 btree ->
-      (Prims.string * 'Auu____1288) Prims.list ->
-        (Prims.string * 'Auu____1288) Prims.list
+  'uu____1288 .
+    'uu____1288 btree ->
+      (Prims.string * 'uu____1288) Prims.list ->
+        (Prims.string * 'uu____1288) Prims.list
   =
   fun btree  ->
     fun acc  ->
@@ -185,10 +183,10 @@ let rec btree_to_list_rev :
           btree_to_list_rev rbt uu____1338
   
 let rec btree_from_list :
-  'Auu____1367 .
-    (Prims.string * 'Auu____1367) Prims.list ->
+  'uu____1367 .
+    (Prims.string * 'uu____1367) Prims.list ->
       Prims.int ->
-        ('Auu____1367 btree * (Prims.string * 'Auu____1367) Prims.list)
+        ('uu____1367 btree * (Prims.string * 'uu____1367) Prims.list)
   =
   fun nodes  ->
     fun size  ->
@@ -389,7 +387,7 @@ let __proj__Mktrie__item__namespaces : 'a . 'a trie -> 'a trie names =
   fun projectee  ->
     match projectee with | { bindings; namespaces;_} -> namespaces
   
-let trie_empty : 'Auu____2553 . unit -> 'Auu____2553 trie =
+let trie_empty : 'uu____2553 . unit -> 'uu____2553 trie =
   fun uu____2557  -> { bindings = []; namespaces = [] } 
 let rec names_find_exact :
   'a . 'a names -> Prims.string -> 'a FStar_Pervasives_Native.option =
@@ -961,7 +959,7 @@ let (json_of_completion_result : completion_result -> FStar_Util.json) =
       FStar_Util.JsonStr (result.completion_candidate)]
   
 let completion_result_of_lid :
-  'Auu____5184 . (path * 'Auu____5184) -> completion_result =
+  'uu____5184 . (path * 'uu____5184) -> completion_result =
   fun uu____5193  ->
     match uu____5193 with
     | (path,_lid) ->

@@ -113,7 +113,7 @@ let (snat :
     uu____177 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let pat :
-  'Auu____258 . 'Auu____258 -> 'Auu____258 FStar_Syntax_Syntax.withinfo_t =
+  'uu____258 . 'uu____258 -> 'uu____258 FStar_Syntax_Syntax.withinfo_t =
   fun p  -> FStar_Syntax_Syntax.withinfo p FStar_Range.dummyRange 
 let (snat_type : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) =
   let uu____269 =
@@ -1454,12 +1454,12 @@ let (tests :
    uu____870 :: uu____904)
   
 let run_either :
-  'Auu____3914 .
+  'uu____3914 .
     Prims.int ->
-      'Auu____3914 ->
+      'uu____3914 ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           (FStar_TypeChecker_Env.env ->
-             'Auu____3914 -> FStar_Syntax_Syntax.term)
+             'uu____3914 -> FStar_Syntax_Syntax.term)
             -> unit
   =
   fun i  ->
@@ -1541,11 +1541,11 @@ let (run_nbe_with_time :
         (i, uu____4103)
   
 let run_tests :
-  'Auu____4115 .
+  'uu____4115 .
     (Prims.int ->
        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'Auu____4115)
-      -> 'Auu____4115 Prims.list
+         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'uu____4115)
+      -> 'uu____4115 Prims.list
   =
   fun run1  ->
     FStar_Options.__set_unit_tests ();

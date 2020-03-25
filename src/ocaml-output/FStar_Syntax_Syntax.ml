@@ -1786,18 +1786,18 @@ let (lookup_aq : bv -> antiquotations -> term FStar_Pervasives_Native.option)
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
   
 let syn :
-  'Auu____8376 'Auu____8377 'Auu____8378 .
-    'Auu____8376 ->
-      'Auu____8377 ->
-        ('Auu____8377 -> 'Auu____8376 -> 'Auu____8378) -> 'Auu____8378
+  'uu____8376 'uu____8377 'uu____8378 .
+    'uu____8376 ->
+      'uu____8377 ->
+        ('uu____8377 -> 'uu____8376 -> 'uu____8378) -> 'uu____8378
   = fun p  -> fun k  -> fun f  -> f k p 
 let mk_fvs :
-  'Auu____8409 .
-    unit -> 'Auu____8409 FStar_Pervasives_Native.option FStar_ST.ref
+  'uu____8409 .
+    unit -> 'uu____8409 FStar_Pervasives_Native.option FStar_ST.ref
   = fun uu____8418  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let mk_uvs :
-  'Auu____8426 .
-    unit -> 'Auu____8426 FStar_Pervasives_Native.option FStar_ST.ref
+  'uu____8426 .
+    unit -> 'uu____8426 FStar_Pervasives_Native.option FStar_ST.ref
   = fun uu____8435  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let (new_bv_set : unit -> bv FStar_Util.set) =
   fun uu____8445  -> FStar_Util.new_set order_bv 

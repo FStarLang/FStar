@@ -34,16 +34,16 @@ let (fv_as_emb_typ : FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.emb_typ) =
     FStar_Syntax_Syntax.ET_app uu____77
   
 let mk_emb' :
-  'Auu____99 .
+  'uu____99 .
     (FStar_TypeChecker_NBETerm.nbe_cbs ->
-       'Auu____99 -> FStar_TypeChecker_NBETerm.t)
+       'uu____99 -> FStar_TypeChecker_NBETerm.t)
       ->
       (FStar_TypeChecker_NBETerm.nbe_cbs ->
          FStar_TypeChecker_NBETerm.t ->
-           'Auu____99 FStar_Pervasives_Native.option)
+           'uu____99 FStar_Pervasives_Native.option)
         ->
         FStar_Syntax_Syntax.fv ->
-          'Auu____99 FStar_TypeChecker_NBETerm.embedding
+          'uu____99 FStar_TypeChecker_NBETerm.embedding
   =
   fun x  ->
     fun y  ->
@@ -53,9 +53,9 @@ let mk_emb' :
         FStar_TypeChecker_NBETerm.mk_emb x y uu____141 uu____146
   
 let mk_lazy :
-  'Auu____158 .
+  'uu____158 .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      'Auu____158 ->
+      'uu____158 ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.lazy_kind -> FStar_TypeChecker_NBETerm.t
   =
@@ -677,9 +677,9 @@ let (e_argv_aq :
     FStar_TypeChecker_NBETerm.e_tuple2 uu____1735 e_aqualv
   
 let unlazy_as_t :
-  'Auu____1745 .
+  'uu____1745 .
     FStar_Syntax_Syntax.lazy_kind ->
-      FStar_TypeChecker_NBETerm.t -> 'Auu____1745
+      FStar_TypeChecker_NBETerm.t -> 'uu____1745
   =
   fun k  ->
     fun t  ->

@@ -128,7 +128,7 @@ let (load_native_tactics : unit -> unit) =
 let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let go : 'Auu____347 . 'Auu____347 -> unit =
+let go : 'uu____347 . 'uu____347 -> unit =
   fun uu____352  ->
     let uu____353 = process_args ()  in
     match uu____353 with
@@ -324,7 +324,7 @@ let (handle_error : Prims.exn -> unit) =
     cleanup ();
     report_errors []
   
-let main : 'Auu____804 . unit -> 'Auu____804 =
+let main : 'uu____804 . unit -> 'uu____804 =
   fun uu____809  ->
     try
       (fun uu___125_817  ->

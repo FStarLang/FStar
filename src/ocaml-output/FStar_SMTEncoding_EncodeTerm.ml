@@ -1,9 +1,9 @@
 open Prims
 let mkForall_fuel' :
-  'Auu____14 .
+  'uu____14 .
     Prims.string ->
       FStar_Range.range ->
-        'Auu____14 ->
+        'uu____14 ->
           (FStar_SMTEncoding_Term.pat Prims.list Prims.list *
             FStar_SMTEncoding_Term.fvs * FStar_SMTEncoding_Term.term) ->
             FStar_SMTEncoding_Term.term
@@ -459,10 +459,10 @@ let (is_an_eta_expansion :
         check_partial_applications body (FStar_List.rev vars)
   
 let check_pattern_vars :
-  'Auu____1363 'Auu____1364 .
+  'uu____1363 'uu____1364 .
     FStar_SMTEncoding_Env.env_t ->
-      (FStar_Syntax_Syntax.bv * 'Auu____1363) Prims.list ->
-        (FStar_Syntax_Syntax.term * 'Auu____1364) Prims.list -> unit
+      (FStar_Syntax_Syntax.bv * 'uu____1363) Prims.list ->
+        (FStar_Syntax_Syntax.term * 'uu____1364) Prims.list -> unit
   =
   fun env  ->
     fun vars  ->
@@ -614,9 +614,9 @@ let rec (curried_arrow_formals_comp :
         let uu____1912 = FStar_Syntax_Syntax.mk_Total k1  in ([], uu____1912)
   
 let is_arithmetic_primitive :
-  'Auu____1926 .
+  'uu____1926 .
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      'Auu____1926 Prims.list -> Prims.bool
+      'uu____1926 Prims.list -> Prims.bool
   =
   fun head1  ->
     fun args  ->
@@ -679,9 +679,9 @@ let (getInteger : FStar_Syntax_Syntax.term' -> Prims.int) =
     | uu____2011 -> failwith "Expected an Integer term"
   
 let is_BitVector_primitive :
-  'Auu____2021 .
+  'uu____2021 .
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax * 'Auu____2021)
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax * 'uu____2021)
         Prims.list -> Prims.bool
   =
   fun head1  ->

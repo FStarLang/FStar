@@ -74,7 +74,7 @@ let __proj__Mkembedding__item__emb_typ :
 let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun e  -> e.emb_typ 
 let unknown_printer :
-  'Auu____431 . FStar_Syntax_Syntax.term -> 'Auu____431 -> Prims.string =
+  'uu____431 . FStar_Syntax_Syntax.term -> 'uu____431 -> Prims.string =
   fun typ  ->
     fun uu____442  ->
       let uu____443 = FStar_Syntax_Print.term_to_string typ  in

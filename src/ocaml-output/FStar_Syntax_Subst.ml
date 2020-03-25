@@ -1,7 +1,6 @@
 open Prims
 let subst_to_string :
-  'Auu____4 . (FStar_Syntax_Syntax.bv * 'Auu____4) Prims.list -> Prims.string
-  =
+  'uu____4 . (FStar_Syntax_Syntax.bv * 'uu____4) Prims.list -> Prims.string =
   fun s  ->
     let uu____23 =
       FStar_All.pipe_right s
@@ -14,10 +13,10 @@ let subst_to_string :
     FStar_All.pipe_right uu____23 (FStar_String.concat ", ")
   
 let rec apply_until_some :
-  'Auu____66 'Auu____67 .
-    ('Auu____66 -> 'Auu____67 FStar_Pervasives_Native.option) ->
-      'Auu____66 Prims.list ->
-        ('Auu____66 Prims.list * 'Auu____67) FStar_Pervasives_Native.option
+  'uu____66 'uu____67 .
+    ('uu____66 -> 'uu____67 FStar_Pervasives_Native.option) ->
+      'uu____66 Prims.list ->
+        ('uu____66 Prims.list * 'uu____67) FStar_Pervasives_Native.option
   =
   fun f  ->
     fun s  ->
@@ -31,11 +30,11 @@ let rec apply_until_some :
                FStar_Pervasives_Native.Some (rest, st))
   
 let map_some_curry :
-  'Auu____142 'Auu____143 'Auu____144 .
-    ('Auu____142 -> 'Auu____143 -> 'Auu____144) ->
-      'Auu____144 ->
-        ('Auu____142 * 'Auu____143) FStar_Pervasives_Native.option ->
-          'Auu____144
+  'uu____142 'uu____143 'uu____144 .
+    ('uu____142 -> 'uu____143 -> 'uu____144) ->
+      'uu____144 ->
+        ('uu____142 * 'uu____143) FStar_Pervasives_Native.option ->
+          'uu____144
   =
   fun f  ->
     fun x  ->
@@ -45,11 +44,11 @@ let map_some_curry :
         | FStar_Pervasives_Native.Some (a,b) -> f a b
   
 let apply_until_some_then_map :
-  'Auu____207 'Auu____208 'Auu____209 .
-    ('Auu____207 -> 'Auu____208 FStar_Pervasives_Native.option) ->
-      'Auu____207 Prims.list ->
-        ('Auu____207 Prims.list -> 'Auu____208 -> 'Auu____209) ->
-          'Auu____209 -> 'Auu____209
+  'uu____207 'uu____208 'uu____209 .
+    ('uu____207 -> 'uu____208 FStar_Pervasives_Native.option) ->
+      'uu____207 Prims.list ->
+        ('uu____207 Prims.list -> 'uu____208 -> 'uu____209) ->
+          'uu____209 -> 'uu____209
   =
   fun f  ->
     fun s  ->
@@ -59,10 +58,10 @@ let apply_until_some_then_map :
           FStar_All.pipe_right uu____257 (map_some_curry g t)
   
 let compose_subst :
-  'Auu____283 .
-    ('Auu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range) ->
-      ('Auu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range) ->
-        ('Auu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range)
+  'uu____283 .
+    ('uu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range) ->
+      ('uu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range) ->
+        ('uu____283 Prims.list * FStar_Syntax_Syntax.maybe_set_use_range)
   =
   fun s1  ->
     fun s2  ->
@@ -275,9 +274,9 @@ let rec (subst_univ :
           FStar_Syntax_Syntax.U_max uu____996
   
 let tag_with_range :
-  'Auu____1006 .
+  'uu____1006 .
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      ('Auu____1006 * FStar_Syntax_Syntax.maybe_set_use_range) ->
+      ('uu____1006 * FStar_Syntax_Syntax.maybe_set_use_range) ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
   fun t  ->
@@ -337,9 +336,9 @@ let tag_with_range :
              })
   
 let tag_lid_with_range :
-  'Auu____1068 .
+  'uu____1068 .
     FStar_Ident.lident ->
-      ('Auu____1068 * FStar_Syntax_Syntax.maybe_set_use_range) ->
+      ('uu____1068 * FStar_Syntax_Syntax.maybe_set_use_range) ->
         FStar_Ident.lident
   =
   fun l  ->
@@ -534,10 +533,10 @@ let (shift_subst :
   Prims.int -> FStar_Syntax_Syntax.subst_t -> FStar_Syntax_Syntax.subst_t) =
   fun n1  -> fun s  -> FStar_List.map (shift n1) s 
 let shift_subst' :
-  'Auu____1612 .
+  'uu____1612 .
     Prims.int ->
-      (FStar_Syntax_Syntax.subst_t Prims.list * 'Auu____1612) ->
-        (FStar_Syntax_Syntax.subst_t Prims.list * 'Auu____1612)
+      (FStar_Syntax_Syntax.subst_t Prims.list * 'uu____1612) ->
+        (FStar_Syntax_Syntax.subst_t Prims.list * 'uu____1612)
   =
   fun n1  ->
     fun s  ->
@@ -598,10 +597,10 @@ let (subst_binders :
     fun bs  -> subst_binders' ([s], FStar_Syntax_Syntax.NoUseRange) bs
   
 let subst_arg' :
-  'Auu____1839 .
+  'uu____1839 .
     FStar_Syntax_Syntax.subst_ts ->
-      (FStar_Syntax_Syntax.term * 'Auu____1839) ->
-        (FStar_Syntax_Syntax.term * 'Auu____1839)
+      (FStar_Syntax_Syntax.term * 'uu____1839) ->
+        (FStar_Syntax_Syntax.term * 'uu____1839)
   =
   fun s  ->
     fun uu____1857  ->
@@ -609,10 +608,10 @@ let subst_arg' :
       | (t,imp) -> let uu____1864 = subst' s t  in (uu____1864, imp)
   
 let subst_args' :
-  'Auu____1871 .
+  'uu____1871 .
     FStar_Syntax_Syntax.subst_ts ->
-      (FStar_Syntax_Syntax.term * 'Auu____1871) Prims.list ->
-        (FStar_Syntax_Syntax.term * 'Auu____1871) Prims.list
+      (FStar_Syntax_Syntax.term * 'uu____1871) Prims.list ->
+        (FStar_Syntax_Syntax.term * 'uu____1871) Prims.list
   = fun s  -> FStar_List.map (subst_arg' s) 
 let (subst_pat' :
   (FStar_Syntax_Syntax.subst_t Prims.list *

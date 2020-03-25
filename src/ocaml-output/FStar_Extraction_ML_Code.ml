@@ -261,7 +261,7 @@ let (prim_uni_ops : unit -> (Prims.string * Prims.string) Prims.list) =
     ("op_Minus", op_minus);
     ("op_Bang", "Support.ST.read")]
   
-let prim_types : 'Auu____1235 . unit -> 'Auu____1235 Prims.list =
+let prim_types : 'uu____1235 . unit -> 'uu____1235 Prims.list =
   fun uu____1239  -> [] 
 let (prim_constructors : (Prims.string * Prims.string) Prims.list) =
   [("Some", "Some"); ("None", "None"); ("Nil", "[]"); ("Cons", "::")] 

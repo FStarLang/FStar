@@ -15,10 +15,10 @@ let (parser_pat_to_string : FStar_Parser_AST.pattern -> Prims.string) =
     doc_to_string uu____23
   
 let map_opt :
-  'Auu____33 'Auu____34 .
+  'uu____33 'uu____34 .
     unit ->
-      ('Auu____33 -> 'Auu____34 FStar_Pervasives_Native.option) ->
-        'Auu____33 Prims.list -> 'Auu____34 Prims.list
+      ('uu____33 -> 'uu____34 FStar_Pervasives_Native.option) ->
+        'uu____33 Prims.list -> 'uu____34 Prims.list
   = fun uu____51  -> FStar_List.filter_map 
 let (bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident) =
   fun x  ->
@@ -39,10 +39,10 @@ let (bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident) =
       (unique_name, ((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
   
 let filter_imp :
-  'Auu____74 .
-    ('Auu____74 * FStar_Syntax_Syntax.arg_qualifier
+  'uu____74 .
+    ('uu____74 * FStar_Syntax_Syntax.arg_qualifier
       FStar_Pervasives_Native.option) Prims.list ->
-      ('Auu____74 * FStar_Syntax_Syntax.arg_qualifier
+      ('uu____74 * FStar_Syntax_Syntax.arg_qualifier
         FStar_Pervasives_Native.option) Prims.list
   =
   fun a  ->
@@ -61,9 +61,9 @@ let filter_imp :
             | uu____157 -> true))
   
 let filter_pattern_imp :
-  'Auu____170 .
-    ('Auu____170 * Prims.bool) Prims.list ->
-      ('Auu____170 * Prims.bool) Prims.list
+  'uu____170 .
+    ('uu____170 * Prims.bool) Prims.list ->
+      ('uu____170 * Prims.bool) Prims.list
   =
   fun xs  ->
     FStar_List.filter

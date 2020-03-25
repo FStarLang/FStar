@@ -144,9 +144,9 @@ let mk_emb :
           (fun x  -> fun w  -> fun _norm  -> un w x) uu____304
   
 let embed :
-  'Auu____331 .
-    'Auu____331 FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range -> 'Auu____331 -> FStar_Syntax_Syntax.term
+  'uu____331 .
+    'uu____331 FStar_Syntax_Embeddings.embedding ->
+      FStar_Range.range -> 'uu____331 -> FStar_Syntax_Syntax.term
   =
   fun e  ->
     fun r  ->
@@ -156,11 +156,10 @@ let embed :
           FStar_Syntax_Embeddings.id_norm_cb
   
 let unembed' :
-  'Auu____369 .
+  'uu____369 .
     Prims.bool ->
-      'Auu____369 FStar_Syntax_Embeddings.embedding ->
-        FStar_Syntax_Syntax.term ->
-          'Auu____369 FStar_Pervasives_Native.option
+      'uu____369 FStar_Syntax_Embeddings.embedding ->
+        FStar_Syntax_Syntax.term -> 'uu____369 FStar_Pervasives_Native.option
   =
   fun w  ->
     fun e  ->

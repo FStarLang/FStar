@@ -1,5 +1,5 @@
 open Prims
-let main : 'Auu____6 'Auu____7 . 'Auu____6 -> 'Auu____7 =
+let main : 'uu____6 'uu____7 . 'uu____6 -> 'uu____7 =
   fun argv  ->
     FStar_Util.print_string "Initializing ...\n";
     (try

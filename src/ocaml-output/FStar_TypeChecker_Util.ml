@@ -7496,8 +7496,8 @@ let (lift_tf_layered_effect :
                                   (c1, uu____19871)))))))))
   
 let lift_tf_layered_effect_term :
-  'Auu____19887 .
-    'Auu____19887 ->
+  'uu____19887 .
+    'uu____19887 ->
       FStar_Syntax_Syntax.sub_eff ->
         FStar_Syntax_Syntax.universe ->
           FStar_Syntax_Syntax.typ ->

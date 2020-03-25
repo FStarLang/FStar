@@ -64,8 +64,8 @@ let (should_print_fs_typ_app : Prims.bool FStar_ST.ref) =
   FStar_Util.mk_ref false 
 let (unfold_tuples : Prims.bool FStar_ST.ref) = FStar_Util.mk_ref true 
 let with_fs_typ_app :
-  'Auu____311 'Auu____312 .
-    Prims.bool -> ('Auu____311 -> 'Auu____312) -> 'Auu____311 -> 'Auu____312
+  'uu____311 'uu____312 .
+    Prims.bool -> ('uu____311 -> 'uu____312) -> 'uu____311 -> 'uu____312
   =
   fun b  ->
     fun printer  ->
@@ -78,10 +78,10 @@ let with_fs_typ_app :
 let (str : Prims.string -> FStar_Pprint.document) =
   fun s  -> FStar_Pprint.doc_of_string s 
 let default_or_map :
-  'Auu____422 'Auu____423 .
-    'Auu____422 ->
-      ('Auu____423 -> 'Auu____422) ->
-        'Auu____423 FStar_Pervasives_Native.option -> 'Auu____422
+  'uu____422 'uu____423 .
+    'uu____422 ->
+      ('uu____423 -> 'uu____422) ->
+        'uu____423 FStar_Pervasives_Native.option -> 'uu____422
   =
   fun n1  ->
     fun f  ->
@@ -117,10 +117,10 @@ let (infix0 :
   = FStar_Pprint.infix Prims.int_zero Prims.int_one 
 let (break1 : FStar_Pprint.document) = FStar_Pprint.break_ Prims.int_one 
 let separate_break_map :
-  'Auu____536 .
+  'uu____536 .
     FStar_Pprint.document ->
-      ('Auu____536 -> FStar_Pprint.document) ->
-        'Auu____536 Prims.list -> FStar_Pprint.document
+      ('uu____536 -> FStar_Pprint.document) ->
+        'uu____536 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -133,11 +133,11 @@ let separate_break_map :
         FStar_Pprint.group uu____561
   
 let precede_break_separate_map :
-  'Auu____575 .
+  'uu____575 .
     FStar_Pprint.document ->
       FStar_Pprint.document ->
-        ('Auu____575 -> FStar_Pprint.document) ->
-          'Auu____575 Prims.list -> FStar_Pprint.document
+        ('uu____575 -> FStar_Pprint.document) ->
+          'uu____575 Prims.list -> FStar_Pprint.document
   =
   fun prec  ->
     fun sep  ->
@@ -164,9 +164,9 @@ let precede_break_separate_map :
           FStar_Pprint.op_Hat_Hat uu____605 uu____609
   
 let concat_break_map :
-  'Auu____626 .
-    ('Auu____626 -> FStar_Pprint.document) ->
-      'Auu____626 Prims.list -> FStar_Pprint.document
+  'uu____626 .
+    ('uu____626 -> FStar_Pprint.document) ->
+      'uu____626 Prims.list -> FStar_Pprint.document
   =
   fun f  ->
     fun l  ->
@@ -227,10 +227,10 @@ let (soft_begin_end_with_nesting :
       contents uu____715
   
 let separate_map_last :
-  'Auu____728 .
+  'uu____728 .
     FStar_Pprint.document ->
-      (Prims.bool -> 'Auu____728 -> FStar_Pprint.document) ->
-        'Auu____728 Prims.list -> FStar_Pprint.document
+      (Prims.bool -> 'uu____728 -> FStar_Pprint.document) ->
+        'uu____728 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -243,10 +243,10 @@ let separate_map_last :
         FStar_Pprint.separate sep es1
   
 let separate_break_map_last :
-  'Auu____780 .
+  'uu____780 .
     FStar_Pprint.document ->
-      (Prims.bool -> 'Auu____780 -> FStar_Pprint.document) ->
-        'Auu____780 Prims.list -> FStar_Pprint.document
+      (Prims.bool -> 'uu____780 -> FStar_Pprint.document) ->
+        'uu____780 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -259,10 +259,10 @@ let separate_break_map_last :
         FStar_Pprint.group uu____812
   
 let separate_map_or_flow :
-  'Auu____824 .
+  'uu____824 .
     FStar_Pprint.document ->
-      ('Auu____824 -> FStar_Pprint.document) ->
-        'Auu____824 Prims.list -> FStar_Pprint.document
+      ('uu____824 -> FStar_Pprint.document) ->
+        'uu____824 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -272,10 +272,10 @@ let separate_map_or_flow :
         else FStar_Pprint.flow_map sep f l
   
 let flow_map_last :
-  'Auu____862 .
+  'uu____862 .
     FStar_Pprint.document ->
-      (Prims.bool -> 'Auu____862 -> FStar_Pprint.document) ->
-        'Auu____862 Prims.list -> FStar_Pprint.document
+      (Prims.bool -> 'uu____862 -> FStar_Pprint.document) ->
+        'uu____862 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -288,10 +288,10 @@ let flow_map_last :
         FStar_Pprint.flow sep es1
   
 let separate_map_or_flow_last :
-  'Auu____914 .
+  'uu____914 .
     FStar_Pprint.document ->
-      (Prims.bool -> 'Auu____914 -> FStar_Pprint.document) ->
-        'Auu____914 Prims.list -> FStar_Pprint.document
+      (Prims.bool -> 'uu____914 -> FStar_Pprint.document) ->
+        'uu____914 Prims.list -> FStar_Pprint.document
   =
   fun sep  ->
     fun f  ->
@@ -323,15 +323,15 @@ let (surround_maybe_empty :
             else FStar_Pprint.surround n1 b doc1 doc2 doc3
   
 let soft_surround_separate_map :
-  'Auu____1018 .
+  'uu____1018 .
     Prims.int ->
       Prims.int ->
         FStar_Pprint.document ->
           FStar_Pprint.document ->
             FStar_Pprint.document ->
               FStar_Pprint.document ->
-                ('Auu____1018 -> FStar_Pprint.document) ->
-                  'Auu____1018 Prims.list -> FStar_Pprint.document
+                ('uu____1018 -> FStar_Pprint.document) ->
+                  'uu____1018 Prims.list -> FStar_Pprint.document
   =
   fun n1  ->
     fun b  ->
@@ -349,15 +349,15 @@ let soft_surround_separate_map :
                        closing)
   
 let soft_surround_map_or_flow :
-  'Auu____1097 .
+  'uu____1097 .
     Prims.int ->
       Prims.int ->
         FStar_Pprint.document ->
           FStar_Pprint.document ->
             FStar_Pprint.document ->
               FStar_Pprint.document ->
-                ('Auu____1097 -> FStar_Pprint.document) ->
-                  'Auu____1097 Prims.list -> FStar_Pprint.document
+                ('uu____1097 -> FStar_Pprint.document) ->
+                  'uu____1097 Prims.list -> FStar_Pprint.document
   =
   fun n1  ->
     fun b  ->
@@ -607,9 +607,9 @@ let (matches_token :
       | FStar_Util.Inr s' -> s = s'
   
 let matches_level :
-  'Auu____1649 .
+  'uu____1649 .
     Prims.string ->
-      ('Auu____1649 * (FStar_Char.char,Prims.string) FStar_Util.either
+      ('uu____1649 * (FStar_Char.char,Prims.string) FStar_Util.either
         Prims.list) -> Prims.bool
   =
   fun s  ->
@@ -677,7 +677,7 @@ let (assign_levels :
       | uu____2092 -> failwith (Prims.op_Hat "Unrecognized operator " s)
   
 let max_level :
-  'Auu____2125 . ('Auu____2125 * token Prims.list) Prims.list -> Prims.int =
+  'uu____2125 . ('uu____2125 * token Prims.list) Prims.list -> Prims.int =
   fun l  ->
     let find_level_and_max n1 level =
       let uu____2174 =
@@ -755,7 +755,7 @@ let (handleable_args_length : FStar_Ident.ident -> Prims.int) =
          else Prims.int_zero)
   
 let handleable_op :
-  'Auu____2641 . FStar_Ident.ident -> 'Auu____2641 Prims.list -> Prims.bool =
+  'uu____2641 . FStar_Ident.ident -> 'uu____2641 Prims.list -> Prims.bool =
   fun op  ->
     fun args  ->
       match FStar_List.length args with
@@ -838,9 +838,9 @@ let (__proj__Mkdecl_meta__item__has_attrs : decl_meta -> Prims.bool) =
 let (dummy_meta : decl_meta) =
   { r = FStar_Range.dummyRange; has_qs = false; has_attrs = false } 
 let with_comment :
-  'Auu____3029 .
-    ('Auu____3029 -> FStar_Pprint.document) ->
-      'Auu____3029 -> FStar_Range.range -> FStar_Pprint.document
+  'uu____3029 .
+    ('uu____3029 -> FStar_Pprint.document) ->
+      'uu____3029 -> FStar_Range.range -> FStar_Pprint.document
   =
   fun printer  ->
     fun tm  ->
@@ -889,10 +889,10 @@ let with_comment :
                FStar_Pprint.group uu____3220)
   
 let with_comment_sep :
-  'Auu____3232 'Auu____3233 .
-    ('Auu____3232 -> 'Auu____3233) ->
-      'Auu____3232 ->
-        FStar_Range.range -> (FStar_Pprint.document * 'Auu____3233)
+  'uu____3232 'uu____3233 .
+    ('uu____3232 -> 'uu____3233) ->
+      'uu____3232 ->
+        FStar_Range.range -> (FStar_Pprint.document * 'uu____3233)
   =
   fun printer  ->
     fun tm  ->
@@ -1008,12 +1008,12 @@ let rec (place_comments_until_pos :
                        FStar_Pprint.op_Hat_Hat doc uu____3628)
   
 let separate_map_with_comments :
-  'Auu____3642 .
+  'uu____3642 .
     FStar_Pprint.document ->
       FStar_Pprint.document ->
-        ('Auu____3642 -> FStar_Pprint.document) ->
-          'Auu____3642 Prims.list ->
-            ('Auu____3642 -> decl_meta) -> FStar_Pprint.document
+        ('uu____3642 -> FStar_Pprint.document) ->
+          'uu____3642 Prims.list ->
+            ('uu____3642 -> decl_meta) -> FStar_Pprint.document
   =
   fun prefix1  ->
     fun sep  ->
@@ -1059,12 +1059,12 @@ let separate_map_with_comments :
                 FStar_Pervasives_Native.snd uu____3763
   
 let separate_map_with_comments_kw :
-  'Auu____3790 'Auu____3791 .
-    'Auu____3790 ->
-      'Auu____3790 ->
-        ('Auu____3790 -> 'Auu____3791 -> FStar_Pprint.document) ->
-          'Auu____3791 Prims.list ->
-            ('Auu____3791 -> decl_meta) -> FStar_Pprint.document
+  'uu____3790 'uu____3791 .
+    'uu____3790 ->
+      'uu____3790 ->
+        ('uu____3790 -> 'uu____3791 -> FStar_Pprint.document) ->
+          'uu____3791 Prims.list ->
+            ('uu____3791 -> decl_meta) -> FStar_Pprint.document
   =
   fun prefix1  ->
     fun sep  ->
