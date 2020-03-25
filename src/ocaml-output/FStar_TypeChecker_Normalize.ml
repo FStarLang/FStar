@@ -391,7 +391,8 @@ let (norm_universe :
                | uu____1651 -> us1)
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu____1655 = aux u3  in
-              FStar_List.map (fun _1658  -> FStar_Syntax_Syntax.U_succ _1658)
+              FStar_List.map
+                (fun uu____1658  -> FStar_Syntax_Syntax.U_succ uu____1658)
                 uu____1655
            in
         if
@@ -2620,8 +2621,8 @@ let rec (norm :
                  FStar_TypeChecker_Env.delta_depth_of_qninfo fv qninfo  in
                (match uu____9852 with
                 | FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level _9855) when
-                    _9855 = Prims.int_zero ->
+                    (FStar_Syntax_Syntax.Delta_constant_at_level uu____9855)
+                    when uu____9855 = Prims.int_zero ->
                     (FStar_TypeChecker_Cfg.log_unfolding cfg
                        (fun uu____9859  ->
                           let uu____9860 =
@@ -5487,8 +5488,8 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____16695 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _16698  -> FStar_Pervasives_Native.Some _16698)
-                     uu____16695
+                     (fun uu____16698  ->
+                        FStar_Pervasives_Native.Some uu____16698) uu____16695
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
                 in
@@ -5508,8 +5509,8 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____16721 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _16724  -> FStar_Pervasives_Native.Some _16724)
-                     uu____16721
+                     (fun uu____16724  ->
+                        FStar_Pervasives_Native.Some uu____16724) uu____16721
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
                 in

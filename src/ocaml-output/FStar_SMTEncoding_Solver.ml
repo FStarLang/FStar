@@ -604,7 +604,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                in
             FStar_All.pipe_right uu____2092 format_smt_error  in
           FStar_All.pipe_right uu____2090
-            (fun _2120  -> FStar_Util.Inr _2120)
+            (fun uu____2120  -> FStar_Util.Inr uu____2120)
         else
           (let uu____2123 =
              FStar_List.fold_left
@@ -633,19 +633,21 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                FStar_All.pipe_right
                  (match (incomplete_count, canceled_count, unknown_count)
                   with
-                  | (uu____2253,_2258,_2259) when
-                      ((_2258 = Prims.int_zero) && (_2259 = Prims.int_zero))
+                  | (uu____2253,uu____2258,uu____2259) when
+                      ((uu____2258 = Prims.int_zero) &&
+                         (uu____2259 = Prims.int_zero))
                         && (incomplete_count > Prims.int_zero)
                       ->
                       "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
-                  | (_2266,uu____2262,_2268) when
-                      ((_2266 = Prims.int_zero) && (_2268 = Prims.int_zero))
+                  | (uu____2266,uu____2262,uu____2268) when
+                      ((uu____2266 = Prims.int_zero) &&
+                         (uu____2268 = Prims.int_zero))
                         && (canceled_count > Prims.int_zero)
                       ->
                       "The SMT query timed out, you might want to increase the rlimit"
                   | (uu____2271,uu____2272,uu____2273) ->
                       "Try with --query_stats to get more details")
-                 (fun _2283  -> FStar_Util.Inl _2283))
+                 (fun uu____2283  -> FStar_Util.Inl uu____2283))
          in
       let uu____2284 = find_localized_errors settings.query_errors  in
       match uu____2284 with

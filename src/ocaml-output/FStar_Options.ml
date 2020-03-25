@@ -1585,7 +1585,9 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
      (let uu____8412 =
         let uu____8418 =
           let uu____8419 =
-            FStar_List.map (fun _8423  -> String _8423) old_verify_module  in
+            FStar_List.map (fun uu____8423  -> String uu____8423)
+              old_verify_module
+             in
           List uu____8419  in
         ("verify_module", uu____8418)  in
       set_option' uu____8412);

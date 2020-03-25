@@ -759,17 +759,17 @@ let handleable_op :
   fun op  ->
     fun args  ->
       match FStar_List.length args with
-      | _2657 when _2657 = Prims.int_zero -> true
-      | _2659 when _2659 = Prims.int_one ->
+      | uu____2657 when uu____2657 = Prims.int_zero -> true
+      | uu____2659 when uu____2659 = Prims.int_one ->
           (is_general_prefix_op op) ||
             (let uu____2661 = FStar_Ident.text_of_id op  in
              FStar_List.mem uu____2661 ["-"; "~"])
-      | _2669 when _2669 = (Prims.of_int (2)) ->
+      | uu____2669 when uu____2669 = (Prims.of_int (2)) ->
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (let uu____2671 = FStar_Ident.text_of_id op  in
              FStar_List.mem uu____2671
                ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-      | _2693 when _2693 = (Prims.of_int (3)) ->
+      | uu____2693 when uu____2693 = (Prims.of_int (3)) ->
           let uu____2694 = FStar_Ident.text_of_id op  in
           FStar_List.mem uu____2694 [".()<-"; ".[]<-"]
       | uu____2702 -> false
@@ -3425,7 +3425,8 @@ and (format_sig :
                      then FStar_Pprint.space
                      else FStar_Pprint.empty  in
                    (match FStar_List.length terms with
-                    | _8406 when _8406 = Prims.int_one -> FStar_List.hd terms
+                    | uu____8406 when uu____8406 = Prims.int_one ->
+                        FStar_List.hd terms
                     | uu____8407 ->
                         let uu____8408 =
                           let uu____8409 =

@@ -882,7 +882,8 @@ let (extend_with_iface :
                in
             let uu___457_2130 = g  in
             let uu____2131 =
-              let uu____2134 = FStar_List.map (fun _2141  -> Fv _2141) bs  in
+              let uu____2134 =
+                FStar_List.map (fun uu____2141  -> Fv uu____2141) bs  in
               FStar_List.append uu____2134 g.env_bindings  in
             {
               env_tcenv = (uu___457_2130.env_tcenv);

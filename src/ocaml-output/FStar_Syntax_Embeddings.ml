@@ -1470,7 +1470,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5395
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5431  -> FStar_Pervasives_Native.Some _5431)
+                         (fun uu____5431  ->
+                            FStar_Pervasives_Native.Some uu____5431)
                          (UnfoldOnly ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____5434)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1484,7 +1485,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5469
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5505  -> FStar_Pervasives_Native.Some _5505)
+                         (fun uu____5505  ->
+                            FStar_Pervasives_Native.Some uu____5505)
                          (UnfoldFully ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____5508)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1498,7 +1500,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5543
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5579  -> FStar_Pervasives_Native.Some _5579)
+                         (fun uu____5579  ->
+                            FStar_Pervasives_Native.Some uu____5579)
                          (UnfoldAttr ss))
               | uu____5580 ->
                   (if w

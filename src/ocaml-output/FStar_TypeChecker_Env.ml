@@ -4584,7 +4584,8 @@ let (update_effect_lattice :
                 if uu____25087
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _25094  -> FStar_Pervasives_Native.Some _25094)
+                    (fun uu____25094  ->
+                       FStar_Pervasives_Native.Some uu____25094)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
@@ -5815,8 +5816,8 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                 f.FStar_Syntax_Syntax.pos
                in
             FStar_All.pipe_left
-              (fun _27457  -> FStar_TypeChecker_Common.NonTrivial _27457)
-              uu____27383
+              (fun uu____27457  ->
+                 FStar_TypeChecker_Common.NonTrivial uu____27457) uu____27383
              in
           {
             FStar_TypeChecker_Common.guard_f = uu____27382;
