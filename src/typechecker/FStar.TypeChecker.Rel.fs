@@ -434,8 +434,8 @@ let explain env d (s : lstring) =
             | SUB -> "a subtype of"
             | _ -> failwith "impossible" in
          let lhs, rhs = match d with
-            | TProb tp -> N.term_to_string env tp.lhs, N.term_to_string env tp.rhs
-            | CProb cp -> N.comp_to_string env cp.lhs, N.comp_to_string env cp.rhs in
+            | TProb tp -> Err.print_discrepancy (N.term_to_string env) tp.lhs tp.rhs
+            | CProb cp -> Err.print_discrepancy (N.comp_to_string env) cp.lhs cp.rhs in
          BU.format3 "%s is not %s the expected type %s" lhs rel rhs
 
 

@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (17)) 
+let (cache_version_number : Prims.int) = (Prims.of_int (18)) 
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -280,7 +280,7 @@ let (load_checked_file_with_tc_result :
                  in
               FStar_All.pipe_right uu____1009 FStar_Pervasives_Native.snd  in
             FStar_All.pipe_right uu____1008
-              (fun uu____1061  -> FStar_Util.Inr uu____1061)
+              (fun _1061  -> FStar_Util.Inr _1061)
         | (Unknown ,parsing_data) ->
             let uu____1073 = hash_dependences deps fn  in
             (match uu____1073 with
@@ -411,8 +411,7 @@ let (load_parsing_data_from_cache :
                let uu____1479 = FStar_Parser_Dep.cache_file_name file_name
                   in
                FStar_All.pipe_right uu____1479
-                 (fun uu____1486  -> FStar_Pervasives_Native.Some uu____1486))
-          ()
+                 (fun _1486  -> FStar_Pervasives_Native.Some _1486)) ()
       with | uu___171_1488 -> FStar_Pervasives_Native.None  in
     match cache_file with
     | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None

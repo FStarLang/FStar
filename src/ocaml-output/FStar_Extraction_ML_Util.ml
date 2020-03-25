@@ -79,7 +79,7 @@ let (mlexpr_of_range :
             (uu____173, FStar_Pervasives_Native.None)  in
           FStar_Extraction_ML_Syntax.MLC_Int uu____161  in
         FStar_All.pipe_right uu____160
-          (fun uu____186  -> FStar_Extraction_ML_Syntax.MLE_Const uu____186)
+          (fun _186  -> FStar_Extraction_ML_Syntax.MLE_Const _186)
          in
       FStar_All.pipe_right uu____159
         (FStar_Extraction_ML_Syntax.with_ty
@@ -88,7 +88,7 @@ let (mlexpr_of_range :
     let cstr s =
       let uu____195 =
         FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLC_String s)
-          (fun uu____196  -> FStar_Extraction_ML_Syntax.MLE_Const uu____196)
+          (fun _196  -> FStar_Extraction_ML_Syntax.MLE_Const _196)
          in
       FStar_All.pipe_right uu____195
         (FStar_Extraction_ML_Syntax.with_ty
@@ -421,8 +421,8 @@ let rec (type_leq_c :
                            let uu____892 =
                              let uu____895 = mk_fun xs body  in
                              FStar_All.pipe_left
-                               (fun uu____898  ->
-                                  FStar_Pervasives_Native.Some uu____898)
+                               (fun _898  ->
+                                  FStar_Pervasives_Native.Some _898)
                                uu____895
                               in
                            type_leq_c unfold_ty uu____892 t2 t2'  in
@@ -1173,8 +1173,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | uu____3873 when
-                                      uu____3873 = Prims.int_zero -> head2
+                                  | _3873 when _3873 = Prims.int_zero ->
+                                      head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -1231,8 +1231,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | uu____4116 when
-                                      uu____4116 = Prims.int_zero -> head2
+                                  | _4116 when _4116 = Prims.int_zero ->
+                                      head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -1289,8 +1289,8 @@ let (interpret_plugin_as_term_fun :
                                  let head2 =
                                    mk_basic_embedding loc_embedding nm  in
                                  (match t_arity with
-                                  | uu____4369 when
-                                      uu____4369 = Prims.int_zero -> head2
+                                  | _4369 when _4369 = Prims.int_zero ->
+                                      head2
                                   | n1 ->
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App

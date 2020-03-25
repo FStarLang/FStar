@@ -867,10 +867,12 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
     then solve goal t
-    else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
+    else
+      let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
+      fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts (goal_env goal) t)
-                    (tts (goal_env goal) typ)
-                    (tts (goal_env goal) (goal_type goal))
+                    typ
+                    goalt
                     (tts (goal_env goal) (goal_witness goal))))))))
 
 let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
@@ -1037,11 +1039,13 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let post = SS.subst subst post in
     bind (do_unify (goal_env goal) (U.mk_squash U_zero post) (goal_type goal)) (fun b ->
     if not b
-    then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (tts (goal_env goal) tm)
-                            (tts (goal_env goal) (U.mk_squash U_zero post))
-                            (tts (goal_env goal) (goal_type goal))
-    else
+    then begin
+        let post, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal))
+                                                            (U.mk_squash U_zero post)
+                                                            (goal_type goal) in
+        fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
+                            (tts (goal_env goal) tm) post goalt
+    end else
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve' goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
@@ -1392,7 +1396,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
     let _, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
 
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then begin
-        BU.print1 "not pure: %s\n" (Print.term_to_string t);
+        (* BU.print1 "not pure: %s\n" (Print.term_to_string t); *)
         ret t // Don't do anything for possibly impure terms
     end else
         let rewrite_eq =
@@ -1571,7 +1575,8 @@ let _trefl (l : term) (r : term) : tac<unit> =
      let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
      bind (do_unify (goal_env g) l r) (fun b ->
      if b then solve' g U.exp_unit else
-       fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r))))
+       let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
+       fail2 "not a trivial equality ((%s) vs (%s))" ls rs)))
 
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->

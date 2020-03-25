@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Bug1121
+module Bug1121a
 
 let foo() : Tot int =
   match (1,3,2) with

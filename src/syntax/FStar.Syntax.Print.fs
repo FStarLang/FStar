@@ -753,6 +753,12 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
+      | Sig_fail (errs, lax, ses) ->
+        U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
+            (string_of_bool lax)
+            (FStar.Common.string_of_list string_of_int errs)
+            (List.map sigelt_to_string ses |> String.concat "\n")
+
       | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
@@ -799,6 +805,7 @@ let tag_of_sigelt (se:sigelt) : string =
   | Sig_pragma _           -> "Sig_pragma"
   | Sig_splice _           -> "Sig_splice"
   | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
+  | Sig_fail _             -> "Sig_fail"
 
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)

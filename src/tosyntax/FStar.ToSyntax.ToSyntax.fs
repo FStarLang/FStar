@@ -443,7 +443,7 @@ let mk_ref_assign t1 t2 pos =
 (*
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
-let generalize_annotated_univs (s:sigelt) :sigelt =
+let rec generalize_annotated_univs (s:sigelt) :sigelt =
   let bs_univnames (bs:binders) :BU.set<univ_name> =
     bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
   in
@@ -502,7 +502,17 @@ let generalize_annotated_univs (s:sigelt) :sigelt =
     let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
     let usubst = Subst.univ_var_closing uvs in
     { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
-  | _ -> s
+
+  | Sig_fail (errs, lax, ses) ->
+    { s with sigel = Sig_fail (errs, lax, List.map generalize_annotated_univs ses) }
+
+  | Sig_new_effect _
+  | Sig_sub_effect _
+  | Sig_main _
+  | Sig_polymonadic_bind _
+  | Sig_splice _
+  | Sig_pragma _ ->
+    s
 
 let is_special_effect_combinator = function
   | "lift1"
@@ -601,10 +611,8 @@ let check_no_aq (aq : antiquotations) : unit =
    so, then return the record found by field name resolution. *)
 let check_fields env fields rg =
     let (f, _) = List.hd fields in
-    let _ = Env.fail_if_qualified_by_curmodule env f in
     let record = fail_or env (try_lookup_record_by_field_name env) f in
     let check_field (f', _) =
-        let _ = Env.fail_if_qualified_by_curmodule env f' in
         if Env.belongs_to_record env f' record
         then ()
         else let msg = BU.format3
@@ -1017,7 +1025,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                               noaqs
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
-      let _ = Env.fail_if_qualified_by_curmodule env eff_name in
       (* TODO : would it be possible to normalize the effect name at that point so that *)
       (* we get back the original effect definition instead of an effect abbreviation *)
       begin match try_lookup_effect_defn env eff_name with
@@ -1033,11 +1040,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Var l
     | Name l ->
-      let _ = Env.fail_if_qualified_by_curmodule env l in
       desugar_name mk setpos env true l, noaqs
 
     | Projector (l, i) ->
-      let _ = Env.fail_if_qualified_by_curmodule env l in
       let name =
         match Env.try_lookup_datacon env l with
         | Some _ -> Some (true, l)
@@ -1054,7 +1059,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Discrim lid ->
-      let _ = Env.fail_if_qualified_by_curmodule env lid in
       begin match Env.try_lookup_datacon env lid with
       | None ->
         raise_error (Errors.Fatal_DataContructorNotFound, (BU.format1 "Data constructor %s not found" lid.str)) top.range
@@ -1064,7 +1068,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Construct(l, args) ->
-        let _ = Env.fail_if_qualified_by_curmodule env l in
         begin match Env.try_lookup_datacon env l with
         | Some head ->
             let head = mk (Tm_fvar head) in
@@ -1517,7 +1520,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Project(e, f) ->
-      let _ = Env.fail_if_qualified_by_curmodule env f in
       let constrname, is_rec = fail_or env  (try_lookup_dc_by_field_name env) f in
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in
@@ -2435,8 +2437,8 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * 
      None, false
 
 
-// If this is a fail attribute, return the listed errors and whether it's a fail_lax or not
-let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
+// If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
+let get_fail_attr1 warn (at : S.term) : option<(list<int> * bool)> =
     let rebind res b =
       match res with
       | None -> None
@@ -2446,6 +2448,21 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     if matched then rebind res false
     else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
          rebind res true
+
+// Traverse a list of attributes to find all expect_failures and combine them
+let get_fail_attr warn (ats : list<S.term>) : option<(list<int> * bool)> =
+    let comb f1 f2 =
+      match f1, f2 with
+      | Some (e1, l1), Some (e2, l2) ->
+        Some (e1@e2, l1 || l2)
+
+      | Some (e, l), None
+      | None, Some (e, l) ->
+        Some (e, l)
+
+      | _ -> None
+    in
+    List.fold_right (fun at acc -> comb (get_fail_attr1 warn at) acc) ats None
 
 let lookup_effect_lid env (l:lident) r : S.eff_decl =
   match Env.try_lookup_effect_defn env l with
@@ -2704,31 +2721,78 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
+  let no_fail_attrs (ats : list<S.term>) : list<S.term> =
+      List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
+  in
+
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
   // new decl.
   let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
                                          * will shadow a previous val *)
-  let env, sigelts = desugar_decl_noattrs env d in
   let attrs = List.map (desugar_term env) d.attrs in
-  let val_attrs =
-    match sigelts with
+
+  (* If this is an expect_failure, check to see if it fails.
+   * If it does, check that the errors match as we normally do.
+   * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
+  let env, sigelts =
+    match get_fail_attr false attrs with
+    | Some (expected_errs, lax) ->
+      let d = { d with attrs = [] } in
+      let errs, r = Errors.catch_errors (fun () ->
+                      Options.with_saved_options (fun () ->
+                        desugar_decl_noattrs env d)) in
+      begin match errs, r with
+      | [], Some (env, ses) ->
+        (* Succeeded desugaring, carry on, but make a Sig_fail *)
+        (* Restore attributes, except for fail *)
+        let ses = List.map (fun se -> { se with sigattrs = no_fail_attrs attrs }) ses in
+        let se = { sigel = Sig_fail (expected_errs, lax, ses);
+                   sigquals = [];
+                   sigrng = d.drange;
+                   sigmeta = default_sigmeta;
+                   sigattrs = [];
+                   sigopts = None; } in
+        env0, [se]
+
+      | errs, ropt -> (* failed! check that it failed as expected *)
+        let errnos = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
+        if expected_errs = [] then
+          env0, []
+        else begin
+          match Errors.find_multiset_discrepancy expected_errs errnos with
+          | None -> env0, []
+          | Some (e, n1, n2) ->
+            List.iter Errors.print_issue errs;
+            Errors.log_issue
+                     d.drange
+                     (Errors.Error_DidNotFail,
+                      BU.format5 "This top-level definition was expected to raise error codes %s, \
+                                  but it raised %s (at desugaring time). Error #%s was raised %s \
+                                  times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int expected_errs)
+                                    (FStar.Common.string_of_list string_of_int errnos)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1));
+            env0, []
+        end
+      end
+    | None ->
+      desugar_decl_noattrs env d
+  in
+
+  let rec val_attrs (ses:list<sigelt>) : list<S.term> =
+    match ses with
     | [{ sigel = Sig_let _}]
     |  { sigel = Sig_inductive_typ _ } :: _ ->
       lids_of_sigelt (List.hd sigelts) |>
-      List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm)) |>
-      List.filter (fun t -> Option.isNone (get_fail_attr false t)) //don't forward fail attributes
+      List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm))
+    | [{ sigel = Sig_fail (_errs, _lax, ses) }] ->
+      List.collect (fun se -> val_attrs [se]) ses
     | _ -> []
   in
-  let attrs = attrs @ val_attrs in
-  env,
-  List.mapi
-    (fun i sigelt ->
-      if i = 0
-      then { sigelt with sigattrs = attrs }
-      else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
-    sigelts
+  let attrs = attrs @ val_attrs sigelts in
+  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in

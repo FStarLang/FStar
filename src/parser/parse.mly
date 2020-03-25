@@ -193,6 +193,8 @@ rawDecl:
       { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
+  | MODULE qlident
+      { raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) }
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
