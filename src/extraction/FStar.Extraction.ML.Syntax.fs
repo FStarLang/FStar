@@ -79,13 +79,6 @@ let is_reserved k =
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
-let gensym () =
-    let i = Ident.next_id() in
-   "_" ^ Util.string_of_int i
-let rec gensyms x = match x with
-  | 0 -> []
-  | n -> gensym ()::gensyms (n-1)
-
 
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>

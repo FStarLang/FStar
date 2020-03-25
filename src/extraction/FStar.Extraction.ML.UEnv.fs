@@ -264,6 +264,13 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
+let new_mlident (g:uenv)
+  : uenv * mlident
+  = let ml_ty = MLTY_Top in
+    let x = FStar.Syntax.Syntax.new_bv None FStar.Syntax.Syntax.tun in
+    let g, id, _ = extend_bv g x ([], MLTY_Top) false false false in
+    g, id
+
 let rec mltyFvars (t: mlty) : list<mlident>  =
     match t with
     | MLTY_Var  x -> [x]

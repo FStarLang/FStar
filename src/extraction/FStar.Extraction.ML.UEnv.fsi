@@ -111,6 +111,8 @@ val extend_bv:
       bool
   -> uenv * mlident * exp_binding
 
+val new_mlident : g:uenv -> uenv * mlident
+
 val extend_fv': g:uenv -> x:fv -> y:mlpath -> t_x:mltyscheme -> add_unit:bool ->
                 is_rec:bool -> uenv * mlident * exp_binding
 
