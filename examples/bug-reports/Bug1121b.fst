@@ -1,4 +1,4 @@
-module Bug1121
+module Bug1121b
 
 [@(expect_failure [138])]
 let foo () : Tot int =

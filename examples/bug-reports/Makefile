@@ -24,7 +24,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug786.fst bug836.fst bug844.fst bug985.fst \
 	bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1345b.fst bug1345c.fst bug1346.fst bug1348.fst bug1362.fst \
+  bug1341.fst bug1345.fst bug1345b.fst bug1345c.fst bug1346.fst bug1348.fst bug1362.fst \
   bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1414.fst \
   unfold.fst bug1091.fst BugUnfoldAbstractEquational.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
   bug1319a.fst bug1319b.fst bug1319c.fst bug1319d.fst bug1319e.fst bug1319f.fst bug807a.fst bug807b.fst bug807c.fst bug807d.fst bug807e.fst \
@@ -39,7 +39,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
   Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst bug442.fst Bug1954.fst \
-  Bug1903.fst Bug1121.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst
+  Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
