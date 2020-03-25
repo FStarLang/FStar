@@ -1,1 +1,36 @@
-[ "VÊ)\u000f¸ßBõ\u001d\u001c\u000e!\u0001\u000e\u0006\u0018", [] ]
+[
+  "VÊ)\u000f¸ßBõ\u001d\u001c\u000e!\u0001\u000e\u0006\u0018",
+  [
+    [
+      "Bug1908.__proj__Mkr__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug1908.Mkr",
+        "fuel_guarded_inversion_Bug1908.r", "proj_equation_Bug1908.Mkr_m",
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
+      ],
+      0,
+      "ea7955a49320df32e1edffc1f66490c4"
+    ],
+    [
+      "Bug1908.__proj__Mkr__item__n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "constructor_distinct_FStar.UInt32.t",
+        "constructor_distinct_Prims.int", "data_elim_Bug1908.Mkr",
+        "equality_tok_Bug1908.U32@tok", "equation_Bug1908.t",
+        "fuel_guarded_inversion_Bug1908.r",
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
+      ],
+      0,
+      "c9c9506009daa8f4b41af2c9d8f13b7b"
+    ]
+  ]
+]
