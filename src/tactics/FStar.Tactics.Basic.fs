@@ -1392,7 +1392,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
     let _, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
 
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then begin
-        BU.print1 "not pure: %s\n" (Print.term_to_string t);
+        (* BU.print1 "not pure: %s\n" (Print.term_to_string t); *)
         ret t // Don't do anything for possibly impure terms
     end else
         let rewrite_eq =
