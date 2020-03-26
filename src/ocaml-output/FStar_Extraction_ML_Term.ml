@@ -39,9 +39,9 @@ let (eraseTypeDeep :
         (FStar_Extraction_ML_Util.udelta_unfold g) t
   
 let record_fields :
-  'uu____77 .
+  'uuuuuu77 .
     FStar_Ident.ident Prims.list ->
-      'uu____77 Prims.list -> (Prims.string * 'uu____77) Prims.list
+      'uuuuuu77 Prims.list -> (Prims.string * 'uuuuuu77) Prims.list
   =
   fun fs  ->
     fun vs  ->
@@ -54,17 +54,17 @@ let record_fields :
              (uu____113, e)) fs vs
   
 let fail :
-  'uu____123 .
+  'uuuuuu123 .
     FStar_Range.range ->
-      (FStar_Errors.raw_error * Prims.string) -> 'uu____123
+      (FStar_Errors.raw_error * Prims.string) -> 'uuuuuu123
   = fun r  -> fun err  -> FStar_Errors.raise_error err r 
 let err_ill_typed_application :
-  'uu____159 'uu____160 .
+  'uuuuuu159 'uuuuuu160 .
     FStar_Extraction_ML_UEnv.uenv ->
       FStar_Syntax_Syntax.term ->
         FStar_Extraction_ML_Syntax.mlexpr ->
-          (FStar_Syntax_Syntax.term * 'uu____159) Prims.list ->
-            FStar_Extraction_ML_Syntax.mlty -> 'uu____160
+          (FStar_Syntax_Syntax.term * 'uuuuuu159) Prims.list ->
+            FStar_Extraction_ML_Syntax.mlty -> 'uuuuuu160
   =
   fun env  ->
     fun t  ->
@@ -102,9 +102,9 @@ let err_ill_typed_application :
             fail t.FStar_Syntax_Syntax.pos uu____198
   
 let err_ill_typed_erasure :
-  'uu____261 .
+  'uuuuuu261 .
     FStar_Extraction_ML_UEnv.uenv ->
-      FStar_Range.range -> FStar_Extraction_ML_Syntax.mlty -> 'uu____261
+      FStar_Range.range -> FStar_Extraction_ML_Syntax.mlty -> 'uuuuuu261
   =
   fun env  ->
     fun pos  ->
@@ -123,8 +123,8 @@ let err_ill_typed_erasure :
         fail pos uu____277
   
 let err_value_restriction :
-  'uu____295 .
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'uu____295
+  'uuuuuu295 .
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'uuuuuu295
   =
   fun t  ->
     let uu____305 =
@@ -377,9 +377,9 @@ let (is_type :
        b)
   
 let is_type_binder :
-  'uu____1376 .
+  'uuuuuu1376 .
     FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv * 'uu____1376) -> Prims.bool
+      (FStar_Syntax_Syntax.bv * 'uuuuuu1376) -> Prims.bool
   =
   fun env  ->
     fun x  ->
@@ -846,8 +846,8 @@ let (apply_coercion :
           aux e ty expect
   
 let maybe_coerce :
-  'uu____3094 .
-    'uu____3094 ->
+  'uuuuuu3094 .
+    'uuuuuu3094 ->
       FStar_Extraction_ML_UEnv.uenv ->
         FStar_Extraction_ML_Syntax.mlexpr ->
           FStar_Extraction_ML_Syntax.mlty ->
@@ -1005,8 +1005,8 @@ let (comp_no_args :
         c1
   
 let maybe_reify_comp :
-  'uu____3317 .
-    'uu____3317 ->
+  'uuuuuu3317 .
+    'uuuuuu3317 ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.term
   =

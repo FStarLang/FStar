@@ -1,7 +1,7 @@
 module Bug310
 type capture (a:Type) 'Aa = 'Aa*a
 type capture2 (_a:Type) 'Aa = 'Aa*_a
-
+type tickvar (a':Type) = a' * a'
 ////////////////////////////////////////////////////////////////////////////////
 val r: unit -> a:Type -> f:(a -> a) -> int
 let r _ _ _ = 0

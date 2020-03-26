@@ -205,14 +205,22 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
 
 let sanitize (s:string) (is_type:bool) : string =
   let cs = FStar.String.list_of_string s in
-  let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
-  let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
-  let cs' = match cs' with
-            | (c::cs) when BU.is_digit c
-                       || (not is_type && c = '\'') ->
-              '_'::c::cs
-            | _ -> cs in
-  FStar.String.string_of_list cs'
+  let sanitize_typ () =
+    let valid_rest c = BU.is_letter_or_digit c in
+    let aux cs = List.map (fun x -> if valid_rest x then x else 'u') cs in
+    if List.hd cs = '\'' then List.hd cs :: aux (List.tail cs)
+    else '\'' :: aux cs
+  in
+  let sanitize_term () =
+    let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
+    let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
+    match cs' with
+    | (c::cs) when BU.is_digit c || c = '\'' ->
+       '_'::c::cs
+    | _ -> cs
+  in
+  FStar.String.string_of_list
+    (if is_type then sanitize_typ() else sanitize_term())
 
 
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
@@ -229,24 +237,7 @@ let find_uniq ml_ident_map mlident is_type =
 
 let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
     let is_type = not map_to_top in
-    let ml_a = bv_as_mlident a in
-    let ml_a =
-      if map_to_top
-      then ml_a //this is not really a type binding in ML; don't add a '
-      else
-        //it's a type variable, so add a preceding "'"
-        let ml_a =
-          if BU.starts_with ml_a "'"
-          then ml_a
-          else "'"^ml_a
-        in
-        //the addition of the A is intentional;
-        //"'_" in ocaml denotes a weak type variable and cannot be written in source programs
-        if BU.starts_with ml_a "'_"
-        then "'A" ^ BU.substring_from ml_a 2
-        else ml_a
-    in
-    let ml_a = find_uniq g.env_mlident_map ml_a is_type in
+    let ml_a = find_uniq g.env_mlident_map (bv_as_mlident a) is_type in
     let mlident_map = BU.psmap_add g.env_mlident_map ml_a "" in
     let mapped_to =
       if map_to_top

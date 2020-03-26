@@ -93,7 +93,7 @@ let (lident_as_mlsymbol :
     FStar_Extraction_ML_Syntax.avoid_keyword
       (id1.FStar_Ident.ident).FStar_Ident.idText
   
-let as_pair : 'uu____296 . 'uu____296 Prims.list -> ('uu____296 * 'uu____296)
+let as_pair : 'uuuuuu296 . 'uuuuuu296 Prims.list -> ('uuuuuu296 * 'uuuuuu296)
   =
   fun uu___0_307  ->
     match uu___0_307 with
@@ -222,9 +222,9 @@ let (extract_metadata :
     FStar_Extraction_ML_Syntax.meta Prims.list)
   = fun metas  -> FStar_List.choose extract_meta metas 
 let binders_as_mlty_binders :
-  'uu____481 .
+  'uuuuuu481 .
     FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv * 'uu____481) Prims.list ->
+      (FStar_Syntax_Syntax.bv * 'uuuuuu481) Prims.list ->
         (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
           Prims.list)
   =
@@ -574,9 +574,9 @@ let (mlpath_to_string : FStar_Extraction_ML_Syntax.mlpath -> Prims.string) =
          [FStar_Pervasives_Native.snd p])
   
 let tscheme_to_string :
-  'uu____1417 .
+  'uuuuuu1417 .
     FStar_Extraction_ML_Syntax.mlpath ->
-      ('uu____1417 * FStar_Extraction_ML_Syntax.mlty) -> Prims.string
+      ('uuuuuu1417 * FStar_Extraction_ML_Syntax.mlty) -> Prims.string
   =
   fun cm  ->
     fun ts  ->
