@@ -155,10 +155,6 @@ let go _ =
               FStar.Interactive.Ide.interactive_mode filename
           end
 
-        (* --fsdoc: Generate Markdown documentation files *)
-        else if Options.doc() then
-          FStar.Fsdoc.Generator.generate filenames
-
         (* --print: Emit files in canonical source syntax *)
         else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
@@ -227,7 +223,7 @@ let main () =
     setup_hooks ();
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
-    then Util.print2 "TOTAL TIME %s ms: %s\n"
+    then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();

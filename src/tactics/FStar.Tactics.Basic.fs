@@ -226,7 +226,9 @@ let ps_to_json (msg, ps) =
 let do_dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
-        print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
+        print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
+        BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
+    )
 
 let dump (msg:string) : tac<unit> =
     mk_tac (fun ps ->
@@ -585,7 +587,7 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
 
 let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     bind get (fun ps ->
-    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
+    mlog (fun () -> BU.print1 "Tac> __tc_lax(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
@@ -865,10 +867,12 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
     then solve goal t
-    else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
+    else
+      let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
+      fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts (goal_env goal) t)
-                    (tts (goal_env goal) typ)
-                    (tts (goal_env goal) (goal_type goal))
+                    typ
+                    goalt
                     (tts (goal_env goal) (goal_witness goal))))))))
 
 let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
@@ -1035,11 +1039,13 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let post = SS.subst subst post in
     bind (do_unify (goal_env goal) (U.mk_squash U_zero post) (goal_type goal)) (fun b ->
     if not b
-    then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (tts (goal_env goal) tm)
-                            (tts (goal_env goal) (U.mk_squash U_zero post))
-                            (tts (goal_env goal) (goal_type goal))
-    else
+    then begin
+        let post, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal))
+                                                            (U.mk_squash U_zero post)
+                                                            (goal_type goal) in
+        fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
+                            (tts (goal_env goal) tm) post goalt
+    end else
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve' goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
@@ -1381,10 +1387,18 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
-    let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    (* It's important to keep the original term if we want to do
+     * nothing, (hence the underscore below) since after the call to
+     * the typechecker, t can be elaborated and have more structure. In
+     * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
+     * Which would cause an infinite loop between this function and
+     * tac_fold_env. *)
+    let _, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
+
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then begin
+        (* BU.print1 "not pure: %s\n" (Print.term_to_string t); *)
         ret t // Don't do anything for possibly impure terms
-    else
+    end else
         let rewrite_eq =
           let typ = lcomp.res_typ in
           bind (new_uvar "pointwise_rec" env typ) (fun (ut, uvar_ut) -> //NS: FIXME uvar_ut dropped?
@@ -1400,14 +1414,13 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
                 // Try to get rid  of all the unification lambdas
                 let ut = N.reduce_uvar_solutions env ut in
                 log ps (fun () ->
-                    BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                    BU.print2 "pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                                 (Print.term_to_string t)
                                 (Print.term_to_string ut));
                 ret ut))
           ))
        in
-       bind (catch rewrite_eq) (fun x ->
-       match x with
+       bind (catch rewrite_eq) (function
        // TODO: Share a `Skip` exception to userspace
        | Inl (TacticFailure "SKIP") -> ret t
        | Inl e -> traise e
@@ -1534,10 +1547,10 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     log ps (fun () ->
         BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 
-let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise" <|
+let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointwise" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
@@ -1551,7 +1564,7 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise"
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    add_goals [goal_with_type g gt' |> bnorm_goal]))))
 
 let _trefl (l : term) (r : term) : tac<unit> =
    bind (cur_goal ()) (fun g ->
@@ -1562,11 +1575,12 @@ let _trefl (l : term) (r : term) : tac<unit> =
      let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
      bind (do_unify (goal_env g) l r) (fun b ->
      if b then solve' g U.exp_unit else
-       fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r))))
+       let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
+       fail2 "not a trivial equality ((%s) vs (%s))" ls rs)))
 
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
-    match destruct_eq (goal_type g) with
+    match destruct_eq (bnorm (goal_env g) (goal_type g)) with
     | Some (l, r) ->
         _trefl l r
     | None ->
@@ -1835,6 +1849,20 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         (* Deconstruct its type, separating the parameters from the
                          * actual arguments (indices do not matter here). *)
                         let bs, comp = U.arrow_formals_comp c_ty in
+
+                        (* More friendly names: 'a_i' instead of '_i' *)
+                        let bs, comp =
+                          let rename_bv bv =
+                              let ppname = bv.ppname in
+                              let ppname = { ppname with idText = "a" ^ ppname.idText } in
+                              // freshen just to be extra safe.. probably not needed
+                              freshen_bv ({ bv with ppname = ppname })
+                          in
+                          let bs' = List.map (fun (bv, aq) -> (rename_bv bv, aq)) bs in
+                          let subst = List.map2 (fun (bv, _) (bv', _) -> NT (bv, bv_to_name bv')) bs bs' in
+                          SS.subst_binders subst bs', SS.subst_comp subst comp
+                        in
+
                         (* BU.print1 "bs = (%s)\n" (Print.binders_to_string ", " bs); *)
                         let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->

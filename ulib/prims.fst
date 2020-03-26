@@ -54,7 +54,7 @@ type squash (p:Type) : Type0 = x:unit{p}
 
    It's marked `private` so that users cannot write it themselves.
 *)
-//private : AR: TODO: MAKE IT PRIVATE AGAIN AFTER FIXING BIND FOR DOUBLE LAYERING
+private
 let auto_squash (p:Type) = squash p
 
 (*
@@ -478,4 +478,4 @@ let labeled (r:range) (msg:string) (b:Type) :Type = b
    Incrementing this forces all .checked files to be invalidated *)
 private
 abstract
-let __cache_version_number__ = 16
+let __cache_version_number__ = 18

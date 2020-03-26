@@ -186,7 +186,7 @@ let (gensym : unit -> Prims.string) =
 let rec (gensyms : Prims.int -> Prims.string Prims.list) =
   fun x  ->
     match x with
-    | _438 when _438 = Prims.int_zero -> []
+    | uu____438 when uu____438 = Prims.int_zero -> []
     | n1 ->
         let uu____442 = gensym ()  in
         let uu____444 = gensyms (n1 - Prims.int_one)  in uu____442 ::

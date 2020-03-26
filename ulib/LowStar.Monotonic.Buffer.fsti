@@ -2220,7 +2220,7 @@ val malloca (#a:Type0) (#rrel:srel a)
  *)
 val malloca_and_blit (#a:Type0) (#rrel:srel a)
   (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
-  : HST.StackInline (b:lmbuffer a rrel rrel (U32.v len))
+  : HST.StackInline (lmbuffer a rrel rrel (U32.v len))
     (requires fun h0 ->
       alloca_pre len /\
       live h0 src /\ U32.v id_src + U32.v len <= length src)

@@ -1,7 +1,7 @@
 (*
   Copyright 2008-2014 Microsoft Research
 
-  Authors: Nikhil Swamy, ...
+  Authors: Qunyan Mangus, Nikhil Swamy
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -1022,7 +1022,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow(bs, _) ->
-                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort, None)) in
+                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end
@@ -1035,7 +1035,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
           let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
-              let c = (l.ident, Some (resugar_term' env term), None, false)  in
+              let c = (l.ident, Some (resugar_term' env term), false)  in
               c::constructors
             | _ -> failwith "unexpected"
           in
@@ -1049,8 +1049,6 @@ let mk_decl r q d' =
   {
     d = d' ;
     drange = r ;
-    (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-    doc = None ;
     quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
@@ -1062,7 +1060,7 @@ let decl'_to_decl se d' =
 let resugar_tscheme'' env name (ts:S.tscheme) =
   let (univs, typ) = ts in
   let name = I.mk_ident (name, typ.pos) in
-  mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ), None)]))
+  mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ))]))
 
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
@@ -1115,9 +1113,9 @@ let resugar_eff_decl' env r q ed =
     if for_free then
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
       let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ))]))
     else
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn))]))
   in
   let eff_name = ed.mname.ident in
   let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
@@ -1149,7 +1147,7 @@ let resugar_sigelt' env se : option<A.decl> =
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-        Some (decl'_to_decl se (Tycon (false, false, List.map (fun tyc -> tyc, None) tycons)))
+        Some (decl'_to_decl se (Tycon (false, false, tycons)))
       | [se] ->
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
@@ -1161,6 +1159,9 @@ let resugar_sigelt' env se : option<A.decl> =
       | _ ->
         failwith "Should not happen hopefully"
     end
+
+  | Sig_fail _ ->
+    None
 
   | Sig_let (lbs, _) ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
@@ -1207,7 +1208,7 @@ let resugar_sigelt' env se : option<A.decl> =
     let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
     let bs = bs |> map_opt (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c), None])))
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))

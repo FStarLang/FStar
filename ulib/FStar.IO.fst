@@ -27,18 +27,28 @@ assume val print_string : string -> ML unit
 (* assume val print_nat_hex : nat -> ML unit *)
 (* assume val print_nat_dec : nat -> ML unit *)
 
+(* Print as hexadecimal with a leading 0x *)
 assume val print_uint8 : FStar.UInt8.t -> ML unit
-assume val print_uint8_dec : FStar.UInt8.t -> ML unit
+assume val print_uint16 : FStar.UInt16.t -> ML unit
 assume val print_uint32 : FStar.UInt32.t -> ML unit
-assume val print_uint32_dec : FStar.UInt32.t -> ML unit
 assume val print_uint64 : FStar.UInt64.t -> ML unit
+
+(* Print as decimal *)
+assume val print_uint8_dec : FStar.UInt8.t -> ML unit
+assume val print_uint16_dec : FStar.UInt16.t -> ML unit
+assume val print_uint32_dec : FStar.UInt32.t -> ML unit
 assume val print_uint64_dec : FStar.UInt64.t -> ML unit
 
+(* Print as hex in fixed width, no leading 0x *)
 assume val print_uint8_hex_pad : FStar.UInt8.t -> ML unit
-assume val print_uint8_dec_pad : FStar.UInt8.t -> ML unit
+assume val print_uint16_hex_pad : FStar.UInt16.t -> ML unit
 assume val print_uint32_hex_pad : FStar.UInt32.t -> ML unit
-assume val print_uint32_dec_pad : FStar.UInt32.t -> ML unit
 assume val print_uint64_hex_pad : FStar.UInt64.t -> ML unit
+
+(* Print as decimal, zero padded to maximum possible length *)
+assume val print_uint8_dec_pad : FStar.UInt8.t -> ML unit
+assume val print_uint16_dec_pad : FStar.UInt16.t -> ML unit
+assume val print_uint32_dec_pad : FStar.UInt32.t -> ML unit
 assume val print_uint64_dec_pad : FStar.UInt64.t -> ML unit
 
 assume val print_any : 'a -> ML unit

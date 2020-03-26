@@ -31,7 +31,7 @@ type epost_t (a:Type) = option a -> Type0
 
 /// wp has a refinement for monotonicity -- we should handle it more uniformly in the typechecker
 
-type ewp_t (a:Type) = wp:(epost_t a -> epre_t)
+type ewp_t (a:Type) = epost_t a -> epre_t
 
 assume EWP_monotonicity_axiom:
   forall (a:Type) (wp:ewp_t a).

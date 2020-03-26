@@ -1,0 +1,73 @@
+[
+  "\u0014óÓ´NÎ Áø,\u000bí%[À/",
+  [
+    [
+      "Bug138.foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "4f5ec750d35b66ebd9cfb4af52cf2cd6"
+    ],
+    [
+      "Bug138.foo",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equality_tok_Prims.LexTop@tok",
+        "int_typing", "projection_inverse_BoxInt_proj_0",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "31577628b84e57e1b115cf8e64f73048"
+    ],
+    [
+      "Bug138.arg_precede",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug138.Bar",
+        "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
+      ],
+      0,
+      "feec4606b577375e28bfd3b1d66c68ae"
+    ],
+    [
+      "Bug138.foo_bar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_1",
+        "binder_x_b36ed00db7cc6c7168379d56a35933e2_0",
+        "constructor_distinct_Bug138.Foo", "disc_equation_Bug138.Bar",
+        "disc_equation_Bug138.Foo", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Bug138.Foo@tok",
+        "equality_tok_Prims.LexTop@tok", "equation_Bug138.arg_precede",
+        "equation_Prims.nat", "fuel_guarded_inversion_Bug138.arg",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Prims.Cons", "typing_Bug138.arg_precede",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "ad036da3e4568f22182e9efb5a3e8525"
+    ]
+  ]
+]

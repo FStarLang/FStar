@@ -113,8 +113,6 @@ type token =
   | HASH
   | FUNCTION
   | FUN
-  | FSDOC_STANDALONE of (fsdoc)
-  | FSDOC of (fsdoc)
   | FRIEND
   | FORALL
   | FALSE
@@ -270,8 +268,6 @@ type tokenId =
     | TOKEN_HASH
     | TOKEN_FUNCTION
     | TOKEN_FUN
-    | TOKEN_FSDOC_STANDALONE
-    | TOKEN_FSDOC
     | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
@@ -321,7 +317,6 @@ type nonTerminalId =
     | NONTERM__startwarn_error_list
     | NONTERM__startterm
     | NONTERM__startinputFragment
-    | NONTERM_option_FSDOC_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_5_
@@ -357,7 +352,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
-    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    | NONTERM_separated_nonempty_list_AND_typeDecl_
     | NONTERM_separated_nonempty_list_BAR_tuplePattern_
     | NONTERM_separated_nonempty_list_COMMA_appTerm_
     | NONTERM_separated_nonempty_list_COMMA_atomicTerm_
@@ -425,6 +420,7 @@ type nonTerminalId =
     | NONTERM_kind
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_calcRel
     | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
@@ -447,7 +443,6 @@ type nonTerminalId =
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
     | NONTERM_binop_name
-    | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq

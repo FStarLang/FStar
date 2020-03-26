@@ -228,8 +228,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dump"          dump e_string e_unit
                                dump NBET.e_string NBET.e_unit;
 
-      mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
-                               pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
+      mktac2 0 "t_pointwise"   t_pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
+                               t_pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 
       mktac2 0 "topdown_rewrite"   topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_thunk e_unit) e_unit
                                    topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
@@ -755,6 +755,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  let gt' = TcUtil.label label  goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
+    let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', FStar.Options.peek ()) :: gs
 

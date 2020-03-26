@@ -226,9 +226,9 @@ let rec (lookup_ty_local :
                (b.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
   
 let tyscheme_of_td :
-  'Auu____735 'Auu____736 'Auu____737 'Auu____738 .
-    ('Auu____735 * 'Auu____736 * 'Auu____737 *
-      FStar_Extraction_ML_Syntax.mlidents * 'Auu____738 *
+  'uuuuuu735 'uuuuuu736 'uuuuuu737 'uuuuuu738 .
+    ('uuuuuu735 * 'uuuuuu736 * 'uuuuuu737 *
+      FStar_Extraction_ML_Syntax.mlidents * 'uuuuuu738 *
       FStar_Extraction_ML_Syntax.mltybody FStar_Pervasives_Native.option) ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
   =
@@ -451,8 +451,7 @@ let (sanitize : Prims.string -> Prims.string) =
     FStar_String.string_of_list cs'1
   
 let find_uniq :
-  'Auu____1259 .
-    'Auu____1259 FStar_Util.psmap -> Prims.string -> Prims.string
+  'uuuuuu1259 . 'uuuuuu1259 FStar_Util.psmap -> Prims.string -> Prims.string
   =
   fun ml_ident_map  ->
     fun mlident  ->

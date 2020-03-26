@@ -7,7 +7,6 @@ INCLUDE_PATHS = \
 	boot \
 	basic \
 	extraction \
-	fsdoc \
 	fstar \
 	parser \
 	prettyprint \

@@ -706,7 +706,7 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let lids_of_sigelt (se: sigelt) = match se.sigel with
+let rec lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
@@ -719,6 +719,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_sub_effect _
   | Sig_pragma _
   | Sig_main _ 
+  | Sig_fail _
   | Sig_polymonadic_bind _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with

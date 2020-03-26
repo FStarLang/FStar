@@ -133,19 +133,12 @@ type knd = term
 type typ = term
 type expr = term
 
-// Documentation comment. May appear appear as follows:
-//  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
-//  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -174,7 +167,6 @@ type qualifiers = list<qualifier>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
-  | Doc of fsdoc
 
 type lift_op =
   | NonReifiableLift of term
@@ -203,7 +195,7 @@ type decl' =
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
-  | Tycon of bool * bool * list<(tycon * option<fsdoc>)>
+  | Tycon of bool * bool * list<tycon>
     (* first bool is for effect *)
     (* second bool is for typeclass *)
   | Val of ident * term  (* bool is for logic val *)
@@ -213,14 +205,12 @@ type decl' =
   | SubEffect of lift
   | Polymonadic_bind of lid * lid * lid * term
   | Pragma of pragma
-  | Fsdoc of fsdoc
   | Assume of ident * term
   | Splice of list<ident> * term
 
 and decl = {
   d:decl';
   drange:range;
-  doc:option<fsdoc>;
   quals: qualifiers;
   attrs: attributes_
 }
@@ -250,13 +240,12 @@ let at_most_one s r l = match l with
   | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
 
 let mk_decl d r decorations =
-  let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
   let attributes_ = at_most_one "attribute set" r (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
+  { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
 
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
@@ -729,7 +718,7 @@ let decl_to_string (d:decl) = match d.d with
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(i, _) -> "assume " ^ i.idText
-  | Tycon(_, _, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
+  | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
@@ -737,7 +726,6 @@ let decl_to_string (d:decl) = match d.d with
   | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Fsdoc _ -> "fsdoc"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

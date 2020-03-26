@@ -1712,6 +1712,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
     in
     let is_type t =
         let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
         match (SS.compress t).n with
         | Tm_type _ -> true
         | _ -> false
@@ -1995,9 +1996,22 @@ let maybe_instantiate (env:Env.env) e t =
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                  (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
+       (* Similar to U.arrow_formals, but makes sure to unfold
+        * recursively to catch all the binders across type
+        * definitions. TODO: Move to library? Revise other uses
+        * of arrow_formals{,_comp}?*)
+       let unfolded_arrow_formals (t:term) : list<binder> =
+         let rec aux (bs:list<binder>) (t:term) : list<binder> =
+           let t = N.unfold_whnf env t in
+           let bs', t = U.arrow_formals t in
+           match bs' with
+           | [] -> bs
+           | bs' -> aux (bs@bs') t
+         in
+         aux [] t
+       in
        let number_of_implicits t =
-            let t = N.unfold_whnf env t in
-            let formals, _ = U.arrow_formals t in
+            let formals = unfolded_arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
@@ -2613,6 +2627,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                     r
           | Sig_declare_typ _ ->
             ()
+          | Sig_fail _ ->
+            () (* just ignore it, the member ses have the attribute too *)
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,

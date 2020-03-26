@@ -49,8 +49,6 @@ let logic_qualifier_deprecation_warning =
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
-%token <FStar_Parser_AST.fsdoc> FSDOC
-%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
@@ -141,8 +139,6 @@ attribute:
       { x }
 
 decoration:
-  | x=FSDOC
-      { Doc x }
   | x=attribute
       { DeclAttributes x }
   | x=qualifier
@@ -162,13 +158,11 @@ decl:
       }
 
 typeclassDecl:
-  | CLASS tcdef=pair(option(FSDOC), typeDecl)
+  | CLASS tcdef=typeDecl
       {
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let flip (a,b) = (b,a) in
-        let tcdef = flip tcdef in
         let d = Tycon (false, true, [tcdef]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
@@ -199,12 +193,14 @@ rawDecl:
       { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
+  | MODULE qlident
+      { raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) }
   | MODULE uid=quident
       {  TopLevelModule uid }
-  | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+  | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
+      { Tycon (false, false, tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let r = rhs2 parseState 1 3 in
@@ -212,6 +208,11 @@ rawDecl:
         if q <> Rec && List.length lbs <> 1
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
+      }
+  | VAL c=constant
+      {
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
@@ -232,8 +233,6 @@ rawDecl:
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
       { Polymonadic_bind b }
-  | doc=FSDOC_STANDALONE
-      { Fsdoc doc }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -262,12 +261,12 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=typ
-      { (lid, t, doc_opt) }
+  |  lid=lident COLON t=typ
+      { (lid, t) }
 
 constructorDecl:
-  | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
-  | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
+  | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
+  | BAR uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, true) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
@@ -309,7 +308,7 @@ effectDefinition:
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -670,8 +669,13 @@ noSeqTerm:
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
      }
 
+calcRel:
+  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
+  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
+  | t=atomicTerm { t }
+
 calcStep:
-   | rel=binop LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
+   | rel=calcRel LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
      {
          let justif =
              match justif with
@@ -877,11 +881,6 @@ binop_name:
   | o=COLON_COLON            { mk_ident ("::", rhs parseState 1) }
   | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rhs parseState 1) }
   | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
-
-binop:
-  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 2) Expr }
-  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
-  | t=atomicTerm { t }
 
 tmEqNoRefinement:
   | e=tmEqWith(appTerm) { e }

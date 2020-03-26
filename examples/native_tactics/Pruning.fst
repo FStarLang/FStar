@@ -36,9 +36,7 @@ open FStar.IndefiniteDescription
 open FStar.Int
 open FStar.Int128
 open FStar.Int16
-open FStar.Int31
 open FStar.Int32
-open FStar.Int63
 open FStar.Int64
 open FStar.Int8
 open FStar.Int.Cast

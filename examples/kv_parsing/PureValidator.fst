@@ -95,7 +95,7 @@ let validate_reject : validator =
 val validate_many':
   n:nat ->
   v:validator ->
-  v':validator
+    validator
 let rec validate_many' n v =
   match n with
   | 0 -> validate_accept

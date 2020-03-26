@@ -95,7 +95,6 @@ type env = {
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
@@ -172,7 +171,6 @@ let empty_env deps = {curmodule=None;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false;
-                    docs=new_sigmap();
                     remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
@@ -411,26 +409,6 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 
     in
     aux env.scope_mods
-
-(** Forbid self-references to current module (#451) *)
-
-let fail_if_curmodule env ns_original ns_resolved =
-  if lid_equals ns_resolved (current_module env)
-  then
-    if lid_equals ns_resolved Const.prims_lid
-    then () // disable this check for Prims, because of Prims.unit, etc.
-    else raise_error (Errors.Fatal_ForbiddenReferenceToCurrentModule, (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str)) (range_of_lid ns_original)
-  else ()
-
-let fail_if_qualified_by_curmodule env lid =
-  match lid.ns with
-  | [] -> ()
-  | _ ->
-    let modul_orig = lid_of_ids lid.ns in
-    begin match resolve_module_name env modul_orig true with
-    | Some modul_res -> fail_if_curmodule env modul_orig modul_res
-    | _ -> ()
-    end
 
 let is_open env lid open_kind =
   List.existsb (function
@@ -725,9 +703,6 @@ let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * list<
 
 let try_lookup_lid_no_resolve (env: env) l :option<term> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
-let try_lookup_doc (env: env) (l:lid) =
-  BU.smap_try_find env.docs l.str
-
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid se =
       match se with
@@ -976,7 +951,6 @@ let push_namespace env ns =
      then (ns, Open_namespace)
      else raise_error (Errors.Fatal_NameSpaceNotFound, (BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns))) ( Ident.range_of_lid ns)
   | Some ns' ->
-     let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
      env.ds_hooks.ds_push_open_hook env (ns', kd);
@@ -989,7 +963,6 @@ let push_include env ns =
     match resolve_module_name env ns false with
     | Some ns ->
       env.ds_hooks.ds_push_include_hook env ns;
-      let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
       (* update the list of includes *)
@@ -1027,23 +1000,10 @@ let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
-  then let _ = fail_if_curmodule env l l in
+  then begin
        env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
-  else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
-
-let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
-  match doc_opt with
-  | None -> env
-  | Some doc ->
-    (match BU.smap_try_find env.docs l.str with
-     | None -> ()
-     | Some old_doc -> FStar.Errors.log_issue (range_of_lid l)
-                        (Errors.Warning_DocOverwrite, (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
-                           (Ident.string_of_lid l) (Parser.AST.string_of_fsdoc old_doc)
-                           (Parser.AST.string_of_fsdoc doc))));
-    BU.smap_add env.docs l.str doc;
-    env
+  end else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
 
 let check_admits env m =
   let admitted_sig_lids =
@@ -1140,8 +1100,7 @@ let push env = BU.atomically (fun () ->
   {env with exported_ids = BU.smap_copy env.exported_ids;
             trans_exported_ids = BU.smap_copy env.trans_exported_ids;
             includes = BU.smap_copy env.includes;
-            sigmap = BU.smap_copy env.sigmap;
-            docs = BU.smap_copy env.docs})
+            sigmap = BU.smap_copy env.sigmap })
 
 let pop () = BU.atomically (fun () ->
   match !stack with
