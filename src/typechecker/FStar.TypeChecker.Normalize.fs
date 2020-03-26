@@ -1596,7 +1596,9 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
+      let eff_name = Env.norm_eff_name cfg.tcenv m in
+      let ed = Env.get_effect_decl cfg.tcenv eff_name in
+      let _, repr = ed |> U.get_eff_repr |> must in
       let _, bind_repr = ed |> U.get_bind_repr |> must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -1633,6 +1635,22 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               let rng = top.pos in
 
               let head = U.mk_reify <| lb.lbdef in
+              let lb_head, head_bv, head =
+                let bv = S.new_bv None x.sort in
+                let lb =
+                    { lbname = Inl bv;
+                      lbunivs = [];
+                      lbtyp = U.mk_app repr [S.as_arg x.sort];
+                      lbeff = if is_total_effect cfg.tcenv eff_name then PC.effect_Tot_lid
+                                                                    else PC.effect_Dv_lid;
+                      lbdef = head;
+                      lbattrs = [];
+                      lbpos = head.pos;
+                    }
+                in
+                lb, bv, S.bv_to_name bv
+              in
+
               let body = U.mk_reify <| body in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
               let body_rc = {
@@ -1683,8 +1701,11 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                       (* wp_head, head--the term shouldn't depend on wp_head *)
                       as_arg S.tun; as_arg head;
                       (* wp_body, body--the term shouldn't depend on wp_body *)
-                      as_arg S.tun; as_arg body] in
-                S.mk (Tm_app(bind_inst, args)) None rng in
+                      as_arg S.tun; as_arg body]
+                in
+                S.mk (Tm_let ((false, [lb_head]),
+                   SS.close [S.mk_binder head_bv] <|
+                   S.mk (Tm_app(bind_inst, args)) None rng)) None rng in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1799,13 +1820,32 @@ and reify_lift cfg e msrc mtgt t : term =
      not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
+    let _, repr = ed |> U.get_eff_repr |> must in
     let _, return_repr = ed |> U.get_return_repr |> must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+
+    let lb_e, e_bv, e =
+      let bv = S.new_bv None t in
+      let lb =
+          { lbname = Inl bv;
+            lbunivs = [];
+            lbtyp = U.mk_app repr [S.as_arg t];
+            lbeff = msrc;
+            lbdef = e;
+            lbattrs = [];
+            lbpos = e.pos;
+          }
+      in
+      lb, bv, S.bv_to_name bv
+    in
+
+    S.mk (Tm_let ((false, [lb_e]), SS.close [S.mk_binder e_bv] <|
+            S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    )) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
