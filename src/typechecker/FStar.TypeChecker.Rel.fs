@@ -781,6 +781,7 @@ let occurs_check (uk:ctx_uvar) t =
                         (Print.term_to_string t)) in
     uvars, not occurs, msg
 
+
 let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
   | (b, i)::bs_tail, (b', i')::bs'_tail ->
@@ -802,17 +803,9 @@ let gamma_until (g:gamma) (bs:binders) =
       | Some (_, bx, rest) -> bx::rest
 
 
-let tgt_ctx_includes_src_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
-    let rec aux tgt_bs src_bs =
-      match tgt_bs, src_bs with
-      | (b, i)::tgt_bs_tail, (b', i')::src_bs_tail ->
-         if S.bv_eq b b'
-         then aux tgt_bs_tail src_bs_tail
-         else false
-      | _, [] -> true
-      | _ -> false
-    in
-    aux tgt.ctx_uvar_binders src.ctx_uvar_binders
+let tgt_ctx_includes_src_ctx (tgt:ctx_uvar) (src:ctx_uvar) =
+    let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
+    List.length pfx = List.length src.ctx_uvar_binders
 
 let tgt_ctx_includes_all_source_ctx (tgt:ctx_uvar) (sources:list<ctx_uvar>) =
     List.for_all (tgt_ctx_includes_src_ctx tgt) sources
@@ -2044,9 +2037,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
         // (G |- ?u_lhs' : bs_lhs -> _:?t -> tu) : A variable to match rhs'
         //FIXME: this may be an implicit arg ... fix qualifier
-        let _, lhs', wl = copy_uvar u_lhs [] (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (U.mk_Total t_res_lhs)) wl in
+        let _, lhs', wl = copy_uvar u_lhs [] (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (S.mk_Total t_res_lhs)) wl in
         // (G |- ?u_lhs'_last_arg : bs_lhs -> ?t) : A variable to match last_arg_rhs
-        let _, lhs'_last_arg, wl = copy_uvar u_lhs [] (U.arrow bs_lhs (U.mk_Total t_last_arg)) wl in
+        let _, lhs'_last_arg, wl = copy_uvar u_lhs [] (U.arrow bs_lhs (S.mk_Total t_last_arg)) wl in
 
         // Now, we set:
         // ?u_lhs <- (fun bs_lhs -> ?u_lhs' bs_lhs (?u_lhs'_last_arg bs_lhs))
@@ -2061,13 +2054,15 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
         let sol = [TERM(u_lhs, 
                         U.abs bs_lhs
-                              (U.mk_app_binders lhs' (bs_lhs@[S.mk_app_binders lhs'_last_arg bs_lhs]))
+                              (S.mk_Tm_app (U.mk_app_binders lhs' bs_lhs)
+                                           [U.mk_app_binders lhs'_last_arg bs_lhs, None]
+                                           None lhs'.pos)
                               (Some (U.residual_tot t_res_lhs)))]
         in
         
         let sub_probs, wl =
-            let p1, wl = mk_t_problem wl [] orig (S.mk_app lhs' lhs_args) EQ rhs' None "first-order lhs" in
-            let p2, wl = mk_t_problem wl [] orig (S.mk_app lhs'_last_arg lhs_args) EQ (fst last_arg_rhs) None "first-order rhs" in
+            let p1, wl = mk_t_problem wl [] orig (S.mk_Tm_app lhs' lhs_args None lhs'.pos) EQ rhs' None "first-order lhs" in
+            let p2, wl = mk_t_problem wl [] orig (S.mk_Tm_app lhs'_last_arg lhs_args None lhs'_last_arg.pos) EQ (fst last_arg_rhs) None "first-order rhs" in
             [p1; p2], wl
         in
         solve env (attempt sub_probs (solve_prob orig None sol wl))
