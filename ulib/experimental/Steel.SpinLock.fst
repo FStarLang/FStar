@@ -22,6 +22,7 @@ open Steel.Reference
 open Steel.Actions
 open Steel.SteelT.Basics
 open Steel.SteelAtomic.Basics
+open Steel.Memory.Tactics
 
 module U = FStar.Universe
 
@@ -62,7 +63,7 @@ let new_lock (p:hprop)
   : SteelT (lock p) p (fun _ -> emp) =
   Steel.SteelT.Basics.h_intro_emp_l p;
   let r:ref bool =
-    frame (fun _ -> alloc available) p
+    steel_frame_t (fun _ -> alloc available) // p
   in
   lift_atomic_to_steelT (fun _ -> intro_lockinv_available p r);
   let i:ival (lockinv p r) = new_inv (lockinv p r) in

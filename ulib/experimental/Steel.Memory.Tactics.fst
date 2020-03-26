@@ -80,34 +80,32 @@ let squash_and p q (x:squash (p /\ q)) : (p /\ q) =
 
 
 inline_for_extraction noextract let resolve_frame () : Tac unit =
-  norm [delta_attr [`%__reduce__];
-       delta;
-        delta_only [
-          `%__proj__CM__item__unit;
-          `%__proj__CM__item__mult;
-          `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-          `%fst; `%snd];
-        primops; iota; zeta];
   refine_intro();
   flip();
   apply_lemma (`unfold_with_tactic);
   split();
   norm [delta_only [`%can_be_split_into]];
-  canon();
-  trivial()
-
-inline_for_extraction noextract let reprove_frame () : Tac unit =
   norm [delta_attr [`%__reduce__];
-       delta;
         delta_only [
           `%__proj__CM__item__unit;
           `%__proj__CM__item__mult;
           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
           `%fst; `%snd];
         primops; iota; zeta];
+  canon();
+  trivial()
+
+inline_for_extraction noextract let reprove_frame () : Tac unit =
   apply (`squash_and);
-  norm [delta_only [`%can_be_split_into]];
   split();
+  norm [delta_only [`%can_be_split_into]];
+  norm [delta_attr [`%__reduce__];
+        delta_only [
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+          `%fst; `%snd];
+        primops; iota; zeta];
   canon();
   trivial()
 
