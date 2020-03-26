@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0dec87c3e2080674ea5d70638278aded"
+      "9efa2f4b98480888cdf6c0e969f1338a"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "65018e03a56184c1189be47be109ccc0"
+      "7bc61a14dfbf519ebddef74c3d842b49"
     ],
     [
       "Bug606.f_eq_g",

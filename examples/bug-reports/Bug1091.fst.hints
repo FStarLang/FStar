@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0a854d59567bca2f0c2fb3f5e2d72c44"
+      "0cbd98e15f013cc8b9aeddd8a80a226f"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -76,7 +76,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2d2d623a4cf21bcc8592b0dc208edba3"
+      "291fedfa4dc8b0f6360f95673ed6c50e"
     ]
   ]
 ]

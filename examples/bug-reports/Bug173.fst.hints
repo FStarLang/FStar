@@ -314,7 +314,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "b468ed583ed7de3d029a15d3cfcdfd45"
+      "81fcd68a3e3ea7c0a6dc65f9da822c45"
     ],
     [
       "Bug173.step",
@@ -345,7 +345,7 @@
         "typing_tok_Bug173.Skip@tok"
       ],
       0,
-      "f96090f495a79c3d5d434b945780d057"
+      "cab8df29560bc1fc8d6a808cac2bb097"
     ],
     [
       "Bug173.op_type",
@@ -389,7 +389,7 @@
         "subterm_ordering_Bug173.Op"
       ],
       0,
-      "fee91f7895405939d736c76f12c6838e"
+      "77d82c5556ef64677a112fe908fab829"
     ],
     [
       "Bug173.typing",
@@ -420,7 +420,7 @@
         "typing_tok_Bug173.Skip@tok"
       ],
       0,
-      "e21580576df7790d4669cc5be0032ac3"
+      "9138bb128a663f5d54d043bf1f641d68"
     ],
     [
       "Bug173.typed_heap",
@@ -590,10 +590,10 @@
         "assumption_Bug173.typ__uu___haseq",
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "data_typing_intro_Bug173.TBool@tok", "kinding_Bug173.typ@tok",
-        "refinement_interpretation_Tm_refine_cda6ae012580de34662fc99f7aa2b583"
+        "refinement_interpretation_Tm_refine_b1760d14e54ba74cbee25f18c2f9bc07"
       ],
       0,
-      "867f72cc64c3c21b5af13939b32dba75"
+      "a9b7f76d81151e3db441663421493b82"
     ],
     [
       "Bug173.preservation_exp",
@@ -699,10 +699,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_d9288543f57f0073e2ee091cdb97dee1"
+        "refinement_interpretation_Tm_refine_c8f58d9082e95de9af18879a56680a2e"
       ],
       0,
-      "daa95fb5aa188a2e9a44a269ab6ceed6"
+      "e630a500baae842df4b4cc31087a11e6"
     ],
     [
       "Bug173.preservation",
@@ -811,10 +811,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_dd0b27c4b2ddc3551e38086d902443af"
+        "refinement_interpretation_Tm_refine_03d2e86aebef68f4b7bf4031a779cd73"
       ],
       0,
-      "4f27107f0a67fcb61db963669d668683"
+      "3df7a5ce2641d4c831e4b88fd4e0998a"
     ],
     [
       "Bug173.preservation'",
