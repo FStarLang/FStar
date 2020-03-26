@@ -1,5 +1,5 @@
 open Prims
-let profile : 'uu____16 . (unit -> 'uu____16) -> Prims.string -> 'uu____16 =
+let profile : 'uuuuuu16 . (unit -> 'uuuuuu16) -> Prims.string -> 'uuuuuu16 =
   fun f  ->
     fun c  -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
   
@@ -81,8 +81,8 @@ let (is_interface : Prims.string -> Prims.bool) =
 let (is_implementation : Prims.string -> Prims.bool) =
   fun f  -> let uu____255 = is_interface f  in Prims.op_Negation uu____255 
 let list_of_option :
-  'uu____262 .
-    'uu____262 FStar_Pervasives_Native.option -> 'uu____262 Prims.list
+  'uuuuuu262 .
+    'uuuuuu262 FStar_Pervasives_Native.option -> 'uuuuuu262 Prims.list
   =
   fun uu___0_271  ->
     match uu___0_271 with
@@ -90,9 +90,9 @@ let list_of_option :
     | FStar_Pervasives_Native.None  -> []
   
 let list_of_pair :
-  'uu____280 .
-    ('uu____280 FStar_Pervasives_Native.option * 'uu____280
-      FStar_Pervasives_Native.option) -> 'uu____280 Prims.list
+  'uuuuuu280 .
+    ('uuuuuu280 FStar_Pervasives_Native.option * 'uuuuuu280
+      FStar_Pervasives_Native.option) -> 'uuuuuu280 Prims.list
   =
   fun uu____295  ->
     match uu____295 with
@@ -172,7 +172,7 @@ let (dep_to_string : dependence -> Prims.string) =
     | FriendImplementation f -> FStar_String.op_Hat "FriendImplementation " f
   
 type dependences = dependence Prims.list
-let empty_dependences : 'uu____519 . unit -> 'uu____519 Prims.list =
+let empty_dependences : 'uuuuuu519 . unit -> 'uuuuuu519 Prims.list =
   fun uu____523  -> [] 
 type dep_node = {
   edges: dependences ;

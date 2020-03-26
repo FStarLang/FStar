@@ -1,8 +1,8 @@
 open Prims
 let cases :
-  'uu____10 'uu____11 .
-    ('uu____10 -> 'uu____11) ->
-      'uu____11 -> 'uu____10 FStar_Pervasives_Native.option -> 'uu____11
+  'uuuuuu10 'uuuuuu11 .
+    ('uuuuuu10 -> 'uuuuuu11) ->
+      'uuuuuu11 -> 'uuuuuu10 FStar_Pervasives_Native.option -> 'uuuuuu11
   =
   fun f  ->
     fun d  ->
@@ -150,8 +150,8 @@ let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     match uu____866 with | (hd1,uu____882) -> hd1
   
 let mk :
-  'uu____910 .
-    'uu____910 -> FStar_Range.range -> 'uu____910 FStar_Syntax_Syntax.syntax
+  'uuuuuu910 .
+    'uuuuuu910 -> FStar_Range.range -> 'uuuuuu910 FStar_Syntax_Syntax.syntax
   =
   fun t  -> fun r  -> FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None r 
 let set_memo :
@@ -233,7 +233,7 @@ let (stack_to_string : stack_elt Prims.list -> Prims.string) =
     let uu____1245 = FStar_List.map stack_elt_to_string s  in
     FStar_All.pipe_right uu____1245 (FStar_String.concat "; ")
   
-let is_empty : 'uu____1260 . 'uu____1260 Prims.list -> Prims.bool =
+let is_empty : 'uuuuuu1260 . 'uuuuuu1260 Prims.list -> Prims.bool =
   fun uu___3_1268  ->
     match uu___3_1268 with | [] -> true | uu____1272 -> false
   
@@ -1252,9 +1252,9 @@ let (unembed_binder :
          FStar_Pervasives_Native.None)
   
 let mk_psc_subst :
-  'uu____5172 .
+  'uuuuuu5172 .
     FStar_TypeChecker_Cfg.cfg ->
-      ((FStar_Syntax_Syntax.bv * 'uu____5172) FStar_Pervasives_Native.option
+      ((FStar_Syntax_Syntax.bv * 'uuuuuu5172) FStar_Pervasives_Native.option
         * closure) Prims.list -> FStar_Syntax_Syntax.subst_elt Prims.list
   =
   fun cfg  ->
@@ -1336,10 +1336,10 @@ let mk_psc_subst :
                   | uu____5408 -> subst1)) env []
   
 let reduce_primops :
-  'uu____5430 .
+  'uuuuuu5430 .
     FStar_Syntax_Embeddings.norm_cb ->
       FStar_TypeChecker_Cfg.cfg ->
-        ((FStar_Syntax_Syntax.bv * 'uu____5430)
+        ((FStar_Syntax_Syntax.bv * 'uuuuuu5430)
           FStar_Pervasives_Native.option * closure) Prims.list ->
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -1503,10 +1503,10 @@ let reduce_primops :
                   | uu____5812 -> tm))
   
 let reduce_equality :
-  'uu____5823 .
+  'uuuuuu5823 .
     FStar_Syntax_Embeddings.norm_cb ->
       FStar_TypeChecker_Cfg.cfg ->
-        ((FStar_Syntax_Syntax.bv * 'uu____5823)
+        ((FStar_Syntax_Syntax.bv * 'uuuuuu5823)
           FStar_Pervasives_Native.option * closure) Prims.list ->
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -1757,10 +1757,10 @@ let (tr_norm_steps :
     let s4 = add_exclude s3 FStar_TypeChecker_Env.Iota  in s4
   
 let get_norm_request :
-  'uu____6369 .
+  'uuuuuu6369 .
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-        (FStar_Syntax_Syntax.term * 'uu____6369) Prims.list ->
+        (FStar_Syntax_Syntax.term * 'uuuuuu6369) Prims.list ->
           (FStar_TypeChecker_Env.step Prims.list * FStar_Syntax_Syntax.term)
             FStar_Pervasives_Native.option
   =
@@ -1867,10 +1867,10 @@ let (nbe_eval :
          tm_norm)
   
 let firstn :
-  'uu____6683 .
+  'uuuuuu6683 .
     Prims.int ->
-      'uu____6683 Prims.list ->
-        ('uu____6683 Prims.list * 'uu____6683 Prims.list)
+      'uuuuuu6683 Prims.list ->
+        ('uuuuuu6683 Prims.list * 'uuuuuu6683 Prims.list)
   =
   fun k  ->
     fun l  ->
@@ -2328,11 +2328,11 @@ let (should_unfold :
                FStar_All.pipe_left failwith uu____9016)
   
 let decide_unfolding :
-  'uu____9037 .
+  'uuuuuu9037 .
     FStar_TypeChecker_Cfg.cfg ->
       env ->
         stack_elt Prims.list ->
-          'uu____9037 ->
+          'uuuuuu9037 ->
             FStar_Syntax_Syntax.fv ->
               FStar_TypeChecker_Env.qninfo ->
                 (FStar_TypeChecker_Cfg.cfg * stack_elt Prims.list)

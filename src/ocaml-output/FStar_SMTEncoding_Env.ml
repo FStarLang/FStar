@@ -8,21 +8,21 @@ let (__proj__Inner_let_rec__item__uu___ :
   Prims.exn -> (Prims.string * FStar_Range.range) Prims.list) =
   fun projectee  -> match projectee with | Inner_let_rec uu____77 -> uu____77 
 let add_fuel :
-  'uu____92 . 'uu____92 -> 'uu____92 Prims.list -> 'uu____92 Prims.list =
+  'uuuuuu92 . 'uuuuuu92 -> 'uuuuuu92 Prims.list -> 'uuuuuu92 Prims.list =
   fun x  ->
     fun tl1  ->
       let uu____109 = FStar_Options.unthrottle_inductives ()  in
       if uu____109 then tl1 else x :: tl1
   
 let withenv :
-  'uu____127 'uu____128 'uu____129 .
-    'uu____127 ->
-      ('uu____128 * 'uu____129) -> ('uu____128 * 'uu____129 * 'uu____127)
+  'uuuuuu127 'uuuuuu128 'uuuuuu129 .
+    'uuuuuu127 ->
+      ('uuuuuu128 * 'uuuuuu129) -> ('uuuuuu128 * 'uuuuuu129 * 'uuuuuu127)
   = fun c  -> fun uu____149  -> match uu____149 with | (a,b) -> (a, b, c) 
 let vargs :
-  'uu____165 'uu____166 'uu____167 .
-    (('uu____165,'uu____166) FStar_Util.either * 'uu____167) Prims.list ->
-      (('uu____165,'uu____166) FStar_Util.either * 'uu____167) Prims.list
+  'uuuuuu165 'uuuuuu166 'uuuuuu167 .
+    (('uuuuuu165,'uuuuuu166) FStar_Util.either * 'uuuuuu167) Prims.list ->
+      (('uuuuuu165,'uuuuuu166) FStar_Util.either * 'uuuuuu167) Prims.list
   =
   fun args  ->
     FStar_List.filter
@@ -120,8 +120,8 @@ let (mk_term_projector_by_pos :
       FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____422
   
 let mk_data_tester :
-  'uu____441 .
-    'uu____441 ->
+  'uuuuuu441 .
+    'uuuuuu441 ->
       FStar_Ident.lident ->
         FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term
   =
@@ -428,8 +428,8 @@ let (check_valid_fvb : fvar_binding -> unit) =
      | uu____2720 -> ())
   
 let binder_of_eithervar :
-  'uu____2730 'uu____2731 .
-    'uu____2730 -> ('uu____2730 * 'uu____2731 FStar_Pervasives_Native.option)
+  'uuuuuu2730 'uuuuuu2731 .
+    'uuuuuu2730 -> ('uuuuuu2730 * 'uuuuuu2731 FStar_Pervasives_Native.option)
   = fun v1  -> (v1, FStar_Pervasives_Native.None) 
 type env_t =
   {
@@ -591,11 +591,11 @@ let (lookup_fvar_binding :
       FStar_Util.psmap_try_find uu____3528 lid.FStar_Ident.str
   
 let add_bvar_binding :
-  'uu____3552 .
-    (FStar_Syntax_Syntax.bv * 'uu____3552) ->
-      (FStar_Syntax_Syntax.bv * 'uu____3552) FStar_Util.pimap
+  'uuuuuu3552 .
+    (FStar_Syntax_Syntax.bv * 'uuuuuu3552) ->
+      (FStar_Syntax_Syntax.bv * 'uuuuuu3552) FStar_Util.pimap
         FStar_Util.psmap ->
-        (FStar_Syntax_Syntax.bv * 'uu____3552) FStar_Util.pimap
+        (FStar_Syntax_Syntax.bv * 'uuuuuu3552) FStar_Util.pimap
           FStar_Util.psmap
   =
   fun bvb  ->

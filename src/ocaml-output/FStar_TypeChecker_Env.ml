@@ -1515,9 +1515,9 @@ let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
       | uu____14446 -> false
   
 let (default_table_size : Prims.int) = (Prims.of_int (200)) 
-let new_sigtab : 'uu____14460 . unit -> 'uu____14460 FStar_Util.smap =
+let new_sigtab : 'uuuuuu14460 . unit -> 'uuuuuu14460 FStar_Util.smap =
   fun uu____14467  -> FStar_Util.smap_create default_table_size 
-let new_gamma_cache : 'uu____14473 . unit -> 'uu____14473 FStar_Util.smap =
+let new_gamma_cache : 'uuuuuu14473 . unit -> 'uuuuuu14473 FStar_Util.smap =
   fun uu____14480  -> FStar_Util.smap_create (Prims.of_int (100)) 
 let (initial_env :
   FStar_Parser_Dep.deps ->
@@ -4064,8 +4064,8 @@ let (monad_leq :
                     (FStar_Ident.lid_equals l2 e.mtarget)))
   
 let wp_sig_aux :
-  'uu____23572 .
-    (FStar_Syntax_Syntax.eff_decl * 'uu____23572) Prims.list ->
+  'uuuuuu23572 .
+    (FStar_Syntax_Syntax.eff_decl * 'uuuuuu23572) Prims.list ->
       FStar_Ident.lident ->
         (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
           FStar_Syntax_Syntax.syntax)
@@ -4204,8 +4204,8 @@ let rec (unfold_effect_abbrev :
                  unfold_effect_abbrev env c2)))
   
 let effect_repr_aux :
-  'uu____24029 .
-    'uu____24029 ->
+  'uuuuuu24029 .
+    'uuuuuu24029 ->
       env ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.universe ->

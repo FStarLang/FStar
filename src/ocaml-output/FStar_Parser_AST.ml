@@ -999,10 +999,10 @@ let (check_id : FStar_Ident.ident -> unit) =
        FStar_Errors.raise_error uu____5085 id1.FStar_Ident.idRange)
   
 let at_most_one :
-  'uu____5104 .
+  'uuuuuu5104 .
     Prims.string ->
       FStar_Range.range ->
-        'uu____5104 Prims.list -> 'uu____5104 FStar_Pervasives_Native.option
+        'uuuuuu5104 Prims.list -> 'uuuuuu5104 FStar_Pervasives_Native.option
   =
   fun s  ->
     fun r  ->
@@ -1277,9 +1277,9 @@ let (mkAdmitMagic : FStar_Range.range -> term) =
     let admit_magic = mk_term (Seq (admit1, magic1)) r Expr  in admit_magic
   
 let mkWildAdmitMagic :
-  'uu____5877 .
+  'uuuuuu5877 .
     FStar_Range.range ->
-      (pattern * 'uu____5877 FStar_Pervasives_Native.option * term)
+      (pattern * 'uuuuuu5877 FStar_Pervasives_Native.option * term)
   =
   fun r  ->
     let uu____5891 = mkAdmitMagic r  in
@@ -1287,11 +1287,11 @@ let mkWildAdmitMagic :
       FStar_Pervasives_Native.None, uu____5891)
   
 let focusBranches :
-  'uu____5901 .
-    (Prims.bool * (pattern * 'uu____5901 FStar_Pervasives_Native.option *
+  'uuuuuu5901 .
+    (Prims.bool * (pattern * 'uuuuuu5901 FStar_Pervasives_Native.option *
       term)) Prims.list ->
       FStar_Range.range ->
-        (pattern * 'uu____5901 FStar_Pervasives_Native.option * term)
+        (pattern * 'uuuuuu5901 FStar_Pervasives_Native.option * term)
           Prims.list
   =
   fun branches  ->
@@ -1316,9 +1316,9 @@ let focusBranches :
           (FStar_List.map FStar_Pervasives_Native.snd)
   
 let focusLetBindings :
-  'uu____6202 .
-    (Prims.bool * ('uu____6202 * term)) Prims.list ->
-      FStar_Range.range -> ('uu____6202 * term) Prims.list
+  'uuuuuu6202 .
+    (Prims.bool * ('uuuuuu6202 * term)) Prims.list ->
+      FStar_Range.range -> ('uuuuuu6202 * term) Prims.list
   =
   fun lbs  ->
     fun r  ->
@@ -1342,9 +1342,9 @@ let focusLetBindings :
         FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives_Native.snd)
   
 let focusAttrLetBindings :
-  'uu____6363 'uu____6364 .
-    ('uu____6363 * (Prims.bool * ('uu____6364 * term))) Prims.list ->
-      FStar_Range.range -> ('uu____6363 * ('uu____6364 * term)) Prims.list
+  'uuuuuu6363 'uuuuuu6364 .
+    ('uuuuuu6363 * (Prims.bool * ('uuuuuu6364 * term))) Prims.list ->
+      FStar_Range.range -> ('uuuuuu6363 * ('uuuuuu6364 * term)) Prims.list
   =
   fun lbs  ->
     fun r  ->
@@ -1646,9 +1646,9 @@ let (string_of_let_qualifier : let_qualifier -> Prims.string) =
     match uu___4_7395 with | NoLetQualifier  -> "" | Rec  -> "rec"
   
 let to_string_l :
-  'uu____7408 .
+  'uuuuuu7408 .
     Prims.string ->
-      ('uu____7408 -> Prims.string) -> 'uu____7408 Prims.list -> Prims.string
+      ('uuuuuu7408 -> Prims.string) -> 'uuuuuu7408 Prims.list -> Prims.string
   =
   fun sep  ->
     fun f  ->
@@ -2038,8 +2038,8 @@ let rec (head_id_of_pat : pattern -> FStar_Ident.lident Prims.list) =
     | uu____8774 -> []
   
 let lids_of_let :
-  'uu____8780 .
-    (pattern * 'uu____8780) Prims.list -> FStar_Ident.lident Prims.list
+  'uuuuuu8780 .
+    (pattern * 'uuuuuu8780) Prims.list -> FStar_Ident.lident Prims.list
   =
   fun defs  ->
     FStar_All.pipe_right defs

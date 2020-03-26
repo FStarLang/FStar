@@ -1,10 +1,10 @@
 open Prims
 let unembed :
-  'uu____8 .
-    'uu____8 FStar_Syntax_Embeddings.embedding ->
+  'uuuuuu8 .
+    'uuuuuu8 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'uu____8 FStar_Pervasives_Native.option
+          'uuuuuu8 FStar_Pervasives_Native.option
   =
   fun e  ->
     fun t  ->
@@ -13,10 +13,10 @@ let unembed :
         uu____32 true n1
   
 let embed :
-  'uu____51 .
-    'uu____51 FStar_Syntax_Embeddings.embedding ->
+  'uuuuuu51 .
+    'uuuuuu51 FStar_Syntax_Embeddings.embedding ->
       FStar_Range.range ->
-        'uu____51 ->
+        'uuuuuu51 ->
           FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e  ->
@@ -1335,19 +1335,19 @@ let (step_from_native_step :
     }
   
 let timing_int :
-  'uu____6724 'uu____6725 'uu____6726 'uu____6727 .
+  'uuuuuu6724 'uuuuuu6725 'uuuuuu6726 'uuuuuu6727 .
     FStar_Ident.lid ->
-      ('uu____6724 -> 'uu____6725 -> 'uu____6726 -> 'uu____6727) ->
-        'uu____6724 -> 'uu____6725 -> 'uu____6726 -> 'uu____6727
+      ('uuuuuu6724 -> 'uuuuuu6725 -> 'uuuuuu6726 -> 'uuuuuu6727) ->
+        'uuuuuu6724 -> 'uuuuuu6725 -> 'uuuuuu6726 -> 'uuuuuu6727
   =
   fun l  ->
     fun f  -> fun psc  -> fun cb  -> fun args  -> let r = f psc cb args  in r
   
 let timing_nbe :
-  'uu____6784 'uu____6785 'uu____6786 .
+  'uuuuuu6784 'uuuuuu6785 'uuuuuu6786 .
     FStar_Ident.lid ->
-      ('uu____6784 -> 'uu____6785 -> 'uu____6786) ->
-        'uu____6784 -> 'uu____6785 -> 'uu____6786
+      ('uuuuuu6784 -> 'uuuuuu6785 -> 'uuuuuu6786) ->
+        'uuuuuu6784 -> 'uuuuuu6785 -> 'uuuuuu6786
   =
   fun l  ->
     fun f  -> fun nbe_cbs  -> fun args  -> let r = f nbe_cbs args  in r
@@ -1396,7 +1396,7 @@ let (native_tactics_steps :
     FStar_List.map step_from_native_step uu____6915
   
 let rec drop :
-  'uu____6925 . Prims.int -> 'uu____6925 Prims.list -> 'uu____6925 Prims.list
+  'uuuuuu6925 . Prims.int -> 'uuuuuu6925 Prims.list -> 'uuuuuu6925 Prims.list
   =
   fun n1  ->
     fun l  ->

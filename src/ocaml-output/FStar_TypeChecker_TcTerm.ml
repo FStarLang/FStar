@@ -218,7 +218,7 @@ let (is_eq :
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality ) -> true
     | uu____121 -> false
   
-let steps : 'uu____130 . 'uu____130 -> FStar_TypeChecker_Env.step Prims.list
+let steps : 'uuuuuu130 . 'uuuuuu130 -> FStar_TypeChecker_Env.step Prims.list
   =
   fun env  ->
     [FStar_TypeChecker_Env.Beta;
@@ -323,9 +323,9 @@ let (check_no_escape :
           aux false kt
   
 let push_binding :
-  'uu____344 .
+  'uuuuuu344 .
     FStar_TypeChecker_Env.env ->
-      (FStar_Syntax_Syntax.bv * 'uu____344) -> FStar_TypeChecker_Env.env
+      (FStar_Syntax_Syntax.bv * 'uuuuuu344) -> FStar_TypeChecker_Env.env
   =
   fun env  ->
     fun b  ->
@@ -722,10 +722,10 @@ let (check_expected_effect :
                                     (e2, expected_c, uu____1061)))))))))
   
 let no_logical_guard :
-  'uu____1071 'uu____1072 .
+  'uuuuuu1071 'uuuuuu1072 .
     FStar_TypeChecker_Env.env ->
-      ('uu____1071 * 'uu____1072 * FStar_TypeChecker_Env.guard_t) ->
-        ('uu____1071 * 'uu____1072 * FStar_TypeChecker_Env.guard_t)
+      ('uuuuuu1071 * 'uuuuuu1072 * FStar_TypeChecker_Env.guard_t) ->
+        ('uuuuuu1071 * 'uuuuuu1072 * FStar_TypeChecker_Env.guard_t)
   =
   fun env  ->
     fun uu____1094  ->
@@ -809,11 +809,11 @@ let (get_pat_vars :
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Util.set)
   = fun all  -> fun pats  -> get_pat_vars' all false pats 
 let check_pat_fvs :
-  'uu____1477 .
+  'uuuuuu1477 .
     FStar_Range.range ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.bv * 'uu____1477) Prims.list -> unit
+          (FStar_Syntax_Syntax.bv * 'uuuuuu1477) Prims.list -> unit
   =
   fun rng  ->
     fun env  ->
@@ -949,10 +949,10 @@ let (check_no_smt_theory_symbols :
          FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____2181)
   
 let check_smt_pat :
-  'uu____2202 .
+  'uuuuuu2202 .
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        (FStar_Syntax_Syntax.bv * 'uu____2202) Prims.list ->
+        (FStar_Syntax_Syntax.bv * 'uuuuuu2202) Prims.list ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> unit
   =
   fun env  ->
@@ -11135,9 +11135,9 @@ let (type_of_tot_term :
               FStar_Errors.raise_error uu____27780 uu____27792))
   
 let level_of_type_fail :
-  'uu____27808 .
+  'uuuuuu27808 .
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term -> Prims.string -> 'uu____27808
+      FStar_Syntax_Syntax.term -> Prims.string -> 'uuuuuu27808
   =
   fun env  ->
     fun e  ->

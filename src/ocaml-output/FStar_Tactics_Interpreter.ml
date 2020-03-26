@@ -1,15 +1,15 @@
 open Prims
 let (tacdbg : Prims.bool FStar_ST.ref) = FStar_Util.mk_ref false 
 let mktot1' :
-  'uu____30 'uu____31 'uu____32 'uu____33 .
+  'uuuuuu30 'uuuuuu31 'uuuuuu32 'uuuuuu33 .
     Prims.int ->
       Prims.string ->
-        ('uu____30 -> 'uu____31) ->
-          'uu____30 FStar_Syntax_Embeddings.embedding ->
-            'uu____31 FStar_Syntax_Embeddings.embedding ->
-              ('uu____32 -> 'uu____33) ->
-                'uu____32 FStar_TypeChecker_NBETerm.embedding ->
-                  'uu____33 FStar_TypeChecker_NBETerm.embedding ->
+        ('uuuuuu30 -> 'uuuuuu31) ->
+          'uuuuuu30 FStar_Syntax_Embeddings.embedding ->
+            'uuuuuu31 FStar_Syntax_Embeddings.embedding ->
+              ('uuuuuu32 -> 'uuuuuu33) ->
+                'uuuuuu32 FStar_TypeChecker_NBETerm.embedding ->
+                  'uuuuuu33 FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -47,15 +47,15 @@ let mktot1' :
                   }
   
 let mktot1'_psc :
-  'uu____132 'uu____133 'uu____134 'uu____135 .
+  'uuuuuu132 'uuuuuu133 'uuuuuu134 'uuuuuu135 .
     Prims.int ->
       Prims.string ->
-        (FStar_TypeChecker_Cfg.psc -> 'uu____132 -> 'uu____133) ->
-          'uu____132 FStar_Syntax_Embeddings.embedding ->
-            'uu____133 FStar_Syntax_Embeddings.embedding ->
-              (FStar_TypeChecker_Cfg.psc -> 'uu____134 -> 'uu____135) ->
-                'uu____134 FStar_TypeChecker_NBETerm.embedding ->
-                  'uu____135 FStar_TypeChecker_NBETerm.embedding ->
+        (FStar_TypeChecker_Cfg.psc -> 'uuuuuu132 -> 'uuuuuu133) ->
+          'uuuuuu132 FStar_Syntax_Embeddings.embedding ->
+            'uuuuuu133 FStar_Syntax_Embeddings.embedding ->
+              (FStar_TypeChecker_Cfg.psc -> 'uuuuuu134 -> 'uuuuuu135) ->
+                'uuuuuu134 FStar_TypeChecker_NBETerm.embedding ->
+                  'uuuuuu135 FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -93,17 +93,17 @@ let mktot1'_psc :
                   }
   
 let mktot2' :
-  'uu____252 'uu____253 'uu____254 'uu____255 'uu____256 'uu____257 .
+  'uuuuuu252 'uuuuuu253 'uuuuuu254 'uuuuuu255 'uuuuuu256 'uuuuuu257 .
     Prims.int ->
       Prims.string ->
-        ('uu____252 -> 'uu____253 -> 'uu____254) ->
-          'uu____252 FStar_Syntax_Embeddings.embedding ->
-            'uu____253 FStar_Syntax_Embeddings.embedding ->
-              'uu____254 FStar_Syntax_Embeddings.embedding ->
-                ('uu____255 -> 'uu____256 -> 'uu____257) ->
-                  'uu____255 FStar_TypeChecker_NBETerm.embedding ->
-                    'uu____256 FStar_TypeChecker_NBETerm.embedding ->
-                      'uu____257 FStar_TypeChecker_NBETerm.embedding ->
+        ('uuuuuu252 -> 'uuuuuu253 -> 'uuuuuu254) ->
+          'uuuuuu252 FStar_Syntax_Embeddings.embedding ->
+            'uuuuuu253 FStar_Syntax_Embeddings.embedding ->
+              'uuuuuu254 FStar_Syntax_Embeddings.embedding ->
+                ('uuuuuu255 -> 'uuuuuu256 -> 'uuuuuu257) ->
+                  'uuuuuu255 FStar_TypeChecker_NBETerm.embedding ->
+                    'uuuuuu256 FStar_TypeChecker_NBETerm.embedding ->
+                      'uuuuuu257 FStar_TypeChecker_NBETerm.embedding ->
                         FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -2099,7 +2099,7 @@ let __proj__Dual__item___0 :
   'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
   fun projectee  -> match projectee with | Dual _0 -> _0 
 type tres = FStar_Syntax_Syntax.term tres_m
-let tpure : 'uu____3115 . 'uu____3115 -> 'uu____3115 tres_m =
+let tpure : 'uuuuuu3115 . 'uuuuuu3115 -> 'uuuuuu3115 tres_m =
   fun x  -> Unchanged x 
 let (flip : pol -> pol) =
   fun p  -> match p with | Pos  -> Neg | Neg  -> Pos | Both  -> Both 

@@ -122,17 +122,17 @@ let (as_imp :
     | uu____281 -> FStar_Pervasives_Native.None
   
 let arg_withimp_e :
-  'uu____289 .
+  'uuuuuu289 .
     FStar_Parser_AST.imp ->
-      'uu____289 ->
-        ('uu____289 * FStar_Syntax_Syntax.arg_qualifier
+      'uuuuuu289 ->
+        ('uuuuuu289 * FStar_Syntax_Syntax.arg_qualifier
           FStar_Pervasives_Native.option)
   = fun imp  -> fun t  -> (t, (as_imp imp)) 
 let arg_withimp_t :
-  'uu____315 .
+  'uuuuuu315 .
     FStar_Parser_AST.imp ->
-      'uu____315 ->
-        ('uu____315 * FStar_Syntax_Syntax.arg_qualifier
+      'uuuuuu315 ->
+        ('uuuuuu315 * FStar_Syntax_Syntax.arg_qualifier
           FStar_Pervasives_Native.option)
   =
   fun imp  ->
@@ -280,8 +280,8 @@ let (desugar_name' :
                (let tm1 = setpos tm  in FStar_Pervasives_Native.Some tm1))
   
 let desugar_name :
-  'uu____659 .
-    'uu____659 ->
+  'uuuuuu659 .
+    'uuuuuu659 ->
       (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
         env_t -> Prims.bool -> FStar_Ident.lident -> FStar_Syntax_Syntax.term
   =
@@ -308,10 +308,10 @@ let (compile_op_lid :
         FStar_All.pipe_right uu____712 FStar_Ident.lid_of_ids
   
 let op_as_term :
-  'uu____738 .
+  'uuuuuu738 .
     env_t ->
       Prims.int ->
-        'uu____738 ->
+        'uuuuuu738 ->
           FStar_Ident.ident ->
             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -1471,9 +1471,9 @@ let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
         FStar_Errors.raise_error uu____4133 e.FStar_Syntax_Syntax.pos
   
 let check_fields :
-  'uu____4154 .
+  'uuuuuu4154 .
     FStar_Syntax_DsEnv.env ->
-      (FStar_Ident.lident * 'uu____4154) Prims.list ->
+      (FStar_Ident.lident * 'uuuuuu4154) Prims.list ->
         FStar_Range.range -> FStar_Syntax_DsEnv.record_or_dc
   =
   fun env  ->

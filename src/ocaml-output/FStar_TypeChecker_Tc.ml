@@ -245,10 +245,10 @@ let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
        Prims.op_Negation uu____193)
   
 let tc_lex_t :
-  'uu____207 .
+  'uuuuuu207 .
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.sigelt Prims.list ->
-        'uu____207 Prims.list ->
+        'uuuuuu207 Prims.list ->
           FStar_Ident.lident Prims.list -> FStar_Syntax_Syntax.sigelt
   =
   fun env  ->
@@ -3433,8 +3433,8 @@ let (tc_decl :
          tc_decl' env1 se)
   
 let for_export :
-  'uu____4590 .
-    'uu____4590 ->
+  'uuuuuu4590 .
+    'uuuuuu4590 ->
       FStar_Ident.lident Prims.list ->
         FStar_Syntax_Syntax.sigelt ->
           (FStar_Syntax_Syntax.sigelt Prims.list * FStar_Ident.lident

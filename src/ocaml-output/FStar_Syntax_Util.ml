@@ -44,9 +44,9 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
     FStar_Util.is_upper c
   
 let arg_of_non_null_binder :
-  'uu____121 .
-    (FStar_Syntax_Syntax.bv * 'uu____121) ->
-      (FStar_Syntax_Syntax.term * 'uu____121)
+  'uuuuuu121 .
+    (FStar_Syntax_Syntax.bv * 'uuuuuu121) ->
+      (FStar_Syntax_Syntax.term * 'uuuuuu121)
   =
   fun uu____134  ->
     match uu____134 with
@@ -181,7 +181,7 @@ let (binders_of_freevars :
     FStar_All.pipe_right uu____771
       (FStar_List.map FStar_Syntax_Syntax.mk_binder)
   
-let mk_subst : 'uu____783 . 'uu____783 -> 'uu____783 Prims.list =
+let mk_subst : 'uuuuuu783 . 'uuuuuu783 -> 'uuuuuu783 Prims.list =
   fun s  -> [s] 
 let (subst_of_list :
   FStar_Syntax_Syntax.binders ->
@@ -826,8 +826,8 @@ let (eq_lazy_kind :
       | uu____2836 -> false
   
 let unlazy_as_t :
-  'uu____2849 .
-    FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'uu____2849
+  'uuuuuu2849 .
+    FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'uuuuuu2849
   =
   fun k  ->
     fun t  ->
@@ -1363,16 +1363,16 @@ let (range_of_lbname :
           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
   
 let range_of_arg :
-  'uu____5431 'uu____5432 .
-    ('uu____5431 FStar_Syntax_Syntax.syntax * 'uu____5432) ->
+  'uuuuuu5431 'uuuuuu5432 .
+    ('uuuuuu5431 FStar_Syntax_Syntax.syntax * 'uuuuuu5432) ->
       FStar_Range.range
   =
   fun uu____5443  ->
     match uu____5443 with | (hd1,uu____5451) -> hd1.FStar_Syntax_Syntax.pos
   
 let range_of_args :
-  'uu____5465 'uu____5466 .
-    ('uu____5465 FStar_Syntax_Syntax.syntax * 'uu____5466) Prims.list ->
+  'uuuuuu5465 'uuuuuu5466 .
+    ('uuuuuu5465 FStar_Syntax_Syntax.syntax * 'uuuuuu5466) Prims.list ->
       FStar_Range.range -> FStar_Range.range
   =
   fun args  ->
@@ -3429,9 +3429,9 @@ let (is_unknown : FStar_Syntax_Syntax.term -> Prims.bool) =
     | uu____14217 -> false
   
 let rec apply_last :
-  'uu____14226 .
-    ('uu____14226 -> 'uu____14226) ->
-      'uu____14226 Prims.list -> 'uu____14226 Prims.list
+  'uuuuuu14226 .
+    ('uuuuuu14226 -> 'uuuuuu14226) ->
+      'uuuuuu14226 Prims.list -> 'uuuuuu14226 Prims.list
   =
   fun f  ->
     fun l  ->

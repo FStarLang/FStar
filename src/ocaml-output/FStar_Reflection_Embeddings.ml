@@ -1,12 +1,12 @@
 open Prims
 let mk_emb :
-  'uu____8 .
-    (FStar_Range.range -> 'uu____8 -> FStar_Syntax_Syntax.term) ->
+  'uuuuuu8 .
+    (FStar_Range.range -> 'uuuuuu8 -> FStar_Syntax_Syntax.term) ->
       (Prims.bool ->
-         FStar_Syntax_Syntax.term -> 'uu____8 FStar_Pervasives_Native.option)
+         FStar_Syntax_Syntax.term -> 'uuuuuu8 FStar_Pervasives_Native.option)
         ->
         FStar_Syntax_Syntax.term ->
-          'uu____8 FStar_Syntax_Embeddings.embedding
+          'uuuuuu8 FStar_Syntax_Embeddings.embedding
   =
   fun f  ->
     fun g  ->
@@ -17,9 +17,9 @@ let mk_emb :
           (fun x  -> fun w  -> fun _norm  -> g w x) uu____52
   
 let embed :
-  'uu____79 .
-    'uu____79 FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range -> 'uu____79 -> FStar_Syntax_Syntax.term
+  'uuuuuu79 .
+    'uuuuuu79 FStar_Syntax_Embeddings.embedding ->
+      FStar_Range.range -> 'uuuuuu79 -> FStar_Syntax_Syntax.term
   =
   fun e  ->
     fun r  ->
@@ -29,10 +29,10 @@ let embed :
           FStar_Syntax_Embeddings.id_norm_cb
   
 let unembed' :
-  'uu____117 .
+  'uuuuuu117 .
     Prims.bool ->
-      'uu____117 FStar_Syntax_Embeddings.embedding ->
-        FStar_Syntax_Syntax.term -> 'uu____117 FStar_Pervasives_Native.option
+      'uuuuuu117 FStar_Syntax_Embeddings.embedding ->
+        FStar_Syntax_Syntax.term -> 'uuuuuu117 FStar_Pervasives_Native.option
   =
   fun w  ->
     fun e  ->

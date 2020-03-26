@@ -125,8 +125,8 @@ let (as_list' : option_val -> option_val Prims.list) =
     | uu____444 -> failwith "Impos: expected List"
   
 let as_list :
-  'uu____455 .
-    (option_val -> 'uu____455) -> option_val -> 'uu____455 Prims.list
+  'uuuuuu455 .
+    (option_val -> 'uuuuuu455) -> option_val -> 'uuuuuu455 Prims.list
   =
   fun as_t  ->
     fun x  ->
@@ -134,9 +134,9 @@ let as_list :
       FStar_All.pipe_right uu____473 (FStar_List.map as_t)
   
 let as_option :
-  'uu____487 .
-    (option_val -> 'uu____487) ->
-      option_val -> 'uu____487 FStar_Pervasives_Native.option
+  'uuuuuu487 .
+    (option_val -> 'uuuuuu487) ->
+      option_val -> 'uuuuuu487 FStar_Pervasives_Native.option
   =
   fun as_t  ->
     fun uu___4_502  ->
@@ -160,7 +160,7 @@ let (as_comma_string_list : option_val -> Prims.string Prims.list) =
   
 type optionstate = option_val FStar_Util.smap
 let copy_optionstate :
-  'uu____558 . 'uu____558 FStar_Util.smap -> 'uu____558 FStar_Util.smap =
+  'uuuuuu558 . 'uuuuuu558 FStar_Util.smap -> 'uuuuuu558 FStar_Util.smap =
   fun m  -> FStar_Util.smap_copy m 
 let (fstar_options : optionstate Prims.list Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
@@ -437,7 +437,7 @@ let (get_option : Prims.string -> option_val) =
     | FStar_Pervasives_Native.Some s1 -> s1
   
 let lookup_opt :
-  'uu____2706 . Prims.string -> (option_val -> 'uu____2706) -> 'uu____2706 =
+  'uuuuuu2706 . Prims.string -> (option_val -> 'uuuuuu2706) -> 'uuuuuu2706 =
   fun s  -> fun c  -> let uu____2724 = get_option s  in c uu____2724 
 let (get_abort_on : unit -> Prims.int) =
   fun uu____2731  -> lookup_opt "abort_on" as_int 
@@ -746,8 +746,8 @@ let (display_version : unit -> unit) =
     FStar_Util.print_string uu____4064
   
 let display_usage_aux :
-  'uu____4189 'uu____4190 .
-    ('uu____4189 * Prims.string * 'uu____4190 FStar_Getopt.opt_variant *
+  'uuuuuu4189 'uuuuuu4190 .
+    ('uuuuuu4189 * Prims.string * 'uuuuuu4190 FStar_Getopt.opt_variant *
       Prims.string) Prims.list -> unit
   =
   fun specs  ->
@@ -825,8 +825,8 @@ let (reverse_accumulated_option : Prims.string -> option_val -> option_val) =
       List (FStar_List.append prev_values [value])
   
 let accumulate_string :
-  'uu____4494 .
-    Prims.string -> ('uu____4494 -> Prims.string) -> 'uu____4494 -> unit
+  'uuuuuu4494 .
+    Prims.string -> ('uuuuuu4494 -> Prims.string) -> 'uuuuuu4494 -> unit
   =
   fun name  ->
     fun post_processor  ->

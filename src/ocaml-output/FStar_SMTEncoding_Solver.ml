@@ -3,9 +3,9 @@ type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
 let z3_result_as_replay_result :
-  'uu____35 'uu____36 'uu____37 .
-    ('uu____35,('uu____36 * 'uu____37)) FStar_Util.either ->
-      ('uu____35,'uu____36) FStar_Util.either
+  'uuuuuu35 'uuuuuu36 'uuuuuu37 .
+    ('uuuuuu35,('uuuuuu36 * 'uuuuuu37)) FStar_Util.either ->
+      ('uuuuuu35,'uuuuuu36) FStar_Util.either
   =
   fun uu___0_54  ->
     match uu___0_54 with
@@ -18,7 +18,7 @@ let (recorded_hints :
 let (replaying_hints :
   FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let initialize_hints_db : 'uu____95 . Prims.string -> 'uu____95 -> unit =
+let initialize_hints_db : 'uuuuuu95 . Prims.string -> 'uuuuuu95 -> unit =
   fun src_filename  ->
     fun format_filename  ->
       (let uu____109 = FStar_Options.record_hints ()  in

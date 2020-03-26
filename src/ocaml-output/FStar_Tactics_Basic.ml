@@ -497,13 +497,13 @@ let fail : 'a . Prims.string -> 'a tac =
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Types.TacticFailure msg), ps))
   
-let fail1 : 'uu____1509 . Prims.string -> Prims.string -> 'uu____1509 tac =
+let fail1 : 'uuuuuu1509 . Prims.string -> Prims.string -> 'uuuuuu1509 tac =
   fun msg  ->
     fun x  -> let uu____1526 = FStar_Util.format1 msg x  in fail uu____1526
   
 let fail2 :
-  'uu____1537 .
-    Prims.string -> Prims.string -> Prims.string -> 'uu____1537 tac
+  'uuuuuu1537 .
+    Prims.string -> Prims.string -> Prims.string -> 'uuuuuu1537 tac
   =
   fun msg  ->
     fun x  ->
@@ -511,9 +511,9 @@ let fail2 :
         let uu____1561 = FStar_Util.format2 msg x y  in fail uu____1561
   
 let fail3 :
-  'uu____1574 .
+  'uuuuuu1574 .
     Prims.string ->
-      Prims.string -> Prims.string -> Prims.string -> 'uu____1574 tac
+      Prims.string -> Prims.string -> Prims.string -> 'uuuuuu1574 tac
   =
   fun msg  ->
     fun x  ->
@@ -522,10 +522,10 @@ let fail3 :
           let uu____1605 = FStar_Util.format3 msg x y z  in fail uu____1605
   
 let fail4 :
-  'uu____1620 .
+  'uuuuuu1620 .
     Prims.string ->
       Prims.string ->
-        Prims.string -> Prims.string -> Prims.string -> 'uu____1620 tac
+        Prims.string -> Prims.string -> Prims.string -> 'uuuuuu1620 tac
   =
   fun msg  ->
     fun x  ->

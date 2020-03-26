@@ -38,7 +38,7 @@ let (__proj__Mksl_reponse__item__slr_def :
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_def
   
 let with_printed_effect_args :
-  'uu____194 . (unit -> 'uu____194) -> 'uu____194 =
+  'uuuuuu194 . (unit -> 'uuuuuu194) -> 'uuuuuu194 =
   fun k  ->
     FStar_Options.with_saved_options
       (fun uu____207  ->
@@ -154,9 +154,9 @@ let (symlookup :
                 }
   
 let mod_filter :
-  'uu____788 .
-    ('uu____788 * FStar_Interactive_CompletionTable.mod_symbol) ->
-      ('uu____788 * FStar_Interactive_CompletionTable.mod_symbol)
+  'uuuuuu788 .
+    ('uuuuuu788 * FStar_Interactive_CompletionTable.mod_symbol) ->
+      ('uuuuuu788 * FStar_Interactive_CompletionTable.mod_symbol)
         FStar_Pervasives_Native.option
   =
   fun uu___1_803  ->
