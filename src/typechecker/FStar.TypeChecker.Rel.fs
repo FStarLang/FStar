@@ -98,6 +98,12 @@ let copy_uvar u (bs:binders) t wl =
     new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
             (Env.all_binders env) t u.ctx_uvar_should_check u.ctx_uvar_meta
 
+let copy_uvar_for_type u (bs:binders) t wl =
+    let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
+    let env = Env.push_binders env bs in
+    new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
+            (Env.all_binders env) t Allow_unresolved u.ctx_uvar_meta
+
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
@@ -2025,6 +2031,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //    (Print.term_to_string rhs);
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
+        let last_arg_rhs, iqual_last_arg_rhs = last_arg_rhs in
         // rhs' = rhs_hd args_rhs
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
         //if Env.debug env <| Options.Other "Rel"
@@ -2034,10 +2041,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let t_lhs, u_lhs, lhs_args = lhs in
         
         // (G |- ?t_last_arg : Type) : This is the type of the newly introduced variable to match the last arg
-        let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+        let _, t_last_arg, wl = copy_uvar_for_type u_lhs [] (fst <| U.type_u()) wl in
         // (G |- ?u_lhs' : bs_lhs -> _:?t -> tu) : A variable to match rhs'
-        //FIXME: this may be an implicit arg ... fix qualifier
-        let _, lhs', wl = copy_uvar u_lhs [] (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (S.mk_Total t_res_lhs)) wl in
+        let _, lhs', wl = copy_uvar u_lhs [] (U.arrow (bs_lhs@[S.null_bv t_last_arg, iqual_last_arg_rhs]) (S.mk_Total t_res_lhs)) wl in
         // (G |- ?u_lhs'_last_arg : bs_lhs -> ?t) : A variable to match last_arg_rhs
         let _, lhs'_last_arg, wl = copy_uvar u_lhs [] (U.arrow bs_lhs (S.mk_Total t_last_arg)) wl in
 
@@ -2055,23 +2061,35 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let sol = [TERM(u_lhs, 
                         U.abs bs_lhs
                               (S.mk_Tm_app (U.mk_app_binders lhs' bs_lhs)
-                                           [U.mk_app_binders lhs'_last_arg bs_lhs, None]
+                                           [U.mk_app_binders lhs'_last_arg bs_lhs, iqual_last_arg_rhs]
                                            None lhs'.pos)
                               (Some (U.residual_tot t_res_lhs)))]
         in
         
         let sub_probs, wl =
-            let p1, wl = mk_t_problem wl [] orig (S.mk_Tm_app lhs' lhs_args None lhs'.pos) EQ rhs' None "first-order lhs" in
-            let p2, wl = mk_t_problem wl [] orig (S.mk_Tm_app lhs'_last_arg lhs_args None lhs'_last_arg.pos) EQ (fst last_arg_rhs) None "first-order rhs" in
+            let p1, wl = 
+              mk_t_problem wl [] orig 
+                           (S.mk_Tm_app lhs' lhs_args None lhs'.pos)
+                           EQ
+                           rhs'
+                           None "first-order lhs"
+            in
+            let p2, wl = 
+              mk_t_problem wl [] orig 
+                           (S.mk_Tm_app lhs'_last_arg lhs_args None lhs'_last_arg.pos)
+                           EQ
+                           last_arg_rhs
+                           None "first-order rhs"
+            in
             [p1; p2], wl
         in
         solve env (attempt sub_probs (solve_prob orig None sol wl))
     in
 
-    let first_order (orig:prob) (env:Env.env) (wl:worklist)
-                    (lhs:flex_t) (rhs:term)
-        : solution =
-        let is_app rhs =
+    let first_order_applicable (orig:prob) (env:Env.env) (wl:worklist)
+                               (lhs:flex_t) (rhs:term)
+      : option<(either<(binders * term), (binders * term)>)>
+      = let is_app rhs =
            let _, args = U.head_and_args rhs in
            match args with
            | [] -> false
@@ -2083,23 +2101,38 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
             | _ -> false
         in
         match quasi_pattern env lhs with
-        | None ->
-           let msg = Thunk.mk (fun () ->
-                        BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
-                          (prob_to_string env orig)) in
-           giveup_or_defer env orig wl msg
-
+        | None -> None
         | Some (bs_lhs, t_res_lhs) ->
           if is_app rhs
-          then imitate_app orig env wl lhs bs_lhs t_res_lhs rhs
+          then Some (Inl (bs_lhs, t_res_lhs))
           else if is_arrow rhs
-          then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
-          else
-            let msg = Thunk.mk (fun () ->
-                                  BU.format1 "first_order heuristic cannot solve %s; rhs not an app or arrow"
-                                  (prob_to_string env orig)) in
-            giveup_or_defer env orig wl msg
+          then Some (Inr (bs_lhs, t_res_lhs))
+          else None
+    in          
+
+    let apply_first_order (orig:prob) (env:Env.env) (wl:worklist)
+                          (lhs:flex_t) (rhs:term)
+                          (app_or_arrow:_)
+      : solution
+      = match app_or_arrow with
+        | Inl (bs_lhs, t_res_lhs) ->
+          imitate_app orig env wl lhs bs_lhs t_res_lhs rhs
+        | Inr (bs_lhs, t_res_lhs) ->
+          imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs        
     in
+    
+    let first_order (orig:prob) (env:Env.env) (wl:worklist)
+                    (lhs:flex_t) (rhs:term)
+        : solution
+        = match first_order_applicable orig env wl lhs rhs with
+          | None  ->
+            let msg = 
+             Thunk.mk (fun () -> BU.format1 "first_order heuristic cannot solve %s"
+                                         (prob_to_string env orig)) in
+            giveup_or_defer env orig wl msg
+          | Some app_or_arrow ->
+            apply_first_order orig env wl lhs rhs app_or_arrow
+    in            
 
     match p_rel orig with
     | SUB
@@ -2121,20 +2154,31 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
-        else if BU.set_is_subset_of fvs2 fvs1 
-             && tgt_ctx_includes_all_source_ctx ctx_uv uvars
-        then let sol = mk_solution env lhs lhs_binders rhs in
-             solve env (solve_prob orig None sol wl)
-        else if wl.defer_ok
-        then
-          let msg = Thunk.mk (fun () ->
-                                BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
+        else
+          let fvs_included_ok = BU.set_is_subset_of fvs2 fvs1 in
+          let ctx_included_ok = tgt_ctx_includes_all_source_ctx ctx_uv uvars in
+          if fvs_included_ok && ctx_included_ok
+          then let sol = mk_solution env lhs lhs_binders rhs in
+               solve env (solve_prob orig None sol wl)
+          else if wl.defer_ok
+          then
+            let msg = Thunk.mk (fun () ->
+                                  BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                            (names_to_string fvs2)
                                            (names_to_string fvs1)
                                            (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
-          giveup_or_defer env orig wl msg
-        else first_order orig env wl lhs rhs
-
+            giveup_or_defer env orig wl msg
+          else begin
+               match first_order_applicable orig env wl lhs rhs with
+               | None -> 
+                 if fvs_included_ok
+                 then let sol = mk_solution env lhs lhs_binders rhs in
+                      let wl = restrict_all_uvars ctx_uv uvars wl in
+                      solve env (solve_prob orig None sol wl)
+                 else giveup_or_defer env orig wl (Thunk.mkv <| "free-variable check failed an firstorder imitation is not applicable either")
+               | Some app_or_arrow ->
+                 apply_first_order orig env wl lhs rhs app_or_arrow
+          end
 
       | _ -> //Not a pattern
         if wl.defer_ok
