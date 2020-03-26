@@ -841,8 +841,8 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
             Lazy ((FStar_Util.Inr li), thunk1)))
   
 let lazy_unembed :
-  'Auu____4433 'a .
-    'Auu____4433 ->
+  'uuuuuu4433 'a .
+    'uuuuuu4433 ->
       FStar_Syntax_Syntax.emb_typ ->
         t ->
           (t -> 'a FStar_Pervasives_Native.option) ->
@@ -1453,7 +1453,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____6735
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _6761  -> FStar_Pervasives_Native.Some _6761)
+               (fun uu____6761  -> FStar_Pervasives_Native.Some uu____6761)
                (FStar_Syntax_Embeddings.UnfoldOnly ss))
     | FV (fv,uu____6763,(l,uu____6765)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldfully
@@ -1463,7 +1463,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____6784
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _6810  -> FStar_Pervasives_Native.Some _6810)
+               (fun uu____6810  -> FStar_Pervasives_Native.Some uu____6810)
                (FStar_Syntax_Embeddings.UnfoldFully ss))
     | FV (fv,uu____6812,(l,uu____6814)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldattr
@@ -1473,7 +1473,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____6833
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _6859  -> FStar_Pervasives_Native.Some _6859)
+               (fun uu____6859  -> FStar_Pervasives_Native.Some uu____6859)
                (FStar_Syntax_Embeddings.UnfoldAttr ss))
     | uu____6860 ->
         ((let uu____6862 =

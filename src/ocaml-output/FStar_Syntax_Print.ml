@@ -124,8 +124,8 @@ let (is_lex_cons : exp -> Prims.bool) =
 let (is_lex_top : exp -> Prims.bool) =
   fun f  -> is_prim_op [FStar_Parser_Const.lextop_lid] f 
 let is_inr :
-  'Auu____424 'Auu____425 .
-    ('Auu____424,'Auu____425) FStar_Util.either -> Prims.bool
+  'uuuuuu424 'uuuuuu425 .
+    ('uuuuuu424,'uuuuuu425) FStar_Util.either -> Prims.bool
   =
   fun uu___1_435  ->
     match uu___1_435 with
@@ -133,10 +133,10 @@ let is_inr :
     | FStar_Util.Inr uu____442 -> true
   
 let filter_imp :
-  'Auu____449 .
-    ('Auu____449 * FStar_Syntax_Syntax.arg_qualifier
+  'uuuuuu449 .
+    ('uuuuuu449 * FStar_Syntax_Syntax.arg_qualifier
       FStar_Pervasives_Native.option) Prims.list ->
-      ('Auu____449 * FStar_Syntax_Syntax.arg_qualifier
+      ('uuuuuu449 * FStar_Syntax_Syntax.arg_qualifier
         FStar_Pervasives_Native.option) Prims.list
   =
   fun a  ->

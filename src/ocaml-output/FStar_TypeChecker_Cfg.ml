@@ -1737,9 +1737,9 @@ let try_unembed_simple :
       uu____3938 false FStar_Syntax_Embeddings.id_norm_cb
   
 let mk :
-  'Auu____3953 .
-    'Auu____3953 ->
-      FStar_Range.range -> 'Auu____3953 FStar_Syntax_Syntax.syntax
+  'uuuuuu3953 .
+    'uuuuuu3953 ->
+      FStar_Range.range -> 'uuuuuu3953 FStar_Syntax_Syntax.syntax
   =
   fun t  -> fun r  -> FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None r 
 let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
