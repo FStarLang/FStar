@@ -802,6 +802,21 @@ let gamma_until (g:gamma) (bs:binders) =
       | Some (_, bx, rest) -> bx::rest
 
 
+let tgt_ctx_includes_src_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
+    let rec aux tgt_bs src_bs =
+      match tgt_bs, src_bs with
+      | (b, i)::tgt_bs_tail, (b', i')::src_bs_tail ->
+         if S.bv_eq b b'
+         then aux tgt_bs_tail src_bs_tail
+         else false
+      | _, [] -> true
+      | _ -> false
+    in
+    aux tgt.ctx_uvar_binders src.ctx_uvar_binders
+
+let tgt_ctx_includes_all_source_ctx (tgt:ctx_uvar) (sources:list<ctx_uvar>) =
+    List.for_all (tgt_ctx_includes_src_ctx tgt) sources
+
 let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
@@ -1386,7 +1401,7 @@ let is_flex_pat = function
     | _ -> false
 
 (* <quasi_pattern>:
-        Given a term (?u_(bs;t) e1..en)
+        Given a term ((G |- ?u : bs -> t) e1..en)
         returns None in case the arity of the type t is less than n
         otherwise returns Some (x1 ... xn)
         where if ei is a variable distinct from bs and all the ej
@@ -1414,10 +1429,10 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
                      //so don't include it in the quasi-pattern
                      aux ((formal, formal_imp) :: pat_binders) formals t_res args
                 else let x = {x with sort=formal.sort} in
-                        let subst = [NT(formal, S.bv_to_name x)] in
-                        let formals = SS.subst_binders subst formals in
-                        let t_res = SS.subst subst t_res in
-                        aux (({x with sort=formal.sort}, a_imp) :: pat_binders) formals t_res args
+                     let subst = [NT(formal, S.bv_to_name x)] in
+                     let formals = SS.subst_binders subst formals in
+                     let t_res = SS.subst subst t_res in
+                     aux (({x with sort=formal.sort}, a_imp) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
             aux ((formal, formal_imp) :: pat_binders) formals t_res args
             end
@@ -2003,6 +2018,12 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
+        (* We have a problem of this shape:
+             (G |- ?u_lhs : bs_lhs -> t_lhs) lhs_args  =?= rhs_hd args_rhs last_arg_rhs
+
+           Our goal is to solve ?u_lhs matching the shape of the RHS
+           by peeling the last argument of the RHS
+         *)
         //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
         //    (flex_t_to_string lhs)
@@ -2011,29 +2032,42 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //    (Print.term_to_string rhs);
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
+        // rhs' = rhs_hd args_rhs
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
         //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
-        let t_lhs, u_lhs, _lhs_args = lhs in
-        let lhs', lhs'_last_arg, wl =
-              let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
-              //FIXME: this may be an implicit arg ... fix qualifier
-              let _, lhs', wl = copy_uvar u_lhs (bs_lhs@[S.null_binder t_last_arg]) t_res_lhs wl in
-              let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
-              lhs', lhs'_last_arg, wl
-        in
+        let t_lhs, u_lhs, lhs_args = lhs in
+        
+        // (G |- ?t_last_arg : Type) : This is the type of the newly introduced variable to match the last arg
+        let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+        // (G |- ?u_lhs' : bs_lhs -> _:?t -> tu) : A variable to match rhs'
+        //FIXME: this may be an implicit arg ... fix qualifier
+        let _, lhs', wl = copy_uvar u_lhs [] (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (U.mk_Total t_res_lhs)) wl in
+        // (G |- ?u_lhs'_last_arg : bs_lhs -> ?t) : A variable to match last_arg_rhs
+        let _, lhs'_last_arg, wl = copy_uvar u_lhs [] (U.arrow bs_lhs (U.mk_Total t_last_arg)) wl in
+
+        // Now, we set:
+        // ?u_lhs <- (fun bs_lhs -> ?u_lhs' bs_lhs (?u_lhs'_last_arg bs_lhs))
+        // And generate sub-problems 
+        // ?u_lhs' lhs_args =?= rhs'
+        // (?u_lhs'_last_arg lhs_args) =?= lhs'_last_arg
+
         //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
-        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
-                                            (Some (U.residual_tot t_res_lhs)))]
+
+        let sol = [TERM(u_lhs, 
+                        U.abs bs_lhs
+                              (U.mk_app_binders lhs' (bs_lhs@[S.mk_app_binders lhs'_last_arg bs_lhs]))
+                              (Some (U.residual_tot t_res_lhs)))]
         in
+        
         let sub_probs, wl =
-            let p1, wl = mk_t_problem wl [] orig lhs' EQ rhs' None "first-order lhs" in
-            let p2, wl = mk_t_problem wl [] orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
+            let p1, wl = mk_t_problem wl [] orig (S.mk_app lhs' lhs_args) EQ rhs' None "first-order lhs" in
+            let p2, wl = mk_t_problem wl [] orig (S.mk_app lhs'_last_arg lhs_args) EQ (fst last_arg_rhs) None "first-order rhs" in
             [p1; p2], wl
         in
         solve env (attempt sub_probs (solve_prob orig None sol wl))
@@ -2088,13 +2122,13 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
             List.map Print.bv_to_string (BU.set_elements fvs) |> String.concat ", "
         in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
-        let fvs2 = Free.names rhs in
+        let fvs2 = Free.names rhs in // (G |- ?l)  <- f (G' |- ?u )
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
-        else if BU.set_is_subset_of fvs2 fvs1
+        else if BU.set_is_subset_of fvs2 fvs1 
+             && tgt_ctx_includes_all_source_ctx ctx_uv uvars
         then let sol = mk_solution env lhs lhs_binders rhs in
-             let wl = restrict_all_uvars ctx_uv uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
         then
