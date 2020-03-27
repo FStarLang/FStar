@@ -242,6 +242,12 @@ let ml_mode_check_initial_interface mname (iface:list<decl>) =
   | Val _ -> true //only retain the vals in --MLish mode
   | _ -> false)
 
+(*
+ * AR: ml mode optimizations are only applied in ml mode and only to non-core files
+ *
+ *     otherwise we skip effect declarations like Lemma from Pervasives.fsti,
+ *       resulting in desugaring failures when typechecking Pervasives.fst
+ *)
 let apply_ml_mode_optimizations (mname:lident) : bool =
   Options.ml_ish () &&
   (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules)))
