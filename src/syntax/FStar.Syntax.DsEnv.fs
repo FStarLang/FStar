@@ -552,12 +552,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                    Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
-            | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
-            | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
-            | Sig_splice (lids, t) ->
+          | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+          | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
+          | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
                 Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
-            | _ -> None
+          | _ -> None
         end in
 
   let k_local_binding r = let t = found_local_binding (range_of_lid lid) r in Some (Term_name (t, []))
