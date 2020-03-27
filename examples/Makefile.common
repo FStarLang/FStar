@@ -29,6 +29,10 @@ CACHE_DIR ?= _cache
 # Additionaly flags to pass to F*
 OTHERFLAGS += --use_extracted_interfaces true --use_hints
 
+# Set ADMIT=1 to admit queries
+ADMIT ?=
+MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
+
 ################################################################################
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
@@ -37,7 +41,7 @@ MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
-		  $(OTHERFLAGS)
+		  $(OTHERFLAGS) $(MAYBE_ADMIT)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES
