@@ -326,7 +326,10 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
-    let steps = [Env.Weak; Env.Reify; Env.UnfoldUntil delta_constant; Env.UnfoldTac; Env.Primops; Env.Unascribe] in
+    let steps = [Env.Weak;
+                 Env.Reify; Env.ReduceDivLets;
+                 Env.UnfoldUntil delta_constant; Env.UnfoldTac;
+                 Env.Primops; Env.Unascribe] in
 
     // Maybe use NBE if the user asked for it
     let norm_f = if Options.tactics_nbe ()
