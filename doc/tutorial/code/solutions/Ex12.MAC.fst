@@ -59,11 +59,11 @@ abstract type key : eqtype = SHA1.key
 private
 let unique_registry_order' (#a:eqtype) (#b:Type) (l1 l2:list (a * b))
   = (forall x. x `memP` l1 ==> x `memP` l2) /\ (noRepeats (map fst l1) ==> noRepeats (map fst l2))
-let unique_registry_order (#a:eqtype) (#b:Type) : Tot (preorder (l:list (a * b))) =
+let unique_registry_order (#a:eqtype) (#b:Type) : Tot (preorder (list (a * b))) =
   unique_registry_order' #a #b
 
 type key_entry = key * (text -> GTot bool)
-type key_lref = mref (l:list key_entry) unique_registry_order
+type key_lref = mref (list key_entry) unique_registry_order
 
 (** returns the no repeats predicate with a type expressing that it is stable under the unique_registry_order. The unit function is due to a known encoding issue: https://github.com/FStarLang/FStar/issues/1150 *)
 

@@ -6,4 +6,6 @@ open Prims
 
 
 
+type e_nat_2 = unit
+type e_nat_3 = unit
 

@@ -74,7 +74,8 @@ let op_Less_Equals_Hat = lte
 
 let of_string s = int_of_string s
 let to_string s = string_of_int s
-let to_string_hex s = Printf.sprintf "%02x" s
+let to_string_hex s = Printf.sprintf "0x%x" s
+let to_string_hex_pad s = Printf.sprintf "%02x" s
 let uint_to_t s = int_to_uint8 s
 let to_int s = s
 let __uint_to_t = uint_to_t

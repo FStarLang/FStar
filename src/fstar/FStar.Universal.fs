@@ -129,6 +129,7 @@ let init_env deps : TcEnv.env =
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStar.Tactics.Interpreter.synthesize } in
+  let env = { env with try_solve_implicits_hook = FStar.Tactics.Interpreter.solve_implicits } in
   let env = { env with splice           = FStar.Tactics.Interpreter.splice} in
   let env = { env with mpreprocess      = FStar.Tactics.Interpreter.mpreprocess} in
   let env = { env with postprocess      = FStar.Tactics.Interpreter.postprocess} in

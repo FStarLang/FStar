@@ -1,0 +1,33 @@
+[
+  "ËËXþøäÙÿÎ»D\u0014E\\\u000fš",
+  [
+    [
+      "Bug316.c",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug316.a",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_22e66b3cc5a2a795d66d00b6de2b1e50",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "8c211a1c5e0be3f6dbde1d41cdccb24b"
+    ],
+    [
+      "Bug316.r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug316.a",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_22e66b3cc5a2a795d66d00b6de2b1e50",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "4786d5b481445893be66b2c7a8a1002b"
+    ]
+  ]
+]

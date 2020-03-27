@@ -434,8 +434,8 @@ let explain env d (s : lstring) =
             | SUB -> "a subtype of"
             | _ -> failwith "impossible" in
          let lhs, rhs = match d with
-            | TProb tp -> N.term_to_string env tp.lhs, N.term_to_string env tp.rhs
-            | CProb cp -> N.comp_to_string env cp.lhs, N.comp_to_string env cp.rhs in
+            | TProb tp -> Err.print_discrepancy (N.term_to_string env) tp.lhs tp.rhs
+            | CProb cp -> Err.print_discrepancy (N.comp_to_string env) cp.lhs cp.rhs in
          BU.format3 "%s is not %s the expected type %s" lhs rel rhs
 
 
@@ -3076,6 +3076,11 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (fun b -> BU.format3 "implicit for binder %s in stronger of %s at %s"
             (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
 
+        if debug env <| Options.Other "LayeredEffects"
+        then BU.print1 "Introduced uvars for subcomp: %s\n"
+               (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
+
+
         let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 
         let substs = List.map2
@@ -3680,7 +3685,7 @@ let resolve_implicits' env must_total forcelax g =
                     in
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
-                    until_fixpoint (out, true) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (extra @ tl)
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
@@ -3724,13 +3729,15 @@ let resolve_implicits_tac env g = resolve_implicits' env false true  g
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
-        | [] -> ignore <| discharge_guard env g
-        | imp::_ ->
-           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                        BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                    (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                    (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
-                                    imp.imp_reason) imp.imp_range
+    | [] -> ignore <| discharge_guard env g
+    | imp::_ ->
+        raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                     BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
+                                (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                                (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                imp.imp_reason) imp.imp_range
+
+
 
 let teq_force (env:env) (t1:typ) (t2:typ) : unit =
     force_trivial_guard env (teq env t1 t2)

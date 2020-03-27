@@ -489,6 +489,9 @@ type sigelt' =
   | Sig_splice            of list<lident> * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
+  | Sig_fail              of list<int>         (* Expected errors (empty for 'any') *)
+                          * bool               (* true if should fail in --lax *)
+                          * list<sigelt>       (* The sigelts to be checked *)
 
 and sigelt = {
     sigel:    sigelt';

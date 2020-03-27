@@ -356,6 +356,7 @@ let dependences_of (file_system_map:files_for_module_name)
     | None -> empty_dependences
     | Some ({edges=deps}) ->
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
+      |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
 let print_graph (graph:dependence_graph) =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";

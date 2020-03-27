@@ -150,6 +150,8 @@ val print1_warning: string -> string -> unit
 val print2_warning: string -> string -> string -> unit
 val print3_warning: string -> string -> string -> string -> unit
 
+val flush_stdout: unit -> unit
+
 val stdout_isatty: unit -> option<bool>
 
 // These functions have no effect
@@ -447,7 +449,7 @@ type hints_db = {
 }
 
 val write_hints: string -> hints_db -> unit
-val read_hints: string -> option<hints_db>
+val read_hints: string -> bool -> option<hints_db>
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string

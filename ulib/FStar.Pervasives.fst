@@ -46,7 +46,7 @@ let id (#a: Type) (x: a) : a = x
 
 (** Trivial postconditions for the [PURE] effect *)
 unfold
-let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
+let trivial_pure_poost (a: Type) : pure_post a = fun _ -> True
 
 (** Sometimes it is convenient to explicit introduce nullary symbols
     into the ambient context, so that SMT can appeal to their definitions
@@ -606,15 +606,22 @@ let unifier_hint_injective:unit = ()
         If, according to the positional arguments [1;2],
         if v1 and v2 have constant head symbols
               (e.g., v1 = Cons _ _ _, and v2 = None _)
-       then `f` is unfolded to `e` and reduced as
-         e[v0/x0][v1/x1][v2/x2]
+       then [f] is unfolded to [e] and reduced as
+         {[e[v0/x0][v1/x1][v2/x2]]}
 
      2 b.
 
-      Otherwise, `f` is not unfolded and the term is `f e0 e1 e2`
-      reduces to `f v0 v1 v2`. *)
+      Otherwise, [f] is not unfolded and the term is [f e0 e1 e2]
+      reduces to [f v0 v1 v2]. *)
 irreducible
 let strict_on_arguments (x: list int) : unit = ()
+
+(**
+ * An attribute to tag a tactic designated to solve any
+ * unsolved implicit arguments remaining at the end of type inference.
+ **)
+irreducible
+let resolve_implicits : unit = ()
 
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.

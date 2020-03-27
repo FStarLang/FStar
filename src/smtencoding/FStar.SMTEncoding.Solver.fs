@@ -53,25 +53,28 @@ let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
 (****************************************************************************)
 let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
-    if Options.use_hints()
-    then let norm_src_filename = BU.normalize_file_path src_filename in
-         let val_filename = Options.hint_file_for_src norm_src_filename in
-         begin match BU.read_hints val_filename with
-            | Some hints ->
-                let expected_digest = BU.digest_of_file norm_src_filename in
-                if Options.hint_info()
-                then begin
+    let norm_src_filename = BU.normalize_file_path src_filename in
+    (*
+     * Read the hints file into replaying_hints
+     * But it will only be used when use_hints is on
+     *)
+    let val_filename = Options.hint_file_for_src norm_src_filename in
+    begin match BU.read_hints val_filename (Options.use_hints ())  with
+          | Some hints ->
+            let expected_digest = BU.digest_of_file norm_src_filename in
+            if Options.hint_info()
+            then begin
                     BU.print3 "(%s) digest is %s from %s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
                          val_filename
-                end;
-                replaying_hints := Some hints.hints
-            | None ->
-                if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
-         end
+                 end;
+                 replaying_hints := Some hints.hints
+          | None ->
+            if Options.hint_info()
+            then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
+    end
 
 let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
@@ -515,6 +518,12 @@ let query_info settings z3result =
             FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
+//caller must ensure that the recorded_hints is already initiailized
+let store_hint hint =
+  match !recorded_hints with
+  | Some l -> recorded_hints := Some (l@[Some hint])
+  | _ -> assert false; ()
+
 let record_hint settings z3result =
     if not (Options.record_hints()) then () else
     begin
@@ -529,11 +538,6 @@ let record_hint settings z3result =
                         | UNSAT core -> z3result.z3result_query_hash
                         | _ -> None)
           }
-      in
-      let store_hint hint =
-          match !recorded_hints with
-          | Some l -> recorded_hints := Some (l@[Some hint])
-          | _ -> assert false; ()
       in
       match z3result.z3result_status with
       | UNSAT None ->
@@ -630,13 +634,13 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
     in
 
     let use_hints_setting =
-        match next_hint with
-        | Some ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) ->
-          [{default_settings with query_hint=Some core;
-                                  query_fuel=i;
-                                  query_ifuel=j}]
-        | _ ->
-          []
+        if Options.use_hints () && next_hint |> is_some
+        then
+            let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+            [{default_settings with query_hint=Some core;
+                                    query_fuel=i;
+                                    query_ifuel=j}]
+        else []
     in
 
     let initial_fuel_max_ifuel =
@@ -695,7 +699,8 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         let hi   = Options.quake_hi () in
         let seed = Options.z3_seed () in
         let name = full_query_id default_settings in
-        let quaking = hi > 1 in
+        let quaking = hi > 1 && not (Options.retry ()) in
+        let quaking_or_retrying = hi > 1 in
         let hi = if hi < 1 then 1 else hi in
         let lo =
             if lo < 1 then 1
@@ -740,30 +745,41 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             | None -> r := Some n
             | Some m -> if n < m then r := Some n
         in
-        let nsuccess, rs =
+        let nsuccess, nfailures, rs =
             fold_nat'
-                (fun (nsucc, rs) n ->
+                (fun (nsucc, nfail, rs) n ->
+                     if not (Options.quake_keep ())
+                        && (nsucc >= lo (* already have enough successes *)
+                            || nfail > hi-lo) (* already have too many failures *)
+                     then (nsucc, nfail, rs)
+                     else begin
+                     if quaking_or_retrying
+                        && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
+                        && n>0 then (* no need to print last *)
+                       BU.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
+                           (if quaking then "Quake" else "Retry")
+                           name
+                           (if quaking then BU.format1 "succeeded %s times and " (string_of_int nsucc) else "")
+                           (* ^ if --retrying, it does not make sense to print successes since
+                            * they must be exactly 0 *)
+                           (if quaking then string_of_int nfail else string_of_int nfail ^ " times")
+                           (* ^ proper grammar :-) *)
+                           (string_of_int (hi-n));
                      let r = run_one (seed+n) in
-                     let nsucc =
+                     let nsucc, nfail =
                         match r with
                         | Inr cfg ->
                             (* maybe update best fuels *)
                             maybe_improve best_fuel cfg.query_fuel;
                             maybe_improve best_ifuel cfg.query_ifuel;
-                            nsucc + 1
-                        | _ -> nsucc
+                            nsucc + 1, nfail
+                        | _ -> nsucc, nfail+1
                      in
-                     if quaking
-                        && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
-                        && n<hi-1 then (* no need to print last *)
-                       BU.print4 "Quake: so far query %s succeeded %s times and failed %s (%s runs remain)\n"
-                           name
-                           (string_of_int nsucc)
-                           (string_of_int (n+1-nsucc))
-                           (string_of_int (hi-1-n));
-                     (nsucc, r::rs))
-                (0, []) 0 (hi-1)
+                     (nsucc, nfail, r::rs)
+                     end)
+                (0, 0, []) 0 (hi-1)
         in
+        let total_ran = nsuccess + nfailures in
         if quaking then begin
             let fuel_msg =
               match !best_fuel, !best_ifuel with
@@ -771,10 +787,11 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                 BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
               | _, _ -> ""
             in
-            BU.print4 "Quake: query %s succeeded %s/%s times%s\n"
+            BU.print5 "Quake: query %s succeeded %s/%s times%s%s\n"
                       name
                       (string_of_int nsuccess)
-                      (string_of_int hi)
+                      (string_of_int total_ran)
+                      (if total_ran < hi then " (early finish)" else "")
                       fuel_msg
         end;
         (* If nsuccess < lo, we have a failure. We report summarized
@@ -782,7 +799,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         if nsuccess < lo then begin
           let all_errs = List.concatMap (function | Inr _ -> []
                                                   | Inl es -> [es]) rs in
-          if quaking && not (Options.query_stats ()) then begin
+          if quaking_or_retrying && not (Options.query_stats ()) then begin
             let errors_to_report errs =
                 errors_to_report ({default_settings with query_errors=errs})
             in
@@ -805,18 +822,21 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                       | Some (l, _) -> Ident.range_of_lid l
                       | _ -> Range.dummyRange
             in
-            (* Adding another error for the threshold *)
-            FStar.TypeChecker.Err.add_errors
-              env
-              [(Errors.Error_QuakeFailed,
-                BU.format4
-                  "Query %s failed the quake test, %s out of %s attempts succeded, \
-                   but the threshold was %s"
-                   name
-                  (string_of_int nsuccess)
-                  (string_of_int hi)
-                  (string_of_int lo),
-                rng)]
+            (* Adding another error for the threshold (but not for --retry) *)
+            if quaking then
+              FStar.TypeChecker.Err.add_errors
+                env
+                [(Errors.Error_QuakeFailed,
+                  BU.format6
+                    "Query %s failed the quake test, %s out of %s attempts succeded, \
+                     but the threshold was %s out of %s%s"
+                     name
+                    (string_of_int nsuccess)
+                    (string_of_int total_ran)
+                    (string_of_int lo)
+                    (string_of_int hi)
+                    (if total_ran < hi then " (early abort)" else ""),
+                  rng)]
           end
           else begin
             (* Just report them as usual *)
@@ -826,17 +846,21 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         end
     in
 
-    match Options.admit_smt_queries(), Options.admit_except() with
-    | true, _ -> ()
-    | false, None -> quake_and_check_all_configs all_configs
-    | false, Some id ->
-      let skip =
-        if BU.starts_with id "("
-        then full_query_id default_settings <> id
-        else default_settings.query_name <> id
-      in
-      if not skip
-      then quake_and_check_all_configs all_configs
+    let skip =
+        Options.admit_smt_queries () ||
+        (match Options.admit_except () with
+         | Some id ->
+           if BU.starts_with id "("
+           then full_query_id default_settings <> id
+           else default_settings.query_name <> id
+         | None -> false) in
+
+    if skip
+    then if Options.record_hints () && next_hint |> is_some
+         //restore the hint as is, cf. #1651
+         then next_hint |> must |> store_hint
+         else ()
+    else quake_and_check_all_configs all_configs
 
 type solver_cfg = {
   seed             : int;

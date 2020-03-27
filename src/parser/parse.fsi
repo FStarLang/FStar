@@ -420,6 +420,7 @@ type nonTerminalId =
     | NONTERM_kind
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_calcRel
     | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
@@ -442,7 +443,6 @@ type nonTerminalId =
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
     | NONTERM_binop_name
-    | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq

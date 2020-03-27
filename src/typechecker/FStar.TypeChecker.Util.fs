@@ -1446,6 +1446,7 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
   (scrutinee:bv) : lcomp =
+
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
@@ -1496,15 +1497,21 @@ let bind_cases env0 (res_t:typ)
              * note that we don't need to build these just to combine cases because the shape of if_then_else
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
-            let branch_conditions, _ =
+            let branch_conditions =
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
                   let cond = U.mk_conj acc (U.mk_neg g) in
-                  (conds@[cond]), cond) ([], U.t_true) in
+                  (conds@[cond]), cond) ([U.t_true], U.t_true)
+              |> fst
+              |> List.splitAt (List.length lcases)
+              |> fst in
+
+            //let default_case, g_comp = weaken_comp env default_case default_branch_condition in
 
             let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
                 let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
+                let gthen = TcComm.weaken_guard_formula gthen (U.mk_conj bcond g) in
                 let md, ct_then, ct_else, g_lift_then, g_lift_else =
                   let m, cthen, celse, g_lift_then, g_lift_else =
                     lift_comps_sep_guards env cthen celse None false in
@@ -1705,6 +1712,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
     in
     let is_type t =
         let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
         match (SS.compress t).n with
         | Tm_type _ -> true
         | _ -> false
@@ -1988,9 +1996,22 @@ let maybe_instantiate (env:Env.env) e t =
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                  (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
+       (* Similar to U.arrow_formals, but makes sure to unfold
+        * recursively to catch all the binders across type
+        * definitions. TODO: Move to library? Revise other uses
+        * of arrow_formals{,_comp}?*)
+       let unfolded_arrow_formals (t:term) : list<binder> =
+         let rec aux (bs:list<binder>) (t:term) : list<binder> =
+           let t = N.unfold_whnf env t in
+           let bs', t = U.arrow_formals t in
+           match bs' with
+           | [] -> bs
+           | bs' -> aux (bs@bs') t
+         in
+         aux [] t
+       in
        let number_of_implicits t =
-            let t = N.unfold_whnf env t in
-            let formals, _ = U.arrow_formals t in
+            let formals = unfolded_arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
@@ -2606,6 +2627,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                     r
           | Sig_declare_typ _ ->
             ()
+          | Sig_fail _ ->
+            () (* just ignore it, the member ses have the attribute too *)
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,

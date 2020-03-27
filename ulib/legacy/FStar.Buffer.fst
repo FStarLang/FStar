@@ -40,7 +40,7 @@ let lseq (a: Type) (l: nat) : Type =
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type _buffer (a:Type) =
   | MkBuffer: max_length:UInt32.t
-    -> content:reference (s: lseq a (v max_length))
+    -> content:reference (lseq a (v max_length))
     -> idx:UInt32.t
     -> length:UInt32.t{v idx + v length <= v max_length}
     -> _buffer a

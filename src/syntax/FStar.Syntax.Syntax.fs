@@ -447,6 +447,9 @@ type sigelt' =
   | Sig_splice            of list<lident> * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  | Sig_fail              of list<int>         (* Expected errors *)
+                          * bool               (* true if should fail in --lax *)
+                          * list<sigelt>       (* The sigelts to be checked *)
   
 and sigelt = {
     sigel:    sigelt';

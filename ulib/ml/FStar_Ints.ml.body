@@ -44,7 +44,9 @@ let lognot        = M.lognot
 let to_string     = M.to_string
 let of_string     = M.of_string
 
-let to_string_hex i =
+let to_string_hex = M.to_string_hex
+
+let to_string_hex_pad i =
     let s0 = M.to_string_hex i in
     let len = (String.length s0 - 2) in
     let s1 = String.sub s0 2 len in (* Remove leading "0x" *)

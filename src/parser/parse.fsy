@@ -694,6 +694,9 @@ rawDecl:
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
       ( ModuleAbbrev(uid1, uid2) )}
+| MODULE qlident
+    {let (_1, _2) = ((), $2) in
+      ( raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
@@ -711,6 +714,12 @@ rawDecl:
         if q <> Rec && List.length lbs <> 1
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
+      )}
+| VAL constant
+    {let (_1, c) = ((), $2) in
+      (
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
     {let (_1, lid, bss, _4, t) = ((), $2, $3, (), $5) in
@@ -1446,8 +1455,19 @@ let pbs =    ( List.rev xs ) in
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
      )}
 
+calcRel:
+  binop_name
+    {let i = $1 in
+                 ( mk_term (Op (i, [])) (rhs parseState 1) Expr )}
+| BACKTICK qlident BACKTICK
+    {let (_1, id, _3) = ((), $2, ()) in
+                                 ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
+| atomicTerm
+    {let t = $1 in
+                 ( t )}
+
 calcStep:
-  binop LBRACE option_term_ RBRACE noSeqTerm SEMICOLON
+  calcRel LBRACE option_term_ RBRACE noSeqTerm SEMICOLON
     {let (rel, _2, justif, _4, next, _6) = ($1, (), $3, (), $5, ()) in
      (
          let justif =
@@ -1956,17 +1976,6 @@ binop_name:
 | OP_MIXFIX_ACCESS
     {let o = $1 in
                              ( mk_ident (o, rhs parseState 1) )}
-
-binop:
-  binop_name
-    {let i = $1 in
-                 ( mk_term (Op (i, [])) (rhs parseState 2) Expr )}
-| BACKTICK qlident BACKTICK
-    {let (_1, id, _3) = ((), $2, ()) in
-                                 ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
-| atomicTerm
-    {let t = $1 in
-                 ( t )}
 
 tmEqNoRefinement:
   tmEqWith_appTerm_
