@@ -110,3 +110,5 @@ let normalize_spec _ = ()
 let norm_spec _ #_ _ = ()
 
 let singleton #_ x = x
+
+let with_type #_ e = e

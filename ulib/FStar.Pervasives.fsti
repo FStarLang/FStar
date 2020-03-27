@@ -511,4 +511,4 @@ val singleton (#a:Type) (x:a) : Tot (y:a{y == x})
  *  an SMT axiom:
  *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
  *)
-let with_type (#t:Type) (e:t) = e
+val with_type (#t:Type) (e:t) : Tot t
