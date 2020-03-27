@@ -1311,7 +1311,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc env.env_tcenv rc
-                then TcUtil.reify_body env.env_tcenv [TcEnv.Inlining] body
+                then TcUtil.reify_body env.env_tcenv [TcEnv.Inlining; TcEnv.Unascribe] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1350,7 +1350,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg g.env_tcenv [TcEnv.Inlining] head (List.hd args) in
+              let e = TcUtil.reify_body_with_arg g.env_tcenv [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
               term_as_mlexpr g tm
 
