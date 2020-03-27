@@ -2083,18 +2083,22 @@ let maybe_instantiate (env:Env.env) e t =
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
         * of arrow_formals{,_comp}?*)
-       let unfolded_arrow_formals (t:term) : list<binder> =
-         let rec aux (bs:list<binder>) (t:term) : list<binder> =
-           let t = N.unfold_whnf env t in
-           let bs', t = U.arrow_formals t in
+       let unfolded_arrow_formals (t:term) : list<binder> * comp =
+         let rec aux (bs:list<binder>) (t0:term) : list<binder> * comp =
+           let t = N.unfold_whnf env t0 in
+           let bs', c = U.arrow_formals_comp t in
            match bs' with
-           | [] -> bs
-           | bs' -> aux (bs@bs') t
+           (* It's important to return t0 in these first two cases
+            * to not unnecessarily reduce t *)
+           | [] -> bs, S.mk_Total t0
+           | _ when not (U.is_total_comp c) ->
+                bs@(List.init bs'), S.mk_Total (U.arrow [(List.last bs' |> BU.must)] c)
+           | bs' -> aux (bs@bs') (U.comp_result c)
          in
          aux [] t
        in
        let number_of_implicits t =
-            let formals = unfolded_arrow_formals t in
+            let formals, _ = unfolded_arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
@@ -2118,46 +2122,84 @@ let maybe_instantiate (env:Env.env) e t =
                 | None -> None
                 | Some i -> Some (i - 1)
         in
-        let t = N.unfold_whnf env t in
-        begin match t.n with
-            | Tm_arrow(bs, c) ->
-              let bs, c = SS.open_comp bs c in
-              //instantiate at most inst_n implicit binders, when inst_n = Some n
+        let bs, c = unfolded_arrow_formals t in
+        begin //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
               let rec aux subst inst_n bs =
+                (* 0: do not instantiate
+                 * 1: instantiate implicit
+                 * 2: instantiate meta implicit *)
+                let decide () : int =
                   match inst_n, bs with
-                  | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
+                  (* No expected type, function is of shape #x:a -> c where
+                   * x appears in c. Instantiate, it might help inference
+                   * and `x` will probably be generalized. *)
+                  | None, (x, (Some (Implicit _)))::rest when
+                         BU.set_mem x (Free.names (U.arrow (List.tail bs) c)) ->
+                    1
+
+                  (* Similar to above for meta args *)
+                  | None, (x, (Some (Meta _)))::rest when
+                         BU.set_mem x (Free.names (U.arrow (List.tail bs) c)) ->
+                    2
+
+                  (* No expected type, do not instantiate as it might specialize too much *)
+                  | None, _ ->
+                    0
+
+                  (* Expected type has no more implicits binders, we're done *)
+                  | Some 0, _ ->
+                    0
+
+                  (* Expected type has at least one implicit, we have an available
+                   * implicit, instantiate it *)
                   | _, (x, Some (Implicit _))::rest ->
-                      let t = SS.subst subst x.sort in
-                      let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
-                      if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
-                                (Print.term_to_string v);
-                      let subst = NT(x, v)::subst in
-                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                    1
 
-                  | _, (x, Some (Meta tac_or_attr))::rest ->
-                      let t = SS.subst subst x.sort in
-                      let meta_t = 
-                        match tac_or_attr with
-                        | Arg_qualifier_meta_tac tau ->
-                          Ctx_uvar_meta_tac (mkdyn env, tau)
-                        | Arg_qualifier_meta_attr attr ->
-                          Ctx_uvar_meta_attr attr
-                      in
-                      let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
-                                                         e.pos env t Strict
-                                                         (Some meta_t) in
-                      if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
-                                (Print.term_to_string v);
-                      let subst = NT(x, v)::subst in
-                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                  (* As above, for meta args *)
+                  | _, (x, Some (Meta _))::rest ->
+                    2
 
-                 | _, bs -> [], bs, subst, Env.trivial_guard
+                  (* No more available implicits to instantiate *)
+                  | _ ->
+                    0
+                in
+                match decide (), bs with
+                | 0, _ ->
+                  [], bs, subst, Env.trivial_guard //no more instantiations to do
+
+                | 1, (x, Some (Implicit _))::rest ->
+                  let t = SS.subst subst x.sort in
+                  let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
+                  if Env.debug env Options.High then
+                    BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
+                            (Print.term_to_string v);
+                  let subst = NT(x, v)::subst in
+                  let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
+                  (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
+                | 2, (x, Some (Meta tac_or_attr))::rest ->
+                  let t = SS.subst subst x.sort in
+                  let meta_t =
+                    match tac_or_attr with
+                    | Arg_qualifier_meta_tac tau ->
+                      Ctx_uvar_meta_tac (mkdyn env, tau)
+                    | Arg_qualifier_meta_attr attr ->
+                      Ctx_uvar_meta_attr attr
+                  in
+                  let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
+                                                     e.pos env t Strict
+                                                     (Some meta_t) in
+                  if Env.debug env Options.High then
+                    BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
+                            (Print.term_to_string v);
+                  let subst = NT(x, v)::subst in
+                  let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
+                  (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
+                | _ ->
+                  failwith "impossible: maybe_instantiate: bad decide"
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
@@ -2177,8 +2219,6 @@ let maybe_instantiate (env:Env.env) e t =
                   let e = S.mk_Tm_app e args e.pos in
                   e, t, guard
               end
-
-            | _ -> e, torig, Env.trivial_guard
        end
   end
 
