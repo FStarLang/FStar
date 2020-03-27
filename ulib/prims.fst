@@ -158,7 +158,7 @@ type prop = a:Type0{ a `subtype_of` unit }
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
-         abstractly.  Importantly, while we allow constructing ranges,
+         abstractly. Importantly, while we allow constructing ranges,
          we do not allow destructing them, since that would reveal
          that internally, set_range_of is not an identity function.
 *)
@@ -358,41 +358,8 @@ type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-abstract
-type pattern :Type0 = unit
-
-// SMTPat and SMTPatOr desugar to these two
-irreducible
-let smt_pat (#a:Type) (x:a) : pattern = ()
-
-irreducible
-let smt_pat_or (x:list (list pattern)) : pattern = ()
-
 assume
 type decreases : #a:Type -> a -> Type0
-
-(*
-   Lemma is desugared specially. The valid forms are:
-
-     Lemma (ensures post)
-     Lemma post [SMTPat ...]
-     Lemma (ensures post) [SMTPat ...]
-     Lemma (ensures post) (decreases d)
-     Lemma (ensures post) (decreases d) [SMTPat ...]
-     Lemma (requires pre) (ensures post) (decreases d)
-     Lemma (requires pre) (ensures post) [SMTPat ...]
-     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
-
-   and
-
-     Lemma post    (== Lemma (ensures post))
-
-   the squash argument on the postcondition allows to assume the
-   precondition for the *well-formedness* of the postcondition.
-   C.f. #57.
-*)
-effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
-       Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
  * either as an alias for reasoning about the direct definitions, or as a marker
@@ -428,14 +395,6 @@ val admitP  : p:Type -> Pure unit True (fun x -> p)
 val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
 
 let _assert p = ()
-
-// Can be used to mark a query for a separate SMT invocation
-abstract
-let spinoff (p:Type) : Type = p
-
-// Logically equivalent to assert, but spins off separate query
-val assert_spinoff : (p:Type) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
-let assert_spinoff p = ()
 
 val cut : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
@@ -473,9 +432,3 @@ val string_of_int: int -> Tot string
 
 irreducible
 let labeled (r:range) (msg:string) (b:Type) :Type = b
-
-(* THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
-   Incrementing this forces all .checked files to be invalidated *)
-private
-abstract
-let __cache_version_number__ = 18
