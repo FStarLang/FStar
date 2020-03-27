@@ -975,7 +975,7 @@ let extract (g:uenv) (m:modul) =
   if Options.interactive() then g, None else
   let res =
       if Options.debug_any ()
-      then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+      then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
       else extract' g m
   in

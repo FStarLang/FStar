@@ -2340,7 +2340,7 @@ let (extract :
                 let uu____6657 =
                   FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
                    in
-                FStar_Util.format1 "Extracting module %s\n" uu____6657  in
+                FStar_Util.format1 "Extracting module %s" uu____6657  in
               FStar_Util.measure_execution_time msg
                 (fun uu____6667  -> extract' g m)
             else extract' g m  in

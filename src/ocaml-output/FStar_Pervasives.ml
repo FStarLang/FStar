@@ -60,7 +60,7 @@ type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else = unit
 type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = unit
 type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) all_close_wp = unit
 type ('Aheap,'Aa,'Awp) all_trivial = unit
-type 'Aa inversion = unit
+type 'Auu____929 inversion = unit
 
 
 type ('a,'b) either =
@@ -301,4 +301,4 @@ let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
 
 
 let singleton : 'Auu____2187 . 'Auu____2187 -> 'Auu____2187 = fun x  -> x 
-let with_type : 'At . 'At -> 'At = fun e  -> e 
+let with_type : 'Auu____2198 . 'Auu____2198 -> 'Auu____2198 = fun e  -> e 
