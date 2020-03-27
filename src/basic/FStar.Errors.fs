@@ -341,6 +341,7 @@ type raw_error =
   | Warning_UnusedLetRec
   | Fatal_PolymonadicBind_conflict
   | Warning_BleedingEdge_Feature
+  | Warning_IgnoredBinding
 
 type flag = error_flag
 
@@ -677,11 +678,12 @@ let default_flags =
   (Error_IllSMTPat                                   , CError); //326
   (Error_IllScopedTerm                               , CError);
   (Warning_UnusedLetRec                              , CWarning);
-  (* Protip: if we keep the semicolon at the end, we modify exactly one
-   * line for each error we add. This means we get a cleaner git history/blame *)
   (Fatal_PolymonadicBind_conflict                    , CError);
   (Warning_BleedingEdge_Feature                      , CWarning);
+  (Warning_IgnoredBinding                            , CWarning);
   ]
+  (* Protip: if we keep the semicolon at the end, we modify exactly one
+   * line for each error we add. This means we get a cleaner git history/blame *)
 
 type error = raw_error * string * Range.range
 
@@ -948,3 +950,46 @@ let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let errs = newh.eh_report() in
     current_handler := old;
     errs, r
+
+(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
+ * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
+ *     since 3 appears 1 time in l1, but 2 times in l2. *)
+let find_multiset_discrepancy (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
+    let sort = List.sortWith (fun x y -> x - y) in
+    let rec collect (l : list<'a>) : list<('a * int)> =
+        match l with
+        | [] -> []
+        | hd :: tl ->
+            begin match collect tl with
+            | [] -> [(hd, 1)]
+            | (h, n) :: t ->
+                if h = hd
+                then (h, n+1) :: t
+                else (hd, 1) :: (h, n) :: t
+            end
+    in
+    let summ l =
+        collect l
+    in
+    let l1 = summ (sort l1) in
+    let l2 = summ (sort l2) in
+    let rec aux l1 l2 =
+        match l1, l2 with
+        | [], [] -> None
+
+        | (e, n) :: _, [] ->
+            Some (e, n, 0)
+
+        | [], (e, n) :: _ ->
+            Some (e, 0, n)
+
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 ->
+            if hd1 < hd2 then
+                Some (hd1, n1, 0)
+            else if hd1 > hd2 then
+                Some (hd2, 0, n2)
+            else if n1 <> n2 then
+                Some (hd1, n1, n2)
+            else aux tl1 tl2
+    in
+    aux l1 l2

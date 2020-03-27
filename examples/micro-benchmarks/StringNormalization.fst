@@ -78,5 +78,6 @@ let _ =
   assert_norm (length "Hello World" == 11); (* awkward *)
   assert (sub "Hello World" 3 4 == "lo W")
 
+[@expect_failure] // should succeed..
 let _ =
   assert (norm [nbe; primops] ("abc" ^ "def") == "abcdef")

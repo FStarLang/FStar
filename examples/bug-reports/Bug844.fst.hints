@@ -1,0 +1,47 @@
+[
+  "Çà¥W\u0007<°SCÇv^OõwQ",
+  [
+    [
+      "Bug844.__proj__MkR__item__inv",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug844.MkR_i", "proj_equation_Bug844.MkR_j",
+        "projection_inverse_Bug844.MkR_i", "projection_inverse_Bug844.MkR_j",
+        "token_correspondence_Bug844.__proj__MkR__item__i",
+        "token_correspondence_Bug844.__proj__MkR__item__j"
+      ],
+      0,
+      "ffae680d4db87e9ca8f28614e2ff1841"
+    ],
+    [
+      "Bug844.__proj__MkC__item__inv2",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug844.MkC_i2",
+        "proj_equation_Bug844.MkC_j2", "projection_inverse_Bug844.MkC_i2",
+        "projection_inverse_Bug844.MkC_j2",
+        "token_correspondence_Bug844.__proj__MkC__item__i2",
+        "token_correspondence_Bug844.__proj__MkC__item__j2"
+      ],
+      0,
+      "c8fb40a81c097a3f07cee7ab9a0fac36"
+    ],
+    [
+      "Bug844.l1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.c_or"
+      ],
+      0,
+      "a81a2d331f94cd7a5c0f60efc9c8e164"
+    ]
+  ]
+]

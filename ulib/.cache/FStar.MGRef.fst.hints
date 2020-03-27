@@ -1,0 +1,67 @@
+[
+  "Ø\u001f‹E÷ıè0—+Xl]a«4",
+  [
+    [
+      "FStar.MGRef.aloc_preserved",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "72169fa00b09cca406da81e9be49d862"
+    ],
+    [
+      "FStar.MGRef.aloc_unused_in",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f0a8da752d35cd5292587b140a054f05"
+    ],
+    [
+      "FStar.MGRef.clas",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.MGRef.aloc_preserved",
+        "equation_FStar.MGRef.aloc_unused_in",
+        "equation_FStar.MGRef.mreference_preserved"
+      ],
+      0,
+      "4d8541bde18b5cfc7a0ee1ddbdb12661"
+    ],
+    [
+      "FStar.MGRef.aloc_preserved",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "88020085e8480e2e5fee37259915149b"
+    ],
+    [
+      "FStar.MGRef.aloc_unused_in",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "df542e6dca232a5a370f2c6497835db2"
+    ],
+    [
+      "FStar.MGRef.clas",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.MGRef.aloc_preserved",
+        "equation_FStar.MGRef.aloc_unused_in",
+        "equation_FStar.MGRef.mreference_preserved"
+      ],
+      0,
+      "d602ca18bcb86f1c3c61ef4943a7bf08"
+    ]
+  ]
+]

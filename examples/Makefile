@@ -36,12 +36,14 @@ csl \
 hello \
 extraction \
 demos \
-refinement \
 indexed_effects \
 doublylinkedlist \
 regional \
 generic \
+machine_integers \
+indent \
 calc \
+steel \
 layeredeffects
 
 # low-level \  ... NS: removing from CI for this branch

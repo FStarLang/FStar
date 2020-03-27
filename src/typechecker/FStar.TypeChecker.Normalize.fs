@@ -231,7 +231,7 @@ let norm_universe cfg (env:env) u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec inline_closure_env cfg (env:env) stack t =
-    log cfg (fun () -> BU.print3 "\n>>> %s (env=%s) Closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (Print.term_to_string t));
+    log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (Print.term_to_string t));
     match env with
     | [] when not <| cfg.steps.compress_uvars ->
       rebuild_closure cfg env stack t
@@ -411,7 +411,7 @@ and non_tail_inline_closure_env cfg env t =
     inline_closure_env cfg env [] t
 
 and rebuild_closure cfg env stack t =
-    log cfg (fun () -> BU.print4 "\n>>> %s (env=%s, stack=%s) Rebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (stack_to_string stack) (Print.term_to_string t));
+    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (stack_to_string stack) (Print.term_to_string t));
     match stack with
     | [] -> t
 
@@ -1559,17 +1559,17 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     in
     norm cfg env (Meta(env,metadata, head.pos)::stack) head
 
-and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
+and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
     | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ -> ()
     | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
     end;
-    let head0 = head in
-    let head = U.unascribe head in
-    log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
-    let head = U.unmeta_safe head in
-    match (SS.compress head).n with
+    let top0 = top in
+    let top = U.unascribe top in
+    log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term top) (Print.term_to_string top));
+    let top = U.unmeta_safe top in
+    match (SS.compress top).n with
     | Tm_let ((false, [lb]), body) ->
       (* ****************************************************************************)
       (* Monadic binding                                                            *)
@@ -1598,22 +1598,22 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
           in
 
           match is_return lb.lbdef with
-          (* We are in the case where [head] = [bind (return e) (fun x -> body)] *)
+          (* We are in the case where [top] = [bind (return e) (fun x -> body)] *)
           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
           | Some e ->
             let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
-            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) None head.pos)
+            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) None top.pos)
           | None ->
             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
             then
-              (* We are in the case where [head] = [bind e (fun x -> return x)] *)
+              (* We are in the case where [top] = [bind e (fun x -> return x)] *)
               (* which can be optimised to just keeping normalizing [e] with a reify on the stack *)
               norm cfg env stack lb.lbdef
             else (
               (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
               (* Rewriting binds in that direction would be better for exception-like monad *)
               (* since we wouldn't rematch on an already raised exception *)
-              let rng = head.pos in
+              let rng = top.pos in
 
               let head = U.mk_reify <| lb.lbdef in
               let body = U.mk_reify <| body in
@@ -1668,11 +1668,11 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                       (* wp_body, body--the term shouldn't depend on wp_body *)
                       as_arg S.tun; as_arg body] in
                 S.mk (Tm_app(bind_inst, args)) None rng in
-              log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
+              log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
       end
-    | Tm_app (head_app, args) ->
+    | Tm_app (head, args) ->
         (* ****************************************************************************)
         (* Monadic application                                                        *)
         (*                                                                            *)
@@ -1697,29 +1697,29 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
             | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) -> not (U.is_pure_effect m1)
             | _ -> false
           in
-          if BU.for_some is_arg_impure ((as_arg head_app)::args) then
-            Errors.log_issue head.pos
+          if BU.for_some is_arg_impure ((as_arg head)::args) then
+            Errors.log_issue top.pos
                              (Errors.Warning_Defensive,
                               BU.format1 "Incompatibility between typechecker and normalizer; \
                                           this monadic application contains impure terms %s\n"
-                                          (Print.term_to_string head))
+                                          (Print.term_to_string top))
         end;
 
         (* GM: I'm really suspicious of this code, I tried to change it the least
          * when trying to fixing it but these two seem super weird. Why 2 of them?
          * Why is it not calling rebuild? I'm gonna keep it for now. *)
         let fallback1 () =
-            log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string head0) "");
-            norm cfg env (List.tl stack) (U.mk_reify head)
+            log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string top0) "");
+            norm cfg env (List.tl stack) (U.mk_reify top)
         in
         let fallback2 () =
-            log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string head0) "");
-            norm cfg env (List.tl stack) (mk (Tm_meta (head, Meta_monadic(m, t))) head0.pos)
+            log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string top0) "");
+            norm cfg env (List.tl stack) (mk (Tm_meta (top, Meta_monadic(m, t))) top0.pos)
         in
 
         (* This application case is only interesting for fully-applied dm4f actions. Otherwise,
          * we just continue rebuilding. *)
-        begin match (U.un_uinst head_app).n with
+        begin match (U.un_uinst head).n with
         | Tm_fvar fv ->
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
@@ -1736,7 +1736,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
             else
 
             (* Turn it info (reify head) args, then do_unfold_fv will kick in on the head *)
-            let t = S.mk_Tm_app (U.mk_reify head_app) args None t.pos in
+            let t = S.mk_Tm_app (U.mk_reify head) args None t.pos in
             norm cfg env (List.tl stack) t
 
         | _ ->
@@ -1757,7 +1757,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
       (* reify (match e with p -> e') ~> match e with p -> reify e' *)
       let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-      let tm = mk (Tm_match(e, branches)) head.pos in
+      let tm = mk (Tm_match(e, branches)) top.pos in
       norm cfg env (List.tl stack) tm
 
     | _ ->
@@ -2985,7 +2985,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_pragma _ ->
       s
 
-    (* This should never happen, it should have been run by now *)
+    (* These should never happen, they should have been elaborated by now *)
+    | Sig_fail _
     | Sig_splice _ ->
       s
 

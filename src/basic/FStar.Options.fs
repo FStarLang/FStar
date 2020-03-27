@@ -172,7 +172,6 @@ let defaults =
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
-      ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
@@ -227,6 +226,7 @@ let defaults =
       ("quake"                        , Int 0);
       ("quake_lo"                     , Int 1);
       ("quake_hi"                     , Int 1);
+      ("quake_keep"                   , Bool false);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -333,7 +333,6 @@ let get_defensive               ()      = lookup_opt "defensive"                
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
-let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
@@ -381,9 +380,11 @@ let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
 let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
+let get_quake_keep              ()      = lookup_opt "quake_keep"               as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
+let get_retry                   ()      = lookup_opt "retry"                    as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -604,6 +605,22 @@ let pp_lowercase s =
 let abort_counter : ref<int> =
     mk_ref 0
 
+let interp_quake_arg (s:string)
+            : int * int * bool =
+           (* min,  max,  keep_going *)
+  let ios = int_of_string in
+  match split s "/" with
+  | [f] -> ios f, ios f, false
+  | [f1; f2] ->
+    if f2 = "k"
+    then ios f1, ios f1, true
+    else ios f1, ios f2, false
+  | [f1; f2; k] ->
+    if k = "k"
+    then ios f1, ios f2, true
+    else failwith "unexpected value for --quake"
+  | _ -> failwith "unexpected value for --quake"
+
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
         "abort_on",
@@ -693,11 +710,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "detail_hint_replay",
         Const (Bool true),
          "Emit a detailed report for proof whose unsat core fails to replay");
-
-       ( noshort,
-        "doc",
-        Const (Bool true),
-         "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
@@ -952,19 +964,20 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "quake",
         PostProcessed
             ((function | String s ->
-                         let p f = Int (int_of_string f) in
-                         let min, max =
-                           match split s "/" with
-                           | [f] -> f, f
-                           | [f1;f2] -> f1, f2
-                           | _ -> failwith "unexpected value for --quake"
-                         in
-                         set_option "quake_lo" (p min);
-                         set_option "quake_hi" (p max);
+                         let min, max, k = interp_quake_arg s in
+                         set_option "quake_lo" (Int min);
+                         set_option "quake_hi" (Int max);
+                         set_option "quake_keep" (Bool k);
+                         set_option "retry" (Bool false);
                          String s
                        | _ -> failwith "impos"),
-            SimpleStr "non-negative integer or pair of non-negative integers"),
-        "N/M repeats each query M times and checks that it succeeds at least N times");
+            SimpleStr "positive integer or pair of positive integers"),
+        "Repeats SMT queries to check for robustness\n\t\t\
+         --quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t\
+         --quake N/M/k works as above, except it will unconditionally run M times\n\t\t\
+         --quake N is an alias for --quake N/N\n\t\t\
+         --quake N/k is an alias for --quake N/N/k\n\t\
+         Using --quake disables --retry.");
 
        ( noshort,
         "query_stats",
@@ -980,6 +993,19 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "record_options",
         Const (Bool true),
         "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
+
+       ( noshort,
+        "retry",
+        PostProcessed
+            ((function | Int i ->
+                         set_option "quake_lo" (Int 1);
+                         set_option "quake_hi" (Int i);
+                         set_option "quake_keep" (Bool false);
+                         set_option "retry" (Bool true);
+                         Bool true
+                       | _ -> failwith "impos"),
+            IntStr "positive integer"),
+        "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
 
        ( noshort,
         "reuse_hint_for",
@@ -1317,9 +1343,11 @@ let settable = function
     | "prn"
     | "quake_lo"
     | "quake_hi"
+    | "quake_keep"
     | "quake"
     | "query_stats"
     | "record_options"
+    | "retry"
     | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
@@ -1570,7 +1598,6 @@ let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
-let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
@@ -1628,9 +1655,11 @@ let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let quake_lo                     () = get_quake_lo                    ()
 let quake_hi                     () = get_quake_hi                    ()
+let quake_keep                   () = get_quake_keep                  ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
+let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()

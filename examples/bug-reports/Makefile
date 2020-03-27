@@ -10,58 +10,60 @@ all: verify iverify not-verify extract
 ##################
 
 # These will be checked as part of the F* regressions.
-SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug028.fst bug046.fst bug052.fst\
-  bug056.fst bug058.fst bug058b.fst bug067.fst bug069.fst bug077.fst bug097b.fst bug102.fst bug103.fst\
-  bug111.fst bug116.fst bug122.fst bug124.fst bug125.fst bug126.fst bug128.fst bug138.fst bug139.fst bug152.fst\
-  bug155.fst bug161.fst bug162.fst bug170.fst bug173.fst bug175.fst bug178.fst bug181.fst bug184Eta.fst\
-  bug184.fst bug185.fst bug187.fst bug190.fst bug195.fst bug195b.fst bug209.fst bug209b.fst bug212.fst\
-  bug213.fst bug215.fst bug237b.fst bug238.fst bug244.fst bug251.fst bug252.fst bug254.fst bug256.fst\
-  bug257.fst bug260.fst bug264.fst bug274.fst bug275.fst bug279.fst bug281.fst bug283.fst bug290.fst bug292.fst\
-  bug293.fst bug311.fst bug316.fst bug363.fst bug375.fst bug397.fst bug398.fst bug399.fst bug405.fst\
-  bug413.fst bug416.fst bug417.fst bug422.fst bug424.fst bug433.fst bug445.fst bug463b.fst bug482.fst bug493.fst\
-  bug516.fst bug516b.fst bug517.fst bug540.fst bug552.fst bug566.fst bug574.fst bug577.fst bug579.fst bug581.fst\
-  bug590.fst bug601.fst bug605.fst bug609.fst bug613.fst bug686.fst bug705.fst bug706.fst bug707.fst bug709.fst\
-  bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug786.fst bug836.fst bug844.fst bug985.fst \
-	bug989.fst\
-  BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1345b.fst bug1345c.fst bug1346.fst bug1348.fst bug1362.fst \
-  bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1414.fst \
-  unfold.fst bug1091.fst BugUnfoldAbstractEquational.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
-  bug1319a.fst bug1319b.fst bug1319c.fst bug1319d.fst bug1319e.fst bug1319f.fst bug807a.fst bug807b.fst bug807c.fst bug807d.fst bug807e.fst \
+SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug028.fst Bug046.fst Bug052.fst\
+  Bug056.fst Bug058.fst Bug058b.fst Bug067.fst Bug069.fst Bug077.fst Bug097b.fst Bug102.fst Bug103.fst\
+  Bug111.fst Bug116.fst Bug122.fst Bug124.fst Bug125.fst Bug126.fst Bug128.fst Bug138.fst Bug139.fst Bug152.fst\
+  Bug155.fst Bug161.fst Bug162.fst Bug170.fst Bug173.fst Bug175.fst Bug178.fst Bug181.fst Bug184Eta.fst\
+  Bug184.fst Bug185.fst Bug187.fst Bug190.fst Bug195.fst Bug195b.fst Bug209.fst Bug209b.fst Bug212.fst\
+  Bug213.fst Bug215.fst Bug237b.fst Bug238.fst Bug244.fst Bug251.fst Bug252.fst Bug254.fst Bug256.fst\
+  Bug257.fst Bug260.fst Bug264.fst Bug274.fst Bug275.fst Bug279.fst Bug281.fst Bug283.fst Bug290.fst Bug292.fst\
+  Bug293.fst Bug311.fst Bug316.fst Bug363.fst Bug375.fst Bug397.fst Bug398.fst Bug399.fst Bug405.fst\
+  Bug413.fst Bug416.fst Bug417.fst Bug422.fst Bug424.fst Bug433.fst Bug445.fst Bug463b.fst Bug482.fst Bug493.fst\
+  Bug516.fst Bug516b.fst Bug517.fst Bug540.fst Bug552.fst Bug566.fst Bug574.fst Bug577.fst Bug579.fst Bug581.fst\
+  Bug590.fst Bug601.fst Bug605.fst Bug609.fst Bug613.fst Bug686.fst Bug705.fst Bug706.fst Bug707.fst Bug709.fst\
+  Bug710.fst Bug712.fst Bug713.fst Bug736.fst Bug765.fst Bug769c.fst Bug786.fst Bug836.fst Bug844.fst Bug985.fst \
+	Bug989.fst\
+  BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst Bug1150.fst Bug1076.fst\
+  Bug1341.fst Bug1345.fst Bug1345b.fst Bug1345c.fst Bug1346.fst Bug1348.fst Bug1362.fst \
+  Bug1347b.fst Bug1206.fst Bug1271.fst Bug1305.fst Bug1361.fst Bug1383.fst Bug1414.fst \
+  unfold.fst Bug1091.fst BugUnfoldAbstractEquational.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
+  Bug1319a.fst Bug1319b.fst Bug1319c.fst Bug1319d.fst Bug1319e.fst Bug1319f.fst Bug807a.fst Bug807b.fst Bug807c.fst Bug807d.fst Bug807e.fst \
   Bug1502.fst \
-  Bug1488.fst bug607.fst bug466.fst bug400.fst bug1470.fst bug1481.fst Bug1506.fst bug606.fst bug543.fst bug1521.fst \
-  Bug1533.fst bug1535a.fst bug1535b.fst Bug1536.fst bug1370a.fst bug1370b.fst bug1534.fst bug575.fst \
-  bug1443a.fst bug1443b.fst bug1443c.fst bug1443d.fst bug1443e.fst bug1523.fst bug1141a.fst bug1141b.fst bug1141c.fst bug1141d.fst \
-  bug1561a.fst bug1561b.fst bug1065a.fst bug1065b.fst bug1065c.fst bug1568.fst Bug1571.fst Bug1572.fst Bug1592.fst \
+  Bug1488.fst Bug607.fst Bug466.fst Bug400.fst Bug1470.fst Bug1481.fst Bug1506.fst Bug606.fst Bug543.fst Bug1521.fst \
+  Bug1533.fst Bug1535a.fst Bug1535b.fst Bug1536.fst Bug1370a.fst Bug1370b.fst Bug1534.fst Bug575.fst \
+  Bug1443a.fst Bug1443b.fst Bug1443c.fst Bug1443d.fst Bug1443e.fst Bug1523.fst Bug1141a.fst Bug1141b.fst Bug1141c.fst Bug1141d.fst \
+  Bug1561a.fst Bug1561b.fst Bug1065a.fst Bug1065b.fst Bug1065c.fst Bug1568.fst Bug1571.fst Bug1572.fst Bug1592.fst \
   Bug1595.fst Bug1601.fst Bug1602.fst Bug1604.fst Bug1605.fst Bug1621.fst Bug1680.fst Bug1682.fst Bug1694.fst \
   Bug1730b.fst Bug1612.fst Bug1614a.fst Bug1614b.fst Bug1614c.fst Bug1614d.fst Bug1614e.fst Bug1750.fst Bug1750.Aux.fst \
-  Bug1622.fst bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1243.fst Bug1841.fst \
+  Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1243.fst Bug1841.fst \
   Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
-  Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst
+  Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
+  Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
+  Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst
 
-SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
-SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
+SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
+SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
 
 # These will not be checked, but the SHOULD_VERIFY_BROKEN examples are expected to work since their corresponding
 # GitHub issue is closed. Consider re-opening.
-SHOULD_VERIFY_BROKEN=bug092.fst bug170b.fst bug192.fst bug210.fst bug210b.fst bug210c.fst bug312.fst\
-  bug818.fst bug818b.fst
-SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121.fst bug131.fst bug171.fst\
-  bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug419.fst bug442.fst\
-  bug442b.fst bug484.fst bug542.fst bug543.fst bug554.fst bug604.fst bug606.fst\
-  bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
-  bug1038.fst bug1091.fst bug1390.fst bug807d.fst bug1486.fst bug1392.fst Bug1867.fst
+SHOULD_VERIFY_BROKEN=Bug092.fst Bug170b.fst Bug192.fst Bug210.fst Bug210b.fst Bug210c.fst Bug312.fst\
+  Bug818.fst Bug818b.fst
+SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121.fst Bug131.fst Bug171.fst\
+  Bug171b.fst Bug171c.fst Bug258.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
+  Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
+  Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\
+  Bug1038.fst Bug1091.fst Bug1390.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
-SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug812.fst bug853.fst bug1042.fst bug1360.fst
+SHOULD_VERIFY_MAYBE_CLOSE=Bug121b.fst Bug351.fst Bug351b.fst Bug812.fst Bug853.fst Bug1042.fst Bug1360.fst
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue.
-SHOULD_VERIFY_NOT_WORKING=bug015.fst bug021.fst bug023.fst  bug060.fst bug062.fst bug029.fst bug096.fst bug097a.fst\
-  bug100.fst bug101.fst bug111.fst bug117.fst bug148.fst bug179.fst bug184b.fst bug185.fst bug189.fst bug203.fst\
-  bug237.fst bug295.fst bug377.fst bug389.fst bug422.fst bug463a.fst bug713.fst bug974.fst \
-  bug1287.fst bug1291.fst bug1347.fst
+SHOULD_VERIFY_NOT_WORKING=Bug015.fst Bug021.fst Bug023.fst  Bug060.fst Bug062.fst Bug029.fst Bug096.fst Bug097a.fst\
+  Bug100.fst Bug101.fst Bug111.fst Bug117.fst Bug148.fst Bug179.fst Bug184b.fst Bug185.fst Bug189.fst Bug203.fst\
+  Bug237.fst Bug295.fst Bug377.fst Bug389.fst Bug422.fst Bug463a.fst Bug713.fst Bug974.fst \
+  Bug1287.fst Bug1291.fst Bug1347.fst
 
 
 ##################
@@ -69,18 +71,18 @@ SHOULD_VERIFY_NOT_WORKING=bug015.fst bug021.fst bug023.fst  bug060.fst bug062.fs
 ##################
 
 # These will be checked as part of the F* regressions.
-SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst bug154.fst bug154b.fst bug154c.fst\
-  bug156.fst bug163.fst bug176.fst bug177.fst bug183.fst bug250.fst bug253.fst bug253b.fst bug262.fst bug284.fst\
-  bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug446.fst bug612.fst bug623.fst bug655.fst\
-  bug769.fst bug769b.fst bug769d.fst bug1017.fst bug1043.fst bug1043b.fst bug1106.fst bug1106b.fst bug174.fst\
-  bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst bug380_1.fst bug380_2.fst \
-  bug1404.fst bug367.fst bug1389a.fst bug1389b.fst bug1389c.fst Bug1441.fst bug1029.fst bug1029b.fst \
+SHOULD_NOT_VERIFY_CLOSED=Bug035.fst Bug043.fst Bug044.fst Bug063.fst Bug120.fst Bug154.fst Bug154b.fst Bug154c.fst\
+  Bug156.fst Bug163.fst Bug176.fst Bug177.fst Bug183.fst Bug250.fst Bug253.fst Bug253b.fst Bug262.fst Bug284.fst\
+  Bug319.fst Bug320.fst Bug362.fst Bug379.fst Bug406.fst Bug446.fst Bug612.fst Bug623.fst Bug655.fst\
+  Bug769.fst Bug769b.fst Bug769d.fst Bug1017.fst Bug1043.fst Bug1043b.fst Bug1106.fst Bug1106b.fst Bug174.fst\
+  Bug193.fst Bug208.fst Bug208.fst Bug378.fst Bug696.fst Bug1090.fst Bug1187.fst Bug380_1.fst Bug380_2.fst \
+  Bug1404.fst Bug367.fst Bug1389a.fst Bug1389b.fst Bug1389c.fst Bug1441.fst Bug1029.fst Bug1029b.fst \
   Bug1863.fst
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
 SHOULD_NOT_VERIFY_BROKEN=
-SHOULD_NOT_VERIFY_OPEN=bug151.fst bug1041.fst bug1056.fst bug1368.fst
+SHOULD_NOT_VERIFY_OPEN=Bug151.fst Bug1041.fst Bug1056.fst Bug1368.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_NOT_VERIFY_CLOSED.
@@ -88,7 +90,7 @@ SHOULD_NOT_VERIFY_MAYBE_CLOSE=
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue.
-SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
+SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 
 
 ####################
@@ -96,10 +98,10 @@ SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst bug734.fst
+SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst
 #ExtractionBug03.fst
 
-# bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
+# Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
 
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
@@ -113,17 +115,17 @@ SHOULD_EXTRACT_MAYBE_CLOSE=
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue
-SHOULD_EXTRACT_NOT_WORKING=bug383.fst bug450.fst bug460.fst bug490.fst
+SHOULD_EXTRACT_NOT_WORKING=Bug383.fst Bug450.fst Bug460.fst Bug490.fst
 
 
 # To obtain module name from file name
-CAPPED=$(subst bug,Bug,$*)
+CAPPED=$(subst Bug,Bug,$*)
 
 
 %.verify: %.fst
 	$(FSTAR) $^
 
-bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
+Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 

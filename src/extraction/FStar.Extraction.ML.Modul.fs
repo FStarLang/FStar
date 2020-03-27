@@ -610,6 +610,9 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_splice _ ->
       failwith "impossible: trying to extract splice"
 
+    | Sig_fail _ ->
+      failwith "impossible: trying to extract Sig_fail"
+
     | Sig_new_effect ed ->
       if Env.is_reifiable_effect g.env_tcenv ed.mname
       && List.isEmpty ed.binders //we do not extract parameterized effects
@@ -783,6 +786,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_splice _ ->
           failwith "impossible: trying to extract splice"
+
+        | Sig_fail _ ->
+          failwith "impossible: trying to extract Sig_fail"
 
         | Sig_new_effect _ ->
           g, []
@@ -969,7 +975,7 @@ let extract (g:uenv) (m:modul) =
   if Options.interactive() then g, None else
   let res =
       if Options.debug_any ()
-      then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+      then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
       else extract' g m
   in

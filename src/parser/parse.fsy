@@ -72,8 +72,6 @@ let logic_qualifier_deprecation_warning =
 %token FALSE
 %token FORALL
 %token FRIEND
-%token <fsdoc> FSDOC
-%token <fsdoc> FSDOC_STANDALONE
 %token FUN
 %token FUNCTION
 %token HASH
@@ -207,13 +205,6 @@ let logic_qualifier_deprecation_warning =
 %type <(flag * string) list> warn_error_list
 %%
 
-option_FSDOC_:
-  
-    {    ( None )}
-| FSDOC
-    {let x = $1 in
-    ( Some x )}
-
 option___anonymous_1_:
   
     {    ( None )}
@@ -227,7 +218,7 @@ option___anonymous_2_:
     {    ( None )}
 | OF typ
     {let (_1, t) = ((), $2) in
-let x =                                                         (t) in
+let x =                                          (t) in
     ( Some x )}
 
 option___anonymous_5_:
@@ -512,14 +503,12 @@ separated_nonempty_list_AND_letbinding_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__:
-  option_FSDOC_ typeDecl
-    {let (x, y) = ($1, $2) in
-let x =     ( (x, y) ) in
+separated_nonempty_list_AND_typeDecl_:
+  typeDecl
+    {let x = $1 in
     ( [ x ] )}
-| option_FSDOC_ typeDecl AND separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
-    {let (x, y, _2, xs) = ($1, $2, (), $4) in
-let x =     ( (x, y) ) in
+| typeDecl AND separated_nonempty_list_AND_typeDecl_
+    {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
 separated_nonempty_list_BAR_tuplePattern_:
@@ -641,10 +630,7 @@ attribute:
       ( x )}
 
 decoration:
-  FSDOC
-    {let x = $1 in
-      ( Doc x )}
-| attribute
+  attribute
     {let x = $1 in
       ( DeclAttributes x )}
 | qualifier
@@ -667,15 +653,12 @@ let phi =                 ( {e with level=Formula} ) in
       )}
 
 typeclassDecl:
-  CLASS option_FSDOC_ typeDecl
-    {let (_1, x, y) = ((), $2, $3) in
-let tcdef =     ( (x, y) ) in
+  CLASS typeDecl
+    {let (_1, tcdef) = ((), $2) in
       (
         (* Only a single type decl allowed, but construct it the same as for multiple ones.
          * Only difference is the `true` below marking that this a class so desugaring
          * adds the needed %splice. *)
-        let flip (a,b) = (b,a) in
-        let tcdef = flip tcdef in
         let d = Tycon (false, true, [tcdef]) in
 
         (* No attrs yet, but perhaps we want a `class` attribute *)
@@ -711,15 +694,18 @@ rawDecl:
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
       ( ModuleAbbrev(uid1, uid2) )}
+| MODULE qlident
+    {let (_1, _2) = ((), $2) in
+      ( raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
-| TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+| TYPE separated_nonempty_list_AND_typeDecl_
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (false, false, tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
-      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) )}
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
@@ -728,6 +714,12 @@ rawDecl:
         if q <> Rec && List.length lbs <> 1
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
+      )}
+| VAL constant
+    {let (_1, c) = ((), $2) in
+      (
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
     {let (_1, lid, bss, _4, t) = ((), $2, $3, (), $5) in
@@ -756,9 +748,6 @@ let ids =     ( xs ) in
 | POLYMONADIC_BIND polymonadic_bind
     {let (_1, b) = ((), $2) in
       ( Polymonadic_bind b )}
-| FSDOC_STANDALONE
-    {let doc = $1 in
-      ( Fsdoc doc )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition
@@ -793,21 +782,16 @@ typeDefinition:
 
 recordFieldDecl:
   lident COLON typ
-    {let (lid, _3, t) = ($1, (), $3) in
-let doc_opt =     ( None ) in
-      ( (lid, t, doc_opt) )}
-| FSDOC lident COLON typ
-    {let (x, lid, _3, t) = ($1, $2, (), $4) in
-let doc_opt =     ( Some x ) in
-      ( (lid, t, doc_opt) )}
+    {let (lid, _2, t) = ($1, (), $3) in
+      ( (lid, t) )}
 
 constructorDecl:
-  BAR option_FSDOC_ uident COLON typ
-    {let (_1, doc_opt, uid, _4, t) = ((), $2, $3, (), $5) in
-                                                             ( (uid, Some t, doc_opt, false) )}
-| BAR option_FSDOC_ uident option___anonymous_2_
-    {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
-                                                             ( (uid, t_opt, doc_opt, true) )}
+  BAR uident COLON typ
+    {let (_1, uid, _3, t) = ((), $2, (), $4) in
+                                              ( (uid, Some t, false) )}
+| BAR uident option___anonymous_2_
+    {let (_1, uid, t_opt) = ((), $2, $3) in
+                                              ( (uid, t_opt, true) )}
 
 attr_letbinding:
   AND letbinding
@@ -858,7 +842,7 @@ effectDefinition:
 effectDecl:
   lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1471,8 +1455,19 @@ let pbs =    ( List.rev xs ) in
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
      )}
 
+calcRel:
+  binop_name
+    {let i = $1 in
+                 ( mk_term (Op (i, [])) (rhs parseState 1) Expr )}
+| BACKTICK qlident BACKTICK
+    {let (_1, id, _3) = ((), $2, ()) in
+                                 ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
+| atomicTerm
+    {let t = $1 in
+                 ( t )}
+
 calcStep:
-  binop LBRACE option_term_ RBRACE noSeqTerm SEMICOLON
+  calcRel LBRACE option_term_ RBRACE noSeqTerm SEMICOLON
     {let (rel, _2, justif, _4, next, _6) = ($1, (), $3, (), $5, ()) in
      (
          let justif =
@@ -1981,17 +1976,6 @@ binop_name:
 | OP_MIXFIX_ACCESS
     {let o = $1 in
                              ( mk_ident (o, rhs parseState 1) )}
-
-binop:
-  binop_name
-    {let i = $1 in
-                 ( mk_term (Op (i, [])) (rhs parseState 2) Expr )}
-| BACKTICK qlident BACKTICK
-    {let (_1, id, _3) = ((), $2, ()) in
-                                 ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
-| atomicTerm
-    {let t = $1 in
-                 ( t )}
 
 tmEqNoRefinement:
   tmEqWith_appTerm_

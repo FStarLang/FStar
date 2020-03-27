@@ -58,6 +58,7 @@ dump
 *.o
 
 .depend
+._depend
 *.a
 *.cmxa
 *.so

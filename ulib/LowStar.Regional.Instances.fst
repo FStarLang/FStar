@@ -99,7 +99,7 @@ let buffer_r_alloc_p #a v =
 /// captured.
 val buffer_r_alloc:
   #a:Type -> #arg':Ghost.erased (a & nonzero) -> arg:(a & nonzero) { arg == Ghost.reveal arg' } -> r:HST.erid ->
-  HST.ST (b:B.buffer a)
+  HST.ST (B.buffer a)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 ->
       let ia = fst arg in
@@ -230,7 +230,7 @@ let vector_r_alloc_p #a #rst rg v =
 
 val vector_r_alloc:
   #a:Type0 -> #rst:Type -> rg:regional rst a -> r:HST.erid ->
-  HST.ST (v:rvector rg)
+  HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 ->
       Set.subset (Map.domain (HS.get_hmap h0))

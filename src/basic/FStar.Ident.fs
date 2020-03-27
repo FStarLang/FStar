@@ -30,9 +30,12 @@ let _gen =
 
 let next_id () = fst _gen ()
 let reset_gensym () = snd _gen ()
-let gen r =
+
+let gen' s r =
     let i = next_id() in
-    mk_ident (reserved_prefix ^ string_of_int i, r)
+    mk_ident (s ^ string_of_int i, r)
+
+let gen r = gen' reserved_prefix r
 
 let range_of_id (id:ident) = id.idRange
 let id_of_text str = mk_ident(str, dummyRange)

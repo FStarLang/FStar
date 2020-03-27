@@ -511,13 +511,24 @@ let grewrite (t1 t2 : term) : Tac unit =
     let e = pack_ln (Tv_Var (bv_of_binder e)) in
     pointwise (fun () -> try exact e with | _ -> trefl ())
 
+private
+let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
+
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
 let grewrite_eq (b:binder) : Tac unit =
   match term_as_formula (type_of_binder b) with
   | Comp (Eq _) l r ->
     grewrite l r;
     iseq [idtac; (fun () -> exact (binder_to_term b))]
-  | _ -> fail "failed in grewrite_eq"
+  | _ ->
+    begin match term_as_formula' (type_of_binder b) with
+    | Comp (Eq _) l r ->
+      grewrite l r;
+      iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
+                              exact (binder_to_term b))]
+    | _ ->
+      fail "grewrite_eq: binder type is not an equality"
+    end
 
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->
@@ -831,3 +842,16 @@ let branch_on_match () : Tac unit =
         grewrite_eq b;
         norm [iota])
     )
+
+(** When the argument [i] is non-negative, [nth_binder] grabs the nth
+binder in the current goal. When it is negative, it grabs the (-i-1)th
+binder counting from the end of the goal. That is, [nth_binder (-1)]
+will return the last binder, [nth_binder (-2)] the second to last, and
+so on. *)
+let nth_binder (i:int) : Tac binder =
+  let bs = cur_binders () in
+  let k : int = if i >= 0 then i else List.length bs + i in
+  let k : nat = if k < 0 then fail "not enough binders" else k in
+  match List.Tot.nth bs k with
+  | None -> fail "not enough binders"
+  | Some b -> b

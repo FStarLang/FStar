@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9f67becc697c76e0ca86b1350709055a"
+      "7d07e41748fff40a3c09591f78ccbaa3"
     ],
     [
       "Bug1191.test0",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "78c97462f57d762d751588c083fa97f4"
+      "266e306b1526f8d397ce0432cb3fb524"
     ]
   ]
 ]

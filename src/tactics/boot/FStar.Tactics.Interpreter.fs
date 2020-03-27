@@ -228,8 +228,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dump"          dump e_string e_unit
                                dump NBET.e_string NBET.e_unit;
 
-      mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
-                               pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
+      mktac2 0 "t_pointwise"   t_pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
+                               t_pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 
       mktac2 0 "topdown_rewrite"   topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_thunk e_unit) e_unit
                                    topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
@@ -433,9 +433,6 @@ let run_tactic_on_ps
     if !tacdbg then
         BU.print_string "}\n";
 
-    (* TODO: We do not faithfully expose universes to metaprograms *)
-    let env = { env with Env.lax_universes = true } in
-
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
@@ -513,6 +510,25 @@ let run_tactic_on_typ
     let ps, w = proofstate_of_goal_ty rng env typ in
     let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic env ps in
     gs, w
+
+let run_tactic_on_all_implicits
+        (rng_tac : Range.range) (rng_goal : Range.range)
+        (tactic:term) (env:env) (imps:Env.implicits)
+    : list<goal> // remaining goals
+    =
+    let ps, _ = proofstate_of_all_implicits rng_goal env imps in
+    let goals, () =
+      run_tactic_on_ps
+        rng_tac
+        rng_goal
+        e_unit
+        ()
+        e_unit
+        tactic
+        env
+        ps
+    in
+    goals
 
 // Polarity
 type pol =
@@ -739,6 +755,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  let gt' = TcUtil.label label  goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
+    let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', FStar.Options.peek ()) :: gs
 
@@ -768,6 +785,34 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
+    end
+
+
+let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+    if env.nosynth then () else
+    begin
+    tacdbg := Env.debug env (Options.Other "Tac");
+
+    let gs = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
+    // Check that all goals left are irrelevant and provable
+    // TODO: It would be nicer to combine all of these into a guard and return
+    // that to TcTerm, but the varying environments make it awkward.
+    gs |> List.iter (fun g ->
+        match getprop (goal_env g) (goal_type g) with
+        | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
+            let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
+                        ; deferred = []
+                        ; univ_ineqs = [], []
+                        ; implicits = [] } in
+            TcRel.force_trivial_guard (goal_env g) guard
+            end
+        | None ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals")
+                            (Env.get_range env));
+    ()
     end
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =

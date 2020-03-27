@@ -190,13 +190,8 @@ let rec tcompile #t (e : texp t) (ts : tstack) : Tot (tprog ts (t :: ts)) (decre
     | TNConst n -> TCons (TiNConst _ n) TNil
     | TBConst b -> TCons (TiBConst _ b) TNil
     | TBinop #t1 #t2 #t b e1 e2 ->
-      tconcat (tcompile e2 ts)
-        (tconcat (tcompile e1 (t1 :: ts)) (TCons (TiBinop b) TNil))
-        (* Coq can even infer the ts and (t1::ts) arguments if they
-           are replaced with _, but F* is not that magic at the moment.
-           In fact it fails with a quite silly error message.
-./StackMachine.fst(175,27-175,28): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e2 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type StackMachine.tstack
-./StackMachine.fst(176,30-176,31): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e1 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type (Prims.list StackMachine.typ)  *)
+      tconcat (tcompile e2 _)
+        (tconcat (tcompile e1 _) (TCons (TiBinop b) TNil))
 
 #reset-options "--z3rlimit 10"
 
