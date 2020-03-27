@@ -424,7 +424,7 @@ let rec (inline_closure_env :
                let uu____1824 = FStar_Syntax_Print.tag_of_term t  in
                let uu____1826 = env_to_string env  in
                let uu____1828 = FStar_Syntax_Print.term_to_string t  in
-               FStar_Util.print3 "\n>>> %s (env=%s) Closure_as_term %s\n"
+               FStar_Util.print3 ">>> %s (env=%s)\nClosure_as_term %s\n"
                  uu____1824 uu____1826 uu____1828);
           (match env with
            | [] when
@@ -860,7 +860,7 @@ and (rebuild_closure :
                let uu____3137 = stack_to_string stack  in
                let uu____3139 = FStar_Syntax_Print.term_to_string t  in
                FStar_Util.print4
-                 "\n>>> %s (env=%s, stack=%s) Rebuild closure_as_term %s\n"
+                 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n"
                  uu____3133 uu____3135 uu____3137 uu____3139);
           (match stack with
            | [] -> t
@@ -4660,7 +4660,7 @@ and (do_reify_monadic :
     fun cfg  ->
       fun env  ->
         fun stack  ->
-          fun head1  ->
+          fun top  ->
             fun m  ->
               fun t  ->
                 (match stack with
@@ -4680,19 +4680,19 @@ and (do_reify_monadic :
                          uu____14648
                         in
                      failwith uu____14646);
-                (let head0 = head1  in
-                 let head2 = FStar_Syntax_Util.unascribe head1  in
+                (let top0 = top  in
+                 let top1 = FStar_Syntax_Util.unascribe top  in
                  FStar_TypeChecker_Cfg.log cfg
                    (fun uu____14657  ->
-                      let uu____14658 = FStar_Syntax_Print.tag_of_term head2
+                      let uu____14658 = FStar_Syntax_Print.tag_of_term top1
                          in
                       let uu____14660 =
-                        FStar_Syntax_Print.term_to_string head2  in
+                        FStar_Syntax_Print.term_to_string top1  in
                       FStar_Util.print2 "Reifying: (%s) %s\n" uu____14658
                         uu____14660);
-                 (let head3 = FStar_Syntax_Util.unmeta_safe head2  in
+                 (let top2 = FStar_Syntax_Util.unmeta_safe top1  in
                   let uu____14664 =
-                    let uu____14665 = FStar_Syntax_Subst.compress head3  in
+                    let uu____14665 = FStar_Syntax_Subst.compress top2  in
                     uu____14665.FStar_Syntax_Syntax.n  in
                   match uu____14664 with
                   | FStar_Syntax_Syntax.Tm_let ((false ,lb::[]),body) ->
@@ -4789,7 +4789,7 @@ and (do_reify_monadic :
                                           in
                                        uu____14778
                                          FStar_Pervasives_Native.None
-                                         head3.FStar_Syntax_Syntax.pos
+                                         top2.FStar_Syntax_Syntax.pos
                                         in
                                      norm cfg env uu____14776 uu____14777
                                  | FStar_Pervasives_Native.None  ->
@@ -4812,8 +4812,8 @@ and (do_reify_monadic :
                                          lb.FStar_Syntax_Syntax.lbdef
                                      else
                                        (let rng =
-                                          head3.FStar_Syntax_Syntax.pos  in
-                                        let head4 =
+                                          top2.FStar_Syntax_Syntax.pos  in
+                                        let head1 =
                                           FStar_All.pipe_left
                                             FStar_Syntax_Util.mk_reify
                                             lb.FStar_Syntax_Syntax.lbdef
@@ -5041,7 +5041,7 @@ and (do_reify_monadic :
                                                   let uu____15431 =
                                                     let uu____15442 =
                                                       FStar_Syntax_Syntax.as_arg
-                                                        head4
+                                                        head1
                                                        in
                                                     let uu____15451 =
                                                       let uu____15462 =
@@ -5081,7 +5081,7 @@ and (do_reify_monadic :
                                                    let uu____15616 =
                                                      let uu____15627 =
                                                        FStar_Syntax_Syntax.as_arg
-                                                         head4
+                                                         head1
                                                         in
                                                      let uu____15636 =
                                                        let uu____15647 =
@@ -5118,7 +5118,7 @@ and (do_reify_monadic :
                                           (fun uu____15748  ->
                                              let uu____15749 =
                                                FStar_Syntax_Print.term_to_string
-                                                 head0
+                                                 top0
                                                 in
                                              let uu____15751 =
                                                FStar_Syntax_Print.term_to_string
@@ -5130,7 +5130,7 @@ and (do_reify_monadic :
                                         (let uu____15754 =
                                            FStar_List.tl stack  in
                                          norm cfg env uu____15754 reified)))))
-                  | FStar_Syntax_Syntax.Tm_app (head_app,args) ->
+                  | FStar_Syntax_Syntax.Tm_app (head1,args) ->
                       ((let uu____15782 = FStar_Options.defensive ()  in
                         if uu____15782
                         then
@@ -5155,7 +5155,7 @@ and (do_reify_monadic :
                           let uu____15832 =
                             let uu____15834 =
                               let uu____15845 =
-                                FStar_Syntax_Syntax.as_arg head_app  in
+                                FStar_Syntax_Syntax.as_arg head1  in
                               uu____15845 :: args  in
                             FStar_Util.for_some is_arg_impure uu____15834  in
                           (if uu____15832
@@ -5163,8 +5163,7 @@ and (do_reify_monadic :
                              let uu____15871 =
                                let uu____15877 =
                                  let uu____15879 =
-                                   FStar_Syntax_Print.term_to_string head3
-                                    in
+                                   FStar_Syntax_Print.term_to_string top2  in
                                  FStar_Util.format1
                                    "Incompatibility between typechecker and normalizer; this monadic application contains impure terms %s\n"
                                    uu____15879
@@ -5172,18 +5171,18 @@ and (do_reify_monadic :
                                (FStar_Errors.Warning_Defensive, uu____15877)
                                 in
                              FStar_Errors.log_issue
-                               head3.FStar_Syntax_Syntax.pos uu____15871
+                               top2.FStar_Syntax_Syntax.pos uu____15871
                            else ())
                         else ());
                        (let fallback1 uu____15892 =
                           FStar_TypeChecker_Cfg.log cfg
                             (fun uu____15896  ->
                                let uu____15897 =
-                                 FStar_Syntax_Print.term_to_string head0  in
+                                 FStar_Syntax_Print.term_to_string top0  in
                                FStar_Util.print2 "Reified (2) <%s> to %s\n"
                                  uu____15897 "");
                           (let uu____15901 = FStar_List.tl stack  in
-                           let uu____15902 = FStar_Syntax_Util.mk_reify head3
+                           let uu____15902 = FStar_Syntax_Util.mk_reify top2
                               in
                            norm cfg env uu____15901 uu____15902)
                            in
@@ -5191,22 +5190,22 @@ and (do_reify_monadic :
                           FStar_TypeChecker_Cfg.log cfg
                             (fun uu____15912  ->
                                let uu____15913 =
-                                 FStar_Syntax_Print.term_to_string head0  in
+                                 FStar_Syntax_Print.term_to_string top0  in
                                FStar_Util.print2 "Reified (3) <%s> to %s\n"
                                  uu____15913 "");
                           (let uu____15917 = FStar_List.tl stack  in
                            let uu____15918 =
                              mk
                                (FStar_Syntax_Syntax.Tm_meta
-                                  (head3,
+                                  (top2,
                                     (FStar_Syntax_Syntax.Meta_monadic (m, t))))
-                               head0.FStar_Syntax_Syntax.pos
+                               top0.FStar_Syntax_Syntax.pos
                               in
                            norm cfg env uu____15917 uu____15918)
                            in
                         let uu____15923 =
-                          let uu____15924 =
-                            FStar_Syntax_Util.un_uinst head_app  in
+                          let uu____15924 = FStar_Syntax_Util.un_uinst head1
+                             in
                           uu____15924.FStar_Syntax_Syntax.n  in
                         match uu____15923 with
                         | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -5238,8 +5237,7 @@ and (do_reify_monadic :
                                  (let t1 =
                                     let uu____15956 =
                                       let uu____15961 =
-                                        FStar_Syntax_Util.mk_reify head_app
-                                         in
+                                        FStar_Syntax_Util.mk_reify head1  in
                                       FStar_Syntax_Syntax.mk_Tm_app
                                         uu____15961 args
                                        in
@@ -5280,7 +5278,7 @@ and (do_reify_monadic :
                          in
                       let tm =
                         mk (FStar_Syntax_Syntax.Tm_match (e, branches1))
-                          head3.FStar_Syntax_Syntax.pos
+                          top2.FStar_Syntax_Syntax.pos
                          in
                       let uu____16198 = FStar_List.tl stack  in
                       norm cfg env uu____16198 tm
