@@ -1994,25 +1994,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         [TERM(ctx_u, sol)]
     in
 
-    let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
-                          (lhs:flex_t) (rhs:term)
-        : either<string, list<uvi>> * worklist =
-        match quasi_pattern env lhs with
-        | None ->
-          Inl "Not a quasi-pattern", wl
-
-        | Some (bs, _) ->
-          let (t_lhs, ctx_u, args) = lhs in
-          let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
-          if not occurs_ok
-          then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
-          else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
-               let fvs_rhs = Free.names rhs in
-               if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
-               then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
-    in
-
     let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
@@ -2086,21 +2067,21 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         solve env (attempt sub_probs (solve_prob orig None sol wl))
     in
 
+    let is_app rhs =
+        let _, args = U.head_and_args rhs in
+        match args with
+        | [] -> false
+        | _ -> true
+    in
+    let is_arrow rhs =
+        match (SS.compress rhs).n with
+        | Tm_arrow _ -> true
+        | _ -> false
+    in
     let first_order_applicable (orig:prob) (env:Env.env) (wl:worklist)
                                (lhs:flex_t) (rhs:term)
       : option<(either<(binders * term), (binders * term)>)>
-      = let is_app rhs =
-           let _, args = U.head_and_args rhs in
-           match args with
-           | [] -> false
-           | _ -> true
-        in
-        let is_arrow rhs =
-            match (SS.compress rhs).n with
-            | Tm_arrow _ -> true
-            | _ -> false
-        in
-        match quasi_pattern env lhs with
+      = match quasi_pattern env lhs with
         | None -> None
         | Some (bs_lhs, t_res_lhs) ->
           if is_app rhs
@@ -2133,6 +2114,37 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           | Some app_or_arrow ->
             apply_first_order orig env wl lhs rhs app_or_arrow
     in            
+
+    let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
+                          (lhs:flex_t) (rhs:term)
+        : solution =
+        match quasi_pattern env lhs with
+        | None ->
+          giveup_or_defer env orig wl (Thunk.mkv <| "Not a quasi-pattern")
+
+        | Some (bs, bs_t) ->
+          let (t_lhs, ctx_u, args) = lhs in
+          let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
+          if not occurs_ok
+          then giveup_or_defer env orig wl (Thunk.mkv <| ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)))
+          else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
+               let fvs_rhs = Free.names rhs in
+               let fvs_included_ok = BU.set_is_subset_of fvs_rhs fvs_lhs in
+               let ctx_included_ok = tgt_ctx_includes_all_source_ctx ctx_u uvars in
+               if fvs_included_ok 
+               && ctx_included_ok
+               then let sol = mk_solution env lhs bs rhs in
+                    solve env (solve_prob orig None sol wl)               
+               else if is_app rhs
+               then apply_first_order orig env wl lhs rhs (Inl (bs, bs_t))
+               else if is_arrow rhs
+               then apply_first_order orig env wl lhs rhs (Inr (bs, bs_t))
+               else if not fvs_included_ok
+               then giveup_or_defer env orig wl (Thunk.mkv <| "quasi-pattern, free names on the RHS are not included in the LHS")
+               else let wl = restrict_all_uvars ctx_u uvars wl in
+                    let sol = mk_solution env lhs bs rhs in
+                    solve env (solve_prob orig None sol wl)
+    in
 
     match p_rel orig with
     | SUB
@@ -2183,11 +2195,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       | _ -> //Not a pattern
         if wl.defer_ok
         then giveup_or_defer env orig wl (Thunk.mkv "Not a pattern")
-        else match try_quasi_pattern orig env wl lhs rhs with
-            | Inr sol, wl ->
-              solve env (solve_prob orig None sol wl)
-            | Inl msg, _ -> //try first-order
-              first_order orig env wl lhs rhs
+        else try_quasi_pattern orig env wl lhs rhs
 
 (* solve_t_flex-flex:
        Always delay flex-flex constraints, if possible.
