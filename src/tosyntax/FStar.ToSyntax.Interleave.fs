@@ -236,18 +236,21 @@ let ml_mode_prefix_with_iface_decls
    | _ ->
      iface, [impl]
 
-let ml_mode_check_initial_interface (iface:list<decl>) =
-    iface |> List.filter (fun d ->
-    match d.d with
-    | Val _ -> true //only retain the vals in --MLish mode
-    | _ -> false)
+let ml_mode_check_initial_interface mname (iface:list<decl>) =
+  iface |> List.filter (fun d ->
+  match d.d with
+  | Val _ -> true //only retain the vals in --MLish mode
+  | _ -> false)
 
+let apply_ml_mode_optimizations (mname:lident) : bool =
+  Options.ml_ish () &&
+  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules)))
 
-let prefix_one_decl iface impl =
+let prefix_one_decl mname iface impl =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
-      if Options.ml_ish ()
+      if apply_ml_mode_optimizations mname
       then ml_mode_prefix_with_iface_decls iface impl
       else prefix_with_iface_decls iface impl
 
@@ -258,8 +261,8 @@ module E = FStar.Syntax.DsEnv
 let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
   fun (env:E.env) ->
     let decls =
-        if Options.ml_ish()
-        then ml_mode_check_initial_interface l
+        if apply_ml_mode_optimizations mname
+        then ml_mode_check_initial_interface mname l
         else check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
@@ -270,13 +273,13 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
     | None ->
       (), E.set_iface_decls env mname decls
 
-let prefix_with_interface_decls (impl:decl) : E.withenv<(list<decl>)> =
+let prefix_with_interface_decls mname (impl:decl) : E.withenv<(list<decl>)> =
   fun (env:E.env) ->
     match E.iface_decls env (E.current_module env) with
     | None ->
       [impl], env
     | Some iface ->
-      let iface, impl = prefix_one_decl iface impl in
+      let iface, impl = prefix_one_decl mname iface impl in
       let env = E.set_iface_decls env (E.current_module env) iface in
       impl, env
 
@@ -291,7 +294,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
         let iface, impls =
             List.fold_left
                 (fun (iface, impls) impl ->
-                    let iface, impls' = prefix_one_decl iface impl in
+                    let iface, impls' = prefix_one_decl l iface impl in
                     iface, impls@impls')
                 (iface, [])
                 impls

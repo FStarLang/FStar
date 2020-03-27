@@ -475,15 +475,18 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 exception Exit
 
 (* In public interface *)
+
+let core_modules =
+  [Options.prims_basename () ;
+   Options.pervasives_basename () ;
+   Options.pervasives_native_basename ()]
+  |> List.map module_name_of_file
+
 let hard_coded_dependencies full_filename =
   let filename : string = basename full_filename in
-  let corelibs =
-    [Options.prims_basename () ;
-     Options.pervasives_basename () ;
-     Options.pervasives_native_basename ()]
-  in
+
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem filename corelibs then []
+  if List.mem (module_name_of_file filename) core_modules then []
   else let implicit_deps =
            [ (Const.fstar_ns_lid, Open_namespace);
              (Const.prims_lid, Open_module);
