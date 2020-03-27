@@ -31,6 +31,10 @@ let ambient #_ _ = True
 
 let intro_ambient #_ _ = ()
 
+let inversion _ = True
+
+let allow_inversion _ = ()
+
 let invertOption _ = ()
 
 let rec false_elim #_ _ = false_elim ()

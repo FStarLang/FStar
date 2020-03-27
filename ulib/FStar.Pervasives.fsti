@@ -246,11 +246,10 @@ new_effect {
    In a proof, you can say `allow_inversion (option a)`
    to allow the SMT solver. cf. allow_inversion below
  *)
-let inversion (a:Type) = True
+val inversion (a:Type) : Type0
 
-let allow_inversion (a:Type)
+val allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
-  = ()
 
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
@@ -261,7 +260,6 @@ val invertOption : a:Type -> Lemma
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
-
 
 let dfst (#a:Type) (#b:a -> GTot Type) (t:dtuple2 a b) : a = Mkdtuple2?._1 t
 
