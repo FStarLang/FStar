@@ -77,6 +77,7 @@ type stack_elt =
  | Match    of env * branches * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
+ | CBVApp   of env * term * aqual * Range.range
  | Meta     of env * S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Cfg      of cfg
@@ -112,6 +113,7 @@ let stack_elt_to_string = function
     | UnivArgs _ -> "UnivArgs"
     | Match   _ -> "Match"
     | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
+    | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
     | Meta (_, m,_) -> "Meta"
     | Let  _ -> "Let"
     | Cfg _ -> "Cfg"
@@ -420,6 +422,10 @@ and rebuild_closure cfg env stack t =
       inline_closure_env cfg env_arg stack tm
 
     | App(env, head, aq, r)::stack ->
+      let t = S.extend_app head (t,aq) None r in
+      rebuild_closure cfg env stack t
+
+    | CBVApp(env, head, aq, r)::stack ->
       let t = S.extend_app head (t,aq) None r in
       rebuild_closure cfg env stack t
 
@@ -1196,6 +1202,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Meta _::_
                 | Let _ :: _
                 | App _ :: _
+                | CBVApp _ :: _
                 | Abs _ :: _
                 | [] ->
                   if cfg.steps.weak
@@ -1349,9 +1356,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
+
+            (* Currently only for tactics *)
+            else if cfg.steps.reduce_div_lets
+                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
+            then let ffun = S.mk (Tm_abs ([S.mk_binder (lb.lbname |> BU.left)], body, None)) None t.pos in
+                 let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
+                 log cfg (fun () -> BU.print_string "+++ Evaluating DIV Tm_let\n");
+                 norm cfg env stack lb.lbdef
+
             else if cfg.steps.weak
             then (log cfg (fun () -> BU.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
+
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
@@ -2389,6 +2406,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       | App(env, head, aq, r)::stack ->
         let t = S.extend_app head (t,aq) None r in
         rebuild cfg env stack t
+
+      | CBVApp(env', head, aq, r)::stack ->
+        norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', branches, cfg, r) :: stack ->
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));

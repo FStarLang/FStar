@@ -37,6 +37,7 @@ type step =
   | Eager_unfolding
   | Inlining
   | DoNotUnfoldPureLets
+  | ReduceDivLets
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>

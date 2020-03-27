@@ -30,6 +30,7 @@ type fsteps = {
      hnf  : bool;
      primops : bool;
      do_not_unfold_pure_lets : bool;
+     reduce_div_lets : bool;
      unfold_until : option<S.delta_depth>;
      unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
@@ -67,6 +68,7 @@ let steps_to_string f =
     hnf  = %s;\n\
     primops = %s;\n\
     do_not_unfold_pure_lets = %s;\n\
+    reduce_div_lets = %s;\n\
     unfold_until = %s;\n\
     unfold_only = %s;\n\
     unfold_fully = %s;\n\
@@ -92,6 +94,7 @@ let steps_to_string f =
     f.hnf  |> b;
     f.primops |> b;
     f.do_not_unfold_pure_lets |> b;
+    f.reduce_div_lets|> b;
     f.unfold_until |> format_opt Print.delta_depth_to_string;
     f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
@@ -118,6 +121,7 @@ let default_steps : fsteps = {
     hnf  = false;
     primops = false;
     do_not_unfold_pure_lets = false;
+    reduce_div_lets = false;
     unfold_until = None;
     unfold_only = None;
     unfold_fully = None;
@@ -154,6 +158,7 @@ let fstep_add_one s fs =
     | Eager_unfolding -> fs // eager_unfolding is not a step
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
+    | ReduceDivLets ->  { fs with reduce_div_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
