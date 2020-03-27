@@ -1710,9 +1710,9 @@ let (maybe_register_plugin :
                        in
                     match uu____5337 with
                     | FStar_Pervasives_Native.Some
-                        (interp,nbe_interp,arity,plugin1) ->
+                        (interp,nbe_interp,arity,plugin) ->
                         let uu____5370 =
-                          if plugin1
+                          if plugin
                           then
                             ("FStar_Tactics_Native.register_plugin",
                               [interp; nbe_interp])

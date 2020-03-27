@@ -6184,13 +6184,13 @@ let (t_destruct :
                                             | FStar_Syntax_Syntax.Sig_inductive_typ
                                                 (_lid,t_us,t_ps,t_ty,mut,c_lids)
                                                 ->
-                                                let erasable1 =
+                                                let erasable =
                                                   FStar_Syntax_Util.has_attribute
                                                     se.FStar_Syntax_Syntax.sigattrs
                                                     FStar_Parser_Const.erasable_attr
                                                    in
                                                 let uu____13088 =
-                                                  erasable1 &&
+                                                  erasable &&
                                                     (let uu____13091 =
                                                        is_irrelevant g  in
                                                      Prims.op_Negation

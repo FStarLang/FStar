@@ -3146,29 +3146,29 @@ and (tc_match :
                                            match (uu____9437, uu____9438)
                                            with
                                            | ((branch1,f,eff_label,cflags,c,g,erasable_branch),
-                                              (caccum,gaccum,erasable1)) ->
+                                              (caccum,gaccum,erasable)) ->
                                                let uu____9710 =
                                                  FStar_TypeChecker_Env.conj_guard
                                                    g gaccum
                                                   in
                                                (((f, eff_label, cflags, c) ::
                                                  caccum), uu____9710,
-                                                 (erasable1 ||
-                                                    erasable_branch))) t_eqns
+                                                 (erasable || erasable_branch)))
+                                      t_eqns
                                       ([],
                                         FStar_TypeChecker_Env.trivial_guard,
                                         false)
                                      in
                                   match uu____9344 with
-                                  | (cases,g,erasable1) ->
+                                  | (cases,g,erasable) ->
                                       let uu____9824 =
                                         FStar_TypeChecker_Util.bind_cases env
                                           res_t cases guard_x
                                          in
-                                      (uu____9824, g, erasable1)
+                                      (uu____9824, g, erasable)
                                    in
                                 match uu____9336 with
-                                | (c_branches,g_branches,erasable1) ->
+                                | (c_branches,g_branches,erasable) ->
                                     let cres =
                                       FStar_TypeChecker_Util.bind
                                         e12.FStar_Syntax_Syntax.pos env
@@ -3178,7 +3178,7 @@ and (tc_match :
                                             guard_x), c_branches)
                                        in
                                     let cres1 =
-                                      if erasable1
+                                      if erasable
                                       then
                                         let e =
                                           FStar_Syntax_Util.exp_true_bool  in
@@ -7083,7 +7083,7 @@ and (tc_pat :
                            in
                         (match uu____19852 with
                          | (formals,t) ->
-                             let erasable1 =
+                             let erasable =
                                FStar_TypeChecker_Env.non_informative env1 t
                                 in
                              (if
@@ -7112,7 +7112,7 @@ and (tc_pat :
                                             FStar_Syntax_Subst.subst subst1 t
                                              in
                                           (pat_e, uu____20140, bvs, guard,
-                                            erasable1)
+                                            erasable)
                                       | ((f1,uu____20147)::formals2,(a,imp_a)::args2)
                                           ->
                                           let t_f1 =
@@ -7415,7 +7415,7 @@ and (tc_pat :
                         let uu____21144 =
                           type_of_simple_pat env1 simple_pat_e  in
                         match uu____21144 with
-                        | (simple_pat_e1,simple_pat_t,simple_bvs1,guard,erasable1)
+                        | (simple_pat_e1,simple_pat_t,simple_bvs1,guard,erasable)
                             ->
                             let g' =
                               let uu____21181 =
@@ -7472,15 +7472,15 @@ and (tc_pat :
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                                   uu____21189 uu____21191 uu____21193
                               else ());
-                             (simple_pat_e1, simple_bvs1, guard1, erasable1))
+                             (simple_pat_e1, simple_bvs1, guard1, erasable))
                          in
                       match uu____21132 with
-                      | (simple_pat_e1,simple_bvs1,g1,erasable1) ->
+                      | (simple_pat_e1,simple_bvs1,g1,erasable) ->
                           let uu____21254 =
                             let uu____21286 =
                               let uu____21318 =
                                 FStar_TypeChecker_Env.conj_guard g0 g1  in
-                              (env1, [], [], [], [], uu____21318, erasable1,
+                              (env1, [], [], [], [], uu____21318, erasable,
                                 Prims.int_zero)
                                in
                             FStar_List.fold_left2
@@ -7488,7 +7488,7 @@ and (tc_pat :
                                  fun uu____21401  ->
                                    fun x  ->
                                      match (uu____21400, uu____21401) with
-                                     | ((env2,bvs,tms,pats,subst1,g,erasable2,i),
+                                     | ((env2,bvs,tms,pats,subst1,g,erasable1,i),
                                         (p1,b)) ->
                                          let expected_t =
                                            FStar_Syntax_Subst.subst subst1
@@ -7541,12 +7541,12 @@ and (tc_pat :
                                                 ((FStar_Syntax_Syntax.NT
                                                     (x, e_p)) :: subst1),
                                                 uu____21676,
-                                                (erasable2 || erasable_p),
+                                                (erasable1 || erasable_p),
                                                 (i + Prims.int_one))))
                               uu____21286 sub_pats1 simple_bvs1
                              in
                           (match uu____21254 with
-                           | (_env,bvs,tms,checked_sub_pats,subst1,g,erasable2,uu____21735)
+                           | (_env,bvs,tms,checked_sub_pats,subst1,g,erasable1,uu____21735)
                                ->
                                let pat_e =
                                  FStar_Syntax_Subst.subst subst1
@@ -7614,7 +7614,7 @@ and (tc_pat :
                                  | uu____22098 -> failwith "Impossible"  in
                                let uu____22102 =
                                  reconstruct_nested_pat simple_pat_elab  in
-                               (bvs, tms, pat_e, uu____22102, g, erasable2))))))
+                               (bvs, tms, pat_e, uu____22102, g, erasable1))))))
            in
         (let uu____22109 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -7731,7 +7731,7 @@ and (tc_pat :
              FStar_TypeChecker_PatternUtils.elaborate_pat env p0  in
            check_nested_pattern uu____22137 uu____22155 pat_t  in
          match uu____22119 with
-         | (bvs,tms,pat_e,pat,g,erasable1) ->
+         | (bvs,tms,pat_e,pat,g,erasable) ->
              ((let uu____22194 =
                  FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                    (FStar_Options.Other "Patterns")
@@ -7750,7 +7750,7 @@ and (tc_pat :
                  FStar_TypeChecker_Normalize.normalize
                    [FStar_TypeChecker_Env.Beta] env pat_e
                   in
-               (pat, bvs, tms, uu____22206, pat_e, uu____22207, g, erasable1))))
+               (pat, bvs, tms, uu____22206, pat_e, uu____22207, g, erasable))))
 
 and (tc_eqn :
   FStar_Syntax_Syntax.bv ->
@@ -7785,7 +7785,7 @@ and (tc_eqn :
                   | (scrutinee_env,uu____22391) ->
                       let uu____22396 = tc_pat env pat_t pattern  in
                       (match uu____22396 with
-                       | (pattern1,pat_bvs1,pat_bv_tms,pat_env,pat_exp,norm_pat_exp,guard_pat,erasable1)
+                       | (pattern1,pat_bvs1,pat_bv_tms,pat_env,pat_exp,norm_pat_exp,guard_pat,erasable)
                            ->
                            ((let uu____22466 =
                                FStar_All.pipe_left
@@ -8932,7 +8932,7 @@ and (tc_eqn :
                                               (uu____23986, branch_guard,
                                                 effect_label, cflags,
                                                 maybe_return_c, uu____24003,
-                                                erasable1)))))))))))
+                                                erasable)))))))))))
 
 and (check_top_level_let :
   FStar_TypeChecker_Env.env ->

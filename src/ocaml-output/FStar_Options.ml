@@ -1729,7 +1729,7 @@ let (prims_basename : unit -> Prims.string) =
   
 let (pervasives : unit -> Prims.string) =
   fun uu____8803  ->
-    let filename = "FStar.Pervasives.fst"  in
+    let filename = "FStar.Pervasives.fsti"  in
     let uu____8807 = find_file filename  in
     match uu____8807 with
     | FStar_Pervasives_Native.Some result -> result

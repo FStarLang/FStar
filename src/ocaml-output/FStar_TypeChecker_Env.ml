@@ -3442,7 +3442,7 @@ let (type_is_erasable : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
             FStar_Parser_Const.erasable_attr
            in
-        match uu____21391 with | (ex,erasable1) -> (ex, erasable1)  in
+        match uu____21391 with | (ex,erasable) -> (ex, erasable)  in
       cache_in_fv_tab env.erasable_types_tab fv f
   
 let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =

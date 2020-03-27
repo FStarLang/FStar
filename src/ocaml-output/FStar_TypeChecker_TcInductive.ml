@@ -2858,7 +2858,7 @@ let (mk_discriminator_and_indexed_projectors :
                   fun inductive_tps  ->
                     fun indices  ->
                       fun fields  ->
-                        fun erasable1  ->
+                        fun erasable  ->
                           let p = FStar_Ident.range_of_lid lid  in
                           let pos q = FStar_Syntax_Syntax.withinfo q p  in
                           let projectee ptyp =
@@ -3045,7 +3045,7 @@ let (mk_discriminator_and_indexed_projectors :
                                   in
                                let t =
                                  let bool_typ =
-                                   if erasable1
+                                   if erasable
                                    then
                                      FStar_Syntax_Syntax.mk_GTotal
                                        FStar_Syntax_Util.t_bool
@@ -3366,7 +3366,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                          subst1
                                                          x.FStar_Syntax_Syntax.sort
                                                         in
-                                                     if erasable1
+                                                     if erasable
                                                      then
                                                        FStar_Syntax_Syntax.mk_GTotal
                                                          t
@@ -3901,7 +3901,7 @@ let (mk_data_operations :
                                           FStar_Syntax_Subst.subst_binders
                                             rename fields
                                        in
-                                    let erasable1 =
+                                    let erasable =
                                       FStar_Syntax_Util.has_attribute
                                         se.FStar_Syntax_Syntax.sigattrs
                                         FStar_Parser_Const.erasable_attr
@@ -3909,6 +3909,6 @@ let (mk_data_operations :
                                     mk_discriminator_and_indexed_projectors
                                       iquals1 attrs fv_qual refine_domain env
                                       typ_lid constr_lid uvs1 inductive_tps1
-                                      indices fields erasable1))))
+                                      indices fields erasable))))
             | uu____9617 -> []
   
