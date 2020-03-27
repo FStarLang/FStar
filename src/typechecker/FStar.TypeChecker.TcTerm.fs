@@ -1028,7 +1028,8 @@ and tc_value env (e:term) : term
                           * lcomp
                           * guard_t =
   let check_instantiated_fvar env v dc e t0 =
-    let e, t, implicits = TcUtil.maybe_instantiate env e t0 in
+    let t = U.remove_inacc t0 in (* remove inaccesible pattern implicits, make them regular implicits *)
+    let e, t, implicits = TcUtil.maybe_instantiate env e t in
 //    printfn "Instantiated type of %s from %s to %s\n" (Print.term_to_string e) (Print.term_to_string t0) (Print.term_to_string t);
     let tc = if Env.should_verify env then Inl t else Inr (TcComm.lcomp_of_comp <| mk_Total t) in
     let is_data_ctor = function

@@ -866,13 +866,12 @@ let branch b = Subst.close_branch b
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-let rec arrow_formals_comp k =
+let rec arrow_formals_comp_ln k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
-            let bs, c = Subst.open_comp bs c in
             if is_total_comp c
-            then let bs', k = arrow_formals_comp (comp_result c) in
+            then let bs', k = arrow_formals_comp_ln (comp_result c) in
                  bs@bs', k
             else bs, c
         | Tm_refine ({ sort = s }, _) ->
@@ -881,12 +880,20 @@ let rec arrow_formals_comp k =
            *)
           let rec aux (s:term) (k:term) =
             match (Subst.compress s).n with
-            | Tm_arrow _ -> arrow_formals_comp s  //found an arrow, go to the main function
+            | Tm_arrow _ -> arrow_formals_comp_ln s  //found an arrow, go to the main function
             | Tm_refine ({ sort = s }, _) -> aux s k  //another refinement, descend into it, but with the same def
             | _ -> [], Syntax.mk_Total k  //return def
           in
           aux s k
         | _ -> [], Syntax.mk_Total k
+
+let arrow_formals_comp k =
+    let bs, c = arrow_formals_comp_ln k in
+    Subst.open_comp bs c
+
+let arrow_formals_ln k =
+    let bs, c = arrow_formals_comp_ln k in
+    bs, comp_result c
 
 let arrow_formals k =
     let bs, c = arrow_formals_comp k in
@@ -949,6 +956,20 @@ let abs_formals t =
     let bs, t, opening = Subst.open_term' bs t in
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
+
+let remove_inacc (t:term) : term =
+    let no_acc ((b, aq) : binder) : binder =
+      let aq =
+        match aq with
+        | Some (Implicit true) -> Some (Implicit false)
+        | _ -> aq
+      in
+      (b, aq)
+    in
+    let bs, c = arrow_formals_comp_ln t in
+    match bs with
+    | [] -> t
+    | _ -> mk (Tm_arrow (List.map no_acc bs, c)) None t.pos
 
 let mk_letbinding (lbname : either<bv,fv>) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
