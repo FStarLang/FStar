@@ -1,6 +1,6 @@
 open Prims
 let id : 'Aa . 'Aa -> 'Aa = fun x  -> x 
-type ('Aa,'Auu____45) trivial_pure_poost = unit
+type ('Aa,'Auu____45) trivial_pure_post = unit
 type ('Aa,'Ax) ambient = unit
 
 type 'Aheap st_pre_h = unit

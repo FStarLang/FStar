@@ -46,7 +46,7 @@ let id (#a: Type) (x: a) : a = x
 
 (** Trivial postconditions for the [PURE] effect *)
 unfold
-let trivial_pure_poost (a: Type) : pure_post a = fun _ -> True
+let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
 
 (** Sometimes it is convenient to explicit introduce nullary symbols
     into the ambient context, so that SMT can appeal to their definitions
