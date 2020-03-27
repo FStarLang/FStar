@@ -46,9 +46,13 @@ MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
 #--------------------------------------------------------------------------------
 # Include the .depend before any other target
 # since we rely on the dependences it computes in other rules
+# #
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 #--------------------------------------------------------------------------------
 .depend: $(FSTAR_FILES)
-	$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(MY_FSTAR) --dep full $(FSTAR_FILES) > ._depend
+	mv ._depend .depend
 
 depend: .depend
 
