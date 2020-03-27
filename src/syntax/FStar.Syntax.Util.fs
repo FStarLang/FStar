@@ -749,14 +749,6 @@ let mk_app f args =
 let mk_app_binders f bs =
     mk_app f (List.map (fun (bv, aq) -> (bv_to_name bv, aq)) bs)
 
-let mk_data l args =
-  match args with
-    | [] ->
-      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l) //NS delta: ok
-    | _ ->
-      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
-      mk e None e.pos
-
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
    data constructor name with the name of one of its formal parameters
