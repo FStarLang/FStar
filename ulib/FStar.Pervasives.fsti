@@ -286,7 +286,7 @@ unopteq type dtuple4 (a:Type)
            -> _4:d _1 _2 _3
            -> dtuple4 a b c d
 
-let ignore (#a:Type) (x:a) : unit = ()
+val ignore (#a:Type) (x:a) :Tot unit
 
 val false_elim (#a:Type) (u:unit{false}) : Tot a
 
