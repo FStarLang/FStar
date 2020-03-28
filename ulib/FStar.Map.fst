@@ -30,7 +30,6 @@ module F = FStar.FunctionalExtensionality
  * which is necessary if Map.t is to also enjoy extensional equality.
  *)
 noeq
-abstract
 type t (key:eqtype) (value:Type) = {
   mappings: key ^-> value;
   domain:   set key
