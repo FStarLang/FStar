@@ -12,7 +12,7 @@
         "token_correspondence_Steel.Memory.star"
       ],
       0,
-      "f6bb447b3e254f279f4497b78c243edc"
+      "9d6b18913900b71c90f234db016b44cd"
     ],
     [
       "Steel.Semantics.Instantiate.commutative",
@@ -25,7 +25,7 @@
         "token_correspondence_Steel.Memory.star"
       ],
       0,
-      "fd48b00d6acb9d3dc73b3d3cb5b08757"
+      "175c28f5befb236ab16a745a2259b1c1"
     ],
     [
       "Steel.Semantics.Instantiate.is_unit",
@@ -43,7 +43,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "337d9f3dd818b1b5722bb5dd14ca12bf"
+      "26f9a2b1b9ac19be78717d74025a3c76"
     ],
     [
       "Steel.Semantics.Instantiate.state_obeys_st_laws",
@@ -147,7 +147,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "e9a2d1fb0f82b0af323886a4ae22c396"
+      "fcf05b353a62feee201a639ca8eeaab3"
     ],
     [
       "Steel.Semantics.Instantiate.state",
@@ -156,7 +156,7 @@
       1,
       [ "@query" ],
       0,
-      "22b9ad20c3fbe96397f2916549901543"
+      "4ada7b1aaa914b6e17c02c5ee898cf06"
     ]
   ]
 ]
