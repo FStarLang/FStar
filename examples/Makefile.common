@@ -37,7 +37,8 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
 
-MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
+MY_FSTAR=$(BENCHMARK_PRE)                                   \
+		$(FSTAR) --cache_checked_modules            \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \

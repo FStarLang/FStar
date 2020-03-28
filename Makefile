@@ -1,4 +1,4 @@
-.PHONY: all package clean 0 1 2 3 hints
+.PHONY: all package clean 0 1 2 3 hints bench
 
 all:
 	$(MAKE) -C src/ocaml-output
@@ -43,3 +43,6 @@ hints:
 	OTHERFLAGS=--record_hints $(MAKE) -C ulib/
 	OTHERFLAGS=--record_hints $(MAKE) -C ulib/ml
 	OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions
+
+bench:
+	./bin/run_benchmark.sh
