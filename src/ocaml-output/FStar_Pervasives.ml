@@ -38,8 +38,8 @@ type 'Aa ex_post = unit
 type 'Aa ex_wp = unit
 type ('Aa,'Ax,'Ap) ex_return = 'Ap
 type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) ex_bind_wp = unit
-type ('Aa,'Awp,'Apost) ex_ite_wp = unit
 type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) ex_if_then_else = unit
+type ('Aa,'Awp,'Apost) ex_ite_wp = unit
 type ('Aa,'Awp1,'Awp2) ex_stronger = unit
 type ('Aa,'Ab,'Awp,'Ap) ex_close_wp = unit
 type ('Aa,'Awp) ex_trivial = 'Awp
@@ -48,28 +48,28 @@ type 'Ah all_pre_h = unit
 type ('Ah,'Aa,'Apre) all_post_h' = unit
 type ('Ah,'Aa) all_post_h = unit
 type ('Ah,'Aa) all_wp_h = unit
-type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___3_741) all_return = 'Ap
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___3_710) all_return = 'Ap
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else = unit
+type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = unit
 type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = unit
 type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) all_close_wp = unit
 type ('Aheap,'Aa,'Awp) all_trivial = unit
 type 'Aa inversion = unit
 
 
-type ('a,'b) either =
-  | Inl of 'a 
-  | Inr of 'b 
-let uu___is_Inl : 'a 'b . ('a,'b) either -> Prims.bool =
+type ('Aa,'Ab) either =
+  | Inl of 'Aa 
+  | Inr of 'Ab 
+let uu___is_Inl : 'Aa 'Ab . ('Aa,'Ab) either -> Prims.bool =
   fun projectee  -> match projectee with | Inl v -> true | uu____970 -> false 
-let __proj__Inl__item__v : 'a 'b . ('a,'b) either -> 'a =
+let __proj__Inl__item__v : 'Aa 'Ab . ('Aa,'Ab) either -> 'Aa =
   fun projectee  -> match projectee with | Inl v -> v 
-let uu___is_Inr : 'a 'b . ('a,'b) either -> Prims.bool =
+let uu___is_Inr : 'Aa 'Ab . ('Aa,'Ab) either -> Prims.bool =
   fun projectee  ->
     match projectee with | Inr v -> true | uu____1024 -> false
   
-let __proj__Inr__item__v : 'a 'b . ('a,'b) either -> 'b =
+let __proj__Inr__item__v : 'Aa 'Ab . ('Aa,'Ab) either -> 'Ab =
   fun projectee  -> match projectee with | Inr v -> v 
 let dfst : 'Aa 'Ab . ('Aa,'Ab) Prims.dtuple2 -> 'Aa =
   fun t  -> Prims.__proj__Mkdtuple2__item___1 t 
