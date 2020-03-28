@@ -119,10 +119,33 @@ let mk_class (nm:string) : Tac decls =
                   let dbv = fresh_bv_named "d" cod in
                   let tcr = (`tcresolve) in
                   let tcdict = pack_binder dbv (Q_Meta tcr) in
-                  let bs = ps @ [tcdict] in
-                  let ty = pack Tv_Unknown in (* Just leave it to inference *)
+                  let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv (cur_module () @ [base ^ s]))) in
-                  let def : term = mk_abs bs (mk_e_app proj [binder_to_term tcdict]) in
+
+                  let proj_ty =
+                    match lookup_typ (top_env ()) proj_name with
+                    | None -> fail "mk_class: proj not found?"
+                    | Some se ->
+                      match inspect_sigelt se with
+                      | Sg_Let _ _ _ t _ -> t
+                      | _ -> fail "mk_class: proj not Sg_Let?"
+                  in
+                  //dump ("proj_ty = " ^ term_to_string proj_ty);
+                  let ty =
+                    let bs, cod = collect_arr_bs proj_ty in
+                    let ps, bs = List.Tot.splitAt (List.length params) bs in
+                    match bs with
+                    | [] -> fail "mk_class: impossible, no binders"
+                    | b1::bs' ->
+                        let (bv, aq) = inspect_binder b1 in
+                        let b1 = pack_binder bv (Q_Meta tcr) in
+                        mk_arr (ps@(b1::bs')) cod
+                  in
+
+                  let def : term =
+                    let bs = ps @ [tcdict] in
+                    mk_abs bs (mk_e_app proj [binder_to_term tcdict])
+                  in
                   //dump ("def = " ^ term_to_string def);
                   //dump ("ty  = " ^ term_to_string ty);
 
