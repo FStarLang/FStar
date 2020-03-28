@@ -4419,7 +4419,7 @@ let (smt_lemma_as_forall :
          in
       let lemma_pats p =
         let elts = list_elements1 p  in
-        let smt_pat_or1 t1 =
+        let smt_pat_or t1 =
           let uu____18927 =
             let uu____18944 = unmeta t1  in
             FStar_All.pipe_right uu____18944 head_and_args  in
@@ -4439,7 +4439,7 @@ let (smt_lemma_as_forall :
            in
         match elts with
         | t1::[] ->
-            let uu____19093 = smt_pat_or1 t1  in
+            let uu____19093 = smt_pat_or t1  in
             (match uu____19093 with
              | FStar_Pervasives_Native.Some e ->
                  let uu____19115 = list_elements1 e  in

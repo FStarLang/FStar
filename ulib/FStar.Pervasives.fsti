@@ -41,7 +41,7 @@ include FStar.Pervasives.Native
 ///   definitions.
 
 (** The concrete syntax [SMTPat] desugars to [smt_pat] *)
-val smt_pat (#a: Type) (x: a) : pattern
+val smt_pat (#a: Type) (x: a) : Tot pattern
 
 (** The concrete syntax [SMTPatOr] desugars to [smt_pat_or]. This is
     used to represent a disjunction of conjunctions of patterns.
@@ -53,7 +53,7 @@ val smt_pat (#a: Type) (x: a) : pattern
     TODO: We should tighten this up, perhaps just reusing the
     attribute mechanism for patterns.
 *)
-val smt_pat_or (x: list (list pattern)) : pattern
+val smt_pat_or (x: list (list pattern)) : Tot pattern
 
 
 (** In the default mode of operation, all proofs in a verification
