@@ -20,11 +20,15 @@ module FStar.Pervasives
 open Prims
 
 
-/// Implementation of FStar.Pervasives
+/// Implementation of FStar.Pervasives.fsti
 
 let smt_pat #_ _ = ()
 
 let smt_pat_or _ = ()
+
+let spinoff p = p
+
+let assert_spinoff _ = ()
 
 let ambient #_ _ = True
 

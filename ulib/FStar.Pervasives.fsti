@@ -55,6 +55,16 @@ val smt_pat (#a: Type) (x: a) : pattern
 *)
 val smt_pat_or (x: list (list pattern)) : pattern
 
+
+(** In the default mode of operation, all proofs in a verification
+    condition are bundled into a single SMT query. Sub-terms marked
+    with the [spinoff] below are the exception: each of them is
+    spawned off into a separate SMT query *)
+val spinoff (p: Type0) : Type0
+
+(** Logically equivalent to assert, but spins off separate query *)
+val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+
 (** The polymorphic identity function *)
 unfold
 let id (#a: Type) (x: a) : a = x
@@ -757,3 +767,8 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
 
+
+(** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
+    Incrementing this forces all .checked files to be invalidated *)
+irreducible
+let __cache_version_number__ = 18

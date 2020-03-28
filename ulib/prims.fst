@@ -635,17 +635,6 @@ val admitP (p: Type) : Pure unit True (fun x -> p)
 val _assert (p: Type) : Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
 
-(** In the default mode of operation, all proofs in a verification
-    condition are bundled into a single SMT query. Sub-terms marked
-    with the [spinoff] below are the exception: each of them is
-    spawned off into a separate SMT query *)
-abstract
-let spinoff (p: Type) : Type = p
-
-(** Logically equivalent to assert, but spins off separate query *)
-val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
-let assert_spinoff p = ()
-
 (** Logically equivalent to assert; TODO remove? *)
 val cut (p: Type) : Pure unit (requires p) (fun x -> p)
 let cut p = ()
@@ -704,8 +693,3 @@ val string_of_int: int -> Tot string
     source-code location with an assertion. *)
 irreducible
 let labeled (r: range) (msg: string) (b: Type) : Type = b
-
-(** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
-    Incrementing this forces all .checked files to be invalidated *)
-private abstract
-let __cache_version_number__ = 18
