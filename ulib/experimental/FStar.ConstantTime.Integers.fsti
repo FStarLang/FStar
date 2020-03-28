@@ -15,44 +15,42 @@
 *)
 module FStar.ConstantTime.Integers
 
-(**
-    This module provides a refinement of FStar.IFC providing an
-    interface restricted only to constant-time operations on integers.
-
-    In contrast, FStar.IFC provides a general monadic information-flow
-    control framework, which need not be restricted to constant-time
-    operations.
-*)
+/// This module provides a refinement of FStar.IFC providing an
+/// interface restricted only to constant-time operations on integers.
+///
+/// In contrast, FStar.IFC provides a general monadic information-flow
+/// control framework, which need not be restricted to constant-time
+/// operations.
 
 open FStar.IFC
 open FStar.Integers
 
 
-/// `sw`: signedness and width of machine integers excluding
-///       FStar.[U]Int128, which does not provide constant-time
-///       operations.
-let sw =
-    s:signed_width{width_of_sw s <> Winfinite /\ width_of_sw s <> W128}
+(** `sw`: signedness and width of machine integers excluding
+      FStar.[U]Int128, which does not provide constant-time
+      operations. *)
+let sw = s:signed_width{width_of_sw s <> Winfinite
+      /\ width_of_sw s <> W128}
 
-/// A `secret_int l s` is a machine-integer at secrecy level `l` and
-/// signedness/width `s`.
-val secret_int (#sl:sl)
+(** A `secret_int l s` is a machine-integer at secrecy level `l` and
+    signedness/width `s`. *)
+val secret_int (#sl:sl u#c)
                (l:lattice_element sl)
                (s:sw) : Type0
 
-/// A `secret_int l s` can be seen as an int in spec
+(** A `secret_int l s` can be seen as an int in spec *)
 val reveal (#sl:sl)
            (#l:lattice_element sl)
            (#s:sw)
            (x:secret_int l s)
    : GTot (y:int{within_bounds s y})
 
-/// A `secret_int l s` can be also be seen as an machine integer in spec
+(** A `secret_int l s` can be also be seen as an machine integer in spec *)
 let m #sl (#t:lattice_element sl) #s (x:secret_int t s)
   : GTot (int_t s)
   = u (reveal x)
 
-/// `hide` is the inverse of `reveal`, proving that `secret_int` is injective
+(** `hide` is the inverse of `reveal`, proving that `secret_int` is injective *)
 val hide (#sl:sl)
          (#l:lattice_element sl)
          (#s:sw)
@@ -72,8 +70,8 @@ val hide_reveal (#sl:sl)
   : Lemma (hide (reveal x) == x)
           [SMTPat (reveal x)]
 
-/// `promote x l` allows increasing the confidentiality classification of `x`
-///  This can easily be programmed using the FStar.IFC interface
+(** `promote x l` allows increasing the confidentiality classification of `x`
+  This can easily be programmed using the FStar.IFC interface *)
 val promote (#sl:sl)
             (#l0:lattice_element sl)
             (#s:sw)
@@ -81,14 +79,16 @@ val promote (#sl:sl)
             (l1:lattice_element sl)
   : Tot (y:secret_int (l1 `lub` l0) s{reveal y == reveal x})
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// The remainder of this module provides liftings of specific integers operations
-/// to work on secret integers, i.e., only those that respect the constant time guarantees
-/// and do not break confidentiality.
+/// The remainder of this module provides liftings of specific
+/// integers operations to work on secret integers, i.e., only those
+/// that respect the constant time guarantees and do not break
+/// confidentiality.
 ///
 /// Note, with our choice of representation, it is impossible to
 /// implement functions that break basic IFC guarantees, e.g., we
 /// cannot implement a boolean comparison function on secret_ints
+
+(** Bounds-respecting addition *)
 val addition (#sl:sl)
              (#l:lattice_element sl)
              (#s:sw)
@@ -96,6 +96,7 @@ val addition (#sl:sl)
              (y : secret_int l s {ok ( + ) (m x) (m y)})
     : Tot (z:secret_int l s{m z == m x + m y})
 
+(** Addition modulo *)
 val addition_mod (#sl:sl)
                  (#l:lattice_element sl)
                  (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
@@ -106,9 +107,10 @@ val addition_mod (#sl:sl)
 /// If we like this style, I will proceed to implement a lifting of
 /// the rest of the constant-time integers over secret integers
 
-////////////////////////////////////////////////////////////////////////////////
-//Now, a multiplexing layer to overload operators over int_t and secret_int
-////////////////////////////////////////////////////////////////////////////////
+
+/// Now, a multiplexing layer to overload operators over int_t and secret_int
+
+(** A type of qualifiers, distinguishing secret and public integers *)
 noeq
 type qual =
   | Secret: #sl:sl
@@ -118,18 +120,21 @@ type qual =
   | Public: sw:signed_width
           -> qual
 
+(** The signedness and width of a qualifier *)
 [@mark_for_norm]
 unfold
 let sw_qual = function
   | Secret _ sw -> sw
   | Public sw -> sw
 
+(** The lattice element of a secret qualifier *)
 [@mark_for_norm]
 unfold
 let label_qual (q:qual{Secret? q}) : lattice_element (Secret?.sl q) =
   match q with
   | Secret l _ -> l
 
+(** The type corresponding to a qualifier, either an integer or a secret integer *)
 [@mark_for_norm]
 unfold
 let t (q:qual) =
@@ -139,14 +144,7 @@ let t (q:qual) =
 
 [@mark_for_norm]
 unfold
-let q2s (q:qual) : signed_width =
-  match q with
-  | Secret _ s -> s
-  | Public s -> s
-
-[@mark_for_norm]
-unfold
-let i (#q:qual) (x:t q) : GTot (int_t (q2s q)) =
+let i (#q:qual) (x:t q) : GTot (int_t (sw_qual q)) =
   match q with
   | Public s -> x
   | Secret l s -> m (x <: secret_int l s)
@@ -163,6 +161,7 @@ let as_public (#q:qual{Public? q}) (x:t q)
   : int_t (sw_qual q)
   = x
 
+(** Lifting addition to work over both secret and public integers *)
 [@mark_for_norm]
 unfold
 let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
@@ -171,9 +170,10 @@ let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
       | Public s -> as_public x + as_public y
       | Secret l s -> as_secret x `addition` as_secret y
 
+(** Lifting addition modulo to work over both secret and public integers *)
 [@mark_for_norm]
 unfold
-let ( +% ) (#q:qual{norm (Unsigned? (q2s q) /\ width_of_sw (q2s q) <> W128)})
+let ( +% ) (#q:qual{norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W128)})
            (x:t q)
            (y:t q)
     : Tot (t q)
@@ -181,17 +181,30 @@ let ( +% ) (#q:qual{norm (Unsigned? (q2s q) /\ width_of_sw (q2s q) <> W128)})
       | Public s -> as_public x +% as_public y
       | Secret l s -> as_secret x `addition_mod` as_secret y
 
-let test (x:int) (y:int) = x + y
+(**** Tests *)
 
+private irreducible
+let test (x:int) (y:int) = x + y
+private abstract
 let two_point_lattice = Ghost.hide (SemiLattice true ( || ))
+private abstract
 let lo : lattice_element two_point_lattice = Ghost.hide false
+private abstract
 let hi : lattice_element two_point_lattice = Ghost.hide true
+private irreducible
 let test2 (x:t (Secret lo (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% y
+private irreducible
 let test3 (x:t (Secret hi (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% promote y hi
+private irreducible
 let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) = promote x hi + y
 
+private abstract
 let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
+private abstract
 let hacl_label : lattice_element hacl_lattice = Ghost.hide ()
+private abstract
 let s_uint32 = t (Secret hacl_label (Unsigned W32))
+private irreducible
 let test5 (x:s_uint32) (y:s_uint32) = x +% y
+private irreducible
 let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x + y

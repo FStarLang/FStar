@@ -1,5 +1,5 @@
 [
-  "\u000eA\u0004<àu‡™ôÙ­\u0015­þ—\u0017",
+  "D¤]\nËÓÁÆ‘|T\f\u001e\u001b\\Œ",
   [
     [
       "FStar.Ghost.elift1",
@@ -14,7 +14,7 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "e8c18c42c63ea4ef7592ffd380d32cb4"
+      "057b668baedd8c5a5b490378168ef326"
     ],
     [
       "FStar.Ghost.elift2",
@@ -30,7 +30,7 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "5acb32e776e4941e9a14ffb9d9d65680"
+      "0c9b0deb755487577d73f3a2215a8f08"
     ],
     [
       "FStar.Ghost.elift3",
@@ -47,7 +47,19 @@
         "lemma_FStar.Ghost.reveal_hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "26176cf109ffec14e244b5feb15d5114"
+      "cdd181c92f4b10feca21642e5b495330"
+    ],
+    [
+      "FStar.Ghost.push_refinement",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "e7bcbe3a8c359d6c303b31bd57e80c52"
     ],
     [
       "FStar.Ghost.elift1_p",
@@ -61,7 +73,7 @@
         "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0,
-      "d92bed5e95f5b91d79d3dc36588e32a9"
+      "d24111d9ef81a54cb1b0a79bc41b2d5d"
     ],
     [
       "FStar.Ghost.elift2_p",
@@ -76,7 +88,7 @@
         "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0,
-      "93e6fb41b53f968efd1cb22afc069291"
+      "344a08282ee624f34165360d058df45f"
     ],
     [
       "FStar.Ghost.elift1_pq",
@@ -91,7 +103,7 @@
         "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0,
-      "998545037f232bcf4af5a4854b038b0d"
+      "5467b0547d6637fc905c5cdb5852ca0f"
     ],
     [
       "FStar.Ghost.elift2_pq",
@@ -107,7 +119,7 @@
         "refinement_interpretation_Tm_refine_f9e3dab5c1ea39d2741639e0fe40e216"
       ],
       0,
-      "04f11bc248b3c04866b984434b4f1261"
+      "5be32fc7af6e033aa92c466bae970975"
     ]
   ]
 ]
