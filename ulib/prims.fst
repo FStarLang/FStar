@@ -534,23 +534,6 @@ type list (a: Type) =
     quantifier triggers *)
 type pattern : Type0 = unit
 
-(** The concrete syntax [SMTPat] desugars to [smt_pat] *)
-irreducible
-let smt_pat (#a: Type) (x: a) : pattern = ()
-
-(** The concrete syntax [SMTPatOr] desugars to [smt_pat_or]. This is
-    used to represent a disjunction of conjunctions of patterns.
-
-    Note, the typing discipline and syntax of patterns is laxer than
-    it should be. Patterns like [SMTPatOr [SMTPatOr [...]]] are
-    expressible, but unsupported by F*
-
-    TODO: We should tighten this up, perhaps just reusing the
-    attribute mechanism for patterns.
-*)
-irreducible
-let smt_pat_or (x: list (list pattern)) : pattern = ()
-
 (** The [decreases] attribute on a recursive function is used to
     specify a well-founded ordering for a termination proof *)
 assume
