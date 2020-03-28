@@ -1,8 +1,8 @@
 [
-  "*Éun§'tÙñ\u0019çÃên˝c",
+  "÷ıÄ´Û\u0013á•ﬂM\u001f”zpÜ\u001b",
   [
     [
-      "FStar.IndefiniteDescription.aux",
+      "FStar.IndefiniteDescription.strong_excluded_middle",
       1,
       2,
       1,
@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "b44acf624a796a3499c7602d54358bec"
+      "27dcab6360a50d105a2e5413e63567a9"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -25,7 +25,33 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "49120338e9bf533dc7924c0056d59f15"
+      "b591be8b0cce2230623087eb99a0c35c"
+    ],
+    [
+      "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "ba1c6aee9975bfb7b8e341fec474b405"
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.c_or"
+      ],
+      0,
+      "1c4cfd7b45d76941b8639ed28933a7f3"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -38,7 +64,20 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "efe2884da6dfc67f140e502ce776e292"
+      "33fc4ffb540ea39065fc1e405eb23207"
+    ],
+    [
+      "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "580d6877acfcbdcd7b7715437d07b7b1"
     ]
   ]
 ]

@@ -61,7 +61,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "3319f0e05671121a534a016e10dd9dd1"
+      "d651be21b22570912c0932028eaceabb"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -84,7 +84,8 @@
         "equation_Benton2004.RHL.gop", "equation_Benton2004.RHL.gsubst",
         "equation_Benton2004.RHL.gvar", "equation_Benton2004.assign",
         "equation_Benton2004.const", "equation_Benton2004.eop",
-        "equation_Benton2004.evar", "equation_Benton2004.var",
+        "equation_Benton2004.evar", "equation_Benton2004.reify_exp",
+        "equation_Benton2004.var",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
         "equation_Prims.eqtype",
         "function_token_typing_Benton2004.RHL.exp_to_gexp",
@@ -110,6 +111,7 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Benton2004.RHL.gop",
+        "token_correspondence_Benton2004.reify_exp",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_AmpAmp",
         "token_correspondence_Prims.op_Equality",
@@ -123,7 +125,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "78154378c27952ac57851a4f727f68eb"
+      "3f6c03ca88146cfa619b41702faaeda9"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -155,7 +157,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "d0b86de4b3434f4bd08484dca46ac20f"
+      "07d7858fd4dc4877a788b8b68a493f10"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -188,7 +190,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "5c60a7bc24c1b853a1f628874acedaff"
+      "e774f1b8b008124c8c7fa66321a67c62"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -221,7 +223,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "c75a542b0a7182591bf28972511152c6"
+      "bdb60b5d8e2660a06bb833b235a831cc"
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -238,7 +240,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "e329412e8c0d1890500a0fcbbab6c55f"
+      "42ef3a359647b6c50d762a6f8db5f61a"
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -255,7 +257,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "fb32dfd45c99bd724b5deead527b5996"
+      "57053c64f042c753355207211e5aae58"
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -268,7 +270,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "ce5428c617b7ae2c103315c0dc2fa86c"
+      "f8e2c40cf40fb0e89bbfd0458f745b27"
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -295,7 +297,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "1f48a230276261b5f4cb3d3a77ebd0c4"
+      "0360140b88153fa425d48efc944d43ed"
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -308,7 +310,7 @@
         "typing_Benton2004.skip"
       ],
       0,
-      "ed1ffcf6eb263efa71e9659b91461695"
+      "532e6b03cd769a448f45d3a390ddf381"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -415,7 +417,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "d74c863624d61bca3da839843e926a66"
+      "693590cc5980b59db361774fd8e58fe8"
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
@@ -439,10 +441,9 @@
         "equation_Benton2004.RHL.geq", "equation_Benton2004.RHL.gexp",
         "equation_Benton2004.RHL.gnot", "equation_Benton2004.RHL.gop",
         "equation_Benton2004.RHL.gsubst", "equation_Benton2004.RHL.gvar",
-        "equation_Benton2004.RHL.included", "equation_Benton2004.RHL.interp",
         "equation_Benton2004.const", "equation_Benton2004.eop",
-        "equation_Benton2004.evar", "equation_Benton2004.included",
-        "equation_Benton2004.reify_exp", "equation_Benton2004.var",
+        "equation_Benton2004.evar", "equation_Benton2004.reify_exp",
+        "equation_Benton2004.var",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
         "equation_FStar.DM4F.IntStoreFixed.read",
         "equation_FStar.Pervasives.Native.fst", "equation_Prims.eqtype",
@@ -462,7 +463,6 @@
         "interpretation_Tm_abs_ec742af2e60fcd53c3ec5adf15a291f6",
         "lemma_Benton2004.RHL.exp_to_gexp_const",
         "lemma_Benton2004.RHL.exp_to_gexp_evar",
-        "lemma_Benton2004.RHL.holds_interp",
         "lemma_Benton2004.RHL.included_alt",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThan",

@@ -27,7 +27,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "243a6fc7f15170252738df89b12325cb"
+      "150fc397a8b60ac0490917837df22802"
     ],
     [
       "TestShift.test_u8",
@@ -55,7 +55,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "f365b5402d0b11f52df68c8ad5d58dde"
+      "2885a96069cff0bbaa1ab96c763a3064"
     ],
     [
       "TestShift.test_i32_right",
@@ -79,7 +79,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "95064f2e37ab6991b04dac1b03754147"
+      "4ea2158a52e3cf38dac97f45172fa52a"
     ],
     [
       "TestShift.test_i32_arith_right",
@@ -103,7 +103,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "788c1e569753ab934d64e59bf5037a64"
+      "b3077a084e0f427fba3199bec8101f0d"
     ],
     [
       "TestShift.test_i8_right",
@@ -127,7 +127,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "bf52c6c6cd8f57dbc69a0d310453bcaa"
+      "21af7b0535363b0d3c902fdcb58ad023"
     ],
     [
       "TestShift.test_i8_arith_right",
@@ -151,7 +151,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "f8ae99114b5c7647fdc3037aa6029900"
+      "a61f267b7a2f94002e915b9a79b19546"
     ],
     [
       "TestShift.test_i8_left",
@@ -186,7 +186,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "bff42e6e05feceebadc4d3fce413e117"
+      "7e0a3fe61385b784988bf92e2879c923"
     ]
   ]
 ]
