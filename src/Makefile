@@ -98,6 +98,7 @@ boot_dir:
 boot: $(ALL_BOOT)
 
 clean_boot:
+	rm -rf .cache.boot
 	rm -f .depend
 	rm -rf boot
 
