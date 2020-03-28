@@ -302,7 +302,7 @@ assume val hfn (_:unit) : STATE unit (fun p h -> p () h)
  *
  *       YOU COULD READ THE COMMENTS IN THIS MODULE IF YOU ARE CURIOUS
  *)
-
+[@expect_failure]
 let ref_hfn ()
 : Ref unit
   (requires fun _ -> True)

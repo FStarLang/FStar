@@ -442,7 +442,7 @@ type dtuple4
   = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
 
 (** Explicitly discarding a value *)
-val ignore (#a: Type) (x: a) : Tot unit
+let ignore (#a: Type) (x: a) : Tot unit = ()
 
 (** In a context where [false] is provable, you can prove that any
     type [a] is inhabited.

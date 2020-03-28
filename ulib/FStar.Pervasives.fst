@@ -40,8 +40,6 @@ let allow_inversion _ = ()
 
 let invertOption _ = ()
 
-let ignore #_ _ = ()
-
 let rec false_elim #_ _ = false_elim ()
 
 let inline_let = ()
