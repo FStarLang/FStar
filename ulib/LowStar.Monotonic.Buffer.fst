@@ -216,7 +216,8 @@ let live_same_addresses_equal_types_and_preorders'
   ))
 =   Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ()
+    Seq.lemma_equal_instances_implies_equal_types ();
+    admit ()
 
 let live_same_addresses_equal_types_and_preorders
   #_ #_ #_ #_ #_ #_ b1 b2 h
@@ -1123,6 +1124,7 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
         Heap.lemma_distinct_addrs_distinct_preorders ();
         Heap.lemma_distinct_addrs_distinct_mm ();
         Seq.lemma_equal_instances_implies_equal_types ();
+        admit ();
         let boff = U32.v (Buffer?.idx b) in
         let from_ = boff + U32.v from in
         let to_ = boff + U32.v to in
@@ -1311,6 +1313,7 @@ let g_upd_seq_as_seq #_ #_ #_ b s h =
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     Seq.lemma_equal_instances_implies_equal_types ();
+    admit ();
     modifies_1_modifies b h h'
   end
 
@@ -1320,6 +1323,7 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     Seq.lemma_equal_instances_implies_equal_types ();
+    admit ();
     modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 
