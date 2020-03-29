@@ -7,7 +7,6 @@ include Makefile.include
 # them.
 
 ALL_EXAMPLE_DIRS=\
-bug-reports \
 data_structures \
 algorithms \
 crypto \
@@ -21,10 +20,6 @@ metatheory \
 verifythis \
 preorders \
 dm4free \
-incl \
-struct \
-micro-benchmarks \
-friends \
 tactics \
 param \
 typeclasses \
@@ -40,7 +35,6 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-machine_integers \
 indent \
 calc \
 steel \

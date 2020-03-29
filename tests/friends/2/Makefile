@@ -4,7 +4,7 @@ OTHERFLAGS+=--already_cached 'Prims FStar LowStar'
 all: verify-all
 
 include .depend
-include ../../Makefile.include
+include $(FSTAR_HOME)/examples/Makefile.include
 
 verify-all: $(ALL_CHECKED_FILES)
 

@@ -5,7 +5,7 @@ FSTAR_FILES=$(wildcard *.fst)
 
 all: verify-all
 
-include ../Makefile.common
+include $(FSTAR_HOME)/examples/Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES))) \
             Erasable.ml-cmp \

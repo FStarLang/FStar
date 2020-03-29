@@ -1,9 +1,8 @@
 FSTAR_HOME=../..
-include ../Makefile.include
+include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 all: verify iverify not-verify extract
-
 
 ##################
 # Positive tests #
