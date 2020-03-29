@@ -135,7 +135,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "02bb4fef8e0ef701ede7d20c1389b324"
+      "5401ccfd984a2f21871935cc81d1bdfc"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",
@@ -527,7 +527,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "4d1ef954a090ef57fe6056ce13253143"
+      "ee66b87c4cffb7df4b53c1a1a54c8b24"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",

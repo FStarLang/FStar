@@ -217,7 +217,7 @@
         "typing_Tm_abs_14540b1677bb0879c263763c122744f7"
       ],
       0,
-      "85549bbd8d62fc814eccdc35c98e8144"
+      "ba2dc5aee44e4522167a49a45f063957"
     ],
     [
       "FStar.ConstantTime.Integers.addition_mod",
@@ -340,7 +340,7 @@
         "typing_Tm_abs_3b3b3487729e58b4bfeba69d78394443"
       ],
       0,
-      "e4bc895bb3edba102cf0db5b71cee42b"
+      "70c2f67fcd4434364967e88174c81c34"
     ],
     [
       "FStar.ConstantTime.Integers.__proj__Secret__item__sl",
@@ -614,7 +614,7 @@
         "token_correspondence_Prims.op_BarBar"
       ],
       0,
-      "27eae839f8e4efd98a17083a14fd8b36"
+      "0f87aaa3342c186889ac45f9d005ec00"
     ],
     [
       "FStar.ConstantTime.Integers.hi",
@@ -644,7 +644,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "a1523d518c52eb02733ea5a8a5bc573b"
+      "3e3e4ce8bfad2abdb5abe73ce53c61f7"
     ],
     [
       "FStar.ConstantTime.Integers.test2",
@@ -751,7 +751,7 @@
         "typing_FStar.IFC.__proj__SemiLattice__item__carrier"
       ],
       0,
-      "a97ce8213f4293e6283b4a46c69454b3"
+      "85d31c4e2da383526d8cd68d31003a34"
     ],
     [
       "FStar.ConstantTime.Integers.test4",
@@ -823,7 +823,7 @@
         "typing_FStar.IFC.__proj__SemiLattice__item__carrier"
       ],
       0,
-      "dbe5777c8cf3a0590ea506cea97c0b9e"
+      "34b3da9a9a9dd65c9364b94c9a694752"
     ],
     [
       "FStar.ConstantTime.Integers.hacl_lattice",
@@ -869,7 +869,7 @@
         "unit_typing"
       ],
       0,
-      "a8d3e8057e2b7a8a4f39b6b130db559e"
+      "2164ce9a60c5d52a7280ee9f677d1b9e"
     ],
     [
       "FStar.ConstantTime.Integers.s_uint32",
