@@ -64,7 +64,7 @@ val t_exact : bool -> bool -> term -> tac<unit>
 val t_apply : bool -> bool -> term -> tac<unit>
 val apply_lemma : term -> tac<unit>
 val rewrite : binder -> tac<unit>
-val rename_to : binder -> string -> tac<unit>
+val rename_to : binder -> string -> tac<binder>
 val binder_retype : binder -> tac<unit>
 val norm_binder_type : list<EMB.norm_step> -> binder -> tac<unit>
 val revert : unit -> tac<unit>

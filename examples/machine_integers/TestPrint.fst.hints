@@ -28,7 +28,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "2f1e0e185530236601d67b9d48fd1bef"
+      "3a35c12b79ce7823f15df58ceebb5608"
     ],
     [
       "TestPrint.test_dec",
@@ -57,7 +57,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "8647a65b5b21d6ac970ce446da49cfa6"
+      "7e8723e6629e44aeac111117f529e6a6"
     ],
     [
       "TestPrint.test_hex_pad",
@@ -86,7 +86,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "f9a3c7e5aff6fb8aa20c48cf28971909"
+      "710982f53748de667e406006be3eff29"
     ],
     [
       "TestPrint.test_dec_pad",
@@ -115,7 +115,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "80ebbd5462ac52bffb971ed07b739be2"
+      "1b1ceda8940be3f752ab368f48da3861"
     ]
   ]
 ]

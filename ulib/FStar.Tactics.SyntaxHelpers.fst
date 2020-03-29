@@ -3,6 +3,7 @@ module FStar.Tactics.SyntaxHelpers
 open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Types
 
 (* These are fully-named variants of functions found in FStar.Reflection *)
 
@@ -41,6 +42,15 @@ val collect_abs : term -> Tac (list binder * term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
+
+(* Copied from FStar.Tactics.Derived *)
+let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+
+let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
+    match bs with
+    | [] -> fail "mk_arr, empty binders"
+    | [b] -> pack (Tv_Arrow b cod)
+    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_arr bs cod) None)))
 
 let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with

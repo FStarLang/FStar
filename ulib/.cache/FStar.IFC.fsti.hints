@@ -1,0 +1,31 @@
+[
+  "$”U@àÑ#BõD¶\u001e¬\u0016¥\u001f",
+  [
+    [
+      "FStar.IFC.__proj__SemiLattice__item__top",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier"
+      ],
+      0,
+      "b3d40ff7c0033a3bd9241c2c23a4fa64"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__lub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier",
+        "refinement_interpretation_Tm_refine_cb318fd5778149a9d33dfa0172d8686e"
+      ],
+      0,
+      "3247f59406d7c7e764cac643ba3ca213"
+    ]
+  ]
+]

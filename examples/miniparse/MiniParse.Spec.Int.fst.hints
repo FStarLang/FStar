@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "c3c36044fe55f66745774b97ac0037b6"
+      "f46a9f9e584af51112b8320cdcc43071"
     ],
     [
       "MiniParse.Spec.Int.serialize_u8",
@@ -63,7 +63,7 @@
         "typing_Tm_abs_abe39403e7ecb7eefc1a316047051357"
       ],
       0,
-      "1eda0cf7329e4369c59c28fa0c1f7716"
+      "eab50128782769d9a4d31c09ff757a1c"
     ],
     [
       "MiniParse.Spec.Int.parse_u16_aux",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Tm_refine_15105f0ad7318b3348d436c7619fd5de"
       ],
       0,
-      "385b4600a2f0faef00ad849c5bf511f4"
+      "56e6b044d6e200414a34cc9639f751ce"
     ],
     [
       "MiniParse.Spec.Int.parse_u16_aux",
@@ -119,7 +119,7 @@
         "typing_FStar.UInt8.v"
       ],
       0,
-      "057abdd574f4e6b98fee3b9f0c838a36"
+      "e79d6a091b6985be35822ce59c346f93"
     ],
     [
       "MiniParse.Spec.Int.parse_u16",
@@ -128,10 +128,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "function_token_typing_MiniParse.Spec.Int.parse_u16_aux",
         "refinement_interpretation_Tm_refine_af8636cafa07354ad4272bfa8c0b3ef3"
       ],
       0,
-      "924536e0638ead9e9ebf16a5f363ca3d"
+      "672983c6eb9125f564793138f4ee2db0"
     ],
     [
       "MiniParse.Spec.Int.serialize_u16",
@@ -217,7 +218,7 @@
         "typing_MiniParse.Spec.Int.serialize_u16_", "typing_Prims.pow2"
       ],
       0,
-      "bc8d3f59ff863f3965c3829ce0c71c41"
+      "5b90c3029f5ef1d6217818d14647b554"
     ],
     [
       "MiniParse.Spec.Int.mk_u16",
@@ -238,7 +239,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fcb265ec953580ae4f96485b70370c22"
+      "ec1ea15f0b60d17edccbe889d9c76b39"
     ],
     [
       "MiniParse.Spec.Int.bounded_u16",
@@ -250,7 +251,7 @@
         "haseqMiniParse.Spec.Int_Tm_refine_4a34c5b30307f7bc5de1b73c66981962"
       ],
       0,
-      "c2e1c27843157df36fda90db2be0efc6"
+      "a201d64f9d09727ce7a63ad561f04afb"
     ],
     [
       "MiniParse.Spec.Int.map_u16_to_bounded_u16",
@@ -266,7 +267,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "528c8694436c81938eba36f0d650bdef"
+      "17a91b2ff037773b5863b7534475016f"
     ],
     [
       "MiniParse.Spec.Int.pred_pre",
@@ -279,7 +280,7 @@
         "refinement_interpretation_Tm_refine_35fb8759ee35d7bf7cf3df6dd7bf565c"
       ],
       0,
-      "e97cbc2a2088e21e9d148a9551c8eff6"
+      "ea649ba18fdd32ea2c79ec911fdd4af8"
     ],
     [
       "MiniParse.Spec.Int.pred_pre",
@@ -308,7 +309,7 @@
         "typing_FStar.UInt16.v"
       ],
       0,
-      "6108138751de0d4fbd83413f9893eb20"
+      "66d3ae93ade2759d66ba79f4097572d0"
     ],
     [
       "MiniParse.Spec.Int.pred_large_bound",
@@ -321,7 +322,7 @@
         "refinement_interpretation_Tm_refine_ed1ec337958d4240fdc3197cba495263"
       ],
       0,
-      "e550a59716bd8e68340df1ccc5c896df"
+      "a9883fb2fd16269826d138f46bf4fe5a"
     ],
     [
       "MiniParse.Spec.Int.pred_large_bound",
@@ -335,7 +336,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "d1ef2437cf9ecde8af07ee48d2cebced"
+      "0298cc36fea8a67ac553f9580042006a"
     ],
     [
       "MiniParse.Spec.Int.forall_bounded_u16",
@@ -353,7 +354,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4983777d497865ab39c3d3a96e2a28c1"
+      "bd484b49e936c69cb9bce436585a41b4"
     ],
     [
       "MiniParse.Spec.Int.forall_bounded_u16_elim",
@@ -402,7 +403,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "6175930519dc595397538868c568910c"
+      "f8beec875aeaf8509bfd92241aa146f6"
     ],
     [
       "MiniParse.Spec.Int.parse_bounded_u16",
@@ -422,7 +423,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "e8f09ce1a281c1d8d79996439cd78a8d"
+      "864c25f95a3e8eda4e3f7e0f0d3e1a6d"
     ],
     [
       "MiniParse.Spec.Int.serialize_bounded_u16",
@@ -442,7 +443,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "8597bba6f0bb006968afa4db840b06af"
+      "36bf23718e0ca5a41b6dd98f483d2f4b"
     ],
     [
       "MiniParse.Spec.Int.parse_u8",
@@ -465,7 +466,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "e9cd7dc96c716b0b0e5e5d5413319d49"
+      "07daaffd9b3dc2e83866c73dafcf7e6b"
     ],
     [
       "MiniParse.Spec.Int.serialize_u8",
@@ -506,7 +507,7 @@
         "typing_Tm_abs_abe39403e7ecb7eefc1a316047051357"
       ],
       0,
-      "a2acf0527b784ce91af0aa174a5a9970"
+      "173fa24004b0210f59a0c9cad20b1dfd"
     ],
     [
       "MiniParse.Spec.Int.parse_u16_aux",
@@ -518,7 +519,7 @@
         "refinement_interpretation_Tm_refine_15105f0ad7318b3348d436c7619fd5de"
       ],
       0,
-      "cac6e826a4ba3d149974afae193e61e3"
+      "3770352647c4acba7b85a645f568c711"
     ],
     [
       "MiniParse.Spec.Int.parse_u16_aux",
@@ -562,7 +563,7 @@
         "typing_FStar.UInt8.v"
       ],
       0,
-      "0966abef07dad3fc0a5561b3c183a41f"
+      "eb7e16d465842fd8c10494b8cc44fa41"
     ],
     [
       "MiniParse.Spec.Int.parse_u16",
@@ -571,10 +572,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "function_token_typing_MiniParse.Spec.Int.parse_u16_aux",
         "refinement_interpretation_Tm_refine_af8636cafa07354ad4272bfa8c0b3ef3"
       ],
       0,
-      "a3aefd5d8eae48942a3af7764fd76e5c"
+      "4fe874a55d3e31eb3a101bdbc41e0fe0"
     ],
     [
       "MiniParse.Spec.Int.serialize_u16",
@@ -661,7 +663,7 @@
         "typing_MiniParse.Spec.Int.serialize_u16_", "typing_Prims.pow2"
       ],
       0,
-      "2db5dea932fe3ceaa8ada5a8bbfba281"
+      "29606288bf6176af167d4d52829594f2"
     ],
     [
       "MiniParse.Spec.Int.mk_u16",
@@ -682,7 +684,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1f896b150d36f646c3422a3f342ed93a"
+      "639cfa2730f5982507ebe02b426283fe"
     ],
     [
       "MiniParse.Spec.Int.bounded_u16",
@@ -694,7 +696,7 @@
         "haseqMiniParse.Spec.Int_Tm_refine_4a34c5b30307f7bc5de1b73c66981962"
       ],
       0,
-      "3911cb34e44329a14722b7a6cae36c79"
+      "a0c4b09fae33fba62909f72aa7aaf317"
     ],
     [
       "MiniParse.Spec.Int.map_u16_to_bounded_u16",
@@ -710,7 +712,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "748164ccef0e10f7ce1aaae5f056f745"
+      "1415d439d2bbcda4eda22a9aefbac11f"
     ],
     [
       "MiniParse.Spec.Int.pred_pre",
@@ -723,7 +725,7 @@
         "refinement_interpretation_Tm_refine_35fb8759ee35d7bf7cf3df6dd7bf565c"
       ],
       0,
-      "26c4f20e58910839ca0c1efff5ae1f6b"
+      "82883266fd345b46ed1a16265655316f"
     ],
     [
       "MiniParse.Spec.Int.pred_pre",
@@ -752,7 +754,7 @@
         "typing_FStar.UInt16.v"
       ],
       0,
-      "0c649e91a788bb34332c3bb0ad5aba3b"
+      "c092921127a3b4283853b9a71cfc5cde"
     ],
     [
       "MiniParse.Spec.Int.pred_pre",
@@ -765,7 +767,7 @@
         "refinement_interpretation_Tm_refine_35fb8759ee35d7bf7cf3df6dd7bf565c"
       ],
       0,
-      "d1000f8995ef907f9ab7a27cc4681b72"
+      "c82707feaf3078677b23597d2b97cc59"
     ],
     [
       "MiniParse.Spec.Int.pred_large_bound",
@@ -778,7 +780,7 @@
         "refinement_interpretation_Tm_refine_ed1ec337958d4240fdc3197cba495263"
       ],
       0,
-      "39cd11972b09a29bdb60391433dd143a"
+      "a78a0861372a0a47a2acfbbc90c8efdf"
     ],
     [
       "MiniParse.Spec.Int.pred_large_bound",
@@ -792,7 +794,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "bebfcf6779eaf5e4c8ee06e120980039"
+      "a40791a9eabd56d3d25761ebb17b07bf"
     ],
     [
       "MiniParse.Spec.Int.pred_large_bound",
@@ -805,7 +807,7 @@
         "refinement_interpretation_Tm_refine_ed1ec337958d4240fdc3197cba495263"
       ],
       0,
-      "f56cb534b036d9ed94d16607597c49ed"
+      "d1739e41f1b529d99691d694a687c4e4"
     ],
     [
       "MiniParse.Spec.Int.forall_bounded_u16",
@@ -823,7 +825,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fa18f595e496e8e599cf4c0ffd3c7c1b"
+      "69f2583a695e840226308000931e25a2"
     ],
     [
       "MiniParse.Spec.Int.parse_bounded_u16",
@@ -843,7 +845,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "5a9f6299d4f44663dae390649c05976f"
+      "f9ead32fb5baa8030a75a899666713f2"
     ],
     [
       "MiniParse.Spec.Int.serialize_bounded_u16",
@@ -863,7 +865,7 @@
         "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674"
       ],
       0,
-      "4f1f2048c71f2bf8662b98a7973af29a"
+      "95d8685bbb7695b6d53ca57d4c6db04d"
     ]
   ]
 ]

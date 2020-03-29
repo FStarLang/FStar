@@ -484,6 +484,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | Sig_datacon (lid, us, ty, _, n, _) ->
         let s, us = SS.univ_var_opening us in
         let ty = SS.subst s ty in
+        let ty = U.remove_inacc ty in
         (* TODO: return universes *)
         Sg_Constructor (Ident.path_of_lid lid, ty)
 

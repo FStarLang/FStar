@@ -168,8 +168,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
                                norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
                                norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
 
-      mktac2 0 "rename_to"     rename_to RE.e_binder e_string e_unit
-                               rename_to NRE.e_binder NBET.e_string NBET.e_unit;
+      mktac2 0 "rename_to"     rename_to RE.e_binder e_string RE.e_binder
+                               rename_to NRE.e_binder NBET.e_string NRE.e_binder;
 
       mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit
                                binder_retype NRE.e_binder NBET.e_unit;
