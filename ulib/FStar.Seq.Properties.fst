@@ -202,7 +202,7 @@ let lemma_swap_permutes #a s i j
      of each other also have the same length
 *)
 //a proof optimization: Z3 only needs to unfold the recursive definition of `count` once
-#push-options "--fuel 1"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 let rec perm_len' (#a:eqtype) (s1 s2: seq a)
   : Lemma (requires (permutation a s1 s2))
           (ensures  (length s1 == length s2))
