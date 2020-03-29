@@ -506,7 +506,7 @@ let inline_let:unit = ()
     This is useful, particularly in conjunction with partial
     evaluation, to ensure that names reflect their usage context.
 
-    See examples/micro-benchmarks/Renaming*.fst *)
+    See tests/micro-benchmarks/Renaming*.fst *)
 irreducible
 let rename_let (new_name: string) : unit = ()
 
@@ -630,7 +630,7 @@ let resolve_implicits : unit = ()
     in a `Ghost` effect, ensuring that computationally relevant
     code cannot rely on the values of the erasable type.
 
-    See examples/micro-benchmarks/Erasable.fst, for examples.  Also
+    See tests/micro-benchmarks/Erasable.fst, for examples.  Also
     see https://github.com/FStarLang/FStar/issues/1844 *)
 irreducible
 let erasable:unit = ()

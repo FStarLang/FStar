@@ -150,7 +150,7 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int n_args))
                                 rng
 
-//See issue #1750 and examples/bug-reports/Bug1750.fst
+//See issue #1750 and tests/bug-reports/Bug1750.fst
 let isTotFun_axioms pos head vars guards is_pure =
     let maybe_mkForall pat vars body =
         match vars with
