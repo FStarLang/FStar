@@ -131,7 +131,7 @@ val lemma_index_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= lengt
 
 val hasEq_lemma: a:Type -> Lemma (requires (hasEq a)) (ensures (hasEq (seq a))) [SMTPat (hasEq  (seq a))]
 
-val equal (#a:Type) (s1:seq a) (s2:seq a) : prop
+val equal (#a:Type) (s1:seq a) (s2:seq a) : Tot prop
 
 (* decidable equality *)
 private val eq_i:
