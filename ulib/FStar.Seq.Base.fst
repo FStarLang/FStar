@@ -20,10 +20,8 @@ module FStar.Seq.Base
 
 module List = FStar.List.Tot
 
-type seq' (a:Type u#a) :Type u#a =
-  | MkSeq: l:list a -> seq' a
-
-let seq = seq'
+type seq (a:Type u#a) :Type u#a =
+  | MkSeq: l:list a -> seq a
 
 let length #_ s = List.length (MkSeq?.l s)
 

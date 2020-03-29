@@ -20,7 +20,7 @@ module FStar.Seq.Base
 
 module List = FStar.List.Tot
 
-type seq (a : Type u#a) : Type u#a
+new val seq (a : Type u#a) : Type u#a
 
 (* Destructors *)
 val length: #a:Type -> seq a -> Tot nat
