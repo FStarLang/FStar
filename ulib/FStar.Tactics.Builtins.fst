@@ -115,8 +115,9 @@ assume val intro_rec  : unit -> Tac (binder * binder)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
-is to make goals and terms more user readable. *)
-assume val rename_to  : binder -> string -> Tac unit
+is to make goals and terms more user readable. The primitive returns
+the new binder, since the old one disappears from the context. *)
+assume val rename_to  : binder -> string -> Tac binder
 
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].

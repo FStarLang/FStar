@@ -1192,14 +1192,16 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
         | _ -> fail "Not an equality hypothesis"
         end))
 
-let rename_to (b : binder) (s : string) : tac<unit> = wrap_err "rename_to" <|
+let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind (cur_goal ()) (fun goal ->
-    let bv, _ = b in
+    let bv, q = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
     let s = [NT (bv, S.bv_to_name bv')] in
     match subst_goal bv bv' s goal with
     | None -> fail "binder not found in environment"
-    | Some goal -> replace_cur goal)
+    | Some goal ->
+        bind (replace_cur goal) (fun () ->
+        ret (bv', q))))
 
 let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     bind (cur_goal ()) (fun goal ->
