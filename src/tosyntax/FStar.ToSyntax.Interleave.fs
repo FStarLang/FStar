@@ -249,8 +249,21 @@ let ml_mode_check_initial_interface mname (iface:list<decl>) =
  *       resulting in desugaring failures when typechecking Pervasives.fst
  *)
 let apply_ml_mode_optimizations (mname:lident) : bool =
+  (*
+   * AR: 03/29:
+   *     As we introduce interfaces for modules in ulib/, the interleaving code
+   *       doesn't interact with it too well when bootstrapping
+   *     Essentially we do optimizations here (e.g. not taking any interface decls but vals)
+   *       when bootstrapping
+   *     This doesn't work well for ulib files (but is ok for compiler files)
+   *     A better way to fix this problem would be to make compiler files in a separate namespace
+   *       and then do these optimizations (as well as --MLish etc.) only for them
+   *     But until then ... (sigh)
+   *)
+  let ulib_modules = ["FStar.TSet"] in
   Options.ml_ish () &&
-  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules)))
+  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules))) &&
+  (not (List.contains (Ident.string_of_lid mname) ulib_modules))
 
 let prefix_one_decl mname iface impl =
     match impl.d with
