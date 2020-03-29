@@ -1072,13 +1072,13 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                 mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
                                     (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                                     (Print.term_to_string term)) (fun () ->
-                let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
                   // NS:01/24: use the fast path instead, knowing that term is at least well-typed
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term' true env term ctx_uvar.ctx_uvar_typ
+                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
+                            true (goal_env goal) term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
