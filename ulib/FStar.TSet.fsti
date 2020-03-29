@@ -41,7 +41,7 @@ val intersect  : #a:Type -> x:set a -> y:set a -> Tot (set a)
 val complement : #a:Type -> x:set a -> Tot (set a)
 
 (* ops *)
-type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
+let subset (#a:Type) (s1:set a) (s2:set a) : Type0 = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
 val mem_empty: #a:Type -> x:a -> Lemma
@@ -109,9 +109,6 @@ val lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
   :Lemma (requires True)
          (ensures  (mem x (filter f s) <==> mem x s /\ f x))
          [SMTPat (mem x (filter f s))]
-
-let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
-  exists (y:a). mem y s /\ x == f y
 
 val map (#a:Type) (#b:Type) (f:a -> Tot b) (s:set a) : Tot (set b)
 

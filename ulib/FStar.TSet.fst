@@ -80,6 +80,9 @@ let filter #a f s = F.on_dom a #(fun _ -> prop) (fun (x:a) -> f x /\ s x)
 
 let lemma_mem_filter #a f s x = ()
 
+let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
+  exists (y:a). mem y s /\ x == f y
+
 let map #_ #b f s = F.on_dom b (exists_y_in_s s f)
 
 let lemma_mem_map #_ #_ _ _ _ = ()
