@@ -1151,19 +1151,23 @@ let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
-let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
-    map_opt (split_env b1 (goal_env g)) (fun (e0, b1, bvs) ->
+let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : tac<option<goal>> =
+    match split_env b1 (goal_env g) with
+    | Some (e0, b1, bvs) ->
         let s1 bv = { bv with sort = SS.subst s bv.sort } in
-        let bvs = List.map s1 bvs in
-        let new_env = push_bvs e0 (b2::bvs) in
-        let new_goal = {
-            g.goal_ctx_uvar with
-                ctx_uvar_gamma=new_env.gamma;
-                ctx_uvar_binders=Env.all_binders new_env;
-                ctx_uvar_typ = SS.subst s (goal_type g);
-        } in
-        { g with goal_ctx_uvar=new_goal }
-    )
+        let bvs' = List.map s1 bvs in
+        let new_env = push_bvs e0 (b2::bvs') in
+        let new_goal_ty = SS.subst s (goal_type g) in
+        bind (new_uvar "subst_goal" new_env new_goal_ty) (fun (uvt, uv) ->
+        let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
+        let sol = U.mk_app (U.abs (List.map S.mk_binder (b2::bvs')) uvt None)
+                            (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) (b1::bvs)) in
+
+        bind (set_solution g sol) (fun () ->
+        ret (Some goal')))
+
+    | None ->
+        ret None
 
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind (cur_goal ()) (fun goal ->
@@ -1178,15 +1182,15 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
            | Tm_name x ->
              let s = [NT(x,e)] in
              let s1 bv = { bv with sort = SS.subst s bv.sort } in
-             let bvs = List.map s1 bvs in
-             let new_env = push_bvs e0 (bv::bvs) in
-             let new_goal = {
-                 goal.goal_ctx_uvar with
-                     ctx_uvar_gamma=new_env.gamma;
-                     ctx_uvar_binders=Env.all_binders new_env;
-                     ctx_uvar_typ = SS.subst s (goal_type goal);
-             } in
-             replace_cur ({goal with goal_ctx_uvar=new_goal})
+             let bvs' = List.map s1 bvs in
+             let new_env = push_bvs e0 (bv::bvs') in
+             let new_goal_ty = SS.subst s (goal_type goal) in
+             bind (new_uvar "rewrite" new_env new_goal_ty) (fun (uvt, uv) ->
+             let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
+             let sol = U.mk_app (U.abs (List.map S.mk_binder bvs') uvt None)
+                                 (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) bvs) in
+             bind (set_solution goal sol) (fun () ->
+             replace_cur goal'))
            | _ ->
              fail "Not an equality hypothesis with a variable on the LHS")
         | _ -> fail "Not an equality hypothesis"
@@ -1197,7 +1201,7 @@ let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     let bv, q = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
     let s = [NT (bv, S.bv_to_name bv')] in
-    match subst_goal bv bv' s goal with
+    bind (subst_goal bv bv' s goal) (function
     | None -> fail "binder not found in environment"
     | Some goal ->
         bind (replace_cur goal) (fun () ->
