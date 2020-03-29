@@ -1293,14 +1293,14 @@ let prune (s:string) : tac<unit> =
     let ctx = goal_env g in
     let ctx' = Env.rem_proof_ns ctx (path_of_text s) in
     let g' = goal_with_env g ctx' in
-    bind __dismiss (fun _ -> add_goals [g']))
+    replace_cur g')
 
 let addns (s:string) : tac<unit> =
     bind (cur_goal ()) (fun g ->
     let ctx = goal_env g in
     let ctx' = Env.add_proof_ns ctx (path_of_text s) in
     let g' = goal_with_env g ctx' in
-    bind __dismiss (fun _ -> add_goals [g']))
+    replace_cur g')
 
 let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in

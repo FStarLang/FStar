@@ -63,6 +63,7 @@ let rename_binders subst bs =
             ({ y with sort = SS.subst subst x.sort }, imp)
         | _ -> failwith "Not a renaming")
 
+(* This is only for show: this goal becomes ill-formed *)
 let subst_goal subst goal =
     let g = goal.goal_ctx_uvar in
     let ctx_uvar = {
