@@ -2750,14 +2750,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
+             let tx = UF.new_transaction () in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
+               UF.rollback tx;
                if (not env.uvar_subtyping && has_uvars)
                || not wl.smt_ok
                then giveup env msg prob
                else fallback()
 
              | Success _ ->
+               UF.commit tx;
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
