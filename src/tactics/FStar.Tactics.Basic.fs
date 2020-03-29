@@ -1061,7 +1061,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             end
         in
         bind (implicits |> mapM (fun imp ->
-            let t1 = BU.now () in
             let (term, ctx_uvar) = imp in
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
