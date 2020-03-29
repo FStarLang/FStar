@@ -251,6 +251,12 @@ type implicit = {
 }
 type implicits = list<implicit>
 
+let implicits_to_string imps =
+    let imp_to_string i =
+        Print.uvar_to_string i.imp_uvar.ctx_uvar_head
+    in
+    FStar.Common.string_of_list imp_to_string imps
+
 type guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
