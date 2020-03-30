@@ -33,7 +33,7 @@ module FStar.FunctionalExtensionality
 /// to conclude that they are equal everywhere.
 ///
 /// For more context on how functional extensionality works in F*, see
-///   1. examples/micro-benchmarks/Test.FunctionalExtensionality.fst
+///   1. tests/micro-benchmarks/Test.FunctionalExtensionality.fst
 ///   2. ulib/FStar.Map.fst and ulib/FStar.Map.fsti
 ///   3. Issue #1542 on github.com/FStarLang/FStar/issues/1542
 

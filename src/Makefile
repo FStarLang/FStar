@@ -94,6 +94,7 @@ boot_dir:
 boot: $(ALL_BOOT)
 
 clean_boot:
+	rm -rf .cache.boot
 	rm -f .depend
 	rm -rf boot
 
@@ -164,7 +165,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
+uregressions: ulib-extra tutorial utests uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
@@ -182,6 +183,9 @@ ulib-extra:
 
 tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
+
+utests: fstarlib
+	+$(MAKE) -C ../tests all
 
 uexamples: fstarlib
 	+$(MAKE) -C ../examples all

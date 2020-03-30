@@ -1,4 +1,4 @@
-.PHONY: all package clean 0 1 2 3 hints
+.PHONY: all package clean 0 1 2 3 hints bench
 
 include src/Makefile.common
 
@@ -45,3 +45,6 @@ hints:
 	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C ulib/
 	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C ulib/ml
 	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C src/ uregressions
+
+bench:
+	./bin/run_benchmark.sh
