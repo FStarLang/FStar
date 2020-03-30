@@ -2750,7 +2750,8 @@ and (term_as_mlexpr' :
                            then
                              FStar_TypeChecker_Util.reify_body
                                env.FStar_Extraction_ML_UEnv.env_tcenv
-                               [FStar_TypeChecker_Env.Inlining] body1
+                               [FStar_TypeChecker_Env.Inlining;
+                               FStar_TypeChecker_Env.Unascribe] body1
                            else body1
                        | FStar_Pervasives_Native.None  ->
                            (FStar_Extraction_ML_UEnv.debug g
@@ -2863,7 +2864,8 @@ and (term_as_mlexpr' :
                   let uu____10003 = FStar_List.hd args  in
                   FStar_TypeChecker_Util.reify_body_with_arg
                     g.FStar_Extraction_ML_UEnv.env_tcenv
-                    [FStar_TypeChecker_Env.Inlining] head1 uu____10003
+                    [FStar_TypeChecker_Env.Inlining;
+                    FStar_TypeChecker_Env.Unascribe] head1 uu____10003
                    in
                 let tm =
                   let uu____10015 =

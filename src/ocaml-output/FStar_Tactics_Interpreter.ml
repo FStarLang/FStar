@@ -1557,6 +1557,7 @@ and unembed_tactic_0 :
              let steps =
                [FStar_TypeChecker_Env.Weak;
                FStar_TypeChecker_Env.Reify;
+               FStar_TypeChecker_Env.ReduceDivLets;
                FStar_TypeChecker_Env.UnfoldUntil
                  FStar_Syntax_Syntax.delta_constant;
                FStar_TypeChecker_Env.UnfoldTac;

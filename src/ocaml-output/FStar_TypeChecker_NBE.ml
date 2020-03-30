@@ -201,6 +201,8 @@ let (zeta_false : config -> config) =
                  (uu___103_598.FStar_TypeChecker_Cfg.primops);
                FStar_TypeChecker_Cfg.do_not_unfold_pure_lets =
                  (uu___103_598.FStar_TypeChecker_Cfg.do_not_unfold_pure_lets);
+               FStar_TypeChecker_Cfg.reduce_div_lets =
+                 (uu___103_598.FStar_TypeChecker_Cfg.reduce_div_lets);
                FStar_TypeChecker_Cfg.unfold_until =
                  (uu___103_598.FStar_TypeChecker_Cfg.unfold_until);
                FStar_TypeChecker_Cfg.unfold_only =
@@ -2981,6 +2983,8 @@ let (normalize :
                      (uu___1475_9798.FStar_TypeChecker_Cfg.primops);
                    FStar_TypeChecker_Cfg.do_not_unfold_pure_lets =
                      (uu___1475_9798.FStar_TypeChecker_Cfg.do_not_unfold_pure_lets);
+                   FStar_TypeChecker_Cfg.reduce_div_lets =
+                     (uu___1475_9798.FStar_TypeChecker_Cfg.reduce_div_lets);
                    FStar_TypeChecker_Cfg.unfold_until =
                      (uu___1475_9798.FStar_TypeChecker_Cfg.unfold_until);
                    FStar_TypeChecker_Cfg.unfold_only =
@@ -3091,6 +3095,8 @@ let (normalize_for_unit_test :
                    (uu___1493_9850.FStar_TypeChecker_Cfg.primops);
                  FStar_TypeChecker_Cfg.do_not_unfold_pure_lets =
                    (uu___1493_9850.FStar_TypeChecker_Cfg.do_not_unfold_pure_lets);
+                 FStar_TypeChecker_Cfg.reduce_div_lets =
+                   (uu___1493_9850.FStar_TypeChecker_Cfg.reduce_div_lets);
                  FStar_TypeChecker_Cfg.unfold_until =
                    (uu___1493_9850.FStar_TypeChecker_Cfg.unfold_until);
                  FStar_TypeChecker_Cfg.unfold_only =
