@@ -4451,8 +4451,8 @@ let (coerce_views :
                      FStar_Syntax_Syntax.mk_Tac
                     in
                  FStar_All.pipe_left
-                   (fun _11752  -> FStar_Pervasives_Native.Some _11752)
-                   uu____11725
+                   (fun uu____11752  ->
+                      FStar_Pervasives_Native.Some uu____11752) uu____11725
              | uu____11753 -> FStar_Pervasives_Native.None)
   
 let (weaken_result_typ :
@@ -4786,9 +4786,9 @@ let (weaken_result_typ :
                                     let uu____12196 =
                                       let uu____12201 =
                                         FStar_All.pipe_left
-                                          (fun _12222  ->
+                                          (fun uu____12222  ->
                                              FStar_Pervasives_Native.Some
-                                               _12222)
+                                               uu____12222)
                                           (FStar_TypeChecker_Err.subtyping_failed
                                              env
                                              lc.FStar_TypeChecker_Common.res_typ
@@ -5282,8 +5282,9 @@ let (maybe_instantiate :
                  | (bs1,c1) ->
                      let rec aux subst1 inst_n bs2 =
                        match (inst_n, bs2) with
-                       | (FStar_Pervasives_Native.Some _13542,uu____13529)
-                           when _13542 = Prims.int_zero ->
+                       | (FStar_Pervasives_Native.Some
+                          uu____13542,uu____13529) when
+                           uu____13542 = Prims.int_zero ->
                            ([], bs2, subst1,
                              FStar_TypeChecker_Env.trivial_guard)
                        | (uu____13575,(x,FStar_Pervasives_Native.Some
@@ -5901,9 +5902,9 @@ let (gen :
                                           FStar_TypeChecker_Env.get_range env
                                            in
                                         FStar_All.pipe_left
-                                          (fun _15609  ->
+                                          (fun uu____15609  ->
                                              FStar_Pervasives_Native.Some
-                                               _15609) uu____15606
+                                               uu____15609) uu____15606
                                          in
                                       FStar_Syntax_Syntax.new_bv uu____15603
                                         kres
@@ -6163,7 +6164,8 @@ let (check_has_type :
               | FStar_Pervasives_Native.Some f ->
                   let uu____16671 = FStar_TypeChecker_Env.apply_guard f e  in
                   FStar_All.pipe_right uu____16671
-                    (fun _16674  -> FStar_Pervasives_Native.Some _16674)
+                    (fun uu____16674  ->
+                       FStar_Pervasives_Native.Some uu____16674)
             else
               if env2.FStar_TypeChecker_Env.use_eq
               then FStar_TypeChecker_Rel.try_teq true env2 t1 t21
@@ -6178,7 +6180,8 @@ let (check_has_type :
                      let uu____16689 = FStar_TypeChecker_Env.apply_guard f e
                         in
                      FStar_All.pipe_left
-                       (fun _16692  -> FStar_Pervasives_Native.Some _16692)
+                       (fun uu____16692  ->
+                          FStar_Pervasives_Native.Some uu____16692)
                        uu____16689)
              in
           let uu____16693 = maybe_coerce_lc env1 e lc t2  in
@@ -6295,27 +6298,32 @@ let (short_circuit :
       let op_and_e e =
         let uu____16932 = FStar_Syntax_Util.b2t e  in
         FStar_All.pipe_right uu____16932
-          (fun _16933  -> FStar_TypeChecker_Common.NonTrivial _16933)
+          (fun uu____16933  ->
+             FStar_TypeChecker_Common.NonTrivial uu____16933)
          in
       let op_or_e e =
         let uu____16944 =
           let uu____16945 = FStar_Syntax_Util.b2t e  in
           FStar_Syntax_Util.mk_neg uu____16945  in
         FStar_All.pipe_right uu____16944
-          (fun _16948  -> FStar_TypeChecker_Common.NonTrivial _16948)
+          (fun uu____16948  ->
+             FStar_TypeChecker_Common.NonTrivial uu____16948)
          in
       let op_and_t t =
         FStar_All.pipe_right t
-          (fun _16955  -> FStar_TypeChecker_Common.NonTrivial _16955)
+          (fun uu____16955  ->
+             FStar_TypeChecker_Common.NonTrivial uu____16955)
          in
       let op_or_t t =
         let uu____16966 = FStar_All.pipe_right t FStar_Syntax_Util.mk_neg  in
         FStar_All.pipe_right uu____16966
-          (fun _16969  -> FStar_TypeChecker_Common.NonTrivial _16969)
+          (fun uu____16969  ->
+             FStar_TypeChecker_Common.NonTrivial uu____16969)
          in
       let op_imp_t t =
         FStar_All.pipe_right t
-          (fun _16976  -> FStar_TypeChecker_Common.NonTrivial _16976)
+          (fun uu____16976  ->
+             FStar_TypeChecker_Common.NonTrivial uu____16976)
          in
       let short_op_ite uu___9_16982 =
         match uu___9_16982 with
@@ -6325,7 +6333,8 @@ let (short_circuit :
         | _then::(guard,uu____17019)::[] ->
             let uu____17060 = FStar_Syntax_Util.mk_neg guard  in
             FStar_All.pipe_right uu____17060
-              (fun _17061  -> FStar_TypeChecker_Common.NonTrivial _17061)
+              (fun uu____17061  ->
+                 FStar_TypeChecker_Common.NonTrivial uu____17061)
         | uu____17062 -> failwith "Unexpected args to ITE"  in
       let table =
         let uu____17074 =
@@ -7487,8 +7496,8 @@ let (lift_tf_layered_effect :
                                   (c1, uu____19751)))))))))
   
 let lift_tf_layered_effect_term :
-  'Auu____19767 .
-    'Auu____19767 ->
+  'uuuuuu19767 .
+    'uuuuuu19767 ->
       FStar_Syntax_Syntax.sub_eff ->
         FStar_Syntax_Syntax.universe ->
           FStar_Syntax_Syntax.typ ->

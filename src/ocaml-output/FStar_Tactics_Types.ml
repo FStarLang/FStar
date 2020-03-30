@@ -130,10 +130,10 @@ let (mk_goal :
             }
   
 let rename_binders :
-  'Auu____220 .
+  'uuuuuu220 .
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      (FStar_Syntax_Syntax.bv * 'Auu____220) Prims.list ->
-        (FStar_Syntax_Syntax.bv * 'Auu____220) Prims.list
+      (FStar_Syntax_Syntax.bv * 'uuuuuu220) Prims.list ->
+        (FStar_Syntax_Syntax.bv * 'uuuuuu220) Prims.list
   =
   fun subst1  ->
     fun bs  ->

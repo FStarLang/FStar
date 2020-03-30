@@ -1,10 +1,10 @@
 open Prims
 let unembed :
-  'Auu____8 .
-    'Auu____8 FStar_Syntax_Embeddings.embedding ->
+  'uuuuuu8 .
+    'uuuuuu8 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'Auu____8 FStar_Pervasives_Native.option
+          'uuuuuu8 FStar_Pervasives_Native.option
   =
   fun e  ->
     fun t  ->
@@ -13,10 +13,10 @@ let unembed :
         uu____32 true n1
   
 let embed :
-  'Auu____51 .
-    'Auu____51 FStar_Syntax_Embeddings.embedding ->
+  'uuuuuu51 .
+    'uuuuuu51 FStar_Syntax_Embeddings.embedding ->
       FStar_Range.range ->
-        'Auu____51 ->
+        'uuuuuu51 ->
           FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e  ->
@@ -1335,19 +1335,19 @@ let (step_from_native_step :
     }
   
 let timing_int :
-  'Auu____6724 'Auu____6725 'Auu____6726 'Auu____6727 .
+  'uuuuuu6724 'uuuuuu6725 'uuuuuu6726 'uuuuuu6727 .
     FStar_Ident.lid ->
-      ('Auu____6724 -> 'Auu____6725 -> 'Auu____6726 -> 'Auu____6727) ->
-        'Auu____6724 -> 'Auu____6725 -> 'Auu____6726 -> 'Auu____6727
+      ('uuuuuu6724 -> 'uuuuuu6725 -> 'uuuuuu6726 -> 'uuuuuu6727) ->
+        'uuuuuu6724 -> 'uuuuuu6725 -> 'uuuuuu6726 -> 'uuuuuu6727
   =
   fun l  ->
     fun f  -> fun psc  -> fun cb  -> fun args  -> let r = f psc cb args  in r
   
 let timing_nbe :
-  'Auu____6784 'Auu____6785 'Auu____6786 .
+  'uuuuuu6784 'uuuuuu6785 'uuuuuu6786 .
     FStar_Ident.lid ->
-      ('Auu____6784 -> 'Auu____6785 -> 'Auu____6786) ->
-        'Auu____6784 -> 'Auu____6785 -> 'Auu____6786
+      ('uuuuuu6784 -> 'uuuuuu6785 -> 'uuuuuu6786) ->
+        'uuuuuu6784 -> 'uuuuuu6785 -> 'uuuuuu6786
   =
   fun l  ->
     fun f  -> fun nbe_cbs  -> fun args  -> let r = f nbe_cbs args  in r
@@ -1396,8 +1396,7 @@ let (native_tactics_steps :
     FStar_List.map step_from_native_step uu____6915
   
 let rec drop :
-  'Auu____6925 .
-    Prims.int -> 'Auu____6925 Prims.list -> 'Auu____6925 Prims.list
+  'uuuuuu6925 . Prims.int -> 'uuuuuu6925 Prims.list -> 'uuuuuu6925 Prims.list
   =
   fun n1  ->
     fun l  ->

@@ -74,7 +74,7 @@ let __proj__Mkembedding__item__emb_typ :
 let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun e  -> e.emb_typ 
 let unknown_printer :
-  'Auu____457 . FStar_Syntax_Syntax.term -> 'Auu____457 -> Prims.string =
+  'uuuuuu457 . FStar_Syntax_Syntax.term -> 'uuuuuu457 -> Prims.string =
   fun typ  ->
     fun uu____468  ->
       let uu____469 = FStar_Syntax_Print.term_to_string typ  in
@@ -1470,7 +1470,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5421
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5457  -> FStar_Pervasives_Native.Some _5457)
+                         (fun uu____5457  ->
+                            FStar_Pervasives_Native.Some uu____5457)
                          (UnfoldOnly ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____5460)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1484,7 +1485,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5495
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5531  -> FStar_Pervasives_Native.Some _5531)
+                         (fun uu____5531  ->
+                            FStar_Pervasives_Native.Some uu____5531)
                          (UnfoldFully ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____5534)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1498,7 +1500,8 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____5569
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _5605  -> FStar_Pervasives_Native.Some _5605)
+                         (fun uu____5605  ->
+                            FStar_Pervasives_Native.Some uu____5605)
                          (UnfoldAttr ss))
               | uu____5606 ->
                   (if w

@@ -1515,9 +1515,9 @@ let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
       | uu____14472 -> false
   
 let (default_table_size : Prims.int) = (Prims.of_int (200)) 
-let new_sigtab : 'Auu____14486 . unit -> 'Auu____14486 FStar_Util.smap =
+let new_sigtab : 'uuuuuu14486 . unit -> 'uuuuuu14486 FStar_Util.smap =
   fun uu____14493  -> FStar_Util.smap_create default_table_size 
-let new_gamma_cache : 'Auu____14499 . unit -> 'Auu____14499 FStar_Util.smap =
+let new_gamma_cache : 'uuuuuu14499 . unit -> 'uuuuuu14499 FStar_Util.smap =
   fun uu____14506  -> FStar_Util.smap_create (Prims.of_int (100)) 
 let (initial_env :
   FStar_Parser_Dep.deps ->
@@ -4064,8 +4064,8 @@ let (monad_leq :
                     (FStar_Ident.lid_equals l2 e.mtarget)))
   
 let wp_sig_aux :
-  'Auu____23598 .
-    (FStar_Syntax_Syntax.eff_decl * 'Auu____23598) Prims.list ->
+  'uuuuuu23598 .
+    (FStar_Syntax_Syntax.eff_decl * 'uuuuuu23598) Prims.list ->
       FStar_Ident.lident ->
         (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
           FStar_Syntax_Syntax.syntax)
@@ -4204,8 +4204,8 @@ let rec (unfold_effect_abbrev :
                  unfold_effect_abbrev env c2)))
   
 let effect_repr_aux :
-  'Auu____24055 .
-    'Auu____24055 ->
+  'uuuuuu24055 .
+    'uuuuuu24055 ->
       env ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.universe ->
@@ -4584,7 +4584,8 @@ let (update_effect_lattice :
                 if uu____25113
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _25120  -> FStar_Pervasives_Native.Some _25120)
+                    (fun uu____25120  ->
+                       FStar_Pervasives_Native.Some uu____25120)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
@@ -5815,8 +5816,8 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                 f.FStar_Syntax_Syntax.pos
                in
             FStar_All.pipe_left
-              (fun _27483  -> FStar_TypeChecker_Common.NonTrivial _27483)
-              uu____27409
+              (fun uu____27483  ->
+                 FStar_TypeChecker_Common.NonTrivial uu____27483) uu____27409
              in
           {
             FStar_TypeChecker_Common.guard_f = uu____27408;

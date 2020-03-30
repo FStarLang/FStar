@@ -266,8 +266,8 @@ let (ml_mode_prefix_with_iface_decls :
       | uu____802 -> (iface1, [impl])
   
 let ml_mode_check_initial_interface :
-  'Auu____814 .
-    'Auu____814 ->
+  'uuuuuu814 .
+    'uuuuuu814 ->
       FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list
   =
   fun mname  ->
