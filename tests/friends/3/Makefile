@@ -1,5 +1,4 @@
 FSTAR_HOME=../../..
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar'
 
 all: verify-all
 
