@@ -247,7 +247,16 @@ let ulib_modules = [
   "FStar.Seq.Base";
   "FStar.Seq.Properties";
   "FStar.UInt";
-  "FStar.Int"
+  "FStar.UInt8";
+  "FStar.UInt16";
+  "FStar.UInt32";
+  "FStar.UInt64";
+  "FStar.Int";
+  "FStar.Int8";
+  "FStar.Int16";
+  "FStar.Int32";
+  "FStar.Int64";
+  "
 ]
 
 (*
