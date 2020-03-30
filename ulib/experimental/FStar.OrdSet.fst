@@ -119,8 +119,6 @@ let minus #a #f s1 s2 =
 
 let strict_subset #a #f s1 s2 = s1 <> s2 && subset #a #f s1 s2
 
-let equal #_ #f s1 s2 = forall x. mem #_ #f x s1 = mem #_ #f x s2
-
 private val set_props:
   #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
   -> Lemma (requires True)

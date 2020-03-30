@@ -55,7 +55,8 @@ val strict_subset: #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
 
 let disjoint #a #f (s1 s2 : ordset a f) : Tot bool = intersect s1 s2 = empty
 
-val equal (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) : Tot prop
+let equal (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) : Tot prop =
+  forall x. mem #_ #f x s1 = mem #_ #f x s2
 
 val eq_lemma: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (equal s1 s2))
