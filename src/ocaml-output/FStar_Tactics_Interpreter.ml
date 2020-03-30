@@ -1,15 +1,15 @@
 open Prims
 let (tacdbg : Prims.bool FStar_ST.ref) = FStar_Util.mk_ref false 
 let mktot1' :
-  'uuuuuu30 'uuuuuu31 'uuuuuu32 'uuuuuu33 .
+  'Auu____30 'Auu____31 'Auu____32 'Auu____33 .
     Prims.int ->
       Prims.string ->
-        ('uuuuuu30 -> 'uuuuuu31) ->
-          'uuuuuu30 FStar_Syntax_Embeddings.embedding ->
-            'uuuuuu31 FStar_Syntax_Embeddings.embedding ->
-              ('uuuuuu32 -> 'uuuuuu33) ->
-                'uuuuuu32 FStar_TypeChecker_NBETerm.embedding ->
-                  'uuuuuu33 FStar_TypeChecker_NBETerm.embedding ->
+        ('Auu____30 -> 'Auu____31) ->
+          'Auu____30 FStar_Syntax_Embeddings.embedding ->
+            'Auu____31 FStar_Syntax_Embeddings.embedding ->
+              ('Auu____32 -> 'Auu____33) ->
+                'Auu____32 FStar_TypeChecker_NBETerm.embedding ->
+                  'Auu____33 FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -47,15 +47,15 @@ let mktot1' :
                   }
   
 let mktot1'_psc :
-  'uuuuuu132 'uuuuuu133 'uuuuuu134 'uuuuuu135 .
+  'Auu____132 'Auu____133 'Auu____134 'Auu____135 .
     Prims.int ->
       Prims.string ->
-        (FStar_TypeChecker_Cfg.psc -> 'uuuuuu132 -> 'uuuuuu133) ->
-          'uuuuuu132 FStar_Syntax_Embeddings.embedding ->
-            'uuuuuu133 FStar_Syntax_Embeddings.embedding ->
-              (FStar_TypeChecker_Cfg.psc -> 'uuuuuu134 -> 'uuuuuu135) ->
-                'uuuuuu134 FStar_TypeChecker_NBETerm.embedding ->
-                  'uuuuuu135 FStar_TypeChecker_NBETerm.embedding ->
+        (FStar_TypeChecker_Cfg.psc -> 'Auu____132 -> 'Auu____133) ->
+          'Auu____132 FStar_Syntax_Embeddings.embedding ->
+            'Auu____133 FStar_Syntax_Embeddings.embedding ->
+              (FStar_TypeChecker_Cfg.psc -> 'Auu____134 -> 'Auu____135) ->
+                'Auu____134 FStar_TypeChecker_NBETerm.embedding ->
+                  'Auu____135 FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -93,17 +93,17 @@ let mktot1'_psc :
                   }
   
 let mktot2' :
-  'uuuuuu252 'uuuuuu253 'uuuuuu254 'uuuuuu255 'uuuuuu256 'uuuuuu257 .
+  'Auu____252 'Auu____253 'Auu____254 'Auu____255 'Auu____256 'Auu____257 .
     Prims.int ->
       Prims.string ->
-        ('uuuuuu252 -> 'uuuuuu253 -> 'uuuuuu254) ->
-          'uuuuuu252 FStar_Syntax_Embeddings.embedding ->
-            'uuuuuu253 FStar_Syntax_Embeddings.embedding ->
-              'uuuuuu254 FStar_Syntax_Embeddings.embedding ->
-                ('uuuuuu255 -> 'uuuuuu256 -> 'uuuuuu257) ->
-                  'uuuuuu255 FStar_TypeChecker_NBETerm.embedding ->
-                    'uuuuuu256 FStar_TypeChecker_NBETerm.embedding ->
-                      'uuuuuu257 FStar_TypeChecker_NBETerm.embedding ->
+        ('Auu____252 -> 'Auu____253 -> 'Auu____254) ->
+          'Auu____252 FStar_Syntax_Embeddings.embedding ->
+            'Auu____253 FStar_Syntax_Embeddings.embedding ->
+              'Auu____254 FStar_Syntax_Embeddings.embedding ->
+                ('Auu____255 -> 'Auu____256 -> 'Auu____257) ->
+                  'Auu____255 FStar_TypeChecker_NBETerm.embedding ->
+                    'Auu____256 FStar_TypeChecker_NBETerm.embedding ->
+                      'Auu____257 FStar_TypeChecker_NBETerm.embedding ->
                         FStar_TypeChecker_Cfg.primitive_step
   =
   fun uarity  ->
@@ -143,9 +143,9 @@ let mktot2' :
                       }
   
 let rec e_tactic_thunk :
-  'r .
-    'r FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Tactics_Basic.tac FStar_Syntax_Embeddings.embedding
+  'Ar .
+    'Ar FStar_Syntax_Embeddings.embedding ->
+      'Ar FStar_Tactics_Basic.tac FStar_Syntax_Embeddings.embedding
   =
   fun er  ->
     let uu____589 =
@@ -166,9 +166,9 @@ let rec e_tactic_thunk :
              FStar_Pervasives_Native.Some uu____613) uu____589
 
 and e_tactic_nbe_thunk :
-  'r .
-    'r FStar_TypeChecker_NBETerm.embedding ->
-      'r FStar_Tactics_Basic.tac FStar_TypeChecker_NBETerm.embedding
+  'Ar .
+    'Ar FStar_TypeChecker_NBETerm.embedding ->
+      'Ar FStar_Tactics_Basic.tac FStar_TypeChecker_NBETerm.embedding
   =
   fun er  ->
     let uu____628 =
@@ -189,10 +189,11 @@ and e_tactic_nbe_thunk :
       uu____628
 
 and e_tactic_1 :
-  'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
-        ('a -> 'r FStar_Tactics_Basic.tac) FStar_Syntax_Embeddings.embedding
+  'Aa 'Ar .
+    'Aa FStar_Syntax_Embeddings.embedding ->
+      'Ar FStar_Syntax_Embeddings.embedding ->
+        ('Aa -> 'Ar FStar_Tactics_Basic.tac)
+          FStar_Syntax_Embeddings.embedding
   =
   fun ea  ->
     fun er  ->
@@ -210,10 +211,10 @@ and e_tactic_1 :
                FStar_Pervasives_Native.Some uu____690) uu____661
 
 and e_tactic_nbe_1 :
-  'a 'r .
-    'a FStar_TypeChecker_NBETerm.embedding ->
-      'r FStar_TypeChecker_NBETerm.embedding ->
-        ('a -> 'r FStar_Tactics_Basic.tac)
+  'Aa 'Ar .
+    'Aa FStar_TypeChecker_NBETerm.embedding ->
+      'Ar FStar_TypeChecker_NBETerm.embedding ->
+        ('Aa -> 'Ar FStar_Tactics_Basic.tac)
           FStar_TypeChecker_NBETerm.embedding
   =
   fun ea  ->
@@ -600,11 +601,11 @@ and (primitive_steps :
                                                         FStar_Tactics_Basic.rename_to
                                                         FStar_Reflection_Embeddings.e_binder
                                                         FStar_Syntax_Embeddings.e_string
-                                                        FStar_Syntax_Embeddings.e_unit
+                                                        FStar_Reflection_Embeddings.e_binder
                                                         FStar_Tactics_Basic.rename_to
                                                         FStar_Reflection_NBEEmbeddings.e_binder
                                                         FStar_TypeChecker_NBETerm.e_string
-                                                        FStar_TypeChecker_NBETerm.e_unit
+                                                        FStar_Reflection_NBEEmbeddings.e_binder
                                                        in
                                                     let uu____1151 =
                                                       let uu____1154 =
@@ -1503,11 +1504,12 @@ and (primitive_steps :
     FStar_List.append uu____743 uu____1642
 
 and unembed_tactic_1 :
-  'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
+  'Aa 'Ar .
+    'Aa FStar_Syntax_Embeddings.embedding ->
+      'Ar FStar_Syntax_Embeddings.embedding ->
         FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Embeddings.norm_cb -> 'a -> 'r FStar_Tactics_Basic.tac
+          FStar_Syntax_Embeddings.norm_cb ->
+            'Aa -> 'Ar FStar_Tactics_Basic.tac
   =
   fun ea  ->
     fun er  ->
@@ -1526,10 +1528,10 @@ and unembed_tactic_1 :
             unembed_tactic_0 er app ncb
 
 and unembed_tactic_0 :
-  'b .
-    'b FStar_Syntax_Embeddings.embedding ->
+  'Ab .
+    'Ab FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb -> 'b FStar_Tactics_Basic.tac
+        FStar_Syntax_Embeddings.norm_cb -> 'Ab FStar_Tactics_Basic.tac
   =
   fun eb  ->
     fun embedded_tac_b  ->
@@ -1600,11 +1602,11 @@ and unembed_tactic_0 :
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 
 and unembed_tactic_nbe_1 :
-  'a 'r .
-    'a FStar_TypeChecker_NBETerm.embedding ->
-      'r FStar_TypeChecker_NBETerm.embedding ->
+  'Aa 'Ar .
+    'Aa FStar_TypeChecker_NBETerm.embedding ->
+      'Ar FStar_TypeChecker_NBETerm.embedding ->
         FStar_TypeChecker_NBETerm.nbe_cbs ->
-          FStar_TypeChecker_NBETerm.t -> 'a -> 'r FStar_Tactics_Basic.tac
+          FStar_TypeChecker_NBETerm.t -> 'Aa -> 'Ar FStar_Tactics_Basic.tac
   =
   fun ea  ->
     fun er  ->
@@ -1620,10 +1622,10 @@ and unembed_tactic_nbe_1 :
             unembed_tactic_nbe_0 er cb app
 
 and unembed_tactic_nbe_0 :
-  'b .
-    'b FStar_TypeChecker_NBETerm.embedding ->
+  'Ab .
+    'Ab FStar_TypeChecker_NBETerm.embedding ->
       FStar_TypeChecker_NBETerm.nbe_cbs ->
-        FStar_TypeChecker_NBETerm.t -> 'b FStar_Tactics_Basic.tac
+        FStar_TypeChecker_NBETerm.t -> 'Ab FStar_Tactics_Basic.tac
   =
   fun eb  ->
     fun cb  ->
@@ -1670,12 +1672,13 @@ and unembed_tactic_nbe_0 :
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 
 let unembed_tactic_1_alt :
-  'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
+  'Aa 'Ar .
+    'Aa FStar_Syntax_Embeddings.embedding ->
+      'Ar FStar_Syntax_Embeddings.embedding ->
         FStar_Syntax_Syntax.term ->
           FStar_Syntax_Embeddings.norm_cb ->
-            ('a -> 'r FStar_Tactics_Basic.tac) FStar_Pervasives_Native.option
+            ('Aa -> 'Ar FStar_Tactics_Basic.tac)
+              FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun er  ->
@@ -1695,11 +1698,12 @@ let unembed_tactic_1_alt :
                unembed_tactic_0 er app ncb)
   
 let e_tactic_1_alt :
-  'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
-        ('a ->
-           FStar_Tactics_Types.proofstate -> 'r FStar_Tactics_Result.__result)
+  'Aa 'Ar .
+    'Aa FStar_Syntax_Embeddings.embedding ->
+      'Ar FStar_Syntax_Embeddings.embedding ->
+        ('Aa ->
+           FStar_Tactics_Types.proofstate ->
+             'Ar FStar_Tactics_Result.__result)
           FStar_Syntax_Embeddings.embedding
   =
   fun ea  ->
@@ -2099,7 +2103,7 @@ let __proj__Dual__item___0 :
   'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
   fun projectee  -> match projectee with | Dual _0 -> _0 
 type tres = FStar_Syntax_Syntax.term tres_m
-let tpure : 'uuuuuu3115 . 'uuuuuu3115 -> 'uuuuuu3115 tres_m =
+let tpure : 'Auu____3115 . 'Auu____3115 -> 'Auu____3115 tres_m =
   fun x  -> Unchanged x 
 let (flip : pol -> pol) =
   fun p  -> match p with | Pos  -> Neg | Neg  -> Pos | Both  -> Both 

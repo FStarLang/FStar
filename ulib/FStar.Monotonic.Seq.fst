@@ -38,10 +38,13 @@ module Seq = FStar.Seq
  *     that meant going through many hoops to prove simple things like transitivity of grows
  *     so far this seems to work better.
  *)
-abstract let grows (#a:Type) :Preorder.preorder (seq a)
+let grows_aux (#a:Type) :Preorder.preorder (seq a)
   = fun (s1:seq a) (s2:seq a) ->
     length s1 <= length s2 /\
     (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)} i < length s1 ==> index s1 i == index s2 i)
+
+[@"opaque_to_smt"]
+let grows #a = grows_aux #a
 
 type rid = HST.erid
 
@@ -49,11 +52,11 @@ let snoc (s:seq 'a) (x:'a)
   : Tot (seq 'a) 
   = Seq.append s (Seq.create 1 x)
 
-let lemma_snoc_extends (s:seq 'a) (x:'a)
+let lemma_snoc_extends (#a:Type) (s:seq a) (x:a)
   : Lemma (requires True)
 	  (ensures (grows s (Seq.snoc s x)))
 	  [SMTPat (grows s (Seq.snoc s x))]
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 
 let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
@@ -73,7 +76,7 @@ let at_least (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:mem)
 
 let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
   : Lemma (ensures stable_on_t r (at_least n x r))
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 
 (** extending a stored sequence, witnessing its new entry for convenience. *)
 let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
@@ -115,14 +118,14 @@ let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r 
 
 let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
   : Lemma (ensures stable_on_t m (i_at_least n x m))
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 
 let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:mem) : Type0 =
   x < Seq.length (HS.sel h is)
 
 let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p) (k:int)
   : Lemma (ensures stable_on_t is (int_at_most k is))
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 
 let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
   : GTot (s:seq a{p s})
@@ -251,11 +254,12 @@ let rec map_index f s i =
 
 //17-01-05 all the stuff above should go to Seq.Properties! 
 
-let map_grows (f:'a -> Tot 'b)
-	      (s1:seq 'a) (s3:seq 'a)
+let map_grows (#a:Type) (#b:Type) (f:a -> Tot b)
+	      (s1:seq a) (s3:seq a)
   : Lemma (grows s1 s3
 	   ==> grows (map f s1) (map f s3))
-  = ()
+  = reveal_opaque (`%grows) (grows #a);
+    reveal_opaque (`%grows) (grows #b)
 
 let map_prefix (#a:Type) (#b:Type) (#i:rid)
 	       (r:m_rref i (seq a) grows)
@@ -267,7 +271,8 @@ let map_prefix (#a:Type) (#b:Type) (#i:rid)
 //17-01-05  this applies to log_t's defined below. 
 let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot b) (bs:seq b)
   :Lemma (stable_on_t r (map_prefix r f bs))
-  = ()
+  = reveal_opaque (`%grows) (grows #a);
+    reveal_opaque (`%grows) (grows #b)
 
 let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
 		     (r:m_rref i (seq a) grows)
@@ -281,7 +286,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 			    (r:m_rref i (seq a) grows)
 			    (f:a -> Tot b) (n:nat) (v:b)
   : Lemma (stable_on_t r (map_has_at_index r f n v))
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 		     
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +312,9 @@ let collect_snoc f s a =
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)
   : Lemma (grows s1 s2 ==> grows (collect f s1) (collect f s2))
-  = let rec collect_grows_aux (f:'a -> Tot (seq 'b)) (s1:seq 'a) (s2:seq 'a)
+  = reveal_opaque (`%grows) (grows #'a);
+    reveal_opaque (`%grows) (grows #'b);
+    let rec collect_grows_aux (f:'a -> Tot (seq 'b)) (s1:seq 'a) (s2:seq 'a)
       :Lemma (requires (grows s1 s2)) (ensures (grows (collect f s1) (collect f s2)))
              (decreases (Seq.length s2))
       = if length s1 = length s2 then assert (Seq.equal s1 s2)
@@ -349,7 +356,8 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 				(r:m_rref i (seq a) grows)
 				(f:a -> Tot (seq b)) (n:nat) (v:b)
   : Lemma (stable_on_t r (collect_has_at_index r f n v))
-  = Classical.forall_intro_2 (collect_grows f)
+  = reveal_opaque (`%grows) (grows #b);
+    Classical.forall_intro_2 (collect_grows f)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Monotonic sequence numbers, bounded by the length of a log
@@ -375,7 +383,7 @@ type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
 
 let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
   : Lemma (stable_on_t log (at_most_log_len x log))
-  = ()
+  = reveal_opaque (`%grows) (grows #a)
 
 let new_seqn (#a:Type) (#l:rid) (#max:nat)
   	     (i:rid) (init:nat) (log:log_t l a)
@@ -390,7 +398,8 @@ let new_seqn (#a:Type) (#l:rid) (#max:nat)
 		   fresh_ref c h0 h1 /\
 		   HS.sel h1 c = init /\
 		   FStar.Map.contains (HS.get_hmap h1) i))
-  = recall log; recall_region i;
+  = reveal_opaque (`%grows) (grows #a);
+    recall log; recall_region i;
     mr_witness log (at_most_log_len init log);
     ralloc i init
 
@@ -406,7 +415,8 @@ let increment_seqn (#a:Type) (#l:rid) (#max:nat)
 	  modifies_one i h0 h1 /\
 	  modifies_ref i (Set.singleton (HS.as_addr c)) h0 h1 /\
 	  HS.sel h1 c = HS.sel h0 c + 1))
-  = recall c; recall log;
+  = reveal_opaque (`%grows) (grows #a);
+    recall c; recall log;
     let n = !c + 1 in
     mr_witness log (at_most_log_len n log);
     c := n

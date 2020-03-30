@@ -1509,7 +1509,7 @@ let prims () =
 let prims_basename () = basename (prims ())
 
 let pervasives () =
-  let filename = "FStar.Pervasives.fst" in
+  let filename = "FStar.Pervasives.fsti" in
   match find_file filename with
   | Some result -> result
   | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)

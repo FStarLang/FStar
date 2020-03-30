@@ -7,8 +7,12 @@ ifdef Z3
 OTHERFLAGS+=--smt $(Z3)
 endif
 
+# Set ADMIT=1 to admit queries
+ADMIT ?=
+MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
+
 ifdef FSTAR_HOME
-FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED) $(CACHE_DIR)
+FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED) $(CACHE_DIR)
 FSTAR=$(FSTAR_ALWAYS)
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH

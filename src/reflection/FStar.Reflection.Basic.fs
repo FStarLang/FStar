@@ -305,16 +305,16 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        U.abs [b] t None // TODO: effect?
+        mk (Tm_abs ([b], t, None)) None t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        U.arrow [b] c
+        mk (Tm_arrow ([b], c)) None c.pos
 
     | Tv_Type () ->
         U.ktype
 
     | Tv_Refine (bv, t) ->
-        U.refine bv t
+        mk (Tm_refine (bv, t)) None t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) None Range.dummyRange
@@ -484,6 +484,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | Sig_datacon (lid, us, ty, _, n, _) ->
         let s, us = SS.univ_var_opening us in
         let ty = SS.subst s ty in
+        let ty = U.remove_inacc ty in
         (* TODO: return universes *)
         Sg_Constructor (Ident.path_of_lid lid, ty)
 

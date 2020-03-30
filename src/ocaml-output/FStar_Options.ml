@@ -125,8 +125,8 @@ let (as_list' : option_val -> option_val Prims.list) =
     | uu____444 -> failwith "Impos: expected List"
   
 let as_list :
-  'uuuuuu455 .
-    (option_val -> 'uuuuuu455) -> option_val -> 'uuuuuu455 Prims.list
+  'Auu____455 .
+    (option_val -> 'Auu____455) -> option_val -> 'Auu____455 Prims.list
   =
   fun as_t  ->
     fun x  ->
@@ -134,9 +134,9 @@ let as_list :
       FStar_All.pipe_right uu____473 (FStar_List.map as_t)
   
 let as_option :
-  'uuuuuu487 .
-    (option_val -> 'uuuuuu487) ->
-      option_val -> 'uuuuuu487 FStar_Pervasives_Native.option
+  'Auu____487 .
+    (option_val -> 'Auu____487) ->
+      option_val -> 'Auu____487 FStar_Pervasives_Native.option
   =
   fun as_t  ->
     fun uu___4_502  ->
@@ -160,7 +160,7 @@ let (as_comma_string_list : option_val -> Prims.string Prims.list) =
   
 type optionstate = option_val FStar_Util.smap
 let copy_optionstate :
-  'uuuuuu558 . 'uuuuuu558 FStar_Util.smap -> 'uuuuuu558 FStar_Util.smap =
+  'Auu____558 . 'Auu____558 FStar_Util.smap -> 'Auu____558 FStar_Util.smap =
   fun m  -> FStar_Util.smap_copy m 
 let (fstar_options : optionstate Prims.list Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
@@ -437,8 +437,8 @@ let (get_option : Prims.string -> option_val) =
     | FStar_Pervasives_Native.Some s1 -> s1
   
 let lookup_opt :
-  'uuuuuu2706 . Prims.string -> (option_val -> 'uuuuuu2706) -> 'uuuuuu2706 =
-  fun s  -> fun c  -> let uu____2724 = get_option s  in c uu____2724 
+  'Auu____2706 . Prims.string -> (option_val -> 'Auu____2706) -> 'Auu____2706
+  = fun s  -> fun c  -> let uu____2724 = get_option s  in c uu____2724 
 let (get_abort_on : unit -> Prims.int) =
   fun uu____2731  -> lookup_opt "abort_on" as_int 
 let (get_admit_smt_queries : unit -> Prims.bool) =
@@ -746,8 +746,8 @@ let (display_version : unit -> unit) =
     FStar_Util.print_string uu____4064
   
 let display_usage_aux :
-  'uuuuuu4189 'uuuuuu4190 .
-    ('uuuuuu4189 * Prims.string * 'uuuuuu4190 FStar_Getopt.opt_variant *
+  'Auu____4189 'Auu____4190 .
+    ('Auu____4189 * Prims.string * 'Auu____4190 FStar_Getopt.opt_variant *
       Prims.string) Prims.list -> unit
   =
   fun specs  ->
@@ -825,8 +825,8 @@ let (reverse_accumulated_option : Prims.string -> option_val -> option_val) =
       List (FStar_List.append prev_values [value])
   
 let accumulate_string :
-  'uuuuuu4494 .
-    Prims.string -> ('uuuuuu4494 -> Prims.string) -> 'uuuuuu4494 -> unit
+  'Auu____4494 .
+    Prims.string -> ('Auu____4494 -> Prims.string) -> 'Auu____4494 -> unit
   =
   fun name  ->
     fun post_processor  ->
@@ -1585,9 +1585,7 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
      (let uu____8412 =
         let uu____8418 =
           let uu____8419 =
-            FStar_List.map (fun uu____8423  -> String uu____8423)
-              old_verify_module
-             in
+            FStar_List.map (fun _8423  -> String _8423) old_verify_module  in
           List uu____8419  in
         ("verify_module", uu____8418)  in
       set_option' uu____8412);
@@ -1731,7 +1729,7 @@ let (prims_basename : unit -> Prims.string) =
   
 let (pervasives : unit -> Prims.string) =
   fun uu____8803  ->
-    let filename = "FStar.Pervasives.fst"  in
+    let filename = "FStar.Pervasives.fsti"  in
     let uu____8807 = find_file filename  in
     match uu____8807 with
     | FStar_Pervasives_Native.Some result -> result

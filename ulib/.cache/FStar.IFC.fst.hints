@@ -1,5 +1,5 @@
 [
-  "ý:\t°m¯ˆÛ\u0005\u001bµ£½¶:Õ",
+  "\r8\f•ß©[Ù\\‹ª¬@ÆÈV",
   [
     [
       "FStar.IFC.__proj__SemiLattice__item__top",
@@ -11,7 +11,7 @@
         "projection_inverse_FStar.IFC.SemiLattice_carrier"
       ],
       0,
-      "5e248d02be4bb7e32398d9430b3b7e6f"
+      "77868909760ffcfee699dd0fc9887c82"
     ],
     [
       "FStar.IFC.__proj__SemiLattice__item__lub",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_edb2c6521da1348bce354e228735aede"
       ],
       0,
-      "99bf726b3fa7cf40a61c121b8b08c7b9"
+      "918f575a4aa4b4748f025695e3651761"
     ],
     [
       "FStar.IFC.reveal_hide",
@@ -34,7 +34,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "7bc505dcebb8a084f81297df8f5f2a1e"
+      "4f4497be2a10f04ec5e6b7d76b036f53"
     ],
     [
       "FStar.IFC.hide_reveal",
@@ -43,7 +43,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "a645d81860a5f82f5440f5e25c794cfa"
+      "6b41fa1b15494b27d7bff1ff92fbc720"
     ],
     [
       "FStar.IFC.map",
@@ -52,7 +52,7 @@
       1,
       [ "@query", "equation_FStar.IFC.reveal" ],
       0,
-      "e80b888c6d28a17a4d35c9c4cc848af3"
+      "3c19209cd1c2f754c2a26c4b8a359aca"
     ],
     [
       "FStar.IFC.join",
@@ -61,33 +61,7 @@
       1,
       [ "@query", "equation_FStar.IFC.reveal" ],
       0,
-      "f6b188bef9492d14bccd302cbea29cc9"
-    ],
-    [
-      "FStar.IFC.__proj__SemiLattice__item__top",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.IFC.SemiLattice_carrier",
-        "projection_inverse_FStar.IFC.SemiLattice_carrier"
-      ],
-      0,
-      "f441e3a8cc9b1910440eadd733018032"
-    ],
-    [
-      "FStar.IFC.__proj__SemiLattice__item__lub",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_FStar.IFC.SemiLattice_carrier",
-        "projection_inverse_FStar.IFC.SemiLattice_carrier",
-        "refinement_interpretation_Tm_refine_edb2c6521da1348bce354e228735aede"
-      ],
-      0,
-      "d72e4e843a56316e16aba645813ffd1b"
+      "63437be834700aea083b9993f726822b"
     ]
   ]
 ]

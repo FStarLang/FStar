@@ -1144,13 +1144,16 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
 
 //The main extraction function
 let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
-    debug g (fun () -> BU.print2 "Checking %s at type %s\n" (Print.term_to_string e) (Code.string_of_mlty (current_module_of_uenv g) ty));
+    debug g 
+      (fun () -> BU.print3 "Checking %s at type %s and eff %s\n" 
+                        (Print.term_to_string e)
+                        (Code.string_of_mlty g.currentModule ty)
+                        (Util.eff_to_string f));
     match f, ty with
     | E_GHOST, _
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
-      let ml_e, tag = maybe_promote_effect ml_e tag t in
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
@@ -1160,13 +1163,14 @@ let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * 
              err_unexpected_eff g e ty f tag;
              maybe_coerce e.pos g ml_e t ty, ty
 
-and term_as_mlexpr g e =
+and term_as_mlexpr (g:uenv) (e:term) : (mlexpr * e_tag * mlty) =
     let e, f, t = term_as_mlexpr' g e in
     let e, f = maybe_promote_effect e f t in
     e, f, t
 
 
 and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
+    let top = SS.compress top in
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (Print.tag_of_term top)
@@ -1345,21 +1349,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
 
-          begin match head.n, (head |> SS.compress |> U.unascribe).n with  //AR: unascribe, gives more opportunities for beta
-            | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
-              let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g) t in
-              term_as_mlexpr g t
-
+          begin match (head |> SS.compress |> U.unascribe).n with  //AR: unascribe, gives more opportunities for beta
             (*
              * AR: do we need is_total rc here?
              *)
-            | _, Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
+            | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
               |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
-            | _, Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining] head (List.hd args) in
+            | Tm_constant Const_reify ->
+              let e = TcUtil.reify_body_with_arg g.env_tcenv [TcEnv.Inlining] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
               term_as_mlexpr g tm
 

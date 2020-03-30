@@ -242,7 +242,6 @@ let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuf
     in
     (Classical.move_requires aux) ()
 
-abstract
 let buffer_immutable_buffer_disjoint
   (#t: Type) (#ti: Type)
   (b: LowStar.Buffer.buffer t)

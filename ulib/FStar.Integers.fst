@@ -126,7 +126,7 @@ let u    #sw
        | W64 -> FStar.Int64.int_to_t x
        | W128 -> FStar.Int128.int_to_t x)
 
-abstract
+irreducible
 let cast #sw #sw'
          (from:int_t sw{within_bounds sw' (v from)})
    : Tot (to:int_t sw'{norm (v from == v to)})

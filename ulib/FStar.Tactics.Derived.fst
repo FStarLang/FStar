@@ -394,13 +394,11 @@ let pose (t:term) : Tac binder =
 
 let intro_as (s:string) : Tac binder =
     let b = intro () in
-    rename_to b s;
-    b
+    rename_to b s
 
 let pose_as (s:string) (t:term) : Tac binder =
     let b = pose t in
-    rename_to b s;
-    b
+    rename_to b s
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
     map f (cur_binders ())

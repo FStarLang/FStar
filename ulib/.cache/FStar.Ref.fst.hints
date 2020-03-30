@@ -1,5 +1,5 @@
 [
-  "-\u0019√Ê¯]ÊRQVOˇ,û\u0007“",
+  "äç´Z+gÀa\bÖBQeN6\t",
   [
     [
       "FStar.Ref.addr_of",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c7f7d3745d403787db70778fc8fe229f"
+      "562cc1da6646232f09ff68478d782605"
     ],
     [
       "FStar.Ref.only",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4b818ac4ac204466b8db5d1c8ad34987"
+      "28ca812dec71f7154976e139990c2ec5"
     ],
     [
       "FStar.Ref.alloc",
@@ -37,7 +37,16 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b8d2f3f7e7c6f04d0f3b2e26fd3101ab"
+      "84eeaa938ea62b85de2ab63cebff79b9"
+    ],
+    [
+      "FStar.Ref.alloc",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.ST.ref" ],
+      0,
+      "18d9ec7f532a18e44ef4bb2d49cc5636"
     ],
     [
       "FStar.Ref.write",
@@ -55,7 +64,7 @@
         "true_interp"
       ],
       0,
-      "4490c3182c9d6f1ed78c2199e89d8edb"
+      "086ca3b53d8f04a614b2ba7ec121f019"
     ],
     [
       "FStar.Ref.addr_of",
@@ -64,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "56c3e63dcbe41fd227aacac38c6817ae"
+      "baf742619f0454ff8a5ec984f21f8b0f"
     ],
     [
       "FStar.Ref.only",
@@ -78,7 +87,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "20317fe0d9151dbb0b5ea4edfff7992f"
+      "6058881956821b2d81233710cf57ae6a"
     ],
     [
       "FStar.Ref.only",
@@ -92,11 +101,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dab4c2ed6efd785bca8dc886504a35a3"
+      "bcd8f4649429fc31a2ff01c811765052"
     ],
     [
       "FStar.Ref.alloc",
-      2,
+      3,
       2,
       1,
       [
@@ -106,7 +115,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ad631918b8bb6eb4e75fdc61840818c1"
+      "785768681e880fd4dbc3674982daa283"
     ]
   ]
 ]

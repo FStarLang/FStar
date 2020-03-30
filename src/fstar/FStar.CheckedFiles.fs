@@ -40,7 +40,7 @@ module Dep     = FStar.Parser.Dep
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
- * It need to be kept in sync with prims.fst
+ * It need to be kept in sync with FStar.Pervasives.fst
  *)
 let cache_version_number = 18
 
