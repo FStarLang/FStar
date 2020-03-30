@@ -1157,13 +1157,26 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : tac<option<goa
         let bvs' = List.map s1 bvs in
         let new_env = push_bvs e0 (b2::bvs') in
         let new_goal_ty = SS.subst s (goal_type g) in
+
+        (* GM Why are we doing this tc_lax? To make the typechecker
+         * set the bvsorts properly, otherwise these goals
+         * will wreak havoc if the happen to be used by
+         * type_of_well_typed_term (as in apply_lemma).
+         *
+         * They are not set by the substitution since substitutions
+         * do not descend into bv sorts, perhaps that's the real issue.
+         *
+         * See issue #1966. *)
+        bind (__tc_lax new_env new_goal_ty) (fun (new_goal_ty, _, _) ->
         bind (new_uvar "subst_goal" new_env new_goal_ty) (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
         let sol = U.mk_app (U.abs (List.map S.mk_binder (b2::bvs')) uvt None)
                             (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) (b1::bvs)) in
 
+        (* As above *)
+        bind (__tc_lax (goal_env g)  sol) (fun (sol, _, _) ->
         bind (set_solution g sol) (fun () ->
-        ret (Some goal')))
+        ret (Some goal')))))
 
     | None ->
         ret None
@@ -1184,12 +1197,18 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
              let bvs' = List.map s1 bvs in
              let new_env = push_bvs e0 (bv::bvs') in
              let new_goal_ty = SS.subst s (goal_type goal) in
+
+             (* See comment in subst_goal *)
+             bind (__tc_lax new_env new_goal_ty) (fun (new_goal_ty, _, _) ->
              bind (new_uvar "rewrite" new_env new_goal_ty) (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs (List.map S.mk_binder bvs') uvt None)
                                  (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) bvs) in
+
+             (* See comment in subst_goal *)
+             bind (__tc_lax (goal_env goal)  sol) (fun (sol, _, _) ->
              bind (set_solution goal sol) (fun () ->
-             replace_cur goal'))
+             replace_cur goal'))))
            | _ ->
              fail "Not an equality hypothesis with a variable on the LHS")
         | _ -> fail "Not an equality hypothesis"
