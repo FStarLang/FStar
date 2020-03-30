@@ -45,7 +45,8 @@ type heap_predicate = heap -> Type0
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
 
-abstract let witnessed (p:heap_predicate{stable p}) :Type0 = W.witnessed heap_rel p
+[@"opaque_to_smt"]
+let witnessed (p:heap_predicate{stable p}) : Type0 = W.witnessed heap_rel p
 
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
@@ -53,7 +54,9 @@ assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\
 val lemma_functoriality (p:heap_predicate{stable p /\ witnessed p}) 
                         (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
   :Lemma (ensures (witnessed q))
-let lemma_functoriality p q = W.lemma_witnessed_weakening heap_rel p q
+let lemma_functoriality p q =
+  reveal_opaque (`%witnessed) witnessed;
+  W.lemma_witnessed_weakening heap_rel p q
 
 (***** ST effect *****)
 
@@ -77,10 +80,10 @@ let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `cont
 
 type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{is_mm r = false /\ witnessed (contains_pred r)}
 
-abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
+let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
   = gst_recall (contains_pred r)
 
-abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
+let alloc (#a:Type) (#rel:preorder a) (init:a)
   :ST (mref a rel)
       (fun h -> True)
       (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
@@ -90,13 +93,13 @@ abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
     gst_witness (contains_pred r);
     r
 
-abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel h r) h)
+let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel h r) h)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     Heap.lemma_sel_equals_sel_tot_for_contained_refs h0 r;
     sel_tot h0 r
 
-abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
+let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
     (fun h -> rel (sel h r) v)
     (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
@@ -110,14 +113,13 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
     Heap.lemma_upd_equals_upd_tot_for_contained_refs h0 r v;
     gst_put h1
 
-abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
+let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
 
-abstract
 let op_Bang (#a:Type) (#rel:preorder a) (r:mref a rel)
   : STATE a (fun p h -> p (sel h r) h)
 = read #a #rel r
 
-abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
+let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
     (fun h -> rel (sel h r) v)
     (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
@@ -128,4 +130,3 @@ abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 type ref (a:Type0) = mref a (trivial_preorder a)
 
 let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
-

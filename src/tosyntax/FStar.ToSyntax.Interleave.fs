@@ -242,6 +242,22 @@ let ml_mode_check_initial_interface mname (iface:list<decl>) =
   | Val _ -> true //only retain the vals in --MLish mode
   | _ -> false)
 
+let ulib_modules = [
+  "FStar.TSet";
+  "FStar.Seq.Base";
+  "FStar.Seq.Properties";
+  "FStar.UInt";
+  "FStar.UInt8";
+  "FStar.UInt16";
+  "FStar.UInt32";
+  "FStar.UInt64";
+  "FStar.Int";
+  "FStar.Int8";
+  "FStar.Int16";
+  "FStar.Int32";
+  "FStar.Int64";
+]
+
 (*
  * AR: ml mode optimizations are only applied in ml mode and only to non-core files
  *
@@ -259,8 +275,7 @@ let apply_ml_mode_optimizations (mname:lident) : bool =
    *     A better way to fix this problem would be to make compiler files in a separate namespace
    *       and then do these optimizations (as well as --MLish etc.) only for them
    *     But until then ... (sigh)
-   *)
-  let ulib_modules = ["FStar.TSet"; "FStar.Seq.Base"; "FStar.Seq.Properties"] in
+   *)  
   Options.ml_ish () &&
   (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules))) &&
   (not (List.contains (Ident.string_of_lid mname) ulib_modules))
