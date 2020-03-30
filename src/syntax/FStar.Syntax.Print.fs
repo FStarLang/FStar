@@ -250,11 +250,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_ascribed _ -> "Tm_ascribed"
   | Tm_let _ -> "Tm_let"
   | Tm_uvar _ -> "Tm_uvar"
-  | Tm_delayed(_, m) ->
-    begin match !m with
-        | None -> "Tm_delayed"
-        | Some _ -> "Tm_delayed-resolved"
-    end
+  | Tm_delayed _ -> "Tm_delayed"
   | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
   | Tm_lazy _ -> "Tm_lazy"
