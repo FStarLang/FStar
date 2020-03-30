@@ -21,6 +21,7 @@ CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
 
+include $(FSTAR_HOME)/src/Makefile.common
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
@@ -42,7 +43,8 @@ verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 
 %.checked:
-	$(MY_FSTAR) $<
+	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $(SIL) $<
 
 # Benchmarking rules
 #
