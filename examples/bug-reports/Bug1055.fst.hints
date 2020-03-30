@@ -18,7 +18,7 @@
         "true_interp"
       ],
       0,
-      "9c6f612ed7559a5412e894de3b58d451"
+      "5a0a1706d1e1ae1bad53a561bc6a2e00"
     ],
     [
       "Bug1055.test5_client",
@@ -36,7 +36,7 @@
         "true_interp"
       ],
       0,
-      "ddc28cba75d0219fed2dcd588bbf0f7c"
+      "a9f8746ca476136969b79787cc75a93c"
     ],
     [
       "Bug1055.test6_f",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_10c29965fb26bdf7f409a07e0279e553"
       ],
       0,
-      "a851eaa32ac64e4d606a2dd13a27b180"
+      "827910748c4bbecff02de143402db494"
     ]
   ]
 ]

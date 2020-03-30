@@ -1,5 +1,5 @@
 [
-  "<Lx´Ó°í”ü\r¨é\bÙE,",
+  "*\u0013ô\u000e•!5˜¤]ëšžïN>",
   [
     [
       "Prims.Ghost",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "1e63d1e739310e7fc36d80825cbdefdd"
+      "b71b78cbf5a6e08a7cb3399345a547af"
     ],
     [
       "Prims._assert",
@@ -76,16 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "b610d3b9ade1fad75d8bec4acfa4cb04"
-    ],
-    [
-      "Prims.assert_spinoff",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ab6d9d3f32df782e006370e6d6220190"
+      "da8aaf3bfdaf674a2aa2a07cdba289de"
     ],
     [
       "Prims.cut",
@@ -94,7 +85,7 @@
       1,
       [ "@query" ],
       0,
-      "8b17b40cbfba4dd56f9c4c5f512ea4ec"
+      "81b0f4656b88992d1aec9f695112d58a"
     ],
     [
       "Prims.pow2",
@@ -111,7 +102,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "39ad8931bc9d3b7bda6b9fd589f3b2bb"
+      "859b435d28767238a5b4c84d947f14a7"
     ],
     [
       "Prims.Ghost",
@@ -120,7 +111,7 @@
       1,
       [ "@query" ],
       0,
-      "eb9f24b56630e517d046882323754b27"
+      "b95ff0172264b9d9d373d32d592c4784"
     ],
     [
       "Prims.__proj__Mkdtuple2__item___2",
@@ -132,7 +123,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "bf51667fc57cf0309afabd0fe98b14d4"
+      "e9ee12a17c1df1faf3f63577fc22d2ec"
     ],
     [
       "Prims.list",
@@ -141,7 +132,7 @@
       1,
       [ "@query" ],
       0,
-      "6f991529a03eb067140bc71b051dfa3c"
+      "1bb2d18f1e4692639d0b2a417868e97a"
     ],
     [
       "Prims.__proj__Cons__item__hd",
@@ -154,7 +145,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "01cbb6c5c0610511da685dc91a784cf2"
+      "a15afe8f7d661640a8a8c34bceca381a"
     ],
     [
       "Prims.__proj__Cons__item__tl",
@@ -167,7 +158,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "195bae73739af65788c69403e31e9933"
+      "d9eef7319a5cd257832c1494e972bed0"
     ],
     [
       "Prims.Lemma",
@@ -179,7 +170,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "0ba1fcfdc0f0e26c1abf3b17462c081c"
+      "a627fe9d434c1e5bbbfa3a5f64928385"
     ],
     [
       "Prims._assert",
@@ -188,16 +179,7 @@
       1,
       [ "@query" ],
       0,
-      "8459663ee8994a9bd014efbb8aff32b0"
-    ],
-    [
-      "Prims.assert_spinoff",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "90d5b945ccf5f43bd0e0156b202019eb"
+      "0241ea5c5e4bacf531aa48adce6f7fc6"
     ],
     [
       "Prims.cut",
@@ -206,7 +188,7 @@
       1,
       [ "@query" ],
       0,
-      "4fc6b871bf32a7b4fc09de73b3349e72"
+      "7c28c89ff2ebd3f1f173cf683eeac09f"
     ],
     [
       "Prims.pow2",
@@ -223,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9adc0b1f2097a3aa90dd1568308cb976"
+      "7e524cf432bb96f45a2c6a71a63a5782"
     ]
   ]
 ]
