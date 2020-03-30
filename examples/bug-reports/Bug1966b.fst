@@ -6,13 +6,11 @@ assume val t : int -> Type
 assume val lem : x:int -> y:(t x) -> Lemma (y == y)
 assume val mk : x:int -> y:(t x) -> int
 
-// Fails due to BV sorts not being updated by the renaming
-// substitution...
-(* let f (xxxx:int) (y : t xxxx) = *)
-(*   assert (y == y) *)
-(*       by (let xXX = nth_binder (-2) in *)
-(*           let zZZ = rename_to xXX "zzzz" in *)
-(*           apply_lemma (`lem)) *)
+let f (xxxx:int) (y : t xxxx) =
+  assert (y == y)
+      by (let xXX = nth_binder (-2) in
+          let zZZ = rename_to xXX "zzzz" in
+          apply_lemma (`lem))
 
 let syn (xxxx:int) (y : t xxxx) : int =
     _ by (let xXX = nth_binder (-2) in
