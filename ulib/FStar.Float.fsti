@@ -13,7 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module FStar.Float
 
-assume new type float: Type0
+/// Support for floating point numbers in F* is nearly non-existent.
+/// This module is a placeholder
+assume new
+type float : Type0 
+
 type double = float
+

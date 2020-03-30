@@ -196,7 +196,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
             (fun env a_decl ->
                 let decls, env =
                     with_dsenv_of_tcenv env <|
-                    FStar.ToSyntax.Interleave.prefix_with_interface_decls a_decl
+                    FStar.ToSyntax.Interleave.prefix_with_interface_decls modul.name a_decl
                 in
                 env, decls)
             env

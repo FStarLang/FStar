@@ -1,0 +1,14 @@
+[
+  "\u0001Lð¼G’=·\u0014W\ró=žóÏ",
+  [
+    [
+      "BugUnfoldAbstractEquational.t0",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "f55a1f23dfb06355ab3c84c5bd1834b6"
+    ]
+  ]
+]

@@ -90,6 +90,8 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
               ; imp_uvar   = ctx_uvar
               ; imp_range  = r
               } in
+    if Env.debug wl.tcenv (Options.Other "ImplicitTrace") then
+      BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
@@ -1443,6 +1445,10 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
 //    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
     if Env.debug env <| Options.Other "Rel"
     then BU.print1 "solve:\n\t%s\n" (wl_to_string probs);
+    if Env.debug env <| Options.Other "ImplicitTrace" then
+      BU.print1 "solve: wl_implicits = %s\n"
+                    (Common.implicits_to_string probs.wl_implicits);
+
     match next_prob probs with
     | Some (hd, tl, rank) ->
       let probs = {probs with attempting=tl} in
@@ -2744,14 +2750,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
+             let tx = UF.new_transaction () in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
+               UF.rollback tx;
                if (not env.uvar_subtyping && has_uvars)
                || not wl.smt_ok
                then giveup env msg prob
                else fallback()
 
              | Success _ ->
+               UF.commit tx;
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in

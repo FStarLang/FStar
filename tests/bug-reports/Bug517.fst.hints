@@ -1,0 +1,31 @@
+[
+  ";ζ¨\u0017=Gύ\u0005Ϊ\u001b{X/σπ",
+  [
+    [
+      "Bug517.add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
+      ],
+      0,
+      "d8aa97cd2eeb26366a108a798c630a9c"
+    ],
+    [
+      "Bug517.add'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ccca5f91040f12ee7ed29f269126342d"
+      ],
+      0,
+      "94e34bacaf341f249705e12e6baed67b"
+    ]
+  ]
+]

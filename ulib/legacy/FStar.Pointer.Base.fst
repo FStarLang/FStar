@@ -788,6 +788,7 @@ let rec value_of_ovalue_of_value
     = value_of_ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
     in
     Classical.forall_intro phi;
+    DM.equal_intro v' v;
     DM.equal_elim #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) v' v
   | TArray len t' ->
     let (v: array len (type_of_typ t')) = v in

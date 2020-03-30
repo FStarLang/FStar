@@ -250,11 +250,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_ascribed _ -> "Tm_ascribed"
   | Tm_let _ -> "Tm_let"
   | Tm_uvar _ -> "Tm_uvar"
-  | Tm_delayed(_, m) ->
-    begin match !m with
-        | None -> "Tm_delayed"
-        | Some _ -> "Tm_delayed-resolved"
-    end
+  | Tm_delayed _ -> "Tm_delayed"
   | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
   | Tm_lazy _ -> "Tm_lazy"
@@ -310,7 +306,7 @@ and term_to_string x =
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
-      | Tm_name x ->        nm_to_string x
+      | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
       | Tm_fvar f ->        fv_to_string f
       | Tm_uvar (u, ([], _)) ->
         if Options.print_bound_var_types()

@@ -13,31 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
-(*
-   This module provides an erased type
-   to abstract computationally irrelevant values.
-
-   It relies on the GHOST effect defined in Prims.
-
-   [erased a] is decorated with the erasable attribute
-   As such,
-
-   1. The type is considered non-informative.
-      So, [Ghost (erased a)] can be subsumed to [Pure (erased a)]
-
-   2. The compiler extracts [erased a] to [unit]
-
-   The type is [erased a] is in a bijection with [a],
-   as witnessed by the [hide] and [reveal] function.
-
-   Importantly, computationally relevant code cannot use [reveal]
-     (it's marked GTot)
-
-   Just like Coq's prop, it is okay to use erased types
-   freely as long as we produce an erased type.
-
-*)
 module FStar.Ghost
 
 [@erasable]

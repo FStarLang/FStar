@@ -601,11 +601,11 @@ and (primitive_steps :
                                                         FStar_Tactics_Basic.rename_to
                                                         FStar_Reflection_Embeddings.e_binder
                                                         FStar_Syntax_Embeddings.e_string
-                                                        FStar_Syntax_Embeddings.e_unit
+                                                        FStar_Reflection_Embeddings.e_binder
                                                         FStar_Tactics_Basic.rename_to
                                                         FStar_Reflection_NBEEmbeddings.e_binder
                                                         FStar_TypeChecker_NBETerm.e_string
-                                                        FStar_TypeChecker_NBETerm.e_unit
+                                                        FStar_Reflection_NBEEmbeddings.e_binder
                                                        in
                                                     let uu____1151 =
                                                       let uu____1154 =

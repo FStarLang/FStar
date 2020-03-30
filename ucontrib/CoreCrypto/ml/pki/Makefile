@@ -137,10 +137,10 @@ clean:
 
 # --------------------------------------------------------------------
 define pki
-  $(MAKE) MODE=$(1) clean
-  $(MAKE) MODE=$(1) dh dsap ca
-  $(MAKE) MODE=$(1) '$(1)/certificates/$(1).cert.mitls.org.p12'
-  $(MAKE) MODE=$(1) hash
+  +$(MAKE) MODE=$(1) clean
+  +$(MAKE) MODE=$(1) dh dsap ca
+  +$(MAKE) MODE=$(1) '$(1)/certificates/$(1).cert.mitls.org.p12'
+  +$(MAKE) MODE=$(1) hash
 endef
 
 pki.built:
@@ -150,7 +150,7 @@ pki.built:
 	touch $@
 
 pki.clean:
-	$(MAKE) MODE=rsa clean
-	$(MAKE) MODE=dsa clean
-	$(MAKE) MODE=ecdsa clean
+	+$(MAKE) MODE=rsa clean
+	+$(MAKE) MODE=dsa clean
+	+$(MAKE) MODE=ecdsa clean
 	rm pki.built

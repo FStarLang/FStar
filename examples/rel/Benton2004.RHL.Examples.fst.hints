@@ -61,7 +61,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "3319f0e05671121a534a016e10dd9dd1"
+      "b35893abf188181f7e703de19c2432f5"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -91,7 +91,6 @@
         "function_token_typing_Benton2004.RHL.gconst",
         "function_token_typing_Benton2004.RHL.gsubst",
         "function_token_typing_Benton2004.RHL.gvar",
-        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_typing",
         "interpretation_Tm_abs_2a81661ddb51dfd01a5b7ce5a5e7f6e9",
         "interpretation_Tm_abs_6c79f0d33661d6bb133651fed566829b",
@@ -123,7 +122,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "78154378c27952ac57851a4f727f68eb"
+      "45f653d39c0cb12447a0db0ddcf8a2a7"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -155,7 +154,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "d0b86de4b3434f4bd08484dca46ac20f"
+      "282f0707963492dec82facf58dab2999"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -188,7 +187,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "5c60a7bc24c1b853a1f628874acedaff"
+      "57e01be25fdb13318818c964a73bb9e0"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -221,7 +220,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "c75a542b0a7182591bf28972511152c6"
+      "a7a2e250ebe7a0e92da7d38a41feed9b"
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -238,7 +237,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "e329412e8c0d1890500a0fcbbab6c55f"
+      "8ff9b1733121804af866cfa4809d660c"
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -255,7 +254,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "fb32dfd45c99bd724b5deead527b5996"
+      "bd15b93f0fd634e7320afdcdb33b955b"
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -268,7 +267,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "ce5428c617b7ae2c103315c0dc2fa86c"
+      "bdf449d7f7a87837b82579250185d90b"
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -295,7 +294,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "1f48a230276261b5f4cb3d3a77ebd0c4"
+      "9547a3301b709382eb08a9bf6aad2c24"
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -308,7 +307,7 @@
         "typing_Benton2004.skip"
       ],
       0,
-      "ed1ffcf6eb263efa71e9659b91461695"
+      "032a91f43f57f25585936ba10a25f739"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -415,7 +414,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "d74c863624d61bca3da839843e926a66"
+      "66afe09a6cbf4ef8574e1f360e0b705a"
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
@@ -447,7 +446,7 @@
         "equation_FStar.DM4F.IntStoreFixed.read",
         "equation_FStar.Pervasives.Native.fst", "equation_Prims.eqtype",
         "function_token_typing_Benton2004.RHL.exp_to_gexp",
-        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Benton2004.RHL.gvar",
         "function_token_typing_Prims.int", "int_typing",
         "interpretation_Tm_abs_05240244b80fb15ad0f10a3eca729431",
         "interpretation_Tm_abs_2a81661ddb51dfd01a5b7ce5a5e7f6e9",
@@ -476,8 +475,8 @@
         "token_correspondence_Benton2004.reify_exp",
         "token_correspondence_Prims.op_AmpAmp",
         "token_correspondence_Prims.op_GreaterThan",
-        "typing_Benton2004.RHL.exp_to_gexp", "typing_Benton2004.RHL.gnot",
-        "typing_Benton2004.evar", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
+        "typing_Benton2004.RHL.gnot", "typing_Benton2004.RHL.gvar",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_Tm_abs_6c79f0d33661d6bb133651fed566829b",
         "typing_Tm_abs_815b57c9640da25f7ebc5d29276cb38b",
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908",

@@ -14,7 +14,7 @@ MAKEFLAGS += --no-builtin-rules
 # --------------------------------------------------------------------
 # An artefact of the build process is that parse.fsi is auto-generated
 fstar-in-fsharp: nuget-restore
-	$(MAKE) -C VS install-packages
+	+$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
@@ -46,51 +46,47 @@ $(FSYACC) $(FSLEX): nuget-restore
 ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Compiler.Bytes.fsti String.fsti	\
 			          BigInt.fsti Pprint.fsti		\
-			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fst		\
+			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fsti \
 			          Tests.Test.fst \
 			          StringBuffer.fsti)
 
-boot/%.fsti: basic/boot/%.fsi | boot_dir
-	cp $^ $@
-	$(SED) -i.bak 's/<.* when .* : equality>//g' $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	touch -r $^ $@
-
-boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
-	cp $^ $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	touch -r $^ $@
-
-#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
-boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
-	cp $^ $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
-	touch -r $^ $@
-
-boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
-	cp $^ $@
-	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	touch -r $^ $@
-
-boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
-	echo "#light \"off\"" > $@
-	$(HEAD) -n12 $^ >> $@
-	touch -r parser/parse.mly $@
+define from_boot_file
+	@echo "[BOOT      $(basename $(notdir $@))]"
+	$(Q)cp $^ $@
+	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
+	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
+	$(Q)touch -r $^ $@
+endef
 
 boot/%.fst: basic/boot/%.fs | boot_dir
-	cp $^ $@
-	touch -r $^ $@
+	$(call from_boot_file)
+
+boot/%.fsti: basic/boot/%.fsi | boot_dir
+	$(call from_boot_file)
+
+boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
+	$(call from_boot_file)
+
+boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
+	$(call from_boot_file)
+
+boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
+	$(call from_boot_file)
+
+# GM: What's going on here?
+boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
+	@echo "[BOOT      $(basename $(notdir $@))]"
+	$(Q)echo "#light \"off\"" > $@
+	$(Q)$(HEAD) -n12 $^ >> $@
+	$(Q)touch -r parser/parse.mly $@
 
 boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
-	cp $^ $@
-	touch -r $^ $@
+	$(call from_boot_file)
 
 boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
-	cp $^ $@
-	touch -r $^ $@
+	$(call from_boot_file)
 
 boot_dir:
 	mkdir -p boot
@@ -98,6 +94,7 @@ boot_dir:
 boot: $(ALL_BOOT)
 
 clean_boot:
+	rm -rf .cache.boot
 	rm -f .depend
 	rm -rf boot
 
@@ -107,7 +104,7 @@ clean_boot:
 # And ocaml-output/Makefile, to actually build the compiler in OCaml
 # --------------------------------------------------------------------------------
 ocaml: boot
-	+$(MAKE) -f Makefile.boot all-ml
+	$(Q)+$(MAKE) -f Makefile.boot all-ml
 
 boot-ocaml:
 	+$(MAKE) -C ocaml-output all
@@ -128,10 +125,10 @@ clean_extracted:
 	rm -f ocaml-output/FStar_*.ml
 
 rebuild:
-	$(MAKE) ocaml
-	$(MAKE) -C ../ulib clean_ocaml
-	$(MAKE) -C ocaml-output
-	$(MAKE) -C ../ulib install-fstarlib install-fstar-tactics
+	+$(MAKE) ocaml
+	+$(MAKE) -C ../ulib clean_ocaml
+	+$(MAKE) -C ocaml-output
+	+$(MAKE) -C ../ulib install-fstarlib install-fstar-tactics
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------
@@ -168,7 +165,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
+uregressions: ulib-extra tutorial utests uexamples
 
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
@@ -187,17 +184,13 @@ ulib-extra:
 tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
 
+utests: fstarlib
+	+$(MAKE) -C ../tests all
+
 uexamples: fstarlib
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
 	+$(MAKE) -C ../examples semiring.all
-
-# Interactive mode regressions
-interactive-test:
-	$(MAKE) -C tests/interactive
-
-prettyprinting-tests:
-	$(MAKE) -C tests/prettyprinting
 
 ulong:
 	+$(MAKE) utest-prelude

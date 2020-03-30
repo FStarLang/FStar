@@ -1,0 +1,19 @@
+[
+  "a/êÏ6ˆ\f!ZFw≥Èu\u0010\t",
+  [
+    [
+      "FStar.TSet.as_set'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "50f75c802eb2071f9f5a3273499bb408"
+    ]
+  ]
+]

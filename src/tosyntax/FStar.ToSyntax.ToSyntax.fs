@@ -669,6 +669,9 @@ let check_linear_pattern_variables pats r =
     in
     List.iter aux ps
 
+let smt_pat_lid (r:Range.range) = Ident.set_lid_range C.smtpat_lid r
+let smt_pat_or_lid (r:Range.range) = Ident.set_lid_range C.smtpatOr_lid r
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat
@@ -1006,14 +1009,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Construct (n, [(a, _)]) when n.str = "SMTPat" ->
-        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
+        desugar_term_maybe_top top_level env
+          ({top with tm = App ({top with tm = Var (smt_pat_lid top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatT" ->
         Errors.log_issue top.range (Errors.Warning_SMTPatTDeprecated, "SMTPatT is deprecated; please just use SMTPat");
-        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
+        desugar_term_maybe_top top_level env
+          ({top with tm = App ({top with tm = Var (smt_pat_lid top.range) }, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatOr" ->
-        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat_or"] top.range)}, a, Nothing)})
+        desugar_term_maybe_top top_level env
+          ({top with tm = App ({top with tm = Var (smt_pat_or_lid top.range)}, a, Nothing)})
 
     | Name {str="Type0"}  -> mk (Tm_type U_zero), noaqs
     | Name {str="Type"}   -> mk (Tm_type U_unknown), noaqs
@@ -1773,7 +1779,9 @@ and desugar_comp r (allow_type_promotion:bool) env t =
           | _other ->
             fail_lemma()
         in
-        let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
+        let head_and_attributes = fail_or env
+          (Env.try_lookup_effect_name_and_attributes env)
+          lemma in
         head_and_attributes, args
 
       | Name l when Env.is_effect_name env l ->

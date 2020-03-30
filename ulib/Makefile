@@ -25,7 +25,7 @@ fstarlib.mgen: *.fst *.fsti
 	rm -f .depend.extract
 	OUTPUT_DIRECTORY=ml/extracted \
 	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics $(NOEXTRACT_MODULES)'" \
-	$(MAKE) -f Makefile.extract all-ml
+	+$(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
@@ -39,7 +39,7 @@ fstartaclib.mgen: fstarlib.mgen
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
 	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
-	$(MAKE) -f Makefile.extract all-ml
+	+$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
@@ -92,10 +92,10 @@ FSTARLIB_OBJECTS=fstarlib.a fstarlib.cma fstarlib.cmxs fstarlib.cmxa
 TACLIB_OBJECTS=fstartaclib.cma fstartaclib.cmxs fstartaclib.cmxa
 
 _fstarlib: ml/fstarlib.mllib
-	$(MAKE) -C ml/ intfiles
+	+$(MAKE) -C ml/ intfiles
 	$(FSTARLIB_OCAMLBUILD) $(FSTARLIB_OBJECTS)
 _fstartaclib: tactics_ml/fstartaclib.mllib
-	$(MAKE) -C ml/ intfiles
+	+$(MAKE) -C ml/ intfiles
 	$(TACLIB_OCAMLBUILD) $(TACLIB_OBJECTS)
 
 $(FSTARLIB_OBJECTS): _fstarlib
@@ -140,3 +140,23 @@ clean_ocaml:
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 rebuild: clean_ocaml install-fstarlib install-fstar-tactics
+
+DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
+	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \
+	  FStar.BaseTypes.fsti FStar.BitVector.fst FStar.BV.fsti \
+	  FStar.Char.fsti FStar.Date.fsti FStar.DependentMap.fsti \
+	  FStar.Dyn.fsti FStar.Exn.fst FStar.Fin.fst FStar.Float.fsti \
+	  FStar.FunctionalExtensionality.fsti FStar.Float.fsti \
+	  FStar.Ghost.fsti FStar.IFC.fsti FStar.IndefiniteDescription.fst \
+	  FStar.UInt8.fst FStar.UInt16.fst FStar.UInt32.fst FStar.UInt64.fst
+
+DOC_DIR=./doc
+
+fstardoc: $(DOC_DIR) $(addprefix $(DOC_DIR)/, $(addsuffix .md, $(DOC_FILES)))
+
+$(DOC_DIR):
+	mkdir -p $@
+
+$(DOC_DIR)/%.md: %
+	../bin/fstar --print_in_place $^
+	python3 ../.scripts/fstardoc/fstardoc.py $^ > $@

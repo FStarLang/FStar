@@ -1,0 +1,27 @@
+[
+  "†ÊØM5B\u0019\b‹_Ã%€%\u0005\\",
+  [
+    [
+      "Bug044.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "681e77e26850d21c5e7699cee8be47a6"
+    ],
+    [
+      "Bug044.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug044.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_cb990c8c018df02302626151fc4bc03a"
+      ],
+      0,
+      "6bde494412f272f546ed6f3c84784e77"
+    ]
+  ]
+]

@@ -1,0 +1,20 @@
+[
+  "âù9¿£S7MBè‘≈%$cŒ",
+  [
+    [
+      "FStar.MRef.lemma_functoriality",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.spred",
+        "equation_FStar.MRef.stable",
+        "function_token_typing_FStar.Preorder.stable",
+        "refinement_interpretation_Tm_refine_db2289e2f27e1e1fb8c92bdbb90863d4",
+        "token_correspondence_FStar.MRef.stable"
+      ],
+      0,
+      "e302cb280646f36006eccf740f27f195"
+    ]
+  ]
+]

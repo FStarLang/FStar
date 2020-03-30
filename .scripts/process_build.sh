@@ -108,7 +108,7 @@ bin/fstar.exe --version
 bin/z3 --version
 
 diag "-- Verify micro benchmarks --"
-make -C examples/micro-benchmarks
+make -C tests/micro-benchmarks
 if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
   exit 1

@@ -132,8 +132,7 @@ type term' =
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
                                                                     and a delayed substitution of only NM or NT elements *)
-  | Tm_delayed    of (term * subst_ts)
-                   * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
+  | Tm_delayed    of term * subst_ts                             (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
@@ -565,7 +564,7 @@ let extend_app_n t args' kopt r = match t.n with
     | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
     | _ -> mk_Tm_app t args' kopt r
 let extend_app t arg kopt r = extend_app_n t [arg] kopt r
-let mk_Tm_delayed lr pos : term = mk (Tm_delayed(lr, Util.mk_ref None)) None pos
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) None pos
 let mk_Total' t  u: comp  = mk (Total(t, u)) None t.pos
 let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None

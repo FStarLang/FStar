@@ -1,0 +1,54 @@
+[
+  "ž};«\\ÍlEÙ=]†ds£ñ",
+  [
+    [
+      "Bug1055.test5_write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "refinement_interpretation_Tm_refine_b62509b32f454f3a8b9e042db8a69c72",
+        "true_interp"
+      ],
+      0,
+      "5a0a1706d1e1ae1bad53a561bc6a2e00"
+    ],
+    [
+      "Bug1055.test5_client",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "true_interp"
+      ],
+      0,
+      "a9f8746ca476136969b79787cc75a93c"
+    ],
+    [
+      "Bug1055.test6_f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_10c29965fb26bdf7f409a07e0279e553"
+      ],
+      0,
+      "827910748c4bbecff02de143402db494"
+    ]
+  ]
+]

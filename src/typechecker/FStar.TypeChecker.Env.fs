@@ -1748,6 +1748,8 @@ let new_implicit_var_aux reason r env k should_check meta =
                 ; imp_uvar   = ctx_uvar
                 ; imp_range  = r
                 } in
+      if debug env (Options.Other "ImplicitTrace") then
+        BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 

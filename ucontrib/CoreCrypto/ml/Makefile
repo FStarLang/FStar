@@ -64,17 +64,17 @@ openssl_stub.o: libcrypto.a openssl_stub.c
 	$(OCAMLOPT) -c $<
 
 $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
-	$(MAKE) -C $(PLATFORM)
+	+$(MAKE) -C $(PLATFORM)
 
 $(DB)/DB.cmx: $(DB)/DB.ml
-	$(MAKE) -C $(DB)
+	+$(MAKE) -C $(DB)
 
 openssl/Configure:
 	echo "openssl folder is empty, running git submodule update... no recursion"
 	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
+	cd openssl && $(OPENSSL_CONF) && +$(MAKE) build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
@@ -96,8 +96,8 @@ test: Tests.exe
 	@$(EXTRA_PATH) ./Tests.exe
 
 clean:
-	$(MAKE) -C $(DB) clean
-	$(MAKE) -C $(PLATFORM) clean
+	+$(MAKE) -C $(DB) clean
+	+$(MAKE) -C $(PLATFORM) clean
 	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:

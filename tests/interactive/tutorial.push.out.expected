@@ -1,0 +1,24 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.eq2 Prims.eq2", "ranges": [{"beg": [1010, 2], "end": [1010, 136], "fname": "FStar.List.Tot.Properties.fst"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_Addition 1", "ranges": [{"beg": [609, 2], "end": [609, 49], "fname": "FStar.Seq.Properties.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_Addition 1", "ranges": [{"beg": [609, 2], "end": [609, 49], "fname": "FStar.Seq.Properties.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  0", "ranges": [{"beg": [626, 2], "end": [626, 33], "fname": "FStar.Seq.Properties.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  0", "ranges": [{"beg": [626, 2], "end": [626, 33], "fname": "FStar.Seq.Properties.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.eq2 Prims.op_Modulus 0", "ranges": [{"beg": [434, 8], "end": [434, 66], "fname": "FStar.UInt.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_LessThan", "ranges": [{"beg": [440, 8], "end": [440, 61], "fname": "FStar.UInt.fsti"}]}, {"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_Subtraction 1", "ranges": [{"beg": [448, 8], "end": [448, 51], "fname": "FStar.UInt.fsti"}]}], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "3", "response": [], "status": "success"}
+{"kind": "response", "query-id": "4", "response": [], "status": "success"}
+{"kind": "response", "query-id": "5", "response": [], "status": "success"}
+{"kind": "response", "query-id": "6", "response": [], "status": "success"}
+{"kind": "response", "query-id": "7", "response": [], "status": "success"}
+{"kind": "response", "query-id": "8", "response": [], "status": "success"}
+{"kind": "response", "query-id": "9", "response": [], "status": "success"}
+{"kind": "response", "query-id": "10", "response": [], "status": "success"}
+{"kind": "response", "query-id": "11", "response": [{"level": "warning", "message": "Top-level let-bindings must be total; this term may have effects", "ranges": [{"beg": [60, 0], "end": [60, 48], "fname": "<input>"}]}, {"level": "warning", "message": "Top-level let-bindings must be total; this term may have effects", "ranges": [{"beg": [60, 0], "end": [60, 48], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "a1", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a2", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a3", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a4", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a5", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a6", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a7", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a8", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a9", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a10", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a11", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a12", "response": "Too many pops", "status": "failure"}

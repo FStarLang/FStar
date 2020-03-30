@@ -38,10 +38,13 @@ let sel #a #b (m:map' a b) (x:a)
   : Tot (option (b x))
   = m x
 
-abstract let grows #a #b #inv :Preorder.preorder (map a b inv) =
+let grows_aux #a #b #inv :Preorder.preorder (map a b inv) =
   fun (m1 m2:map a b inv) ->
   forall x.{:pattern (Some? (m1 x))}
       Some? (m1 x) ==> Some? (m2 x) /\ Some?.v (m1 x) == Some?.v (m2 x)
+
+[@"opaque_to_smt"]
+let grows #a #b #inv = grows_aux #a #b #inv
 
 (* Monotone, partial, dependent maps, with a whole-map invariant *)
 type t r a b inv = m_rref r (map a b inv) grows  //maybe grows can include the inv?
@@ -78,7 +81,7 @@ let fresh #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
 
 let contains_stable #r #a #b #inv (m:t r a b inv) (x:a) (y:b x)
   : Lemma (ensures (stable_on_t m (contains m x y)))
-  = ()
+  = reveal_opaque (`%grows) (grows #a #b #inv)
 
 let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r a b inv) (x:a) (y:b x)
   : ST unit
@@ -93,6 +96,7 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
             /\ HST.witnessed (defined m x)
             /\ HST.witnessed (contains m x y)))
   = recall m;
+    reveal_opaque (`%grows) (grows #a #b #inv);
     let cur = !m in
     m := upd cur x y;
     contains_stable m x y;
@@ -111,7 +115,7 @@ let lookup #r #a #b #inv (m:t r a b inv) (x:a)
          contains m x (Some?.v y) h1 /\
          HST.witnessed (defined m x) /\
          HST.witnessed (contains m x (Some?.v y)))))
-=
+= reveal_opaque (`%grows) (grows #a #b #inv);
   let y = sel !m x in
   match y with
     | None -> y
