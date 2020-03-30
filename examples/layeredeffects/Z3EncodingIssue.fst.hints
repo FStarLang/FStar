@@ -1,5 +1,5 @@
 [
-  "≥‘˛v}ı\u0012∂\u001d6‘:5°’\u0001",
+  "\tê”ÜÂ\t\bG0«ŒH:Kﬂí",
   [
     [
       "Z3EncodingIssue.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2c9e1d766ff69249b9f5501aa7542601"
+      "f83ef1f6e9cabb4f241e6f5d513352fd"
     ],
     [
       "Z3EncodingIssue.subcomp",
@@ -26,7 +26,7 @@
         "typing_Z3EncodingIssue.buf"
       ],
       0,
-      "91c01af40884683c0cbd291cca8200a5"
+      "6d535c7bfd3359c4efe3a686aeca7b58"
     ],
     [
       "Z3EncodingIssue.CHACHA",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "ddc89dddb2802f46631f7053b1f7c346"
+      "39cc0909b8f9b5948ad9b0ef914e072d"
     ],
     [
       "Z3EncodingIssue.CHACHA",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "5eda052ef3b481206a516cec71ca3e7c"
+      "bb02af6a7302ab6b84cb70a1518b7e6b"
     ],
     [
       "Z3EncodingIssue.lift_div_chacha",
@@ -64,7 +64,7 @@
         "typing_Tm_abs_e8e7dd3fad251651880a411e491cc508"
       ],
       0,
-      "0c3bfe21570d12450314f3a76fedca8f"
+      "613b64fae8168de732a8e2c0125c4224"
     ],
     [
       "Z3EncodingIssue.chacha_fn_ok",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "272a197d52e8f543894bcc65ca7875e0"
+      "bd5e336d4a342f6d598b55f43f647c2b"
     ],
     [
       "Z3EncodingIssue.hreturn",
@@ -82,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "a0b497ea1f64c9409646c1aafcca3583"
+      "f2d900e048609fad7f67c7f11bf55080"
     ],
     [
       "Z3EncodingIssue.hsubcomp",
@@ -103,7 +103,7 @@
         "typing_Z3EncodingIssue.state"
       ],
       0,
-      "bed46128563815bd31850e65ecb5d193"
+      "22f22f80d3d3678b33b89322f2880129"
     ],
     [
       "Z3EncodingIssue.REF",
@@ -112,7 +112,7 @@
       1,
       [ "@query" ],
       0,
-      "1f58f69ae11327e1aac9322d4b255204"
+      "4f9dc20ddb41345407fa5ddc1b1a9354"
     ],
     [
       "Z3EncodingIssue.REF",
@@ -121,7 +121,7 @@
       1,
       [ "@query" ],
       0,
-      "81f0149b52a35ccca5b03cfc5961b72f"
+      "a92835752ee0b9a80a52d46e72b257f6"
     ],
     [
       "Z3EncodingIssue.lift_div_ref",
@@ -141,7 +141,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "c08de98b5512f887fb27f987088ae158"
+      "1423b4b29cb559c165b9851b35c6d3ed"
     ],
     [
       "Z3EncodingIssue.15673",
@@ -153,25 +153,7 @@
         "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830"
       ],
       0,
-      "1513077593958222f54dcdb6de0a906d"
-    ],
-    [
-      "Z3EncodingIssue.ref_hfn",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Integers.int", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref", "function_token_typing_FStar.Integers.int",
-        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.sel", "typing_Z3EncodingIssue.state",
-        "unit_typing"
-      ],
-      0,
-      "684b177c17263743ef6584fc51ddd532"
+      "1e489a57f0595fe4dd2d4f8ff9fae8b3"
     ]
   ]
 ]

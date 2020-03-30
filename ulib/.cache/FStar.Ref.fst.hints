@@ -1,5 +1,5 @@
 [
-  "-\u0019√Ê¯]ÊRQVOˇ,û\u0007“",
+  "äç´Z+gÀa\bÖBQeN6\t",
   [
     [
       "FStar.Ref.addr_of",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "81a3f0de1dfb5a516c4f79df2cc5ddef"
+      "562cc1da6646232f09ff68478d782605"
     ],
     [
       "FStar.Ref.only",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ba575f5f8d19a54d5b138aa935c078c6"
+      "28ca812dec71f7154976e139990c2ec5"
     ],
     [
       "FStar.Ref.alloc",
@@ -37,7 +37,16 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8ee623abdf62e79cc51b5e0803c75ef7"
+      "84eeaa938ea62b85de2ab63cebff79b9"
+    ],
+    [
+      "FStar.Ref.alloc",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.ST.ref" ],
+      0,
+      "5eeb451826cf3a0a236f254b8bf37328"
     ],
     [
       "FStar.Ref.write",
@@ -55,7 +64,7 @@
         "true_interp"
       ],
       0,
-      "46f2709c84b5b3c1f204c2e94a5801cd"
+      "086ca3b53d8f04a614b2ba7ec121f019"
     ],
     [
       "FStar.Ref.addr_of",
@@ -64,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "f3430dc42ee5d32ebe0c8eec35321d98"
+      "baf742619f0454ff8a5ec984f21f8b0f"
     ],
     [
       "FStar.Ref.only",
@@ -78,7 +87,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f9c4534d61bd268e69bd61d4c70c60ba"
+      "6058881956821b2d81233710cf57ae6a"
     ],
     [
       "FStar.Ref.only",
@@ -92,11 +101,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2a2e86ec6fdcbfb7a75f6154eb8c55ff"
+      "bcd8f4649429fc31a2ff01c811765052"
     ],
     [
       "FStar.Ref.alloc",
-      2,
+      3,
       2,
       1,
       [
@@ -106,7 +115,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "435dc241c1b13d6a8816cef45ed0108a"
+      "d95c6fdc4541dbf005af2ae14d7ad608"
     ]
   ]
 ]
