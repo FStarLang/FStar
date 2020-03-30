@@ -23,9 +23,9 @@ include ml/Makefile.include
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
-	OUTPUT_DIRECTORY=ml/extracted \
-	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics $(NOEXTRACT_MODULES)'" \
-	+$(MAKE) -f Makefile.extract all-ml
+	+OUTPUT_DIRECTORY=ml/extracted \
+	    EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics $(NOEXTRACT_MODULES)'" \
+	    $(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
@@ -36,10 +36,10 @@ FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract
-	OUTPUT_DIRECTORY=tactics_ml/extracted \
-	CODEGEN=Plugin \
-	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
-	+$(MAKE) -f Makefile.extract all-ml
+	+OUTPUT_DIRECTORY=tactics_ml/extracted \
+	    CODEGEN=Plugin \
+	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
+	    $(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
