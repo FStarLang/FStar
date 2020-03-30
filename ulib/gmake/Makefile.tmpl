@@ -70,7 +70,7 @@ test.kremlin: $(KREMLIN_EXE)
 test: test.kremlin test.ocaml
 
 $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
-	make -C $(FSTAR_HOME)/ulib/ml
+	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml
 
 basic_clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend

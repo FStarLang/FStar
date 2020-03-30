@@ -1,8 +1,8 @@
 .PHONY: intfiles
 
 all: intfiles
-	$(MAKE) -C .. install-fstarlib
-	$(MAKE) -C .. install-fstar-tactics
+	+$(MAKE) -C .. install-fstarlib
+	+$(MAKE) -C .. install-fstar-tactics
 
 intfiles:			\
 	FStar_Int8.ml		\
@@ -22,4 +22,4 @@ intfiles:			\
 	@cat $< FStar_Ints.ml.body >> $@
 
 clean:
-	$(MAKE) -C .. clean
+	+$(MAKE) -C .. clean

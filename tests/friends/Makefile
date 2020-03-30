@@ -6,4 +6,4 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/examples/Makefile.include
 
 %.ver:
-	$(MAKE) -C $* verify-all
+	+$(MAKE) -C $* verify-all

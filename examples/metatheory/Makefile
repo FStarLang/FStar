@@ -5,7 +5,7 @@ FSTAR_FILES = ParSubst.fst StlcCbvDbPntSubstNoLists.fst		\
 
 all:
 	mkdir -p $(CACHE_DIR)
-	$(MAKE) verify-all
+	+$(MAKE) verify-all
 
 include ../Makefile.common
 

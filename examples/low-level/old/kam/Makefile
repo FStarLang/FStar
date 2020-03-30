@@ -30,9 +30,9 @@ kam_simple$(EXE): kam_simple.ml
 
 allocator:
 ifdef NOGC
-	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" NOGC=y -C $(ALLOCATOR_DIR)
+	+$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" NOGC=y -C $(ALLOCATOR_DIR)
 else
-	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" -C $(ALLOCATOR_DIR)
+	+$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" -C $(ALLOCATOR_DIR)
 endif
 
 %.$(CMO): %.ml
@@ -42,5 +42,5 @@ endif
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@
 
 clean:
-	$(MAKE) -C $(ALLOCATOR_DIR) clean
+	+$(MAKE) -C $(ALLOCATOR_DIR) clean
 	$(RM) kamregions$(EXE) kamgc$(EXE) *.o *.cm*
