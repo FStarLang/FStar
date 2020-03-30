@@ -775,16 +775,16 @@ let (current_version : version) = (Prims.of_int (28))
 type file = (Prims.string * program)
 type binary_format = (version * file Prims.list)
 let fst3 :
-  'uuuuuu4324 'uuuuuu4325 'uuuuuu4326 .
-    ('uuuuuu4324 * 'uuuuuu4325 * 'uuuuuu4326) -> 'uuuuuu4324
+  'Auu____4324 'Auu____4325 'Auu____4326 .
+    ('Auu____4324 * 'Auu____4325 * 'Auu____4326) -> 'Auu____4324
   = fun uu____4337  -> match uu____4337 with | (x,uu____4345,uu____4346) -> x 
 let snd3 :
-  'uuuuuu4356 'uuuuuu4357 'uuuuuu4358 .
-    ('uuuuuu4356 * 'uuuuuu4357 * 'uuuuuu4358) -> 'uuuuuu4357
+  'Auu____4356 'Auu____4357 'Auu____4358 .
+    ('Auu____4356 * 'Auu____4357 * 'Auu____4358) -> 'Auu____4357
   = fun uu____4369  -> match uu____4369 with | (uu____4376,x,uu____4378) -> x 
 let thd3 :
-  'uuuuuu4388 'uuuuuu4389 'uuuuuu4390 .
-    ('uuuuuu4388 * 'uuuuuu4389 * 'uuuuuu4390) -> 'uuuuuu4390
+  'Auu____4388 'Auu____4389 'Auu____4390 .
+    ('Auu____4388 * 'Auu____4389 * 'Auu____4390) -> 'Auu____4390
   = fun uu____4401  -> match uu____4401 with | (uu____4408,uu____4409,x) -> x 
 let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
   fun uu___0_4419  ->
@@ -942,7 +942,7 @@ let (find_t : env -> Prims.string -> Prims.int) =
           failwith uu____4765
   
 let add_binders :
-  'uuuuuu4776 . env -> (Prims.string * 'uuuuuu4776) Prims.list -> env =
+  'Auu____4776 . env -> (Prims.string * 'Auu____4776) Prims.list -> env =
   fun env  ->
     fun binders  ->
       FStar_List.fold_left

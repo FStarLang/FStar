@@ -69,7 +69,7 @@ let rollback :
           | FStar_Pervasives_Native.None  -> Prims.int_one  in
         FStar_Util.atomically (fun uu____256  -> aux n1)
   
-let raise_failed_assertion : 'uuuuuu262 . Prims.string -> 'uuuuuu262 =
+let raise_failed_assertion : 'Auu____262 . Prims.string -> 'Auu____262 =
   fun msg  ->
     let uu____270 = FStar_Util.format1 "Assertion failed: %s" msg  in
     failwith uu____270
@@ -98,9 +98,9 @@ let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
     | FStar_Pervasives_Native.Some x -> [x]
   
 let string_of_option :
-  'uuuuuu360 .
-    ('uuuuuu360 -> Prims.string) ->
-      'uuuuuu360 FStar_Pervasives_Native.option -> Prims.string
+  'Auu____360 .
+    ('Auu____360 -> Prims.string) ->
+      'Auu____360 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
     fun uu___0_377  ->

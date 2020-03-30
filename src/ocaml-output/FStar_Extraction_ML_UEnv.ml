@@ -241,9 +241,9 @@ let rec (lookup_ty_local :
                (b.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
   
 let tyscheme_of_td :
-  'uuuuuu731 'uuuuuu732 'uuuuuu733 'uuuuuu734 .
-    ('uuuuuu731 * 'uuuuuu732 * 'uuuuuu733 *
-      FStar_Extraction_ML_Syntax.mlidents * 'uuuuuu734 *
+  'Auu____731 'Auu____732 'Auu____733 'Auu____734 .
+    ('Auu____731 * 'Auu____732 * 'Auu____733 *
+      FStar_Extraction_ML_Syntax.mlidents * 'Auu____734 *
       FStar_Extraction_ML_Syntax.mltybody FStar_Pervasives_Native.option) ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
   =
@@ -456,8 +456,8 @@ let (sanitize : Prims.string -> Prims.bool -> Prims.string) =
       FStar_String.string_of_list uu____1303
   
 let find_uniq :
-  'uuuuuu1322 .
-    'uuuuuu1322 FStar_Util.psmap ->
+  'Auu____1322 .
+    'Auu____1322 FStar_Util.psmap ->
       Prims.string -> Prims.bool -> Prims.string
   =
   fun ml_ident_map  ->
@@ -891,8 +891,7 @@ let (extend_with_iface :
                in
             let uu___468_2212 = g  in
             let uu____2213 =
-              let uu____2216 =
-                FStar_List.map (fun uu____2223  -> Fv uu____2223) bs  in
+              let uu____2216 = FStar_List.map (fun _2223  -> Fv _2223) bs  in
               FStar_List.append uu____2216 g.env_bindings  in
             {
               env_tcenv = (uu___468_2212.env_tcenv);

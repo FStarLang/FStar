@@ -104,11 +104,11 @@ let print_discrepancy :
         FStar_Options.with_saved_options (fun uu____587  -> go bas)
   
 let errors_smt_detail :
-  'uuuuuu597 .
+  'Auu____597 .
     FStar_TypeChecker_Env.env ->
-      ('uuuuuu597 * Prims.string * FStar_Range.range) Prims.list ->
+      ('Auu____597 * Prims.string * FStar_Range.range) Prims.list ->
         (Prims.string,Prims.string) FStar_Util.either ->
-          ('uuuuuu597 * Prims.string * FStar_Range.range) Prims.list
+          ('Auu____597 * Prims.string * FStar_Range.range) Prims.list
   =
   fun env  ->
     fun errs  ->
@@ -357,8 +357,8 @@ let (occurs_check : (FStar_Errors.raw_error * Prims.string)) =
     "Possibly infinite typ (occurs check failed)")
   
 let constructor_fails_the_positivity_check :
-  'uuuuuu1271 .
-    'uuuuuu1271 ->
+  'Auu____1271 .
+    'Auu____1271 ->
       FStar_Syntax_Syntax.term ->
         FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)
   =
@@ -475,9 +475,9 @@ let (name_and_result :
         (uu____1515, (ct.FStar_Syntax_Syntax.result_typ))
   
 let computed_computation_type_does_not_match_annotation :
-  'uuuuuu1531 .
+  'Auu____1531 .
     FStar_TypeChecker_Env.env ->
-      'uuuuuu1531 ->
+      'Auu____1531 ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
             (FStar_Errors.raw_error * Prims.string)
@@ -504,9 +504,9 @@ let computed_computation_type_does_not_match_annotation :
                           uu____1625)))
   
 let computed_computation_type_does_not_match_annotation_eq :
-  'uuuuuu1640 .
+  'Auu____1640 .
     FStar_TypeChecker_Env.env ->
-      'uuuuuu1640 ->
+      'Auu____1640 ->
         FStar_Syntax_Syntax.comp ->
           FStar_Syntax_Syntax.comp -> (FStar_Errors.raw_error * Prims.string)
   =

@@ -3,9 +3,9 @@ type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
 let z3_result_as_replay_result :
-  'uuuuuu35 'uuuuuu36 'uuuuuu37 .
-    ('uuuuuu35,('uuuuuu36 * 'uuuuuu37)) FStar_Util.either ->
-      ('uuuuuu35,'uuuuuu36) FStar_Util.either
+  'Auu____35 'Auu____36 'Auu____37 .
+    ('Auu____35,('Auu____36 * 'Auu____37)) FStar_Util.either ->
+      ('Auu____35,'Auu____36) FStar_Util.either
   =
   fun uu___0_54  ->
     match uu___0_54 with
@@ -18,7 +18,7 @@ let (recorded_hints :
 let (replaying_hints :
   FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let initialize_hints_db : 'uuuuuu95 . Prims.string -> 'uuuuuu95 -> unit =
+let initialize_hints_db : 'Auu____95 . Prims.string -> 'Auu____95 -> unit =
   fun src_filename  ->
     fun format_filename  ->
       (let uu____109 = FStar_Options.record_hints ()  in
@@ -604,7 +604,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                in
             FStar_All.pipe_right uu____2092 format_smt_error  in
           FStar_All.pipe_right uu____2090
-            (fun uu____2120  -> FStar_Util.Inr uu____2120)
+            (fun _2120  -> FStar_Util.Inr _2120)
         else
           (let uu____2123 =
              FStar_List.fold_left
@@ -633,21 +633,19 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                FStar_All.pipe_right
                  (match (incomplete_count, canceled_count, unknown_count)
                   with
-                  | (uu____2253,uu____2258,uu____2259) when
-                      ((uu____2258 = Prims.int_zero) &&
-                         (uu____2259 = Prims.int_zero))
+                  | (uu____2253,_2258,_2259) when
+                      ((_2258 = Prims.int_zero) && (_2259 = Prims.int_zero))
                         && (incomplete_count > Prims.int_zero)
                       ->
                       "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
-                  | (uu____2266,uu____2262,uu____2268) when
-                      ((uu____2266 = Prims.int_zero) &&
-                         (uu____2268 = Prims.int_zero))
+                  | (_2266,uu____2262,_2268) when
+                      ((_2266 = Prims.int_zero) && (_2268 = Prims.int_zero))
                         && (canceled_count > Prims.int_zero)
                       ->
                       "The SMT query timed out, you might want to increase the rlimit"
                   | (uu____2271,uu____2272,uu____2273) ->
                       "Try with --query_stats to get more details")
-                 (fun uu____2283  -> FStar_Util.Inl uu____2283))
+                 (fun _2283  -> FStar_Util.Inl _2283))
          in
       let uu____2284 = find_localized_errors settings.query_errors  in
       match uu____2284 with

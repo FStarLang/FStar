@@ -144,9 +144,9 @@ let mk_emb :
           (fun x  -> fun w  -> fun _norm  -> un w x) uu____304
   
 let embed :
-  'uuuuuu331 .
-    'uuuuuu331 FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range -> 'uuuuuu331 -> FStar_Syntax_Syntax.term
+  'Auu____331 .
+    'Auu____331 FStar_Syntax_Embeddings.embedding ->
+      FStar_Range.range -> 'Auu____331 -> FStar_Syntax_Syntax.term
   =
   fun e  ->
     fun r  ->
@@ -156,10 +156,11 @@ let embed :
           FStar_Syntax_Embeddings.id_norm_cb
   
 let unembed' :
-  'uuuuuu369 .
+  'Auu____369 .
     Prims.bool ->
-      'uuuuuu369 FStar_Syntax_Embeddings.embedding ->
-        FStar_Syntax_Syntax.term -> 'uuuuuu369 FStar_Pervasives_Native.option
+      'Auu____369 FStar_Syntax_Embeddings.embedding ->
+        FStar_Syntax_Syntax.term ->
+          'Auu____369 FStar_Pervasives_Native.option
   =
   fun w  ->
     fun e  ->
@@ -201,8 +202,7 @@ let (e_proofstate :
           FStar_Syntax_Syntax.rng = uu____531;_}
         ->
         let uu____534 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun uu____537  -> FStar_Pervasives_Native.Some uu____537)
+        FStar_All.pipe_left (fun _537  -> FStar_Pervasives_Native.Some _537)
           uu____534
     | uu____538 ->
         (if w
@@ -285,8 +285,7 @@ let (e_proofstate_nbe :
            FStar_Syntax_Syntax.rng = uu____707;_},uu____708)
         ->
         let uu____727 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun uu____730  -> FStar_Pervasives_Native.Some uu____730)
+        FStar_All.pipe_left (fun _730  -> FStar_Pervasives_Native.Some _730)
           uu____727
     | uu____731 ->
         ((let uu____733 = FStar_ST.op_Bang FStar_Options.debug_embedding  in
@@ -328,8 +327,7 @@ let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
           FStar_Syntax_Syntax.rng = uu____816;_}
         ->
         let uu____819 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun uu____822  -> FStar_Pervasives_Native.Some uu____822)
+        FStar_All.pipe_left (fun _822  -> FStar_Pervasives_Native.Some _822)
           uu____819
     | uu____823 ->
         (if w
@@ -376,8 +374,7 @@ let (e_goal_nbe :
            FStar_Syntax_Syntax.rng = uu____901;_},uu____902)
         ->
         let uu____921 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun uu____924  -> FStar_Pervasives_Native.Some uu____924)
+        FStar_All.pipe_left (fun _924  -> FStar_Pervasives_Native.Some _924)
           uu____921
     | uu____925 ->
         ((let uu____927 = FStar_ST.op_Bang FStar_Options.debug_embedding  in

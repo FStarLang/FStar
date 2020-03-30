@@ -32,7 +32,7 @@ let (m : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "m" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let tm : 'uuuuuu44 . 'uuuuuu44 -> 'uuuuuu44 FStar_Syntax_Syntax.syntax =
+let tm : 'Auu____44 . 'Auu____44 -> 'Auu____44 FStar_Syntax_Syntax.syntax =
   fun t  ->
     FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
       FStar_Range.dummyRange

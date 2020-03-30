@@ -1,10 +1,10 @@
 open Prims
 let unembed :
-  'uuuuuu8 .
-    'uuuuuu8 FStar_Syntax_Embeddings.embedding ->
+  'Auu____8 .
+    'Auu____8 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'uuuuuu8 FStar_Pervasives_Native.option
+          'Auu____8 FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun a  ->
@@ -13,11 +13,11 @@ let unembed :
         uu____32 true norm_cb
   
 let try_unembed :
-  'uuuuuu49 .
-    'uuuuuu49 FStar_Syntax_Embeddings.embedding ->
+  'Auu____49 .
+    'Auu____49 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'uuuuuu49 FStar_Pervasives_Native.option
+          'Auu____49 FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun a  ->
@@ -26,10 +26,10 @@ let try_unembed :
         uu____73 false norm_cb
   
 let embed :
-  'uuuuuu92 .
-    'uuuuuu92 FStar_Syntax_Embeddings.embedding ->
+  'Auu____92 .
+    'Auu____92 FStar_Syntax_Embeddings.embedding ->
       FStar_Range.range ->
-        'uuuuuu92 ->
+        'Auu____92 ->
           FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea  ->

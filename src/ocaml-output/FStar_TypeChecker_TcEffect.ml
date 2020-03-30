@@ -2154,11 +2154,10 @@ let (tc_layered_eff_decl :
                                                                   FStar_All.pipe_right
                                                                     uu____4743
                                                                     (
-                                                                    fun
-                                                                    uu____4746
+                                                                    fun _4746
                                                                      ->
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu____4746)
+                                                                    _4746)
                                                                    in
                                                                 FStar_Syntax_Syntax.mk_Total'
                                                                   repr1
@@ -2565,8 +2564,8 @@ let (tc_non_layered_eff_decl :
                         let uu____5270 =
                           let uu____5273 =
                             FStar_All.pipe_right FStar_Syntax_Syntax.U_zero
-                              (fun uu____5278  ->
-                                 FStar_Pervasives_Native.Some uu____5278)
+                              (fun _5278  ->
+                                 FStar_Pervasives_Native.Some _5278)
                              in
                           FStar_Syntax_Syntax.mk_Total'
                             FStar_Syntax_Syntax.t_unit uu____5273
@@ -3994,10 +3993,9 @@ let (tc_non_layered_eff_decl :
                                                                   =
                                                                   (uu___804_7868.FStar_TypeChecker_Env.erasable_types_tab)
                                                               })
-                                                             (fun uu____7870 
-                                                                ->
+                                                             (fun _7870  ->
                                                                 FStar_Pervasives_Native.Some
-                                                                  uu____7870)
+                                                                  _7870)
                                                             in
                                                          check_and_gen'
                                                            "bind_repr"

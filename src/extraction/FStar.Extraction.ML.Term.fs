@@ -1147,7 +1147,7 @@ let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * 
     debug g 
       (fun () -> BU.print3 "Checking %s at type %s and eff %s\n" 
                         (Print.term_to_string e)
-                        (Code.string_of_mlty g.currentModule ty)
+                        (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
     match f, ty with
     | E_GHOST, _
@@ -1359,7 +1359,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg g.env_tcenv [TcEnv.Inlining] head (List.hd args) in
+              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
               term_as_mlexpr g tm
 
