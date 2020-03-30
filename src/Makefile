@@ -165,7 +165,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: ulib-extra tutorial utests uexamples interactive-test prettyprinting-tests
+uregressions: ulib-extra tutorial utests uexamples
 
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
@@ -191,13 +191,6 @@ uexamples: fstarlib
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
 	+$(MAKE) -C ../examples semiring.all
-
-# Interactive mode regressions
-interactive-test:
-	+$(MAKE) -C tests/interactive
-
-prettyprinting-tests:
-	+$(MAKE) -C tests/prettyprinting
 
 ulong:
 	+$(MAKE) utest-prelude

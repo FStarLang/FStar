@@ -5,8 +5,10 @@ ALL_TEST_DIRS=\
 bug-reports \
 friends \
 incl \
+interactive \
 machine_integers \
 micro-benchmarks \
+prettyprinting \
 struct
 
 all: $(addsuffix .all, $(ALL_TEST_DIRS))
