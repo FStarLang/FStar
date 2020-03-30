@@ -15,7 +15,7 @@
 *)
 module FStar.Int
 
-(* NOTE: anything that you fix/update here should be reflected in [FStar.UInt.fst], which is mostly
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UInt.fsti], which is mostly
  * a copy-paste of this module. *)
 
 open FStar.Mul
