@@ -7,7 +7,7 @@ DISABLED=FailRange.in
 
 IN=$(filter-out $(DISABLED), $(ALL))
 
-default: check
+all: check
 
 # Rebuild all .out files
 BUILD_TARGETS := $(IN:.in=.out)
