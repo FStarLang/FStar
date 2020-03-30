@@ -7,6 +7,9 @@ out_file=$2
 threads=$3
 branchname=$4
 
+# Make sure to get verbose output from makefiles
+export V=1
+
 function export_home() {
     local home_path=""
     if command -v cygpath >/dev/null 2>&1; then
