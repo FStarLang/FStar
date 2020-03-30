@@ -24,3 +24,8 @@ Erasable.ml: Erasable.fst
 
 Erasable.ml-cmp: Erasable.ml Erasable.ml.expected
 	diff --strip-trailing-cr $< $<.expected
+
+clean:
+	rm -f .depend
+	rm -rf _cache
+	rm -rf _output

@@ -12,11 +12,10 @@ prettyprinting \
 struct
 
 all: $(addsuffix .all, $(ALL_TEST_DIRS))
+clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
 
 %.all: %
 	+$(MAKE) -C $^ all
 
-test: all
-
-clean:
-	rm ../cache/*.cache
+%.clean: %
+	+$(MAKE) -C $^ clean

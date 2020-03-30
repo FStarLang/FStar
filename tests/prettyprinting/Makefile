@@ -24,4 +24,5 @@ all: $(TESTS) $(TESTS_IN_PLACE)
 	diff --strip-trailing-cr $^
 
 clean:
-	rm -f *.test.fst
+	rm -f *.print.fst
+	rm -f *.print_in_place.fst
