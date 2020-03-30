@@ -36,7 +36,7 @@ touch:
 
 %.in: .FORCE
 
-FSTAR_HOME = ../../..
+FSTAR_HOME = ../..
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 
 ifdef Z3
