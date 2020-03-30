@@ -310,7 +310,7 @@ and term_to_string x =
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
-      | Tm_name x ->        nm_to_string x
+      | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
       | Tm_fvar f ->        fv_to_string f
       | Tm_uvar (u, ([], _)) ->
         if Options.print_bound_var_types()
