@@ -50,7 +50,6 @@ type step =
   | Eager_unfolding
   | Inlining
   | DoNotUnfoldPureLets
-  | ReduceDivLets
   | UnfoldUntil of S.delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
@@ -81,7 +80,6 @@ let rec eq_step s1 s2 =
   | Eager_unfolding, Eager_unfolding
   | Inlining, Inlining
   | DoNotUnfoldPureLets, DoNotUnfoldPureLets
-  | ReduceDivLets, ReduceDivLets
   | UnfoldTac, UnfoldTac
   | PureSubtermsWithinComputations, PureSubtermsWithinComputations
   | Simplify, Simplify

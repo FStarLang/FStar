@@ -34,7 +34,6 @@ type fsteps = {
      hnf  : bool;
      primops : bool;
      do_not_unfold_pure_lets : bool;
-     reduce_div_lets : bool;
      unfold_until : option<S.delta_depth>;
      unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;

@@ -1357,8 +1357,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
 
-            (* Currently only for tactics *)
-            else if cfg.steps.reduce_div_lets
+            (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
+            (* This is important for tactics, see issue #1594 *)
+            else if cfg.steps.reify_
                     && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
             then let ffun = S.mk (Tm_abs ([S.mk_binder (lb.lbname |> BU.left)], body, None)) None t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
