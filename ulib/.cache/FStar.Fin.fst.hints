@@ -82,7 +82,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "98fbca9a55e7a92f64599e0b65c11159"
+      "51b4a30442c491a0df22add5f9dbe10a"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -236,7 +236,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "13b712a5285b7d5f46e1c118c4877f74"
+      "ad181b1cf339a809563d925edd2d212c"
     ],
     [
       "FStar.Fin.pigeonhole",

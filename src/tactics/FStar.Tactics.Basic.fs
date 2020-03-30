@@ -1061,7 +1061,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             end
         in
         bind (implicits |> mapM (fun imp ->
-            let t1 = BU.now () in
             let (term, ctx_uvar) = imp in
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
@@ -1072,13 +1071,13 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                 mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
                                     (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                                     (Print.term_to_string term)) (fun () ->
-                let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
                   // NS:01/24: use the fast path instead, knowing that term is at least well-typed
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term' true env term ctx_uvar.ctx_uvar_typ
+                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
+                            true (goal_env goal) term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
@@ -1151,19 +1150,23 @@ let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
-let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
-    map_opt (split_env b1 (goal_env g)) (fun (e0, b1, bvs) ->
+let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : tac<option<goal>> =
+    match split_env b1 (goal_env g) with
+    | Some (e0, b1, bvs) ->
         let s1 bv = { bv with sort = SS.subst s bv.sort } in
-        let bvs = List.map s1 bvs in
-        let new_env = push_bvs e0 (b2::bvs) in
-        let new_goal = {
-            g.goal_ctx_uvar with
-                ctx_uvar_gamma=new_env.gamma;
-                ctx_uvar_binders=Env.all_binders new_env;
-                ctx_uvar_typ = SS.subst s (goal_type g);
-        } in
-        { g with goal_ctx_uvar=new_goal }
-    )
+        let bvs' = List.map s1 bvs in
+        let new_env = push_bvs e0 (b2::bvs') in
+        let new_goal_ty = SS.subst s (goal_type g) in
+        bind (new_uvar "subst_goal" new_env new_goal_ty) (fun (uvt, uv) ->
+        let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
+        let sol = U.mk_app (U.abs (List.map S.mk_binder (b2::bvs')) uvt None)
+                            (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) (b1::bvs)) in
+
+        bind (set_solution g sol) (fun () ->
+        ret (Some goal')))
+
+    | None ->
+        ret None
 
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind (cur_goal ()) (fun goal ->
@@ -1178,28 +1181,30 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
            | Tm_name x ->
              let s = [NT(x,e)] in
              let s1 bv = { bv with sort = SS.subst s bv.sort } in
-             let bvs = List.map s1 bvs in
-             let new_env = push_bvs e0 (bv::bvs) in
-             let new_goal = {
-                 goal.goal_ctx_uvar with
-                     ctx_uvar_gamma=new_env.gamma;
-                     ctx_uvar_binders=Env.all_binders new_env;
-                     ctx_uvar_typ = SS.subst s (goal_type goal);
-             } in
-             replace_cur ({goal with goal_ctx_uvar=new_goal})
+             let bvs' = List.map s1 bvs in
+             let new_env = push_bvs e0 (bv::bvs') in
+             let new_goal_ty = SS.subst s (goal_type goal) in
+             bind (new_uvar "rewrite" new_env new_goal_ty) (fun (uvt, uv) ->
+             let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
+             let sol = U.mk_app (U.abs (List.map S.mk_binder bvs') uvt None)
+                                 (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) bvs) in
+             bind (set_solution goal sol) (fun () ->
+             replace_cur goal'))
            | _ ->
              fail "Not an equality hypothesis with a variable on the LHS")
         | _ -> fail "Not an equality hypothesis"
         end))
 
-let rename_to (b : binder) (s : string) : tac<unit> = wrap_err "rename_to" <|
+let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind (cur_goal ()) (fun goal ->
-    let bv, _ = b in
+    let bv, q = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
     let s = [NT (bv, S.bv_to_name bv')] in
-    match subst_goal bv bv' s goal with
+    bind (subst_goal bv bv' s goal) (function
     | None -> fail "binder not found in environment"
-    | Some goal -> replace_cur goal)
+    | Some goal ->
+        bind (replace_cur goal) (fun () ->
+        ret (bv', q))))
 
 let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     bind (cur_goal ()) (fun goal ->
@@ -1293,14 +1298,14 @@ let prune (s:string) : tac<unit> =
     let ctx = goal_env g in
     let ctx' = Env.rem_proof_ns ctx (path_of_text s) in
     let g' = goal_with_env g ctx' in
-    bind __dismiss (fun _ -> add_goals [g']))
+    replace_cur g')
 
 let addns (s:string) : tac<unit> =
     bind (cur_goal ()) (fun g ->
     let ctx = goal_env g in
     let ctx' = Env.add_proof_ns ctx (path_of_text s) in
     let g' = goal_with_env g ctx' in
-    bind __dismiss (fun _ -> add_goals [g']))
+    replace_cur g')
 
 let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in

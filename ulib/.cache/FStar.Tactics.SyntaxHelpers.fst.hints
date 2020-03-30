@@ -1,6 +1,18 @@
 [
-  "ö<Sw÷x³=¾“–þ—½Ùž",
+  "êŽ´A\u0000ò\u001bô6é2b¼å)0",
   [
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "c651183bd457494f9a0554282d525a69"
+    ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
       1,
@@ -11,7 +23,19 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "c9d1921ac9eda905e1c17f66f0887219"
+      "37cb0d7a2f0019ff758672c98f9c2dfe"
+    ],
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_arr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "f7be62dca715117a0acc6caeced55275"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
@@ -23,7 +47,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "e3ca4c00615a55efad7fd49499d9da0d"
+      "9f812b09dcf768977e85be9fa78a1457"
     ]
   ]
 ]

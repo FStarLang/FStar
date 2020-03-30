@@ -23,6 +23,8 @@ module S = FStar.Syntax.Syntax
 // where context = G
 //       witness = ?u, although, more generally, witness is a partial solution and can be any term
 //       goal_ty = t
+//
+// INVARIANT: goal_main_env.gamma is EQUAL to goal_ctx_uvar.ctx_uvar_gamma
 type goal = {
     goal_main_env : env;
     goal_ctx_uvar : ctx_uvar;
@@ -31,7 +33,7 @@ type goal = {
                      // We make the distinction to be more user-friendly at times
     label : string; // A user-defined description
 }
-let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
+let goal_env g = g.goal_main_env
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) None Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
@@ -63,6 +65,8 @@ let rename_binders subst bs =
             ({ y with sort = SS.subst subst x.sort }, imp)
         | _ -> failwith "Not a renaming")
 
+(* This is only for show: this goal becomes ill-formed since it does
+ * not satisfy the invariant on gamma *)
 let subst_goal subst goal =
     let g = goal.goal_ctx_uvar in
     let ctx_uvar = {
