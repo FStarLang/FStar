@@ -623,9 +623,10 @@ let wl_to_string wl =
 (* </printing worklists>                             *)
 (* ------------------------------------------------ *)
 
-type flex_t = (term * ctx_uvar * args)
+type flex_t =
+  | Flex of (term * ctx_uvar * args)
 
-let flex_t_to_string (_, c, args) =
+let flex_t_to_string (Flex (_, c, args)) =
     BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
 
 let is_flex t =
@@ -643,7 +644,7 @@ let flex_uvar_head t =
 let destruct_flex_t t wl : flex_t * worklist =
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
-    | Tm_uvar (uv, ([], _)) -> (t, uv, args), wl
+    | Tm_uvar (uv, ([], _)) -> Flex (t, uv, args), wl
     | Tm_uvar (uv, s) ->
       //let dom_s = s |> List.collect (function NT(x, _) | NM(x, _) -> [S.mk_binder x] | _ -> []) in
       let new_gamma, dom_binders_rev =
@@ -674,7 +675,7 @@ let destruct_flex_t t wl : flex_t * worklist =
       let all_args = args_sol_s @ args in
       let t = S.mk_Tm_app t_v all_args None t.pos in
       Unionfind.change uv.ctx_uvar_head sol;
-      (t, v, all_args), wl
+      Flex (t, v, all_args), wl
 
     | _ -> failwith "Not a flex-uvar"
 
@@ -735,7 +736,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         then if resolve_ok
              then wl
              else (fail(); wl)
-        else let (_, uv, args), wl  = destruct_flex_t g wl in
+        else let Flex (_, uv, args), wl  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
     in
@@ -1384,8 +1385,22 @@ let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : 
     | SUBINV -> has_type_guard t2 t1, wl
 
 let is_flex_pat = function
-    | _, _, [] -> true
+    | Flex (_, _, []) -> true
     | _ -> false
+
+let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
+  let Flex (_, u, _) = f in
+  match u.ctx_uvar_meta with
+  | Some (Ctx_uvar_meta_attr a) ->
+    begin
+    match Env.lookup_attr wl.tcenv Const.resolve_implicits_attr_string with
+    | hooks ->
+      hooks |> BU.for_some 
+              (fun hook -> hook.sigattrs |> BU.for_some (U.attr_eq a))
+    | _ -> false
+    end
+  | _ -> false
+
 
 (* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
@@ -1396,7 +1411,7 @@ let is_flex_pat = function
             else xi is a fresh variable
     *)
 let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
-    let _, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args = f in
+    let Flex (_, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args) = f in
     let name_exists_in x bs =
         BU.for_some (fun (y, _) -> S.bv_eq x y) bs
     in
@@ -1826,7 +1841,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   (arrow:term)
         : solution =
         let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
-        let _, u_lhs, _ = lhs in
+        let Flex (_, u_lhs, _) = lhs in
         let imitate_comp bs bs_terms c wl =
            let imitate_tot_or_gtot t uopt f wl =
               let k, univ =
@@ -1976,7 +1991,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     in
 
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
-        let (_, ctx_u, _) = lhs in
+        let Flex (_, ctx_u, _) = lhs in
         let sol =
           match bs with
           | [] -> rhs
@@ -1994,7 +2009,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           Inl "Not a quasi-pattern", wl
 
         | Some (bs, _) ->
-          let (t_lhs, ctx_u, args) = lhs in
+          let Flex (t_lhs, ctx_u, args) = lhs in
           let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
@@ -2022,7 +2037,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
-        let t_lhs, u_lhs, _lhs_args = lhs in
+        let Flex (t_lhs, u_lhs, _lhs_args) = lhs in
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
@@ -2086,7 +2101,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       else solve_t_flex_rigid_eq env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      let (_t1, ctx_uv, args_lhs) = lhs in
+      let Flex (_t1, ctx_uv, args_lhs) = lhs in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
         let rhs = sn env rhs in
@@ -2141,8 +2156,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       else
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
-            let ({pos=range}, u_lhs, _) = lhs in
-            let (_, u_rhs, _) = rhs in
+            let Flex ({pos=range}, u_lhs, _) = lhs in
+            let Flex (_, u_rhs, _) = rhs in
             if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
             && binders_eq binders_lhs binders_rhs
             then solve env (solve_prob orig None [] wl)
@@ -2364,7 +2379,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
      *)
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
-            let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
+            let Flex (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
             let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
@@ -2776,13 +2791,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_app({n=Tm_uvar _}, _), Tm_app({n=Tm_uvar _}, _) ->
         let f1, wl = destruct_flex_t t1 wl in
         let f2, wl = destruct_flex_t t2 wl in
-        solve_t_flex_flex env orig wl f1 f2
+        if should_defer_flex_to_user_tac wl f1 
+        ||  should_defer_flex_to_user_tac wl f1 
+        then giveup_or_defer (TProb problem) (Thunk.mkv "Deferring to user tactic")
+        else solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
       | Tm_uvar _, _
       | Tm_app({n=Tm_uvar _}, _), _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
         let f1, wl = destruct_flex_t t1 wl in
-        solve_t_flex_rigid_eq env orig wl f1 t2
+        if should_defer_flex_to_user_tac wl f1 
+        then giveup_or_defer (TProb problem) (Thunk.mkv "Deferring to user tactic")
+        else solve_t_flex_rigid_eq env orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
@@ -3703,8 +3723,6 @@ let resolve_implicits' env must_total forcelax g =
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
           then begin match ctx_u.ctx_uvar_meta with
-               | None ->
-                    until_fixpoint (hd::out, changed) tl
                | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
                     let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
@@ -3719,6 +3737,9 @@ let resolve_implicits' env must_total forcelax g =
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
                     until_fixpoint (out, true) (extra @ tl)
+               | _ -> 
+                    until_fixpoint (hd::out, changed) tl
+
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl

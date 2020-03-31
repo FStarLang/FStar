@@ -703,7 +703,7 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
-      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq_maybe_defer env i1 f_i1))
+      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
       Env.trivial_guard is1 f_sort_is
   in 
 
@@ -724,7 +724,7 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq_maybe_defer env_g i1 g_i1))
+      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a]
   in
@@ -751,11 +751,21 @@ let mk_indexed_bind env
   then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guards [
-    g_uvars;
-    f_guard;
-    g_guard;
-    Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
+  let guard =
+    Env.conj_guards [
+      g_uvars;
+      f_guard;
+      g_guard;
+      Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
+  in
+
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print2 "///////////////////////////////EndBind at %s/////////////////////\n\
+                 guard = %s\n"
+                 (Range.string_of_range (Env.get_range env))
+                 (guard_to_string env guard);
+
+  c, guard
 
 let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
   : comp =
