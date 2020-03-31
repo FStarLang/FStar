@@ -799,8 +799,7 @@ let mk_field_projector_name lid (x:bv) i =
     let nm = if Syntax.is_null_bv x
              then mk_ident("_" ^ U.string_of_int i, Syntax.range_of_bv x)
              else x.ppname in
-    let y = {x with ppname=nm} in
-    mk_field_projector_name_from_ident lid nm, y
+    mk_field_projector_name_from_ident lid nm
 
 let ses_of_sigbundle (se:sigelt) :list<sigelt> =
   match se.sigel with

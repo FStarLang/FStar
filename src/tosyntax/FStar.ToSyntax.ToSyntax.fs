@@ -2039,7 +2039,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i (x, _) ->
-        let field_name, _ = U.mk_field_projector_name lid x i in
+        let field_name = U.mk_field_projector_name lid x i in
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor

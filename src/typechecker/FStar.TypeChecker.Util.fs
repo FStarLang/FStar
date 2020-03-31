@@ -2911,7 +2911,7 @@ let get_field_projector_name env datacon index =
     if List.length bs <= index then err (List.length bs)
     else
       let b = List.nth bs index in
-      U.mk_field_projector_name datacon (fst b) index |> fst
+      U.mk_field_projector_name datacon (fst b) index
   | _ -> err 0
 
 
