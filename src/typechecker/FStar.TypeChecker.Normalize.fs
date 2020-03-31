@@ -1554,8 +1554,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     (* the Meta_monadic marker and reconstruct the computation after      *)
     (* normalization.                                                     *)
     let t = norm cfg env [] t in
-    let stack = (Cfg cfg)::stack in
-    let cfg =
+    let cfg, stack =
       if cfg.steps.pure_subterms_within_computations
       then
         let new_steps = [PureSubtermsWithinComputations;
@@ -1564,11 +1563,14 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          EraseUniverses;
                          Exclude Zeta;
                          Inlining]
-        in { cfg with
-               steps = List.fold_right fstep_add_one new_steps cfg.steps;
-               delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
-           }
-      else cfg
+        in
+        let cfg' = { cfg with
+                       steps = List.fold_right fstep_add_one new_steps cfg.steps;
+                       delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
+                   }
+        in
+        cfg', (Cfg cfg)::stack
+      else cfg, stack
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with
