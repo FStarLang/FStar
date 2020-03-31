@@ -163,6 +163,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("print_cache_version"          , Bool false);
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -324,6 +325,7 @@ let get_already_cached          ()      = lookup_opt "already_cached"           
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
 let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
@@ -658,6 +660,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_off",
         Const (Bool true),
         "Do not read or write any .checked files");
+
+      ( noshort,
+        "print_cache_version",
+        Const (Bool true),
+        "Print the version for .checked files and exit.");
 
       ( noshort,
         "cmi",
@@ -1576,6 +1583,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
