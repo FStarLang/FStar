@@ -473,7 +473,7 @@ let rec push_subst s t =
       Tm_uvar then the fastpath out match in compress will need to be
       updated.
 *)
-let rec compress_slow (t:term) =
+let compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed (t', s) ->

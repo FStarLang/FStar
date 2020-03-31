@@ -706,7 +706,7 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let rec lids_of_sigelt (se: sigelt) = match se.sigel with
+let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
