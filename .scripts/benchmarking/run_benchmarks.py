@@ -17,7 +17,7 @@ def get_script_dir():
 
 SCRIPTDIR = get_script_dir()
 DEFAULT_REPO = os.path.join(SCRIPTDIR, 'FStar') ## TODO: what should this be
-DEFAULT_BENCHMARK_RUN_SCRIPT = 'make_bench_results.sh' ## TODO: what should this be
+DEFAULT_BENCHMARK_RUN_SCRIPT = './bin/run_benchmark.sh -c' ## TODO: what should this be
 DEFAULT_BRANCH = 'master'
 ENVIRONMENT = 'bench_machine'
 CODESPEED_URL = 'http://localhost:8070/'
