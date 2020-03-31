@@ -426,7 +426,7 @@ let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
     | FStar_Syntax_Syntax.Tm_ascribed uu____1504 -> "Tm_ascribed"
     | FStar_Syntax_Syntax.Tm_let uu____1532 -> "Tm_let"
     | FStar_Syntax_Syntax.Tm_uvar uu____1547 -> "Tm_uvar"
-    | FStar_Syntax_Syntax.Tm_delayed uu____1561 -> "Tm_delayed"
+    | FStar_Syntax_Syntax.Tm_delayed uu____1561 -> "Tm_delayed-resolved"
     | FStar_Syntax_Syntax.Tm_meta (uu____1577,m) ->
         let uu____1583 = metadata_to_string m  in
         Prims.op_Hat "Tm_meta:" uu____1583
