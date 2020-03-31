@@ -42,9 +42,9 @@ boot:
 
 # Regenerate all hints for the standard library and regression test suite
 hints:
-	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C ulib/
-	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C ulib/ml
-	$(Q)OTHERFLAGS=--record_hints +$(MAKE) -C src/ uregressions
+	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/
+	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/ml
+	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions
 
 bench:
 	./bin/run_benchmark.sh

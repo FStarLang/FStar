@@ -14,7 +14,7 @@ FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS)
 .PHONY: all test clean
 
 all:
-	rm -f .depend && +$(MAKE) .depend
+	rm -f .depend && $(MAKE) .depend
 	+$(MAKE) test
 
 # 1. Extract .ml files
