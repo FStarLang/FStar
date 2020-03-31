@@ -3,6 +3,7 @@ open Lexing
 open Migrate_parsetree
 open Migrate_parsetree.Ast_405
 open Migrate_parsetree.Ast_405.Parsetree
+open Migrate_parsetree.Versions
 open Location
 open Pprintast
 open Ast_helper

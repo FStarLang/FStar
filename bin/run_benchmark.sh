@@ -71,25 +71,27 @@ EOF
 
 write_simple_summary() {
     IN=${1}
-    OUT=${1}.summary
-    echo ${IN} > ${OUT}
+    AGG=${1}.summary
+    IND=${1}.perfile
 
-    if ! $PERFILE; then
-        # Default, sum everything and summarize
-        awk -F',' '
-            BEGIN {total=0; user=0; sys=0; mem=0}
-            BEGIN {printf "%-10s %10s %10s %10s %10s\n", "N_benches", "total", "user", "system", "mem(mb)"}
-            NR>1 {total+=$2; user+=$3; sys+=$4; mem+=$5}
-            END { printf "%-10d %10g %10g %10g %10d\n", NR-1,total, user, sys, mem/1000}' \
-            < ${IN}.csv >> ${OUT}
-    else
-        # One line per file
-        awk -F',' '
-            BEGIN {printf "%-40s %10s %10s %10s %10s\n", "file", "total", "user", "system", "mem(kb)"}
-            NR>1  {printf "%-40s %10g %10g %10g %10d\n", $1, $2, $3, $4, $5}' \
-            < ${IN}.csv >> ${OUT}
-    fi
-    echo "Wrote results in ${OUT}"
+    # Sum everything and summarize into X.summary
+    awk -F',' '
+        BEGIN {total=0; user=0; sys=0; mem=0}
+        BEGIN {printf "%-10s %10s %10s %10s %10s\n", "N_benches", "total", "user", "system", "mem(mb)"}
+        NR>1 {total+=$2; user+=$3; sys+=$4; mem+=$5}
+        END { printf "%-10d %10g %10g %10g %10d\n", NR-1,total, user, sys, mem/1000}' \
+        < ${IN}.csv > ${AGG}
+    echo "Wrote ${AGG}"
+
+    # Place individual results into X.perfile, sorted by total time
+    cat ${IN}.csv |
+    tail -n+2 |
+    sort -n -k 2 -t, -r |
+    awk -F',' '
+        BEGIN {printf "%-40s %10s %10s %10s %10s\n", "file", "total", "user", "system", "mem(kb)"}
+        NR>1  {printf "%-40s %10g %10g %10g %10d\n", $1, $2, $3, $4, $5}' \
+        > ${IND}
+    echo "Wrote ${IND}"
 }
 
 write_csv() {
@@ -158,7 +160,7 @@ bench_dir () {
 
     if $RUN; then
         # Remove old .bench files
-        find "${BENCH_DIR}/" -name '*.bench' -delete
+        find "${BENCH_DIR}" -name '*.bench' -delete
 
         ${BENCH_WRAP} make -j${JLEVEL} -C "${BENCH_DIR}" "${RULE}" BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS}" 2>&1 | tee ${BENCH_OUTDIR}/${NAME}.log
     fi
@@ -176,17 +178,16 @@ BENCH_OTHERFLAGS=${BENCH_OTHERFLAGS-"--admit_smt_queries true"}
 BENCH_WRAP=${BENCH_WRAP-}
 
 # BENCH_OUTDIR is the location of the output directory
-BENCH_OUTDIR=${BENCH_OUTDIR-"./bench_results/"`date +'%Y%m%d_%H%M%S'`}
+BENCH_OUTDIR="./bench_results/"`date +'%Y%m%d_%H%M%S'`
 
 CLEAN=false
 AUTO=true
-PERFILE=false
 RUN=true
 JLEVEL=1
 
 # First pass for options
-OPTIONS=co:h1nj:
-LONGOPTS=clean,odir:,help,custom:,perfile,norun
+OPTIONS=co:hnj:
+LONGOPTS=clean,odir:,help,custom:,norun
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 
 eval set -- "$PARSED"
@@ -206,11 +207,6 @@ while true; do
         -h|--help)
             help
             exit 1
-            ;;
-
-        -1|--perfile)
-            PERFILE=true
-            shift
             ;;
 
         -n|--norun)
@@ -262,26 +258,19 @@ To install a local pinned copy of orun do the following:
  $ cd sandmark/orun
  $ opam install  "
 
-mkdir -p ${BENCH_OUTDIR}
-
-if $CLEAN; then
-    clean_slate
-fi
-
 # Second pass for options, only handles --custom which needs to run after the others
 OPTIONS=
 LONGOPTS=custom:
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+
+CUSTOMS=
 
 eval set -- "$PARSED"
 
 while true; do
     case "$1" in
         --custom)
-            DIR=$(echo "$2" | cut -d, -f1)
-            NAME=$(echo "$2" | cut -d, -f2)
-            RULE=$(echo "$2" | cut -d, -f3)
-            bench_dir "$DIR" "$NAME" "$RULE"
+            CUSTOMS+=($2)
             AUTO=false
             shift 2
             ;;
@@ -299,9 +288,22 @@ while true; do
 done
 
 if [[ $# -ne 0 ]]; then
-    echo "bad args remaining: $@"
+    echo "Unexpected argument: '$1'"
     exit 0
 fi
+
+mkdir -p ${BENCH_OUTDIR}
+
+if $CLEAN; then
+    clean_slate
+fi
+
+for i in ${CUSTOMS[*]}; do
+    DIR=$(echo "$i" | cut -d, -f1)
+    NAME=$(echo "$i" | cut -d, -f2)
+    RULE=$(echo "$i" | cut -d, -f3)
+    bench_dir "$DIR" "$NAME" "$RULE"
+done
 
 # If not --custom, run the default set of benchmarks
 if $AUTO; then

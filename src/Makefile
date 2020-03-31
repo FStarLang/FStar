@@ -48,12 +48,12 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          BigInt.fsti Pprint.fsti		\
 			          Tactics.Interpreter.fst		\
 			          Parser.Parse.fsti			\
-			          Tactics.Interpreter.fsti \
+			          Tactics.Interpreter.fsti		 \
 			          Tests.Test.fst \
 			          StringBuffer.fsti)
 
 define from_boot_file
-	@echo "[BOOT      $(basename $(notdir $@))]"
+	@echo "[BOOT      $(notdir $@)]"
 	$(Q)cp $^ $@
 	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
@@ -77,7 +77,7 @@ boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 
 # GM: What's going on here?
 boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
-	@echo "[BOOT      $(basename $(notdir $@))]"
+	@echo "[BOOT      $(notdir $@)]"
 	$(Q)echo "#light \"off\"" > $@
 	$(Q)$(HEAD) -n12 $^ >> $@
 	$(Q)touch -r parser/parse.mly $@
