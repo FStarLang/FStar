@@ -1980,7 +1980,8 @@ and as_binder env imp = function
 and trans_aqual env = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
-  | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
+  | Some (AST.Meta (AST.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac (desugar_term env t)))
+  | Some (AST.Meta (AST.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (desugar_term env t)))
   | None -> None
 
 let typars_of_binders env bs =

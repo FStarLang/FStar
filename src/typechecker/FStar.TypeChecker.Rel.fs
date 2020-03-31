@@ -3561,10 +3561,16 @@ let solve_some_deferred_constraints env (g:guard_t) =
 //if use_smt = false, then None means could not discharge the guard without using smt
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
   let debug =
-       (Env.debug env <| Options.Other "Rel")
+      (Env.debug env <| Options.Other "Rel")
     || (Env.debug env <| Options.Other "SMTQuery")
     || (Env.debug env <| Options.Other "Tac")
   in
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print2 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
+                  guard = %s\n\
+                  backtrace=%s\n"
+                  (guard_to_string env g)
+                  (BU.stack_dump());
   let g = solve_deferred_constraints env g in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
@@ -3650,6 +3656,24 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | None -> None
   | Some g -> discharge_guard' None env g false
 
+let teq_maybe_defer (env:env) (t1:typ) (t2:typ) : guard_t =
+  let should_defer =
+    match Env.lookup_attr env Const.resolve_implicits_attr_string with
+    | [] -> false
+    | _ -> true
+  in    
+  if should_defer
+  then let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
+       let wl = defer (Thunk.mkv "deferring for user-provided resolve_implicits hook") prob wl in
+       let g = with_guard env prob <| solve_and_commit env wl (fun _ -> None) in
+       let g = Option.get g in
+       if Env.debug env (Options.Other "ResolveImplicitsHook")
+       then BU.print2 "(%s): Deferred unification: %s\n" 
+                      (Range.string_of_range (Env.get_range env))
+                      (guard_to_string env g);
+       g
+  else teq env t1 t2
+
 let resolve_implicits' env must_total forcelax g =
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -3681,7 +3705,7 @@ let resolve_implicits' env must_total forcelax g =
           then begin match ctx_u.ctx_uvar_meta with
                | None ->
                     until_fixpoint (hd::out, changed) tl
-               | Some (env_dyn, tau) ->
+               | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
                     let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
@@ -3732,10 +3756,20 @@ let resolve_implicits' env must_total forcelax g =
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
-let resolve_implicits env g = resolve_implicits' env (not env.phase1 && not env.lax)  false g
+let resolve_implicits env g = 
+    if Env.debug env <| Options.Other "ResolveImplicitsHook"
+    then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
+                    guard = %s\n"
+                    (guard_to_string env g);
+  resolve_implicits' env (not env.phase1 && not env.lax) false g
+  
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 
 let force_trivial_guard env g =
+    if Env.debug env <| Options.Other "ResolveImplicitsHook"
+    then BU.print1 "//////////////////////////ResolveImplicitsHook: force_trivial_guard////////////\n\
+                    guard = %s\n"
+                    (guard_to_string env g);
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g

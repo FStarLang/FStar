@@ -645,7 +645,8 @@ let eq_aqual a1 a2 =
     | None, _
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some (Meta (Arg_qualifier_meta_tac t1)), Some (Meta (Arg_qualifier_meta_tac t2)) -> eq_tm t1 t2
+    | Some (Meta (Arg_qualifier_meta_attr t1)), Some (Meta (Arg_qualifier_meta_attr t2)) -> eq_tm t1 t2    
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
@@ -706,7 +707,7 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let rec lids_of_sigelt (se: sigelt) = match se.sigel with
+let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
   | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
@@ -1721,7 +1722,6 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))

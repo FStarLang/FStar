@@ -497,7 +497,8 @@ and rebuild_closure cfg env stack t =
 
 and close_imp cfg env imp =
     match imp with
-    | Some (S.Meta t) -> Some (S.Meta (inline_closure_env cfg env [] t))
+    | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac(inline_closure_env cfg env [] t)))
+    | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (inline_closure_env cfg env [] t)))
     | i -> i
 
 and close_binders cfg env bs =
@@ -1927,7 +1928,8 @@ and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
     let (x, imp) = b in
     let x = { x with sort = norm cfg env [] x.sort } in
     let imp = match imp with
-              | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
+              | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac (closure_as_term cfg env t)))
+              | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (closure_as_term cfg env t)))
               | i -> i
     in
     (x, imp)

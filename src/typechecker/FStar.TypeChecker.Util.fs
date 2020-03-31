@@ -656,10 +656,14 @@ let mk_indexed_bind env
   (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
   (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
-    BU.print2 "Binding c1:%s and c2:%s {\n"
-      (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print2 "Binding c1:%s and c2:%s {\n"
+       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print1 "///////////////////////////////Bind at %s/////////////////////\n"
+                 (Range.string_of_range (Env.get_range env));
+                  
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
   let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
@@ -699,8 +703,9 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
-      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
-      Env.trivial_guard is1 f_sort_is in 
+      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq_maybe_defer env i1 f_i1))
+      Env.trivial_guard is1 f_sort_is
+  in 
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
     let x_a =
@@ -719,9 +724,10 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq_maybe_defer env_g i1 g_i1))
       Env.trivial_guard is2 g_sort_is
-    |> Env.close_guard env [x_a] in
+    |> Env.close_guard env [x_a]
+  in
 
   let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
 
@@ -741,7 +747,8 @@ let mk_indexed_bind env
     flags = flags
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
   c, Env.conj_guards [
@@ -2055,11 +2062,18 @@ let maybe_instantiate (env:Env.env) e t =
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
-                  | _, (x, Some (Meta tau))::rest ->
+                  | _, (x, Some (Meta tac_or_attr))::rest ->
                       let t = SS.subst subst x.sort in
+                      let meta_t = 
+                        match tac_or_attr with
+                        | Arg_qualifier_meta_tac tau ->
+                          Ctx_uvar_meta_tac (mkdyn env, tau)
+                        | Arg_qualifier_meta_attr attr ->
+                          Ctx_uvar_meta_attr attr
+                      in
                       let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
                                                          e.pos env t Strict
-                                                         (Some (mkdyn env, tau)) in
+                                                         (Some meta_t) in
                       if Env.debug env Options.High then
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);

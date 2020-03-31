@@ -401,7 +401,13 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string ->
+                           Range.range ->
+                           env ->
+                           typ ->
+                           should_check_uvar ->
+                           option<ctx_uvar_meta_t> ->
+                           (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 
 val print_gamma : gamma -> string

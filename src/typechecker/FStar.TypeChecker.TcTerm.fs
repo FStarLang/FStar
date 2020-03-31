@@ -1813,7 +1813,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
-        | (x, Some (Meta tau))::rest, (_, None)::_ -> (* instantiate a meta arg *)
+        | (x, Some (Meta tau_or_attr))::rest, (_, None)::_ -> (* instantiate a meta arg *)
             (* We follow the exact same procedure as for instantiating an implicit,
              * except that we keep track of the (uvar, env, metaprogram) pair in the environment
              * so we can later come back to the implicit and, if it wasn't solved by unification,
@@ -1824,14 +1824,25 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
-            let tau = SS.subst subst tau in
-            let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+            let ctx_uvar_meta, g_tau_or_attr = 
+                match tau_or_attr with
+                | Arg_qualifier_meta_tac tau ->
+                  let tau = SS.subst subst tau in
+                  let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+                  Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
+                | Arg_qualifier_meta_attr attr ->
+                  let attr = SS.subst subst attr in
+                  let attr, _, g_attr = tc_tot_or_gtot_term env attr in
+                  Ctx_uvar_meta_attr attr, g_attr
+            in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
+            let varg, _, implicits = 
+              new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some ctx_uvar_meta)
+            in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in
+            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
@@ -3207,9 +3218,16 @@ and tc_binder env (x, imp) =
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let imp, g' =
         match imp with
-        | Some (Meta tau) ->
+        | Some (Meta tau_or_attr) ->
+          begin
+          match tau_or_attr with
+          | Arg_qualifier_meta_tac tau ->
             let tau, _, g = tc_tactic t_unit t_unit env tau in
-            Some (Meta tau), g
+            Some (Meta (Arg_qualifier_meta_tac tau)), g
+          | Arg_qualifier_meta_attr attr ->
+            let attr, _, g = tc_tot_or_gtot_term env attr in
+            Some (Meta (Arg_qualifier_meta_attr attr)), g
+          end
         | _ -> imp, Env.trivial_guard
     in
     let x = {x with sort=t}, imp in

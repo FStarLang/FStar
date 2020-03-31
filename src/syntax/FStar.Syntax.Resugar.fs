@@ -59,10 +59,10 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
 
 let filter_imp a =
   (* keep typeclass args *)
-  a |> List.filter (function | (_, Some (S.Meta t)) when U.is_fvar C.tcresolve_lid t -> true
-                             | (_, Some (S.Implicit _))
-                             | (_, Some (S.Meta _)) -> false
-                             | _ -> true)
+  a |> List.filter (function | (_, Some (S.Meta (S.Arg_qualifier_meta_tac t))) when U.is_fvar C.tcresolve_lid t -> true
+                            | (_, Some (S.Implicit _))
+                            | (_, Some (S.Meta _)) -> false
+                            | _ -> true)
 
 let filter_pattern_imp xs =
   List.filter (fun (_, is_implicit) -> not is_implicit) xs
@@ -955,8 +955,10 @@ and resugar_arg_qual env (q:option<S.arg_qualifier>) : option<(option<A.arg_qual
     if b then None
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
-  | Some (S.Meta t) ->
-    Some (Some (A.Meta (resugar_term' env t)))
+  | Some (S.Meta (S.Arg_qualifier_meta_tac t)) ->
+    Some (Some (A.Meta (A.Arg_qualifier_meta_tac (resugar_term' env t))))
+  | Some (S.Meta (S.Arg_qualifier_meta_attr t)) ->
+    Some (Some (A.Meta (A.Arg_qualifier_meta_attr (resugar_term' env t))))
 
 and resugar_imp env (q:option<S.arg_qualifier>) : A.imp =
   match q with
@@ -964,7 +966,8 @@ and resugar_imp env (q:option<S.arg_qualifier>) : A.imp =
   | Some (S.Implicit false) -> A.Hash
   | Some S.Equality
   | Some (S.Implicit true) -> A.Nothing // We don't have syntax for inaccessible arguments
-  | Some (S.Meta t) -> A.HashBrace (resugar_term' env t)
+  | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> A.HashBrace (resugar_term' env t)
+  | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> A.Nothing //TODO: Review this 03/31
 
 let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   | S.Assumption -> Some A.Assumption

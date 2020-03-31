@@ -145,8 +145,11 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
+    ctx_uvar_meta: option<ctx_uvar_meta_t>;
 }
+and ctx_uvar_meta_t =
+  | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
+  | Ctx_uvar_meta_attr of term
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version
 and uvars = set<ctx_uvar>
@@ -294,8 +297,11 @@ and tscheme = list<univ_name> * typ
 and gamma = list<binding>
 and arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term
+  | Meta of arg_qualifier_meta_t
   | Equality
+and arg_qualifier_meta_t =
+  | Arg_qualifier_meta_tac of term
+  | Arg_qualifier_meta_attr of term  
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.

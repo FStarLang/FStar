@@ -793,7 +793,8 @@ let collect_one
         | _ -> ()
 
       and collect_aqual = function
-        | Some (Meta t) -> collect_term t
+        | Some (Meta (Arg_qualifier_meta_tac t))
+        | Some (Meta (Arg_qualifier_meta_attr t)) -> collect_term t
         | _ -> ()
 
       and collect_term t =
