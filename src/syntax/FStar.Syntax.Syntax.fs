@@ -653,7 +653,6 @@ let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
 let new_univ_name ropt =
     let id = Ident.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
-let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
   | Inr l, Inr m -> lid_equals l m
