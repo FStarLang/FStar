@@ -1662,8 +1662,7 @@ let (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string) =
         FStar_Util.format2 "let %s : %s" uu____4393 uu____4395
     | uu____4398 ->
         let uu____4399 =
-          let uu____4403 = FStar_Syntax_Util.lids_of_sigelt x  in
-          FStar_All.pipe_right uu____4403
+          FStar_All.pipe_right (FStar_Syntax_Util.lids_of_sigelt x)
             (FStar_List.map (fun l  -> l.FStar_Ident.str))
            in
         FStar_All.pipe_right uu____4399 (FStar_String.concat ", ")
@@ -1671,37 +1670,37 @@ let (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string) =
 let (tag_of_sigelt : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_inductive_typ uu____4428 -> "Sig_inductive_typ"
-    | FStar_Syntax_Syntax.Sig_bundle uu____4446 -> "Sig_bundle"
-    | FStar_Syntax_Syntax.Sig_datacon uu____4456 -> "Sig_datacon"
-    | FStar_Syntax_Syntax.Sig_declare_typ uu____4473 -> "Sig_declare_typ"
-    | FStar_Syntax_Syntax.Sig_let uu____4481 -> "Sig_let"
-    | FStar_Syntax_Syntax.Sig_main uu____4489 -> "Sig_main"
-    | FStar_Syntax_Syntax.Sig_assume uu____4491 -> "Sig_assume"
-    | FStar_Syntax_Syntax.Sig_new_effect uu____4499 -> "Sig_new_effect"
-    | FStar_Syntax_Syntax.Sig_sub_effect uu____4501 -> "Sig_sub_effect"
-    | FStar_Syntax_Syntax.Sig_effect_abbrev uu____4503 -> "Sig_effect_abbrev"
-    | FStar_Syntax_Syntax.Sig_pragma uu____4517 -> "Sig_pragma"
-    | FStar_Syntax_Syntax.Sig_splice uu____4519 -> "Sig_splice"
-    | FStar_Syntax_Syntax.Sig_polymonadic_bind uu____4527 ->
+    | FStar_Syntax_Syntax.Sig_inductive_typ uu____4425 -> "Sig_inductive_typ"
+    | FStar_Syntax_Syntax.Sig_bundle uu____4443 -> "Sig_bundle"
+    | FStar_Syntax_Syntax.Sig_datacon uu____4453 -> "Sig_datacon"
+    | FStar_Syntax_Syntax.Sig_declare_typ uu____4470 -> "Sig_declare_typ"
+    | FStar_Syntax_Syntax.Sig_let uu____4478 -> "Sig_let"
+    | FStar_Syntax_Syntax.Sig_main uu____4486 -> "Sig_main"
+    | FStar_Syntax_Syntax.Sig_assume uu____4488 -> "Sig_assume"
+    | FStar_Syntax_Syntax.Sig_new_effect uu____4496 -> "Sig_new_effect"
+    | FStar_Syntax_Syntax.Sig_sub_effect uu____4498 -> "Sig_sub_effect"
+    | FStar_Syntax_Syntax.Sig_effect_abbrev uu____4500 -> "Sig_effect_abbrev"
+    | FStar_Syntax_Syntax.Sig_pragma uu____4514 -> "Sig_pragma"
+    | FStar_Syntax_Syntax.Sig_splice uu____4516 -> "Sig_splice"
+    | FStar_Syntax_Syntax.Sig_polymonadic_bind uu____4524 ->
         "Sig_polymonadic_bind"
-    | FStar_Syntax_Syntax.Sig_fail uu____4539 -> "Sig_fail"
+    | FStar_Syntax_Syntax.Sig_fail uu____4536 -> "Sig_fail"
   
 let (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
   fun m  ->
-    let uu____4560 = sli m.FStar_Syntax_Syntax.name  in
-    let uu____4562 =
-      let uu____4564 =
+    let uu____4557 = sli m.FStar_Syntax_Syntax.name  in
+    let uu____4559 =
+      let uu____4561 =
         FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.declarations
          in
-      FStar_All.pipe_right uu____4564 (FStar_String.concat "\n")  in
-    let uu____4574 =
-      let uu____4576 =
+      FStar_All.pipe_right uu____4561 (FStar_String.concat "\n")  in
+    let uu____4571 =
+      let uu____4573 =
         FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.exports  in
-      FStar_All.pipe_right uu____4576 (FStar_String.concat "\n")  in
+      FStar_All.pipe_right uu____4573 (FStar_String.concat "\n")  in
     FStar_Util.format3
-      "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu____4560
-      uu____4562 uu____4574
+      "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu____4557
+      uu____4559 uu____4571
   
 let list_to_string :
   'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
@@ -1712,13 +1711,13 @@ let list_to_string :
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
           (FStar_Util.string_builder_append strb "[";
-           (let uu____4626 = f x  in
-            FStar_Util.string_builder_append strb uu____4626);
+           (let uu____4623 = f x  in
+            FStar_Util.string_builder_append strb uu____4623);
            FStar_List.iter
              (fun x1  ->
                 FStar_Util.string_builder_append strb "; ";
-                (let uu____4635 = f x1  in
-                 FStar_Util.string_builder_append strb uu____4635)) xs;
+                (let uu____4632 = f x1  in
+                 FStar_Util.string_builder_append strb uu____4632)) xs;
            FStar_Util.string_builder_append strb "]";
            FStar_Util.string_of_string_builder strb)
   
@@ -1732,13 +1731,13 @@ let set_to_string :
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
           (FStar_Util.string_builder_append strb "{";
-           (let uu____4682 = f x  in
-            FStar_Util.string_builder_append strb uu____4682);
+           (let uu____4679 = f x  in
+            FStar_Util.string_builder_append strb uu____4679);
            FStar_List.iter
              (fun x1  ->
                 FStar_Util.string_builder_append strb ", ";
-                (let uu____4691 = f x1  in
-                 FStar_Util.string_builder_append strb uu____4691)) xs;
+                (let uu____4688 = f x1  in
+                 FStar_Util.string_builder_append strb uu____4688)) xs;
            FStar_Util.string_builder_append strb "}";
            FStar_Util.string_of_string_builder strb)
   
@@ -1746,31 +1745,31 @@ let (bvs_to_string :
   Prims.string -> FStar_Syntax_Syntax.bv Prims.list -> Prims.string) =
   fun sep  ->
     fun bvs  ->
-      let uu____4713 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
-      binders_to_string sep uu____4713
+      let uu____4710 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
+      binders_to_string sep uu____4710
   
 let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
-  fun uu___15_4726  ->
-    match uu___15_4726 with
+  fun uu___15_4723  ->
+    match uu___15_4723 with
     | FStar_Syntax_Syntax.ET_abstract  -> "abstract"
     | FStar_Syntax_Syntax.ET_app (h,[]) -> h
     | FStar_Syntax_Syntax.ET_app (h,args) ->
-        let uu____4742 =
-          let uu____4744 =
-            let uu____4746 =
-              let uu____4748 =
-                let uu____4750 = FStar_List.map emb_typ_to_string args  in
-                FStar_All.pipe_right uu____4750 (FStar_String.concat " ")  in
-              Prims.op_Hat uu____4748 ")"  in
-            Prims.op_Hat " " uu____4746  in
-          Prims.op_Hat h uu____4744  in
-        Prims.op_Hat "(" uu____4742
+        let uu____4739 =
+          let uu____4741 =
+            let uu____4743 =
+              let uu____4745 =
+                let uu____4747 = FStar_List.map emb_typ_to_string args  in
+                FStar_All.pipe_right uu____4747 (FStar_String.concat " ")  in
+              Prims.op_Hat uu____4745 ")"  in
+            Prims.op_Hat " " uu____4743  in
+          Prims.op_Hat h uu____4741  in
+        Prims.op_Hat "(" uu____4739
     | FStar_Syntax_Syntax.ET_fun (a,b) ->
-        let uu____4765 =
-          let uu____4767 = emb_typ_to_string a  in
-          let uu____4769 =
-            let uu____4771 = emb_typ_to_string b  in
-            Prims.op_Hat ") -> " uu____4771  in
-          Prims.op_Hat uu____4767 uu____4769  in
-        Prims.op_Hat "(" uu____4765
+        let uu____4762 =
+          let uu____4764 = emb_typ_to_string a  in
+          let uu____4766 =
+            let uu____4768 = emb_typ_to_string b  in
+            Prims.op_Hat ") -> " uu____4768  in
+          Prims.op_Hat uu____4764 uu____4766  in
+        Prims.op_Hat "(" uu____4762
   

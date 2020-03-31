@@ -1027,7 +1027,7 @@ let rec (push_subst :
             FStar_Syntax_Syntax.Tm_meta uu____3489  in
           mk1 uu____3488
   
-let rec (compress_slow :
+let (compress_slow :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
