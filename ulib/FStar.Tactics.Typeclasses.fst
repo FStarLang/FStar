@@ -76,15 +76,14 @@ let rec last (l : list 'a) : Tac 'a =
   | _::xs -> last xs
 
 let mk_class (nm:string) : Tac decls =
-    (* sigh *)
-    let ns = String.split ['.'] nm in
+    let ns = explode_qn nm in
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive name us params ty ctors = sv in
-    (* dump ("got it, name = " ^ String.concat "." name); *)
+    (* dump ("got it, name = " ^ implode_qn name); *)
     (* dump ("got it, ty = " ^ term_to_string ty); *)
     let ctor_name = last name in
     // Must have a single constructor
@@ -96,7 +95,7 @@ let mk_class (nm:string) : Tac decls =
     let r = inspect_sigelt res in
     guard (Sg_Constructor? r);
     let Sg_Constructor _ ty = r in
-    (* dump ("got ctor " ^ String.concat "." ctor ^ " of type " ^ term_to_string ty); *)
+    (* dump ("got ctor " ^ implode_qn ctor ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);

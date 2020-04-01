@@ -118,7 +118,7 @@ let collect_abs_ln t =
 let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_name (n1 n2 : name) : order =
-    compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) n1 n2
+    compare_list (fun s1 s2 -> order_from_int (compare_string s1 s2)) n1 n2
 
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
@@ -129,7 +129,7 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Int i, C_Int j -> order_from_int (i - j)
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
-    | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_String s1, C_String s2 -> order_from_int (compare_string s1 s2)
     | C_Range r1, C_Range r2 -> Eq
     | C_Reify, C_Reify -> Eq
     | C_Reflect l1, C_Reflect l2 -> compare_name l1 l2
@@ -338,7 +338,7 @@ let rec head (t : term) : term =
 
 let nameof (t : term) : string =
     match inspect_ln t with
-    | Tv_FVar fv -> String.concat "." (inspect_fv fv)
+    | Tv_FVar fv -> implode_qn (inspect_fv fv)
     | _ -> "?"
 
 let is_uvar (t : term) : bool =

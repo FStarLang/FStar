@@ -482,7 +482,7 @@ let rewrite_equality (t:term) : Tac unit =
 let unfold_def (t:term) : Tac unit =
     match inspect t with
     | Tv_FVar fv ->
-        let n = String.concat "." (inspect_fv fv) in
+        let n = implode_qn (inspect_fv fv) in
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
