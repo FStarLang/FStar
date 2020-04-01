@@ -781,6 +781,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
                         ; deferred = []
+                        ; deferred_to_tac = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
@@ -808,6 +809,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
                         ; deferred = []
+                        ; deferred_to_tac = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
@@ -869,6 +871,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
               BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
                         ; deferred = []
+                        ; deferred_to_tac = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard

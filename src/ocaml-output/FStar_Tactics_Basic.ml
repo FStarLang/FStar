@@ -737,6 +737,8 @@ let (compress_implicits : unit tac) =
          {
            FStar_TypeChecker_Common.guard_f =
              (uu___327_2101.FStar_TypeChecker_Common.guard_f);
+           FStar_TypeChecker_Common.deferred_to_tac =
+             (uu___327_2101.FStar_TypeChecker_Common.deferred_to_tac);
            FStar_TypeChecker_Common.deferred =
              (uu___327_2101.FStar_TypeChecker_Common.deferred);
            FStar_TypeChecker_Common.univ_ineqs =
@@ -7468,7 +7470,7 @@ let (goal_of_implicit :
     fun i  ->
       let uu____16482 = FStar_Options.peek ()  in
       FStar_Tactics_Types.mk_goal env i.FStar_TypeChecker_Common.imp_uvar
-        uu____16482 false ""
+        uu____16482 false i.FStar_TypeChecker_Common.imp_reason
   
 let (proofstate_of_all_implicits :
   FStar_Range.range ->
@@ -7481,14 +7483,14 @@ let (proofstate_of_all_implicits :
       fun imps  ->
         let goals = FStar_List.map (goal_of_implicit env) imps  in
         let w =
-          let uu____16509 = FStar_List.hd goals  in
-          FStar_Tactics_Types.goal_witness uu____16509  in
+          let uu____16508 = FStar_List.hd goals  in
+          FStar_Tactics_Types.goal_witness uu____16508  in
         let ps =
-          let uu____16511 =
+          let uu____16510 =
             FStar_TypeChecker_Env.debug env
               (FStar_Options.Other "TacVerbose")
              in
-          let uu____16514 = FStar_Util.psmap_empty ()  in
+          let uu____16513 = FStar_Util.psmap_empty ()  in
           {
             FStar_Tactics_Types.main_context = env;
             FStar_Tactics_Types.all_implicits = imps;
@@ -7501,8 +7503,8 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
             FStar_Tactics_Types.freshness = Prims.int_zero;
-            FStar_Tactics_Types.tac_verb_dbg = uu____16511;
-            FStar_Tactics_Types.local_state = uu____16514
+            FStar_Tactics_Types.tac_verb_dbg = uu____16510;
+            FStar_Tactics_Types.local_state = uu____16513
           }  in
         (ps, w)
   

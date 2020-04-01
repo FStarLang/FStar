@@ -132,6 +132,7 @@ val implicits_to_string : implicits -> string
 
 type guard_t = {
   guard_f:    guard_formula;
+  deferred_to_tac: deferred;
   deferred:   deferred;
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;

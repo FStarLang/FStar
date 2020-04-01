@@ -661,8 +661,10 @@ let mk_indexed_bind env
        (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
-  then BU.print1 "///////////////////////////////Bind at %s/////////////////////\n"
-                 (Range.string_of_range (Env.get_range env));
+  then BU.print2 "///////////////////////////////Bind at %s/////////////////////\n\
+                  with bind_t = %s\n"                                    
+                 (Range.string_of_range (Env.get_range env))
+                 (Print.tscheme_to_string bind_t);
                   
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
@@ -694,6 +696,17 @@ let mk_indexed_bind env
       (BU.format3 "(%s, %s) |> %s" (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p))
       (Range.string_of_range r1)) r1 in
 
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then rest_bs_uvars |>
+       List.iter (fun t -> 
+         match (SS.compress t).n with
+         | Tm_uvar (u, _ ) ->
+           BU.print2 "Generated uvar %s with attribute %s\n"
+             (Print.term_to_string t)
+             (match u.ctx_uvar_meta with
+              | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
+              | _ -> "<no attr>"));
+
   let subst = List.map2
     (fun b t -> NT (b |> fst, t))
     (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
@@ -703,7 +716,12 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
-      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
+      (fun g i1 f_i1 -> 
+        if Env.debug env <| Options.Other "ResolveImplicitsHook"
+        then BU.print2 "Generating constraint %s = %s\n"
+                                   (Print.term_to_string i1)
+                                   (Print.term_to_string f_i1);
+        Env.conj_guard g (Rel.teq env i1 f_i1))
       Env.trivial_guard is1 f_sort_is
   in 
 
@@ -724,7 +742,12 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+      (fun g i1 g_i1 ->
+        if Env.debug env <| Options.Other "ResolveImplicitsHook"
+        then BU.print2 "Generating constraint %s = %s\n"
+                                   (Print.term_to_string i1)
+                                   (Print.term_to_string g_i1);
+         Env.conj_guard g (Rel.teq env_g i1 g_i1))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a]
   in

@@ -1816,6 +1816,8 @@ and (tc_maybe_toplevel_term :
                   {
                     FStar_TypeChecker_Common.guard_f =
                       FStar_TypeChecker_Common.Trivial;
+                    FStar_TypeChecker_Common.deferred_to_tac =
+                      (uu___624_4725.FStar_TypeChecker_Common.deferred_to_tac);
                     FStar_TypeChecker_Common.deferred =
                       (uu___624_4725.FStar_TypeChecker_Common.deferred);
                     FStar_TypeChecker_Common.univ_ineqs =
@@ -1852,6 +1854,8 @@ and (tc_maybe_toplevel_term :
                             {
                               FStar_TypeChecker_Common.guard_f =
                                 FStar_TypeChecker_Common.Trivial;
+                              FStar_TypeChecker_Common.deferred_to_tac =
+                                (uu___647_4876.FStar_TypeChecker_Common.deferred_to_tac);
                               FStar_TypeChecker_Common.deferred =
                                 (uu___647_4876.FStar_TypeChecker_Common.deferred);
                               FStar_TypeChecker_Common.univ_ineqs =
@@ -10800,13 +10804,16 @@ and (tc_binder :
                             | FStar_Syntax_Syntax.Arg_qualifier_meta_attr
                                 attr ->
                                 let uu____26846 =
-                                  tc_tot_or_gtot_term env attr  in
+                                  tc_check_tot_or_gtot_term env attr
+                                    FStar_Syntax_Syntax.t_unit
+                                   in
                                 (match uu____26846 with
                                  | (attr1,uu____26860,g1) ->
                                      ((FStar_Pervasives_Native.Some
                                          (FStar_Syntax_Syntax.Meta
                                             (FStar_Syntax_Syntax.Arg_qualifier_meta_attr
-                                               attr1))), g1)))
+                                               attr1))),
+                                       FStar_TypeChecker_Env.trivial_guard)))
                        | uu____26864 ->
                            (imp, FStar_TypeChecker_Env.trivial_guard)
                         in

@@ -2183,7 +2183,7 @@ let proofstate_of_goal_ty rng env typ =
     (ps, goal_witness g)
 
 let goal_of_implicit env (i:Env.implicit) : goal =
-  mk_goal env i.imp_uvar (FStar.Options.peek()) false ""
+  mk_goal env i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
     let goals = List.map (goal_of_implicit env) imps in

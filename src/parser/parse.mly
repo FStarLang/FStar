@@ -395,7 +395,7 @@ aqual:
 
 aqualUniverses:
   | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta (Arg_qualifier_meta_tac t) }
-  | HASH LBRACK_AT t=thunk(tmNoEq) RBRACK { Meta (Arg_qualifier_meta_attr t) }
+  | HASH LBRACK_AT t=tmNoEq RBRACK { Meta (Arg_qualifier_meta_attr t) }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 

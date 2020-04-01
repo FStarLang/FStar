@@ -3225,8 +3225,8 @@ and tc_binder env (x, imp) =
             let tau, _, g = tc_tactic t_unit t_unit env tau in
             Some (Meta (Arg_qualifier_meta_tac tau)), g
           | Arg_qualifier_meta_attr attr ->
-            let attr, _, g = tc_tot_or_gtot_term env attr in
-            Some (Meta (Arg_qualifier_meta_attr attr)), g
+            let attr, _, g = tc_check_tot_or_gtot_term env attr t_unit in
+            Some (Meta (Arg_qualifier_meta_attr attr)), Env.trivial_guard
           end
         | _ -> imp, Env.trivial_guard
     in
