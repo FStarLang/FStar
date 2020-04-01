@@ -57,7 +57,6 @@ define from_boot_file
 	$(Q)cp $^ $@
 	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
-	$(Q)touch -r $^ $@
 endef
 
 boot/%.fst: basic/boot/%.fs | boot_dir
@@ -80,7 +79,6 @@ boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	@echo "[BOOT      $(notdir $@)]"
 	$(Q)echo "#light \"off\"" > $@
 	$(Q)$(HEAD) -n12 $^ >> $@
-	$(Q)touch -r parser/parse.mly $@
 
 boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
 	$(call from_boot_file)

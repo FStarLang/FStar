@@ -48,7 +48,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
 	$(Q)$(FSTAR_C) $(SIL) $< --already_cached "* -$(basename $(notdir $<))"
-	$(Q)@touch $@
+	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
