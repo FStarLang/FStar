@@ -1150,33 +1150,36 @@ let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
-let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : tac<option<goal>> =
+let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac<option<(bv * goal)>> =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
-        let s1 bv = { bv with sort = SS.subst s bv.sort } in
-        let bvs' = List.map s1 bvs in
-        let new_env = push_bvs e0 (b2::bvs') in
-        let new_goal_ty = SS.subst s (goal_type g) in
+        let bs = List.map S.mk_binder (b1::bvs) in
 
-        (* GM Why are we doing this tc_lax? To make the typechecker
-         * set the bvsorts properly, otherwise these goals
-         * will wreak havoc if the happen to be used by
-         * type_of_well_typed_term (as in apply_lemma).
-         *
-         * They are not set by the substitution since substitutions
-         * do not descend into bv sorts, perhaps that's the real issue.
-         *
-         * See issue #1966. *)
-        bind (__tc_lax new_env new_goal_ty) (fun (new_goal_ty, _, _) ->
-        bind (new_uvar "subst_goal" new_env new_goal_ty) (fun (uvt, uv) ->
+        let t = goal_type g in
+
+        (* Close the binders and t *)
+        let bs', t' = SS.close_binders bs, SS.close bs t in
+
+        (* Replace b1 (the head) by b2 *)
+        let bs' = (S.mk_binder b2) :: List.tail bs' in
+
+        (* Re-open, all done for renaming *)
+        let bs'', t'' = SS.open_term bs' t' in
+
+        (* b2 has been freshened *)
+        let b2 = fst (List.hd bs'') in
+
+        (* Make a new goal in the new env (with new binders) *)
+        let new_env = push_bvs e0 (List.map fst bs'') in
+        bind (new_uvar "subst_goal" new_env t'') (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
-        let sol = U.mk_app (U.abs (List.map S.mk_binder (b2::bvs')) uvt None)
-                            (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) (b1::bvs)) in
 
-        (* As above *)
-        bind (__tc_lax (goal_env g)  sol) (fun (sol, _, _) ->
+        (* Solve the old goal with an application of the new witness *)
+        let sol = U.mk_app (U.abs bs'' uvt None)
+                            (List.map (fun (bv, q) -> S.as_arg (S.bv_to_name bv)) bs) in
         bind (set_solution g sol) (fun () ->
-        ret (Some goal')))))
+
+        ret (Some (b2, goal'))))
 
     | None ->
         ret None
@@ -1187,41 +1190,47 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
-    | Some (e0, bv, bvs) -> begin
-        match destruct_eq bv.sort with
+    | Some (e0, bv, bvs) ->
+    begin match destruct_eq bv.sort with
         | Some (x, e) ->
-        (match (SS.compress x).n with
+        begin match (SS.compress x).n with
            | Tm_name x ->
-             let s = [NT(x,e)] in
-             let s1 bv = { bv with sort = SS.subst s bv.sort } in
-             let bvs' = List.map s1 bvs in
-             let new_env = push_bvs e0 (bv::bvs') in
-             let new_goal_ty = SS.subst s (goal_type goal) in
+             let s = [NT(x, e)] in
 
-             (* See comment in subst_goal *)
-             bind (__tc_lax new_env new_goal_ty) (fun (new_goal_ty, _, _) ->
-             bind (new_uvar "rewrite" new_env new_goal_ty) (fun (uvt, uv) ->
+             (* See subst_goal for an explanation *)
+
+             let t = goal_type goal in
+             let bs = List.map S.mk_binder bvs in
+
+             let bs', t' = SS.close_binders bs, SS.close bs t in
+
+             let bs', t' = SS.subst_binders s bs', SS.subst s t in
+
+             let bs'', t'' = SS.open_term bs' t' in
+
+             let new_env = push_bvs e0 (bv::(List.map fst bs'')) in
+
+             bind (new_uvar "rewrite" new_env t'') (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
-             let sol = U.mk_app (U.abs (List.map S.mk_binder bvs') uvt None)
-                                 (List.map (fun bv -> S.as_arg (S.bv_to_name bv)) bvs) in
+             let sol = U.mk_app (U.abs bs'' uvt None)
+                                 (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) in
 
              (* See comment in subst_goal *)
-             bind (__tc_lax (goal_env goal)  sol) (fun (sol, _, _) ->
              bind (set_solution goal sol) (fun () ->
-             replace_cur goal'))))
+             replace_cur goal'))
            | _ ->
-             fail "Not an equality hypothesis with a variable on the LHS")
+             fail "Not an equality hypothesis with a variable on the LHS"
+        end
         | _ -> fail "Not an equality hypothesis"
-        end))
+    end))
 
 let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind (cur_goal ()) (fun goal ->
     let bv, q = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
-    let s = [NT (bv, S.bv_to_name bv')] in
-    bind (subst_goal bv bv' s goal) (function
+    bind (subst_goal bv bv' goal) (function
     | None -> fail "binder not found in environment"
-    | Some goal ->
+    | Some (bv',  goal) ->
         bind (replace_cur goal) (fun () ->
         ret (bv', q))))
 
