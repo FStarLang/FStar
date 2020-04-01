@@ -1598,8 +1598,11 @@ let codegen                      () =
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
+
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
-let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let debug_at_level_no_module level  = debug_level_geq level
+let debug_at_level      modul level = debug_module modul && debug_at_level_no_module level
+
 let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
