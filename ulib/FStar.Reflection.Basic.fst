@@ -47,6 +47,14 @@ assume val pack_bv        : bv_view -> bv
 assume val inspect_binder : binder -> bv * aqualv
 assume val pack_binder    : bv -> aqualv -> binder
 
+(* These are equivalent to [String.concat "."], [String.split ['.']]
+ * and [String.compare]. We're only taking them as primitives to break
+ * the dependency of Reflection/Tactics into * FStar.String, which
+ * pulls a LOT of modules. *)
+assume val implode_qn     : list string -> string
+assume val explode_qn     : string -> list string
+assume val compare_string : string -> string -> int
+
 (* Primitives & helpers *)
 assume val lookup_typ            : env -> name -> option sigelt
 assume val compare_bv            : bv -> bv -> order

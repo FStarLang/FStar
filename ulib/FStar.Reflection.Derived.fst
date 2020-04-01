@@ -115,9 +115,6 @@ let collect_abs_ln t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
-let explode_qn : string -> list string = String.split ['.']
-let implode_qn : list string -> string = String.concat "."
-
 let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_name (n1 n2 : name) : order =
