@@ -3410,7 +3410,10 @@ let (tc_decl :
       then ([], [], env)
       else
         (let env1 = set_hint_correlator env se  in
-         (let uu____4544 = FStar_Options.debug_any ()  in
+         (let uu____4544 =
+            FStar_Options.debug_module
+              (env1.FStar_TypeChecker_Env.curmodule).FStar_Ident.str
+             in
           if uu____4544
           then
             let uu____4547 =

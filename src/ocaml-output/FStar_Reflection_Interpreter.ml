@@ -588,7 +588,55 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                               FStar_Reflection_NBEEmbeddings.e_env
                                                               uu____1157
                                                              in
-                                                          [uu____1145]  in
+                                                          let uu____1179 =
+                                                            let uu____1182 =
+                                                              mk1
+                                                                "implode_qn"
+                                                                FStar_Reflection_Basic.implode_qn
+                                                                FStar_Syntax_Embeddings.e_string_list
+                                                                FStar_Syntax_Embeddings.e_string
+                                                                FStar_Reflection_Basic.implode_qn
+                                                                FStar_TypeChecker_NBETerm.e_string_list
+                                                                FStar_TypeChecker_NBETerm.e_string
+                                                               in
+                                                            let uu____1192 =
+                                                              let uu____1195
+                                                                =
+                                                                mk1
+                                                                  "explode_qn"
+                                                                  FStar_Reflection_Basic.explode_qn
+                                                                  FStar_Syntax_Embeddings.e_string
+                                                                  FStar_Syntax_Embeddings.e_string_list
+                                                                  FStar_Reflection_Basic.explode_qn
+                                                                  FStar_TypeChecker_NBETerm.e_string
+                                                                  FStar_TypeChecker_NBETerm.e_string_list
+                                                                 in
+                                                              let uu____1205
+                                                                =
+                                                                let uu____1208
+                                                                  =
+                                                                  mk2
+                                                                    "compare_string"
+                                                                    FStar_Reflection_Basic.compare_string
+                                                                    FStar_Syntax_Embeddings.e_string
+                                                                    FStar_Syntax_Embeddings.e_string
+                                                                    FStar_Syntax_Embeddings.e_int
+                                                                    FStar_Reflection_Basic.compare_string
+                                                                    FStar_TypeChecker_NBETerm.e_string
+                                                                    FStar_TypeChecker_NBETerm.e_string
+                                                                    FStar_TypeChecker_NBETerm.e_int
+                                                                   in
+                                                                [uu____1208]
+                                                                 in
+                                                              uu____1195 ::
+                                                                uu____1205
+                                                               in
+                                                            uu____1182 ::
+                                                              uu____1192
+                                                             in
+                                                          uu____1145 ::
+                                                            uu____1179
+                                                           in
                                                         uu____1120 ::
                                                           uu____1142
                                                          in
