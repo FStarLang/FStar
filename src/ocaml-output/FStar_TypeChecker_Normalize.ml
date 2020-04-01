@@ -8735,7 +8735,10 @@ let (eta_expand :
                                    FStar_TypeChecker_Env.strict_args_tab =
                                      (uu___3372_28123.FStar_TypeChecker_Env.strict_args_tab);
                                    FStar_TypeChecker_Env.erasable_types_tab =
-                                     (uu___3372_28123.FStar_TypeChecker_Env.erasable_types_tab)
+                                     (uu___3372_28123.FStar_TypeChecker_Env.erasable_types_tab);
+                                   FStar_TypeChecker_Env.enable_defer_to_tac
+                                     =
+                                     (uu___3372_28123.FStar_TypeChecker_Env.enable_defer_to_tac)
                                  }) t
                                in
                             match uu____28115 with
@@ -8837,7 +8840,9 @@ let (eta_expand :
                            FStar_TypeChecker_Env.strict_args_tab =
                              (uu___3379_28138.FStar_TypeChecker_Env.strict_args_tab);
                            FStar_TypeChecker_Env.erasable_types_tab =
-                             (uu___3379_28138.FStar_TypeChecker_Env.erasable_types_tab)
+                             (uu___3379_28138.FStar_TypeChecker_Env.erasable_types_tab);
+                           FStar_TypeChecker_Env.enable_defer_to_tac =
+                             (uu___3379_28138.FStar_TypeChecker_Env.enable_defer_to_tac)
                          }) t
                        in
                     (match uu____28130 with

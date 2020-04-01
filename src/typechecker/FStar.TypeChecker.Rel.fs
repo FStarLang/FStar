@@ -305,33 +305,18 @@ let wl_of_guard env g            = {empty_worklist env with attempting=List.map 
 let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
 let defer_lit reason prob wl     = defer (Thunk.mkv reason) prob wl
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
-  match u.ctx_uvar_meta with
-  | Some (Ctx_uvar_meta_attr a) ->
-    let hooks = Env.lookup_attr env Const.resolve_implicits_attr_string in
-    let should_defer =
-        hooks |> BU.for_some 
-                (fun hook -> 
-                  hook.sigattrs |> BU.for_some (U.attr_eq a))
-    in
-    should_defer
-  | _ -> false
-let defer_maybe_tac_lit reason prob wl =
-  match prob.relation with
-  | EQ ->
-    let should_defer_tac t = 
-      let head, _ = U.head_and_args t in
-      match (SS.compress head).n with
-      | Tm_uvar(uv, _) -> 
-        should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
-      | _ -> false, ""
-    in
-    let l1, r1 = should_defer_tac prob.lhs in
-    let l2, r2 = should_defer_tac prob.rhs in
-    if l1 || l2 
-    then { wl with 
-              wl_deferred_to_tac=(wl.ctr, Thunk.mkv (r1 ^ ", " ^ r2), TProb prob)::wl.wl_deferred_to_tac }
-    else defer_lit reason (TProb prob) wl
-  | _ -> defer_lit reason (TProb prob) wl
+  if not env.enable_defer_to_tac then false
+  else
+    match u.ctx_uvar_meta with
+    | Some (Ctx_uvar_meta_attr a) ->
+      let hooks = Env.lookup_attr env Const.resolve_implicits_attr_string in
+      let should_defer =
+          hooks |> BU.for_some 
+                  (fun hook -> 
+                    hook.sigattrs |> BU.for_some (U.attr_eq a))
+      in
+      should_defer
+    | _ -> false
 let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
@@ -1511,7 +1496,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t env tp probs
         else if probs.defer_ok
-        then solve env (defer_maybe_tac_lit "deferring flex_rigid or flex_flex subtyping" tp probs)
+        then maybe_defer_to_user_tac env tp "deferring flex_rigid or flex_flex subtyping" probs
         else if rank=Flex_flex
         then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
@@ -1585,8 +1570,26 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:lstring) : solu
     else giveup env msg orig
 
 and defer_to_user_tac (env:Env.env) (orig:prob) reason (wl:worklist) : solution =
+  let wl = solve_prob orig None [] wl in
   let wl = {wl with wl_deferred_to_tac=(wl.ctr, Thunk.mkv reason, orig)::wl.wl_deferred_to_tac} in
   solve env wl
+
+and maybe_defer_to_user_tac (env:Env.env) prob reason wl : solution =
+  match prob.relation with
+  | EQ ->
+    let should_defer_tac t = 
+      let head, _ = U.head_and_args t in
+      match (SS.compress head).n with
+      | Tm_uvar(uv, _) -> 
+        should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
+      | _ -> false, ""
+    in
+    let l1, r1 = should_defer_tac prob.lhs in
+    let l2, r2 = should_defer_tac prob.rhs in
+    if l1 || l2 
+    then defer_to_user_tac env (TProb prob) (r1 ^ ", " ^ r2) wl
+    else solve env (defer_lit reason (TProb prob) wl)
+  | _ -> solve env (defer_lit reason (TProb prob) wl)
 
 (******************************************************************************************************)
 (* The case where t1 < u, ..., tn < u: we solve this by taking u=t1\/...\/tn                          *)
@@ -3721,24 +3724,6 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | None -> None
   | Some g -> discharge_guard' None env g false
 
-let teq_maybe_defer (env:env) (t1:typ) (t2:typ) : guard_t =
-  let should_defer =
-    match Env.lookup_attr env Const.resolve_implicits_attr_string with
-    | [] -> false
-    | _ -> true
-  in    
-  if should_defer
-  then let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
-       let wl = defer (Thunk.mkv "deferring for user-provided resolve_implicits hook") prob wl in
-       let g = with_guard env prob <| solve_and_commit env wl (fun _ -> None) in
-       let g = Option.get g in
-       if Env.debug env (Options.Other "ResolveImplicitsHook")
-       then BU.print2 "(%s): Deferred unification: %s\n" 
-                      (Range.string_of_range (Env.get_range env))
-                      (guard_to_string env g);
-       g
-  else teq env t1 t2
-
 let resolve_implicits' env must_total forcelax g =
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -3831,6 +3816,157 @@ let resolve_implicits env g =
   
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 
+type goal_type = 
+  | FlexRigid of ctx_uvar * term
+  | FlexFlex of ctx_uvar * ctx_uvar
+  | Frame of ctx_uvar * term * term
+  | Imp of ctx_uvar
+  
+type goal_dep = 
+  { 
+    goal_dep_id:int;
+    goal_type:goal_type;
+    goal_imp:implicit;
+    assignees:BU.set<ctx_uvar>;
+    dependences:list<goal_dep>;
+    visited:ref int
+  }
+
+let print_goal_dep gd =
+  BU.print4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n"
+    (BU.string_of_int gd.goal_dep_id)
+    (BU.set_elements gd.assignees 
+     |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
+     |> String.concat "; ")
+    (List.map (fun gd -> string_of_int gd.goal_dep_id) gd.dependences
+     |> String.concat "; ")
+    (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
+
+let sort_goals (eqs:implicits) (rest:implicits) : implicits =
+  (* For each goal g, maintain:
+       1. Assigned uvars, at most 2 of them
+           - if g is a flex_rigid eq goal, then it assigns one uvar
+           - if g is a flex_flex eq goal, then it assigns two uvars
+           - if g is a ?u:split_frame outer inner, then it assigns ?u
+           - otherwise g assigns no uvars
+           
+       2. A list of goals that are dependences for each goal LHS
+          - if g is a flex_rigid goal (?lhs = rhs) then it depends on
+               all goals g' that may assign a variable in freeuvars rhs
+
+          - if g is a flex_flex goal (?lhs = ?rhs) then it depends on
+               all goals g' that may assign either lhs or rhs
+
+          - if g is a ?u:split_frame outer inner, then it depends on
+               all goals g' that may assign a variable in freeuvars outer U freeuvars inner
+
+          - otherwise g's dependence is Top (meaning these goals depend on all other goals)
+
+       3. Given the dependence relations among all the goals, topologically sort them   
+  *)
+  let goal_dep_id = BU.mk_ref 0 in
+  let mark_unset, mark_temp, mark_set = 0, 1, 2 in
+  let empty_uv_set = Free.new_uv_set () in
+  let eq_as_goal_dep (eq:implicit) = 
+    let goal_type, assignees = 
+      match (eq.imp_uvar.ctx_uvar_typ).n with
+      | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_; (lhs, _); (rhs, _)])
+              when S.fv_eq_lid fv FStar.Parser.Const.eq2_lid ->
+        let flex_lhs = is_flex lhs in
+        let flex_rhs = is_flex rhs in
+        if flex_lhs && flex_rhs
+        then let lhs, rhs = flex_uvar_head lhs, flex_uvar_head rhs in
+             FlexFlex (lhs, rhs), (BU.set_add rhs (BU.set_add lhs empty_uv_set))
+        else if flex_lhs 
+        then let lhs = flex_uvar_head lhs in
+             FlexRigid (lhs, rhs), BU.set_add lhs empty_uv_set 
+        else if flex_rhs
+        then let rhs = flex_uvar_head rhs in
+             FlexRigid (rhs, lhs), BU.set_add rhs empty_uv_set
+        else failwith "Impossible: deferred goals must be flex on one at least one side"
+      | _ -> failwith "Not an eq"
+    in
+    BU.incr goal_dep_id;
+    { goal_dep_id = !goal_dep_id;
+      goal_type = goal_type;
+      goal_imp = eq;
+      assignees = assignees;
+      dependences = [];
+      visited = BU.mk_ref mark_unset }
+  in
+  let imp_as_goal_dep (i:implicit) = 
+    BU.incr goal_dep_id;  
+    let head, args = U.head_and_args i.imp_uvar.ctx_uvar_typ in
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [(outer, _);(inner, _)]
+        when fv_eq_lid fv (Ident.lid_of_str "Repro.split_frame") ->
+      { goal_dep_id = !goal_dep_id;
+        goal_type = Frame(i.imp_uvar, outer, inner);
+        goal_imp = i;
+        assignees = BU.set_add i.imp_uvar empty_uv_set;
+        dependences = [];
+        visited = BU.mk_ref mark_unset }        
+    | _ ->
+      BU.print2 "Discarding goal as imp: head=%s, args=%s\n"
+        (Print.term_to_string head)
+        (Print.args_to_string args);
+      { goal_dep_id = !goal_dep_id;
+        goal_type = Imp(i.imp_uvar);
+        goal_imp = i;
+        assignees = empty_uv_set;
+        dependences = [];
+        visited = BU.mk_ref mark_unset }                
+  in
+  let goal_deps = List.map eq_as_goal_dep eqs @ List.map imp_as_goal_dep rest in
+  let goal_deps, rest = 
+    List.partition 
+      (fun gd -> match gd.goal_type with
+              | Imp _ -> false
+              | _ -> true)
+      goal_deps
+  in
+  //This is quadratic
+  let fill_deps_of_goal (gd:goal_dep) : goal_dep =
+      let dependent_uvars = 
+        match gd.goal_type with
+        | FlexRigid(flex, t) -> Free.uvars t
+        | FlexFlex(lhs, rhs) -> gd.assignees
+        | Frame (_, outer, inner) -> BU.set_union (Free.uvars outer) (Free.uvars inner)
+        | Imp _ -> failwith "Impossible: should be filtered out"
+      in
+      let deps =
+        List.filter 
+           (fun other_gd -> 
+             if BU.physical_equality gd other_gd
+             then false // no self-dependences
+             else not (BU.set_is_empty (BU.set_intersect dependent_uvars other_gd.assignees)))
+            goal_deps
+      in
+      { gd with dependences = deps }
+  in
+  let topological_sort gds = 
+    let out = BU.mk_ref [] in
+    let rec visit gd = 
+      if !gd.visited = mark_set then ()
+      else if !gd.visited = mark_temp then failwith "Cycle"
+      else begin
+        gd.visited := mark_temp;
+        List.iter visit gd.dependences;
+        gd.visited := mark_set;
+        out := gd :: !out
+      end
+    in
+    List.iter visit gds;
+    !out
+  in
+  let goal_deps = List.map fill_deps_of_goal goal_deps in
+  BU.print_string "<<<<<<<<<<<<Goals before sorting>>>>>>>>>>>>>>>\n";
+  List.iter print_goal_dep goal_deps;
+  let goal_deps = List.rev (topological_sort goal_deps) in
+  BU.print_string "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";  
+  List.iter print_goal_dep goal_deps;  
+  List.map (fun gd -> gd.goal_imp) (goal_deps @ rest)
+  
 let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: force_trivial_guard////////////\n\
@@ -3844,13 +3980,14 @@ let force_trivial_guard env g =
         let prob_as_implicit (reason, prob) =
           match prob with
           | TProb tp when tp.relation=EQ ->
-            let _, tlhs, _ = env.type_of env tp.lhs in
-            let goal_ty = U.mk_eq2 (env.universe_of env tlhs) tlhs tp.lhs tp.rhs in
-            let reason = (string_of_int tp.pid ^":"^ reason) in
+            let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
+            let env_lax = {env with lax=true; use_bv_sorts=true} in
+            let _, tlhs, _ = env.type_of env_lax tp.lhs in
+            let goal_ty = U.mk_eq2 (env.universe_of env_lax tlhs) tlhs tp.lhs tp.rhs in
             let goal, ctx_uvar, _ = 
               Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None 
             in
-            { imp_reason = reason;
+            { imp_reason = "";
               imp_uvar = fst (List.hd ctx_uvar);
               imp_tm = goal;
               imp_range = tp.lhs.pos 
@@ -3866,7 +4003,16 @@ let force_trivial_guard env g =
                      | _ -> false)
             g.implicits
         in
-        let deferred_goals = more @ deferred_goals in
+        let more = 
+          more |> List.map 
+            (fun i -> 
+              match i.imp_uvar.ctx_uvar_meta with
+              | Some (Ctx_uvar_meta_attr a) ->
+                let reason = BU.format2 "%s::%s" (Print.term_to_string a) i.imp_reason in
+                { i with imp_reason = reason }
+              | _ -> i) 
+        in
+        let deferred_goals = sort_goals deferred_goals more in
         let guard = { g with implicits = imps; deferred_to_tac=[] } in
         let resolve_tac = 
           match Env.lookup_attr env Const.resolve_implicits_attr_string with
@@ -3882,11 +4028,15 @@ let force_trivial_guard env g =
             term
           | _ -> failwith "Resolve_tac not found"
         in
+        let env = { env with enable_defer_to_tac = false } in
         env.try_solve_implicits_hook env resolve_tac deferred_goals;
         guard
     in
     let g = solve_deferred_constraints env g in
     let g = solve_deferred_to_tactic g in
+    if Env.debug env <| Options.Other "ResolveImplicitsHook"
+    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
+                                          (guard_to_string env g);
     let g = resolve_implicits env g in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
@@ -3895,8 +4045,6 @@ let force_trivial_guard env g =
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                 (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                 imp.imp_reason) imp.imp_range
-
-
 
 let teq_force (env:env) (t1:typ) (t2:typ) : unit =
     force_trivial_guard env (teq env t1 t2)

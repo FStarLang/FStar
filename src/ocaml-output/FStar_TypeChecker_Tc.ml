@@ -120,7 +120,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.strict_args_tab =
               (uu___15_73.FStar_TypeChecker_Env.strict_args_tab);
             FStar_TypeChecker_Env.erasable_types_tab =
-              (uu___15_73.FStar_TypeChecker_Env.erasable_types_tab)
+              (uu___15_73.FStar_TypeChecker_Env.erasable_types_tab);
+            FStar_TypeChecker_Env.enable_defer_to_tac =
+              (uu___15_73.FStar_TypeChecker_Env.enable_defer_to_tac)
           }
       | FStar_Pervasives_Native.None  ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se  in
@@ -233,7 +235,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.strict_args_tab =
               (uu___24_137.FStar_TypeChecker_Env.strict_args_tab);
             FStar_TypeChecker_Env.erasable_types_tab =
-              (uu___24_137.FStar_TypeChecker_Env.erasable_types_tab)
+              (uu___24_137.FStar_TypeChecker_Env.erasable_types_tab);
+            FStar_TypeChecker_Env.enable_defer_to_tac =
+              (uu___24_137.FStar_TypeChecker_Env.enable_defer_to_tac)
           }
   
 let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
@@ -1019,7 +1023,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.strict_args_tab =
                        (uu___268_1472.FStar_TypeChecker_Env.strict_args_tab);
                      FStar_TypeChecker_Env.erasable_types_tab =
-                       (uu___268_1472.FStar_TypeChecker_Env.erasable_types_tab)
+                       (uu___268_1472.FStar_TypeChecker_Env.erasable_types_tab);
+                     FStar_TypeChecker_Env.enable_defer_to_tac =
+                       (uu___268_1472.FStar_TypeChecker_Env.enable_defer_to_tac)
                    }
                  else env  in
                let env'1 = FStar_TypeChecker_Env.push env' "expect_failure"
@@ -1235,7 +1241,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.strict_args_tab =
                                   (uu___310_1853.FStar_TypeChecker_Env.strict_args_tab);
                                 FStar_TypeChecker_Env.erasable_types_tab =
-                                  (uu___310_1853.FStar_TypeChecker_Env.erasable_types_tab)
+                                  (uu___310_1853.FStar_TypeChecker_Env.erasable_types_tab);
+                                FStar_TypeChecker_Env.enable_defer_to_tac =
+                                  (uu___310_1853.FStar_TypeChecker_Env.enable_defer_to_tac)
                               }) ses se1.FStar_Syntax_Syntax.sigquals
                              se1.FStar_Syntax_Syntax.sigattrs lids
                             in
@@ -1476,7 +1484,10 @@ let (tc_decl' :
                                    FStar_TypeChecker_Env.strict_args_tab =
                                      (uu___352_2025.FStar_TypeChecker_Env.strict_args_tab);
                                    FStar_TypeChecker_Env.erasable_types_tab =
-                                     (uu___352_2025.FStar_TypeChecker_Env.erasable_types_tab)
+                                     (uu___352_2025.FStar_TypeChecker_Env.erasable_types_tab);
+                                   FStar_TypeChecker_Env.enable_defer_to_tac
+                                     =
+                                     (uu___352_2025.FStar_TypeChecker_Env.enable_defer_to_tac)
                                  }) ne se1.FStar_Syntax_Syntax.sigquals
                                in
                             FStar_All.pipe_right uu____2022
@@ -1679,7 +1690,9 @@ let (tc_decl' :
                               FStar_TypeChecker_Env.strict_args_tab =
                                 (uu___381_2105.FStar_TypeChecker_Env.strict_args_tab);
                               FStar_TypeChecker_Env.erasable_types_tab =
-                                (uu___381_2105.FStar_TypeChecker_Env.erasable_types_tab)
+                                (uu___381_2105.FStar_TypeChecker_Env.erasable_types_tab);
+                              FStar_TypeChecker_Env.enable_defer_to_tac =
+                                (uu___381_2105.FStar_TypeChecker_Env.enable_defer_to_tac)
                             }) (lid, uvs, tps, c) r
                           in
                        FStar_All.pipe_right uu____2094
@@ -1879,7 +1892,9 @@ let (tc_decl' :
                             FStar_TypeChecker_Env.strict_args_tab =
                               (uu___433_2307.FStar_TypeChecker_Env.strict_args_tab);
                             FStar_TypeChecker_Env.erasable_types_tab =
-                              (uu___433_2307.FStar_TypeChecker_Env.erasable_types_tab)
+                              (uu___433_2307.FStar_TypeChecker_Env.erasable_types_tab);
+                            FStar_TypeChecker_Env.enable_defer_to_tac =
+                              (uu___433_2307.FStar_TypeChecker_Env.enable_defer_to_tac)
                           }) (uvs, t) se1.FStar_Syntax_Syntax.sigrng
                         in
                      match uu____2304 with
@@ -2030,7 +2045,9 @@ let (tc_decl' :
                           FStar_TypeChecker_Env.strict_args_tab =
                             (uu___455_2433.FStar_TypeChecker_Env.strict_args_tab);
                           FStar_TypeChecker_Env.erasable_types_tab =
-                            (uu___455_2433.FStar_TypeChecker_Env.erasable_types_tab)
+                            (uu___455_2433.FStar_TypeChecker_Env.erasable_types_tab);
+                          FStar_TypeChecker_Env.enable_defer_to_tac =
+                            (uu___455_2433.FStar_TypeChecker_Env.enable_defer_to_tac)
                         }) (uvs, t) se1.FStar_Syntax_Syntax.sigrng
                       in
                    match uu____2430 with
@@ -2286,7 +2303,9 @@ let (tc_decl' :
                             FStar_TypeChecker_Env.strict_args_tab =
                               (uu___511_2698.FStar_TypeChecker_Env.strict_args_tab);
                             FStar_TypeChecker_Env.erasable_types_tab =
-                              (uu___511_2698.FStar_TypeChecker_Env.erasable_types_tab)
+                              (uu___511_2698.FStar_TypeChecker_Env.erasable_types_tab);
+                            FStar_TypeChecker_Env.enable_defer_to_tac =
+                              (uu___511_2698.FStar_TypeChecker_Env.enable_defer_to_tac)
                           }  in
                         ([], ses, env1))))))
            | FStar_Syntax_Syntax.Sig_let (lbs,lids) ->
@@ -2705,7 +2724,9 @@ let (tc_decl' :
                              FStar_TypeChecker_Env.strict_args_tab =
                                (uu___662_3781.FStar_TypeChecker_Env.strict_args_tab);
                              FStar_TypeChecker_Env.erasable_types_tab =
-                               (uu___662_3781.FStar_TypeChecker_Env.erasable_types_tab)
+                               (uu___662_3781.FStar_TypeChecker_Env.erasable_types_tab);
+                             FStar_TypeChecker_Env.enable_defer_to_tac =
+                               (uu___662_3781.FStar_TypeChecker_Env.enable_defer_to_tac)
                            }  in
                          let e1 =
                            let uu____3784 =
@@ -2921,7 +2942,10 @@ let (tc_decl' :
                                                  (uu___693_3890.FStar_TypeChecker_Env.strict_args_tab);
                                                FStar_TypeChecker_Env.erasable_types_tab
                                                  =
-                                                 (uu___693_3890.FStar_TypeChecker_Env.erasable_types_tab)
+                                                 (uu___693_3890.FStar_TypeChecker_Env.erasable_types_tab);
+                                               FStar_TypeChecker_Env.enable_defer_to_tac
+                                                 =
+                                                 (uu___693_3890.FStar_TypeChecker_Env.enable_defer_to_tac)
                                              }) e
                                            in
                                         FStar_All.pipe_right uu____3881
@@ -3301,7 +3325,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.strict_args_tab =
                                   (uu___785_4406.FStar_TypeChecker_Env.strict_args_tab);
                                 FStar_TypeChecker_Env.erasable_types_tab =
-                                  (uu___785_4406.FStar_TypeChecker_Env.erasable_types_tab)
+                                  (uu___785_4406.FStar_TypeChecker_Env.erasable_types_tab);
+                                FStar_TypeChecker_Env.enable_defer_to_tac =
+                                  (uu___785_4406.FStar_TypeChecker_Env.enable_defer_to_tac)
                               }) m n1 p t
                             in
                          FStar_All.pipe_right uu____4399
@@ -3806,7 +3832,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.strict_args_tab =
                          (uu___969_5263.FStar_TypeChecker_Env.strict_args_tab);
                        FStar_TypeChecker_Env.erasable_types_tab =
-                         (uu___969_5263.FStar_TypeChecker_Env.erasable_types_tab)
+                         (uu___969_5263.FStar_TypeChecker_Env.erasable_types_tab);
+                       FStar_TypeChecker_Env.enable_defer_to_tac =
+                         (uu___969_5263.FStar_TypeChecker_Env.enable_defer_to_tac)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PopOptions ) ->
@@ -3908,7 +3936,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.strict_args_tab =
                          (uu___969_5268.FStar_TypeChecker_Env.strict_args_tab);
                        FStar_TypeChecker_Env.erasable_types_tab =
-                         (uu___969_5268.FStar_TypeChecker_Env.erasable_types_tab)
+                         (uu___969_5268.FStar_TypeChecker_Env.erasable_types_tab);
+                       FStar_TypeChecker_Env.enable_defer_to_tac =
+                         (uu___969_5268.FStar_TypeChecker_Env.enable_defer_to_tac)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.SetOptions uu____5270) ->
@@ -4010,7 +4040,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.strict_args_tab =
                          (uu___969_5275.FStar_TypeChecker_Env.strict_args_tab);
                        FStar_TypeChecker_Env.erasable_types_tab =
-                         (uu___969_5275.FStar_TypeChecker_Env.erasable_types_tab)
+                         (uu___969_5275.FStar_TypeChecker_Env.erasable_types_tab);
+                       FStar_TypeChecker_Env.enable_defer_to_tac =
+                         (uu___969_5275.FStar_TypeChecker_Env.enable_defer_to_tac)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.ResetOptions uu____5277) ->
@@ -4112,7 +4144,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.strict_args_tab =
                          (uu___969_5284.FStar_TypeChecker_Env.strict_args_tab);
                        FStar_TypeChecker_Env.erasable_types_tab =
-                         (uu___969_5284.FStar_TypeChecker_Env.erasable_types_tab)
+                         (uu___969_5284.FStar_TypeChecker_Env.erasable_types_tab);
+                       FStar_TypeChecker_Env.enable_defer_to_tac =
+                         (uu___969_5284.FStar_TypeChecker_Env.enable_defer_to_tac)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.RestartSolver ) ->
@@ -4417,7 +4451,9 @@ let (check_exports :
             FStar_TypeChecker_Env.strict_args_tab =
               (uu___1063_6077.FStar_TypeChecker_Env.strict_args_tab);
             FStar_TypeChecker_Env.erasable_types_tab =
-              (uu___1063_6077.FStar_TypeChecker_Env.erasable_types_tab)
+              (uu___1063_6077.FStar_TypeChecker_Env.erasable_types_tab);
+            FStar_TypeChecker_Env.enable_defer_to_tac =
+              (uu___1063_6077.FStar_TypeChecker_Env.enable_defer_to_tac)
           }  in
         let check_term lid univs1 t =
           let uu____6097 = FStar_Syntax_Subst.open_univ_vars univs1 t  in
@@ -5119,7 +5155,9 @@ let (tc_partial_modul :
            FStar_TypeChecker_Env.strict_args_tab =
              (uu___1351_7520.FStar_TypeChecker_Env.strict_args_tab);
            FStar_TypeChecker_Env.erasable_types_tab =
-             (uu___1351_7520.FStar_TypeChecker_Env.erasable_types_tab)
+             (uu___1351_7520.FStar_TypeChecker_Env.erasable_types_tab);
+           FStar_TypeChecker_Env.enable_defer_to_tac =
+             (uu___1351_7520.FStar_TypeChecker_Env.enable_defer_to_tac)
          }  in
        let env2 =
          FStar_TypeChecker_Env.set_current_module env1
@@ -5357,7 +5395,9 @@ and (finish_partial_modul :
                       FStar_TypeChecker_Env.strict_args_tab =
                         (uu___1394_7775.FStar_TypeChecker_Env.strict_args_tab);
                       FStar_TypeChecker_Env.erasable_types_tab =
-                        (uu___1394_7775.FStar_TypeChecker_Env.erasable_types_tab)
+                        (uu___1394_7775.FStar_TypeChecker_Env.erasable_types_tab);
+                      FStar_TypeChecker_Env.enable_defer_to_tac =
+                        (uu___1394_7775.FStar_TypeChecker_Env.enable_defer_to_tac)
                     }  in
                   let en02 =
                     let uu___1397_7777 = en01  in
@@ -5461,7 +5501,9 @@ and (finish_partial_modul :
                       FStar_TypeChecker_Env.strict_args_tab =
                         (uu___1397_7777.FStar_TypeChecker_Env.strict_args_tab);
                       FStar_TypeChecker_Env.erasable_types_tab =
-                        (uu___1397_7777.FStar_TypeChecker_Env.erasable_types_tab)
+                        (uu___1397_7777.FStar_TypeChecker_Env.erasable_types_tab);
+                      FStar_TypeChecker_Env.enable_defer_to_tac =
+                        (uu___1397_7777.FStar_TypeChecker_Env.enable_defer_to_tac)
                     }  in
                   let uu____7839 =
                     let uu____7841 = FStar_Options.interactive ()  in
@@ -5687,7 +5729,9 @@ let (check_module :
              FStar_TypeChecker_Env.strict_args_tab =
                (uu___1438_8016.FStar_TypeChecker_Env.strict_args_tab);
              FStar_TypeChecker_Env.erasable_types_tab =
-               (uu___1438_8016.FStar_TypeChecker_Env.erasable_types_tab)
+               (uu___1438_8016.FStar_TypeChecker_Env.erasable_types_tab);
+             FStar_TypeChecker_Env.enable_defer_to_tac =
+               (uu___1438_8016.FStar_TypeChecker_Env.enable_defer_to_tac)
            }  in
          let uu____8021 = tc_modul env1 m b  in
          match uu____8021 with

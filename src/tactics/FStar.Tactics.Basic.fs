@@ -921,9 +921,10 @@ let rec  __try_unify_by_application
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
+            mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (fst b, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, snd b, uv)::acc) e typ' ty2)
+            __try_unify_by_application only_match ((uvt, snd b, uv)::acc) e typ' ty2))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
@@ -945,9 +946,12 @@ let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : ter
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
 let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
-    mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let e = goal_env goal in
+    mlog (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
+            (Print.term_to_string tm)
+            (goal_to_string_verbose goal)
+            (Env.print_gamma e.gamma)) (fun _ ->
     bind (__tc e tm) (fun (tm, typ, guard) ->
     // Focus helps keep the goal order
     let typ = bnorm e typ in
@@ -2183,7 +2187,7 @@ let proofstate_of_goal_ty rng env typ =
     (ps, goal_witness g)
 
 let goal_of_implicit env (i:Env.implicit) : goal =
-  mk_goal env i.imp_uvar (FStar.Options.peek()) false i.imp_reason
+  mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
     let goals = List.map (goal_of_implicit env) imps in

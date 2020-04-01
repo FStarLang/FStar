@@ -192,6 +192,7 @@ and env = {
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac: bool
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -305,6 +306,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     nbe = nbe;
     strict_args_tab = BU.smap_create 20;
     erasable_types_tab = BU.smap_create 20;
+    enable_defer_to_tac=true
   }
 
 let dsenv env = env.dsenv

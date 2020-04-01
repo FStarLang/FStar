@@ -146,7 +146,9 @@ let (push_with_kind :
               FStar_TypeChecker_Env.strict_args_tab =
                 (uu___30_299.FStar_TypeChecker_Env.strict_args_tab);
               FStar_TypeChecker_Env.erasable_types_tab =
-                (uu___30_299.FStar_TypeChecker_Env.erasable_types_tab)
+                (uu___30_299.FStar_TypeChecker_Env.erasable_types_tab);
+              FStar_TypeChecker_Env.enable_defer_to_tac =
+                (uu___30_299.FStar_TypeChecker_Env.enable_defer_to_tac)
             }  in
           let res = FStar_TypeChecker_Tc.push_context env1 msg  in
           FStar_Options.push ();

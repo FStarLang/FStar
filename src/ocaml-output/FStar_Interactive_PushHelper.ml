@@ -120,7 +120,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.strict_args_tab =
           (uu___4_71.FStar_TypeChecker_Env.strict_args_tab);
         FStar_TypeChecker_Env.erasable_types_tab =
-          (uu___4_71.FStar_TypeChecker_Env.erasable_types_tab)
+          (uu___4_71.FStar_TypeChecker_Env.erasable_types_tab);
+        FStar_TypeChecker_Env.enable_defer_to_tac =
+          (uu___4_71.FStar_TypeChecker_Env.enable_defer_to_tac)
       }
   
 let (repl_ld_tasks_of_deps :

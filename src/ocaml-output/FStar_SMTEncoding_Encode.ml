@@ -1971,7 +1971,10 @@ let (encode_free_var :
                                        (uu___316_7473.FStar_TypeChecker_Env.strict_args_tab);
                                      FStar_TypeChecker_Env.erasable_types_tab
                                        =
-                                       (uu___316_7473.FStar_TypeChecker_Env.erasable_types_tab)
+                                       (uu___316_7473.FStar_TypeChecker_Env.erasable_types_tab);
+                                     FStar_TypeChecker_Env.enable_defer_to_tac
+                                       =
+                                       (uu___316_7473.FStar_TypeChecker_Env.enable_defer_to_tac)
                                    }) comp FStar_Syntax_Syntax.U_unknown
                                  in
                               FStar_Syntax_Syntax.mk_Total uu____7470
@@ -2984,7 +2987,9 @@ let (encode_top_level_let :
                   FStar_TypeChecker_Env.strict_args_tab =
                     (uu___528_9487.FStar_TypeChecker_Env.strict_args_tab);
                   FStar_TypeChecker_Env.erasable_types_tab =
-                    (uu___528_9487.FStar_TypeChecker_Env.erasable_types_tab)
+                    (uu___528_9487.FStar_TypeChecker_Env.erasable_types_tab);
+                  FStar_TypeChecker_Env.enable_defer_to_tac =
+                    (uu___528_9487.FStar_TypeChecker_Env.enable_defer_to_tac)
                 }  in
               let subst_comp1 formals actuals comp =
                 let subst1 =

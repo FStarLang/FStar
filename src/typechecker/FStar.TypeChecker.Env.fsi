@@ -168,6 +168,7 @@ and env = {
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;  (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac:bool
 }
 
 and solver_depth_t = int * int * int

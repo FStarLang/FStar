@@ -1007,9 +1007,9 @@ aqualUniverses:
   HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
                                        ( Meta (Arg_qualifier_meta_tac t) )}
-| HASH LBRACK_AT thunk_tmNoEq_ RBRACK
+| HASH LBRACK_AT tmNoEq RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                          ( Meta (Arg_qualifier_meta_attr t) )}
+                                   ( Meta (Arg_qualifier_meta_attr t) )}
 | HASH
     {let _1 = () in
               ( Implicit )}
