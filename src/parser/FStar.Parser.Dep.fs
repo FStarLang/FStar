@@ -263,7 +263,7 @@ let cache_file_name =
             FStar.Errors.log_issue
                 Range.dummyRange
                 (FStar.Errors.Warning_UnexpectedCheckedFile,
-                    BU.format3 "Did not expected %s to be already checked, \
+                    BU.format3 "Did not expect %s to be already checked, \
                                 but found it in an unexpected location %s \
                                 instead of %s"
                                 mname
@@ -1284,7 +1284,7 @@ let collect (all_cmd_line_files: list<file_name>)
             match deps_try_find dep_graph filename with
             | Some node -> node
             | None ->
-              failwith (BU.format1 "Failed to find dependences of %s" filename)
+              failwith (BU.format1 "Impossible: Failed to find dependencies of %s" filename)
         in
         let direct_deps = node.edges |> List.collect (fun x ->
             match x with
