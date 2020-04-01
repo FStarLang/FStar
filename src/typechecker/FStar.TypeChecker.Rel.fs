@@ -52,6 +52,20 @@ let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 (* lazy string, for error reporting *)
 type lstring = Thunk.t<string>
 
+(* Make a thunk for a string, but keep the UF state
+ * so it can be set before calling the function. This is
+ * used since most error messages call term_to_string,
+ * which will resolve uvars and explode if the version is
+ * wrong. *)
+let mklstr (f : unit -> string) =
+    let uf = UF.get () in
+    Thunk.mk (fun () ->
+        let tx = UF.new_transaction () in
+        UF.set uf;
+        let r = f () in
+        UF.rollback tx;
+        r)
+
 (* Instantiation of unification variables *)
 type uvi =
     | TERM of ctx_uvar * term
@@ -195,7 +209,7 @@ let giveup env (reason : lstring) prob =
     Failed (prob, reason)
 
 let giveup_lit env (reason : string) prob =
-    giveup env (Thunk.mk (fun () -> reason)) prob
+    giveup env (mklstr (fun () -> reason)) prob
 
 (* ------------------------------------------------*)
 (* </worklist ops>                                 *)
@@ -1225,7 +1239,7 @@ let ufailed_simple (s:string) : univ_eq_sol =
   UFailed (Thunk.mkv s)
 
 let ufailed_thunk (s: unit -> string) : univ_eq_sol =
-  UFailed (Thunk.mk s)
+  UFailed (mklstr s)
 
 let rec really_solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
@@ -1879,7 +1893,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in
          if not occurs_ok
-         then giveup_or_defer env orig wl (Thunk.mk (fun () -> "occurs-check failed: " ^ (Option.get msg)))
+         then giveup_or_defer env orig wl (mklstr (fun () -> "occurs-check failed: " ^ (Option.get msg)))
          else aux [] [] formals wl
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
@@ -2061,7 +2075,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         in
         match quasi_pattern env lhs with
         | None ->
-           let msg = Thunk.mk (fun () ->
+           let msg = mklstr (fun () ->
                         BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
                           (prob_to_string env orig)) in
            giveup_or_defer env orig wl msg
@@ -2072,7 +2086,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           else if is_arrow rhs
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
           else
-            let msg = Thunk.mk (fun () ->
+            let msg = mklstr (fun () ->
                                   BU.format1 "first_order heuristic cannot solve %s; rhs not an app or arrow"
                                   (prob_to_string env orig)) in
             giveup_or_defer env orig wl msg
@@ -2104,7 +2118,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
         then
-          let msg = Thunk.mk (fun () ->
+          let msg = mklstr (fun () ->
                                 BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                            (names_to_string fvs2)
                                            (names_to_string fvs1)
@@ -2226,7 +2240,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let nargs = List.length args1 in
         if nargs <> List.length args2
         then giveup env
-                    (Thunk.mk
+                    (mklstr
                       (fun () -> BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
                                      (Print.term_to_string head1)
                                      (args_to_string args1)
@@ -2522,7 +2536,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
-                else giveup env (Thunk.mk (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
+                else giveup env (mklstr (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (Print.term_to_string head1)
                                                   (BU.dflt ""
                                                     (BU.bind_opt (delta_depth_of_term env head1)
@@ -2541,7 +2555,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             if wl.smt_ok
             then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
-            else giveup env (Thunk.mk (fun () -> BU.format2 "head mismatch for subtyping (%s vs %s)"
+            else giveup env (mklstr (fun () -> BU.format2 "head mismatch for subtyping (%s vs %s)"
                                         (Print.term_to_string t1)
                                         (Print.term_to_string t2)))
                                 orig
@@ -2952,11 +2966,11 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                             (Print.comp_to_string (mk_Comp c1_comp))
                             (Print.comp_to_string (mk_Comp c2_comp)) in
         if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
-        then giveup env (Thunk.mk (fun () -> BU.format2 "incompatible effects: %s <> %s"
+        then giveup env (mklstr (fun () -> BU.format2 "incompatible effects: %s <> %s"
                                         (Print.lid_to_string c1_comp.effect_name)
                                         (Print.lid_to_string c2_comp.effect_name))) orig
         else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
-        then giveup env (Thunk.mk (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
+        then giveup env (mklstr (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
                                         (Print.args_to_string c1_comp.effect_args)
                                         (Print.args_to_string c2_comp.effect_args))) orig
         else
@@ -3271,7 +3285,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                     if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                     match Env.monad_leq env c1.effect_name c2.effect_name with
                     | None ->
-                       giveup env (Thunk.mk (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
+                       giveup env (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
                                               (Print.lid_to_string c1.effect_name)
                                               (Print.lid_to_string c2.effect_name))) orig
                     | Some edge ->
