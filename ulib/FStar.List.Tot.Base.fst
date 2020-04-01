@@ -21,8 +21,6 @@ used in specifications.
 *)
 module FStar.List.Tot.Base
 
-module F = FStar.FunctionalExtensionality
-
 (**
 Base operations
 *)
