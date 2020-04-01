@@ -20,12 +20,6 @@ val nop (_:unit) : SteelT unit emp (fun c -> emp)
 assume
 val h_admit (#a:Type) (#[@resolve_framing] p:hprop) (q:a -> hprop) : SteelT a p q
 
-let split_frame outer inner = frame:hprop {can_be_split_into outer inner frame}
-
-#push-options "--admit_smt_queries true"
-let solve_split_frame (outer:hprop) : Tot (split_frame outer emp) = outer
-#pop-options
-
 assume
 val my_frame_t
   (outer:hprop)
@@ -52,16 +46,16 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
 [@(resolve_implicits)
   (resolve_framing)]
 let resolve () : Tac unit =
-  let rec aux (i:int) : Tac unit =
-//    T.dump ("State: " ^ string_of_int i);
+    let rec aux (i:int) : Tac unit =
+    T.dump ("State: " ^ string_of_int i);
     match T.goals () with
     | [] -> ()
     | g :: _ ->
       let f = T.term_as_formula' (goal_type g) in
-//      T.print ("Goal formula is " ^ (formula_to_string f));
+      T.print ("Goal formula is " ^ (formula_to_string f));
       match f with
       | Comp (Eq _) _ _ ->
-//        T.print "Solving equality goal\n";
+        T.print "Solving equality goal\n";
         T.trefl();
         aux (i + 1)
 
@@ -73,9 +67,8 @@ let resolve () : Tac unit =
   aux 0
 
 
-//succeeds if you open SteelT.Effect instead of Steel.Effect
-//#push-options "--debug Repro --debug_level ResolveImplicitsHook"
 
+//#push-options "--debug Repro --debug_level ResolveImplicitsHook"
 val test_ok1 (_:unit)
   : SteelT unit emp (fun c -> emp)
 let test_ok1 _

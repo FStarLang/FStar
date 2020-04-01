@@ -3828,17 +3828,21 @@ type goal_dep =
     goal_type:goal_type;
     goal_imp:implicit;
     assignees:BU.set<ctx_uvar>;
-    dependences:list<goal_dep>;
+    goal_dep_uvars:BU.set<ctx_uvar>; 
+    dependences:ref<(list<goal_dep>)>;
     visited:ref int
   }
 
-let print_goal_dep gd =
-  BU.print4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n"
-    (BU.string_of_int gd.goal_dep_id)
-    (BU.set_elements gd.assignees 
+let print_uvar_set (s:BU.set<ctx_uvar>) =
+    (BU.set_elements s
      |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
      |> String.concat "; ")
-    (List.map (fun gd -> string_of_int gd.goal_dep_id) gd.dependences
+
+let print_goal_dep gd =
+  BU.format4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n"
+    (BU.string_of_int gd.goal_dep_id)
+    (print_uvar_set gd.assignees)
+    (List.map (fun gd -> string_of_int gd.goal_dep_id) (!gd.dependences)
      |> String.concat "; ")
     (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
@@ -3868,7 +3872,7 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
   let mark_unset, mark_temp, mark_set = 0, 1, 2 in
   let empty_uv_set = Free.new_uv_set () in
   let eq_as_goal_dep (eq:implicit) = 
-    let goal_type, assignees = 
+    let goal_type, assignees, dep_uvars = 
       match (eq.imp_uvar.ctx_uvar_typ).n with
       | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_; (lhs, _); (rhs, _)])
               when S.fv_eq_lid fv FStar.Parser.Const.eq2_lid ->
@@ -3876,13 +3880,18 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
         let flex_rhs = is_flex rhs in
         if flex_lhs && flex_rhs
         then let lhs, rhs = flex_uvar_head lhs, flex_uvar_head rhs in
-             FlexFlex (lhs, rhs), (BU.set_add rhs (BU.set_add lhs empty_uv_set))
+             let assignees = BU.set_add rhs (BU.set_add lhs empty_uv_set) in
+             FlexFlex (lhs, rhs), assignees, assignees
         else if flex_lhs 
         then let lhs = flex_uvar_head lhs in
-             FlexRigid (lhs, rhs), BU.set_add lhs empty_uv_set 
+             let assignees = BU.set_add lhs empty_uv_set in
+             let dep_uvars = Free.uvars rhs in
+             FlexRigid (lhs, rhs), assignees, dep_uvars
         else if flex_rhs
         then let rhs = flex_uvar_head rhs in
-             FlexRigid (rhs, lhs), BU.set_add rhs empty_uv_set
+             let assignees = BU.set_add rhs empty_uv_set in
+             let dep_uvars = Free.uvars lhs in
+             FlexRigid (rhs, lhs), assignees, dep_uvars
         else failwith "Impossible: deferred goals must be flex on one at least one side"
       | _ -> failwith "Not an eq"
     in
@@ -3891,33 +3900,40 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
       goal_type = goal_type;
       goal_imp = eq;
       assignees = assignees;
-      dependences = [];
+      goal_dep_uvars = dep_uvars;
+      dependences = BU.mk_ref [];
       visited = BU.mk_ref mark_unset }
   in
   let imp_as_goal_dep (i:implicit) = 
     BU.incr goal_dep_id;  
-    let head, args = U.head_and_args i.imp_uvar.ctx_uvar_typ in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
-        when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
-          && is_flex frame ->
-      let imp_uvar = flex_uvar_head frame in
-      { goal_dep_id = !goal_dep_id;
-        goal_type = Frame(imp_uvar, outer, inner);
-        goal_imp = i;
-        assignees = BU.set_add imp_uvar empty_uv_set;
-        dependences = [];
-        visited = BU.mk_ref mark_unset }        
-    | _ ->
-      BU.print2 "Discarding goal as imp: head=%s, args=%s\n"
-        (Print.term_to_string head)
-        (Print.args_to_string args);
+    let imp_goal () = 
+      BU.print1 "Discarding goal as imp: %s\n" (Print.term_to_string i.imp_uvar.ctx_uvar_typ);
       { goal_dep_id = !goal_dep_id;
         goal_type = Imp(i.imp_uvar);
         goal_imp = i;
         assignees = empty_uv_set;
-        dependences = [];
-        visited = BU.mk_ref mark_unset }                
+        goal_dep_uvars = empty_uv_set;
+        dependences = BU.mk_ref [];
+        visited = BU.mk_ref mark_unset }                    
+    in
+    match U.un_squash i.imp_uvar.ctx_uvar_typ with
+    | None -> imp_goal()
+    | Some t ->
+      let head, args = U.head_and_args t in
+      match (U.un_uinst head).n, args with
+      | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
+                when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
+                && is_flex frame ->
+        let imp_uvar = flex_uvar_head frame in
+        { goal_dep_id = !goal_dep_id;
+          goal_type = Frame(imp_uvar, outer, inner);
+          goal_imp = i;
+          assignees = BU.set_add imp_uvar empty_uv_set;
+          goal_dep_uvars = BU.set_union (Free.uvars outer) (Free.uvars inner);
+          dependences = BU.mk_ref [];
+          visited = BU.mk_ref mark_unset }        
+      | _ ->
+        imp_goal()
   in
   let goal_deps = List.map eq_as_goal_dep eqs @ List.map imp_as_goal_dep rest in
   let goal_deps, rest = 
@@ -3927,46 +3943,87 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
               | _ -> true)
       goal_deps
   in
-  //This is quadratic
-  let fill_deps_of_goal (gd:goal_dep) : goal_dep =
-      let dependent_uvars = 
-        match gd.goal_type with
-        | FlexRigid(flex, t) -> Free.uvars t
-        | FlexFlex(lhs, rhs) -> gd.assignees
-        | Frame (_, outer, inner) -> BU.set_union (Free.uvars outer) (Free.uvars inner)
-        | Imp _ -> failwith "Impossible: should be filtered out"
-      in
+  let fill_deps gds : unit  =
+    let in_deps (deps:list<goal_dep>) (gd:goal_dep) = 
+      BU.for_some (fun d -> d.goal_dep_id = gd.goal_dep_id) deps
+    in
+    let fill_deps_of_goal (gd:goal_dep) : bool =
+      let dependent_uvars = gd.goal_dep_uvars in
+      let current_deps = !gd.dependences in
+      let changed = BU.mk_ref false in
       let deps =
         List.filter 
            (fun other_gd -> 
-             if BU.physical_equality gd other_gd
-             then false // no self-dependences
-             else not (BU.set_is_empty (BU.set_intersect dependent_uvars other_gd.assignees)))
-            goal_deps
+             let res = 
+               if gd.goal_dep_id = other_gd.goal_dep_id
+               then false // no self-dependences
+               else if in_deps current_deps other_gd
+               then false //no duplicates
+               else match other_gd.goal_type with
+                    | FlexFlex _ ->
+                      begin
+                      match !other_gd.dependences with
+                      | [] -> false //this flex-flex is not yet schedulable
+                      | deps -> 
+                        //it has non-trivial dependences 
+                        //and no cycles allowed
+                        let eligible = not (in_deps deps gd) in
+                        if eligible
+                        then not (BU.set_is_empty (BU.set_intersect dependent_uvars other_gd.assignees))
+                        else false
+                      end
+                    | _ -> 
+                      not (BU.set_is_empty (BU.set_intersect dependent_uvars other_gd.assignees))
+             in
+             if res then changed := true;
+             res)
+            gds
       in
-      { gd with dependences = deps }
+      BU.print3 "Deps for goal %s, dep uvars = %s ... [%s]\n"
+                (print_goal_dep gd)
+                (print_uvar_set dependent_uvars)
+                ((List.map (fun x -> string_of_int x.goal_dep_id) deps |> String.concat "; "));
+      gd.dependences := deps @ !gd.dependences;
+      !changed
+    in
+    let rec aux () = 
+      let changed =
+        List.fold_right 
+          (fun gd changed -> 
+            let changed' = fill_deps_of_goal gd in
+            changed || changed')
+          gds false
+      in
+      if changed then aux() else ()
+    in
+    aux()
   in
   let topological_sort gds = 
     let out = BU.mk_ref [] in
-    let rec visit gd = 
+    let rec visit cycle gd = 
       if !gd.visited = mark_set then ()
-      else if !gd.visited = mark_temp then failwith "Cycle"
+      else if !gd.visited = mark_temp 
+      then let _ = 
+               BU.print1 "Cycle:\n%s\n"
+                 (List.map print_goal_dep (gd::cycle) |> String.concat ", ")
+           in
+           failwith "Cycle"
       else begin
         gd.visited := mark_temp;
-        List.iter visit gd.dependences;
+        List.iter (visit (gd::cycle)) !gd.dependences;
         gd.visited := mark_set;
         out := gd :: !out
       end
     in
-    List.iter visit gds;
+    List.iter (visit []) gds;
     !out
   in
-  let goal_deps = List.map fill_deps_of_goal goal_deps in
+  fill_deps goal_deps;
   BU.print_string "<<<<<<<<<<<<Goals before sorting>>>>>>>>>>>>>>>\n";
-  List.iter print_goal_dep goal_deps;
+  List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps;
   let goal_deps = List.rev (topological_sort goal_deps) in
   BU.print_string "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";  
-  List.iter print_goal_dep goal_deps;  
+  List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps;  
   List.map (fun gd -> gd.goal_imp) (goal_deps @ rest)
   
 let force_trivial_guard env g =
