@@ -3416,11 +3416,14 @@ let rec universe_of_aux env e =
           universe_of_aux env hd, args
         | Tm_match(_, hd::_) ->
           let (_, _, hd) = SS.open_branch hd in
-          let hd, args = U.head_and_args hd in
-          type_of_head retry hd args
+          let hd, args' = U.head_and_args hd in
+          type_of_head retry hd (args'@args)
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
           //      or a let,
+          // GM: NOTE: not using hd and args here,
+          //     this is calling itself with the `e` from
+          //     universe_of_aux and splitting it again.
           let e = N.normalize [Env.Beta; Env.DoNotUnfoldPureLets] env e in
           let hd, args = U.head_and_args e in
           type_of_head false hd args
