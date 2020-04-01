@@ -634,7 +634,7 @@ let collect_one
        let add_dep_on_module (module_name : lid) (is_friend : bool) =
          if add_dependence_edge working_map module_name is_friend
          then ()
-         else if Options.debug_any () then
+         else if Options.debug_at_level_no_module (Options.Other "Dep") then
            FStar.Errors.log_issue (range_of_lid module_name)
              (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
               (Ident.string_of_lid module_name)))
@@ -683,7 +683,7 @@ let collect_one
   let data_from_cache = filename |> get_parsing_data_from_cache in
 
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
-    if Options.debug_any () then
+    if Options.debug_at_level_no_module (Options.Other "Dep") then
       BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     data_from_cache |> must,
@@ -1027,7 +1027,7 @@ let topological_dependences_of'
             * dependencies. Otherwise, the map only contains its direct dependencies. *)
         all_friends, all_files
     | White ->
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print2 "Visiting %s: direct deps are %s\n"
                 filename
                 (String.concat ", " (List.map dep_to_string dep_node.edges));
@@ -1043,7 +1043,7 @@ let topological_dependences_of'
         in
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename ({dep_node with color=Black});
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
@@ -1125,7 +1125,7 @@ let topological_dependences_of'
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print3 "Phase1 complete:\n\t\
                        all_files = %s\n\t\
                        all_friends=%s\n\t\
@@ -1137,11 +1137,11 @@ let topological_dependences_of'
         widen_deps friends dep_graph file_system_map widened
     in
     let _, all_files =
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print_string "==============Phase2==================\n";
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     widened
@@ -1152,7 +1152,7 @@ let phase1
         interfaces_needing_inlining
         for_extraction
 =
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print_string "==============Phase1==================\n";
     let widened = false in
     if Options.cmi()
@@ -1357,7 +1357,7 @@ let collect (all_cmd_line_files: list<file_name>)
            (Options.codegen()<>None))
       "FStar.Parser.Dep.topological_dependences_of"
   in
-  if Options.debug_any()
+  if Options.debug_at_level_no_module (Options.Other "Dep")
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
