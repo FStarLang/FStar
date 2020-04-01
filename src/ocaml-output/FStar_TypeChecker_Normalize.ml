@@ -1264,7 +1264,7 @@ let (unembed_binder :
     match uu____5242 with
     | FStar_Pervasives_Native.Some e ->
         let uu____5281 = FStar_Syntax_Embeddings.unembed e t  in
-        uu____5281 true FStar_Syntax_Embeddings.id_norm_cb
+        uu____5281 false FStar_Syntax_Embeddings.id_norm_cb
     | FStar_Pervasives_Native.None  ->
         (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
            (FStar_Errors.Warning_UnembedBinderKnot,
