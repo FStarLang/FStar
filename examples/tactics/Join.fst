@@ -17,6 +17,9 @@ module Join
 
 open FStar.Tactics
 
+val p16 : x:int -> Lemma (x == 16 ==> pow2 x == 65536) [SMTPat (pow2 x)]
+let p16 _ = assert_norm (pow2 16 == 65536)
+
 let hard = pow2 20 == 1048576
 
 assume val phi : Type
@@ -25,10 +28,6 @@ assume val lem : squash hard -> Lemma phi
 
 (* Making sure it can be proven *)
 let _ = assert hard
-
-let dump m =
-    (* dump m; *)
-    ()
 
 let repeat' t = let _ = repeat t in ()
 let implies_intro' () = let _ = implies_intro () in ()
