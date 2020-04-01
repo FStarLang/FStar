@@ -29,12 +29,25 @@ let solve_split_frame (outer:hprop) : Tot (split_frame outer emp) = outer
 assume
 val my_frame_t
   (outer:hprop)
-  (#[@resolve_framing] frame:split_frame outer emp)
+  (#[@resolve_framing] frame:hprop)
+  (#[@resolve_framing] _:squash (can_be_split_into outer emp frame))
   (_:unit)
   : SteelT unit outer (fun _ -> frame)
 
 open FStar.Tactics
 module T = FStar.Tactics
+
+inline_for_extraction noextract let resolve_frame () : Tac unit =
+  let open FStar.Algebra.CommMonoid.Equiv in
+  norm [delta_only [`%can_be_split_into]];
+  norm [delta_attr [`%__reduce__];
+        delta_only [
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+          `%fst; `%snd];
+        primops; iota; zeta];
+  canon()
 
 [@(resolve_implicits)
   (resolve_framing)]
@@ -54,7 +67,7 @@ let resolve () : Tac unit =
 
       | _ -> //has to be framing
         T.print "Solving framing goal\n";
-        T.apply (`solve_split_frame);
+        T.focus resolve_frame;
         aux (i + 1)
   in
   aux 0
@@ -75,7 +88,8 @@ assume
 val frame_t_emp
   (#[@resolve_framing] outer:hprop)
   (#[@resolve_framing] inner:hprop)
-  (#[@resolve_framing] frame:split_frame outer inner)
+  (#[@resolve_framing] frame:hprop)
+  (#[@resolve_framing] _:squash (can_be_split_into outer inner frame))
   ($f:unit -> SteelT unit inner (fun _ -> emp))
   : SteelT unit outer (fun _ -> frame)
 
@@ -88,13 +102,13 @@ let test_ok2 _
     h_admit (fun _ -> emp)
 
 
-
 assume
 val frame_t
   (#[@resolve_framing] outer:hprop)
   (#[@resolve_framing] inner0:hprop)
   (#[@resolve_framing] inner1:hprop)
-  (#[@resolve_framing] frame:split_frame outer inner0)
+  (#[@resolve_framing] frame:hprop)
+  (#[@resolve_framing] _:squash (can_be_split_into outer inner0 frame))
   ($f:unit -> SteelT unit inner0 (fun _ -> inner1))
   : SteelT unit outer (fun _ -> frame `star` inner1)
 val test_ok3 (_:unit)

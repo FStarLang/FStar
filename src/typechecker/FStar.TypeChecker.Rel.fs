@@ -3898,12 +3898,14 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
     BU.incr goal_dep_id;  
     let head, args = U.head_and_args i.imp_uvar.ctx_uvar_typ in
     match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [(outer, _);(inner, _)]
-        when fv_eq_lid fv (Ident.lid_of_str "Repro.split_frame") ->
+    | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
+        when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
+          && is_flex frame ->
+      let imp_uvar = flex_uvar_head frame in
       { goal_dep_id = !goal_dep_id;
-        goal_type = Frame(i.imp_uvar, outer, inner);
+        goal_type = Frame(imp_uvar, outer, inner);
         goal_imp = i;
-        assignees = BU.set_add i.imp_uvar empty_uv_set;
+        assignees = BU.set_add imp_uvar empty_uv_set;
         dependences = [];
         visited = BU.mk_ref mark_unset }        
     | _ ->
