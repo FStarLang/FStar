@@ -70,6 +70,6 @@ val pack_aqual     : aqualv -> aqual
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)
-val implode_qn     : list string -> string
-val explode_qn     : string -> list string
+val implode_qn     : list<string> -> string
+val explode_qn     : string -> list<string>
 val compare_string : string -> string -> Z.t
