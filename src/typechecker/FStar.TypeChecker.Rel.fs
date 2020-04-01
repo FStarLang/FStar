@@ -2308,9 +2308,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               in
               let unfold_and_retry d env wl (prob, reason) =
                    if debug env <| Options.Other "Rel"
-                   then BU.print3 "Failed to solve %s because sub-problem %s is not solvable without SMT because %s"
+                   then BU.print2 "Failed to solve %s because a sub-problem is not solvable without SMT because %s"
                                 (prob_to_string env orig)
-                                (prob_to_string env prob)
                                 (Thunk.force reason);
                    match N.unfold_head_once env t1,
                          N.unfold_head_once env t2
