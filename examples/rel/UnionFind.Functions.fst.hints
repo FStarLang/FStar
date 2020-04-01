@@ -154,7 +154,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a88236691b1385484173478974991493"
+      "4e3bed03f53ccf9db14cda3b16672afc"
     ],
     [
       "UnionFind.Functions.find_opt",
@@ -247,7 +247,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7c5edeaf27b9ae77cced72718b165b2d"
+      "7a6f955ec9a98c4fc418ba0f85633194"
     ],
     [
       "UnionFind.Functions.well_formed_decreases_lemma",
@@ -292,7 +292,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n"
       ],
       0,
-      "d656fe20de80fe94fd365b815582d043"
+      "155ab6b6faee06a36e81dc38a9db8b62"
     ],
     [
       "UnionFind.Functions.merge",
@@ -593,7 +593,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "616e3f54695d13864fec19b6c60414a1"
+      "7390c1d5154983c43412d3722509ae25"
     ],
     [
       "UnionFind.Functions.find_opt",
@@ -686,7 +686,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "46d8492deeb636b79a39f80174a1dc52"
+      "31fdde18ceda73f63d35aa19346cd6d8"
     ],
     [
       "UnionFind.Functions.well_formed_decreases_lemma",
