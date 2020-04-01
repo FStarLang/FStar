@@ -893,22 +893,6 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 
          bind_pure_wp_with env pure_assert_wp c flags
 
-let record_simplify = 
-  let x = BU.mk_ref 0 in
-  fun env guard ->
-    let n = !x in
-    x := n + 1;
-    let start = BU.now() in
-    let g = Rel.simplify_guard env guard in
-    let fin = BU.now () in
-    if Options.debug_any()
-    then
-      BU.print2 "Simplify_guard %s in %s ms\n"
-        (BU.string_of_int n)
-        (BU.string_of_int (snd (BU.time_diff start fin)));
-    g
-
-  
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
