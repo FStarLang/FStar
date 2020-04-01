@@ -161,8 +161,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
       match BU.smap_try_find mcache cache_fn with
       | None ->
         let msg = BU.format2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
-        if Options.debug_any ()
-        then BU.print1 "%s\m" msg;
+        if Options.debug_at_level_no_module (Options.Other "CheckedFiles")
+        then BU.print1 "%s\n" msg;
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid dig, _)   -> Inr dig
@@ -205,10 +205,10 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
            else let current_digest = BU.digest_of_file fn in
                 if x.digest <> current_digest
                 then begin
-                  if Options.debug_any () then
-                  BU.print4 "Checked file %s is stale since incorrect digest of %s, \
-                    expected: %s, found: %s\n"
-                    checked_fn fn current_digest x.digest;
+                  if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+                    BU.print4 "Checked file %s is stale since incorrect digest of %s, \
+                      expected: %s, found: %s\n"
+                      checked_fn fn current_digest x.digest;
                   let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   add_and_return (Invalid msg, Inl msg)
                 end
@@ -288,7 +288,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
         Inr tc_result
       end
       else begin
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "CheckedFiles")
         then begin
           BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
             (BU.string_of_int (List.length deps_dig'))
@@ -381,8 +381,8 @@ let load_module_from_cache =
               cache_file with
       | Inl msg -> fail msg cache_file; None
       | Inr tc_result ->
-        if Options.debug_any () then
-        BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
+        if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+          BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
         Some tc_result
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
