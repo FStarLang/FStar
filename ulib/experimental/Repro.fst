@@ -105,28 +105,15 @@ let test_ok3 _
     h_admit (fun _ -> emp)
 
 
+assume
+val h_admit' (#a:Type)
+             (#[@resolve_framing] p:hprop)
+             (#[@resolve_framing] q:a -> hprop)
+             (_:unit) : SteelT a p q
 
-(*
-    bind #?u18 #?u19 ?u20 (dependent_provides()) (fun tr ->
-    bind #?u11 #?u12 ?u13 (my_frame_t (myref_hprop tr) #?u3 ()) (fun c ->
-          h_admit #unit #?u7 (fun _ -> emp)))
-
-    ?u18   = emp
-    ?u19   = myref_hprop
-    ?u11   = ?u19 tr
-    ?u20   = ?u13
-
-    ?u11   =  myref_hprop tr
-    ?u12   = fun _ -> ?u3 _
-    ?u12 c = ?u7
-    ?u13   = fun _ -> emp
-
-    ?u20  = fun _ -> emp
-    ?u18  = emp
-
-    let tr = dependent_provides () in
-    let c = my_frame_t (myref_hprop tr) #_(*#(myref_hprop tr)*) () in
-    h_admit #unit #_(*(myref_hprop tr)*) (fun _ -> emp)
-
-
-*)
+val test_ok4 (_:unit)
+  : SteelT unit emp (fun c -> emp)
+let test_ok4 _
+  = let tr = dependent_provides () in
+    let c = frame_t nop in
+    h_admit' ()
