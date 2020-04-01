@@ -70,7 +70,7 @@ let gt e1 e2 = CompProp e1 C_Gt e2
 let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
-private let st = p:(nat * list term){fst p == List.length (snd p)}
+private let st = p:(nat * list term){fst p == List.Tot.Base.length (snd p)}
 private let tm a = st -> Tac (either string (a * st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
 private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
@@ -101,7 +101,7 @@ let liftM3 f x y z =
     return (f xx yy zz)
 
 
-private let rec find_idx (f : 'a -> bool) (l : list 'a) : option ((n:nat{n < List.length l}) * 'a) =
+private let rec find_idx (f : 'a -> bool) (l : list 'a) : option ((n:nat{n < List.Tot.Base.length l}) * 'a) =
     match l with
     | [] -> None
     | x::xs ->
@@ -122,7 +122,7 @@ private let fail #a s = fun i -> Inl s
 
 let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
 
-val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.memP x l ==> p x})
+val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.Tot.Base.memP x l ==> p x})
 let rec list_unref #a #p l =
     match l with
     | [] -> []

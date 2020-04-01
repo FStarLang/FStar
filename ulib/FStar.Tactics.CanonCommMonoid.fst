@@ -179,10 +179,10 @@ let permute_via_swaps_correct
 // variables and only look at the actual identifiers
 
 let sort : permute unit =
-  (fun a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
+  (fun a vm -> List.Tot.Base.sortWith #nat (compare_of_bool (<)))
 
 let sortWith (#b:Type) (f:nat -> nat -> int) : permute b =
-  (fun a vm -> List.Tot.sortWith #nat f)
+  (fun a vm -> List.Tot.Base.sortWith #nat f)
 
 let sort_via_swaps (#a:Type) (vm : vmap a unit) (xs:list var) :
     Lemma (exists ss. sort a vm xs == apply_swaps xs ss) =
@@ -276,7 +276,7 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
         let (e,vs,vm) = reification_aux unquotea vs vm f tmult tunit t
         in (e::es,vs,vm))
       ([],[], const munit def) ts
-  in (List.rev es,vm)
+  in (List.Tot.Base.rev es,vm)
 
 val term_mem: term -> list term -> Tot bool
 let rec term_mem x = function
@@ -440,7 +440,7 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
   | true, false -> -1
 
 let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-  List.Tot.sortWith #nat (const_compare vm) xs
+  List.Tot.Base.sortWith #nat (const_compare vm) xs
 
 let canon_monoid_const #a cm = canon_monoid_with bool is_const false
   (fun a -> const_last a)
@@ -466,7 +466,7 @@ let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
   | true, false -> 1
 
 let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-  List.Tot.sortWith #nat (special_compare vm) xs
+  List.Tot.Base.sortWith #nat (special_compare vm) xs
 
 let special_first_correct : permute_correct special_first =
     (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)

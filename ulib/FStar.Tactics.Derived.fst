@@ -181,7 +181,7 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     if n < 0 then
       fail "divide: negative n";
     let gs, sgs = goals (), smt_goals () in
-    let gs1, gs2 = List.Tot.splitAt n gs in
+    let gs1, gs2 = List.Tot.Base.splitAt n gs in
 
     set_goals gs1; set_smt_goals [];
     let x = l () in
@@ -242,7 +242,7 @@ let seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
-        let n = List.length qs in
+        let n = List.Tot.Base.length qs in
         let uvs = repeatn n (fun () -> fresh_uvar None) in
         let t' = mk_app t (zip uvs qs) in
         exact t';
@@ -255,10 +255,10 @@ let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
 (** [ngoals ()] returns the number of goals *)
-let ngoals () : Tac int = List.length (goals ())
+let ngoals () : Tac int = List.Tot.Base.length (goals ())
 
 (** [ngoals_smt ()] returns the number of SMT goals *)
-let ngoals_smt () : Tac int = List.length (smt_goals ())
+let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
 let fresh_bv t : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
@@ -848,8 +848,8 @@ will return the last binder, [nth_binder (-2)] the second to last, and
 so on. *)
 let nth_binder (i:int) : Tac binder =
   let bs = cur_binders () in
-  let k : int = if i >= 0 then i else List.length bs + i in
+  let k : int = if i >= 0 then i else List.Tot.Base.length bs + i in
   let k : nat = if k < 0 then fail "not enough binders" else k in
-  match List.Tot.nth bs k with
+  match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b

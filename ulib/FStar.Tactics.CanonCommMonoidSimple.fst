@@ -191,7 +191,7 @@ let permute_via_swaps_correct
 
 // Here we sort the variable numbers
 
-let sort : permute = List.Tot.sortWith #nat (compare_of_bool (<))
+let sort : permute = List.Tot.Base.sortWith #nat (compare_of_bool (<))
 
 let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom) :
   Lemma (exists ss. sort xs == apply_swaps xs ss) =

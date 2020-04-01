@@ -160,7 +160,7 @@ let term_as_formula_total (t:term) : Tac formula =
     term_as_formula' (unsquash_total t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
-    let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
+    let mk_app' tv args = List.Tot.Base.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
     let e = Q_Explicit in
     let i = Q_Implicit in
     match f with
