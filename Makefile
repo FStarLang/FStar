@@ -1,4 +1,4 @@
-.PHONY: all package clean 0 1 2 3 hints bench
+.PHONY: all package clean boot 0 1 2 3 hints bench
 
 include src/Makefile.common
 
@@ -32,13 +32,14 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
-# Generate a new OCaml snapshot
-2:
-	$(Q)+$(MAKE) -C src fstar-ocaml
+# Alias for boot
+2: boot
 
 # Build the snapshot and then regen, i.e. 1 + 2
 3:
-	$(Q)+$(MAKE) -C src ocaml-fstar-ocaml
+	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
+	$(Q)+$(MAKE) -C src/ ocaml
+	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
 # Regenerate all hints for the standard library and regression test suite
 hints:
