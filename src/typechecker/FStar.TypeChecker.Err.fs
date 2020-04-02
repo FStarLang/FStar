@@ -89,11 +89,13 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         [pi; pu; pea; pf]
     in
     let set (l : list<bool>) : unit =
-        let [pi; pu; pea; pf] = l in
-        set_bool_option "print_implicits"   pi;
-        set_bool_option "print_universes"   pu;
-        set_bool_option "print_effect_args" pea;
-        set_bool_option "print_full_names " pf
+        match l with
+        | [pi; pu; pea; pf] ->
+          set_bool_option "print_implicits"   pi;
+          set_bool_option "print_universes"   pu;
+          set_bool_option "print_effect_args" pea;
+          set_bool_option "print_full_names " pf
+        | _ -> failwith "impossible: print_discrepancy"
     in
     let bas = get () in
     let rec go (cur : list<bool>) =

@@ -3085,7 +3085,9 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
         let a_b, rest_bs, f_b, stronger_c =
           match (SS.compress stronger_t).n with
           | Tm_arrow (bs, c) when List.length bs >= 2 ->
-            let ((a::bs), c) = SS.open_comp bs c in
+            let (bs', c) = SS.open_comp bs c in
+            let a = List.hd bs' in
+            let bs = List.tail bs' in
             let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
               |> (fun (l1, l2) -> l1, List.hd l2) in
             a, rest_bs, f_b, c

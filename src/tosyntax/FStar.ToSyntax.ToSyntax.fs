@@ -3134,6 +3134,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let attrs = d.attrs in
     desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
 
+  | LayeredEffect (RedefineEffect _) ->
+    failwith "Impossible: LayeredEffect (RedefineEffect _) (should not be parseable)"
+
   | SubEffect l ->
     let src_ed = lookup_effect_lid env l.msource d.drange in
     let dst_ed = lookup_effect_lid env l.mdest d.drange in

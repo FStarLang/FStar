@@ -1551,7 +1551,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           when not (is_top_level [lb])
           && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
           let b = BU.left lb.lbname, None in
-          let ((x, _)::_), body = SS.open_term [b] e' in
+          let (x, _), body = SS.open_term_1 b e' in
           // BU.print_string "Reached let with rename_let attribute\n";
           let suggested_name = 
               let attr = U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs in
@@ -1568,6 +1568,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 | _ -> 
                   None
                 end
+              | Some _ ->
+                Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ill-formed application of `rename_let`"));
+                None
               | None -> 
                 None
           in
