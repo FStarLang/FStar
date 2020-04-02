@@ -1,8 +1,26 @@
 [
-  "S\u0000¦4”HËX\u0010ÎHéÈÛ\u0007•",
+  "ÑßK($–p„lÒ\u00105åê¾\u001e",
   [
     [
-      "Join.uu___1",
+      "Join.p16",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "0031930c1355383c203c07f5336074e2"
+    ],
+    [
+      "Join.p16",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "458f3f3af246c28c8a0e23edbd8644fa"
+    ],
+    [
+      "Join.uu___4",
       1,
       4,
       2,
@@ -11,15 +29,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5c475874acec8b2fb8709208de6fef43"
+      "6beff170962dad8d622c70de5668a54f"
     ],
     [
       "Join.test1",
@@ -31,15 +48,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a152cfc09f25e4d4f8aed3520d30210c"
+      "bddbd013f91ac0eed6ecfd70fc25e3a2"
     ],
     [
       "Join.test1",
@@ -51,15 +67,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "da5225aaebd9d0c77cff3bc837e49a08"
+      "cdb887827ea07c9b9e3cd0dbd9c76890"
     ],
     [
       "Join.test1",
@@ -71,15 +86,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c106fd1cfe7d1d923c51fdf62d0b5f13"
+      "9b80e5b278b291b10620a83fa7d8213f"
     ],
     [
       "Join.test1",
@@ -91,15 +105,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "8f7e25c0714aab79ce145c6eb91fc04b"
+      "03aad30d727f6bd9ed44bf694acb7a19"
     ],
     [
       "Join.test1",
@@ -111,15 +124,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "4765077bee9d578fe1bd7f3d756f70ae"
+      "2e75e747e7da3a112ae6e357c9e3bab7"
     ],
     [
       "Join.test1",
@@ -131,15 +143,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "40cb819baf0a3596a1d45c326cd2f922"
+      "a60577c20bd443d786994f924bc55fa9"
     ],
     [
       "Join.test1",
@@ -151,15 +162,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6c3750f9d6757f6a713f4acf444ededd"
+      "e5c7f3a07f9be0c3b7049a36864f76be"
     ],
     [
       "Join.test1",
@@ -171,15 +181,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6c3d4b963d381d518936eb6fad4f67e3"
+      "3d7deded46eaffd948e6345c08dc8a16"
     ],
     [
       "Join.test1",
@@ -191,15 +200,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d4090e7ce009cb1248c02b31bf8090b7"
+      "4341d2fdee12b2c3c1dc93903a014888"
     ],
     [
       "Join.test1",
@@ -211,15 +219,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "e9417310db005b873c492622e004fe94"
+      "403931a9ddd5b9cd7ad80145c89c6908"
     ],
     [
       "Join.test1",
@@ -231,15 +238,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "8f1abb57b7709e32de8dee9d0bf2dae7"
+      "aed5faafd880be7281561a5a43afb276"
     ],
     [
       "Join.test1",
@@ -251,15 +257,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "2797383df92c9a39abdd211e7b1c7efa"
+      "2ae590c812e752e8b77f26264095daa8"
     ],
     [
       "Join.test1",
@@ -271,15 +276,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c13378ba8f13bf1978f281a64ab1c061"
+      "db96745d1899282049d2e4736ba2728a"
     ],
     [
       "Join.test1",
@@ -291,15 +295,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "0f39f2400ae2089d095253d2a3bd8a69"
+      "fd68db3ccbd8c71d5011d814783484ea"
     ],
     [
       "Join.test1",
@@ -311,15 +314,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c98b25fd38b3f17b851a96bcd2ee8a1d"
+      "e048d4973eb8cf5d3a4b35b5d2226fe4"
     ],
     [
       "Join.test1",
@@ -331,15 +333,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5cf4602fd673b77733b8470165682ca1"
+      "529f156a358b4dabbde4f62d3ea65de7"
     ],
     [
       "Join.test1",
@@ -351,15 +352,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6a339c9e6740cc95b01bf6fbbc86156c"
+      "b9b1957f885b40ef239669e508bba37c"
     ],
     [
       "Join.test1",
@@ -371,15 +371,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9b03143f04a9dcea7f0e7e22138facdb"
+      "f3c3725a893f70e51e512131e17dd080"
     ],
     [
       "Join.test1",
@@ -391,15 +390,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5ee536a8c1882b85d578615917814aca"
+      "66a866eff97230bcede5bbae558a5a91"
     ],
     [
       "Join.test1",
@@ -411,15 +409,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "98089003ac7587d3a9784490b60e9886"
+      "738bcd61133cb0d94d277fbd9c303124"
     ],
     [
       "Join.test1",
@@ -431,15 +428,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "bd3337412e551d8077218877dfd165db"
+      "b46817550273f3c0640a178e4cfde681"
     ],
     [
       "Join.test1",
@@ -451,15 +447,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "18bcf843bbe135ca1c261710d142276e"
+      "127deb0a6f2ee2efe069b83316e47a36"
     ],
     [
       "Join.test1",
@@ -471,35 +466,26 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "b9ea74062ab346414354ac8be0887112"
+      "a8c6482c525fb44b2a7b347ed2d8acd8"
     ],
     [
       "Join.test1",
       24,
-      4,
       2,
+      1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "typing_Prims.pow2"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "3c945bf7c20f5ab4565e84a797af7086"
+      "ed3a162d31d90e3f312c44e1773bc3c8"
     ],
     [
       "Join.test1",
@@ -511,15 +497,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5c2bf1726d94a4089ed2984796917e96"
+      "cc3e1280504364b7ccdd056a86293949"
     ],
     [
       "Join.test1",
@@ -531,15 +516,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "82a3d306bb9e2b0d899cb8f63a658c45"
+      "2559cc6f292b5b998642f9c593563742"
     ],
     [
       "Join.test1",
@@ -551,15 +535,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "bdb6a62eda50701f4abcf79f2ffba588"
+      "db2526e9117562c4fefe41746744f2b7"
     ],
     [
       "Join.test1",
@@ -571,15 +554,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6092d4c66c134f9b166058816ae29592"
+      "a39759cdeb859c0c5abd88ce51ae977b"
     ],
     [
       "Join.test1",
@@ -591,15 +573,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "582b0f97a2ee882d51c6ee6fb30cefd1"
+      "9f9f36b4f5ade7a24a700ed46a27b4a0"
     ],
     [
       "Join.test1",
@@ -611,15 +592,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "21f6d98fa30716fb5da963a5c5984d58"
+      "b05b0da64ac6dddfec7bb88548076898"
     ],
     [
       "Join.test1",
@@ -631,15 +611,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "f1a4981b81cde4da62493111337b5368"
+      "d6403ffe6bf7ebd1d0084156a9373207"
     ],
     [
       "Join.test1",
@@ -651,15 +630,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "1a9ad7db1b45d8fe5f8c12485b8a61bd"
+      "d7625714bd703b9c431895c60d0ec89f"
     ],
     [
       "Join.test1",
@@ -671,15 +649,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "ada8f737b49f84e30ed3b04e0d55f91d"
+      "909a62a44e2403ba323d957c2a57b5e1"
     ],
     [
       "Join.test1",
@@ -691,15 +668,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9b5b999ecc4e69c6036449d7b69e882a"
+      "5a377d6c3a433e25a502843eedebd2b6"
     ],
     [
       "Join.test1",
@@ -711,15 +687,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "2fab8c72c91a356f6b3fbc99e4c4b17f"
+      "06fa7da0122d6d57ed76ed85665d9d69"
     ],
     [
       "Join.test1",
@@ -731,15 +706,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "abfd45d9dfba72d109acb0d647186e66"
+      "ba8fff95de9bd91ed5a6255e69b20a73"
     ],
     [
       "Join.test1",
@@ -751,15 +725,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "57b27aeef89387997f0847a30908346b"
+      "bdefa03f6249c803f627876aa17078ce"
     ],
     [
       "Join.test1",
@@ -771,15 +744,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "7c6208ccb464f66565489826405d8adb"
+      "d83943e14eaadb7325a138fd2dd34090"
     ],
     [
       "Join.test1",
@@ -791,15 +763,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "7f20530927e73c0cfe73b1b4049afdd6"
+      "49515673824739063d6eadf673c88f35"
     ],
     [
       "Join.test1",
@@ -811,15 +782,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "b6d9655a4c42c3e32e8f8086f76d5d26"
+      "6ce6c73110af9e7464d3bd3e8e0b0086"
     ],
     [
       "Join.test1",
@@ -831,15 +801,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "117ba4e5258e325993dabc474ddc55fd"
+      "c7510c31ef1888f1dad5df25ebf8f303"
     ],
     [
       "Join.test1",
@@ -851,15 +820,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "e35cfc60b99cdd14e632a523bd8de500"
+      "95ac7d1bb45693d5455dc0e981f33710"
     ],
     [
       "Join.test1",
@@ -871,15 +839,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "f361c0f5bd04bda29681825ca0b7babb"
+      "a0cb07a9f90d325d8cbf9310590c7932"
     ],
     [
       "Join.test1",
@@ -891,15 +858,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "358a982090009b6e93a4f60fb1a204cd"
+      "07e4e51989785eb2509828f0f8289d08"
     ],
     [
       "Join.test1",
@@ -911,15 +877,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "070bbe32ac019ecaa7f56c639b168ac4"
+      "134868c09b14a95974b67301f8f251e9"
     ],
     [
       "Join.test1",
@@ -931,15 +896,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "39c09eaacbabc581617dc5463d09de4e"
+      "65467d5ad9dbc98ac3c5fbfbb171cd30"
     ],
     [
       "Join.test1",
@@ -951,15 +915,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "32b084337c678b63cd82435b59cc2ae2"
+      "bbd402793ea450d91140131c7d422834"
     ],
     [
       "Join.test1",
@@ -971,15 +934,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "122674fdbea2e98d342cdfb6054b4d82"
+      "32b59902c8e3fc3caf1964feedd66523"
     ],
     [
       "Join.test1",
@@ -991,15 +953,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "e38c5bf61cf48c9384477b9c8e3fd07c"
+      "645619a416871b171eb16570a71ffb1d"
     ],
     [
       "Join.test1",
@@ -1011,15 +972,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a5d57eb61ef7e9df2d3ef93809cd71e6"
+      "5e32115e225fcd45885836e77913ed60"
     ],
     [
       "Join.test1",
@@ -1031,15 +991,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a63042b112ca427b4a7210b0c833ee11"
+      "1ad522a29e1a3b13eb34385200456a0a"
     ],
     [
       "Join.test1",
@@ -1051,15 +1010,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "16e77afae59e3cf619170a2b9f6aaccc"
+      "8b876e00bd2f85a8ba15c3d090bd4a03"
     ],
     [
       "Join.test1",
@@ -1071,15 +1029,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "1dc6ccb24836f37397482884375b2da4"
+      "662230d9b9572d7b2a908407e006d0a3"
     ],
     [
       "Join.test2",
@@ -1091,18 +1048,26 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c00fb9e519bc3efde5d53c3984bb491a"
+      "bd8aebe64fbc2aa11c635fdaf99a59c2"
     ],
     [
-      "Join.uu___1",
+      "Join.p16",
+      3,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "996d69478770ee22fd1b11c8cd5d6704"
+    ],
+    [
+      "Join.uu___4",
       2,
       4,
       2,
@@ -1111,15 +1076,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "dc25d7e7379e7dbfc93cd0336b5d0414"
+      "ee47d5ecf71123c36623b9acb4818e31"
     ],
     [
       "Join.implies_intro'",
@@ -1136,7 +1100,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "077f41600d88dfec467ccfa076fe5768"
+      "9569285cfa5937816f0a1560f29be5b5"
     ],
     [
       "Join.tau",
@@ -1156,7 +1120,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
       ],
       0,
-      "53184b0ef006dbf9bae933d7e62f907f"
+      "7aa595703074a1ec3a9de89fbf1ca3d9"
     ],
     [
       "Join.test1",
@@ -1168,15 +1132,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d08d349aad96a771e0840fd88878d467"
+      "b28a24a5217e62e05b1f675a441f5dec"
     ],
     [
       "Join.test1",
@@ -1188,15 +1151,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9276e2fb93a3aa57a8e06f37c170ebaf"
+      "d2a00fb1778f9c9327f91c71f7d20598"
     ],
     [
       "Join.test1",
@@ -1208,15 +1170,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9eea90e5a27efc3f87a7deddc0bcba4b"
+      "dac39608332d92d4a9ace4d3ad208ae4"
     ],
     [
       "Join.test1",
@@ -1228,15 +1189,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "04dc6565569535223356486f2497ec7c"
+      "8ab234e03ba577a92683706432ba183c"
     ],
     [
       "Join.test1",
@@ -1248,15 +1208,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "0305a51256601dd2e611083a5f7d912d"
+      "294edab71203050e8167c76188b7d477"
     ],
     [
       "Join.test1",
@@ -1268,15 +1227,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "57af5716e3cfb7552442a25b69158845"
+      "5f1a8cf14c70bc931cce748c370dcf1c"
     ],
     [
       "Join.test1",
@@ -1288,15 +1246,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "dfd264d2b5b025c0d886f895a47acf80"
+      "516bc48f334be0e4dcba643961f03fad"
     ],
     [
       "Join.test1",
@@ -1308,15 +1265,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6721dc5e84ee6187e3444176875cec9a"
+      "0b910c7b2db7e900ffe6bffaac3e2633"
     ],
     [
       "Join.test1",
@@ -1328,15 +1284,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "28c3ea8493bc836f78c881b07e3450e5"
+      "b398ba5ecc8bdda2d1cb0837e67d2480"
     ],
     [
       "Join.test1",
@@ -1348,15 +1303,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a26cd6865842af792a03d137c9ec45ef"
+      "2a788b7cac9862caa5f8e1958ef4efc5"
     ],
     [
       "Join.test1",
@@ -1368,15 +1322,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5dee86309582eeb8d2c906f6369a9fdd"
+      "774c17fb3b7be4ea70de473dff787203"
     ],
     [
       "Join.test1",
@@ -1388,15 +1341,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9f67158a4e93ed19bf08ad193bb747d3"
+      "573315838fa1d4d5c59cd3e47f16c261"
     ],
     [
       "Join.test1",
@@ -1408,15 +1360,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "431d0e25c57b101deace64bfe32688d6"
+      "54e9748cc0e0f4bbeabcc8c86c39c8fa"
     ],
     [
       "Join.test1",
@@ -1428,15 +1379,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c698323aa08c71904e6a0b9d52dc07bd"
+      "beb526911aa958f89a07177aff6ef28d"
     ],
     [
       "Join.test1",
@@ -1448,15 +1398,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "74b0a387d482e070d5cb54ab5388db38"
+      "c9433c6b812021afd71b3514e37d94a3"
     ],
     [
       "Join.test1",
@@ -1468,15 +1417,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "44aa3bf8d7ed007de172024409e78701"
+      "a0bca3e68794330930cfc1bed0889a99"
     ],
     [
       "Join.test1",
@@ -1488,15 +1436,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "593d83ead2393744c2b33a8bab8dd301"
+      "6c1b7bbbdbc334717be37e5a27c2f0f4"
     ],
     [
       "Join.test1",
@@ -1508,15 +1455,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "b904e30982dfded93a454ced64a8c7fa"
+      "54a308318c5ead399f3f02406bd7e11d"
     ],
     [
       "Join.test1",
@@ -1528,15 +1474,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "ddad39c4942578314d08b6a68340ab48"
+      "cac62da5a83f9f99e01af446f0dc6c66"
     ],
     [
       "Join.test1",
@@ -1548,15 +1493,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d0104a2d192de2720b2a7460171842b2"
+      "65d78b30aef006b73b3bdbf4f97352d0"
     ],
     [
       "Join.test1",
@@ -1568,15 +1512,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d9bad8a38d9616f0f8f8171a619a7ecb"
+      "0637012811a03c52436d5ec1a2491554"
     ],
     [
       "Join.test1",
@@ -1588,15 +1531,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "b44351d7b5e28ba7d37d42006d744063"
+      "fcf3b1205fdd39094653eef08a48bf86"
     ],
     [
       "Join.test1",
@@ -1608,35 +1550,26 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a8d42d0025bf5e1b1dc3bcefa1661ccb"
+      "a63d94b32fc950875f06c425581c3b0a"
     ],
     [
       "Join.test1",
       77,
-      4,
       2,
+      1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "typing_Prims.pow2"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "395975ff33f682101f91a6f1309e975c"
+      "5a10104c3f59031d09e67de97aab8154"
     ],
     [
       "Join.test1",
@@ -1648,15 +1581,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "f56fc24ae3467ff10eb8c84a477e928e"
+      "ad503b8c0bdd4fcc66037fa715018efc"
     ],
     [
       "Join.test1",
@@ -1668,15 +1600,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "0daa606f66ed455fb11d9950be360f88"
+      "16f059aaec69d01f7473d19ebd88ed2e"
     ],
     [
       "Join.test1",
@@ -1688,15 +1619,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "8a10007f801f2a55679ec0ddf323340e"
+      "395d46c9016fb08a2fa7d5b65c43135f"
     ],
     [
       "Join.test1",
@@ -1708,15 +1638,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "fcba250d03b14da32158f84d7ba280bc"
+      "b788d13c56069fb687cdee7db13823d1"
     ],
     [
       "Join.test1",
@@ -1728,15 +1657,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "680b00e967522bec91fd2fffa45fa731"
+      "de9ceadaddfdba9945a511e4a6dae67b"
     ],
     [
       "Join.test1",
@@ -1748,15 +1676,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "42b58c83acacf7be49a9c17448aec294"
+      "3e7e252d3a0d1d36812b06095e47b694"
     ],
     [
       "Join.test1",
@@ -1768,15 +1695,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6d4d959276068b47f6c09e1ce2fc447e"
+      "a8c03915ea3bc6c659560607e91db62f"
     ],
     [
       "Join.test1",
@@ -1788,15 +1714,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "c32e7fcc56041aa2d27cd9a6ab32e7be"
+      "9df0686c2eadef365ecfb857a3820ea4"
     ],
     [
       "Join.test1",
@@ -1808,15 +1733,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "7dbcb3baaf5ad2e434bcb40ada93846a"
+      "7d8869a60d51763ffe176b5723b275f1"
     ],
     [
       "Join.test1",
@@ -1828,15 +1752,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "27acf30199f539cff3f3b26986c52e6a"
+      "03eb4f201783b5e481dbccebda23a941"
     ],
     [
       "Join.test1",
@@ -1848,15 +1771,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "1e64d8ea4bc36e85ab53bbf8d6b9c99f"
+      "a2821491a54919f6a00dc648b5940c70"
     ],
     [
       "Join.test1",
@@ -1868,15 +1790,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "36fe4ced45fee19fe6c1444e99aab5f0"
+      "ac397d46da0c48f7a4ce1d040d3ba2fa"
     ],
     [
       "Join.test1",
@@ -1888,15 +1809,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "56251daa3ebf0f1bd969837eea51ec1f"
+      "667f1f0e1cbd744a4dc6660057a0bf96"
     ],
     [
       "Join.test1",
@@ -1908,15 +1828,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "b0da72ca44e7b71a7d8b5fda61964d92"
+      "64079328bbcc186a6b3e700f610b5119"
     ],
     [
       "Join.test1",
@@ -1928,15 +1847,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "9bb23f5eb41bb8ac73886c3b3e76a531"
+      "7a8548614f3df5c5437c4c55029dc8a9"
     ],
     [
       "Join.test1",
@@ -1948,15 +1866,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "f9d6cdbf6c2c455f1e01c6c9e8017ee4"
+      "5fcef4a9816c116e06dc266d5dd7ea59"
     ],
     [
       "Join.test1",
@@ -1968,15 +1885,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "a41975a62e078a173e1c135c5e3be885"
+      "317fa68f70e6a9041cfb145d26021596"
     ],
     [
       "Join.test1",
@@ -1988,15 +1904,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "4ed1f8c64e1dcb992e4621e5a76c3583"
+      "88557fafb8e25c3e13ebe4be5702b7d9"
     ],
     [
       "Join.test1",
@@ -2008,15 +1923,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "0625e8142cdc9cf003a2ae4a9e1660f8"
+      "f4372fa013a46ef8e362395b5db47e42"
     ],
     [
       "Join.test1",
@@ -2028,15 +1942,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "2b2aae8cc7b79c6f8f809fee7e383396"
+      "47b9febb5be804c041ca1aaf8a01bbf4"
     ],
     [
       "Join.test1",
@@ -2048,15 +1961,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d4ab384bf6e1c060f9b3395768d06587"
+      "b5b1390b12bb238644a36b06c8ceccf4"
     ],
     [
       "Join.test1",
@@ -2068,15 +1980,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "ea6cfa7212711dd9be9c31fb24096b1d"
+      "0cf4792131681db0a07e3f595a36057b"
     ],
     [
       "Join.test1",
@@ -2088,15 +1999,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "ad09bbb098bf8ffb7b159cdad0b3aedd"
+      "c8b8f728f6b6bf0381c9997ca1f3db8a"
     ],
     [
       "Join.test1",
@@ -2108,15 +2018,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "0d5d6e11ecec9f2309c32dadf3f8ca8a"
+      "21facb32632da93a91734a2dfb9a8094"
     ],
     [
       "Join.test1",
@@ -2128,15 +2037,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "5d7bd1ea03a33ec83a35e2499740034c"
+      "3f0874fc45a27e85cf6f9d7cefa59ac6"
     ],
     [
       "Join.test1",
@@ -2148,15 +2056,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "2e84d6aca4356853280b563f7c4b446e"
+      "31110ff1078b4407d86522bbfbda4e76"
     ],
     [
       "Join.test1",
@@ -2168,15 +2075,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "d7e48b85974837bd77d0ff01187ea448"
+      "5fdacb4fc829561178c47ab4e3529b7d"
     ],
     [
       "Join.test1",
@@ -2188,15 +2094,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "838999309868802f5bf16b813e2192d4"
+      "b5688c60a0f041adff6dd454003a2114"
     ],
     [
       "Join.test1",
@@ -2208,15 +2113,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "24eb7923980e9b10af203d0469d1905b"
+      "a26ef25c59c1cbf50b4cdb6161e07475"
     ],
     [
       "Join.test2",
@@ -2228,15 +2132,14 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "equation_Join.hard", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "int_typing", "lemma_Join.p16", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_Prims.pow2"
       ],
       0,
-      "6e72ef2f6a386bbbf46826792eae7b81"
+      "e08fc34ee26230fcf33708590bacbecf"
     ]
   ]
 ]
