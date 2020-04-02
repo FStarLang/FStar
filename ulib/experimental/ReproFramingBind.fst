@@ -69,9 +69,6 @@ let resolve () : Tac unit =
   aux 0
 
 
-//succeeds if you open SteelT.Effect instead of Steel.Effect
-//#push-options "--debug Repro --debug_level ResolveImplicitsHook"
-
 val test_ok2 (_:unit)
   : SteelT unit emp (fun c -> emp)
 let test_ok2 _

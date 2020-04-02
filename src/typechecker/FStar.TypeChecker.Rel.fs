@@ -763,7 +763,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         then if resolve_ok
              then wl
              else (fail(); wl)
-        else let Flex (_, uv, args), wl  = destruct_flex_t g wl in
+        else let (Flex (_, uv, args), wl)  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
     in
@@ -1416,7 +1416,7 @@ let is_flex_pat = function
     | _ -> false
 
 let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
-  let Flex (_, u, _) = f in
+  let (Flex (_, u, _)) = f in
   should_defer_uvar_to_user_tac wl.tcenv u
   
 
@@ -1429,7 +1429,7 @@ let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
             else xi is a fresh variable
     *)
 let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
-    let Flex (_, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args) = f in
+    let (Flex (_, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args)) = f in
     let name_exists_in x bs =
         BU.for_some (fun (y, _) -> S.bv_eq x y) bs
     in
@@ -1883,7 +1883,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   (arrow:term)
         : solution =
         let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
-        let Flex (_, u_lhs, _) = lhs in
+        let (Flex (_, u_lhs, _)) = lhs in
         let imitate_comp bs bs_terms c wl =
            let imitate_tot_or_gtot t uopt f wl =
               let k, univ =
@@ -2037,7 +2037,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     in
 
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
-        let Flex (_, ctx_u, _) = lhs in
+        let (Flex (_, ctx_u, _)) = lhs in
         let sol =
           match bs with
           | [] -> rhs
@@ -2055,7 +2055,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           Inl "Not a quasi-pattern", wl
 
         | Some (bs, _) ->
-          let Flex (t_lhs, ctx_u, args) = lhs in
+          let (Flex (t_lhs, ctx_u, args)) = lhs in
           let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
@@ -2083,7 +2083,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
-        let Flex (t_lhs, u_lhs, _lhs_args) = lhs in
+        let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
@@ -2147,7 +2147,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       else solve_t_flex_rigid_eq env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      let Flex (_t1, ctx_uv, args_lhs) = lhs in
+      let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
         let rhs = sn env rhs in
@@ -2206,8 +2206,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       else
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
-            let Flex ({pos=range}, u_lhs, _) = lhs in
-            let Flex (_, u_rhs, _) = rhs in
+            let (Flex ({pos=range}, u_lhs, _)) = lhs in
+            let (Flex (_, u_rhs, _)) = rhs in
             if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
             && binders_eq binders_lhs binders_rhs
             then solve env (solve_prob orig None [] wl)
@@ -2429,7 +2429,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
      *)
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
-            let Flex (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
+            let (Flex (_t, uv, _args), wl) = destruct_flex_t scrutinee wl  in
             let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
@@ -3400,7 +3400,7 @@ let new_t_prob wl env t1 rel t2 =
  p, x, wl
 
 let solve_and_commit env probs err
-  : option (deferred * deferred * implicits) =
+  : option<(deferred * deferred * implicits)> =
   let tx = UF.new_transaction () in
 
   if Env.debug env <| Options.Other "RelBench" then
@@ -3829,9 +3829,10 @@ type goal_dep =
     goal_imp:implicit;
     assignees:BU.set<ctx_uvar>;
     goal_dep_uvars:BU.set<ctx_uvar>; 
-    dependences:ref<(list<goal_dep>)>;
-    visited:ref int
+    dependences:ref<goal_deps>;
+    visited:ref<int>
   }
+and goal_deps = list<goal_dep>
 
 let print_uvar_set (s:BU.set<ctx_uvar>) =
     (BU.set_elements s
