@@ -57,6 +57,7 @@ define from_boot_file
 	$(Q)cp $^ $@
 	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
+	$(Q)rm -f $@.bak
 endef
 
 boot/%.fst: basic/boot/%.fs | boot_dir
