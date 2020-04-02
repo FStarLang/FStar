@@ -51,7 +51,7 @@ let recall = (fun r -> ())
 
 let recall_region = (fun r -> ())
 let witness_region _ = ()
-let witness_hsref _ _ = ()
+let witness_hsref _ = ()
 type erid = rid
 
 type 'a ref = 'a FStar_HyperStack.reference
