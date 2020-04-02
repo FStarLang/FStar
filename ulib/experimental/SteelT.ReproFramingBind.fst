@@ -1,4 +1,4 @@
-module ReproFramingBind
+module SteelT.ReproFramingBind
 open Steel.Memory.Tactics
 open Steel.Memory
 open SteelT.FramingBind
@@ -21,14 +21,6 @@ val h_admit (#a:Type)
              (#[@resolve_framing] p:hprop)
              (#[@resolve_framing] q:a -> hprop)
              (_:unit) : SteelT a p q
-
-// assume
-// val my_frame_t
-//   (outer:hprop)
-//   (#[@resolve_framing] frame:hprop)
-//   (#[@resolve_framing] _:squash (can_be_split_into outer emp frame))
-//   (_:unit)
-//   : SteelT unit outer (fun _ -> frame)
 
 open FStar.Tactics
 module T = FStar.Tactics
@@ -69,9 +61,25 @@ let resolve () : Tac unit =
   aux 0
 
 
+assume
+val ret (#a:_) 
+        (#[@resolve_framing] p:a -> hprop)
+        (x:a)
+        (#[@resolve_framing] q: hprop)
+        (#[@resolve_framing] _u:squash (can_be_split_into q (p x) emp))
+        (_:unit)
+        : SteelT a q p
+
 val test_ok2 (_:unit)
   : SteelT unit emp (fun c -> emp)
 let test_ok2 _
   = let tr = dependent_provides () in
     let c = nop () in
     h_admit ()
+
+val test_ok3 (_:unit)
+  : SteelT myref emp myref_hprop
+let test_ok3 _
+  = let tr = dependent_provides () in
+    let _ = nop () in
+    ret tr ()

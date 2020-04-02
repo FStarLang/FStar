@@ -1,4 +1,4 @@
-module Repro
+module SteelT.Repro
 open Steel.Memory.Tactics
 open Steel.Memory
 open SteelT.Effect

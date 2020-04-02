@@ -3847,7 +3847,7 @@ let print_goal_dep gd =
      |> String.concat "; ")
     (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
-let sort_goals (eqs:implicits) (rest:implicits) : implicits =
+let sort_goals env (eqs:implicits) (rest:implicits) : implicits =
   (* For each goal g, maintain:
        1. Assigned uvars, at most 2 of them
            - if g is a flex_rigid eq goal, then it assigns one uvar
@@ -3908,7 +3908,8 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
   let imp_as_goal_dep (i:implicit) = 
     BU.incr goal_dep_id;  
     let imp_goal () = 
-      BU.print1 "Discarding goal as imp: %s\n" (Print.term_to_string i.imp_uvar.ctx_uvar_typ);
+      if Env.debug env <| Options.Other "ResolveImplicitsHook"
+      then BU.print1 "Discarding goal as imp: %s\n" (Print.term_to_string i.imp_uvar.ctx_uvar_typ);
       { goal_dep_id = !goal_dep_id;
         goal_type = Imp(i.imp_uvar);
         goal_imp = i;
@@ -3980,7 +3981,9 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
              res)
             gds
       in
-      BU.print3 "Deps for goal %s, dep uvars = %s ... [%s]\n"
+      if Env.debug env <| Options.Other "ResolveImplicitsHook"
+      then
+        BU.print3 "Deps for goal %s, dep uvars = %s ... [%s]\n"
                 (print_goal_dep gd)
                 (print_uvar_set dependent_uvars)
                 ((List.map (fun x -> string_of_int x.goal_dep_id) deps |> String.concat "; "));
@@ -4005,6 +4008,8 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
       if !gd.visited = mark_set then ()
       else if !gd.visited = mark_temp 
       then let _ = 
+            if Env.debug env <| Options.Other "ResolveImplicitsHook"
+            then 
                BU.print1 "Cycle:\n%s\n"
                  (List.map print_goal_dep (gd::cycle) |> String.concat ", ")
            in
@@ -4020,11 +4025,13 @@ let sort_goals (eqs:implicits) (rest:implicits) : implicits =
     !out
   in
   fill_deps goal_deps;
-  BU.print_string "<<<<<<<<<<<<Goals before sorting>>>>>>>>>>>>>>>\n";
-  List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps;
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then (BU.print_string "<<<<<<<<<<<<Goals before sorting>>>>>>>>>>>>>>>\n";
+        List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps);
   let goal_deps = List.rev (topological_sort goal_deps) in
-  BU.print_string "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";  
-  List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps;  
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then (BU.print_string "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";  
+        List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps);  
   List.map (fun gd -> gd.goal_imp) (goal_deps @ rest)
   
 let force_trivial_guard env g =
@@ -4072,7 +4079,7 @@ let force_trivial_guard env g =
                 { i with imp_reason = reason }
               | _ -> i) 
         in
-        let deferred_goals = sort_goals deferred_goals more in
+        let deferred_goals = sort_goals env deferred_goals more in
         let guard = { g with implicits = imps; deferred_to_tac=[] } in
         let resolve_tac = 
           match Env.lookup_attr env Const.resolve_implicits_attr_string with
