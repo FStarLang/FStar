@@ -43,8 +43,10 @@ type implicits = Env.implicits
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
 
-(* Use this one for everything the user is supposed to see, as it does resugaring.
- * For debug messages, just use plain term_to_string, we don't want to cause normalization with debug flags. *)
+(* Use this one for everything the user is supposed to see, EXCEPT
+ * STATE DUMPS, as it does resugaring. For debug messages, just use plain
+ * term_to_string, we don't want to cause normalization with debug
+ * flags. *)
 let tts = N.term_to_string
 
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
@@ -138,10 +140,10 @@ let unshadow (bs : binders) (t : term) : binders * term =
 let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
     let w =
         if Options.print_implicits ()
-        then tts (goal_env g) (goal_witness g)
+        then Print.term_to_string (goal_witness g)
         else match get_uvar_solved g.goal_ctx_uvar with
              | None -> "_"
-             | Some t -> tts (goal_env g) (goal_witness g) (* shouldn't really happen that we print a solved goal *)
+             | Some t -> Print.term_to_string (goal_witness g) (* shouldn't really happen that we print a solved goal *)
     in
     let num = match maybe_num with
               | None -> ""
@@ -160,7 +162,7 @@ let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofst
         then goal_to_string_verbose g
         else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " goal_binders)
                                           w
-                                          (tts (goal_env g) goal_ty)
+                                          (Print.term_to_string goal_ty)
     in
     BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
@@ -209,8 +211,8 @@ let goal_to_json g =
     let g_binders, g_type = unshadow g_binders g_type in
     let j_binders = Print.binders_to_json (Env.dsenv (goal_env g)) g_binders in
     JsonAssoc [("hyps", j_binders);
-               ("goal", JsonAssoc [("witness", JsonStr (tts (goal_env g) (goal_witness g)));
-                                   ("type", JsonStr (tts (goal_env g) g_type));
+               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string (goal_witness g)));
+                                   ("type", JsonStr (Print.term_to_string g_type));
                                    ("label", JsonStr g.label)
                                   ])]
 
@@ -744,7 +746,7 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
 *)
 let intro () : tac<binder> = wrap_err "intro" <|
     bind (cur_goal ()) (fun goal ->
-    match U.arrow_one (goal_type goal) with
+    match U.arrow_one (bnorm (goal_env goal) (goal_type goal)) with
     | Some (b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
@@ -794,7 +796,7 @@ let intro_rec () : tac<(binder * binder)> =
     bind (cur_goal ()) (fun goal ->
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
-    match U.arrow_one (goal_type goal) with
+    match U.arrow_one (bnorm (goal_env goal) (goal_type goal)) with
     | Some (b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
