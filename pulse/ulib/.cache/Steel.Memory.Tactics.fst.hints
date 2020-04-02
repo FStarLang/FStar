@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "3decaade8c8df2eb1ce52301d11bf196"
+      "029673ed9b7be033adfcd115f5e55142"
     ],
     [
       "Steel.Memory.Tactics.equiv_sym",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "5800c4bd680d840616da65da07f3fcc9"
+      "674b4b203ebf90ca32b70b1990464a11"
     ],
     [
       "Steel.Memory.Tactics.equiv_trans",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "d9da99fd320b11010990e17f84f7b870"
+      "e2ab4444ccf391c0adb0b8c9e9f58592"
     ],
     [
       "Steel.Memory.Tactics.cm_identity",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "fb8b9c7b11a696c4ec034339e9d35d18"
+      "b0289e2331accf7cd65c4a2c43b6ff37"
     ],
     [
       "Steel.Memory.Tactics.rm",
@@ -52,7 +52,7 @@
         "token_correspondence_Steel.Memory.equiv"
       ],
       0,
-      "674d80292a18d59f1c606de6a4c0661a"
+      "1f08735ce4800f4a07962fd1e526217a"
     ],
     [
       "Steel.Memory.Tactics.shuffled",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_34282dbf569abc897afdc6a1da9cf2db"
       ],
       0,
-      "b21443d9062a64fdbadcab478936b46f"
+      "661939143de6e3bf5dc9b4472800a289"
     ],
     [
       "Steel.Memory.Tactics.rassert",
@@ -140,7 +140,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "2913bd3473dbd9b117b3f4f980afd64d"
+      "db4abb07095ed9b97c15e30da4b8aa91"
     ],
     [
       "Steel.Memory.Tactics.steel_frame_t",
@@ -160,7 +160,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "a310d4497c2798dc2312247e8d825e09"
+      "ca51c8e1fa520966ccfba6c5a98b24db"
     ],
     [
       "Steel.Memory.Tactics.steel_frame_t",
@@ -183,7 +183,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "44ee6f9b84baf94400340afc15d9c473"
+      "cc650ed3149233997fc935b084b4c0e9"
     ],
     [
       "Steel.Memory.Tactics.rm",
@@ -200,7 +200,7 @@
         "token_correspondence_Steel.Memory.equiv"
       ],
       0,
-      "882d7901754c3c375e69f16f03f425c5"
+      "658880abdb9f288bb300490908d1cb87"
     ],
     [
       "Steel.Memory.Tactics.rassert",
@@ -276,7 +276,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "b7a1ff99b90bbdb6fce8448292c32925"
+      "6389dd340b8c3454fa4c73827f48ecc3"
     ],
     [
       "Steel.Memory.Tactics.steel_frame_t",
@@ -296,7 +296,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "c2db4f9ae7efe07d4cba6b458306f2bb"
+      "463bf78d30b2946a1307a268319f54e9"
     ],
     [
       "Steel.Memory.Tactics.steel_frame_t",
@@ -319,7 +319,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "33c77fb40ee7e6d15d428402d00eb047"
+      "ae5c5bdb779c26faa21439f387e9aee0"
     ]
   ]
 ]
