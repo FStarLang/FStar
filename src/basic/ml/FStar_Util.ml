@@ -1024,6 +1024,11 @@ let digest_of_file =
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  (* Sets access and modification times to current time *)
+  Unix.utimes fname 0.0 0.0
+
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
 let measure_execution_time tag f =
