@@ -43,14 +43,9 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	  $(addprefix --no_extract , $(NO_EXTRACT))
 
 # We first lax type-check each file, producing a .checked.lax file
-# We touch the file, because if F* determined that the .checked.lax
-# file was already up to date, it doesn't touch it. Touching it here
-# ensures that if this rule is successful then %.checked.lax is more
-# recent than its dependences.
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
 	$(Q)$(FSTAR_C) $(SIL) $< --already_cached "* -$(basename $(notdir $<))"
-	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
