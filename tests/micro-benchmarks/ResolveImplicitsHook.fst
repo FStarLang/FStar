@@ -1,6 +1,9 @@
 module ResolveImplicitsHook
 open FStar.Tactics
 module T = FStar.Tactics
+irreducible
+let marker : unit = ()
+
 assume
 val resource : Type u#1
 
@@ -45,8 +48,8 @@ val frame_delta (pre p post q : resource) : Type
 
 assume
 val frame2
-    (#pre #post #p #q : resource)
-    (#delta:frame_delta pre p post q)
+    (#[@marker]pre #[@marker]post #[@marker]p #[@marker]q : resource)
+    (#[@marker]delta:frame_delta pre p post q)
     (f:cmd p q)
   : cmd pre post
 
@@ -77,7 +80,8 @@ let test0 : cmd (r1 ** r2) (r1 ** r2) =
 //   frame f1 >>
 //   frame f2
 
-[@resolve_implicits]
+[@(resolve_implicits)
+  (marker)]
 let resolve_tac () : Tac unit =
   T.dump "Start!";
   let _ = T.repeat (fun () ->
@@ -87,24 +91,24 @@ let resolve_tac () : Tac unit =
   ()
 
 
-let test1 (b:bool)
-  : cmd (r1 ** r2 ** r3 ** r4 ** r5)
-        (r1 ** r2 ** r3 ** r4 ** r5)
-  =
-  frame2 f1 >>
-  frame2 f2 >>
-  frame2 f3 >>
-  frame2 f4 >>
-  frame2 f5
+// let test1 (b:bool)
+//   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
+//         (r1 ** r2 ** r3 ** r4 ** r5)
+//   =
+//   frame2 f1 >>
+//   frame2 f2 >>
+//   frame2 f3 >>
+//   frame2 f4 >>
+//   frame2 f5
 
-  // >>
-  // (if b then
-  //   frame2 f3 >>
-  //   frame2 f4
-  //  else frame2 f5)
+//   // >>
+//   // (if b then
+//   //   frame2 f3 >>
+//   //   frame2 f4
+//   //  else frame2 f5)
 
 
-#set-options "--print_implicits"
+// #set-options "--print_implicits"
 
 
 assume
