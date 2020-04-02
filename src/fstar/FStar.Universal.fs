@@ -370,11 +370,21 @@ let tc_one_file
         then Ch.store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env
 
-      | Some tc_result ->
+      | Some (tc_result, checked_fname) ->
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
         if Options.dump_module tcmod.name.str
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
+
+        (* If we were called to verify (or lax check) this file, and we found
+         * a good, non-stale checked file, update the timestamp as if we had
+         * built it again. This simplifies Makefile logic a lot. See
+         * issue #1978 (starting from "Also, separate issue: ..."). *)
+        if Options.should_check_file fn then begin
+            if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+              BU.print1 "Updating timestamp on checked file %s\n" checked_fname;
+            BU.touch_file checked_fname
+        end;
 
         let extend_tcenv tcmod tcenv =
             let _, tcenv =
