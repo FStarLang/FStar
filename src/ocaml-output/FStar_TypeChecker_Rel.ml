@@ -10196,7 +10196,7 @@ and (solve_c :
                                        (match uu____27316 with
                                         | (bs',c3) ->
                                             let a = FStar_List.hd bs'  in
-                                            let bs1 = FStar_List.tail bs  in
+                                            let bs1 = FStar_List.tail bs'  in
                                             let uu____27379 =
                                               let uu____27398 =
                                                 FStar_All.pipe_right bs1
