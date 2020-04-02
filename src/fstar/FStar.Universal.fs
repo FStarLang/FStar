@@ -360,13 +360,14 @@ let tc_one_file
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
 
-
         let tc_result, mllib, env = tc_source_file () in
+
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
             || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
+        //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
         then Ch.store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env
 
