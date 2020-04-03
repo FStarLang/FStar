@@ -3065,42 +3065,42 @@ and (mk_op_app :
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____9400 =
-            let uu____9407 = FStar_List.map (translate_expr env) args  in
-            ((EOp (op, w)), uu____9407)  in
-          EApp uu____9400
+          let uu____9401 =
+            let uu____9408 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____9408)  in
+          EApp uu____9401
 
 let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
-  fun uu____9419  ->
-    match uu____9419 with
+  fun uu____9420  ->
+    match uu____9420 with
     | FStar_Extraction_ML_Syntax.MLLib modules ->
         FStar_List.filter_map
           (fun m  ->
              let m_name =
-               let uu____9468 = m  in
-               match uu____9468 with
-               | (path,uu____9483,uu____9484) ->
+               let uu____9469 = m  in
+               match uu____9469 with
+               | (path,uu____9484,uu____9485) ->
                    FStar_Extraction_ML_Syntax.string_of_mlpath path
                 in
              try
-               (fun uu___1670_9502  ->
+               (fun uu___1670_9503  ->
                   match () with
                   | () ->
-                      ((let uu____9506 =
-                          let uu____9508 = FStar_Options.silent ()  in
-                          Prims.op_Negation uu____9508  in
-                        if uu____9506
+                      ((let uu____9507 =
+                          let uu____9509 = FStar_Options.silent ()  in
+                          Prims.op_Negation uu____9509  in
+                        if uu____9507
                         then
                           FStar_Util.print1
                             "Attempting to translate module %s\n" m_name
                         else ());
-                       (let uu____9514 = translate_module m  in
-                        FStar_Pervasives_Native.Some uu____9514))) ()
+                       (let uu____9515 = translate_module m  in
+                        FStar_Pervasives_Native.Some uu____9515))) ()
              with
-             | uu___1669_9517 ->
-                 ((let uu____9521 = FStar_Util.print_exn uu___1669_9517  in
+             | uu___1669_9518 ->
+                 ((let uu____9522 = FStar_Util.print_exn uu___1669_9518  in
                    FStar_Util.print2
                      "Unable to translate module: %s because:\n  %s\n" m_name
-                     uu____9521);
+                     uu____9522);
                   FStar_Pervasives_Native.None)) modules
   

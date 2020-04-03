@@ -263,17 +263,17 @@ type mlconstant =
   | MLC_Bytes of FStar_BaseTypes.byte Prims.array 
 let (uu___is_MLC_Unit : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Unit  -> true | uu____752 -> false
+    match projectee with | MLC_Unit  -> true | uu____753 -> false
   
 let (uu___is_MLC_Bool : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Bool _0 -> true | uu____765 -> false
+    match projectee with | MLC_Bool _0 -> true | uu____766 -> false
   
 let (__proj__MLC_Bool__item___0 : mlconstant -> Prims.bool) =
   fun projectee  -> match projectee with | MLC_Bool _0 -> _0 
 let (uu___is_MLC_Int : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Int _0 -> true | uu____798 -> false
+    match projectee with | MLC_Int _0 -> true | uu____799 -> false
   
 let (__proj__MLC_Int__item___0 :
   mlconstant ->
@@ -282,25 +282,25 @@ let (__proj__MLC_Int__item___0 :
   = fun projectee  -> match projectee with | MLC_Int _0 -> _0 
 let (uu___is_MLC_Float : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Float _0 -> true | uu____850 -> false
+    match projectee with | MLC_Float _0 -> true | uu____851 -> false
   
 let (__proj__MLC_Float__item___0 : mlconstant -> FStar_BaseTypes.float) =
   fun projectee  -> match projectee with | MLC_Float _0 -> _0 
 let (uu___is_MLC_Char : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Char _0 -> true | uu____870 -> false
+    match projectee with | MLC_Char _0 -> true | uu____871 -> false
   
 let (__proj__MLC_Char__item___0 : mlconstant -> FStar_BaseTypes.char) =
   fun projectee  -> match projectee with | MLC_Char _0 -> _0 
 let (uu___is_MLC_String : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_String _0 -> true | uu____893 -> false
+    match projectee with | MLC_String _0 -> true | uu____894 -> false
   
 let (__proj__MLC_String__item___0 : mlconstant -> Prims.string) =
   fun projectee  -> match projectee with | MLC_String _0 -> _0 
 let (uu___is_MLC_Bytes : mlconstant -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLC_Bytes _0 -> true | uu____917 -> false
+    match projectee with | MLC_Bytes _0 -> true | uu____919 -> false
   
 let (__proj__MLC_Bytes__item___0 :
   mlconstant -> FStar_BaseTypes.byte Prims.array) =
@@ -315,43 +315,43 @@ type mlpattern =
   | MLP_Tuple of mlpattern Prims.list 
 let (uu___is_MLP_Wild : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Wild  -> true | uu____996 -> false
+    match projectee with | MLP_Wild  -> true | uu____1001 -> false
   
 let (uu___is_MLP_Const : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Const _0 -> true | uu____1008 -> false
+    match projectee with | MLP_Const _0 -> true | uu____1013 -> false
   
 let (__proj__MLP_Const__item___0 : mlpattern -> mlconstant) =
   fun projectee  -> match projectee with | MLP_Const _0 -> _0 
 let (uu___is_MLP_Var : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Var _0 -> true | uu____1028 -> false
+    match projectee with | MLP_Var _0 -> true | uu____1033 -> false
   
 let (__proj__MLP_Var__item___0 : mlpattern -> mlident) =
   fun projectee  -> match projectee with | MLP_Var _0 -> _0 
 let (uu___is_MLP_CTor : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_CTor _0 -> true | uu____1056 -> false
+    match projectee with | MLP_CTor _0 -> true | uu____1061 -> false
   
 let (__proj__MLP_CTor__item___0 :
   mlpattern -> (mlpath * mlpattern Prims.list)) =
   fun projectee  -> match projectee with | MLP_CTor _0 -> _0 
 let (uu___is_MLP_Branch : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Branch _0 -> true | uu____1095 -> false
+    match projectee with | MLP_Branch _0 -> true | uu____1100 -> false
   
 let (__proj__MLP_Branch__item___0 : mlpattern -> mlpattern Prims.list) =
   fun projectee  -> match projectee with | MLP_Branch _0 -> _0 
 let (uu___is_MLP_Record : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Record _0 -> true | uu____1134 -> false
+    match projectee with | MLP_Record _0 -> true | uu____1139 -> false
   
 let (__proj__MLP_Record__item___0 :
   mlpattern -> (mlsymbol Prims.list * (mlsymbol * mlpattern) Prims.list)) =
   fun projectee  -> match projectee with | MLP_Record _0 -> _0 
 let (uu___is_MLP_Tuple : mlpattern -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLP_Tuple _0 -> true | uu____1197 -> false
+    match projectee with | MLP_Tuple _0 -> true | uu____1202 -> false
   
 let (__proj__MLP_Tuple__item___0 : mlpattern -> mlpattern Prims.list) =
   fun projectee  -> match projectee with | MLP_Tuple _0 -> _0 
@@ -379,101 +379,101 @@ type meta =
   | Deprecated of Prims.string 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Mutable  -> true | uu____1263 -> false
+    match projectee with | Mutable  -> true | uu____1268 -> false
   
 let (uu___is_Assumed : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Assumed  -> true | uu____1274 -> false
+    match projectee with | Assumed  -> true | uu____1279 -> false
   
 let (uu___is_Private : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Private  -> true | uu____1285 -> false
+    match projectee with | Private  -> true | uu____1290 -> false
   
 let (uu___is_NoExtract : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NoExtract  -> true | uu____1296 -> false
+    match projectee with | NoExtract  -> true | uu____1301 -> false
   
 let (uu___is_CInline : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____1307 -> false
+    match projectee with | CInline  -> true | uu____1312 -> false
   
 let (uu___is_Substitute : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____1318 -> false
+    match projectee with | Substitute  -> true | uu____1323 -> false
   
 let (uu___is_GCType : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | GCType  -> true | uu____1329 -> false
+    match projectee with | GCType  -> true | uu____1334 -> false
   
 let (uu___is_PpxDerivingShow : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____1340 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____1345 -> false
   
 let (uu___is_PpxDerivingShowConstant : meta -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____1353 -> false
+    | uu____1358 -> false
   
 let (__proj__PpxDerivingShowConstant__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0 
 let (uu___is_PpxDerivingYoJson : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingYoJson  -> true | uu____1374 -> false
+    match projectee with | PpxDerivingYoJson  -> true | uu____1379 -> false
   
 let (uu___is_Comment : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____1387 -> false
+    match projectee with | Comment _0 -> true | uu____1392 -> false
   
 let (__proj__Comment__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | Comment _0 -> _0 
 let (uu___is_StackInline : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | StackInline  -> true | uu____1408 -> false
+    match projectee with | StackInline  -> true | uu____1413 -> false
   
 let (uu___is_CPrologue : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CPrologue _0 -> true | uu____1421 -> false
+    match projectee with | CPrologue _0 -> true | uu____1426 -> false
   
 let (__proj__CPrologue__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | CPrologue _0 -> _0 
 let (uu___is_CEpilogue : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CEpilogue _0 -> true | uu____1444 -> false
+    match projectee with | CEpilogue _0 -> true | uu____1449 -> false
   
 let (__proj__CEpilogue__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | CEpilogue _0 -> _0 
 let (uu___is_CConst : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CConst _0 -> true | uu____1467 -> false
+    match projectee with | CConst _0 -> true | uu____1472 -> false
   
 let (__proj__CConst__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | CConst _0 -> _0 
 let (uu___is_CCConv : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CCConv _0 -> true | uu____1490 -> false
+    match projectee with | CCConv _0 -> true | uu____1495 -> false
   
 let (__proj__CCConv__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | CCConv _0 -> _0 
 let (uu___is_Erased : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Erased  -> true | uu____1511 -> false
+    match projectee with | Erased  -> true | uu____1516 -> false
   
 let (uu___is_CAbstract : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CAbstract  -> true | uu____1522 -> false
+    match projectee with | CAbstract  -> true | uu____1527 -> false
   
 let (uu___is_CIfDef : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CIfDef  -> true | uu____1533 -> false
+    match projectee with | CIfDef  -> true | uu____1538 -> false
   
 let (uu___is_CMacro : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CMacro  -> true | uu____1544 -> false
+    match projectee with | CMacro  -> true | uu____1549 -> false
   
 let (uu___is_Deprecated : meta -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Deprecated _0 -> true | uu____1557 -> false
+    match projectee with | Deprecated _0 -> true | uu____1562 -> false
   
 let (__proj__Deprecated__item___0 : meta -> Prims.string) =
   fun projectee  -> match projectee with | Deprecated _0 -> _0 
@@ -482,10 +482,10 @@ type mlletflavor =
   | Rec 
   | NonRec 
 let (uu___is_Rec : mlletflavor -> Prims.bool) =
-  fun projectee  -> match projectee with | Rec  -> true | uu____1580 -> false 
+  fun projectee  -> match projectee with | Rec  -> true | uu____1585 -> false 
 let (uu___is_NonRec : mlletflavor -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NonRec  -> true | uu____1591 -> false
+    match projectee with | NonRec  -> true | uu____1596 -> false
   
 type mlexpr' =
   | MLE_Const of mlconstant 
@@ -521,51 +521,51 @@ and mllb =
   print_typ: Prims.bool }
 let (uu___is_MLE_Const : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Const _0 -> true | uu____1848 -> false
+    match projectee with | MLE_Const _0 -> true | uu____1853 -> false
   
 let (__proj__MLE_Const__item___0 : mlexpr' -> mlconstant) =
   fun projectee  -> match projectee with | MLE_Const _0 -> _0 
 let (uu___is_MLE_Var : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Var _0 -> true | uu____1868 -> false
+    match projectee with | MLE_Var _0 -> true | uu____1873 -> false
   
 let (__proj__MLE_Var__item___0 : mlexpr' -> mlident) =
   fun projectee  -> match projectee with | MLE_Var _0 -> _0 
 let (uu___is_MLE_Name : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Name _0 -> true | uu____1890 -> false
+    match projectee with | MLE_Name _0 -> true | uu____1895 -> false
   
 let (__proj__MLE_Name__item___0 : mlexpr' -> mlpath) =
   fun projectee  -> match projectee with | MLE_Name _0 -> _0 
 let (uu___is_MLE_Let : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Let _0 -> true | uu____1919 -> false
+    match projectee with | MLE_Let _0 -> true | uu____1924 -> false
   
 let (__proj__MLE_Let__item___0 :
   mlexpr' -> ((mlletflavor * mllb Prims.list) * mlexpr)) =
   fun projectee  -> match projectee with | MLE_Let _0 -> _0 
 let (uu___is_MLE_App : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_App _0 -> true | uu____1974 -> false
+    match projectee with | MLE_App _0 -> true | uu____1979 -> false
   
 let (__proj__MLE_App__item___0 : mlexpr' -> (mlexpr * mlexpr Prims.list)) =
   fun projectee  -> match projectee with | MLE_App _0 -> _0 
 let (uu___is_MLE_TApp : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_TApp _0 -> true | uu____2017 -> false
+    match projectee with | MLE_TApp _0 -> true | uu____2022 -> false
   
 let (__proj__MLE_TApp__item___0 : mlexpr' -> (mlexpr * mlty Prims.list)) =
   fun projectee  -> match projectee with | MLE_TApp _0 -> _0 
 let (uu___is_MLE_Fun : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Fun _0 -> true | uu____2065 -> false
+    match projectee with | MLE_Fun _0 -> true | uu____2070 -> false
   
 let (__proj__MLE_Fun__item___0 :
   mlexpr' -> ((mlident * mlty) Prims.list * mlexpr)) =
   fun projectee  -> match projectee with | MLE_Fun _0 -> _0 
 let (uu___is_MLE_Match : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Match _0 -> true | uu____2131 -> false
+    match projectee with | MLE_Match _0 -> true | uu____2136 -> false
   
 let (__proj__MLE_Match__item___0 :
   mlexpr' ->
@@ -574,57 +574,57 @@ let (__proj__MLE_Match__item___0 :
   = fun projectee  -> match projectee with | MLE_Match _0 -> _0 
 let (uu___is_MLE_Coerce : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Coerce _0 -> true | uu____2198 -> false
+    match projectee with | MLE_Coerce _0 -> true | uu____2203 -> false
   
 let (__proj__MLE_Coerce__item___0 : mlexpr' -> (mlexpr * mlty * mlty)) =
   fun projectee  -> match projectee with | MLE_Coerce _0 -> _0 
 let (uu___is_MLE_CTor : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_CTor _0 -> true | uu____2241 -> false
+    match projectee with | MLE_CTor _0 -> true | uu____2246 -> false
   
 let (__proj__MLE_CTor__item___0 : mlexpr' -> (mlpath * mlexpr Prims.list)) =
   fun projectee  -> match projectee with | MLE_CTor _0 -> _0 
 let (uu___is_MLE_Seq : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Seq _0 -> true | uu____2280 -> false
+    match projectee with | MLE_Seq _0 -> true | uu____2285 -> false
   
 let (__proj__MLE_Seq__item___0 : mlexpr' -> mlexpr Prims.list) =
   fun projectee  -> match projectee with | MLE_Seq _0 -> _0 
 let (uu___is_MLE_Tuple : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Tuple _0 -> true | uu____2307 -> false
+    match projectee with | MLE_Tuple _0 -> true | uu____2312 -> false
   
 let (__proj__MLE_Tuple__item___0 : mlexpr' -> mlexpr Prims.list) =
   fun projectee  -> match projectee with | MLE_Tuple _0 -> _0 
 let (uu___is_MLE_Record : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Record _0 -> true | uu____2346 -> false
+    match projectee with | MLE_Record _0 -> true | uu____2351 -> false
   
 let (__proj__MLE_Record__item___0 :
   mlexpr' -> (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list)) =
   fun projectee  -> match projectee with | MLE_Record _0 -> _0 
 let (uu___is_MLE_Proj : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Proj _0 -> true | uu____2411 -> false
+    match projectee with | MLE_Proj _0 -> true | uu____2416 -> false
   
 let (__proj__MLE_Proj__item___0 : mlexpr' -> (mlexpr * mlpath)) =
   fun projectee  -> match projectee with | MLE_Proj _0 -> _0 
 let (uu___is_MLE_If : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_If _0 -> true | uu____2450 -> false
+    match projectee with | MLE_If _0 -> true | uu____2455 -> false
   
 let (__proj__MLE_If__item___0 :
   mlexpr' -> (mlexpr * mlexpr * mlexpr FStar_Pervasives_Native.option)) =
   fun projectee  -> match projectee with | MLE_If _0 -> _0 
 let (uu___is_MLE_Raise : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Raise _0 -> true | uu____2499 -> false
+    match projectee with | MLE_Raise _0 -> true | uu____2504 -> false
   
 let (__proj__MLE_Raise__item___0 : mlexpr' -> (mlpath * mlexpr Prims.list)) =
   fun projectee  -> match projectee with | MLE_Raise _0 -> _0 
 let (uu___is_MLE_Try : mlexpr' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLE_Try _0 -> true | uu____2550 -> false
+    match projectee with | MLE_Try _0 -> true | uu____2555 -> false
   
 let (__proj__MLE_Try__item___0 :
   mlexpr' ->
@@ -682,20 +682,20 @@ type mltybody =
   | MLTD_DType of (mlsymbol * (mlsymbol * mlty) Prims.list) Prims.list 
 let (uu___is_MLTD_Abbrev : mltybody -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLTD_Abbrev _0 -> true | uu____2800 -> false
+    match projectee with | MLTD_Abbrev _0 -> true | uu____2805 -> false
   
 let (__proj__MLTD_Abbrev__item___0 : mltybody -> mlty) =
   fun projectee  -> match projectee with | MLTD_Abbrev _0 -> _0 
 let (uu___is_MLTD_Record : mltybody -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLTD_Record _0 -> true | uu____2826 -> false
+    match projectee with | MLTD_Record _0 -> true | uu____2831 -> false
   
 let (__proj__MLTD_Record__item___0 :
   mltybody -> (mlsymbol * mlty) Prims.list) =
   fun projectee  -> match projectee with | MLTD_Record _0 -> _0 
 let (uu___is_MLTD_DType : mltybody -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLTD_DType _0 -> true | uu____2880 -> false
+    match projectee with | MLTD_DType _0 -> true | uu____2885 -> false
   
 let (__proj__MLTD_DType__item___0 :
   mltybody -> (mlsymbol * (mlsymbol * mlty) Prims.list) Prims.list) =
@@ -712,32 +712,32 @@ type mlmodule1 =
   | MLM_Loc of mlloc 
 let (uu___is_MLM_Ty : mlmodule1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLM_Ty _0 -> true | uu____2999 -> false
+    match projectee with | MLM_Ty _0 -> true | uu____3004 -> false
   
 let (__proj__MLM_Ty__item___0 : mlmodule1 -> mltydecl) =
   fun projectee  -> match projectee with | MLM_Ty _0 -> _0 
 let (uu___is_MLM_Let : mlmodule1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLM_Let _0 -> true | uu____3018 -> false
+    match projectee with | MLM_Let _0 -> true | uu____3023 -> false
   
 let (__proj__MLM_Let__item___0 : mlmodule1 -> mlletbinding) =
   fun projectee  -> match projectee with | MLM_Let _0 -> _0 
 let (uu___is_MLM_Exn : mlmodule1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLM_Exn _0 -> true | uu____3049 -> false
+    match projectee with | MLM_Exn _0 -> true | uu____3054 -> false
   
 let (__proj__MLM_Exn__item___0 :
   mlmodule1 -> (mlsymbol * (mlsymbol * mlty) Prims.list)) =
   fun projectee  -> match projectee with | MLM_Exn _0 -> _0 
 let (uu___is_MLM_Top : mlmodule1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLM_Top _0 -> true | uu____3104 -> false
+    match projectee with | MLM_Top _0 -> true | uu____3109 -> false
   
 let (__proj__MLM_Top__item___0 : mlmodule1 -> mlexpr) =
   fun projectee  -> match projectee with | MLM_Top _0 -> _0 
 let (uu___is_MLM_Loc : mlmodule1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLM_Loc _0 -> true | uu____3123 -> false
+    match projectee with | MLM_Loc _0 -> true | uu____3128 -> false
   
 let (__proj__MLM_Loc__item___0 : mlmodule1 -> mlloc) =
   fun projectee  -> match projectee with | MLM_Loc _0 -> _0 
@@ -749,25 +749,25 @@ type mlsig1 =
   | MLS_Exn of (mlsymbol * mlty Prims.list) 
 let (uu___is_MLS_Mod : mlsig1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLS_Mod _0 -> true | uu____3190 -> false
+    match projectee with | MLS_Mod _0 -> true | uu____3195 -> false
   
 let (__proj__MLS_Mod__item___0 : mlsig1 -> (mlsymbol * mlsig1 Prims.list)) =
   fun projectee  -> match projectee with | MLS_Mod _0 -> _0 
 let (uu___is_MLS_Ty : mlsig1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLS_Ty _0 -> true | uu____3230 -> false
+    match projectee with | MLS_Ty _0 -> true | uu____3235 -> false
   
 let (__proj__MLS_Ty__item___0 : mlsig1 -> mltydecl) =
   fun projectee  -> match projectee with | MLS_Ty _0 -> _0 
 let (uu___is_MLS_Val : mlsig1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLS_Val _0 -> true | uu____3254 -> false
+    match projectee with | MLS_Val _0 -> true | uu____3259 -> false
   
 let (__proj__MLS_Val__item___0 : mlsig1 -> (mlsymbol * mltyscheme)) =
   fun projectee  -> match projectee with | MLS_Val _0 -> _0 
 let (uu___is_MLS_Exn : mlsig1 -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLS_Exn _0 -> true | uu____3295 -> false
+    match projectee with | MLS_Exn _0 -> true | uu____3300 -> false
   
 let (__proj__MLS_Exn__item___0 : mlsig1 -> (mlsymbol * mlty Prims.list)) =
   fun projectee  -> match projectee with | MLS_Exn _0 -> _0 
@@ -796,11 +796,11 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   fun x  ->
     fun t  ->
       let obj_ns =
-        let uu____3495 =
-          let uu____3497 = FStar_Options.codegen ()  in
-          uu____3497 = (FStar_Pervasives_Native.Some FStar_Options.FSharp)
+        let uu____3500 =
+          let uu____3502 = FStar_Options.codegen ()  in
+          uu____3502 = (FStar_Pervasives_Native.Some FStar_Options.FSharp)
            in
-        if uu____3495 then "FSharp.Compatibility.OCaml.Obj" else "Obj"  in
+        if uu____3500 then "FSharp.Compatibility.OCaml.Obj" else "Obj"  in
       let obj_repr =
         with_ty (MLTY_Fun (t, E_PURE, MLTY_Top))
           (MLE_Name ([obj_ns], "repr"))
@@ -809,62 +809,62 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   
 let (avoid_keyword : Prims.string -> Prims.string) =
   fun s  ->
-    let uu____3527 = is_reserved s  in
-    if uu____3527 then Prims.op_Hat s "_" else s
+    let uu____3532 = is_reserved s  in
+    if uu____3532 then Prims.op_Hat s "_" else s
   
 let (bv_as_mlident : FStar_Syntax_Syntax.bv -> mlident) =
   fun x  ->
-    let uu____3542 =
+    let uu____3547 =
       ((FStar_Util.starts_with
           (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           FStar_Ident.reserved_prefix)
          || (FStar_Syntax_Syntax.is_null_bv x))
         || (is_reserved (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
        in
-    if uu____3542
+    if uu____3547
     then
-      let uu____3546 =
-        let uu____3548 =
-          let uu____3550 =
+      let uu____3551 =
+        let uu____3553 =
+          let uu____3555 =
             FStar_Util.string_of_int x.FStar_Syntax_Syntax.index  in
-          Prims.op_Hat "_" uu____3550  in
+          Prims.op_Hat "_" uu____3555  in
         Prims.op_Hat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-          uu____3548
+          uu____3553
          in
-      FStar_All.pipe_left avoid_keyword uu____3546
+      FStar_All.pipe_left avoid_keyword uu____3551
     else
       FStar_All.pipe_left avoid_keyword
         (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
   
 let (mlpath_of_lident : FStar_Ident.lident -> mlpath) =
   fun x  ->
-    let uu____3565 = FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid
+    let uu____3570 = FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid
        in
-    if uu____3565
+    if uu____3570
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
     else
-      (let uu____3575 =
+      (let uu____3580 =
          FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns
           in
-       let uu____3582 =
+       let uu____3587 =
          avoid_keyword (x.FStar_Ident.ident).FStar_Ident.idText  in
-       (uu____3575, uu____3582))
+       (uu____3580, uu____3587))
   
 let (push_unit : mltyscheme -> mltyscheme) =
   fun ts  ->
-    let uu____3594 = ts  in
-    match uu____3594 with
+    let uu____3599 = ts  in
+    match uu____3599 with
     | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
   
 let (pop_unit : mltyscheme -> mltyscheme) =
   fun ts  ->
-    let uu____3603 = ts  in
-    match uu____3603 with
+    let uu____3608 = ts  in
+    match uu____3608 with
     | (vs,ty) ->
         (match ty with
          | MLTY_Fun (l,E_PURE ,t) ->
              if l = ml_unit_ty
              then (vs, t)
              else failwith "unexpected: pop_unit: domain was not unit"
-         | uu____3612 -> failwith "unexpected: pop_unit: not a function type")
+         | uu____3617 -> failwith "unexpected: pop_unit: not a function type")
   
