@@ -8,7 +8,6 @@ all:
 	$(Q)+$(MAKE) -C ulib/ml
 
 package:
-	$(Q)git clean -ffdx .
 	$(Q)+$(MAKE) -C src/ocaml-output package
 
 clean:
