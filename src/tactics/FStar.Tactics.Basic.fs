@@ -42,6 +42,7 @@ type implicits = Env.implicits
 // Beta reduce
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
+let whnf e t = N.unfold_whnf e t
 
 (* Use this one for everything the user is supposed to see, EXCEPT
  * STATE DUMPS, as it does resugaring. For debug messages, just use plain
@@ -172,7 +173,7 @@ let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
 let get_phi (g:goal) : option<term> =
-    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+    U.un_squash (whnf (goal_env g) (goal_type g))
 
 let is_irrelevant (g:goal) : bool =
     Option.isSome (get_phi g)
@@ -746,7 +747,7 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
 *)
 let intro () : tac<binder> = wrap_err "intro" <|
     bind (cur_goal ()) (fun goal ->
-    match U.arrow_one (bnorm (goal_env goal) (goal_type goal)) with
+    match U.arrow_one (whnf (goal_env goal) (goal_type goal)) with
     | Some (b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
@@ -796,7 +797,7 @@ let intro_rec () : tac<(binder * binder)> =
     bind (cur_goal ()) (fun goal ->
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
-    match U.arrow_one (bnorm (goal_env goal) (goal_type goal)) with
+    match U.arrow_one (whnf (goal_env goal) (goal_type goal)) with
     | Some (b, c) ->
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
@@ -1194,7 +1195,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
     | Some (e0, bv, bvs) ->
-    begin match destruct_eq bv.sort with
+    begin match destruct_eq (whnf e0 bv.sort) with
         | Some (x, e) ->
         begin match (SS.compress x).n with
            | Tm_name x ->
@@ -1583,7 +1584,7 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     log ps (fun () ->
         BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt' |> bnorm_goal]))))
+    add_goals [goal_with_type g gt']))))
 
 
 let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointwise" <|
@@ -1600,7 +1601,7 @@ let t_pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "t_pointw
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt' |> bnorm_goal]))))
+    add_goals [goal_with_type g gt']))))
 
 let _trefl (l : term) (r : term) : tac<unit> =
    bind (cur_goal ()) (fun g ->
@@ -1616,7 +1617,7 @@ let _trefl (l : term) (r : term) : tac<unit> =
 
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
-    match destruct_eq (bnorm (goal_env g) (goal_type g)) with
+    match destruct_eq (whnf (goal_env g) (goal_type g)) with
     | Some (l, r) ->
         _trefl l r
     | None ->
