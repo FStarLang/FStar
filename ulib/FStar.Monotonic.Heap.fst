@@ -304,3 +304,15 @@ let ref_of h a t rel = ref_of' h a t rel
 let aref_live_at_aref_of h #t #rel r = ()
 let contains_gref_of h a t rel = ()
 let aref_of_gref_of a t rel = ()
+
+let addr_of_gref_of a t rel = addr_of_aref_of (gref_of a t rel)
+
+let is_mm_gref_of a t rel = is_mm_aref_of (gref_of a t rel)
+
+let unused_in_gref_of a t rel h = unused_in_aref_of (gref_of a t rel) h
+
+let sel_ref_of a t rel h1 h2 = ()
+
+let upd_ref_of a t rel h1 h2 x =
+  lemma_heap_equality_upd_same_addr h1 (ref_of h2 a t rel) (gref_of a t rel) x
+
