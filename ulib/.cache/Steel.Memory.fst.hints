@@ -198,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "0006e39b854d90275dbbd8382bec1690"
+      "35a941c4642c63c2e06e2bcf896c9a2c"
     ],
     [
       "Steel.Memory.__proj__Mkarray_ref'__item__array_length",
@@ -527,7 +527,7 @@
         "typing_Steel.Memory.select_index"
       ],
       0,
-      "d01798106153f9019458174af2378898"
+      "9e4ff372be6601e5fde412a92c2dc4d8"
     ],
     [
       "Steel.Memory.disjoint_join_addr'",
@@ -625,7 +625,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "b69657a2243c92f355901ffc0161f8c0"
+      "f798837a5218f2a6fd41d8408b83f506"
     ],
     [
       "Steel.Memory.disjoint_join'",
@@ -731,7 +731,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "b514ef7bc1b894536824d25c3131621d"
+      "b244fa571a09ef525aeccc25a0b5fa1b"
     ],
     [
       "Steel.Memory.join_commutative_heap",
@@ -764,7 +764,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "51c84295741d7e0454060152e68fbca8"
+      "bf4807d507191b2319106005e7bee987"
     ],
     [
       "Steel.Memory.join_associative'",
@@ -881,7 +881,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7", "unit_typing"
       ],
       0,
-      "00491049dadf4a785b062aa86b00db32"
+      "ce35e35aa6402b6cb32915b0dd078952"
     ],
     [
       "Steel.Memory.join_associative_heap",
@@ -1015,7 +1015,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "012c03faf3fc294449acedf3fbe4ec9a"
+      "8c83ae55b937cd0571bcb9356040ed66"
     ],
     [
       "Steel.Memory.heap_prop_is_affine",
@@ -1515,7 +1515,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "c31af36d6b6c71117148a67c81f049ec"
+      "1c5ba774016e43bcb6d50525d9f2f111"
     ],
     [
       "Steel.Memory.join_associative",
@@ -1907,7 +1907,7 @@
         "typing_Steel.Memory.readable"
       ],
       0,
-      "671b4cc146a0d705dc82286096e3a592"
+      "c4134409b5c529084509f9753d29175e"
     ],
     [
       "Steel.Memory.pts_to_array_with_preorder_injective",
@@ -2327,7 +2327,7 @@
         "typing_tok_Steel.Memory.Emp@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "99bb79c428674d8cea0ac8b2410cb1b5"
+      "8666eca5029e24196eea6c5a0576e7fe"
     ],
     [
       "Steel.Memory.share_pts_to_array",
@@ -2686,7 +2686,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "a0e84fb6a0e259a8fbb52028c092e769"
+      "a1ba70ca4786e0331ee6db80a5d0dc2c"
     ],
     [
       "Steel.Memory.gather_pts_to_array",
@@ -3080,7 +3080,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "066b8738b77c9f4752bcd6c5557ea6c8"
+      "0f644375263b04bb0dfdcf4ff8929eb5"
     ],
     [
       "Steel.Memory.star_associative",
@@ -3717,7 +3717,7 @@
         "unit_typing"
       ],
       0,
-      "831d82da6b87662fd9715c5814bbc417"
+      "30db157fa233cf711a09feb7f469be3c"
     ],
     [
       "Steel.Memory.disjoint_join_heap_specialized",
@@ -3901,7 +3901,7 @@
         "typing_tok_Steel.Memory.Emp@tok", "unit_typing"
       ],
       0,
-      "b63404fc76f03704d751ee543987168e"
+      "f930e69a4f8b472d6adab4e0305ee242"
     ],
     [
       "Steel.Memory.affine_star_heap",
@@ -3968,7 +3968,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "1504feba56316e3d9d9dd3d616af0fc6"
+      "f87af1153475299667f781725c72e7e9"
     ],
     [
       "Steel.Memory.affine_star",
@@ -4030,7 +4030,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "502378558b8f7d7fd8fd7da4d8903011"
+      "bd9c177d935e8e42d676161f7110fbbc"
     ],
     [
       "Steel.Memory.intro_emp",
@@ -4116,7 +4116,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "5b36e7e2b2e3c04cb41aca9a65398dc9"
+      "e47b62b701a2169d013a31532ba63674"
     ],
     [
       "Steel.Memory.weaken_depends_only_on",
@@ -4300,7 +4300,7 @@
         "typing_tok_Steel.Memory.Emp@tok"
       ],
       0,
-      "007dedcf9a81c5d9c21e72698e0c56c5"
+      "23d0b493c57e51f52efec88529e3e81e"
     ],
     [
       "Steel.Memory.weaken_refine_mprop_depends_only_on",
