@@ -286,6 +286,4 @@ let ctrl_rewrite
         BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
 
     bind (push_goals gs) (fun _ ->
-    (* GM: is goal_with_type OK here? What if I rewrite int to bool, admitting? *)
-    (* Will the implicits fail later? *)
     add_goals [goal_with_type g gt']))))
