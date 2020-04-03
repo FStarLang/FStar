@@ -179,7 +179,8 @@ let is_irrelevant (g:goal) : bool =
     Option.isSome (get_phi g)
 
 let print (msg:string) : tac<unit> =
-    tacprint msg;
+    if not (Options.silent ()) then
+      tacprint msg;
     ret ()
 
 let debugging () : tac<bool> =
