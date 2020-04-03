@@ -742,7 +742,7 @@ let extract_7_nbe :
   
 let mk_tactic_interpretation_1 :
   'a 'r .
-    ('a -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'r FStar_Syntax_Embeddings.embedding ->
           FStar_TypeChecker_Cfg.psc ->
@@ -766,7 +766,7 @@ let mk_tactic_interpretation_1 :
                        let ps1 = FStar_Tactics_Types.set_ps_psc psc ps  in
                        let r =
                          let uu____4275 = t a  in
-                         FStar_Tactics_Basic.run_safe uu____4275 ps1  in
+                         FStar_Tactics_Monad.run_safe uu____4275 ps1  in
                        let uu____4278 =
                          let uu____4279 = FStar_Tactics_Embedding.e_result er
                             in
@@ -777,7 +777,7 @@ let mk_tactic_interpretation_1 :
   
 let mk_tactic_interpretation_2 :
   'a 'b 'r .
-    ('a -> 'b -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'b -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'r FStar_Syntax_Embeddings.embedding ->
@@ -804,7 +804,7 @@ let mk_tactic_interpretation_2 :
                          let ps1 = FStar_Tactics_Types.set_ps_psc psc ps  in
                          let r =
                            let uu____4414 = t a b  in
-                           FStar_Tactics_Basic.run_safe uu____4414 ps1  in
+                           FStar_Tactics_Monad.run_safe uu____4414 ps1  in
                          let uu____4417 =
                            let uu____4418 =
                              FStar_Tactics_Embedding.e_result er  in
@@ -815,7 +815,7 @@ let mk_tactic_interpretation_2 :
   
 let mk_tactic_interpretation_3 :
   'a 'b 'c 'r .
-    ('a -> 'b -> 'c -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'b -> 'c -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'c FStar_Syntax_Embeddings.embedding ->
@@ -845,7 +845,7 @@ let mk_tactic_interpretation_3 :
                               in
                            let r =
                              let uu____4580 = t a b c  in
-                             FStar_Tactics_Basic.run_safe uu____4580 ps1  in
+                             FStar_Tactics_Monad.run_safe uu____4580 ps1  in
                            let uu____4583 =
                              let uu____4584 =
                                FStar_Tactics_Embedding.e_result er  in
@@ -856,7 +856,7 @@ let mk_tactic_interpretation_3 :
   
 let mk_tactic_interpretation_4 :
   'a 'b 'c 'd 'r .
-    ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'c FStar_Syntax_Embeddings.embedding ->
@@ -888,7 +888,7 @@ let mk_tactic_interpretation_4 :
                                 in
                              let r =
                                let uu____4773 = t a b c d  in
-                               FStar_Tactics_Basic.run_safe uu____4773 ps1
+                               FStar_Tactics_Monad.run_safe uu____4773 ps1
                                 in
                              let uu____4776 =
                                let uu____4777 =
@@ -900,7 +900,7 @@ let mk_tactic_interpretation_4 :
   
 let mk_tactic_interpretation_5 :
   'a 'b 'c 'd 'e 'r .
-    ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'c FStar_Syntax_Embeddings.embedding ->
@@ -935,7 +935,7 @@ let mk_tactic_interpretation_5 :
                                  FStar_Tactics_Types.set_ps_psc psc ps  in
                                let r =
                                  let uu____4993 = t a b c d e  in
-                                 FStar_Tactics_Basic.run_safe uu____4993 ps1
+                                 FStar_Tactics_Monad.run_safe uu____4993 ps1
                                   in
                                let uu____4996 =
                                  let uu____4997 =
@@ -947,7 +947,7 @@ let mk_tactic_interpretation_5 :
   
 let mk_tactic_interpretation_6 :
   'a 'b 'c 'd 'e 'f 'r .
-    ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'r FStar_Tactics_Basic.tac) ->
+    ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'r FStar_Tactics_Monad.tac) ->
       'a FStar_Syntax_Embeddings.embedding ->
         'b FStar_Syntax_Embeddings.embedding ->
           'c FStar_Syntax_Embeddings.embedding ->
@@ -984,7 +984,7 @@ let mk_tactic_interpretation_6 :
                                    FStar_Tactics_Types.set_ps_psc psc ps  in
                                  let r =
                                    let uu____5240 = t a b c d e f  in
-                                   FStar_Tactics_Basic.run_safe uu____5240
+                                   FStar_Tactics_Monad.run_safe uu____5240
                                      ps1
                                     in
                                  let uu____5243 =
@@ -1007,7 +1007,7 @@ let mk_tactic_interpretation_13 :
                    't8 ->
                      't9 ->
                        't10 ->
-                         't11 -> 't12 -> 't13 -> 'r FStar_Tactics_Basic.tac)
+                         't11 -> 't12 -> 't13 -> 'r FStar_Tactics_Monad.tac)
       ->
       't1 FStar_Syntax_Embeddings.embedding ->
         't2 FStar_Syntax_Embeddings.embedding ->
@@ -1068,7 +1068,7 @@ let mk_tactic_interpretation_13 :
                                                    t a1 a2 a3 a4 a5 a6 a7 a8
                                                      a9 a10 a11 a12 a13
                                                     in
-                                                 FStar_Tactics_Basic.run_safe
+                                                 FStar_Tactics_Monad.run_safe
                                                    uu____5676 ps1
                                                   in
                                                let uu____5679 =
@@ -1089,7 +1089,7 @@ let mk_tactic_interpretation_13 :
 let mk_tactic_nbe_interpretation_1 :
   'a 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'r FStar_TypeChecker_NBETerm.embedding ->
             FStar_TypeChecker_NBETerm.args ->
@@ -1110,7 +1110,7 @@ let mk_tactic_nbe_interpretation_1 :
                  | (a,ps) ->
                      let r =
                        let uu____5777 = t a  in
-                       FStar_Tactics_Basic.run_safe uu____5777 ps  in
+                       FStar_Tactics_Monad.run_safe uu____5777 ps  in
                      let uu____5780 =
                        let uu____5781 =
                          FStar_Tactics_Embedding.e_result_nbe er  in
@@ -1120,7 +1120,7 @@ let mk_tactic_nbe_interpretation_1 :
 let mk_tactic_nbe_interpretation_2 :
   'a 'b 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'b -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'b -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'b FStar_TypeChecker_NBETerm.embedding ->
             'r FStar_TypeChecker_NBETerm.embedding ->
@@ -1143,7 +1143,7 @@ let mk_tactic_nbe_interpretation_2 :
                    | (a,b,ps) ->
                        let r =
                          let uu____5904 = t a b  in
-                         FStar_Tactics_Basic.run_safe uu____5904 ps  in
+                         FStar_Tactics_Monad.run_safe uu____5904 ps  in
                        let uu____5907 =
                          let uu____5908 =
                            FStar_Tactics_Embedding.e_result_nbe er  in
@@ -1153,7 +1153,7 @@ let mk_tactic_nbe_interpretation_2 :
 let mk_tactic_nbe_interpretation_3 :
   'a 'b 'c 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'b -> 'c -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'b -> 'c -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'b FStar_TypeChecker_NBETerm.embedding ->
             'c FStar_TypeChecker_NBETerm.embedding ->
@@ -1178,7 +1178,7 @@ let mk_tactic_nbe_interpretation_3 :
                      | (a,b,c,ps) ->
                          let r =
                            let uu____6058 = t a b c  in
-                           FStar_Tactics_Basic.run_safe uu____6058 ps  in
+                           FStar_Tactics_Monad.run_safe uu____6058 ps  in
                          let uu____6061 =
                            let uu____6062 =
                              FStar_Tactics_Embedding.e_result_nbe er  in
@@ -1189,7 +1189,7 @@ let mk_tactic_nbe_interpretation_3 :
 let mk_tactic_nbe_interpretation_4 :
   'a 'b 'c 'd 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'b FStar_TypeChecker_NBETerm.embedding ->
             'c FStar_TypeChecker_NBETerm.embedding ->
@@ -1217,7 +1217,7 @@ let mk_tactic_nbe_interpretation_4 :
                        | (a,b,c,d,ps) ->
                            let r =
                              let uu____6239 = t a b c d  in
-                             FStar_Tactics_Basic.run_safe uu____6239 ps  in
+                             FStar_Tactics_Monad.run_safe uu____6239 ps  in
                            let uu____6242 =
                              let uu____6243 =
                                FStar_Tactics_Embedding.e_result_nbe er  in
@@ -1228,7 +1228,7 @@ let mk_tactic_nbe_interpretation_4 :
 let mk_tactic_nbe_interpretation_5 :
   'a 'b 'c 'd 'e 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'b FStar_TypeChecker_NBETerm.embedding ->
             'c FStar_TypeChecker_NBETerm.embedding ->
@@ -1258,7 +1258,7 @@ let mk_tactic_nbe_interpretation_5 :
                          | (a,b,c,d,e,ps) ->
                              let r =
                                let uu____6447 = t a b c d e  in
-                               FStar_Tactics_Basic.run_safe uu____6447 ps  in
+                               FStar_Tactics_Monad.run_safe uu____6447 ps  in
                              let uu____6450 =
                                let uu____6451 =
                                  FStar_Tactics_Embedding.e_result_nbe er  in
@@ -1270,7 +1270,7 @@ let mk_tactic_nbe_interpretation_5 :
 let mk_tactic_nbe_interpretation_6 :
   'a 'b 'c 'd 'e 'f 'r .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'r FStar_Tactics_Basic.tac) ->
+      ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'r FStar_Tactics_Monad.tac) ->
         'a FStar_TypeChecker_NBETerm.embedding ->
           'b FStar_TypeChecker_NBETerm.embedding ->
             'c FStar_TypeChecker_NBETerm.embedding ->
@@ -1302,7 +1302,7 @@ let mk_tactic_nbe_interpretation_6 :
                            | (a,b,c,d,e,f,ps) ->
                                let r =
                                  let uu____6682 = t a b c d e f  in
-                                 FStar_Tactics_Basic.run_safe uu____6682 ps
+                                 FStar_Tactics_Monad.run_safe uu____6682 ps
                                   in
                                let uu____6685 =
                                  let uu____6686 =
@@ -1412,10 +1412,10 @@ let mktac1 :
   'a 'na 'nr 'r .
     Prims.int ->
       Prims.string ->
-        ('a -> 'r FStar_Tactics_Basic.tac) ->
+        ('a -> 'r FStar_Tactics_Monad.tac) ->
           'a FStar_Syntax_Embeddings.embedding ->
             'r FStar_Syntax_Embeddings.embedding ->
-              ('na -> 'nr FStar_Tactics_Basic.tac) ->
+              ('na -> 'nr FStar_Tactics_Monad.tac) ->
                 'na FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_Cfg.primitive_step
@@ -1440,11 +1440,11 @@ let mktac2 :
   'a 'b 'na 'nb 'nr 'r .
     Prims.int ->
       Prims.string ->
-        ('a -> 'b -> 'r FStar_Tactics_Basic.tac) ->
+        ('a -> 'b -> 'r FStar_Tactics_Monad.tac) ->
           'a FStar_Syntax_Embeddings.embedding ->
             'b FStar_Syntax_Embeddings.embedding ->
               'r FStar_Syntax_Embeddings.embedding ->
-                ('na -> 'nb -> 'nr FStar_Tactics_Basic.tac) ->
+                ('na -> 'nb -> 'nr FStar_Tactics_Monad.tac) ->
                   'na FStar_TypeChecker_NBETerm.embedding ->
                     'nb FStar_TypeChecker_NBETerm.embedding ->
                       'nr FStar_TypeChecker_NBETerm.embedding ->
@@ -1472,12 +1472,12 @@ let mktac3 :
   'a 'b 'c 'na 'nb 'nc 'nr 'r .
     Prims.int ->
       Prims.string ->
-        ('a -> 'b -> 'c -> 'r FStar_Tactics_Basic.tac) ->
+        ('a -> 'b -> 'c -> 'r FStar_Tactics_Monad.tac) ->
           'a FStar_Syntax_Embeddings.embedding ->
             'b FStar_Syntax_Embeddings.embedding ->
               'c FStar_Syntax_Embeddings.embedding ->
                 'r FStar_Syntax_Embeddings.embedding ->
-                  ('na -> 'nb -> 'nc -> 'nr FStar_Tactics_Basic.tac) ->
+                  ('na -> 'nb -> 'nc -> 'nr FStar_Tactics_Monad.tac) ->
                     'na FStar_TypeChecker_NBETerm.embedding ->
                       'nb FStar_TypeChecker_NBETerm.embedding ->
                         'nc FStar_TypeChecker_NBETerm.embedding ->
@@ -1508,13 +1508,13 @@ let mktac4 :
   'a 'b 'c 'd 'na 'nb 'nc 'nd 'nr 'r .
     Prims.int ->
       Prims.string ->
-        ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Basic.tac) ->
+        ('a -> 'b -> 'c -> 'd -> 'r FStar_Tactics_Monad.tac) ->
           'a FStar_Syntax_Embeddings.embedding ->
             'b FStar_Syntax_Embeddings.embedding ->
               'c FStar_Syntax_Embeddings.embedding ->
                 'd FStar_Syntax_Embeddings.embedding ->
                   'r FStar_Syntax_Embeddings.embedding ->
-                    ('na -> 'nb -> 'nc -> 'nd -> 'nr FStar_Tactics_Basic.tac)
+                    ('na -> 'nb -> 'nc -> 'nd -> 'nr FStar_Tactics_Monad.tac)
                       ->
                       'na FStar_TypeChecker_NBETerm.embedding ->
                         'nb FStar_TypeChecker_NBETerm.embedding ->
@@ -1549,7 +1549,7 @@ let mktac5 :
   'a 'b 'c 'd 'e 'na 'nb 'nc 'nd 'ne 'nr 'r .
     Prims.int ->
       Prims.string ->
-        ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Basic.tac) ->
+        ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Monad.tac) ->
           'a FStar_Syntax_Embeddings.embedding ->
             'b FStar_Syntax_Embeddings.embedding ->
               'c FStar_Syntax_Embeddings.embedding ->
@@ -1558,7 +1558,7 @@ let mktac5 :
                     'r FStar_Syntax_Embeddings.embedding ->
                       ('na ->
                          'nb ->
-                           'nc -> 'nd -> 'ne -> 'nr FStar_Tactics_Basic.tac)
+                           'nc -> 'nd -> 'ne -> 'nr FStar_Tactics_Monad.tac)
                         ->
                         'na FStar_TypeChecker_NBETerm.embedding ->
                           'nb FStar_TypeChecker_NBETerm.embedding ->
